@@ -174,6 +174,15 @@ test("proof: focused GREEN, syntax and surface raw provenance match final source
     assert.equal(sha256(bytes), whitespace[kind].sha256);
     assert.equal(bytes.toString("utf8"), whitespace[kind].utf8);
   }
+  const cached = record("publicationCachedIndex");
+  assert.equal(cached.qualified, false);
+  assert.equal(cached.publication.commit, manifest.publication.intermediateUnqualifiedCommit);
+  assert.equal(cached.mismatches.length, 13);
+  const repair = record("publicationIndexRepair");
+  assert.equal(repair.trackedFilesChecked, 81);
+  assert.equal(repair.stagedBytesMatch, true);
+  assert.equal(repair.unownedPathsStaged, false);
+  assert.deepEqual(repair.command, ["git", "add", "--renormalize", "--", "learning\\S025"]);
 });
 
 test("proof: exact offline signed tooling and actual 14-leaf browser evidence with finally cleanup", () => {

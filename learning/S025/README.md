@@ -113,9 +113,16 @@ qualify checkout-byte integrity. That tag remains unqualified and unchanged;
 on preserved CR line endings; its lossless rejection is retained separately in
 `publication-whitespace-001.json`, not called behavioral RED. Owned whitespace
 attributes recognize CR-at-EOL while retaining blank-at-EOL, blank-at-EOF and
-space-before-tab checks. Final references are `green-003`, `syntax-003`,
-`integrity-005`, `tooling-003`, `browser-003` and `integrity-006`; earlier
-captures remain historical, not silently overwritten.
+space-before-tab checks. An intermediate publication, `26d90d5b686a`, retained
+13 stat-cached normalized blobs despite the attribute change; its tag also stays
+unqualified. `publication-normalization-002.json` retains the actual mismatch.
+Only `learning\S025` was rehashed with `git add --renormalize` under the publisher
+mutex, then all 81 tracked index blobs were compared byte-for-byte; see
+`publication-index-001.json`. Commits and pushes still use the authorized publisher.
+Final references are `green-004`, `syntax-004`, `integrity-007`, `tooling-004`,
+`browser-004` and `integrity-008`; earlier captures remain historical, not
+silently overwritten. Final worker reporting additionally checks every published
+blob against its verified working bytes.
 
 Only existing Node **22.23.4**, offline Playwright **1.56.1**, signed installed
 Edge **156**, and published helper `53c0c0d` are used. Helper SHA256:
