@@ -1,0 +1,85 @@
+'use strict';
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('./model.js');
+const replay = (state) => model.apply(state, { type: 'replay' });
+const reassign = (state, clientId, result = 'complete') =>
+  model.apply(state, { type: 'reassign', clientId, result });
+
+test('loadable initial fixture is unknown, never unobserved success', () => {
+  const view = model.inspect(model.create());
+  assert.equal(view.verdict, 'unknown');
+  assert.equal(view.attempted, 0);
+  assert.equal(view.migrated, 0);
+});
+
+test('100 percent nominal still observes two blue pins; zero of two migrated', () => {
+  const view = model.inspect(replay(model.create()));
+  assert.deepEqual(view.clients.map((client) => client.observed), ['blue', 'blue', 'green', 'green']);
+  assert.equal(view.completed, 4);
+  assert.equal(view.migrated, 0);
+  assert.equal(view.verdict, 'unknown');
+  assert.equal(view.retirement.state, 'blocked');
+});
+
+test('green cookie overrides zero percent; deterministic unpinned client follows allocation', () => {
+  const state = model.apply(model.create(), { type: 'weight', greenPercent: 0 });
+  const view = model.inspect(replay(state));
+  assert.deepEqual(view.clients.map((client) => client.observed), ['blue', 'blue', 'green', 'blue']);
+  assert.equal(view.greenPercent, 0);
+});
+
+test('controlled reassignment counts only the originally blue-pinned client', () => {
+  const state = reassign(replay(model.create()), 'pinned-a');
+  const view = model.inspect(state);
+  assert.equal(view.migrated, 1);
+  assert.equal(view.clients[0].cookie, 'green');
+  assert.equal(view.clients[0].observed, 'green');
+  assert.equal(view.retirement.state, 'blocked');
+  assert.equal(view.attempted, 5);
+});
+
+test('fresh complete migration permits guarded retirement, not merely a nominal percentage', () => {
+  let state = replay(model.create());
+  state = reassign(reassign(state, 'pinned-a'), 'pinned-b');
+  assert.equal(model.inspect(state).migrated, 2);
+  assert.equal(model.inspect(state).retirement.state, 'ready');
+  assert.equal(model.inspect(state).verdict, 'success');
+  state = model.apply(state, { type: 'retire' });
+  assert.equal(model.inspect(state).blueRetired, true);
+  assert.equal(model.inspect(state).retirement.state, 'retired');
+});
+
+test('missing reassignment reply remains unknown and blocks retirement', () => {
+  const state = reassign(replay(model.create()), 'pinned-a', 'unknown');
+  const view = model.inspect(state);
+  assert.equal(view.unknown, 1);
+  assert.equal(view.migrated, 0);
+  assert.equal(view.verdict, 'unknown');
+  assert.equal(view.retirement.state, 'blocked');
+  assert.equal(view.clients[0].cookie, 'green');
+  assert.equal(view.clients[0].observed, null);
+});
+
+test('interruption survives recovery as a cumulative failure, never a successful migration run', () => {
+  let state = reassign(replay(model.create()), 'pinned-a', 'interrupted');
+  assert.equal(model.inspect(state).verdict, 'failure');
+  state = reassign(replay(state), 'pinned-b');
+  const view = model.inspect(state);
+  assert.equal(view.migrated, 2);
+  assert.equal(view.interrupted, 1);
+  assert.equal(view.retirement.state, 'ready');
+  assert.equal(view.verdict, 'failure');
+  assert.equal(view.requests.filter((request) => request.status === 503).length, 1);
+});
+
+test('blocked retirement is a measured safety guard, not a user interruption', () => {
+  const state = model.apply(replay(model.create()), { type: 'retire' });
+  const view = model.inspect(state);
+  assert.equal(view.timeline.length, 2);
+  assert.equal(view.timeline[1].outcome, 'blocked');
+  assert.equal(view.blueRetired, false);
+  assert.equal(view.interrupted, 0);
+  assert.equal(view.verdict, 'unknown');
+});

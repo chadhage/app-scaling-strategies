@@ -1,0 +1,29 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else Object.defineProperty(root, 'SlotCookieLesson', { value: api });
+}(globalThis, function () {
+  'use strict';
+  const limits = Object.freeze({ clients: 4, maxActions: 24, maxArchives: 3, maxRuns: 1000 });
+  function create() {
+    return { schemaVersion: 1, run: 1, events: [], archives: [], evicted: 0 };
+  }
+  function apply(state) { return state; }
+  function reset(state) { return state; }
+  function inspect() {
+    return {
+      greenPercent: 100, epoch: 1, inspected: false, blueRetired: false,
+      attempted: 0, completed: 0, interrupted: 0, unknown: 0, migrated: 0,
+      verdict: 'unknown', retirement: { state: 'blocked', blockers: ['Unobserved pinned clients'] },
+      clients: [
+        { id: 'pinned-a', cookie: 'blue', observed: null },
+        { id: 'pinned-b', cookie: 'blue', observed: null },
+        { id: 'green-c', cookie: 'green', observed: null },
+        { id: 'new-d', cookie: null, observed: null }
+      ],
+      requests: [], timeline: [], archives: []
+    };
+  }
+  return Object.freeze({ limits, create, apply, reset, inspect });
+}));

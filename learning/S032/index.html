@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'; frame-src 'none'; media-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S032 · Slot-routing cookie transition</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to exercise</a>
+  <main>
+    <p class="banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S032 · Slot-routing cookie transition</h1>
+    <p>Inspect a slot pin, replay its destination, then reassign and verify the client before retiring blue.
+      <strong>100% nominal green allocation does not move a blue-pinned client.</strong></p>
+    <details>
+      <summary>Objective, fixture and limits</summary>
+      <p>Source S032 / D-S032; A-S032 is one frozen S unit in SC-S032. This is about abstract
+        <strong>slot-routing cookies, not worker affinity or externalized session storage</strong>.</p>
+      <p>Preconditions: both synthetic slots are healthy and compatible. Four fixed clients:
+        pinned-a and pinned-b start at blue, green-c starts at green, and unpinned new-d uses bucket 75.
+        For new-d only, green is chosen when 75 is less than the nominal green percent. Pins override allocation.</p>
+      <p>No real cookie is read or written. No timers, randomness, network, accounts or Azure resources.
+        A completed request at blue is not a migration. A green cookie without a complete observed reply is not proof.</p>
+      <p>Bounds: 24 actions per run; three complete archived runs with counted eviction; 1000 runs per page lifetime.
+        History is in memory only: reloading or closing the page loses it. No persistent storage is used.</p>
+    </details>
+
+    <section id="exercise" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">Conduct the rehearsal</h2>
+      <ol>
+        <li>Replay the cohort at 100%. Inspect the two destinations still pinned to blue; attempt retirement.</li>
+        <li>Choose pinned-a, select a reply outcome, and reassign it. Repeat for pinned-b.</li>
+        <li>Observe that missing or interrupted replies block retirement. Replay to resolve current evidence;
+          earlier failed or unknown attempts remain in the run impact.</li>
+        <li>Retire only after all four clients have fresh completed green evidence and allocation is 100%.
+          Applying allocation invalidates earlier evidence, even when the percentage stays the same.</li>
+      </ol>
+      <form id="lesson-controls" novalidate>
+        <div class="control">
+          <label for="green-percent">Nominal green allocation (%)</label>
+          <input id="green-percent" name="greenPercent" type="text" inputmode="numeric" value="100"
+            maxlength="3" aria-describedby="weight-help" autocomplete="off">
+          <p id="weight-help">Whole decimal 0–100; no signs, spaces, leading zeros or exponent notation.
+            Applying allocation never changes a slot pin.</p>
+          <button id="apply-weight" type="button">Apply allocation</button>
+        </div>
+        <div class="control">
+          <label for="client-id">Originally blue-pinned client</label>
+          <select id="client-id" name="clientId">
+            <option value="pinned-a">pinned-a</option>
+            <option value="pinned-b">pinned-b</option>
+          </select>
+          <label for="reply-outcome">Synthetic reassignment reply</label>
+          <select id="reply-outcome" name="reply">
+            <option value="complete">Complete · 200 at green</option>
+            <option value="interrupted">Interrupted · 503 at green</option>
+            <option value="unknown">Unknown · reply missing</option>
+          </select>
+          <button id="reassign-client" type="button" disabled>Reassign / retry green</button>
+        </div>
+        <div class="actions">
+          <button id="replay-cohort" type="button">Replay cohort</button>
+          <button id="retire-blue" type="button">Attempt blue retirement</button>
+          <button id="archive-run" type="button">Archive run and reset</button>
+        </div>
+      </form>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <p id="announcement" role="status" aria-live="polite">Ready. Replay the cohort to collect observations.</p>
+      <noscript>This exercise requires JavaScript. No result has been measured.</noscript>
+    </section>
+
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Measured synthetic result</h2>
+      <dl class="metrics">
+        <div><dt>Run / routing epoch</dt><dd id="run-epoch">1 / 1</dd></div>
+        <div><dt>Nominal green allocation</dt><dd id="nominal">100%</dd></div>
+        <div><dt>Originally blue-pinned clients migrated</dt><dd id="migrated">0 / 2</dd></div>
+        <div><dt>Requests: attempted / completed / interrupted / unknown</dt><dd id="counts">0 / 0 / 0 / 0</dd></div>
+        <div><dt>Cumulative transition impact</dt><dd id="impact">unknown</dd></div>
+        <div><dt>Blue retirement gate</dt><dd id="retirement">blocked</dd></div>
+      </dl>
+      <p id="impact-detail">No destination evidence has been collected.</p>
+      <p id="bounds">24 actions remaining. 0 archived runs evicted.</p>
+      <p><strong>Verifier and impact are separate:</strong> a blocked retirement verifies the safety guard,
+        not successful migration. Current readiness can recover; any earlier interruption keeps impact at
+        failure, otherwise any earlier missing reply keeps it unknown.</p>
+      <h3>Retirement blockers</h3>
+      <ul id="blockers"><li>Replay the cohort in the current routing epoch.</li></ul>
+      <div class="table-wrap">
+        <table>
+          <caption>Current synthetic cookie targets and latest observed destinations</caption>
+          <thead><tr><th scope="col">Client / origin</th><th scope="col">Cookie target</th>
+            <th scope="col">Requested</th><th scope="col">Observed</th><th scope="col">Reply / freshness</th>
+            <th scope="col">Verified migrated</th></tr></thead>
+          <tbody id="client-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Retained run trace</h2>
+      <ol id="action-log"></ol>
+      <div class="table-wrap">
+        <table>
+          <caption>Every attempted request in the current run, including failed and missing replies</caption>
+          <thead><tr><th scope="col">Request / step / epoch</th><th scope="col">Client</th>
+            <th scope="col">Cookie before → after</th><th scope="col">Requested</th>
+            <th scope="col">Observed</th><th scope="col">Reply</th></tr></thead>
+          <tbody id="request-rows"></tbody>
+        </table>
+      </div>
+      <h3>Archived runs</h3>
+      <p>Reset retains the complete prior action and request trace. The oldest archive is explicitly
+        evicted after three archives. Reset does not erase the old run's failures or unknowns.</p>
+      <div id="archives"><p>No archived runs.</p></div>
+    </section>
+
+    <footer>
+      <p>Portable lesson only. B-S032 still requires CORE, DATA, ASANY, C108 and a qualified native target;
+        D-S032 retains P001 and shared native prerequisites. No native Azure support, production Node.js 24,
+        source-parent completion, five-nines claim or reliability guarantee is established.</p>
+      <p>This demonstration is provided “AS IS”, without warranty; it is not a Microsoft SLA.
+        See the repository's <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft Open Source Disclaimer</a>
+        and <a href="README.md">lesson instructions and evidence</a>.</p>
+    </footer>
+  </main>
+</body>
+</html>

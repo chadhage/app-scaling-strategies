@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S032",
+  "source": "S032",
+  "parent": "D-S032",
+  "kano": "S",
+  "kanoUnit": "A-S032",
+  "packet": "SC-S032",
+  "entryGate": "SOURCE",
+  "mode": "portable-offline-synthetic-lesson",
+  "entryPoint": "learning\\S032\\index.html",
+  "feature": "learning\\S032\\slot-cookie.feature",
+  "tests": [
+    "learning\\S032\\model.test.cjs",
+    "learning\\S032\\browser.test.cjs",
+    "learning\\S032\\integrity.test.cjs"
+  ],
+  "objective": "Inspect actual synthetic slot-cookie destinations, reassign originally blue-pinned clients and require fresh complete evidence before blue retirement; nominal percentages are not migration proof.",
+  "preconditions": [
+    "Two healthy compatible synthetic slots named blue and green.",
+    "No native Azure target, real cookie, cloud access, account, package installation or server is required.",
+    "Use standard browser HTML/JavaScript with keyboard-accessible controls."
+  ],
+  "actions": [
+    "Apply nominal green allocation from 0 to 100; this starts a new evidence epoch without changing pins.",
+    "Replay all four fixed clients to inspect actual destinations.",
+    "After current-epoch inspection, reassign or retry either originally blue-pinned client at green with a complete, interrupted or unknown reply.",
+    "Attempt guarded blue retirement; blocked attempts retain blue without inventing user interruptions.",
+    "Archive the full run and reset known defaults; retain at most three complete prior runs with counted eviction."
+  ],
+  "syntheticInputTrace": {
+    "defaultGreenPercent": 100,
+    "clients": [
+      { "id": "pinned-a", "slotCookie": "blue" },
+      { "id": "pinned-b", "slotCookie": "blue" },
+      { "id": "green-c", "slotCookie": "green" },
+      { "id": "new-d", "slotCookie": null, "bucket": 75 }
+    ],
+    "routingRule": "A slot pin overrides nominal allocation. Only unpinned new-d uses bucket < greenPercent.",
+    "replies": {
+      "complete": { "status": 200, "destinationObserved": true },
+      "interrupted": { "status": 503, "destinationObserved": true },
+      "unknown": { "status": null, "destinationObserved": false }
+    }
+  },
+  "expectedAssertions": [
+    "At nominal 100%, initial replay still observes two blue and two green destinations, with zero of two originally blue-pinned clients migrated.",
+    "A cookie assignment alone never proves migration; a complete current-epoch green reply is required.",
+    "Retirement requires nominal 100% and fresh complete green observations for all four clients.",
+    "An interruption permanently makes cumulative run impact failure; otherwise any missing reply permanently makes it unknown even after current readiness recovers.",
+    "Pre-existing green clients and new clients never inflate originally blue-pinned migration counts.",
+    "Strict schemas, state replay validation, action bounds and immutable snapshots preserve the run on invalid input."
+  ],
+  "limits": {
+    "clients": 4,
+    "maxActions": 24,
+    "maxArchives": 3,
+    "maxRuns": 1000,
+    "persistence": "In-memory page lifetime only; reload clears current and archived history.",
+    "nativeQualification": "No real slot, cookie expiry, browser-cookie policy, authentication/session migration, worker affinity, drain, in-flight work, production runtime or native retirement is exercised."
+  },
+  "dependencies": [],
+  "originalParentPrerequisites": ["P001"],
+  "sharedParentPrerequisites": ["H011", "P005", "HOST"],
+  "nativeRemainderGates": ["CORE", "DATA", "ASANY", "C108"],
+  "nativeProof": false,
+  "productionNode24Validated": false,
+  "parentComplete": false,
+  "reliabilityGuarantee": false
+}
