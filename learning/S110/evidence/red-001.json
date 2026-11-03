@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "stage": "Behavioral RED",
+  "startedAtUtc": "2026-11-03T23:12:43.018Z",
+  "finishedAtUtc": "2026-11-03T23:12:43.309Z",
+  "runtime": "v22.23.4",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "--test",
+    "--test-reporter=tap",
+    "learning\\S110\\tests\\model.test.cjs"
+  ],
+  "status": 1,
+  "signal": null,
+  "error": null,
+  "acceptedBehavioralRed": true,
+  "precheck": {
+    "code": "const fs=require('node:fs');const vm=require('node:vm');const api=require('./learning/S110/model.js');if(typeof api.createState!=='function'||typeof api.apply!=='function')throw Error('API absent');const status={textContent:''};const context={document:{getElementById:()=>status}};vm.createContext(context);vm.runInContext(fs.readFileSync('./learning/S110/model.js','utf8'),context);vm.runInContext(fs.readFileSync('./learning/S110/lesson.js','utf8'),context);if(!status.textContent.includes('Loadable stub API'))throw Error('Browser script failed');console.log(status.textContent);",
+    "status": 0,
+    "stdout": {
+      "file": "raw\\red\\precheck-stdout.raw.gz",
+      "sha256": "ebd7752dc6e294e2b5830195f46bb1a7182409492fbd0576265a31ebc484a221",
+      "bytes": 30,
+      "crlf": 0
+    },
+    "stderr": {
+      "file": "raw\\red\\precheck-stderr.raw.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "crlf": 0
+    }
+  },
+  "stdout": {
+    "file": "raw\\red\\stdout.raw.gz",
+    "sha256": "59c7bbfeff10e2b6b7ad016e29e7d22adcb6cc5aaf4745af93ab6cc95b44e804",
+    "bytes": 1104,
+    "crlf": 0
+  },
+  "stderr": {
+    "file": "raw\\red\\stderr.raw.gz",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0,
+    "crlf": 0
+  },
+  "snapshots": [
+    {
+      "source": ".gitattributes",
+      "file": "raw\\red\\-gitattributes.raw.gz",
+      "sha256": "01d0d7514d9a6a80ab85e85efce339790ebf0d3b1c60f5e32a6cd8eb73c76f91",
+      "bytes": 161,
+      "crlf": 8
+    },
+    {
+      "source": "lesson.feature",
+      "file": "raw\\red\\lesson-feature.raw.gz",
+      "sha256": "a435415261d8d9f8b9cc125215317f44683af5b85aa7292159bb75aa00628563",
+      "bytes": 4855,
+      "crlf": 77
+    },
+    {
+      "source": "model.js",
+      "file": "raw\\red\\model-js.raw.gz",
+      "sha256": "19d918b6d1808f24888322b81aff1e0948951eaccaf55f77fd3df32ac553c2b6",
+      "bytes": 848,
+      "crlf": 27
+    },
+    {
+      "source": "lesson.js",
+      "file": "raw\\red\\lesson-js.raw.gz",
+      "sha256": "4d1e49613293231f6e78493ce5d6fcece494d1a72034f45e8b7a85d3f34a146d",
+      "bytes": 147,
+      "crlf": 4
+    },
+    {
+      "source": "index.html",
+      "file": "raw\\red\\index-html.raw.gz",
+      "sha256": "393cbb5ce282ee7eb59eaf33e2ce8a8f14a5836ada90b1bd4f2e94dbf7ae8c35",
+      "bytes": 745,
+      "crlf": 16
+    },
+    {
+      "source": "tests\\model.test.cjs",
+      "file": "raw\\red\\tests-model-test-cjs.raw.gz",
+      "sha256": "6dc25c94673fb3789fd52884b7703d1a6d8b33f63dc32330b6cdf99b0b95f601",
+      "bytes": 856,
+      "crlf": 18
+    }
+  ]
+}
