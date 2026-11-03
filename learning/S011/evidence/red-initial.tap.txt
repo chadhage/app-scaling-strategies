@@ -1,0 +1,1042 @@
+TAP version 13
+# Subtest: baseline is a frozen resource-free fixture, not a successful transition
+not ok 1 - baseline is a frozen resource-free fixture, not a successful transition
+  ---
+  duration_ms: 9.2464
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:19:1'
+  failureType: 'testCodeFailure'
+  error: 'the baseline must be immutable'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:25:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: requesting extra instances changes desired capacity only
+not ok 2 - requesting extra instances changes desired capacity only
+  ---
+  duration_ms: 2.3959
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:28:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+    -   4,
+        2,
+        2,
+        2,
+    +   2
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 4
+    1: 2
+    2: 2
+    3: 2
+  actual:
+    0: 2
+    1: 2
+    2: 2
+    3: 2
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:30:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: deployment observation does not fabricate readiness or admission
+not ok 3 - deployment observation does not fabricate readiness or admission
+  ---
+  duration_ms: 3.3921
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:35:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+    -   4,
+    -   4,
+        2,
+        2,
+    +   2,
+    +   2
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 4
+    1: 4
+    2: 2
+    3: 2
+  actual:
+    0: 2
+    1: 2
+    2: 2
+    3: 2
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:37:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: complete readiness is observed before traffic eligibility
+not ok 4 - complete readiness is observed before traffic eligibility
+  ---
+  duration_ms: 1.4248
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:42:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+    -   4,
+    -   4,
+    -   4,
+        2,
+    +   2,
+    +   2,
+    +   2
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 4
+    1: 4
+    2: 4
+    3: 2
+  actual:
+    0: 2
+    1: 2
+    2: 2
+    3: 2
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:44:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: verification records a fresh observation without increasing traffic
+not ok 5 - verification records a fresh observation without increasing traffic
+  ---
+  duration_ms: 0.9071
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:50:1'
+  failureType: 'testCodeFailure'
+  error: 'fresh complete capacity needs an explicit verification token'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:52:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: increased admission is blocked at unverified baseline stage
+not ok 6 - increased admission is blocked at unverified baseline stage
+  ---
+  duration_ms: 1.0223
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:59:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'BLOCKED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'BLOCKED'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:64:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: increased admission is blocked at unverified requested stage
+not ok 7 - increased admission is blocked at unverified requested stage
+  ---
+  duration_ms: 0.7284
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:59:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'BLOCKED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'BLOCKED'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:64:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: increased admission is blocked at unverified deployed stage
+not ok 8 - increased admission is blocked at unverified deployed stage
+  ---
+  duration_ms: 0.5284
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:59:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'BLOCKED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'BLOCKED'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:64:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: increased admission is blocked at unverified ready stage
+not ok 9 - increased admission is blocked at unverified ready stage
+  ---
+  duration_ms: 3.0503
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:59:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'BLOCKED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'BLOCKED'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:64:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: healthy scale-out measures actual admissions and separates old-only journeys
+not ok 10 - healthy scale-out measures actual admissions and separates old-only journeys
+  ---
+  duration_ms: 1.6859
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:70:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+    +   2,
+    +   2,
+    +   2,
+    +   2
+    -   4,
+    -   4,
+    -   4,
+    -   4
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 4
+    1: 4
+    2: 4
+    3: 4
+  actual:
+    0: 2
+    1: 2
+    2: 2
+    3: 2
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:72:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: one unready instance prevents complete-pool verification
+not ok 11 - one unready instance prevents complete-pool verification
+  ---
+  duration_ms: 2.5358
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:91:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+    -   4,
+    -   4,
+    -   3,
+        2,
+    +   2,
+    +   2,
+    +   2
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 4
+    1: 4
+    2: 3
+    3: 2
+  actual:
+    0: 2
+    1: 2
+    2: 2
+    3: 2
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:93:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: unknown capacity stays null with confirmed lower bounds, never invented zero
+not ok 12 - unknown capacity stays null with confirmed lower bounds, never invented zero
+  ---
+  duration_ms: 3.7171
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:99:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    2 !== null
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:101:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: known provisioning failure is a failure, not missing telemetry
+not ok 13 - known provisioning failure is a failure, not missing telemetry
+  ---
+  duration_ms: 0.8898
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:109:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+    -   4,
+        2,
+        2,
+        2,
+    +   2
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 4
+    1: 2
+    2: 2
+    3: 2
+  actual:
+    0: 2
+    1: 2
+    2: 2
+    3: 2
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:111:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: aggregate connections include newly deployed pools and block excess dependency use
+not ok 14 - aggregate connections include newly deployed pools and block excess dependency use
+  ---
+  duration_ms: 0.8251
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:116:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    40 !== 80
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 80
+  actual: 40
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:118:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: total load just beyond the measured 80 percent ceiling is rejected
+not ok 15 - total load just beyond the measured 80 percent ceiling is rejected
+  ---
+  duration_ms: 0.6993
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:126:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'BLOCKED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'BLOCKED'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:128:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a lopsided traffic share cannot overload the new pool despite spare total capacity
+not ok 16 - a lopsided traffic share cannot overload the new pool despite spare total capacity
+  ---
+  duration_ms: 0.5793
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:134:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'BLOCKED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'BLOCKED'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:136:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: ready evidence expires by measured logical age
+not ok 17 - ready evidence expires by measured logical age
+  ---
+  duration_ms: 0.9134
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:140:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'BLOCKED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'BLOCKED'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:143:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a newer observation must be verified, and does not inherit an older approval
+not ok 18 - a newer observation must be verified, and does not inherit an older approval
+  ---
+  duration_ms: 3.079
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:149:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'BLOCKED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'BLOCKED'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:152:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: re-observation after expiration creates separate evidence and enables fresh admission
+not ok 19 - re-observation after expiration creates separate evidence and enables fresh admission
+  ---
+  duration_ms: 1.3002
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:155:1'
+  failureType: 'testCodeFailure'
+  error: 'fresh evidence must be verified'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:159:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: late complete journeys are interrupted even when every instance is ready
+not ok 20 - late complete journeys are interrupted even when every instance is ready
+  ---
+  duration_ms: 2.0917
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:165:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 10
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 10
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:167:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a broken required connection is an interruption, not a successful latency sample
+not ok 21 - a broken required connection is an interruption, not a successful latency sample
+  ---
+  duration_ms: 0.6825
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:174:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:176:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: missing client evidence is unknown and remains in the transition denominator
+not ok 22 - missing client evidence is unknown and remains in the transition denominator
+  ---
+  duration_ms: 0.7082
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:182:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 10
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 10
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:184:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: recovery preserves slow-journey history and cumulative impact
+not ok 23 - recovery preserves slow-journey history and cumulative impact
+  ---
+  duration_ms: 0.6664
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:194:3'
+  failureType: 'testCodeFailure'
+  error: 'the original scale request must remain recorded'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:199:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: recovery preserves journey-unknown history and cumulative impact
+not ok 24 - recovery preserves journey-unknown history and cumulative impact
+  ---
+  duration_ms: 0.6439
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:194:3'
+  failureType: 'testCodeFailure'
+  error: 'the original scale request must remain recorded'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:199:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: observations and historical action snapshots cannot be retroactively rewritten
+not ok 25 - observations and historical action snapshots cannot be retroactively rewritten
+  ---
+  duration_ms: 0.525
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:214:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'capacity')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:221:51)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a slot addition changes slots only and never manufactures a transition success
+not ok 26 - a slot addition changes slots only and never manufactures a transition success
+  ---
+  duration_ms: 0.4179
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:225:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:228:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a second admission sample requires explicit recovery and fresh verification
+not ok 27 - a second admission sample requires explicit recovery and fresh verification
+  ---
+  duration_ms: 0.5974
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:236:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'BLOCKED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'BLOCKED'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:239:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a share producing no affected clients cannot establish successful scale-out
+not ok 28 - a share producing no affected clients cannot establish successful scale-out
+  ---
+  duration_ms: 0.767
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:244:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'BLOCKED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'BLOCKED'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:246:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid targetInstances inputs are rejected without changing capacity
+not ok 29 - invalid targetInstances inputs are rejected without changing capacity
+  ---
+  duration_ms: 0.6666
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:257:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    targetInstances=2
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'INVALID'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:260:14)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid demandRps inputs are rejected without changing capacity
+not ok 30 - invalid demandRps inputs are rejected without changing capacity
+  ---
+  duration_ms: 0.3409
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:257:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    demandRps=0
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'INVALID'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:260:14)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid connectionLimit inputs are rejected without changing capacity
+not ok 31 - invalid connectionLimit inputs are rejected without changing capacity
+  ---
+  duration_ms: 0.5835
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:257:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    connectionLimit=39
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'INVALID'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:260:14)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid condition inputs are rejected without changing capacity
+not ok 32 - invalid condition inputs are rejected without changing capacity
+  ---
+  duration_ms: 0.2902
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:257:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    condition=unknown-fixture
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'INVALID'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:260:14)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: canonical integer strings from browser controls are supported
+not ok 33 - canonical integer strings from browser controls are supported
+  ---
+  duration_ms: 0.7398
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:267:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+    -   4,
+        2,
+        2,
+        2,
+    +   2
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 4
+    1: 2
+    2: 2
+    3: 2
+  actual:
+    0: 2
+    1: 2
+    2: 2
+    3: 2
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:269:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: malformed input objects and unknown actions produce visible invalid results
+not ok 34 - malformed input objects and unknown actions produce visible invalid results
+  ---
+  duration_ms: 0.5619
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:272:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'INVALID'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:274:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: malformed or out-of-range shares preserve all capacity and evidence
+not ok 35 - malformed or out-of-range shares preserve all capacity and evidence
+  ---
+  duration_ms: 7.4281
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S011\\scale-out.test.cjs:279:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    share=0
+    + actual - expected
+    
+    + 'NOT_RUN'
+    - 'INVALID'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT_RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S011\scale-out.test.cjs:283:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: reset creates the original baseline without modifying retained prior snapshots
+ok 36 - reset creates the original baseline without modifying retained prior snapshots
+  ---
+  duration_ms: 6.7513
+  type: 'test'
+  ...
+1..36
+# tests 36
+# suites 0
+# pass 1
+# fail 35
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1039.312

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; media-src 'none'; manifest-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="S011 manual horizontal scale-out: a deterministic, offline synthetic learning exercise.">
+  <title>S011 · Manual horizontal scale-out rehearsal</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script defer src="scale-out.js"></script>
+  <script defer src="lesson.js"></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to controls</a>
+  <header>
+    <p class="banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p>A-S011 · Kano S · SC-S011 · Source parent D-S011</p>
+    <h1>Manual horizontal scale-out</h1>
+    <p>Add instances, evidence effective ready capacity, and only then increase their traffic share. A requested instance, a deployed instance, a ready instance, and a traffic-eligible instance are not interchangeable.</p>
+  </header>
+  <main>
+    <noscript><p class="error">This local exercise needs JavaScript. No cloud connection or account is needed.</p></noscript>
+    <section aria-labelledby="objective">
+      <h2 id="objective">Objective, preconditions, and worked exercise</h2>
+      <p>Source: README.md S011 and .docs/wiki/backlog.md D-S011. The original D-S021 readiness prerequisite and the separate B-S011 native proof are still incomplete.</p>
+      <p>The fixture starts with two ready, eligible instances at 80 requests/second. All values below are declared teaching assumptions, not Azure limits or measurements. Slots share this fixture's compute pool; adding a slot does not add an instance.</p>
+      <ul>
+        <li>50 requests/second per instance; an 80% utilization ceiling per old pool, new pool, and total ready pool.</li>
+        <li>20 pooled dependency connections per deployed instance, including warming instances; default aggregate limit 100.</li>
+        <li>800 ms complete-journey budget; preserved required connection, intact state, and exactly one synthetic business effect.</li>
+        <li>Readiness is valid for at most 30 logical seconds. Each action advances 10 seconds; the age action advances 31. No wall-clock observation or timer is implied.</li>
+        <li>20 deterministic client records per admission sample. Only clients admitted to added instances enter the transition denominator; old-only journeys stay separate.</li>
+      </ul>
+      <ol>
+        <li>Keep the default four instances, 160 requests/second, 100 connections, and healthy fixture. Request scale-out: counts are 4 / 2 / 2 / 2.</li>
+        <li>Observe twice: first 4 / 4 / 2 / 2, then 4 / 4 / 4 / 2. Verify fresh effective capacity; eligible remains two.</li>
+        <li>Increase added-instance share to 50%: eligible becomes four; inspect actual client instance IDs and budget assertions.</li>
+        <li>Reset, select a fault, and compare. Recovering a fixture allows another sample but never rewrites failed or unknown history.</li>
+      </ol>
+    </section>
+
+    <section id="controls" tabindex="-1" aria-labelledby="control-title">
+      <h2 id="control-title">Conduct the rehearsal</h2>
+      <form id="request-form" novalidate>
+        <fieldset id="configuration-fields">
+          <legend>1. Freeze a bounded synthetic request</legend>
+          <div class="grid">
+            <label for="target-total">Requested total instances (3–6)
+              <input id="target-total" name="targetTotal" type="number" min="3" max="6" step="1" value="4" required>
+            </label>
+            <label for="demand-rps">Demand after admission (requests/second, 1–300)
+              <input id="demand-rps" name="demandRps" type="number" min="1" max="300" step="1" value="160" required>
+            </label>
+            <label for="connection-ceiling">Aggregate dependency connection limit (40–200)
+              <input id="connection-ceiling" name="connectionCeiling" type="number" min="40" max="200" step="1" value="100" required>
+            </label>
+            <label for="fixture-condition">Deterministic observation condition
+              <select id="fixture-condition" name="fixtureCondition" aria-describedby="fixture-help">
+                <option value="healthy">Healthy capacity and client journeys</option>
+                <option value="unready">One additional instance remains unready</option>
+                <option value="provisioning-failure">Known provisioning failure</option>
+                <option value="capacity-unknown">Missing capacity telemetry</option>
+                <option value="slow-journey">Ready instances, over-budget journeys</option>
+                <option value="broken-connection">Ready instances, one broken connection</option>
+                <option value="journey-unknown">Ready instances, missing client outcomes</option>
+              </select>
+            </label>
+          </div>
+          <p id="fixture-help">The choice is frozen for this request. Recovery selects healthy observations in a new epoch while retaining the original choice and every earlier result.</p>
+        </fieldset>
+        <button id="request-scale" type="submit">Request scale out</button>
+      </form>
+
+      <fieldset>
+        <legend>2. Observe and verify before exposure</legend>
+        <div class="buttons">
+          <button id="observe-capacity" type="button">Observe capacity</button>
+          <button id="verify-capacity" type="button">Verify effective capacity</button>
+          <button id="age-evidence" type="button">Age evidence by 31 seconds</button>
+        </div>
+      </fieldset>
+
+      <form id="admission-form" novalidate>
+        <fieldset>
+          <legend>3. Increase admission and inspect actual journeys</legend>
+          <label for="added-share">Requested added-instance traffic share (%, 1–100)
+            <input id="added-share" name="addedShare" type="number" min="1" max="100" step="1" value="50" required aria-describedby="share-help">
+          </label>
+          <p id="share-help">The 20-client sample resolves shares in 5-point increments, rounded down. Both requested and observed pool loads must meet their ceilings; a sample with no added-instance client is blocked.</p>
+          <button id="increase-admission" type="submit">Increase admission and sample journeys</button>
+        </fieldset>
+      </form>
+      <div class="buttons">
+        <button id="add-shared-slot" type="button">Add a shared-compute slot</button>
+        <button id="recover-fixture" type="button">Recover synthetic fixture</button>
+        <button id="restart-rehearsal" type="button">Reset rehearsal</button>
+      </div>
+      <p>Recovery is a deterministic fixture restart, not a native rollback, drain, or repair of already interrupted users. Reset clears only this page's in-memory run.</p>
+      <p id="input-error" class="error" role="alert" hidden></p>
+      <div id="action-status" class="status" role="status" aria-live="polite" aria-atomic="true">
+        <p id="last-action"></p>
+        <p id="action-reason"></p>
+      </div>
+    </section>
+
+    <section aria-labelledby="capacity-title">
+      <h2 id="capacity-title">Capacity and transition observations</h2>
+      <p id="clock-summary"></p>
+      <dl class="capacity">
+        <div><dt>Requested</dt><dd id="requested-count"></dd></div>
+        <div><dt>Deployed</dt><dd id="deployed-count"></dd></div>
+        <div><dt>Ready</dt><dd id="ready-count"></dd></div>
+        <div><dt>Traffic-eligible</dt><dd id="eligible-count"></dd></div>
+      </dl>
+      <p id="load-summary"></p>
+      <p id="connection-summary"></p>
+      <p id="share-summary"></p>
+      <div class="scroll">
+        <table>
+          <caption>Per-instance synthetic observations</caption>
+          <thead><tr><th scope="col">Instance</th><th scope="col">Pool</th><th scope="col">Deployed</th><th scope="col">Readiness</th><th scope="col">Eligible</th><th scope="col">Observed logical seconds</th></tr></thead>
+          <tbody id="instance-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Cumulative synthetic result</h2>
+      <p id="cumulative-verdict"></p>
+      <p id="impact-summary"></p>
+      <p id="cleanup-summary"></p>
+      <p>A passing last action is not necessarily a passing cumulative transition. Failures take precedence over unknowns; neither can be erased by recovery. A zero transition denominator is no evidence, not 100% success.</p>
+      <div class="scroll">
+        <table>
+          <caption>Actual deterministic client records, not configured routing alone</caption>
+          <thead><tr><th scope="col">Client</th><th scope="col">Instance</th><th scope="col">Population</th><th scope="col">Latency / budget (ms)</th><th scope="col">Connection</th><th scope="col">State intact</th><th scope="col">Effects</th><th scope="col">Outcome</th></tr></thead>
+          <tbody id="client-rows"></tbody>
+        </table>
+      </div>
+      <h3>Append-only observations and action assertions</h3>
+      <ol id="action-history"></ol>
+      <details>
+        <summary>Inspect the complete synthetic run record</summary>
+        <pre id="run-evidence"></pre>
+      </details>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Limits and remaining To Do</h2>
+      <p>Native B-S011 and source parent D-S011 are not complete. Original prerequisite D-S021, qualified App Service configuration, client/dependency evidence, readiness qualification, safety capabilities, and all native entry gates remain open. No source-parent lineage or native proof is supplied by this lesson.</p>
+      <p>No credentials, login, registration, Azure management calls, IaC, deployments, cloud resources, expenditure, persistence, framework, or application dependency are used. Open this file locally; reload starts fresh. This small synthetic sample cannot prove production behavior, actual Azure capacity, or five-nines reliability.</p>
+      <p>Node.js 22.23.4 is test tooling only. The approved production Node.js 24 runtime remains unvalidated.</p>
+      <p>Bundle references: <a href="manifest.json">manifest</a>, <a href="manual-scale-out.feature">BDD scenarios</a>, <a href="evidence.json">verification evidence</a>, and <a href="README.md">operator notes</a>.</p>
+    </section>
+  </main>
+</body>
+</html>

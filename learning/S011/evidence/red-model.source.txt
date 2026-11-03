@@ -1,0 +1,59 @@
+'use strict';
+
+(function expose(root) {
+  function createRehearsal() {
+    return {
+      schemaVersion: 1,
+      sourceId: 'S011',
+      mode: 'synthetic-only',
+      nativeProof: false,
+      parentComplete: false,
+      phase: 'baseline',
+      clockSeconds: 0,
+      sequence: 0,
+      requestEpoch: 0,
+      slots: 1,
+      configuration: null,
+      activeCondition: 'healthy',
+      observationStep: 0,
+      verification: null,
+      observations: [],
+      history: [],
+      clients: [],
+      instances: [1, 2].map((number) => ({
+        id: `instance-${number}`, baseline: true, deployed: true,
+        readiness: 'ready', observedAtSeconds: 0
+      })),
+      eligibleIds: ['instance-1', 'instance-2'],
+      capacity: {
+        requested: 2, deployed: 2, ready: 2, eligible: 2,
+        confirmedDeployed: 2, confirmedReady: 2
+      },
+      load: {
+        baselineRps: 80, plannedRps: 160, observedRps: 80,
+        perInstanceRps: 50, utilizationCeilingPercent: 80,
+        eligibleCapacityRps: 100, readyCapacityRps: 100,
+        requestedNewSharePercent: 0, observedNewSharePercent: null,
+        oldPoolRps: 80, newPoolRps: 0
+      },
+      connections: { poolPerInstance: 20, observed: 40, projected: 40, limit: 100, withinLimit: true },
+      totals: {
+        attemptedTransitions: 0, successfulTransitions: 0, interruptedTransitions: 0,
+        unknownTransitions: 0, oldOnlyJourneys: 0, oldOnlySuccessful: 0
+      },
+      lastResult: {
+        verdict: 'NOT_RUN', reason: 'Loadable behavioral stub; no strategy implemented.',
+        assertions: [], userOutcome: 'not-run', journeys: []
+      },
+      result: { verdict: 'NOT_RUN', userOutcome: 'not-run', successRate: null }
+    };
+  }
+
+  function transition(state) {
+    return structuredClone(state);
+  }
+
+  const api = { createRehearsal, transition };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.S011ScaleOut = api;
+}(typeof globalThis === 'undefined' ? this : globalThis));

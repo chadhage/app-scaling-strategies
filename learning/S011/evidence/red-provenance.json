@@ -1,0 +1,82 @@
+{
+  "cardId": "A-S011",
+  "workerId": "worker-A-S011",
+  "kano": "S",
+  "kanoUnit": "A-S011",
+  "packet": "SC-S011",
+  "recordedAtUtc": "2026-11-03T14:42:51.078Z",
+  "sourceHead": "3a057ebfee3b2b3d91f4172a532cbfcafce5122e",
+  "sourceFiles": [
+    {
+      "path": "README.md",
+      "sha256": "1d5c51096f6563d8a79eb9369c0ba4d221e06f0f0e5711c7967c39aa09e0166b"
+    },
+    {
+      "path": ".docs\\wiki\\backlog.md",
+      "sha256": "40b4d8e2ab4774f47de029f97dd8ff4e267d9412292c3c47f72726b002831418"
+    },
+    {
+      "path": ".docs\\wiki\\kanban.md",
+      "sha256": "deeedde564164866063d9b4f906769a5c6352e92340f91b1d0184c7230ee5646"
+    }
+  ],
+  "sourceRows": {
+    "scenario": "| S011 | **Manual horizontal scale-out:** Add instances and verify effective capacity before increasing their traffic share. |",
+    "parent": "| D-S011 | P0 | Add **Scale out** with requested/effective instance counts, readiness, load, and connection observations. | Additional ready capacity is evidenced before increased admission; actual journeys meet budgets; adding slots alone is not counted as compute scaling. | D-S021 |",
+    "prerequisite": "| D-S021 | P0 | Add per-instance probe status and **Make one candidate instance unready**. | One healthy response cannot approve the whole required pool; stale/failed instances block unsafe admission. | none |",
+    "card": "| A-S011 | D-S011 | S | Request extra instances; distinguish requested, deployed, ready, and traffic-eligible capacity. | SOURCE |",
+    "native": "| B-S011 | D-S011 | S | Conduct bounded scale-out; verify effective ready capacity and client/dependency budgets. | CORE, DATA, ASANY, C065 |"
+  },
+  "order": [
+    "BDD specification saved",
+    "loadable CommonJS/browser behavior stub saved",
+    "actual focused assertion RED executed",
+    "IaC N/A: resource-free lesson",
+    "implementation follows"
+  ],
+  "command": "node --test --test-reporter=tap learning\\S011\\scale-out.test.cjs",
+  "exitCode": 1,
+  "runtime": "v22.23.4",
+  "snapshots": [
+    {
+      "path": "learning\\S011\\evidence\\red-model.source.txt",
+      "sha256": "deddac9482ecd11ff0224e4c432bebb2234bd05b8ccb2247b3b977f02735d6e6"
+    },
+    {
+      "path": "learning\\S011\\evidence\\red-tests.source.txt",
+      "sha256": "7583979a536c3d66c7ddb7352ee84cadb9aef10fac7d89354c5c5eea07dac0f2"
+    },
+    {
+      "path": "learning\\S011\\evidence\\red-bdd.source.txt",
+      "sha256": "486e6e96ecddfbd87193bba9fcd5f436157717c1936fdb5119c4d060582def87"
+    },
+    {
+      "path": "learning\\S011\\evidence\\red.tap.txt",
+      "sha256": "9c130485cc2fa4c5c5b37d0ca0a8ff115afc3ea639b9421b6d89bf3b9ac73a46"
+    },
+    {
+      "path": "learning\\S011\\evidence\\red-initial.tap.txt",
+      "sha256": "9c0a87bd01a13a1d8d1c5ebc866d283fe7b7cb80592ed9a4d19385b90441068c"
+    },
+    {
+      "path": "learning\\S011\\evidence\\red-initial-tests.source.txt",
+      "sha256": "8196e5b407fd1d7ce8e9a0d98a7a5027ea1a4ddea39f969ceb5a2e74bf5e0256"
+    }
+  ],
+  "redSummary": [
+    "# tests 36",
+    "# pass 1",
+    "# fail 35",
+    "# cancelled 0",
+    "# skipped 0"
+  ],
+  "assertionFailures": 35,
+  "initialRun": "Retained without editing: 36 tests, 35 failures; 34 assertions plus one unguarded missing-observation TypeError. Added a positive snapshot-count assertion to that test, then reran the same loadable stub. Corrected RED has 35 actual assertion failures and one passing reset check. No implementation or missing-module substitution occurred.",
+  "fakeRed": false,
+  "infrastructure": "N/A; no resources, IaC, credentials, login, deployment, or Azure calls",
+  "limits": [
+    "Node 22 test tooling only; approved production Node 24 remains unvalidated",
+    "B-S011 and original D-S021 prerequisite incomplete",
+    "D-S011 parent and native proof remain incomplete"
+  ]
+}
