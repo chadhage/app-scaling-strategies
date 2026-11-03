@@ -1,0 +1,144 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory(require('./search.js'), require('../C005/catalog-contract.js'));
+  } else {
+    const page = factory(root.C006Search, root.C005Contract);
+    Object.defineProperty(root, 'C006Page', { value: page });
+    page.mountSearch(root.C005Catalog, root.C003Matrix, root.document);
+  }
+}(globalThis, function (search, contract) {
+  'use strict';
+
+  const mounts = new WeakMap();
+
+  function mountSearch(catalog, matrix, document) {
+    mounts.get(document)?.dispose();
+    const byId = id => document.getElementById(id);
+    const form = byId('search-form');
+    const input = byId('search-query');
+    const results = byId('search-results');
+    const count = byId('search-count');
+    const error = byId('search-error');
+    const empty = byId('search-empty');
+    const snapshot = byId('snapshot-summary');
+    const snapshotSource = byId('snapshot-source');
+    const availability = byId('availability-summary');
+
+    function element(tag, text, className) {
+      const node = document.createElement(tag);
+      if (text !== undefined) node.textContent = text;
+      if (className) node.className = className;
+      return node;
+    }
+    function link(text, href, className) {
+      const node = element('a', text, className);
+      node.href = href;
+      return node;
+    }
+    function renderEntry(entry) {
+      const article = element('article', undefined, 'search-result');
+      article.id = entry.id;
+      article.dataset.entryId = entry.id;
+      article.dataset.kind = entry.kind;
+      const heading = element('h3', `${entry.id} — ${entry.title}`);
+      heading.id = `result-title-${entry.id}`;
+      article.setAttribute('aria-labelledby', heading.id);
+      article.append(heading, element('p', entry.objective, 'objective'));
+      const metadata = element('dl');
+      function field(label, value, className) {
+        const description = element('dd', value, className);
+        metadata.append(element('dt', label), description);
+        return description;
+      }
+      const lesson = entry.learning;
+      const learning = field('Portable learning',
+        `${lesson.available ? 'Accepted' : 'Unavailable'} in historical snapshot only. ${lesson.reason}`, 'learning-status');
+      if (lesson.available) {
+        learning.append(element('p', `Accepted ${lesson.evidence.acceptedAtUtc}; implementation ${lesson.evidence.commit}; annotated tag ${lesson.evidence.tag}.`));
+        learning.append(link(`Open ${entry.id} accepted synthetic lesson`, lesson.href, 'lesson-link'));
+      }
+      field('Native execution',
+        `${entry.native.status}; runnable: ${entry.native.runnable}; qualified: ${entry.native.qualified}. ${entry.native.reason}`, 'native-status');
+      const support = field('Target support', `${entry.support.status}. ${entry.support.reason} `, 'support-status');
+      support.append(link(`C003 configuration reasons for ${entry.id}`, catalog.capabilityMatrix.href));
+      field('Source parent',
+        `${entry.parentId} — ${entry.parent.status}; completed: ${entry.parent.completed}. ${entry.parent.reason}`, 'parent-status');
+      field('Risk', `${entry.risk}. ${catalog.common.riskReason}`, 'risk-status');
+      article.append(metadata);
+      const sources = element('p', undefined, 'source-links');
+      entry.sourceReferences.forEach((reference, index) => {
+        if (index) sources.append(document.createTextNode(' · '));
+        sources.append(link(`${reference.document === 'readme' ? 'README' : 'Backlog'} ${entry.id} (source line ${reference.line})`,
+          contract.sourceHref(catalog, reference), 'source-link'));
+      });
+      article.append(sources, link(`Shared catalog entry ${entry.id}`, `../C005/index.html#${entry.id}`, 'catalog-link'));
+      return article;
+    }
+    function failure(caught) {
+      results.replaceChildren();
+      snapshotSource.replaceChildren();
+      snapshot.textContent = 'No validated shared snapshot. Do not infer availability from local files or previous results.';
+      availability.textContent = 'Historical availability is unverified.';
+      count.textContent = 'Search unavailable — result counts and historical availability are unverified.';
+      empty.hidden = true;
+      error.textContent = `${caught instanceof Error ? caught.message : 'Shared catalog search failed.'} No previous results or availability claims are retained.`;
+      error.hidden = false;
+      if (caught?.code === 'ERR_SEARCH_QUERY') input.setAttribute('aria-invalid', 'true');
+      else input.removeAttribute('aria-invalid');
+      return false;
+    }
+    function run(query) {
+      try {
+        if (!search || typeof search.searchCatalog !== 'function') {
+          throw new TypeError('The C006 reusable search primitive is unavailable.');
+        }
+        const matches = search.searchCatalog(catalog, matrix, query);
+        const fragment = document.createDocumentFragment();
+        for (const entry of matches) fragment.append(renderEntry(entry));
+        results.replaceChildren(fragment);
+        input.value = query;
+        const source = catalog.acceptanceSnapshot;
+        snapshot.textContent = `As-of commit ${source.commit}; commit time ${source.commitTimeUtc}; ledger updated ${source.ledgerUpdatedAtUtc}; ledger SHA-256 ${source.ledgerSha256}. This is a committed historical snapshot, not live availability.`;
+        snapshotSource.replaceChildren(link('Read C005’s pinned committed ledger (not the worktree ledger)',
+          `https://github.com/chadhage/app-scaling-strategies/blob/${source.commit}/.docs/wiki/flow-state.json`));
+        availability.textContent = `${catalog.entries.filter(entry => entry.learning.available).length} accepted portable lessons in the full historical snapshot; 0 native runnable; 0 native qualified; 0 completed source parents. Risk is unclassified, not inferred from priority.`;
+        count.textContent = `${matches.length} of ${catalog.entries.length} entries${query.trim() ? ` match “${query.trim()}”` : ' — empty query shows all titles and objectives'}. Original source order; stable IDs.${matches.length === 0 ? ' No matching titles or objectives.' : ''}`;
+        error.hidden = true;
+        error.textContent = '';
+        empty.hidden = matches.length !== 0;
+        input.removeAttribute('aria-invalid');
+        return true;
+      } catch (caught) {
+        return failure(caught);
+      }
+    }
+    function submit(event) {
+      event.preventDefault();
+      run(input.value);
+    }
+    function change() {
+      run(input.value);
+    }
+    function reset(event) {
+      event?.preventDefault();
+      input.value = '';
+      const success = run('');
+      input.focus();
+      return success;
+    }
+    function dispose() {
+      form.removeEventListener('submit', submit);
+      form.removeEventListener('reset', reset);
+      input.removeEventListener('input', change);
+    }
+    const controller = Object.freeze({ search: run, reset, dispose });
+    form.addEventListener('submit', submit);
+    form.addEventListener('reset', reset);
+    input.addEventListener('input', change);
+    mounts.set(document, controller);
+    run('');
+    return controller;
+  }
+  return Object.freeze({ mountSearch });
+}));

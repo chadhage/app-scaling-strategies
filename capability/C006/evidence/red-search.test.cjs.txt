@@ -1,0 +1,13 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const catalog = require('../../C005/catalog-data.js');
+const matrix = require('../../C003/matrix-data.js');
+const { searchCatalog } = require('../search.js');
+
+test('exact shared title returns the one original S001 entry', () => {
+  const results = searchCatalog(catalog, matrix, 'Warm blue-green handoff');
+  assert.equal(results.length, 1, 'the exact shared title must have one result');
+  assert.equal(results[0], catalog.entries[0]);
+});
