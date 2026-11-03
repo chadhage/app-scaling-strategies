@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>A-S004 — Hold 50/50, then deliberately converge</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script defer src="experiment.js"></script>
+  <script defer src="lesson.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#exercise">Skip to rehearsal controls</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p class="eyebrow">A-S004 · Kano S · unit A-S004 · parent D-S004 · source S004 · packet SC-S004</p>
+    <h1>Hold 50/50. Observe. Then converge.</h1>
+    <p>A healthy A/B experiment preserves stable cohorts and equivalent state/effects.
+      It does <strong>not</strong> mean every user migrated. Requesting 100% is not observing 100%.</p>
+  </header>
+
+  <main>
+    <section aria-labelledby="worked-heading">
+      <h2 id="worked-heading">A worked local experiment</h2>
+      <ol class="worked-path">
+        <li><strong>Hold three healthy rounds.</strong> Expect ten observed users on each version,
+          schema 1, three tickets each, and exactly one effect per retried transaction.</li>
+        <li><strong>Hold again.</strong> Stable cohorts remain split. More time does not complete migration.</li>
+        <li><strong>Request convergence to v2.</strong> Desired routing changes; the previous observations do not.</li>
+        <li><strong>Observe convergence.</strong> Only a new compatible sample can show all twenty fixture users on v2.</li>
+        <li><strong>Reset and break it.</strong> Try unstable assignment, incompatible v2 state, or missing evidence.
+          A passing negative guard check is not a passing user outcome.</li>
+      </ol>
+      <p class="note"><strong>Preconditions, not measured readiness:</strong> two invented available versions,
+        sufficient capacity, a shared account contract and synthetic identities. No availability, identity or
+        cloud capability is verified here. One round is one <em>simulated</em> minute; no real soak runs.</p>
+    </section>
+
+    <section id="exercise" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">1. Choose a condition and act</h2>
+      <form id="rehearsal-settings" novalidate aria-describedby="configuration-help input-error">
+        <div class="fields">
+          <div class="field">
+            <label for="hold-rounds">Rounds to hold (whole number, 1–12)</label>
+            <input id="hold-rounds" name="round-count" type="number" min="1" max="12" step="1" value="3"
+              required aria-describedby="configuration-help input-error">
+          </div>
+          <div class="field">
+            <label for="condition">Next synthetic observation condition</label>
+            <select id="condition" name="synthetic-condition" aria-describedby="condition-help input-error">
+              <option value="stable-compatible">Stable cohorts / compatible state</option>
+              <option value="unstable-assignment">Unstable per-request assignment (hold only)</option>
+              <option value="incompatible-state">Incompatible v2 state + duplicate retry effects</option>
+              <option value="missing-observation">Missing observation for u20</option>
+              <option value="lagging-route">Lagging route: u20 stays on v1 (convergence only)</option>
+            </select>
+          </div>
+        </div>
+        <p id="configuration-help">Each round retries one ticket operation per user.
+          Both versions should spend one credit, issue one ticket and share the same deduplication key.
+          The local rehearsal is bounded to 100 total rounds.</p>
+        <p id="condition-help" class="expected"></p>
+        <div class="actions">
+          <button id="hold-experiment" type="submit">Hold 50/50 experiment</button>
+          <button id="request-convergence" type="button">Request convergence to v2</button>
+          <button id="observe-convergence" type="button" disabled>Observe convergence</button>
+          <button id="reset-rehearsal" type="button" class="secondary">Reset rehearsal</button>
+        </div>
+      </form>
+      <p id="input-error" role="alert" hidden></p>
+      <p class="note">Convergence requests are deliberately clickable during a bad or unobserved split so
+        you can inspect the refusal. Later passing probes cannot erase failed/unknown history.
+        Reset clears only local memory and begins a <strong>separate</strong> practice attempt.</p>
+      <p id="live-result" role="status" aria-live="polite" aria-atomic="true"></p>
+      <noscript><p>Enable JavaScript for the exercise. All code and data are in this local bundle.</p></noscript>
+    </section>
+
+    <section aria-labelledby="outcome-heading">
+      <h2 id="outcome-heading">2. Separate desire, observations and outcome</h2>
+      <div class="metrics">
+        <div><h3>Configured desired v2</h3><output id="desired-percent">50%</output></div>
+        <div><h3>Latest observed destinations</h3><output id="observed-counts">Not observed</output></div>
+        <div><h3>Rehearsal phase</h3><output id="phase">Held experiment</output></div>
+        <div><h3>Simulated rounds / minutes</h3><output id="round-count">0 / 0</output></div>
+      </div>
+      <p id="observation-age"></p>
+      <h3>Verifier result — did the educational guard behave?</h3>
+      <p id="verifier-result" class="result"></p>
+      <h3>User-impact result — were recorded users safe?</h3>
+      <p id="impact-result" class="result"></p>
+      <h3>Migration / convergence result</h3>
+      <p id="migration-result" class="result"></p>
+      <ul id="assertions"></ul>
+    </section>
+
+    <section aria-labelledby="cohort-heading">
+      <h2 id="cohort-heading">3. Inspect the synthetic users</h2>
+      <p>These fixed fixture buckets (2, 7, …, 97) deliberately give ten users below 50
+        and ten at/above 50. <strong>Real configured 50/50 weights do not guarantee an exactly
+        balanced finite observed sample.</strong> Intended cohorts are not observations.</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Synthetic cohort observations, horizontally scrollable">
+        <table id="cohort-table">
+          <caption>Latest observed round only. “—” means not observed; it is not a successful result.
+            Cohorts describe the held experiment; convergence deliberately moves both to v2.</caption>
+          <thead>
+            <tr>
+              <th scope="col">User</th>
+              <th scope="col">Stable bucket / intended cohort</th>
+              <th scope="col">Observed version</th>
+              <th scope="col">Observed schema</th>
+              <th scope="col">Credits actual / expected</th>
+              <th scope="col">Tickets actual / expected</th>
+              <th scope="col">Effects actual / expected 1</th>
+              <th scope="col">Outcome / reason</th>
+            </tr>
+          </thead>
+          <tbody id="cohort-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">4. Retain the evidence, including adverse rounds</h2>
+      <p>Counts below are <strong>user observations</strong>, not distinct migrated people.
+        Repeated rounds do not add migration credit. Failed/unknown rounds remain in the denominator.</p>
+      <ol id="round-history"></ol>
+      <details open>
+        <summary id="trace-heading">Inspect action trace</summary>
+        <ol id="action-trace"></ol>
+      </details>
+    </section>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Scope, limits and cleanup</h2>
+      <p>IaC: <strong>N/A</strong>. No resource is created. C001 approves design/local implementation only;
+        it does not authorize cloud traffic, IaC generation, identity registration, deployment or spending.
+        Node 22 is test tooling only; no framework or Express adoption is required for this portable lesson.</p>
+      <p>This bundle makes no network or management calls, uses no credentials or persistent browser storage,
+        and proves no B-S004 native behavior, full D-S004 acceptance, real-user migration, version retirement
+        or reliability guarantee. Reset is local-memory cleanup, not Azure cleanup.</p>
+    </section>
+  </main>
+  <footer>Source S004 · standalone HTML / JavaScript / CSS · all users, state, transactions and traces are invented.</footer>
+</body>
+</html>

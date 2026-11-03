@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S004",
+  "workerId": "worker-A-S004",
+  "kano": "S",
+  "kanoUnit": "A-S004",
+  "parentId": "D-S004",
+  "sourceId": "S004",
+  "packet": "SC-S004",
+  "technicalEntryGate": "SOURCE",
+  "mode": "synthetic",
+  "entry": "index.html",
+  "behaviorContract": "experiment.feature",
+  "objective": "Hold stable 50/50 synthetic cohorts with equivalent state and retry effects, then deliberately observe convergence to v2 without mistaking desired routing for observed migration.",
+  "sourceReferences": [
+    "README.md#scenario-2-progressive-cohort-or-ab-routing",
+    ".docs\\wiki\\backlog.md#D-S004",
+    ".docs\\wiki\\kanban.md#portable-a-card-lesson-contract"
+  ],
+  "preconditions": [
+    "A modern local browser with JavaScript enabled; Node is required only for tests.",
+    "Invented v1 and v2 have fixed shared schema-1 accounts and idempotency keys.",
+    "Synthetic availability, identity, capacity and readiness are assumptions, not measured Azure properties."
+  ],
+  "actions": [
+    "Hold 1-12 simulated 50/50 rounds with a chosen synthetic condition.",
+    "Inspect intended cohorts separately from observed destinations, state and effects.",
+    "Request 100% v2 convergence only after a passing observed split.",
+    "Record a separate convergence observation; inspect a lagging route or missing evidence.",
+    "Reset rehearsal to discard local evidence and start a separate attempt."
+  ],
+  "syntheticInput": {
+    "users": 20,
+    "bucketFormula": "2 + 5 * zero-based fixture index",
+    "cohortRule": "bucket < 50 means A/v1; otherwise B/v2",
+    "startingCredits": 1000,
+    "startingTickets": 0,
+    "transaction": "Spend one synthetic credit for one ticket; retry the same operation key.",
+    "round": "One simulated minute, no wall-clock waiting",
+    "maximumRoundsPerRehearsal": 100,
+    "conditions": [
+      "stable-compatible",
+      "unstable-assignment",
+      "incompatible-state",
+      "missing-observation",
+      "lagging-route"
+    ]
+  },
+  "expectedAssertions": [
+    "Configured 50% or 100% is never counted as an observation.",
+    "A held stable experiment has ten observed users on each version, not complete migration.",
+    "Compatible versions preserve schema, cumulative state and one effect per transaction despite retries.",
+    "Unstable assignment and incompatible state/effects produce failed user-impact outcomes.",
+    "Missing observations produce unknown outcomes without fabricated state.",
+    "Prior failed/unknown rounds survive later passing samples.",
+    "Only a new complete compatible convergence sample can pass for all twenty fixture users.",
+    "Invalid inputs preserve the current rehearsal and explain the rejection."
+  ],
+  "iac": {
+    "status": "N/A",
+    "reason": "Resource-free local HTML/JS/CSS training bundle. Explicitly recorded after behavioral red and before implementation.",
+    "resourcesCreated": [],
+    "c001ApprovalScope": "Design and local implementation only.",
+    "cloudIacIdentityRegistrationOrSpendAuthorized": false
+  },
+  "scope": {
+    "framework": "none",
+    "dependencies": "none",
+    "networkOrManagementCalls": "none",
+    "credentials": "none",
+    "testRuntime": "Node.js 22.23.4 is test tooling, not production runtime validation.",
+    "expressRequired": false,
+    "nativeBS004Proof": false,
+    "parentDS004Complete": false,
+    "reliabilityGuarantee": false
+  },
+  "testCommand": "node --test --test-reporter=tap learning\\S004\\experiment.test.cjs learning\\S004\\bundle.test.cjs",
+  "evidencePath": "learning\\S004\\evidence.json"
+}

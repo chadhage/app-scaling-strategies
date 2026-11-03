@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S004",
+  "workerId": "worker-A-S004",
+  "owner": "worker-A-S004",
+  "kano": "S",
+  "kanoUnit": "A-S004",
+  "parentId": "D-S004",
+  "sourceId": "S004",
+  "packet": "SC-S004",
+  "technicalEntryGate": "SOURCE",
+  "mode": "synthetic",
+  "host": "Local file bundle in the actual integrated browser",
+  "entry": "learning\\S004\\index.html",
+  "recordedDateUtc": "2026-11-03",
+  "configuration": {
+    "users": 20,
+    "cohorts": "Fixed buckets 2, 7, ... 97; below 50 is A/v1, otherwise B/v2.",
+    "desiredSplitPercent": 50,
+    "convergenceTarget": "v2",
+    "initialAccount": "Schema 1, 1000 synthetic credits, zero tickets, no effect keys.",
+    "operation": "One credit for one ticket, retried with the same operation key.",
+    "round": "One simulated minute, not a measured wall-clock soak.",
+    "maximumRounds": 100
+  },
+  "acceptance": {
+    "status": "ready-for-parent-empirical-review",
+    "workerAwardsDoneOrKanoCredit": false,
+    "reviewer": "Pending parent/controller review",
+    "acceptedAtUtc": null,
+    "browserAcceptanceSatisfied": true,
+    "blocker": null,
+    "nativeBS004Proof": false,
+    "parentDS004Complete": false
+  },
+  "publicationBinding": {
+    "receipt": ".git\\kanban-orchestrator\\published\\A-S004.json",
+    "finalResult": ".git\\kanban-orchestrator\\results\\A-S004-final.json",
+    "note": "The serialized publisher assigns and remotely verifies the implementation SHA and annotated tag after these files are committed. The receipt and final result bind this evidence to those exact identifiers; no self-referential commit SHA is fabricated here."
+  },
+  "bdd": {
+    "path": "learning\\S004\\experiment.feature",
+    "writtenBeforeTestsAndImplementation": true,
+    "workflowEvidence": "learning\\S004\\evidence\\workflow.json",
+    "coverage": [
+      "Desired percentage versus observed destinations",
+      "Stable cohorts during a sustained 50/50 experiment",
+      "Equivalent canonical state and shared idempotency effects",
+      "Deliberate convergence needing a new current-target observation",
+      "Unstable assignment and incompatible-state failures",
+      "Unknown missing observations and lagging-route failure",
+      "Historical adverse outcomes retained after later passing probes",
+      "Invalid inputs preserve evidence",
+      "Actual keyboard operation, Reset and scope boundaries"
+    ]
+  },
+  "tdd": {
+    "runtime": "Node.js v22.23.4, test tooling only",
+    "runner": "node:test with node:assert/strict; no dependencies, install or mock-browser runner",
+    "command": "node --test --test-reporter=tap learning\\S004\\experiment.test.cjs learning\\S004\\bundle.test.cjs",
+    "red": {
+      "path": "learning\\S004\\evidence\\red.txt",
+      "stub": "learning\\S004\\evidence\\behavior-stub.js.txt",
+      "exitCode": 1,
+      "tests": 24,
+      "passed": 0,
+      "failed": 24,
+      "assertionErrors": 23,
+      "unimplementedHistoryTypeErrors": 1,
+      "firstAssertion": "Expected desired 50, actual 0",
+      "cause": "Loadable no-op behavior stub lacked the specified behavior. This is actual runner output, not missing tooling/imports, fake red, or a browser mock.",
+      "capturedBeforeImplementation": true
+    },
+    "iacStep": {
+      "status": "N/A",
+      "recordedAfterRedBeforeImplementation": true,
+      "path": "learning\\S004\\manifest.json",
+      "reason": "Self-contained resource-free lesson. C001 approves design/local implementation only, not cloud, IaC generation, identity registration, deployment or expenditure.",
+      "resourcesCreated": []
+    },
+    "implementationAndRefactor": "Pure immutable behavior engine plus local HTML/JS/CSS controller. Refactored the fixed cohort rule to derive both cohort and version directly from the stable bucket; existing tests remained green.",
+    "green": {
+      "path": "learning\\S004\\evidence\\green.txt",
+      "exitCode": 0,
+      "tests": 32,
+      "passed": 32,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "scope": "24 behavior tests and 8 static bundle-contract checks"
+    },
+    "syntax": {
+      "path": "learning\\S004\\evidence\\syntax.txt",
+      "files": [
+        "learning\\S004\\experiment.js",
+        "learning\\S004\\lesson.js",
+        "learning\\S004\\experiment.test.cjs",
+        "learning\\S004\\bundle.test.cjs"
+      ],
+      "command": "node --check <each listed relative file>",
+      "exitCode": 0
+    },
+    "metadataIntegrity": {
+      "path": "learning\\S004\\evidence\\metadata-checks.txt",
+      "exitCode": 0,
+      "scope": "JSON identities, retained workflow SHA-256 values and ordering, actual red/green summaries, redacted output paths, and exclusion of the hidden-page timeout."
+    },
+    "paths": "Workspace prefixes in actual runner output are redacted to <repo>; other evidence paths are repository-relative. Whitespace-only TAP line padding was stripped from the retained real red output because the publisher rejected trailing whitespace before any commit; assertions, counts and timings were not altered."
+  },
+  "browser": {
+    "path": "learning\\S004\\evidence\\browser.json",
+    "actualBrowser": true,
+    "mockBrowser": false,
+    "finalOwnedForceNewPageId": "67c4357c-51b1-40c0-873c-c6f4eca1da53",
+    "reloadedFinalAssets": true,
+    "positiveKeyboardPassed": true,
+    "resetAndFocusPassed": true,
+    "negativeFixturesPassed": true,
+    "invalidInputPreservesEvidencePassed": true,
+    "hiddenPageTimeoutExcludedFromPassingEvidence": true,
+    "passingBlockHttpRequests": 0,
+    "passingBlockPageErrors": 0,
+    "passingBlockConsoleErrors": 0
+  },
+  "verifierResult": {
+    "status": "passed-for-synthetic-lesson-contract",
+    "note": "The educational guard correctly exposes failed/unknown users and refuses false convergence. This is not a claim that those negative users succeeded.",
+    "heldSplit": "Twelve observed passing rounds still report not complete migration.",
+    "convergence": "A 100% request retains the prior 10/10 sample and unknown current-target outcome until a separate complete observation.",
+    "negativeRetention": "Unstable/incompatible/lagging failures and missing unknowns remain in history, including after later passing samples."
+  },
+  "userImpactResult": {
+    "healthySplit": "20 synthetic observations per round; 10 v1 and 10 v2; compatible cumulative state and one effect per transaction; not all users migrated.",
+    "healthyConvergence": "After 12 held rounds plus one convergence observation, all 20 fixture users show v2, schema 1, credits 987/987, tickets 13/13 and effects 1/1.",
+    "unstableAssignment": "Round 2 fails for all 20 switched users; round 3 returns but does not erase the failure.",
+    "incompatibleState": "10 v2 users fail with schema 2 and two effects per retried operation; not successful migration.",
+    "missingObservation": "10 observed v1, 9 observed v2 and 1 unknown; no invented state/effect for u20.",
+    "laggingConvergence": "Desired 100%; observed 1 v1 and 19 v2; failed convergence remains failed after a later all-v2 sample.",
+    "missingConvergence": "19 observed v2 and 1 unknown; convergence is unknown."
+  },
+  "cleanupResult": {
+    "localResetAndReloadVerified": true,
+    "result": "Defaults restored, local rows/history cleared, keyboard focus returned to hold-rounds on Reset; final reload remained unobserved.",
+    "persistentBrowserStorage": "none",
+    "serversStarted": 0,
+    "dependenciesInstalled": 0,
+    "resourcesCreated": [],
+    "cloudCleanup": "N/A"
+  },
+  "limits": [
+    "Training rehearsal - synthetic data - not a live Azure result",
+    "No credentials, management calls, live traffic, cloud resources, identity registration or expenditure.",
+    "No framework is adopted. Node 22 is test tooling and does not validate the proposed Node 24/Express production design.",
+    "The deliberately balanced fixture is not a claim that configured 50/50 weights guarantee a balanced real observed sample.",
+    "No native B-S004 proof, full D-S004 acceptance, real-user migration, version retirement or reliability guarantee.",
+    "One Kano unit A-S004 is retained. Worker publication is not empirical acceptance or awarded credit."
+  ]
+}

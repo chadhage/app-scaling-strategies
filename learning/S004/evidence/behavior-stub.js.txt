@@ -1,0 +1,33 @@
+(function (root, factory) {
+  "use strict";
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.S004Experiment = factory();
+})(typeof globalThis === "object" ? globalThis : this, function () {
+  "use strict";
+  const createRehearsal = () => ({
+    desiredPercent: 0, phase: "uninitialized", epoch: 0, rounds: [], trace: []
+  });
+  const unchanged = (state) => state;
+  const inspect = (state) => ({
+    desiredPercent: state.desiredPercent,
+    phase: state.phase,
+    sampleCount: 0,
+    simulatedMinutes: 0,
+    currentEvidence: false,
+    observed: { v1: 0, v2: 0, unknown: 0, hasSample: false },
+    rows: [],
+    history: [],
+    trace: state.trace,
+    checks: { cohorts: "unknown", stateEffects: "unknown" },
+    impact: { status: "unknown", failedRounds: 0, unknownRounds: 0, unknownUserObservations: 0 },
+    migration: { status: "not-complete", message: "Behavior not implemented." }
+  });
+  return {
+    createRehearsal,
+    inspect,
+    holdExperiment: unchanged,
+    requestConvergence: unchanged,
+    observeConvergence: unchanged,
+    transact: (_version, account) => ({ account, readable: false, reason: "Behavior not implemented." })
+  };
+});
