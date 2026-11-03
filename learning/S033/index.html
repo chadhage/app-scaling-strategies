@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; img-src 'none'; media-src 'none'; font-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A-S033 — Worker-affinity removal rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="affinity.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to rehearsal controls</a>
+  <header>
+    <p class="training">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p>A-S033 · D-S033 · SC-S033 · Kano S · SOURCE gate</p>
+    <h1>Remove worker affinity only after state is safe</h1>
+    <p>Objective: distinguish a successful pinned baseline from verified externalization,
+      then compare worker affinity on and off without silently resetting required user state.</p>
+  </header>
+  <main>
+    <section aria-labelledby="exercise-title">
+      <h2 id="exercise-title">A worked, bounded comparison</h2>
+      <p>Two synthetic clients each have a cart, workflow step and revision, initially present only on
+        <strong>worker-a</strong>. Affinity on sends all four probe requests there.
+        Affinity off uses the fixed order client-1/a, client-1/b, client-2/a, client-2/b.</p>
+      <ol>
+        <li><strong>Probe current routing</strong>: 4/4 pinned replies match, but local state is still unsafe to unpin.</li>
+        <li><strong>Remove worker affinity</strong> first: explicit safe abort; affinity remains on.</li>
+        <li><strong>Preview unsafe off + local order</strong>: 2/4 state checks fail despite four HTTP 200s.
+          This counterexample is not applied.</li>
+        <li><strong>Externalize and verify state</strong> with complete receipts, then probe while still pinned.
+          Remove affinity and probe again: 4/4 matching states across both workers.</li>
+        <li>Try mismatch or missing observations. Failure and unknown are distinct; neither is success.
+          Open older history entries to inspect their retained traces.</li>
+      </ol>
+    </section>
+
+    <section id="controls" tabindex="-1" aria-labelledby="controls-title">
+      <h2 id="controls-title">Operator controls</h2>
+      <form id="lesson-controls">
+        <label for="lesson-action">Next action</label>
+        <select id="lesson-action">
+          <option value="probe">Probe current routing</option>
+          <option value="externalize">Externalize and verify state</option>
+          <option value="remove-affinity">Remove worker affinity</option>
+          <option value="restore-affinity">Restore worker affinity</option>
+          <option value="preview-unsafe">Preview unsafe off + local order (not applied)</option>
+        </select>
+        <label for="lesson-observation">Synthetic observation</label>
+        <select id="lesson-observation" aria-describedby="observation-hint">
+          <option value="complete">Complete matching observations</option>
+          <option value="mismatch">One HTTP 200 / migration receipt with a wrong revision</option>
+          <option value="missing">One response / migration receipt missing</option>
+        </select>
+        <p id="observation-hint"></p>
+        <div class="buttons">
+          <button type="submit" id="step-lesson">Step rehearsal</button>
+          <button type="button" id="reset-lesson">Reset lesson and clear history</button>
+        </div>
+        <p id="capacity-hint"></p>
+        <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      </form>
+      <noscript>JavaScript is required for this local synthetic exercise. No result has been established.</noscript>
+    </section>
+
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Current state and latest result</h2>
+      <p id="run-state"></p>
+      <p id="result" role="status" aria-live="polite" aria-atomic="true" data-verdict="untested">UNTESTED</p>
+      <p id="user-impact"></p>
+      <p id="metric-unit"></p>
+      <dl class="metrics">
+        <div><dt>Attempted</dt><dd id="count-attempted">0</dd></div>
+        <div><dt>Preserved / passed</dt><dd id="count-preserved">0</dd></div>
+        <div><dt>Failed</dt><dd id="count-failed">0</dd></div>
+        <div><dt>Unknown</dt><dd id="count-unknown">0</dd></div>
+      </dl>
+      <p>Guard checks, migration records and request probes have separate measurement units.
+        Passing a guard is not proof that users crossed workers successfully.</p>
+      <div class="table-wrap" role="region" aria-label="Latest synthetic trace" tabindex="0">
+        <table>
+          <caption>Latest deterministic synthetic trace (not production telemetry)</caption>
+          <thead><tr><th scope="col">Client</th><th scope="col">Worker / candidate</th><th scope="col">HTTP</th>
+            <th scope="col">Expected state</th><th scope="col">Observed state</th><th scope="col">Assertion</th></tr></thead>
+          <tbody id="trace-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained run history</h2>
+      <p id="history-summary"></p>
+      <ol id="history-list"></ol>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Preconditions, assertions and limits</h2>
+      <p>Source: README.md S033, “Worker-affinity removal”; backlog D-S033; portable card A-S033.
+        A complete migration requires matching receipts for both clients and all three state fields.
+        Missing receipts cannot establish verification, and mismatches are explicit failures.
+        Unsupported removal is blocked before exposure; the separate unsafe preview shows why.</p>
+      <p>This finite model assumes compatible readers and an atomic shared-state migration.
+        One in-memory map is not durable storage. There are no concurrent writes, authentication,
+        real cookies, actual routing changes, Azure resources or management calls.
+        This is worker affinity, not slot-routing-cookie migration.</p>
+      <p>All values are synthetic and fixed. Observational faults do not modify stored state.
+        History is retained only in this page, for up to 16 steps; reset or reload clears it.
+        No credentials, packages, network requests or browser persistence are needed.</p>
+      <p>B-S033 native qualification and the full D-S033 source parent remain separate and uncompleted.
+        No live continuity, production Node.js 24 support, Azure support, availability SLA or Kano acceptance is certified.
+        IaC: N/A — resource-free local lesson.</p>
+      <p>Keyboard: Tab / Shift+Tab move between controls, arrow keys select options, Enter or Space activates buttons.
+        Native history details can be expanded from the keyboard. Reset returns focus to “Next action”.</p>
+    </section>
+  </main>
+</body>
+</html>

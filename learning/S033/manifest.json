@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S033",
+  "workerId": "worker-A-S033",
+  "sourceId": "S033",
+  "parentId": "D-S033",
+  "packet": "SC-S033",
+  "kano": "S",
+  "kanoUnit": "A-S033",
+  "entryGate": "SOURCE",
+  "executionMode": "local-synthetic-only",
+  "entryPoint": "index.html",
+  "trainingLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Compare worker affinity on and off, reject removal before state externalization, and verify both clients across both workers after migration.",
+  "preconditions": [
+    "Two fixed synthetic clients have instance-local state on worker-a only; affinity initially pins every request there.",
+    "Compatible state readers and a modeled atomic migration are assumed, not certified.",
+    "No framework, network service, Azure account, credentials or packages are required to open the lesson."
+  ],
+  "actions": [
+    "Probe current routing with complete, mismatched or missing observations.",
+    "Externalize and verify both records while affinity is on; only complete matching receipts commit.",
+    "Remove affinity only after verified externalization.",
+    "Restore affinity without reversing externalization or erasing history.",
+    "Preview the unsafe off/local counterexample without applying any state change.",
+    "Explicitly reset to an untested, local-state, affinity-on run."
+  ],
+  "syntheticFixture": {
+    "clients": [
+      { "id": "client-1", "expected": { "cart": 3, "step": "review", "revision": 7 } },
+      { "id": "client-2", "expected": { "cart": 1, "step": "address", "revision": 4 } }
+    ],
+    "offRouteOrder": ["client-1/worker-a", "client-1/worker-b", "client-2/worker-a", "client-2/worker-b"],
+    "requestsPerProbe": 4,
+    "maxSteps": 16,
+    "faults": {
+      "mismatch": "Wrong revision in the last response or migration receipt, without modifying stored state.",
+      "missing": "Last response or migration receipt absent, classified unknown rather than successful."
+    }
+  },
+  "expectedAssertions": [
+    "Pinned local baseline: 4/4 preserved; removal is still unsupported.",
+    "Unsupported removal: failure, safe abort before exposure, unchanged affinity and records.",
+    "Unsafe preview: four HTTP 200s, two preserved and two failed required-state checks; not applied.",
+    "Complete migration: two matching record receipts, shared verified state, affinity still on.",
+    "Shared on/off comparison: 4/4 state checks preserved; off probes reach both workers.",
+    "Mismatched or missing migration receipts: no commit and no removal authorization.",
+    "Later complete probe cannot erase retained failures, unknowns or counterexamples.",
+    "Malformed commands and over-limit steps preserve state and all prior history.",
+    "Keyboard controls, explicit error, reset focus and CSP work in an actual isolated browser."
+  ],
+  "limits": [
+    "Only local synthetic observations; no live Azure, native B-S033 or source-parent completion.",
+    "Worker affinity, not slot-routing-cookie migration.",
+    "In-memory, two-client, two-worker, read-only model; no durability, races, concurrent writes, authentication or real cookies.",
+    "History lasts for at most 16 steps in this page; reset/reload deliberately clears it.",
+    "Guard and migration checks are not user-request continuity probes.",
+    "Node 22 test tooling and the approved offline Playwright 1.56.1/signed Edge 156 pairing only; no production Node 24 certification.",
+    "No cloud, IaC, identity, deployment, expenditure, package installation or extra Kano unit."
+  ],
+  "evidence": "evidence.json",
+  "discovery": "Standalone portable lesson; no shared catalog or host allowlist is modified.",
+  "acceptance": "Parent-owned empirical review remains required; publication does not self-award Done credit."
+}

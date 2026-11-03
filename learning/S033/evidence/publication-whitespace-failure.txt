@@ -1,0 +1,258 @@
+learning/S033/evidence/red/affinity-removal.feature.txt:1: trailing whitespace.
++Feature: Remove worker affinity only after verifying state externalization
+learning/S033/evidence/red/affinity-removal.feature.txt:2: trailing whitespace.
++  A-S033 / D-S033 / SC-S033, frozen Kano S, local synthetic rehearsal only.
+learning/S033/evidence/red/affinity-removal.feature.txt:3: trailing whitespace.
++  Source S033 requires eliminating or safely migrating instance-local state
+learning/S033/evidence/red/affinity-removal.feature.txt:4: trailing whitespace.
++  before disabling instance affinity. No native Azure result is implied.
+learning/S033/evidence/red/affinity-removal.feature.txt:5: trailing whitespace.
++
+learning/S033/evidence/red/affinity-removal.feature.txt:6: trailing whitespace.
++  Background:
+learning/S033/evidence/red/affinity-removal.feature.txt:7: trailing whitespace.
++    Given two synthetic clients each have an expected cart, workflow step and revision
+learning/S033/evidence/red/affinity-removal.feature.txt:8: trailing whitespace.
++    And their instance-local state exists only on worker-a
+learning/S033/evidence/red/affinity-removal.feature.txt:9: trailing whitespace.
++    And worker affinity initially pins their requests to worker-a
+learning/S033/evidence/red/affinity-removal.feature.txt:10: trailing whitespace.
++    And each probe contains four deterministic requests covering both clients
+learning/S033/evidence/red/affinity-removal.feature.txt:11: trailing whitespace.
++
+learning/S033/evidence/red/affinity-removal.feature.txt:12: trailing whitespace.
++  Scenario: A pinned baseline is not permission to remove affinity
+learning/S033/evidence/red/affinity-removal.feature.txt:13: trailing whitespace.
++    When I probe with complete observations
+learning/S033/evidence/red/affinity-removal.feature.txt:14: trailing whitespace.
++    Then all four requests preserve the expected state
+learning/S033/evidence/red/affinity-removal.feature.txt:15: trailing whitespace.
++    When I try to remove affinity before externalization
+learning/S033/evidence/red/affinity-removal.feature.txt:16: trailing whitespace.
++    Then the action fails explicitly with a safe abort before exposure
+learning/S033/evidence/red/affinity-removal.feature.txt:17: trailing whitespace.
++    And affinity remains on and no client state is reset
+learning/S033/evidence/red/affinity-removal.feature.txt:18: trailing whitespace.
++
+learning/S033/evidence/red/affinity-removal.feature.txt:19: trailing whitespace.
++  Scenario: Verify externalization before comparing affinity on and off
+learning/S033/evidence/red/affinity-removal.feature.txt:20: trailing whitespace.
++    When I externalize with two complete matching record receipts
+learning/S033/evidence/red/affinity-removal.feature.txt:21: trailing whitespace.
++    Then storage changes to verified shared state while affinity remains on
+learning/S033/evidence/red/affinity-removal.feature.txt:22: trailing whitespace.
++    When I probe with complete observations
+learning/S033/evidence/red/affinity-removal.feature.txt:23: trailing whitespace.
++    Then all four requests preserve state on worker-a
+learning/S033/evidence/red/affinity-removal.feature.txt:24: trailing whitespace.
++    When I remove affinity and probe with complete observations
+learning/S033/evidence/red/affinity-removal.feature.txt:25: trailing whitespace.
++    Then the four requests span worker-a and worker-b
+learning/S033/evidence/red/affinity-removal.feature.txt:26: trailing whitespace.
++    And all four preserve every expected state field
+learning/S033/evidence/red/affinity-removal.feature.txt:27: trailing whitespace.
++    And the result is synthetic success, not native certification
+learning/S033/evidence/red/affinity-removal.feature.txt:28: trailing whitespace.
++
+learning/S033/evidence/red/affinity-removal.feature.txt:29: trailing whitespace.
++  Scenario: Inspect the unsafe order without applying it
+learning/S033/evidence/red/affinity-removal.feature.txt:30: trailing whitespace.
++    When I preview removal while state is instance-local
+learning/S033/evidence/red/affinity-removal.feature.txt:31: trailing whitespace.
++    Then the hypothetical trace has four HTTP 200 responses
+learning/S033/evidence/red/affinity-removal.feature.txt:32: trailing whitespace.
++    And the two responses from worker-b explicitly fail the state comparison
+learning/S033/evidence/red/affinity-removal.feature.txt:33: trailing whitespace.
++    And no empty state is silently accepted as successful continuity
+learning/S033/evidence/red/affinity-removal.feature.txt:34: trailing whitespace.
++    And the preview does not change affinity, storage or migration verification
+learning/S033/evidence/red/affinity-removal.feature.txt:35: trailing whitespace.
++
+learning/S033/evidence/red/affinity-removal.feature.txt:36: trailing whitespace.
++  Scenario Outline: Incomplete migration evidence cannot authorize removal
+learning/S033/evidence/red/affinity-removal.feature.txt:37: trailing whitespace.
++    When I externalize using "<observation>" observations
+learning/S033/evidence/red/affinity-removal.feature.txt:38: trailing whitespace.
++    Then migration is "<verdict>" and no shared state is committed
+learning/S033/evidence/red/affinity-removal.feature.txt:39: trailing whitespace.
++    And the original local records remain intact with affinity on
+learning/S033/evidence/red/affinity-removal.feature.txt:40: trailing whitespace.
++    When I try to remove affinity
+learning/S033/evidence/red/affinity-removal.feature.txt:41: trailing whitespace.
++    Then the action fails explicitly with a safe abort before exposure
+learning/S033/evidence/red/affinity-removal.feature.txt:42: trailing whitespace.
++
+learning/S033/evidence/red/affinity-removal.feature.txt:43: trailing whitespace.
++    Examples:
+learning/S033/evidence/red/affinity-removal.feature.txt:44: trailing whitespace.
++      | observation | verdict |
+learning/S033/evidence/red/affinity-removal.feature.txt:45: trailing whitespace.
++      | mismatch    | failure |
+learning/S033/evidence/red/affinity-removal.feature.txt:46: trailing whitespace.
++      | missing     | unknown |
+learning/S033/evidence/red/affinity-removal.feature.txt:47: trailing whitespace.
++
+learning/S033/evidence/red/affinity-removal.feature.txt:48: trailing whitespace.
++  Scenario: Later successful reads do not erase negative observations
+learning/S033/evidence/red/affinity-removal.feature.txt:49: trailing whitespace.
++    Given I have externalized and removed affinity safely
+learning/S033/evidence/red/affinity-removal.feature.txt:50: trailing whitespace.
++    When one probe response is missing
+learning/S033/evidence/red/affinity-removal.feature.txt:51: trailing whitespace.
++    Then the result is unknown with three preserved and one unknown request
+learning/S033/evidence/red/affinity-removal.feature.txt:52: trailing whitespace.
++    When one HTTP 200 probe response contains a wrong revision
+learning/S033/evidence/red/affinity-removal.feature.txt:53: trailing whitespace.
++    Then the result is failure with three preserved and one failed request
+learning/S033/evidence/red/affinity-removal.feature.txt:54: trailing whitespace.
++    When a subsequent complete probe succeeds
+learning/S033/evidence/red/affinity-removal.feature.txt:55: trailing whitespace.
++    Then both the unknown and failure remain in ordered history
+learning/S033/evidence/red/affinity-removal.feature.txt:56: trailing whitespace.
++    And the current successful result is not a clean-history claim
+learning/S033/evidence/red/affinity-removal.feature.txt:57: trailing whitespace.
++
+learning/S033/evidence/red/affinity-removal.feature.txt:58: trailing whitespace.
++  Scenario: Reject malformed commands and bound a run
+learning/S033/evidence/red/affinity-removal.feature.txt:59: trailing whitespace.
++    When a command has an unknown action, observation, extra property or wrong type
+learning/S033/evidence/red/affinity-removal.feature.txt:60: trailing whitespace.
++    Then it is rejected before changing state or history
+learning/S033/evidence/red/affinity-removal.feature.txt:61: trailing whitespace.
++    And guards cannot be bypassed by mutating a returned snapshot
+learning/S033/evidence/red/affinity-removal.feature.txt:62: trailing whitespace.
++    When sixteen valid steps have been recorded
+learning/S033/evidence/red/affinity-removal.feature.txt:63: trailing whitespace.
++    Then further steps are refused without discarding history
+learning/S033/evidence/red/affinity-removal.feature.txt:64: trailing whitespace.
++    And reset starts an untested local-state run with affinity on
+learning/S033/evidence/red/affinity-removal.feature.txt:65: trailing whitespace.
++
+learning/S033/evidence/red/affinity-removal.feature.txt:66: trailing whitespace.
++  Scenario: Accessible local browser operation
+learning/S033/evidence/red/affinity-removal.feature.txt:67: trailing whitespace.
++    Given the exact banner "Training rehearsal - synthetic data - not a live Azure result" is visible
+learning/S033/evidence/red/affinity-removal.feature.txt:68: trailing whitespace.
++    When I use Tab, arrow keys and Enter to conduct the before and after comparison
+learning/S033/evidence/red/affinity-removal.feature.txt:69: trailing whitespace.
++    Then the real DOM shows measured results, explicit failures and retained history
+learning/S033/evidence/red/affinity-removal.feature.txt:70: trailing whitespace.
++    And invalid input is announced without replacing the previous valid result
+learning/S033/evidence/red/affinity-removal.feature.txt:71: trailing whitespace.
++    And keyboard reset clears the run and returns focus to the action picker
+learning/S033/evidence/red/affinity-removal.feature.txt:72: trailing whitespace.
++    And native form.reset remains callable
+learning/S033/evidence/red/affinity-removal.feature.txt:73: trailing whitespace.
++    And the page CSP blocks inline code, evaluation, connections and form submission
+learning/S033/evidence/red/affinity-removal.feature.txt:74: trailing whitespace.
++    And ordinary verification does not rewrite published evidence
+learning/S033/evidence/red/affinity.stub.js.txt:1: trailing whitespace.
++(function (root, factory) {
+learning/S033/evidence/red/affinity.stub.js.txt:2: trailing whitespace.
++  'use strict';
+learning/S033/evidence/red/affinity.stub.js.txt:3: trailing whitespace.
++  const api = factory();
+learning/S033/evidence/red/affinity.stub.js.txt:4: trailing whitespace.
++  if (typeof module === 'object' && module.exports) module.exports = api;
+learning/S033/evidence/red/affinity.stub.js.txt:5: trailing whitespace.
++  else root.S033Affinity = api;
+learning/S033/evidence/red/affinity.stub.js.txt:6: trailing whitespace.
++}(typeof globalThis === 'object' ? globalThis : this, function () {
+learning/S033/evidence/red/affinity.stub.js.txt:7: trailing whitespace.
++  'use strict';
+learning/S033/evidence/red/affinity.stub.js.txt:8: trailing whitespace.
++  function createLesson() {
+learning/S033/evidence/red/affinity.stub.js.txt:9: trailing whitespace.
++    return {
+learning/S033/evidence/red/affinity.stub.js.txt:10: trailing whitespace.
++      step() {
+learning/S033/evidence/red/affinity.stub.js.txt:11: trailing whitespace.
++        return { verdict: 'unknown', metrics: { attempted: 0, preserved: 0, failed: 0, unknown: 0 } };
+learning/S033/evidence/red/affinity.stub.js.txt:12: trailing whitespace.
++      },
+learning/S033/evidence/red/affinity.stub.js.txt:13: trailing whitespace.
++      view() {
+learning/S033/evidence/red/affinity.stub.js.txt:14: trailing whitespace.
++        return { affinity: 'on', storage: 'local', verified: false, history: [] };
+learning/S033/evidence/red/affinity.stub.js.txt:15: trailing whitespace.
++      },
+learning/S033/evidence/red/affinity.stub.js.txt:16: trailing whitespace.
++      reset() {
+learning/S033/evidence/red/affinity.stub.js.txt:17: trailing whitespace.
++        return this.view();
+learning/S033/evidence/red/affinity.stub.js.txt:18: trailing whitespace.
++      },
+learning/S033/evidence/red/affinity.stub.js.txt:19: trailing whitespace.
++    };
+learning/S033/evidence/red/affinity.stub.js.txt:20: trailing whitespace.
++  }
+learning/S033/evidence/red/affinity.stub.js.txt:21: trailing whitespace.
++  return { createLesson };
+learning/S033/evidence/red/affinity.stub.js.txt:22: trailing whitespace.
++}));
+learning/S033/evidence/red/assertion.cjs.txt:1: trailing whitespace.
++'use strict';
+learning/S033/evidence/red/assertion.cjs.txt:2: trailing whitespace.
++
+learning/S033/evidence/red/assertion.cjs.txt:3: trailing whitespace.
++const test = require('node:test');
+learning/S033/evidence/red/assertion.cjs.txt:4: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S033/evidence/red/assertion.cjs.txt:5: trailing whitespace.
++const { createLesson } = require('../affinity.js');
+learning/S033/evidence/red/assertion.cjs.txt:6: trailing whitespace.
++
+learning/S033/evidence/red/assertion.cjs.txt:7: trailing whitespace.
++test('verified externalization before affinity removal preserves both clients on both workers', () => {
+learning/S033/evidence/red/assertion.cjs.txt:8: trailing whitespace.
++  const lesson = createLesson();
+learning/S033/evidence/red/assertion.cjs.txt:9: trailing whitespace.
++  lesson.step({ action: 'externalize', observation: 'complete' });
+learning/S033/evidence/red/assertion.cjs.txt:10: trailing whitespace.
++  lesson.step({ action: 'remove-affinity', observation: 'complete' });
+learning/S033/evidence/red/assertion.cjs.txt:11: trailing whitespace.
++  const result = lesson.step({ action: 'probe', observation: 'complete' });
+learning/S033/evidence/red/assertion.cjs.txt:12: trailing whitespace.
++  assert.equal(result.verdict, 'success', 'the complete cross-worker probe must preserve state');
+learning/S033/evidence/red/assertion.cjs.txt:13: trailing whitespace.
++  assert.equal(lesson.view().affinity, 'off');
+learning/S033/evidence/red/assertion.cjs.txt:14: trailing whitespace.
++  assert.deepEqual(result.metrics, { attempted: 4, preserved: 4, failed: 0, unknown: 0 });
+learning/S033/evidence/red/assertion.cjs.txt:15: trailing whitespace.
++  assert.deepEqual([...new Set(result.trace.map((row) => row.worker))], ['worker-a', 'worker-b']);
+learning/S033/evidence/red/assertion.cjs.txt:16: trailing whitespace.
++});
+learning/S033/evidence/tooling.json:1: trailing whitespace.
++{
+learning/S033/evidence/tooling.json:2: trailing whitespace.
++  "cardId": "A-S033",
+learning/S033/evidence/tooling.json:3: trailing whitespace.
++  "observedAtUtc": "2026-11-03T17:34:01.9828054Z",
+learning/S033/evidence/tooling.json:4: trailing whitespace.
++  "node": "v22.23.4",
+learning/S033/evidence/tooling.json:5: trailing whitespace.
++  "playwrightVersion": "1.56.1",
+learning/S033/evidence/tooling.json:6: trailing whitespace.
++  "playwrightLocation": "testing\\browser\\node_modules\\playwright",
+learning/S033/evidence/tooling.json:7: trailing whitespace.
++  "rootModuleResolution": "Root require(playwright) was absent; the existing helper-local offline package resolves. No installation or download was performed.",
+learning/S033/evidence/tooling.json:8: trailing whitespace.
++  "edgePath": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+learning/S033/evidence/tooling.json:9: trailing whitespace.
++  "edgeVersion": "156.0.4314.50",
+learning/S033/evidence/tooling.json:10: trailing whitespace.
++  "edgeSignatureStatus": "Valid",
+learning/S033/evidence/tooling.json:11: trailing whitespace.
++  "edgeSigner": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+learning/S033/evidence/tooling.json:12: trailing whitespace.
++  "downloads": false,
+learning/S033/evidence/tooling.json:13: trailing whitespace.
++  "newPackages": false,
+learning/S033/evidence/tooling.json:14: trailing whitespace.
++  "productionNode24Certified": false,
+learning/S033/evidence/tooling.json:15: trailing whitespace.
++  "nativeAzureCertified": false,
+learning/S033/evidence/tooling.json:16: trailing whitespace.
++  "lifecycleQualification": "Published helper only; known lifecycle limitation retained; abandoned prototype unused."
+learning/S033/evidence/tooling.json:17: trailing whitespace.
++}

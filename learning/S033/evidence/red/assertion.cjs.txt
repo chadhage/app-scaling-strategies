@@ -1,0 +1,16 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createLesson } = require('../affinity.js');
+
+test('verified externalization before affinity removal preserves both clients on both workers', () => {
+  const lesson = createLesson();
+  lesson.step({ action: 'externalize', observation: 'complete' });
+  lesson.step({ action: 'remove-affinity', observation: 'complete' });
+  const result = lesson.step({ action: 'probe', observation: 'complete' });
+  assert.equal(result.verdict, 'success', 'the complete cross-worker probe must preserve state');
+  assert.equal(lesson.view().affinity, 'off');
+  assert.deepEqual(result.metrics, { attempted: 4, preserved: 4, failed: 0, unknown: 0 });
+  assert.deepEqual([...new Set(result.trace.map((row) => row.worker))], ['worker-a', 'worker-b']);
+});

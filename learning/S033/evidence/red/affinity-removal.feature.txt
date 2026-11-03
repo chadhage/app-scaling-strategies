@@ -1,0 +1,74 @@
+Feature: Remove worker affinity only after verifying state externalization
+  A-S033 / D-S033 / SC-S033, frozen Kano S, local synthetic rehearsal only.
+  Source S033 requires eliminating or safely migrating instance-local state
+  before disabling instance affinity. No native Azure result is implied.
+
+  Background:
+    Given two synthetic clients each have an expected cart, workflow step and revision
+    And their instance-local state exists only on worker-a
+    And worker affinity initially pins their requests to worker-a
+    And each probe contains four deterministic requests covering both clients
+
+  Scenario: A pinned baseline is not permission to remove affinity
+    When I probe with complete observations
+    Then all four requests preserve the expected state
+    When I try to remove affinity before externalization
+    Then the action fails explicitly with a safe abort before exposure
+    And affinity remains on and no client state is reset
+
+  Scenario: Verify externalization before comparing affinity on and off
+    When I externalize with two complete matching record receipts
+    Then storage changes to verified shared state while affinity remains on
+    When I probe with complete observations
+    Then all four requests preserve state on worker-a
+    When I remove affinity and probe with complete observations
+    Then the four requests span worker-a and worker-b
+    And all four preserve every expected state field
+    And the result is synthetic success, not native certification
+
+  Scenario: Inspect the unsafe order without applying it
+    When I preview removal while state is instance-local
+    Then the hypothetical trace has four HTTP 200 responses
+    And the two responses from worker-b explicitly fail the state comparison
+    And no empty state is silently accepted as successful continuity
+    And the preview does not change affinity, storage or migration verification
+
+  Scenario Outline: Incomplete migration evidence cannot authorize removal
+    When I externalize using "<observation>" observations
+    Then migration is "<verdict>" and no shared state is committed
+    And the original local records remain intact with affinity on
+    When I try to remove affinity
+    Then the action fails explicitly with a safe abort before exposure
+
+    Examples:
+      | observation | verdict |
+      | mismatch    | failure |
+      | missing     | unknown |
+
+  Scenario: Later successful reads do not erase negative observations
+    Given I have externalized and removed affinity safely
+    When one probe response is missing
+    Then the result is unknown with three preserved and one unknown request
+    When one HTTP 200 probe response contains a wrong revision
+    Then the result is failure with three preserved and one failed request
+    When a subsequent complete probe succeeds
+    Then both the unknown and failure remain in ordered history
+    And the current successful result is not a clean-history claim
+
+  Scenario: Reject malformed commands and bound a run
+    When a command has an unknown action, observation, extra property or wrong type
+    Then it is rejected before changing state or history
+    And guards cannot be bypassed by mutating a returned snapshot
+    When sixteen valid steps have been recorded
+    Then further steps are refused without discarding history
+    And reset starts an untested local-state run with affinity on
+
+  Scenario: Accessible local browser operation
+    Given the exact banner "Training rehearsal - synthetic data - not a live Azure result" is visible
+    When I use Tab, arrow keys and Enter to conduct the before and after comparison
+    Then the real DOM shows measured results, explicit failures and retained history
+    And invalid input is announced without replacing the previous valid result
+    And keyboard reset clears the run and returns focus to the action picker
+    And native form.reset remains callable
+    And the page CSP blocks inline code, evaluation, connections and form submission
+    And ordinary verification does not rewrite published evidence

@@ -1,0 +1,105 @@
+{
+  "cardId": "A-S033",
+  "recordedAtUtc": "2026-11-03T17:42:18.909Z",
+  "failedStage": "Authorized publisher whitespace gate; no S033 commit was created.",
+  "diagnostic": "publication-whitespace-failure.raw.json",
+  "rootCause": "Exact original CRLF snapshots/tooling JSON were intentionally non-normalized evidence; diff treated CR as trailing whitespace. Working implementation source was CRLF while staged Git blobs were LF.",
+  "resolution": "Owned attributes preserve snapshots/tooling as non-diff exact evidence. Materialize only 13 already-staged owned source blobs after comparing every blob to normalized working text; all functional code changes were made with apply_patch.",
+  "materializationTool": "git cat-file blob with exact SHA IDs; explicit owned writes after verifying all files; checkout-index returned 0 but left CRLF and was not counted as successful conversion.",
+  "materializations": [
+    {
+      "file": "README.md",
+      "beforeSha256": "2263ca8aa9cfccd1fda363d0ab3f1b32aefadab17d504696fca3fb8b806866fd",
+      "canonicalSha256": "8d7cb6733979473522c28bfd80fecdbd5c9addad9f6b6b7d1e40088e3ee284b1",
+      "stagedBlob": "f637834354ea159cdd48f6bc6920a3d1cef3d80e"
+    },
+    {
+      "file": "affinity-removal.feature",
+      "beforeSha256": "3ec994f7a95ef6370f877909b68a1380ed8f347a1f608bb97e61ab7cd8a9851c",
+      "canonicalSha256": "92f707203a624075ddf36fd3876a7247c3a08b4225175b45762d71ec2d32f0fe",
+      "stagedBlob": "8aa436edf219270d44d44c094e9b8db1195a0216"
+    },
+    {
+      "file": "affinity.js",
+      "beforeSha256": "6b617a79abe6e25c6c505668abfd8be0290f8516f84fe790a41554882f5cbbb7",
+      "canonicalSha256": "42596a2cc0db6df0b0b363082ce4696a0b9b4514378135de29da2f9912c78588",
+      "stagedBlob": "b0ab22395695359c9f0fcaa313828860adc475c7"
+    },
+    {
+      "file": "app.js",
+      "beforeSha256": "7cc5db35fb75b802859ef5eed3426a2d69fd466388cccc9e6fc0409eead719e7",
+      "canonicalSha256": "1411a58aae5a70cb70ee40e1936e2a2960e2e854fb3dc4c03992c343c946d481",
+      "stagedBlob": "2d5aee29f126bb9edfd2a91c0b97bf33944cf1f6"
+    },
+    {
+      "file": "index.html",
+      "beforeSha256": "cfdd59a49266596eddb7c99b045ecf35f1901885b4afa7a3a483b420f9c7c174",
+      "canonicalSha256": "3795d716778086e23202b42b664cb5719cc25ffe01883baebaf68fc96153286d",
+      "stagedBlob": "bdebb0d84609178237dc50198cee09e5390c322a"
+    },
+    {
+      "file": "manifest.json",
+      "beforeSha256": "1e0b78c03587e7cc1933a1213d5b4f2bb1f768f4de11763d11d8a2b70bf73f9a",
+      "canonicalSha256": "c2b86dbf0405245a394c50c0fcc85170f304e8fde66a833c43d31e26c9ce987f",
+      "stagedBlob": "9f721aae8e75285857cebf426f6c742a77622df9"
+    },
+    {
+      "file": "styles.css",
+      "beforeSha256": "765ac2574979e9401689bf4823bcc11f96718f21656d7500d761dddc416a0a8b",
+      "canonicalSha256": "8f52233b8f114314439ba0bb319ec2d29fdb53388aed6bc6aa3d18567fefac7e",
+      "stagedBlob": "cd55ac92beb80e59196442590fe611fb1cca7e0d"
+    },
+    {
+      "file": "tests\\affinity.test.cjs",
+      "beforeSha256": "d774ebcdbc821c1c3b794a1c18017ead10436d3642aefc069fbe94e357f8c6a8",
+      "canonicalSha256": "3c7f992faf43fbe817dae71e3f358e880ce6921042cbacd8bbc0b3784e4214d0",
+      "stagedBlob": "491f67e38eaac9cf680fa4d01dd527df53e26579"
+    },
+    {
+      "file": "tests\\surface.test.cjs",
+      "beforeSha256": "59fedb668c0a8910f3d72627fa0a5ba9748a87595df602ff5a2d89f86e61ec28",
+      "canonicalSha256": "2954fe596800418a21fc0ab492bc847c05e5efb6e641b109725609fb00b4bf34",
+      "stagedBlob": "49d7616bbe308a5f550a153e55c8012581a85d41"
+    },
+    {
+      "file": "tests\\evidence.test.cjs",
+      "beforeSha256": "d6ef936078654fd4bb3f25f46ea3679089ab853a52c08af5e8e7102f6d06659e",
+      "canonicalSha256": "55df8bde85ab25bf585307822101280dd7024e70d8dcbd6659f4540df3dbfcb2",
+      "stagedBlob": "855d1545c0f8734c4ef0e4c9eb4a3148a2696482"
+    },
+    {
+      "file": "tests\\browser.cjs",
+      "beforeSha256": "8d75ded21a8ca5122f96b9200860fdf01bd965fb5dd7ac8b6dac6befb52aa9db",
+      "canonicalSha256": "2bec46df2c93331097727a88a6faeb634372052487af37583e38d8c51f7006d8",
+      "stagedBlob": "f39b2f69a80bf150d6b5e31402d1fa18ea23f52a"
+    },
+    {
+      "file": "tests\\csp-probe.js",
+      "beforeSha256": "41ca8415912570c9d6d56fdf445eb483b4f656b40d6bba8ceef4240accc081f0",
+      "canonicalSha256": "ebb2e900eeda79b5953d7c8b8772452e5cc918daf904b585defaaa8943ae3d88",
+      "stagedBlob": "b0691bc796251e72319f1dacc5ff6c36aaed943b"
+    },
+    {
+      "file": "tests\\replay-red.cjs",
+      "beforeSha256": "e8fd8840a1598ce766842f91e14c6c45482cc3f946e88a7d0e340774e20038ad",
+      "canonicalSha256": "cf50609317cabf8cef3a5f3db4bf0af520e78de762df302814ff463d1a47f025",
+      "stagedBlob": "e223b94e44cfe0db9c44748616c060bf7df75588"
+    }
+  ],
+  "originalRedSnapshotHashesStillMatch": true,
+  "broaderStaging": false,
+  "reset": false,
+  "stash": false,
+  "unownedCleanup": false,
+  "sharedOrRootEdit": false,
+  "extraKanoUnits": 0,
+  "requiresCurrentLfSourceChecks": true,
+  "currentLfSourceChecks": {
+    "outcome": "passed",
+    "coreGreen": "core-green.raw.json",
+    "syntax": "syntax.raw.json",
+    "sourceIntegrity": "pre-browser-integrity.json",
+    "browser": "evidence\\browser-003.json",
+    "focusedGreen": "focused-green.raw.json"
+  }
+}

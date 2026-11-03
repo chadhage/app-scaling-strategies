@@ -1,0 +1,22 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S033Affinity = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  function createLesson() {
+    return {
+      step() {
+        return { verdict: 'unknown', metrics: { attempted: 0, preserved: 0, failed: 0, unknown: 0 } };
+      },
+      view() {
+        return { affinity: 'on', storage: 'local', verified: false, history: [] };
+      },
+      reset() {
+        return this.view();
+      },
+    };
+  }
+  return { createLesson };
+}));
