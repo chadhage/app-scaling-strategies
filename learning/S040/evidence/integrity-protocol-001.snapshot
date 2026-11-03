@@ -1,0 +1,76 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const owned = path.resolve(__dirname, '..');
+const proofPath = path.join(owned, 'evidence', 'integrity.json');
+const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const json = (file) => JSON.parse(fs.readFileSync(path.join(owned, file), 'utf8'));
+
+function inventory(directory, result = {}) {
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    const file = path.join(directory, entry.name);
+    assert.ok(!entry.isSymbolicLink(), 'Proof scope must not contain links');
+    if (entry.isDirectory()) inventory(file, result);
+    else if (file !== proofPath) result[path.relative(owned, file)] = sha256(fs.readFileSync(file));
+  }
+  return result;
+}
+
+const historical = [];
+for (const name of fs.readdirSync(path.join(owned, 'evidence')).filter((file) => file.endsWith('.json'))) {
+  const proof = json(path.join('evidence', name));
+  if (!proof.stdout || !proof.stderr) continue;
+  for (const stream of ['stdout', 'stderr']) {
+    const raw = Buffer.from(proof[stream].base64, 'base64');
+    assert.equal(raw.length, proof[stream].length);
+    assert.equal(sha256(raw), proof[stream].sha256);
+  }
+  if (proof.exitCode !== proof.expectedExitCode) {
+    assert.equal(name, 'browser.json', 'Only the documented first browser-protocol attempt is an expected historical non-green capture');
+    assert.equal(proof.exitCode, 1);
+    const failed = json('evidence\\browser-observation.json');
+    assert.equal(failed.passed, false);
+    assert.equal(failed.sessionClosed, true);
+    assert.match(failed.failure.message, /waiting for navigation to finish/);
+  }
+  const display = `${Buffer.from(proof.stdout.base64, 'base64')}${Buffer.from(proof.stderr.base64, 'base64')}`
+    .replace(/\r\n/g, '\n').split('\n').map((line) => line.trimEnd()).join('\n');
+  assert.equal(fs.readFileSync(path.join(owned, 'evidence', name.replace(/\.json$/, '.txt')), 'utf8'), display);
+  if (proof.exitCode === proof.expectedExitCode) historical.push(proof.stage);
+}
+for (const stage of ['red', 'red-replay', 'green', 'syntax', 'browser']) assert.ok(historical.includes(stage), `Missing ${stage} proof`);
+for (const stage of ['red', 'red-replay']) {
+  const red = json(path.join('evidence', `${stage}.json`));
+  const text = Buffer.from(red.stdout.base64, 'base64').toString();
+  assert.equal(red.exitCode, 1);
+  assert.match(text, /ERR_ASSERTION/);
+  assert.match(text, /unknown/);
+  assert.match(text, /success/);
+  assert.doesNotMatch(text, /MODULE_NOT_FOUND|ENOENT|SyntaxError/);
+}
+const original = json('evidence\\source-contract.json');
+assert.equal(sha256(fs.readFileSync(path.join(owned, 'evidence', 'red', 'model.stub.snapshot'))), original.references['learning\\S040\\model.js']);
+assert.equal(sha256(fs.readFileSync(path.join(owned, 'evidence', 'red', 'assertion.source.snapshot'))), original.references['learning\\S040\\tests\\model.test.cjs']);
+const browser = json('evidence\\browser-observation-002.json');
+assert.equal(browser.passed, true);
+assert.equal(browser.sessionClosed, true);
+assert.ok(browser.checks.length >= 16);
+assert.equal(browser.helperSHA256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+assert.deepEqual(browser.pageErrors, []);
+assert.deepEqual(browser.nonFileResponses, []);
+const files = inventory(owned);
+if (process.env.CAPTURE_INTEGRITY_EVIDENCE === '1') {
+  assert.ok(!fs.existsSync(proofPath), 'Integrity evidence is immutable');
+  fs.writeFileSync(proofPath, `${JSON.stringify({
+    cardId: 'A-S040', capturedAt: new Date().toISOString(), algorithm: 'SHA-256',
+    scope: 'Every owned file except this integrity inventory itself; no external mutable ledger included.',
+    files,
+  }, null, 2)}\n`, { flag: 'wx' });
+}
+const recorded = json('evidence\\integrity.json');
+assert.equal(recorded.cardId, 'A-S040');
+assert.deepEqual(recorded.files, files, 'Owned file bytes changed or file inventory drifted');
+console.log(`S040 integrity: ${Object.keys(files).length} owned files verified; raw stream bytes, RED snapshots and closed-browser evidence verified. Read-only unless explicit initial capture.`);

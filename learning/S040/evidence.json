@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S040",
+  "workerId": "worker-A-S040",
+  "owner": "worker-A-S040",
+  "parentId": "D-S040",
+  "packet": "SC-S040",
+  "kano": "S",
+  "kanoUnit": "A-S040",
+  "entryGate": "SOURCE",
+  "mode": "synthetic",
+  "lesson": "index.html",
+  "manifest": "manifest.json",
+  "trainingLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "host": "Standalone browser-openable local file; no listener or deployed host.",
+  "verificationStatus": "local-synthetic-verified-controller-review-pending",
+  "reviewer": "Parent-owned independent empirical review pending",
+  "acceptedAtUtc": null,
+  "commitReference": "The authorized publisher and state Report record the implementation commit and annotated kanban/A-S040/<12sha> marker. This file does not self-award acceptance.",
+  "sourceReadBeforeDesign": {
+    "provenance": "evidence/source-contract.json",
+    "readme": "S040: Cookie-less clients: Preserve mobile and API-client continuity without assuming browser slot-routing cookies exist.",
+    "backlog": "D-S040: authenticated cookie-less API/mobile drivers controlled from the web console; actual API clients move correctly without browser affinity assumptions and identity, state and budgets are preserved; no original prerequisite.",
+    "card": "A-S040: Remove browser cookies from an API-client trace; choose identity/routing rules that still work.",
+    "portableContract": "Standalone browser-openable worked exercise; explicit objective, preconditions, actions, synthetic trace, expected assertions, limits, exact banner and keyboard controls.",
+    "packet": "SC-S040 is the default source-strategy packet from the registered card. A-S040 is one independent S unit; B-S040 and original source-parent acceptance remain separate."
+  },
+  "configuration": {
+    "clients": 2,
+    "fields": ["cookies", "identity", "routing", "state", "observation"],
+    "declaredConfigurations": 64,
+    "checksPerRehearsal": 9,
+    "originalBudgetMsPerClient": 300,
+    "completeElapsedMs": [150, 240],
+    "delayedElapsedMs": [350, 440],
+    "maximumRecordedRehearsals": 12,
+    "retention": "In-memory, page lifetime only; reset retains full records and never replenishes the run budget.",
+    "unknownRule": "Missing post-handoff observations and browser-only cookie traces cannot establish cookie-less continuity.",
+    "failureRule": "Any known failed required check dominates unknowns while retaining those unknown checks."
+  },
+  "sequence": [
+    {
+      "stage": "BDD first",
+      "artifact": "cookie-less.feature",
+      "executionClaim": "Behavior specification mapped to focused Node assertions and actual browser checks; no Cucumber package or runner is claimed."
+    },
+    {
+      "stage": "Loadable stub and genuine assertion RED",
+      "artifact": "evidence/red.json",
+      "readableLog": "evidence/red.txt",
+      "exitCode": 1,
+      "failure": "Loaded stub returned unknown where the behavioral assertion requires success; ERR_ASSERTION, not missing code, packages or tooling.",
+      "stubSnapshot": "evidence/red/model.stub.snapshot",
+      "assertionSnapshot": "evidence/red/assertion.source.snapshot",
+      "replay": "evidence/red/replay.cjs",
+      "replayCapture": "evidence/red-replay.json",
+      "replayExitCode": 1,
+      "nonAutoDiscovered": "Original source bytes use .snapshot; replay.cjs is outside test directories and is not named *.test.cjs."
+    },
+    {
+      "stage": "IaC applicability after RED, before implementation",
+      "artifact": "evidence/iac-na.json",
+      "status": "N/A"
+    },
+    {
+      "stage": "Implement and refactor",
+      "artifacts": ["model.js", "app.js", "index.html", "styles.css"],
+      "behavior": "Deterministic independent identity/routing/state/deadline checks, strict enum/data-property input guards, immutable results, guarded run/reset state, bounded retained history and text-only rendering."
+    },
+    {
+      "stage": "Focused GREEN",
+      "command": "node --test learning\\S040\\tests\\model.test.cjs learning\\S040\\tests\\page.test.cjs",
+      "artifact": "evidence/green-002.json",
+      "readableLog": "evidence/green-002.txt",
+      "exitCode": 0,
+      "testsPassed": 20,
+      "testsFailed": 0,
+      "skipped": 0,
+      "scope": "15 model tests, including all 64 configurations, and five static page/manifest/CSP checks. Static checks do not substitute for a real browser."
+    },
+    {
+      "stage": "Syntax",
+      "command": "node learning\\S040\\tests\\syntax.cjs",
+      "artifact": "evidence/syntax-002.json",
+      "exitCode": 0,
+      "scope": "Compile owned JavaScript and non-auto-discovered source snapshots; parse owned JSON."
+    },
+    {
+      "stage": "Actual isolated browser",
+      "command": "node learning\\S040\\tests\\browser.cjs",
+      "protocol": "tests/browser.cjs",
+      "artifact": "evidence/browser-observation-002.json",
+      "rawCapture": "evidence/browser-002.json",
+      "readableLog": "evidence/browser-002.txt",
+      "exitCode": 0,
+      "checksPassed": 16,
+      "scope": "Real DOM, native Tab/Shift+Tab/arrows/Enter/Space, success/failure/unknown traces, rejected identity, wrong destination, missing work under HTTP 200, original deadlines, non-destructive errors, reset/focus/history/cap guards and enforced CSP.",
+      "ordinaryPageErrors": 0,
+      "ordinaryConsoleErrors": 0,
+      "ownedFileRequests": 4,
+      "nonFileResponses": 0,
+      "intentionalCspViolations": 5,
+      "intentionalCspConsoleMessages": 6,
+      "enforcedDirectives": ["script-src-elem", "style-src-elem", "connect-src", "frame-src", "form-action"],
+      "forcedClicks": false,
+      "skippedAssertions": false,
+      "cleanup": "Awaited session.close() in finally; helper completed owned browser/scratch cleanup.",
+      "earlierFailedAttempt": {
+        "rawCapture": "evidence/browser.json",
+        "observation": "evidence/browser-observation.json",
+        "protocolSnapshot": "evidence/red/browser.attempt-001.protocol.snapshot",
+        "exitCode": 1,
+        "exerciseChecksPassed": 15,
+        "sessionClosed": true,
+        "failure": "After CSP correctly blocked form navigation, a Playwright locator waited for navigation and timed out. Direct DOM evaluation avoids that protocol wait without changing lesson behavior or relaxing CSP.",
+        "classification": "Preserved browser-protocol failure; not the behavioral RED and not a green run."
+      }
+    },
+    {
+      "stage": "Owned evidence integrity",
+      "command": "node learning\\S040\\tests\\integrity.cjs",
+      "artifact": "evidence/integrity-002.json",
+      "scope": "Every owned file except the integrity inventory itself; raw stream lengths/digests, original RED source/assertion hashes, failed browser-attempt classification and successful closed-browser result."
+    }
+  ],
+  "tooling": {
+    "provenance": "evidence/runtime-provenance.json",
+    "node": "v22.23.4; test tooling only",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Installed Microsoft-signed Edge 156.0.4314.50; Authenticode Valid",
+    "helper": "testing\\browser\\isolated.cjs",
+    "helperPublishedRevision": "53c0c0d",
+    "helperSHA256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "api": "openIsolatedLesson",
+    "lifecycleLimit": "The published helper's documented unattended lifecycle limitation remains; no abandoned recovery prototype or unattended CI qualification is claimed.",
+    "packagesInstalled": false,
+    "downloads": false,
+    "frameworksAdded": false,
+    "unsafeFlags": false,
+    "foregroundLease": false
+  },
+  "proofPolicy": {
+    "ordinaryVerification": "Read-only to proof; capture flags are deliberate producer operations and historical files are never overwritten.",
+    "rawBytes": "Capture JSON retains exact stdout/stderr base64, SHA-256 and lengths; readable logs alone normalize line endings and trailing whitespace.",
+    "redSnapshots": "Non-auto-discovered .snapshot source bytes remain immutable and are checked against the pre-implementation provenance.",
+    "captureEvolution": "The capture utility added immutable attempt labels and fuller current-asset source hashes after the original RED; original captures and RED snapshots remain unchanged.",
+    "newlinePolicy": "Owned .gitattributes disables newline conversion so recorded byte hashes survive Windows checkout; cr-at-eol recognizes Windows line endings while retaining normal trailing-space/space-before-tab checks.",
+    "firstPublicationCheck": {
+      "artifact": "evidence/publication-attempt-001.json",
+      "exitCode": 2,
+      "rawStreams": "Gzip archives retain exact scoped git diff --cached --check stdout/stderr with raw/compressed byte lengths and SHA-256.",
+      "failure": "The first publisher stopped before commit/tag/push: raw CRLF bytes were preserved by -text but initially interpreted as trailing whitespace.",
+      "correction": "Added cr-at-eol recognition, without modifying original source/proof bytes or disabling normal whitespace checks.",
+      "historicalInventory": "evidence/integrity.json",
+      "currentInventory": "evidence/integrity-002.json",
+      "historicalVerifier": "evidence/integrity-protocol-001.snapshot",
+      "recapturedFinalChecks": ["evidence/green-002.json", "evidence/syntax-002.json"]
+    }
+  },
+  "userImpact": {
+    "success": "Both synthetic clients reach v2 without cookies, preserving their distinct subjects, all declared work fields and original deadlines.",
+    "failure": "Known identity, routing, state or budget interruption is explicit and retained.",
+    "unknown": "Unavailable mobile observations or browser-only cookie traces do not establish cookie-less continuity.",
+    "reset": "Current result becomes untested and defaults/focus return; prior records remain unchanged and the budget is not replenished."
+  },
+  "refinement": "evidence/refinement.json",
+  "nativeRemainder": "B-S040 retains CORE, DATA, HOST and C032 gates plus actual qualified client/host evidence and explicit live-execution authorization.",
+  "iac": "N/A",
+  "cloudCalls": false,
+  "credentials": false,
+  "identityRegistration": false,
+  "liveAuthentication": false,
+  "deployment": false,
+  "spend": false,
+  "nativeProof": false,
+  "sourceParentComplete": false,
+  "productionNode24Validated": false,
+  "selfAccepted": false
+}
