@@ -1,0 +1,127 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { createHash } = require('node:crypto');
+const { spawnSync } = require('node:child_process');
+
+const root = path.resolve(__dirname, '..');
+const repo = path.resolve(root, '..', '..');
+const bytes = (file) => fs.readFileSync(path.join(root, file));
+const json = (file) => JSON.parse(bytes(file));
+const hash = (value) => createHash('sha256').update(value).digest('hex');
+function files(dir = root) {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const target = path.join(dir, entry.name);
+    return entry.isDirectory() ? files(target) : [path.relative(root, target)];
+  }).sort();
+}
+function git(args, input) {
+  const result = spawnSync('git', ['--no-pager', ...args], { cwd: repo, input });
+  assert.equal(result.status, 0, result.stderr.toString());
+  return result.stdout;
+}
+
+test('sealed integrity index covers every owned file except itself without rewriting any proof', () => {
+  const index = json('evidence/index.json');
+  assert.equal(index.algorithm, 'SHA-256');
+  assert.equal(index.excludesOnly, 'evidence\\index.json');
+  const actual = files().filter((file) => file !== 'evidence\\index.json');
+  assert.deepEqual(Object.keys(index.files).sort(), actual);
+  for (const file of actual) assert.equal(hash(bytes(file)), index.files[file], `Raw owned bytes changed: ${file}`);
+  assert.match(bytes('.gitattributes').toString(), /evidence\/raw\/\*\* -text -diff/);
+  assert.match(bytes('.gitattributes').toString(), /evidence\/red\/\*\* -text -diff/);
+});
+
+test('original RED, CRLF excerpts, chronology and raw/canonical helper identity remain independently qualified', () => {
+  const contract = json('evidence/source-contract.json');
+  const bdd = json('evidence/bdd.json');
+  const red = json('evidence/red.json');
+  const iac = json('evidence/iac-decision.json');
+  assert.equal(bdd.sourceContractSha256, hash(bytes('evidence/source-contract.json')));
+  assert.equal(bdd.featureSha256, hash(bytes('evidence/red/dns-cache.feature.snapshot')));
+  assert.equal(red.status, 1);
+  assert.equal(red.error, null);
+  assert.equal(red.stdoutSha256, hash(bytes('evidence/raw/red.stdout.txt')));
+  assert.equal(red.stderrSha256, hash(bytes('evidence/raw/red.stderr.txt')));
+  const tap = bytes('evidence/raw/red.stdout.txt').toString();
+  assert.match(tap, /# pass 1\r?\n# fail 10/);
+  assert.equal((tap.match(/code: 'ERR_ASSERTION'/g) || []).length, 10);
+  assert.doesNotMatch(tap, /MODULE_NOT_FOUND|SyntaxError|TypeError:/);
+  assert.equal(iac.decision, 'N/A');
+  assert.equal(iac.afterRedSha256, hash(bytes('evidence/red.json')));
+  assert.ok(Date.parse(contract.capturedAtUtc) <= Date.parse(bdd.capturedAtUtc));
+  assert.ok(Date.parse(bdd.capturedAtUtc) <= Date.parse(red.capturedAtUtc));
+  assert.ok(Date.parse(red.capturedAtUtc) < Date.parse(iac.capturedAtUtc));
+  assert.ok(Date.parse(iac.capturedAtUtc) < Date.parse(json('evidence/green.json').capturedAtUtc));
+  const excerpt = bytes('evidence/source/atomic-portable.snapshot');
+  assert.equal(hash(excerpt), contract.atomicPortableSha256);
+  assert.ok(excerpt.includes(Buffer.from('\r\n')));
+  const helper = fs.readFileSync(path.join(repo, 'testing', 'browser', 'isolated.cjs'));
+  assert.equal(hash(helper), '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+  assert.equal(hash(helper), contract.helper.rawSha256);
+  assert.ok(helper.includes(Buffer.from('\r\n')));
+  const canonical = git(['show', `${contract.helper.publishedCommit}:testing/browser/isolated.cjs`]);
+  assert.equal(hash(canonical), contract.helper.canonicalGitSha256);
+  assert.notEqual(hash(helper), hash(canonical));
+  assert.deepEqual(Buffer.from(helper.toString().replace(/\r\n/g, '\n')), canonical);
+  const qualification = json('evidence/browser-qualification.json');
+  assert.equal(qualification.extraCredit, 0);
+  assert.equal(json(qualification.rawRun).status, 1);
+  assert.deepEqual(qualification.actualAssertion, {
+    expected: false, line: 206, actual: true, file: 'tests\\browser.test.cjs', field: 'csp.evalExecuted'
+  });
+  for (const snapshot of qualification.snapshots) assert.equal(hash(bytes(snapshot.snapshot)), snapshot.sha256);
+  assert.equal(json('evidence/browser-final-run.json').status, 0);
+  for (const check of json('evidence/syntax-final.json').checks) {
+    assert.equal(check.status, 0);
+    assert.equal(hash(bytes(check.file)), check.sha256, `Final checked source changed: ${check.file}`);
+  }
+});
+
+test('original RED suite replays from non-discovered snapshots in memory, never by swapping source', () => {
+  const code = `
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const Module = require('node:module');
+    const root = ${JSON.stringify(root)};
+    const modelPath = path.join(root, 'model.js');
+    const model = new Module(modelPath);
+    model.filename = modelPath;
+    model.paths = Module._nodeModulePaths(root);
+    model._compile(fs.readFileSync(path.join(root, 'evidence', 'red', 'model.js.snapshot'), 'utf8'), modelPath);
+    require.cache[modelPath] = model;
+    const testPath = path.join(root, 'tests', 'model.test.cjs');
+    const suite = new Module(testPath);
+    suite.filename = testPath;
+    suite.paths = Module._nodeModulePaths(path.dirname(testPath));
+    suite._compile(fs.readFileSync(path.join(root, 'evidence', 'red', 'model.test.cjs.snapshot'), 'utf8'), testPath);
+  `;
+  const env = { ...process.env, NODE_DISABLE_COMPILE_CACHE: '1' };
+  delete env.NODE_TEST_CONTEXT;
+  delete env.CAPTURE_BROWSER_EVIDENCE;
+  const before = Object.fromEntries(files().map((file) => [file, hash(bytes(file))]));
+  const result = spawnSync(process.execPath, ['-e', code], { cwd: repo, env, timeout: 15000 });
+  assert.equal(result.status, 1);
+  assert.equal(result.error, undefined);
+  assert.match(result.stdout.toString(), /# pass 1\r?\n# fail 10/);
+  assert.equal((result.stdout.toString().match(/code: 'ERR_ASSERTION'/g) || []).length, 10);
+  assert.deepEqual(Object.fromEntries(files().map((file) => [file, hash(bytes(file))])), before);
+});
+
+test('Git canonical source normalization is qualified separately from protected raw evidence', () => {
+  for (const file of ['model.js', 'app.js', 'index.html', 'styles.css', 'manifest.json', 'README.md', 'dns-cache.feature']) {
+    const raw = bytes(file);
+    const canonical = Buffer.from(raw.toString().replace(/\r\n/g, '\n'));
+    const actual = git(['hash-object', `--path=learning/S102/${file}`, '--stdin'], raw).toString().trim();
+    const expected = git(['hash-object', '--stdin'], canonical).toString().trim();
+    assert.equal(actual, expected, `Canonical Git source mismatch: ${file}`);
+  }
+  for (const file of ['evidence/source/atomic-portable.snapshot', 'evidence/red/model.js.snapshot', 'evidence/raw/red.stdout.txt']) {
+    const raw = bytes(file);
+    assert.equal(git(['hash-object', `--path=learning/S102/${file}`, '--stdin'], raw).toString().trim(),
+      git(['hash-object', '--no-filters', '--stdin'], raw).toString().trim(), `Raw evidence was filtered: ${file}`);
+  }
+});

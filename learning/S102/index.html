@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; media-src 'none'; font-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S102 — DNS cache persistence rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#lesson">Skip to lesson</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S102 — DNS cache persistence</h1>
+    <p>Compare fresh/cached DNS answers; identify why immediate convergence cannot be assumed.</p>
+  </header>
+  <main id="lesson" tabindex="-1">
+    <section aria-labelledby="instructions-heading">
+      <h2 id="instructions-heading">Conduct the fixed-data exercise</h2>
+      <p><strong>DATA ONLY:</strong> DNS answers, resolver/cache expiry, destinations, routing, and latency below are fixed teaching observations. Nothing queries or changes DNS, host files, resolver/system settings, resources, or real endpoints.</p>
+      <ol>
+        <li>Choose whether the old teaching destination stays usable, then publish the <em>fixed teaching answer</em>.</li>
+        <li>Choose a fixed observation time and coverage; compare fresh and cached answers.</li>
+        <li>Predict the measured synthetic outcome and explain why a fresh answer does not authorize immediate retirement.</li>
+        <li>Reset and compare the early-retirement and missing-observation cases. Previous outcomes remain in history.</li>
+      </ol>
+      <dl class="fixture">
+        <div><dt>Teaching name (display only)</dt><dd><code>service.training.invalid</code></dd></div>
+        <div><dt>Before switch, t=0</dt><dd>All fixed samples: blue, <code>192.0.2.10</code></dd></div>
+        <div><dt>Fresh after switch, t=30</dt><dd>Green, <code>192.0.2.20</code></dd></div>
+        <div><dt>Fixed pre-change cache expiries</dt><dd>A: t=120; B: t=180 synthetic seconds</dd></div>
+        <div><dt>Declared overlap</dt><dd>Retain blue through t=180, including cached B's later expiry</dd></div>
+        <div><dt>Fixed journey envelope</dt><dd>3 sampled journeys per comparison; 10 synthetic ms budget; 12 comparisons maximum</dd></div>
+      </dl>
+      <p>These different expiry deadlines are fixture assumptions, not universal resolver behavior. A first expiry is not everybody's expiry. Agreement at t=180 covers only the three samples, not unobserved resolvers or real DNS convergence.</p>
+    </section>
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Operator actions — fixture only</h2>
+      <form id="lesson-controls">
+        <fieldset>
+          <legend>1. Publish a fixed synthetic switch</legend>
+          <label for="retention-policy">Old teaching destination</label>
+          <select id="retention-policy" name="retentionPolicy">
+            <option value="retain" selected>Retain blue through declared overlap</option>
+            <option value="retire-now">Retire blue immediately at t=30 (negative case)</option>
+          </select>
+          <button id="publish-answer" type="button">Publish fixed teaching answer</button>
+        </fieldset>
+        <fieldset>
+          <legend>2. Compare predetermined observations</legend>
+          <label for="sample-time">Fixed observation time</label>
+          <select id="sample-time" name="sampleTime">
+            <option value="immediate" selected>t=30 — immediately after switch</option>
+            <option value="first-expiry">t=120 — cached A expires, B remains old</option>
+            <option value="overlap-end">t=180 — declared sampled overlap ends</option>
+          </select>
+          <label for="observation-coverage">Evidence coverage</label>
+          <select id="observation-coverage" name="observationCoverage">
+            <option value="complete" selected>All three fixed observations available</option>
+            <option value="missing-b">Cached B observation missing (unknown case)</option>
+          </select>
+          <button id="compare-answers" type="button" disabled>Compare fixed fresh/cached answers</button>
+        </fieldset>
+        <fieldset>
+          <legend>3. Check your interpretation, not a live result</legend>
+          <label for="predicted-outcome">Measured synthetic outcome</label>
+          <select id="predicted-outcome" name="predictedOutcome">
+            <option value="success" selected>SUCCESS — all sampled journeys succeed</option>
+            <option value="failure">FAILURE — at least one sampled interruption</option>
+            <option value="unknown">UNKNOWN — no interruption seen, but evidence missing</option>
+          </select>
+          <label for="convergence-reason">What follows from the DNS observations?</label>
+          <select id="convergence-reason" name="convergenceReason">
+            <option value="fresh-proves-all" selected>Fresh answer proves everyone moved; retire immediately</option>
+            <option value="retain-overlap-not-universal">Retain old overlap; sampled answers do not prove universal convergence</option>
+            <option value="ttl-proves-all">A sampled expiry proves every resolver converged</option>
+          </select>
+          <button id="check-explanation" type="button" disabled>Check interpretation</button>
+        </fieldset>
+        <button id="reset-rehearsal" type="button">Reset rehearsal — keep history</button>
+      </form>
+      <p id="error-message" role="alert" tabindex="-1" hidden></p>
+      <p id="phase"></p>
+      <p>Teaching clock: <output id="teaching-clock">0 synthetic seconds</output>. Fixed fresh reference: <output id="fresh-reference">192.0.2.10</output>.</p>
+    </section>
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Measured synthetic comparison</h2>
+      <p id="current-status" role="status" aria-live="polite" aria-atomic="true">No comparison yet; no outcome claim.</p>
+      <p id="sample-agreement">Sample agreement: not measured.</p>
+      <p id="convergence-warning"><strong>Universal convergence: NOT ESTABLISHED.</strong> No real DNS or user transition was measured.</p>
+      <div class="table-scroll">
+        <table>
+          <caption>Current fixed observations — not live DNS responses</caption>
+          <thead><tr><th scope="col">Sample</th><th scope="col">Evidence kind</th><th scope="col">Answer</th><th scope="col">Destination</th><th scope="col">Remaining fixed cache</th><th scope="col">Usability</th><th scope="col">Synthetic latency</th><th scope="col">Outcome</th></tr></thead>
+          <tbody id="trace-rows"></tbody>
+        </table>
+      </div>
+      <p id="interpretation" role="status" aria-live="polite" aria-atomic="true">Interpretation: choose an outcome and a reason after comparing.</p>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained in-memory history</h2>
+      <p id="history-summary">Comparisons 0/12 · attempted 0 · successful 0 · interruptions 0 · unknown 0</p>
+      <p>Failures and unknowns stay in the attempted denominator. Reset clears only the current trace and controls; deliberate reload clears all memory. A correct negative-test explanation never turns an interrupted journey into success.</p>
+      <div class="table-scroll">
+        <table>
+          <caption>Every measured comparison, including failures and unknowns</caption>
+          <thead><tr><th scope="col">Run</th><th scope="col">Time</th><th scope="col">Old destination</th><th scope="col">Coverage</th><th scope="col">Outcome</th><th scope="col">Success / attempted</th><th scope="col">Interruptions</th><th scope="col">Unknown</th><th scope="col">Interpretation</th></tr></thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <p>A-S102 · D-S102 · SC-S102 · frozen Kano S. B-S102 native proof and the source parent remain incomplete.</p>
+    <p>No cloud, IaC, identity, credentials, deployment, spend, real resolver certification, production Node.js 24 validation, or five-nines claim.</p>
+    <p><a href="README.md">Lesson instructions and evidence</a> · <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft Open Source Disclaimer</a></p>
+  </footer>
+</body>
+</html>
