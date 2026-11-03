@@ -1,0 +1,20 @@
+'use strict';
+
+(function expose(root, factory) {
+  const value = factory();
+  if (typeof module === 'object' && module.exports) module.exports = value;
+  else root.S081Model = value;
+})(globalThis, function stub() {
+  function createLesson() {
+    const state = {
+      phase: 'idle', desired: 'NOT_STARTED', observed: 'NOT_STARTED', config: null,
+      outcome: 'NOT_DECIDED', gate: { target: null, checks: [], success: 0, failure: 0, unknown: 0 },
+      trace: [], history: [], prediction: null, predictionCorrect: null,
+      totals: { attempted: 0, success: 0, failure: 0, unknown: 0 },
+    };
+    const snapshot = () => JSON.parse(JSON.stringify(state));
+    return { snapshot, start: snapshot, requestNext: snapshot, observe: snapshot,
+      retain: snapshot, newAttempt: snapshot, reset: snapshot };
+  }
+  return { createLesson };
+});

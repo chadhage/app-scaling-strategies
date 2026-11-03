@@ -1,0 +1,56 @@
+Feature: A-S081 synthetic desired and observed lifecycle
+  Training rehearsal - synthetic data - not a live Azure result
+  Source S081; parent D-S081; native sibling B-S081; frozen S; packet SC-S081.
+
+  Background:
+    Given the fixed synthetic green-v2 deployment, desired epoch 7 and legacy warm true
+    And only exact endpoint, epoch, readiness, routing, drain and retention choices are accepted
+    And no controller, durable service, deployment, routing or ownership is actually operated
+
+  Scenario: Requested state is not an observed state
+    When I start and request CREATED
+    Then desired is CREATED and observed is UNOBSERVED
+    When I observe each gate and request the next state
+    Then the trace records CREATED, WARMING, READY, CANARY, ACTIVE, DRAINING, RETAINED and RETIRED
+    And SUCCESS is possible only after all eight observed gates pass
+    And endpoint, epoch, freshness, compatibility, capacity and measured routing are inspectable
+
+  Scenario: Warm cannot bypass routing
+    Given warm is true and routing is partial
+    When I request ACTIVE after observed CANARY
+    Then desired is ACTIVE and observed stays CANARY
+    And desired routing 100 and effective routing 60 produce FAILURE
+
+  Scenario: Warm cannot bypass drain or retention
+    Given warm is true and remaining work, clients or ownership are nonzero
+    When I request RETAINED
+    Then observed stays DRAINING and the result is FAILURE
+    Given the rollback window is still open
+    When I request RETIRED
+    Then observed stays RETAINED and the result is FAILURE
+
+  Scenario: Missing evidence and known failures are not success
+    Given endpoint, epoch, readiness, routing, drain or retention evidence is missing
+    When its gate is observed
+    Then the result is UNKNOWN with explicit unknown counts
+    Given the endpoint is missing and the epoch is stale at the same gate
+    Then the known stale epoch makes the result FAILURE and the missing endpoint remains visible
+
+  Scenario: Guard invalid input and out-of-order state changes
+    When I inject an invalid option, extra field, repeated request or out-of-order observation
+    Then the action is rejected without changing lifecycle state or retained history
+    And the browser announces the error and focuses its field or alert
+
+  Scenario: Retain learning separately from lifecycle outcomes
+    When I check a SUCCESS, FAILURE or UNKNOWN prediction
+    Then the actual result and prediction correctness remain separate
+    And new attempt retains the full desired/observed trace and attempt denominator
+    And the seventh attempt is rejected without evicting any of six retained attempts
+
+  Scenario: Keyboard, reset and portable CSP
+    Given I use Tab, Enter and Space on a narrow viewport
+    Then controls have visible focus and the page has no horizontal overflow
+    When I explicitly reset
+    Then defaults, current evidence, errors, prediction, history and counters are cleared
+    And native form.reset remains callable and reload clears memory
+    And enforced CSP blocks inline scripts and connections without an unsafe flag

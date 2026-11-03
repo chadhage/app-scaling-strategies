@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S081 — Desired is not observed</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" id="skip-main" href="#main">Skip to lesson</a>
+  <main id="main" tabindex="-1">
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S081 — Desired is not observed</h1>
+    <p><strong>A-S081 · D-S081 · frozen S · SC-S081.</strong> Advance desired/observed states; a warm boolean cannot bypass routing/drain gates.</p>
+    <p>Request one state, then observe its gate. Only a passing observation advances the synthetic deployment. A safe rejection or an unknown result is not a completed migration.</p>
+    <details>
+      <summary>Preconditions, fixed trace and limits</summary>
+      <p>JavaScript enabled. Fixed green-v2 candidate, desired epoch 7, legacy warm = true, canary 10%, active 100%, then 0% on drain. Each exposed stage declares ten synthetic journeys. Fresh readiness means age ≤ 2 synthetic ticks, compatible version, healthy and at least three capacity units. Retire only at synthetic tick 8 or later.</p>
+      <p>Choose six fixed evidence conditions before starting. The inputs freeze for that attempt. Six attempts are retained in memory without eviction. New attempt retains evidence; explicit reset or reload clears it.</p>
+      <p>This is not a durable controller or an actual deployment, routing, drain, ownership or Azure test. No production Node24, native sibling B-S081, source-parent completion or five-nines claim. No cloud, IaC, credentials, identity, network calls, packages, framework, deployment or spending. Optional direct promotion, abort, quarantine, rollback and changing evidence mid-run are outside this small fixed canary path.</p>
+    </details>
+
+    <section aria-labelledby="configure-heading">
+      <h2 id="configure-heading">1. Choose synthetic evidence</h2>
+      <form id="settings-form" novalidate>
+        <fieldset id="settings">
+          <legend>Fixed conditions for one attempt</legend>
+          <div class="grid">
+            <div>
+              <label for="endpoint">Recorded endpoint</label>
+              <select id="endpoint"><option value="recorded">Recorded /synthetic/green-v2</option><option value="missing">Missing endpoint observation</option></select>
+            </div>
+            <div>
+              <label for="epoch">Deployment epoch</label>
+              <select id="epoch"><option value="current">Observed 7 = desired 7</option><option value="stale">Observed 6 ≠ desired 7</option><option value="missing">Missing epoch observation</option></select>
+            </div>
+            <div>
+              <label for="readiness">Readiness evidence</label>
+              <select id="readiness"><option value="fresh">Healthy, fresh, compatible, capacity 4/3</option><option value="stale">Stale: age 3, limit 2 ticks</option><option value="insufficient">Unhealthy, incompatible, capacity 2/3</option><option value="missing">Missing readiness observation</option></select>
+            </div>
+            <div>
+              <label for="routing">Desired / effective routing</label>
+              <select id="routing"><option value="converged">10/10 → 100/100 → 0/0 percent</option><option value="partial">10/10 → 100/60 → 0/20 percent</option><option value="missing">Missing routing observation</option></select>
+            </div>
+            <div>
+              <label for="drain">Drain evidence</label>
+              <select id="drain"><option value="complete">No admissions, clients, work or ownership</option><option value="remaining">Clients 2, work 1, owner 1, no checkpoint</option><option value="missing">Missing drain observation</option></select>
+            </div>
+            <div>
+              <label for="retention">Rollback retention</label>
+              <select id="retention"><option value="elapsed">Ready artifacts; tick 8 / deadline 8</option><option value="open">Ready artifacts; tick 7 / deadline 8</option><option value="missing">Missing retention observation</option></select>
+            </div>
+          </div>
+        </fieldset>
+        <button id="start-candidate" type="button">Start / request CREATED</button>
+      </form>
+    </section>
+
+    <p id="input-error" role="alert" tabindex="-1" hidden></p>
+    <section aria-labelledby="conduct-heading">
+      <h2 id="conduct-heading">2. Request, then observe</h2>
+      <div class="status" aria-live="polite" aria-atomic="true">
+        <p id="phase">Phase: idle</p>
+        <p id="desired-state">Desired: NOT_STARTED</p>
+        <p id="observed-state">Observed: NOT_STARTED</p>
+        <p id="outcome">Result: NOT_DECIDED</p>
+        <p id="gate-counts">Current gate checks: success 0 · failure 0 · unknown 0</p>
+      </div>
+      <p id="legacy-warm">Legacy warm: true — never a gate</p>
+      <p>Deployment identity: green-v2 · desired epoch: 7. A request changes intent only; an observation must provide every required gate signal.</p>
+      <div class="controls">
+        <button id="observe-state" type="button" disabled>Observe requested gate</button>
+        <button id="request-next" type="button" disabled>Request next state</button>
+      </div>
+      <ol id="lifecycle" aria-label="Desired and observed lifecycle"></ol>
+      <h3>Current gate inspector</h3>
+      <p id="routing-metrics">Routing: not evaluated at current gate</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Required evidence, including missing or failed observations</caption>
+          <thead><tr><th scope="col">Gate signal</th><th scope="col">Actual synthetic value</th><th scope="col">Required</th><th scope="col">Result</th></tr></thead>
+          <tbody id="gate-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>Request and observation timeline</caption>
+          <thead><tr><th scope="col">Step</th><th scope="col">Action</th><th scope="col">Desired</th><th scope="col">Observed</th><th scope="col">Gate</th><th scope="col">Result</th></tr></thead>
+          <tbody id="trace-rows"></tbody>
+        </table>
+      </div>
+      <details id="current-detail"><summary>Full current synthetic trace</summary><pre id="current-proof">No attempt started.</pre></details>
+    </section>
+
+    <section aria-labelledby="check-heading">
+      <h2 id="check-heading">3. Check and retain</h2>
+      <form id="prediction-form" novalidate>
+        <label for="prediction">Predict the actual lifecycle result</label>
+        <select id="prediction" disabled><option value="">Choose a result</option><option value="SUCCESS">SUCCESS — observed RETIRED</option><option value="FAILURE">FAILURE — a known gate failed</option><option value="UNKNOWN">UNKNOWN — required evidence missing</option></select>
+        <button id="check-prediction" type="button" disabled>Check prediction &amp; retain</button>
+      </form>
+      <p id="prediction-result" aria-live="polite">Learning prediction not checked.</p>
+      <p id="attempt-totals">Retained attempts: 0 · success 0 · failure 0 · unknown 0</p>
+      <p id="history-count">Retained complete traces: 0 / 6</p>
+      <div class="controls">
+        <button id="new-attempt" type="button" disabled>New attempt (retain history)</button>
+        <button id="reset-lesson" type="button">Reset all local data</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>Actual results remain separate from learning predictions</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Result</th><th scope="col">Desired / observed</th><th scope="col">Prediction</th><th scope="col">Learning</th><th scope="col">Trace events</th></tr></thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+      <details id="retained-detail"><summary>Full retained synthetic evidence</summary><pre id="retained-proof"></pre></details>
+    </section>
+    <noscript><p>This resource-free lesson requires JavaScript. No evidence or migration is produced while JavaScript is unavailable.</p></noscript>
+  </main>
+</body>
+</html>

@@ -1,0 +1,210 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fixtures = require('..\\fixtures.js');
+const { createLesson } = require('..\\model.js');
+const config = (change = {}) => ({ ...fixtures.defaults, ...change });
+function finish(lesson, change = {}) {
+  lesson.start(config(change));
+  for (let count = 0; count < 16; count++) {
+    const state = lesson.snapshot();
+    if (state.phase === 'awaiting') lesson.observe();
+    else if (state.phase === 'advanced') lesson.requestNext();
+    else break;
+  }
+  return lesson.snapshot();
+}
+function rejected(lesson, action, field) {
+  const before = lesson.snapshot();
+  assert.throws(action, (error) => error.code === 'INVALID_INPUT' || error.code === 'INVALID_STATE');
+  assert.deepEqual(lesson.snapshot(), before);
+  if (field) assert.throws(action, (error) => error.field === field);
+}
+
+test('loadable model begins with no manufactured observation or success', () => {
+  const lesson = createLesson();
+  assert.equal(lesson.snapshot().phase, 'idle');
+  assert.equal(lesson.snapshot().outcome, 'NOT_DECIDED');
+  assert.deepEqual(lesson.snapshot().history, []);
+});
+
+test('starting requests CREATED without claiming it was observed', () => {
+  const lesson = createLesson();
+  const state = lesson.start(config());
+  assert.equal(state.desired, 'CREATED');
+  assert.equal(state.observed, 'UNOBSERVED');
+  assert.equal(state.phase, 'awaiting');
+  assert.deepEqual(state.config, config());
+  assert.equal(state.trace[0].action, 'request');
+});
+
+test('eight independent observations, not requests, advance the entire lifecycle', () => {
+  const lesson = createLesson();
+  lesson.start(config());
+  for (const [index, target] of fixtures.states.entries()) {
+    let state = lesson.snapshot();
+    assert.equal(state.desired, target);
+    assert.equal(state.observed, index ? fixtures.states[index - 1] : 'UNOBSERVED');
+    assert.equal(state.outcome, 'NOT_DECIDED');
+    state = lesson.observe();
+    assert.equal(state.observed, target);
+    assert.equal(state.gate.failure, 0);
+    assert.equal(state.gate.unknown, 0);
+    if (index < fixtures.states.length - 1) lesson.requestNext();
+  }
+  const state = lesson.snapshot();
+  assert.equal(state.phase, 'decided');
+  assert.equal(state.outcome, 'SUCCESS');
+  assert.equal(state.trace.length, 16);
+  assert.deepEqual(state.trace.filter((event) => event.action === 'observe').map((event) => event.observed), fixtures.states);
+});
+
+test('legacy warm true cannot bypass desired/effective routing evidence', () => {
+  const state = finish(createLesson(), { routing: 'partial' });
+  assert.equal(state.outcome, 'FAILURE');
+  assert.equal(fixtures.legacyWarm, true);
+  assert.equal(state.desired, 'ACTIVE');
+  assert.equal(state.observed, 'CANARY');
+  const check = state.gate.checks.find((entry) => entry.id === 'effective-routing');
+  assert.equal(check.actual, 60);
+  assert.equal(check.expected, 100);
+});
+
+test('nonzero clients, work and ownership prevent RETAINED despite warm', () => {
+  const state = finish(createLesson(), { drain: 'remaining' });
+  assert.equal(state.outcome, 'FAILURE');
+  assert.equal(state.desired, 'RETAINED');
+  assert.equal(state.observed, 'DRAINING');
+  for (const id of ['remaining-clients', 'remaining-work', 'ownership-holders', 'checkpoint']) {
+    assert.equal(state.gate.checks.find((entry) => entry.id === id).status, 'FAILURE', id);
+  }
+});
+
+test('an open rollback deadline cannot be reported as retirement', () => {
+  const state = finish(createLesson(), { retention: 'open' });
+  assert.equal(state.outcome, 'FAILURE');
+  assert.equal(state.desired, 'RETIRED');
+  assert.equal(state.observed, 'RETAINED');
+  assert.equal(state.gate.checks.find((entry) => entry.id === 'rollback-deadline').actual, 7);
+});
+
+test('a stale epoch cannot establish even the CREATED observation', () => {
+  const state = finish(createLesson(), { epoch: 'stale' });
+  assert.equal(state.outcome, 'FAILURE');
+  assert.equal(state.desired, 'CREATED');
+  assert.equal(state.observed, 'UNOBSERVED');
+  assert.equal(state.gate.checks.find((entry) => entry.id === 'epoch').actual, 6);
+});
+
+test('readiness includes freshness, health, compatibility and capacity, not warm', () => {
+  for (const readiness of ['stale', 'insufficient']) {
+    const state = finish(createLesson(), { readiness });
+    assert.equal(state.outcome, 'FAILURE');
+    assert.equal(state.desired, 'READY');
+    assert.equal(state.observed, 'WARMING');
+    assert.ok(state.gate.checks.some((entry) => entry.status === 'FAILURE'));
+  }
+});
+
+test('missing evidence in each gate is UNKNOWN, never invented success', () => {
+  for (const [field, desired] of Object.entries({
+    endpoint: 'CREATED', epoch: 'CREATED', readiness: 'READY',
+    routing: 'CANARY', drain: 'DRAINING', retention: 'RETAINED',
+  })) {
+    const state = finish(createLesson(), { [field]: 'missing' });
+    assert.equal(state.outcome, 'UNKNOWN', field);
+    assert.equal(state.desired, desired, field);
+    assert.ok(state.gate.unknown > 0);
+    assert.equal(state.gate.failure, 0);
+    assert.notEqual(state.desired, state.observed);
+  }
+});
+
+test('known failure dominates unknown only within the same evaluated gate', () => {
+  const state = finish(createLesson(), { endpoint: 'missing', epoch: 'stale' });
+  assert.equal(state.outcome, 'FAILURE');
+  assert.equal(state.gate.failure, 1);
+  assert.equal(state.gate.unknown, 1);
+});
+
+test('exact input and prediction validation is atomic', () => {
+  const lesson = createLesson();
+  for (const input of [null, [], {}, config({ warm: true }), config({ epoch: 7 }),
+    config({ endpoint: 'RECORDED' }), Object.assign(Object.create({ foreign: true }), config())]) {
+    rejected(lesson, () => lesson.start(input));
+  }
+  assert.equal(finish(lesson).outcome, 'SUCCESS');
+  rejected(lesson, () => lesson.retain(''), 'prediction');
+  rejected(lesson, () => lesson.retain('PASS'), 'prediction');
+});
+
+test('out-of-order and repeated actions cannot mutate lifecycle state', () => {
+  const lesson = createLesson();
+  for (const action of [() => lesson.observe(), () => lesson.requestNext(), () => lesson.retain('SUCCESS'), () => lesson.newAttempt()]) {
+    rejected(lesson, action);
+  }
+  lesson.start(config());
+  rejected(lesson, () => lesson.start(config()));
+  rejected(lesson, () => lesson.requestNext());
+  lesson.observe();
+  rejected(lesson, () => lesson.observe());
+});
+
+test('prediction is separate; complete retained evidence survives new attempt and returned snapshot mutation', () => {
+  const lesson = createLesson();
+  assert.equal(finish(lesson, { routing: 'partial' }).outcome, 'FAILURE');
+  let state = lesson.retain('SUCCESS');
+  assert.equal(state.predictionCorrect, false);
+  assert.deepEqual(state.totals, { attempted: 1, success: 0, failure: 1, unknown: 0 });
+  assert.equal(state.history[0].outcome, 'FAILURE');
+  assert.ok(state.history[0].trace.length > 1);
+  const retained = JSON.parse(JSON.stringify(state.history));
+  state.history[0].trace.length = 0;
+  state.config.epoch = 'stale';
+  state = lesson.newAttempt();
+  assert.equal(state.phase, 'idle');
+  assert.deepEqual(state.history, retained);
+  assert.equal(state.totals.failure, 1);
+});
+
+test('six attempts are bounded without eviction and explicit reset clears all state', () => {
+  const lesson = createLesson();
+  for (let index = 0; index < fixtures.maxAttempts; index++) {
+    assert.equal(finish(lesson).outcome, 'SUCCESS');
+    lesson.retain('SUCCESS');
+    if (index < fixtures.maxAttempts - 1) lesson.newAttempt();
+  }
+  assert.equal(lesson.snapshot().history.length, 6);
+  rejected(lesson, () => lesson.newAttempt());
+  rejected(lesson, () => lesson.retain('SUCCESS'));
+  lesson.reset();
+  assert.deepEqual(lesson.snapshot(), createLesson().snapshot());
+  assert.equal(finish(lesson).outcome, 'SUCCESS');
+});
+
+test('all 648 exact configurations agree with independent sequential gate classification', () => {
+  let count = 0;
+  function check(input, keys) {
+    if (keys.length) {
+      const [key, ...rest] = keys;
+      for (const value of fixtures.choices[key]) check({ ...input, [key]: value }, rest);
+      return;
+    }
+    let expected;
+    if (input.epoch === 'stale') expected = 'FAILURE';
+    else if (input.endpoint === 'missing' || input.epoch === 'missing') expected = 'UNKNOWN';
+    else if (['stale', 'insufficient'].includes(input.readiness)) expected = 'FAILURE';
+    else if (input.readiness === 'missing' || input.routing === 'missing') expected = 'UNKNOWN';
+    else if (input.routing === 'partial') expected = 'FAILURE';
+    else if (input.drain === 'missing') expected = 'UNKNOWN';
+    else if (input.drain === 'remaining') expected = 'FAILURE';
+    else if (input.retention === 'missing') expected = 'UNKNOWN';
+    else if (input.retention === 'open') expected = 'FAILURE';
+    else expected = 'SUCCESS';
+    assert.equal(finish(createLesson(), input).outcome, expected, JSON.stringify(input));
+    count++;
+  }
+  check({}, Object.keys(fixtures.choices));
+  assert.equal(count, 648);
+});

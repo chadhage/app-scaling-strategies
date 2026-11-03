@@ -1,0 +1,61 @@
+'use strict';
+
+(function expose(root, factory) {
+  const value = factory();
+  if (typeof module === 'object' && module.exports) module.exports = value;
+  else root.S081Fixtures = value;
+})(globalThis, function fixtures() {
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+  return freeze({
+    deploymentId: 'green-v2',
+    desiredEpoch: 7,
+    legacyWarm: true,
+    maxAttempts: 6,
+    states: ['CREATED', 'WARMING', 'READY', 'CANARY', 'ACTIVE', 'DRAINING', 'RETAINED', 'RETIRED'],
+    choices: {
+      endpoint: ['recorded', 'missing'],
+      epoch: ['current', 'stale', 'missing'],
+      readiness: ['fresh', 'stale', 'insufficient', 'missing'],
+      routing: ['converged', 'partial', 'missing'],
+      drain: ['complete', 'remaining', 'missing'],
+      retention: ['elapsed', 'open', 'missing'],
+    },
+    defaults: {
+      endpoint: 'recorded', epoch: 'current', readiness: 'fresh',
+      routing: 'converged', drain: 'complete', retention: 'elapsed',
+    },
+    evidence: {
+      endpoint: { recorded: '/synthetic/green-v2', missing: null },
+      epoch: { current: 7, stale: 6, missing: null },
+      readiness: {
+        fresh: { healthy: true, ageTicks: 1, maxAgeTicks: 2, compatible: true, capacity: 4, requiredCapacity: 3 },
+        stale: { healthy: true, ageTicks: 3, maxAgeTicks: 2, compatible: true, capacity: 4, requiredCapacity: 3 },
+        insufficient: { healthy: false, ageTicks: 1, maxAgeTicks: 2, compatible: false, capacity: 2, requiredCapacity: 3 },
+        missing: null,
+      },
+      routing: {
+        converged: { canaryDesired: 10, canaryEffective: 10, activeDesired: 100, activeEffective: 100,
+          drainDesired: 0, drainEffective: 0, journeyAttempts: 10, journeySuccesses: 10 },
+        partial: { canaryDesired: 10, canaryEffective: 10, activeDesired: 100, activeEffective: 60,
+          drainDesired: 0, drainEffective: 20, journeyAttempts: 10, journeySuccesses: 10 },
+        missing: null,
+      },
+      drain: {
+        complete: { newAdmissions: 0, clients: 0, work: 0, ownershipHolders: 0, checkpointConfirmed: true },
+        remaining: { newAdmissions: 0, clients: 2, work: 1, ownershipHolders: 1, checkpointConfirmed: false },
+        missing: null,
+      },
+      retention: {
+        elapsed: { nowTick: 8, deadlineTick: 8, artifactsReady: true, dependentRequirements: 0 },
+        open: { nowTick: 7, deadlineTick: 8, artifactsReady: true, dependentRequirements: 0 },
+        missing: null,
+      },
+    },
+  });
+});
