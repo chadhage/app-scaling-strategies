@@ -1,0 +1,144 @@
+{
+  "cardId": "A-S031",
+  "workerId": "worker-A-S031",
+  "kano": "S",
+  "parent": "D-S031",
+  "packet": "SC-S031",
+  "entryGate": "SOURCE",
+  "lesson": "index.html",
+  "trainingLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "executionMode": "synthetic",
+  "verificationStatus": "local-synthetic-verified-controller-review-pending",
+  "artifactPathBase": "This learning/S031 directory; nested run logs name sibling output files.",
+  "sourceHashArtifact": "evidence/source-hashes.json",
+  "integrityArtifact": "evidence/integrity.json",
+  "publicationRecoveryArtifact": "evidence/publication-recovery.json",
+  "sequence": [
+    {
+      "stage": "BDD first",
+      "artifact": "session-continuity.feature",
+      "executionClaim": "Behavior contract mapped to Node and real browser assertions; no Cucumber runner or package install is claimed."
+    },
+    {
+      "stage": "Loadable behavior stub and genuine Node RED",
+      "command": "node --test learning\\S031\\tests\\session.test.cjs",
+      "exitCode": 1,
+      "actualFailure": "ERR_ASSERTION: actual unknown, expected preserved; the HTTP 200 assertion had already passed.",
+      "artifact": "evidence/red.txt",
+      "rawArtifact": "evidence/red-raw.json",
+      "metadata": "evidence/red-run.json",
+      "archivedStub": "evidence/red/session.js",
+      "archivedTest": "evidence/red/checks/assertion-red.cjs",
+      "replayCommand": "node --test learning\\S031\\evidence\\red\\checks\\assertion-red.cjs",
+      "replayArtifact": "evidence/red-replay.txt",
+      "rawReplayArtifact": "evidence/red-replay-raw.json",
+      "replayMetadata": "evidence/red-replay-run.json",
+      "textNormalization": "Only human-readable log whitespace/line endings were normalized to satisfy the publisher. Exact original RED and replay output bytes are preserved in base64/SHA-256 JSON captures.",
+      "originalBytesHashVerified": true
+    },
+    {
+      "stage": "IaC applicability after RED, before implementation",
+      "status": "N/A",
+      "artifact": "evidence/iac-na.json",
+      "reason": "A local file lesson requires no infrastructure; cloud/IaC generation, deployment and spend are not approved."
+    },
+    {
+      "stage": "Implement and refactor",
+      "behavior": "session.js",
+      "renderer": "app.js",
+      "page": "index.html",
+      "style": "styles.css",
+      "notes": [
+        "Two immutable declared profiles, four explicit version/instance destinations and client-keyed local/shared synthetic maps.",
+        "Every reply checks HTTP, client/version/instance binding and all seven declared profile fields.",
+        "Previous interruptions and unknowns survive later good reads within a run.",
+        "Supplied JSON checks never write stores; source counters distinguish samples, injected faults and stored-profile reads.",
+        "Mode changes and Reset start separate untested runs, not a migration or repair.",
+        "Text-node rendering; no external assets, network APIs or browser persistence."
+      ]
+    },
+    {
+      "stage": "Node GREEN",
+      "command": "node --test learning\\S031\\tests\\session.test.cjs learning\\S031\\tests\\page.test.cjs",
+      "exitCode": 0,
+      "tests": 64,
+      "passed": 64,
+      "failed": 0,
+      "artifact": "evidence/green.txt",
+      "metadata": "evidence/green-run.json",
+      "scope": "Node built-in tests of model, script export and static page guards. The VM export check is not a browser or DOM test."
+    },
+    {
+      "stage": "Syntax",
+      "exitCode": 0,
+      "filesChecked": [
+        "session.js",
+        "app.js",
+        "tests/session.test.cjs",
+        "tests/page.test.cjs",
+        "tests/browser-acceptance.cjs"
+      ],
+      "artifact": "evidence/syntax.txt",
+      "metadata": "evidence/syntax-run.json"
+    },
+    {
+      "stage": "Actual browser",
+      "artifact": "evidence/browser.json",
+      "protocol": "tests/browser-acceptance.cjs",
+      "toolActionabilityHistory": "evidence/browser-actionability.json",
+      "result": "evidence/browser-final-result.json",
+      "assertionsPassed": 129,
+      "casesPassed": 6,
+      "forcedClicks": false,
+      "skippedAssertions": false,
+      "scope": "Final acceptance ran on a visible, fresh, worker-owned forceNew file page with native Tab/arrows/Enter, ordinary clicks, fault/invalid-data checks and full Reset. Zero HTTP requests, page errors, console errors or CSP violations during acceptance. The compact equivalent UI protocol was inlined in the real browser tool; no CommonJS loader or Node mock was used. Historical hidden-page attempts are excluded."
+    }
+  ],
+  "behaviorCoverage": [
+    {
+      "behavior": "Shared state across repeated versions/instances and two isolated clients",
+      "node": "shared mode preserves both isolated clients through repeated routes",
+      "browser": "browser-final-shared-keyboard"
+    },
+    {
+      "behavior": "HTTP 200 local loss at same-version and cross-version targets, retained after return to origin",
+      "node": "local mode detects HTTP 200 state loss; local origin succeeds but returning later does not erase the earlier loss",
+      "browser": "browser-final-local-keyboard"
+    },
+    {
+      "behavior": "Empty/reset/stale/foreign or incomplete profile cannot replace declared state",
+      "node": "HTTP 200 fault fixtures; supplied-profile mismatch matrix",
+      "browser": "browser-final-faults; browser-final-sample-boundary"
+    },
+    {
+      "behavior": "Unknown and malformed data never become continuity; invalid commands preserve history",
+      "node": "unknown-response matrix; non-destructive invalid-command/text matrix",
+      "browser": "browser-final-invalid-data"
+    },
+    {
+      "behavior": "Mode switch and Reset restore independent untested runs with callable native form methods",
+      "node": "switch and reset create independent untested runs; no control shadows native form methods",
+      "browser": "browser-final-shared-keyboard; browser-final-reset"
+    }
+  ],
+  "approvalBoundary": {
+    "futureDesignAndLocalImplementation": true,
+    "cloudManagementCalls": false,
+    "iacGeneration": false,
+    "deployment": false,
+    "spend": false,
+    "credentialsRequired": false,
+    "packageInstalls": false,
+    "productionStackDecisionMade": false,
+    "nodeRole": "Existing Node v22.23.4 test tooling only"
+  },
+  "limits": [
+    "Both versions understand profile schema 1 by assumption; no serializer-compatibility result.",
+    "One in-memory JavaScript map illustrates shared lookup, not Azure storage or durability.",
+    "Read-only deterministic fixtures; no authentication, real routing, writes, races, eviction, retries or failover.",
+    "Supplied replies are verifier samples, never evidence that a selected store returned their contents.",
+    "Initial ordinary mouse actionability timed out twice. Historical forced interactions are retained but excluded from final acceptance; the final browser protocol requires visible-page ordinary input, with no forced clicks or skipped assertions.",
+    "Finite synthetic observations do not prove a reliability SLA or uninterrupted live users.",
+    "No B-S031 native proof, whole D-S031 acceptance, board acceptance or Kano credit is claimed."
+  ]
+}

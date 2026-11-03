@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>S031 — Session continuity, not just HTTP success</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="session.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#exercise">Skip to session experiment</a>
+  <header>
+    <p class="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <div class="hero">
+      <p class="eyebrow">A-S031 · Kano S · Parent D-S031 · SOURCE</p>
+      <h1>A 200 can still<br>lose a session.</h1>
+      <p class="lead">Move two synthetic clients between versions and instances. Compare the reply with the state you promised to preserve — not with an empty replacement.</p>
+      <nav aria-label="Lesson sections">
+        <a href="#exercise">Experiment</a>
+        <a href="#assertions">Assertions</a>
+        <a href="#trace">Trace</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="two-column" aria-label="Contract and worked comparison">
+      <article class="card">
+        <p class="eyebrow">Declare before moving</p>
+        <h2>What must survive?</h2>
+        <p>Each client has a different profile ID, display name, theme, cart, draft and nonzero revision. Every field and <strong>schema 1</strong> must match. HTTP status, client identity, version and instance must also match the requested read.</p>
+        <p>The declaration is fixed. Reading an empty/default profile does <strong>not</strong> redefine success. One passing read cannot erase an earlier interruption or unknown result.</p>
+        <p class="hint">Preconditions: both synthetic application versions understand schema 1; each client keeps its invented session key. Identity/authentication, serialization upgrades and actual routing are not under test.</p>
+      </article>
+      <article class="card">
+        <p class="eyebrow">Work the comparison</p>
+        <h2>Predict, then inspect</h2>
+        <ol>
+          <li>In <strong>local</strong> mode, read amber at v2/green-a. Expect HTTP 200 but missing state.</li>
+          <li>Switch to <strong>shared</strong>. Repeat at several instances; both clients must keep their own profiles.</li>
+          <li>Inject a reset profile. Expect an interruption even in shared mode.</li>
+        </ol>
+        <p class="hint">These shortcuts each start a separate seeded run, then execute real model reads:</p>
+        <div class="button-row" role="group" aria-label="Worked example runs">
+          <button type="button" data-example="local-loss">Local loss</button>
+          <button type="button" data-example="shared-tour">Shared tour</button>
+          <button type="button" data-example="reset-profile">200 reset profile</button>
+        </div>
+      </article>
+    </section>
+
+    <section id="exercise" class="card" aria-labelledby="exercise-heading">
+      <div class="section-top">
+        <div>
+          <p class="eyebrow">In-memory experiment · no server</p>
+          <h2 id="exercise-heading">Choose where this session reads.</h2>
+        </div>
+        <button id="reset-exercise" type="button" class="quiet">Reset exercise</button>
+      </div>
+      <div class="mode-control">
+        <div>
+          <label for="session-mode">Session storage mode</label>
+          <select id="session-mode" aria-describedby="mode-help">
+            <option value="local">Instance-local memory</option>
+            <option value="shared">Shared session map — synthetic</option>
+          </select>
+        </div>
+        <p id="mode-help" class="hint">Changing modes starts a separate run with identical seed profiles and zero reads. It does not migrate or repair the previous run. Reset returns to local mode.</p>
+      </div>
+      <p id="mode-explanation" class="store-explanation"></p>
+      <div class="route-grid" aria-label="Four synthetic destinations">
+        <span><strong>v1</strong> / blue-a <small>amber origin</small></span>
+        <span><strong>v1</strong> / blue-b <small>cobalt origin</small></span>
+        <span><strong>v2</strong> / green-a <small>initially empty locally</small></span>
+        <span><strong>v2</strong> / green-b <small>initially empty locally</small></span>
+      </div>
+      <form id="request-controls">
+        <fieldset>
+          <legend>Issue one synthetic read</legend>
+          <div class="control-grid">
+            <div>
+              <label for="synthetic-client">Synthetic client</label>
+              <select id="synthetic-client">
+                <option value="client-amber">client-amber — revision 7</option>
+                <option value="client-cobalt">client-cobalt — revision 11</option>
+              </select>
+            </div>
+            <div>
+              <label for="request-target">Requested version / instance</label>
+              <select id="request-target">
+                <option value="v1/blue-a">v1 / blue-a</option>
+                <option value="v1/blue-b">v1 / blue-b</option>
+                <option value="v2/green-a" selected>v2 / green-a</option>
+                <option value="v2/green-b">v2 / green-b</option>
+              </select>
+            </div>
+            <div>
+              <label for="reply-fixture">Reply fixture</label>
+              <select id="reply-fixture" aria-describedby="fixture-help">
+                <option value="stored">Read stored profile</option>
+                <option value="empty">Inject empty profile — HTTP 200</option>
+                <option value="reset">Inject reset/default profile — HTTP 200</option>
+                <option value="stale">Inject stale revision — HTTP 200</option>
+                <option value="unknown">Omit profile — HTTP 200, unknown</option>
+              </select>
+            </div>
+          </div>
+          <p id="fixture-help" class="hint">Stored-profile reads use the chosen mode's map. Injected replies are faults, not writes; they never overwrite the declaration or repair the store.</p>
+          <button type="submit" class="primary">Read profile at target</button>
+        </fieldset>
+      </form>
+      <p id="input-error" role="alert" class="error" hidden></p>
+      <noscript><p class="training-banner">JavaScript is required. No read or verification has run.</p></noscript>
+    </section>
+
+    <section class="card" aria-labelledby="client-heading">
+      <p class="eyebrow">Two session keys · independent declarations</p>
+      <h2 id="client-heading">Never replace the promised profile.</h2>
+      <div class="table-wrap">
+        <table>
+          <caption>Seeded client state and latest requested destination</caption>
+          <thead><tr><th scope="col">Client / origin</th><th scope="col">Declared profile</th><th scope="col">Last requested target</th><th scope="col">Latest read</th></tr></thead>
+          <tbody id="client-rows"></tbody>
+        </table>
+      </div>
+      <details>
+        <summary>Inspect the active synthetic store maps</summary>
+        <p class="hint">Shared is one JavaScript map keyed by client. Local is four independent maps; absent entries stay absent after a read. Neither is a real Azure or durable store.</p>
+        <pre id="store-snapshot"></pre>
+      </details>
+    </section>
+
+    <section id="assertions" class="card" aria-labelledby="assertions-heading">
+      <p class="eyebrow">Transport ≠ continuity</p>
+      <h2 id="assertions-heading">Expected versus observed</h2>
+      <p id="read-verdict" class="verdict" role="status" aria-live="polite" aria-atomic="true" data-outcome="not-tested">Not tested — no read observation exists.</p>
+      <p id="reply-binding" class="hint">A destination choice is not yet a reply.</p>
+      <p id="report-source" class="hint">Seed profiles are declarations, not successful read observations.</p>
+      <div class="two-column">
+        <div><h3>Declared profile for this read</h3><pre id="expected-profile"></pre></div>
+        <div><h3>Observed profile</h3><pre id="observed-profile">No reply observed.</pre></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>Every assertion must pass for this read to preserve declared state</caption>
+          <thead><tr><th scope="col">Assertion</th><th scope="col">Expected</th><th scope="col">Observed</th><th scope="col">Result</th></tr></thead>
+          <tbody id="assertion-rows"></tbody>
+        </table>
+      </div>
+      <div class="run-summary">
+        <h3>Whole run, including earlier reads</h3>
+        <p id="run-verdict" data-outcome="not-tested">Not tested — zero attempted reads.</p>
+        <p id="run-counts">Attempted: 0 · Preserved: 0 · Interrupted: 0 · Unknown: 0</p>
+        <p id="source-counts" class="hint">Stored-profile reads: 0 · Injected replies: 0 · Supplied samples: 0</p>
+        <p class="hint">Supplied samples test the verifier, not the selected store. Matching supplied samples alone cannot prove even synthetic store continuity.</p>
+        <p class="hint">Passing the detector is not uninterrupted user impact. “Interrupted” means the synthetic read failed continuity. A finite passing sample is not a reliability SLA.</p>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="supplied-heading">
+      <p class="eyebrow">Challenge the verifier</p>
+      <h2 id="supplied-heading">Can a success-shaped reply fool it?</h2>
+      <p>The editor initially contains an illustrative matching reply for amber at green-a, <strong>not</strong> an observed read. Verification binds it to the currently selected client and target. It never writes either store.</p>
+      <label for="supplied-reply">Supplied reply JSON</label>
+      <textarea id="supplied-reply" rows="16" spellcheck="false" aria-describedby="editor-help" maxlength="16000"></textarea>
+      <p id="editor-help" class="hint">Verifier limit: 12000 characters. Try <code>{broken</code>, <code>null</code>, a missing profile, HTTP "200" as text, another client's profile, or revision 0. Invalid text is rejected without erasing any previous result; unknown evidence never passes.</p>
+      <div class="button-row">
+        <button id="verify-supplied-reply" type="button">Verify supplied reply</button>
+        <button id="fill-matching-sample" type="button" class="quiet">Fill declared matching sample</button>
+      </div>
+      <p id="editor-note" class="hint" role="status" aria-live="polite">An editable sample is not store-read evidence.</p>
+    </section>
+
+    <section id="trace" class="card" aria-labelledby="trace-heading">
+      <p class="eyebrow">Chronological evidence · retained until a new run</p>
+      <h2 id="trace-heading">Follow the session, not the status code.</h2>
+      <ol id="trace-events" class="trace"></ol>
+    </section>
+
+    <section class="card boundaries" aria-labelledby="boundaries-heading">
+      <h2 id="boundaries-heading">What this demonstrates — and what it does not</h2>
+      <p>A shared lookup by the same client key preserves this declared synthetic state across all four destinations. Local memory only has a profile at its seeded instance. Empty, default, stale, misbound and unknown replies cannot pass the state contract just because HTTP says 200.</p>
+      <p>This read-only model has no network, credentials, Azure management calls, storage persistence, authentication, concurrency, eviction, writes or real failover. It does not prove a store's durability, a live deployment, B-S031 native continuity or full D-S031 acceptance.</p>
+      <p><strong>IaC: N/A.</strong> Only future design/local implementation is approved. Cloud/IaC generation, deployment and spend remain false. Node 22 is test tooling, not a production-stack selection.</p>
+      <p>Use Tab to reach controls; arrow keys choose options; Enter issues a read; Reset returns focus to the storage-mode selector. All state is in this page's memory. Reload or Reset starts an untested rehearsal.</p>
+      <div class="button-row evidence-links">
+        <a href="session-continuity.feature">BDD contract</a>
+        <a href="tests/session.test.cjs">Node assertions</a>
+        <a href="evidence.json">Evidence and limits</a>
+      </div>
+    </section>
+  </main>
+  <footer>S031 · SC-S031 · Portable synthetic lesson · No cloud execution</footer>
+</body>
+</html>

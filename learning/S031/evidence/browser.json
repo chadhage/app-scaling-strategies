@@ -1,0 +1,119 @@
+{
+  "cardId": "A-S031",
+  "status": "passed",
+  "provenance": "Recorded actual assertions and observed values from integrated browser tool calls; not a Node simulation and not a raw transport transcript.",
+  "tools": [
+    "openBrowserPage",
+    "runPlaywrightCode"
+  ],
+  "initialPage": {
+    "pageId": "3f4e0c96-08af-484d-aa50-28c7cf8211d1",
+    "forceNew": true,
+    "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/learning/S031/index.html",
+    "scope": "Only this worker-owned file page was interacted with; no shared-page navigation.",
+    "countedAsFinalAcceptance": false
+  },
+  "initialChecks": [
+    {
+      "caseId": "browser-local-keyboard",
+      "status": "historical-excluded-from-final-acceptance",
+      "note": "The listed assertions completed before a later ordinary-click timeout; visibility was not conclusively measured for this historical block.",
+      "actual": {
+        "bannerVisible": true,
+        "initialOutcome": "not-tested",
+        "initialTraceEvents": 3,
+        "nativeReset": "function",
+        "nativeSubmit": "function",
+        "keyboard": "Home/ArrowDown selected v1/blue-b; Enter on the read button issued the read.",
+        "latest": "Read #1 — INTERRUPTED — client-amber → v1/blue-b (HTTP 200).",
+        "httpAssertion": "PASS",
+        "nonemptyProfileAssertion": "FAIL"
+      }
+    },
+    {
+      "caseId": "browser-local-cross-version",
+      "status": "historical-excluded-from-final-acceptance",
+      "method": "Checked visible and enabled, then actual Playwright mouse click with force:true.",
+      "actual": {
+        "latest": "Read #2 — INTERRUPTED — client-amber → v2/green-a (HTTP 200).",
+        "counts": "Attempted: 2 · Preserved: 0 · Interrupted: 2 · Unknown: 0",
+        "traceEvents": 9
+      }
+    },
+    {
+      "caseId": "browser-shared-keyboard",
+      "status": "historical-excluded-from-final-acceptance",
+      "assertionsPassed": 16,
+      "actual": {
+        "localReturn": "Preserved at v1/blue-a while prior two interruptions remained in run history.",
+        "localCounts": "Attempted: 3 · Preserved: 1 · Interrupted: 2 · Unknown: 0",
+        "keyboardModeSwitch": "Home/ArrowDown selected shared; zero-read result and three seed/start events restored.",
+        "sharedReadMethod": "Select target/client, focus read button, press Enter.",
+        "sharedReads": [
+          { "clientId": "client-amber", "destination": "v2/green-a", "revision": 7, "profileId": "profile-amber" },
+          { "clientId": "client-amber", "destination": "v1/blue-b", "revision": 7, "profileId": "profile-amber" },
+          { "clientId": "client-amber", "destination": "v2/green-b", "revision": 7, "profileId": "profile-amber" },
+          { "clientId": "client-cobalt", "destination": "v2/green-b", "revision": 11, "profileId": "profile-cobalt" }
+        ],
+        "allFourFullProfilesMatched": true,
+        "sharedCounts": "Attempted: 4 · Preserved: 4 · Interrupted: 0 · Unknown: 0",
+        "traceEvents": 15,
+        "lastAssertionResults": "12 PASS"
+      }
+    },
+    {
+      "caseId": "browser-reset-invalid-json",
+      "status": "historical-excluded-from-final-acceptance",
+      "assertionsPassed": 13,
+      "actual": {
+        "resetFixture": "HTTP 200; INTERRUPTED; expected revision 7, observed revision 0; revision assertion FAIL.",
+        "invalidJsonError": "reply.json.invalid: Invalid JSON. No observation was added; previous results were retained.",
+        "oversizedTextError": "reply.text.invalid: Supplied reply must be JSON text of at most 12000 characters. Previous results were retained.",
+        "invalidActionsPreserved": ["clients", "stores", "latest assertions", "counters", "trace"],
+        "validJsonNullOutcome": "unknown",
+        "source": "supplied reply — not a store read",
+        "counts": "Attempted: 2 · Preserved: 0 · Interrupted: 1 · Unknown: 1",
+        "traceEvents": 9
+      }
+    }
+  ],
+  "initialChecksVersionNote": "Historical actual interactions only, excluded from final acceptance. They preceded the UI-only source-count/source-wording refinement and included a forced click. The final protocol requires a visible real browser, ordinary clicks and no skipped assertions.",
+  "actionabilityHistory": "browser-actionability.json",
+  "finalProtocol": "../tests/browser-acceptance.cjs",
+  "finalPage": {
+    "pageId": "796867ee-ffcb-4086-a141-99bdfb643241",
+    "forceNew": true,
+    "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/learning/S031/index.html",
+    "visibility": "visible before all ordinary mouse/keyboard action groups and at completion",
+    "scope": "A fresh worker-owned file page after the explicit S007-to-S031 handoff. No shared-page navigation. Explicitly released directly to S005 afterward.",
+    "reasonForFreshPage": "The earlier prepared page could not establish ordinary click actionability under shared foreground contention."
+  },
+  "finalExecution": {
+    "tool": "runPlaywrightCode",
+    "method": "Compact inlined equivalent of the owned real-Playwright-Page protocol, using the tool's actual page object.",
+    "protocolModuleLoadProbe": {
+      "moduleLoaderAvailable": false,
+      "visible": "visible",
+      "countedAsAcceptance": false
+    },
+    "note": "The tool has no CommonJS require loader. The protocol was therefore inlined rather than claiming that Node or require executed browser tests. The CJS file is a reusable replay protocol; five Node syntax checks include it, but the Node unit suite does not execute it.",
+    "result": "browser-final-result.json",
+    "assertionsPassed": 129,
+    "countingNote": "Includes visibility guards and environment checks. Six case counts total 123; six outer visibility/environment checks complete 129.",
+    "forcedClicks": false,
+    "skippedAssertions": false,
+    "httpRequestsDuringAcceptance": 0,
+    "pageErrorsDuringAcceptance": 0,
+    "consoleErrorsDuringAcceptance": 0,
+    "cspViolationsDuringAcceptance": 0
+  },
+  "finalChecks": [
+    { "caseId": "browser-final-local-keyboard", "assertionsPassed": 20 },
+    { "caseId": "browser-final-shared-keyboard", "assertionsPassed": 23 },
+    { "caseId": "browser-final-faults", "assertionsPassed": 15 },
+    { "caseId": "browser-final-invalid-data", "assertionsPassed": 30 },
+    { "caseId": "browser-final-sample-boundary", "assertionsPassed": 14 },
+    { "caseId": "browser-final-reset", "assertionsPassed": 21 }
+  ],
+  "cloudExecution": false
+}
