@@ -1,0 +1,23 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const model = require(process.env.S095_MODEL || path.resolve(__dirname, '..', 'model.js'));
+
+test('removing the partitioned candidate retains compatible service and recovery evidence', () => {
+  const state = model.rehearse(model.emptyState(), {
+    fixture: 'healthy-survivor', action: 'gate-candidate', prediction: 'success',
+  });
+  const result = state.attempts[0];
+  assert.equal(result.safety, 'success', 'Observed removal and retained compatible service must pass S095 safety acceptance.');
+  assert.deepEqual(result.assertions, {
+    candidateRemovedDuringPartition: 'success',
+    retainedUsableCompatibleDestination: 'success',
+    completePartitionJourneys: 'success',
+    recoveryEvidence: 'success',
+  });
+  assert.deepEqual(result.counts, { attempted: 4, successes: 4, interruptions: 0, unknown: 0 });
+  assert.deepEqual(result.transitionCounts, { attempted: 0, successes: 0, interruptions: 0, unknown: 0 });
+  assert.equal(result.learning, 'pass');
+});

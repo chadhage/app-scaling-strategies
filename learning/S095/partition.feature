@@ -1,0 +1,68 @@
+Feature: Required candidate dependency partition and admission decisions
+  Training rehearsal - synthetic data - not a live Azure result
+  A-S095 / D-S095 / SC-S095 / one frozen S unit
+
+  Background:
+    Given one fictional candidate-v2 epoch 2 and retained old-v1 epoch 1
+    And only the candidate's required service path is partitioned in fixed teaching data
+    And four synthetic new arrivals require session, saved-state and exactly one effect
+    And the original complete journey budget is 250 milliseconds
+    And two later recovery validation probes are not ordinary user migrations
+
+  Scenario: Remove candidate admission and retain usable compatible service
+    Given the observed healthy compatible survivor fixture
+    When the operator gates the candidate until fresh recovery proof
+    Then candidate admission during the partition is removed
+    And all four arrivals reach the retained compatible old-v1 and pass their contract
+    And required-dependency and recovery evidence are preserved
+    And source safety acceptance is success
+    But old-only arrivals and recovery probes do not establish completed migration
+
+  Scenario Outline: Unsafe admission is not repaired retroactively
+    Given the observed healthy compatible survivor fixture
+    When the operator chooses "<action>"
+    Then two new candidate transition journeys encounter the partition and fail
+    And later observed repair and removal do not erase those interruptions
+    And source safety acceptance is failure
+    And a correct failure prediction passes learning verification only
+    Examples:
+      | action                   |
+      | Keep candidate admitting |
+      | Reopen before proof      |
+
+  Scenario: Healthy is insufficient when the retained destination is incompatible
+    Given the survivor returns HTTP 200 but cannot preserve the required saved state
+    When the operator removes candidate admission
+    Then all four old-only journeys are interruptions
+    And source safety acceptance is failure despite the gate and healthy response
+
+  Scenario: Missing observations must remain unknown
+    Given the missing gate, routing, client and recovery observations fixture
+    When the operator chooses an admission action
+    Then effective admission, survivor usability and recovery stay unknown
+    And all four client outcomes remain unknown without success credit
+    And any two commanded candidate trials stay in the transition denominator
+    And source safety acceptance is unknown rather than commanded success
+
+  Scenario: Conclusions cannot rewrite observations
+    Given an observed successful safety rehearsal
+    When the operator predicts failure
+    Then only learning verification fails
+    And the source result, trace and journey counts remain unchanged
+
+  Scenario: Bounded immutable history and strict guards
+    Given six checked attempts with retained successes, failures and unknowns
+    When a seventh attempt or an invalid input or forged state is submitted
+    Then an explicit error preserves all prior results and counts
+    And arbitrary values, extra fields, coercion, getters and malformed state are rejected
+
+  Scenario: Browser operation, errors and explicit reset
+    Given the standalone local lesson with the exact training banner and enforced CSP
+    When the operator uses Tab, select arrow keys and Enter or Space
+    Then the synthetic result and retained ledger are observable without a server
+    And errors are announced and focused without optimistic result changes
+    When Reset rehearsal is activated
+    Then native form reset is not shadowed
+    And defaults, empty history, counters and hidden result are restored
+    And focus returns to the fixture selector
+    And inline scripts, connections and form navigation are blocked by actual CSP

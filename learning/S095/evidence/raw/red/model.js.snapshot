@@ -1,0 +1,31 @@
+'use strict';
+
+(function publish(root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S095Lesson = api;
+}(typeof window === 'object' ? window : globalThis, function createStub() {
+  const MAX_ATTEMPTS = 6;
+  function emptyState() {
+    return Object.freeze({ version: 1, attempts: Object.freeze([]) });
+  }
+  function rehearse(state, input) {
+    const result = Object.freeze({
+      number: state.attempts.length + 1,
+      input: Object.freeze({ ...input }),
+      safety: 'unknown',
+      assertions: Object.freeze({
+        candidateRemovedDuringPartition: 'unknown',
+        retainedUsableCompatibleDestination: 'unknown',
+        completePartitionJourneys: 'unknown',
+        recoveryEvidence: 'unknown',
+      }),
+      counts: Object.freeze({ attempted: 4, successes: 0, interruptions: 0, unknown: 4 }),
+      transitionCounts: Object.freeze({ attempted: 0, successes: 0, interruptions: 0, unknown: 0 }),
+      learning: input.prediction === 'unknown' ? 'pass' : 'fail',
+      trace: Object.freeze(['Loadable behavioral stub: admission observation is not implemented.']),
+    });
+    return Object.freeze({ version: 1, attempts: Object.freeze([...state.attempts, result]) });
+  }
+  return Object.freeze({ MAX_ATTEMPTS, emptyState, rehearse });
+}));

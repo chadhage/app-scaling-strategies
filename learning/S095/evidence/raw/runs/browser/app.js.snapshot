@@ -1,0 +1,132 @@
+'use strict';
+
+(function mountLesson() {
+  const model = window.S095Lesson;
+  const byId = (id) => document.getElementById(id);
+  const form = byId('rehearsal-form');
+  const fixture = byId('fixture');
+  const action = byId('admission-action');
+  const prediction = byId('prediction');
+  const error = byId('input-error');
+  let state = model.emptyState();
+  const label = (options, value) => options.find((item) => item.value === value).label;
+  const fact = (value) => value === null ? 'UNKNOWN' : typeof value === 'boolean' ? (value ? 'yes' : 'no') : String(value);
+  function element(tag, text) {
+    const node = document.createElement(tag);
+    node.textContent = text;
+    return node;
+  }
+  function row(body, texts) {
+    const tr = document.createElement('tr');
+    for (const text of texts) tr.append(element('td', text));
+    body.append(tr);
+  }
+  function routing(value) {
+    return value.oldV1Percent === null || value.candidateV2Percent === null ? 'UNKNOWN'
+      : `old-v1 ${value.oldV1Percent}% / candidate-v2 ${value.candidateV2Percent}%`;
+  }
+  function renderJourneys(body, journeys) {
+    body.replaceChildren();
+    for (const journey of journeys) {
+      row(body, [
+        journey.id,
+        `${journey.intendedDestination} → ${fact(journey.destination)} / ${fact(journey.epoch)}`,
+        `${fact(journey.status)} / ${fact(journey.elapsedMs)}`,
+        `${fact(journey.sessionPreserved)} / ${fact(journey.savedStatePreserved)} / ${fact(journey.effects)}`,
+        `${journey.outcome.toUpperCase()}: ${journey.reason}`,
+      ]);
+    }
+  }
+  function renderHistory() {
+    const summary = model.summarize(state);
+    const transition = summary.transitions.attempted === 0 ? 'No transition evidence.'
+      : `Intended transition trials ${summary.transitions.attempted}: ${summary.transitions.successes} success, ${summary.transitions.interruptions} interruption, ${summary.transitions.unknown} unknown; none removed from the denominator.`;
+    byId('summary').textContent = `${summary.attempts} / ${model.MAX_ATTEMPTS} attempts. Safety: ${summary.safety.successes} success, ${summary.safety.failures} failure, ${summary.safety.unknown} unknown. Journeys: ${summary.journeys.successes} success, ${summary.journeys.interruptions} interruption, ${summary.journeys.unknown} unknown. ${transition}`;
+    const body = byId('history-rows');
+    body.replaceChildren();
+    for (const attempt of state.attempts) {
+      row(body, [
+        String(attempt.number),
+        `${label(model.FIXTURES, attempt.input.fixture)}; ${label(model.ACTIONS, attempt.input.action)}`,
+        `${attempt.safety.toUpperCase()} / predicted ${attempt.input.prediction.toUpperCase()}`,
+        attempt.learning.toUpperCase(),
+        `${attempt.counts.successes} / ${attempt.counts.interruptions} / ${attempt.counts.unknown}`,
+      ]);
+    }
+  }
+  function renderResult(attempt) {
+    byId('result').hidden = false;
+    byId('source-result').textContent = `Source safety acceptance: ${attempt.safety.toUpperCase()}`;
+    byId('source-result').dataset.outcome = attempt.safety;
+    byId('learning-result').textContent = `Learning prediction: ${attempt.learning.toUpperCase()} (predicted ${attempt.input.prediction.toUpperCase()}). This verdict never changes source acceptance or user outcomes.`;
+    byId('explanation').textContent = attempt.explanation;
+    byId('instruction-assessment').textContent = attempt.admissionInstruction;
+    const assertions = byId('assertion-rows');
+    assertions.replaceChildren();
+    for (const [key, text] of [
+      ['candidateRemovedDuringPartition', 'Candidate removed from new admission during the partition'],
+      ['retainedUsableCompatibleDestination', 'Healthy, usable compatible survivor retained'],
+      ['completePartitionJourneys', 'All four original-budget session/state/effect journeys pass'],
+      ['recoveryEvidence', 'Fresh required-path, readiness, capacity and compatibility recovery evidence preserved'],
+    ]) row(assertions, [text, attempt.assertions[key].toUpperCase()]);
+    const facts = byId('facts');
+    facts.replaceChildren();
+    for (const [name, value] of [
+      ['Candidate required path during fault', attempt.duringPartition.requiredCandidateDependency],
+      ['Effective candidate admission DURING partition', attempt.duringPartition.candidateAdmission.toUpperCase()],
+      ['Intended routing command', routing(attempt.duringPartition.intendedRouting)],
+      ['Observed routing during partition', routing(attempt.duringPartition.observedRouting)],
+      ['Observed candidate arrivals during partition', fact(attempt.duringPartition.observedCandidateArrivals)],
+      ['Survivor healthy / compatible / sufficient capacity / retained', [attempt.survivor.healthy, attempt.survivor.compatible, attempt.survivor.capacitySufficient, attempt.survivor.retained].map(fact).join(' / ')],
+      ['Ordinary partition arrivals', `${attempt.counts.attempted}: ${attempt.counts.successes} success / ${attempt.counts.interruptions} interruption / ${attempt.counts.unknown} unknown`],
+      ['Intended candidate transition trials', `${attempt.transitionCounts.attempted}: ${attempt.transitionCounts.successes} success / ${attempt.transitionCounts.interruptions} interruption / ${attempt.transitionCounts.unknown} unknown`],
+      ['Migration evidence', attempt.transitionEvidence],
+      ['Later required-path recovery / validation', `${attempt.recovery.requiredCandidateDependency} / ${attempt.recovery.outcome.toUpperCase()}`],
+      ['Recovery validation probes, not user migrations', `${attempt.recovery.counts.attempted}: ${attempt.recovery.counts.successes} success / ${attempt.recovery.counts.unknown} unknown`],
+      ['CURRENT candidate admission after reconciliation', attempt.current.candidateAdmission.toUpperCase()],
+      ['Current observed routing', routing(attempt.current.observedRouting)],
+      ['Ordinary candidate readmission executed', 'no — fresh recovery proof only permits a future decision'],
+      ['Cleanup boundary', 'Memory-only synthetic data; no resources were created, partitioned, restored or cleaned up'],
+    ]) {
+      facts.append(element('dt', name), element('dd', value));
+    }
+    renderJourneys(byId('journey-rows'), attempt.journeys);
+    renderJourneys(byId('recovery-rows'), attempt.recovery.probes);
+    const trace = byId('trace');
+    trace.replaceChildren();
+    for (const event of attempt.trace) trace.append(element('li', `Step ${event.step} — ${event.event}: ${event.detail}`));
+  }
+  function clearError() {
+    error.hidden = true;
+    error.textContent = '';
+  }
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    try {
+      const next = model.rehearse(state, { fixture: fixture.value, action: action.value, prediction: prediction.value });
+      state = next;
+      clearError();
+      renderResult(state.attempts.at(-1));
+      renderHistory();
+      byId('run-status').textContent = `Attempt ${state.attempts.length} retained. Inspect source safety, learning verdict and original client outcomes separately.`;
+      byId('result-title').focus();
+    } catch (failure) {
+      error.textContent = failure.message;
+      error.hidden = false;
+      error.focus();
+    }
+  });
+  byId('reset-rehearsal').addEventListener('click', () => {
+    form.reset();
+    state = model.emptyState();
+    clearError();
+    byId('result').hidden = true;
+    for (const id of ['source-result', 'learning-result', 'explanation', 'instruction-assessment']) byId(id).textContent = '';
+    delete byId('source-result').dataset.outcome;
+    for (const id of ['assertion-rows', 'facts', 'journey-rows', 'recovery-rows', 'trace']) byId(id).replaceChildren();
+    renderHistory();
+    byId('run-status').textContent = 'Rehearsal reset. No attempts yet; no resource operation or cleanup was performed.';
+    fixture.focus();
+  });
+  renderHistory();
+}());
