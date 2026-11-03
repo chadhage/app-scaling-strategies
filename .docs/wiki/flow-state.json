@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 213,
+  "revision": 218,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-03T16:24:13.0844546Z",
+  "updatedAtUtc": "2026-11-03T16:33:04.9855089Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -38,13 +38,13 @@
     "packet": "s_p >= 6 * (l_p + rlp + 1), with all six named distinct companions Done"
   },
   "kanoDone": {
+    "S": 31,
     "L": 0,
-    "D": 2,
-    "S": 30
+    "D": 2
   },
   "reservations": {
-    "L": 0,
-    "D": 0
+    "D": 0,
+    "L": 0
   },
   "gateAliases": {
     "JAVA": "C097, C098, HOSTJAVA.",
@@ -7599,10 +7599,10 @@
       "parents": [
         "D-S017"
       ],
-      "state": "In Progress",
+      "state": "Done",
       "readiness": false,
       "owner": "worker-A-S017",
-      "blocker": "Published; controller empirical review and acceptance pending.",
+      "blocker": null,
       "result": {
         "schemaVersion": 1,
         "cardId": "A-S017",
@@ -7725,7 +7725,32 @@
       },
       "admittedAtUtc": "2026-11-03T16:06:57.1290769Z",
       "authorization": "local-synthetic-only",
-      "claimedAtUtc": "2026-11-03T16:08:06.9979745Z"
+      "claimedAtUtc": "2026-11-03T16:08:06.9979745Z",
+      "review": {
+        "cardId": "A-S017",
+        "accepted": true,
+        "reviewer": "parent-controller",
+        "reviewedAtUtc": "2026-11-03T16:30:30.537733Z",
+        "commit": "88e1b8d5ffad10dc27f23f73f6b8c8cf507214d3",
+        "tag": "kanban/A-S017/88e1b8d5ffad",
+        "focusedTestsPassed": true,
+        "focusedTestCases": 71,
+        "browserObserved": true,
+        "browserObservedBy": "212069f8-f9f9-4d27-a4a1-ccbac1fd0466",
+        "actualBrowserLeafChecks": 16,
+        "browserEvidence": "learning\\S017\\evidence.json",
+        "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+        "remoteVerified": true,
+        "ownedScopeVerified": true,
+        "bddReviewed": true,
+        "genuineRedGreenReviewed": true,
+        "executionMode": "synthetic-vertical-replacement",
+        "nativeAzureProof": false,
+        "sourceParentComplete": false,
+        "iac": "N/A",
+        "reviewNotes": "55 behavioral+16 integrity cases independently passed; reported88 total includes17 browser Node results with one parent. Reviewed54 genuine assertion RED, matched in-place versus parallel replacement, observed warm/readiness capacity, original client/state/budget outcomes, old retained capacity still charged, failure-before-unknown precedence and history/reset.16 actual Edge leaf scenarios use published helper with successful cleanup. No real size/SKU replacement, native/statistical/production24/source-parent proof."
+      },
+      "acceptedAtUtc": "2026-11-03T16:30:30.8039849Z"
     },
     {
       "technicalEntryGate": "C020",
@@ -7810,6 +7835,27 @@
       "admittedAtUtc": "2026-11-03T16:23:14.5214273Z",
       "authorization": "local-synthetic-only",
       "claimedAtUtc": "2026-11-03T16:23:37.5672963Z"
+    },
+    {
+      "technicalEntryGate": "SOURCE",
+      "kano": "S",
+      "priority": "P0",
+      "kanoUnit": "A-S022",
+      "deliver": "Disable a required versus optional dependency; choose the appropriate readiness decision.",
+      "packet": "SC-S022",
+      "id": "A-S022",
+      "parents": [
+        "D-S022"
+      ],
+      "state": "In Progress",
+      "readiness": true,
+      "owner": "worker-A-S022",
+      "blocker": null,
+      "result": null,
+      "publication": null,
+      "admittedAtUtc": "2026-11-03T16:30:31.2413314Z",
+      "authorization": "local-synthetic-only",
+      "claimedAtUtc": "2026-11-03T16:31:46.7148134Z"
     }
   ],
   "workers": [
@@ -8079,7 +8125,7 @@
       "dispatchedAtUtc": "2026-11-03T16:06:57.2281144Z",
       "id": "worker-A-S017",
       "cardId": "A-S017",
-      "status": "result_received",
+      "status": "accepted",
       "agentId": "212069f8-f9f9-4d27-a4a1-ccbac1fd0466",
       "reportedAtUtc": "2026-11-03T16:23:57.4619777Z"
     },
@@ -8110,16 +8156,23 @@
       "dispatchedAtUtc": "2026-11-03T16:23:14.6724018Z",
       "cardId": "A-S020",
       "status": "running"
+    },
+    {
+      "cardId": "A-S022",
+      "dispatchedAtUtc": "2026-11-03T16:30:31.3416343Z",
+      "status": "running",
+      "agentId": "8b2e2821-dcbf-4cd0-a323-f131b10f784b",
+      "id": "worker-A-S022"
     }
   ],
   "completedParents": [],
   "admittedReadyIds": [],
   "plannedNextIds": [
-    "A-S020",
+    "A-S022",
     "C025",
-    "A-S017",
     "A-S018",
-    "A-S019"
+    "A-S019",
+    "A-S020"
   ],
   "blockedReasons": [],
   "stopNewDispatch": false,
@@ -8160,7 +8213,8 @@
       "objective": "Compose existing accepted catalog/search/filter/preparation, zero new Kano units",
       "scope": "capability/local-harness",
       "kanoCredit": 0,
-      "status": "running"
+      "status": "completed",
+      "result": "Verified local unified learner UI; parent independently passed28 focused+11 actual browser checks, published c2876146; zero extra Kano credit."
     }
   ],
   "operationalBlockers": [
@@ -8304,7 +8358,7 @@
     {
       "owner": "worker-OP-CATALOG-COMPOSE",
       "kanoCredit": 0,
-      "state": "In Progress",
+      "state": "Done",
       "id": "OP-CATALOG-COMPOSE",
       "parentComplete": false,
       "prerequisites": [
@@ -8313,12 +8367,51 @@
         "C007",
         "C008"
       ],
-      "readiness": true,
+      "readiness": false,
       "scope": "capability/local-harness only; compose accepted pure modules into one local learner flow",
       "parent": "H002",
       "note": "Required integration/refinement, not a new satisfier or H002/H001 completion. No provider rewrites, live availability, native controls, identity or infrastructure.",
       "agentId": "a2b20ea1-87b1-458c-b019-8a06486d85ec",
-      "startedAtUtc": "2026-11-03T15:57:46.7467884Z"
+      "startedAtUtc": "2026-11-03T15:57:46.7467884Z",
+      "result": {
+        "id": "OP-CATALOG-COMPOSE",
+        "accepted": true,
+        "reviewer": "parent-controller",
+        "reviewedAtUtc": "2026-11-03T16:30:31.1532707Z",
+        "commit": "c2876146cd9052029075323a03c4fcc997b05569",
+        "tag": "kanban/flow-catalog/c2876146cd90",
+        "focusedLeafCasesPassed": 28,
+        "actualBrowserLeafChecksPassed": 11,
+        "independentActualE2E": true,
+        "remoteVerified": true,
+        "ownedScopeVerified": true,
+        "providerInterfacesUnchanged": 13,
+        "kanoCredit": 0,
+        "H001Complete": false,
+        "H002Complete": false,
+        "nativeProof": false,
+        "production24Validated": false,
+        "note": "Controller independently passed28 composed-model cases and11 actual Edge E2E groups, including query+filter+preparation, opening/conducting original accepted A-S001 PASS/FAIL/reset and return with preserved state. Historical152-entry/11-practice snapshot remains explicit. No extra unit or parent/native completion."
+      },
+      "completedAtUtc": "2026-11-03T16:30:31.2093622Z"
+    },
+    {
+      "note": "Expose newly accepted portable lessons in the unified UI without live discovery, native qualification, provider-authority changes, or extra units; preserve previous snapshots/proof.",
+      "id": "OP-CATALOG-SNAPSHOT-REFRESH",
+      "readiness": true,
+      "scope": "Refresh one historical committed acceptance/source snapshot and necessary consumer proof/pin expectations only",
+      "state": "To Do",
+      "parent": "H002",
+      "owner": null,
+      "parentComplete": false,
+      "prerequisites": [
+        "C005",
+        "C006",
+        "C007",
+        "C008",
+        "OP-CATALOG-COMPOSE"
+      ],
+      "kanoCredit": 0
     }
   ]
 }
