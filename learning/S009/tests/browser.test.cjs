@@ -201,7 +201,9 @@ test('real isolated Edge: keyboard, intended responses, discrepancies, effects, 
       }
     } finally {
       report.endedAtUtc = new Date().toISOString();
-      fs.writeFileSync(path.join(__dirname, '..', 'evidence', 'browser-observations.json'), JSON.stringify(report, null, 2) + '\n');
+      if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') {
+        fs.writeFileSync(path.join(__dirname, '..', 'evidence', 'browser-observations.json'), JSON.stringify(report, null, 2) + '\n');
+      }
     }
   }
 });
