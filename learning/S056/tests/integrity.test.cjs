@@ -75,8 +75,8 @@ test('archived RED is genuine and replayable, not absent code or tooling', () =>
     assert.equal(sha(fs.readFileSync(path.join(evidence, 'red', snapshot.snapshot))), snapshot.sha256);
     assert.ok(snapshot.snapshot.endsWith('.snapshot'));
   }
-  const archivedTest = fs.readFileSync(path.join(evidence, 'red', 'model.test.cjs.snapshot'), 'utf8').trimEnd();
-  assert.ok(fs.readFileSync(path.join(root, 'tests', 'model.test.cjs'), 'utf8').startsWith(archivedTest));
+  const archivedTest = canonical(fs.readFileSync(path.join(evidence, 'red', 'model.test.cjs.snapshot'))).toString().trimEnd();
+  assert.ok(canonical(fs.readFileSync(path.join(root, 'tests', 'model.test.cjs'))).toString().startsWith(archivedTest));
   const replayEnv = { ...process.env, S056_MODEL_PATH: path.join(evidence, 'red', 'model.js.snapshot') };
   // Node's inherited test-runner marker suppresses recursively spawned --test runs.
   delete replayEnv.NODE_TEST_CONTEXT;
@@ -138,4 +138,29 @@ test('stage-order metadata and preserved real verification failures remain hones
     assert.equal(sha(fs.readFileSync(path.join(evidence, record.path))), record.sha256);
   }
   assert.equal(json(path.join('focused-001-failure', 'run.json')).exitCode, 1);
+});
+
+test('canonical published lesson sources and binary-preserved raw snapshots qualify against Git blobs', () => {
+  const commit = git(['rev-parse', 'HEAD']).toString().trim();
+  const qualification = json('git-source-qualification.json');
+  const proof = json('browser.json');
+  for (const record of proof.sources) {
+    const blob = git(['show', `${commit}:learning/S056/${record.path.replace(/\\/g, '/')}`]);
+    assert.equal(sha(canonical(blob)), record.canonicalSha256, `published canonical source: ${record.path}`);
+  }
+  const contract = json('source-contract.json');
+  const red = json(path.join('red', 'run.json'));
+  const paths = [...contract.records.map((record) => record.snapshot), contract.packetRule.snapshot,
+    ...red.snapshots.map((record) => path.join('red', record.snapshot)), 'browser-001-failure.snapshot'];
+  for (const relative of paths) {
+    const blob = git(['show', `${commit}:learning/S056/evidence/${relative.replace(/\\/g, '/')}`]);
+    assert.equal(sha(blob), sha(fs.readFileSync(path.join(evidence, relative))), `raw snapshot preserved in Git: ${relative}`);
+  }
+  const rawTest = fs.readFileSync(path.join(evidence, 'red', 'model.test.cjs.snapshot'));
+  const gitTest = git(['show', `${commit}:learning/S056/tests/model.test.cjs`]);
+  assert.ok(canonical(gitTest).toString().startsWith(canonical(rawTest).toString().trimEnd()));
+  assert.equal(sha(rawTest), qualification.rawSnapshotSha256);
+  assert.equal(qualification.beforeFix.workingRawPrefixMatched, true);
+  assert.equal(qualification.beforeFix.canonicalGitVersusRawPrefixMatched, false);
+  assert.equal(qualification.canonicalNormalizedPrefixMatched, true);
 });
