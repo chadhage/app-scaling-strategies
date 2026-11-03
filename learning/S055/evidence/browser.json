@@ -1,0 +1,824 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S055",
+  "workerId": "worker-A-S055",
+  "mode": "synthetic",
+  "entry": "learning\\S055\\index.html",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "startedAtUtc": "2026-11-03T19:04:12.997Z",
+  "captureExplicitlyEnabled": true,
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "publication": "53c0c0d"
+  },
+  "outcome": "PASS",
+  "observations": [
+    {
+      "name": "state guard: reading before preparation is refused",
+      "phase": "Phase: idle · two synthetic readers",
+      "gate": "Compatibility gate: not evaluated",
+      "impact": "Synthetic read impact: not evaluated",
+      "metrics": "No reads observed.",
+      "reads": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "Read requires prepared; current phase is idle.",
+      "activeElement": "layout"
+    },
+    {
+      "name": "input guard: forged payload choice is refused without a result",
+      "phase": "Phase: idle · two synthetic readers",
+      "gate": "Compatibility gate: not evaluated",
+      "impact": "Synthetic read impact: not evaluated",
+      "metrics": "No reads observed.",
+      "reads": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "Payload: choose one of equivalent, malformed, wrong-total; no coercion or accessors.",
+      "activeElement": "prepare"
+    },
+    {
+      "name": "exact keyboard reset from input error",
+      "phase": "Phase: idle · two synthetic readers",
+      "gate": "Compatibility gate: not evaluated",
+      "impact": "Synthetic read impact: not evaluated",
+      "metrics": "No reads observed.",
+      "reads": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "prepare"
+    },
+    {
+      "name": "shared unsafe overlap: explicit incompatible reads; correct failure prediction is not continuity",
+      "phase": "Phase: complete · two synthetic readers",
+      "gate": "Compatibility gate: FAIL",
+      "impact": "Synthetic read impact: INTERRUPTED",
+      "metrics": "Started 4 · observed 4 · correct 2 · failed 2 · unknown 0 · translated 0",
+      "reads": [
+        [
+          "1",
+          "v1",
+          "cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Direct read preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "2",
+          "v2",
+          "cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "FAILURE",
+          "Not established",
+          "SCHEMA_MISMATCH: reader v2 cannot consume schema 1; use validated translation or a versioned namespace."
+        ],
+        [
+          "3",
+          "v1",
+          "cart:SYN-CART-055",
+          "{\"schema\":2,\"itemId\":\"SYN-CART-055\",\"money\":{\"minor\":1250,\"currency\":\"USD\"}}",
+          "FAILURE",
+          "Not established",
+          "SCHEMA_MISMATCH: reader v1 cannot consume schema 2; use validated translation or a versioned namespace."
+        ],
+        [
+          "4",
+          "v2",
+          "cart:SYN-CART-055",
+          "{\"schema\":2,\"itemId\":\"SYN-CART-055\",\"money\":{\"minor\":1250,\"currency\":\"USD\"}}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Direct read preserves SYN-CART-055, USD and 1250 integer minor units."
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "shared · none · equivalent · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "PASS"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · chosen FAIL, measured FAIL. Cache gate and synthetic impact are unchanged.",
+      "trace": "Attempt 1: prepared two synthetic readers; layout shared, translation none, payload equivalent, observation complete.\nSynthetic write v1 -> shared cart key; both readers read. Synthetic write v2 overwrites that key; both readers read again.\nExpected invariant: SYN-CART-055, USD, exactly 1250 integer minor units. No cache service or network is contacted.\nRead 1: reader v1, cart:SYN-CART-055 -> CORRECT. Direct read preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 2: reader v2, cart:SYN-CART-055 -> SCHEMA_MISMATCH. SCHEMA_MISMATCH: reader v2 cannot consume schema 1; use validated translation or a versioned namespace.\nRead 3: reader v1, cart:SYN-CART-055 -> SCHEMA_MISMATCH. SCHEMA_MISMATCH: reader v1 cannot consume schema 2; use validated translation or a versioned namespace.\nRead 4: reader v2, cart:SYN-CART-055 -> CORRECT. Direct read preserves SYN-CART-055, USD and 1250 integer minor units.\nCompatibility gate FAIL; 2 correct, 2 failed, 0 unknown. No started read was dropped.\nLearner prediction FAIL: verifier PASS; measured gate FAIL is unchanged.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "lossless translation in both directions preserves all four consumed values",
+      "phase": "Phase: complete · two synthetic readers",
+      "gate": "Compatibility gate: PASS",
+      "impact": "Synthetic read impact: UNINTERRUPTED",
+      "metrics": "Started 4 · observed 4 · correct 4 · failed 0 · unknown 0 · translated 2",
+      "reads": [
+        [
+          "1",
+          "v1",
+          "cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Direct read preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "2",
+          "v2",
+          "cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Validated translation preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "3",
+          "v1",
+          "cart:SYN-CART-055",
+          "{\"schema\":2,\"itemId\":\"SYN-CART-055\",\"money\":{\"minor\":1250,\"currency\":\"USD\"}}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Validated translation preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "4",
+          "v2",
+          "cart:SYN-CART-055",
+          "{\"schema\":2,\"itemId\":\"SYN-CART-055\",\"money\":{\"minor\":1250,\"currency\":\"USD\"}}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Direct read preserves SYN-CART-055, USD and 1250 integer minor units."
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "shared · none · equivalent · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "PASS"
+        ],
+        [
+          "2",
+          "shared · lossless · equivalent · complete",
+          "4 / 0 / 0",
+          "PASS",
+          "UNINTERRUPTED",
+          "PASS"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · chosen PASS, measured PASS. Cache gate and synthetic impact are unchanged.",
+      "trace": "Attempt 2: prepared two synthetic readers; layout shared, translation lossless, payload equivalent, observation complete.\nSynthetic write v1 -> shared cart key; both readers read. Synthetic write v2 overwrites that key; both readers read again.\nExpected invariant: SYN-CART-055, USD, exactly 1250 integer minor units. No cache service or network is contacted.\nRead 1: reader v1, cart:SYN-CART-055 -> CORRECT. Direct read preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 2: reader v2, cart:SYN-CART-055 -> CORRECT. Validated translation preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 3: reader v1, cart:SYN-CART-055 -> CORRECT. Validated translation preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 4: reader v2, cart:SYN-CART-055 -> CORRECT. Direct read preserves SYN-CART-055, USD and 1250 integer minor units.\nCompatibility gate PASS; 4 correct, 0 failed, 0 unknown. No started read was dropped.\nLearner prediction PASS: verifier PASS; measured gate PASS is unchanged.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "versioned namespaces isolate schemas with zero translations",
+      "phase": "Phase: complete · two synthetic readers",
+      "gate": "Compatibility gate: PASS",
+      "impact": "Synthetic read impact: UNINTERRUPTED",
+      "metrics": "Started 4 · observed 4 · correct 4 · failed 0 · unknown 0 · translated 0",
+      "reads": [
+        [
+          "1",
+          "v1",
+          "v1:cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Direct read preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "2",
+          "v2",
+          "v2:cart:SYN-CART-055",
+          "{\"schema\":2,\"itemId\":\"SYN-CART-055\",\"money\":{\"minor\":1250,\"currency\":\"USD\"}}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Direct read preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "3",
+          "v1",
+          "v1:cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Direct read preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "4",
+          "v2",
+          "v2:cart:SYN-CART-055",
+          "{\"schema\":2,\"itemId\":\"SYN-CART-055\",\"money\":{\"minor\":1250,\"currency\":\"USD\"}}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Direct read preserves SYN-CART-055, USD and 1250 integer minor units."
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "shared · none · equivalent · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "PASS"
+        ],
+        [
+          "2",
+          "shared · lossless · equivalent · complete",
+          "4 / 0 / 0",
+          "PASS",
+          "UNINTERRUPTED",
+          "PASS"
+        ],
+        [
+          "3",
+          "versioned · none · equivalent · complete",
+          "4 / 0 / 0",
+          "PASS",
+          "UNINTERRUPTED",
+          "PASS"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · chosen PASS, measured PASS. Cache gate and synthetic impact are unchanged.",
+      "trace": "Attempt 3: prepared two synthetic readers; layout versioned, translation none, payload equivalent, observation complete.\nBoth synthetic versioned keys are pre-populated. Each reader reads only its own namespace twice; this is not cache warming or synchronization proof.\nExpected invariant: SYN-CART-055, USD, exactly 1250 integer minor units. No cache service or network is contacted.\nRead 1: reader v1, v1:cart:SYN-CART-055 -> CORRECT. Direct read preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 2: reader v2, v2:cart:SYN-CART-055 -> CORRECT. Direct read preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 3: reader v1, v1:cart:SYN-CART-055 -> CORRECT. Direct read preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 4: reader v2, v2:cart:SYN-CART-055 -> CORRECT. Direct read preserves SYN-CART-055, USD and 1250 integer minor units.\nCompatibility gate PASS; 4 correct, 0 failed, 0 unknown. No started read was dropped.\nLearner prediction PASS: verifier PASS; measured gate PASS is unchanged.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "malformed own-version objects fail explicitly despite namespaces",
+      "phase": "Phase: complete · two synthetic readers",
+      "gate": "Compatibility gate: FAIL",
+      "impact": "Synthetic read impact: INTERRUPTED",
+      "metrics": "Started 4 · observed 4 · correct 2 · failed 2 · unknown 0 · translated 0",
+      "reads": [
+        [
+          "1",
+          "v1",
+          "v1:cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Direct read preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "2",
+          "v2",
+          "v2:cart:SYN-CART-055",
+          "{\"schema\":2,\"itemId\":\"SYN-CART-055\",\"money\":{\"minor\":\"1250\",\"currency\":\"USD\"}}",
+          "FAILURE",
+          "Not established",
+          "INVALID_PAYLOAD: schema requires an item ID, nonnegative safe integer minor units and a currency; strings are not coerced."
+        ],
+        [
+          "3",
+          "v1",
+          "v1:cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Direct read preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "4",
+          "v2",
+          "v2:cart:SYN-CART-055",
+          "{\"schema\":2,\"itemId\":\"SYN-CART-055\",\"money\":{\"minor\":\"1250\",\"currency\":\"USD\"}}",
+          "FAILURE",
+          "Not established",
+          "INVALID_PAYLOAD: schema requires an item ID, nonnegative safe integer minor units and a currency; strings are not coerced."
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "shared · none · equivalent · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "PASS"
+        ],
+        [
+          "2",
+          "shared · lossless · equivalent · complete",
+          "4 / 0 / 0",
+          "PASS",
+          "UNINTERRUPTED",
+          "PASS"
+        ],
+        [
+          "3",
+          "versioned · none · equivalent · complete",
+          "4 / 0 / 0",
+          "PASS",
+          "UNINTERRUPTED",
+          "PASS"
+        ],
+        [
+          "4",
+          "versioned · none · malformed · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "PASS"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · chosen FAIL, measured FAIL. Cache gate and synthetic impact are unchanged.",
+      "trace": "Attempt 4: prepared two synthetic readers; layout versioned, translation none, payload malformed, observation complete.\nBoth synthetic versioned keys are pre-populated. Each reader reads only its own namespace twice; this is not cache warming or synchronization proof.\nExpected invariant: SYN-CART-055, USD, exactly 1250 integer minor units. No cache service or network is contacted.\nRead 1: reader v1, v1:cart:SYN-CART-055 -> CORRECT. Direct read preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 2: reader v2, v2:cart:SYN-CART-055 -> INVALID_PAYLOAD. INVALID_PAYLOAD: schema requires an item ID, nonnegative safe integer minor units and a currency; strings are not coerced.\nRead 3: reader v1, v1:cart:SYN-CART-055 -> CORRECT. Direct read preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 4: reader v2, v2:cart:SYN-CART-055 -> INVALID_PAYLOAD. INVALID_PAYLOAD: schema requires an item ID, nonnegative safe integer minor units and a currency; strings are not coerced.\nCompatibility gate FAIL; 2 correct, 2 failed, 0 unknown. No started read was dropped.\nLearner prediction FAIL: verifier PASS; measured gate FAIL is unchanged.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "wrong business value fails after valid translation; wrong prediction fails independently",
+      "phase": "Phase: complete · two synthetic readers",
+      "gate": "Compatibility gate: FAIL",
+      "impact": "Synthetic read impact: INTERRUPTED",
+      "metrics": "Started 4 · observed 4 · correct 2 · failed 2 · unknown 0 · translated 2",
+      "reads": [
+        [
+          "1",
+          "v1",
+          "cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Direct read preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "2",
+          "v2",
+          "cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Validated translation preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "3",
+          "v1",
+          "cart:SYN-CART-055",
+          "{\"schema\":2,\"itemId\":\"SYN-CART-055\",\"money\":{\"minor\":1200,\"currency\":\"USD\"}}",
+          "FAILURE",
+          "SYN-CART-055 · USD · 1200 minor units",
+          "VALUE_MISMATCH: decoded object does not preserve SYN-CART-055, USD and exactly 1250 minor units; shape compatibility alone is insufficient."
+        ],
+        [
+          "4",
+          "v2",
+          "cart:SYN-CART-055",
+          "{\"schema\":2,\"itemId\":\"SYN-CART-055\",\"money\":{\"minor\":1200,\"currency\":\"USD\"}}",
+          "FAILURE",
+          "SYN-CART-055 · USD · 1200 minor units",
+          "VALUE_MISMATCH: decoded object does not preserve SYN-CART-055, USD and exactly 1250 minor units; shape compatibility alone is insufficient."
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "shared · none · equivalent · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "PASS"
+        ],
+        [
+          "2",
+          "shared · lossless · equivalent · complete",
+          "4 / 0 / 0",
+          "PASS",
+          "UNINTERRUPTED",
+          "PASS"
+        ],
+        [
+          "3",
+          "versioned · none · equivalent · complete",
+          "4 / 0 / 0",
+          "PASS",
+          "UNINTERRUPTED",
+          "PASS"
+        ],
+        [
+          "4",
+          "versioned · none · malformed · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "PASS"
+        ],
+        [
+          "5",
+          "shared · lossless · wrong-total · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "FAIL"
+        ]
+      ],
+      "prediction": "Prediction verifier: FAIL · chosen PASS, measured FAIL. Cache gate and synthetic impact are unchanged.",
+      "trace": "Attempt 5: prepared two synthetic readers; layout shared, translation lossless, payload wrong-total, observation complete.\nSynthetic write v1 -> shared cart key; both readers read. Synthetic write v2 overwrites that key; both readers read again.\nExpected invariant: SYN-CART-055, USD, exactly 1250 integer minor units. No cache service or network is contacted.\nRead 1: reader v1, cart:SYN-CART-055 -> CORRECT. Direct read preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 2: reader v2, cart:SYN-CART-055 -> CORRECT. Validated translation preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 3: reader v1, cart:SYN-CART-055 -> VALUE_MISMATCH. VALUE_MISMATCH: decoded object does not preserve SYN-CART-055, USD and exactly 1250 minor units; shape compatibility alone is insufficient.\nRead 4: reader v2, cart:SYN-CART-055 -> VALUE_MISMATCH. VALUE_MISMATCH: decoded object does not preserve SYN-CART-055, USD and exactly 1250 minor units; shape compatibility alone is insufficient.\nCompatibility gate FAIL; 2 correct, 2 failed, 0 unknown. No started read was dropped.\nLearner prediction PASS: verifier FAIL; measured gate FAIL is unchanged.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "partial compatible observations remain unknown, not success",
+      "phase": "Phase: complete · two synthetic readers",
+      "gate": "Compatibility gate: UNKNOWN",
+      "impact": "Synthetic read impact: UNKNOWN",
+      "metrics": "Started 4 · observed 2 · correct 2 · failed 0 · unknown 2 · translated 1",
+      "reads": [
+        [
+          "1",
+          "v1",
+          "cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Direct read preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "2",
+          "v2",
+          "cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Validated translation preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "3",
+          "v1",
+          "cart:SYN-CART-055",
+          "UNKNOWN — no received object observed",
+          "UNKNOWN",
+          "Not established",
+          "No observation; selected fixtures are not evidence of this read."
+        ],
+        [
+          "4",
+          "v2",
+          "cart:SYN-CART-055",
+          "UNKNOWN — no received object observed",
+          "UNKNOWN",
+          "Not established",
+          "No observation; selected fixtures are not evidence of this read."
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "shared · none · equivalent · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "PASS"
+        ],
+        [
+          "2",
+          "shared · lossless · equivalent · complete",
+          "4 / 0 / 0",
+          "PASS",
+          "UNINTERRUPTED",
+          "PASS"
+        ],
+        [
+          "3",
+          "versioned · none · equivalent · complete",
+          "4 / 0 / 0",
+          "PASS",
+          "UNINTERRUPTED",
+          "PASS"
+        ],
+        [
+          "4",
+          "versioned · none · malformed · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "PASS"
+        ],
+        [
+          "5",
+          "shared · lossless · wrong-total · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "FAIL"
+        ],
+        [
+          "6",
+          "shared · lossless · equivalent · partial",
+          "2 / 0 / 2",
+          "UNKNOWN",
+          "UNKNOWN",
+          "PASS"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · chosen UNKNOWN, measured UNKNOWN. Cache gate and synthetic impact are unchanged.",
+      "trace": "Attempt 6: prepared two synthetic readers; layout shared, translation lossless, payload equivalent, observation partial.\nSynthetic write v1 -> shared cart key; both readers read. Synthetic write v2 overwrites that key; both readers read again.\nExpected invariant: SYN-CART-055, USD, exactly 1250 integer minor units. No cache service or network is contacted.\nRead 1: reader v1, cart:SYN-CART-055 -> CORRECT. Direct read preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 2: reader v2, cart:SYN-CART-055 -> CORRECT. Validated translation preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 3: reader v1, cart:SYN-CART-055 -> UNOBSERVED. No observation; selected fixtures are not evidence of this read.\nRead 4: reader v2, cart:SYN-CART-055 -> UNOBSERVED. No observation; selected fixtures are not evidence of this read.\nCompatibility gate UNKNOWN; 2 correct, 0 failed, 2 unknown. No started read was dropped.\nLearner prediction UNKNOWN: verifier PASS; measured gate UNKNOWN is unchanged.",
+      "alert": "",
+      "activeElement": "reset-rehearsal"
+    },
+    {
+      "name": "six-attempt history cap refuses preparation and never evicts failures or unknowns",
+      "phase": "Phase: idle · two synthetic readers",
+      "gate": "Compatibility gate: not evaluated",
+      "impact": "Synthetic read impact: not evaluated",
+      "metrics": "No reads observed.",
+      "reads": [],
+      "history": [
+        [
+          "1",
+          "shared · none · equivalent · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "PASS"
+        ],
+        [
+          "2",
+          "shared · lossless · equivalent · complete",
+          "4 / 0 / 0",
+          "PASS",
+          "UNINTERRUPTED",
+          "PASS"
+        ],
+        [
+          "3",
+          "versioned · none · equivalent · complete",
+          "4 / 0 / 0",
+          "PASS",
+          "UNINTERRUPTED",
+          "PASS"
+        ],
+        [
+          "4",
+          "versioned · none · malformed · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "PASS"
+        ],
+        [
+          "5",
+          "shared · lossless · wrong-total · complete",
+          "2 / 2 / 0",
+          "FAIL",
+          "INTERRUPTED",
+          "FAIL"
+        ],
+        [
+          "6",
+          "shared · lossless · equivalent · partial",
+          "2 / 0 / 2",
+          "UNKNOWN",
+          "UNKNOWN",
+          "PASS"
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "History full: six completed attempts retained; reset explicitly to clear them.",
+      "activeElement": "reset-rehearsal"
+    },
+    {
+      "name": "exact keyboard reset from full history and limit error",
+      "phase": "Phase: idle · two synthetic readers",
+      "gate": "Compatibility gate: not evaluated",
+      "impact": "Synthetic read impact: not evaluated",
+      "metrics": "No reads observed.",
+      "reads": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "prepare"
+    },
+    {
+      "name": "known failure dominates incomplete proof while other reads stay unknown",
+      "phase": "Phase: complete · two synthetic readers",
+      "gate": "Compatibility gate: FAIL",
+      "impact": "Synthetic read impact: INTERRUPTED",
+      "metrics": "Started 4 · observed 2 · correct 1 · failed 1 · unknown 2 · translated 0",
+      "reads": [
+        [
+          "1",
+          "v1",
+          "cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "SUCCESS",
+          "SYN-CART-055 · USD · 1250 minor units",
+          "Direct read preserves SYN-CART-055, USD and 1250 integer minor units."
+        ],
+        [
+          "2",
+          "v2",
+          "cart:SYN-CART-055",
+          "{\"schema\":1,\"itemId\":\"SYN-CART-055\",\"totalCents\":1250,\"currency\":\"USD\"}",
+          "FAILURE",
+          "Not established",
+          "SCHEMA_MISMATCH: reader v2 cannot consume schema 1; use validated translation or a versioned namespace."
+        ],
+        [
+          "3",
+          "v1",
+          "cart:SYN-CART-055",
+          "UNKNOWN — no received object observed",
+          "UNKNOWN",
+          "Not established",
+          "No observation; selected fixtures are not evidence of this read."
+        ],
+        [
+          "4",
+          "v2",
+          "cart:SYN-CART-055",
+          "UNKNOWN — no received object observed",
+          "UNKNOWN",
+          "Not established",
+          "No observation; selected fixtures are not evidence of this read."
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "shared · none · equivalent · partial",
+          "1 / 1 / 2",
+          "FAIL",
+          "INTERRUPTED",
+          "PASS"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · chosen FAIL, measured FAIL. Cache gate and synthetic impact are unchanged.",
+      "trace": "Attempt 1: prepared two synthetic readers; layout shared, translation none, payload equivalent, observation partial.\nSynthetic write v1 -> shared cart key; both readers read. Synthetic write v2 overwrites that key; both readers read again.\nExpected invariant: SYN-CART-055, USD, exactly 1250 integer minor units. No cache service or network is contacted.\nRead 1: reader v1, cart:SYN-CART-055 -> CORRECT. Direct read preserves SYN-CART-055, USD and 1250 integer minor units.\nRead 2: reader v2, cart:SYN-CART-055 -> SCHEMA_MISMATCH. SCHEMA_MISMATCH: reader v2 cannot consume schema 1; use validated translation or a versioned namespace.\nRead 3: reader v1, cart:SYN-CART-055 -> UNOBSERVED. No observation; selected fixtures are not evidence of this read.\nRead 4: reader v2, cart:SYN-CART-055 -> UNOBSERVED. No observation; selected fixtures are not evidence of this read.\nCompatibility gate FAIL; 1 correct, 1 failed, 2 unknown. No started read was dropped.\nLearner prediction FAIL: verifier PASS; measured gate FAIL is unchanged.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "absent observations do not infer failure from a malformed selected fixture",
+      "phase": "Phase: complete · two synthetic readers",
+      "gate": "Compatibility gate: UNKNOWN",
+      "impact": "Synthetic read impact: UNKNOWN",
+      "metrics": "Started 4 · observed 0 · correct 0 · failed 0 · unknown 4 · translated 0",
+      "reads": [
+        [
+          "1",
+          "v1",
+          "cart:SYN-CART-055",
+          "UNKNOWN — no received object observed",
+          "UNKNOWN",
+          "Not established",
+          "No observation; selected fixtures are not evidence of this read."
+        ],
+        [
+          "2",
+          "v2",
+          "cart:SYN-CART-055",
+          "UNKNOWN — no received object observed",
+          "UNKNOWN",
+          "Not established",
+          "No observation; selected fixtures are not evidence of this read."
+        ],
+        [
+          "3",
+          "v1",
+          "cart:SYN-CART-055",
+          "UNKNOWN — no received object observed",
+          "UNKNOWN",
+          "Not established",
+          "No observation; selected fixtures are not evidence of this read."
+        ],
+        [
+          "4",
+          "v2",
+          "cart:SYN-CART-055",
+          "UNKNOWN — no received object observed",
+          "UNKNOWN",
+          "Not established",
+          "No observation; selected fixtures are not evidence of this read."
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "shared · none · equivalent · partial",
+          "1 / 1 / 2",
+          "FAIL",
+          "INTERRUPTED",
+          "PASS"
+        ],
+        [
+          "2",
+          "shared · none · malformed · none",
+          "0 / 0 / 4",
+          "UNKNOWN",
+          "UNKNOWN",
+          "PASS"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · chosen UNKNOWN, measured UNKNOWN. Cache gate and synthetic impact are unchanged.",
+      "trace": "Attempt 2: prepared two synthetic readers; layout shared, translation none, payload malformed, observation none.\nSynthetic write v1 -> shared cart key; both readers read. Synthetic write v2 overwrites that key; both readers read again.\nExpected invariant: SYN-CART-055, USD, exactly 1250 integer minor units. No cache service or network is contacted.\nRead 1: reader v1, cart:SYN-CART-055 -> UNOBSERVED. No observation; selected fixtures are not evidence of this read.\nRead 2: reader v2, cart:SYN-CART-055 -> UNOBSERVED. No observation; selected fixtures are not evidence of this read.\nRead 3: reader v1, cart:SYN-CART-055 -> UNOBSERVED. No observation; selected fixtures are not evidence of this read.\nRead 4: reader v2, cart:SYN-CART-055 -> UNOBSERVED. No observation; selected fixtures are not evidence of this read.\nCompatibility gate UNKNOWN; 0 correct, 0 failed, 4 unknown. No started read was dropped.\nLearner prediction UNKNOWN: verifier PASS; measured gate UNKNOWN is unchanged.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "exact keyboard reset from prepared locked assumptions",
+      "phase": "Phase: idle · two synthetic readers",
+      "gate": "Compatibility gate: not evaluated",
+      "impact": "Synthetic read impact: not evaluated",
+      "metrics": "No reads observed.",
+      "reads": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "prepare"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp-probes",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-5Koeug2ymIv6Sqfxlk+eMVEr+jBM2fGRPGO700yCN+0='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Connecting to 'https://synthetic.invalid/S055-csp-probe' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Fetch API cannot load https://synthetic.invalid/S055-csp-probe. Refused to connect because it violates the document's Content Security Policy."
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "probeRequests": [],
+  "probeResponses": [],
+  "cleanup": {
+    "sessionCloseAwaited": true,
+    "serversStarted": 0,
+    "foregroundLeaseUsed": false
+  },
+  "testedSourceHashes": {
+    "index.html": "201db8f2312cfacf4c1faeb2724582346caa19b48b5655a4e3cebd86b4dc7f6e",
+    "styles.css": "e388a9145a4fa75043e1fd3b38de726e21793bc0d4f0f16b58004ab980438e84",
+    "fixtures.js": "8b1c74ab440078cd7f8704343a56d90c0fc0ac6fa75b65766afbf146fe96fe0d",
+    "model.js": "e20834938d816e2879b86a69b073ab86e6d5d1887d4a220bfdab4f9ea7da9c1c",
+    "app.js": "71d701ef89ffeadb3f0591cf78986420b0a246bd90300909c20635f2d5a64a86",
+    "tests\\browser.test.cjs": "4b0d30ed4fe121409892b1e04f4552ac051e1bd0a0abb650700763950cb2fb1c"
+  },
+  "browserVersion": "156.0.4314.50",
+  "keyboardFocusStyle": {
+    "width": "3px",
+    "style": "solid"
+  },
+  "smallViewport": {
+    "width": 320,
+    "pageWidth": 320,
+    "noPageHorizontalOverflow": true
+  },
+  "csp": {
+    "fetchRejected": true,
+    "inlineExecuted": false,
+    "violations": [
+      {
+        "effectiveDirective": "script-src-elem",
+        "blockedURI": "inline",
+        "disposition": "enforce"
+      },
+      {
+        "effectiveDirective": "connect-src",
+        "blockedURI": "https://synthetic.invalid/S055-csp-probe",
+        "disposition": "enforce"
+      }
+    ]
+  },
+  "completedAtUtc": "2026-11-03T19:04:18.402Z"
+}

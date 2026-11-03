@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'">
+  <title>S055 · Cache payload evolution</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="fixtures.js"></script>
+  <script defer src="model.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#exercise">Skip to rehearsal controls</a>
+  <header>
+    <p class="training" id="training-label">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S055 · Cache payload evolution</h1>
+    <p>A-S055 · D-S055 · frozen S · SC-S055</p>
+    <p>Read mixed cache payloads; identify when translation or versioned namespaces are required.</p>
+  </header>
+  <main>
+    <section aria-labelledby="instructions-title">
+      <h2 id="instructions-title">Two readers, two payload shapes, one value</h2>
+      <p>Reader v1 consumes <code>totalCents</code>; reader v2 consumes <code>money.minor</code>.
+        Both must preserve cart <code>SYN-CART-055</code>, currency <code>USD</code> and exactly
+        <strong>1250 integer minor units</strong>. A decoded shape alone is not correctness.</p>
+      <ol>
+        <li>Try the default shared key without translation: both same-schema reads pass, but two cross-schema reads fail.</li>
+        <li>Start another attempt with retained history. Enable validated translation, or isolate each reader in its own versioned namespace.</li>
+        <li>Try a malformed or wrong-total object. Neither a translator nor a namespace repairs bad data.</li>
+        <li>Remove observations: unknown reads remain unknown, even when the chosen fixture looks safe.</li>
+      </ol>
+      <p>Preconditions: modern local-file browser, four fixed synthetic reads, both versioned keys pre-populated
+        when that layout is selected. No server, cache service, account, credentials or Azure subscription.</p>
+    </section>
+    <section id="exercise" aria-labelledby="exercise-title">
+      <h2 id="exercise-title">Operate the rehearsal</h2>
+      <form id="cache-controls" novalidate>
+        <fieldset id="configuration">
+          <legend>Fixed synthetic assumptions — locked on Prepare</legend>
+          <label for="layout">Cache layout</label>
+          <select id="layout" name="layout">
+            <option value="shared">Shared key — both writers overwrite one key</option>
+            <option value="versioned">Versioned namespaces — each reader uses its own key</option>
+          </select>
+          <label for="translation">Cross-schema translation</label>
+          <select id="translation" name="translation">
+            <option value="none">Off — require the reader's own schema</option>
+            <option value="lossless">Validated lossless v1 ↔ v2 translator</option>
+          </select>
+          <label for="payload">v2 cached object</label>
+          <select id="payload" name="payload">
+            <option value="equivalent">Equivalent value — 1250 integer minor units</option>
+            <option value="malformed">Malformed — "1250" is a string, not an integer</option>
+            <option value="wrong-total">Valid shape, wrong value — 1200 instead of 1250</option>
+          </select>
+          <label for="observation">Observed reads</label>
+          <select id="observation" name="observation">
+            <option value="complete">Complete — all four</option>
+            <option value="partial">Partial — first two only</option>
+            <option value="none">Absent — none observed</option>
+          </select>
+        </fieldset>
+        <div class="actions">
+          <button type="submit" id="prepare">Prepare mixed readers</button>
+          <button type="button" id="read-cache" disabled>Read four synthetic cache objects</button>
+        </div>
+        <p id="input-error" role="alert" hidden></p>
+        <p id="history-limit" hidden>History full: six attempts retained. Reset explicitly; no result is silently evicted.</p>
+      </form>
+      <p id="phase" role="status" aria-live="polite">Phase: idle · two synthetic readers</p>
+      <p id="cache-plan">No cache prepared.</p>
+      <p id="gate" class="badge">Compatibility gate: not evaluated</p>
+      <p id="impact">Synthetic read impact: not evaluated</p>
+      <p id="metrics">No reads observed.</p>
+      <p>Learning-verifier correctness is separate from the cache gate and synthetic user impact.
+        Correctly predicting a failure never makes that failed transition uninterrupted.</p>
+      <section id="result-detail" aria-labelledby="reads-title" hidden>
+        <h3 id="reads-title">Observed synthetic payloads and assertions</h3>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Synthetic read results; horizontally scrollable">
+          <table>
+            <caption>Four started reads; unknown payloads are not inferred</caption>
+            <thead><tr><th scope="col">Read</th><th scope="col">Reader</th><th scope="col">Synthetic key</th><th scope="col">Received object</th><th scope="col">Outcome</th><th scope="col">Decoded value</th><th scope="col">Assertion</th></tr></thead>
+            <tbody id="reads"></tbody>
+          </table>
+        </div>
+      </section>
+      <div class="prediction">
+        <label for="prediction">Predict the measured cache gate</label>
+        <select id="prediction" disabled>
+          <option value="">Choose a prediction</option>
+          <option value="PASS">PASS — all four observed and correct</option>
+          <option value="FAIL">FAIL — at least one known failure</option>
+          <option value="UNKNOWN">UNKNOWN — incomplete proof, no known failure</option>
+        </select>
+        <button type="button" id="check-prediction" disabled>Check prediction</button>
+        <p id="prediction-result" role="status">Prediction not checked.</p>
+      </div>
+      <div class="actions">
+        <button type="button" id="new-attempt" disabled>New attempt (retain history)</button>
+        <button type="button" id="reset-rehearsal">Reset rehearsal and history</button>
+      </div>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained completed attempts</h2>
+      <p>At most six attempts, including failed and unknown reads. In-memory only; explicit reset or reload clears them.</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Retained attempts; horizontally scrollable">
+        <table>
+          <caption>Independent assumptions, measured impact and prediction verifier</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Assumptions</th><th scope="col">Correct / failed / unknown</th><th scope="col">Gate</th><th scope="col">Synthetic impact</th><th scope="col">Prediction verifier</th></tr></thead>
+          <tbody id="history"><tr><td colspan="6">No completed attempts.</td></tr></tbody>
+        </table>
+      </div>
+      <h3>Current synthetic trace</h3>
+      <pre id="trace">No attempt started.</pre>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">What this does not prove</h2>
+      <p>All keys, objects, writes, reads, translations and outcomes are synthetic.
+        This is not a cache client, a real cache/service result, native Azure evidence, source-parent completion,
+        production Node.js 24 certification, or five-nines proof. Namespace contents are fixed;
+        real warming, expiry, invalidation, races and synchronization are not tested.</p>
+      <p>Cleanup: local memory only; no external resources exist. B-S055 and D-S055 native acceptance remain unfulfilled.
+        No cloud, IaC, scaffolding, identity registration, deployment or spending is involved.</p>
+    </section>
+  </main>
+  <footer><p>Portable A-card lesson · one frozen S unit · keyboard controls and explicit reset</p></footer>
+</body>
+</html>

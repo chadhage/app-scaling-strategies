@@ -1,0 +1,66 @@
+Feature: S055 cache payload evolution during mixed application versions
+  Training rehearsal - synthetic data - not a live Azure result
+  A-S055 / D-S055 / frozen S / SC-S055 / worker-A-S055
+  Source: "Version or translate cached objects so mixed application versions can coexist."
+  Acceptance: compatible translation/versioning preserves correctness;
+  incompatible cached objects fail explicitly.
+
+  Background:
+    Given two fixed synthetic readers v1 and v2 coexist
+    And a cart must retain SYN-CART-055, USD, and exactly 1250 minor units
+    And four synthetic reads follow two writes with no cache service or network
+    And at most six completed attempts are retained in memory
+
+  Scenario: Shared keys expose incompatible cached objects
+    Given equivalent v1 and v2 payloads share one key without translation
+    When both readers read after each write with complete observations
+    Then two same-schema reads succeed and two cross-schema reads fail explicitly
+    And the compatibility gate is FAIL and synthetic user impact is INTERRUPTED
+
+  Scenario: A declared lossless translator preserves the consumed value
+    Given equivalent payloads share one key with lossless translation enabled
+    When both readers read after each write with complete observations
+    Then all four reads retain the expected cart, currency and integer minor units
+    And two reads use validated translation and the compatibility gate is PASS
+
+  Scenario: Versioned namespaces avoid cross-schema reads
+    Given both v1 and v2 namespaces contain their own equivalent synthetic payload
+    When translation is off and both readers read their own namespace twice
+    Then all four reads pass with zero translations and distinct cache keys
+    But this does not prove real cache warming, freshness or namespace synchronization
+
+  Scenario Outline: Namespaces and translation cannot repair bad cached objects
+    Given the v2 cached payload is <payload>
+    When the complete read plan uses versioned namespaces
+    Then two v2 reads fail with <reason> and two v1 reads remain successful
+    And the failed cache gate stays FAIL even if the learner predicts it correctly
+    Examples:
+      | payload   | reason          |
+      | malformed | INVALID_PAYLOAD |
+      | wrong-total | VALUE_MISMATCH |
+
+  Scenario: Missing observations are never inferred from selected fixtures
+    Given only the first two reads are observed
+    When shared-key translation is enabled
+    Then two correct reads and two unknown reads produce UNKNOWN
+    When shared-key translation is disabled
+    Then one known cross-schema failure produces FAIL while two reads stay unknown
+    And absent observations always produce four unknowns, never success or failure
+
+  Scenario: Guard the deterministic lifecycle and preserve history
+    Given an idle rehearsal
+    Then only an exact own-data configuration from the fixed enum choices is accepted
+    And reads before preparation and repeated preparation or reads are rejected
+    And completed state snapshots cannot mutate private state
+    And a new attempt clears current proof but retains immutable completed results
+    And six completed attempts block another preparation without evicting history
+
+  Scenario: Keyboard, reset and browser boundaries
+    Given the standalone lesson is open with the exact training banner
+    When the operator uses native keyboard controls to prepare, read and predict
+    Then focus follows the valid next action and errors are announced
+    When the operator resets
+    Then defaults, phase, results, errors, prediction and history are cleared exactly
+    And focus returns to Prepare without shadowing form.reset
+    And enforced CSP blocks inline scripts and connections
+    And no external request, account, credential or live Azure result is involved

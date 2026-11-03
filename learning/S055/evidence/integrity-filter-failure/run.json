@@ -1,0 +1,64 @@
+{
+  "cardId": "A-S055",
+  "stage": "Post-implementation Git clean-filter qualification failure; not behavioral RED",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "--test",
+    "--test-reporter=tap",
+    "learning\\S055\\tests\\integrity.test.cjs"
+  ],
+  "startedAtUtc": "2026-11-03T19:07:15.937Z",
+  "completedAtUtc": "2026-11-03T19:07:21.316Z",
+  "exitCode": 1,
+  "rawStdoutSha256": "6232fd886cda014ad22b8d2c93c4117cbd2de377c66e3856a8198d7103ced02f",
+  "rawStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "snapshots": [
+    {
+      "source": "tests\\integrity.test.cjs",
+      "snapshot": "integrity.test.cjs.snapshot",
+      "sha256": "d97f718b027d933256a19802ef6efdea1c25c09bebb6b058609e28cb6d0866c6"
+    },
+    {
+      "source": "evidence\\content-index.json",
+      "snapshot": "content-index.json.snapshot",
+      "sha256": "605f18244a6e4645c5883053ff216aeff0267139b6103a3b4e3baebc5602e845"
+    }
+  ],
+  "probes": [
+    {
+      "name": "stdin with Windows --path option",
+      "args": [
+        "hash-object",
+        "--path=learning\\S055\\evidence\\red\\cache-payload.feature.snapshot",
+        "--stdin"
+      ],
+      "status": 0,
+      "stdout": "6dbba7caa49325c953350c1040164eef6e91ac05",
+      "stderr": ""
+    },
+    {
+      "name": "actual Windows filename operand",
+      "args": [
+        "hash-object",
+        "--",
+        "learning\\S055\\evidence\\red\\cache-payload.feature.snapshot"
+      ],
+      "status": 0,
+      "stdout": "6dbba7caa49325c953350c1040164eef6e91ac05",
+      "stderr": ""
+    },
+    {
+      "name": "no-filters raw bytes",
+      "args": [
+        "hash-object",
+        "--no-filters",
+        "--stdin"
+      ],
+      "status": 0,
+      "stdout": "707682c028d05f26eb76dc853881a1468b0828d2",
+      "stderr": ""
+    }
+  ],
+  "rawSnapshotHasCRLF": true,
+  "conclusion": "The initial filename-operand hypothesis was disproved: both root-relative Windows operands normalized these binary bytes unexpectedly. path-qualification.json verifies actual-directory plus basename qualification; raw snapshots remain unchanged. This failure is not the behavioral RED."
+}

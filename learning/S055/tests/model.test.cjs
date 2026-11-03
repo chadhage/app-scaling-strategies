@@ -1,0 +1,264 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('../model.js');
+const fixtures = require('../fixtures.js');
+const config = (changes = {}) => ({ ...model.DEFAULTS, ...changes });
+const execute = (changes = {}, lesson = model.createLesson()) => {
+  const prepared = lesson.prepare(config(changes));
+  assert.equal(prepared.phase, 'prepared');
+  const state = lesson.read();
+  assert.equal(state.phase, 'complete');
+  assert.ok(state.result, 'completed reads have a measured result');
+  return { lesson, state, result: state.result };
+};
+const metrics = (result, expected) => {
+  assert.equal(result.metrics.started, 4);
+  assert.deepEqual(result.metrics, expected);
+  assert.equal(result.metrics.success + result.metrics.failure + result.metrics.unknown, 4);
+  assert.equal(result.metrics.observed, result.metrics.success + result.metrics.failure);
+};
+
+test('stub API and fixed synthetic fixtures are loadable without tools or a cache service', () => {
+  const lesson = model.createLesson();
+  for (const method of ['snapshot', 'prepare', 'read', 'predict', 'newAttempt', 'reset']) {
+    assert.equal(typeof lesson[method], 'function');
+  }
+  assert.equal(fixtures.expected.minor, 1250);
+  assert.equal(fixtures.v2.malformed.money.minor, '1250');
+  assert.equal(Object.isFrozen(fixtures.v2.equivalent.money), true);
+});
+
+test('shared keys without translation explicitly reject cross-schema reads', () => {
+  const { result } = execute();
+  metrics(result, { started: 4, observed: 4, success: 2, failure: 2, unknown: 0, translated: 0 });
+  assert.equal(result.gate, 'FAIL');
+  assert.equal(result.impact, 'INTERRUPTED');
+  assert.deepEqual(result.reads.map((read) => read.status), ['success', 'failure', 'failure', 'success']);
+  assert.ok(result.reads.filter((read) => read.status === 'failure')
+    .every((read) => read.code === 'SCHEMA_MISMATCH' && /translation|namespace/.test(read.detail)));
+});
+
+test('lossless translation in both directions preserves cart, currency and integer units', () => {
+  const { result } = execute({ translation: 'lossless' });
+  metrics(result, { started: 4, observed: 4, success: 4, failure: 0, unknown: 0, translated: 2 });
+  assert.equal(result.gate, 'PASS');
+  assert.equal(result.impact, 'UNINTERRUPTED');
+  assert.deepEqual(result.reads.map((read) => read.translated), [false, true, true, false]);
+  for (const read of result.reads) {
+    assert.deepEqual(read.value, fixtures.expected);
+    assert.equal(read.reader, read.deliveredPayload.schema);
+    assert.equal(read.payload.schema, read.writer);
+  }
+});
+
+test('versioned namespaces serve both readers correctly without a translator', () => {
+  const { result } = execute({ layout: 'versioned' });
+  metrics(result, { started: 4, observed: 4, success: 4, failure: 0, unknown: 0, translated: 0 });
+  assert.equal(result.gate, 'PASS');
+  assert.deepEqual(result.reads.map((read) => read.key),
+    ['v1:cart:SYN-CART-055', 'v2:cart:SYN-CART-055', 'v1:cart:SYN-CART-055', 'v2:cart:SYN-CART-055']);
+  assert.ok(result.reads.every((read) => read.reader === read.writer && !read.translated));
+});
+
+test('a malformed integer is not coerced or repaired by the translator', () => {
+  const { result } = execute({ translation: 'lossless', payload: 'malformed' });
+  assert.equal(result.gate, 'FAIL');
+  assert.equal(result.metrics.success, 2);
+  assert.equal(result.metrics.failure, 2);
+  assert.ok(result.reads.slice(2).every((read) =>
+    read.code === 'INVALID_PAYLOAD' && read.value === null && /integer/.test(read.detail)));
+});
+
+test('versioned namespaces do not bless malformed own-version objects', () => {
+  const { result } = execute({ layout: 'versioned', payload: 'malformed' });
+  assert.equal(result.gate, 'FAIL');
+  assert.deepEqual(result.reads.map((read) => read.code), ['CORRECT', 'INVALID_PAYLOAD', 'CORRECT', 'INVALID_PAYLOAD']);
+  assert.equal(result.metrics.failure, 2);
+});
+
+test('schema-valid but wrong business values fail after translation', () => {
+  const { result } = execute({ translation: 'lossless', payload: 'wrong-total' });
+  assert.equal(result.gate, 'FAIL');
+  assert.ok(result.reads.slice(2).every((read) =>
+    read.code === 'VALUE_MISMATCH' && read.value.minor === 1200 && /1250/.test(read.detail)));
+});
+
+test('schema-valid but wrong business values also fail in versioned namespaces', () => {
+  const { result } = execute({ layout: 'versioned', payload: 'wrong-total' });
+  assert.equal(result.gate, 'FAIL');
+  assert.equal(result.metrics.failure, 2);
+  assert.equal(result.reads[1].code, 'VALUE_MISMATCH');
+});
+
+test('partial observations are unknown even when the selected fixture would be safe', () => {
+  const { result } = execute({ translation: 'lossless', observation: 'partial' });
+  metrics(result, { started: 4, observed: 2, success: 2, failure: 0, unknown: 2, translated: 1 });
+  assert.equal(result.gate, 'UNKNOWN');
+  assert.equal(result.impact, 'UNKNOWN');
+  assert.ok(result.reads.slice(2).every((read) =>
+    read.payload === null && read.deliveredPayload === null && read.value === null
+      && read.translated === null && read.code === 'UNOBSERVED'));
+});
+
+test('one known cross-schema failure dominates the gate without erasing unknowns', () => {
+  const { result } = execute({ observation: 'partial' });
+  metrics(result, { started: 4, observed: 2, success: 1, failure: 1, unknown: 2, translated: 0 });
+  assert.equal(result.gate, 'FAIL');
+  assert.equal(result.impact, 'INTERRUPTED');
+});
+
+test('absent observations never infer failure from the malformed fixture', () => {
+  const { result } = execute({ payload: 'malformed', observation: 'none' });
+  metrics(result, { started: 4, observed: 0, success: 0, failure: 0, unknown: 4, translated: 0 });
+  assert.equal(result.gate, 'UNKNOWN');
+  assert.ok(result.reads.every((read) => read.status === 'unknown' && read.payload === null));
+});
+
+test('all 36 fixed configurations are deterministic and partition every started read', () => {
+  let combinations = 0;
+  for (const layout of model.OPTIONS.layout) {
+    for (const translation of model.OPTIONS.translation) {
+      for (const payload of model.OPTIONS.payload) {
+        for (const observation of model.OPTIONS.observation) {
+          const settings = { layout, translation, payload, observation };
+          const first = execute(settings).state;
+          assert.deepEqual(execute(settings).state, first);
+          const m = first.result.metrics;
+          assert.equal(m.success + m.failure + m.unknown, 4);
+          assert.equal(m.observed, observation === 'complete' ? 4 : observation === 'partial' ? 2 : 0);
+          assert.equal(first.result.gate, m.failure ? 'FAIL' : m.unknown ? 'UNKNOWN' : 'PASS');
+          combinations++;
+        }
+      }
+    }
+  }
+  assert.equal(combinations, 36);
+});
+
+test('preparation locks an independent copy of the exact fixed configuration', () => {
+  const lesson = model.createLesson();
+  const settings = config();
+  const prepared = lesson.prepare(settings);
+  assert.equal(prepared.phase, 'prepared');
+  settings.translation = 'lossless';
+  assert.equal(lesson.snapshot().config.translation, 'none');
+  assert.throws(() => lesson.prepare(config()), /requires idle/);
+  assert.equal(lesson.read().result.gate, 'FAIL');
+});
+
+test('configuration rejects missing, extra, inherited, symbolic, accessor and coercible inputs atomically', () => {
+  const lesson = model.createLesson();
+  const before = lesson.snapshot();
+  const accessor = config();
+  Object.defineProperty(accessor, 'payload', { get() { throw new Error('getter must not execute'); }, enumerable: true });
+  const symbolic = config();
+  symbolic[Symbol('extra')] = true;
+  for (const invalid of [
+    null, [], 'shared', {}, { ...config(), extra: true },
+    Object.assign(Object.create(config()), {}), Object.assign(Object.create(null), config()),
+    config({ layout: 'SHARED' }), config({ translation: true }), config({ payload: 'unknown' }),
+    config({ observation: new String('complete') }), symbolic, accessor,
+  ]) {
+    assert.throws(() => lesson.prepare(invalid), /Configuration|Layout|Translation|Payload|Observation/);
+    assert.deepEqual(lesson.snapshot(), before);
+  }
+});
+
+test('read, prediction and new-attempt lifecycle guards do not mutate private state', () => {
+  const lesson = model.createLesson();
+  const idle = lesson.snapshot();
+  assert.throws(() => lesson.read(), /requires prepared/);
+  assert.throws(() => lesson.predict('FAIL'), /requires complete/);
+  assert.throws(() => lesson.newAttempt(), /requires complete/);
+  assert.deepEqual(lesson.snapshot(), idle);
+  lesson.prepare(config());
+  const prepared = lesson.snapshot();
+  assert.throws(() => lesson.newAttempt(), /requires complete/);
+  assert.throws(() => lesson.predict('FAIL'), /requires complete/);
+  assert.deepEqual(lesson.snapshot(), prepared);
+  lesson.read();
+  const completed = lesson.snapshot();
+  assert.throws(() => lesson.read(), /requires prepared/);
+  assert.throws(() => lesson.prepare(config()), /requires idle/);
+  assert.deepEqual(lesson.snapshot(), completed);
+});
+
+test('prediction verifier is independent of the failed cache gate and is immutable once checked', () => {
+  const { lesson } = execute();
+  assert.throws(() => lesson.predict('success'), /Prediction/);
+  assert.throws(() => lesson.predict({ gate: 'FAIL' }), /Prediction/);
+  const predicted = lesson.predict('FAIL');
+  assert.equal(predicted.prediction.verdict, 'PASS');
+  assert.equal(predicted.result.gate, 'FAIL');
+  assert.equal(predicted.result.impact, 'INTERRUPTED');
+  assert.equal(predicted.history[0].prediction.verdict, 'PASS');
+  const before = lesson.snapshot();
+  assert.throws(() => lesson.predict('FAIL'), /already checked/);
+  assert.deepEqual(lesson.snapshot(), before);
+});
+
+test('a wrong prediction fails without changing a measured compatible result', () => {
+  const { lesson } = execute({ layout: 'versioned' });
+  const state = lesson.predict('FAIL');
+  assert.equal(state.prediction.verdict, 'FAIL');
+  assert.equal(state.result.gate, 'PASS');
+  assert.equal(state.result.metrics.success, 4);
+});
+
+test('new attempts clear all current proof and keep immutable completed assumptions and predictions', () => {
+  const { lesson } = execute();
+  lesson.predict('FAIL');
+  const history = lesson.snapshot().history;
+  const next = lesson.newAttempt();
+  assert.equal(next.phase, 'idle');
+  assert.equal(next.config, null);
+  assert.equal(next.result, null);
+  assert.equal(next.prediction, null);
+  assert.deepEqual(next.trace, []);
+  assert.deepEqual(next.history, history);
+  execute({ layout: 'versioned' }, lesson);
+  assert.equal(lesson.snapshot().history.length, 2);
+  assert.equal(lesson.snapshot().history[0].result.gate, 'FAIL');
+  assert.equal(lesson.snapshot().history[1].result.gate, 'PASS');
+});
+
+test('six attempts are retained without eviction and the next preparation is blocked', () => {
+  const lesson = model.createLesson();
+  for (let index = 0; index < model.HISTORY_LIMIT; index++) {
+    const { state } = execute({ translation: index % 2 ? 'lossless' : 'none' }, lesson);
+    assert.equal(state.result.attempt, index + 1);
+    assert.equal(state.history.length, index + 1);
+    lesson.newAttempt();
+  }
+  const before = lesson.snapshot();
+  assert.throws(() => lesson.prepare(config()), /History full/);
+  assert.deepEqual(lesson.snapshot(), before);
+  assert.equal(before.history.length, 6);
+});
+
+test('returned API and all nested state are frozen detached snapshots', () => {
+  const { lesson, state } = execute({ translation: 'lossless' });
+  assert.equal(Object.isFrozen(lesson), true);
+  for (const value of [state, state.config, state.result, state.result.reads,
+    state.result.reads[0].payload, state.result.reads[0].deliveredPayload, state.history[0]]) {
+    assert.equal(Object.isFrozen(value), true);
+  }
+  assert.throws(() => { state.result.reads[0].payload.totalCents = 1; }, TypeError);
+  assert.throws(() => { state.history.length = 0; }, TypeError);
+  assert.notEqual(lesson.snapshot(), state);
+  assert.equal(lesson.snapshot().result.metrics.success, 4);
+});
+
+test('reset from prepared or complete restores exact initial state including history and trace', () => {
+  const lesson = model.createLesson();
+  const initial = lesson.snapshot();
+  lesson.prepare(config({ payload: 'malformed' }));
+  assert.notDeepEqual(lesson.snapshot(), initial);
+  assert.deepEqual(lesson.reset(), initial);
+  execute({}, lesson);
+  lesson.predict('FAIL');
+  assert.deepEqual(lesson.reset(), initial);
+  assert.deepEqual(lesson.reset(), initial);
+});

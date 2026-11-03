@@ -1,0 +1,27 @@
+(function (root, factory) {
+  'use strict';
+  const model = factory();
+  if (typeof module === 'object' && module.exports) module.exports = model;
+  else root.CachePayloadLesson = model;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULTS = Object.freeze({
+    layout: 'shared', translation: 'none', payload: 'equivalent', observation: 'complete',
+  });
+  const OPTIONS = Object.freeze({
+    layout: Object.freeze(['shared', 'versioned']),
+    translation: Object.freeze(['none', 'lossless']),
+    payload: Object.freeze(['equivalent', 'malformed', 'wrong-total']),
+    observation: Object.freeze(['complete', 'partial', 'none']),
+  });
+  function createLesson() {
+    const snapshot = () => ({
+      phase: 'idle', config: null, result: null, history: [], trace: [], prediction: null,
+    });
+    return Object.freeze({
+      snapshot, prepare: snapshot, read: snapshot, predict: snapshot,
+      newAttempt: snapshot, reset: snapshot,
+    });
+  }
+  return Object.freeze({ DEFAULTS, OPTIONS, HISTORY_LIMIT: 6, createLesson });
+}));

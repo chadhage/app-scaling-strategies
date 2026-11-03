@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S055",
+  "sourceId": "S055",
+  "parentId": "D-S055",
+  "kano": "S",
+  "kanoUnit": "A-S055",
+  "packet": "SC-S055",
+  "owner": "worker-A-S055",
+  "entryGate": "SOURCE",
+  "title": "Cache payload evolution: mixed readers, validated translation and versioned namespaces",
+  "entryPoint": "learning/S055/index.html",
+  "feature": "learning/S055/cache-payload.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Read mixed cache payloads; identify when translation or versioned namespaces are required.",
+  "sourceAcceptance": "Compatible translation/versioning preserves correctness; incompatible cached objects fail explicitly.",
+  "preconditions": [
+    "A modern browser supporting local HTML, CSS and JavaScript.",
+    "Two fixed synthetic readers v1/v2, four reads, two serialized schemas and an exact USD 1250 minor-unit invariant.",
+    "Versioned namespaces are both pre-populated with their fixed own-version fixture.",
+    "No account, cache service, server, credentials, framework or Azure subscription."
+  ],
+  "actions": [
+    "Choose shared or versioned keys, translation, payload and observation coverage.",
+    "Prepare to lock assumptions, then read four fixed synthetic objects.",
+    "Inspect received payloads, decoded values, explicit failure reasons and unknowns.",
+    "Check a prediction separately from the measured cache gate and synthetic impact.",
+    "Start another attempt with retained history or explicitly reset all in-memory state."
+  ],
+  "input": "learning/S055/fixtures.js",
+  "assertions": [
+    "A shared key without translation produces two explicit cross-schema failures.",
+    "Validated translation preserves both reader contracts and all expected values.",
+    "Versioned namespaces preserve coexistence without cross-schema reads.",
+    "Malformed and schema-valid wrong-value objects fail even with versioning or translation.",
+    "Unobserved reads remain unknown; known failures dominate an incomplete gate.",
+    "Exact configuration, lifecycle, immutable state and six-attempt history are guarded."
+  ],
+  "bounds": {
+    "completedAttempts": 6,
+    "readsPerAttempt": 4,
+    "layouts": ["shared", "versioned"],
+    "translation": ["none", "lossless"],
+    "payload": ["equivalent", "malformed", "wrong-total"],
+    "observation": ["complete", "partial", "none"],
+    "arbitraryPayloadsKeysOrEndpoints": false
+  },
+  "iac": {
+    "status": "N/A",
+    "decisionStage": "After genuine behavioral RED and before behavior implementation",
+    "decision": "learning/S055/evidence/iac-decision.json",
+    "redReference": "learning/S055/evidence/red/run.json",
+    "reason": "Resource-free local synthetic lesson; cloud/IaC/scaffold/identity/deploy/spend are not authorized."
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "purpose": "Existing Node22 tooling only; not production Node24 certification.",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing signed Microsoft Edge 156",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "dependencyChanges": false
+  },
+  "limits": [
+    "Every cache key, serialized object, write, read, translation and outcome is synthetic.",
+    "No real cache/service, native Azure, source-parent, production24 or five-nines proof.",
+    "Real cache warming, synchronization, freshness, expiry, races and invalidation are unverified.",
+    "History retains at most six completed attempts in memory; explicit reset or reload erases it.",
+    "The published browser helper's known unattended lifecycle limitation remains unqualified.",
+    "B-S055 and D-S055 native acceptance remain separate and unfulfilled.",
+    "Only learning/S055 is owned; one frozen S unit, no extra test/plumbing/refinement credit."
+  ]
+}
