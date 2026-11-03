@@ -1,0 +1,56 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('..\\model.js');
+
+function measured(fixture = 'redundant', scopeClaim = 'application-worker') {
+  let state = model.createState();
+  state = model.transition(state, 'begin', { fixture, scopeClaim });
+  assert.equal(state.phase, 'baseline', 'begin must enter the explicit baseline observation step');
+  state = model.transition(state, 'observe-baseline');
+  state = model.transition(state, 'record-loss');
+  state = model.transition(state, 'measure');
+  assert.equal(state.phase, 'measured');
+  return state;
+}
+
+test('authored worker loss preserves declared workload and state on surviving versions', () => {
+  const state = measured();
+  const run = state.runs[0];
+  assert.equal(run.measurement.observedCapacityRps, 80);
+  assert.equal(run.measurement.demandRps, 60);
+  assert.deepEqual(run.measurement.counts, { successes: 6, interruptions: 0, unknown: 0 });
+  assert.equal(run.assessment.contract, 'positive');
+  assert.equal(run.assessment.scopeClaim, 'positive');
+  assert.equal(run.assessment.overall, 'positive');
+  assert.deepEqual(run.assessment.outageTolerance, {
+    node: 'unverified', zone: 'unverified', region: 'unverified',
+  });
+});
+
+test('insufficient surviving capacity produces measured interruptions', () => {
+  const run = measured('capacity-shortfall').runs[0];
+  assert.equal(run.measurement.observedCapacityRps, 40);
+  assert.deepEqual(run.measurement.counts, { successes: 4, interruptions: 2, unknown: 0 });
+  assert.equal(run.assessment.contract, 'negative');
+  assert.equal(run.assessment.overall, 'negative');
+});
+
+test('HTTP 200 does not hide incompatible surviving fixture state', () => {
+  const run = measured('state-mismatch').runs[0];
+  assert.equal(run.measurement.observedCapacityRps, 80);
+  assert.deepEqual(run.measurement.counts, { successes: 5, interruptions: 1, unknown: 0 });
+  assert.equal(run.measurement.journeys[5].httpStatus, 200);
+  assert.equal(run.measurement.journeys[5].stateMatches, false);
+  assert.equal(run.assessment.contract, 'negative');
+});
+
+test('missing capacity, state and journeys remain unknown rather than inferred healthy', () => {
+  const run = measured('missing-observations').runs[0];
+  assert.equal(run.measurement.observedCapacityRps, null);
+  assert.equal(run.measurement.stateGate, 'unknown');
+  assert.deepEqual(run.measurement.counts, { successes: 3, interruptions: 0, unknown: 3 });
+  assert.equal(run.assessment.contract, 'unknown');
+  assert.equal(run.assessment.overall, 'unknown');
+});

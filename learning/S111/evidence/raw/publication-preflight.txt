@@ -1,0 +1,306 @@
+learning/S111/evidence/raw/bdd-at-red.feature:1: trailing whitespace.
++Feature: S111 single application-worker loss during migration
+learning/S111/evidence/raw/bdd-at-red.feature:2: trailing whitespace.
++  All topology, loss, recovery and measurements are fixed fictional teaching DATA ONLY.
+learning/S111/evidence/raw/bdd-at-red.feature:3: trailing whitespace.
++  No process, node, zone, region, resource or network is changed.
+learning/S111/evidence/raw/bdd-at-red.feature:4: trailing whitespace.
++
+learning/S111/evidence/raw/bdd-at-red.feature:5: trailing whitespace.
++  Background:
+learning/S111/evidence/raw/bdd-at-red.feature:6: trailing whitespace.
++    Given the banner "Training rehearsal - synthetic data - not a live Azure result"
+learning/S111/evidence/raw/bdd-at-red.feature:7: trailing whitespace.
++    And the declared workload is 60 requests per second with six journey samples within 120 ms
+learning/S111/evidence/raw/bdd-at-red.feature:8: trailing whitespace.
++    And session, cart and receipt fixture state must match on both serving versions
+learning/S111/evidence/raw/bdd-at-red.feature:9: trailing whitespace.
++    And worker-a and worker-b share node-1 and zone-1 in region-east
+learning/S111/evidence/raw/bdd-at-red.feature:10: trailing whitespace.
++    And candidate worker-c is on node-2 in zone-2 in region-east
+learning/S111/evidence/raw/bdd-at-red.feature:11: trailing whitespace.
++    And worker-d in region-west is an unmeasured, unrouted standby label
+learning/S111/evidence/raw/bdd-at-red.feature:12: trailing whitespace.
++
+learning/S111/evidence/raw/bdd-at-red.feature:13: trailing whitespace.
++  Scenario: Surviving workers meet the fixture contract
+learning/S111/evidence/raw/bdd-at-red.feature:14: trailing whitespace.
++    Given the redundant fixture and an application-worker scope claim
+learning/S111/evidence/raw/bdd-at-red.feature:15: trailing whitespace.
++    When I explicitly observe baseline, record fictional worker-a loss and measure survivors
+learning/S111/evidence/raw/bdd-at-red.feature:16: trailing whitespace.
++    Then observed surviving capacity is 80 requests per second against a demand of 60
+learning/S111/evidence/raw/bdd-at-red.feature:17: trailing whitespace.
++    And all six journeys meet latency and fixture state requirements
+learning/S111/evidence/raw/bdd-at-red.feature:18: trailing whitespace.
++    And the result is positive only for this authored application-worker-loss trace
+learning/S111/evidence/raw/bdd-at-red.feature:19: trailing whitespace.
++    And no node, zone or region outage tolerance is verified
+learning/S111/evidence/raw/bdd-at-red.feature:20: trailing whitespace.
++
+learning/S111/evidence/raw/bdd-at-red.feature:21: trailing whitespace.
++  Scenario Outline: Known interruptions cannot pass
+learning/S111/evidence/raw/bdd-at-red.feature:22: trailing whitespace.
++    Given the <fixture> fixture and an application-worker scope claim
+learning/S111/evidence/raw/bdd-at-red.feature:23: trailing whitespace.
++    When I observe baseline, record fictional worker-a loss and measure survivors
+learning/S111/evidence/raw/bdd-at-red.feature:24: trailing whitespace.
++    Then the contract result is negative
+learning/S111/evidence/raw/bdd-at-red.feature:25: trailing whitespace.
++    And the result includes <successes> successes and <interruptions> interruptions
+learning/S111/evidence/raw/bdd-at-red.feature:26: trailing whitespace.
++    When I explicitly record fictional worker-a recovery
+learning/S111/evidence/raw/bdd-at-red.feature:27: trailing whitespace.
++    Then recovered capacity is 120 and all six recovered journeys pass
+learning/S111/evidence/raw/bdd-at-red.feature:28: trailing whitespace.
++    And the earlier negative measurement remains in history after reset
+learning/S111/evidence/raw/bdd-at-red.feature:29: trailing whitespace.
++
+learning/S111/evidence/raw/bdd-at-red.feature:30: trailing whitespace.
++    Examples:
+learning/S111/evidence/raw/bdd-at-red.feature:31: trailing whitespace.
++      | fixture            | successes | interruptions |
+learning/S111/evidence/raw/bdd-at-red.feature:32: trailing whitespace.
++      | capacity-shortfall | 4         | 2             |
+learning/S111/evidence/raw/bdd-at-red.feature:33: trailing whitespace.
++      | state-mismatch     | 5         | 1             |
+learning/S111/evidence/raw/bdd-at-red.feature:34: trailing whitespace.
++
+learning/S111/evidence/raw/bdd-at-red.feature:35: trailing whitespace.
++  Scenario: Missing observations remain unknown
+learning/S111/evidence/raw/bdd-at-red.feature:36: trailing whitespace.
++    Given the missing-observations fixture and an application-worker scope claim
+learning/S111/evidence/raw/bdd-at-red.feature:37: trailing whitespace.
++    When I observe baseline, record fictional worker-a loss and measure survivors
+learning/S111/evidence/raw/bdd-at-red.feature:38: trailing whitespace.
++    Then surviving capacity and candidate state are unknown
+learning/S111/evidence/raw/bdd-at-red.feature:39: trailing whitespace.
++    And there are three successes, zero known interruptions and three unknown journeys
+learning/S111/evidence/raw/bdd-at-red.feature:40: trailing whitespace.
++    And the contract result is unknown, never positive
+learning/S111/evidence/raw/bdd-at-red.feature:41: trailing whitespace.
++
+learning/S111/evidence/raw/bdd-at-red.feature:42: trailing whitespace.
++  Scenario Outline: Broader failure claims are rejected
+learning/S111/evidence/raw/bdd-at-red.feature:43: trailing whitespace.
++    Given the redundant fixture and a <scope> scope claim
+learning/S111/evidence/raw/bdd-at-red.feature:44: trailing whitespace.
++    When I observe baseline, record fictional worker-a loss and measure survivors
+learning/S111/evidence/raw/bdd-at-red.feature:45: trailing whitespace.
++    Then the measured workload contract is positive
+learning/S111/evidence/raw/bdd-at-red.feature:46: trailing whitespace.
++    But the scope claim is negative because only one application worker is absent
+learning/S111/evidence/raw/bdd-at-red.feature:47: trailing whitespace.
++    And same-node and same-zone worker-b still serves
+learning/S111/evidence/raw/bdd-at-red.feature:48: trailing whitespace.
++    And all broader outage-tolerance claims remain unverified
+learning/S111/evidence/raw/bdd-at-red.feature:49: trailing whitespace.
++
+learning/S111/evidence/raw/bdd-at-red.feature:50: trailing whitespace.
++    Examples:
+learning/S111/evidence/raw/bdd-at-red.feature:51: trailing whitespace.
++      | scope  |
+learning/S111/evidence/raw/bdd-at-red.feature:52: trailing whitespace.
++      | node   |
+learning/S111/evidence/raw/bdd-at-red.feature:53: trailing whitespace.
++      | zone   |
+learning/S111/evidence/raw/bdd-at-red.feature:54: trailing whitespace.
++      | region |
+learning/S111/evidence/raw/bdd-at-red.feature:55: trailing whitespace.
++
+learning/S111/evidence/raw/bdd-at-red.feature:56: trailing whitespace.
++  Scenario: Inputs and state are guarded without losing evidence
+learning/S111/evidence/raw/bdd-at-red.feature:57: trailing whitespace.
++    Given a reachable immutable rehearsal state
+learning/S111/evidence/raw/bdd-at-red.feature:58: trailing whitespace.
++    When an input has wrong types, extra keys, an unknown fixture or scope
+learning/S111/evidence/raw/bdd-at-red.feature:59: trailing whitespace.
++    Or an action is repeated, out of order or beyond six rehearsals
+learning/S111/evidence/raw/bdd-at-red.feature:60: trailing whitespace.
++    Or computed results, counters or retained events are forged
+learning/S111/evidence/raw/bdd-at-red.feature:61: trailing whitespace.
++    Then the action is rejected without mutation
+learning/S111/evidence/raw/bdd-at-red.feature:62: trailing whitespace.
++    And resets preserve all earlier runs and measurements
+learning/S111/evidence/raw/bdd-at-red.feature:63: trailing whitespace.
++
+learning/S111/evidence/raw/bdd-at-red.feature:64: trailing whitespace.
++  Scenario: Browser operation and evidence are honest
+learning/S111/evidence/raw/bdd-at-red.feature:65: trailing whitespace.
++    Given the complete standalone local bundle
+learning/S111/evidence/raw/bdd-at-red.feature:66: trailing whitespace.
++    When I use keyboard controls through positive, negative, unknown and recovery paths
+learning/S111/evidence/raw/bdd-at-red.feature:67: trailing whitespace.
++    Then disabled controls reflect the state guards
+learning/S111/evidence/raw/bdd-at-red.feature:68: trailing whitespace.
++    And validation errors receive focus without changing the last valid state
+learning/S111/evidence/raw/bdd-at-red.feature:69: trailing whitespace.
++    And reset restores the controls but retains history
+learning/S111/evidence/raw/bdd-at-red.feature:70: trailing whitespace.
++    And active CSP blocks inline script and connections without any external request
+learning/S111/evidence/raw/bdd-at-red.feature:71: trailing whitespace.
++    And normal verification does not rewrite source or historical proof
+learning/S111/evidence/raw/bdd-at-red.feature:72: trailing whitespace.
++    And only exact deliberate CAPTURE_BROWSER_EVIDENCE=1 writes fresh browser evidence
+learning/S111/evidence/raw/model-tests-at-red.txt:1: trailing whitespace.
++'use strict';
+learning/S111/evidence/raw/model-tests-at-red.txt:2: trailing whitespace.
++
+learning/S111/evidence/raw/model-tests-at-red.txt:3: trailing whitespace.
++const test = require('node:test');
+learning/S111/evidence/raw/model-tests-at-red.txt:4: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S111/evidence/raw/model-tests-at-red.txt:5: trailing whitespace.
++const model = require('..\\model.js');
+learning/S111/evidence/raw/model-tests-at-red.txt:6: trailing whitespace.
++
+learning/S111/evidence/raw/model-tests-at-red.txt:7: trailing whitespace.
++function measured(fixture = 'redundant', scopeClaim = 'application-worker') {
+learning/S111/evidence/raw/model-tests-at-red.txt:8: trailing whitespace.
++  let state = model.createState();
+learning/S111/evidence/raw/model-tests-at-red.txt:9: trailing whitespace.
++  state = model.transition(state, 'begin', { fixture, scopeClaim });
+learning/S111/evidence/raw/model-tests-at-red.txt:10: trailing whitespace.
++  assert.equal(state.phase, 'baseline', 'begin must enter the explicit baseline observation step');
+learning/S111/evidence/raw/model-tests-at-red.txt:11: trailing whitespace.
++  state = model.transition(state, 'observe-baseline');
+learning/S111/evidence/raw/model-tests-at-red.txt:12: trailing whitespace.
++  state = model.transition(state, 'record-loss');
+learning/S111/evidence/raw/model-tests-at-red.txt:13: trailing whitespace.
++  state = model.transition(state, 'measure');
+learning/S111/evidence/raw/model-tests-at-red.txt:14: trailing whitespace.
++  assert.equal(state.phase, 'measured');
+learning/S111/evidence/raw/model-tests-at-red.txt:15: trailing whitespace.
++  return state;
+learning/S111/evidence/raw/model-tests-at-red.txt:16: trailing whitespace.
++}
+learning/S111/evidence/raw/model-tests-at-red.txt:17: trailing whitespace.
++
+learning/S111/evidence/raw/model-tests-at-red.txt:18: trailing whitespace.
++test('authored worker loss preserves declared workload and state on surviving versions', () => {
+learning/S111/evidence/raw/model-tests-at-red.txt:19: trailing whitespace.
++  const state = measured();
+learning/S111/evidence/raw/model-tests-at-red.txt:20: trailing whitespace.
++  const run = state.runs[0];
+learning/S111/evidence/raw/model-tests-at-red.txt:21: trailing whitespace.
++  assert.equal(run.measurement.observedCapacityRps, 80);
+learning/S111/evidence/raw/model-tests-at-red.txt:22: trailing whitespace.
++  assert.equal(run.measurement.demandRps, 60);
+learning/S111/evidence/raw/model-tests-at-red.txt:23: trailing whitespace.
++  assert.deepEqual(run.measurement.counts, { successes: 6, interruptions: 0, unknown: 0 });
+learning/S111/evidence/raw/model-tests-at-red.txt:24: trailing whitespace.
++  assert.equal(run.assessment.contract, 'positive');
+learning/S111/evidence/raw/model-tests-at-red.txt:25: trailing whitespace.
++  assert.equal(run.assessment.scopeClaim, 'positive');
+learning/S111/evidence/raw/model-tests-at-red.txt:26: trailing whitespace.
++  assert.equal(run.assessment.overall, 'positive');
+learning/S111/evidence/raw/model-tests-at-red.txt:27: trailing whitespace.
++  assert.deepEqual(run.assessment.outageTolerance, {
+learning/S111/evidence/raw/model-tests-at-red.txt:28: trailing whitespace.
++    node: 'unverified', zone: 'unverified', region: 'unverified',
+learning/S111/evidence/raw/model-tests-at-red.txt:29: trailing whitespace.
++  });
+learning/S111/evidence/raw/model-tests-at-red.txt:30: trailing whitespace.
++});
+learning/S111/evidence/raw/model-tests-at-red.txt:31: trailing whitespace.
++
+learning/S111/evidence/raw/model-tests-at-red.txt:32: trailing whitespace.
++test('insufficient surviving capacity produces measured interruptions', () => {
+learning/S111/evidence/raw/model-tests-at-red.txt:33: trailing whitespace.
++  const run = measured('capacity-shortfall').runs[0];
+learning/S111/evidence/raw/model-tests-at-red.txt:34: trailing whitespace.
++  assert.equal(run.measurement.observedCapacityRps, 40);
+learning/S111/evidence/raw/model-tests-at-red.txt:35: trailing whitespace.
++  assert.deepEqual(run.measurement.counts, { successes: 4, interruptions: 2, unknown: 0 });
+learning/S111/evidence/raw/model-tests-at-red.txt:36: trailing whitespace.
++  assert.equal(run.assessment.contract, 'negative');
+learning/S111/evidence/raw/model-tests-at-red.txt:37: trailing whitespace.
++  assert.equal(run.assessment.overall, 'negative');
+learning/S111/evidence/raw/model-tests-at-red.txt:38: trailing whitespace.
++});
+learning/S111/evidence/raw/model-tests-at-red.txt:39: trailing whitespace.
++
+learning/S111/evidence/raw/model-tests-at-red.txt:40: trailing whitespace.
++test('HTTP 200 does not hide incompatible surviving fixture state', () => {
+learning/S111/evidence/raw/model-tests-at-red.txt:41: trailing whitespace.
++  const run = measured('state-mismatch').runs[0];
+learning/S111/evidence/raw/model-tests-at-red.txt:42: trailing whitespace.
++  assert.equal(run.measurement.observedCapacityRps, 80);
+learning/S111/evidence/raw/model-tests-at-red.txt:43: trailing whitespace.
++  assert.deepEqual(run.measurement.counts, { successes: 5, interruptions: 1, unknown: 0 });
+learning/S111/evidence/raw/model-tests-at-red.txt:44: trailing whitespace.
++  assert.equal(run.measurement.journeys[5].httpStatus, 200);
+learning/S111/evidence/raw/model-tests-at-red.txt:45: trailing whitespace.
++  assert.equal(run.measurement.journeys[5].stateMatches, false);
+learning/S111/evidence/raw/model-tests-at-red.txt:46: trailing whitespace.
++  assert.equal(run.assessment.contract, 'negative');
+learning/S111/evidence/raw/model-tests-at-red.txt:47: trailing whitespace.
++});
+learning/S111/evidence/raw/model-tests-at-red.txt:48: trailing whitespace.
++
+learning/S111/evidence/raw/model-tests-at-red.txt:49: trailing whitespace.
++test('missing capacity, state and journeys remain unknown rather than inferred healthy', () => {
+learning/S111/evidence/raw/model-tests-at-red.txt:50: trailing whitespace.
++  const run = measured('missing-observations').runs[0];
+learning/S111/evidence/raw/model-tests-at-red.txt:51: trailing whitespace.
++  assert.equal(run.measurement.observedCapacityRps, null);
+learning/S111/evidence/raw/model-tests-at-red.txt:52: trailing whitespace.
++  assert.equal(run.measurement.stateGate, 'unknown');
+learning/S111/evidence/raw/model-tests-at-red.txt:53: trailing whitespace.
++  assert.deepEqual(run.measurement.counts, { successes: 3, interruptions: 0, unknown: 3 });
+learning/S111/evidence/raw/model-tests-at-red.txt:54: trailing whitespace.
++  assert.equal(run.assessment.contract, 'unknown');
+learning/S111/evidence/raw/model-tests-at-red.txt:55: trailing whitespace.
++  assert.equal(run.assessment.overall, 'unknown');
+learning/S111/evidence/raw/model-tests-at-red.txt:56: trailing whitespace.
++});
+learning/S111/evidence/raw/pre-browser-integrity-red.txt:29: trailing whitespace.
++    
+learning/S111/evidence/raw/pre-browser-integrity-red.txt:31: trailing whitespace.
++    
+learning/S111/evidence/raw/red-stub.js:1: trailing whitespace.
++(function (root, factory) {
+learning/S111/evidence/raw/red-stub.js:2: trailing whitespace.
++  'use strict';
+learning/S111/evidence/raw/red-stub.js:3: trailing whitespace.
++  const api = factory();
+learning/S111/evidence/raw/red-stub.js:4: trailing whitespace.
++  if (typeof module === 'object' && module.exports) module.exports = api;
+learning/S111/evidence/raw/red-stub.js:5: trailing whitespace.
++  else root.S111Model = api;
+learning/S111/evidence/raw/red-stub.js:6: trailing whitespace.
++}(typeof globalThis === 'object' ? globalThis : this, function () {
+learning/S111/evidence/raw/red-stub.js:7: trailing whitespace.
++  'use strict';
+learning/S111/evidence/raw/red-stub.js:8: trailing whitespace.
++  function createState() {
+learning/S111/evidence/raw/red-stub.js:9: trailing whitespace.
++    return { version: 1, phase: 'ready', current: null, runs: [], events: [] };
+learning/S111/evidence/raw/red-stub.js:10: trailing whitespace.
++  }
+learning/S111/evidence/raw/red-stub.js:11: trailing whitespace.
++  function transition(state) {
+learning/S111/evidence/raw/red-stub.js:12: trailing whitespace.
++    return state;
+learning/S111/evidence/raw/red-stub.js:13: trailing whitespace.
++  }
+learning/S111/evidence/raw/red-stub.js:14: trailing whitespace.
++  return { createState, transition };
+learning/S111/evidence/raw/red-stub.js:15: trailing whitespace.
++}));
+learning/S111/evidence/raw/red.tap:12: trailing whitespace.
++    
+learning/S111/evidence/raw/red.tap:15: trailing whitespace.
++    
+learning/S111/evidence/raw/red.tap:39: trailing whitespace.
++    
+learning/S111/evidence/raw/red.tap:42: trailing whitespace.
++    
+learning/S111/evidence/raw/red.tap:68: trailing whitespace.
++    
+learning/S111/evidence/raw/red.tap:71: trailing whitespace.
++    
+learning/S111/evidence/raw/red.tap:97: trailing whitespace.
++    
+learning/S111/evidence/raw/red.tap:100: trailing whitespace.
++    
