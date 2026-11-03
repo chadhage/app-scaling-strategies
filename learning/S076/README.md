@@ -120,6 +120,11 @@ The corrected **lesson-local** `-text` policy preserves exact bytes in Git;
 it does not disable runtime whitespace validation or change shared attributes,
 model behavior, CSP, or historical captures. Canonical published blobs are
 checked again before reporting the final publication.
+The next canonical check retained 56 passes and 11 failures: ordinary `git add`
+had kept unchanged cached LF blobs despite the corrected policy. The final
+publication explicitly reapplies normalization **only to `learning\S076`**
+under publisher serialization, verifies staged bytes against the sealed index,
+then uses the authorized publisher. No broad staging or shared changes occur.
 
 IaC: **N/A**, explicitly recorded after qualified RED and before implementation.
 No cloud, IaC, scaffold, identity, credentials, deployment or expenditure.

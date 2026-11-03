@@ -1,0 +1,4 @@
+'use strict';
+const {test}=require('node:test');const assert=require('node:assert/strict');const{execFileSync}=require('node:child_process');const{createHash}=require('node:crypto');
+const commit='7d65149beacd720373475c1c7e0e2f3eb7809a78';const index=JSON.parse(execFileSync('git',['show',commit+':learning/S076/evidence.json']));
+for(const entry of index.files)test('Canonical published bytes: '+entry.path,()=>{const bytes=execFileSync('git',['show',commit+':'+entry.path.replaceAll('\\','/')]);assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.sha256,entry.path);});
