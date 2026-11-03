@@ -1,0 +1,815 @@
+TAP version 13
+# Subtest: the model is loadable and an unobserved fixture is NOT_RUN, never PASS
+ok 1 - the model is loadable and an unobserved fixture is NOT_RUN, never PASS
+  ---
+  duration_ms: 2.098
+  type: 'test'
+  ...
+# Subtest: only intended frontend changes; all ten journeys and unchanged downstream budgets pass
+not ok 2 - only intended frontend changes; all ten journeys and unchanged downstream budgets pass
+  ---
+  duration_ms: 2.3845
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:25:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        api: 1,
+    +   frontend: 1,
+    -   frontend: 2,
+        worker: 1
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    frontend: 2
+    api: 1
+    worker: 1
+  actual:
+    frontend: 1
+    api: 1
+    worker: 1
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:30:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: only intended api changes; all ten journeys and unchanged downstream budgets pass
+not ok 3 - only intended api changes; all ten journeys and unchanged downstream budgets pass
+  ---
+  duration_ms: 0.8768
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:25:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+    +   api: 1,
+    -   api: 2,
+        frontend: 1,
+        worker: 1
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    frontend: 1
+    api: 2
+    worker: 1
+  actual:
+    frontend: 1
+    api: 1
+    worker: 1
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:30:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: only intended worker changes; all ten journeys and unchanged downstream budgets pass
+not ok 4 - only intended worker changes; all ten journeys and unchanged downstream budgets pass
+  ---
+  duration_ms: 0.3726
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:25:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        api: 1,
+        frontend: 1,
+    +   worker: 1
+    -   worker: 2
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    frontend: 1
+    api: 1
+    worker: 2
+  actual:
+    frontend: 1
+    api: 1
+    worker: 1
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:30:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: wrong-tier scaling retains the bottleneck and exposes four deadline failures
+not ok 5 - wrong-tier scaling retains the bottleneck and exposes four deadline failures
+  ---
+  duration_ms: 0.4697
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:52:1'
+  failureType: 'testCodeFailure'
+  error: 'a real synthetic observation must be recorded'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    last (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:11:10)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:54:18)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: scale-all creates sixteen occupied connections, four acquisition failures and six successes
+not ok 6 - scale-all creates sixteen occupied connections, four acquisition failures and six successes
+  ---
+  duration_ms: 0.3109
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:66:1'
+  failureType: 'testCodeFailure'
+  error: 'a real synthetic observation must be recorded'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    last (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:11:10)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:68:18)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: even a correctly selected tier cannot bypass its downstream connection limit
+not ok 7 - even a correctly selected tier cannot bypass its downstream connection limit
+  ---
+  duration_ms: 0.2588
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:84:1'
+  failureType: 'testCodeFailure'
+  error: 'a real synthetic observation must be recorded'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    last (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:11:10)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:86:18)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: compatible counts and fast responses cannot conceal ten broken-contract journeys
+not ok 8 - compatible counts and fast responses cannot conceal ten broken-contract journeys
+  ---
+  duration_ms: 0.2672
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:92:1'
+  failureType: 'testCodeFailure'
+  error: 'a real synthetic observation must be recorded'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    last (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:11:10)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:93:18)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: missing downstream completion evidence is UNKNOWN, not zero failure or fabricated completion
+not ok 9 - missing downstream completion evidence is UNKNOWN, not zero failure or fabricated completion
+  ---
+  duration_ms: 0.5498
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:102:1'
+  failureType: 'testCodeFailure'
+  error: 'a real synthetic observation must be recorded'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    last (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:11:10)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:104:18)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: known deadline or contract failure takes precedence over missing evidence
+not ok 10 - known deadline or contract failure takes precedence over missing evidence
+  ---
+  duration_ms: 0.7872
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:117:1'
+  failureType: 'testCodeFailure'
+  error: 'a real synthetic observation must be recorded'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    last (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:11:10)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:118:20)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: an earlier failure remains cumulative after a later successful observation
+not ok 11 - an earlier failure remains cumulative after a later successful observation
+  ---
+  duration_ms: 0.4063
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:128:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:131:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: an earlier unknown remains cumulative after success; FAIL outranks UNKNOWN
+not ok 12 - an earlier unknown remains cumulative after success; FAIL outranks UNKNOWN
+  ---
+  duration_ms: 0.2017
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:136:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:139:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: configuration selects the exact constrained tier only before commands begin
+not ok 13 - configuration selects the exact constrained tier only before commands begin
+  ---
+  duration_ms: 0.3506
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:145:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    'api' !== 'worker'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'worker'
+  actual: 'api'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:147:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: all supported instance counts are bounded and a same-count no-op is rejected
+not ok 14 - all supported instance counts are bounded and a same-count no-op is rejected
+  ---
+  duration_ms: 0.3226
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:153:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:154:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: text, non-finite, fractional and out-of-range counts fail without mutation
+not ok 15 - text, non-finite, fractional and out-of-range counts fail without mutation
+  ---
+  duration_ms: 0.232
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:161:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception: 2'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:165:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: unknown tiers, actions, proof and contract conditions are rejected exactly
+not ok 16 - unknown tiers, actions, proof and contract conditions are rejected exactly
+  ---
+  duration_ms: 0.1826
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:170:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:179:13)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: commands reject extra keys, prototypes, symbols and accessors without invoking getters
+not ok 17 - commands reject extra keys, prototypes, symbols and accessors without invoking getters
+  ---
+  duration_ms: 0.2091
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:182:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:191:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a run permits exactly eight observations and rejects a ninth atomically
+not ok 18 - a run permits exactly eight observations and rejects a ninth atomically
+  ---
+  duration_ms: 0.9144
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:195:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 8
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 8
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:198:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a run permits exactly twenty-four commands but reset remains available
+not ok 19 - a run permits exactly twenty-four commands but reset remains available
+  ---
+  duration_ms: 0.3498
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:204:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 24
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 24
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:207:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: archive/reset retains failed evidence while restoring a fresh default fixture
+not ok 20 - archive/reset retains failed evidence while restoring a fresh default fixture
+  ---
+  duration_ms: 0.481
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:215:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:219:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: only six most recent nonempty runs are retained, and empty resets cannot erase them
+not ok 21 - only six most recent nonempty runs are retained, and empty resets cannot erase them
+  ---
+  duration_ms: 0.3076
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:228:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 6
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 6
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:231:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: replay validation rejects changed tier count without accepting forged state
+not ok 22 - replay validation rejects changed tier count without accepting forged state
+  ---
+  duration_ms: 0.2595
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:250:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    a recorded fixture precedes state mutation
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:252:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: replay validation rejects fabricated verdict without accepting forged state
+not ok 23 - replay validation rejects fabricated verdict without accepting forged state
+  ---
+  duration_ms: 0.1727
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:250:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    a recorded fixture precedes state mutation
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:252:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: replay validation rejects fabricated completion without accepting forged state
+not ok 24 - replay validation rejects fabricated completion without accepting forged state
+  ---
+  duration_ms: 0.1641
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:250:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    a recorded fixture precedes state mutation
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:252:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: replay validation rejects fabricated journey without accepting forged state
+not ok 25 - replay validation rejects fabricated journey without accepting forged state
+  ---
+  duration_ms: 0.2077
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:250:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    a recorded fixture precedes state mutation
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:252:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: replay validation rejects rewritten command without accepting forged state
+not ok 26 - replay validation rejects rewritten command without accepting forged state
+  ---
+  duration_ms: 0.1847
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:250:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    a recorded fixture precedes state mutation
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:252:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: replay validation rejects extra state field without accepting forged state
+not ok 27 - replay validation rejects extra state field without accepting forged state
+  ---
+  duration_ms: 0.2491
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:250:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    a recorded fixture precedes state mutation
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:252:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: replay validation rejects invalid version without accepting forged state
+not ok 28 - replay validation rejects invalid version without accepting forged state
+  ---
+  duration_ms: 0.1133
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:250:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    a recorded fixture precedes state mutation
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:252:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: replay validation rejects invalid run ID without accepting forged state
+not ok 29 - replay validation rejects invalid run ID without accepting forged state
+  ---
+  duration_ms: 0.1001
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:250:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    a recorded fixture precedes state mutation
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:252:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: replay validation rejects sparse command array without accepting forged state
+not ok 30 - replay validation rejects sparse command array without accepting forged state
+  ---
+  duration_ms: 0.1
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:250:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    a recorded fixture precedes state mutation
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:252:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: archive identity/order and archive contents are guarded, not trusted UI data
+not ok 31 - archive identity/order and archive contents are guarded, not trusted UI data
+  ---
+  duration_ms: 0.2156
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:259:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    an archived fixture precedes archive mutation
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:261:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: hostile state properties are rejected without evaluating getters
+not ok 32 - hostile state properties are rejected without evaluating getters
+  ---
+  duration_ms: 0.1807
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S018\\model.test.cjs:274:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S018\model.test.cjs:277:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..32
+# tests 32
+# suites 0
+# pass 1
+# fail 31
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 238.2664

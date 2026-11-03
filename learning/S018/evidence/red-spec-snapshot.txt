@@ -1,0 +1,276 @@
+'use strict';
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const { createLesson, dispatch, LIMITS } = require('./model.js');
+const clone = (value) => JSON.parse(JSON.stringify(value));
+const scale = (state, tier, count) => dispatch(state, { type: 'scale', tier, count });
+const observe = (state, proof = 'complete', contract = 'compatible') =>
+  dispatch(state, { type: 'observe', proof, contract });
+const last = (state) => {
+  assert.ok(state.current.observations.length > 0, 'a real synthetic observation must be recorded');
+  return state.current.observations.at(-1);
+};
+const ready = (tier = 'api') => scale(createLesson(tier), tier, 2);
+
+test('the model is loadable and an unobserved fixture is NOT_RUN, never PASS', () => {
+  assert.equal(typeof createLesson, 'function');
+  assert.equal(typeof dispatch, 'function');
+  assert.equal(createLesson().current.verdict, 'NOT_RUN');
+  assert.equal(createLesson().current.observations.length, 0);
+  assert.equal(LIMITS.demand, 10);
+});
+
+for (const tier of ['frontend', 'api', 'worker']) {
+  test(`only intended ${tier} changes; all ten journeys and unchanged downstream budgets pass`, () => {
+    const state = createLesson(tier);
+    const before = clone(state);
+    const changed = scale(state, tier, 2);
+    const expected = { frontend: 1, api: 1, worker: 1, [tier]: 2 };
+    assert.deepEqual(changed.current.counts, expected);
+    assert.deepEqual(state, before, 'input state is immutable');
+    const result = observe(changed);
+    const window = last(result);
+    assert.deepEqual(window.counts, expected);
+    assert.equal(window.capacities[tier], 12);
+    assert.equal(window.admitted, 10);
+    assert.equal(window.completed, 10);
+    assert.equal(window.failed, 0);
+    assert.equal(window.unknown, 0);
+    assert.equal(window.maxLatencyMs, 100);
+    assert.ok(window.observedConnections <= 12);
+    assert.deepEqual(window.assertions, {
+      tierCapacity: 'PASS', connections: 'PASS', contracts: 'PASS', journeys: 'PASS'
+    });
+    assert.equal(result.current.verdict, 'PASS');
+    assert.equal(window.journeys.length, 10);
+    assert.ok(window.journeys.every((journey) => journey.outcome === 'PASS'));
+    assert.equal(Object.isFrozen(result.current.observations[0].journeys[0]), true);
+  });
+}
+
+test('wrong-tier scaling retains the bottleneck and exposes four deadline failures', () => {
+  const state = observe(scale(createLesson(), 'frontend', 2));
+  const window = last(state);
+  assert.deepEqual(window.capacities, { frontend: 24, api: 6, worker: 12 });
+  assert.equal(window.admitted, 6);
+  assert.equal(window.completed, 6);
+  assert.equal(window.failed, 4);
+  assert.equal(window.maxLatencyMs, 250);
+  assert.equal(window.assertions.tierCapacity, 'FAIL');
+  assert.equal(window.assertions.connections, 'PASS');
+  assert.equal(window.verdict, 'FAIL');
+  assert.equal(window.journeys.filter((journey) => journey.reason === 'tier deadline').length, 4);
+});
+
+test('scale-all creates sixteen occupied connections, four acquisition failures and six successes', () => {
+  const state = observe(dispatch(createLesson(), { type: 'scale-all' }));
+  const window = last(state);
+  assert.deepEqual(window.counts, { frontend: 2, api: 2, worker: 2 });
+  assert.equal(window.admitted, 10);
+  assert.equal(window.requestedConnections, 16);
+  assert.equal(window.observedConnections, 16);
+  assert.equal(window.connectionExcess, 4);
+  assert.equal(window.failed, 4);
+  assert.equal(window.completed, 6);
+  assert.equal(window.maxLatencyMs, 200);
+  assert.deepEqual(window.assertions, {
+    tierCapacity: 'PASS', connections: 'FAIL', contracts: 'PASS', journeys: 'FAIL'
+  });
+  assert.equal(state.current.verdict, 'FAIL');
+  assert.equal(window.journeys.filter((journey) => journey.reason === 'connection acquisition').length, 4);
+});
+
+test('even a correctly selected tier cannot bypass its downstream connection limit', () => {
+  const state = observe(scale(createLesson(), 'api', 3));
+  const window = last(state);
+  assert.deepEqual(window.counts, { frontend: 1, api: 3, worker: 1 });
+  assert.equal(window.connectionExcess, 4);
+  assert.equal(window.verdict, 'FAIL');
+});
+
+test('compatible counts and fast responses cannot conceal ten broken-contract journeys', () => {
+  const window = last(observe(ready(), 'complete', 'incompatible'));
+  assert.equal(window.admitted, 10);
+  assert.equal(window.maxLatencyMs, 100);
+  assert.equal(window.completed, 0);
+  assert.equal(window.failed, 10);
+  assert.equal(window.assertions.contracts, 'FAIL');
+  assert.equal(window.verdict, 'FAIL');
+});
+
+test('missing downstream completion evidence is UNKNOWN, not zero failure or fabricated completion', () => {
+  const state = observe(ready(), 'missing');
+  const window = last(state);
+  assert.equal(window.requestedConnections, 12, 'configured expectation is not an observation');
+  assert.equal(window.observedConnections, null);
+  assert.equal(window.connectionExcess, null);
+  assert.equal(window.completed, 0);
+  assert.equal(window.failed, 0);
+  assert.equal(window.unknown, 10);
+  assert.equal(window.maxLatencyMs, null);
+  assert.equal(window.assertions.connections, 'UNKNOWN');
+  assert.equal(window.assertions.journeys, 'UNKNOWN');
+  assert.equal(state.current.verdict, 'UNKNOWN');
+});
+
+test('known deadline or contract failure takes precedence over missing evidence', () => {
+  const baseline = last(observe(createLesson(), 'missing'));
+  assert.equal(baseline.failed, 4);
+  assert.equal(baseline.unknown, 6);
+  assert.equal(baseline.verdict, 'FAIL');
+  const broken = last(observe(ready(), 'missing', 'incompatible'));
+  assert.equal(broken.failed, 10);
+  assert.equal(broken.unknown, 0);
+  assert.equal(broken.verdict, 'FAIL');
+});
+
+test('an earlier failure remains cumulative after a later successful observation', () => {
+  let state = observe(createLesson());
+  state = observe(scale(state, 'api', 2));
+  assert.equal(state.current.observations.length, 2);
+  assert.deepEqual(state.current.observations.map((window) => window.verdict), ['FAIL', 'PASS']);
+  assert.equal(state.current.verdict, 'FAIL');
+});
+
+test('an earlier unknown remains cumulative after success; FAIL outranks UNKNOWN', () => {
+  let state = observe(ready(), 'missing');
+  state = observe(state);
+  assert.equal(state.current.observations.length, 2);
+  assert.equal(state.current.verdict, 'UNKNOWN');
+  state = observe(state, 'complete', 'incompatible');
+  assert.equal(state.current.verdict, 'FAIL');
+});
+
+test('configuration selects the exact constrained tier only before commands begin', () => {
+  const state = dispatch(createLesson(), { type: 'configure', bottleneck: 'worker' });
+  assert.equal(state.current.bottleneck, 'worker');
+  assert.equal(state.current.verdict, 'NOT_RUN');
+  assert.throws(() => dispatch(scale(state, 'worker', 2), { type: 'configure', bottleneck: 'api' }),
+    /configure|started/i);
+});
+
+test('all supported instance counts are bounded and a same-count no-op is rejected', () => {
+  assert.throws(() => scale(createLesson(), 'api', 1), /change|same/i);
+  for (const count of [2, 3]) {
+    assert.equal(scale(createLesson(), 'api', count).current.counts.api, count);
+  }
+  assert.equal(scale(scale(createLesson(), 'api', 2), 'api', 1).current.counts.api, 1);
+});
+
+test('text, non-finite, fractional and out-of-range counts fail without mutation', () => {
+  const state = createLesson();
+  const before = clone(state);
+  for (const count of ['2', '', 0, -0, -1, 4, 1.5, NaN, Infinity, null, true]) {
+    assert.throws(() => scale(state, 'api', count), /instance|integer|count/i, String(count));
+    assert.deepEqual(state, before);
+  }
+});
+
+test('unknown tiers, actions, proof and contract conditions are rejected exactly', () => {
+  const state = createLesson();
+  for (const action of [
+    { type: 'scale', tier: 'database', count: 2 },
+    { type: 'scale', tier: 'API', count: 2 },
+    { type: 'configure', bottleneck: 'any' },
+    { type: 'observe', proof: 'maybe', contract: 'compatible' },
+    { type: 'observe', proof: 'complete', contract: 'maybe' },
+    { type: 'surprise' }, { type: 'reset', extra: true }, null, [], 'scale'
+  ]) assert.throws(() => dispatch(state, action), /action|tier|condition|contract|proof|field|object/i);
+});
+
+test('commands reject extra keys, prototypes, symbols and accessors without invoking getters', () => {
+  const state = createLesson();
+  const getter = { type: 'scale', tier: 'api' };
+  Object.defineProperty(getter, 'count', { enumerable: true, get() { throw new Error('getter invoked'); } });
+  for (const action of [
+    { type: 'scale', tier: 'api', count: 2, extra: true },
+    Object.assign(Object.create({ inherited: true }), { type: 'reset' }),
+    { type: 'reset', [Symbol('extra')]: true }, getter
+  ]) {
+    assert.throws(() => dispatch(state, action), /field|plain|accessor|symbol|data/i);
+  }
+});
+
+test('a run permits exactly eight observations and rejects a ninth atomically', () => {
+  let state = ready();
+  for (let index = 0; index < 8; index += 1) state = observe(state);
+  assert.equal(state.current.observations.length, 8);
+  const before = clone(state);
+  assert.throws(() => observe(state), /observation|eight|8/i);
+  assert.deepEqual(state, before);
+});
+
+test('a run permits exactly twenty-four commands but reset remains available', () => {
+  let state = createLesson();
+  for (let index = 0; index < 24; index += 1) state = scale(state, 'frontend', index % 2 ? 1 : 2);
+  assert.equal(state.current.commands.length, 24);
+  assert.throws(() => scale(state, 'frontend', 2), /command|24/i);
+  const reset = dispatch(state, { type: 'reset' });
+  assert.equal(reset.current.id, 2);
+  assert.equal(reset.current.commands.length, 0);
+  assert.equal(reset.archives[0].commands.length, 24);
+});
+
+test('archive/reset retains failed evidence while restoring a fresh default fixture', () => {
+  const failed = observe(createLesson('worker'));
+  const before = clone(failed);
+  const reset = dispatch(failed, { type: 'reset' });
+  assert.equal(reset.current.id, 2);
+  assert.equal(reset.current.bottleneck, 'api');
+  assert.deepEqual(reset.current.counts, { frontend: 1, api: 1, worker: 1 });
+  assert.equal(reset.current.verdict, 'NOT_RUN');
+  assert.deepEqual(reset.archives, [before.current]);
+  assert.deepEqual(failed, before);
+  assert.equal(Object.isFrozen(reset.archives[0].observations[0]), true);
+});
+
+test('only six most recent nonempty runs are retained, and empty resets cannot erase them', () => {
+  let state = createLesson();
+  for (let index = 0; index < 8; index += 1) state = dispatch(observe(state), { type: 'reset' });
+  assert.equal(state.archives.length, 6);
+  assert.deepEqual(state.archives.map((run) => run.id), [3, 4, 5, 6, 7, 8]);
+  assert.equal(state.current.id, 9);
+  const reset = dispatch(state, { type: 'reset' });
+  assert.equal(reset.archives.length, 6);
+  assert.equal(reset.current.id, 10);
+});
+
+for (const [name, mutate] of [
+  ['changed tier count', (state) => { state.current.counts.api = 3; }],
+  ['fabricated verdict', (state) => { state.current.verdict = 'PASS'; }],
+  ['fabricated completion', (state) => { state.current.observations[0].completed = 10; }],
+  ['fabricated journey', (state) => { state.current.observations[0].journeys[0].latencyMs = 1; }],
+  ['rewritten command', (state) => { state.current.commands[0].proof = 'missing'; }],
+  ['extra state field', (state) => { state.extra = true; }],
+  ['invalid version', (state) => { state.schemaVersion = 2; }],
+  ['invalid run ID', (state) => { state.current.id = Infinity; }],
+  ['sparse command array', (state) => { delete state.current.commands[0]; }]
+]) {
+  test(`replay validation rejects ${name} without accepting forged state`, () => {
+    const state = clone(observe(createLesson()));
+    mutate(state);
+    assert.throws(() => dispatch(state, { type: 'reset' }), /state|replay|field|version|run|array|command/i);
+  });
+}
+
+test('archive identity/order and archive contents are guarded, not trusted UI data', () => {
+  const good = dispatch(observe(createLesson()), { type: 'reset' });
+  for (const mutate of [
+    (state) => { state.archives.push(clone(state.archives[0])); },
+    (state) => { state.archives[0].id = state.current.id; },
+    (state) => { state.archives[0].verdict = 'PASS'; },
+    (state) => { state.archives = Array(7).fill(state.archives[0]); }
+  ]) {
+    const state = clone(good);
+    mutate(state);
+    assert.throws(() => dispatch(state, { type: 'reset' }), /archive|state|replay|run|array/i);
+  }
+});
+
+test('hostile state properties are rejected without evaluating getters', () => {
+  const state = clone(createLesson());
+  Object.defineProperty(state, 'current', { enumerable: true, get() { throw new Error('getter invoked'); } });
+  assert.throws(() => dispatch(state, { type: 'reset' }), /accessor|data|state/i);
+  assert.throws(() => createLesson('not-a-tier'), /tier|bottleneck/i);
+});

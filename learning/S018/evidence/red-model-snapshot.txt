@@ -1,0 +1,21 @@
+(function (root) {
+  'use strict';
+  const LIMITS = Object.freeze({
+    commands: 24, observations: 8, archives: 6, instances: 3,
+    demand: 10, latencyBudgetMs: 150, connectionLimit: 12
+  });
+  function createLesson(bottleneck = 'api') {
+    return {
+      schemaVersion: 1,
+      current: {
+        id: 1, bottleneck, counts: { frontend: 1, api: 1, worker: 1 },
+        commands: [], observations: [], verdict: 'NOT_RUN'
+      },
+      archives: []
+    };
+  }
+  function dispatch(state) { return state; }
+  const api = Object.freeze({ LIMITS, createLesson, dispatch });
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S018Lesson = api;
+}(typeof globalThis === 'object' ? globalThis : this));

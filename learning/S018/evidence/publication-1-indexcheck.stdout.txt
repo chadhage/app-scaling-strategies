@@ -1,0 +1,1538 @@
+learning/S018/evidence/red-2-bdd-snapshot.txt:1: trailing whitespace.
++Feature: S018 independent tier scaling in a bounded synthetic rehearsal
+learning/S018/evidence/red-2-bdd-snapshot.txt:2: trailing whitespace.
++  # A-S018 / D-S018 / SC-S018; one frozen S unit, not native Azure evidence.
+learning/S018/evidence/red-2-bdd-snapshot.txt:3: trailing whitespace.
++  Background:
+learning/S018/evidence/red-2-bdd-snapshot.txt:4: trailing whitespace.
++    Given the banner "Training rehearsal - synthetic data - not a live Azure result"
+learning/S018/evidence/red-2-bdd-snapshot.txt:5: trailing whitespace.
++    And ten synthetic journeys cross frontend, API and worker in one observation window
+learning/S018/evidence/red-2-bdd-snapshot.txt:6: trailing whitespace.
++    And the selected constrained tier handles six journeys per ready instance
+learning/S018/evidence/red-2-bdd-snapshot.txt:7: trailing whitespace.
++    And each other tier handles twelve journeys per ready instance
+learning/S018/evidence/red-2-bdd-snapshot.txt:8: trailing whitespace.
++    And all instances are assumed ready and contracts are compatible unless deliberately broken
+learning/S018/evidence/red-2-bdd-snapshot.txt:9: trailing whitespace.
++    And each API and worker instance fills four synthetic database connections
+learning/S018/evidence/red-2-bdd-snapshot.txt:10: trailing whitespace.
++    And the database limit is twelve connections and the journey budget is 150 ms
+learning/S018/evidence/red-2-bdd-snapshot.txt:11: trailing whitespace.
++
+learning/S018/evidence/red-2-bdd-snapshot.txt:12: trailing whitespace.
++  Scenario Outline: Scale only the constrained tier
+learning/S018/evidence/red-2-bdd-snapshot.txt:13: trailing whitespace.
++    Given "<tier>" is the selected bottleneck and every tier has one instance
+learning/S018/evidence/red-2-bdd-snapshot.txt:14: trailing whitespace.
++    When I change only "<tier>" to two instances and observe complete evidence
+learning/S018/evidence/red-2-bdd-snapshot.txt:15: trailing whitespace.
++    Then the other two tier counts remain one
+learning/S018/evidence/red-2-bdd-snapshot.txt:16: trailing whitespace.
++    And ten journeys succeed at 100 ms within the unchanged downstream limits
+learning/S018/evidence/red-2-bdd-snapshot.txt:17: trailing whitespace.
++    And the observation and cumulative result are PASS
+learning/S018/evidence/red-2-bdd-snapshot.txt:18: trailing whitespace.
++    Examples:
+learning/S018/evidence/red-2-bdd-snapshot.txt:19: trailing whitespace.
++      | tier     |
+learning/S018/evidence/red-2-bdd-snapshot.txt:20: trailing whitespace.
++      | frontend |
+learning/S018/evidence/red-2-bdd-snapshot.txt:21: trailing whitespace.
++      | api      |
+learning/S018/evidence/red-2-bdd-snapshot.txt:22: trailing whitespace.
++      | worker   |
+learning/S018/evidence/red-2-bdd-snapshot.txt:23: trailing whitespace.
++
+learning/S018/evidence/red-2-bdd-snapshot.txt:24: trailing whitespace.
++  Scenario: A wrong-tier change does not fix a bottleneck
+learning/S018/evidence/red-2-bdd-snapshot.txt:25: trailing whitespace.
++    Given API is constrained and every tier has one instance
+learning/S018/evidence/red-2-bdd-snapshot.txt:26: trailing whitespace.
++    When I scale only frontend to two instances and observe
+learning/S018/evidence/red-2-bdd-snapshot.txt:27: trailing whitespace.
++    Then API still admits six journeys in the window
+learning/S018/evidence/red-2-bdd-snapshot.txt:28: trailing whitespace.
++    And four journeys exceed the original 150 ms deadline
+learning/S018/evidence/red-2-bdd-snapshot.txt:29: trailing whitespace.
++    And the result is FAIL rather than a capacity-success claim
+learning/S018/evidence/red-2-bdd-snapshot.txt:30: trailing whitespace.
++
+learning/S018/evidence/red-2-bdd-snapshot.txt:31: trailing whitespace.
++  Scenario: Indiscriminate scaling transfers pressure downstream
+learning/S018/evidence/red-2-bdd-snapshot.txt:32: trailing whitespace.
++    Given API is constrained and every tier has one instance
+learning/S018/evidence/red-2-bdd-snapshot.txt:33: trailing whitespace.
++    When I scale every tier to two instances and observe
+learning/S018/evidence/red-2-bdd-snapshot.txt:34: trailing whitespace.
++    Then the tier path can admit ten journeys
+learning/S018/evidence/red-2-bdd-snapshot.txt:35: trailing whitespace.
++    But sixteen occupied database connections exceed the limit of twelve
+learning/S018/evidence/red-2-bdd-snapshot.txt:36: trailing whitespace.
++    And four journeys fail synthetic connection acquisition
+learning/S018/evidence/red-2-bdd-snapshot.txt:37: trailing whitespace.
++    And six journeys succeed and the result is FAIL
+learning/S018/evidence/red-2-bdd-snapshot.txt:38: trailing whitespace.
++
+learning/S018/evidence/red-2-bdd-snapshot.txt:39: trailing whitespace.
++  Scenario: Correct targeting cannot waive other constraints
+learning/S018/evidence/red-2-bdd-snapshot.txt:40: trailing whitespace.
++    Given API is constrained
+learning/S018/evidence/red-2-bdd-snapshot.txt:41: trailing whitespace.
++    When I scale API alone to three instances and observe
+learning/S018/evidence/red-2-bdd-snapshot.txt:42: trailing whitespace.
++    Then the unchanged worker and frontend do not grow
+learning/S018/evidence/red-2-bdd-snapshot.txt:43: trailing whitespace.
++    But the database connection limit is exceeded and the result is FAIL
+learning/S018/evidence/red-2-bdd-snapshot.txt:44: trailing whitespace.
++
+learning/S018/evidence/red-2-bdd-snapshot.txt:45: trailing whitespace.
++  Scenario: Compatible contracts are independently required
+learning/S018/evidence/red-2-bdd-snapshot.txt:46: trailing whitespace.
++    Given the constrained tier alone has two instances
+learning/S018/evidence/red-2-bdd-snapshot.txt:47: trailing whitespace.
++    When the observed tier contract is incompatible
+learning/S018/evidence/red-2-bdd-snapshot.txt:48: trailing whitespace.
++    Then all ten journeys fail contract validation even at 100 ms
+learning/S018/evidence/red-2-bdd-snapshot.txt:49: trailing whitespace.
++    And successful throughput alone cannot pass the rehearsal
+learning/S018/evidence/red-2-bdd-snapshot.txt:50: trailing whitespace.
++
+learning/S018/evidence/red-2-bdd-snapshot.txt:51: trailing whitespace.
++  Scenario: Missing evidence is not success
+learning/S018/evidence/red-2-bdd-snapshot.txt:52: trailing whitespace.
++    Given the constrained tier alone has two instances
+learning/S018/evidence/red-2-bdd-snapshot.txt:53: trailing whitespace.
++    When downstream completion evidence is missing
+learning/S018/evidence/red-2-bdd-snapshot.txt:54: trailing whitespace.
++    Then observed connections and maximum latency are unknown
+learning/S018/evidence/red-2-bdd-snapshot.txt:55: trailing whitespace.
++    And zero journeys are verified successful and ten remain unknown
+learning/S018/evidence/red-2-bdd-snapshot.txt:56: trailing whitespace.
++    And the result is UNKNOWN
+learning/S018/evidence/red-2-bdd-snapshot.txt:57: trailing whitespace.
++
+learning/S018/evidence/red-2-bdd-snapshot.txt:58: trailing whitespace.
++  Scenario: Recovery does not rewrite a failure or unknown
+learning/S018/evidence/red-2-bdd-snapshot.txt:59: trailing whitespace.
++    Given an earlier observation failed or had missing completion evidence
+learning/S018/evidence/red-2-bdd-snapshot.txt:60: trailing whitespace.
++    When I correct the scaling and observe a successful window
+learning/S018/evidence/red-2-bdd-snapshot.txt:61: trailing whitespace.
++    Then both observations remain inspectable
+learning/S018/evidence/red-2-bdd-snapshot.txt:62: trailing whitespace.
++    And cumulative FAIL takes precedence over UNKNOWN and PASS
+learning/S018/evidence/red-2-bdd-snapshot.txt:63: trailing whitespace.
++    And an earlier UNKNOWN cannot become cumulative PASS
+learning/S018/evidence/red-2-bdd-snapshot.txt:64: trailing whitespace.
++
+learning/S018/evidence/red-2-bdd-snapshot.txt:65: trailing whitespace.
++  Scenario: Invalid commands and forged state are rejected atomically
+learning/S018/evidence/red-2-bdd-snapshot.txt:66: trailing whitespace.
++    When a count is fractional, non-finite, textual, outside one to three, or has extra fields
+learning/S018/evidence/red-2-bdd-snapshot.txt:67: trailing whitespace.
++    Or a tier, observation condition, action, archive, or replayed result is invalid
+learning/S018/evidence/red-2-bdd-snapshot.txt:68: trailing whitespace.
++    Then a useful error is shown and the previous state and evidence remain unchanged
+learning/S018/evidence/red-2-bdd-snapshot.txt:69: trailing whitespace.
++
+learning/S018/evidence/red-2-bdd-snapshot.txt:70: trailing whitespace.
++  Scenario: The exercise is finite and reset retains bounded history
+learning/S018/evidence/red-2-bdd-snapshot.txt:71: trailing whitespace.
++    Given a run permits at most 24 commands and eight observations
+learning/S018/evidence/red-2-bdd-snapshot.txt:72: trailing whitespace.
++    When either bound is reached
+learning/S018/evidence/red-2-bdd-snapshot.txt:73: trailing whitespace.
++    Then another command or observation is rejected without changing evidence
+learning/S018/evidence/red-2-bdd-snapshot.txt:74: trailing whitespace.
++    When I use the keyboard to archive and reset
+learning/S018/evidence/red-2-bdd-snapshot.txt:75: trailing whitespace.
++    Then a fresh default API fixture has no observations and is NOT_RUN
+learning/S018/evidence/red-2-bdd-snapshot.txt:76: trailing whitespace.
++    And up to six earlier runs retain their own commands, observations and cumulative results
+learning/S018/evidence/red-2-bdd-snapshot.txt:77: trailing whitespace.
++    And reset never implies that earlier failures became successful
+learning/S018/evidence/red-2-bdd-snapshot.txt:78: trailing whitespace.
++
+learning/S018/evidence/red-2-bdd-snapshot.txt:79: trailing whitespace.
++  Scenario: Browser operation is accessible, local and evidence-preserving
+learning/S018/evidence/red-2-bdd-snapshot.txt:80: trailing whitespace.
++    Given a standalone file lesson with labeled controls, visible keyboard focus and local-only CSP
+learning/S018/evidence/red-2-bdd-snapshot.txt:81: trailing whitespace.
++    When I configure, scale, observe, provoke an error and archive/reset using the actual browser
+learning/S018/evidence/red-2-bdd-snapshot.txt:82: trailing whitespace.
++    Then semantic controls work and native form.reset remains callable
+learning/S018/evidence/red-2-bdd-snapshot.txt:83: trailing whitespace.
++    And inline script and external network attempts are blocked by enforced CSP
+learning/S018/evidence/red-2-bdd-snapshot.txt:84: trailing whitespace.
++    And no page error or completed external request occurs
+learning/S018/evidence/red-2-bdd-snapshot.txt:85: trailing whitespace.
++    And ordinary verification does not add, remove or rewrite historical proof
+learning/S018/evidence/red-2-bdd-snapshot.txt:86: trailing whitespace.
++    And only CAPTURE_BROWSER_EVIDENCE=1 deliberately appends new evidence
+learning/S018/evidence/red-2-model-snapshot.txt:1: trailing whitespace.
++(function (root) {
+learning/S018/evidence/red-2-model-snapshot.txt:2: trailing whitespace.
++  'use strict';
+learning/S018/evidence/red-2-model-snapshot.txt:3: trailing whitespace.
++  const LIMITS = Object.freeze({
+learning/S018/evidence/red-2-model-snapshot.txt:4: trailing whitespace.
++    commands: 24, observations: 8, archives: 6, instances: 3,
+learning/S018/evidence/red-2-model-snapshot.txt:5: trailing whitespace.
++    demand: 10, latencyBudgetMs: 150, connectionLimit: 12
+learning/S018/evidence/red-2-model-snapshot.txt:6: trailing whitespace.
++  });
+learning/S018/evidence/red-2-model-snapshot.txt:7: trailing whitespace.
++  function createLesson(bottleneck = 'api') {
+learning/S018/evidence/red-2-model-snapshot.txt:8: trailing whitespace.
++    return {
+learning/S018/evidence/red-2-model-snapshot.txt:9: trailing whitespace.
++      schemaVersion: 1,
+learning/S018/evidence/red-2-model-snapshot.txt:10: trailing whitespace.
++      current: {
+learning/S018/evidence/red-2-model-snapshot.txt:11: trailing whitespace.
++        id: 1, bottleneck, counts: { frontend: 1, api: 1, worker: 1 },
+learning/S018/evidence/red-2-model-snapshot.txt:12: trailing whitespace.
++        commands: [], observations: [], verdict: 'NOT_RUN'
+learning/S018/evidence/red-2-model-snapshot.txt:13: trailing whitespace.
++      },
+learning/S018/evidence/red-2-model-snapshot.txt:14: trailing whitespace.
++      archives: []
+learning/S018/evidence/red-2-model-snapshot.txt:15: trailing whitespace.
++    };
+learning/S018/evidence/red-2-model-snapshot.txt:16: trailing whitespace.
++  }
+learning/S018/evidence/red-2-model-snapshot.txt:17: trailing whitespace.
++  function dispatch(state) { return state; }
+learning/S018/evidence/red-2-model-snapshot.txt:18: trailing whitespace.
++  const api = Object.freeze({ LIMITS, createLesson, dispatch });
+learning/S018/evidence/red-2-model-snapshot.txt:19: trailing whitespace.
++  if (typeof module === 'object' && module.exports) module.exports = api;
+learning/S018/evidence/red-2-model-snapshot.txt:20: trailing whitespace.
++  else root.S018Lesson = api;
+learning/S018/evidence/red-2-model-snapshot.txt:21: trailing whitespace.
++}(typeof globalThis === 'object' ? globalThis : this));
+learning/S018/evidence/red-2-spec-snapshot.txt:1: trailing whitespace.
++'use strict';
+learning/S018/evidence/red-2-spec-snapshot.txt:2: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:3: trailing whitespace.
++const { test } = require('node:test');
+learning/S018/evidence/red-2-spec-snapshot.txt:4: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S018/evidence/red-2-spec-snapshot.txt:5: trailing whitespace.
++const { createLesson, dispatch, LIMITS } = require('./model.js');
+learning/S018/evidence/red-2-spec-snapshot.txt:6: trailing whitespace.
++const clone = (value) => JSON.parse(JSON.stringify(value));
+learning/S018/evidence/red-2-spec-snapshot.txt:7: trailing whitespace.
++const scale = (state, tier, count) => dispatch(state, { type: 'scale', tier, count });
+learning/S018/evidence/red-2-spec-snapshot.txt:8: trailing whitespace.
++const observe = (state, proof = 'complete', contract = 'compatible') =>
+learning/S018/evidence/red-2-spec-snapshot.txt:9: trailing whitespace.
++  dispatch(state, { type: 'observe', proof, contract });
+learning/S018/evidence/red-2-spec-snapshot.txt:10: trailing whitespace.
++const last = (state) => {
+learning/S018/evidence/red-2-spec-snapshot.txt:11: trailing whitespace.
++  assert.ok(state.current.observations.length > 0, 'a real synthetic observation must be recorded');
+learning/S018/evidence/red-2-spec-snapshot.txt:12: trailing whitespace.
++  return state.current.observations.at(-1);
+learning/S018/evidence/red-2-spec-snapshot.txt:13: trailing whitespace.
++};
+learning/S018/evidence/red-2-spec-snapshot.txt:14: trailing whitespace.
++const ready = (tier = 'api') => scale(createLesson(tier), tier, 2);
+learning/S018/evidence/red-2-spec-snapshot.txt:15: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:16: trailing whitespace.
++test('the model is loadable and an unobserved fixture is NOT_RUN, never PASS', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:17: trailing whitespace.
++  assert.equal(typeof createLesson, 'function');
+learning/S018/evidence/red-2-spec-snapshot.txt:18: trailing whitespace.
++  assert.equal(typeof dispatch, 'function');
+learning/S018/evidence/red-2-spec-snapshot.txt:19: trailing whitespace.
++  assert.equal(createLesson().current.verdict, 'NOT_RUN');
+learning/S018/evidence/red-2-spec-snapshot.txt:20: trailing whitespace.
++  assert.equal(createLesson().current.observations.length, 0);
+learning/S018/evidence/red-2-spec-snapshot.txt:21: trailing whitespace.
++  assert.equal(LIMITS.demand, 10);
+learning/S018/evidence/red-2-spec-snapshot.txt:22: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:23: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:24: trailing whitespace.
++for (const tier of ['frontend', 'api', 'worker']) {
+learning/S018/evidence/red-2-spec-snapshot.txt:25: trailing whitespace.
++  test(`only intended ${tier} changes; all ten journeys and unchanged downstream budgets pass`, () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:26: trailing whitespace.
++    const state = createLesson(tier);
+learning/S018/evidence/red-2-spec-snapshot.txt:27: trailing whitespace.
++    const before = clone(state);
+learning/S018/evidence/red-2-spec-snapshot.txt:28: trailing whitespace.
++    const changed = scale(state, tier, 2);
+learning/S018/evidence/red-2-spec-snapshot.txt:29: trailing whitespace.
++    const expected = { frontend: 1, api: 1, worker: 1, [tier]: 2 };
+learning/S018/evidence/red-2-spec-snapshot.txt:30: trailing whitespace.
++    assert.deepEqual(changed.current.counts, expected);
+learning/S018/evidence/red-2-spec-snapshot.txt:31: trailing whitespace.
++    assert.deepEqual(state, before, 'input state is immutable');
+learning/S018/evidence/red-2-spec-snapshot.txt:32: trailing whitespace.
++    const result = observe(changed);
+learning/S018/evidence/red-2-spec-snapshot.txt:33: trailing whitespace.
++    const window = last(result);
+learning/S018/evidence/red-2-spec-snapshot.txt:34: trailing whitespace.
++    assert.deepEqual(window.counts, expected);
+learning/S018/evidence/red-2-spec-snapshot.txt:35: trailing whitespace.
++    assert.equal(window.capacities[tier], 12);
+learning/S018/evidence/red-2-spec-snapshot.txt:36: trailing whitespace.
++    assert.equal(window.admitted, 10);
+learning/S018/evidence/red-2-spec-snapshot.txt:37: trailing whitespace.
++    assert.equal(window.completed, 10);
+learning/S018/evidence/red-2-spec-snapshot.txt:38: trailing whitespace.
++    assert.equal(window.failed, 0);
+learning/S018/evidence/red-2-spec-snapshot.txt:39: trailing whitespace.
++    assert.equal(window.unknown, 0);
+learning/S018/evidence/red-2-spec-snapshot.txt:40: trailing whitespace.
++    assert.equal(window.maxLatencyMs, 100);
+learning/S018/evidence/red-2-spec-snapshot.txt:41: trailing whitespace.
++    assert.ok(window.observedConnections <= 12);
+learning/S018/evidence/red-2-spec-snapshot.txt:42: trailing whitespace.
++    assert.deepEqual(window.assertions, {
+learning/S018/evidence/red-2-spec-snapshot.txt:43: trailing whitespace.
++      tierCapacity: 'PASS', connections: 'PASS', contracts: 'PASS', journeys: 'PASS'
+learning/S018/evidence/red-2-spec-snapshot.txt:44: trailing whitespace.
++    });
+learning/S018/evidence/red-2-spec-snapshot.txt:45: trailing whitespace.
++    assert.equal(result.current.verdict, 'PASS');
+learning/S018/evidence/red-2-spec-snapshot.txt:46: trailing whitespace.
++    assert.equal(window.journeys.length, 10);
+learning/S018/evidence/red-2-spec-snapshot.txt:47: trailing whitespace.
++    assert.ok(window.journeys.every((journey) => journey.outcome === 'PASS'));
+learning/S018/evidence/red-2-spec-snapshot.txt:48: trailing whitespace.
++    assert.equal(Object.isFrozen(result.current.observations[0].journeys[0]), true);
+learning/S018/evidence/red-2-spec-snapshot.txt:49: trailing whitespace.
++  });
+learning/S018/evidence/red-2-spec-snapshot.txt:50: trailing whitespace.
++}
+learning/S018/evidence/red-2-spec-snapshot.txt:51: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:52: trailing whitespace.
++test('wrong-tier scaling retains the bottleneck and exposes four deadline failures', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:53: trailing whitespace.
++  const state = observe(scale(createLesson(), 'frontend', 2));
+learning/S018/evidence/red-2-spec-snapshot.txt:54: trailing whitespace.
++  const window = last(state);
+learning/S018/evidence/red-2-spec-snapshot.txt:55: trailing whitespace.
++  assert.deepEqual(window.capacities, { frontend: 24, api: 6, worker: 12 });
+learning/S018/evidence/red-2-spec-snapshot.txt:56: trailing whitespace.
++  assert.equal(window.admitted, 6);
+learning/S018/evidence/red-2-spec-snapshot.txt:57: trailing whitespace.
++  assert.equal(window.completed, 6);
+learning/S018/evidence/red-2-spec-snapshot.txt:58: trailing whitespace.
++  assert.equal(window.failed, 4);
+learning/S018/evidence/red-2-spec-snapshot.txt:59: trailing whitespace.
++  assert.equal(window.maxLatencyMs, 250);
+learning/S018/evidence/red-2-spec-snapshot.txt:60: trailing whitespace.
++  assert.equal(window.assertions.tierCapacity, 'FAIL');
+learning/S018/evidence/red-2-spec-snapshot.txt:61: trailing whitespace.
++  assert.equal(window.assertions.connections, 'PASS');
+learning/S018/evidence/red-2-spec-snapshot.txt:62: trailing whitespace.
++  assert.equal(window.verdict, 'FAIL');
+learning/S018/evidence/red-2-spec-snapshot.txt:63: trailing whitespace.
++  assert.equal(window.journeys.filter((journey) => journey.reason === 'tier deadline').length, 4);
+learning/S018/evidence/red-2-spec-snapshot.txt:64: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:65: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:66: trailing whitespace.
++test('scale-all creates sixteen occupied connections, four acquisition failures and six successes', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:67: trailing whitespace.
++  const state = observe(dispatch(createLesson(), { type: 'scale-all' }));
+learning/S018/evidence/red-2-spec-snapshot.txt:68: trailing whitespace.
++  const window = last(state);
+learning/S018/evidence/red-2-spec-snapshot.txt:69: trailing whitespace.
++  assert.deepEqual(window.counts, { frontend: 2, api: 2, worker: 2 });
+learning/S018/evidence/red-2-spec-snapshot.txt:70: trailing whitespace.
++  assert.equal(window.admitted, 10);
+learning/S018/evidence/red-2-spec-snapshot.txt:71: trailing whitespace.
++  assert.equal(window.requestedConnections, 16);
+learning/S018/evidence/red-2-spec-snapshot.txt:72: trailing whitespace.
++  assert.equal(window.observedConnections, 16);
+learning/S018/evidence/red-2-spec-snapshot.txt:73: trailing whitespace.
++  assert.equal(window.connectionExcess, 4);
+learning/S018/evidence/red-2-spec-snapshot.txt:74: trailing whitespace.
++  assert.equal(window.failed, 4);
+learning/S018/evidence/red-2-spec-snapshot.txt:75: trailing whitespace.
++  assert.equal(window.completed, 6);
+learning/S018/evidence/red-2-spec-snapshot.txt:76: trailing whitespace.
++  assert.equal(window.maxLatencyMs, 200);
+learning/S018/evidence/red-2-spec-snapshot.txt:77: trailing whitespace.
++  assert.deepEqual(window.assertions, {
+learning/S018/evidence/red-2-spec-snapshot.txt:78: trailing whitespace.
++    tierCapacity: 'PASS', connections: 'FAIL', contracts: 'PASS', journeys: 'FAIL'
+learning/S018/evidence/red-2-spec-snapshot.txt:79: trailing whitespace.
++  });
+learning/S018/evidence/red-2-spec-snapshot.txt:80: trailing whitespace.
++  assert.equal(state.current.verdict, 'FAIL');
+learning/S018/evidence/red-2-spec-snapshot.txt:81: trailing whitespace.
++  assert.equal(window.journeys.filter((journey) => journey.reason === 'connection acquisition').length, 4);
+learning/S018/evidence/red-2-spec-snapshot.txt:82: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:83: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:84: trailing whitespace.
++test('even a correctly selected tier cannot bypass its downstream connection limit', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:85: trailing whitespace.
++  const state = observe(scale(createLesson(), 'api', 3));
+learning/S018/evidence/red-2-spec-snapshot.txt:86: trailing whitespace.
++  const window = last(state);
+learning/S018/evidence/red-2-spec-snapshot.txt:87: trailing whitespace.
++  assert.deepEqual(window.counts, { frontend: 1, api: 3, worker: 1 });
+learning/S018/evidence/red-2-spec-snapshot.txt:88: trailing whitespace.
++  assert.equal(window.connectionExcess, 4);
+learning/S018/evidence/red-2-spec-snapshot.txt:89: trailing whitespace.
++  assert.equal(window.verdict, 'FAIL');
+learning/S018/evidence/red-2-spec-snapshot.txt:90: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:91: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:92: trailing whitespace.
++test('compatible counts and fast responses cannot conceal ten broken-contract journeys', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:93: trailing whitespace.
++  const window = last(observe(ready(), 'complete', 'incompatible'));
+learning/S018/evidence/red-2-spec-snapshot.txt:94: trailing whitespace.
++  assert.equal(window.admitted, 10);
+learning/S018/evidence/red-2-spec-snapshot.txt:95: trailing whitespace.
++  assert.equal(window.maxLatencyMs, 100);
+learning/S018/evidence/red-2-spec-snapshot.txt:96: trailing whitespace.
++  assert.equal(window.completed, 0);
+learning/S018/evidence/red-2-spec-snapshot.txt:97: trailing whitespace.
++  assert.equal(window.failed, 10);
+learning/S018/evidence/red-2-spec-snapshot.txt:98: trailing whitespace.
++  assert.equal(window.assertions.contracts, 'FAIL');
+learning/S018/evidence/red-2-spec-snapshot.txt:99: trailing whitespace.
++  assert.equal(window.verdict, 'FAIL');
+learning/S018/evidence/red-2-spec-snapshot.txt:100: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:101: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:102: trailing whitespace.
++test('missing downstream completion evidence is UNKNOWN, not zero failure or fabricated completion', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:103: trailing whitespace.
++  const state = observe(ready(), 'missing');
+learning/S018/evidence/red-2-spec-snapshot.txt:104: trailing whitespace.
++  const window = last(state);
+learning/S018/evidence/red-2-spec-snapshot.txt:105: trailing whitespace.
++  assert.equal(window.requestedConnections, 12, 'configured expectation is not an observation');
+learning/S018/evidence/red-2-spec-snapshot.txt:106: trailing whitespace.
++  assert.equal(window.observedConnections, null);
+learning/S018/evidence/red-2-spec-snapshot.txt:107: trailing whitespace.
++  assert.equal(window.connectionExcess, null);
+learning/S018/evidence/red-2-spec-snapshot.txt:108: trailing whitespace.
++  assert.equal(window.completed, 0);
+learning/S018/evidence/red-2-spec-snapshot.txt:109: trailing whitespace.
++  assert.equal(window.failed, 0);
+learning/S018/evidence/red-2-spec-snapshot.txt:110: trailing whitespace.
++  assert.equal(window.unknown, 10);
+learning/S018/evidence/red-2-spec-snapshot.txt:111: trailing whitespace.
++  assert.equal(window.maxLatencyMs, null);
+learning/S018/evidence/red-2-spec-snapshot.txt:112: trailing whitespace.
++  assert.equal(window.assertions.connections, 'UNKNOWN');
+learning/S018/evidence/red-2-spec-snapshot.txt:113: trailing whitespace.
++  assert.equal(window.assertions.journeys, 'UNKNOWN');
+learning/S018/evidence/red-2-spec-snapshot.txt:114: trailing whitespace.
++  assert.equal(state.current.verdict, 'UNKNOWN');
+learning/S018/evidence/red-2-spec-snapshot.txt:115: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:116: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:117: trailing whitespace.
++test('known deadline or contract failure takes precedence over missing evidence', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:118: trailing whitespace.
++  const baseline = last(observe(createLesson(), 'missing'));
+learning/S018/evidence/red-2-spec-snapshot.txt:119: trailing whitespace.
++  assert.equal(baseline.failed, 4);
+learning/S018/evidence/red-2-spec-snapshot.txt:120: trailing whitespace.
++  assert.equal(baseline.unknown, 6);
+learning/S018/evidence/red-2-spec-snapshot.txt:121: trailing whitespace.
++  assert.equal(baseline.verdict, 'FAIL');
+learning/S018/evidence/red-2-spec-snapshot.txt:122: trailing whitespace.
++  const broken = last(observe(ready(), 'missing', 'incompatible'));
+learning/S018/evidence/red-2-spec-snapshot.txt:123: trailing whitespace.
++  assert.equal(broken.failed, 10);
+learning/S018/evidence/red-2-spec-snapshot.txt:124: trailing whitespace.
++  assert.equal(broken.unknown, 0);
+learning/S018/evidence/red-2-spec-snapshot.txt:125: trailing whitespace.
++  assert.equal(broken.verdict, 'FAIL');
+learning/S018/evidence/red-2-spec-snapshot.txt:126: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:127: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:128: trailing whitespace.
++test('an earlier failure remains cumulative after a later successful observation', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:129: trailing whitespace.
++  let state = observe(createLesson());
+learning/S018/evidence/red-2-spec-snapshot.txt:130: trailing whitespace.
++  state = observe(scale(state, 'api', 2));
+learning/S018/evidence/red-2-spec-snapshot.txt:131: trailing whitespace.
++  assert.equal(state.current.observations.length, 2);
+learning/S018/evidence/red-2-spec-snapshot.txt:132: trailing whitespace.
++  assert.deepEqual(state.current.observations.map((window) => window.verdict), ['FAIL', 'PASS']);
+learning/S018/evidence/red-2-spec-snapshot.txt:133: trailing whitespace.
++  assert.equal(state.current.verdict, 'FAIL');
+learning/S018/evidence/red-2-spec-snapshot.txt:134: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:135: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:136: trailing whitespace.
++test('an earlier unknown remains cumulative after success; FAIL outranks UNKNOWN', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:137: trailing whitespace.
++  let state = observe(ready(), 'missing');
+learning/S018/evidence/red-2-spec-snapshot.txt:138: trailing whitespace.
++  state = observe(state);
+learning/S018/evidence/red-2-spec-snapshot.txt:139: trailing whitespace.
++  assert.equal(state.current.observations.length, 2);
+learning/S018/evidence/red-2-spec-snapshot.txt:140: trailing whitespace.
++  assert.equal(state.current.verdict, 'UNKNOWN');
+learning/S018/evidence/red-2-spec-snapshot.txt:141: trailing whitespace.
++  state = observe(state, 'complete', 'incompatible');
+learning/S018/evidence/red-2-spec-snapshot.txt:142: trailing whitespace.
++  assert.equal(state.current.verdict, 'FAIL');
+learning/S018/evidence/red-2-spec-snapshot.txt:143: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:144: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:145: trailing whitespace.
++test('configuration selects the exact constrained tier only before commands begin', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:146: trailing whitespace.
++  const state = dispatch(createLesson(), { type: 'configure', bottleneck: 'worker' });
+learning/S018/evidence/red-2-spec-snapshot.txt:147: trailing whitespace.
++  assert.equal(state.current.bottleneck, 'worker');
+learning/S018/evidence/red-2-spec-snapshot.txt:148: trailing whitespace.
++  assert.equal(state.current.verdict, 'NOT_RUN');
+learning/S018/evidence/red-2-spec-snapshot.txt:149: trailing whitespace.
++  assert.throws(() => dispatch(scale(state, 'worker', 2), { type: 'configure', bottleneck: 'api' }),
+learning/S018/evidence/red-2-spec-snapshot.txt:150: trailing whitespace.
++    /configure|started/i);
+learning/S018/evidence/red-2-spec-snapshot.txt:151: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:152: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:153: trailing whitespace.
++test('all supported instance counts are bounded and a same-count no-op is rejected', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:154: trailing whitespace.
++  assert.throws(() => scale(createLesson(), 'api', 1), /change|same/i);
+learning/S018/evidence/red-2-spec-snapshot.txt:155: trailing whitespace.
++  for (const count of [2, 3]) {
+learning/S018/evidence/red-2-spec-snapshot.txt:156: trailing whitespace.
++    assert.equal(scale(createLesson(), 'api', count).current.counts.api, count);
+learning/S018/evidence/red-2-spec-snapshot.txt:157: trailing whitespace.
++  }
+learning/S018/evidence/red-2-spec-snapshot.txt:158: trailing whitespace.
++  assert.equal(scale(scale(createLesson(), 'api', 2), 'api', 1).current.counts.api, 1);
+learning/S018/evidence/red-2-spec-snapshot.txt:159: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:160: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:161: trailing whitespace.
++test('text, non-finite, fractional and out-of-range counts fail without mutation', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:162: trailing whitespace.
++  const state = createLesson();
+learning/S018/evidence/red-2-spec-snapshot.txt:163: trailing whitespace.
++  const before = clone(state);
+learning/S018/evidence/red-2-spec-snapshot.txt:164: trailing whitespace.
++  for (const count of ['2', '', 0, -0, -1, 4, 1.5, NaN, Infinity, null, true]) {
+learning/S018/evidence/red-2-spec-snapshot.txt:165: trailing whitespace.
++    assert.throws(() => scale(state, 'api', count), /instance|integer|count/i, String(count));
+learning/S018/evidence/red-2-spec-snapshot.txt:166: trailing whitespace.
++    assert.deepEqual(state, before);
+learning/S018/evidence/red-2-spec-snapshot.txt:167: trailing whitespace.
++  }
+learning/S018/evidence/red-2-spec-snapshot.txt:168: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:169: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:170: trailing whitespace.
++test('unknown tiers, actions, proof and contract conditions are rejected exactly', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:171: trailing whitespace.
++  const state = createLesson();
+learning/S018/evidence/red-2-spec-snapshot.txt:172: trailing whitespace.
++  for (const action of [
+learning/S018/evidence/red-2-spec-snapshot.txt:173: trailing whitespace.
++    { type: 'scale', tier: 'database', count: 2 },
+learning/S018/evidence/red-2-spec-snapshot.txt:174: trailing whitespace.
++    { type: 'scale', tier: 'API', count: 2 },
+learning/S018/evidence/red-2-spec-snapshot.txt:175: trailing whitespace.
++    { type: 'configure', bottleneck: 'any' },
+learning/S018/evidence/red-2-spec-snapshot.txt:176: trailing whitespace.
++    { type: 'observe', proof: 'maybe', contract: 'compatible' },
+learning/S018/evidence/red-2-spec-snapshot.txt:177: trailing whitespace.
++    { type: 'observe', proof: 'complete', contract: 'maybe' },
+learning/S018/evidence/red-2-spec-snapshot.txt:178: trailing whitespace.
++    { type: 'surprise' }, { type: 'reset', extra: true }, null, [], 'scale'
+learning/S018/evidence/red-2-spec-snapshot.txt:179: trailing whitespace.
++  ]) assert.throws(() => dispatch(state, action), /action|tier|condition|contract|proof|field|object/i);
+learning/S018/evidence/red-2-spec-snapshot.txt:180: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:181: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:182: trailing whitespace.
++test('commands reject extra keys, prototypes, symbols and accessors without invoking getters', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:183: trailing whitespace.
++  const state = createLesson();
+learning/S018/evidence/red-2-spec-snapshot.txt:184: trailing whitespace.
++  const getter = { type: 'scale', tier: 'api' };
+learning/S018/evidence/red-2-spec-snapshot.txt:185: trailing whitespace.
++  Object.defineProperty(getter, 'count', { enumerable: true, get() { throw new Error('getter invoked'); } });
+learning/S018/evidence/red-2-spec-snapshot.txt:186: trailing whitespace.
++  for (const action of [
+learning/S018/evidence/red-2-spec-snapshot.txt:187: trailing whitespace.
++    { type: 'scale', tier: 'api', count: 2, extra: true },
+learning/S018/evidence/red-2-spec-snapshot.txt:188: trailing whitespace.
++    Object.assign(Object.create({ inherited: true }), { type: 'reset' }),
+learning/S018/evidence/red-2-spec-snapshot.txt:189: trailing whitespace.
++    { type: 'reset', [Symbol('extra')]: true }, getter
+learning/S018/evidence/red-2-spec-snapshot.txt:190: trailing whitespace.
++  ]) {
+learning/S018/evidence/red-2-spec-snapshot.txt:191: trailing whitespace.
++    assert.throws(() => dispatch(state, action), /field|plain|accessor|symbol|data/i);
+learning/S018/evidence/red-2-spec-snapshot.txt:192: trailing whitespace.
++  }
+learning/S018/evidence/red-2-spec-snapshot.txt:193: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:194: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:195: trailing whitespace.
++test('a run permits exactly eight observations and rejects a ninth atomically', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:196: trailing whitespace.
++  let state = ready();
+learning/S018/evidence/red-2-spec-snapshot.txt:197: trailing whitespace.
++  for (let index = 0; index < 8; index += 1) state = observe(state);
+learning/S018/evidence/red-2-spec-snapshot.txt:198: trailing whitespace.
++  assert.equal(state.current.observations.length, 8);
+learning/S018/evidence/red-2-spec-snapshot.txt:199: trailing whitespace.
++  const before = clone(state);
+learning/S018/evidence/red-2-spec-snapshot.txt:200: trailing whitespace.
++  assert.throws(() => observe(state), /observation|eight|8/i);
+learning/S018/evidence/red-2-spec-snapshot.txt:201: trailing whitespace.
++  assert.deepEqual(state, before);
+learning/S018/evidence/red-2-spec-snapshot.txt:202: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:203: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:204: trailing whitespace.
++test('a run permits exactly twenty-four commands but reset remains available', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:205: trailing whitespace.
++  let state = createLesson();
+learning/S018/evidence/red-2-spec-snapshot.txt:206: trailing whitespace.
++  for (let index = 0; index < 24; index += 1) state = scale(state, 'frontend', index % 2 ? 1 : 2);
+learning/S018/evidence/red-2-spec-snapshot.txt:207: trailing whitespace.
++  assert.equal(state.current.commands.length, 24);
+learning/S018/evidence/red-2-spec-snapshot.txt:208: trailing whitespace.
++  assert.throws(() => scale(state, 'frontend', 2), /command|24/i);
+learning/S018/evidence/red-2-spec-snapshot.txt:209: trailing whitespace.
++  const reset = dispatch(state, { type: 'reset' });
+learning/S018/evidence/red-2-spec-snapshot.txt:210: trailing whitespace.
++  assert.equal(reset.current.id, 2);
+learning/S018/evidence/red-2-spec-snapshot.txt:211: trailing whitespace.
++  assert.equal(reset.current.commands.length, 0);
+learning/S018/evidence/red-2-spec-snapshot.txt:212: trailing whitespace.
++  assert.equal(reset.archives[0].commands.length, 24);
+learning/S018/evidence/red-2-spec-snapshot.txt:213: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:214: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:215: trailing whitespace.
++test('archive/reset retains failed evidence while restoring a fresh default fixture', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:216: trailing whitespace.
++  const failed = observe(createLesson('worker'));
+learning/S018/evidence/red-2-spec-snapshot.txt:217: trailing whitespace.
++  const before = clone(failed);
+learning/S018/evidence/red-2-spec-snapshot.txt:218: trailing whitespace.
++  const reset = dispatch(failed, { type: 'reset' });
+learning/S018/evidence/red-2-spec-snapshot.txt:219: trailing whitespace.
++  assert.equal(reset.current.id, 2);
+learning/S018/evidence/red-2-spec-snapshot.txt:220: trailing whitespace.
++  assert.equal(reset.current.bottleneck, 'api');
+learning/S018/evidence/red-2-spec-snapshot.txt:221: trailing whitespace.
++  assert.deepEqual(reset.current.counts, { frontend: 1, api: 1, worker: 1 });
+learning/S018/evidence/red-2-spec-snapshot.txt:222: trailing whitespace.
++  assert.equal(reset.current.verdict, 'NOT_RUN');
+learning/S018/evidence/red-2-spec-snapshot.txt:223: trailing whitespace.
++  assert.deepEqual(reset.archives, [before.current]);
+learning/S018/evidence/red-2-spec-snapshot.txt:224: trailing whitespace.
++  assert.deepEqual(failed, before);
+learning/S018/evidence/red-2-spec-snapshot.txt:225: trailing whitespace.
++  assert.equal(Object.isFrozen(reset.archives[0].observations[0]), true);
+learning/S018/evidence/red-2-spec-snapshot.txt:226: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:227: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:228: trailing whitespace.
++test('only six most recent nonempty runs are retained, and empty resets cannot erase them', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:229: trailing whitespace.
++  let state = createLesson();
+learning/S018/evidence/red-2-spec-snapshot.txt:230: trailing whitespace.
++  for (let index = 0; index < 8; index += 1) state = dispatch(observe(state), { type: 'reset' });
+learning/S018/evidence/red-2-spec-snapshot.txt:231: trailing whitespace.
++  assert.equal(state.archives.length, 6);
+learning/S018/evidence/red-2-spec-snapshot.txt:232: trailing whitespace.
++  assert.deepEqual(state.archives.map((run) => run.id), [3, 4, 5, 6, 7, 8]);
+learning/S018/evidence/red-2-spec-snapshot.txt:233: trailing whitespace.
++  assert.equal(state.current.id, 9);
+learning/S018/evidence/red-2-spec-snapshot.txt:234: trailing whitespace.
++  const reset = dispatch(state, { type: 'reset' });
+learning/S018/evidence/red-2-spec-snapshot.txt:235: trailing whitespace.
++  assert.equal(reset.archives.length, 6);
+learning/S018/evidence/red-2-spec-snapshot.txt:236: trailing whitespace.
++  assert.equal(reset.current.id, 10);
+learning/S018/evidence/red-2-spec-snapshot.txt:237: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:238: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:239: trailing whitespace.
++for (const [name, mutate] of [
+learning/S018/evidence/red-2-spec-snapshot.txt:240: trailing whitespace.
++  ['changed tier count', (state) => { state.current.counts.api = 3; }],
+learning/S018/evidence/red-2-spec-snapshot.txt:241: trailing whitespace.
++  ['fabricated verdict', (state) => { state.current.verdict = 'PASS'; }],
+learning/S018/evidence/red-2-spec-snapshot.txt:242: trailing whitespace.
++  ['fabricated completion', (state) => { state.current.observations[0].completed = 10; }],
+learning/S018/evidence/red-2-spec-snapshot.txt:243: trailing whitespace.
++  ['fabricated journey', (state) => { state.current.observations[0].journeys[0].latencyMs = 1; }],
+learning/S018/evidence/red-2-spec-snapshot.txt:244: trailing whitespace.
++  ['rewritten command', (state) => { state.current.commands[0].proof = 'missing'; }],
+learning/S018/evidence/red-2-spec-snapshot.txt:245: trailing whitespace.
++  ['extra state field', (state) => { state.extra = true; }],
+learning/S018/evidence/red-2-spec-snapshot.txt:246: trailing whitespace.
++  ['invalid version', (state) => { state.schemaVersion = 2; }],
+learning/S018/evidence/red-2-spec-snapshot.txt:247: trailing whitespace.
++  ['invalid run ID', (state) => { state.current.id = Infinity; }],
+learning/S018/evidence/red-2-spec-snapshot.txt:248: trailing whitespace.
++  ['sparse command array', (state) => { delete state.current.commands[0]; }]
+learning/S018/evidence/red-2-spec-snapshot.txt:249: trailing whitespace.
++]) {
+learning/S018/evidence/red-2-spec-snapshot.txt:250: trailing whitespace.
++  test(`replay validation rejects ${name} without accepting forged state`, () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:251: trailing whitespace.
++    const state = clone(observe(createLesson()));
+learning/S018/evidence/red-2-spec-snapshot.txt:252: trailing whitespace.
++    assert.equal(state.current.observations.length, 1, 'a recorded fixture precedes state mutation');
+learning/S018/evidence/red-2-spec-snapshot.txt:253: trailing whitespace.
++    assert.equal(state.current.commands.length, 1, 'a recorded command precedes state mutation');
+learning/S018/evidence/red-2-spec-snapshot.txt:254: trailing whitespace.
++    mutate(state);
+learning/S018/evidence/red-2-spec-snapshot.txt:255: trailing whitespace.
++    assert.throws(() => dispatch(state, { type: 'reset' }), /state|replay|field|version|run|array|command/i);
+learning/S018/evidence/red-2-spec-snapshot.txt:256: trailing whitespace.
++  });
+learning/S018/evidence/red-2-spec-snapshot.txt:257: trailing whitespace.
++}
+learning/S018/evidence/red-2-spec-snapshot.txt:258: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:259: trailing whitespace.
++test('archive identity/order and archive contents are guarded, not trusted UI data', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:260: trailing whitespace.
++  const good = dispatch(observe(createLesson()), { type: 'reset' });
+learning/S018/evidence/red-2-spec-snapshot.txt:261: trailing whitespace.
++  assert.equal(good.archives.length, 1, 'an archived fixture precedes archive mutation');
+learning/S018/evidence/red-2-spec-snapshot.txt:262: trailing whitespace.
++  for (const mutate of [
+learning/S018/evidence/red-2-spec-snapshot.txt:263: trailing whitespace.
++    (state) => { state.archives.push(clone(state.archives[0])); },
+learning/S018/evidence/red-2-spec-snapshot.txt:264: trailing whitespace.
++    (state) => { state.archives[0].id = state.current.id; },
+learning/S018/evidence/red-2-spec-snapshot.txt:265: trailing whitespace.
++    (state) => { state.archives[0].verdict = 'PASS'; },
+learning/S018/evidence/red-2-spec-snapshot.txt:266: trailing whitespace.
++    (state) => { state.archives = Array(7).fill(state.archives[0]); }
+learning/S018/evidence/red-2-spec-snapshot.txt:267: trailing whitespace.
++  ]) {
+learning/S018/evidence/red-2-spec-snapshot.txt:268: trailing whitespace.
++    const state = clone(good);
+learning/S018/evidence/red-2-spec-snapshot.txt:269: trailing whitespace.
++    mutate(state);
+learning/S018/evidence/red-2-spec-snapshot.txt:270: trailing whitespace.
++    assert.throws(() => dispatch(state, { type: 'reset' }), /archive|state|replay|run|array/i);
+learning/S018/evidence/red-2-spec-snapshot.txt:271: trailing whitespace.
++  }
+learning/S018/evidence/red-2-spec-snapshot.txt:272: trailing whitespace.
++});
+learning/S018/evidence/red-2-spec-snapshot.txt:273: trailing whitespace.
++
+learning/S018/evidence/red-2-spec-snapshot.txt:274: trailing whitespace.
++test('hostile state properties are rejected without evaluating getters', () => {
+learning/S018/evidence/red-2-spec-snapshot.txt:275: trailing whitespace.
++  const state = clone(createLesson());
+learning/S018/evidence/red-2-spec-snapshot.txt:276: trailing whitespace.
++  Object.defineProperty(state, 'current', { enumerable: true, get() { throw new Error('getter invoked'); } });
+learning/S018/evidence/red-2-spec-snapshot.txt:277: trailing whitespace.
++  assert.throws(() => dispatch(state, { type: 'reset' }), /accessor|data|state/i);
+learning/S018/evidence/red-2-spec-snapshot.txt:278: trailing whitespace.
++  assert.throws(() => createLesson('not-a-tier'), /tier|bottleneck/i);
+learning/S018/evidence/red-2-spec-snapshot.txt:279: trailing whitespace.
++});
+learning/S018/evidence/red-bdd-snapshot.txt:1: trailing whitespace.
++Feature: S018 independent tier scaling in a bounded synthetic rehearsal
+learning/S018/evidence/red-bdd-snapshot.txt:2: trailing whitespace.
++  # A-S018 / D-S018 / SC-S018; one frozen S unit, not native Azure evidence.
+learning/S018/evidence/red-bdd-snapshot.txt:3: trailing whitespace.
++  Background:
+learning/S018/evidence/red-bdd-snapshot.txt:4: trailing whitespace.
++    Given the banner "Training rehearsal - synthetic data - not a live Azure result"
+learning/S018/evidence/red-bdd-snapshot.txt:5: trailing whitespace.
++    And ten synthetic journeys cross frontend, API and worker in one observation window
+learning/S018/evidence/red-bdd-snapshot.txt:6: trailing whitespace.
++    And the selected constrained tier handles six journeys per ready instance
+learning/S018/evidence/red-bdd-snapshot.txt:7: trailing whitespace.
++    And each other tier handles twelve journeys per ready instance
+learning/S018/evidence/red-bdd-snapshot.txt:8: trailing whitespace.
++    And all instances are assumed ready and contracts are compatible unless deliberately broken
+learning/S018/evidence/red-bdd-snapshot.txt:9: trailing whitespace.
++    And each API and worker instance fills four synthetic database connections
+learning/S018/evidence/red-bdd-snapshot.txt:10: trailing whitespace.
++    And the database limit is twelve connections and the journey budget is 150 ms
+learning/S018/evidence/red-bdd-snapshot.txt:11: trailing whitespace.
++
+learning/S018/evidence/red-bdd-snapshot.txt:12: trailing whitespace.
++  Scenario Outline: Scale only the constrained tier
+learning/S018/evidence/red-bdd-snapshot.txt:13: trailing whitespace.
++    Given "<tier>" is the selected bottleneck and every tier has one instance
+learning/S018/evidence/red-bdd-snapshot.txt:14: trailing whitespace.
++    When I change only "<tier>" to two instances and observe complete evidence
+learning/S018/evidence/red-bdd-snapshot.txt:15: trailing whitespace.
++    Then the other two tier counts remain one
+learning/S018/evidence/red-bdd-snapshot.txt:16: trailing whitespace.
++    And ten journeys succeed at 100 ms within the unchanged downstream limits
+learning/S018/evidence/red-bdd-snapshot.txt:17: trailing whitespace.
++    And the observation and cumulative result are PASS
+learning/S018/evidence/red-bdd-snapshot.txt:18: trailing whitespace.
++    Examples:
+learning/S018/evidence/red-bdd-snapshot.txt:19: trailing whitespace.
++      | tier     |
+learning/S018/evidence/red-bdd-snapshot.txt:20: trailing whitespace.
++      | frontend |
+learning/S018/evidence/red-bdd-snapshot.txt:21: trailing whitespace.
++      | api      |
+learning/S018/evidence/red-bdd-snapshot.txt:22: trailing whitespace.
++      | worker   |
+learning/S018/evidence/red-bdd-snapshot.txt:23: trailing whitespace.
++
+learning/S018/evidence/red-bdd-snapshot.txt:24: trailing whitespace.
++  Scenario: A wrong-tier change does not fix a bottleneck
+learning/S018/evidence/red-bdd-snapshot.txt:25: trailing whitespace.
++    Given API is constrained and every tier has one instance
+learning/S018/evidence/red-bdd-snapshot.txt:26: trailing whitespace.
++    When I scale only frontend to two instances and observe
+learning/S018/evidence/red-bdd-snapshot.txt:27: trailing whitespace.
++    Then API still admits six journeys in the window
+learning/S018/evidence/red-bdd-snapshot.txt:28: trailing whitespace.
++    And four journeys exceed the original 150 ms deadline
+learning/S018/evidence/red-bdd-snapshot.txt:29: trailing whitespace.
++    And the result is FAIL rather than a capacity-success claim
+learning/S018/evidence/red-bdd-snapshot.txt:30: trailing whitespace.
++
+learning/S018/evidence/red-bdd-snapshot.txt:31: trailing whitespace.
++  Scenario: Indiscriminate scaling transfers pressure downstream
+learning/S018/evidence/red-bdd-snapshot.txt:32: trailing whitespace.
++    Given API is constrained and every tier has one instance
+learning/S018/evidence/red-bdd-snapshot.txt:33: trailing whitespace.
++    When I scale every tier to two instances and observe
+learning/S018/evidence/red-bdd-snapshot.txt:34: trailing whitespace.
++    Then the tier path can admit ten journeys
+learning/S018/evidence/red-bdd-snapshot.txt:35: trailing whitespace.
++    But sixteen occupied database connections exceed the limit of twelve
+learning/S018/evidence/red-bdd-snapshot.txt:36: trailing whitespace.
++    And four journeys fail synthetic connection acquisition
+learning/S018/evidence/red-bdd-snapshot.txt:37: trailing whitespace.
++    And six journeys succeed and the result is FAIL
+learning/S018/evidence/red-bdd-snapshot.txt:38: trailing whitespace.
++
+learning/S018/evidence/red-bdd-snapshot.txt:39: trailing whitespace.
++  Scenario: Correct targeting cannot waive other constraints
+learning/S018/evidence/red-bdd-snapshot.txt:40: trailing whitespace.
++    Given API is constrained
+learning/S018/evidence/red-bdd-snapshot.txt:41: trailing whitespace.
++    When I scale API alone to three instances and observe
+learning/S018/evidence/red-bdd-snapshot.txt:42: trailing whitespace.
++    Then the unchanged worker and frontend do not grow
+learning/S018/evidence/red-bdd-snapshot.txt:43: trailing whitespace.
++    But the database connection limit is exceeded and the result is FAIL
+learning/S018/evidence/red-bdd-snapshot.txt:44: trailing whitespace.
++
+learning/S018/evidence/red-bdd-snapshot.txt:45: trailing whitespace.
++  Scenario: Compatible contracts are independently required
+learning/S018/evidence/red-bdd-snapshot.txt:46: trailing whitespace.
++    Given the constrained tier alone has two instances
+learning/S018/evidence/red-bdd-snapshot.txt:47: trailing whitespace.
++    When the observed tier contract is incompatible
+learning/S018/evidence/red-bdd-snapshot.txt:48: trailing whitespace.
++    Then all ten journeys fail contract validation even at 100 ms
+learning/S018/evidence/red-bdd-snapshot.txt:49: trailing whitespace.
++    And successful throughput alone cannot pass the rehearsal
+learning/S018/evidence/red-bdd-snapshot.txt:50: trailing whitespace.
++
+learning/S018/evidence/red-bdd-snapshot.txt:51: trailing whitespace.
++  Scenario: Missing evidence is not success
+learning/S018/evidence/red-bdd-snapshot.txt:52: trailing whitespace.
++    Given the constrained tier alone has two instances
+learning/S018/evidence/red-bdd-snapshot.txt:53: trailing whitespace.
++    When downstream completion evidence is missing
+learning/S018/evidence/red-bdd-snapshot.txt:54: trailing whitespace.
++    Then observed connections and maximum latency are unknown
+learning/S018/evidence/red-bdd-snapshot.txt:55: trailing whitespace.
++    And zero journeys are verified successful and ten remain unknown
+learning/S018/evidence/red-bdd-snapshot.txt:56: trailing whitespace.
++    And the result is UNKNOWN
+learning/S018/evidence/red-bdd-snapshot.txt:57: trailing whitespace.
++
+learning/S018/evidence/red-bdd-snapshot.txt:58: trailing whitespace.
++  Scenario: Recovery does not rewrite a failure or unknown
+learning/S018/evidence/red-bdd-snapshot.txt:59: trailing whitespace.
++    Given an earlier observation failed or had missing completion evidence
+learning/S018/evidence/red-bdd-snapshot.txt:60: trailing whitespace.
++    When I correct the scaling and observe a successful window
+learning/S018/evidence/red-bdd-snapshot.txt:61: trailing whitespace.
++    Then both observations remain inspectable
+learning/S018/evidence/red-bdd-snapshot.txt:62: trailing whitespace.
++    And cumulative FAIL takes precedence over UNKNOWN and PASS
+learning/S018/evidence/red-bdd-snapshot.txt:63: trailing whitespace.
++    And an earlier UNKNOWN cannot become cumulative PASS
+learning/S018/evidence/red-bdd-snapshot.txt:64: trailing whitespace.
++
+learning/S018/evidence/red-bdd-snapshot.txt:65: trailing whitespace.
++  Scenario: Invalid commands and forged state are rejected atomically
+learning/S018/evidence/red-bdd-snapshot.txt:66: trailing whitespace.
++    When a count is fractional, non-finite, textual, outside one to three, or has extra fields
+learning/S018/evidence/red-bdd-snapshot.txt:67: trailing whitespace.
++    Or a tier, observation condition, action, archive, or replayed result is invalid
+learning/S018/evidence/red-bdd-snapshot.txt:68: trailing whitespace.
++    Then a useful error is shown and the previous state and evidence remain unchanged
+learning/S018/evidence/red-bdd-snapshot.txt:69: trailing whitespace.
++
+learning/S018/evidence/red-bdd-snapshot.txt:70: trailing whitespace.
++  Scenario: The exercise is finite and reset retains bounded history
+learning/S018/evidence/red-bdd-snapshot.txt:71: trailing whitespace.
++    Given a run permits at most 24 commands and eight observations
+learning/S018/evidence/red-bdd-snapshot.txt:72: trailing whitespace.
++    When either bound is reached
+learning/S018/evidence/red-bdd-snapshot.txt:73: trailing whitespace.
++    Then another command or observation is rejected without changing evidence
+learning/S018/evidence/red-bdd-snapshot.txt:74: trailing whitespace.
++    When I use the keyboard to archive and reset
+learning/S018/evidence/red-bdd-snapshot.txt:75: trailing whitespace.
++    Then a fresh default API fixture has no observations and is NOT_RUN
+learning/S018/evidence/red-bdd-snapshot.txt:76: trailing whitespace.
++    And up to six earlier runs retain their own commands, observations and cumulative results
+learning/S018/evidence/red-bdd-snapshot.txt:77: trailing whitespace.
++    And reset never implies that earlier failures became successful
+learning/S018/evidence/red-bdd-snapshot.txt:78: trailing whitespace.
++
+learning/S018/evidence/red-bdd-snapshot.txt:79: trailing whitespace.
++  Scenario: Browser operation is accessible, local and evidence-preserving
+learning/S018/evidence/red-bdd-snapshot.txt:80: trailing whitespace.
++    Given a standalone file lesson with labeled controls, visible keyboard focus and local-only CSP
+learning/S018/evidence/red-bdd-snapshot.txt:81: trailing whitespace.
++    When I configure, scale, observe, provoke an error and archive/reset using the actual browser
+learning/S018/evidence/red-bdd-snapshot.txt:82: trailing whitespace.
++    Then semantic controls work and native form.reset remains callable
+learning/S018/evidence/red-bdd-snapshot.txt:83: trailing whitespace.
++    And inline script and external network attempts are blocked by enforced CSP
+learning/S018/evidence/red-bdd-snapshot.txt:84: trailing whitespace.
++    And no page error or completed external request occurs
+learning/S018/evidence/red-bdd-snapshot.txt:85: trailing whitespace.
++    And ordinary verification does not add, remove or rewrite historical proof
+learning/S018/evidence/red-bdd-snapshot.txt:86: trailing whitespace.
++    And only CAPTURE_BROWSER_EVIDENCE=1 deliberately appends new evidence
+learning/S018/evidence/red-model-snapshot.txt:1: trailing whitespace.
++(function (root) {
+learning/S018/evidence/red-model-snapshot.txt:2: trailing whitespace.
++  'use strict';
+learning/S018/evidence/red-model-snapshot.txt:3: trailing whitespace.
++  const LIMITS = Object.freeze({
+learning/S018/evidence/red-model-snapshot.txt:4: trailing whitespace.
++    commands: 24, observations: 8, archives: 6, instances: 3,
+learning/S018/evidence/red-model-snapshot.txt:5: trailing whitespace.
++    demand: 10, latencyBudgetMs: 150, connectionLimit: 12
+learning/S018/evidence/red-model-snapshot.txt:6: trailing whitespace.
++  });
+learning/S018/evidence/red-model-snapshot.txt:7: trailing whitespace.
++  function createLesson(bottleneck = 'api') {
+learning/S018/evidence/red-model-snapshot.txt:8: trailing whitespace.
++    return {
+learning/S018/evidence/red-model-snapshot.txt:9: trailing whitespace.
++      schemaVersion: 1,
+learning/S018/evidence/red-model-snapshot.txt:10: trailing whitespace.
++      current: {
+learning/S018/evidence/red-model-snapshot.txt:11: trailing whitespace.
++        id: 1, bottleneck, counts: { frontend: 1, api: 1, worker: 1 },
+learning/S018/evidence/red-model-snapshot.txt:12: trailing whitespace.
++        commands: [], observations: [], verdict: 'NOT_RUN'
+learning/S018/evidence/red-model-snapshot.txt:13: trailing whitespace.
++      },
+learning/S018/evidence/red-model-snapshot.txt:14: trailing whitespace.
++      archives: []
+learning/S018/evidence/red-model-snapshot.txt:15: trailing whitespace.
++    };
+learning/S018/evidence/red-model-snapshot.txt:16: trailing whitespace.
++  }
+learning/S018/evidence/red-model-snapshot.txt:17: trailing whitespace.
++  function dispatch(state) { return state; }
+learning/S018/evidence/red-model-snapshot.txt:18: trailing whitespace.
++  const api = Object.freeze({ LIMITS, createLesson, dispatch });
+learning/S018/evidence/red-model-snapshot.txt:19: trailing whitespace.
++  if (typeof module === 'object' && module.exports) module.exports = api;
+learning/S018/evidence/red-model-snapshot.txt:20: trailing whitespace.
++  else root.S018Lesson = api;
+learning/S018/evidence/red-model-snapshot.txt:21: trailing whitespace.
++}(typeof globalThis === 'object' ? globalThis : this));
+learning/S018/evidence/red-spec-snapshot.txt:1: trailing whitespace.
++'use strict';
+learning/S018/evidence/red-spec-snapshot.txt:2: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:3: trailing whitespace.
++const { test } = require('node:test');
+learning/S018/evidence/red-spec-snapshot.txt:4: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S018/evidence/red-spec-snapshot.txt:5: trailing whitespace.
++const { createLesson, dispatch, LIMITS } = require('./model.js');
+learning/S018/evidence/red-spec-snapshot.txt:6: trailing whitespace.
++const clone = (value) => JSON.parse(JSON.stringify(value));
+learning/S018/evidence/red-spec-snapshot.txt:7: trailing whitespace.
++const scale = (state, tier, count) => dispatch(state, { type: 'scale', tier, count });
+learning/S018/evidence/red-spec-snapshot.txt:8: trailing whitespace.
++const observe = (state, proof = 'complete', contract = 'compatible') =>
+learning/S018/evidence/red-spec-snapshot.txt:9: trailing whitespace.
++  dispatch(state, { type: 'observe', proof, contract });
+learning/S018/evidence/red-spec-snapshot.txt:10: trailing whitespace.
++const last = (state) => {
+learning/S018/evidence/red-spec-snapshot.txt:11: trailing whitespace.
++  assert.ok(state.current.observations.length > 0, 'a real synthetic observation must be recorded');
+learning/S018/evidence/red-spec-snapshot.txt:12: trailing whitespace.
++  return state.current.observations.at(-1);
+learning/S018/evidence/red-spec-snapshot.txt:13: trailing whitespace.
++};
+learning/S018/evidence/red-spec-snapshot.txt:14: trailing whitespace.
++const ready = (tier = 'api') => scale(createLesson(tier), tier, 2);
+learning/S018/evidence/red-spec-snapshot.txt:15: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:16: trailing whitespace.
++test('the model is loadable and an unobserved fixture is NOT_RUN, never PASS', () => {
+learning/S018/evidence/red-spec-snapshot.txt:17: trailing whitespace.
++  assert.equal(typeof createLesson, 'function');
+learning/S018/evidence/red-spec-snapshot.txt:18: trailing whitespace.
++  assert.equal(typeof dispatch, 'function');
+learning/S018/evidence/red-spec-snapshot.txt:19: trailing whitespace.
++  assert.equal(createLesson().current.verdict, 'NOT_RUN');
+learning/S018/evidence/red-spec-snapshot.txt:20: trailing whitespace.
++  assert.equal(createLesson().current.observations.length, 0);
+learning/S018/evidence/red-spec-snapshot.txt:21: trailing whitespace.
++  assert.equal(LIMITS.demand, 10);
+learning/S018/evidence/red-spec-snapshot.txt:22: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:23: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:24: trailing whitespace.
++for (const tier of ['frontend', 'api', 'worker']) {
+learning/S018/evidence/red-spec-snapshot.txt:25: trailing whitespace.
++  test(`only intended ${tier} changes; all ten journeys and unchanged downstream budgets pass`, () => {
+learning/S018/evidence/red-spec-snapshot.txt:26: trailing whitespace.
++    const state = createLesson(tier);
+learning/S018/evidence/red-spec-snapshot.txt:27: trailing whitespace.
++    const before = clone(state);
+learning/S018/evidence/red-spec-snapshot.txt:28: trailing whitespace.
++    const changed = scale(state, tier, 2);
+learning/S018/evidence/red-spec-snapshot.txt:29: trailing whitespace.
++    const expected = { frontend: 1, api: 1, worker: 1, [tier]: 2 };
+learning/S018/evidence/red-spec-snapshot.txt:30: trailing whitespace.
++    assert.deepEqual(changed.current.counts, expected);
+learning/S018/evidence/red-spec-snapshot.txt:31: trailing whitespace.
++    assert.deepEqual(state, before, 'input state is immutable');
+learning/S018/evidence/red-spec-snapshot.txt:32: trailing whitespace.
++    const result = observe(changed);
+learning/S018/evidence/red-spec-snapshot.txt:33: trailing whitespace.
++    const window = last(result);
+learning/S018/evidence/red-spec-snapshot.txt:34: trailing whitespace.
++    assert.deepEqual(window.counts, expected);
+learning/S018/evidence/red-spec-snapshot.txt:35: trailing whitespace.
++    assert.equal(window.capacities[tier], 12);
+learning/S018/evidence/red-spec-snapshot.txt:36: trailing whitespace.
++    assert.equal(window.admitted, 10);
+learning/S018/evidence/red-spec-snapshot.txt:37: trailing whitespace.
++    assert.equal(window.completed, 10);
+learning/S018/evidence/red-spec-snapshot.txt:38: trailing whitespace.
++    assert.equal(window.failed, 0);
+learning/S018/evidence/red-spec-snapshot.txt:39: trailing whitespace.
++    assert.equal(window.unknown, 0);
+learning/S018/evidence/red-spec-snapshot.txt:40: trailing whitespace.
++    assert.equal(window.maxLatencyMs, 100);
+learning/S018/evidence/red-spec-snapshot.txt:41: trailing whitespace.
++    assert.ok(window.observedConnections <= 12);
+learning/S018/evidence/red-spec-snapshot.txt:42: trailing whitespace.
++    assert.deepEqual(window.assertions, {
+learning/S018/evidence/red-spec-snapshot.txt:43: trailing whitespace.
++      tierCapacity: 'PASS', connections: 'PASS', contracts: 'PASS', journeys: 'PASS'
+learning/S018/evidence/red-spec-snapshot.txt:44: trailing whitespace.
++    });
+learning/S018/evidence/red-spec-snapshot.txt:45: trailing whitespace.
++    assert.equal(result.current.verdict, 'PASS');
+learning/S018/evidence/red-spec-snapshot.txt:46: trailing whitespace.
++    assert.equal(window.journeys.length, 10);
+learning/S018/evidence/red-spec-snapshot.txt:47: trailing whitespace.
++    assert.ok(window.journeys.every((journey) => journey.outcome === 'PASS'));
+learning/S018/evidence/red-spec-snapshot.txt:48: trailing whitespace.
++    assert.equal(Object.isFrozen(result.current.observations[0].journeys[0]), true);
+learning/S018/evidence/red-spec-snapshot.txt:49: trailing whitespace.
++  });
+learning/S018/evidence/red-spec-snapshot.txt:50: trailing whitespace.
++}
+learning/S018/evidence/red-spec-snapshot.txt:51: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:52: trailing whitespace.
++test('wrong-tier scaling retains the bottleneck and exposes four deadline failures', () => {
+learning/S018/evidence/red-spec-snapshot.txt:53: trailing whitespace.
++  const state = observe(scale(createLesson(), 'frontend', 2));
+learning/S018/evidence/red-spec-snapshot.txt:54: trailing whitespace.
++  const window = last(state);
+learning/S018/evidence/red-spec-snapshot.txt:55: trailing whitespace.
++  assert.deepEqual(window.capacities, { frontend: 24, api: 6, worker: 12 });
+learning/S018/evidence/red-spec-snapshot.txt:56: trailing whitespace.
++  assert.equal(window.admitted, 6);
+learning/S018/evidence/red-spec-snapshot.txt:57: trailing whitespace.
++  assert.equal(window.completed, 6);
+learning/S018/evidence/red-spec-snapshot.txt:58: trailing whitespace.
++  assert.equal(window.failed, 4);
+learning/S018/evidence/red-spec-snapshot.txt:59: trailing whitespace.
++  assert.equal(window.maxLatencyMs, 250);
+learning/S018/evidence/red-spec-snapshot.txt:60: trailing whitespace.
++  assert.equal(window.assertions.tierCapacity, 'FAIL');
+learning/S018/evidence/red-spec-snapshot.txt:61: trailing whitespace.
++  assert.equal(window.assertions.connections, 'PASS');
+learning/S018/evidence/red-spec-snapshot.txt:62: trailing whitespace.
++  assert.equal(window.verdict, 'FAIL');
+learning/S018/evidence/red-spec-snapshot.txt:63: trailing whitespace.
++  assert.equal(window.journeys.filter((journey) => journey.reason === 'tier deadline').length, 4);
+learning/S018/evidence/red-spec-snapshot.txt:64: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:65: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:66: trailing whitespace.
++test('scale-all creates sixteen occupied connections, four acquisition failures and six successes', () => {
+learning/S018/evidence/red-spec-snapshot.txt:67: trailing whitespace.
++  const state = observe(dispatch(createLesson(), { type: 'scale-all' }));
+learning/S018/evidence/red-spec-snapshot.txt:68: trailing whitespace.
++  const window = last(state);
+learning/S018/evidence/red-spec-snapshot.txt:69: trailing whitespace.
++  assert.deepEqual(window.counts, { frontend: 2, api: 2, worker: 2 });
+learning/S018/evidence/red-spec-snapshot.txt:70: trailing whitespace.
++  assert.equal(window.admitted, 10);
+learning/S018/evidence/red-spec-snapshot.txt:71: trailing whitespace.
++  assert.equal(window.requestedConnections, 16);
+learning/S018/evidence/red-spec-snapshot.txt:72: trailing whitespace.
++  assert.equal(window.observedConnections, 16);
+learning/S018/evidence/red-spec-snapshot.txt:73: trailing whitespace.
++  assert.equal(window.connectionExcess, 4);
+learning/S018/evidence/red-spec-snapshot.txt:74: trailing whitespace.
++  assert.equal(window.failed, 4);
+learning/S018/evidence/red-spec-snapshot.txt:75: trailing whitespace.
++  assert.equal(window.completed, 6);
+learning/S018/evidence/red-spec-snapshot.txt:76: trailing whitespace.
++  assert.equal(window.maxLatencyMs, 200);
+learning/S018/evidence/red-spec-snapshot.txt:77: trailing whitespace.
++  assert.deepEqual(window.assertions, {
+learning/S018/evidence/red-spec-snapshot.txt:78: trailing whitespace.
++    tierCapacity: 'PASS', connections: 'FAIL', contracts: 'PASS', journeys: 'FAIL'
+learning/S018/evidence/red-spec-snapshot.txt:79: trailing whitespace.
++  });
+learning/S018/evidence/red-spec-snapshot.txt:80: trailing whitespace.
++  assert.equal(state.current.verdict, 'FAIL');
+learning/S018/evidence/red-spec-snapshot.txt:81: trailing whitespace.
++  assert.equal(window.journeys.filter((journey) => journey.reason === 'connection acquisition').length, 4);
+learning/S018/evidence/red-spec-snapshot.txt:82: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:83: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:84: trailing whitespace.
++test('even a correctly selected tier cannot bypass its downstream connection limit', () => {
+learning/S018/evidence/red-spec-snapshot.txt:85: trailing whitespace.
++  const state = observe(scale(createLesson(), 'api', 3));
+learning/S018/evidence/red-spec-snapshot.txt:86: trailing whitespace.
++  const window = last(state);
+learning/S018/evidence/red-spec-snapshot.txt:87: trailing whitespace.
++  assert.deepEqual(window.counts, { frontend: 1, api: 3, worker: 1 });
+learning/S018/evidence/red-spec-snapshot.txt:88: trailing whitespace.
++  assert.equal(window.connectionExcess, 4);
+learning/S018/evidence/red-spec-snapshot.txt:89: trailing whitespace.
++  assert.equal(window.verdict, 'FAIL');
+learning/S018/evidence/red-spec-snapshot.txt:90: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:91: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:92: trailing whitespace.
++test('compatible counts and fast responses cannot conceal ten broken-contract journeys', () => {
+learning/S018/evidence/red-spec-snapshot.txt:93: trailing whitespace.
++  const window = last(observe(ready(), 'complete', 'incompatible'));
+learning/S018/evidence/red-spec-snapshot.txt:94: trailing whitespace.
++  assert.equal(window.admitted, 10);
+learning/S018/evidence/red-spec-snapshot.txt:95: trailing whitespace.
++  assert.equal(window.maxLatencyMs, 100);
+learning/S018/evidence/red-spec-snapshot.txt:96: trailing whitespace.
++  assert.equal(window.completed, 0);
+learning/S018/evidence/red-spec-snapshot.txt:97: trailing whitespace.
++  assert.equal(window.failed, 10);
+learning/S018/evidence/red-spec-snapshot.txt:98: trailing whitespace.
++  assert.equal(window.assertions.contracts, 'FAIL');
+learning/S018/evidence/red-spec-snapshot.txt:99: trailing whitespace.
++  assert.equal(window.verdict, 'FAIL');
+learning/S018/evidence/red-spec-snapshot.txt:100: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:101: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:102: trailing whitespace.
++test('missing downstream completion evidence is UNKNOWN, not zero failure or fabricated completion', () => {
+learning/S018/evidence/red-spec-snapshot.txt:103: trailing whitespace.
++  const state = observe(ready(), 'missing');
+learning/S018/evidence/red-spec-snapshot.txt:104: trailing whitespace.
++  const window = last(state);
+learning/S018/evidence/red-spec-snapshot.txt:105: trailing whitespace.
++  assert.equal(window.requestedConnections, 12, 'configured expectation is not an observation');
+learning/S018/evidence/red-spec-snapshot.txt:106: trailing whitespace.
++  assert.equal(window.observedConnections, null);
+learning/S018/evidence/red-spec-snapshot.txt:107: trailing whitespace.
++  assert.equal(window.connectionExcess, null);
+learning/S018/evidence/red-spec-snapshot.txt:108: trailing whitespace.
++  assert.equal(window.completed, 0);
+learning/S018/evidence/red-spec-snapshot.txt:109: trailing whitespace.
++  assert.equal(window.failed, 0);
+learning/S018/evidence/red-spec-snapshot.txt:110: trailing whitespace.
++  assert.equal(window.unknown, 10);
+learning/S018/evidence/red-spec-snapshot.txt:111: trailing whitespace.
++  assert.equal(window.maxLatencyMs, null);
+learning/S018/evidence/red-spec-snapshot.txt:112: trailing whitespace.
++  assert.equal(window.assertions.connections, 'UNKNOWN');
+learning/S018/evidence/red-spec-snapshot.txt:113: trailing whitespace.
++  assert.equal(window.assertions.journeys, 'UNKNOWN');
+learning/S018/evidence/red-spec-snapshot.txt:114: trailing whitespace.
++  assert.equal(state.current.verdict, 'UNKNOWN');
+learning/S018/evidence/red-spec-snapshot.txt:115: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:116: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:117: trailing whitespace.
++test('known deadline or contract failure takes precedence over missing evidence', () => {
+learning/S018/evidence/red-spec-snapshot.txt:118: trailing whitespace.
++  const baseline = last(observe(createLesson(), 'missing'));
+learning/S018/evidence/red-spec-snapshot.txt:119: trailing whitespace.
++  assert.equal(baseline.failed, 4);
+learning/S018/evidence/red-spec-snapshot.txt:120: trailing whitespace.
++  assert.equal(baseline.unknown, 6);
+learning/S018/evidence/red-spec-snapshot.txt:121: trailing whitespace.
++  assert.equal(baseline.verdict, 'FAIL');
+learning/S018/evidence/red-spec-snapshot.txt:122: trailing whitespace.
++  const broken = last(observe(ready(), 'missing', 'incompatible'));
+learning/S018/evidence/red-spec-snapshot.txt:123: trailing whitespace.
++  assert.equal(broken.failed, 10);
+learning/S018/evidence/red-spec-snapshot.txt:124: trailing whitespace.
++  assert.equal(broken.unknown, 0);
+learning/S018/evidence/red-spec-snapshot.txt:125: trailing whitespace.
++  assert.equal(broken.verdict, 'FAIL');
+learning/S018/evidence/red-spec-snapshot.txt:126: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:127: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:128: trailing whitespace.
++test('an earlier failure remains cumulative after a later successful observation', () => {
+learning/S018/evidence/red-spec-snapshot.txt:129: trailing whitespace.
++  let state = observe(createLesson());
+learning/S018/evidence/red-spec-snapshot.txt:130: trailing whitespace.
++  state = observe(scale(state, 'api', 2));
+learning/S018/evidence/red-spec-snapshot.txt:131: trailing whitespace.
++  assert.equal(state.current.observations.length, 2);
+learning/S018/evidence/red-spec-snapshot.txt:132: trailing whitespace.
++  assert.deepEqual(state.current.observations.map((window) => window.verdict), ['FAIL', 'PASS']);
+learning/S018/evidence/red-spec-snapshot.txt:133: trailing whitespace.
++  assert.equal(state.current.verdict, 'FAIL');
+learning/S018/evidence/red-spec-snapshot.txt:134: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:135: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:136: trailing whitespace.
++test('an earlier unknown remains cumulative after success; FAIL outranks UNKNOWN', () => {
+learning/S018/evidence/red-spec-snapshot.txt:137: trailing whitespace.
++  let state = observe(ready(), 'missing');
+learning/S018/evidence/red-spec-snapshot.txt:138: trailing whitespace.
++  state = observe(state);
+learning/S018/evidence/red-spec-snapshot.txt:139: trailing whitespace.
++  assert.equal(state.current.observations.length, 2);
+learning/S018/evidence/red-spec-snapshot.txt:140: trailing whitespace.
++  assert.equal(state.current.verdict, 'UNKNOWN');
+learning/S018/evidence/red-spec-snapshot.txt:141: trailing whitespace.
++  state = observe(state, 'complete', 'incompatible');
+learning/S018/evidence/red-spec-snapshot.txt:142: trailing whitespace.
++  assert.equal(state.current.verdict, 'FAIL');
+learning/S018/evidence/red-spec-snapshot.txt:143: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:144: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:145: trailing whitespace.
++test('configuration selects the exact constrained tier only before commands begin', () => {
+learning/S018/evidence/red-spec-snapshot.txt:146: trailing whitespace.
++  const state = dispatch(createLesson(), { type: 'configure', bottleneck: 'worker' });
+learning/S018/evidence/red-spec-snapshot.txt:147: trailing whitespace.
++  assert.equal(state.current.bottleneck, 'worker');
+learning/S018/evidence/red-spec-snapshot.txt:148: trailing whitespace.
++  assert.equal(state.current.verdict, 'NOT_RUN');
+learning/S018/evidence/red-spec-snapshot.txt:149: trailing whitespace.
++  assert.throws(() => dispatch(scale(state, 'worker', 2), { type: 'configure', bottleneck: 'api' }),
+learning/S018/evidence/red-spec-snapshot.txt:150: trailing whitespace.
++    /configure|started/i);
+learning/S018/evidence/red-spec-snapshot.txt:151: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:152: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:153: trailing whitespace.
++test('all supported instance counts are bounded and a same-count no-op is rejected', () => {
+learning/S018/evidence/red-spec-snapshot.txt:154: trailing whitespace.
++  assert.throws(() => scale(createLesson(), 'api', 1), /change|same/i);
+learning/S018/evidence/red-spec-snapshot.txt:155: trailing whitespace.
++  for (const count of [2, 3]) {
+learning/S018/evidence/red-spec-snapshot.txt:156: trailing whitespace.
++    assert.equal(scale(createLesson(), 'api', count).current.counts.api, count);
+learning/S018/evidence/red-spec-snapshot.txt:157: trailing whitespace.
++  }
+learning/S018/evidence/red-spec-snapshot.txt:158: trailing whitespace.
++  assert.equal(scale(scale(createLesson(), 'api', 2), 'api', 1).current.counts.api, 1);
+learning/S018/evidence/red-spec-snapshot.txt:159: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:160: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:161: trailing whitespace.
++test('text, non-finite, fractional and out-of-range counts fail without mutation', () => {
+learning/S018/evidence/red-spec-snapshot.txt:162: trailing whitespace.
++  const state = createLesson();
+learning/S018/evidence/red-spec-snapshot.txt:163: trailing whitespace.
++  const before = clone(state);
+learning/S018/evidence/red-spec-snapshot.txt:164: trailing whitespace.
++  for (const count of ['2', '', 0, -0, -1, 4, 1.5, NaN, Infinity, null, true]) {
+learning/S018/evidence/red-spec-snapshot.txt:165: trailing whitespace.
++    assert.throws(() => scale(state, 'api', count), /instance|integer|count/i, String(count));
+learning/S018/evidence/red-spec-snapshot.txt:166: trailing whitespace.
++    assert.deepEqual(state, before);
+learning/S018/evidence/red-spec-snapshot.txt:167: trailing whitespace.
++  }
+learning/S018/evidence/red-spec-snapshot.txt:168: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:169: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:170: trailing whitespace.
++test('unknown tiers, actions, proof and contract conditions are rejected exactly', () => {
+learning/S018/evidence/red-spec-snapshot.txt:171: trailing whitespace.
++  const state = createLesson();
+learning/S018/evidence/red-spec-snapshot.txt:172: trailing whitespace.
++  for (const action of [
+learning/S018/evidence/red-spec-snapshot.txt:173: trailing whitespace.
++    { type: 'scale', tier: 'database', count: 2 },
+learning/S018/evidence/red-spec-snapshot.txt:174: trailing whitespace.
++    { type: 'scale', tier: 'API', count: 2 },
+learning/S018/evidence/red-spec-snapshot.txt:175: trailing whitespace.
++    { type: 'configure', bottleneck: 'any' },
+learning/S018/evidence/red-spec-snapshot.txt:176: trailing whitespace.
++    { type: 'observe', proof: 'maybe', contract: 'compatible' },
+learning/S018/evidence/red-spec-snapshot.txt:177: trailing whitespace.
++    { type: 'observe', proof: 'complete', contract: 'maybe' },
+learning/S018/evidence/red-spec-snapshot.txt:178: trailing whitespace.
++    { type: 'surprise' }, { type: 'reset', extra: true }, null, [], 'scale'
+learning/S018/evidence/red-spec-snapshot.txt:179: trailing whitespace.
++  ]) assert.throws(() => dispatch(state, action), /action|tier|condition|contract|proof|field|object/i);
+learning/S018/evidence/red-spec-snapshot.txt:180: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:181: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:182: trailing whitespace.
++test('commands reject extra keys, prototypes, symbols and accessors without invoking getters', () => {
+learning/S018/evidence/red-spec-snapshot.txt:183: trailing whitespace.
++  const state = createLesson();
+learning/S018/evidence/red-spec-snapshot.txt:184: trailing whitespace.
++  const getter = { type: 'scale', tier: 'api' };
+learning/S018/evidence/red-spec-snapshot.txt:185: trailing whitespace.
++  Object.defineProperty(getter, 'count', { enumerable: true, get() { throw new Error('getter invoked'); } });
+learning/S018/evidence/red-spec-snapshot.txt:186: trailing whitespace.
++  for (const action of [
+learning/S018/evidence/red-spec-snapshot.txt:187: trailing whitespace.
++    { type: 'scale', tier: 'api', count: 2, extra: true },
+learning/S018/evidence/red-spec-snapshot.txt:188: trailing whitespace.
++    Object.assign(Object.create({ inherited: true }), { type: 'reset' }),
+learning/S018/evidence/red-spec-snapshot.txt:189: trailing whitespace.
++    { type: 'reset', [Symbol('extra')]: true }, getter
+learning/S018/evidence/red-spec-snapshot.txt:190: trailing whitespace.
++  ]) {
+learning/S018/evidence/red-spec-snapshot.txt:191: trailing whitespace.
++    assert.throws(() => dispatch(state, action), /field|plain|accessor|symbol|data/i);
+learning/S018/evidence/red-spec-snapshot.txt:192: trailing whitespace.
++  }
+learning/S018/evidence/red-spec-snapshot.txt:193: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:194: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:195: trailing whitespace.
++test('a run permits exactly eight observations and rejects a ninth atomically', () => {
+learning/S018/evidence/red-spec-snapshot.txt:196: trailing whitespace.
++  let state = ready();
+learning/S018/evidence/red-spec-snapshot.txt:197: trailing whitespace.
++  for (let index = 0; index < 8; index += 1) state = observe(state);
+learning/S018/evidence/red-spec-snapshot.txt:198: trailing whitespace.
++  assert.equal(state.current.observations.length, 8);
+learning/S018/evidence/red-spec-snapshot.txt:199: trailing whitespace.
++  const before = clone(state);
+learning/S018/evidence/red-spec-snapshot.txt:200: trailing whitespace.
++  assert.throws(() => observe(state), /observation|eight|8/i);
+learning/S018/evidence/red-spec-snapshot.txt:201: trailing whitespace.
++  assert.deepEqual(state, before);
+learning/S018/evidence/red-spec-snapshot.txt:202: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:203: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:204: trailing whitespace.
++test('a run permits exactly twenty-four commands but reset remains available', () => {
+learning/S018/evidence/red-spec-snapshot.txt:205: trailing whitespace.
++  let state = createLesson();
+learning/S018/evidence/red-spec-snapshot.txt:206: trailing whitespace.
++  for (let index = 0; index < 24; index += 1) state = scale(state, 'frontend', index % 2 ? 1 : 2);
+learning/S018/evidence/red-spec-snapshot.txt:207: trailing whitespace.
++  assert.equal(state.current.commands.length, 24);
+learning/S018/evidence/red-spec-snapshot.txt:208: trailing whitespace.
++  assert.throws(() => scale(state, 'frontend', 2), /command|24/i);
+learning/S018/evidence/red-spec-snapshot.txt:209: trailing whitespace.
++  const reset = dispatch(state, { type: 'reset' });
+learning/S018/evidence/red-spec-snapshot.txt:210: trailing whitespace.
++  assert.equal(reset.current.id, 2);
+learning/S018/evidence/red-spec-snapshot.txt:211: trailing whitespace.
++  assert.equal(reset.current.commands.length, 0);
+learning/S018/evidence/red-spec-snapshot.txt:212: trailing whitespace.
++  assert.equal(reset.archives[0].commands.length, 24);
+learning/S018/evidence/red-spec-snapshot.txt:213: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:214: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:215: trailing whitespace.
++test('archive/reset retains failed evidence while restoring a fresh default fixture', () => {
+learning/S018/evidence/red-spec-snapshot.txt:216: trailing whitespace.
++  const failed = observe(createLesson('worker'));
+learning/S018/evidence/red-spec-snapshot.txt:217: trailing whitespace.
++  const before = clone(failed);
+learning/S018/evidence/red-spec-snapshot.txt:218: trailing whitespace.
++  const reset = dispatch(failed, { type: 'reset' });
+learning/S018/evidence/red-spec-snapshot.txt:219: trailing whitespace.
++  assert.equal(reset.current.id, 2);
+learning/S018/evidence/red-spec-snapshot.txt:220: trailing whitespace.
++  assert.equal(reset.current.bottleneck, 'api');
+learning/S018/evidence/red-spec-snapshot.txt:221: trailing whitespace.
++  assert.deepEqual(reset.current.counts, { frontend: 1, api: 1, worker: 1 });
+learning/S018/evidence/red-spec-snapshot.txt:222: trailing whitespace.
++  assert.equal(reset.current.verdict, 'NOT_RUN');
+learning/S018/evidence/red-spec-snapshot.txt:223: trailing whitespace.
++  assert.deepEqual(reset.archives, [before.current]);
+learning/S018/evidence/red-spec-snapshot.txt:224: trailing whitespace.
++  assert.deepEqual(failed, before);
+learning/S018/evidence/red-spec-snapshot.txt:225: trailing whitespace.
++  assert.equal(Object.isFrozen(reset.archives[0].observations[0]), true);
+learning/S018/evidence/red-spec-snapshot.txt:226: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:227: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:228: trailing whitespace.
++test('only six most recent nonempty runs are retained, and empty resets cannot erase them', () => {
+learning/S018/evidence/red-spec-snapshot.txt:229: trailing whitespace.
++  let state = createLesson();
+learning/S018/evidence/red-spec-snapshot.txt:230: trailing whitespace.
++  for (let index = 0; index < 8; index += 1) state = dispatch(observe(state), { type: 'reset' });
+learning/S018/evidence/red-spec-snapshot.txt:231: trailing whitespace.
++  assert.equal(state.archives.length, 6);
+learning/S018/evidence/red-spec-snapshot.txt:232: trailing whitespace.
++  assert.deepEqual(state.archives.map((run) => run.id), [3, 4, 5, 6, 7, 8]);
+learning/S018/evidence/red-spec-snapshot.txt:233: trailing whitespace.
++  assert.equal(state.current.id, 9);
+learning/S018/evidence/red-spec-snapshot.txt:234: trailing whitespace.
++  const reset = dispatch(state, { type: 'reset' });
+learning/S018/evidence/red-spec-snapshot.txt:235: trailing whitespace.
++  assert.equal(reset.archives.length, 6);
+learning/S018/evidence/red-spec-snapshot.txt:236: trailing whitespace.
++  assert.equal(reset.current.id, 10);
+learning/S018/evidence/red-spec-snapshot.txt:237: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:238: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:239: trailing whitespace.
++for (const [name, mutate] of [
+learning/S018/evidence/red-spec-snapshot.txt:240: trailing whitespace.
++  ['changed tier count', (state) => { state.current.counts.api = 3; }],
+learning/S018/evidence/red-spec-snapshot.txt:241: trailing whitespace.
++  ['fabricated verdict', (state) => { state.current.verdict = 'PASS'; }],
+learning/S018/evidence/red-spec-snapshot.txt:242: trailing whitespace.
++  ['fabricated completion', (state) => { state.current.observations[0].completed = 10; }],
+learning/S018/evidence/red-spec-snapshot.txt:243: trailing whitespace.
++  ['fabricated journey', (state) => { state.current.observations[0].journeys[0].latencyMs = 1; }],
+learning/S018/evidence/red-spec-snapshot.txt:244: trailing whitespace.
++  ['rewritten command', (state) => { state.current.commands[0].proof = 'missing'; }],
+learning/S018/evidence/red-spec-snapshot.txt:245: trailing whitespace.
++  ['extra state field', (state) => { state.extra = true; }],
+learning/S018/evidence/red-spec-snapshot.txt:246: trailing whitespace.
++  ['invalid version', (state) => { state.schemaVersion = 2; }],
+learning/S018/evidence/red-spec-snapshot.txt:247: trailing whitespace.
++  ['invalid run ID', (state) => { state.current.id = Infinity; }],
+learning/S018/evidence/red-spec-snapshot.txt:248: trailing whitespace.
++  ['sparse command array', (state) => { delete state.current.commands[0]; }]
+learning/S018/evidence/red-spec-snapshot.txt:249: trailing whitespace.
++]) {
+learning/S018/evidence/red-spec-snapshot.txt:250: trailing whitespace.
++  test(`replay validation rejects ${name} without accepting forged state`, () => {
+learning/S018/evidence/red-spec-snapshot.txt:251: trailing whitespace.
++    const state = clone(observe(createLesson()));
+learning/S018/evidence/red-spec-snapshot.txt:252: trailing whitespace.
++    mutate(state);
+learning/S018/evidence/red-spec-snapshot.txt:253: trailing whitespace.
++    assert.throws(() => dispatch(state, { type: 'reset' }), /state|replay|field|version|run|array|command/i);
+learning/S018/evidence/red-spec-snapshot.txt:254: trailing whitespace.
++  });
+learning/S018/evidence/red-spec-snapshot.txt:255: trailing whitespace.
++}
+learning/S018/evidence/red-spec-snapshot.txt:256: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:257: trailing whitespace.
++test('archive identity/order and archive contents are guarded, not trusted UI data', () => {
+learning/S018/evidence/red-spec-snapshot.txt:258: trailing whitespace.
++  const good = dispatch(observe(createLesson()), { type: 'reset' });
+learning/S018/evidence/red-spec-snapshot.txt:259: trailing whitespace.
++  for (const mutate of [
+learning/S018/evidence/red-spec-snapshot.txt:260: trailing whitespace.
++    (state) => { state.archives.push(clone(state.archives[0])); },
+learning/S018/evidence/red-spec-snapshot.txt:261: trailing whitespace.
++    (state) => { state.archives[0].id = state.current.id; },
+learning/S018/evidence/red-spec-snapshot.txt:262: trailing whitespace.
++    (state) => { state.archives[0].verdict = 'PASS'; },
+learning/S018/evidence/red-spec-snapshot.txt:263: trailing whitespace.
++    (state) => { state.archives = Array(7).fill(state.archives[0]); }
+learning/S018/evidence/red-spec-snapshot.txt:264: trailing whitespace.
++  ]) {
+learning/S018/evidence/red-spec-snapshot.txt:265: trailing whitespace.
++    const state = clone(good);
+learning/S018/evidence/red-spec-snapshot.txt:266: trailing whitespace.
++    mutate(state);
+learning/S018/evidence/red-spec-snapshot.txt:267: trailing whitespace.
++    assert.throws(() => dispatch(state, { type: 'reset' }), /archive|state|replay|run|array/i);
+learning/S018/evidence/red-spec-snapshot.txt:268: trailing whitespace.
++  }
+learning/S018/evidence/red-spec-snapshot.txt:269: trailing whitespace.
++});
+learning/S018/evidence/red-spec-snapshot.txt:270: trailing whitespace.
++
+learning/S018/evidence/red-spec-snapshot.txt:271: trailing whitespace.
++test('hostile state properties are rejected without evaluating getters', () => {
+learning/S018/evidence/red-spec-snapshot.txt:272: trailing whitespace.
++  const state = clone(createLesson());
+learning/S018/evidence/red-spec-snapshot.txt:273: trailing whitespace.
++  Object.defineProperty(state, 'current', { enumerable: true, get() { throw new Error('getter invoked'); } });
+learning/S018/evidence/red-spec-snapshot.txt:274: trailing whitespace.
++  assert.throws(() => dispatch(state, { type: 'reset' }), /accessor|data|state/i);
+learning/S018/evidence/red-spec-snapshot.txt:275: trailing whitespace.
++  assert.throws(() => createLesson('not-a-tier'), /tier|bottleneck/i);
+learning/S018/evidence/red-spec-snapshot.txt:276: trailing whitespace.
++});
