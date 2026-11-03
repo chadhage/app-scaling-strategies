@@ -1,0 +1,21 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createLesson } = require('..\\model.js');
+
+test('durable upload preserves required artifact after ownership changes, not merely status 200', () => {
+  assert.equal(typeof createLesson, 'function');
+  const lesson = createLesson();
+  lesson.prepare({ kind: 'upload', storage: 'durable', observation: 'intact' });
+  lesson.handoff();
+  const result = lesson.verify();
+  assert.equal(result.verdict, 'success');
+  assert.equal(result.successful, 1);
+  assert.equal(result.failed, 0);
+  assert.equal(result.unknown, 0);
+  assert.equal(result.responseStatus, 200);
+  assert.equal(result.expected.bytes, result.observed.bytes);
+  assert.deepEqual(result.expected.checkpoint, result.observed.checkpoint);
+  assert.equal(result.owner, 'B');
+});

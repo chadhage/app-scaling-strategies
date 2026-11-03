@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S039 — Instance-local temporary state</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S039 — Instance-local temporary state</h1>
+    <p>Move ownership, not just traffic: preserve required uploads, workflow state and generated artifacts.</p>
+    <p>A-S039 · D-S039 · SC-S039 · one satisfier, not a completed native source demo.</p>
+  </header>
+  <main>
+    <section aria-labelledby="instructions">
+      <h2 id="instructions">Conduct the rehearsal</h2>
+      <ol>
+        <li>Choose an artifact and its storage. <strong>Prepare on A</strong> seeds fixed ASCII bytes and a required workflow checkpoint.</li>
+        <li><strong>Handoff to B</strong> changes the serving owner. It does not copy A's local state. B starts empty.</li>
+        <li><strong>Verify on B</strong> compares the retrieved bytes, byte count, teaching checksum and checkpoint with the retained original.</li>
+        <li>Compare durable/intact success with local/intact loss. Then try empty 200, corruption, missing checkpoint and unavailable evidence.</li>
+      </ol>
+      <p>“Durable” means a simulated shared in-memory store outside the two worker stores, not real persistent storage.
+        No account, server or credentials are required. No authentication or storage durability guarantee is modeled.</p>
+      <form id="controls" novalidate>
+        <fieldset id="conditions">
+          <legend>Fixed synthetic conditions (locked after preparation)</legend>
+          <label for="kind">Required artifact</label>
+          <select id="kind" name="kind">
+            <option value="upload">Upload awaiting processing</option>
+            <option value="workflow">Workflow checkpoint document</option>
+            <option value="generated">Generated export for download</option>
+          </select>
+          <label for="storage">Storage location</label>
+          <select id="storage" name="storage">
+            <option value="durable">Shared/durable teaching model</option>
+            <option value="local">Instance-local A only</option>
+          </select>
+          <label for="observation">Retrieval observation</label>
+          <select id="observation" name="observation">
+            <option value="intact">Observed storage contents</option>
+            <option value="empty-200">Empty response with status 200</option>
+            <option value="corrupt">Altered bytes, same length</option>
+            <option value="missing-checkpoint">Missing workflow checkpoint</option>
+            <option value="unavailable">Observation unavailable</option>
+          </select>
+        </fieldset>
+        <div class="buttons">
+          <button type="button" id="prepare">Prepare on A</button>
+          <button type="button" id="handoff" disabled>Handoff to B</button>
+          <button type="button" id="verify" disabled>Verify on B</button>
+          <button type="button" id="restart">Reset current run</button>
+        </div>
+      </form>
+      <p id="error" role="alert" tabindex="-1" hidden></p>
+      <p>Use Tab / Shift+Tab, native arrow keys, Enter or Space. Reset restores defaults and artifact focus, not history or budgets.
+        At most 12 runs and 12 verified journeys per page; no timers or unbounded work.</p>
+    </section>
+    <section aria-labelledby="result-heading" aria-live="polite">
+      <h2 id="result-heading">Measured synthetic result</h2>
+      <p id="state"></p>
+      <p id="verdict"></p>
+      <p id="counts"></p>
+      <p id="response"></p>
+      <p id="reason"></p>
+      <p id="impact"></p>
+      <p id="cleanup"></p>
+      <div class="comparison">
+        <div><h3>Required original</h3><pre id="expected"></pre></div>
+        <div><h3>Retrieved on B</h3><pre id="observed"></pre></div>
+      </div>
+      <p>All fixture strings are ASCII, so character count equals byte count.
+        FNV-1a-32 is a teaching checksum, not a cryptographic or security proof. Exact-byte equality is required independently.</p>
+      <table>
+        <caption>Required assertions; a 200 response is not an assertion of continuity</caption>
+        <thead><tr><th scope="col">Assertion</th><th scope="col">Observation</th></tr></thead>
+        <tbody id="checks"></tbody>
+      </table>
+      <h3>Synthetic trace</h3>
+      <ol id="trace"></ol>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained history</h2>
+      <p id="totals"></p>
+      <p>History retains every verified failure, unknown and success, including sampled bytes. Nothing is persisted outside this page.
+        Reload or close clears this teaching model; reset never repairs or erases an earlier result.</p>
+      <ol id="history"></ol>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Scope and next evidence</h2>
+      <p>Only three fixed artifacts, at most 256 ASCII bytes each, two simulated owners and one synchronous operator are supported.
+        This is not multipart upload, real file I/O, concurrent ownership fencing, HTTP transport or download testing.</p>
+      <p>B-S039 remains gated by approved CORE, DATA, HOST and OBJECT capabilities and actual durable bytes/authorization evidence.
+        D-S039 is not complete. No Azure operations, IaC, registration, deployment, expenditure, native Azure proof,
+        Node.js 24 production validation or five-nines claim is included.</p>
+      <p><a href="README.md">Lesson instructions and verification</a> ·
+        <a href="../../README.md#d-sessions-authentication-and-user-state">Source S039</a> ·
+        <a href="../../.docs/wiki/backlog.md#d-sessions-authentication-and-state">D-S039 acceptance</a></p>
+      <p>Provided “AS IS” for education, without warranties. Microsoft and Azure references imply no endorsement or certification.
+        The project's 99.999% target is not a Microsoft SLA.
+        <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft Open Source Disclaimer</a></p>
+    </section>
+  </main>
+</body>
+</html>

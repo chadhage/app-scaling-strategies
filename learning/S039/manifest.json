@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S039",
+  "workerId": "worker-A-S039",
+  "sourceId": "S039",
+  "title": "Instance-local temporary state",
+  "parentId": "D-S039",
+  "packet": "SC-S039",
+  "kano": "S",
+  "kanoUnit": "A-S039",
+  "entryGate": "SOURCE",
+  "mode": "synthetic",
+  "entry": "index.html",
+  "trainingLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Move ownership from A to B and compare exact required artifact bytes and workflow checkpoints in instance-local versus simulated shared/durable storage; reject empty successful-looking responses.",
+  "preconditions": [
+    "A browser with JavaScript and local sibling scripts/styles; no account or server.",
+    "Three fixed ASCII fixtures represent an upload, workflow checkpoint and generated export.",
+    "Durable mode is an in-memory shared-store teaching assumption, not persisted storage."
+  ],
+  "actions": [
+    "Select artifact, storage and retrieval observation, then prepare on A.",
+    "Handoff ownership to empty B without copying local state.",
+    "Verify the artifact bytes, byte count, teaching checksum and workflow checkpoint.",
+    "Reset to defaults and an untested current run while retaining all recorded outcomes."
+  ],
+  "syntheticInput": {
+    "kinds": ["upload", "workflow", "generated"],
+    "storage": ["durable", "local"],
+    "observations": ["intact", "empty-200", "corrupt", "missing-checkpoint", "unavailable"],
+    "owners": ["A", "B"],
+    "checksum": "FNV-1a-32; teaching only, not cryptographic"
+  },
+  "expectedAssertions": [
+    "Shared/durable intact retrieval preserves exact bytes and checkpoint for all three artifacts.",
+    "Local state remains on A and becomes missing on serving owner B; HTTP-like 200 cannot hide loss.",
+    "Empty 200, same-length corruption and missing workflow checkpoint are explicit failures.",
+    "Unavailable observation is unknown, never success or known loss.",
+    "Strict inputs, phase guards, immutable snapshots and page-lifetime limits prevent destructive retries.",
+    "Keyboard reset preserves all prior results and lifetime budgets."
+  ],
+  "limits": {
+    "runsPerPage": 12,
+    "verifiedJourneysPerPage": 12,
+    "artifactBytes": 256,
+    "operators": 1,
+    "retention": "In-memory page lifetime only; reset retains history; reload clears the teaching model.",
+    "concurrency": "No concurrent writers or timing model."
+  },
+  "iac": "N/A",
+  "cloudCalls": false,
+  "credentials": false,
+  "nativeProof": false,
+  "parentComplete": false,
+  "productionNode24Validated": false,
+  "evidence": "evidence.json",
+  "sourceReferences": [
+    "../../README.md#d-sessions-authentication-and-user-state",
+    "../../.docs/wiki/backlog.md#d-sessions-authentication-and-state",
+    "../../.docs/wiki/kanban.md#portable-a-card-lesson-contract"
+  ]
+}

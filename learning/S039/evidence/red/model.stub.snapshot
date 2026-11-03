@@ -1,0 +1,13 @@
+(function (root) {
+  'use strict';
+  function createLesson() {
+    return {
+      prepare() { return { phase: 'prepared' }; },
+      handoff() { return { phase: 'transferred' }; },
+      verify() { return { verdict: 'unknown', successful: 0, failed: 0, unknown: 1 }; },
+    };
+  }
+  const api = { createLesson };
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.ArtifactHandoff = api;
+}(typeof globalThis === 'object' ? globalThis : this));

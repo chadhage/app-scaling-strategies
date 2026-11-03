@@ -1,0 +1,739 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S039",
+  "workerId": "worker-A-S039",
+  "mode": "synthetic",
+  "startedAtUtc": "2026-11-03T17:54:39.439Z",
+  "node": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "browserVersion": "156.0.4314.50",
+  "helper": "testing\\browser\\isolated.cjs",
+  "helperPublishedRevision": "53c0c0d",
+  "helperSHA256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "protocol": "tests\\browser.cjs",
+  "checks": [
+    {
+      "name": "actual DOM initial unknown, exact banner, guarded controls and unshadowed form methods",
+      "result": "passed",
+      "observed": {
+        "state": "Run 1/12 · Owner A · Phase idle",
+        "verdict": "UNKNOWN — current run not verified"
+      }
+    },
+    {
+      "name": "native arrows, Tab, Enter and Space conduct a local artifact loss",
+      "result": "passed",
+      "observed": {
+        "response": "HTTP-like response 200 · Bytes 0/49",
+        "result": {
+          "run": 1,
+          "config": {
+            "kind": "upload",
+            "storage": "local",
+            "observation": "intact"
+          },
+          "owner": "B",
+          "from": "A",
+          "verdict": "failure",
+          "attempted": 1,
+          "successful": 0,
+          "failed": 1,
+          "unknown": 0,
+          "responseStatus": 200,
+          "expected": {
+            "bytes": "S039 synthetic upload\npart=1\ncontent=DEMO-UPLOAD\n",
+            "byteLength": 49,
+            "checksum": "e1cff5c4",
+            "checkpoint": {
+              "workflowId": "synthetic-workflow-039",
+              "step": 2,
+              "status": "awaiting-review"
+            }
+          },
+          "observed": {
+            "bytes": "",
+            "byteLength": 0,
+            "checksum": "811c9dc5",
+            "checkpoint": null
+          },
+          "checks": [
+            {
+              "id": "byteLength",
+              "status": "failed"
+            },
+            {
+              "id": "bytes",
+              "status": "failed"
+            },
+            {
+              "id": "checksum",
+              "status": "failed"
+            },
+            {
+              "id": "checkpoint",
+              "status": "failed"
+            }
+          ],
+          "reason": "Required state remained on A. Empty B returned an HTTP-like 200 but zero bytes and no checkpoint: observed local-state loss.",
+          "impact": "synthetic-interrupted-transition",
+          "cleanup": "No external resources; in-memory observations retained for this page lifetime.",
+          "trace": [
+            {
+              "step": "prepare",
+              "owner": "A",
+              "detail": "Required bytes and checkpoint reside only in owner A memory; B starts empty."
+            },
+            {
+              "step": "handoff",
+              "owner": "B",
+              "detail": "Ownership moved A → B. No artifact was copied by the routing change; A is no longer the serving owner."
+            },
+            {
+              "step": "verify",
+              "owner": "B",
+              "detail": "HTTP-like 200; 0/49 bytes; failure."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "keyboard reset restores defaults, untested result and focus while retaining failure",
+      "result": "passed",
+      "observed": {
+        "state": "Run 2/12 · Owner A · Phase idle",
+        "totals": "Lifetime: 1/12 attempted / 0 successful / 1 failed / 0 unknown"
+      }
+    },
+    {
+      "name": "all three durable fixtures preserve actual bytes and workflow checkpoints on B",
+      "result": "passed",
+      "observed": [
+        {
+          "run": 2,
+          "config": {
+            "kind": "upload",
+            "storage": "durable",
+            "observation": "intact"
+          },
+          "owner": "B",
+          "from": "A",
+          "verdict": "success",
+          "attempted": 1,
+          "successful": 1,
+          "failed": 0,
+          "unknown": 0,
+          "responseStatus": 200,
+          "expected": {
+            "bytes": "S039 synthetic upload\npart=1\ncontent=DEMO-UPLOAD\n",
+            "byteLength": 49,
+            "checksum": "e1cff5c4",
+            "checkpoint": {
+              "workflowId": "synthetic-workflow-039",
+              "step": 2,
+              "status": "awaiting-review"
+            }
+          },
+          "observed": {
+            "bytes": "S039 synthetic upload\npart=1\ncontent=DEMO-UPLOAD\n",
+            "byteLength": 49,
+            "checksum": "e1cff5c4",
+            "checkpoint": {
+              "workflowId": "synthetic-workflow-039",
+              "step": 2,
+              "status": "awaiting-review"
+            }
+          },
+          "checks": [
+            {
+              "id": "byteLength",
+              "status": "passed"
+            },
+            {
+              "id": "bytes",
+              "status": "passed"
+            },
+            {
+              "id": "checksum",
+              "status": "passed"
+            },
+            {
+              "id": "checkpoint",
+              "status": "passed"
+            }
+          ],
+          "reason": "B retrieved every required byte and the exact workflow checkpoint from the simulated shared store.",
+          "impact": "synthetic-uninterrupted-transition",
+          "cleanup": "No external resources; in-memory observations retained for this page lifetime.",
+          "trace": [
+            {
+              "step": "prepare",
+              "owner": "A",
+              "detail": "Required bytes and checkpoint reside in the simulated shared store, outside either worker."
+            },
+            {
+              "step": "handoff",
+              "owner": "B",
+              "detail": "Ownership moved A → B. No artifact was copied by the routing change; A is no longer the serving owner."
+            },
+            {
+              "step": "verify",
+              "owner": "B",
+              "detail": "HTTP-like 200; 49/49 bytes; success."
+            }
+          ]
+        },
+        {
+          "run": 3,
+          "config": {
+            "kind": "workflow",
+            "storage": "durable",
+            "observation": "intact"
+          },
+          "owner": "B",
+          "from": "A",
+          "verdict": "success",
+          "attempted": 1,
+          "successful": 1,
+          "failed": 0,
+          "unknown": 0,
+          "responseStatus": 200,
+          "expected": {
+            "bytes": "{\"workflowId\":\"synthetic-workflow-039\",\"step\":3,\"status\":\"awaiting-review\"}",
+            "byteLength": 75,
+            "checksum": "c4bcd8b9",
+            "checkpoint": {
+              "workflowId": "synthetic-workflow-039",
+              "step": 3,
+              "status": "awaiting-review"
+            }
+          },
+          "observed": {
+            "bytes": "{\"workflowId\":\"synthetic-workflow-039\",\"step\":3,\"status\":\"awaiting-review\"}",
+            "byteLength": 75,
+            "checksum": "c4bcd8b9",
+            "checkpoint": {
+              "workflowId": "synthetic-workflow-039",
+              "step": 3,
+              "status": "awaiting-review"
+            }
+          },
+          "checks": [
+            {
+              "id": "byteLength",
+              "status": "passed"
+            },
+            {
+              "id": "bytes",
+              "status": "passed"
+            },
+            {
+              "id": "checksum",
+              "status": "passed"
+            },
+            {
+              "id": "checkpoint",
+              "status": "passed"
+            }
+          ],
+          "reason": "B retrieved every required byte and the exact workflow checkpoint from the simulated shared store.",
+          "impact": "synthetic-uninterrupted-transition",
+          "cleanup": "No external resources; in-memory observations retained for this page lifetime.",
+          "trace": [
+            {
+              "step": "prepare",
+              "owner": "A",
+              "detail": "Required bytes and checkpoint reside in the simulated shared store, outside either worker."
+            },
+            {
+              "step": "handoff",
+              "owner": "B",
+              "detail": "Ownership moved A → B. No artifact was copied by the routing change; A is no longer the serving owner."
+            },
+            {
+              "step": "verify",
+              "owner": "B",
+              "detail": "HTTP-like 200; 75/75 bytes; success."
+            }
+          ]
+        },
+        {
+          "run": 4,
+          "config": {
+            "kind": "generated",
+            "storage": "durable",
+            "observation": "intact"
+          },
+          "owner": "B",
+          "from": "A",
+          "verdict": "success",
+          "attempted": 1,
+          "successful": 1,
+          "failed": 0,
+          "unknown": 0,
+          "responseStatus": 200,
+          "expected": {
+            "bytes": "S039 DEMO EXPORT\nsku,quantity\nDEMO-PEN,2\n",
+            "byteLength": 41,
+            "checksum": "a0b9a932",
+            "checkpoint": {
+              "workflowId": "synthetic-workflow-039",
+              "step": 4,
+              "status": "ready-for-download"
+            }
+          },
+          "observed": {
+            "bytes": "S039 DEMO EXPORT\nsku,quantity\nDEMO-PEN,2\n",
+            "byteLength": 41,
+            "checksum": "a0b9a932",
+            "checkpoint": {
+              "workflowId": "synthetic-workflow-039",
+              "step": 4,
+              "status": "ready-for-download"
+            }
+          },
+          "checks": [
+            {
+              "id": "byteLength",
+              "status": "passed"
+            },
+            {
+              "id": "bytes",
+              "status": "passed"
+            },
+            {
+              "id": "checksum",
+              "status": "passed"
+            },
+            {
+              "id": "checkpoint",
+              "status": "passed"
+            }
+          ],
+          "reason": "B retrieved every required byte and the exact workflow checkpoint from the simulated shared store.",
+          "impact": "synthetic-uninterrupted-transition",
+          "cleanup": "No external resources; in-memory observations retained for this page lifetime.",
+          "trace": [
+            {
+              "step": "prepare",
+              "owner": "A",
+              "detail": "Required bytes and checkpoint reside in the simulated shared store, outside either worker."
+            },
+            {
+              "step": "handoff",
+              "owner": "B",
+              "detail": "Ownership moved A → B. No artifact was copied by the routing change; A is no longer the serving owner."
+            },
+            {
+              "step": "verify",
+              "owner": "B",
+              "detail": "HTTP-like 200; 41/41 bytes; success."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an empty 200 response fails even in durable mode",
+      "result": "passed",
+      "observed": {
+        "run": 5,
+        "config": {
+          "kind": "upload",
+          "storage": "durable",
+          "observation": "empty-200"
+        },
+        "owner": "B",
+        "from": "A",
+        "verdict": "failure",
+        "attempted": 1,
+        "successful": 0,
+        "failed": 1,
+        "unknown": 0,
+        "responseStatus": 200,
+        "expected": {
+          "bytes": "S039 synthetic upload\npart=1\ncontent=DEMO-UPLOAD\n",
+          "byteLength": 49,
+          "checksum": "e1cff5c4",
+          "checkpoint": {
+            "workflowId": "synthetic-workflow-039",
+            "step": 2,
+            "status": "awaiting-review"
+          }
+        },
+        "observed": {
+          "bytes": "",
+          "byteLength": 0,
+          "checksum": "811c9dc5",
+          "checkpoint": null
+        },
+        "checks": [
+          {
+            "id": "byteLength",
+            "status": "failed"
+          },
+          {
+            "id": "bytes",
+            "status": "failed"
+          },
+          {
+            "id": "checksum",
+            "status": "failed"
+          },
+          {
+            "id": "checkpoint",
+            "status": "failed"
+          }
+        ],
+        "reason": "HTTP-like 200 hid an empty body and missing checkpoint. Status alone cannot establish artifact continuity.",
+        "impact": "synthetic-interrupted-transition",
+        "cleanup": "No external resources; in-memory observations retained for this page lifetime.",
+        "trace": [
+          {
+            "step": "prepare",
+            "owner": "A",
+            "detail": "Required bytes and checkpoint reside in the simulated shared store, outside either worker."
+          },
+          {
+            "step": "handoff",
+            "owner": "B",
+            "detail": "Ownership moved A → B. No artifact was copied by the routing change; A is no longer the serving owner."
+          },
+          {
+            "step": "verify",
+            "owner": "B",
+            "detail": "HTTP-like 200; 0/49 bytes; failure."
+          }
+        ]
+      }
+    },
+    {
+      "name": "same-length corruption fails exact-byte and teaching-checksum assertions",
+      "result": "passed",
+      "observed": {
+        "run": 6,
+        "config": {
+          "kind": "generated",
+          "storage": "durable",
+          "observation": "corrupt"
+        },
+        "owner": "B",
+        "from": "A",
+        "verdict": "failure",
+        "attempted": 1,
+        "successful": 0,
+        "failed": 1,
+        "unknown": 0,
+        "responseStatus": 200,
+        "expected": {
+          "bytes": "S039 DEMO EXPORT\nsku,quantity\nDEMO-PEN,2\n",
+          "byteLength": 41,
+          "checksum": "a0b9a932",
+          "checkpoint": {
+            "workflowId": "synthetic-workflow-039",
+            "step": 4,
+            "status": "ready-for-download"
+          }
+        },
+        "observed": {
+          "bytes": "X039 DEMO EXPORT\nsku,quantity\nDEMO-PEN,2\n",
+          "byteLength": 41,
+          "checksum": "cac39b67",
+          "checkpoint": {
+            "workflowId": "synthetic-workflow-039",
+            "step": 4,
+            "status": "ready-for-download"
+          }
+        },
+        "checks": [
+          {
+            "id": "byteLength",
+            "status": "passed"
+          },
+          {
+            "id": "bytes",
+            "status": "failed"
+          },
+          {
+            "id": "checksum",
+            "status": "failed"
+          },
+          {
+            "id": "checkpoint",
+            "status": "passed"
+          }
+        ],
+        "reason": "The returned body has the expected length but altered bytes. The exact-byte and checksum checks expose corruption.",
+        "impact": "synthetic-interrupted-transition",
+        "cleanup": "No external resources; in-memory observations retained for this page lifetime.",
+        "trace": [
+          {
+            "step": "prepare",
+            "owner": "A",
+            "detail": "Required bytes and checkpoint reside in the simulated shared store, outside either worker."
+          },
+          {
+            "step": "handoff",
+            "owner": "B",
+            "detail": "Ownership moved A → B. No artifact was copied by the routing change; A is no longer the serving owner."
+          },
+          {
+            "step": "verify",
+            "owner": "B",
+            "detail": "HTTP-like 200; 41/41 bytes; failure."
+          }
+        ]
+      }
+    },
+    {
+      "name": "matching bytes cannot hide lost workflow state",
+      "result": "passed",
+      "observed": {
+        "run": 7,
+        "config": {
+          "kind": "workflow",
+          "storage": "durable",
+          "observation": "missing-checkpoint"
+        },
+        "owner": "B",
+        "from": "A",
+        "verdict": "failure",
+        "attempted": 1,
+        "successful": 0,
+        "failed": 1,
+        "unknown": 0,
+        "responseStatus": 200,
+        "expected": {
+          "bytes": "{\"workflowId\":\"synthetic-workflow-039\",\"step\":3,\"status\":\"awaiting-review\"}",
+          "byteLength": 75,
+          "checksum": "c4bcd8b9",
+          "checkpoint": {
+            "workflowId": "synthetic-workflow-039",
+            "step": 3,
+            "status": "awaiting-review"
+          }
+        },
+        "observed": {
+          "bytes": "{\"workflowId\":\"synthetic-workflow-039\",\"step\":3,\"status\":\"awaiting-review\"}",
+          "byteLength": 75,
+          "checksum": "c4bcd8b9",
+          "checkpoint": null
+        },
+        "checks": [
+          {
+            "id": "byteLength",
+            "status": "passed"
+          },
+          {
+            "id": "bytes",
+            "status": "passed"
+          },
+          {
+            "id": "checksum",
+            "status": "passed"
+          },
+          {
+            "id": "checkpoint",
+            "status": "failed"
+          }
+        ],
+        "reason": "Artifact bytes survived but the required workflow checkpoint did not. Bytes alone cannot complete this journey.",
+        "impact": "synthetic-interrupted-transition",
+        "cleanup": "No external resources; in-memory observations retained for this page lifetime.",
+        "trace": [
+          {
+            "step": "prepare",
+            "owner": "A",
+            "detail": "Required bytes and checkpoint reside in the simulated shared store, outside either worker."
+          },
+          {
+            "step": "handoff",
+            "owner": "B",
+            "detail": "Ownership moved A → B. No artifact was copied by the routing change; A is no longer the serving owner."
+          },
+          {
+            "step": "verify",
+            "owner": "B",
+            "detail": "HTTP-like 200; 75/75 bytes; failure."
+          }
+        ]
+      }
+    },
+    {
+      "name": "unavailable retrieval remains unknown with unobserved metrics, not invented loss",
+      "result": "passed",
+      "observed": {
+        "run": 8,
+        "config": {
+          "kind": "upload",
+          "storage": "durable",
+          "observation": "unavailable"
+        },
+        "owner": "B",
+        "from": "A",
+        "verdict": "unknown",
+        "attempted": 1,
+        "successful": 0,
+        "failed": 0,
+        "unknown": 1,
+        "responseStatus": null,
+        "expected": {
+          "bytes": "S039 synthetic upload\npart=1\ncontent=DEMO-UPLOAD\n",
+          "byteLength": 49,
+          "checksum": "e1cff5c4",
+          "checkpoint": {
+            "workflowId": "synthetic-workflow-039",
+            "step": 2,
+            "status": "awaiting-review"
+          }
+        },
+        "observed": null,
+        "checks": [
+          {
+            "id": "byteLength",
+            "status": "unknown"
+          },
+          {
+            "id": "bytes",
+            "status": "unknown"
+          },
+          {
+            "id": "checksum",
+            "status": "unknown"
+          },
+          {
+            "id": "checkpoint",
+            "status": "unknown"
+          }
+        ],
+        "reason": "No retrieval observation was supplied. Neither persistence nor loss has been observed.",
+        "impact": "unverified",
+        "cleanup": "No external resources; in-memory observations retained for this page lifetime.",
+        "trace": [
+          {
+            "step": "prepare",
+            "owner": "A",
+            "detail": "Required bytes and checkpoint reside in the simulated shared store, outside either worker."
+          },
+          {
+            "step": "handoff",
+            "owner": "B",
+            "detail": "Ownership moved A → B. No artifact was copied by the routing change; A is no longer the serving owner."
+          },
+          {
+            "step": "verify",
+            "owner": "B",
+            "detail": "Retrieval unobserved; outcome remains unknown."
+          }
+        ]
+      }
+    },
+    {
+      "name": "tampered input and wrong-state events produce focused, non-destructive DOM errors",
+      "result": "passed",
+      "observed": {
+        "invalidInput": "Unsupported storage",
+        "wrongState": "requires transferred",
+        "historyPreserved": true
+      }
+    },
+    {
+      "name": "keyboard history expansion and narrow viewport preserve readable results",
+      "result": "passed",
+      "observed": {
+        "width": 360,
+        "scroll": 360
+      }
+    },
+    {
+      "name": "12-run lifetime cap locks controls and guards reset without erasing any outcome",
+      "result": "passed",
+      "observed": {
+        "totals": "Lifetime: 12/12 attempted / 7 successful / 4 failed / 1 unknown",
+        "retained": 12
+      }
+    },
+    {
+      "name": "normal browser operation has no page errors, CSP violations or HTTP requests",
+      "result": "passed",
+      "observed": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "cspViolations": [],
+        "httpRequests": [],
+        "fileRequests": 4
+      }
+    },
+    {
+      "name": "actual enforced CSP blocks inline code and a synthetic outbound connection",
+      "result": "passed",
+      "observed": {
+        "inlineExecutionBlocked": true,
+        "connectionBlocked": true,
+        "violations": [
+          {
+            "effectiveDirective": "script-src-elem",
+            "blockedURI": "inline",
+            "disposition": "enforce"
+          },
+          {
+            "effectiveDirective": "connect-src",
+            "blockedURI": "https://s039.invalid/synthetic-csp-probe",
+            "disposition": "enforce"
+          }
+        ]
+      }
+    }
+  ],
+  "normalDiagnostics": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "cspViolations": [],
+    "httpRequests": [],
+    "fileRequests": 4
+  },
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "phase": "intentional-csp-probe",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-tsHXgFqdCyWuknl9umXf1KwQqI5VubuczUSmVnsGPLc='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "phase": "intentional-csp-probe",
+      "text": "Connecting to 'https://s039.invalid/synthetic-csp-probe' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "phase": "intentional-csp-probe",
+      "text": "Fetch API cannot load https://s039.invalid/synthetic-csp-probe. Refused to connect because it violates the document's Content Security Policy."
+    }
+  ],
+  "requests": [
+    {
+      "phase": "normal",
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/learning/S039/index.html",
+      "method": "GET"
+    },
+    {
+      "phase": "normal",
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/learning/S039/styles.css",
+      "method": "GET"
+    },
+    {
+      "phase": "normal",
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/learning/S039/model.js",
+      "method": "GET"
+    },
+    {
+      "phase": "normal",
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/learning/S039/app.js",
+      "method": "GET"
+    }
+  ],
+  "forcedClicks": false,
+  "skippedAssertions": false,
+  "foregroundLease": false,
+  "ordinaryVerification": "Read-only to proof; CAPTURE_BROWSER_EVIDENCE=1 is a deliberate producer operation.",
+  "qualification": "Node 22 test tooling and this offline Playwright/installed Edge pair only; not production Node 24, native Azure or unattended lifecycle certification.",
+  "completedAtUtc": "2026-11-03T17:54:43.040Z",
+  "cleanup": "Awaited session.close() in finally; helper completed owned context/browser/scratch cleanup."
+}
