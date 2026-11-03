@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>S044 — Resume the original download</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="range-resume.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S044 — Resume the original download</h1>
+    <p>A-S044 · D-S044 · satisfier S · packet SC-S044 · SOURCE-only lesson.</p>
+    <p>Large downloads need the <strong>same original bytes and hash</strong>, not merely successful
+      responses. Rehearse a cutover after a retained prefix, then inspect range resumption against
+      the original user-experience budget.</p>
+    <section aria-labelledby="fixture-title">
+      <h2 id="fixture-title">Declared synthetic fixture</h2>
+      <p>One artifact, byte values 0–31 (32 bytes, not a performance benchmark).
+        Original validator <code>"s044-artifact-v1"</code>.
+        Admission <strong>0 ms</strong>, retained prefix <strong>30 ms</strong>, cutover
+        <strong>40 ms</strong>, resumed transfer <strong>20 ms</strong>.
+        Completion clock = <strong>60 + resume delay</strong>; retries never restart the budget.</p>
+      <p>Original SHA-256: <code id="original-hash">630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd</code></p>
+      <ol>
+        <li>Choose bounded assumptions; admit the prefix on synthetic v1.</li>
+        <li>Resume on synthetic v2 at the first missing byte; inspect the verifier and impact separately.</li>
+        <li>Reset, try a gap or duplicate despite 206, then compare the retained outcomes.</li>
+      </ol>
+    </section>
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Conduct the rehearsal</h2>
+      <form id="configuration" novalidate>
+        <fieldset id="configuration-fields">
+          <legend>Original operating envelope (locked after admission)</legend>
+          <label for="prefix">Retained prefix bytes (4–28)
+            <input id="prefix" name="prefixBytes" type="number" min="4" max="28" step="1" value="12" required>
+          </label>
+          <label for="response">Synthetic destination response
+            <select id="response" name="response">
+              <option value="correct">206 — exact remaining range</option>
+              <option value="gap">206 — skip one byte</option>
+              <option value="duplicate">206 — overlap one byte</option>
+              <option value="corrupt">206 — change one byte, same length</option>
+              <option value="ignored">200 — Range unsupported / ignored</option>
+            </select>
+          </label>
+          <label for="delay">Resume delay in ms (0–1000)
+            <input id="delay" name="delayMs" type="number" min="0" max="1000" step="1" value="10" required>
+          </label>
+          <label for="budget">Original journey budget in ms (1–1000)
+            <input id="budget" name="budgetMs" type="number" min="1" max="1000" step="1" value="100" required>
+          </label>
+          <label for="hash-evidence">Final checksum evidence
+            <select id="hash-evidence" name="hashEvidence">
+              <option value="present">Observed — compute SHA-256</option>
+              <option value="missing">Missing — deliberately unverified</option>
+            </select>
+          </label>
+          <button type="submit" id="admit-prefix">1. Admit prefix and cut over</button>
+        </fieldset>
+      </form>
+      <div class="actions">
+        <button type="button" id="resume-download" disabled>2. Resume &amp; verify</button>
+        <button type="button" id="rehearsal-reset">Reset rehearsal</button>
+      </div>
+      <p id="phase" role="status" aria-live="polite"></p>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <p id="paused-receipt" hidden></p>
+    </section>
+    <section id="current-result" aria-labelledby="result-title" tabindex="-1" hidden>
+      <h2 id="result-title">Current verification</h2>
+      <p>Verifier: <strong id="verdict"></strong></p>
+      <p>User impact: <strong id="impact"></strong></p>
+      <dl id="metrics"></dl>
+      <h3>Checks (unknown is not pass)</h3>
+      <ul id="checks"></ul>
+      <h3>Reasons</h3>
+      <ul id="reasons"></ul>
+      <h3>Ordered synthetic trace</h3>
+      <ol id="trace"></ol>
+      <p id="cleanup"></p>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained session history</h2>
+      <p>Newest eight outcomes only. Reset keeps failures, unknowns, receipts and traces;
+        page reload clears memory. Reset before resume records UNKNOWN, not a completed download.</p>
+      <p id="history-empty">No completed or cancelled attempts.</p>
+      <ol id="history"></ol>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Limits and native remainder</h2>
+      <p>All bytes, responses, routing and times are synthetic. PASS means this declared toy
+        fixture met its checks, not a live Azure result. Actual HTTP range support, artifact
+        retention, user migration, throughput and native UX remain <strong>unknown</strong>.
+        No success percentage or production guarantee is inferred.</p>
+      <p>No server, account, credentials, storage, management calls or resources. Cleanup is
+        in-memory only. IaC: N/A. No deployment, identity registration, spending, downloads
+        or package installation. B-S044 and D-S044 native acceptance remain unfulfilled.</p>
+      <p><a href="README.md">Lesson instructions and evidence</a> ·
+        <a href="../../README.md#microsoft-open-source-disclaimer">Source Microsoft open-source disclaimer</a></p>
+    </section>
+    <noscript>This exercise requires standard browser JavaScript. No result has been verified.</noscript>
+  </main>
+</body>
+</html>

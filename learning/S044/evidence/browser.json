@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S044",
+  "workerId": "worker-A-S044",
+  "mode": "actual isolated browser observing a synthetic lesson",
+  "startedAtUtc": "2026-11-03T18:16:49.776Z",
+  "finishedAtUtc": "2026-11-03T18:17:15.863Z",
+  "passed": true,
+  "provenance": {
+    "runtime": "v22.23.4",
+    "playwright": "1.56.1",
+    "browserVersion": "156.0.4314.50",
+    "browserExecutable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "browserExecutableSha256": "f87d927bed3597f19c70af67bc786dd22e4eca3b5c7cc050336a016bb42f7fda",
+    "signatureShell": "pwsh.exe (installed PowerShell 7)",
+    "signatureCommand": "$ErrorActionPreference='Stop';$s=Get-AuthenticodeSignature 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';[pscustomobject]@{status=[string]$s.Status;subject=$s.SignerCertificate.Subject}|ConvertTo-Json -Compress",
+    "signatureStdout": "{\"status\":\"Valid\",\"subject\":\"CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US\"}\r\n",
+    "signatureStderr": "",
+    "signer": {
+      "status": "Valid",
+      "subject": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+    },
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "helperPublication": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+    "browserSecurityBypassed": false,
+    "ownHeadlessSession": true,
+    "finallyAwaitedClose": true
+  },
+  "observations": [
+    {
+      "check": "keyboard-only default admission and resume",
+      "actualVerdict": "PASS",
+      "dom": "Current verification\n\nVerifier: PASS\n\nUser impact: Uninterrupted synthetic completion\n\nAttempted / succeeded / interrupted / unknown\n1 / 1 / 0 / 0\nSynthetic request\nRange: bytes=12-; If-Range: \"s044-artifact-v1\"\nSynthetic response\n206; Content-Range: bytes 12-31/32\nExpected / retained / received / assembled bytes\n32 / 12 / 20 / 32\nMissing byte offsets\nnone\nDuplicated byte offsets\nnone\nObserved SHA-256\n630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd\nOriginal elapsed / budget\n70 ms / 100 ms (clock starts at 0 ms)\nResumed transfer only\n20 ms — not a replacement budget clock\nCorrect artifact completion observed\n70 ms\nChecks (unknown is not pass)\nrangeSupported: PASS\nrangeMatches: PASS\ncoverage: PASS\nbyteCount: PASS\ncontentHash: PASS\noriginalBudget: PASS\nReasons\nEvery byte occurs once in order, the original SHA-256 matches, and the original budget is met.\nOrdered synthetic trace\n0 ms — v1 admits original artifact; original deadline 100 ms.\n30 ms — Retain verified byte offsets 0 through 11 from v1.\n40 ms — Cutover to synthetic v2; keep the prefix, artifact validator and original clock.\n50 ms — v2 resume request: Range bytes=12-, If-Range \"s044-artifact-v1\".\n70 ms — Synthetic response 206; Content-Range bytes 12-31/32; 20 received bytes.\n70 ms — Verify original bytes/hash and clock: PASS.\n\nCleanup: No resources created; only bounded session memory remains."
+    },
+    {
+      "check": "keyboard gap, real failing 206 receipt, failure retained",
+      "actualVerdict": "FAIL",
+      "dom": "Current verification\n\nVerifier: FAIL\n\nUser impact: Interrupted synthetic journey\n\nAttempted / succeeded / interrupted / unknown\n1 / 0 / 1 / 0\nSynthetic request\nRange: bytes=12-; If-Range: \"s044-artifact-v1\"\nSynthetic response\n206; Content-Range: bytes 13-31/32\nExpected / retained / received / assembled bytes\n32 / 12 / 19 / 31\nMissing byte offsets\n12\nDuplicated byte offsets\nnone\nObserved SHA-256\naa1c87fd02d69f6976f13ead2d0085db876e471e891c33b0f98e2abd8dfb7695\nOriginal elapsed / budget\n70 ms / 100 ms (clock starts at 0 ms)\nResumed transfer only\n20 ms — not a replacement budget clock\nCorrect artifact completion observed\nnot verified\nChecks (unknown is not pass)\nrangeSupported: PASS\nrangeMatches: FAIL\ncoverage: FAIL\nbyteCount: FAIL\ncontentHash: FAIL\noriginalBudget: PASS\nReasons\nContent-Range starts at 13, not requested cursor 12.\nCoverage failed: missing offsets [12]; duplicate offsets [].\nAssembled 31 bytes, expected 32.\nFinal SHA-256 differs from the original artifact.\nOrdered synthetic trace\n0 ms — v1 admits original artifact; original deadline 100 ms.\n30 ms — Retain verified byte offsets 0 through 11 from v1.\n40 ms — Cutover to synthetic v2; keep the prefix, artifact validator and original clock.\n50 ms — v2 resume request: Range bytes=12-, If-Range \"s044-artifact-v1\".\n70 ms — Synthetic response 206; Content-Range bytes 13-31/32; 19 received bytes.\n70 ms — Verify original bytes/hash and clock: FAIL.\n\nCleanup: No resources created; only bounded session memory remains."
+    },
+    {
+      "response": "duplicate",
+      "hashEvidence": "present",
+      "delayMs": 10,
+      "expectedVerdict": "FAIL",
+      "actualVerdict": "FAIL",
+      "dom": "Current verification\n\nVerifier: FAIL\n\nUser impact: Interrupted synthetic journey\n\nAttempted / succeeded / interrupted / unknown\n1 / 0 / 1 / 0\nSynthetic request\nRange: bytes=12-; If-Range: \"s044-artifact-v1\"\nSynthetic response\n206; Content-Range: bytes 11-31/32\nExpected / retained / received / assembled bytes\n32 / 12 / 21 / 33\nMissing byte offsets\nnone\nDuplicated byte offsets\n11\nObserved SHA-256\nc09f8e4cfb3230b92bc65e1c25b6ddc186e6653ccb3b4dfff754de8e6bfbfa01\nOriginal elapsed / budget\n70 ms / 100 ms (clock starts at 0 ms)\nResumed transfer only\n20 ms — not a replacement budget clock\nCorrect artifact completion observed\nnot verified\nChecks (unknown is not pass)\nrangeSupported: PASS\nrangeMatches: FAIL\ncoverage: FAIL\nbyteCount: FAIL\ncontentHash: FAIL\noriginalBudget: PASS\nReasons\nContent-Range starts at 11, not requested cursor 12.\nCoverage failed: missing offsets []; duplicate offsets [11].\nAssembled 33 bytes, expected 32.\nFinal SHA-256 differs from the original artifact.\nOrdered synthetic trace\n0 ms — v1 admits original artifact; original deadline 100 ms.\n30 ms — Retain verified byte offsets 0 through 11 from v1.\n40 ms — Cutover to synthetic v2; keep the prefix, artifact validator and original clock.\n50 ms — v2 resume request: Range bytes=12-, If-Range \"s044-artifact-v1\".\n70 ms — Synthetic response 206; Content-Range bytes 11-31/32; 21 received bytes.\n70 ms — Verify original bytes/hash and clock: FAIL.\n\nCleanup: No resources created; only bounded session memory remains."
+    },
+    {
+      "response": "corrupt",
+      "hashEvidence": "present",
+      "delayMs": 10,
+      "expectedVerdict": "FAIL",
+      "actualVerdict": "FAIL",
+      "dom": "Current verification\n\nVerifier: FAIL\n\nUser impact: Interrupted synthetic journey\n\nAttempted / succeeded / interrupted / unknown\n1 / 0 / 1 / 0\nSynthetic request\nRange: bytes=12-; If-Range: \"s044-artifact-v1\"\nSynthetic response\n206; Content-Range: bytes 12-31/32\nExpected / retained / received / assembled bytes\n32 / 12 / 20 / 32\nMissing byte offsets\nnone\nDuplicated byte offsets\nnone\nObserved SHA-256\ncb12d354106efc693c3c5a4afdae233605fc436609dca4170a7d9e316be62c25\nOriginal elapsed / budget\n70 ms / 100 ms (clock starts at 0 ms)\nResumed transfer only\n20 ms — not a replacement budget clock\nCorrect artifact completion observed\nnot verified\nChecks (unknown is not pass)\nrangeSupported: PASS\nrangeMatches: PASS\ncoverage: PASS\nbyteCount: PASS\ncontentHash: FAIL\noriginalBudget: PASS\nReasons\nFinal SHA-256 differs from the original artifact.\nOrdered synthetic trace\n0 ms — v1 admits original artifact; original deadline 100 ms.\n30 ms — Retain verified byte offsets 0 through 11 from v1.\n40 ms — Cutover to synthetic v2; keep the prefix, artifact validator and original clock.\n50 ms — v2 resume request: Range bytes=12-, If-Range \"s044-artifact-v1\".\n70 ms — Synthetic response 206; Content-Range bytes 12-31/32; 20 received bytes.\n70 ms — Verify original bytes/hash and clock: FAIL.\n\nCleanup: No resources created; only bounded session memory remains."
+    },
+    {
+      "response": "ignored",
+      "hashEvidence": "present",
+      "delayMs": 10,
+      "expectedVerdict": "FAIL",
+      "actualVerdict": "FAIL",
+      "dom": "Current verification\n\nVerifier: FAIL\n\nUser impact: Interrupted synthetic journey\n\nAttempted / succeeded / interrupted / unknown\n1 / 0 / 1 / 0\nSynthetic request\nRange: bytes=12-; If-Range: \"s044-artifact-v1\"\nSynthetic response\n200; Content-Range: absent\nExpected / retained / received / assembled bytes\n32 / 12 / 32 / 12\nMissing byte offsets\n12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31\nDuplicated byte offsets\nnone\nObserved SHA-256\nUNKNOWN — no final checksum proof\nOriginal elapsed / budget\n70 ms / 100 ms (clock starts at 0 ms)\nResumed transfer only\n20 ms — not a replacement budget clock\nCorrect artifact completion observed\nnot verified\nChecks (unknown is not pass)\nrangeSupported: FAIL\nrangeMatches: FAIL\ncoverage: FAIL\nbyteCount: FAIL\ncontentHash: UNKNOWN\noriginalBudget: PASS\nReasons\nUnsupported resume: destination ignored Range and returned 200; unsafe append refused.\nCoverage failed: missing offsets [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]; duplicate offsets [].\nAssembled 12 bytes, expected 32.\nFinal checksum evidence not observed; content hash is unknown.\nOrdered synthetic trace\n0 ms — v1 admits original artifact; original deadline 100 ms.\n30 ms — Retain verified byte offsets 0 through 11 from v1.\n40 ms — Cutover to synthetic v2; keep the prefix, artifact validator and original clock.\n50 ms — v2 resume request: Range bytes=12-, If-Range \"s044-artifact-v1\".\n70 ms — Synthetic response 200; Content-Range absent; 32 received bytes.\n70 ms — Verify original bytes/hash and clock: FAIL.\n\nCleanup: No resources created; only bounded session memory remains."
+    },
+    {
+      "response": "correct",
+      "hashEvidence": "missing",
+      "delayMs": 10,
+      "expectedVerdict": "UNKNOWN",
+      "actualVerdict": "UNKNOWN",
+      "dom": "Current verification\n\nVerifier: UNKNOWN\n\nUser impact: Unverified synthetic journey\n\nAttempted / succeeded / interrupted / unknown\n1 / 0 / 0 / 1\nSynthetic request\nRange: bytes=12-; If-Range: \"s044-artifact-v1\"\nSynthetic response\n206; Content-Range: bytes 12-31/32\nExpected / retained / received / assembled bytes\n32 / 12 / 20 / 32\nMissing byte offsets\nnone\nDuplicated byte offsets\nnone\nObserved SHA-256\nUNKNOWN — no final checksum proof\nOriginal elapsed / budget\n70 ms / 100 ms (clock starts at 0 ms)\nResumed transfer only\n20 ms — not a replacement budget clock\nCorrect artifact completion observed\nnot verified\nChecks (unknown is not pass)\nrangeSupported: PASS\nrangeMatches: PASS\ncoverage: PASS\nbyteCount: PASS\ncontentHash: UNKNOWN\noriginalBudget: PASS\nReasons\nFinal checksum evidence not observed; content hash is unknown.\nOrdered synthetic trace\n0 ms — v1 admits original artifact; original deadline 100 ms.\n30 ms — Retain verified byte offsets 0 through 11 from v1.\n40 ms — Cutover to synthetic v2; keep the prefix, artifact validator and original clock.\n50 ms — v2 resume request: Range bytes=12-, If-Range \"s044-artifact-v1\".\n70 ms — Synthetic response 206; Content-Range bytes 12-31/32; 20 received bytes.\n70 ms — Verify original bytes/hash and clock: UNKNOWN.\n\nCleanup: No resources created; only bounded session memory remains."
+    },
+    {
+      "response": "gap",
+      "hashEvidence": "missing",
+      "delayMs": 10,
+      "expectedVerdict": "FAIL",
+      "actualVerdict": "FAIL",
+      "dom": "Current verification\n\nVerifier: FAIL\n\nUser impact: Interrupted synthetic journey\n\nAttempted / succeeded / interrupted / unknown\n1 / 0 / 1 / 0\nSynthetic request\nRange: bytes=12-; If-Range: \"s044-artifact-v1\"\nSynthetic response\n206; Content-Range: bytes 13-31/32\nExpected / retained / received / assembled bytes\n32 / 12 / 19 / 31\nMissing byte offsets\n12\nDuplicated byte offsets\nnone\nObserved SHA-256\nUNKNOWN — no final checksum proof\nOriginal elapsed / budget\n70 ms / 100 ms (clock starts at 0 ms)\nResumed transfer only\n20 ms — not a replacement budget clock\nCorrect artifact completion observed\nnot verified\nChecks (unknown is not pass)\nrangeSupported: PASS\nrangeMatches: FAIL\ncoverage: FAIL\nbyteCount: FAIL\ncontentHash: UNKNOWN\noriginalBudget: PASS\nReasons\nContent-Range starts at 13, not requested cursor 12.\nCoverage failed: missing offsets [12]; duplicate offsets [].\nAssembled 31 bytes, expected 32.\nFinal checksum evidence not observed; content hash is unknown.\nOrdered synthetic trace\n0 ms — v1 admits original artifact; original deadline 100 ms.\n30 ms — Retain verified byte offsets 0 through 11 from v1.\n40 ms — Cutover to synthetic v2; keep the prefix, artifact validator and original clock.\n50 ms — v2 resume request: Range bytes=12-, If-Range \"s044-artifact-v1\".\n70 ms — Synthetic response 206; Content-Range bytes 13-31/32; 19 received bytes.\n70 ms — Verify original bytes/hash and clock: FAIL.\n\nCleanup: No resources created; only bounded session memory remains."
+    },
+    {
+      "response": "correct",
+      "hashEvidence": "present",
+      "delayMs": 41,
+      "expectedVerdict": "FAIL",
+      "actualVerdict": "FAIL",
+      "dom": "Current verification\n\nVerifier: FAIL\n\nUser impact: Interrupted synthetic journey\n\nAttempted / succeeded / interrupted / unknown\n1 / 0 / 1 / 0\nSynthetic request\nRange: bytes=12-; If-Range: \"s044-artifact-v1\"\nSynthetic response\n206; Content-Range: bytes 12-31/32\nExpected / retained / received / assembled bytes\n32 / 12 / 20 / 32\nMissing byte offsets\nnone\nDuplicated byte offsets\nnone\nObserved SHA-256\n630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd\nOriginal elapsed / budget\n101 ms / 100 ms (clock starts at 0 ms)\nResumed transfer only\n20 ms — not a replacement budget clock\nCorrect artifact completion observed\n101 ms\nChecks (unknown is not pass)\nrangeSupported: PASS\nrangeMatches: PASS\ncoverage: PASS\nbyteCount: PASS\ncontentHash: PASS\noriginalBudget: FAIL\nReasons\nOriginal user budget exceeded: 101 ms > 100 ms; the retry clock cannot replace it.\nOrdered synthetic trace\n0 ms — v1 admits original artifact; original deadline 100 ms.\n30 ms — Retain verified byte offsets 0 through 11 from v1.\n40 ms — Cutover to synthetic v2; keep the prefix, artifact validator and original clock.\n81 ms — v2 resume request: Range bytes=12-, If-Range \"s044-artifact-v1\".\n101 ms — Synthetic response 206; Content-Range bytes 12-31/32; 20 received bytes.\n101 ms — Verify original bytes/hash and clock: FAIL.\n\nCleanup: No resources created; only bounded session memory remains."
+    },
+    {
+      "response": "correct",
+      "hashEvidence": "present",
+      "delayMs": 40,
+      "expectedVerdict": "PASS",
+      "actualVerdict": "PASS",
+      "dom": "Current verification\n\nVerifier: PASS\n\nUser impact: Uninterrupted synthetic completion\n\nAttempted / succeeded / interrupted / unknown\n1 / 1 / 0 / 0\nSynthetic request\nRange: bytes=12-; If-Range: \"s044-artifact-v1\"\nSynthetic response\n206; Content-Range: bytes 12-31/32\nExpected / retained / received / assembled bytes\n32 / 12 / 20 / 32\nMissing byte offsets\nnone\nDuplicated byte offsets\nnone\nObserved SHA-256\n630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd\nOriginal elapsed / budget\n100 ms / 100 ms (clock starts at 0 ms)\nResumed transfer only\n20 ms — not a replacement budget clock\nCorrect artifact completion observed\n100 ms\nChecks (unknown is not pass)\nrangeSupported: PASS\nrangeMatches: PASS\ncoverage: PASS\nbyteCount: PASS\ncontentHash: PASS\noriginalBudget: PASS\nReasons\nEvery byte occurs once in order, the original SHA-256 matches, and the original budget is met.\nOrdered synthetic trace\n0 ms — v1 admits original artifact; original deadline 100 ms.\n30 ms — Retain verified byte offsets 0 through 11 from v1.\n40 ms — Cutover to synthetic v2; keep the prefix, artifact validator and original clock.\n80 ms — v2 resume request: Range bytes=12-, If-Range \"s044-artifact-v1\".\n100 ms — Synthetic response 206; Content-Range bytes 12-31/32; 20 received bytes.\n100 ms — Verify original bytes/hash and clock: PASS.\n\nCleanup: No resources created; only bounded session memory remains."
+    },
+    {
+      "check": "empty numeric rejection",
+      "error": "Rejected: Input prefixBytes must be a whole numeric value; empty and coerced values are invalid.",
+      "priorOutcomesRetained": true
+    },
+    {
+      "check": "forged response rejected without script execution or state advance",
+      "passed": true
+    },
+    {
+      "check": "premature resume handler state guard",
+      "passed": true
+    },
+    {
+      "check": "unfinished reset retains UNKNOWN full receipt",
+      "passed": true
+    },
+    {
+      "response": "correct",
+      "hashEvidence": "present",
+      "delayMs": 10,
+      "expectedVerdict": "UNKNOWN",
+      "actualVerdict": "UNKNOWN",
+      "dom": "Current verification\n\nVerifier: UNKNOWN\n\nUser impact: Unverified synthetic journey\n\nAttempted / succeeded / interrupted / unknown\n1 / 0 / 0 / 1\nSynthetic request\nRange: bytes=12-; If-Range: \"s044-artifact-v1\"\nSynthetic response\n206; Content-Range: bytes 12-31/32\nExpected / retained / received / assembled bytes\n32 / 12 / 20 / 32\nMissing byte offsets\nnone\nDuplicated byte offsets\nnone\nObserved SHA-256\nUNKNOWN — no final checksum proof\nOriginal elapsed / budget\n70 ms / 100 ms (clock starts at 0 ms)\nResumed transfer only\n20 ms — not a replacement budget clock\nCorrect artifact completion observed\nnot verified\nChecks (unknown is not pass)\nrangeSupported: PASS\nrangeMatches: PASS\ncoverage: PASS\nbyteCount: PASS\ncontentHash: UNKNOWN\noriginalBudget: PASS\nReasons\nChecksum calculation unavailable; final content hash is unverified.\nOrdered synthetic trace\n0 ms — v1 admits original artifact; original deadline 100 ms.\n30 ms — Retain verified byte offsets 0 through 11 from v1.\n40 ms — Cutover to synthetic v2; keep the prefix, artifact validator and original clock.\n50 ms — v2 resume request: Range bytes=12-, If-Range \"s044-artifact-v1\".\n70 ms — Synthetic response 206; Content-Range bytes 12-31/32; 20 received bytes.\n70 ms — Verify original bytes/hash and clock: UNKNOWN.\n\nCleanup: No resources created; only bounded session memory remains."
+    },
+    {
+      "check": "actual browser checksum error is UNKNOWN",
+      "passed": true
+    },
+    {
+      "check": "final exact defaults, idle, focus, bounded history, mobile overflow",
+      "passed": true
+    }
+  ],
+  "csp": {
+    "violations": [
+      {
+        "directive": "script-src-elem",
+        "blockedURI": "inline"
+      },
+      {
+        "directive": "connect-src",
+        "blockedURI": "https://s044-proof.invalid/should-not-connect"
+      }
+    ],
+    "inlineExecuted": false,
+    "connection": "blocked"
+  },
+  "externalRequests": [],
+  "defensiveRouteAttempts": 0,
+  "pageErrors": [],
+  "consoleErrors": [
+    "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-G3FksGqu4oXuNNIsHXBI0MpWr7nrReWyQkG6LbkGhHU='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked.",
+    "Connecting to 'https://s044-proof.invalid/should-not-connect' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked.",
+    "Fetch API cannot load https://s044-proof.invalid/should-not-connect. Refused to connect because it violates the document's Content Security Policy."
+  ],
+  "finalDom": "Training rehearsal - synthetic data - not a live Azure result\n\nS044 — Resume the original download\n\nA-S044 · D-S044 · satisfier S · packet SC-S044 · SOURCE-only lesson.\n\nLarge downloads need the same original bytes and hash, not merely successful responses. Rehearse a cutover after a retained prefix, then inspect range resumption against the original user-experience budget.\n\nDeclared synthetic fixture\n\nOne artifact, byte values 0–31 (32 bytes, not a performance benchmark). Original validator \"s044-artifact-v1\". Admission 0 ms, retained prefix 30 ms, cutover 40 ms, resumed transfer 20 ms. Completion clock = 60 + resume delay; retries never restart the budget.\n\nOriginal SHA-256: 630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd\n\nChoose bounded assumptions; admit the prefix on synthetic v1.\nResume on synthetic v2 at the first missing byte; inspect the verifier and impact separately.\nReset, try a gap or duplicate despite 206, then compare the retained outcomes.\nConduct the rehearsal\nOriginal operating envelope (locked after admission)\nRetained prefix bytes (4–28)\nSynthetic destination response\n206 — exact remaining range\n206 — skip one byte\n206 — overlap one byte\n206 — change one byte, same length\n200 — Range unsupported / ignored\nResume delay in ms (0–1000)\nOriginal journey budget in ms (1–1000)\nFinal checksum evidence\nObserved — compute SHA-256\nMissing — deliberately unverified\n1. Admit prefix and cut over\n2. Resume & verify\nReset rehearsal\n\nIdle — choose assumptions, then admit the original prefix.\n\nRetained session history\n\nNewest eight outcomes only. Reset keeps failures, unknowns, receipts and traces; page reload clears memory. Reset before resume records UNKNOWN, not a completed download.\n\nRun 4: FAIL — Interrupted synthetic journey\n\nRetained trace and receipt\n\nRun 5: FAIL — Interrupted synthetic journey\n\nRetained trace and receipt\n\nRun 6: UNKNOWN — Unverified synthetic journey\n\nRetained trace and receipt\n\nRun 7: FAIL — Interrupted synthetic journey\n\nRetained trace and receipt\n\nRun 8: FAIL — Interrupted synthetic journey\n\nRetained trace and receipt\n\nRun 9: PASS — Uninterrupted synthetic completion\n\nRetained trace and receipt\n\nRun 10: UNKNOWN — Unverified synthetic journey\n\nRetained trace and receipt\n\nRun 11: UNKNOWN — Unverified synthetic journey\n\nRetained trace and receipt\nLimits and native remainder\n\nAll bytes, responses, routing and times are synthetic. PASS means this declared toy fixture met its checks, not a live Azure result. Actual HTTP range support, artifact retention, user migration, throughput and native UX remain unknown. No success percentage or production guarantee is inferred.\n\nNo server, account, credentials, storage, management calls or resources. Cleanup is in-memory only. IaC: N/A. No deployment, identity registration, spending, downloads or package installation. B-S044 and D-S044 native acceptance remain unfulfilled.\n\nLesson instructions and evidence · Source Microsoft open-source disclaimer",
+  "cleanup": "Owned isolated session closed; no listener or foreground lease.",
+  "limits": "Not native HTTP/Azure evidence, production Node.js 24 certification, or parent completion."
+}

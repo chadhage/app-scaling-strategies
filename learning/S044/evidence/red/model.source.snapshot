@@ -1,0 +1,29 @@
+'use strict';
+
+(function expose(root) {
+  const DEFAULTS = Object.freeze({
+    prefixBytes: 12, response: 'correct', delayMs: 10, budgetMs: 100, hashEvidence: 'present',
+  });
+  function createRehearsal() {
+    const result = {
+      verdict: 'UNKNOWN', impact: 'Unverified synthetic completion',
+      request: { range: '', ifRange: '' },
+      response: { status: 206, contentRange: null },
+      bytes: { expected: 32, retained: 0, received: 0, assembled: 0, missing: [], duplicates: [] },
+      hash: { expected: '', observed: null, matches: null },
+      timing: { elapsedMs: 0, budgetMs: 100, withinBudget: null },
+      checks: { rangeSupported: null, coverage: null, byteCount: null, contentHash: null },
+      counts: { attempted: 1, succeeded: 0, interrupted: 0, unknown: 1 },
+      trace: [], reasons: [],
+    };
+    return {
+      admit() { return { phase: 'idle' }; },
+      async resume() { return result; },
+      reset() { return { phase: 'idle', history: [] }; },
+      snapshot() { return { phase: 'idle', active: null, result: null, history: [] }; },
+    };
+  }
+  const api = { DEFAULTS, createRehearsal };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.S044 = api;
+}(globalThis));
