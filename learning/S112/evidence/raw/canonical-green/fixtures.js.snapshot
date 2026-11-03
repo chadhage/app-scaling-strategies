@@ -1,0 +1,66 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S112Fixtures = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+
+  const zoneIds = ['zone-a', 'zone-b', 'zone-c'];
+  const fixtureIds = ['redundant', 'compute-shortfall', 'single-zone-data', 'missing-data-evidence'];
+  const journeys = [
+    { id: 'journey-1', profileId: 'fictional-profile-1', latencyTicks: 8 },
+    { id: 'journey-2', profileId: 'fictional-profile-2', latencyTicks: 9 },
+    { id: 'journey-3', profileId: 'fictional-profile-3', latencyTicks: 10 },
+    { id: 'journey-4', profileId: 'fictional-profile-4', latencyTicks: 11 },
+  ];
+  const fixtures = {
+    redundant: {
+      title: 'Redundant compute and observed data',
+      compute: [2, 2, 2], data: [2, 2, 2], observations: ['complete', 'complete', 'complete'],
+      dataTopology: 'Three fictional data replicas',
+    },
+    'compute-shortfall': {
+      title: 'Insufficient surviving compute',
+      compute: [2, 1, 1], data: [2, 2, 2], observations: ['complete', 'complete', 'complete'],
+      dataTopology: 'Three fictional data replicas; insufficient surviving compute',
+    },
+    'single-zone-data': {
+      title: 'Data exists only in fictional zone-a',
+      compute: [2, 2, 2], data: [4, 0, 0], observations: ['complete', 'absent', 'absent'],
+      dataTopology: 'One fictional data replica in zone-a',
+    },
+    'missing-data-evidence': {
+      title: 'Surviving data observations are unknown',
+      compute: [2, 2, 2], data: [2, 2, 2], observations: ['unknown', 'unknown', 'unknown'],
+      dataTopology: 'Configured fictional replicas without data-availability observations',
+    },
+  };
+  fixtureIds.forEach((fixtureId) => {
+    const fixture = fixtures[fixtureId];
+    fixture.records = zoneIds.map((zoneId, index) => ({
+      zoneId, workloadId: `fictional-app-${index + 1}`, dataId: `fictional-data-${index + 1}`,
+      computeCapacity: fixture.compute[index], configuredDataCapacity: fixture.data[index],
+      dataObservation: fixture.observations[index],
+    }));
+    delete fixture.compute;
+    delete fixture.data;
+    delete fixture.observations;
+  });
+
+  return freeze({
+    version: 's112-fixed-fictional-v1',
+    banner: 'Training rehearsal - synthetic data - not a live Azure result',
+    zoneIds, fixtureIds, fixtures, journeys, demand: 4, budgetTicks: 12, historyLimit: 6,
+    interruptedTicks: 16,
+    limits: 'All placement, topology, failure, capacity, recovery and journey values are fixed fictional teaching data. No actual isolation occurs.',
+  });
+}));

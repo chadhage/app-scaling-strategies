@@ -1,0 +1,140 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+
+const directory = path.resolve(__dirname, '..');
+const read = (file) => fs.readFileSync(path.join(directory, file), 'utf8');
+const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const manifest = JSON.parse(read('manifest.json'));
+const fixtures = require('../fixtures.js');
+const html = read('index.html');
+
+test('exact card/source/packet identity and honest resource-free boundary are discoverable', () => {
+  assert.equal(manifest.cardId, 'A-S112');
+  assert.equal(manifest.sourceId, 'S112');
+  assert.equal(manifest.parentId, 'D-S112');
+  assert.equal(manifest.kanoUnit, 'A-S112');
+  assert.equal(manifest.kano, 'S');
+  assert.equal(manifest.packet, 'SC-S112');
+  assert.equal(manifest.owner, 'worker-A-S112');
+  assert.equal(manifest.mode, 'synthetic-data-only');
+  assert.equal(manifest.nativeProof.sourceParentComplete, false);
+  assert.equal(manifest.envelope.actualResourcesCreatedOrIsolated, 0);
+  assert.ok(html.includes(`<p id="training-banner" class="banner">${fixtures.banner}</p>`));
+  assert.equal(manifest.banner, fixtures.banner);
+  assert.match(html, /No process, pod, VM, network or Azure resource is isolated/);
+  assert.match(html, /not an actual Azure-zone outage/);
+  assert.match(html, /B-S112 and D-S112 remain incomplete/);
+  assert.match(html, /not Microsoft SLAs/);
+  assert.match(read('LESSON.txt'), /RELEVANT BLOCKED REMAINDER/);
+});
+
+test('fixed fixture choices, versions and bounded envelope agree across the bundle', () => {
+  assert.equal(manifest.fixtureVersion, fixtures.version);
+  assert.deepEqual(manifest.fixtureIds, fixtures.fixtureIds);
+  assert.equal(manifest.envelope.fixedJourneyAttemptsPerMeasurement, fixtures.journeys.length);
+  assert.equal(manifest.envelope.maximumArchivedRuns, fixtures.historyLimit);
+  assert.equal(manifest.envelope.maximumActionsPerRun, 7);
+  assert.equal(manifest.envelope.fixedTeachingTickBudget, 12);
+  fixtures.fixtureIds.forEach((id) => assert.ok(html.includes(`value="${id}"`)));
+  fixtures.zoneIds.forEach((id) => assert.ok(html.includes(`value="${id}"`)));
+  assert.match(html, /Configured data units/);
+  assert.match(html, /configured data units are not observed surviving capacity/);
+});
+
+test('the standalone surface has only local external scripts/styles and strict CSP', () => {
+  const policy = html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];
+  assert.ok(policy);
+  [
+    "default-src 'none'", "script-src 'self'", "style-src 'self'", "connect-src 'none'",
+    "base-uri 'none'", "form-action 'none'", "object-src 'none'", "frame-src 'none'", "worker-src 'none'",
+  ].forEach((directive) => assert.ok(policy.includes(directive)));
+  assert.doesNotMatch(policy, /unsafe-|https?:|data:/);
+  const scripts = [...html.matchAll(/<script src="([^"]+)" defer><\/script>/g)].map((match) => match[1]);
+  assert.deepEqual(scripts, ['fixtures.js', 'lesson.js', 'app.js']);
+  assert.equal((html.match(/<script\b/g) || []).length, scripts.length);
+  assert.doesNotMatch(html, /\bon[a-z]+\s*=|style\s*=|<iframe|<object|<base|https?:\/\//i);
+  ['app.js', 'lesson.js', 'fixtures.js'].forEach((file) => {
+    assert.doesNotMatch(read(file), /\bfetch\s*\(|XMLHttpRequest|WebSocket|Worker\s*\(|\beval\s*\(|innerHTML|localStorage|setInterval|setTimeout/);
+  });
+});
+
+test('keyboard/error/reset/result semantics are explicit without form.reset shadowing', () => {
+  assert.match(html, /<html lang="en">/);
+  ['fixture', 'zone', 'confirm-isolation'].forEach((id) => assert.ok(html.includes(`for="${id}"`)));
+  assert.match(html, /id="error"[^>]*role="alert"[^>]*tabindex="-1"[^>]*hidden/);
+  assert.match(html, /id="status"[^>]*role="status"[^>]*aria-live="polite"/);
+  const form = html.match(/<form\b[\s\S]*?<\/form>/)?.[0];
+  assert.ok(form);
+  assert.doesNotMatch(form, /(?:id|name)="reset"|reset-lesson/);
+  assert.match(html, /id="reset-lesson" type="button"/);
+  assert.doesNotMatch(read('app.js'), /\.reset\s*\(/);
+  assert.match(read('app.js'), /byId\('error'\)\.focus\(\)/);
+  assert.match(read('app.js'), /byId\(nextFocus\[state\.phase\]\)\.focus\(\)/);
+  assert.match(html, /Original surviving-fixture measurement/);
+  assert.match(html, /Separate recovery measurement/);
+  assert.match(html, /Reset archives the original result/);
+  assert.match(read('styles.css'), /:focus-visible/);
+});
+
+test('exact source snapshots retain canonical-Git and working-byte provenance separately', () => {
+  const provenance = JSON.parse(read('evidence\\source\\source.json'));
+  assert.match(provenance.sourceHead, /^[a-f0-9]{40}$/);
+  assert.equal(provenance.records.length, 8);
+  provenance.records.forEach((record) => {
+    const raw = fs.readFileSync(path.join(directory, record.workingBytes.path));
+    const git = fs.readFileSync(path.join(directory, record.canonicalGitBytes.path));
+    assert.equal(hash(raw), record.workingBytes.sha256);
+    assert.equal(hash(git), record.canonicalGitBytes.sha256);
+    assert.equal((raw.toString('latin1').match(/\r\n/g) || []).length, record.workingBytes.crlf);
+    assert.equal((raw.toString('latin1').match(/\n/g) || []).length, record.workingBytes.lf);
+    assert.notEqual(record.workingBytes.path, record.canonicalGitBytes.path);
+    assert.equal(raw.toString('utf8').replace(/\r\n/g, '\n'), git.toString('utf8').replace(/\r\n/g, '\n'));
+  });
+  assert.match(read('evidence\\source\\readme-s112.raw.snapshot'),
+    /\| S112 \| \*\*Availability-zone loss:\*\* Test supported compute\/data redundancy and sufficient surviving-zone capacity/);
+  assert.match(read('evidence\\source\\backlog-d-s112.raw.snapshot'),
+    /Surviving workload\/data capacity is measured; the injected zone-workload fault is labeled as an outage proxy, not an actual Azure-zone outage/);
+  assert.match(read('evidence\\source\\card-a-s112.raw.snapshot'), /Isolate a zone's fixture workloads; do not label it an actual Azure-zone outage/);
+  assert.match(read('evidence\\source\\packet-rule.raw.snapshot'), /every other A\/B card belongs to SC-Snnn/);
+});
+
+test('RED is eight genuine assertion failures, loadable stub proof, and explicitly precedes IaC N/A', () => {
+  const red = JSON.parse(read('evidence\\raw\\red\\run.json'));
+  assert.equal(red.genuineRed, true);
+  assert.equal(red.passed, false);
+  assert.equal(red.commands[0].status, 1);
+  const stdout = read('evidence\\raw\\red\\stdout.raw');
+  assert.match(stdout, /ERR_ASSERTION/);
+  assert.match(stdout, /# fail 8/);
+  assert.doesNotMatch(stdout, /SyntaxError|MODULE_NOT_FOUND|ReferenceError|TypeError/);
+  assert.equal(hash(fs.readFileSync(path.join(directory, 'evidence\\raw\\red\\stdout.raw'))), red.stdoutSha256);
+  red.snapshots.forEach((snapshot) => {
+    assert.ok(snapshot.snapshot.endsWith('.snapshot'));
+    assert.equal(hash(fs.readFileSync(path.join(directory, snapshot.snapshot))), snapshot.sha256);
+  });
+  assert.match(read('evidence\\raw\\red\\lesson.js.snapshot'), /function createState\(\)/);
+  const iac = JSON.parse(read('evidence\\iac.json'));
+  assert.equal(iac.status, 'N/A');
+  assert.equal(iac.redConfirmed, true);
+  assert.equal(iac.resourcesCreated, 0);
+  assert.equal(iac.nativeAcceptance, false);
+});
+
+test('raw-byte attributes and deliberate capture policy protect historical proof', () => {
+  const attributes = read('.gitattributes');
+  assert.match(attributes, /^evidence\/raw\/\*\* -text$/m);
+  assert.match(attributes, /^evidence\/source\/\*\.snapshot -text$/m);
+  const capture = read('capture.cjs');
+  assert.match(capture, /process\.env\.CAPTURE_BROWSER_EVIDENCE !== '1'/);
+  assert.match(capture, /proof exists; no silent overwrite/);
+  const browser = read('tests\\browser.test.cjs');
+  assert.match(browser, /process\.env\.CAPTURE_BROWSER_EVIDENCE === '1'/);
+  assert.match(browser, /await session\.close\(\)/);
+  assert.match(browser, /finally/);
+  assert.doesNotMatch(browser, /recovery-prototype|openIsolatedLoopback|bypassCSP:\s*true/);
+});

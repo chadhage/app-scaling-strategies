@@ -1,0 +1,138 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
+
+const root = path.resolve(__dirname, '..', '..');
+const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const relative = (file) => path.relative(__dirname, file).split(path.sep).join('/');
+const evidence = path.join(__dirname, 'evidence');
+const mode = process.argv[2];
+
+function filesIn(directory) {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const target = path.join(directory, entry.name);
+    return entry.isDirectory() ? filesIn(target) : [target];
+  }).sort();
+}
+
+function saveJson(target, value) {
+  fs.writeFileSync(target, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function sourceCapture() {
+  const target = path.join(evidence, 'source');
+  if (fs.existsSync(target)) throw new Error('Source capture already exists; do not overwrite historical bytes.');
+  fs.mkdirSync(target, { recursive: true });
+  const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
+  if (head.status !== 0) throw new Error(head.stderr);
+  const contracts = [
+    ['readme-s112', 'README.md', /^\| S112 \|[^\n]*\n/m],
+    ['backlog-d-s112', '.docs/wiki/backlog.md', /^\| D-S112 \|[^\n]*\n/m],
+    ['card-a-s112', '.docs/wiki/kanban.md', /^\| A-S112 \|[^\n]*\n/m],
+    ['portable-a', '.docs/wiki/kanban.md', /### Portable A-card lesson contract\r?\n[\s\S]*?(?=## Concurrent pull)/],
+    ['atomic-order', '.docs/wiki/kanban.md', /^Implementation order is [^\n]*\n/m],
+    ['packet-rule', '.docs/wiki/kanban.md', /^Packet membership is fixed [^\n]*\n/m],
+    ['parent-boundary', '.docs/wiki/kanban.md', /^- A source parent is complete [^\n]*\n/m],
+    ['honest-mode', '.docs/wiki/backlog.md', /^7\. \*\*Honest execution mode[^\n]*\n/m],
+  ];
+  const records = contracts.map(([id, gitPath, pattern]) => {
+    const working = fs.readFileSync(path.join(root, ...gitPath.split('/')));
+    const git = spawnSync('git', ['show', `${head.stdout.trim()}:${gitPath}`], {
+      cwd: root, encoding: 'buffer', maxBuffer: 4 * 1024 * 1024,
+    });
+    if (git.status !== 0) throw new Error(git.stderr.toString());
+    function extract(bytes, suffix) {
+      const match = bytes.toString('latin1').match(pattern);
+      if (!match) throw new Error(`Missing exact ${id} ${suffix} contract`);
+      const snapshot = Buffer.from(match[0], 'latin1');
+      const name = `${id}.${suffix}.snapshot`;
+      fs.writeFileSync(path.join(target, name), snapshot);
+      return {
+        path: `evidence/source/${name}`, sha256: sha(snapshot),
+        fullSourceSha256: sha(bytes),
+        crlf: (snapshot.toString('latin1').match(/\r\n/g) || []).length,
+        lf: (snapshot.toString('latin1').match(/\n/g) || []).length,
+      };
+    }
+    return { id, source: gitPath, workingBytes: extract(working, 'raw'), canonicalGitBytes: extract(git.stdout, 'git') };
+  });
+  saveJson(path.join(target, 'source.json'), {
+    capturedAtUtc: new Date().toISOString(), sourceHead: head.stdout.trim(),
+    boundary: 'Exact source traceability only; not native or source-parent acceptance.',
+    records,
+  });
+  console.log(`Captured ${records.length} exact contracts with separate working-byte and canonical-Git provenance.`);
+}
+
+function captureRun(label, commands, inputs) {
+  const target = path.join(evidence, 'raw', label);
+  if (fs.existsSync(target)) throw new Error(`${label} proof exists; no silent overwrite.`);
+  fs.mkdirSync(target, { recursive: true });
+  const snapshots = inputs.map((input) => {
+    const bytes = fs.readFileSync(path.join(__dirname, input));
+    const name = `${input.split(/[\\/]/).join('__')}.snapshot`;
+    fs.writeFileSync(path.join(target, name), bytes);
+    return { input, snapshot: `evidence/raw/${label}/${name}`, sha256: sha(bytes) };
+  });
+  const startedAtUtc = new Date().toISOString();
+  const runs = commands.map((args) => {
+    const child = spawnSync(process.execPath, args, {
+      cwd: __dirname, env: process.env, encoding: 'buffer',
+      timeout: 180000, maxBuffer: 8 * 1024 * 1024,
+    });
+    return { args, status: child.status, signal: child.signal, error: child.error?.message ?? null,
+      stdout: child.stdout || Buffer.alloc(0), stderr: child.stderr || Buffer.alloc(0) };
+  });
+  const stdout = Buffer.concat(runs.map((run) => run.stdout));
+  const stderr = Buffer.concat(runs.map((run) => run.stderr));
+  fs.writeFileSync(path.join(target, 'stdout.raw'), stdout);
+  fs.writeFileSync(path.join(target, 'stderr.raw'), stderr);
+  const genuineRed = label === 'red' && runs.every((run) => run.status === 1 && !run.error)
+    && stdout.toString().includes('ERR_ASSERTION')
+    && !/SyntaxError|MODULE_NOT_FOUND|ReferenceError|TypeError/.test(`${stdout}${stderr}`);
+  const passed = runs.every((run) => run.status === 0 && !run.error);
+  saveJson(path.join(target, 'run.json'), {
+    label, startedAtUtc, finishedAtUtc: new Date().toISOString(), nodeVersion: process.version,
+    commands: runs.map(({ stdout: out, stderr: err, ...run }) => ({
+      executable: process.execPath, ...run, stdoutSha256: sha(out), stderrSha256: sha(err),
+    })),
+    stdoutSha256: sha(stdout), stderrSha256: sha(stderr), snapshots, passed, genuineRed,
+    captureBrowserEvidence: process.env.CAPTURE_BROWSER_EVIDENCE === '1',
+  });
+  process.stdout.write(stdout);
+  process.stderr.write(stderr);
+  if (label === 'red' ? !genuineRed : !passed) process.exitCode = 1;
+}
+
+if (mode === 'source') sourceCapture();
+else if (mode === 'red') captureRun('red', [['--test', 'tests\\lesson.test.cjs']],
+  ['.gitattributes', 'lesson.feature', 'lesson.js', 'tests\\lesson.test.cjs', 'capture.cjs']);
+else if (mode === 'green') captureRun('green', [['--test', 'tests\\lesson.test.cjs', 'tests\\surface.test.cjs']],
+  ['lesson.feature', 'fixtures.js', 'lesson.js', 'app.js', 'index.html', 'styles.css', 'manifest.json',
+    'tests\\lesson.test.cjs', 'tests\\surface.test.cjs']);
+else if (mode === 'syntax') {
+  const inputs = filesIn(__dirname).filter((file) => !relative(file).startsWith('evidence/')
+    && /\.(?:js|cjs)$/.test(file)).map((file) => path.relative(__dirname, file));
+  captureRun('syntax', inputs.map((file) => ['--check', file]), inputs);
+} else if (mode === 'browser') {
+  if (process.env.CAPTURE_BROWSER_EVIDENCE !== '1') throw new Error('Browser capture requires deliberate exact CAPTURE_BROWSER_EVIDENCE=1.');
+  captureRun('browser', [['--test', 'tests\\browser.test.cjs']],
+    ['fixtures.js', 'lesson.js', 'app.js', 'index.html', 'styles.css', 'tests\\browser.test.cjs']);
+} else if (mode === 'index') {
+  fs.mkdirSync(evidence, { recursive: true });
+  const entries = filesIn(__dirname).filter((file) => relative(file) !== 'evidence/content-index.json')
+    .map((file) => {
+      const bytes = fs.readFileSync(file);
+      return { path: relative(file), bytes: bytes.length, sha256: sha(bytes) };
+    });
+  saveJson(path.join(evidence, 'content-index.json'), {
+    schemaVersion: 1, scope: 'learning\\S112', entries,
+    policy: 'Normal verification is read-only. Historical raw proof and source CRLF bytes are immutable.',
+  });
+  console.log(`Indexed ${entries.length} owned files.`);
+} else {
+  throw new Error('Choose one deliberate capture action: source, red, green, syntax, browser, index.');
+}

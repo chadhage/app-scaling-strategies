@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S112 - Fictional zone-workload isolation</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="lesson.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <p id="training-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+      <h1>S112 - Fictional zone-workload isolation</h1>
+      <p>Isolate a zone's fixture workloads; do not label it an actual Azure-zone outage.</p>
+      <p id="scope">All zones, placement, topology, capacity, failure, recovery and journeys here are fixed fictional teaching data only. No process, pod, VM, network or Azure resource is isolated.</p>
+      <p><strong>Data-only outage-proxy rehearsal; not an actual Azure-zone outage.</strong> S112's native compute/data redundancy and surviving-zone capacity requirements are not validated by this lesson. B-S112 and D-S112 remain incomplete.</p>
+    </header>
+    <section aria-labelledby="instructions-heading">
+      <h2 id="instructions-heading">Operating envelope and steps</h2>
+      <p>Four fixed profile journeys, three fictional zones, one selected fictional-zone record fault. Capacity is teaching units, not requests/second. Latencies are fixed teaching ticks, not elapsed time. Budget: 12 ticks. Retain at most six runs; reopening the page starts a new memory-only session.</p>
+      <ol>
+        <li>Choose a fixed fixture and target zone; load its fictional records.</li>
+        <li>Check recorded placement before confirming data-only isolation.</li>
+        <li>Isolate fictional records and calculate surviving compute/data capacity and all four journeys.</li>
+        <li>Restore records, separately check recovery, and reset without erasing earlier failure.</li>
+      </ol>
+      <p>The negative compute and single-zone-data fixtures show why redundant compute alone is insufficient. Unknown observations are never treated as configured capacity, zero, or success.</p>
+    </section>
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Operator controls</h2>
+      <form id="setup-form" novalidate>
+        <label for="fixture">Fixed fictional fixture</label>
+        <select id="fixture" name="fixture" aria-describedby="input-help">
+          <option value="redundant">Redundant compute and observed data</option>
+          <option value="compute-shortfall">Insufficient surviving compute</option>
+          <option value="single-zone-data">Data exists only in fictional zone-a</option>
+          <option value="missing-data-evidence">Surviving data observations are unknown</option>
+        </select>
+        <label for="zone">Fictional target zone</label>
+        <select id="zone" name="zone">
+          <option value="zone-a">zone-a (fictional)</option>
+          <option value="zone-b">zone-b (fictional)</option>
+          <option value="zone-c">zone-c (fictional)</option>
+        </select>
+        <button id="load-fixture" type="submit">Load fixture</button>
+      </form>
+      <p id="input-help">Only these immutable presets and zone IDs are accepted. No custom topology, workload, fault command or resource address.</p>
+      <div class="actions">
+        <button id="verify-placement" type="button">Check fictional placement</button>
+        <label class="confirmation" for="confirm-isolation">
+          <input id="confirm-isolation" type="checkbox">
+          I confirm only fictional zone-workload records change; this is not an actual Azure-zone outage.
+        </label>
+        <button id="isolate" type="button">Isolate fictional zone records</button>
+        <button id="measure" type="button">Measure synthetic survivors and journeys</button>
+        <button id="restore" type="button">Restore fictional records</button>
+        <button id="check-recovery" type="button">Check synthetic recovery</button>
+        <button id="reset-lesson" type="button">Reset; retain history</button>
+      </div>
+      <p id="control-help">Controls follow the displayed phase. An unchecked confirmation produces an error without changing the fixture.</p>
+      <p id="error" class="error" role="alert" tabindex="-1" hidden></p>
+      <p id="status" role="status" aria-live="polite" tabindex="-1"></p>
+      <p>Phase: <strong id="phase"></strong>. Placement: <span id="placement"></span>.</p>
+      <p>Cleanup: <span id="cleanup"></span></p>
+    </section>
+    <section aria-labelledby="topology-heading">
+      <h2 id="topology-heading">Fixed fictional placement and topology</h2>
+      <p id="topology-description">Load a fixture to inspect its teaching records.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Fictional zone records only; configured data units are not observed surviving capacity</caption>
+          <thead><tr><th scope="col">Fictional zone</th><th scope="col">Workload / data record</th><th scope="col">Compute units</th><th scope="col">Configured data units</th><th scope="col">Data observation</th><th scope="col">Record status</th></tr></thead>
+          <tbody id="topology"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="measurement-heading">
+      <h2 id="measurement-heading">Original surviving-fixture measurement</h2>
+      <div id="measurement"></div>
+    </section>
+    <section aria-labelledby="recovery-heading">
+      <h2 id="recovery-heading">Separate recovery measurement</h2>
+      <p>Restoring teaching records cannot undo prior interruption. No actual recovery is performed.</p>
+      <div id="recovery"></div>
+    </section>
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Ordered operator trace</h2>
+      <p>Sequence numbers are deterministic action order, not platform timestamps.</p>
+      <ol id="trace"></ol>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained run history</h2>
+      <p id="history-help">Reset archives the original result and action trace. No runs are silently removed. Page reload clears this local memory-only teaching session.</p>
+      <ol id="history" aria-describedby="history-help"></ol>
+    </section>
+    <footer>
+      <p>Source: S112 / D-S112 / A-S112; packet SC-S112; one frozen S Kano unit. This standalone portable asset does not complete the native sibling, source parent, deployed harness or Azure reliability qualification.</p>
+      <p>Examples are provided AS IS for education, without warranties or guarantees. Microsoft/Azure references do not imply endorsement, certification or support. Project targets are not Microsoft SLAs. Microsoft and Azure are Microsoft group trademarks. This disclaimer is not a license and does not replace applicable licenses or product terms.</p>
+    </footer>
+  </main>
+</body>
+</html>
