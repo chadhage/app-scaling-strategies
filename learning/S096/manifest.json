@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "sourceId": "S096",
+  "cardId": "A-S096",
+  "parentId": "D-S096",
+  "packet": "LP-COMPARE",
+  "kano": "S",
+  "kanoUnit": "A-S096",
+  "technicalEntryGate": "SOURCE",
+  "owner": "worker-A-S096",
+  "title": "Shared-plan resource contention",
+  "objective": "Warm competing slots; distinguish shared-plan pressure from real added compute.",
+  "entry": "index.html",
+  "mode": "synthetic",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "preconditions": [
+    "A modern browser with local JavaScript; no server, framework, account or cloud resources",
+    "One baseline 100-unit production worker; only explicit workers add modeled compute",
+    "Four fixed synthetic production journeys per run; no candidate exposure or attempted user migration",
+    "A dependency shared by production and all warming slots, even with separate compute plans"
+  ],
+  "actions": [
+    "Choose shared or separately provisioned candidate placement, bounded workers and competing slot demand",
+    "Declare production/warm-up budgets and choose complete or incomplete synthetic observations",
+    "Warm and measure once, inspect observed compute/headroom, readiness, journeys, gates and trace",
+    "Reset the current rehearsal with keyboard or pointer; preserve all earlier failures/unknowns and the six-run allowance"
+  ],
+  "syntheticInputs": {
+    "topologies": ["shared", "separate"],
+    "coverage": ["complete", "missing-capacity", "missing-journeys", "missing-warmup"],
+    "productionWorkers": [1, 3],
+    "candidateWorkers": [1, 3],
+    "slots": [1, 4],
+    "productionDemand": [1, 250],
+    "warmDemand": [1, 80],
+    "dependencyCapacity": [1, 300],
+    "journeyBudgetMs": [1, 500],
+    "warmupBudgetMs": [1, 500],
+    "computeUnitsPerWorker": 100,
+    "dependencyDemand": "40 + 20 * warming slots",
+    "productionLatencyMs": "80 + 2 * (production compute excess + dependency excess) + [0,4,8,12]",
+    "warmupLatencyMs": "100 + 2 * (warming plan compute excess + dependency excess) + 3 * zero-based slot index",
+    "maxRuns": 6,
+    "historyLifetime": "In-memory page session; reset preserves history and consumed allowance; reload starts a new lesson"
+  },
+  "expectedAssertions": [
+    "Additional shared-plan slots increase overlap demand but never add compute",
+    "Explicit workers or an explicitly provisioned candidate plan add modeled compute",
+    "Sufficient shared overlap headroom or separately provisioned compute passes only complete synthetic acceptance gates",
+    "Separate plans do not isolate a shared dependency or guarantee independent fault domains",
+    "Known capacity/budget failures block admission; slow synthetic HTTP 200 journeys remain interruptions",
+    "Missing capacity, journey or warm-up observations cannot pass; known failures dominate uncertainty without discarding it",
+    "Production checks are not migrations; attempted and successful transitions stay zero and their rate stays unknown",
+    "Invalid inputs, forged state, duplicate measured actions and a seventh run cannot change retained evidence",
+    "Actual keyboard, reset, error focus, history, DOM results and CSP enforcement pass in the approved isolated browser",
+    "Normal verification preserves every owned byte; only exact CAPTURE_BROWSER_EVIDENCE=1 deliberately captures browser evidence"
+  ],
+  "limits": [
+    "Capacity units, overload latency, HTTP responses, readiness and journeys are deterministic synthetic fixtures, not Azure measurements or limits",
+    "No actual App Service slot, warm-up, shared-plan, compute scaling, source-parent, fault-domain or five-nines certification",
+    "B-S096 and D-S096 remain incomplete; X002 is a distinct delighter requiring all six LP-COMPARE companions",
+    "IaC N/A; no cloud/IaC/scaffold/identity/credentials/deploy/spend/packages/framework/root/shared changes",
+    "Existing Node 22.23.4 tooling, offline Playwright 1.56.1 and Microsoft-signed Edge 156.0.4314.50 only; not production Node 24",
+    "Published isolated.cjs 53c0c0d only, SHA256 86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055; abandoned lifecycle prototype is unqualified"
+  ],
+  "evidence": {
+    "source": "evidence\\source-contract.json",
+    "bdd": "shared-plan.feature",
+    "assertionRed": "evidence\\assertion-red.json",
+    "iac": "evidence\\iac-decision.json",
+    "tooling": "evidence\\tooling-preflight.json",
+    "focused": "evidence\\focused-green.json",
+    "browser": "evidence\\browser-acceptance.json",
+    "canonicalIntegrity": "evidence\\integrity-index.json"
+  },
+  "acceptance": {
+    "reviewer": "Parent controller only",
+    "acceptedAtUtc": null,
+    "credit": "At most one frozen A-S096 S unit; evidence, tests, plumbing and refinement earn no extra credit",
+    "nativeSibling": "B-S096 remains separately gated and incomplete"
+  }
+}

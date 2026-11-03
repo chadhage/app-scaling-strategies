@@ -1,0 +1,26 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('..\\model.js');
+
+function fixture(overrides = {}) {
+  return {
+    topology: 'shared',
+    productionWorkers: 1,
+    candidateWorkers: 1,
+    slots: 2,
+    productionDemand: 70,
+    warmDemand: 40,
+    dependencyCapacity: 100,
+    journeyBudgetMs: 120,
+    warmupBudgetMs: 160,
+    coverage: 'complete',
+    ...overrides,
+  };
+}
+
+test('slots never add compute to a shared plan', () => {
+  const state = model.warm(model.createState(), fixture());
+  assert.equal(state.current.metrics.totalComputeUnits, 100, 'Adding warming slots must not create compute');
+});

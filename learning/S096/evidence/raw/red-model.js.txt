@@ -1,0 +1,23 @@
+(function (root) {
+  'use strict';
+
+  function createState() {
+    return Object.freeze({ phase: 'ready', history: [], current: null });
+  }
+
+  function warm(state, input) {
+    const result = {
+      verdict: 'success',
+      metrics: { totalComputeUnits: 100 + input.slots * 100 },
+    };
+    return Object.freeze({ phase: 'measured', history: [result], current: result });
+  }
+
+  function reset() {
+    return createState();
+  }
+
+  const api = Object.freeze({ createState, warm, reset });
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S096Model = api;
+}(typeof globalThis === 'object' ? globalThis : this));

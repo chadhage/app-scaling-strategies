@@ -1,0 +1,163 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { createHash } = require('node:crypto');
+const { spawnSync } = require('node:child_process');
+const model = require('..\\model.js');
+
+const lesson = path.resolve(__dirname, '..');
+const repo = path.resolve(lesson, '..', '..');
+const file = (name) => path.join(lesson, name);
+const json = (name) => JSON.parse(fs.readFileSync(file(name), 'utf8'));
+const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const canonical = (bytes) => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+const git = (...args) => {
+  const result = spawnSync('git', ['--no-pager', ...args], { cwd: repo, maxBuffer: 8 * 1024 * 1024 });
+  assert.equal(result.status, 0, result.stderr.toString());
+  return result.stdout;
+};
+const coreFiles = [
+  '.gitattributes', 'README.md', 'app.js', 'index.html', 'manifest.json', 'model.js',
+  'shared-plan.feature', 'styles.css', 'tests\\model.test.cjs', 'tests\\bundle.test.cjs', 'tests\\browser.test.cjs',
+];
+
+test('manifest preserves the exact frozen card, packet, synthetic objective and independent acceptance', () => {
+  const manifest = json('manifest.json');
+  for (const [key, value] of Object.entries({
+    sourceId: 'S096', cardId: 'A-S096', parentId: 'D-S096', kano: 'S', kanoUnit: 'A-S096',
+    packet: 'LP-COMPARE', technicalEntryGate: 'SOURCE', owner: 'worker-A-S096', mode: 'synthetic', entry: 'index.html',
+    objective: 'Warm competing slots; distinguish shared-plan pressure from real added compute.',
+    banner: 'Training rehearsal - synthetic data - not a live Azure result',
+  })) assert.equal(manifest[key], value);
+  assert.equal(manifest.acceptance.acceptedAtUtc, null);
+  assert.equal(manifest.acceptance.reviewer, 'Parent controller only');
+  assert.equal(manifest.syntheticInputs.maxRuns, model.MAX_RUNS);
+  for (const [key, bounds] of Object.entries(model.limits)) assert.deepEqual(manifest.syntheticInputs[key], bounds);
+  assert.match(manifest.limits.join(' '), /B-S096 and D-S096 remain incomplete/);
+  assert.match(manifest.limits.join(' '), /not production Node 24/);
+});
+
+test('canonical source blobs preserve exact S096, D-S096, card and LP-COMPARE acceptance', () => {
+  const source = json('evidence\\source-contract.json');
+  const texts = {};
+  for (const document of source.documents) {
+    const bytes = git('cat-file', 'blob', document.blob);
+    assert.equal(digest(bytes), document.rawBlobSha256);
+    assert.equal(digest(canonical(bytes)), document.canonicalTextSha256);
+    assert.equal(git('rev-parse', `${source.sourceCommit}:${document.path}`).toString().trim(), document.blob);
+    texts[document.path] = bytes.toString();
+  }
+  assert.ok(texts['README.md'].includes(source.readmeScenario));
+  assert.equal(source.readmeScenario, '| S096 | **Shared-plan resource contention:** Demonstrate sufficient overlap headroom or isolate deployments into separate plans. |');
+  assert.ok(texts['README.md'].includes(source.readmeSharedPlanFinding));
+  assert.ok(texts['README.md'].includes(source.readmeAcceptance));
+  assert.match(source.readmeAcceptance, /empty transition sample produces no evidence, not 100% success/);
+  assert.ok(texts['.docs/wiki/backlog.md'].includes(source.backlogRow));
+  assert.match(source.backlogRow, /Real shared compute\/dependency contention and journey outcomes are measured; additional slots are not treated as free extra capacity/);
+  const kanban = texts['.docs/wiki/kanban.md'];
+  for (const key of ['cardRow', 'nativeRow', 'packetRow', 'delighterRow', 'portableContract', 'atomicCardContract']) assert.ok(kanban.includes(source[key]));
+  assert.equal(source.packetRow, '| LP-COMPARE | X002 | A-S096, B-S096, A-S097, B-S097, A-S098, B-S098 |');
+  assert.match(source.portableContract, /Training rehearsal - synthetic data - not a live Azure result/);
+});
+
+test('loadable stub RED is a retained real assertion and IaC N/A follows it', () => {
+  const red = json('evidence\\assertion-red.json');
+  assert.equal(red.exitCode, 1);
+  assert.equal(red.assertion.errorCode, 'ERR_ASSERTION');
+  assert.equal(red.assertion.expected, 100);
+  assert.equal(red.assertion.actual, 300);
+  assert.equal(red.loadableStubBrowserObserved, true);
+  assert.equal(red.missingCodeOrTools, false);
+  for (const snapshot of red.files) assert.equal(digest(fs.readFileSync(file(snapshot.path))), snapshot.sha256);
+  const raw = fs.readFileSync(file('evidence\\raw\\assertion-red.stdout.tap'), 'utf8');
+  assert.match(raw, /not ok 1 - slots never add compute/);
+  assert.match(raw, /ERR_ASSERTION/);
+  assert.doesNotMatch(raw, /MODULE_NOT_FOUND|ENOENT/);
+  assert.equal(require(file('evidence\\raw\\red-model.js.txt')).warm({}, { slots: 2 }).current.metrics.totalComputeUnits, 300);
+  const iac = json('evidence\\iac-decision.json');
+  assert.equal(iac.applicability, 'N/A');
+  assert.ok(Date.parse(iac.decidedAtUtc) >= Date.parse(red.finishedAtUtc));
+  assert.equal(iac.redSha256, digest(fs.readFileSync(file('evidence\\assertion-red.json'))));
+  for (const key of ['generatedInfrastructure', 'cloudCalls', 'scaffolding', 'identity', 'credentials', 'deployment', 'spend']) assert.equal(iac[key], false);
+});
+
+test('browser bundle has local assets, strict CSP, accessible guards/reset and no management implementation', () => {
+  const html = fs.readFileSync(file('index.html'), 'utf8');
+  const app = fs.readFileSync(file('app.js'), 'utf8');
+  assert.match(html, /<p class="banner">Training rehearsal - synthetic data - not a live Azure result<\/p>/);
+  const csp = html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)[1];
+  for (const directive of ["default-src 'none'", "script-src 'self'", "style-src 'self'", "connect-src 'none'", "base-uri 'none'", "form-action 'none'"]) assert.ok(csp.includes(directive));
+  assert.doesNotMatch(csp, /unsafe-inline|unsafe-eval|\*/);
+  assert.deepEqual([...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]), ['model.js', 'app.js']);
+  assert.doesNotMatch(html, /<script(?! src=)|\son\w+=|name="reset"/);
+  const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
+  assert.equal(ids.length, new Set(ids).size);
+  for (const id of [...html.matchAll(/<(?:input|select)\b[^>]*id="([^"]+)"/g)].map((m) => m[1])) assert.ok(html.includes(`label for="${id}"`));
+  assert.match(html, /role="alert" tabindex="-1" hidden/);
+  assert.match(app, /HTMLFormElement\.prototype\.reset\.call\(form\)/);
+  assert.match(app, /get\('error'\)\.focus\(\)/);
+  assert.doesNotMatch(app + fs.readFileSync(file('model.js'), 'utf8'), /innerHTML|eval\s*\(|new Function|fetch\s*\(|XMLHttpRequest|WebSocket|localStorage/);
+  assert.match(fs.readFileSync(file('shared-plan.feature'), 'utf8'), /Slots consume shared compute rather than adding it/);
+  for (const name of ['model.js', 'app.js', 'styles.css']) assert.ok(fs.statSync(file(name)).isFile());
+});
+
+test('raw CRLF and canonical Git-clean source integrity remain separately qualified', () => {
+  const attributes = fs.readFileSync(file('.gitattributes'), 'utf8');
+  assert.equal(canonical(Buffer.from(attributes)).toString(), '* text=auto eol=lf\nevidence/raw/** -text -diff\n');
+  const index = json('evidence\\integrity-index.json');
+  const names = index.files.map((item) => item.path);
+  assert.equal(names.length, new Set(names).size);
+  for (const name of coreFiles) assert.ok(names.includes(name), `Missing canonical source: ${name}`);
+  for (const item of index.files) {
+    assert.ok(!path.isAbsolute(item.path) && !item.path.split(/[\\/]/).includes('..'));
+    const bytes = fs.readFileSync(file(item.path));
+    const raw = item.path.startsWith('evidence\\raw\\');
+    assert.equal(item.kind, raw ? 'raw-bytes' : 'canonical-text');
+    if (raw) assert.equal(digest(bytes), item.rawSha256, item.path);
+    else assert.equal(digest(canonical(bytes)), item.canonicalTextSha256, item.path);
+    const gitPath = path.relative(repo, file(item.path)).split(path.sep).join('/');
+    const clean = spawnSync('git', ['hash-object', '--path', gitPath, '--stdin'], { cwd: repo, input: bytes });
+    assert.equal(clean.status, 0, clean.stderr.toString());
+    assert.equal(clean.stdout.toString().trim(), item.gitCleanBlob, item.path);
+    const tracked = git('ls-files', '--stage', '--', path.relative(repo, file(item.path))).toString().trim();
+    if (tracked) assert.equal(tracked.split(/\s+/)[1], item.gitCleanBlob, `Published canonical blob: ${item.path}`);
+  }
+  const crlf = fs.readFileSync(file('evidence\\raw\\tooling-preflight.json'));
+  assert.ok(crlf.includes(Buffer.from('\r\n')));
+  assert.match(git('check-attr', 'text', '--', 'learning\\S096\\evidence\\raw\\tooling-preflight.json').toString(), /text: unset/);
+  if (index.stage === 'final') {
+    const list = (directory, prefix = '') => fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+      assert.ok(!entry.isSymbolicLink());
+      const name = prefix ? path.join(prefix, entry.name) : entry.name;
+      return entry.isDirectory() ? list(path.join(directory, entry.name), name) : [name];
+    });
+    assert.deepEqual(names.slice().sort(), list(lesson).filter((name) => name !== 'evidence\\integrity-index.json').sort());
+  }
+});
+
+test('qualified tooling and deliberate-only browser capture cannot silently change scope', () => {
+  const preflight = json('evidence\\tooling-preflight.json');
+  assert.equal(preflight.node, 'v22.23.4');
+  assert.equal(preflight.playwright, '1.56.1');
+  assert.equal(preflight.browser.signatureStatus, 'Valid');
+  assert.equal(preflight.browser.productVersion, '156.0.4314.50');
+  assert.equal(preflight.helperSha256, digest(fs.readFileSync(path.join(repo, 'testing', 'browser', 'isolated.cjs'))));
+  assert.equal(preflight.helperSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+  assert.equal(preflight.lifecyclePrototypeQualified, false);
+  const browser = fs.readFileSync(file('tests\\browser.test.cjs'), 'utf8');
+  assert.match(browser, /process\.env\.CAPTURE_BROWSER_EVIDENCE === '1'/);
+  assert.match(browser, /openIsolatedLesson/);
+  assert.match(browser, /finally \{\s*await session\.close\(\)/);
+  if (fs.existsSync(file('evidence\\browser-acceptance.json'))) {
+    const evidence = json('evidence\\browser-acceptance.json');
+    assert.equal(evidence.passed, true);
+    assert.equal(evidence.awaitedFinallyClose, true);
+    assert.equal(evidence.nativeCertification, false);
+    assert.equal(evidence.ownedBytesPreservedExceptDeliberateCapture, true);
+    assert.ok(evidence.checks.every((check) => check.passed));
+    assert.equal(evidence.rawSha256, digest(fs.readFileSync(file('evidence\\raw\\browser-dom.json'))));
+  }
+});
