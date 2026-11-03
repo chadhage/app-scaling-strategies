@@ -49,6 +49,8 @@ function successful(key, count) {
 }
 
 test("surface: exact portable manifest, BDD and one unaccepted SC-S025 S unit", () => {
+  assert.equal(fs.readFileSync(path.join(root, ".gitattributes"), "utf8").trim(),
+    "* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol");
   assert.equal(manifest.cardId, "A-S025");
   assert.equal(manifest.workerId, "worker-A-S025");
   assert.equal(manifest.sourceId, "S025");
@@ -158,6 +160,20 @@ test("proof: focused GREEN, syntax and surface raw provenance match final source
   const before = record("red").sources.find((source) => source.path.endsWith("\\warmup.js")).sha256;
   const after = green.sources.find((source) => source.path.endsWith("\\warmup.js")).sha256;
   assert.notEqual(before, after);
+  const normalization = record("publicationNormalization");
+  assert.equal(normalization.qualified, false);
+  assert.equal(normalization.publication.commit, manifest.publication.earlierUnqualifiedCommit);
+  assert.equal(normalization.mismatches.length, 17);
+  assert.ok(normalization.mismatches.every((item) => item.workingSha256 !== item.publishedSha256));
+  const whitespace = record("publicationWhitespace");
+  assert.equal(whitespace.exitCode, 2);
+  assert.equal(whitespace.behavioralRed, false);
+  for (const kind of ["stdout", "stderr"]) {
+    const bytes = Buffer.from(whitespace[kind].data, "base64");
+    assert.equal(bytes.length, whitespace[kind].bytes);
+    assert.equal(sha256(bytes), whitespace[kind].sha256);
+    assert.equal(bytes.toString("utf8"), whitespace[kind].utf8);
+  }
 });
 
 test("proof: exact offline signed tooling and actual 14-leaf browser evidence with finally cleanup", () => {

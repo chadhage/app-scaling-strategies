@@ -105,6 +105,18 @@ The implementation commit is resolved by its annotated
 `kanban/A-S025/<12sha>` tag; publication and parent review stay outside the
 self-referential source manifest.
 
+The first publication, `b8637370d9ed`, exposed Git CRLF-to-LF normalization
+in 17 files, including RED snapshots. Its passing working-tree checks did not
+qualify checkout-byte integrity. That tag remains unqualified and unchanged;
+`publication-normalization-001.json` preserves the actual mismatch. Owned
+`-text` attributes now preserve raw bytes. The publisher then correctly stopped
+on preserved CR line endings; its lossless rejection is retained separately in
+`publication-whitespace-001.json`, not called behavioral RED. Owned whitespace
+attributes recognize CR-at-EOL while retaining blank-at-EOL, blank-at-EOF and
+space-before-tab checks. Final references are `green-003`, `syntax-003`,
+`integrity-005`, `tooling-003`, `browser-003` and `integrity-006`; earlier
+captures remain historical, not silently overwritten.
+
 Only existing Node **22.23.4**, offline Playwright **1.56.1**, signed installed
 Edge **156**, and published helper `53c0c0d` are used. Helper SHA256:
 `86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055`.
