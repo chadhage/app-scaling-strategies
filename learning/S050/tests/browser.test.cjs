@@ -1,0 +1,349 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
+const { createHash } = require('node:crypto');
+const root = path.resolve(__dirname, '..');
+const repo = path.resolve(root, '..', '..');
+const helper = path.join(repo, 'testing', 'browser', 'isolated.cjs');
+const helperHash = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+const sha = (data) => createHash('sha256').update(data).digest('hex');
+assert.equal(sha(fs.readFileSync(helper)), helperHash);
+const { openIsolatedLesson } = require(helper);
+const playwrightVersion = require(path.join(repo, 'testing', 'browser', 'node_modules', 'playwright', 'package.json')).version;
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+const defaults = { connection: 'reconnect', cookie: 'rebind', work: 'finish', receipt: 'verified', retirement: 'guarded' };
+
+test('real isolated DOM: pinned dependencies, keyboard, errors, outcomes, retained history, reset and CSP', { timeout: 240000 }, async () => {
+  const proof = {
+    schemaVersion: 1, cardId: 'A-S050', workerId: 'worker-A-S050', packet: 'SC-S050', mode: 'synthetic',
+    startedAtUtc: new Date().toISOString(), node: process.version, playwrightVersion,
+    helper: { path: 'testing\\browser\\isolated.cjs', sha256: helperHash, publication: '53c0c0d' },
+    entry: 'learning\\S050\\index.html', captureExplicitlyEnabled: capture, outcome: 'FAIL',
+    browserVersion: null, observations: [], pageErrors: [], consoleErrors: [],
+    exerciseNetworkRequests: [], probeRequests: [], cspViolations: [], cleanup: {},
+    testedSourceHashes: Object.fromEntries([
+      'index.html', 'styles.css', 'model.js', 'app.js', 'manifest.json', 'retirement.feature',
+      'tests\\browser.test.cjs', 'tests\\csp-probe.js',
+    ].map((file) => [file, sha(Buffer.from(fs.readFileSync(path.join(root, file), 'utf8').replace(/\r\n/g, '\n')))])),
+    sourceHashPolicy: 'UTF-8 text normalized CRLF to LF; raw streams and snapshots are byte-exact.',
+  };
+  let session;
+  let failure;
+  let stage = 'exercise';
+  try {
+    assert.equal(playwrightVersion, '1.56.1');
+    session = await openIsolatedLesson('learning\\S050\\index.html');
+    const page = session.page;
+    proof.browserVersion = session.browserVersion;
+    assert.match(proof.browserVersion, /^156\./);
+    page.on('pageerror', (error) => proof.pageErrors.push(error.message));
+    page.on('console', (message) => {
+      if (message.type() === 'error') proof.consoleErrors.push({ stage, text: message.text() });
+    });
+    page.on('request', (request) => {
+      if (/^https?:/.test(request.url())) {
+        (stage === 'exercise' ? proof.exerciseNetworkRequests : proof.probeRequests).push(request.url());
+      }
+    });
+    const value = (id) => page.locator(`#${id}`).innerText();
+    const historyCount = () => page.locator('#history li').filter({ hasText: /^Attempt / }).count();
+    const observe = async (name) => {
+      proof.observations.push({
+        name, phase: await value('phase'), oldDestination: await value('old-status'),
+        newAdmissions: await value('route-target'), outcome: await value('outcome'),
+        metrics: await value('metrics'), dependencies: await value('dependencies'), clients: await value('clients'),
+        reason: await value('reason'), userImpact: await value('user-impact'), cleanup: await value('cleanup'),
+        history: await value('history'), trace: await value('trace'), prediction: await value('prediction-result'),
+        error: await page.locator('#input-error').textContent(),
+        focus: await page.evaluate(() => document.activeElement.id),
+      });
+    };
+    const config = async (overrides = {}) => {
+      for (const [key, choice] of Object.entries({ ...defaults, ...overrides })) {
+        await page.locator(`#${key}`).selectOption(choice);
+      }
+    };
+    const complete = async () => {
+      await page.locator('#route').focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await value('phase'), 'Phase: routed');
+      assert.equal(await value('route-target'), 'candidate');
+      assert.equal(await value('old-status'), 'usable');
+      assert.equal(await value('dependency-count'), '3');
+      assert.equal(await page.locator('#connection').isDisabled(), true);
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'resolve');
+      await page.keyboard.press('Space');
+      assert.equal(await value('phase'), 'Phase: resolved');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'retire');
+      await page.keyboard.press('Enter');
+      assert.equal(await value('phase'), 'Phase: reviewed');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'prediction');
+    };
+    const next = async () => {
+      const retained = await historyCount();
+      await page.locator('#next-attempt').click();
+      assert.equal(await historyCount(), retained);
+      assert.equal(await value('phase'), 'Phase: ready');
+      assert.equal(await value('outcome'), 'Not evaluated.');
+      assert.equal(await value('trace'), 'No attempt started.');
+      assert.equal(await page.locator('#prediction').inputValue(), '');
+      assert.equal(await value('prediction-result'), 'Prediction not checked.');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'connection');
+    };
+    const predict = async (choice, expected) => {
+      const result = await value('outcome');
+      const retained = await historyCount();
+      await page.locator('#prediction').selectOption(choice);
+      await page.locator('#prediction').focus();
+      await page.keyboard.press('Tab');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'check-prediction');
+      await page.keyboard.press('Space');
+      assert.match(await value('prediction-result'), new RegExp(`verifier: ${expected}`));
+      assert.equal(await value('outcome'), result);
+      assert.equal(await historyCount(), retained);
+    };
+    const reset = async () => {
+      await page.locator('#reset-rehearsal').focus();
+      await page.keyboard.press('Space');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'connection');
+      assert.equal(await value('phase'), 'Phase: ready');
+      assert.equal(await value('old-status'), 'usable');
+      assert.equal(await value('route-target'), 'old');
+      assert.equal(await historyCount(), 0);
+      assert.equal(await value('history'), 'No completed attempts.');
+      assert.equal(await value('trace'), 'No attempt started.');
+      assert.equal(await value('outcome'), 'Not evaluated.');
+      assert.equal(await value('reason'), 'No retirement decision yet.');
+      assert.equal(await value('prediction-result'), 'Prediction not checked.');
+      assert.equal(await page.locator('#prediction').inputValue(), '');
+      assert.equal(await page.locator('#input-error').isHidden(), true);
+      assert.equal(await page.locator('#input-error').textContent(), '');
+      assert.equal(await value('dependency-count'), '3');
+      for (const key of ['attempted', 'completed', 'interrupted', 'unknown', 'required']) assert.equal(await value(key), '0');
+      for (const [key, choice] of Object.entries(defaults)) {
+        assert.equal(await page.locator(`#${key}`).inputValue(), choice);
+        assert.equal(await page.locator(`#${key}`).isDisabled(), false);
+      }
+      assert.equal(await page.locator('#resolve').isDisabled(), true);
+      assert.equal(await page.locator('#retire').isDisabled(), true);
+      assert.equal(await page.locator('#next-attempt').isDisabled(), true);
+      assert.equal(await page.locator('#prediction').isDisabled(), true);
+      assert.equal(await page.locator('#configuration').evaluate((form) => typeof form.reset), 'function');
+    };
+    assert.equal(await page.locator('.banner').innerText(), 'Training rehearsal - synthetic data - not a live Azure result');
+    assert.equal(await page.locator('#clients tr').count(), 4);
+    assert.equal(await page.locator('#dependencies tr').count(), 3);
+    await page.locator('#connection').focus();
+    await page.keyboard.press('End');
+    assert.equal(await page.locator('#connection').inputValue(), 'stale');
+    await page.keyboard.press('Home');
+    for (const id of ['cookie', 'work', 'receipt', 'retirement', 'route']) {
+      await page.keyboard.press('Tab');
+      assert.equal(await page.evaluate(() => document.activeElement.id), id);
+    }
+    await observe('default surface and keyboard traversal across every configuration control');
+
+    await page.locator('#retire').evaluate((button) => button.dispatchEvent(new Event('click')));
+    assert.match(await value('input-error'), /out of order/);
+    assert.equal(await value('phase'), 'Phase: ready');
+    assert.equal(await historyCount(), 0);
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'input-error');
+    await observe('disabled-action bypass is rejected without state advancement');
+    await reset();
+    await page.locator('#connection').evaluate((select) => {
+      select.add(new Option('Invalid injected choice', 'invalid'));
+      select.value = 'invalid';
+    });
+    await page.locator('#route').focus();
+    await page.keyboard.press('Enter');
+    assert.match(await value('input-error'), /Invalid connection/);
+    assert.equal(await value('phase'), 'Phase: ready');
+    assert.equal(await value('attempted'), '0');
+    await observe('invalid enum is announced without starting an attempt');
+    await page.locator('#connection option[value="invalid"]').evaluate((option) => option.remove());
+    await reset();
+
+    await page.locator('#route').focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await value('completed'), '1');
+    assert.equal(await value('dependency-count'), '3');
+    await observe('fresh candidate traffic leaves all three old dependencies required');
+    await page.locator('#connection').evaluate((select) => { select.value = 'stale'; });
+    await page.locator('#configuration').evaluate((form) => form.dispatchEvent(new Event('submit', { cancelable: true })));
+    assert.match(await value('input-error'), /locked/);
+    assert.equal(await value('phase'), 'Phase: routed');
+    await page.locator('#resolve').focus();
+    await page.keyboard.press('Space');
+    assert.equal(await page.locator('#connection').inputValue(), 'reconnect');
+    assert.equal(await value('dependency-count'), '0');
+    await page.keyboard.press('Enter');
+    assert.equal(await value('outcome'), 'Synthetic outcome: success');
+    assert.equal(await value('completed'), '4');
+    assert.equal(await value('old-status'), 'retired');
+    await predict('failure', 'FAIL');
+    await observe('resolved success and incorrect prediction remain independent; locked DOM edits cannot alter configuration');
+
+    await next();
+    await config({ connection: 'stale', cookie: 'stale', work: 'pending' });
+    await complete();
+    assert.equal(await value('outcome'), 'Synthetic outcome: safe-abort');
+    assert.equal(await value('old-status'), 'usable');
+    assert.equal(await value('required'), '3');
+    assert.equal(await value('interrupted'), '0');
+    await observe('guarded premature retirement is a safe abort with three named remaining dependencies');
+
+    await next();
+    await config({ connection: 'stale', cookie: 'stale', work: 'pending', retirement: 'force' });
+    await complete();
+    assert.equal(await value('outcome'), 'Synthetic outcome: failure');
+    assert.equal(await value('interrupted'), '3');
+    assert.equal(await value('completed'), '1');
+    assert.equal(await value('old-status'), 'retired');
+    assert.equal(await value('dependency-count'), '3');
+    await predict('failure', 'PASS');
+    await observe('forced retirement interrupts three clients; correct verifier does not rewrite user failure');
+
+    await next();
+    await config({ receipt: 'missing' });
+    await complete();
+    assert.equal(await value('outcome'), 'Synthetic outcome: unknown');
+    assert.equal(await value('unknown'), '1');
+    assert.equal(await value('completed'), '3');
+    assert.equal(await value('attempted'), '4');
+    assert.equal(await value('old-status'), 'usable');
+    assert.match(await value('clients'), /work-1\s+old\s+unknown/);
+    await predict('unknown', 'PASS');
+    await observe('missing final work receipt retains old and one unknown started client');
+
+    await next();
+    await config({ connection: 'stale', receipt: 'missing', retirement: 'force' });
+    await complete();
+    assert.equal(await value('outcome'), 'Synthetic outcome: failure');
+    assert.equal(await value('interrupted'), '1');
+    assert.equal(await value('unknown'), '1');
+    assert.equal(await value('completed'), '2');
+    await observe('known interruption takes precedence without hiding unknown work');
+
+    await next();
+    await config({ work: 'pending' });
+    await complete();
+    assert.equal(await value('outcome'), 'Synthetic outcome: safe-abort');
+    assert.equal(await value('dependency-count'), '1');
+    assert.match(await value('dependencies'), /Already-admitted work\s+work-1\s+required/);
+    assert.equal(await historyCount(), 6);
+    assert.equal(await page.locator('#next-attempt').isDisabled(), true);
+    const retained = await value('history');
+    assert.match(retained, /Attempt 1: success/);
+    assert.match(retained, /Attempt 3: failure/);
+    assert.match(retained, /Attempt 4: unknown/);
+    await page.locator('#next-attempt').evaluate((button) => button.dispatchEvent(new Event('click')));
+    assert.match(await value('input-error'), /Six results/);
+    assert.equal(await value('history'), retained);
+    await observe('only admitted work remains; six mixed results retained and seventh attempt rejected without pruning');
+    await reset();
+    await observe('explicit keyboard reset clears outcomes, trace, prediction, errors and exact defaults');
+    await page.locator('#route').click();
+    await reset();
+    await observe('reset during active work restores exact initial state too');
+
+    await page.setViewportSize({ width: 320, height: 800 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.locator('#connection').focus();
+    assert.equal(await page.locator('#connection').evaluate((element) => parseFloat(getComputedStyle(element).outlineWidth) >= 3), true);
+    assert.deepEqual(proof.exerciseNetworkRequests, []);
+    assert.deepEqual(proof.pageErrors, []);
+    assert.deepEqual(proof.consoleErrors.filter((entry) => entry.stage === 'exercise'), []);
+    await observe('narrow viewport fits and keyboard focus is visible without exercise network requests');
+
+    stage = 'csp-probes';
+    const originalURL = page.url();
+    await page.evaluate(() => {
+      globalThis.__s050Csp = [];
+      globalThis.__s050InlineExecuted = false;
+      globalThis.__s050EvalExecuted = false;
+      document.addEventListener('securitypolicyviolation', (event) => {
+        globalThis.__s050Csp.push({ directive: event.effectiveDirective, blockedURI: event.blockedURI, disposition: event.disposition });
+      });
+      const inline = document.createElement('script');
+      inline.textContent = 'globalThis.__s050InlineExecuted = true;';
+      document.body.append(inline);
+      const external = document.createElement('script');
+      external.src = 'http://127.0.0.1:9/s050-blocked-script.js';
+      document.body.append(external);
+      const style = document.createElement('style');
+      style.textContent = 'body { color: rgb(1, 2, 3); }';
+      document.head.append(style);
+      fetch('http://127.0.0.1:9/s050-blocked-connect').catch(() => {});
+      const frame = document.createElement('iframe');
+      frame.name = 's050-csp-target';
+      frame.src = 'data:text/html,blocked-frame';
+      document.body.append(frame);
+      const object = document.createElement('object');
+      object.data = 'data:text/plain,blocked-object';
+      document.body.append(object);
+      const form = document.createElement('form');
+      form.action = 'http://127.0.0.1:9/s050-blocked-form';
+      form.method = 'post';
+      form.target = frame.name;
+      document.body.append(form);
+      form.submit();
+      const base = document.createElement('base');
+      base.href = 'http://127.0.0.1:9/';
+      document.head.append(base);
+    });
+    await page.evaluate((url) => {
+      const probe = document.createElement('script');
+      probe.src = url;
+      document.body.append(probe);
+    }, pathToFileURL(path.join(root, 'tests', 'csp-probe.js')).href);
+    await page.waitForFunction(() => [
+      'script-src-elem', 'script-src', 'style-src-elem', 'connect-src', 'frame-src', 'object-src', 'form-action', 'base-uri',
+    ].every((directive) => globalThis.__s050Csp.some((event) => event.directive === directive)));
+    proof.cspViolations = await page.evaluate(() => globalThis.__s050Csp);
+    assert.equal(await page.evaluate(() => globalThis.__s050InlineExecuted), false);
+    assert.equal(await page.evaluate(() => globalThis.__s050EvalExecuted), false);
+    assert.equal(await page.evaluate(() => globalThis.__s050EvalError), 'EvalError');
+    assert.equal(proof.cspViolations.every((event) => event.disposition === 'enforce'), true);
+    assert.equal(page.url(), originalURL);
+    assert.equal(await value('phase'), 'Phase: ready');
+    assert.equal(await historyCount(), 0);
+    assert.deepEqual(proof.pageErrors, []);
+    await observe('real CSP blocks inline/external scripts, dynamic evaluation, styles, connect, frames, objects, forms and base changes');
+    proof.outcome = 'PASS';
+  } catch (error) {
+    failure = error;
+    proof.error = { name: error.name, message: error.message, stack: error.stack };
+  } finally {
+    try {
+      if (session) await session.close();
+      proof.cleanup = { closed: true, sessionStarted: Boolean(session), awaitedFinallyClose: true };
+    } catch (error) {
+      proof.cleanup = { closed: false, awaitedFinallyClose: true, error: error.message };
+      proof.outcome = 'FAIL';
+      failure = failure ? new AggregateError([failure, error], 'Browser and cleanup failed') : error;
+    }
+    proof.completedAtUtc = new Date().toISOString();
+    if (capture) {
+      const evidence = path.join(root, 'evidence');
+      let name = process.env.S050_CAPTURE_NAME;
+      if (!name) {
+        let number = 1;
+        do { name = `browser-direct-${String(number++).padStart(3, '0')}`; }
+        while (fs.existsSync(path.join(evidence, `${name}.observations.json`)));
+      }
+      if (!/^browser-(?:run|direct)-\d{3,}$/.test(name)) throw new Error('Invalid owned capture name.');
+      const bytes = `${JSON.stringify(proof, null, 2)}\n`;
+      fs.writeFileSync(path.join(evidence, `${name}.observations.json`), bytes, { flag: 'wx' });
+      fs.writeFileSync(path.join(evidence, 'browser.json'), bytes);
+    }
+  }
+  console.log(JSON.stringify({
+    cardId: proof.cardId, outcome: proof.outcome, browser: proof.browserVersion,
+    observations: proof.observations.length, cspViolations: proof.cspViolations.length,
+    cleanup: proof.cleanup, captureExplicitlyEnabled: capture,
+  }));
+  if (failure) throw failure;
+});

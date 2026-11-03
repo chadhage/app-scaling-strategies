@@ -1,0 +1,15 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('..\\model.js');
+
+test('resolved dependencies permit retirement only after all four clients are accounted for', () => {
+  let state = model.createState();
+  for (const action of ['route', 'resolve', 'retire']) state = model.step(state, action);
+  assert.equal(state.result.outcome, 'success');
+  assert.equal(state.result.oldDestination, 'retired');
+  assert.equal(state.result.metrics.attempted, 4);
+  assert.equal(state.result.metrics.completed, 4);
+  assert.equal(state.result.metrics.interrupted, 0);
+  assert.equal(state.result.metrics.unknown, 0);
+});

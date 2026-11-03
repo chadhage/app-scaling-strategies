@@ -1,0 +1,67 @@
+Feature: Account for stale keep-alive and pinned clients before retirement
+  A-S050 / D-S050 / SC-S050 / one frozen S unit
+  Training rehearsal - synthetic data - not a live Azure result
+
+  Background:
+    Given four fixed synthetic clients: fresh, keep-alive, cookie-pinned, and active-work
+    And the old destination is usable
+    And all configuration is bounded and locked once an attempt starts
+
+  Scenario: Resolve all required old dependencies
+    Given reconnect, rebind, finish, verified receipt, and guarded retirement
+    When I route new arrivals, resolve dependencies, and request retirement
+    Then all four clients are accounted for without interruption
+    And the old destination is retired with a synthetic success result
+
+  Scenario: Fresh traffic is not proof of retirement readiness
+    Given stale keep-alive and cookie pins with unfinished old work
+    When I route new arrivals to the candidate
+    Then the fresh client succeeds on the candidate
+    But the three old dependencies remain visible and the old destination stays usable
+    When I resolve dependencies and request guarded retirement
+    Then retirement is blocked as a safe abort, not a successful migration
+    And all three still-required clients remain attributed to the old destination
+
+  Scenario: Each dependency independently blocks retirement
+    Given exactly one of keep-alive, cookie pin, or active work remains required
+    When I request guarded retirement after routing and resolution
+    Then the old destination stays usable
+    And the dependency viewer names that remaining client and dependency
+
+  Scenario: Forced premature retirement interrupts required clients
+    Given stale keep-alive, cookie pins, and unfinished work
+    And forced retirement is selected for the negative experiment
+    When I route, resolve, and retire
+    Then three clients are interrupted and the result is failure
+    And a correct prediction may pass its verifier without rewriting that failure
+
+  Scenario: Missing final work evidence is not success
+    Given reconnect, rebind, and finish but a missing final work receipt
+    When I route, resolve, and request guarded retirement
+    Then one client is unknown and the old destination is retained
+    And the result is unknown, not success
+
+  Scenario: Known interruption takes precedence over missing evidence
+    Given one stale connection and a missing final work receipt
+    When I force retirement after routing and resolution
+    Then one client is interrupted, one is unknown, and the result is failure
+    And no unknown started client is omitted from the four-client denominator
+
+  Scenario: Invalid actions cannot advance or corrupt the rehearsal
+    Given an invalid enum, extra input, forged state, or out-of-order action
+    When that input or action is submitted
+    Then a visible error is announced and the previous state and history are unchanged
+
+  Scenario: Retain every outcome within a finite history
+    Given six completed attempts including success, failure, and unknown
+    When I request another attempt
+    Then the request is blocked without pruning any result
+    When I explicitly reset the rehearsal
+    Then defaults, trace, prediction, errors, and history are reset
+
+  Scenario: Operate safely in an actual browser
+    Given the lesson is opened locally with no server or account
+    Then all controls are keyboard operable with a visible focus indicator
+    And errors are announced, configuration locks, and reset restores focus
+    And CSP blocks inline code, dynamic evaluation, connections, frames, and form submission
+    And no actual cookie, authentication, network protocol, Azure operation, or credential is used

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; media-src 'none'; manifest-src 'none'">
+  <title>S050 — Account for pinned clients before retirement</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S050: Retire only after accounting for pinned clients</h1>
+    <p>A-S050 · D-S050 · SC-S050 · one frozen S unit</p>
+    <p>Moving fresh arrivals does not clear an old keep-alive connection, a routing-cookie pin,
+      or already-admitted work. Keep the old destination usable until each required dependency is resolved.</p>
+  </header>
+  <main id="exercise" tabindex="-1">
+    <section aria-labelledby="instructions">
+      <h2 id="instructions">Conduct a bounded rehearsal</h2>
+      <p>Four fixed synthetic client checks begin when you route new arrivals:
+        <strong>fresh-1</strong>, <strong>keepalive-1</strong>, <strong>pinned-1</strong>,
+        and <strong>work-1</strong>. Each contributes once to the denominator.
+        No real connection or cookie is created. “Finish” without a verified final work receipt is unknown.</p>
+      <ol>
+        <li>Choose how to handle each old dependency; route fresh arrivals to the candidate.</li>
+        <li>Resolve according to your choices; inspect what still requires the old destination.</li>
+        <li>Request retirement. Guarded retirement blocks known or unverified dependencies.
+          Forced retirement is an explicit negative experiment, not a bypass that can claim success.</li>
+      </ol>
+      <form id="configuration" novalidate>
+        <fieldset id="config-fields">
+          <legend>Configure before starting; choices lock during an attempt</legend>
+          <label for="connection">Old keep-alive connection</label>
+          <select id="connection" name="connection">
+            <option value="reconnect">Reconnect to candidate and account for its request</option>
+            <option value="stale">Leave stale connection requiring old destination</option>
+          </select>
+          <label for="cookie">Synthetic routing-cookie pin</label>
+          <select id="cookie" name="cookie">
+            <option value="rebind">Rebind to candidate and account for its request</option>
+            <option value="stale">Leave routing pin requiring old destination</option>
+          </select>
+          <label for="work">Already-admitted old work</label>
+          <select id="work" name="work">
+            <option value="finish">Finish work on old destination</option>
+            <option value="pending">Leave work pending on old destination</option>
+          </select>
+          <label for="receipt">Final work receipt</label>
+          <select id="receipt" name="receipt">
+            <option value="verified">Verified final receipt if work finishes</option>
+            <option value="missing">Missing final receipt; a claimed finish is unverified</option>
+          </select>
+          <label for="retirement">Retirement policy</label>
+          <select id="retirement" name="retirement">
+            <option value="guarded">Guarded: retain old if required or unknown</option>
+            <option value="force">Force: negative experiment, may interrupt clients</option>
+          </select>
+        </fieldset>
+        <button id="route" type="submit">1. Route new arrivals</button>
+      </form>
+      <div class="actions">
+        <button id="resolve" type="button" disabled>2. Resolve dependencies</button>
+        <button id="retire" type="button" disabled>3. Request retirement</button>
+        <button id="next-attempt" type="button" disabled>Another attempt</button>
+        <button id="reset-rehearsal" type="button">Reset rehearsal</button>
+      </div>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <noscript>This interactive synthetic lesson requires JavaScript. No retirement result is available without it.</noscript>
+    </section>
+    <section aria-labelledby="inventory-title">
+      <h2 id="inventory-title">Retirement dependency viewer</h2>
+      <p id="phase" role="status">Phase: ready</p>
+      <p>Fresh admission target: <strong id="route-target">old</strong>.
+        Old destination: <strong id="old-status">usable</strong>.</p>
+      <p>Required at the current decision: <strong id="dependency-count">3</strong>;
+        unverified: <strong id="unverified-count">0</strong>.
+        Forced retirement does not erase the unresolved inventory.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Required old destination dependencies</caption>
+          <thead><tr><th scope="col">Dependency</th><th scope="col">Client</th><th scope="col">Accounting</th></tr></thead>
+          <tbody id="dependencies"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>Four-client attribution</caption>
+          <thead><tr><th scope="col">Client</th><th scope="col">Destination</th><th scope="col">Outcome</th></tr></thead>
+          <tbody id="clients"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Result, user impact, and cleanup</h2>
+      <p id="outcome" role="status">Not evaluated.</p>
+      <p id="reason">No retirement decision yet.</p>
+      <dl class="metrics" id="metrics">
+        <div><dt>Attempted</dt><dd id="attempted">0</dd></div>
+        <div><dt>Completed</dt><dd id="completed">0</dd></div>
+        <div><dt>Interrupted</dt><dd id="interrupted">0</dd></div>
+        <div><dt>Unknown</dt><dd id="unknown">0</dd></div>
+        <div><dt>Still required</dt><dd id="required">0</dd></div>
+      </dl>
+      <p>User impact: <strong id="user-impact">not evaluated</strong>.</p>
+      <p>Cleanup: <strong id="cleanup">old destination retained</strong>.</p>
+      <p>Safe abort is not a successful migration. Unknown started outcomes never count as completed.
+        All counts are synthetic fixture accounting, not native traffic or protocol measurements.</p>
+      <form id="prediction-form" novalidate>
+        <label for="prediction">Predict the recorded result</label>
+        <select id="prediction" disabled>
+          <option value="">Choose an outcome</option>
+          <option value="success">success — every dependency accounted for, then retired</option>
+          <option value="safe-abort">safe-abort — known required clients retained on old</option>
+          <option value="failure">failure — required clients interrupted by retirement</option>
+          <option value="unknown">unknown — incomplete final evidence</option>
+        </select>
+        <button id="check-prediction" type="submit" disabled>Check prediction</button>
+      </form>
+      <p id="prediction-result" role="status">Prediction not checked.</p>
+    </section>
+    <section aria-labelledby="trace-title">
+      <h2 id="trace-title">Current synthetic trace</h2>
+      <ol id="trace"><li>No attempt started.</li></ol>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained outcomes</h2>
+      <p id="history-limit">0 of 6 results retained. Only explicit reset or page reload clears this in-memory history.</p>
+      <ol id="history"><li>No completed attempts.</li></ol>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Preconditions and limits</h2>
+      <p>Use a modern browser with local HTML, CSS, and JavaScript. No account, server, credentials,
+        infrastructure, actual authentication, real cookies or network requests are needed.
+        The fixture has four clients, three dependencies, three steps, and at most six retained attempts;
+        there is no timer, load generator, or random outcome.</p>
+      <p>This portable model does not prove TCP keep-alive behavior, routing-cookie behavior,
+        native Azure retirement, production Node.js 24 support, five-nines reliability, or completion
+        of B-S050 or D-S050. No cloud, IaC, scaffold, registration, deployment, or spend is authorized.</p>
+      <p><a href="README.md">Lesson instructions and verification</a> ·
+        <a href="../../README.md#e-in-flight-requests-and-long-lived-work">Exact source scenario</a> ·
+        <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft disclaimer</a></p>
+    </section>
+  </main>
+</body>
+</html>

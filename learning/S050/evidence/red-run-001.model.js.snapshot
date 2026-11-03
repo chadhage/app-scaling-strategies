@@ -1,0 +1,24 @@
+(function (root) {
+  'use strict';
+  const DEFAULTS = Object.freeze({
+    connection: 'reconnect',
+    cookie: 'rebind',
+    work: 'finish',
+    receipt: 'verified',
+    retirement: 'guarded',
+  });
+  function createState(config = DEFAULTS) {
+    return { phase: 'ready', config: { ...config }, result: null };
+  }
+  function step(state, action) {
+    const phase = { route: 'routed', resolve: 'resolved', retire: 'reviewed' }[action];
+    return {
+      ...state,
+      phase,
+      result: action === 'retire' ? { outcome: 'unknown', oldDestination: 'usable' } : null,
+    };
+  }
+  const api = { DEFAULTS, createState, step };
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S050 = api;
+}(typeof globalThis === 'object' ? globalThis : this));
