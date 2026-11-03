@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
-const catalog = require('../catalog-data.js');
+const catalog = require('../evidence/op-catalog-snapshot-refresh-101-541256d56385/catalog-data.01675ac8d423.js.txt');
 const matrix = require('../../C003/matrix-data.js');
 const contract = require('../catalog-contract.js');
 const source = require('../catalog-source.cjs');
@@ -22,14 +22,14 @@ const acceptedUnits = ledger.cards.filter(source.acceptedLesson);
 const expectedIds = acceptedUnits.filter(card => /^A-S\d{3}$/.test(card.id))
   .map(card => card.id.slice(2)).sort();
 
-test('the catalog is bound to the immutable seventy-six-unit source, never mutable HEAD', () => {
+test('the archived catalog stays bound to the immutable seventy-six-unit source, never mutable HEAD', () => {
   assert.equal(acceptedUnits.length, 76);
   assert.deepEqual(expectedIds, Array.from({ length: 61 }, (_, index) =>
     `S${String(index + 1).padStart(3, '0')}`));
   assert.equal(catalog.source.commit, FIXED_SOURCE);
   assert.equal(catalog.acceptanceSnapshot.commit, FIXED_SOURCE);
   assert.equal(catalog.acceptanceSnapshot.live, false);
-  assert.equal(source.PINNED_COMMIT, FIXED_SOURCE);
+  assert.equal(catalog.capabilityMatrix.sourceCommit, FIXED_SOURCE);
 });
 
 test('all 61 accepted portable destinations survive every existing consumer with no native or parent promotion', async () => {

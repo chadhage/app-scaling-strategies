@@ -7,7 +7,7 @@ const { createHash } = require('node:crypto');
 const assert = require('node:assert/strict');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const PINNED_COMMIT = '01675ac8d4230c51dad027b67a1971d8d3490d74';
+const PINNED_COMMIT = '541256d563853396745381b9aa5fffd8ee29148e';
 const SOURCE_PATHS = Object.freeze({
   readme: 'README.md',
   backlog: '.docs\\wiki\\backlog.md',

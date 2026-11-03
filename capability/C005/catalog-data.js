@@ -18,8 +18,8 @@
   "cardId": "C005",
   "scope": "local-source-derived-snapshot",
   "source": {
-    "commit": "01675ac8d4230c51dad027b67a1971d8d3490d74",
-    "commitTimeUtc": "2026-11-03T19:37:44.000Z",
+    "commit": "541256d563853396745381b9aa5fffd8ee29148e",
+    "commitTimeUtc": "2026-11-03T21:20:11.000Z",
     "readme": {
       "path": "README.md",
       "sha256": "852a82420f3b17a41c6aa56ae32fc1ba37829181654bcd6fa32fd00e88310519"
@@ -30,17 +30,17 @@
     }
   },
   "acceptanceSnapshot": {
-    "commit": "01675ac8d4230c51dad027b67a1971d8d3490d74",
-    "commitTimeUtc": "2026-11-03T19:37:44.000Z",
+    "commit": "541256d563853396745381b9aa5fffd8ee29148e",
+    "commitTimeUtc": "2026-11-03T21:20:11.000Z",
     "ledgerPath": ".docs\\wiki\\flow-state.json",
-    "ledgerSha256": "96764e61587928d7e2e45a15a9668b11faccd62c21042ff994e9c19d875a7f0d",
-    "ledgerUpdatedAtUtc": "2026-11-03T19:37:43.7317890Z",
+    "ledgerSha256": "641b7ee62e3cb8575d3330ab491b6c85c197a5b635c0d68e7705ca4cf45cbec0",
+    "ledgerUpdatedAtUtc": "2026-11-03T21:19:47.4028960Z",
     "live": false
   },
   "capabilityMatrix": {
     "cardId": "C003",
     "schemaVersion": "1.0.0",
-    "sourceCommit": "01675ac8d4230c51dad027b67a1971d8d3490d74",
+    "sourceCommit": "541256d563853396745381b9aa5fffd8ee29148e",
     "dataPath": "capability\\C003\\matrix-data.js",
     "contractPath": "capability\\C003\\matrix-contract.js",
     "href": "../C003/index.html"
@@ -3840,12 +3840,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S062",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S062/index.html",
+        "evidence": {
+          "commit": "4241921851f706935a6d51631d867ae57ba45e43",
+          "tag": "kanban/A-S062/4241921851f7",
+          "acceptedAtUtc": "2026-11-03T19:40:19.2058926Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -3897,12 +3901,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S063",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S063/index.html",
+        "evidence": {
+          "commit": "56e577e090e6c2578fa5a82ac127140c3c9d8fe6",
+          "tag": "kanban/A-S063/56e577e090e6",
+          "acceptedAtUtc": "2026-11-03T19:54:02.4451235Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -3954,12 +3962,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S064",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S064/index.html",
+        "evidence": {
+          "commit": "630517f958e9d83a8df7555101c36aab8da98d33",
+          "tag": "kanban/A-S064/630517f958e9",
+          "acceptedAtUtc": "2026-11-03T19:52:32.1770479Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4011,12 +4023,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S065",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S065/index.html",
+        "evidence": {
+          "commit": "4a01e0c34e388ea898a87ea5e2e5b2fd879bebad",
+          "tag": "kanban/A-S065/4a01e0c34e38",
+          "acceptedAtUtc": "2026-11-03T19:52:32.6430404Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4068,12 +4084,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S066",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S066/index.html",
+        "evidence": {
+          "commit": "624a0459443a6d79bb53ea5df2f3511623bb695b",
+          "tag": "kanban/A-S066/624a0459443a",
+          "acceptedAtUtc": "2026-11-03T19:57:48.9926639Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4125,12 +4145,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S067",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S067/index.html",
+        "evidence": {
+          "commit": "0e4c21715c555f1aa1e67a54d3fcbee2fea89c96",
+          "tag": "kanban/A-S067/0e4c21715c55",
+          "acceptedAtUtc": "2026-11-03T20:04:19.9505359Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4182,12 +4206,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S068",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S068/index.html",
+        "evidence": {
+          "commit": "d913ec5765cf877039f25db096d3d21f1b5487ee",
+          "tag": "kanban/A-S068/d913ec5765cf",
+          "acceptedAtUtc": "2026-11-03T20:10:50.6780619Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4239,12 +4267,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S069",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S069/index.html",
+        "evidence": {
+          "commit": "ea529bba0bb35deba8240c6f420bb2752eb9769c",
+          "tag": "kanban/A-S069/ea529bba0bb3",
+          "acceptedAtUtc": "2026-11-03T20:12:18.0275833Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4296,12 +4328,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S070",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S070/index.html",
+        "evidence": {
+          "commit": "ba9bde7783066c7442a8a0ee44993da125448525",
+          "tag": "kanban/A-S070/ba9bde778306",
+          "acceptedAtUtc": "2026-11-03T20:10:51.2584551Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4353,12 +4389,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S071",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S071/index.html",
+        "evidence": {
+          "commit": "ba6e543b6f60e1fa9f10ba643be045e4b1840df5",
+          "tag": "kanban/A-S071/ba6e543b6f60",
+          "acceptedAtUtc": "2026-11-03T20:18:00.1981957Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4410,12 +4450,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S072",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S072/index.html",
+        "evidence": {
+          "commit": "db46dee71e6b2bc3c16bf31b7f98a4b8e8c99a15",
+          "tag": "kanban/A-S072/db46dee71e6b",
+          "acceptedAtUtc": "2026-11-03T20:30:22.5364023Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4467,12 +4511,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S073",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S073/index.html",
+        "evidence": {
+          "commit": "ea674bfa3653df3169a8521d582aa812d99bdf24",
+          "tag": "kanban/A-S073/ea674bfa3653",
+          "acceptedAtUtc": "2026-11-03T20:28:03.8886107Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4524,12 +4572,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S074",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S074/index.html",
+        "evidence": {
+          "commit": "8d1ceb83dfba1b6fd947fe0f25d9a8bb4e9cb55d",
+          "tag": "kanban/A-S074/8d1ceb83dfba",
+          "acceptedAtUtc": "2026-11-03T20:28:04.1926298Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4581,12 +4633,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S075",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S075/index.html",
+        "evidence": {
+          "commit": "796078001267d0bc6769dfcb14ddc82e467036a0",
+          "tag": "kanban/A-S075/796078001267",
+          "acceptedAtUtc": "2026-11-03T20:28:04.3891402Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4638,12 +4694,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S076",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S076/index.html",
+        "evidence": {
+          "commit": "e53021db6a9a67e5ca6fde5ace8244e5383e5615",
+          "tag": "kanban/A-S076/e53021db6a9a",
+          "acceptedAtUtc": "2026-11-03T20:45:42.7157768Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4695,12 +4755,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S077",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S077/index.html",
+        "evidence": {
+          "commit": "1ddf8e02a0adc147bec6fa749471989f264dbc82",
+          "tag": "kanban/A-S077/1ddf8e02a0ad",
+          "acceptedAtUtc": "2026-11-03T20:42:19.394586Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4752,12 +4816,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S078",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S078/index.html",
+        "evidence": {
+          "commit": "a345b0e4605122bb9221f924e9c16448b453e0e8",
+          "tag": "kanban/A-S078/a345b0e46051",
+          "acceptedAtUtc": "2026-11-03T20:54:46.2755095Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4809,12 +4877,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S079",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S079/index.html",
+        "evidence": {
+          "commit": "704779de06573b47556eaaf40032ed6f5c4a3957",
+          "tag": "kanban/A-S079/704779de0657",
+          "acceptedAtUtc": "2026-11-03T20:52:46.226236Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4866,12 +4938,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S080",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S080/index.html",
+        "evidence": {
+          "commit": "5dfd2745adc1f5338d43bc7c76538b29f46b2e5e",
+          "tag": "kanban/A-S080/5dfd2745adc1",
+          "acceptedAtUtc": "2026-11-03T20:48:12.6501133Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4923,12 +4999,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S081",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S081/index.html",
+        "evidence": {
+          "commit": "357ce73bb3ff523216302de5eeea7b35e5c9af6d",
+          "tag": "kanban/A-S081/357ce73bb3ff",
+          "acceptedAtUtc": "2026-11-03T20:52:46.9312729Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -4980,12 +5060,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S082",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S082/index.html",
+        "evidence": {
+          "commit": "07f7231e94421570f95c85cc8554729541198ff5",
+          "tag": "kanban/A-S082/07f7231e9442",
+          "acceptedAtUtc": "2026-11-03T21:02:40.9714496Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -5037,12 +5121,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S083",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S083/index.html",
+        "evidence": {
+          "commit": "2cd41af767ac95e55f2e10e461819129ca356a51",
+          "tag": "kanban/A-S083/2cd41af767ac",
+          "acceptedAtUtc": "2026-11-03T21:11:16.8928801Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -5094,12 +5182,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S084",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S084/index.html",
+        "evidence": {
+          "commit": "e7423d2ac8a91a026fe177ee3f9323622942f2e3",
+          "tag": "kanban/A-S084/e7423d2ac8a9",
+          "acceptedAtUtc": "2026-11-03T21:15:09.0649197Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -5151,12 +5243,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S085",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S085/index.html",
+        "evidence": {
+          "commit": "56a77f307bde22cd14a89af64bd833121f9399e6",
+          "tag": "kanban/A-S085/56a77f307bde",
+          "acceptedAtUtc": "2026-11-03T21:15:10.5767169Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -5208,12 +5304,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S086",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S086/index.html",
+        "evidence": {
+          "commit": "996134c2a0940818d6982f36009aa2a7cd171aa9",
+          "tag": "kanban/A-S086/996134c2a094",
+          "acceptedAtUtc": "2026-11-03T21:19:47.0841642Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",

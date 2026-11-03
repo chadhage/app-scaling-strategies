@@ -8,9 +8,14 @@ generation and necessary consumer proof bindings only, also for zero credit.
 **OP-CATALOG-SNAPSHOT-REFRESH-51** previously refreshed exactly one later fixed
 51-unit/36-practice snapshot; both preceding catalogs and all earlier proof stay
 byte-for-byte historical.
-**OP-CATALOG-SNAPSHOT-REFRESH-76** now refreshes exactly one fixed
+**OP-CATALOG-SNAPSHOT-REFRESH-76** previously refreshed exactly one fixed
 76-unit/61-practice snapshot. All three preceding snapshots and all 147 earlier
 proof files are preserved; the operation earns zero S/D/L credit.
+**OP-CATALOG-SNAPSHOT-REFRESH-101** now refreshes exactly one immutable
+101-unit/86-practice snapshot. All four preceding catalogs and all 181 earlier
+proof files remain byte-exact, including the 61-practice generator and metadata.
+It is the sixth useful operational mission, not an original C/H completion;
+the parent alone activates and accepts it for zero S/D/L credit.
 
 Open `capability\local-harness\index.html` directly in a browser with JavaScript.
 No install, server, framework, dependency, account, credential or cloud access is
@@ -55,19 +60,19 @@ The original `evidence\provider-integrity.json` records **13 original consumed
 interfaces**, accepted publication commits and exact fingerprints. Twelve remain
 unchanged. Tests still verify the thirteenth's old accepted data baseline against
 C005's byte-preserved snapshot archive, then verify the active data against
-`capability\C005\evidence\op-catalog-snapshot-refresh-76-01675ac8d423\generation.json`
+`capability\C005\evidence\op-catalog-snapshot-refresh-101-541256d56385\generation.json`
 and deterministic extraction. No original fingerprint check is dropped; the new
 generation binding is not self-acceptance. All APIs, declarations and authorities
 remain unchanged.
 
 Availability remains the C005 historical source/acceptance pin
-**`01675ac8d4230c51dad027b67a1971d8d3490d74`**, annotated source tag
-**`kanban/flow-admin/01675ac8d423`**, commit time
-**`2026-11-03T19:37:44.000Z`**, ledger update
-**`2026-11-03T19:37:43.7317890Z`**. The UI displays those values and pinned source
-links. It is **not live availability**. Exactly sixty-one accepted snapshot lessons are
-available: S001–S061. S062 and later files do not silently refresh it.
-The source's 76 accepted units are not reclassified or credited by this operation.
+**`541256d563853396745381b9aa5fffd8ee29148e`**, annotated source tag
+**`kanban/flow-admin/541256d56385`**, commit time
+**`2026-11-03T21:20:11.000Z`**, ledger update
+**`2026-11-03T21:19:47.4028960Z`**. The UI displays those values and pinned source
+links. It is **not live availability**. Exactly 86 accepted snapshot lessons are
+available: S001–S086. S087 and later files do not silently refresh it.
+The source's 101 accepted units are not reclassified or credited by this operation.
 
 - Portable practice is distinct from native runnable/qualified and source-parent
   completion. Native flags and all source-parent completion flags remain false.
@@ -135,7 +140,7 @@ finally { Remove-Item Env:\CAPTURE_BROWSER_EVIDENCE }
 
 Capture happens only after successful checks and awaited child/helper cleanup,
 using exclusive creation of a uniquely named
-`evidence\browser-op-catalog-snapshot-refresh-76-01675ac8d423-*.json`. All old proof
+`evidence\browser-op-catalog-snapshot-refresh-101-541256d56385-*.json`. All old proof
 stays byte-for-byte unchanged and is not relabeled as a current browser run.
 The browser suite verifies the published helper's exact bytes **before import**
 and after cleanup:
@@ -197,14 +202,34 @@ browser verification is `browser-readonly-confirmed-02.json` in that directory.
 It passes all 71 browser cases while preserving all 143 existing proof files,
 including the new 36-practice captures, without appending or modifying any file.
 
-The current fixed-source refresh records genuine **36 !== 61**, immutable-source
+The preceding 76-unit fixed-source refresh records genuine **36 !== 61**, immutable-source
 mismatch and newly accepted S035 behavioral RED before IaC N/A. It reuses the
 same generator and providers, with evidence under
 `capability\C005\evidence\op-catalog-snapshot-refresh-76-01675ac8d423`.
 Its browser checks navigate all 61 actual original practice pages, verify their
 exact synthetic banners and conduct S001 success, negative and reset controls.
 The continuous return journey retains the query, all filters and keyboard focus.
-The current operation's `result-final.json` records actual verification and preservation;
+That operation's `result-final.json` records its historical verification and preservation;
 neither this journey nor operational publication completes H001/H002 or native work.
+
+The current immutable 101-unit refresh records genuine **61 !== 86**, source-pin
+mismatch and newly accepted S062 behavioral RED before IaC N/A. It reuses the
+same generator and providers, with new evidence under
+`capability\C005\evidence\op-catalog-snapshot-refresh-101-541256d56385`.
+All 25 newly accepted S062–S086 destinations have positive consumer coverage.
+The unified browser journey navigates all 86 actual original practice pages,
+verifies each exact synthetic banner and conducts S001 PASS, negative FAIL and reset.
+Returning preserves query, all three filters and keyboard focus. Ordinary reruns
+are checked against quiet owned/proof before-and-after hashes, not capture output.
+The new `result-final.json` records precise leaves/parents, raw/canonical integrity,
+the four historical snapshot hashes and current generated hash. Publication is
+owned-only under the existing publisher mutex; central state and acceptance remain
+parent-only, with zero credit and a stop after this single refresh.
+
+Actual validation passed **216 focused cases (213 leaves, 3 parents)**,
+**34 JavaScript/CommonJS syntax checks**, a PowerShell parser check and
+**71 signed-Edge browser cases (66 leaf groups, 5 parents)**. The ordinary
+capture-unset rerun passed **287 cases (279 leaves, 8 parents)** while preserving
+all **272 owned files / 206 proof files** at its start without any append or rewrite.
 
 [Microsoft Open Source Disclaimer](../../README.md#microsoft-open-source-disclaimer).

@@ -12,7 +12,7 @@ const catalog = require('../../C005/catalog-data.js');
 const catalogContract = require('../../C005/catalog-contract.js');
 const matrix = require('../../C003/matrix-data.js');
 const filterApi = require('../catalog-filters.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-76-01675ac8d423/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-101-541256d56385/generation.json');
 const helperPath = path.resolve(__dirname, '..', '..', '..', 'testing', 'browser', 'isolated.cjs');
 const helperSourceSha256 = createHash('sha256').update(readFileSync(helperPath)).digest('hex');
 const PUBLISHED_HELPER_COMMIT = '53c0c0d82cc1db6780a87ac2b1085734af6d5c60';
@@ -34,7 +34,7 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
   const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
   const previousProof = await existingBytes(historicalPath);
   const reportPath = path.join(__dirname, '..', 'evidence',
-    `browser-op-catalog-snapshot-refresh-76-01675ac8d423-${randomUUID()}.json`);
+    `browser-op-catalog-snapshot-refresh-101-541256d56385-${randomUUID()}.json`);
   assert.equal(Object.hasOwn(require.cache, path.join(path.dirname(helperPath), 'lifecycle.cjs')), false);
   const session = await openIsolatedLesson('capability\\C007\\index.html');
   const { page, browserVersion } = session;
@@ -96,7 +96,7 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
       assert.equal(await page.locator('.lesson-link').count(), generation.acceptedPortableLessons);
       assert.deepEqual(await page.locator('.lesson-link').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))),
         catalog.entries.filter(entry => entry.learning.available).map(entry => entry.learning.href));
-      assert.equal(await page.locator('#S062 .lesson-link, #S063 .lesson-link, #W002 .lesson-link').count(), 0);
+      assert.equal(await page.locator('#S087 .lesson-link, #S088 .lesson-link, #W002 .lesson-link').count(), 0);
       assert.ok((await page.locator('.native-status').allTextContents()).every(text => /runnable: false; qualified: false/.test(text)));
       assert.ok((await page.locator('.parent-status').allTextContents()).every(text => /incomplete; completed: false/.test(text)));
       assert.deepEqual(JSON.parse(await page.locator('#permission-values').innerText()), matrix.permissions);
@@ -176,7 +176,7 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
       }
       await reset('Space');
     });
-    await check('keyboard readiness choices distinguish sixty-one accepted, 91 unavailable and zero native/parent results', async () => {
+    await check('keyboard readiness choices distinguish 86 accepted, 66 unavailable and zero native/parent results', async () => {
       for (const [readiness, count] of [['portable-available', generation.acceptedPortableLessons],
         ['portable-unavailable', catalog.entries.length - generation.acceptedPortableLessons],
         ['native-unavailable', 152], ['native-runnable', 0], ['native-qualified', 0], ['parent-complete', 0]]) {
@@ -185,7 +185,7 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
         assert.equal(await page.locator('#catalog-error').isVisible(), false);
         if (readiness === 'portable-unavailable') {
           assert.equal(await page.locator('.lesson-link').count(), 0);
-          assert.match(await page.locator('#S062 .learning-status').innerText(), /No accepted Done review/);
+          assert.match(await page.locator('#S087 .learning-status').innerText(), /No accepted Done review/);
         }
       }
       await reset();
@@ -338,7 +338,7 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
     assert.match(browserVersion, /^156\./);
     assert.match(process.version, /^v22\./);
     report = {
-      schemaVersion: 1, cardId: 'C007', operation: 'OP-CATALOG-SNAPSHOT-REFRESH-76', status: 'passed',
+      schemaVersion: 1, cardId: 'C007', operation: 'OP-CATALOG-SNAPSHOT-REFRESH-101', status: 'passed',
       observedAtUtc: new Date().toISOString(), mode: 'actual-isolated-headless',
       engine: 'Microsoft Edge (Chromium)', browserVersion,
       playwrightVersion: helperRequire('playwright/package.json').version, nodeVersion: process.version,

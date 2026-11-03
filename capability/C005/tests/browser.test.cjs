@@ -10,7 +10,7 @@ const { createRequire } = require('node:module');
 const { execFileSync } = require('node:child_process');
 const catalog = require('../catalog-data.js');
 const contract = require('../catalog-contract.js');
-const generation = require('../evidence/op-catalog-snapshot-refresh-76-01675ac8d423/generation.json');
+const generation = require('../evidence/op-catalog-snapshot-refresh-101-541256d56385/generation.json');
 const helperPath = path.resolve(__dirname, '..', '..', '..', 'testing', 'browser', 'isolated.cjs');
 const helperSourceSha256 = createHash('sha256').update(readFileSync(helperPath)).digest('hex');
 const PUBLISHED_HELPER_COMMIT = '53c0c0d82cc1db6780a87ac2b1085734af6d5c60';
@@ -26,7 +26,7 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
   const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
   const historicalProof = await fs.readFile(historicalPath);
   const reportPath = path.join(__dirname, '..', 'evidence',
-    `browser-op-catalog-snapshot-refresh-76-01675ac8d423-${randomUUID()}.json`);
+    `browser-op-catalog-snapshot-refresh-101-541256d56385-${randomUUID()}.json`);
   assert.equal(Object.hasOwn(require.cache, path.join(path.dirname(helperPath), 'lifecycle.cjs')), false);
   const session = await openIsolatedLesson('capability\\C005\\index.html');
   const { page, browserVersion } = session;
@@ -69,7 +69,7 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
       assert.equal(await page.locator('#catalog-error').isVisible(), false);
       assert.equal(await page.locator('#catalog-empty').isVisible(), false);
     });
-    await check('historical commit/time and all sixty-one accepted learning destinations are explicit, not live', async () => {
+    await check('historical commit/time and all 86 accepted learning destinations are explicit, not live', async () => {
       const summary = await page.locator('#snapshot-summary').innerText();
       assert.ok(summary.includes(catalog.acceptanceSnapshot.commit));
       assert.ok(summary.includes(catalog.acceptanceSnapshot.commitTimeUtc));
@@ -80,8 +80,8 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
       assert.equal(await page.locator('.lesson-link').count(), generation.acceptedPortableLessons);
       assert.deepEqual(await page.locator('.lesson-link').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))),
         catalog.entries.filter(entry => entry.learning.available).map(entry => entry.learning.href));
-      assert.equal(await page.locator('#S062 .lesson-link, #S063 .lesson-link, #W001 .lesson-link, #W002 .lesson-link').count(), 0);
-      assert.match(await page.locator('#S062 .learning-status').innerText(), /No accepted Done review.*published-but-unaccepted/s);
+      assert.equal(await page.locator('#S087 .lesson-link, #S088 .lesson-link, #W001 .lesson-link, #W002 .lesson-link').count(), 0);
+      assert.match(await page.locator('#S087 .learning-status').innerText(), /No accepted Done review.*published-but-unaccepted/s);
       assert.match(await page.locator('#W002 .learning-status').innerText(), /No portable A-card lesson is defined/);
     });
     await check('all 302 actual source anchors point at the matching pinned canonical row', async () => {
@@ -217,7 +217,7 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
     });
     assert.equal(checks.length, 11);
     report = {
-      schemaVersion: 1, cardId: 'C005', operation: 'OP-CATALOG-SNAPSHOT-REFRESH-76', status: 'passed',
+      schemaVersion: 1, cardId: 'C005', operation: 'OP-CATALOG-SNAPSHOT-REFRESH-101', status: 'passed',
       observedAtUtc: new Date().toISOString(), mode: 'actual-isolated-headless',
       engine: 'Microsoft Edge (Chromium)', browserVersion,
       playwrightVersion: helperRequire('playwright/package.json').version,

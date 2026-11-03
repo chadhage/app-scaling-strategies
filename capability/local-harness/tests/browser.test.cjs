@@ -9,7 +9,7 @@ const { createHash, randomUUID } = require('node:crypto');
 const { createRequire } = require('node:module');
 const { execFileSync } = require('node:child_process');
 const catalog = require('../../C005/catalog-data.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-76-01675ac8d423/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-101-541256d56385/generation.json');
 const repo = path.resolve(__dirname, '..', '..', '..');
 const helperPath = path.join(repo, 'testing', 'browser', 'isolated.cjs');
 const helperRequire = createRequire(helperPath);
@@ -19,7 +19,7 @@ const TRAINING_BANNER = 'Training rehearsal - synthetic data - not a live Azure 
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
 const reportPath = path.join(__dirname, '..', 'evidence',
-  `browser-op-catalog-snapshot-refresh-76-01675ac8d423-${randomUUID()}.json`);
+  `browser-op-catalog-snapshot-refresh-101-541256d56385-${randomUUID()}.json`);
 
 async function previousReport() {
   return fs.readFile(historicalPath).catch(error => {
@@ -143,7 +143,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       assert.equal(await page.locator('#catalog-error').isVisible(), false);
       assert.equal(await page.locator('#preparation').isVisible(), false);
     });
-    await check('all sixty-one accepted lessons pass through real readiness, keyboard preparation and actual practice navigation', async () => {
+    await check('all 86 accepted lessons pass through real readiness, keyboard preparation and actual practice navigation', async () => {
       await choose('readiness-filter', 'portable-available');
       assert.deepEqual(await actualIds(), generation.acceptedPortableIds);
       assert.equal(await page.locator('#matching-entries > article').count(), generation.acceptedPortableLessons);
@@ -313,7 +313,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       await reset();
     });
     await check('unavailable lessons and workflow CONTAINER/BASE distinctions retain exact preparation and all unapproved limits', async () => {
-      await open('S062');
+      await open('S087');
       assert.equal(await page.locator('.lesson-link').count(), 0);
       assert.equal(await page.locator('#preparation-body').getAttribute('data-learning-mode'), 'unavailable-learning');
       await reset();
@@ -442,7 +442,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
     });
     assert.equal(checks.length, 12);
     report = {
-      operation: 'OP-CATALOG-SNAPSHOT-REFRESH-76', status: 'passed', observedAtUtc: new Date().toISOString(),
+      operation: 'OP-CATALOG-SNAPSHOT-REFRESH-101', status: 'passed', observedAtUtc: new Date().toISOString(),
       mode: 'actual-isolated-headless', mockedBrowser: false, browserVersion, signature, playwrightVersion,
       nodeVersion: process.version, productionNode24Validated: false,
       helper: 'testing\\browser\\isolated.cjs', helperApi: 'openIsolatedLesson',
