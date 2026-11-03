@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S057 · Old HTML, immutable assets</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#lesson">Skip to lesson</a>
+  <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+  <main id="lesson" tabindex="-1">
+    <h1>S057 · Old HTML, immutable assets</h1>
+    <p>Deploying new HTML does not rewrite an existing page's asset references. Keep the old required assets available while that HTML can still be used.</p>
+    <p><strong>Local deterministic model only:</strong> “cache”, “deploy”, “retire”, 200 and 404 below are synthetic state and observations. No real HTML cache, CDN, HTTP request, native deployment or asset deletion occurs.</p>
+    <section aria-labelledby="instructions">
+      <h2 id="instructions">Conduct the experiment</h2>
+      <ol>
+        <li>Cache HTML v1, then publish HTML v2 with distinct immutable script and stylesheet identifiers.</li>
+        <li>Optionally retire the selected old assets before loading the cached page.</li>
+        <li>Load cached HTML v1 after deployment. Inspect each required asset, not just the new page.</li>
+        <li>Load current HTML v2 for comparison, then check your prediction.</li>
+        <li>Retain the attempt and compare with old assets kept. Prior failures remain visible.</li>
+      </ol>
+      <p>Exactly two page loads and four required assets per attempt. Pending or withheld observations remain unknown. Six attempts maximum; history lasts until explicit reset or page reload. No retries, latency claim, real user or reliability certification.</p>
+    </section>
+    <section aria-labelledby="operator">
+      <h2 id="operator">Operator controls</h2>
+      <form id="controls">
+        <fieldset id="configuration">
+          <legend>Fixed synthetic conditions (locked after caching)</legend>
+          <label for="observation">Old required script observation</label>
+          <select id="observation" name="observation">
+            <option value="complete">Observe all asset results</option>
+            <option value="withhold-old-script">Withhold the old script observation</option>
+          </select>
+          <label for="retireTarget">Assets removed if you choose Retire</label>
+          <select id="retireTarget" name="retireTarget">
+            <option value="script">Old script only</option>
+            <option value="all-old">Both old required assets</option>
+          </select>
+        </fieldset>
+        <div class="buttons">
+          <button id="start" type="submit">1 · Cache HTML v1</button>
+          <button id="deploy" type="button" disabled>2 · Deploy v2</button>
+          <button id="retire" type="button" disabled>Optional · Retire old assets</button>
+          <button id="load-old" type="button" disabled>3 · Load cached HTML v1</button>
+          <button id="load-new" type="button" disabled>4 · Load current HTML v2</button>
+          <button id="again" type="button" disabled>Retain &amp; compare another</button>
+          <button id="reset-lesson" type="button">Reset all attempts &amp; defaults</button>
+        </div>
+      </form>
+      <p id="error" role="alert" tabindex="-1"></p>
+      <p id="progress" role="status"></p>
+    </section>
+    <section aria-labelledby="evidence-heading">
+      <h2 id="evidence-heading">Measured synthetic evidence</h2>
+      <p id="html-state"></p>
+      <p id="retirement"></p>
+      <ul id="assets" aria-label="Synthetic immutable asset inventory"></ul>
+      <p id="outcome" data-outcome="unknown" role="status"></p>
+      <p id="pages"></p>
+      <p id="metrics"></p>
+      <div class="table-wrap">
+        <table>
+          <caption>Required asset observations · synthetic statuses, not network responses</caption>
+          <thead><tr><th scope="col">Page HTML</th><th scope="col">Required asset</th><th scope="col">Synthetic status</th><th scope="col">Result</th></tr></thead>
+          <tbody id="trace"></tbody>
+        </table>
+      </div>
+      <p>Unknown includes pending and withheld observations in the fixed denominator. A known missing required asset is a failure even if another observation is unknown or the new page succeeds.</p>
+    </section>
+    <section aria-labelledby="prediction-heading">
+      <h2 id="prediction-heading">Check your prediction</h2>
+      <label for="prediction">Overall result after both page loads</label>
+      <select id="prediction" disabled>
+        <option value="">Choose a prediction</option>
+        <option value="success">success</option>
+        <option value="failure">failure</option>
+        <option value="unknown">unknown</option>
+      </select>
+      <button id="check" type="button" disabled>Check prediction</button>
+      <p id="prediction-result" data-verdict="none" role="status"></p>
+      <p>A correct prediction about a broken page can PASS this knowledge check; the measured page outcome stays failure.</p>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained completed attempts</h2>
+      <p id="history-bound"></p>
+      <ol id="history"></ol>
+    </section>
+    <footer>
+      <p>A-S057 · D-S057 · SC-S057 · one frozen S unit. B-S057 native evidence and D-S057 source-parent acceptance remain incomplete.</p>
+      <p>No authentication, credentials, management access, cloud calls, infrastructure, deployment or spending. Immutable identifiers are fixed fixture names, not real content-hash certification. <a href="README.md">Instructions and evidence limits</a>.</p>
+    </footer>
+  </main>
+</body>
+</html>

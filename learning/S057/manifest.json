@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S057",
+  "sourceId": "S057",
+  "parentId": "D-S057",
+  "packet": "SC-S057",
+  "kano": "S",
+  "kanoUnit": "A-S057",
+  "owner": "worker-A-S057",
+  "entryGate": "SOURCE",
+  "title": "Static-asset versioning: existing pages still need old assets",
+  "entryPoint": "learning/S057/index.html",
+  "feature": "learning/S057/static-assets.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Load old HTML after deployment; detect asset retirement that breaks an existing page.",
+  "sourceAcceptance": "Existing pages resolve required assets correctly; early asset removal produces a visible failing result.",
+  "preconditions": [
+    "Local browser HTML, CSS and JavaScript; no account, server or installation for the lesson.",
+    "Cached HTML v1 requires app.a17c.js and site.a17c.css.",
+    "Published HTML v2 requires distinct app.b28d.js and site.b28d.css.",
+    "Fixed synthetic immutable identifiers are never rewritten to new contents.",
+    "Every attempt plans two page loads and four required asset observations."
+  ],
+  "actions": [
+    "Choose complete or withheld-old-script observation, and the optional retirement target.",
+    "Cache HTML v1 and deploy v2; optionally retire the old script or both old assets.",
+    "Load cached HTML v1 after deployment, then load current HTML v2 for comparison.",
+    "Inspect synthetic 200/404/unobserved asset results, page outcomes and the fixed denominator.",
+    "Check a prediction, retain completed attempts for comparison, or explicitly reset all defaults and history."
+  ],
+  "syntheticInput": "learning/S057/model.js: four fixed immutable asset identifiers; all page and asset data are synthetic.",
+  "assertions": [
+    "Retained old assets resolve for cached old HTML after v2 publication.",
+    "Early old-script or stylesheet retirement visibly fails the required old-page journey.",
+    "Successful current HTML never erases a failed old page.",
+    "Withheld and pending observations remain unknown; a known failure dominates uncertainty.",
+    "Both page loads and four observed successes are required for overall synthetic success.",
+    "Exact configuration, event-order and replayed-state guards reject invalid commands without mutation.",
+    "At most six completed attempts are retained without implicit pruning; reset is explicit and keyboard accessible."
+  ],
+  "bounds": {
+    "pageLoadsPerAttempt": 2,
+    "requiredAssetsPerAttempt": 4,
+    "maximumActionsPerAttempt": 5,
+    "maximumRetainedAttempts": 6,
+    "observationPresets": 2,
+    "retirementTargetPresets": 2,
+    "retries": 0
+  },
+  "iac": {
+    "status": "N/A",
+    "reference": "learning/S057/evidence/iac.json",
+    "decisionStage": "After genuine loadable-stub assertion RED and before implementation.",
+    "reason": "Resource-free local synthetic lesson; no infrastructure, cloud or deployment authorized."
+  },
+  "testRuntime": {
+    "node": "22.23.4, existing test tooling only",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156.0.4314.50",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "productionNode24Certification": false,
+    "dependencyChanges": false
+  },
+  "limits": [
+    "In-memory deterministic resolver, not actual asset HTTP responses, downloaded bundles, browser caching, CDN propagation or native retirement proof.",
+    "Identifiers model immutable versioned names; they do not certify real content hashes or cache headers.",
+    "No latency, native-platform, source-parent or five-nines certification.",
+    "No authentication, credentials, registration, management calls, cloud, IaC, scaffold, deployment or spending.",
+    "History lasts until explicit reset or page reload and is never silently pruned.",
+    "B-S057 and D-S057 remain incomplete; one frozen S unit, no credit for tests, plumbing or refinement.",
+    "Published browser helper only; its known unattended lifecycle limitation remains, with awaited finally cleanup used here."
+  ]
+}

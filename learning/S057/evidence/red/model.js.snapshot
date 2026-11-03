@@ -1,0 +1,42 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.StaticAssetLesson = factory();
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULTS = Object.freeze({ observation: 'complete', retireTarget: 'script' });
+  function createState() { return { version: 1, current: null, history: [] }; }
+  function transition(state, action, config) {
+    const next = JSON.parse(JSON.stringify(state));
+    if (action === 'reset') return createState();
+    if (action === 'start') next.current = { id: next.history.length + 1, config, actions: ['cache'] };
+    else {
+      if (!next.current) throw new RangeError('Invalid action for phase ready');
+      if (action === 'again') { next.history.push(next.current); next.current = null; }
+      else next.current.actions.push(action);
+    }
+    return next;
+  }
+  function inspect(state) {
+    const actions = state.current ? state.current.actions : [];
+    const last = actions.at(-1);
+    const phase = { cache: 'cached', deploy: 'deployed', retire: 'retired', 'load-old': 'old-loaded', 'load-new': 'complete' }[last] || 'ready';
+    const rows = [];
+    for (const [action, html, stamp] of [['load-old', 'v1', 'a17c'], ['load-new', 'v2', 'b28d']]) {
+      if (actions.includes(action)) {
+        for (const [kind, name, extension] of [['script', 'app', 'js'], ['style', 'site', 'css']]) {
+          rows.push({ html, kind, path: `/assets/${name}.${stamp}.${extension}`, status: 'unobserved', outcome: 'unknown' });
+        }
+      }
+    }
+    return {
+      phase, outcome: 'unknown', oldOutcome: 'unknown', newOutcome: 'unknown', rows,
+      cachedHtml: state.current ? 'v1' : null,
+      publishedHtml: actions.includes('deploy') ? 'v2' : 'v1',
+      retiredPaths: [], assets: [],
+      metrics: { planned: 4, attempted: rows.length, success: 0, failure: 0, unknown: 4, pending: 4 - rows.length },
+      history: [], retainedCount: state.history.length + (phase === 'complete' ? 1 : 0),
+    };
+  }
+  return { DEFAULTS, MAX_ATTEMPTS: 6, createState, transition, inspect };
+}));

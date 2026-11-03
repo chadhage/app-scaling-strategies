@@ -1,0 +1,64 @@
+Feature: Old cached HTML survives a synthetic deployment
+  # A-S057 / D-S057 / SC-S057, one frozen S unit. No native certification.
+  Background:
+    Given the banner says "Training rehearsal - synthetic data - not a live Azure result"
+    And cached HTML v1 requires immutable app.a17c.js and site.a17c.css
+    And deployed HTML v2 requires different immutable app.b28d.js and site.b28d.css
+    And each attempt has two page loads and four required asset observations
+    And there are no network requests, real caches, accounts or cloud resources
+
+  Scenario: Load an existing page after deploying new HTML
+    When I cache HTML v1 and deploy v2 without removing v1 assets
+    And I load cached HTML v1 and then current HTML v2
+    Then both pages resolve their own required assets with synthetic 200 observations
+    And the result is success with four successful assets and zero unknowns
+    And new HTML publication has not rewritten the references in cached HTML
+
+  Scenario Outline: Early retirement visibly breaks the old page, not the new page
+    When I cache HTML v1 and deploy v2
+    And I retire <target>
+    And I load cached HTML v1 and then current HTML v2
+    Then the old page fails with <missing> synthetic 404 observations
+    And current HTML v2 still succeeds
+    And the overall result remains failure
+    Examples:
+      | target        | missing |
+      | old script    | 1       |
+      | all old assets| 2       |
+
+  Scenario: Withheld observation is not a successful load
+    Given observation of the old required script is withheld
+    When I cache HTML v1, deploy v2 and load both pages
+    Then the old script result is unknown, not an invented 200 or 404
+    And the aggregate result is unknown even though the new page succeeds
+
+  Scenario: A known failure dominates an unknown observation
+    Given observation of the old required script is withheld
+    When I deploy v2, retire all old assets and load both pages
+    Then the old stylesheet's observed 404 makes the result failure
+    And the old script remains unknown in the four-asset denominator
+
+  Scenario: Partial progress and a deployment alone cannot prove success
+    When I deploy v2 and load only cached HTML v1 successfully
+    Then the overall result is unknown with two pending asset observations
+
+  Scenario: Later recovery does not erase the first interruption
+    Given an early retirement attempt completed with failure
+    When I retain it and complete another attempt keeping old assets
+    Then history contains the original failure followed by the new success
+    And at six retained attempts another attempt is rejected without pruning
+
+  Scenario: Reject invalid inputs, stale commands and forged state
+    When an unknown configuration, extra key, invalid action, out-of-order command or inconsistent history is supplied
+    Then it is rejected without changing the prior state
+    And the browser reports a handled error rather than a false result
+
+  Scenario: Keyboard operation and explicit reset
+    When I use Tab, Enter and Space to conduct an attempt and check my prediction
+    Then prediction correctness is separate from the measured synthetic result
+    And resetting clears all history, prediction and errors, restores defaults and focuses observation
+    And the form's native reset method is not shadowed
+
+  Scenario: Restrictive browser policy
+    Then inline scripts, event handlers, eval, connections and form submission are blocked by CSP
+    And external same-directory lesson scripts and styles still work
