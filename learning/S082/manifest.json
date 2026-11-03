@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S082",
+  "sourceId": "S082",
+  "parentId": "D-S082",
+  "nativeSibling": "B-S082",
+  "kano": "S",
+  "kanoUnit": "A-S082",
+  "packet": "SC-S082",
+  "owner": "worker-A-S082",
+  "entryGate": "SOURCE",
+  "title": "Stale epoch update: rejection and unchanged service evidence",
+  "entryPoint": "learning/S082/index.html",
+  "feature": "learning/S082/stale-epoch.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Deliver a stale epoch update; it must not alter current routing/readiness.",
+  "sourceAcceptance": "Reject an old deployment epoch attempting to change current routing or readiness.",
+  "parentAcceptance": "Stale updates cannot change current routing or readiness; rejected commands are surfaced with evidence.",
+  "preconditions": [
+    "Standalone modern browser, JavaScript enabled; no server or account.",
+    "Each independent attempt starts at epoch 12 and deployment green-e12.",
+    "Blue 25%, green 75%; both synthetic endpoints ready.",
+    "A fixed command requests blue 100%, green 0% and/or green not ready."
+  ],
+  "actions": [
+    "Choose stale, matching or future epoch; routing, readiness or both; enforced or unsafe bypass guard; complete or missing after evidence.",
+    "Deliver exactly one command and inspect disposition, rejection reason and before/after measurements.",
+    "Check PASS, FAIL or UNKNOWN interpretation without rewriting the measured result.",
+    "Retain up to six independent attempts or explicitly reset all memory and history."
+  ],
+  "input": "learning/S082/model.js",
+  "trace": "Command identity, epoch, requested values, disposition/reason, before/observed-after service, changed protected fields and learner interpretation.",
+  "assertions": [
+    "An old epoch is rejected and cannot change current epoch, deployment, routing or readiness.",
+    "Rejection includes attempted/current epoch, selected target and an explicit STALE_EPOCH reason.",
+    "Deliberately bypassed stale/future changes fail; correct learner interpretation does not convert them to safety.",
+    "A missing after observation remains UNKNOWN even when rejection is visible.",
+    "Matching and future epochs are bounded comparison controls, not migration proof.",
+    "Invalid input, forged state and out-of-order operations cannot advance the lesson.",
+    "Six immutable attempt histories are retained without automatic eviction.",
+    "Actual DOM, keyboard, error, failure, unknown, reset and enforced CSP checks cover the portable entry."
+  ],
+  "bounds": {
+    "configurations": 36,
+    "commandsPerAttempt": 1,
+    "currentEpoch": 12,
+    "commandEpochs": [11, 12, 13],
+    "protectedFields": 2,
+    "retainedAttempts": 6,
+    "arbitraryEpochsEndpointsPayloadsTimersOrLoad": false
+  },
+  "iac": {
+    "status": "N/A",
+    "decision": "learning/S082/evidence/iac-decision.json",
+    "resourcesCreated": 0
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156.0.4314.50",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperPublication": "53c0c0d",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "dependencyChanges": false
+  },
+  "limits": [
+    "Deterministic in-memory teaching rules only; no actual controller/coordinator epoch, routing or readiness certification.",
+    "No durable state, concurrency, leases, real route convergence, readiness probes or user migration is exercised.",
+    "Original D-S081 dependency and B-S082/native/source-parent acceptance remain separate and incomplete.",
+    "No production Node24, five-nines, shared browser or unattended lifecycle certification.",
+    "Only the published browser helper is used; its abandoned lifecycle prototype is unqualified.",
+    "worker-src and other declared but unprobed directives are not independently certified.",
+    "Synthetic data only; no cloud, IaC, credentials, deployment, spending, downloads, installs or framework.",
+    "One frozen S unit; tests, plumbing, repeated runs and refinement earn no additional credit."
+  ]
+}

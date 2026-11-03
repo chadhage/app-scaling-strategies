@@ -1,0 +1,42 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createState, deliver } = require('../model.js');
+
+const config = (field = 'both', epoch = 'stale') => ({
+  epoch, field, guard: 'enforced', observation: 'complete',
+});
+
+test('the loadable lesson starts with no delivered commands', () => {
+  assert.deepEqual(createState(), { phase: 'ready', records: [] });
+});
+
+for (const field of ['routing', 'readiness', 'both']) {
+  test(`S082 stale ${field} update cannot alter current routing or readiness`, () => {
+    const entry = deliver(createState(), config(field)).records[0];
+    assert.deepEqual(entry.after, entry.before, 'an old epoch must leave the entire current service unchanged');
+    assert.equal(entry.command.disposition, 'REJECTED');
+    assert.equal(entry.command.reason, 'STALE_EPOCH');
+    assert.equal(entry.command.epoch, 11);
+    assert.equal(entry.before.epoch, 12);
+    assert.equal(entry.verdict, 'PASS');
+    assert.equal(entry.metrics.protectedChanges, 0);
+  });
+}
+
+test('a matching epoch comparison applies only the selected update', () => {
+  const entry = deliver(createState(), config('routing', 'current')).records[0];
+  assert.equal(entry.command.disposition, 'APPLIED');
+  assert.equal(entry.command.reason, 'MATCHED_EPOCH');
+  assert.deepEqual(entry.after.routing, { blue: 100, green: 0 });
+  assert.deepEqual(entry.after.readiness, entry.before.readiness);
+  assert.equal(entry.after.epoch, 12);
+  assert.equal(entry.verdict, 'PASS');
+});
+
+test('an unowned future epoch comparison is rejected, not silently installed', () => {
+  const entry = deliver(createState(), config('both', 'future')).records[0];
+  assert.equal(entry.command.disposition, 'REJECTED');
+  assert.equal(entry.command.reason, 'FUTURE_EPOCH');
+  assert.deepEqual(entry.after, entry.before);
+});

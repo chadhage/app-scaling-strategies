@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S082",
+  "workerId": "worker-A-S082",
+  "mode": "synthetic",
+  "entry": "learning\\S082\\index.html",
+  "startedAtUtc": "2026-11-03T20:55:22.936Z",
+  "node": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "captureExplicitlyEnabled": true,
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "publication": "53c0c0d",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055"
+  },
+  "outcome": "PASS",
+  "observations": [
+    {
+      "label": "loadable standalone entry with exact synthetic banner",
+      "outcome": "Not delivered",
+      "command": "No command disposition yet.",
+      "measurements": "Protected fields measured: none.",
+      "history": [],
+      "progress": "Attempts: 0/6; phase: ready.",
+      "error": ""
+    },
+    {
+      "label": "keyboard delivery rejects stale routing and readiness without changing either",
+      "outcome": "PASS",
+      "command": "Command epoch 11 (green-e11) vs current 12: REJECTED / STALE_EPOCH; target both; guard enforced.",
+      "measurements": "Protected fields changed: 0/2 (routing 0, readiness 0).",
+      "history": [
+        "1stale; both; enforced; completee11: REJECTED / STALE_EPOCH0/2 (routing 0, readiness 0)PASSnot checked"
+      ],
+      "progress": "Attempts: 1/6; phase: delivered.",
+      "error": ""
+    },
+    {
+      "label": "out-of-order DOM submission announces an error without state loss",
+      "outcome": "PASS",
+      "command": "Command epoch 11 (green-e11) vs current 12: REJECTED / STALE_EPOCH; target both; guard enforced.",
+      "measurements": "Protected fields changed: 0/2 (routing 0, readiness 0).",
+      "history": [
+        "1stale; both; enforced; completee11: REJECTED / STALE_EPOCH0/2 (routing 0, readiness 0)PASSnot checked"
+      ],
+      "progress": "Attempts: 1/6; phase: delivered.",
+      "error": "ORDER: This action requires phase ready; current phase is delivered."
+    },
+    {
+      "label": "wrong learner answer cannot rewrite measured success",
+      "outcome": "PASS",
+      "command": "Command epoch 11 (green-e11) vs current 12: REJECTED / STALE_EPOCH; target both; guard enforced.",
+      "measurements": "Protected fields changed: 0/2 (routing 0, readiness 0).",
+      "history": [
+        "1stale; both; enforced; completee11: REJECTED / STALE_EPOCH0/2 (routing 0, readiness 0)PASSFAIL: does not match"
+      ],
+      "progress": "Attempts: 1/6; phase: ready.",
+      "error": ""
+    },
+    {
+      "label": "unsafe stale command changes protected state and stays FAIL after correct interpretation",
+      "outcome": "FAIL",
+      "command": "Command epoch 11 (green-e11) vs current 12: APPLIED / GUARD_BYPASSED; target both; guard bypassed.",
+      "measurements": "Protected fields changed: 2/2 (routing 1, readiness 1).",
+      "history": [
+        "1stale; both; enforced; completee11: REJECTED / STALE_EPOCH0/2 (routing 0, readiness 0)PASSFAIL: does not match",
+        "2stale; both; bypassed; completee11: APPLIED / GUARD_BYPASSED2/2 (routing 1, readiness 1)FAILFAIL: matches"
+      ],
+      "progress": "Attempts: 2/6; phase: checked.",
+      "error": ""
+    },
+    {
+      "label": "rejection without after evidence remains UNKNOWN despite a claimed PASS",
+      "outcome": "UNKNOWN",
+      "command": "Command epoch 11 (green-e11) vs current 12: REJECTED / STALE_EPOCH; target both; guard enforced.",
+      "measurements": "Protected fields changed: unknown (after not observed).",
+      "history": [
+        "1stale; both; enforced; completee11: REJECTED / STALE_EPOCH0/2 (routing 0, readiness 0)PASSFAIL: does not match",
+        "2stale; both; bypassed; completee11: APPLIED / GUARD_BYPASSED2/2 (routing 1, readiness 1)FAILFAIL: matches",
+        "3stale; both; enforced; missinge11: REJECTED / STALE_EPOCHunknown (after not observed)UNKNOWNPASS: does not match"
+      ],
+      "progress": "Attempts: 3/6; phase: checked.",
+      "error": ""
+    },
+    {
+      "label": "matching epoch comparison applies routing only without claiming migration",
+      "outcome": "PASS",
+      "command": "Command epoch 12 (green-e12) vs current 12: APPLIED / MATCHED_EPOCH; target routing; guard enforced.",
+      "measurements": "Protected fields changed: 1/2 (routing 1, readiness 0).",
+      "history": [
+        "1stale; both; enforced; completee11: REJECTED / STALE_EPOCH0/2 (routing 0, readiness 0)PASSFAIL: does not match",
+        "2stale; both; bypassed; completee11: APPLIED / GUARD_BYPASSED2/2 (routing 1, readiness 1)FAILFAIL: matches",
+        "3stale; both; enforced; missinge11: REJECTED / STALE_EPOCHunknown (after not observed)UNKNOWNPASS: does not match",
+        "4current; routing; enforced; completee12: APPLIED / MATCHED_EPOCH1/2 (routing 1, readiness 0)PASSPASS: matches"
+      ],
+      "progress": "Attempts: 4/6; phase: checked.",
+      "error": ""
+    },
+    {
+      "label": "unowned future epoch comparison is rejected without installing authority",
+      "outcome": "PASS",
+      "command": "Command epoch 13 (green-e13) vs current 12: REJECTED / FUTURE_EPOCH; target readiness; guard enforced.",
+      "measurements": "Protected fields changed: 0/2 (routing 0, readiness 0).",
+      "history": [
+        "1stale; both; enforced; completee11: REJECTED / STALE_EPOCH0/2 (routing 0, readiness 0)PASSFAIL: does not match",
+        "2stale; both; bypassed; completee11: APPLIED / GUARD_BYPASSED2/2 (routing 1, readiness 1)FAILFAIL: matches",
+        "3stale; both; enforced; missinge11: REJECTED / STALE_EPOCHunknown (after not observed)UNKNOWNPASS: does not match",
+        "4current; routing; enforced; completee12: APPLIED / MATCHED_EPOCH1/2 (routing 1, readiness 0)PASSPASS: matches",
+        "5future; readiness; enforced; completee13: REJECTED / FUTURE_EPOCH0/2 (routing 0, readiness 0)PASSPASS: matches"
+      ],
+      "progress": "Attempts: 5/6; phase: checked.",
+      "error": ""
+    },
+    {
+      "label": "stale readiness is protected and six histories retain both failure and unknown without eviction",
+      "outcome": "PASS",
+      "command": "Command epoch 11 (green-e11) vs current 12: REJECTED / STALE_EPOCH; target readiness; guard enforced.",
+      "measurements": "Protected fields changed: 0/2 (routing 0, readiness 0).",
+      "history": [
+        "1stale; both; enforced; completee11: REJECTED / STALE_EPOCH0/2 (routing 0, readiness 0)PASSFAIL: does not match",
+        "2stale; both; bypassed; completee11: APPLIED / GUARD_BYPASSED2/2 (routing 1, readiness 1)FAILFAIL: matches",
+        "3stale; both; enforced; missinge11: REJECTED / STALE_EPOCHunknown (after not observed)UNKNOWNPASS: does not match",
+        "4current; routing; enforced; completee12: APPLIED / MATCHED_EPOCH1/2 (routing 1, readiness 0)PASSPASS: matches",
+        "5future; readiness; enforced; completee13: REJECTED / FUTURE_EPOCH0/2 (routing 0, readiness 0)PASSPASS: matches",
+        "6stale; readiness; enforced; completee11: REJECTED / STALE_EPOCH0/2 (routing 0, readiness 0)PASSPASS: matches"
+      ],
+      "progress": "Attempts: 6/6; phase: checked. History full. Reset explicitly; no attempts are evicted.",
+      "error": "LIMIT: History is full; reset explicitly. No attempts are evicted."
+    },
+    {
+      "label": "explicit reset clears completed history, result and errors and restores keyboard focus",
+      "outcome": "Not delivered",
+      "command": "No command disposition yet.",
+      "measurements": "Protected fields measured: none.",
+      "history": [],
+      "progress": "Attempts: 0/6; phase: ready.",
+      "error": ""
+    },
+    {
+      "label": "tampered enum is rejected in the actual DOM without consuming an attempt",
+      "outcome": "Not delivered",
+      "command": "No command disposition yet.",
+      "measurements": "Protected fields measured: none.",
+      "history": [],
+      "progress": "Attempts: 0/6; phase: ready.",
+      "error": "INPUT: Invalid epoch; choose one of the declared options."
+    },
+    {
+      "label": "keyboard reset avoids form.reset shadowing; stale routing-only update is unchanged",
+      "outcome": "PASS",
+      "command": "Command epoch 11 (green-e11) vs current 12: REJECTED / STALE_EPOCH; target routing; guard enforced.",
+      "measurements": "Protected fields changed: 0/2 (routing 0, readiness 0).",
+      "history": [
+        "1stale; routing; enforced; completee11: REJECTED / STALE_EPOCH0/2 (routing 0, readiness 0)PASSnot checked"
+      ],
+      "progress": "Attempts: 1/6; phase: delivered.",
+      "error": ""
+    },
+    {
+      "label": "reset works in delivered and checked phases; reload does not restore tab memory",
+      "outcome": "Not delivered",
+      "command": "No command disposition yet.",
+      "measurements": "Protected fields measured: none.",
+      "history": [],
+      "progress": "Attempts: 0/6; phase: ready.",
+      "error": ""
+    },
+    {
+      "label": "actual enforced CSP blocks nine probe categories without a remote response",
+      "outcome": "Not delivered",
+      "command": "No command disposition yet.",
+      "measurements": "Protected fields measured: none.",
+      "history": [],
+      "progress": "Attempts: 0/6; phase: ready.",
+      "error": ""
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-04sE7wef6M9wsCPcTwImVa0QHGEBmzT2v3qj5hajzhY='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Loading the script 'https://s082.invalid/script.js' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Connecting to 'https://s082.invalid/connect' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Fetch API cannot load https://s082.invalid/connect. Refused to connect because it violates the document's Content Security Policy."
+    },
+    {
+      "stage": "csp",
+      "text": "Setting the document's base URI to 'https://s082.invalid/' violates the following Content Security Policy directive: \"base-uri 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Applying inline style violates the following Content Security Policy directive 'style-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-HFtyL98xopkPJSrkZZ6/rzrDXoHmVbcolpk46VKTJRI='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Loading the image 'https://s082.invalid/image.png' violates the following Content Security Policy directive: \"img-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Framing 'https://s082.invalid/' violates the following Content Security Policy directive: \"frame-src 'none'\". The request has been blocked.\n"
+    },
+    {
+      "stage": "csp",
+      "text": "Sending form data to 'https://s082.invalid/form' violates the following Content Security Policy directive: \"form-action 'none'\". The request has been blocked.\n"
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "probeRequests": [
+    {
+      "url": "https://s082.invalid/script.js",
+      "method": "GET"
+    },
+    {
+      "url": "https://s082.invalid/image.png",
+      "method": "GET"
+    }
+  ],
+  "probeResponses": [],
+  "routedProbes": [],
+  "cleanup": {
+    "awaitedFinallyClose": true
+  },
+  "sourceCanonicalLfHashes": {
+    "index.html": "befd333c08ca07a7aa8dd8c439ba6bef0c88f80e8cdaba769a3830e2fef903e0",
+    "styles.css": "ea77be9c62212bd67b1a3424dcbdd722050f33a8176a91162c95f29edf0aabd5",
+    "model.js": "64cd78be2ba59b0fe27c25e45669186d898caeaac9b41b90e7721be24f6a1b62",
+    "app.js": "ebb47df43bc2d41f176ec84ed5481e811c8d9c48d41c8d795b1f480f0ab59a11",
+    "tests\\browser.test.cjs": "f6bc399367956821adfb04c9fe7059207e8d999e7a5ba76931b88284ad7ba797",
+    "tests\\csp-probe.js": "fb716f9610698e5a4cbc7caa40f470238188b59b1707d1660a8ee15eea23b805"
+  },
+  "browserVersion": "156.0.4314.50",
+  "cspViolations": [
+    {
+      "directive": "script-src",
+      "blockedURI": "eval",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "script-src-elem",
+      "blockedURI": "inline",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "script-src-elem",
+      "blockedURI": "https://s082.invalid/script.js",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "connect-src",
+      "blockedURI": "https://s082.invalid/connect",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "base-uri",
+      "blockedURI": "https://s082.invalid/",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "style-src-elem",
+      "blockedURI": "inline",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "img-src",
+      "blockedURI": "https://s082.invalid/image.png",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "frame-src",
+      "blockedURI": "https://s082.invalid",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "form-action",
+      "blockedURI": "https://s082.invalid/form",
+      "disposition": "enforce"
+    }
+  ],
+  "cspChecks": {
+    "inlineScript": "blocked",
+    "dynamicEvaluation": "blocked",
+    "externalScript": "blocked",
+    "connection": "blocked",
+    "image": "blocked",
+    "frame": "blocked",
+    "base": "blocked",
+    "inlineStyle": "blocked",
+    "form": "blocked",
+    "bypassCSP": false,
+    "remoteResponses": 0,
+    "frameReportScope": "Cross-origin frame violation reports the origin only; expected synthetic origin matched.",
+    "workerSrcIndependentlyQualified": false
+  },
+  "finishedAtUtc": "2026-11-03T20:55:28.869Z",
+  "failureFixtureScreenshot": {
+    "path": "evidence\\browser-failure-v2.png",
+    "bytes": 177850,
+    "rawSha256": "f095be93078cea149e62eba4c3b6ac6da19f0a840924d7961b32dcf048efbcd7"
+  }
+}

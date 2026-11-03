@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S082 - Stale epoch update rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to operator controls</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Reject the stale epoch</h1>
+    <p>S082 · A-S082 · one S unit · SC-S082</p>
+    <p>An old deployment command must not change current routing or readiness. Inspect the rejection <em>and</em> the before/after evidence.</p>
+  </header>
+  <main>
+    <section aria-labelledby="preconditions">
+      <h2 id="preconditions">Fixed synthetic preconditions</h2>
+      <p>Every attempt starts independently at epoch <strong>12</strong>, deployment <strong>green-e12</strong>, blue <strong>25%</strong> / green <strong>75%</strong>, with both endpoints ready.</p>
+      <p>The command requests blue 100% / green 0% and/or green not ready. It never advances the current epoch. This is a fixed fixture, not a promotion policy.</p>
+      <p>1. Choose controls. 2. Deliver once. 3. Inspect the command, measurements and trace. 4. Check your interpretation. 5. Start another independent attempt or reset.</p>
+    </section>
+    <section aria-labelledby="controls">
+      <h2 id="controls">Operator controls</h2>
+      <form id="command-form">
+        <fieldset id="configuration">
+          <legend>One bounded command</legend>
+          <label for="epoch">Command epoch</label>
+          <select id="epoch">
+            <option value="stale" selected>11 - old deployment (source exercise)</option>
+            <option value="current">12 - matching epoch (comparison)</option>
+            <option value="future">13 - unowned future epoch (comparison)</option>
+          </select>
+          <label for="field">Requested update</label>
+          <select id="field">
+            <option value="both" selected>Routing and readiness</option>
+            <option value="routing">Routing only</option>
+            <option value="readiness">Readiness only</option>
+          </select>
+          <label for="guard">Epoch guard</label>
+          <select id="guard">
+            <option value="enforced" selected>Enforced - require current epoch</option>
+            <option value="bypassed">UNSAFE teaching fixture - bypass guard</option>
+          </select>
+          <label for="observation">After evidence</label>
+          <select id="observation">
+            <option value="complete" selected>Complete observed after snapshot</option>
+            <option value="missing">Missing after snapshot - cannot prove safety</option>
+          </select>
+        </fieldset>
+        <button id="deliver" type="submit">Deliver update</button>
+      </form>
+      <p id="lesson-error" role="alert" hidden></p>
+      <p id="progress" role="status"></p>
+      <p id="totals">PASS 0 · FAIL 0 · UNKNOWN 0</p>
+    </section>
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Measured result</h2>
+      <output id="outcome" tabindex="-1" aria-live="polite">Not delivered</output>
+      <p id="explanation">No command delivered. PASS means this synthetic epoch rule passed, not that users migrated.</p>
+      <p id="command-evidence">No command disposition yet.</p>
+      <p id="measurements">Protected fields measured: none.</p>
+      <div class="snapshots">
+        <div><h3>Before</h3><pre id="before"></pre></div>
+        <div><h3>Observed after</h3><pre id="after">Not delivered</pre></div>
+      </div>
+      <h3>Synthetic trace</h3>
+      <ol id="trace"></ol>
+      <form id="interpret-form">
+        <label for="answer">Your interpretation of the verifier</label>
+        <select id="answer" disabled>
+          <option value="PASS" selected>PASS - measured epoch rule satisfied</option>
+          <option value="FAIL">FAIL - mismatched update changed protected state</option>
+          <option value="UNKNOWN">UNKNOWN - missing after evidence</option>
+        </select>
+        <button id="check-answer" type="submit" disabled>Check interpretation</button>
+      </form>
+      <p id="interpretation" aria-live="polite">Deliver a command before checking an interpretation.</p>
+      <div class="actions">
+        <button id="next-attempt" type="button" disabled>New independent attempt</button>
+        <button id="reset-lesson" type="button">Reset lesson and history</button>
+      </div>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained in-memory history (maximum six)</h2>
+      <p>Attempts are never silently evicted. New attempts use the fixed baseline; they do not continue a changed service. Reset or reload clears this tab's memory.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Command evidence, measured outcomes and learner answers</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Controls</th><th scope="col">Disposition</th><th scope="col">Changed fields</th><th scope="col">Verifier</th><th scope="col">Interpretation</th></tr></thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="limits">
+      <h2 id="limits">Evidence limits</h2>
+      <p>No controller, coordinator, Azure service, real epoch authority, routing or readiness is exercised. Rejection is not a completed migration. FAIL stays a failure even when correctly identified; missing after evidence stays UNKNOWN.</p>
+      <p>Only 36 fixed configurations, one command per attempt and six retained attempts. No network, timers, management calls, storage, credentials, frameworks or infrastructure. No production Node24, native B-S082, source-parent D-S082 or five-nines certification.</p>
+      <p>Read the local <a href="README.md">lesson instructions and verification boundaries</a>. Source contract and raw evidence accompany this bundle.</p>
+    </section>
+    <noscript>This exercise requires JavaScript. No result can be inferred while it is disabled.</noscript>
+  </main>
+</body>
+</html>

@@ -1,0 +1,217 @@
+TAP version 13
+# Subtest: the loadable lesson starts with no delivered commands
+ok 1 - the loadable lesson starts with no delivered commands
+  ---
+  duration_ms: 3.8373
+  type: 'test'
+  ...
+# Subtest: S082 stale routing update cannot alter current routing or readiness
+not ok 2 - S082 stale routing update cannot alter current routing or readiness
+  ---
+  duration_ms: 2.9834
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S082\\tests\\acceptance.test.cjs:15:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    an old epoch must leave the entire current service unchanged
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        deployment: 'green-e12',
+        epoch: 12,
+        readiness: {
+          blue: true,
+    ...
+        routing: {
+    +     blue: 100,
+    +     green: 0
+    -     blue: 25,
+    -     green: 75
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    epoch: 12
+    deployment: 'green-e12'
+    routing:
+      blue: 25
+      green: 75
+    readiness:
+      blue: true
+      green: true
+  actual:
+    epoch: 12
+    deployment: 'green-e12'
+    routing:
+      blue: 100
+      green: 0
+    readiness:
+      blue: true
+      green: true
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S082\tests\acceptance.test.cjs:17:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: S082 stale readiness update cannot alter current routing or readiness
+not ok 3 - S082 stale readiness update cannot alter current routing or readiness
+  ---
+  duration_ms: 1.3562
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S082\\tests\\acceptance.test.cjs:15:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    an old epoch must leave the entire current service unchanged
+    + actual - expected
+    
+      {
+        deployment: 'green-e12',
+        epoch: 12,
+        readiness: {
+          blue: true,
+    +     green: false
+    -     green: true
+        },
+        routing: {
+          blue: 25,
+          green: 75
+        }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    epoch: 12
+    deployment: 'green-e12'
+    routing:
+      blue: 25
+      green: 75
+    readiness:
+      blue: true
+      green: true
+  actual:
+    epoch: 12
+    deployment: 'green-e12'
+    routing:
+      blue: 25
+      green: 75
+    readiness:
+      blue: true
+      green: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S082\tests\acceptance.test.cjs:17:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: S082 stale both update cannot alter current routing or readiness
+not ok 4 - S082 stale both update cannot alter current routing or readiness
+  ---
+  duration_ms: 5.6516
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S082\\tests\\acceptance.test.cjs:15:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    an old epoch must leave the entire current service unchanged
+    + actual - expected
+    
+      {
+        deployment: 'green-e12',
+        epoch: 12,
+        readiness: {
+          blue: true,
+    +     green: false
+    -     green: true
+        },
+        routing: {
+    +     blue: 100,
+    +     green: 0
+    -     blue: 25,
+    -     green: 75
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    epoch: 12
+    deployment: 'green-e12'
+    routing:
+      blue: 25
+      green: 75
+    readiness:
+      blue: true
+      green: true
+  actual:
+    epoch: 12
+    deployment: 'green-e12'
+    routing:
+      blue: 100
+      green: 0
+    readiness:
+      blue: true
+      green: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S082\tests\acceptance.test.cjs:17:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a matching epoch comparison applies only the selected update
+ok 5 - a matching epoch comparison applies only the selected update
+  ---
+  duration_ms: 0.5487
+  type: 'test'
+  ...
+# Subtest: an unowned future epoch comparison is rejected, not silently installed
+not ok 6 - an unowned future epoch comparison is rejected, not silently installed
+  ---
+  duration_ms: 0.5299
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S082\\tests\\acceptance.test.cjs:37:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'APPLIED'
+    - 'REJECTED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'REJECTED'
+  actual: 'APPLIED'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S082\tests\acceptance.test.cjs:39:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 2
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 260.7748

@@ -1,0 +1,42 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.StaleEpochLesson = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const baseline = {
+    epoch: 12, deployment: 'green-e12',
+    routing: { blue: 25, green: 75 },
+    readiness: { blue: true, green: true },
+  };
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+  function createState() {
+    return { phase: 'ready', records: [] };
+  }
+  function deliver(state, input) {
+    const epoch = { stale: 11, current: 12, future: 13 }[input.epoch];
+    const after = clone(baseline);
+    if (input.field !== 'readiness') after.routing = { blue: 100, green: 0 };
+    if (input.field !== 'routing') after.readiness.green = false;
+    return {
+      phase: 'delivered',
+      records: [...state.records, {
+        id: state.records.length + 1, input: { ...input },
+        command: {
+          epoch, deployment: `green-e${epoch}`, disposition: 'APPLIED',
+          reason: epoch === 12 ? 'MATCHED_EPOCH' : 'GUARD_BYPASSED',
+        },
+        before: clone(baseline), after,
+        metrics: {
+          routingChanges: Number(input.field !== 'readiness'),
+          readinessChanges: Number(input.field !== 'routing'),
+          protectedChanges: input.field === 'both' ? 2 : 1,
+        },
+        verdict: epoch === 12 ? 'PASS' : 'FAIL',
+        learner: null,
+      }],
+    };
+  }
+  return { createState, deliver };
+}));
