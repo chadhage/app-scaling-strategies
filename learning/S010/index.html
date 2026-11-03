@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>S010 — Cohort feature-flag rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="rehearsal.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S010: Cohort feature-flag activation and reversal</h1>
+    <p>A-S010 · D-S010 · SOURCE · one frozen Kano S unit · LP-LEARN</p>
+    <p>Enable behavior, not a new deployment. Compatible code is already present in one
+      fixed synthetic deployment. Flags are not an authentication boundary.</p>
+  </header>
+  <main>
+    <section aria-labelledby="objective">
+      <h2 id="objective">Objective and preconditions</h2>
+      <p>Keep existing sessions and cart data valid while one stable cohort changes
+        behavior and returns to standard behavior. Learn why flag reversal cannot
+        repair an incompatible state schema or erase earlier failures.</p>
+      <p>The deployed reader supports <strong>config v1 / state v1</strong>.
+        Version 2 is a deliberate mismatch fixture. Four synthetic clients (two
+        pilot, two control) start with one cart item. Each successful observed
+        journey adds exactly one item. Events are deterministic, numbered, and
+        bounded to 60 per run; there is no clock, randomness, or real telemetry.</p>
+      <ol>
+        <li>Observe the off baseline.</li>
+        <li>Enable pilot with config v1, then observe all four journeys.</li>
+        <li>Revert the flag to off, then observe again. Check the readable verdict.</li>
+        <li>Try config v2, or inject state v2 after activation and observe. Reverse:
+          earlier failures and incompatible state must remain visible.</li>
+      </ol>
+      <p><strong>No deployment migration is claimed.</strong> Even PASS means only
+        that this synthetic flag-continuity exercise passed. It is not native
+        Azure proof, an availability result, a live transition, or an SLA.</p>
+    </section>
+
+    <section id="exercise" tabindex="-1" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">Conduct the rehearsal</h2>
+      <noscript>This local exercise requires JavaScript. No network or service is required.</noscript>
+      <form id="rehearsal-form">
+        <fieldset>
+          <legend>1. Publish a cohort flag</legend>
+          <label for="target-cohort">Selected cohort</label>
+          <select id="target-cohort" name="cohort">
+            <option value="pilot">pilot (pilot-1, pilot-2)</option>
+            <option value="control">control (control-1, control-2)</option>
+          </select>
+          <label for="config-version">Proposed configuration schema</label>
+          <select id="config-version" name="configVersion">
+            <option value="1">v1 — compatible with deployed code</option>
+            <option value="2">v2 — incompatible; expect publication guard</option>
+          </select>
+          <div class="actions">
+            <button type="button" id="enable-flag">Enable feature by cohort</button>
+            <button type="button" id="turn-off">Turn selected cohort flag off</button>
+            <button type="button" id="revert-flag">Revert flag to off</button>
+          </div>
+          <p>Only one cohort is enabled at a time. Revert changes the flag only:
+            it never converts state or hides previous outcomes.</p>
+        </fieldset>
+        <fieldset>
+          <legend>2. Observe existing sessions</legend>
+          <button type="button" id="observe-journeys">Observe all four journeys</button>
+          <p>Inspect actual results of this <em>synthetic</em> observation below,
+            not merely the requested flag setting.</p>
+        </fieldset>
+        <fieldset>
+          <legend>3. Deliberate state-compatibility condition</legend>
+          <label for="fixture-client">Synthetic session</label>
+          <select id="fixture-client" name="clientId">
+            <option value="pilot-1">pilot-1</option>
+            <option value="pilot-2">pilot-2</option>
+            <option value="control-1">control-1</option>
+            <option value="control-2">control-2</option>
+          </select>
+          <label for="state-version">State fixture version</label>
+          <select id="state-version" name="stateVersion">
+            <option value="2">v2 — incompatible; expect guard or interruption</option>
+            <option value="1">v1 — compatible</option>
+          </select>
+          <div class="actions">
+            <button type="button" id="apply-state">Apply synthetic state version</button>
+            <button type="button" id="restore-state">Restore compatible state fixture</button>
+          </div>
+          <p>This injection/restoration only changes the synthetic version marker.
+            It is not a real data migration, downgrade, or recovery mechanism.</p>
+        </fieldset>
+        <fieldset>
+          <legend>4. Explicit deterministic event</legend>
+          <label for="event-json">One JSON event (maximum 2000 characters)</label>
+          <textarea id="event-json" name="eventJson" rows="4" maxlength="2000"
+            spellcheck="false" aria-describedby="event-help">{"type":"observe"}</textarea>
+          <p id="event-help">Admitted types: observe, publish-flag, revert-flag,
+            set-state-version. Types are strict; unknown fields/versions/operations
+            are rejected explicitly. See the worked examples in README.md.</p>
+          <button type="submit" id="submit-event">Apply JSON event</button>
+        </fieldset>
+        <button type="reset" id="reset-run" name="resetRun">Reset rehearsal</button>
+        <p>Reset starts fresh and archives prior trace/verdict below until this page
+          closes. No browser storage is used. Copy evidence before reloading.</p>
+      </form>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+    </section>
+
+    <section aria-labelledby="current-heading">
+      <h2 id="current-heading">Current synthetic state</h2>
+      <p id="flag-state"></p>
+      <p id="event-budget"></p>
+      <p>Deployment: <code id="deployment-id"></code>;
+        code: <code id="code-version"></code>. Both remain unchanged.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Same existing sessions and data across flag changes</caption>
+          <thead>
+            <tr><th scope="col">Client</th><th scope="col">Cohort</th><th scope="col">State</th>
+              <th scope="col">Session token</th><th scope="col">Cart ID</th>
+              <th scope="col">Items</th><th scope="col">Effects</th></tr>
+          </thead>
+          <tbody id="session-rows"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="verdict-heading">
+      <h2 id="verdict-heading">Readable verdict</h2>
+      <p id="verdict" role="status" aria-live="polite" aria-atomic="true"></p>
+      <p id="user-outcome"></p>
+      <p id="counts"></p>
+      <ul id="checks"></ul>
+      <p>Verification, user impact, and cleanup are distinct. Cleanup is local
+        in-memory state only; no resources exist to tear down.</p>
+    </section>
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Explicit synthetic event trace</h2>
+      <p>No generated live observations: this is a deterministic calculation from your inputs.</p>
+      <ol id="trace"></ol>
+    </section>
+    <section aria-labelledby="evidence-heading">
+      <h2 id="evidence-heading">Readable evidence JSON</h2>
+      <label for="evidence-output">Current local run, observations, and verdict (select/copy)</label>
+      <textarea id="evidence-output" rows="12" readonly spellcheck="false"></textarea>
+      <h3>Prior results retained during this page session</h3>
+      <p id="archive-count"></p>
+      <ol id="archived-runs"></ol>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Scope, evidence, and limits</h2>
+      <p>No credentials, Azure login, management/native calls, identity registrations,
+        IaC, resources, spending, or server are used. No framework/dependency was
+        added. Node 22 is test tooling only; production Node 24 remains unvalidated.
+        B-S010 and the original source-parent native acceptance are not completed.</p>
+      <p><a href="manifest.json">Lesson manifest</a> ·
+        <a href="README.md">Worked exercise, tests, and To Do refinement</a> ·
+        <a href="specification.feature">BDD acceptance specification</a></p>
+    </section>
+  </main>
+  <footer>
+    <h2>Microsoft Open Source Disclaimer</h2>
+    <p>Provided "AS IS" for educational and demonstration purposes without warranties
+      or guarantees except as required by law or binding terms. Validate security,
+      reliability, compatibility, and cost before production use. Microsoft/Azure
+      references do not imply endorsement, sponsorship, certification, or support.
+      Project goals are not Microsoft SLAs. Microsoft and Azure are trademarks of
+      the Microsoft group of companies. This disclaimer grants no license or
+      redistribution rights and changes no applicable terms or SLA.</p>
+  </footer>
+</body>
+</html>

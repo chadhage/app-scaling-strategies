@@ -1,0 +1,178 @@
+Skip to exercise
+
+Training rehearsal - synthetic data - not a live Azure result
+
+S010: Cohort feature-flag activation and reversal
+
+A-S010 · D-S010 · SOURCE · one frozen Kano S unit · LP-LEARN
+
+Enable behavior, not a new deployment. Compatible code is already present in one fixed synthetic deployment. Flags are not an authentication boundary.
+
+Objective and preconditions
+
+Keep existing sessions and cart data valid while one stable cohort changes behavior and returns to standard behavior. Learn why flag reversal cannot repair an incompatible state schema or erase earlier failures.
+
+The deployed reader supports config v1 / state v1. Version 2 is a deliberate mismatch fixture. Four synthetic clients (two pilot, two control) start with one cart item. Each successful observed journey adds exactly one item. Events are deterministic, numbered, and bounded to 60 per run; there is no clock, randomness, or real telemetry.
+
+Observe the off baseline.
+Enable pilot with config v1, then observe all four journeys.
+Revert the flag to off, then observe again. Check the readable verdict.
+Try config v2, or inject state v2 after activation and observe. Reverse: earlier failures and incompatible state must remain visible.
+
+No deployment migration is claimed. Even PASS means only that this synthetic flag-continuity exercise passed. It is not native Azure proof, an availability result, a live transition, or an SLA.
+
+Conduct the rehearsal
+1. Publish a cohort flag
+Selected cohort
+pilot (pilot-1, pilot-2)
+control (control-1, control-2)
+Proposed configuration schema
+v1 — compatible with deployed code
+v2 — incompatible; expect publication guard
+Enable feature by cohort
+Turn selected cohort flag off
+Revert flag to off
+
+Only one cohort is enabled at a time. Revert changes the flag only: it never converts state or hides previous outcomes.
+
+2. Observe existing sessions
+Observe all four journeys
+
+Inspect actual results of this synthetic observation below, not merely the requested flag setting.
+
+3. Deliberate state-compatibility condition
+Synthetic session
+pilot-1
+pilot-2
+control-1
+control-2
+State fixture version
+v2 — incompatible; expect guard or interruption
+v1 — compatible
+Apply synthetic state version
+Restore compatible state fixture
+
+This injection/restoration only changes the synthetic version marker. It is not a real data migration, downgrade, or recovery mechanism.
+
+4. Explicit deterministic event
+One JSON event (maximum 2000 characters)
+
+Admitted types: observe, publish-flag, revert-flag, set-state-version. Types are strict; unknown fields/versions/operations are rejected explicitly. See the worked examples in README.md.
+
+Apply JSON event
+Reset rehearsal
+
+Reset starts fresh and archives prior trace/verdict below until this page closes. No browser storage is used. Copy evidence before reloading.
+
+Current synthetic state
+
+Applied flag: OFF; selected cohort: pilot; compatible config v1; revision 2.
+
+Run 11: 5/60 explicit synthetic events.
+
+Deployment: synthetic-deployment-S010; code: compatible-code-1. Both remain unchanged.
+
+Same existing sessions and data across flag changes
+Client	Cohort	State	Session token	Cart ID	Items	Effects
+pilot-1	pilot	v1	synthetic-session-pilot-1	synthetic-cart-pilot-1	4	3
+pilot-2	pilot	v1	synthetic-session-pilot-2	synthetic-cart-pilot-2	4	3
+control-1	control	v1	synthetic-session-control-1	synthetic-cart-control-1	4	3
+control-2	control	v1	synthetic-session-control-2	synthetic-cart-control-2	4	3
+Readable verdict
+
+PASS — Baseline, cohort-only activation, and reversal observed with intact synthetic sessions/data on unchanged code.
+
+User impact: synthetic flag continuity observed. Deployment migration: not evidenced.
+
+12 attempted; 12 successful; 0 interrupted (retained); 0 guarded publications; 0 deployment changes.
+
+PASS: Observed off baseline before activation
+PASS: Observed selected-cohort-only enhanced behavior
+PASS: Observed standard behavior after reversal
+PASS: Synthetic deployment identity unchanged (not migration)
+PASS: All attempted sessions/data operations uninterrupted
+PASS: No incompatible configuration/state publication attempts
+
+Verification, user impact, and cleanup are distinct. Cleanup is local in-memory state only; no resources exist to tear down.
+
+Explicit synthetic event trace
+
+No generated live observations: this is a deterministic calculation from your inputs.
+
+1. observe: applied — OK
+
+4/4 synthetic journeys completed; 0 interrupted. Each successful journey adds exactly one cart item.
+
+{"type":"observe"}
+
+Applied: OFF → OFF; config v1; deployment synthetic-deployment-S010.
+
+pilot-1 (pilot): OK; standard; state v1; cart 1 → 2; effects +1; OK.
+pilot-2 (pilot): OK; standard; state v1; cart 1 → 2; effects +1; OK.
+control-1 (control): OK; standard; state v1; cart 1 → 2; effects +1; OK.
+control-2 (control): OK; standard; state v1; cart 1 → 2; effects +1; OK.
+2. publish-flag: applied — OK
+
+Compatible config v1 applied: pilot flag on. Code/deployment unchanged; observe journeys next.
+
+{"type":"publish-flag","cohort":"pilot","enabled":true,"configVersion":1}
+
+Applied: OFF → ON; config v1; deployment synthetic-deployment-S010.
+
+3. observe: applied — OK
+
+4/4 synthetic journeys completed; 0 interrupted. Each successful journey adds exactly one cart item.
+
+{"type":"observe"}
+
+Applied: ON → ON; config v1; deployment synthetic-deployment-S010.
+
+pilot-1 (pilot): OK; enhanced; state v1; cart 2 → 3; effects +1; OK.
+pilot-2 (pilot): OK; enhanced; state v1; cart 2 → 3; effects +1; OK.
+control-1 (control): OK; standard; state v1; cart 2 → 3; effects +1; OK.
+control-2 (control): OK; standard; state v1; cart 2 → 3; effects +1; OK.
+4. revert-flag: applied — OK
+
+Flag reverted to off only. Code and state schemas are unchanged; prior failures remain. Observe journeys next.
+
+{"type":"revert-flag"}
+
+Applied: ON → OFF; config v1; deployment synthetic-deployment-S010.
+
+5. observe: applied — OK
+
+4/4 synthetic journeys completed; 0 interrupted. Each successful journey adds exactly one cart item.
+
+{"type":"observe"}
+
+Applied: OFF → OFF; config v1; deployment synthetic-deployment-S010.
+
+pilot-1 (pilot): OK; standard; state v1; cart 3 → 4; effects +1; OK.
+pilot-2 (pilot): OK; standard; state v1; cart 3 → 4; effects +1; OK.
+control-1 (control): OK; standard; state v1; cart 3 → 4; effects +1; OK.
+control-2 (control): OK; standard; state v1; cart 3 → 4; effects +1; OK.
+Readable evidence JSON
+Current local run, observations, and verdict (select/copy)
+Prior results retained during this page session
+
+10 prior local result(s) retained in memory until this page closes.
+
+Run 1: IN_PROGRESS; 0 attempted; 0 interrupted; 1 events retained
+Run 2: PASS; 12 attempted; 0 interrupted; 5 events retained
+Run 3: GUARDED; 0 attempted; 0 interrupted; 1 events retained
+Run 4: GUARDED; 0 attempted; 0 interrupted; 2 events retained
+Run 5: FAIL; 20 attempted; 2 interrupted; 9 events retained
+Run 6: IN_PROGRESS; 0 attempted; 0 interrupted; 1 events retained
+Run 7: PASS; 12 attempted; 0 interrupted; 5 events retained
+Run 8: FAIL; 4 attempted; 1 interrupted; 2 events retained
+Run 9: IN_PROGRESS; 4 attempted; 0 interrupted; 1 events retained
+Run 10: IN_PROGRESS; 4 attempted; 0 interrupted; 1 events retained
+Scope, evidence, and limits
+
+No credentials, Azure login, management/native calls, identity registrations, IaC, resources, spending, or server are used. No framework/dependency was added. Node 22 is test tooling only; production Node 24 remains unvalidated. B-S010 and the original source-parent native acceptance are not completed.
+
+Lesson manifest · Worked exercise, tests, and To Do refinement · BDD acceptance specification
+
+Microsoft Open Source Disclaimer
+
+Provided "AS IS" for educational and demonstration purposes without warranties or guarantees except as required by law or binding terms. Validate security, reliability, compatibility, and cost before production use. Microsoft/Azure references do not imply endorsement, sponsorship, certification, or support. Project goals are not Microsoft SLAs. Microsoft and Azure are trademarks of the Microsoft group of companies. This disclaimer grants no license or redistribution rights and changes no applicable terms or SLA.

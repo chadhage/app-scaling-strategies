@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "id": "S010",
+  "cardId": "A-S010",
+  "parentId": "D-S010",
+  "kanoUnit": "A-S010",
+  "kano": "S",
+  "packet": "LP-LEARN",
+  "owner": "worker-A-S010",
+  "title": "Cohort feature-flag activation and reversal",
+  "mode": "synthetic",
+  "authorization": "local-synthetic-only",
+  "entryGate": "SOURCE",
+  "entrypoint": "index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "sources": [
+    { "path": "..\\..\\README.md", "id": "S010" },
+    { "path": "..\\..\\.docs\\wiki\\backlog.md", "id": "D-S010" },
+    { "path": "..\\..\\.docs\\wiki\\kanban.md", "id": "A-S010" }
+  ],
+  "objective": "Conduct cohort flag on/off/reversal; detect incompatible configuration/state assumptions while preserving sessions, data and prior failures.",
+  "preconditions": [
+    "One synthetic deployment already contains compatible code.",
+    "The deployed synthetic reader supports configuration v1 and state v1 only.",
+    "Four fixed synthetic sessions, two pilot and two control, start with one cart item each."
+  ],
+  "actions": [
+    "Observe all four journeys",
+    "Enable or turn off the flag for a selected cohort",
+    "Revert flag to off without changing deployment identity",
+    "Inject/restore a declared synthetic state-version fixture",
+    "Submit a strictly typed explicit JSON event",
+    "Reset and retain prior in-memory results"
+  ],
+  "syntheticInput": {
+    "deploymentId": "synthetic-deployment-S010",
+    "codeVersion": "compatible-code-1",
+    "cohorts": ["pilot", "control"],
+    "clientIds": ["pilot-1", "pilot-2", "control-1", "control-2"],
+    "compatibleConfigVersions": [1],
+    "compatibleStateVersions": [1],
+    "intentionalMismatchFixtures": [2],
+    "maximumEvents": 60,
+    "maximumJsonCharacters": 2000,
+    "clock": "none; event sequence numbers only",
+    "randomness": "none"
+  },
+  "expectedAssertions": [
+    "Only the selected cohort observes enhanced behavior.",
+    "Observed reversal returns all sessions to standard behavior on unchanged code.",
+    "Session tokens, cart identifiers and earlier data survive compatible flag changes.",
+    "Each successful observation has one synthetic cart effect; incompatible state has none.",
+    "Unsupported configuration/state is guarded without flag publication.",
+    "Earlier interrupted attempts stay in the denominator after reversal or fixture restoration.",
+    "No observation-free, missing-baseline or missing-reversal sequence passes.",
+    "Keyboard controls, explicit accessible errors, safe rendering and CSP work in an actual browser."
+  ],
+  "resultClasses": ["NOT_RUN", "IN_PROGRESS", "PASS", "GUARDED", "FAIL"],
+  "trace": "Deterministic ordered explicit events, requested/applied config, guard codes and per-session observations.",
+  "specification": "specification.feature",
+  "evidence": {
+    "behavioralRed": "evidence\\red.json",
+    "iac": "evidence\\iac-na.json",
+    "logicGreen": "evidence\\green.json",
+    "actualBrowser": "evidence\\browser.json",
+    "browserObservations": "evidence\\browser-observations.json",
+    "syntax": "evidence\\syntax.json",
+    "integrity": "evidence\\integrity.json",
+    "provenance": "evidence\\provenance.json"
+  },
+  "testRuntime": "Node.js 22 test tooling only; exact version recorded in empirical evidence.",
+  "productionNode24Validated": false,
+  "browserTooling": "Existing offline Playwright 1.56.1 with installed headless Edge via testing\\browser\\isolated.cjs; no installation or security weakening.",
+  "nativeEvidence": false,
+  "managementCalls": false,
+  "credentials": false,
+  "iac": "N/A; resource-free",
+  "limits": [
+    "Not a live Azure result, migration, authentication boundary, availability measurement or SLA.",
+    "Config/state v2 is a deliberate mismatch, not a supported conversion or deployment.",
+    "Reset archives are in memory for this page session; closing/reloading loses them.",
+    "B-S010 and source-parent native acceptance remain unfulfilled.",
+    "No cloud, identity, hosting, production Node 24, or mixed-reader qualification is inferred."
+  ]
+}
