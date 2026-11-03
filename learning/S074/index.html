@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S074 — Session/cache eviction pressure</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to eviction controls</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p>A-S074 · D-S074 · SC-S074 · frozen S · standalone local lesson</p>
+    <h1>Eviction is not permission to lose a session</h1>
+    <p>Apply bounded capacity or TTL pressure. Distinguish an acceptable recomputable cache miss from missing required state.</p>
+  </header>
+  <main>
+    <section aria-labelledby="contract-title">
+      <h2 id="contract-title">Declare the continuity contract</h2>
+      <p><strong>Required:</strong> synthetic-session-074, revision 3, cart synthetic-bolt:2, step review. Every field must survive exactly.</p>
+      <p><strong>Optional:</strong> a synthetic catalog tile may be recomputed. It is not a substitute for the session.</p>
+      <p>Two initial cache entries. Required TTL expires at logical tick 4; optional TTL at tick 2. At equality the entry expires. Capacity removal uses fixed least-recently-used order. No real clock, cache, storage or authentication is involved.</p>
+      <p><strong>Source acceptance:</strong> eviction effects are visible; required state survives through the approved durable contract or fails explicitly. An explicit error is safer than invented state but still interrupts this synthetic journey. Unavailable evidence is UNKNOWN, never success.</p>
+    </section>
+    <section id="exercise" tabindex="-1" aria-labelledby="exercise-title">
+      <h2 id="exercise-title">1. Apply pressure, then check continuity</h2>
+      <p id="phase" role="status">Phase: idle</p>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <form id="settings-form" novalidate>
+        <fieldset id="settings">
+          <legend>Fixed synthetic fixtures</legend>
+          <label for="pressure">Pressure condition</label>
+          <select id="pressure" name="pressure" aria-describedby="pressure-help">
+            <option value="capacity">Capacity: shrink two slots to zero</option>
+            <option value="none">No pressure: tick 0, two slots</option>
+            <option value="ttl-optional">TTL: tick 2, optional tile expires</option>
+            <option value="ttl-session">TTL: tick 4, required session expires</option>
+          </select>
+          <p id="pressure-help">All presets start with the same two entries; no arbitrary load or endpoint input.</p>
+          <label for="durable">Required-state durable evidence</label>
+          <select id="durable" name="durable">
+            <option value="current">Approved current record: exact revision 3</option>
+            <option value="missing">Missing record: required state lost</option>
+            <option value="stale">Stale record: revision 2 is not continuity</option>
+            <option value="unverified">Unavailable evidence: cannot verify continuity</option>
+          </select>
+          <label for="response">Response policy on a required miss</label>
+          <select id="response" name="response">
+            <option value="recover">Recover exact state or fail explicitly</option>
+            <option value="empty-success">Unsafe comparison: return empty synthetic status 200</option>
+          </select>
+        </fieldset>
+        <div class="actions">
+          <button id="apply-pressure" type="submit">Apply pressure</button>
+          <button id="check-continuity" type="button" disabled>Check continuity</button>
+        </div>
+      </form>
+      <p id="pressure-metrics">Pressure: not applied · initial entries: 2</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Cache inventory and actual synthetic eviction causes</caption>
+          <thead><tr><th scope="col">Entry</th><th scope="col">Contract</th><th scope="col">Expiry tick</th><th scope="col">After pressure</th></tr></thead>
+          <tbody id="cache-rows"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">2. Inspect the state oracle, not only status</h2>
+      <div id="result" aria-live="polite" aria-atomic="true">
+        <p id="outcome" class="outcome">Journey outcome: not checked</p>
+        <p id="miss-metrics">Cache misses: required not checked · optional not checked</p>
+        <p id="recovery-metrics">Durable recoveries: not checked · optional recomputations: not checked</p>
+        <p id="state-metrics">Required state: not checked</p>
+        <p id="response-metrics">Synthetic response: not checked</p>
+        <p id="impact">User-impact model: no continuity check yet.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>Exact required-state comparison against the served record</caption>
+          <thead><tr><th scope="col">Field</th><th scope="col">Required</th><th scope="col">Served</th><th scope="col">Assertion</th></tr></thead>
+          <tbody id="comparison-rows"></tbody>
+        </table>
+      </div>
+      <p id="durable-observed">Durable record observed: not checked</p>
+      <form id="prediction-form" novalidate>
+        <label for="prediction">Predict the measured journey outcome</label>
+        <select id="prediction" name="prediction" disabled>
+          <option value="">Choose an outcome</option>
+          <option value="SUCCESS">SUCCESS</option>
+          <option value="FAILURE">FAILURE</option>
+          <option value="UNKNOWN">UNKNOWN</option>
+        </select>
+        <button id="retain-attempt" type="submit" disabled>Check prediction and retain attempt</button>
+      </form>
+      <p id="learning-result">Learning prediction not checked.</p>
+      <h3>Synthetic trace</h3>
+      <pre id="trace">No pressure applied.</pre>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">3. Keep failures and unknowns in view</h2>
+      <p id="totals">Retained outcomes: success 0 · failure 0 · unknown 0</p>
+      <p id="history-count">Retained completed attempts: 0 / 6</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Completed attempts; nothing is silently evicted</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Pressure</th><th scope="col">Durable evidence / policy</th><th scope="col">Outcome</th><th scope="col">Required / optional misses</th><th scope="col">Learning check</th></tr></thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+      <details id="retained-detail"><summary>Exact retained synthetic evidence</summary><pre id="retained-proof"></pre></details>
+      <div class="actions">
+        <button id="new-attempt" type="button" disabled>New attempt (keep history)</button>
+        <button id="reset-rehearsal" type="button">Reset all local data</button>
+      </div>
+      <p>Tab and arrow keys select controls; Enter or Space activates buttons. New attempt restores defaults and retains proof. Reset or reload clears this in-memory lesson; six completed attempts require an explicit reset.</p>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Limits, not certification</h2>
+      <p>IaC N/A. No real sessions, identities, credentials, authentication, eviction, durable storage, timing guarantees, management calls, cloud provisioning, deployment or spending. These 32 deterministic cases do not certify Azure behavior, cache durability, production Node.js 24, uninterrupted users or five-nines reliability.</p>
+      <p>B-S074 and source parent D-S074, including its D-S031 dependency, remain incomplete. One frozen S unit; tests, plumbing and refinement add no credit. Publication requires independent parent acceptance.</p>
+      <p><a href="README.md">Source, exercise and verification instructions</a></p>
+    </section>
+  </main>
+  <noscript><p>This local exercise requires JavaScript. No result can be verified while it is disabled.</p></noscript>
+</body>
+</html>

@@ -1,0 +1,249 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('../model.js');
+const fixtures = require('../fixtures.js');
+const defaults = fixtures.defaultInput;
+const config = (changes = {}) => ({ ...defaults, ...changes });
+function complete(lesson, changes = {}, prediction = 'SUCCESS') {
+  lesson.applyPressure(config(changes));
+  lesson.evaluate();
+  return lesson.check(prediction);
+}
+function unchanged(lesson, action, pattern) {
+  const before = JSON.stringify(lesson.snapshot());
+  assert.throws(action, pattern);
+  assert.equal(JSON.stringify(lesson.snapshot()), before);
+}
+
+test('loadable standalone API and idle lesson exist before implementation', () => {
+  assert.equal(typeof model.createLesson, 'function');
+  assert.equal(typeof model.runCase, 'function');
+  assert.equal(typeof model.validateInput, 'function');
+  assert.equal(model.createLesson().snapshot().phase, 'idle');
+});
+
+test('capacity pressure visibly evicts required and optional entries with exact causes', () => {
+  const state = model.createLesson().applyPressure(config());
+  assert.equal(state.phase, 'pressured');
+  assert.equal(state.pressure.slots, 0);
+  assert.equal(state.pressure.tick, 0);
+  assert.deepEqual(state.pressure.remaining, []);
+  assert.deepEqual(state.pressure.evicted.map((entry) => [entry.key, entry.reason]),
+    [['required-session', 'capacity'], ['derived-tile', 'capacity']]);
+});
+
+test('logical TTL at tick 2 expires only the optional tile', () => {
+  const state = model.createLesson().applyPressure(config({ pressure: 'ttl-optional' }));
+  assert.equal(state.phase, 'pressured');
+  assert.equal(state.pressure.tick, 2);
+  assert.deepEqual(state.pressure.remaining.map((entry) => entry.key), ['required-session']);
+  assert.deepEqual(state.pressure.evicted.map((entry) => [entry.key, entry.reason]), [['derived-tile', 'ttl']]);
+});
+
+test('TTL equality at tick 4 expires the required session, not a live cache hit', () => {
+  const state = model.createLesson().applyPressure(config({ pressure: 'ttl-session' }));
+  assert.equal(state.phase, 'pressured');
+  assert.deepEqual(state.pressure.remaining, []);
+  assert.deepEqual(state.pressure.evicted.map((entry) => entry.reason), ['ttl', 'ttl']);
+  assert.equal(model.runCase(config({ pressure: 'ttl-session' })).requiredMisses, 1);
+});
+
+test('approved durable recovery preserves every required field after capacity eviction', () => {
+  const result = model.runCase(config());
+  assert.equal(result.outcome, 'SUCCESS');
+  assert.deepEqual(result.served, fixtures.required);
+  assert.equal(result.source, 'durable-current');
+  assert.equal(result.requiredState, 'preserved');
+  assert.equal(result.requiredMisses, 1);
+  assert.equal(result.optionalMisses, 1);
+  assert.equal(result.recovered, 1);
+  assert.equal(result.recomputed, 1);
+  assert.equal(result.requiredPreserved, 1);
+  assert.equal(result.lostRequiredState, 0);
+  assert.equal(result.interruptions, 0);
+});
+
+test('missing durable state fails explicitly and counts the interrupted journey', () => {
+  const result = model.runCase(config({ durable: 'missing' }));
+  assert.equal(result.outcome, 'FAILURE');
+  assert.equal(result.status, 503);
+  assert.equal(result.served, null);
+  assert.equal(result.requiredState, 'lost');
+  assert.equal(result.lostRequiredState, 1);
+  assert.equal(result.interruptions, 1);
+  assert.equal(result.requiredPreserved, 0);
+});
+
+test('stale durable record is rejected rather than substituted for required revision 3', () => {
+  const result = model.runCase(config({ durable: 'stale' }));
+  assert.equal(result.outcome, 'FAILURE');
+  assert.equal(result.reason, 'durable-required-state-stale');
+  assert.deepEqual(result.durableObserved, fixtures.stale);
+  assert.equal(result.served, null);
+  assert.equal(result.interruptions, 1);
+  assert.equal(result.requiredPreserved, 0);
+});
+
+test('synthetic status 200 with empty required state remains a failure', () => {
+  const result = model.runCase(config({ response: 'empty-success' }));
+  assert.equal(result.outcome, 'FAILURE');
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.served, {});
+  assert.equal(result.reason, 'empty-success-required-state-loss');
+  assert.equal(result.lostRequiredState, 1);
+  assert.equal(result.interruptions, 1);
+  assert.equal(result.recovered, 0);
+});
+
+test('unavailable durable evidence is UNKNOWN, not lost-state certainty or success', () => {
+  const result = model.runCase(config({ durable: 'unverified' }));
+  assert.equal(result.requiredState, 'unverified');
+  assert.equal(result.outcome, 'UNKNOWN');
+  assert.equal(result.served, null);
+  assert.equal(result.status, null);
+  assert.equal(result.unverified, 1);
+  assert.equal(result.lostRequiredState, 0);
+  assert.equal(result.requiredPreserved, 0);
+  assert.equal(result.interruptions, 0);
+});
+
+test('optional miss is acceptable while required cache hit ignores unused durable faults', () => {
+  for (const durable of fixtures.durableModes) {
+    for (const response of fixtures.responseModes) {
+      const result = model.runCase(config({ pressure: 'ttl-optional', durable, response }));
+      assert.equal(result.outcome, 'SUCCESS');
+      assert.equal(result.source, 'cache-hit');
+      assert.equal(result.requiredMisses, 0);
+      assert.equal(result.optionalMisses, 1);
+      assert.equal(result.recomputed, 1);
+      assert.equal(result.recovered, 0);
+      assert.equal(result.durableObserved, null);
+      assert.deepEqual(result.served, fixtures.required);
+    }
+  }
+});
+
+test('all 32 fixed combinations are deterministic with exact outcome and metric accounting', () => {
+  let combinations = 0;
+  const outcomes = { SUCCESS: 0, FAILURE: 0, UNKNOWN: 0 };
+  for (const pressure of Object.keys(fixtures.pressures)) {
+    for (const durable of fixtures.durableModes) {
+      for (const response of fixtures.responseModes) {
+        const input = config({ pressure, durable, response });
+        const miss = pressure === 'capacity' || pressure === 'ttl-session';
+        const expected = !miss || (response === 'recover' && durable === 'current')
+          ? 'SUCCESS' : response === 'recover' && durable === 'unverified' ? 'UNKNOWN' : 'FAILURE';
+        const result = model.runCase(input);
+        assert.equal(result.outcome, expected);
+        assert.deepEqual(result, model.runCase(input));
+        assert.equal(result.requiredMisses, Number(miss));
+        assert.equal(result.requiredPreserved, Number(expected === 'SUCCESS'));
+        assert.equal(result.interruptions, Number(expected === 'FAILURE'));
+        assert.equal(result.unverified, Number(expected === 'UNKNOWN'));
+        outcomes[expected]++;
+        combinations++;
+      }
+    }
+  }
+  assert.equal(combinations, 32);
+  assert.deepEqual(outcomes, { SUCCESS: 18, FAILURE: 12, UNKNOWN: 2 });
+});
+
+test('strict exact-record inputs reject malformed values without changing state', () => {
+  const inherited = Object.create({ pressure: 'capacity' });
+  inherited.durable = 'current';
+  inherited.response = 'recover';
+  const accessor = { durable: 'current', response: 'recover' };
+  Object.defineProperty(accessor, 'pressure', { enumerable: true, get() { throw new Error('must not execute'); } });
+  const invalid = [null, [], '', 0, {}, { ...defaults, pressure: '__proto__' },
+    { ...defaults, durable: 'CURRENT' }, { ...defaults, response: null },
+    { ...defaults, hidden: true }, { ...defaults, [Symbol('extra')]: true }, inherited, accessor];
+  for (const input of invalid) {
+    const lesson = model.createLesson();
+    unchanged(lesson, () => lesson.applyPressure(input), /Invalid input/);
+    assert.throws(() => model.runCase(input), /Invalid input/);
+  }
+});
+
+test('phase guards reject repeated and out-of-order commands atomically', () => {
+  const lesson = model.createLesson();
+  unchanged(lesson, () => lesson.evaluate(), /Apply pressure first/);
+  unchanged(lesson, () => lesson.check('SUCCESS'), /Check continuity first/);
+  unchanged(lesson, () => lesson.newAttempt(), /Retain the current attempt first/);
+  lesson.applyPressure(config());
+  unchanged(lesson, () => lesson.applyPressure(config()), /already applied/);
+  unchanged(lesson, () => lesson.check('SUCCESS'), /Check continuity first/);
+  lesson.evaluate();
+  unchanged(lesson, () => lesson.evaluate(), /already checked/);
+  unchanged(lesson, () => lesson.check('pass'), /Invalid prediction/);
+  lesson.check('SUCCESS');
+  unchanged(lesson, () => lesson.check('SUCCESS'), /already retained/);
+});
+
+test('detached deeply frozen snapshots and fixtures cannot corrupt the lesson', () => {
+  const lesson = model.createLesson();
+  const input = config();
+  const state = lesson.applyPressure(input);
+  assert.equal(Object.isFrozen(state), true);
+  assert.equal(Object.isFrozen(state.pressure.evicted[0]), true);
+  assert.throws(() => { state.pressure.evicted[0].reason = 'forged'; }, TypeError);
+  input.durable = 'missing';
+  assert.equal(lesson.evaluate().result.outcome, 'SUCCESS');
+  const snapshot = lesson.snapshot();
+  assert.notEqual(snapshot, lesson.snapshot());
+  assert.equal(Object.isFrozen(snapshot.result.served), true);
+  assert.equal(Object.isFrozen(fixtures.required), true);
+  assert.throws(() => { fixtures.required.cart = ''; }, TypeError);
+});
+
+test('wrong prediction changes only learning verdict and retains exact evidence once', () => {
+  const lesson = model.createLesson();
+  const state = complete(lesson, { durable: 'missing' }, 'SUCCESS');
+  assert.equal(state.phase, 'checked');
+  assert.equal(state.prediction.correct, false);
+  assert.equal(state.result.outcome, 'FAILURE');
+  assert.equal(state.history.length, 1);
+  assert.equal(state.history[0].result.interruptions, 1);
+  assert.deepEqual(state.history[0].pressure.evicted.map((entry) => entry.reason), ['capacity', 'capacity']);
+  assert.deepEqual(state.history[0].input, config({ durable: 'missing' }));
+  assert.deepEqual(state.totals, { success: 0, failure: 1, unknown: 0 });
+  const retained = state.history;
+  const next = lesson.newAttempt();
+  assert.equal(next.phase, 'idle');
+  assert.equal(next.input, null);
+  assert.equal(next.result, null);
+  assert.equal(next.prediction, null);
+  assert.deepEqual(next.trace, []);
+  assert.deepEqual(next.history, retained);
+});
+
+test('six attempts retain failures and unknowns and reject silent evidence eviction', () => {
+  const lesson = model.createLesson();
+  for (let index = 0; index < 6; index++) {
+    const durable = ['current', 'missing', 'unverified'][index % 3];
+    const expected = ['SUCCESS', 'FAILURE', 'UNKNOWN'][index % 3];
+    assert.equal(complete(lesson, { durable }, expected).phase, 'checked');
+    lesson.newAttempt();
+  }
+  assert.deepEqual(lesson.snapshot().totals, { success: 2, failure: 2, unknown: 2 });
+  assert.deepEqual(lesson.snapshot().history.map((entry) => entry.id), [1, 2, 3, 4, 5, 6]);
+  unchanged(lesson, () => lesson.applyPressure(config()), /Six retained attempts/);
+});
+
+test('explicit reset clears all local data from each possible phase', () => {
+  for (const phase of ['pressured', 'evaluated', 'checked', 'idle-with-history']) {
+    const lesson = model.createLesson();
+    complete(lesson, { durable: 'missing' }, 'FAILURE');
+    assert.equal(lesson.snapshot().history.length, 1);
+    lesson.newAttempt();
+    if (phase !== 'idle-with-history') lesson.applyPressure(config());
+    if (['evaluated', 'checked'].includes(phase)) lesson.evaluate();
+    if (phase === 'checked') lesson.check('SUCCESS');
+    const reset = lesson.reset();
+    assert.deepEqual(reset, model.createLesson().snapshot());
+    assert.equal(reset.history.length, 0);
+    assert.deepEqual(reset.totals, { success: 0, failure: 0, unknown: 0 });
+  }
+});

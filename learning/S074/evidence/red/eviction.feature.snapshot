@@ -1,0 +1,66 @@
+Feature: Required synthetic session state survives eviction or fails explicitly
+  # A-S074 / D-S074 / S074; frozen S; SC-S074; local synthetic data only.
+  Background:
+    Given one synthetic session has revision 3, cart "synthetic-bolt:2" and step "review"
+    And an optional derived tile can be recomputed without inventing required session state
+    And the session expires at logical tick 4 and the optional tile at tick 2
+    And capacity, logical time, durable evidence and response policy are fixed bounded fixtures
+
+  Scenario: Capacity pressure with the approved current durable contract
+    When the operator reduces capacity from two entries to zero
+    And checks continuity using the current durable record
+    Then both evictions and their capacity causes are visible
+    And required revision 3 and every required field are recovered exactly
+    And the optional miss is recomputed separately
+    And the synthetic journey outcome is SUCCESS
+
+  Scenario: Optional expiry is not required-state loss
+    When the operator advances logical time to tick 2
+    Then only the optional tile expires
+    And the required session is a cache hit
+    And recomputing the tile permits SUCCESS even if unused durable evidence is unavailable
+
+  Scenario: TTL equality expires required state
+    When the operator advances logical time to tick 4
+    Then both entries expire at or beyond their declared TTL boundary
+    And required-state continuity must use the durable contract rather than a cache hit
+
+  Scenario Outline: Missing or stale required state is an interruption
+    Given required session state has been evicted
+    When durable evidence is "<evidence>" and the response policy is recovery
+    Then the synthetic outcome is FAILURE
+    And an explicit error is served instead of empty or stale required state
+    And the interrupted journey remains counted
+    Examples:
+      | evidence |
+      | missing  |
+      | stale    |
+
+  Scenario: Empty success is not continuity
+    Given required session state has been evicted
+    When the operator selects the deliberately unsafe empty-success response
+    Then a synthetic status 200 and empty record are shown
+    But the required-state oracle reports FAILURE and lost required state
+
+  Scenario: Unavailable evidence cannot prove survival
+    Given required session state has been evicted
+    When durable evidence is unverified
+    Then the outcome is UNKNOWN and no complete required state is served
+    And UNKNOWN is not counted as success
+
+  Scenario: Guard ordered actions and retain bounded evidence
+    Given a new lesson with no completed attempts
+    Then invalid records, enum injection and out-of-order actions change no state
+    When pressure is applied, continuity checked and a prediction checked
+    Then an immutable attempt retains inputs, eviction causes, required-state comparison and trace
+    And an incorrect learning prediction never rewrites the measured journey outcome
+    And a new attempt retains history
+    And six completed attempts block further pressure without silently dropping evidence
+
+  Scenario: Accessible local reset and enforced isolation
+    Then all core controls work by keyboard with visible focus and announced errors
+    And explicit reset clears settings, result, trace, errors, prediction and history
+    And native form reset methods are not shadowed
+    And the exact synthetic banner is visible
+    And CSP blocks inline scripts, connections and form submissions
+    And ordinary verification preserves historical proof without writing it

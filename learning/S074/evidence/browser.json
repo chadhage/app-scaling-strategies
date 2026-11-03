@@ -1,0 +1,888 @@
+{
+  "cardId": "A-S074",
+  "workerId": "worker-A-S074",
+  "mode": "synthetic",
+  "outcome": "PASS",
+  "entry": "learning\\S074\\index.html",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "startedAtUtc": "2026-11-03T20:20:35.884Z",
+  "captureExplicitlyEnabled": true,
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "publication": "53c0c0d"
+  },
+  "observations": [
+    {
+      "name": "keyboard capacity eviction and exact durable recovery; empty prediction rejected",
+      "phase": "Phase: checked",
+      "outcome": "Journey outcome: SUCCESS",
+      "pressure": "Pressure: logical tick 0 · capacity 0 · evicted 2 · remaining 0",
+      "misses": "Cache misses: required 1 · optional 1",
+      "recovery": "Durable recoveries: 1 · optional recomputations: 1",
+      "requiredState": "Required state: preserved · preserved 1 · lost 0 · unverified 0",
+      "response": "Synthetic response: 200 · source durable-current · approved-durable-recovery",
+      "impact": "User-impact model: exact required state preserved in this synthetic case; no native continuity claim.",
+      "learning": "Learning prediction correct; measured outcome remains SUCCESS.",
+      "totals": "Retained outcomes: success 1 · failure 0 · unknown 0",
+      "cache": [
+        [
+          "required-session",
+          "required",
+          "4",
+          "evicted: capacity"
+        ],
+        [
+          "derived-tile",
+          "optional",
+          "2",
+          "evicted: capacity"
+        ]
+      ],
+      "comparison": [
+        [
+          "session",
+          "synthetic-session-074",
+          "synthetic-session-074",
+          "PASS"
+        ],
+        [
+          "revision",
+          "3",
+          "3",
+          "PASS"
+        ],
+        [
+          "cart",
+          "synthetic-bolt:2",
+          "synthetic-bolt:2",
+          "PASS"
+        ],
+        [
+          "step",
+          "review",
+          "review",
+          "PASS"
+        ]
+      ],
+      "durableObserved": "Durable record observed: {\"session\":\"synthetic-session-074\",\"revision\":3,\"cart\":\"synthetic-bolt:2\",\"step\":\"review\"}",
+      "history": [
+        [
+          "1",
+          "capacity",
+          "current / recover",
+          "SUCCESS",
+          "1 / 1",
+          "correct"
+        ]
+      ],
+      "trace": "Begin with two cache entries; required session revision 3.\nApply capacity: logical tick 0; capacity 0.\nEvict required-session (required) by capacity; expiry 4.\nEvict derived-tile (optional) by capacity; expiry 2.\nRemaining cache entries: 0. No durable evidence consumed yet.\nRequired cache misses 1; optional misses 1.\nOptional tile recomputed from its fixed synthetic catalog; never used as required state.\nRequired-state source: durable-current; approved-durable-recovery.\nOracle SUCCESS: preserved 1; lost 0; unverified 0; interruptions 0.\nPrediction SUCCESS: correct; measured outcome unchanged.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "missing required state fails explicitly; wrong prediction cannot erase interruption",
+      "phase": "Phase: checked",
+      "outcome": "Journey outcome: FAILURE",
+      "pressure": "Pressure: logical tick 0 · capacity 0 · evicted 2 · remaining 0",
+      "misses": "Cache misses: required 1 · optional 1",
+      "recovery": "Durable recoveries: 0 · optional recomputations: 1",
+      "requiredState": "Required state: lost · preserved 0 · lost 1 · unverified 0",
+      "response": "Synthetic response: 503 · source durable-missing · durable-required-state-missing",
+      "impact": "User-impact model: interrupted journey 1. Explicit rejection or status 200 does not erase the failure.",
+      "learning": "Learning prediction incorrect; measured outcome remains FAILURE.",
+      "totals": "Retained outcomes: success 1 · failure 1 · unknown 0",
+      "cache": [
+        [
+          "required-session",
+          "required",
+          "4",
+          "evicted: capacity"
+        ],
+        [
+          "derived-tile",
+          "optional",
+          "2",
+          "evicted: capacity"
+        ]
+      ],
+      "comparison": [
+        [
+          "session",
+          "synthetic-session-074",
+          "(not served)",
+          "FAIL"
+        ],
+        [
+          "revision",
+          "3",
+          "(not served)",
+          "FAIL"
+        ],
+        [
+          "cart",
+          "synthetic-bolt:2",
+          "(not served)",
+          "FAIL"
+        ],
+        [
+          "step",
+          "review",
+          "(not served)",
+          "FAIL"
+        ]
+      ],
+      "durableObserved": "Durable record observed: none consumed or unavailable",
+      "history": [
+        [
+          "1",
+          "capacity",
+          "current / recover",
+          "SUCCESS",
+          "1 / 1",
+          "correct"
+        ],
+        [
+          "2",
+          "capacity",
+          "missing / recover",
+          "FAILURE",
+          "1 / 1",
+          "incorrect"
+        ]
+      ],
+      "trace": "Begin with two cache entries; required session revision 3.\nApply capacity: logical tick 0; capacity 0.\nEvict required-session (required) by capacity; expiry 4.\nEvict derived-tile (optional) by capacity; expiry 2.\nRemaining cache entries: 0. No durable evidence consumed yet.\nRequired cache misses 1; optional misses 1.\nOptional tile recomputed from its fixed synthetic catalog; never used as required state.\nRequired-state source: durable-missing; durable-required-state-missing.\nOracle FAILURE: preserved 0; lost 1; unverified 0; interruptions 1.\nPrediction SUCCESS: incorrect; measured outcome unchanged.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "empty synthetic 200 is lost required state, not successful continuity",
+      "phase": "Phase: checked",
+      "outcome": "Journey outcome: FAILURE",
+      "pressure": "Pressure: logical tick 0 · capacity 0 · evicted 2 · remaining 0",
+      "misses": "Cache misses: required 1 · optional 1",
+      "recovery": "Durable recoveries: 0 · optional recomputations: 1",
+      "requiredState": "Required state: lost · preserved 0 · lost 1 · unverified 0",
+      "response": "Synthetic response: 200 · source empty-success · empty-success-required-state-loss",
+      "impact": "User-impact model: interrupted journey 1. Explicit rejection or status 200 does not erase the failure.",
+      "learning": "Learning prediction correct; measured outcome remains FAILURE.",
+      "totals": "Retained outcomes: success 1 · failure 2 · unknown 0",
+      "cache": [
+        [
+          "required-session",
+          "required",
+          "4",
+          "evicted: capacity"
+        ],
+        [
+          "derived-tile",
+          "optional",
+          "2",
+          "evicted: capacity"
+        ]
+      ],
+      "comparison": [
+        [
+          "session",
+          "synthetic-session-074",
+          "(not served)",
+          "FAIL"
+        ],
+        [
+          "revision",
+          "3",
+          "(not served)",
+          "FAIL"
+        ],
+        [
+          "cart",
+          "synthetic-bolt:2",
+          "(not served)",
+          "FAIL"
+        ],
+        [
+          "step",
+          "review",
+          "(not served)",
+          "FAIL"
+        ]
+      ],
+      "durableObserved": "Durable record observed: none consumed or unavailable",
+      "history": [
+        [
+          "1",
+          "capacity",
+          "current / recover",
+          "SUCCESS",
+          "1 / 1",
+          "correct"
+        ],
+        [
+          "2",
+          "capacity",
+          "missing / recover",
+          "FAILURE",
+          "1 / 1",
+          "incorrect"
+        ],
+        [
+          "3",
+          "capacity",
+          "current / empty-success",
+          "FAILURE",
+          "1 / 1",
+          "correct"
+        ]
+      ],
+      "trace": "Begin with two cache entries; required session revision 3.\nApply capacity: logical tick 0; capacity 0.\nEvict required-session (required) by capacity; expiry 4.\nEvict derived-tile (optional) by capacity; expiry 2.\nRemaining cache entries: 0. No durable evidence consumed yet.\nRequired cache misses 1; optional misses 1.\nOptional tile recomputed from its fixed synthetic catalog; never used as required state.\nRequired-state source: empty-success; empty-success-required-state-loss.\nOracle FAILURE: preserved 0; lost 1; unverified 0; interruptions 1.\nPrediction FAILURE: correct; measured outcome unchanged.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "acceptable optional TTL miss leaves required cache hit; unused durable path not certified",
+      "phase": "Phase: checked",
+      "outcome": "Journey outcome: SUCCESS",
+      "pressure": "Pressure: logical tick 2 · capacity 2 · evicted 1 · remaining 1",
+      "misses": "Cache misses: required 0 · optional 1",
+      "recovery": "Durable recoveries: 0 · optional recomputations: 1",
+      "requiredState": "Required state: preserved · preserved 1 · lost 0 · unverified 0",
+      "response": "Synthetic response: 200 · source cache-hit · required-cache-hit",
+      "impact": "User-impact model: exact required state preserved in this synthetic case; no native continuity claim.",
+      "learning": "Learning prediction correct; measured outcome remains SUCCESS.",
+      "totals": "Retained outcomes: success 2 · failure 2 · unknown 0",
+      "cache": [
+        [
+          "required-session",
+          "required",
+          "4",
+          "cache retained"
+        ],
+        [
+          "derived-tile",
+          "optional",
+          "2",
+          "evicted: ttl"
+        ]
+      ],
+      "comparison": [
+        [
+          "session",
+          "synthetic-session-074",
+          "synthetic-session-074",
+          "PASS"
+        ],
+        [
+          "revision",
+          "3",
+          "3",
+          "PASS"
+        ],
+        [
+          "cart",
+          "synthetic-bolt:2",
+          "synthetic-bolt:2",
+          "PASS"
+        ],
+        [
+          "step",
+          "review",
+          "review",
+          "PASS"
+        ]
+      ],
+      "durableObserved": "Durable record observed: none consumed or unavailable",
+      "history": [
+        [
+          "1",
+          "capacity",
+          "current / recover",
+          "SUCCESS",
+          "1 / 1",
+          "correct"
+        ],
+        [
+          "2",
+          "capacity",
+          "missing / recover",
+          "FAILURE",
+          "1 / 1",
+          "incorrect"
+        ],
+        [
+          "3",
+          "capacity",
+          "current / empty-success",
+          "FAILURE",
+          "1 / 1",
+          "correct"
+        ],
+        [
+          "4",
+          "ttl-optional",
+          "unverified / empty-success",
+          "SUCCESS",
+          "0 / 1",
+          "correct"
+        ]
+      ],
+      "trace": "Begin with two cache entries; required session revision 3.\nApply ttl-optional: logical tick 2; capacity 2.\nEvict derived-tile (optional) by ttl; expiry 2.\nRemaining cache entries: 1. No durable evidence consumed yet.\nRequired cache misses 0; optional misses 1.\nOptional tile recomputed from its fixed synthetic catalog; never used as required state.\nRequired-state source: cache-hit; required-cache-hit.\nOracle SUCCESS: preserved 1; lost 0; unverified 0; interruptions 0.\nPrediction SUCCESS: correct; measured outcome unchanged.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "TTL equality expires required state; stale durable revision rejected",
+      "phase": "Phase: checked",
+      "outcome": "Journey outcome: FAILURE",
+      "pressure": "Pressure: logical tick 4 · capacity 2 · evicted 2 · remaining 0",
+      "misses": "Cache misses: required 1 · optional 1",
+      "recovery": "Durable recoveries: 0 · optional recomputations: 1",
+      "requiredState": "Required state: lost · preserved 0 · lost 1 · unverified 0",
+      "response": "Synthetic response: 503 · source durable-stale · durable-required-state-stale",
+      "impact": "User-impact model: interrupted journey 1. Explicit rejection or status 200 does not erase the failure.",
+      "learning": "Learning prediction correct; measured outcome remains FAILURE.",
+      "totals": "Retained outcomes: success 2 · failure 3 · unknown 0",
+      "cache": [
+        [
+          "required-session",
+          "required",
+          "4",
+          "evicted: ttl"
+        ],
+        [
+          "derived-tile",
+          "optional",
+          "2",
+          "evicted: ttl"
+        ]
+      ],
+      "comparison": [
+        [
+          "session",
+          "synthetic-session-074",
+          "(not served)",
+          "FAIL"
+        ],
+        [
+          "revision",
+          "3",
+          "(not served)",
+          "FAIL"
+        ],
+        [
+          "cart",
+          "synthetic-bolt:2",
+          "(not served)",
+          "FAIL"
+        ],
+        [
+          "step",
+          "review",
+          "(not served)",
+          "FAIL"
+        ]
+      ],
+      "durableObserved": "Durable record observed: {\"session\":\"synthetic-session-074\",\"revision\":2,\"cart\":\"synthetic-bolt:1\",\"step\":\"edit\"}",
+      "history": [
+        [
+          "1",
+          "capacity",
+          "current / recover",
+          "SUCCESS",
+          "1 / 1",
+          "correct"
+        ],
+        [
+          "2",
+          "capacity",
+          "missing / recover",
+          "FAILURE",
+          "1 / 1",
+          "incorrect"
+        ],
+        [
+          "3",
+          "capacity",
+          "current / empty-success",
+          "FAILURE",
+          "1 / 1",
+          "correct"
+        ],
+        [
+          "4",
+          "ttl-optional",
+          "unverified / empty-success",
+          "SUCCESS",
+          "0 / 1",
+          "correct"
+        ],
+        [
+          "5",
+          "ttl-session",
+          "stale / recover",
+          "FAILURE",
+          "1 / 1",
+          "correct"
+        ]
+      ],
+      "trace": "Begin with two cache entries; required session revision 3.\nApply ttl-session: logical tick 4; capacity 2.\nEvict required-session (required) by ttl; expiry 4.\nEvict derived-tile (optional) by ttl; expiry 2.\nRemaining cache entries: 0. No durable evidence consumed yet.\nRequired cache misses 1; optional misses 1.\nOptional tile recomputed from its fixed synthetic catalog; never used as required state.\nRequired-state source: durable-stale; durable-required-state-stale.\nOracle FAILURE: preserved 0; lost 1; unverified 0; interruptions 1.\nPrediction FAILURE: correct; measured outcome unchanged.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "unavailable durable evidence holds UNKNOWN without invented loss certainty",
+      "phase": "Phase: checked",
+      "outcome": "Journey outcome: UNKNOWN",
+      "pressure": "Pressure: logical tick 4 · capacity 2 · evicted 2 · remaining 0",
+      "misses": "Cache misses: required 1 · optional 1",
+      "recovery": "Durable recoveries: 0 · optional recomputations: 1",
+      "requiredState": "Required state: unverified · preserved 0 · lost 0 · unverified 1",
+      "response": "Synthetic response: unverified · source durable-unverified · durable-evidence-unavailable",
+      "impact": "User-impact model: continuity unverified 1. Neither survival nor loss is established; not success.",
+      "learning": "Learning prediction correct; measured outcome remains UNKNOWN.",
+      "totals": "Retained outcomes: success 2 · failure 3 · unknown 1",
+      "cache": [
+        [
+          "required-session",
+          "required",
+          "4",
+          "evicted: ttl"
+        ],
+        [
+          "derived-tile",
+          "optional",
+          "2",
+          "evicted: ttl"
+        ]
+      ],
+      "comparison": [
+        [
+          "session",
+          "synthetic-session-074",
+          "(not served)",
+          "UNKNOWN"
+        ],
+        [
+          "revision",
+          "3",
+          "(not served)",
+          "UNKNOWN"
+        ],
+        [
+          "cart",
+          "synthetic-bolt:2",
+          "(not served)",
+          "UNKNOWN"
+        ],
+        [
+          "step",
+          "review",
+          "(not served)",
+          "UNKNOWN"
+        ]
+      ],
+      "durableObserved": "Durable record observed: none consumed or unavailable",
+      "history": [
+        [
+          "1",
+          "capacity",
+          "current / recover",
+          "SUCCESS",
+          "1 / 1",
+          "correct"
+        ],
+        [
+          "2",
+          "capacity",
+          "missing / recover",
+          "FAILURE",
+          "1 / 1",
+          "incorrect"
+        ],
+        [
+          "3",
+          "capacity",
+          "current / empty-success",
+          "FAILURE",
+          "1 / 1",
+          "correct"
+        ],
+        [
+          "4",
+          "ttl-optional",
+          "unverified / empty-success",
+          "SUCCESS",
+          "0 / 1",
+          "correct"
+        ],
+        [
+          "5",
+          "ttl-session",
+          "stale / recover",
+          "FAILURE",
+          "1 / 1",
+          "correct"
+        ],
+        [
+          "6",
+          "ttl-session",
+          "unverified / recover",
+          "UNKNOWN",
+          "1 / 1",
+          "correct"
+        ]
+      ],
+      "trace": "Begin with two cache entries; required session revision 3.\nApply ttl-session: logical tick 4; capacity 2.\nEvict required-session (required) by ttl; expiry 4.\nEvict derived-tile (optional) by ttl; expiry 2.\nRemaining cache entries: 0. No durable evidence consumed yet.\nRequired cache misses 1; optional misses 1.\nOptional tile recomputed from its fixed synthetic catalog; never used as required state.\nRequired-state source: durable-unverified; durable-evidence-unavailable.\nOracle UNKNOWN: preserved 0; lost 0; unverified 1; interruptions 0.\nPrediction UNKNOWN: correct; measured outcome unchanged.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "seventh attempt rejected without silent history eviction",
+      "phase": "Phase: idle",
+      "outcome": "Journey outcome: not checked",
+      "pressure": "Pressure: not applied · initial entries: 2",
+      "misses": "Cache misses: required not checked · optional not checked",
+      "recovery": "Durable recoveries: not checked · optional recomputations: not checked",
+      "requiredState": "Required state: not checked",
+      "response": "Synthetic response: not checked",
+      "impact": "User-impact model: no continuity check yet.",
+      "learning": "Learning prediction not checked.",
+      "totals": "Retained outcomes: success 2 · failure 3 · unknown 1",
+      "cache": [
+        [
+          "required-session",
+          "required",
+          "4",
+          "not applied"
+        ],
+        [
+          "derived-tile",
+          "optional",
+          "2",
+          "not applied"
+        ]
+      ],
+      "comparison": [
+        [
+          "session",
+          "synthetic-session-074",
+          "not checked",
+          "not checked"
+        ],
+        [
+          "revision",
+          "3",
+          "not checked",
+          "not checked"
+        ],
+        [
+          "cart",
+          "synthetic-bolt:2",
+          "not checked",
+          "not checked"
+        ],
+        [
+          "step",
+          "review",
+          "not checked",
+          "not checked"
+        ]
+      ],
+      "durableObserved": "Durable record observed: not checked",
+      "history": [
+        [
+          "1",
+          "capacity",
+          "current / recover",
+          "SUCCESS",
+          "1 / 1",
+          "correct"
+        ],
+        [
+          "2",
+          "capacity",
+          "missing / recover",
+          "FAILURE",
+          "1 / 1",
+          "incorrect"
+        ],
+        [
+          "3",
+          "capacity",
+          "current / empty-success",
+          "FAILURE",
+          "1 / 1",
+          "correct"
+        ],
+        [
+          "4",
+          "ttl-optional",
+          "unverified / empty-success",
+          "SUCCESS",
+          "0 / 1",
+          "correct"
+        ],
+        [
+          "5",
+          "ttl-session",
+          "stale / recover",
+          "FAILURE",
+          "1 / 1",
+          "correct"
+        ],
+        [
+          "6",
+          "ttl-session",
+          "unverified / recover",
+          "UNKNOWN",
+          "1 / 1",
+          "correct"
+        ]
+      ],
+      "trace": "No pressure applied.",
+      "alert": "Six retained attempts reached. Reset explicitly; no history is evicted.",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "explicit reset clears completed history, errors, totals and predictions",
+      "phase": "Phase: idle",
+      "outcome": "Journey outcome: not checked",
+      "pressure": "Pressure: not applied · initial entries: 2",
+      "misses": "Cache misses: required not checked · optional not checked",
+      "recovery": "Durable recoveries: not checked · optional recomputations: not checked",
+      "requiredState": "Required state: not checked",
+      "response": "Synthetic response: not checked",
+      "impact": "User-impact model: no continuity check yet.",
+      "learning": "Learning prediction not checked.",
+      "totals": "Retained outcomes: success 0 · failure 0 · unknown 0",
+      "cache": [
+        [
+          "required-session",
+          "required",
+          "4",
+          "not applied"
+        ],
+        [
+          "derived-tile",
+          "optional",
+          "2",
+          "not applied"
+        ]
+      ],
+      "comparison": [
+        [
+          "session",
+          "synthetic-session-074",
+          "not checked",
+          "not checked"
+        ],
+        [
+          "revision",
+          "3",
+          "not checked",
+          "not checked"
+        ],
+        [
+          "cart",
+          "synthetic-bolt:2",
+          "not checked",
+          "not checked"
+        ],
+        [
+          "step",
+          "review",
+          "not checked",
+          "not checked"
+        ]
+      ],
+      "durableObserved": "Durable record observed: not checked",
+      "history": [],
+      "trace": "No pressure applied.",
+      "alert": "",
+      "activeElement": "apply-pressure"
+    },
+    {
+      "name": "invalid injected input is rejected without result or markup execution",
+      "phase": "Phase: idle",
+      "outcome": "Journey outcome: not checked",
+      "pressure": "Pressure: not applied · initial entries: 2",
+      "misses": "Cache misses: required not checked · optional not checked",
+      "recovery": "Durable recoveries: not checked · optional recomputations: not checked",
+      "requiredState": "Required state: not checked",
+      "response": "Synthetic response: not checked",
+      "impact": "User-impact model: no continuity check yet.",
+      "learning": "Learning prediction not checked.",
+      "totals": "Retained outcomes: success 0 · failure 0 · unknown 0",
+      "cache": [
+        [
+          "required-session",
+          "required",
+          "4",
+          "not applied"
+        ],
+        [
+          "derived-tile",
+          "optional",
+          "2",
+          "not applied"
+        ]
+      ],
+      "comparison": [
+        [
+          "session",
+          "synthetic-session-074",
+          "not checked",
+          "not checked"
+        ],
+        [
+          "revision",
+          "3",
+          "not checked",
+          "not checked"
+        ],
+        [
+          "cart",
+          "synthetic-bolt:2",
+          "not checked",
+          "not checked"
+        ],
+        [
+          "step",
+          "review",
+          "not checked",
+          "not checked"
+        ]
+      ],
+      "durableObserved": "Durable record observed: not checked",
+      "history": [],
+      "trace": "No pressure applied.",
+      "alert": "Invalid input: pressure. Select a declared fixture.",
+      "activeElement": "pressure"
+    },
+    {
+      "name": "explicit reset clears idle, pressured and evaluated phases; native form.reset remains callable",
+      "phase": "Phase: idle",
+      "outcome": "Journey outcome: not checked",
+      "pressure": "Pressure: not applied · initial entries: 2",
+      "misses": "Cache misses: required not checked · optional not checked",
+      "recovery": "Durable recoveries: not checked · optional recomputations: not checked",
+      "requiredState": "Required state: not checked",
+      "response": "Synthetic response: not checked",
+      "impact": "User-impact model: no continuity check yet.",
+      "learning": "Learning prediction not checked.",
+      "totals": "Retained outcomes: success 0 · failure 0 · unknown 0",
+      "cache": [
+        [
+          "required-session",
+          "required",
+          "4",
+          "not applied"
+        ],
+        [
+          "derived-tile",
+          "optional",
+          "2",
+          "not applied"
+        ]
+      ],
+      "comparison": [
+        [
+          "session",
+          "synthetic-session-074",
+          "not checked",
+          "not checked"
+        ],
+        [
+          "revision",
+          "3",
+          "not checked",
+          "not checked"
+        ],
+        [
+          "cart",
+          "synthetic-bolt:2",
+          "not checked",
+          "not checked"
+        ],
+        [
+          "step",
+          "review",
+          "not checked",
+          "not checked"
+        ]
+      ],
+      "durableObserved": "Durable record observed: not checked",
+      "history": [],
+      "trace": "No pressure applied.",
+      "alert": "",
+      "activeElement": "apply-pressure"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp-probes",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-o7571UXT5UmWaccX2jcpaGc7ny/qEj8ZD/LxUyecDus='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Connecting to 'https://s074.invalid/blocked-connect' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Fetch API cannot load https://s074.invalid/blocked-connect. Refused to connect because it violates the document's Content Security Policy."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Sending form data to 'https://s074.invalid/blocked-form?' violates the following Content Security Policy directive: \"form-action 'none'\". The request has been blocked.\n"
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "probeRequests": [],
+  "probeResponses": [],
+  "guardedNetworkAttempts": [],
+  "screenshots": [
+    "evidence\\browser-eviction-failure.png",
+    "evidence\\browser-unknown.png"
+  ],
+  "cleanup": {
+    "closeAwaited": true,
+    "closed": true
+  },
+  "testedSourceHashes": {
+    "index.html": "5dea4c54aa034b8a0040f2008a34a640ef80dd2075efcaf3d2259bbae5379432",
+    "styles.css": "07162a22bb3be379b59b91112f3e94d26e621f9ae1090b7655be05e712313d1d",
+    "fixtures.js": "9ae96244dbc2677184a9b8e98a0518732700eb854244f7d8722a4670c076cdda",
+    "model.js": "87348edb8a043bc971529cbfa69bd9eeeddbadf9e59ce3c7a7aeefe692eaab2c",
+    "app.js": "7e0d7f25333328fe3c5498b269f3d74aa80934919def36099cfdcf05d90256ef",
+    "manifest.json": "98bfcfcf20971818f3c611afbf07cc2c7a22cc29d2336f4575744d71579d9dad",
+    "README.md": "9db7727a09c9f9b7690e086c6455429269f5408124fc3c812901362a895567da",
+    "eviction.feature": "4fa7a51441726e9028e60662ce800bf4a87ee86f3b354b48ff334a85de800701",
+    "tests\\browser.test.cjs": "8d65a64c506bf0bd25903715dc2e075b61b9c8ecf89c5f7bab2499e882a60eef"
+  },
+  "browserVersion": "156.0.4314.50",
+  "narrowViewport": {
+    "width": 360,
+    "bodyOverflow": false,
+    "visibleKeyboardFocus": true
+  },
+  "csp": {
+    "violations": [
+      {
+        "directive": "script-src-elem",
+        "blocked": "inline"
+      },
+      {
+        "directive": "connect-src",
+        "blocked": "https://s074.invalid/blocked-connect"
+      },
+      {
+        "directive": "form-action",
+        "blocked": "https://s074.invalid/blocked-form?"
+      }
+    ],
+    "inlineRan": false,
+    "connection": "TypeError"
+  },
+  "completedAtUtc": "2026-11-03T20:20:40.367Z"
+}
