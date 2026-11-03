@@ -1,0 +1,113 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; media-src 'none'">
+  <title>S053 — Introduce a breaking API safely</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer=""></script>
+  <script src="lesson.js" defer=""></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to operator controls</a>
+  <header>
+    <p class="banner" id="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S053 — Software releases are not API contracts</h1>
+    <p>A-S053 · D-S053 · SC-S053 · one frozen S learning unit</p>
+    <p>Introduce a breaking API using versioned endpoints or a transitional adapter. A forced endpoint switch is not safe just because it responds with HTTP 200.</p>
+  </header>
+  <main>
+    <section aria-labelledby="preconditions">
+      <h2 id="preconditions">Fixed synthetic envelope</h2>
+      <p>Three profile consumers initially require <code>v1: { displayName: "Ada Example" }</code>. Blue software <strong>1.8.0</strong> serves v1. Green software <strong>2.0.0</strong> uses <code>v2: { name: { given: "Ada", family: "Example" } }</code>. Both shapes refer to the same fixed synthetic profile.</p>
+      <p>An explicit client upgrade changes the declared consumer contract before an attempt. A software deployment does not. Green can preserve v1 through a transitional adapter at a stable route or a retained v1 endpoint; it does not pretend v1 consumers understand v2.</p>
+      <p>Each independent cutover attempt starts from this fixture and contains exactly three journeys. Inspect the response shape <em>and</em> observed software identity. API paths and HTTP statuses below are model data, not requests. No account, server or credentials are needed.</p>
+    </section>
+
+    <section aria-labelledby="controls">
+      <h2 id="controls">Operator controls</h2>
+      <p id="control-help">Try a mixed population with an adapter, then force v2 without upgrading every consumer. Failures stay in history. At most six attempts; no randomness, timers, storage or network.</p>
+      <form id="migration-form" aria-describedby="control-help" novalidate="">
+        <div class="fields">
+          <label for="deployment">Software destination
+            <select id="deployment" name="deployment">
+              <option value="green" selected="">Green — software 2.0.0 (intended migration)</option>
+              <option value="blue">Blue — software 1.8.0 (no migration)</option>
+            </select>
+          </label>
+          <label for="route">API routing policy
+            <select id="route" name="route">
+              <option value="adapter" selected="">Stable /profile + transitional adapter</option>
+              <option value="versioned">Consumer-versioned /api/v1 or /api/v2 endpoints</option>
+              <option value="force-v2">Force everyone to /api/v2 — no adapter</option>
+            </select>
+          </label>
+          <label for="upgrades">Explicit client upgrade before cutover
+            <select id="upgrades" name="upgrades">
+              <option value="none">None — all three still require v1</option>
+              <option value="one" selected="">One — synthetic-a requires v2; b and c require v1</option>
+              <option value="all">All — every consumer explicitly requires v2</option>
+            </select>
+          </label>
+          <label for="observation">Observation coverage
+            <select id="observation" name="observation">
+              <option value="complete" selected="">Complete — all three journey observations</option>
+              <option value="missing-last">Missing last — one started journey stays unknown</option>
+            </select>
+          </label>
+        </div>
+        <div class="actions">
+          <button id="conduct" type="submit" disabled="">Run one cutover attempt</button>
+          <button id="restart" type="button">Reset all</button>
+        </div>
+      </form>
+      <p id="error" role="alert" tabindex="-1">Attempt rejected: The six-attempt history limit is reached; explicitly reset to start again. Previous results are unchanged.</p>
+    </section>
+
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Synthetic result</h2>
+      <div id="result" aria-live="polite" aria-atomic="true">
+        <p id="verdict" data-outcome="failed">Synthetic verifier: FAILED</p>
+        <p id="impact">Synthetic user impact: interrupted</p>
+        <p id="explanation">Known broken contracts are interruptions, even with HTTP 200; later attempts cannot erase them.</p>
+        <dl id="metrics"><dt>Attempted journeys</dt><dd id="metric-attempted">3</dd><dt>Complete journeys</dt><dd id="metric-completed">1</dd><dt>Migrated to green</dt><dd id="metric-migrated">1</dd><dt>Interruptions</dt><dd id="metric-interruptions">1</dd><dt>Unknown outcomes</dt><dd id="metric-unknown">1</dd><dt>Successful but stayed on blue</dt><dd id="metric-stayedOnBlue">0</dd><dt>Migration fraction (all attempts)</dt><dd id="metric-migrationFraction">1/3</dd></dl>
+      </div>
+      <p>Verifier verdict and user impact are separate: observing the expected negative example is educationally correct, but affected consumers are still interrupted. Missing evidence and successful requests left on blue never count as completed migration.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Latest attempt — fixed synthetic per-consumer trace</caption>
+          <thead><tr><th scope="col">Consumer / declared contract</th><th scope="col">Configured endpoint</th><th scope="col">Observed software / API / response</th><th scope="col">Journey check</th></tr></thead>
+          <tbody id="journeys"><tr><td>synthetic-a — requires API v2</td><td>/api/v2/profile</td><td><p>green / software 2.0.0 / API v2 / HTTP 200; adapter: no</p><pre>{
+  "profileId": "synthetic-053",
+  "name": {
+    "given": "Ada",
+    "family": "Example"
+  }
+}</pre></td><td data-outcome="passed">PASSED: Required API v2 shape and synthetic profile value preserved on green.</td></tr><tr><td>synthetic-b — requires API v1</td><td>/api/v2/profile</td><td><p>green / software 2.0.0 / API v2 / HTTP 200; adapter: no</p><pre>{
+  "profileId": "synthetic-053",
+  "name": {
+    "given": "Ada",
+    "family": "Example"
+  }
+}</pre></td><td data-outcome="failed">FAILED: HTTP 200 is not compatibility: expected v1 displayName, received v2 name.</td></tr><tr><td>synthetic-c — requires API v1</td><td>/api/v2/profile</td><td>UNKNOWN — no response or deployment observation.</td><td data-outcome="unknown">UNKNOWN: Journey started, but response and deployment observation are absent; no success is inferred.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained attempt history</h2>
+      <p id="history-count">Retained attempts: 6/6. Explicit reset or page reload erases in-memory history.</p>
+      <ol id="history"><li data-outcome="passed">Attempt 1: PASSED / complete-synthetic-migration; software green, route adapter, upgrades one, observation complete; migrated 3/3, interruptions 0, unknown 0.</li><li data-outcome="passed">Attempt 2: PASSED / complete-synthetic-migration; software green, route versioned, upgrades one, observation complete; migrated 3/3, interruptions 0, unknown 0.</li><li data-outcome="failed">Attempt 3: FAILED / interrupted; software green, route force-v2, upgrades one, observation complete; migrated 1/3, interruptions 2, unknown 0.</li><li data-outcome="passed">Attempt 4: PASSED / complete-synthetic-migration; software green, route force-v2, upgrades all, observation complete; migrated 3/3, interruptions 0, unknown 0.</li><li data-outcome="unknown">Attempt 5: UNKNOWN / unverified; software green, route force-v2, upgrades all, observation missing-last; migrated 2/3, interruptions 0, unknown 1.</li><li data-outcome="failed">Attempt 6: FAILED / interrupted; software green, route force-v2, upgrades one, observation missing-last; migrated 1/3, interruptions 1, unknown 1.</li></ol>
+    </section>
+
+    <section aria-labelledby="limits">
+      <h2 id="limits">Evidence limits and source</h2>
+      <p>This bounded model demonstrates contract reasoning only. It does not execute HTTP, negotiate a real API, test authentication, qualify a real adapter, or prove protocol/platform behavior, production Node.js 24, uninterrupted Azure migration or five-nines reliability. Browser checks use existing Node.js 22 test tooling and signed Edge, not a production runtime.</p>
+      <p>Cleanup: no resources created; only in-memory attempt data is reset. B-S053 and source D-S053, including D-S051/D-S052 prerequisites and native acceptance, remain separate and incomplete. No identity, tokens, keys, cloud, IaC, scaffolding, deployment or expenditure is involved.</p>
+      <p><a href="../../README.md#f-n-tier-and-version-compatibility">Exact S053 source</a> · <a href="../../.docs/wiki/backlog.md">D-S053 acceptance</a> · <a href="api-migration.feature">BDD scenarios</a> · <a href="README.md">Exercise and evidence instructions</a></p>
+      <p>Microsoft Open Source Disclaimer: this demonstration confers no Microsoft endorsement, support or SLA. <a href="../../README.md#microsoft-open-source-disclaimer">Read the source disclaimer.</a></p>
+    </section>
+  </main>
+  <noscript><p>JavaScript is required for this local synthetic exercise; no result is available without it.</p></noscript>
+
+
+</body></html>

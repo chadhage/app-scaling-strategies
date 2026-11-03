@@ -1,0 +1,27 @@
+| D-S053 | P0 | Add deployment-version versus API-contract controls, adapters, and client-upgrade paths. | A stable compatible route can migrate all consumers; a breaking API cannot be force-rerouted and declared uninterrupted. | D-S051, D-S052 |
+## Completion and evidence policy
+
+The source goal is:
+
+```text
+Uninterrupted-transition success =
+    uninterrupted successful transition journeys
+    / all attempted transition journeys
+
+Target >= 0.99999
+```
+
+The UI must count errors, timeouts, over-budget latency, unexpected logout/state loss, missing/duplicate effects, and violated data contracts as interruptions. Unknown started outcomes cannot be excluded or presented as successful. Empty samples and users never moved to the candidate provide no migration proof.
+
+For zero failures in independent comparable Bernoulli trials:
+
+```text
+p_upper = 1 - 0.05^(1/n)
+n >= ceil(ln(0.05) / ln(1 - 0.00001)) = 299572
+```
+
+The 299,572-trial figure is an illustrative one-sided 95% confidence bound, not a universal proof threshold. Correlated users within a swap, repeated requests from one user, changed operating envelopes, and outage emulation require explicit analysis and qualification.
+
+Successful educational execution of a negative test does not satisfy the uninterrupted-transition goal. Keep verification verdicts, actual user impact, and cleanup status independently visible.
+
+This backlog inherits the [Microsoft Open Source Disclaimer](../../README.md#microsoft-open-source-disclaimer). It does not assign a license, imply Microsoft endorsement/support, or turn the five-nines target into a Microsoft service-level agreement.

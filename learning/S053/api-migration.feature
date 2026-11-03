@@ -1,0 +1,62 @@
+Feature: Introduce a breaking API without confusing software and consumer contracts
+  # A-S053; D-S053; SC-S053; one frozen S unit.
+  # Training rehearsal - synthetic data - not a live Azure result
+  Background:
+    Given three fixed synthetic profile consumers originally require API v1
+    And blue software release 1.8.0 serves API v1
+    And green software release 2.0.0 has a native API v2 representation
+    And an explicit client upgrade changes a consumer's declared API contract
+    And every attempt contains exactly three journeys and at most six attempts are retained
+
+  Scenario: A stable transitional adapter migrates a mixed consumer population
+    Given exactly one consumer has explicitly upgraded to API v2
+    When the operator selects green software and the stable adapter route
+    Then all three consumers receive their declared response shape from green
+    And two v1 consumers are translated rather than silently upgraded
+    And the synthetic verifier passes with 3 migrated, 0 interrupted and 0 unknown
+
+  Scenario: Versioned endpoints preserve old contracts on new software
+    Given exactly one consumer has explicitly upgraded to API v2
+    When the operator selects green software and consumer-versioned endpoints
+    Then v1 and v2 endpoints remain distinct on software release 2.0.0
+    And all three consumers migrate with their declared contracts intact
+
+  Scenario: Force-rerouting a breaking API fails even with HTTP 200
+    Given exactly one consumer has explicitly upgraded to API v2
+    When the operator selects green software and forces the v2 endpoint
+    Then the two v1 consumers fail their required response-shape assertion
+    And 1 migrated and 2 interruptions remain in the denominator of 3
+    And the result is interrupted, not a safe migration
+
+  Scenario: An explicit complete client upgrade can use the new endpoint
+    Given all three consumers explicitly upgraded before the attempt
+    When the operator selects green software and forces the v2 endpoint
+    Then all three declared v2 contracts pass and migrate
+    And merely selecting green software never performs a client upgrade
+
+  Scenario: Successful old-deployment requests are not migration evidence
+    Given no consumer has upgraded
+    When the operator selects blue software and consumer-versioned endpoints
+    Then all three journeys succeed but zero migrate to green
+    And the migration result is unknown rather than successful
+
+  Scenario: A missing observation cannot become a successful transition
+    When the last started journey's observation is unavailable
+    Then that journey has an unknown response, deployment and outcome
+    And it stays in the attempted denominator
+    And a known interruption dominates a separate unknown observation
+
+  Scenario: Invalid inputs or forged history cannot alter retained results
+    Given at least one completed attempt
+    When an enum, extra property, accessor, mutated result or over-limit action is supplied
+    Then the model rejects it without modifying previous state
+    And a seventh attempt is rejected until explicit reset
+
+  Scenario: Operate the lesson locally with a keyboard and explicit reset
+    When the operator tabs through labelled controls and submits with Enter
+    Then the DOM shows the actual response shapes, separate verdict and user impact
+    And earlier failures remain visible when a later attempt passes
+    And invalid input has a focused readable error without erasing history
+    And reset restores controls, clears in-memory results and focuses the first control
+    And the exact training banner and native-proof limits remain visible
+    And the browser enforces CSP against inline script, eval and external connections

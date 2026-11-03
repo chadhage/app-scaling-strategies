@@ -1,0 +1,12 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const model = require('../model.js');
+assert.equal(typeof model.initialState, 'function');
+assert.equal(typeof model.conduct, 'function');
+assert.equal(model.LIMITS.maxAttempts, 6);
+assert.deepEqual(model.initialState(), { schemaVersion: 1, nextId: 1, history: [] });
+assert.deepEqual(model.conduct(model.initialState(), {
+  deployment: 'green', route: 'adapter', upgrades: 'one', observation: 'complete',
+}), { schemaVersion: 1, nextId: 1, history: [] });
+console.log('Loadable stub exports the complete API and accepts a valid request; no missing code or tooling.');

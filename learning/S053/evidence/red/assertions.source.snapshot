@@ -1,0 +1,207 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('../model.js');
+const config = (changes = {}) => ({
+  deployment: 'green', route: 'adapter', upgrades: 'one', observation: 'complete', ...changes,
+});
+const run = (changes) => model.conduct(model.initialState(), config(changes));
+const latest = (state) => state.history.at(-1) || { summary: {}, rows: [], config: {} };
+
+test('the entire public API is loadable before behavioral implementation', () => {
+  assert.deepEqual(Object.keys(model).sort(), ['LIMITS', 'conduct', 'initialState']);
+  assert.deepEqual(model.LIMITS, { maxAttempts: 6, consumers: 3 });
+  assert.deepEqual(model.initialState(), { schemaVersion: 1, nextId: 1, history: [] });
+});
+
+test('stable adapter migrates all mixed consumers with independent software/API versions', () => {
+  const result = latest(run());
+  assert.equal(result.verdict, 'passed');
+  assert.deepEqual(result.summary, {
+    attempted: 3, completed: 3, migrated: 3, interruptions: 0,
+    unknown: 0, stayedOnBlue: 0, migrationFraction: '3/3',
+  });
+  assert.deepEqual(result.rows.map((row) => row.expectedContract), ['v2', 'v1', 'v1']);
+  assert.deepEqual(result.rows.map((row) => row.observed.softwareVersion), ['2.0.0', '2.0.0', '2.0.0']);
+  assert.deepEqual(result.rows.map((row) => row.observed.apiContract), ['v2', 'v1', 'v1']);
+  assert.deepEqual(result.rows.map((row) => row.adapterUsed), [false, true, true]);
+});
+
+test('consumer-versioned endpoints preserve both contracts on one new software release', () => {
+  const result = latest(run({ route: 'versioned' }));
+  assert.equal(result.verdict, 'passed');
+  assert.deepEqual(result.rows.map((row) => row.requestedEndpoint), [
+    '/api/v2/profile', '/api/v1/profile', '/api/v1/profile',
+  ]);
+  assert.equal(result.rows[1].observed.body.displayName, 'Ada Example');
+  assert.deepEqual(result.rows[0].observed.body.name, { given: 'Ada', family: 'Example' });
+});
+
+test('force-v2 reports incompatible HTTP-200 journeys as interruptions', () => {
+  const result = latest(run({ route: 'force-v2' }));
+  assert.equal(result.verdict, 'failed');
+  assert.equal(result.impact, 'interrupted');
+  assert.equal(result.summary.attempted, 3);
+  assert.equal(result.summary.migrated, 1);
+  assert.equal(result.summary.interruptions, 2);
+  assert.deepEqual(result.rows.map((row) => row.observed.httpStatus), [200, 200, 200]);
+  assert.deepEqual(result.rows.map((row) => row.status), ['passed', 'failed', 'failed']);
+});
+
+test('deploying new software never silently upgrades consumers', () => {
+  const result = latest(run({ route: 'force-v2', upgrades: 'none' }));
+  assert.equal(result.verdict, 'failed');
+  assert.deepEqual(result.rows.map((row) => row.expectedContract), ['v1', 'v1', 'v1']);
+  assert.equal(result.summary.interruptions, 3);
+  assert.equal(result.summary.migrationFraction, '0/3');
+});
+
+test('explicit all-client upgrade allows the v2 endpoint without an adapter', () => {
+  const result = latest(run({ route: 'force-v2', upgrades: 'all' }));
+  assert.equal(result.verdict, 'passed');
+  assert.equal(result.impact, 'complete-synthetic-migration');
+  assert.equal(result.summary.migrationFraction, '3/3');
+  assert.deepEqual(result.rows.map((row) => row.adapterUsed), [false, false, false]);
+});
+
+test('blue successes do not prove migration to green', () => {
+  const result = latest(run({ deployment: 'blue', route: 'versioned', upgrades: 'none' }));
+  assert.equal(result.verdict, 'unknown');
+  assert.equal(result.impact, 'no-migration');
+  assert.equal(result.summary.completed, 3);
+  assert.equal(result.summary.migrated, 0);
+  assert.equal(result.summary.stayedOnBlue, 3);
+});
+
+test('an explicitly upgraded client cannot get unsupported API v2 from blue', () => {
+  const result = latest(run({ deployment: 'blue' }));
+  assert.equal(result.verdict, 'failed');
+  assert.equal(result.summary.interruptions, 1);
+  assert.equal(result.rows[0].observed.httpStatus, 404);
+  assert.equal(result.rows[0].observed.body, null);
+});
+
+test('an absent last observation stays unknown in the attempted denominator', () => {
+  const result = latest(run({ observation: 'missing-last' }));
+  assert.equal(result.verdict, 'unknown');
+  assert.equal(result.impact, 'unverified');
+  assert.equal(result.summary.attempted, 3);
+  assert.equal(result.summary.migrated, 2);
+  assert.equal(result.summary.unknown, 1);
+  assert.equal(result.rows[2].observed, null);
+  assert.equal(result.rows[2].adapterUsed, null);
+});
+
+test('known incompatibility dominates an additional unknown outcome', () => {
+  const result = latest(run({ route: 'force-v2', observation: 'missing-last' }));
+  assert.equal(result.verdict, 'failed');
+  assert.equal(result.summary.interruptions, 1);
+  assert.equal(result.summary.unknown, 1);
+  assert.equal(result.summary.migrationFraction, '1/3');
+});
+
+test('later success retains earlier failed history and does not mutate prior state', () => {
+  const first = model.conduct(model.initialState(), config({ route: 'force-v2' }));
+  const original = JSON.stringify(first);
+  const second = model.conduct(first, config());
+  assert.equal(second.history.length, 2);
+  assert.equal(second.nextId, 3);
+  assert.equal(latest(first).verdict, 'failed');
+  assert.equal(latest(second).verdict, 'passed');
+  assert.equal(JSON.stringify(first), original);
+});
+
+test('attempt limit rejects the seventh without eviction or silent reset', () => {
+  let state = model.initialState();
+  for (let i = 0; i < 6; i += 1) state = model.conduct(state, config());
+  assert.equal(state.history.length, 6);
+  const before = JSON.stringify(state);
+  assert.throws(() => model.conduct(state, config()), /six|limit/i);
+  assert.equal(JSON.stringify(state), before);
+});
+
+test('state, configuration, nested observations and history are deeply immutable', () => {
+  const state = run();
+  assert.ok(Object.isFrozen(state));
+  assert.ok(Object.isFrozen(state.history));
+  assert.ok(Object.isFrozen(latest(state).config));
+  assert.ok(Object.isFrozen(latest(state).rows[0].observed.body.name));
+  assert.throws(() => state.history.push({}), TypeError);
+});
+
+test('strict input enums and exact keys reject unknown, empty and extra values', () => {
+  for (const invalid of [
+    null, [], {}, config({ deployment: 'preview' }), config({ route: '' }),
+    config({ upgrades: 'All' }), config({ observation: undefined }),
+    { ...config(), unsafe: true }, 'green',
+  ]) assert.throws(() => model.conduct(model.initialState(), invalid), /input|config|invalid/i);
+});
+
+test('prototype-bearing and accessor input are rejected without invoking accessors', () => {
+  let invoked = false;
+  const withGetter = config();
+  Object.defineProperty(withGetter, 'route', { enumerable: true, get() { invoked = true; return 'adapter'; } });
+  assert.throws(() => model.conduct(model.initialState(), withGetter), /input|config|invalid/i);
+  assert.equal(invoked, false);
+  assert.throws(() => model.conduct(model.initialState(), Object.create(config())), /input|config|invalid/i);
+  const withSymbol = config();
+  withSymbol[Symbol('extra')] = true;
+  assert.throws(() => model.conduct(model.initialState(), withSymbol), /input|config|invalid/i);
+});
+
+test('malformed state is rejected before use', () => {
+  for (const state of [
+    null, [], {}, { schemaVersion: 2, nextId: 1, history: [] },
+    { schemaVersion: 1, nextId: 0, history: [] },
+    { schemaVersion: 1, nextId: 2, history: [] },
+    { schemaVersion: 1, nextId: 1, history: [], extra: true },
+  ]) assert.throws(() => model.conduct(state, config()), /state|history|invalid/i);
+});
+
+test('tampered verdicts, rows, configurations and identity cannot forge a safe history', () => {
+  const valid = run({ route: 'force-v2' });
+  assert.equal(valid.history.length, 1);
+  for (const mutate of [
+    (s) => { s.history[0].verdict = 'passed'; },
+    (s) => { s.history[0].summary.interruptions = 0; },
+    (s) => { s.history[0].rows[1].observed.apiContract = 'v1'; },
+    (s) => { s.history[0].config.route = 'adapter'; },
+    (s) => { s.history[0].id = 4; },
+  ]) {
+    const forged = JSON.parse(JSON.stringify(valid));
+    mutate(forged);
+    assert.throws(() => model.conduct(forged, config()), /state|history|invalid/i);
+  }
+});
+
+test('a fresh explicit reset state has no inherited results', () => {
+  const prior = run({ route: 'force-v2' });
+  assert.equal(prior.history.length, 1);
+  assert.deepEqual(model.initialState(), { schemaVersion: 1, nextId: 1, history: [] });
+  assert.notEqual(model.initialState(), model.initialState());
+});
+
+test('all 36 fixed configurations are deterministic and partition every started journey', () => {
+  let cases = 0;
+  for (const deployment of ['blue', 'green']) {
+    for (const route of ['adapter', 'versioned', 'force-v2']) {
+      for (const upgrades of ['none', 'one', 'all']) {
+        for (const observation of ['complete', 'missing-last']) {
+          const input = { deployment, route, upgrades, observation };
+          const result = latest(model.conduct(model.initialState(), input));
+          assert.equal(result.rows.length, 3);
+          assert.equal(result.summary.completed + result.summary.interruptions + result.summary.unknown, 3);
+          assert.ok(result.summary.migrated <= result.summary.completed);
+          if (result.verdict === 'passed') {
+            assert.equal(result.summary.migrated, 3);
+            assert.equal(result.summary.interruptions + result.summary.unknown, 0);
+          }
+          assert.deepEqual(model.conduct(model.initialState(), input), model.conduct(model.initialState(), input));
+          cases += 1;
+        }
+      }
+    }
+  }
+  assert.equal(cases, 36);
+});
