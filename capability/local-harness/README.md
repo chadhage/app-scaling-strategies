@@ -11,11 +11,17 @@ byte-for-byte historical.
 **OP-CATALOG-SNAPSHOT-REFRESH-76** previously refreshed exactly one fixed
 76-unit/61-practice snapshot. All three preceding snapshots and all 147 earlier
 proof files are preserved; the operation earns zero S/D/L credit.
-**OP-CATALOG-SNAPSHOT-REFRESH-101** now refreshes exactly one immutable
+**OP-CATALOG-SNAPSHOT-REFRESH-101** previously refreshed exactly one immutable
 101-unit/86-practice snapshot. All four preceding catalogs and all 181 earlier
 proof files remain byte-exact, including the 61-practice generator and metadata.
 It is the sixth useful operational mission, not an original C/H completion;
 the parent alone activates and accepts it for zero S/D/L credit.
+**OP-CATALOG-SNAPSHOT-REFRESH-115** now refreshes exactly one immutable
+115-unit/100-practice snapshot: **S001–S099 plus S103**, never a contiguous
+first 100. All five preceding catalogs, their generators/metadata, and all
+**212** dynamically inventoried earlier proof files remain byte-exact.
+All **278** pre-existing owned files were fingerprinted before existing-file edits.
+This one operation has zero S/D/L credit and parent-only acceptance.
 
 Open `capability\local-harness\index.html` directly in a browser with JavaScript.
 No install, server, framework, dependency, account, credential or cloud access is
@@ -60,19 +66,20 @@ The original `evidence\provider-integrity.json` records **13 original consumed
 interfaces**, accepted publication commits and exact fingerprints. Twelve remain
 unchanged. Tests still verify the thirteenth's old accepted data baseline against
 C005's byte-preserved snapshot archive, then verify the active data against
-`capability\C005\evidence\op-catalog-snapshot-refresh-101-541256d56385\generation.json`
+`capability\C005\evidence\op-catalog-snapshot-refresh-115-e8a3064f8554\generation.json`
 and deterministic extraction. No original fingerprint check is dropped; the new
 generation binding is not self-acceptance. All APIs, declarations and authorities
 remain unchanged.
 
 Availability remains the C005 historical source/acceptance pin
-**`541256d563853396745381b9aa5fffd8ee29148e`**, annotated source tag
-**`kanban/flow-admin/541256d56385`**, commit time
-**`2026-11-03T21:20:11.000Z`**, ledger update
-**`2026-11-03T21:19:47.4028960Z`**. The UI displays those values and pinned source
-links. It is **not live availability**. Exactly 86 accepted snapshot lessons are
-available: S001–S086. S087 and later files do not silently refresh it.
-The source's 101 accepted units are not reclassified or credited by this operation.
+**`e8a3064f8554906216a9e0c3cf1344a3a6acf019`**, annotated source tag
+**`kanban/flow-admin/e8a3064f8554`**, commit time
+**`2026-11-03T22:47:01.000Z`**, ledger update
+**`2026-11-03T22:47:00.6030609Z`**. The UI displays those values and pinned source
+links. It is **not live availability**. Exactly 100 accepted snapshot lessons are
+available: S001–S099 plus S103. S100–S102 and S104+ remain unavailable even
+if their live board state advances.
+The source's 115 accepted units (113 S + 2 D) are not reclassified or credited here.
 
 - Portable practice is distinct from native runnable/qualified and source-parent
   completion. Native flags and all source-parent completion flags remain false.
@@ -140,7 +147,7 @@ finally { Remove-Item Env:\CAPTURE_BROWSER_EVIDENCE }
 
 Capture happens only after successful checks and awaited child/helper cleanup,
 using exclusive creation of a uniquely named
-`evidence\browser-op-catalog-snapshot-refresh-101-541256d56385-*.json`. All old proof
+`evidence\browser-op-catalog-snapshot-refresh-115-e8a3064f8554-*.json`. All old proof
 stays byte-for-byte unchanged and is not relabeled as a current browser run.
 The browser suite verifies the published helper's exact bytes **before import**
 and after cleanup:
@@ -212,7 +219,7 @@ The continuous return journey retains the query, all filters and keyboard focus.
 That operation's `result-final.json` records its historical verification and preservation;
 neither this journey nor operational publication completes H001/H002 or native work.
 
-The current immutable 101-unit refresh records genuine **61 !== 86**, source-pin
+The preceding immutable 101-unit refresh records genuine **61 !== 86**, source-pin
 mismatch and newly accepted S062 behavioral RED before IaC N/A. It reuses the
 same generator and providers, with new evidence under
 `capability\C005\evidence\op-catalog-snapshot-refresh-101-541256d56385`.
@@ -226,10 +233,33 @@ the four historical snapshot hashes and current generated hash. Publication is
 owned-only under the existing publisher mutex; central state and acceptance remain
 parent-only, with zero credit and a stop after this single refresh.
 
-Actual validation passed **216 focused cases (213 leaves, 3 parents)**,
+That historical validation passed **216 focused cases (213 leaves, 3 parents)**,
 **34 JavaScript/CommonJS syntax checks**, a PowerShell parser check and
 **71 signed-Edge browser cases (66 leaf groups, 5 parents)**. The ordinary
 capture-unset rerun passed **287 cases (279 leaves, 8 parents)** while preserving
 all **272 owned files / 206 proof files** at its start without any append or rewrite.
+
+The current fixed 115-unit refresh records actual **86 !== 100**, source-pin
+mismatch and a separate failing leaf for each of S087–S099 plus S103:
+16 positive failures and one passing negative-gate leaf before IaC N/A.
+The same generator and consumer APIs are reused. Its first write encountered
+the fixed ledger exceeding Node's default 1 MiB Git-output buffer; that actual
+`ENOBUFS` failure is preserved, followed by a bounded 8 MiB transport repair
+without weakening extraction, canonical drift checks or availability rules.
+
+Current evidence is under
+`capability\C005\evidence\op-catalog-snapshot-refresh-115-e8a3064f8554`.
+The existing twelve unified browser groups sweep all 100 actual destinations
+and exact banners, including S103, and reject S100–S102 and S104+. A separate
+S001 navigation conducts PASS/negative FAIL/reset and query/AND-filter-preserving
+return. Counts distinguish the 100 unique sweep destinations from repeated
+S001 navigations and parent Node groups from leaf cases.
+Only exact `CAPTURE_BROWSER_EVIDENCE=1` appends new uniquely named captures.
+Quiet capture-unset replay fingerprints every owned source/proof byte and file
+set before and after. Precise verification, raw streams and hashes are in the
+new `result-final.json`, `validation-final.json` and `hashes-final.json`.
+Publication uses the existing narrow five-scope command pattern and publisher
+mutex, not a state lock or broadened standard/Admin publisher. No central
+ledger, original card, parent gate or credit is mutated by this worker.
 
 [Microsoft Open Source Disclaimer](../../README.md#microsoft-open-source-disclaimer).

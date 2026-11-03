@@ -10,11 +10,12 @@ const { createRequire } = require('node:module');
 const { execFileSync } = require('node:child_process');
 const catalog = require('../catalog-data.js');
 const contract = require('../catalog-contract.js');
-const generation = require('../evidence/op-catalog-snapshot-refresh-101-541256d56385/generation.json');
+const generation = require('../evidence/op-catalog-snapshot-refresh-115-e8a3064f8554/generation.json');
 const helperPath = path.resolve(__dirname, '..', '..', '..', 'testing', 'browser', 'isolated.cjs');
 const helperSourceSha256 = createHash('sha256').update(readFileSync(helperPath)).digest('hex');
 const PUBLISHED_HELPER_COMMIT = '53c0c0d82cc1db6780a87ac2b1085734af6d5c60';
 const PUBLISHED_HELPER_SHA256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+const TRAINING_BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
 assert.equal(helperSourceSha256, PUBLISHED_HELPER_SHA256, 'Verify the published helper before import.');
 assert.equal(readFileSync(helperPath, 'utf8').replaceAll('\r\n', '\n'),
   execFileSync('git', ['--no-pager', 'show', `${PUBLISHED_HELPER_COMMIT}:testing/browser/isolated.cjs`],
@@ -26,7 +27,7 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
   const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
   const historicalProof = await fs.readFile(historicalPath);
   const reportPath = path.join(__dirname, '..', 'evidence',
-    `browser-op-catalog-snapshot-refresh-101-541256d56385-${randomUUID()}.json`);
+    `browser-op-catalog-snapshot-refresh-115-e8a3064f8554-${randomUUID()}.json`);
   assert.equal(Object.hasOwn(require.cache, path.join(path.dirname(helperPath), 'lifecycle.cjs')), false);
   const session = await openIsolatedLesson('capability\\C005\\index.html');
   const { page, browserVersion } = session;
@@ -51,6 +52,7 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
   }
   let report;
   let cspObservation;
+  let acceptedPracticeNavigation;
   try {
     assert.match(browserVersion, /^156\./);
     assert.equal(helperRequire('playwright/package.json').version, '1.56.1');
@@ -69,7 +71,7 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
       assert.equal(await page.locator('#catalog-error').isVisible(), false);
       assert.equal(await page.locator('#catalog-empty').isVisible(), false);
     });
-    await check('historical commit/time and all 86 accepted learning destinations are explicit, not live', async () => {
+    await check('historical commit/time and all 100 noncontiguous accepted learning destinations are explicit, not live', async () => {
       const summary = await page.locator('#snapshot-summary').innerText();
       assert.ok(summary.includes(catalog.acceptanceSnapshot.commit));
       assert.ok(summary.includes(catalog.acceptanceSnapshot.commitTimeUtc));
@@ -80,8 +82,9 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
       assert.equal(await page.locator('.lesson-link').count(), generation.acceptedPortableLessons);
       assert.deepEqual(await page.locator('.lesson-link').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))),
         catalog.entries.filter(entry => entry.learning.available).map(entry => entry.learning.href));
-      assert.equal(await page.locator('#S087 .lesson-link, #S088 .lesson-link, #W001 .lesson-link, #W002 .lesson-link').count(), 0);
-      assert.match(await page.locator('#S087 .learning-status').innerText(), /No accepted Done review.*published-but-unaccepted/s);
+      assert.equal(await page.locator('#S100 .lesson-link, #S101 .lesson-link, #S102 .lesson-link, #S104 .lesson-link, #W001 .lesson-link, #W002 .lesson-link').count(), 0);
+      assert.match(await page.locator('#S100 .learning-status').innerText(), /No accepted Done review.*published-but-unaccepted/s);
+      assert.equal(await page.locator('#S103 .lesson-link').getAttribute('href'), '../../learning/S103/index.html');
       assert.match(await page.locator('#W002 .learning-status').innerText(), /No portable A-card lesson is defined/);
     });
     await check('all 302 actual source anchors point at the matching pinned canonical row', async () => {
@@ -121,7 +124,9 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
       assert.match(await page.evaluate(() => document.activeElement.getAttribute('href')), /learning\/S001\/index\.html$/);
       await page.keyboard.press('Enter');
       await page.waitForURL(/\/learning\/S001\/index\.html$/);
-      assert.match(await page.locator('body').innerText(), /synthetic|training rehearsal/i);
+      acceptedPracticeNavigation = { id: 'S001', loadedUrl: page.url(),
+        trainingBanner: await page.locator('.banner').textContent() };
+      assert.equal(acceptedPracticeNavigation.trainingBanner, TRAINING_BANNER);
       await page.goBack({ waitUntil: 'load' });
       assert.equal(await entries.count(), 152);
       await page.locator('#categories a').last().focus();
@@ -217,7 +222,7 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
     });
     assert.equal(checks.length, 11);
     report = {
-      schemaVersion: 1, cardId: 'C005', operation: 'OP-CATALOG-SNAPSHOT-REFRESH-101', status: 'passed',
+      schemaVersion: 1, cardId: 'C005', operation: 'OP-CATALOG-SNAPSHOT-REFRESH-115', status: 'passed',
       observedAtUtc: new Date().toISOString(), mode: 'actual-isolated-headless',
       engine: 'Microsoft Edge (Chromium)', browserVersion,
       playwrightVersion: helperRequire('playwright/package.json').version,
@@ -229,6 +234,8 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
       sourcePin: catalog.source.commit, sourceScenarios: 150, guidedWorkflows: 2,
       generationSha256: generation.data.sha256, snapshotLessons: generation.acceptedPortableLessons,
       acceptedPracticeDestinations: catalog.entries.filter(entry => entry.learning.available).map(entry => entry.learning.href),
+      practiceNavigations: [acceptedPracticeNavigation], actualPracticeNavigationCount: 1,
+      unavailablePracticeIdsChecked: ['S100', 'S101', 'S102', 'S104'],
       unknownSupport: 152, nativeRunnable: 0, nativeQualified: 0, completedSourceParents: 0,
       checks, cspObservation, pageErrors, remoteRequests,
       nativeAzureObserved: false, productionNode24Validated: false,

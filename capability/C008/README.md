@@ -16,7 +16,7 @@ needed. [Microsoft disclaimer](../../README.md#microsoft-open-source-disclaimer)
 
 ## Three different preparation modes
 
-- **Accepted synthetic practice:** 86 original lesson links from C005's
+- **Accepted synthetic practice:** 100 original lesson links from C005's
   historical snapshot. Read each lesson's own preconditions, synthetic inputs,
   controls, assertions and limitations. **Training rehearsal — synthetic data —
   not a live Azure result.**
@@ -43,20 +43,20 @@ matrix checks to C003. It verifies the unchanged C001 artifact through C001's
 existing cryptographic integrity guard. Ready views hold references to the
 shared catalog, selected entry, matrix and approval artifact, not copied metadata
 or approval tables. There is no extraction, filesystem/ledger discovery, JSON
-import or new catalog. Zero-credit `OP-CATALOG-SNAPSHOT-REFRESH-101` changes only
+import or new catalog. Zero-credit `OP-CATALOG-SNAPSHOT-REFRESH-115` changes only
 C005's generated snapshot and necessary test/proof bindings, not preparation,
 catalog schemas/APIs or the authorities.
 
 - Catalog: `capability\C005\catalog-data.js`, one immutable generated module.
-- Source/availability pin: `541256d563853396745381b9aa5fffd8ee29148e`,
-  annotated source tag `kanban/flow-admin/541256d56385`.
+- Source/availability pin: `e8a3064f8554906216a9e0c3cf1344a3a6acf019`,
+  annotated source tag `kanban/flow-admin/e8a3064f8554`.
   The shared commit time and ledger-update time are displayed. This is
   **historical snapshot availability, not live state**.
-  Accepted IDs are exactly S001–S086. S087 and other unaccepted or
-  later work are not discovered. C005's `generation.json` under
-  `evidence\op-catalog-snapshot-refresh-101-541256d56385` binds source, hashes and IDs.
-  Its source accepts 101 original units; this operation adds none.
-  All four previous catalogs and all 181 earlier proof files remain byte-preserved.
+  Accepted IDs are exactly S001–S099 plus S103. S100–S102 and S104+ remain
+  unavailable even if the live board later advances. C005's `generation.json` under
+  `evidence\op-catalog-snapshot-refresh-115-e8a3064f8554` binds source, hashes and IDs.
+  Its source accepts 115 original units (113 S + 2 D); this operation adds none.
+  All five previous catalogs and all 212 earlier proof files remain byte-preserved.
 - Capability authority: unchanged C003 matrix and constraints. All 17
   configurations, exact reasons and exact constraints can be inspected; none is
   assigned to an entry. Documented-supported is not implemented or qualified.
@@ -102,7 +102,7 @@ This operation does not edit those documents or weaken the CLI.
 
 Ordinary browser verification **does not write or delete observations**. To
 deliberately append a fresh uniquely named
-`evidence\browser-op-catalog-snapshot-refresh-101-541256d56385-*.json`:
+`evidence\browser-op-catalog-snapshot-refresh-115-e8a3064f8554-*.json`:
 
 ```powershell
 $env:CAPTURE_BROWSER_EVIDENCE='1'
@@ -177,10 +177,13 @@ the controller owns live-ledger acceptance and queue changes.
 | Original lineage | Remaining behavior and real boundary |
 | --- | --- |
 | H002 → C006 / C007 | Retain their own search/filter acceptance and accepted C003+C005 gates. C008 supplies neither. No hidden native release gate is added to their local work. Risk stays unclassified unless separately reviewed, never inferred from priority. |
-| H002 → C005 maintenance | Any availability refresh needs a deliberately reviewed committed acceptance/publication snapshot and C005-owned regeneration/checks. The strict whole-checkout check currently flags later README documentation commit `79f4040`; its owner must review that parity boundary before claiming current-source equality. File presence and C008 results cannot update the historical snapshot. Maintenance is the same unit, not a new S credit. |
+| H002 → C005 maintenance | Any availability refresh needs a deliberately reviewed committed acceptance/publication snapshot and C005-owned regeneration/checks. The original strict whole-checkout check flagged later README documentation commit `79f4040`; that retained historical failure is separate from read-only validation of the current fixed pin. File presence and C008 results cannot update the historical snapshot. Maintenance is the same unit, not a new S credit. |
 | Original remaining A-S entries | A preparation reading view is not a worked portable exercise. Any unfinished A card still needs its own synthetic behavior, focused tests/browser evidence and independent acceptance. Its SOURCE gate remains resource-free; native approvals are not a prerequisite for local lessons. |
 | Original B-S / D-S / W001 / W002 | Native proof and source-parent acceptance remain separate. Concrete OS/SKU/subscription/RG/region and separate execution/IaC/scaffold/identity/deployment/spend approvals are absent. Retain each entry's exact C005 source prerequisites and its original card gates; obtain the reviewed lease, applicable adapter/fixture, operating envelope, client evidence and cleanup proof rather than counting a module as readiness. W002 must retain its shared ACA/AKS requirement. |
 | H002 parent / H011 / H012 | This local view supplies no production hosting, manifest/execution path, authenticated leases, production Node.js 24 validation, complete accessibility audit or native recovery/cleanup evidence. Those original acceptance requirements remain unfulfilled by C008. |
 
 Worker publication is not Done. The worker reports actual publication through
 `state.ps1 -Action Report`; only controller empirical review can accept C008.
+That original-card workflow is historical. OP-CATALOG-SNAPSHOT-REFRESH-115
+does not Claim, Report or Accept any original card; operational binding and
+acceptance belong exclusively to the parent.

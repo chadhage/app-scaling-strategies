@@ -7,7 +7,7 @@ const { createHash } = require('node:crypto');
 const assert = require('node:assert/strict');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const PINNED_COMMIT = '541256d563853396745381b9aa5fffd8ee29148e';
+const PINNED_COMMIT = 'e8a3064f8554906216a9e0c3cf1344a3a6acf019';
 const SOURCE_PATHS = Object.freeze({
   readme: 'README.md',
   backlog: '.docs\\wiki\\backlog.md',
@@ -19,7 +19,9 @@ const RISK_REASON = 'The canonical source gives priority, prerequisites and oper
 const PARENT_REASON = 'Planned source parent, not completed in the committed snapshot. Accepted portable learning does not satisfy native proof or the original parent acceptance gates.';
 
 function git(args) {
-  return execFileSync('git', ['--no-pager', ...args], { cwd: ROOT, encoding: 'utf8' });
+  return execFileSync('git', ['--no-pager', ...args], {
+    cwd: ROOT, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024
+  });
 }
 function sha(text) {
   return createHash('sha256').update(text).digest('hex');

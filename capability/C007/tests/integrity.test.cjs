@@ -7,7 +7,7 @@ const { execFileSync } = require('node:child_process');
 const { createHash } = require('node:crypto');
 const path = require('node:path');
 const repo = path.resolve(__dirname, '..', '..', '..');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-101-541256d56385/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-115-e8a3064f8554/generation.json');
 const pins = [
   ['C003', 'matrix-contract.js', '1583da90c1013ba95fdf268d6901f8a14bdf900a', '7fd8863acd4cfa800fbace13b1c2bdf6bbe85636872e71b9c01a3377592cccd1'],
   ['C003', 'matrix-data.js', '1583da90c1013ba95fdf268d6901f8a14bdf900a', 'f549b86b1730e19500b53d79716b72422aaf266ba6ba39558a546fc521e33ab5'],
@@ -26,7 +26,7 @@ test('all four original provider baselines retain accepted bytes/hashes; changed
     assert.equal(normalizeHash(bytes), normalizeHash(accepted), relative);
     assert.equal(createHash('sha256').update(bytes).digest('hex'), sha256, relative);
   }
-  assert.equal(generation.sourceCommit, '541256d563853396745381b9aa5fffd8ee29148e');
+  assert.equal(generation.sourceCommit, 'e8a3064f8554906216a9e0c3cf1344a3a6acf019');
   assert.equal(createHash('sha256').update(readFileSync(path.join(repo, generation.data.path))).digest('hex'),
     generation.data.sha256);
 });

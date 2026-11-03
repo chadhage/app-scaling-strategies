@@ -1,0 +1,88 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const assert = require('node:assert/strict');
+const { gzipSync } = require('node:zlib');
+
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const sha = value => createHash('sha256').update(value).digest('hex');
+const [name, expectedExit, executable, ...args] = process.argv.slice(2);
+assert.match(name || '', /^[a-z0-9-]+$/);
+assert.ok(/^\d+$/.test(expectedExit || '') && executable);
+const reportPath = path.join(__dirname, `${name}.json`);
+assert.equal(fs.existsSync(reportPath), false, 'Never overwrite prior command evidence.');
+const redSnapshotBefore = name === 'red'
+  ? sha(fs.readFileSync(path.join(root, 'capability', 'C005', 'catalog-data.js'))) : null;
+const startedAtUtc = new Date().toISOString();
+const result = spawnSync(executable, args, { cwd: root, windowsHide: true, maxBuffer: 32 * 1024 * 1024 });
+const completedAtUtc = new Date().toISOString();
+const stdout = result.stdout || Buffer.alloc(0);
+const stderr = result.stderr || Buffer.alloc(0);
+const transcripts = {};
+fs.mkdirSync(path.join(__dirname, 'raw'), { recursive: true });
+for (const [stream, bytes] of [['stdout', stdout], ['stderr', stderr]]) {
+  const relative = path.join('raw', `${name}.${stream}.raw.gz`);
+  const compressed = gzipSync(bytes);
+  fs.writeFileSync(path.join(__dirname, relative), compressed, { flag: 'wx' });
+  transcripts[stream] = {
+    path: relative, bytes: bytes.length, sha256: sha(bytes),
+    gzipBytes: compressed.length, gzipSha256: sha(compressed),
+    rawCRLFPairs: (bytes.toString('utf8').match(/\r\n/g) || []).length
+  };
+}
+const text = stdout.toString('utf8');
+const summary = {};
+const runSummaries = [];
+for (const key of ['tests', 'suites', 'pass', 'fail', 'cancelled', 'skipped', 'todo']) {
+  const matches = [...text.matchAll(new RegExp(`^# ${key} (\\d+)\\r?$`, 'gm'))];
+  matches.forEach((match, index) => {
+    runSummaries[index] ||= {};
+    runSummaries[index][key] = Number(match[1]);
+  });
+  if (matches.length) summary[key] = matches.reduce((total, match) => total + Number(match[1]), 0);
+}
+const stack = [];
+const parents = new Set();
+let nodes = 0;
+for (const line of text.split(/\r?\n/)) {
+  const header = /^(\s*)# Subtest: /.exec(line);
+  if (!header) continue;
+  const indent = header[1].length;
+  while (stack.length && stack.at(-1).indent >= indent) stack.pop();
+  if (stack.length) parents.add(stack.at(-1).id);
+  stack.push({ id: nodes++, indent });
+}
+const testNodes = nodes ? { total: nodes, parents: parents.size, leaves: nodes - parents.size } : null;
+const record = {
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-115',
+  worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-115',
+  kind: 'actual-command-and-raw-transcript-not-acceptance',
+  startedAtUtc, completedAtUtc, command: [executable, ...args],
+  node: process.version, captureEnabled: process.env.CAPTURE_BROWSER_EVIDENCE === '1',
+  captureValue: process.env.CAPTURE_BROWSER_EVIDENCE ?? null,
+  expectedExitCode: Number(expectedExit), exitCode: result.status, signal: result.signal,
+  spawnError: result.error ? { code: result.error.code, message: result.error.message } : null,
+  summary, runSummaries,
+  summaryKind: runSummaries.length > 1 ? 'sum-of-distinct-node-invocations-not-global-unique' : 'node-runner-summary',
+  testNodes, transcripts, stdout: text, stderr: stderr.toString('utf8')
+};
+if (name === 'red') {
+  record.oldCatalogSha256 = redSnapshotBefore;
+  record.oldCatalogAfterSha256 = sha(fs.readFileSync(path.join(root, 'capability', 'C005', 'catalog-data.js')));
+  record.assertionsSha256 = sha(fs.readFileSync(path.join(__dirname, 'red-snapshot-refresh-115.cjs.txt')));
+  record.bddSha256 = sha(fs.readFileSync(path.join(__dirname, 'red-snapshot-refresh-115.feature.txt')));
+  record.oldSourceCommit = '541256d563853396745381b9aa5fffd8ee29148e';
+  record.fixedNewSourceCommit = 'e8a3064f8554906216a9e0c3cf1344a3a6acf019';
+  record.oldAcceptedPortableLessons = 86;
+  record.newAcceptedPortableLessons = 100;
+  record.requiredFailedPositiveLeaves = 16;
+  record.requiredPassedNegativeGateLeaves = 1;
+}
+fs.writeFileSync(reportPath, `${JSON.stringify(record, null, 2)}\n`, { flag: 'wx' });
+process.stdout.write(stdout);
+process.stderr.write(stderr);
+console.log(`Recorded ${name}: actual exit ${result.status}; expected ${expectedExit}; raw streams preserved.`);
+process.exitCode = result.status === Number(expectedExit) && !result.error ? 0 : 1;

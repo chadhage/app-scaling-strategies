@@ -1,0 +1,268 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const { gunzipSync } = require('node:zlib');
+
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const relative = path.relative(root, __dirname);
+const scopes = ['C005', 'C006', 'C007', 'C008', 'local-harness'].map(scope => path.join('capability', scope));
+const sha = value => createHash('sha256').update(value).digest('hex');
+const read = file => fs.readFileSync(path.join(root, file));
+const load = name => JSON.parse(fs.readFileSync(path.join(__dirname, name)));
+const git = args => execFileSync('git', ['--no-pager', ...args], { cwd: root, maxBuffer: 32 * 1024 * 1024 });
+function walk(directory) {
+  return fs.readdirSync(path.join(root, directory), { withFileTypes: true })
+    .flatMap(entry => entry.isDirectory() ? walk(path.join(directory, entry.name)) : [path.join(directory, entry.name)]);
+}
+const inventory = () => scopes.flatMap(walk).sort().map(file => {
+  const bytes = read(file);
+  return { path: file, bytes: bytes.length, sha256: sha(bytes) };
+});
+const write = (name, value) => fs.writeFileSync(path.join(__dirname, name),
+  `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
+const generation = load('generation.json');
+const accounting = load('source-accounting.json');
+const historical = load('historical-proof-hashes.json');
+const initial = load('initial-boundary.json');
+const baseline = load('owned-before-hashes.json');
+const focused = load('focused-attempt-01.json');
+const syntax = load('syntax-and-integrity-final-01.json');
+const syntaxDetails = JSON.parse(syntax.stdout);
+const parser = load('publication-command-syntax-01.json');
+const parserDetails = JSON.parse(parser.stdout);
+const browserCommand = load('browser-capture-attempt-01.json');
+const browser = load('browser-qualification-01.json');
+const quiet = load('quiet-readonly-confirmed-01.json');
+const quietCommand = load('quiet-readonly-command-01.json');
+const red = load('red.json');
+for (const record of [focused, syntax, parser, browserCommand, quietCommand]) {
+  assert.equal(record.exitCode, 0);
+}
+assert.equal(red.exitCode, 1);
+assert.equal(focused.summary.fail, 0);
+assert.equal(browserCommand.summary.fail, 0);
+assert.equal(quiet.tests.fail, 0);
+assert.equal(quiet.ownedBytesUnchanged, true);
+assert.equal(quiet.proofBytesUnchanged, true);
+assert.deepEqual(quiet.before, quiet.after);
+assert.equal(quietCommand.testNodes.total, quiet.tests.total);
+assert.equal(quietCommand.testNodes.parents, quiet.tests.parents);
+assert.equal(quietCommand.testNodes.leaves, quiet.tests.leaves);
+assert.equal(parserDetails.sourceSha256, sha(read(path.join(relative, 'publication-command.ps1.txt'))));
+assert.equal(generation.sourceCommit, 'e8a3064f8554906216a9e0c3cf1344a3a6acf019');
+assert.equal(generation.data.sha256, '88d21eb94d378661f878a1b143d798759b62d1e8a4d52b1bea9746b72db8499f');
+assert.equal(sha(read(generation.data.path)), generation.data.sha256);
+for (const file of historical.files) assert.equal(sha(read(file.path)), file.sha256, file.path);
+for (const file of quiet.before) assert.equal(sha(read(file.path)), file.sha256, file.path);
+for (const file of Object.values(initial.readonlyExtra)) assert.equal(sha(read(file.path)), file.sha256, file.path);
+const commandReports = inventory().map(file => file.path).filter(file =>
+  file.startsWith(`${relative}${path.sep}`) && file.endsWith('.json'))
+  .map(file => ({ file, record: JSON.parse(read(file)) })).filter(item => item.record.transcripts);
+let rawStreamsVerified = 0;
+for (const { record } of commandReports) {
+  for (const stream of ['stdout', 'stderr']) {
+    const descriptor = record.transcripts[stream];
+    const compressed = fs.readFileSync(path.join(__dirname, descriptor.path));
+    const bytes = gunzipSync(compressed);
+    assert.equal(sha(compressed), descriptor.gzipSha256);
+    assert.equal(sha(bytes), descriptor.sha256);
+    assert.equal(bytes.toString('utf8'), record[stream]);
+    rawStreamsVerified++;
+  }
+}
+for (const run of quiet.runs) {
+  for (const stream of ['stdout', 'stderr']) {
+    const descriptor = run.transcripts[stream];
+    const compressed = fs.readFileSync(path.join(__dirname, descriptor.path));
+    assert.equal(sha(compressed), descriptor.gzipSha256);
+    assert.equal(sha(gunzipSync(compressed)), descriptor.sha256);
+    rawStreamsVerified++;
+  }
+}
+const targets = ['validation-final.json', 'result-final.json', 'publication-owned-paths.json', 'hashes-final.json'];
+for (const target of targets) assert.equal(fs.existsSync(path.join(__dirname, target)), false, target);
+const filesBefore = inventory();
+const jsonBefore = filesBefore.filter(file => file.path.endsWith('.json'));
+for (const file of jsonBefore) JSON.parse(read(file.path));
+const finalJsonCount = jsonBefore.length + targets.length;
+const finalOwnedCount = filesBefore.length + targets.length;
+const snapshots = [generation.original, generation.intermediate, generation.prior36, generation.prior61, generation.previous];
+const coveragePaths = {
+  'catalog-contract.js': 'capability\\C005\\catalog-contract.js',
+  'catalog-source.cjs': 'capability\\C005\\catalog-source.cjs',
+  'search.js': 'capability\\C006\\search.js',
+  'catalog-filters.js': 'capability\\C007\\catalog-filters.js',
+  'preparation.js': 'capability\\C008\\preparation.js',
+  'composition.js': 'capability\\local-harness\\composition.js'
+};
+const coverage = focused.stdout.split(/\r?\n/).flatMap(line => {
+  const match = /^#\s+(catalog-contract\.js|catalog-source\.cjs|search\.js|catalog-filters\.js|preparation\.js|composition\.js)\s+\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/.exec(line);
+  return match ? [{ path: coveragePaths[match[1]], linePercent: Number(match[2]),
+    branchPercent: Number(match[3]), functionPercent: Number(match[4]) }] : [];
+});
+assert.equal(coverage.length, 6);
+const focusedCounts = { ...focused.testNodes, files: focused.command.filter(argument => argument.endsWith('.test.cjs')).length,
+  passed: focused.summary.pass, failed: focused.summary.fail, record: 'focused-attempt-01.json' };
+const browserCounts = {
+  ...browser.tests, files: 5, unifiedLeafGroups: browser.unifiedLeafGroups,
+  exhaustivePracticeSweepNavigations: browser.exhaustiveSweepNavigations,
+  actualPracticePageNavigations: browser.actualPracticeNavigations,
+  uniquePracticeDestinations: browser.uniquePracticeDestinations,
+  exactSweepBanners: browser.exactSweepBanners,
+  exactBannersAcrossAllNavigations: browser.exactBannersAcrossAllActualNavigations,
+  repeatedS001Navigations: browser.repeatedS001PracticeNavigations,
+  acceptedS001: browser.acceptedS001, S103Navigation: browser.S103Navigation,
+  unavailablePracticeIdsChecked: browser.unavailablePracticeIdsChecked,
+  freshCaptureFiles: browser.freshCaptureFiles, observations: browser.observations,
+  signedEdge: browser.signedEdge, playwright: browser.playwrightVersion, node: browser.nodeVersion,
+  helperSha256: browser.helperSha256, pageErrors: browser.pageErrors, remoteRequests: browser.remoteRequests,
+  awaitedFinallyCleanup: browser.awaitedFinallyCleanup,
+  counting: browser.counting, record: 'browser-capture-attempt-01.json', qualification: 'browser-qualification-01.json'
+};
+const syntaxCounts = {
+  checks: syntaxDetails.syntaxCount, failed: 0,
+  archivalEvidenceScriptChecks: syntaxDetails.archivalScriptSyntaxCount,
+  publicationPowerShellParserChecks: parserDetails.checks, publicationPowerShellParserExitCode: parser.exitCode,
+  ownedJsonFilesParsedAtSyntaxCheck: syntaxDetails.ownedJsonFilesParsed,
+  ownedJsonFilesParsedFinal: finalJsonCount, unchangedPublicInterfaceFiles: syntaxDetails.unchangedPublicInterfaceFiles,
+  currentCanonicalCheckExitCode: syntaxDetails.currentCheckExitCode,
+  deterministicSerializedHashes: syntaxDetails.deterministicSerializedSha256,
+  controlledCanonicalDriftRejectedByFocusedTest: true,
+  acceptedSourceLessonTargetAndAncestryChecks: syntaxDetails.acceptedLessonTargetAndAncestryChecks,
+  verificationOwnedFilesUnchanged: syntaxDetails.ownedFilesChecked,
+  record: 'syntax-and-integrity-final-01.json', publicationParserRecord: 'publication-command-syntax-01.json'
+};
+const quietCounts = {
+  total: quiet.tests.total, parents: quiet.tests.parents, leaves: quiet.tests.leaves,
+  passed: quiet.tests.pass, failed: quiet.tests.fail,
+  model: quiet.runs[0].tests, browser: quiet.runs[1].tests,
+  captureVariableUnset: quiet.captureVariableUnset, ownedFilesChecked: quiet.ownedFilesChecked,
+  proofFilesChecked: quiet.proofFilesChecked, ownedBytesUnchanged: quiet.ownedBytesUnchanged,
+  proofBytesUnchanged: quiet.proofBytesUnchanged, beforeInventorySha256: quiet.beforeInventorySha256,
+  afterInventorySha256: quiet.afterInventorySha256, beforeProofInventorySha256: quiet.beforeProofInventorySha256,
+  afterProofInventorySha256: quiet.afterProofInventorySha256,
+  appendedFiles: quiet.appendedFiles, deletedFiles: quiet.deletedFiles, changedFiles: quiet.changedFiles,
+  counting: quiet.counting, recordingBoundary: quiet.recordingBoundary, record: 'quiet-readonly-confirmed-01.json'
+};
+const recordedAtUtc = new Date().toISOString();
+const tests = { focused: focusedCounts, coverage: {
+  mechanism: 'built-in Node 22 --experimental-test-coverage', providers: coverage,
+  limitation: 'Model/runtime coverage only; percentages do not certify all browser UMD branches, native execution or global unique lessons. Generated/archive data dominate global line totals, which are not promoted.'
+}, syntax: syntaxCounts, browser: browserCounts, quietReadonlyRerun: quietCounts };
+const preservation = {
+  files: historical.files.length, manifest: 'historical-proof-hashes.json',
+  manifestSha256: sha(fs.readFileSync(path.join(__dirname, 'historical-proof-hashes.json'))),
+  byteForByte: true, rawFailuresTimestampsScreenshotsInventoriesAndAllPriorRefreshEvidencePreserved: true,
+  originalRawCRLFPreservedSeparatelyFromCanonicalGitSource: true,
+  rawSha256IsPreservationAuthority: true, canonicalGitSourceSha256IsSeparateIntegrityAuthority: true
+};
+const validation = {
+  schemaVersion: 1, operation: accounting.operation, worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-115',
+  kind: 'actual-verification-record-not-original-unit-or-operational-acceptance', recordedAtUtc,
+  sourceCommit: generation.sourceCommit, generationSha256: generation.data.sha256, tests,
+  historicalProofPreserved: preservation, fiveSnapshotsPreserved: snapshots,
+  rawCommandStreamsVerified: rawStreamsVerified, readOnlyBoundaries: initial.readonlyExtra,
+  finalOwnedFilesIncludingManifest: finalOwnedCount, finalManifestFilesExcludingSelf: finalOwnedCount - 1,
+  normalVerificationIsReadOnly: true, kanoCredits: { S: 0, D: 0, L: 0 }, parentAcceptanceClaimed: false
+};
+const result = {
+  schemaVersion: 1, operation: accounting.operation, worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-115',
+  kind: 'one-shot-zero-credit-operational-refinement', outcome: 'implemented-and-verified',
+  recordedAtUtc, source: {
+    commit: generation.sourceCommit, annotatedTag: generation.sourceTag, sourceTagObject: generation.sourceTagObject,
+    commitTimeUtc: accounting.commitTimeUtc, ledgerUpdatedAtUtc: accounting.ledgerUpdatedAtUtc,
+    acceptedOriginalUnits: 115, sourceKanoDone: accounting.sourceKanoDone,
+    acceptedPortableLessons: 100, acceptedNonPortableUnits: 15,
+    acceptedPortableIds: generation.acceptedPortableIds, newlyAcceptedPortableIds: generation.newlyAcceptedPortableIds,
+    unavailableGaps: generation.unavailableGaps, unavailableFrom: generation.unavailableFrom,
+    sourceScenarios: 150, guidedWorkflows: 2, catalogEntries: 152, portableUnavailable: 52,
+    nativeRunnable: 0, nativeQualified: 0, completedSourceParents: 0,
+    H001Complete: false, H002Complete: false, productionNode24Validated: false,
+    canonicalGitSources: accounting.canonicalSources, historicalOnly: true, liveAvailability: false
+  },
+  generationBinding: 'generation.json', generatedCatalogSha256: generation.data.sha256,
+  previousAcceptedPublication: generation.previous.acceptedPublication,
+  previousSnapshotsPreserved: snapshots, historicalProofPreserved: preservation,
+  ownedBaseline: { files: baseline.files.length, manifest: 'owned-before-hashes.json',
+    manifestSha256: sha(fs.readFileSync(path.join(__dirname, 'owned-before-hashes.json'))) },
+  sequence: {
+    bdd: 'capability\\C005\\snapshot-refresh-115.feature', originalRedBdd: 'red-snapshot-refresh-115.feature.txt',
+    bddRefinement: 'bdd-refinement.json', genuineRed: 'red.json', redAssertions: 'red-snapshot-refresh-115.cjs.txt',
+    redFailedPositiveLeaves: 16, redPassedNegativeGateLeaves: 1,
+    unchanged86SnapshotRedSha256: red.oldCatalogSha256, iacNotApplicable: 'iac-na.json',
+    actualWriteFailure: 'source-write-attempt-01.json', failureProvenance: 'source-buffer-failure-provenance.json',
+    actualSuccessfulWrite: 'source-write-attempt-02.json',
+    requiredGeneratorChanges: ['explicit full immutable source SHA', 'bounded 8 MiB Git output transport for a 1,117,237-byte fixed ledger'],
+    extractionAvailabilityAndPublicContractSemanticsUnchanged: true,
+    priorOperationalAcceptanceShapeCorrection: 'prior-publication-provenance.json',
+    focused: 'focused-attempt-01.json', actualSignedEdge: 'browser-capture-attempt-01.json',
+    quietNormalVerification: 'quiet-readonly-confirmed-01.json',
+    initialSyntaxAndIntegrity: 'syntax-and-integrity-01.json', syntaxAndIntegrity: 'syntax-and-integrity-final-01.json'
+  },
+  tests, rawCommandStreamsVerified: rawStreamsVerified,
+  scope: { owned: scopes, sourceAndProofOnlyWithinFiveExistingScopes: true, newProvidersFrameworksRegistriesOrLiveDaemons: 0,
+    originalSchemasInterfacesAndAuthoritiesUnchanged: true, readOnlyBoundaries: initial.readonlyExtra },
+  finalVerification: 'validation-final.json', finalManifest: 'hashes-final.json',
+  finalManifestScope: { ownedFilesIncludingManifest: finalOwnedCount, filesExcludingManifestItself: finalOwnedCount - 1 },
+  publicationProcedure: { command: 'publication-command.ps1.txt', explicitInventory: 'publication-owned-paths.json',
+    mutex: 'Local\\AppScalingStrategies_KanbanPublisher_v1', checkedOutMainMustAlreadyEqualRemote: true,
+    explicitCommitOnlyPaths: true, preserveUnownedStageEntriesAndFlags: true,
+    atomicMainAndAnnotatedRealCommitTagPush: true, workerWritesSelfReferentialPublicationFields: false,
+    standardPublisherOrAdminGuardsChanged: false, stateLockInsidePublisher: false,
+    operationalSourceSdkResultBindingAndAcceptanceOwner: 'parent-controller-only' },
+  retainedDiagnosticFailures: initial.preCaptureDiagnosticFailures,
+  remaining: ['H001 and H002 full completion', 'native runnable/qualification and source-parent completion',
+    'production Node.js 24 validation', 'S100-S102 and S104+ availability is deliberately excluded from this immutable snapshot'],
+  prohibitedActionsPerformed: { originalCardClaimReportAccept: false, sharedLedgerOrRootDocsEdits: false,
+    cloudQueriesIaCScaffoldIdentityCredentialsDeploySpendPackages: false,
+    foregroundGrantsPrototypeRevivalTlsWeakeningOrUnownedCleanup: false,
+    amendStashResetForceBroadStageOrOtherIndexLockRemoval: false },
+  kanoCredits: { S: 0, D: 0, L: 0 }, parentOperationalAcceptance: 'pending-controller-only',
+  stopAfterThisOperation: true
+};
+write('validation-final.json', validation);
+write('result-final.json', result);
+const proposed = [...git(['diff', '--name-only', 'HEAD', '--', ...scopes]).toString().trim().split('\n'),
+  ...git(['ls-files', '--others', '--exclude-standard', '--', ...scopes]).toString().trim().split('\n'),
+  path.join(relative, 'publication-owned-paths.json'), path.join(relative, 'hashes-final.json')]
+  .filter(Boolean).map(file => file.replaceAll('/', '\\'));
+const paths = [...new Set(proposed)].sort();
+for (const file of paths) assert.match(file, /^capability\\(?:C005|C006|C007|C008|local-harness)\\/);
+write('publication-owned-paths.json', {
+  operation: accounting.operation, recordedAtUtc, fixedSource: generation.sourceCommit,
+  kind: 'explicit-verified-owned-only-operation-publication-inventory', scopes,
+  count: paths.length, paths, noWidenedPublisherAuthority: true
+});
+const files = inventory().filter(file => file.path !== path.join(relative, 'hashes-final.json'));
+assert.equal(files.length, finalOwnedCount - 1);
+write('hashes-final.json', {
+  schemaVersion: 1, operation: accounting.operation, recordedAtUtc, sourceCommit: generation.sourceCommit,
+  kind: 'all-final-owned-source-proof-raw-byte-manifest-excluding-only-itself', scopes,
+  fileCount: files.length, ownedFilesIncludingSelf: files.length + 1, manifestExcludesOnlyItself: true,
+  rawSha256IsPreservationAuthority: true, historicalCanonicalGitIntegrityIsSeparate: true,
+  historicalManifestSha256: preservation.manifestSha256, files
+});
+const finalFiles = inventory();
+assert.equal(finalFiles.length, finalOwnedCount);
+const jsonFinal = finalFiles.filter(file => file.path.endsWith('.json'));
+assert.equal(jsonFinal.length, finalJsonCount);
+for (const file of jsonFinal) JSON.parse(read(file.path));
+for (const file of files) assert.equal(sha(read(file.path)), file.sha256, file.path);
+console.log(JSON.stringify({
+  operation: accounting.operation, source: generation.sourceCommit,
+  focused: focusedCounts, browser: { total: 71, leaves: 66, parents: 5,
+    sweep: 100, uniqueDestinations: 100, actualNavigations: 105, repeatedS001: 5 },
+  quiet: { total: quiet.tests.total, leaves: quiet.tests.leaves, parents: quiet.tests.parents,
+    ownedFiles: quiet.ownedFilesChecked, proofFiles: quiet.proofFilesChecked },
+  historicalFiles: historical.files.length, fiveSnapshots: snapshots.map(item => ({
+    count: item.acceptedPortableLessons, sha256: item.sha256
+  })), syntaxChecks: syntaxCounts.checks, finalJsonFilesParsed: finalJsonCount,
+  finalOwnedFiles: finalOwnedCount, publicationOwnedFiles: paths.length, rawCommandStreamsVerified: rawStreamsVerified,
+  resultPath: path.join(relative, 'result-final.json'), resultSha256: sha(read(path.join(relative, 'result-final.json'))),
+  manifestPath: path.join(relative, 'hashes-final.json'), manifestSha256: sha(read(path.join(relative, 'hashes-final.json'))),
+  ownPublicationOrAcceptanceBindingWritten: false
+}, null, 2));

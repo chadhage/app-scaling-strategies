@@ -12,11 +12,12 @@ const catalog = require('../../C005/catalog-data.js');
 const catalogContract = require('../../C005/catalog-contract.js');
 const matrix = require('../../C003/matrix-data.js');
 const filterApi = require('../catalog-filters.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-101-541256d56385/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-115-e8a3064f8554/generation.json');
 const helperPath = path.resolve(__dirname, '..', '..', '..', 'testing', 'browser', 'isolated.cjs');
 const helperSourceSha256 = createHash('sha256').update(readFileSync(helperPath)).digest('hex');
 const PUBLISHED_HELPER_COMMIT = '53c0c0d82cc1db6780a87ac2b1085734af6d5c60';
 const PUBLISHED_HELPER_SHA256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+const TRAINING_BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
 assert.equal(helperSourceSha256, PUBLISHED_HELPER_SHA256, 'Verify the published helper before import.');
 assert.equal(readFileSync(helperPath, 'utf8').replaceAll('\r\n', '\n'),
   execFileSync('git', ['--no-pager', 'show', `${PUBLISHED_HELPER_COMMIT}:testing/browser/isolated.cjs`],
@@ -34,7 +35,7 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
   const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
   const previousProof = await existingBytes(historicalPath);
   const reportPath = path.join(__dirname, '..', 'evidence',
-    `browser-op-catalog-snapshot-refresh-101-541256d56385-${randomUUID()}.json`);
+    `browser-op-catalog-snapshot-refresh-115-e8a3064f8554-${randomUUID()}.json`);
   assert.equal(Object.hasOwn(require.cache, path.join(path.dirname(helperPath), 'lifecycle.cjs')), false);
   const session = await openIsolatedLesson('capability\\C007\\index.html');
   const { page, browserVersion } = session;
@@ -75,6 +76,7 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
   }
   let report;
   let cspObservation;
+  let acceptedPracticeNavigation;
   try {
     await page.reload({ waitUntil: 'load' });
     await check('default actual DOM preserves all 152 original IDs, titles, objectives and 302 pinned source links', async () => {
@@ -96,7 +98,8 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
       assert.equal(await page.locator('.lesson-link').count(), generation.acceptedPortableLessons);
       assert.deepEqual(await page.locator('.lesson-link').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))),
         catalog.entries.filter(entry => entry.learning.available).map(entry => entry.learning.href));
-      assert.equal(await page.locator('#S087 .lesson-link, #S088 .lesson-link, #W002 .lesson-link').count(), 0);
+      assert.equal(await page.locator('#S100 .lesson-link, #S101 .lesson-link, #S102 .lesson-link, #S104 .lesson-link, #W001 .lesson-link, #W002 .lesson-link').count(), 0);
+      assert.equal(await page.locator('#S103 .lesson-link').getAttribute('href'), '../../learning/S103/index.html');
       assert.ok((await page.locator('.native-status').allTextContents()).every(text => /runnable: false; qualified: false/.test(text)));
       assert.ok((await page.locator('.parent-status').allTextContents()).every(text => /incomplete; completed: false/.test(text)));
       assert.deepEqual(JSON.parse(await page.locator('#permission-values').innerText()), matrix.permissions);
@@ -176,7 +179,7 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
       }
       await reset('Space');
     });
-    await check('keyboard readiness choices distinguish 86 accepted, 66 unavailable and zero native/parent results', async () => {
+    await check('keyboard readiness choices distinguish 100 accepted, 52 unavailable and zero native/parent results', async () => {
       for (const [readiness, count] of [['portable-available', generation.acceptedPortableLessons],
         ['portable-unavailable', catalog.entries.length - generation.acceptedPortableLessons],
         ['native-unavailable', 152], ['native-runnable', 0], ['native-qualified', 0], ['parent-complete', 0]]) {
@@ -185,7 +188,9 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
         assert.equal(await page.locator('#catalog-error').isVisible(), false);
         if (readiness === 'portable-unavailable') {
           assert.equal(await page.locator('.lesson-link').count(), 0);
-          assert.match(await page.locator('#S087 .learning-status').innerText(), /No accepted Done review/);
+          for (const id of ['S100', 'S101', 'S102', 'S104']) {
+            assert.match(await page.locator(`#${id} .learning-status`).innerText(), /No accepted Done review/, id);
+          }
         }
       }
       await reset();
@@ -199,7 +204,7 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
         { host: 'aks', risk: 'unclassified', readiness: 'portable-available' });
       assert.deepEqual(firstOrder, expected.items.map(item => item.entry.id));
       assert.deepEqual(await page.locator('.incompatible-entry').evaluateAll(nodes => nodes.map(node => node.dataset.entryId)),
-        ['S002', 'S012', 'S014', 'S017', 'S024', 'S032', 'S033', 'S058']);
+        ['S002', 'S012', 'S014', 'S017', 'S024', 'S032', 'S033', 'S058', 'S096']);
       assert.equal(firstOrder.length + expected.incompatible.length, generation.acceptedPortableLessons);
       await reset();
       await choose('readiness-filter', 'portable-available');
@@ -280,7 +285,9 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
       await page.locator('#S001 .lesson-link').focus();
       await page.keyboard.press('Enter');
       await page.waitForURL(/\/learning\/S001\/index\.html$/);
-      assert.match(await page.locator('body').innerText(), /synthetic|training rehearsal/i);
+      acceptedPracticeNavigation = { id: 'S001', loadedUrl: page.url(),
+        trainingBanner: await page.locator('.banner').textContent() };
+      assert.equal(acceptedPracticeNavigation.trainingBanner, TRAINING_BANNER);
       await page.goBack({ waitUntil: 'load' });
       await restore();
     });
@@ -338,7 +345,7 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
     assert.match(browserVersion, /^156\./);
     assert.match(process.version, /^v22\./);
     report = {
-      schemaVersion: 1, cardId: 'C007', operation: 'OP-CATALOG-SNAPSHOT-REFRESH-101', status: 'passed',
+      schemaVersion: 1, cardId: 'C007', operation: 'OP-CATALOG-SNAPSHOT-REFRESH-115', status: 'passed',
       observedAtUtc: new Date().toISOString(), mode: 'actual-isolated-headless',
       engine: 'Microsoft Edge (Chromium)', browserVersion,
       playwrightVersion: helperRequire('playwright/package.json').version, nodeVersion: process.version,
@@ -349,6 +356,8 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
       sourcePin: catalog.source.commit, sourceScenarios: 150, guidedWorkflows: 2,
       generationSha256: generation.data.sha256, historicalPortableLessons: generation.acceptedPortableLessons,
       acceptedPracticeDestinations: catalog.entries.filter(entry => entry.learning.available).map(entry => entry.learning.href),
+      practiceNavigations: [acceptedPracticeNavigation], actualPracticeNavigationCount: 1,
+      unavailablePracticeIdsChecked: ['S100', 'S101', 'S102', 'S104'],
       unknownSupport: 152, risk: 'UNCLASSIFIED', nativeRunnable: 0,
       nativeQualified: 0, completedSourceParents: 0, excludedAvailabilityReasons: true, permissions: matrix.permissions,
       checks, cspObservation, pageErrors, remoteRequests,

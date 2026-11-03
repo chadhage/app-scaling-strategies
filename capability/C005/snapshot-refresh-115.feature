@@ -1,0 +1,56 @@
+Feature: Refresh exactly one immutable 115-unit noncontiguous catalog snapshot
+  OP-CATALOG-SNAPSHOT-REFRESH-115 / worker-OP-CATALOG-SNAPSHOT-REFRESH-115
+  Zero S, D and L credits; no original card or H001/H002 completion
+
+  Scenario: The full fixed Git source alone determines the 100 available practices
+    Given immutable source e8a3064f8554906216a9e0c3cf1344a3a6acf019
+    And its 115 accepted original units are 113 S and 2 D
+    And its accepted portable practices are exactly A-S001 through A-S099 plus A-S103
+    And the unchanged current 86-practice catalog is bound to 541256d563853396745381b9aa5fffd8ee29148e
+    When actual behavioral source, count and each of S087 through S099 plus S103 assertions run
+    Then all 16 positive leaves fail against the unchanged 86-practice bytes
+    And the negative availability, native and parent gate leaf passes
+    When IaC is recorded not applicable after RED
+    And the existing deterministic generator changes its full-SHA pin and bounds its Git read at 8 MiB for the fixed ledger larger than 1 MiB
+    And no extraction, availability or public-contract semantics change
+    Then the existing C005, literal C006 search, C007 AND filters, C008 preparation and unified consumers expose all 100 practices
+    And all 152 IDs, schema, interfaces, source objectives, references and authorities remain unchanged
+    But S100, S101, S102 and S104 through S150 stay unavailable even when live main advances
+    And native runnable, native qualified, source parents, H001, H002 and production Node 24 remain false
+
+  Scenario: Five preceding snapshots and every historical proof retain their original bytes
+    Given all owned files and all historical proof are dynamically inventoried before edits
+    And the 11, 20, 36, 61 and 86-practice snapshots retain their recorded SHA256 values
+    And the current 86-practice data, generator, generation and tests are archived byte exact
+    And raw CRLF preservation is separate from normalized canonical Git-source integrity
+    When only the five established owned catalog and consumer scopes are refreshed
+    Then every old proof, failure, timestamp, screenshot and inventory is unchanged
+    And archival assertion snapshots end in plain text and are not auto-discovered tests
+    And deterministic extraction reproduces the fixed catalog and rejects controlled canonical drift
+    But no duplicate provider, schema, framework, live refresh service or feature credit is introduced
+
+  Scenario: Existing actual-browser suites verify the noncontiguous snapshot without rewriting proof
+    Given only published testing\browser\isolated.cjs and openIsolatedLesson are authorized
+    And its SHA256 is 86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055
+    And existing offline Playwright 1.56.1, signed Edge 156 and Node 22 are used
+    When all four provider/UI browser consumers and the existing twelve unified groups run
+    Then all 100 actual practice navigations have the exact banner "Training rehearsal - synthetic data - not a live Azure result"
+    And S103 works while S100, S101 and S102 have no practice link
+    And S001 gives synthetic PASS, negative FAIL, reset and return preserving query and every AND filter
+    And every helper close is awaited in finally
+    And only exact CAPTURE_BROWSER_EVIDENCE=1 appends unique deliberate captures
+    And ordinary capture-unset replay preserves every owned source/proof byte and file set
+    And parent groups, leaf cases and actual navigations are counted separately without inflated unique totals
+    But no foreground grant, abandoned lifecycle prototype, download, TLS weakening, native qualification or cloud spend occurs
+
+  Scenario: Publish one narrow zero-credit operation and stop
+    Given the parent already owns operational activation and alone may accept it
+    And the standard publisher and published helper boundary hashes are unchanged
+    And checked-out main already equals remote main before the transaction
+    When explicit verified owned paths are committed with git commit --only under Local\AppScalingStrategies_KanbanPublisher_v1
+    Then the unowned index remains byte-metadata equivalent before and after
+    And the commit includes [flow][catalog-refresh][no-kano-credit] and the Copilot coauthor trailer
+    And annotated kanban/flow-catalog-refresh/<realcommit12> and main are pushed atomically and remotely verified
+    And the public result and manifest contain actual verification, not fabricated self-referential publication or acceptance fields
+    But no state lock, Claim, Accept, shared ledger, root documentation, broad stage, amend, stash, reset, force or unowned cleanup occurs
+    And this worker stops after this single operation
