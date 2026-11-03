@@ -194,11 +194,32 @@ test('missing or empty transition evidence and missing readiness never mean succ
 });
 
 test('unknown conditions and actions do not fall back to healthy success', () => {
-  assert.throws(() => lesson.createExercise('not-a-fixture'), RangeError);
+  assert.throws(() => lesson.fixture('not-a-fixture'), RangeError);
   const state = lesson.act(lesson.createExercise(), 'not-an-action');
   assert.equal(state.verdict, 'FAIL');
   assert.equal(state.admissionTarget, 'v1');
   assert.equal(state.attemptedTransitions.length, 0);
+});
+
+test('invalid condition data is a rejected exercise, never a healthy fallback', () => {
+  for (const condition of ['', 'not-a-fixture', '__proto__', null, false, 0, {}, []]) {
+    let state = lesson.createExercise(condition);
+    assert.equal(state.condition, null);
+    assert.equal(state.verdict, 'FAIL');
+    assert.equal(state.v2, 'ABORTED');
+    assert.equal(state.admissionTarget, 'v1');
+    assert.equal(state.newJourney, null);
+    assert.equal(state.attemptedTransitions.length, 0);
+    assert.equal(state.userImpact.classification, 'safe-abort');
+    assert.match(state.reason, /invalid synthetic condition/i);
+    for (const action of ['warm', 'handoff', 'drain', 'elapse', 'retire']) {
+      state = lesson.act(state, action);
+      assert.equal(state.verdict, 'FAIL');
+      assert.equal(state.admissionTarget, 'v1');
+      assert.equal(state.oldJourney.status, 'running');
+      assert.equal(state.newJourney, null);
+    }
+  }
 });
 
 test('replays are deterministic, immutable, and fixture copies are isolated', () => {

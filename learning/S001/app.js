@@ -14,9 +14,9 @@
   }
 
   function render() {
-    const input = engine.fixture(state.condition);
-    text('expected', input.expected);
-    text('fixture-input', JSON.stringify(input, null, 2));
+    const input = state.condition === null ? null : engine.fixture(state.condition);
+    text('expected', input ? input.expected : state.reason);
+    text('fixture-input', JSON.stringify(input || { accepted: false }, null, 2));
     text('verdict', state.verdict.replace('_', ' '));
     document.getElementById('verdict').dataset.verdict = state.verdict;
     text('reason', state.reason);

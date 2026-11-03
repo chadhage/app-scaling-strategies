@@ -158,9 +158,9 @@
   }
 
   function createExercise(condition = 'healthy') {
-    fixture(condition);
+    const validCondition = CONDITIONS.includes(condition);
     const state = {
-      mode: 'synthetic', condition: condition, verdict: 'NOT_RUN',
+      mode: 'synthetic', condition: validCondition ? condition : null, verdict: 'NOT_RUN',
       v1: 'ACTIVE', v2: 'WARMING', admissionTarget: 'v1',
       readiness: null, newJourney: null, attemptedTransitions: [], checks: [],
       halted: false, elapsedSinceHandoffMs: 0,
@@ -176,6 +176,10 @@
       trace: []
     };
     log(state, 'start', { mode: 'synthetic', candidate: 'v2@1', lifecycle: 'WARMING', oldJourney: state.oldJourney });
+    if (!validCondition) {
+      state.v2 = 'ABORTED';
+      reject(state, 'Invalid synthetic condition. Choose a listed fixture before rehearsing.');
+    }
     return refreshCleanup(state);
   }
 
@@ -198,6 +202,10 @@
 
   function act(previous, action) {
     const state = copy(previous);
+    if (state.condition === null) {
+      log(state, 'blocked-invalid-condition', { requested: typeof action === 'string' ? action : 'invalid action' });
+      return refreshCleanup(state);
+    }
     const input = fixture(state.condition);
     if (!['warm', 'handoff', 'drain', 'elapse', 'retire'].includes(action)) {
       reject(state, 'Unknown action: ' + action);

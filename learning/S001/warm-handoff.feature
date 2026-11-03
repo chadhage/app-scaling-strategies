@@ -83,6 +83,26 @@ Feature: Warm v2 before a controlled handoff
     And the new journey's successful observation is not erased
     And cleanup explicitly says v1 is still retained
 
+  Scenario: Reset starts a fresh local exercise without carrying a prior result
+    Given the current fixture has reached PASS, FAIL, or UNKNOWN
+    When I activate Reset using the keyboard
+    Then the selected valid fixture is preserved and the verdict is NOT RUN
+    And admissions return to v1 while v2 is WARMING
+    And old-001 is running on v1 with its effect pending
+    And the prior transition, assertions, retention, and trace are cleared
+    And no cloud resources or external data are changed
+
+  Scenario: Invalid condition data cannot leave a stale successful result
+    Given a successful synthetic handoff
+    When the selected condition becomes empty or unknown and a reset is requested
+    Then the exercise reports FAIL without an uncaught error
+    And v2 is ABORTED and admissions stay on v1 with no transition attempts
+    And the input is explicitly rejected rather than replaced by a healthy fixture
+    And warm-up, handoff, drain, retention, and retirement cannot turn it into success
+    When I select a listed valid fixture
+    Then a fresh NOT RUN exercise is available
+    And invalid initial condition data follows the same safe rejection path
+
   Scenario: Evidence and budget boundaries are explicit
     Given readiness evidence for the current candidate at its current epoch
     When I evaluate known, missing, stale, and altered observations against the assertions

@@ -50,7 +50,7 @@
           <option value="missing-admission">Handoff destination stamp is missing</option>
           <option value="regressed-handoff">Warm-up passes, handoff takes 501 ms</option>
         </select>
-        <p id="condition-help">Changing conditions resets only this page's local exercise. All inputs, effects, and durations are invented, deterministic snapshots; no time is actually awaited.</p>
+        <p id="condition-help">Changing conditions resets only this page's local exercise. Reset preserves the selected valid fixture and clears previous results. Empty or unknown condition data is rejected, never replaced with a healthy fixture. All inputs, effects, and durations are invented, deterministic snapshots; no time is actually awaited.</p>
       </fieldset>
       <div class="actions" role="group" aria-label="Rehearsal actions">
         <button type="button" id="warm" data-action="warm">1. Rehearse v2 warm-up</button>
@@ -121,6 +121,7 @@
         <li>PASS means only that this tiny invented fixture matched its assertions. It is not a live Azure result, reliability certification, uptime measurement, or five-nines proof.</li>
         <li>FAIL can describe a safely blocked operator choice or an interrupted exposed journey. User impact is reported separately so a safe abort never looks like a completed migration.</li>
         <li>UNKNOWN covers missing or stale evidence. A missing destination stamp is not replaced by intended routing; an empty sample never becomes 100% success.</li>
+        <li>Invalid condition data produces FAIL with no transition attempts. Choose a listed fixture to recover; Reset cannot turn invalid data or a prior result into a successful migration.</li>
         <li>Latency 500 ms passes; 501 ms fails. Evidence age 1000 ms passes; 1001 ms is unknown. A missing effect observation is unknown; zero or two effects fail.</li>
         <li>This model assumes controlled admission and compatible retained v1. Native slot recycling, real authentication, capacity, durable state, data ownership, provider behavior, and rollback feasibility need separate B-S001 evidence.</li>
         <li><strong>IaC: N/A.</strong> SOURCE read-only synthetic lessons need no Azure resource. C001 runtime/auth/hosting and separate scaffold/deploy approval remain absent.</li>

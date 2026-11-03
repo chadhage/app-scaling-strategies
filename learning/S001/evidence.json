@@ -8,21 +8,23 @@
   "packet": "LP-LEARN",
   "workerId": "worker-A-S001",
   "executionMode": "synthetic",
-  "completionStatus": "incomplete",
-  "blocker": "VS Code browser page handles repeatedly disappear after forceNew open: runPlaywrightCode/readPage/clickElement return Page not found. Partial safe, unsafe and keyboard DOM observations exist, but no clean completed browser acceptance run could be retained. Restore a stable isolated browser bridge and rerun before readmission; no Kano credit.",
-  "capturedAtUtc": "2026-11-03T09:10:37.6501299Z",
+  "completionStatus": "ready-for-controller-review",
+  "blocker": null,
+  "bootstrapCapturedAtUtc": "2026-11-03T09:10:37.6501299Z",
+  "followUpRecordedAtUtc": "2026-11-03T09:28:56.9187143Z",
+  "baseImplementationCommit": "c93c513c801ae31b6b99b93e557b9e47bea69baf",
   "entryPoint": "learning\\S001\\index.html",
   "runtime": "Node v22.23.4; browser local-file page",
   "reviewer": null,
   "controllerAcceptance": "pending; no accepted Done or parent completion claimed",
-  "publicationIdentifiers": "Recorded separately in the worker result, never this artifact",
+  "publicationIdentifiers": "Final SHA/tag are recorded by .git\\kanban-orchestrator\\results\\A-S001-final.json and the annotated publication tag, not self-referentially in this committed artifact.",
   "sourceReferences": [
     "README.md#scenario-1-warm-overlapping-blue-green-handoff",
     "README.md#a-deployment-and-traffic-migration-strategies",
     ".docs\\wiki\\backlog.md:D-S001",
     ".docs\\wiki\\kanban.md:portable A contract and A-S001"
   ],
-  "stageOrder": [
+  "bootstrapStageOrder": [
     "BDD feature written first",
     "TDD tests plus unchanged-state behavior stub",
     "Genuine behavior red captured",
@@ -30,6 +32,17 @@
     "Dependency-free engine and portable UI implemented",
     "Focused green and syntax checks passed",
     "Browser evidence attempted; partial observations retained; bridge blocker prevents completed acceptance"
+  ],
+  "stageOrder": [
+    "Resume the existing worker token through the confirmed controller claim interface",
+    "Observe the genuine stale PASS and uncaught error after invalid condition data in the isolated browser",
+    "Extend BDD with Reset and invalid-condition rejection before changing tests or implementation",
+    "Capture corrected Node behavioral regression red: 25 tests, 22 passed, 3 failed",
+    "IaC explicitly N/A; no cloud, framework, dependencies, or credentials required",
+    "Implement explicit rejected exercise state and rejected-input rendering without healthy fallback",
+    "Capture focused green: all 25 tests passed; check implementation and test syntax",
+    "Reload the owned browser page and verify keyboard lifecycle, Reset, all eight negative fixtures, and invalid-data rejection",
+    "Publish the incremental owned module only; controller review and acceptance remain separate"
   ],
   "bdd": {
     "path": "learning\\S001\\warm-handoff.feature",
@@ -41,11 +54,41 @@
       "Missing actual destination stays UNKNOWN with attempted journey retained",
       "Exposed 501 ms journey stays interrupted after rollback",
       "Drain and retention are separate retirement gates",
+      "Reset clears PASS, FAIL, and UNKNOWN while preserving a valid selected fixture",
+      "Invalid initial or changed condition data rejects safely without stale success or uncaught errors",
       "Inclusive latency/freshness/capacity boundaries; empty evidence and invalid actions"
     ],
     "execution": "Mapped to Node built-in behavior tests; no Gherkin runner or package installed"
   },
   "tdd": {
+    "regression": {
+      "command": "node --test --test-reporter=tap learning\\S001\\engine.test.cjs learning\\S001\\app.test.cjs",
+      "redPath": "learning\\S001\\evidence\\regression-red.json",
+      "red": {
+        "exitCode": 1,
+        "total": 25,
+        "passed": 22,
+        "failed": 3,
+        "actualFailure": "Unknown synthetic condition: empty or unknown data throws instead of producing a rejected exercise, including initial load and Reset after PASS.",
+        "productionCodeChangedBeforeRed": false
+      },
+      "greenPath": "learning\\S001\\evidence\\regression-green.json",
+      "green": {
+        "exitCode": 0,
+        "total": 25,
+        "passed": 25,
+        "failed": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "testHarnessAttemptPath": "learning\\S001\\evidence\\runner-attempt.json",
+      "testHarnessAttempt": "An initial new test had a syntax error. Its output is preserved separately and is not claimed as the completed behavioral red run.",
+      "unitUiScope": "app.test.cjs uses a small DOM test double in Node VM for event/render behavior, not a browser or accessibility substitute. Actual browser observations are separate.",
+      "bootstrapRedOutputSha256": "56a29f60b8676877c45a8b91e5a48d98be831692464b189f840551d7426f9ab6",
+      "bootstrapRedPreservedAt": "learning\\S001\\evidence.json#/tdd/red/output",
+      "syntaxCommand": "node --check learning\\S001\\engine.js && node --check learning\\S001\\app.js && node --check learning\\S001\\app.test.cjs && node --check learning\\S001\\engine.test.cjs",
+      "syntaxExitCode": 0
+    },
     "red": {
       "command": "node --test --test-reporter=tap learning\\S001\\engine.test.cjs",
       "exitCode": 1,
@@ -68,7 +111,7 @@
       "cancelled": 0,
       "skipped": 0,
       "rawOutputPath": "learning\\S001\\evidence.json",
-      "note": "The final suite adds one static portable-bundle/CSP/lineage regression test to the original 20 behavior tests.",
+      "note": "Historical bootstrap green: one static portable-bundle/CSP/lineage regression test added to the original 20 behavior tests. Current follow-up green is recorded in tdd.regression.",
       "output": "TAP version 13\r\n# Subtest: initial state distinguishes existing v1 work from unready new admissions\r\nok 1 - initial state distinguishes existing v1 work from unready new admissions\r\n  ---\r\n  duration_ms: 3.5839\r\n  type: 'test'\r\n  ...\r\n# Subtest: warm-up proves readiness but is not itself a migrated user\r\nok 2 - warm-up proves readiness but is not itself a migrated user\r\n  ---\r\n  duration_ms: 1.5463\r\n  type: 'test'\r\n  ...\r\n# Subtest: handoff observes v2 state, effects, and latency while old work stays on v1\r\nok 3 - handoff observes v2 state, effects, and latency while old work stays on v1\r\n  ---\r\n  duration_ms: 1.7024\r\n  type: 'test'\r\n  ...\r\n# Subtest: choosing unready v2 fails the exercise but safely aborts before exposure\r\nok 4 - choosing unready v2 fails the exercise but safely aborts before exposure\r\n  ---\r\n  duration_ms: 0.5444\r\n  type: 'test'\r\n  ...\r\n# Subtest: dependency-failure is a known gate failure and never exposes v2\r\nok 5 - dependency-failure is a known gate failure and never exposes v2\r\n  ---\r\n  duration_ms: 0.5058\r\n  type: 'test'\r\n  ...\r\n# Subtest: incompatible-state is a known gate failure and never exposes v2\r\nok 6 - incompatible-state is a known gate failure and never exposes v2\r\n  ---\r\n  duration_ms: 0.2915\r\n  type: 'test'\r\n  ...\r\n# Subtest: duplicate-effects is a known gate failure and never exposes v2\r\nok 7 - duplicate-effects is a known gate failure and never exposes v2\r\n  ---\r\n  duration_ms: 0.3285\r\n  type: 'test'\r\n  ...\r\n# Subtest: slow-warmup is a known gate failure and never exposes v2\r\nok 8 - slow-warmup is a known gate failure and never exposes v2\r\n  ---\r\n  duration_ms: 0.8813\r\n  type: 'test'\r\n  ...\r\n# Subtest: missing readiness evidence stays unknown, with no manufactured migration\r\nok 9 - missing readiness evidence stays unknown, with no manufactured migration\r\n  ---\r\n  duration_ms: 0.9405\r\n  type: 'test'\r\n  ...\r\n# Subtest: a missing observed version is unknown even when desired routing was v2\r\nok 10 - a missing observed version is unknown even when desired routing was v2\r\n  ---\r\n  duration_ms: 1.2458\r\n  type: 'test'\r\n  ...\r\n# Subtest: an exposed latency failure remains interrupted after rollback and cleanup actions\r\nok 11 - an exposed latency failure remains interrupted after rollback and cleanup actions\r\n  ---\r\n  duration_ms: 1.9892\r\n  type: 'test'\r\n  ...\r\n# Subtest: retirement needs both observed drain and the rollback retention window\r\nok 12 - retirement needs both observed drain and the rollback retention window\r\n  ---\r\n  duration_ms: 1.1592\r\n  type: 'test'\r\n  ...\r\n# Subtest: safe drain and retention permit retirement without duplicating old effects\r\nok 13 - safe drain and retention permit retirement without duplicating old effects\r\n  ---\r\n  duration_ms: 1.0355\r\n  type: 'test'\r\n  ...\r\n# Subtest: latency and overlap capacity boundaries are inclusive, and missing is not zero\r\nok 14 - latency and overlap capacity boundaries are inclusive, and missing is not zero\r\n  ---\r\n  duration_ms: 0.1878\r\n  type: 'test'\r\n  ...\r\n# Subtest: freshness boundaries and candidate identity cannot be bypassed\r\nok 15 - freshness boundaries and candidate identity cannot be bypassed\r\n  ---\r\n  duration_ms: 0.2017\r\n  type: 'test'\r\n  ...\r\n# Subtest: state, authentication, destination, and exactly-once effects are required observations\r\nok 16 - state, authentication, destination, and exactly-once effects are required observations\r\n  ---\r\n  duration_ms: 0.2653\r\n  type: 'test'\r\n  ...\r\n# Subtest: missing or empty transition evidence and missing readiness never mean success\r\nok 17 - missing or empty transition evidence and missing readiness never mean success\r\n  ---\r\n  duration_ms: 0.1941\r\n  type: 'test'\r\n  ...\r\n# Subtest: unknown conditions and actions do not fall back to healthy success\r\nok 18 - unknown conditions and actions do not fall back to healthy success\r\n  ---\r\n  duration_ms: 0.7684\r\n  type: 'test'\r\n  ...\r\n# Subtest: replays are deterministic, immutable, and fixture copies are isolated\r\nok 19 - replays are deterministic, immutable, and fixture copies are isolated\r\n  ---\r\n  duration_ms: 1.0019\r\n  type: 'test'\r\n  ...\r\n# Subtest: the same dependency-free engine works as a browser global\r\nok 20 - the same dependency-free engine works as a browser global\r\n  ---\r\n  duration_ms: 5.0012\r\n  type: 'test'\r\n  ...\r\n# Subtest: portable bundle declares lineage and restricts execution to local scripts and styles\r\nok 21 - portable bundle declares lineage and restricts execution to local scripts and styles\r\n  ---\r\n  duration_ms: 5.8462\r\n  type: 'test'\r\n  ...\r\n1..21\r\n# tests 21\r\n# suites 0\r\n# pass 21\r\n# fail 0\r\n# cancelled 0\r\n# skipped 0\r\n# todo 0\r\n# duration_ms 288.4448\r\n",
       "rawOutputJsonPointer": "/tdd/green/output"
     },
@@ -99,6 +142,30 @@
     "networkOrManagementCalls": false
   },
   "browser": {
+    "status": "page-scoped-synthetic-checks-passed",
+    "evidencePath": "learning\\S001\\evidence\\browser-acceptance.json",
+    "entryPoint": "learning\\S001\\index.html",
+    "pageId": "a8d6b20f-68f4-4b10-bc7a-7343c93b1965",
+    "toolDiscovery": "Deferred tool search discovered openBrowserPage and runPlaywrightCode before use.",
+    "canonicalFileUriUsed": true,
+    "forceNew": true,
+    "reloadedAfterFix": true,
+    "globalNavigationUsed": false,
+    "completePassingAcceptanceRun": true,
+    "observedRequiredCases": [
+      "Unready handoff: FAIL, SAFE-ABORT, admissions v1, no transition attempts",
+      "Healthy keyboard warm/handoff/drain/retention/retire: observed v2 state and effects; retained v1 until gated retirement",
+      "All eight selectable regression/unknown fixtures, each followed by a fresh NOT RUN keyboard Reset",
+      "Invalid condition after PASS: FAIL, ABORTED, admissions v1, rejected input; all actions and Reset stay failed until a valid fixture is selected",
+      "Native Tab order, Enter/Space actions, selector Home/ArrowDown, keyboard details expansion, and visible focus",
+      "Invalid or missing observation data does not become a positive result"
+    ],
+    "notClaimed": [
+      "A native Azure result, complete WCAG audit, reliability certification, or five-nines proof",
+      "Empty passive network observations as a network-isolation proof"
+    ]
+  },
+  "bootstrapBrowser": {
     "status": "incomplete-bridge-blocker",
     "toolDiscovery": "Searched deferred tools for VS Code openBrowserPage/readPage/runPlaywrightCode, then specific pageId clickElement/typeInPage tools",
     "entryPoint": "learning\\S001\\index.html",
@@ -177,7 +244,7 @@
     "Actual cloud routing, capacity, authentication, data ownership, side effects, timing, provider and recycling behavior are not tested",
     "Controlled routing and compatible retained v1 are assumed",
     "No five-nines claim, reliability certification, Microsoft endorsement, or native success",
-    "Browser bridge blocker must be resolved and remaining browser acceptance rerun before controller acceptance"
+    "Local browser checks and Node VM tests are bounded observations, not a complete WCAG audit or native-platform proof; controller review and acceptance remain pending"
   ],
   "cleanup": {
     "externalResourcesCreated": 0,
@@ -187,8 +254,8 @@
     "credentialsUsed": false,
     "sharedFilesEdited": false,
     "lessonReset": "Resets only this page memory; synthetic v1 retention is not a live resource",
-    "browserPages": "Only unique owned pageIds used. Lost handles prevented closing those views; no shared tab was closed.",
-    "intermediates": "Exact normalized red/green outputs retained inside evidence.json as escaped JSON strings. Separate text captures removed because genuine TAP indentation on blank lines fails git diff --check; no evidence bytes were trimmed."
+    "browserPages": "Historical lost handles remain documented in bootstrapBrowser. Follow-up reused only its own forceNew pageId and left it at healthy NOT RUN after Reset. No shared tab was navigated or closed.",
+    "intermediates": "Exact bootstrap red/green strings remain preserved in evidence.json. Follow-up commands are stored as escaped JSON under learning\\S001\\evidence to preserve TAP indentation while passing diff checks."
   },
   "normalization": "All artifact paths and test stacks are repo-relative. Canonical browser URL was used for opening but the local user path is omitted from this evidence. No secrets included.",
   "publicationAttempts": [
