@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S093 — Latency regression without errors</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S093 — Latency regression without errors</h1>
+    <p>Reject a candidate that returns successful responses too slowly. A-S093 · D-S093 · SC-S093 · Kano S.</p>
+    <p><strong>Preconditions:</strong> three fixed synthetic attempted canary journeys, each labelled HTTP 200. Completion durations are data, not waits or measured network responses. Each independent rehearsal starts at a synthetic 25% canary.</p>
+    <p><strong>Worked exercise:</strong> request expansion with the slow trace and a 1000 ms budget. Two journeys exceed the budget, so acceptance must fail even though the HTTP-only score is 3/3. Reset and hold the same candidate: the safe decision passes, but those interruptions remain failures.</p>
+
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Choose a condition and decision</h2>
+      <form id="rehearsal-controls" novalidate>
+        <div class="controls">
+          <label for="scenario">Fixed synthetic trace</label>
+          <select id="scenario" name="scenario">
+            <option value="slow-200" selected>Slow HTTP 200 — 420, 1700, 2400 ms</option>
+            <option value="within-budget">Within budget — 420, 700, 1000 ms</option>
+            <option value="unmeasured-200">Missing latency — 420, unknown, 700 ms</option>
+          </select>
+          <label for="budget">Journey budget (inclusive)</label>
+          <select id="budget" name="budget">
+            <option value="1000" selected>1000 ms</option>
+            <option value="1500">1500 ms</option>
+          </select>
+          <label for="action">Operator decision</label>
+          <select id="action" name="action">
+            <option value="expand" selected>Request expansion to synthetic 50%</option>
+            <option value="hold">Hold / reject candidate; keep synthetic 25%</option>
+          </select>
+        </div>
+        <div class="buttons">
+          <button id="apply-decision" type="submit">Check and apply decision</button>
+          <button id="reset-rehearsal" type="button">Reset current rehearsal</button>
+        </div>
+      </form>
+      <p id="error" role="alert" tabindex="-1" hidden></p>
+      <p id="current-status" role="status">Ready. No synthetic decision has been checked.</p>
+      <p id="history-limit">Up to six decisions per page session. Reset restores controls and the current trace, but retains every historical failure and denominator. Reload starts a separate in-memory session, not a recovery or certification.</p>
+    </section>
+
+    <section id="result" aria-labelledby="result-heading" hidden>
+      <h2 id="result-heading">Current synthetic result</h2>
+      <p id="verdict"></p>
+      <p id="explanation"></p>
+      <p id="routing"></p>
+      <dl class="metrics">
+        <div><dt>Attempted journeys</dt><dd id="sample-attempted"></dd></div>
+        <div><dt>HTTP 200 labels</dt><dd id="sample-http200"></dd></div>
+        <div><dt>Within-budget successes</dt><dd id="sample-success"></dd></div>
+        <div><dt>Interrupted journeys</dt><dd id="sample-interrupted"></dd></div>
+        <div><dt>Unknown journeys</dt><dd id="sample-unknown"></dd></div>
+      </dl>
+      <div class="table-wrap">
+        <table>
+          <caption>Fixed synthetic attempted-journey trace</caption>
+          <thead><tr><th scope="col">Journey</th><th scope="col">HTTP label</th><th scope="col">Duration</th><th scope="col">Budget</th><th scope="col">Journey outcome</th></tr></thead>
+          <tbody id="trace"></tbody>
+        </table>
+      </div>
+      <p>A safe hold can pass the decision verifier while journey acceptance still fails. Unknown latency never becomes a success. No real request, user transition or latency acceptance is certified here.</p>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained history and attempted-journey denominator</h2>
+      <dl class="metrics">
+        <div><dt>Retained decisions</dt><dd id="total-runs">0</dd></div>
+        <div><dt>Attempted journeys</dt><dd id="total-attempted">0</dd></div>
+        <div><dt>Within-budget successes</dt><dd id="total-success">0</dd></div>
+        <div><dt>Interrupted journeys</dt><dd id="total-interrupted">0</dd></div>
+        <div><dt>Unknown journeys</dt><dd id="total-unknown">0</dd></div>
+      </dl>
+      <p>Success + interruption + unknown equals every retained attempted journey. The empty initial sample is no evidence, not 100% success.</p>
+      <ol id="history"></ol>
+    </section>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits</h2>
+      <p>Standard HTML and JavaScript only. No server, load generation, actual fault injection, management calls, cloud resources, identity, credentials, deployment or spend. IaC is N/A. History lasts in this page's memory only.</p>
+      <p>This is one portable synthetic S unit, not B-S093 native proof, D-S093 completion, production Node.js 24 validation, or reliability certification. Node.js 22 and the approved isolated browser pair are test tooling only.</p>
+    </section>
+    <noscript>This lesson needs local JavaScript. No acceptance result is available with scripting disabled.</noscript>
+  </main>
+</body>
+</html>

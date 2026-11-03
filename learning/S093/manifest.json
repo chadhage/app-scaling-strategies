@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "sourceId": "S093",
+  "cardId": "A-S093",
+  "parentId": "D-S093",
+  "packet": "SC-S093",
+  "kano": "S",
+  "kanoUnit": "A-S093",
+  "technicalEntryGate": "SOURCE",
+  "owner": "worker-A-S093",
+  "title": "Latency regression without errors",
+  "objective": "Return slow 200 responses; an exceeded journey budget must fail acceptance.",
+  "entry": "index.html",
+  "mode": "synthetic",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "preconditions": [
+    "Modern browser with local JavaScript; no server, account or framework",
+    "Three fixed synthetic attempted canary journeys per independent rehearsal, all labelled HTTP 200",
+    "The synthetic starting canary is 25%; the inclusive journey budget is declared before the decision"
+  ],
+  "actions": [
+    "Choose a slow, compliant or unmeasured fixed trace and a 1000 or 1500 ms budget",
+    "Request expansion or hold/reject the candidate, then inspect acceptance, decision verifier and journey counts",
+    "Reset the current rehearsal using mouse or keyboard; retain all previous outcomes and budgets"
+  ],
+  "syntheticInputs": {
+    "scenarios": ["slow-200", "within-budget", "unmeasured-200"],
+    "budgetsMs": [1000, 1500],
+    "actions": ["expand", "hold"],
+    "httpStatuses": [200, 200, 200],
+    "durationFixturesMs": {
+      "slow-200": [420, 1700, 2400],
+      "within-budget": [420, 700, 1000],
+      "unmeasured-200": [420, null, 700]
+    },
+    "maxAttempts": 6,
+    "historyLifetime": "In-memory page session; current-rehearsal reset preserves history and the fixed allowance"
+  },
+  "expectedAssertions": [
+    "Any exceeded journey budget produces failed candidate acceptance and blocks expansion despite HTTP 200",
+    "Safe rejection may pass the decision verifier but never relabels interrupted journeys as successes",
+    "Complete compliant latency, including equality at the budget, permits only synthetic requested expansion",
+    "Missing latency is unknown, blocks expansion and remains in the attempted denominator",
+    "Success + interruption + unknown equals all retained attempted journeys, including earlier failures after reset",
+    "Invalid input, altered state, duplicate decisions and excess attempts cannot append a false result",
+    "Keyboard controls, explicit error focus, reset and enforced CSP work in the actual isolated browser DOM"
+  ],
+  "limits": [
+    "All HTTP statuses, durations, fault actions and routing values are fixed synthetic data; no server or load generation",
+    "No actual HTTP, latency, user-journey acceptance, native Azure, parent-demo or reliability certification",
+    "IaC N/A; no cloud, identity, credentials, deployment, spend, packages, framework or shared-root changes",
+    "Existing Node 22 test tooling, offline Playwright 1.56.1 and signed Edge 156 only; not production Node 24",
+    "Read-only verification by default; CAPTURE_BROWSER_EVIDENCE=1 is deliberate capture only",
+    "Only published isolated.cjs 53c0c0d with SHA256 86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055; no abandoned lifecycle prototype"
+  ],
+  "evidence": {
+    "source": "evidence/source-contract.json",
+    "bdd": "latency-budget.feature",
+    "assertionRed": "evidence/red.json",
+    "iac": "evidence/iac-decision.json",
+    "focused": "evidence/focused-green.json",
+    "browser": "evidence/browser-acceptance.json",
+    "canonicalIntegrity": "evidence/content-index.json"
+  },
+  "acceptance": {
+    "workerResult": "Worker verification and publication are separate from parent-owned empirical acceptance",
+    "reviewer": "Parent controller only",
+    "acceptedAtUtc": null,
+    "credit": "At most one A-S093 frozen S unit; tests, evidence and tooling earn no extra credit",
+    "nativeSibling": "B-S093 remains separate and incomplete"
+  }
+}

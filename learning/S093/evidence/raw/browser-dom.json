@@ -1,0 +1,353 @@
+{
+  "provenance": "CAPTURE_BROWSER_EVIDENCE=1 node --test learning\\S093\\tests\\browser.test.cjs",
+  "observations": [
+    {
+      "label": "slow200-failed-acceptance",
+      "banner": "Training rehearsal - synthetic data - not a live Azure result",
+      "controls": {
+        "scenario": "slow-200",
+        "budget": "1000",
+        "action": "expand"
+      },
+      "current": {
+        "visible": true,
+        "acceptance": "failure",
+        "verifier": "fail",
+        "verdict": "Journey acceptance: failure. Decision verifier: fail.",
+        "routing": "Synthetic expansion: blocked. Canary 25% → 25%. No actual routing change.",
+        "metrics": {
+          "attempted": "3",
+          "http200": "3",
+          "success": "1",
+          "interrupted": "2",
+          "unknown": "0"
+        }
+      },
+      "trace": [
+        [
+          "journey-1",
+          "200",
+          "420 ms",
+          "1000 ms",
+          "success"
+        ],
+        [
+          "journey-2",
+          "200",
+          "1700 ms",
+          "1000 ms",
+          "interrupted"
+        ],
+        [
+          "journey-3",
+          "200",
+          "2400 ms",
+          "1000 ms",
+          "interrupted"
+        ]
+      ],
+      "totals": {
+        "runs": "1",
+        "attempted": "3",
+        "success": "1",
+        "interrupted": "2",
+        "unknown": "0"
+      },
+      "history": [
+        "Attempt 1: slow-200, 1000 ms, expand. Journey acceptance failure; verifier fail; expansion blocked.Attempted 3; within-budget successes 1; interruptions 2; unknown 0."
+      ],
+      "error": {
+        "visible": false,
+        "text": ""
+      },
+      "activeId": ""
+    },
+    {
+      "label": "guard-error-no-new-history",
+      "banner": "Training rehearsal - synthetic data - not a live Azure result",
+      "controls": {
+        "scenario": "slow-200",
+        "budget": "1e3",
+        "action": "expand"
+      },
+      "current": {
+        "visible": false,
+        "acceptance": null,
+        "verifier": null,
+        "verdict": "",
+        "routing": "",
+        "metrics": {
+          "attempted": "",
+          "http200": "",
+          "success": "",
+          "interrupted": "",
+          "unknown": ""
+        }
+      },
+      "trace": [],
+      "totals": {
+        "runs": "1",
+        "attempted": "3",
+        "success": "1",
+        "interrupted": "2",
+        "unknown": "0"
+      },
+      "history": [
+        "Attempt 1: slow-200, 1000 ms, expand. Journey acceptance failure; verifier fail; expansion blocked.Attempted 3; within-budget successes 1; interruptions 2; unknown 0."
+      ],
+      "error": {
+        "visible": true,
+        "text": "ERR_INPUT: Choose exactly 1000 or 1500 milliseconds; numeric coercion is not allowed."
+      },
+      "activeId": "error"
+    },
+    {
+      "label": "safe-hold-still-interrupted",
+      "banner": "Training rehearsal - synthetic data - not a live Azure result",
+      "controls": {
+        "scenario": "slow-200",
+        "budget": "1000",
+        "action": "hold"
+      },
+      "current": {
+        "visible": true,
+        "acceptance": "failure",
+        "verifier": "pass",
+        "verdict": "Journey acceptance: failure. Decision verifier: pass.",
+        "routing": "Synthetic expansion: held. Canary 25% → 25%. No actual routing change.",
+        "metrics": {
+          "attempted": "3",
+          "http200": "3",
+          "success": "1",
+          "interrupted": "2",
+          "unknown": "0"
+        }
+      },
+      "trace": [
+        [
+          "journey-1",
+          "200",
+          "420 ms",
+          "1000 ms",
+          "success"
+        ],
+        [
+          "journey-2",
+          "200",
+          "1700 ms",
+          "1000 ms",
+          "interrupted"
+        ],
+        [
+          "journey-3",
+          "200",
+          "2400 ms",
+          "1000 ms",
+          "interrupted"
+        ]
+      ],
+      "totals": {
+        "runs": "2",
+        "attempted": "6",
+        "success": "2",
+        "interrupted": "4",
+        "unknown": "0"
+      },
+      "history": [
+        "Attempt 1: slow-200, 1000 ms, expand. Journey acceptance failure; verifier fail; expansion blocked.Attempted 3; within-budget successes 1; interruptions 2; unknown 0.",
+        "Attempt 2: slow-200, 1000 ms, hold. Journey acceptance failure; verifier pass; expansion held.Attempted 3; within-budget successes 1; interruptions 2; unknown 0."
+      ],
+      "error": {
+        "visible": false,
+        "text": ""
+      },
+      "activeId": ""
+    },
+    {
+      "label": "later-success-retains-failure",
+      "banner": "Training rehearsal - synthetic data - not a live Azure result",
+      "controls": {
+        "scenario": "within-budget",
+        "budget": "1000",
+        "action": "expand"
+      },
+      "current": {
+        "visible": true,
+        "acceptance": "success",
+        "verifier": "pass",
+        "verdict": "Journey acceptance: success. Decision verifier: pass.",
+        "routing": "Synthetic expansion: allowed. Canary 25% → 50%. No actual routing change.",
+        "metrics": {
+          "attempted": "3",
+          "http200": "3",
+          "success": "3",
+          "interrupted": "0",
+          "unknown": "0"
+        }
+      },
+      "trace": [
+        [
+          "journey-1",
+          "200",
+          "420 ms",
+          "1000 ms",
+          "success"
+        ],
+        [
+          "journey-2",
+          "200",
+          "700 ms",
+          "1000 ms",
+          "success"
+        ],
+        [
+          "journey-3",
+          "200",
+          "1000 ms",
+          "1000 ms",
+          "success"
+        ]
+      ],
+      "totals": {
+        "runs": "3",
+        "attempted": "9",
+        "success": "5",
+        "interrupted": "4",
+        "unknown": "0"
+      },
+      "history": [
+        "Attempt 1: slow-200, 1000 ms, expand. Journey acceptance failure; verifier fail; expansion blocked.Attempted 3; within-budget successes 1; interruptions 2; unknown 0.",
+        "Attempt 2: slow-200, 1000 ms, hold. Journey acceptance failure; verifier pass; expansion held.Attempted 3; within-budget successes 1; interruptions 2; unknown 0.",
+        "Attempt 3: within-budget, 1000 ms, expand. Journey acceptance success; verifier pass; expansion allowed.Attempted 3; within-budget successes 3; interruptions 0; unknown 0."
+      ],
+      "error": {
+        "visible": false,
+        "text": ""
+      },
+      "activeId": ""
+    },
+    {
+      "label": "unknown-latency-is-not-success",
+      "banner": "Training rehearsal - synthetic data - not a live Azure result",
+      "controls": {
+        "scenario": "unmeasured-200",
+        "budget": "1000",
+        "action": "expand"
+      },
+      "current": {
+        "visible": true,
+        "acceptance": "unknown",
+        "verifier": "unknown",
+        "verdict": "Journey acceptance: unknown. Decision verifier: unknown.",
+        "routing": "Synthetic expansion: blocked. Canary 25% → 25%. No actual routing change.",
+        "metrics": {
+          "attempted": "3",
+          "http200": "3",
+          "success": "2",
+          "interrupted": "0",
+          "unknown": "1"
+        }
+      },
+      "trace": [
+        [
+          "journey-1",
+          "200",
+          "420 ms",
+          "1000 ms",
+          "success"
+        ],
+        [
+          "journey-2",
+          "200",
+          "unknown",
+          "1000 ms",
+          "unknown"
+        ],
+        [
+          "journey-3",
+          "200",
+          "700 ms",
+          "1000 ms",
+          "success"
+        ]
+      ],
+      "totals": {
+        "runs": "4",
+        "attempted": "12",
+        "success": "7",
+        "interrupted": "4",
+        "unknown": "1"
+      },
+      "history": [
+        "Attempt 1: slow-200, 1000 ms, expand. Journey acceptance failure; verifier fail; expansion blocked.Attempted 3; within-budget successes 1; interruptions 2; unknown 0.",
+        "Attempt 2: slow-200, 1000 ms, hold. Journey acceptance failure; verifier pass; expansion held.Attempted 3; within-budget successes 1; interruptions 2; unknown 0.",
+        "Attempt 3: within-budget, 1000 ms, expand. Journey acceptance success; verifier pass; expansion allowed.Attempted 3; within-budget successes 3; interruptions 0; unknown 0.",
+        "Attempt 4: unmeasured-200, 1000 ms, expand. Journey acceptance unknown; verifier unknown; expansion blocked.Attempted 3; within-budget successes 2; interruptions 0; unknown 1."
+      ],
+      "error": {
+        "visible": false,
+        "text": ""
+      },
+      "activeId": ""
+    },
+    {
+      "label": "bounded-history-retains-interruptions",
+      "banner": "Training rehearsal - synthetic data - not a live Azure result",
+      "controls": {
+        "scenario": "slow-200",
+        "budget": "1000",
+        "action": "expand"
+      },
+      "current": {
+        "visible": false,
+        "acceptance": null,
+        "verifier": null,
+        "verdict": "",
+        "routing": "",
+        "metrics": {
+          "attempted": "",
+          "http200": "",
+          "success": "",
+          "interrupted": "",
+          "unknown": ""
+        }
+      },
+      "trace": [],
+      "totals": {
+        "runs": "6",
+        "attempted": "18",
+        "success": "13",
+        "interrupted": "4",
+        "unknown": "1"
+      },
+      "history": [
+        "Attempt 1: slow-200, 1000 ms, expand. Journey acceptance failure; verifier fail; expansion blocked.Attempted 3; within-budget successes 1; interruptions 2; unknown 0.",
+        "Attempt 2: slow-200, 1000 ms, hold. Journey acceptance failure; verifier pass; expansion held.Attempted 3; within-budget successes 1; interruptions 2; unknown 0.",
+        "Attempt 3: within-budget, 1000 ms, expand. Journey acceptance success; verifier pass; expansion allowed.Attempted 3; within-budget successes 3; interruptions 0; unknown 0.",
+        "Attempt 4: unmeasured-200, 1000 ms, expand. Journey acceptance unknown; verifier unknown; expansion blocked.Attempted 3; within-budget successes 2; interruptions 0; unknown 1.",
+        "Attempt 5: within-budget, 1000 ms, expand. Journey acceptance success; verifier pass; expansion allowed.Attempted 3; within-budget successes 3; interruptions 0; unknown 0.",
+        "Attempt 6: within-budget, 1000 ms, expand. Journey acceptance success; verifier pass; expansion allowed.Attempted 3; within-budget successes 3; interruptions 0; unknown 0."
+      ],
+      "error": {
+        "visible": true,
+        "text": "ERR_HISTORY_LIMIT: Six decisions are retained. This session is full; reset cannot erase failures or refill its allowance."
+      },
+      "activeId": "error"
+    },
+    {
+      "label": "actual-csp-refusal",
+      "executed": false,
+      "violations": [
+        {
+          "directive": "script-src-elem",
+          "blockedURI": "inline"
+        }
+      ],
+      "actualHttpRequests": 0,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-MXXKQdiReiTvq0RY27OddVDgdQryeI93cgJ+4ioco7E='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+      ]
+    }
+  ]
+}
