@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'">
+  <title>S021 — Per-instance readiness rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="readiness.js" defer></script>
+  <script src="fixtures.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#exercise">Skip to interactive exercise</a>
+  <header class="hero">
+    <p class="eyebrow">A-S021 · Kano S · Per-instance readiness</p>
+    <p class="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>One green reply is<br>not a ready pool.</h1>
+    <p class="lead">Three required candidates. One admission decision. Find the missing evidence before allowing a handoff.</p>
+    <ul class="identifiers" aria-label="Lesson identifiers">
+      <li>Source <strong>S021</strong></li>
+      <li>Parent <strong>D-S021</strong></li>
+      <li>Packet <strong>SC-S021</strong></li>
+      <li>Gate <strong>SOURCE</strong></li>
+      <li>Mode <strong>synthetic</strong></li>
+    </ul>
+  </header>
+  <main>
+    <section class="intro card" aria-labelledby="objective">
+      <div>
+        <h2 id="objective">Objective</h2>
+        <p>Admit the declared required pool only when <em>every</em> required candidate has fresh, identity-bound ready evidence. A healthy aggregate endpoint reply is not evidence about the other instances.</p>
+        <p>Optional instances stay outside this required routing pool. Optional dependency failures remain visible without becoming blanket safety gates.</p>
+      </div>
+      <div>
+        <h2>Preconditions for this model</h2>
+        <ul class="compact">
+          <li>Required: <strong>candidate-a, candidate-b, candidate-c</strong>; optional: candidate-shadow.</li>
+          <li>Deployment: <strong>candidate-v2</strong>. Fixed clock: <strong>120000 ms</strong>.</li>
+          <li>Freshness: age <strong>≤ 30000 ms</strong>, including the boundary.</li>
+          <li>primary-store is required; recommendations is optional. Dependency observations belong to the same per-instance snapshot.</li>
+          <li>Isolated local fixtures only. No subscription, server, credentials, or installation needed.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="exercise" class="card" aria-labelledby="exercise-heading">
+      <div class="section-top">
+        <div>
+          <p class="eyebrow">Worked exercise</p>
+          <h2 id="exercise-heading">Change the evidence. Challenge the gate.</h2>
+        </div>
+        <button id="reset" class="quiet" type="button">Reset exercise</button>
+      </div>
+      <ol class="instructions">
+        <li>Choose a concrete preset and inspect each required candidate.</li>
+        <li>Change one instance or the aggregate sample. Predict ALLOW or BLOCK.</li>
+        <li>Inspect the verification verdict and trace; keep actual user impact separate.</li>
+      </ol>
+      <div class="presets" role="group" aria-label="Concrete scenario presets">
+        <button type="button" data-scenario="all-ready">All required fresh-ready</button>
+        <button type="button" data-scenario="one-unready">Make one candidate unready</button>
+        <button type="button" data-scenario="stale">Stale required evidence</button>
+        <button type="button" data-scenario="sample-only">Healthy sample only</button>
+      </div>
+      <p class="hint">Presets supply their expected verdict. Custom changes preserve your prediction so an incorrect prediction can fail without bypassing admission.</p>
+      <form id="controls">
+        <fieldset>
+          <legend>1 · Targeted instance evidence</legend>
+          <div class="control-grid">
+            <div>
+              <label for="instance">Candidate instance</label>
+              <select id="instance">
+                <option value="candidate-a">candidate-a — required</option>
+                <option value="candidate-b" selected>candidate-b — required</option>
+                <option value="candidate-c">candidate-c — required</option>
+                <option value="candidate-shadow">candidate-shadow — optional, excluded</option>
+              </select>
+            </div>
+            <div>
+              <label for="condition">Instance evidence condition</label>
+              <select id="condition" aria-describedby="condition-help">
+                <option value="ready">Ready — fresh</option>
+                <option value="unready" selected>Unready — fresh</option>
+                <option value="failed">Failed — fresh</option>
+                <option value="stale">Stale ready evidence — age 30001 ms</option>
+                <option value="missing">Missing evidence</option>
+                <option value="unknown">Unknown readiness — fresh observation</option>
+              </select>
+            </div>
+            <button id="apply-condition" type="button">Apply instance condition</button>
+          </div>
+          <p id="condition-help" class="hint">Fresh observations are 5000 ms old. Stale, missing, or unknown is not a current ready result.</p>
+        </fieldset>
+        <fieldset>
+          <legend>2 · Distinguish diagnostics from required gates</legend>
+          <div class="control-grid two">
+            <div>
+              <label for="endpoint-sample">Illustrative aggregate endpoint sample</label>
+              <select id="endpoint-sample" aria-describedby="sample-help">
+                <option value="healthy">Healthy reply from candidate-a</option>
+                <option value="failed">Failed reply</option>
+                <option value="stale">Stale healthy reply</option>
+                <option value="missing">No sample</option>
+                <option value="unknown">Unknown sample</option>
+              </select>
+            </div>
+            <div>
+              <label for="optional-dependency">Optional recommendations dependency</label>
+              <select id="optional-dependency">
+                <option value="failed">Failed — optional</option>
+                <option value="ready">Ready — optional</option>
+                <option value="missing">Missing — optional</option>
+                <option value="unknown">Unknown — optional</option>
+              </select>
+            </div>
+          </div>
+          <p id="sample-help" class="hint">This sample is not a targeted readiness check or a route-validation gate. It cannot prove the whole pool ready, and is not an extra blanket veto when targeted required evidence is complete. Actual routing is unverified.</p>
+        </fieldset>
+        <fieldset>
+          <legend>3 · Check an explicit assertion</legend>
+          <div class="prediction">
+            <div>
+              <label for="expected">Your expected admission</label>
+              <select id="expected">
+                <option value="BLOCK">BLOCK</option>
+                <option value="ALLOW">ALLOW</option>
+              </select>
+            </div>
+            <button class="primary" type="submit">Check prediction</button>
+          </div>
+        </fieldset>
+      </form>
+      <noscript><p class="training-banner">JavaScript is required for this local exercise. No verification has run.</p></noscript>
+    </section>
+
+    <section class="card results" aria-labelledby="result-heading">
+      <p class="eyebrow">Admission and verification — not a migration result</p>
+      <h2 id="result-heading">What does the evidence permit?</h2>
+      <p id="scenario-name">Local fixture awaiting evaluation</p>
+      <div id="live-result" role="status" aria-live="polite" aria-atomic="true">
+        <p id="admission" class="admission" data-decision="unknown">UNKNOWN — not evaluated</p>
+        <p id="verifier"><strong>NOT RUN</strong> — synthetic assertion has not been evaluated.</p>
+        <p id="ready-count">Required readiness unknown.</p>
+      </div>
+      <p id="sample-result"></p>
+      <ul id="blocking-reasons" aria-label="Reasons admission is blocked"></ul>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable per-instance evidence">
+        <table>
+          <caption>Per-instance evidence: observed state is not necessarily current readiness</caption>
+          <thead>
+            <tr><th scope="col">Candidate / role</th><th scope="col">Evidence / age</th><th scope="col">Current readiness</th><th scope="col">Admission effect</th></tr>
+          </thead>
+          <tbody id="pool-results"></tbody>
+        </table>
+      </div>
+      <details open>
+        <summary>Inspect the ordered synthetic trace</summary>
+        <p class="hint">Expected gate trace: scope → informational sample → each required candidate and its required checks → optional exclusions → admission.allow or admission.block → impact.unknown → cleanup.local.</p>
+        <ol id="trace" class="trace" tabindex="0" aria-label="Ordered synthetic trace"></ol>
+      </details>
+    </section>
+
+    <div class="outcome-grid">
+      <section class="card" aria-labelledby="impact-heading">
+        <p class="eyebrow">Separate outcome 02</p>
+        <h2 id="impact-heading">Actual user impact</h2>
+        <p id="impact-summary">Unknown — no actual users or journeys are measured.</p>
+        <p id="model-effect"></p>
+        <ul id="impact-categories" class="impact-list"></ul>
+      </section>
+      <section class="card" aria-labelledby="cleanup-heading">
+        <p class="eyebrow">Separate outcome 03</p>
+        <h2 id="cleanup-heading">Cleanup and recovery</h2>
+        <p id="cleanup-result">Local inputs only; no resources created or deleted.</p>
+        <p><strong>Reset exercise</strong> restores the deterministic one-unready fixture. Closing this page discards in-memory edits; there is no persistence, lease, or remote cleanup operation.</p>
+        <h3>IaC: N/A</h3>
+        <p>SOURCE read-only learning needs no Azure resource. C001 runtime/auth/hosting approval and separate scaffold/deploy approvals are not present or inferred.</p>
+      </section>
+    </div>
+
+    <section class="card limits" aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits: eligible in a model is not certified safe in production</h2>
+      <ul>
+        <li>The clock, deployment identity, probes, dependency checks, and trace are explicit synthetic fixtures. No endpoint is contacted.</li>
+        <li>Only the declared required pool is assessed. Optional instances are excluded from admission, not silently certified ready. Changing the real routing contract would require new evidence.</li>
+        <li>One snapshot is not a stability window, capacity proof, route test, business-journey test, or protection against a readiness race at real admission time.</li>
+        <li>No live migration, uninterrupted transition, availability percentage, or Microsoft reliability certification is demonstrated. Unknown remains unknown.</li>
+        <li>A-S021 does not implement B-S021 native proof and does not complete D-S021 or source S021. Their original real gates remain in force.</li>
+      </ul>
+      <p>Local specifications: <a href="readiness.feature">BDD scenarios</a> · <a href="tests/readiness.test.cjs">Node tests</a> · <a href="evidence.json">Recorded evidence</a> · <a href="../../README.md#c-readiness-and-warm-up">S021 source</a>.</p>
+    </section>
+  </main>
+  <footer>
+    <h2>Microsoft disclaimer</h2>
+    <p>Provided “AS IS” for education, without warranties. Microsoft and Azure names do not imply endorsement, sponsorship, certification, or support. The project’s 99.999% target is not a Microsoft SLA. This disclaimer grants no license rights.</p>
+    <p><a href="../../README.md#microsoft-open-source-disclaimer">Repository Microsoft Open Source Disclaimer</a> · <a href="https://learn.microsoft.com/azure/app-service/deploy-staging-slots" target="_blank" rel="noopener noreferrer">Microsoft Learn: deployment-slot reference (external documentation)</a></p>
+    <p class="hint">No automatic network calls, credentials, management APIs, resource changes, or package dependencies.</p>
+  </footer>
+</body>
+</html>
