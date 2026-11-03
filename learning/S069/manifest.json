@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S069",
+  "sourceId": "S069",
+  "parentId": "D-S069",
+  "siblingId": "B-S069",
+  "kano": "S",
+  "kanoUnit": "A-S069",
+  "packet": "SC-S069",
+  "owner": "worker-A-S069",
+  "entryGate": "SOURCE",
+  "title": "Writer handoff: fence the previous epoch before accepting replacement writes",
+  "entryPoint": "learning/S069/index.html",
+  "feature": "learning/S069/writer-epochs.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Transfer writer epochs; stale writers must not regain authority.",
+  "sourceAcceptance": "Only the authorized epoch writes; stale writers are rejected and acknowledged data is retained.",
+  "preconditions": [
+    "Local browser HTML, CSS and JavaScript only; no server or account.",
+    "Two fixed effects were acknowledged at writer-old epoch 41 before the handoff.",
+    "The replacement presents writer-new epoch 42; authorization checks both writer identity and epoch.",
+    "A confirmed receipt is an assumed atomic authoritative revocation/grant fixture, not a fencing protocol implementation.",
+    "The unsafe fixture intentionally leaves both grants active and accepts stale-grant regression.",
+    "An unavailable receipt supplies no authoritative ownership or stale-write observation."
+  ],
+  "actions": [
+    "Select one authority receipt fixture and one acknowledged-data readback fixture.",
+    "Begin with two already acknowledged effects, then transfer authority.",
+    "Probe the replacement, delayed old writer and replacement identity with a stale epoch.",
+    "Replay the previous writer grant and attempt another old-epoch write.",
+    "Verify authorization, fencing order, no regained authority and retained original effects.",
+    "Check a learning prediction independently; inspect full retained proof or explicitly reset."
+  ],
+  "syntheticInput": "learning/S069/model.js",
+  "assertions": [
+    "Confirmed fencing precedes the replacement write; only writer-new@42 accepts a post-transfer effect.",
+    "Delayed writer-old@41, wrong-epoch writer-new@41 and replayed writer-old@41 are rejected.",
+    "Replaying an old grant cannot regress confirmed authority or its epoch high-water mark.",
+    "Both original acknowledged IDs, payloads and exact-once effect counts remain intact.",
+    "Known safety or retention violations yield FAIL; unavailable authority evidence without a known failure yields UNKNOWN.",
+    "Correct learning predictions never turn a failed or unknown handoff into PASS.",
+    "Strict inputs, ordered lifecycle, immutable detached snapshots and six-attempt retained history remain guarded."
+  ],
+  "bounds": {
+    "originalAcknowledgements": 2,
+    "writeObservationsPerAttempt": 6,
+    "completedAttempts": 6,
+    "configurations": 6,
+    "authority": ["confirmed", "bypassed", "unavailable"],
+    "retention": ["complete", "missing-effect"],
+    "oldEpoch": 41,
+    "replacementEpoch": 42,
+    "arbitraryEndpointsWritersEpochsOrPayloads": false,
+    "clockRandomnessPersistenceOrConcurrency": false
+  },
+  "iac": {
+    "status": "N/A",
+    "decisionStage": "After genuine behavioral RED and before implementation",
+    "decision": "learning/S069/evidence/iac-decision.json",
+    "redReference": "learning/S069/evidence/red/run.json",
+    "reason": "Resource-free local synthetic lesson; no cloud/IaC/scaffold/identity/credentials/deploy/spend."
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "purpose": "Existing Node22 tooling only; not production Node24 validation.",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "dependencyChanges": false
+  },
+  "limits": [
+    "Every write, authority receipt, data fault and effect is deterministic synthetic data.",
+    "No actual database epochs, leases, durable fencing, concurrent writers or acknowledged-data durability certification.",
+    "No Azure management calls, identity, credentials, IaC, deployment, expenditure, new packages or framework.",
+    "Known-effect ledger counts never establish total effects when outcomes are unknown.",
+    "Expected stale-write rejection is a negative safety probe, not uninterrupted user-migration proof.",
+    "History exists only in browser memory until explicit reset or reload, with a hard six-attempt cap.",
+    "No production Node24, native host, source-parent completion, five-nines or platform guarantee.",
+    "The abandoned browser lifecycle prototype is unqualified; no unattended-runner certification.",
+    "B-S069 and original D-S069 native acceptance remain separate and unfulfilled.",
+    "One frozen S unit only; tests, plumbing, evidence and refinement earn no additional units."
+  ]
+}

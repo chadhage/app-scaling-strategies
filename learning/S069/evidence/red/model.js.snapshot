@@ -1,0 +1,27 @@
+(function (scope) {
+  'use strict';
+  const MAX_HISTORY = 6;
+  const FIXTURE = Object.freeze({
+    oldWriter: 'writer-old', oldEpoch: 41, newWriter: 'writer-new', newEpoch: 42,
+  });
+  const OPTIONS = Object.freeze({
+    authority: Object.freeze(['confirmed', 'bypassed', 'unavailable']),
+    retention: Object.freeze(['complete', 'missing-effect']),
+  });
+  function createLesson() {
+    const state = {
+      attempt: 1, phase: 'idle', config: null, authority: null,
+      originalAcknowledged: [], writes: [], ledger: [], trace: [],
+      replayResult: null, assertions: [], verdict: 'NOT_EVALUATED',
+      metrics: null, prediction: null, history: [],
+    };
+    const snapshot = () => JSON.parse(JSON.stringify(state));
+    return {
+      snapshot, begin: snapshot, transfer: snapshot, probe: snapshot, replay: snapshot,
+      verify: snapshot, predict: snapshot, next: snapshot, reset: snapshot,
+    };
+  }
+  const api = Object.freeze({ MAX_HISTORY, FIXTURE, OPTIONS, createLesson });
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else scope.S069 = api;
+}(typeof globalThis !== 'undefined' ? globalThis : this));

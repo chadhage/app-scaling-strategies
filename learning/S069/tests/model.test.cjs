@@ -1,0 +1,261 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createLesson, FIXTURE, OPTIONS, MAX_HISTORY } = require('../model.js');
+const safe = () => ({ authority: 'confirmed', retention: 'complete' });
+function run(config = safe(), lesson = createLesson()) {
+  lesson.begin(config);
+  lesson.transfer();
+  lesson.probe();
+  lesson.replay();
+  return { lesson, result: lesson.verify() };
+}
+const original = [
+  { id: 'SYN-691', payload: 10, writer: 'writer-old', epoch: 41 },
+  { id: 'SYN-692', payload: 20, writer: 'writer-old', epoch: 41 },
+];
+function unchanged(lesson, action, pattern) {
+  const before = lesson.snapshot();
+  assert.throws(action, pattern);
+  assert.deepEqual(lesson.snapshot(), before, 'Rejected input/action must be mutation-free.');
+}
+
+test('loadable S069 module exposes the fixed bounded input and complete action API', () => {
+  assert.deepEqual(FIXTURE, { oldWriter: 'writer-old', oldEpoch: 41, newWriter: 'writer-new', newEpoch: 42 });
+  assert.deepEqual(OPTIONS, {
+    authority: ['confirmed', 'bypassed', 'unavailable'], retention: ['complete', 'missing-effect'],
+  });
+  assert.equal(MAX_HISTORY, 6);
+  const lesson = createLesson();
+  for (const name of ['snapshot', 'begin', 'transfer', 'probe', 'replay', 'verify', 'predict', 'next', 'reset']) {
+    assert.equal(typeof lesson[name], 'function');
+  }
+  assert.equal(lesson.snapshot().phase, 'idle');
+});
+
+test('begin captures the two already acknowledged effects and old epoch authority', () => {
+  const lesson = createLesson();
+  const state = lesson.begin(safe());
+  assert.equal(state.phase, 'begun');
+  assert.deepEqual(state.config, safe());
+  assert.deepEqual(state.originalAcknowledged, original);
+  assert.deepEqual(state.ledger, original);
+  assert.deepEqual(state.authority, {
+    owner: 'writer-old', epoch: 41, highWaterEpoch: 41,
+    receipt: 'initial', grants: [{ writer: 'writer-old', epoch: 41 }],
+  });
+  assert.deepEqual(state.writes.map((row) => row.status), ['accepted', 'accepted']);
+});
+
+test('confirmed transfer fences old authority before any replacement write', () => {
+  const lesson = createLesson();
+  lesson.begin(safe());
+  const transfer = lesson.transfer();
+  assert.equal(transfer.phase, 'transferred');
+  assert.deepEqual(transfer.authority, {
+    owner: 'writer-new', epoch: 42, highWaterEpoch: 42,
+    receipt: 'confirmed', grants: [{ writer: 'writer-new', epoch: 42 }],
+  });
+  assert.deepEqual(transfer.ledger, original);
+  assert.equal(transfer.writes.length, 2, 'Transfer is not itself a write.');
+  assert.ok(transfer.trace.some((row) => row.event === 'fence-confirmed'));
+  const probed = lesson.probe();
+  const fence = probed.trace.findIndex((row) => row.event === 'fence-confirmed');
+  const accepted = probed.trace.findIndex((row) => row.event === 'replacement-write');
+  assert.ok(fence >= 0 && accepted > fence);
+});
+
+test('competing probes require both exact writer identity and epoch', () => {
+  const lesson = createLesson();
+  lesson.begin(safe());
+  lesson.transfer();
+  const probed = lesson.probe();
+  assert.equal(probed.phase, 'probed');
+  assert.deepEqual(probed.writes.slice(2).map(({ id, writer, epoch, status }) => ({ id, writer, epoch, status })), [
+    { id: 'SYN-693', writer: 'writer-new', epoch: 42, status: 'accepted' },
+    { id: 'SYN-694', writer: 'writer-old', epoch: 41, status: 'rejected' },
+    { id: 'SYN-695', writer: 'writer-new', epoch: 41, status: 'rejected' },
+  ]);
+  assert.deepEqual(probed.ledger.map((row) => row.id), ['SYN-691', 'SYN-692', 'SYN-693']);
+});
+
+test('replaying the previous grant cannot regress or regain confirmed epoch authority', () => {
+  const lesson = createLesson();
+  lesson.begin(safe()); lesson.transfer(); lesson.probe();
+  const before = lesson.snapshot().authority;
+  const replayed = lesson.replay();
+  assert.equal(replayed.phase, 'replayed');
+  assert.equal(replayed.replayResult, 'rejected');
+  assert.deepEqual(replayed.authority, before);
+  assert.deepEqual(replayed.writes.at(-1), {
+    id: 'SYN-696', writer: 'writer-old', epoch: 41, payload: 60,
+    kind: 'stale-replay', status: 'rejected', reason: 'Writer/epoch pair is not authorized.',
+  });
+  assert.equal(replayed.authority.highWaterEpoch, 42);
+});
+
+test('safe verification measures authorized effects, rejected probes and unchanged acknowledged data', () => {
+  const { result } = run();
+  assert.equal(result.phase, 'complete');
+  assert.equal(result.verdict, 'PASS');
+  assert.equal(result.assertions.length, 4);
+  assert.ok(result.assertions.every((row) => row.result === 'PASS'));
+  assert.deepEqual(result.metrics, {
+    accepted: 3, rejected: 3, held: 0, unknown: 0, attempted: 6,
+    retained: 2, acknowledged: 2, missingIds: [],
+    knownEffects: 3, replacement: 'accepted',
+  });
+  assert.deepEqual(result.ledger.filter((row) => row.id !== 'SYN-693'), original);
+  assert.equal(result.history.length, 1);
+  assert.equal(result.history[0].verdict, 'PASS');
+  assert.equal(result.history[0].history, undefined);
+});
+
+test('bypassing the fence accepts competing writers and lets a stale grant regain authority: FAIL', () => {
+  const { result } = run({ authority: 'bypassed', retention: 'complete' });
+  assert.equal(result.verdict, 'FAIL');
+  assert.equal(result.replayResult, 'regained');
+  assert.equal(result.authority.owner, 'writer-old');
+  assert.equal(result.authority.epoch, 41);
+  assert.equal(result.authority.highWaterEpoch, 42);
+  assert.equal(result.authority.grants.length, 2);
+  assert.equal(result.metrics.accepted, 5);
+  assert.equal(result.metrics.rejected, 1, 'Even the broken fixture does not authorize a mismatched writer/epoch pair.');
+  assert.equal(result.metrics.retained, 2);
+  assert.deepEqual(result.assertions.map((row) => row.result), ['FAIL', 'FAIL', 'FAIL', 'PASS']);
+});
+
+test('unavailable authority receipt holds replacement admission and never invents stale rejection: UNKNOWN', () => {
+  const { result } = run({ authority: 'unavailable', retention: 'complete' });
+  assert.equal(result.verdict, 'UNKNOWN');
+  assert.equal(result.authority.receipt, 'unavailable');
+  assert.equal(result.authority.owner, null);
+  assert.equal(result.authority.epoch, null);
+  assert.equal(result.authority.grants, null);
+  assert.equal(result.replayResult, 'unknown');
+  assert.deepEqual(result.metrics, {
+    accepted: 2, rejected: 0, held: 1, unknown: 3, attempted: 6,
+    retained: 2, acknowledged: 2, missingIds: [],
+    knownEffects: 2, replacement: 'held',
+  });
+  assert.deepEqual(result.assertions.map((row) => row.result), ['UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'PASS']);
+  assert.match(result.writes.find((row) => row.id === 'SYN-694').reason, /not evidence of rejection or zero effects/);
+});
+
+test('all six configurations preserve failure dominance and identify the lost acknowledged effect', () => {
+  for (const authority of OPTIONS.authority) {
+    for (const retention of OPTIONS.retention) {
+      const { result } = run({ authority, retention });
+      assert.equal(result.verdict, retention === 'missing-effect' || authority === 'bypassed'
+        ? 'FAIL' : authority === 'unavailable' ? 'UNKNOWN' : 'PASS', `${authority}/${retention}`);
+      assert.equal(result.metrics.attempted, 6);
+      assert.equal(result.metrics.accepted + result.metrics.rejected + result.metrics.held + result.metrics.unknown, 6);
+      assert.equal(result.metrics.retained, retention === 'complete' ? 2 : 1);
+      assert.deepEqual(result.metrics.missingIds, retention === 'complete' ? [] : ['SYN-692']);
+      assert.deepEqual(result.originalAcknowledged, original);
+      assert.equal(result.history[0].config.retention, retention);
+    }
+  }
+});
+
+test('strict configuration refuses unknown, inherited, extra, symbol, accessor and coercible inputs without invoking getters', () => {
+  const lesson = createLesson();
+  let getterCalls = 0;
+  const accessor = { retention: 'complete' };
+  Object.defineProperty(accessor, 'authority', { enumerable: true, get() { getterCalls++; return 'confirmed'; } });
+  const nonEnumerable = { retention: 'complete' };
+  Object.defineProperty(nonEnumerable, 'authority', { value: 'confirmed', enumerable: false });
+  const invalid = [
+    undefined, null, [], 'confirmed', 1, true, {},
+    { authority: 'Confirmed', retention: 'complete' },
+    { authority: 'confirmed', retention: 'COMPLETE' },
+    { ...safe(), extra: true }, { ...safe(), [Symbol('hidden')]: true },
+    Object.create(safe()), accessor, nonEnumerable,
+    { authority: new String('confirmed'), retention: 'complete' },
+    { authority: { toString() { throw new Error('No coercion'); } }, retention: 'complete' },
+  ];
+  for (const value of invalid) unchanged(lesson, () => lesson.begin(value), /configuration|enum|properties|plain|primitive/i);
+  assert.equal(getterCalls, 0);
+  const valid = Object.assign(Object.create(null), safe());
+  assert.equal(lesson.begin(valid).phase, 'begun');
+  valid.authority = 'bypassed';
+  assert.equal(lesson.snapshot().config.authority, 'confirmed', 'Configuration must be detached.');
+});
+
+test('phase guards and exact argument counts reject skips/repeats with no mutation', () => {
+  const lesson = createLesson();
+  for (const name of ['transfer', 'probe', 'replay', 'verify', 'next']) {
+    unchanged(lesson, () => lesson[name](), /phase/i);
+  }
+  unchanged(lesson, () => lesson.predict('PASS'), /phase/i);
+  unchanged(lesson, () => lesson.begin(safe(), 'extra'), /argument/i);
+  for (const name of ['snapshot', 'transfer', 'probe', 'replay', 'verify', 'next', 'reset']) {
+    unchanged(lesson, () => lesson[name]('extra'), /argument/i);
+  }
+  lesson.begin(safe());
+  unchanged(lesson, () => lesson.begin(safe()), /phase/i);
+  unchanged(lesson, () => lesson.probe(), /phase/i);
+  lesson.transfer();
+  unchanged(lesson, () => lesson.transfer(), /phase/i);
+  lesson.probe();
+  unchanged(lesson, () => lesson.probe(), /phase/i);
+  lesson.replay();
+  unchanged(lesson, () => lesson.replay(), /phase/i);
+  lesson.verify();
+  unchanged(lesson, () => lesson.verify(), /phase/i);
+  unchanged(lesson, () => lesson.predict('pass'), /prediction/i);
+  unchanged(lesson, () => lesson.predict('PASS', true), /argument/i);
+});
+
+test('learning predictions do not alter the safety result and complete immutable history remains inspectable', () => {
+  const { lesson, result: failed } = run({ authority: 'bypassed', retention: 'complete' });
+  const predicted = lesson.predict('FAIL');
+  assert.equal(predicted.verdict, 'FAIL');
+  assert.deepEqual(predicted.prediction, { expected: 'FAIL', actual: 'FAIL', correct: true });
+  assert.deepEqual(predicted.history[0].prediction, predicted.prediction);
+  unchanged(lesson, () => lesson.predict('FAIL'), /already|once/i);
+  const retained = predicted.history[0];
+  const next = lesson.next();
+  assert.equal(next.phase, 'idle');
+  assert.equal(next.attempt, 2);
+  assert.equal(next.verdict, 'NOT_EVALUATED');
+  assert.deepEqual(next.history[0], retained);
+  assert.equal(failed.history[0].prediction, null, 'Earlier returned snapshots stay detached.');
+  run(safe(), lesson);
+  const wrong = lesson.predict('FAIL');
+  assert.equal(wrong.verdict, 'PASS');
+  assert.equal(wrong.prediction.correct, false);
+  assert.equal(wrong.history[0].verdict, 'FAIL');
+  assert.equal(wrong.history[1].verdict, 'PASS');
+  assert.equal(Object.isFrozen(wrong), true);
+  assert.equal(Object.isFrozen(wrong.history[0].writes[0]), true);
+  assert.throws(() => { wrong.history[0].writes[0].status = 'accepted-again'; }, TypeError);
+  assert.throws(() => { FIXTURE.oldEpoch = 42; }, TypeError);
+  assert.throws(() => OPTIONS.authority.push('arbitrary'), TypeError);
+});
+
+test('six attempts are a hard retained-proof cap and reset is complete from every phase', () => {
+  const lesson = createLesson();
+  for (let attempt = 1; attempt <= MAX_HISTORY; attempt++) {
+    const { result } = run(safe(), lesson);
+    assert.equal(result.attempt, attempt);
+    assert.equal(result.history.length, attempt);
+    if (attempt < MAX_HISTORY) lesson.next();
+  }
+  unchanged(lesson, () => lesson.next(), /capacity|six|limit/i);
+  assert.equal(lesson.snapshot().history[0].attempt, 1);
+  assert.equal(lesson.reset().history.length, 0);
+  const initial = createLesson().snapshot();
+  for (const phase of ['idle', 'begun', 'transferred', 'probed', 'replayed', 'complete']) {
+    const current = createLesson();
+    if (phase !== 'idle') current.begin({ authority: 'bypassed', retention: 'missing-effect' });
+    if (['transferred', 'probed', 'replayed', 'complete'].includes(phase)) current.transfer();
+    if (['probed', 'replayed', 'complete'].includes(phase)) current.probe();
+    if (['replayed', 'complete'].includes(phase)) current.replay();
+    if (phase === 'complete') { current.verify(); current.predict('FAIL'); }
+    assert.deepEqual(current.reset(), initial, phase);
+  }
+  const untouched = createLesson();
+  run(safe());
+  assert.deepEqual(untouched.snapshot(), initial);
+});

@@ -1,0 +1,1013 @@
+{
+  "cardId": "A-S069",
+  "workerId": "worker-A-S069",
+  "parentId": "D-S069",
+  "packet": "SC-S069",
+  "mode": "synthetic",
+  "outcome": "PASS",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "entry": "learning\\S069\\index.html",
+  "startedAtUtc": "2026-11-03T20:05:07.641Z",
+  "captureExplicitlyEnabled": true,
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "publication": "53c0c0d"
+  },
+  "testedSourceHashes": {
+    ".gitattributes": "5cdc6af7eddc9b6b936d828b66216780d114f134995c5a05c3ea8d8829e6162f",
+    "README.md": "e79ba9a84e43eb3461edf5dc81f899ddf9d5acdfaba758516334f4c12db337e9",
+    "index.html": "1857e503c01debdcde9e7e9092363670e0e9b4b58226c99a8b2b2c66045cc7c9",
+    "styles.css": "8670be091a637c8233b4d1a22caf3c51fe1c689b4f9146d759555417ad938fbc",
+    "model.js": "85bfb83c06da9c41b527c083870509f38e14ebb32f4eefffdf49fc047bc009a5",
+    "app.js": "8a0209d4cfc71c33997e9f4d98bde3604ddd9b3b26878871dd5108078e32356c",
+    "manifest.json": "598023896423843802f72fb4729c8b783e525912a6993f5ecd239706863731e2",
+    "writer-epochs.feature": "a04aa1bd7d5c4de82bc9ea7d4f789bfbac33748be344d18dbc1ccaccbaf92454",
+    "tests\\model.test.cjs": "e3108f0c6ee86977556c7904dd24fc92e4cd84eaaea8b7d2d9d942f69885708f",
+    "tests\\surface.test.cjs": "ca60730b731513aa0f0f83ce7d30c7ae317d9a1b8fca41401b7b24296d8dd89a",
+    "tests\\integrity.test.cjs": "a465eff48ffc7a9c999066ccda73a263224b7700728d20bfda9e00c4ce1d467d",
+    "tests\\browser.test.cjs": "724122209feeb9a760b4a8704ee4474eec283168b22f2e3507e2cf5efce8ea5a",
+    "tests\\capture.cjs": "4322e33b77179884ec4c55e6acfd44391749151a96940bbac52a178faf2c8201"
+  },
+  "observations": [
+    {
+      "name": "confirmed fencing PASS; stale replay rejected; wrong learning answer does not change safety",
+      "phase": "Phase: complete",
+      "gate": "Safety gate: PASS",
+      "authority": "Authority: writer-new@42 · high-water epoch: 42 · receipt: confirmed",
+      "grants": "Active grants: writer-new@42",
+      "replay": "Stale grant replay: rejected",
+      "writes": "Write observations: 3 accepted / 3 rejected / 0 held / 0 unknown · attempted: 6",
+      "retained": "Original acknowledgements: 2 / 2 retained unchanged · missing: none",
+      "effects": "Known effect ledger: 3 · unknown outcomes do not establish total effects",
+      "replacement": "Replacement write: accepted",
+      "impact": "User-transition outcome: not measured. Deliberate stale-probe rejections are not uninterrupted migration.",
+      "cleanup": "Cleanup: local memory only; no external resources created.",
+      "writeRows": [
+        [
+          "SYN-691",
+          "writer-old",
+          "41",
+          "10",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-692",
+          "writer-old",
+          "41",
+          "20",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-693",
+          "writer-new",
+          "42",
+          "30",
+          "accepted",
+          "Presented writer/epoch pair has an active synthetic grant."
+        ],
+        [
+          "SYN-694",
+          "writer-old",
+          "41",
+          "40",
+          "rejected",
+          "Writer/epoch pair is not authorized."
+        ],
+        [
+          "SYN-695",
+          "writer-new",
+          "41",
+          "50",
+          "rejected",
+          "Writer/epoch pair is not authorized."
+        ],
+        [
+          "SYN-696",
+          "writer-old",
+          "41",
+          "60",
+          "rejected",
+          "Writer/epoch pair is not authorized."
+        ]
+      ],
+      "effectRows": [
+        [
+          "SYN-691",
+          "10",
+          "writer-old",
+          "41"
+        ],
+        [
+          "SYN-692",
+          "20",
+          "writer-old",
+          "41"
+        ],
+        [
+          "SYN-693",
+          "30",
+          "writer-new",
+          "42"
+        ]
+      ],
+      "assertions": "PASS — Old authority fenced before replacement admission\nPASS — Only the current exact writer/epoch pair accepts new effects\nPASS — Delayed writes and stale-grant replay cannot regain old authority\nPASS — Both originally acknowledged effects retained exactly once and unchanged",
+      "trace": "1. begin-acknowledged: Two fixed effects were acknowledged at writer-old@41 before handoff.\n2. fence-confirmed: Confirmed synthetic receipt revokes writer-old@41 before granting writer-new@42.\n3. retention-readback: Synthetic readback retains both original IDs and their exact payloads.\n4. replacement-write: SYN-693: writer-new@42 — accepted. Presented writer/epoch pair has an active synthetic grant.\n5. competing-write: SYN-694: writer-old@41 — rejected. Writer/epoch pair is not authorized.\n6. competing-write: SYN-695: writer-new@41 — rejected. Writer/epoch pair is not authorized.\n7. stale-grant-rejected: Replayed writer-old@41 grant cannot replace the confirmed writer-new@42 authority.\n8. competing-write: SYN-696: writer-old@41 — rejected. Writer/epoch pair is not authorized.\n9. verification: PASS: 2/2 original acknowledgements retained. Unknown observations are not successful writes or proven rejections.",
+      "history": [
+        [
+          "1",
+          "confirmed / complete",
+          "PASS",
+          "2 / 2",
+          "incorrect",
+          "Inspect attempt 1"
+        ]
+      ],
+      "prediction": "Learning prediction: incorrect · predicted FAIL · measured PASS. Safety result unchanged.",
+      "alert": "",
+      "activeElement": "inspect-attempt-1"
+    },
+    {
+      "name": "unsafe competing writers FAIL; stale grant regained; correct learning answer is not safety",
+      "phase": "Phase: complete",
+      "gate": "Safety gate: FAIL",
+      "authority": "Authority: writer-old@41 · high-water epoch: 42 · receipt: bypassed",
+      "grants": "Active grants: writer-old@41, writer-new@42",
+      "replay": "Stale grant replay: regained",
+      "writes": "Write observations: 5 accepted / 1 rejected / 0 held / 0 unknown · attempted: 6",
+      "retained": "Original acknowledgements: 2 / 2 retained unchanged · missing: none",
+      "effects": "Known effect ledger: 5 · unknown outcomes do not establish total effects",
+      "replacement": "Replacement write: accepted",
+      "impact": "User-transition outcome: not measured. Deliberate stale-probe rejections are not uninterrupted migration.",
+      "cleanup": "Cleanup: local memory only; no external resources created.",
+      "writeRows": [
+        [
+          "SYN-691",
+          "writer-old",
+          "41",
+          "10",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-692",
+          "writer-old",
+          "41",
+          "20",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-693",
+          "writer-new",
+          "42",
+          "30",
+          "accepted",
+          "Presented writer/epoch pair has an active synthetic grant."
+        ],
+        [
+          "SYN-694",
+          "writer-old",
+          "41",
+          "40",
+          "accepted",
+          "Presented writer/epoch pair has an active synthetic grant."
+        ],
+        [
+          "SYN-695",
+          "writer-new",
+          "41",
+          "50",
+          "rejected",
+          "Writer/epoch pair is not authorized."
+        ],
+        [
+          "SYN-696",
+          "writer-old",
+          "41",
+          "60",
+          "accepted",
+          "Presented writer/epoch pair has an active synthetic grant."
+        ]
+      ],
+      "effectRows": [
+        [
+          "SYN-691",
+          "10",
+          "writer-old",
+          "41"
+        ],
+        [
+          "SYN-692",
+          "20",
+          "writer-old",
+          "41"
+        ],
+        [
+          "SYN-693",
+          "30",
+          "writer-new",
+          "42"
+        ],
+        [
+          "SYN-694",
+          "40",
+          "writer-old",
+          "41"
+        ],
+        [
+          "SYN-696",
+          "60",
+          "writer-old",
+          "41"
+        ]
+      ],
+      "assertions": "FAIL — Old authority fenced before replacement admission\nFAIL — Only the current exact writer/epoch pair accepts new effects\nFAIL — Delayed writes and stale-grant replay cannot regain old authority\nPASS — Both originally acknowledged effects retained exactly once and unchanged",
+      "trace": "1. begin-acknowledged: Two fixed effects were acknowledged at writer-old@41 before handoff.\n2. fence-bypassed: Deliberately broken fixture grants the replacement without revoking the old writer.\n3. retention-readback: Synthetic readback retains both original IDs and their exact payloads.\n4. replacement-write: SYN-693: writer-new@42 — accepted. Presented writer/epoch pair has an active synthetic grant.\n5. competing-write: SYN-694: writer-old@41 — accepted. Presented writer/epoch pair has an active synthetic grant.\n6. competing-write: SYN-695: writer-new@41 — rejected. Writer/epoch pair is not authorized.\n7. stale-grant-regained: Broken fixture lets writer-old@41 regain authority; observed epoch regresses below high-water 42.\n8. competing-write: SYN-696: writer-old@41 — accepted. Presented writer/epoch pair has an active synthetic grant.\n9. verification: FAIL: 2/2 original acknowledgements retained. Unknown observations are not successful writes or proven rejections.",
+      "history": [
+        [
+          "1",
+          "confirmed / complete",
+          "PASS",
+          "2 / 2",
+          "incorrect",
+          "Inspect attempt 1"
+        ],
+        [
+          "2",
+          "bypassed / complete",
+          "FAIL",
+          "2 / 2",
+          "correct",
+          "Inspect attempt 2"
+        ]
+      ],
+      "prediction": "Learning prediction: correct · predicted FAIL · measured FAIL. Safety result unchanged.",
+      "alert": "",
+      "activeElement": "next-attempt"
+    },
+    {
+      "name": "unavailable authority UNKNOWN; replacement held; missing observations are not rejection",
+      "phase": "Phase: complete",
+      "gate": "Safety gate: UNKNOWN",
+      "authority": "Authority: UNKNOWN · receipt unavailable · last confirmed epoch: 41",
+      "grants": "Active grants: UNKNOWN",
+      "replay": "Stale grant replay: unknown",
+      "writes": "Write observations: 2 accepted / 0 rejected / 1 held / 3 unknown · attempted: 6",
+      "retained": "Original acknowledgements: 2 / 2 retained unchanged · missing: none",
+      "effects": "Known effect ledger: 2 · unknown outcomes do not establish total effects",
+      "replacement": "Replacement write: held",
+      "impact": "User-transition outcome: not measured. Deliberate stale-probe rejections are not uninterrupted migration.",
+      "cleanup": "Cleanup: local memory only; no external resources created.",
+      "writeRows": [
+        [
+          "SYN-691",
+          "writer-old",
+          "41",
+          "10",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-692",
+          "writer-old",
+          "41",
+          "20",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-693",
+          "writer-new",
+          "42",
+          "30",
+          "held",
+          "Replacement admission held: no authoritative fence receipt."
+        ],
+        [
+          "SYN-694",
+          "writer-old",
+          "41",
+          "40",
+          "unknown",
+          "Authority observation unavailable; not evidence of rejection or zero effects."
+        ],
+        [
+          "SYN-695",
+          "writer-new",
+          "41",
+          "50",
+          "unknown",
+          "Authority observation unavailable; not evidence of rejection or zero effects."
+        ],
+        [
+          "SYN-696",
+          "writer-old",
+          "41",
+          "60",
+          "unknown",
+          "Authority observation unavailable; not evidence of rejection or zero effects."
+        ]
+      ],
+      "effectRows": [
+        [
+          "SYN-691",
+          "10",
+          "writer-old",
+          "41"
+        ],
+        [
+          "SYN-692",
+          "20",
+          "writer-old",
+          "41"
+        ]
+      ],
+      "assertions": "UNKNOWN — Old authority fenced before replacement admission\nUNKNOWN — Only the current exact writer/epoch pair accepts new effects\nUNKNOWN — Delayed writes and stale-grant replay cannot regain old authority\nPASS — Both originally acknowledged effects retained exactly once and unchanged",
+      "trace": "1. begin-acknowledged: Two fixed effects were acknowledged at writer-old@41 before handoff.\n2. fence-unavailable: No authoritative handoff receipt: actual authority is unknown; hold replacement admission.\n3. retention-readback: Synthetic readback retains both original IDs and their exact payloads.\n4. replacement-write: SYN-693: writer-new@42 — held. Replacement admission held: no authoritative fence receipt.\n5. competing-write: SYN-694: writer-old@41 — unknown. Authority observation unavailable; not evidence of rejection or zero effects.\n6. competing-write: SYN-695: writer-new@41 — unknown. Authority observation unavailable; not evidence of rejection or zero effects.\n7. stale-grant-unknown: No authority receipt exists to establish whether a stale grant is rejected.\n8. competing-write: SYN-696: writer-old@41 — unknown. Authority observation unavailable; not evidence of rejection or zero effects.\n9. verification: UNKNOWN: 2/2 original acknowledgements retained. Unknown observations are not successful writes or proven rejections.",
+      "history": [
+        [
+          "1",
+          "confirmed / complete",
+          "PASS",
+          "2 / 2",
+          "incorrect",
+          "Inspect attempt 1"
+        ],
+        [
+          "2",
+          "bypassed / complete",
+          "FAIL",
+          "2 / 2",
+          "correct",
+          "Inspect attempt 2"
+        ],
+        [
+          "3",
+          "unavailable / complete",
+          "UNKNOWN",
+          "2 / 2",
+          "correct",
+          "Inspect attempt 3"
+        ]
+      ],
+      "prediction": "Learning prediction: correct · predicted UNKNOWN · measured UNKNOWN. Safety result unchanged.",
+      "alert": "",
+      "activeElement": "next-attempt"
+    },
+    {
+      "name": "lost acknowledged SYN-692 FAIL dominates unknown authority evidence",
+      "phase": "Phase: complete",
+      "gate": "Safety gate: FAIL",
+      "authority": "Authority: UNKNOWN · receipt unavailable · last confirmed epoch: 41",
+      "grants": "Active grants: UNKNOWN",
+      "replay": "Stale grant replay: unknown",
+      "writes": "Write observations: 2 accepted / 0 rejected / 1 held / 3 unknown · attempted: 6",
+      "retained": "Original acknowledgements: 1 / 2 retained unchanged · missing: SYN-692",
+      "effects": "Known effect ledger: 1 · unknown outcomes do not establish total effects",
+      "replacement": "Replacement write: held",
+      "impact": "User-transition outcome: not measured. Deliberate stale-probe rejections are not uninterrupted migration.",
+      "cleanup": "Cleanup: local memory only; no external resources created.",
+      "writeRows": [
+        [
+          "SYN-691",
+          "writer-old",
+          "41",
+          "10",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-692",
+          "writer-old",
+          "41",
+          "20",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-693",
+          "writer-new",
+          "42",
+          "30",
+          "held",
+          "Replacement admission held: no authoritative fence receipt."
+        ],
+        [
+          "SYN-694",
+          "writer-old",
+          "41",
+          "40",
+          "unknown",
+          "Authority observation unavailable; not evidence of rejection or zero effects."
+        ],
+        [
+          "SYN-695",
+          "writer-new",
+          "41",
+          "50",
+          "unknown",
+          "Authority observation unavailable; not evidence of rejection or zero effects."
+        ],
+        [
+          "SYN-696",
+          "writer-old",
+          "41",
+          "60",
+          "unknown",
+          "Authority observation unavailable; not evidence of rejection or zero effects."
+        ]
+      ],
+      "effectRows": [
+        [
+          "SYN-691",
+          "10",
+          "writer-old",
+          "41"
+        ]
+      ],
+      "assertions": "UNKNOWN — Old authority fenced before replacement admission\nUNKNOWN — Only the current exact writer/epoch pair accepts new effects\nUNKNOWN — Delayed writes and stale-grant replay cannot regain old authority\nFAIL — Both originally acknowledged effects retained exactly once and unchanged",
+      "trace": "1. begin-acknowledged: Two fixed effects were acknowledged at writer-old@41 before handoff.\n2. fence-unavailable: No authoritative handoff receipt: actual authority is unknown; hold replacement admission.\n3. retention-fault: Synthetic readback omits acknowledged SYN-692; the original acknowledgement remains in evidence.\n4. replacement-write: SYN-693: writer-new@42 — held. Replacement admission held: no authoritative fence receipt.\n5. competing-write: SYN-694: writer-old@41 — unknown. Authority observation unavailable; not evidence of rejection or zero effects.\n6. competing-write: SYN-695: writer-new@41 — unknown. Authority observation unavailable; not evidence of rejection or zero effects.\n7. stale-grant-unknown: No authority receipt exists to establish whether a stale grant is rejected.\n8. competing-write: SYN-696: writer-old@41 — unknown. Authority observation unavailable; not evidence of rejection or zero effects.\n9. verification: FAIL: 1/2 original acknowledgements retained. Unknown observations are not successful writes or proven rejections.",
+      "history": [
+        [
+          "1",
+          "confirmed / complete",
+          "PASS",
+          "2 / 2",
+          "incorrect",
+          "Inspect attempt 1"
+        ],
+        [
+          "2",
+          "bypassed / complete",
+          "FAIL",
+          "2 / 2",
+          "correct",
+          "Inspect attempt 2"
+        ],
+        [
+          "3",
+          "unavailable / complete",
+          "UNKNOWN",
+          "2 / 2",
+          "correct",
+          "Inspect attempt 3"
+        ],
+        [
+          "4",
+          "unavailable / missing-effect",
+          "FAIL",
+          "1 / 2",
+          "correct",
+          "Inspect attempt 4"
+        ]
+      ],
+      "prediction": "Learning prediction: correct · predicted FAIL · measured FAIL. Safety result unchanged.",
+      "alert": "",
+      "activeElement": "next-attempt"
+    },
+    {
+      "name": "confirmed fencing still FAILS when acknowledged data is missing",
+      "phase": "Phase: complete",
+      "gate": "Safety gate: FAIL",
+      "authority": "Authority: writer-new@42 · high-water epoch: 42 · receipt: confirmed",
+      "grants": "Active grants: writer-new@42",
+      "replay": "Stale grant replay: rejected",
+      "writes": "Write observations: 3 accepted / 3 rejected / 0 held / 0 unknown · attempted: 6",
+      "retained": "Original acknowledgements: 1 / 2 retained unchanged · missing: SYN-692",
+      "effects": "Known effect ledger: 2 · unknown outcomes do not establish total effects",
+      "replacement": "Replacement write: accepted",
+      "impact": "User-transition outcome: not measured. Deliberate stale-probe rejections are not uninterrupted migration.",
+      "cleanup": "Cleanup: local memory only; no external resources created.",
+      "writeRows": [
+        [
+          "SYN-691",
+          "writer-old",
+          "41",
+          "10",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-692",
+          "writer-old",
+          "41",
+          "20",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-693",
+          "writer-new",
+          "42",
+          "30",
+          "accepted",
+          "Presented writer/epoch pair has an active synthetic grant."
+        ],
+        [
+          "SYN-694",
+          "writer-old",
+          "41",
+          "40",
+          "rejected",
+          "Writer/epoch pair is not authorized."
+        ],
+        [
+          "SYN-695",
+          "writer-new",
+          "41",
+          "50",
+          "rejected",
+          "Writer/epoch pair is not authorized."
+        ],
+        [
+          "SYN-696",
+          "writer-old",
+          "41",
+          "60",
+          "rejected",
+          "Writer/epoch pair is not authorized."
+        ]
+      ],
+      "effectRows": [
+        [
+          "SYN-691",
+          "10",
+          "writer-old",
+          "41"
+        ],
+        [
+          "SYN-693",
+          "30",
+          "writer-new",
+          "42"
+        ]
+      ],
+      "assertions": "PASS — Old authority fenced before replacement admission\nPASS — Only the current exact writer/epoch pair accepts new effects\nPASS — Delayed writes and stale-grant replay cannot regain old authority\nFAIL — Both originally acknowledged effects retained exactly once and unchanged",
+      "trace": "1. begin-acknowledged: Two fixed effects were acknowledged at writer-old@41 before handoff.\n2. fence-confirmed: Confirmed synthetic receipt revokes writer-old@41 before granting writer-new@42.\n3. retention-fault: Synthetic readback omits acknowledged SYN-692; the original acknowledgement remains in evidence.\n4. replacement-write: SYN-693: writer-new@42 — accepted. Presented writer/epoch pair has an active synthetic grant.\n5. competing-write: SYN-694: writer-old@41 — rejected. Writer/epoch pair is not authorized.\n6. competing-write: SYN-695: writer-new@41 — rejected. Writer/epoch pair is not authorized.\n7. stale-grant-rejected: Replayed writer-old@41 grant cannot replace the confirmed writer-new@42 authority.\n8. competing-write: SYN-696: writer-old@41 — rejected. Writer/epoch pair is not authorized.\n9. verification: FAIL: 1/2 original acknowledgements retained. Unknown observations are not successful writes or proven rejections.",
+      "history": [
+        [
+          "1",
+          "confirmed / complete",
+          "PASS",
+          "2 / 2",
+          "incorrect",
+          "Inspect attempt 1"
+        ],
+        [
+          "2",
+          "bypassed / complete",
+          "FAIL",
+          "2 / 2",
+          "correct",
+          "Inspect attempt 2"
+        ],
+        [
+          "3",
+          "unavailable / complete",
+          "UNKNOWN",
+          "2 / 2",
+          "correct",
+          "Inspect attempt 3"
+        ],
+        [
+          "4",
+          "unavailable / missing-effect",
+          "FAIL",
+          "1 / 2",
+          "correct",
+          "Inspect attempt 4"
+        ],
+        [
+          "5",
+          "confirmed / missing-effect",
+          "FAIL",
+          "1 / 2",
+          "correct",
+          "Inspect attempt 5"
+        ]
+      ],
+      "prediction": "Learning prediction: correct · predicted FAIL · measured FAIL. Safety result unchanged.",
+      "alert": "",
+      "activeElement": "next-attempt"
+    },
+    {
+      "name": "six-proof hard cap and earlier failure retained after later PASS",
+      "phase": "Phase: complete",
+      "gate": "Safety gate: PASS",
+      "authority": "Authority: writer-new@42 · high-water epoch: 42 · receipt: confirmed",
+      "grants": "Active grants: writer-new@42",
+      "replay": "Stale grant replay: rejected",
+      "writes": "Write observations: 3 accepted / 3 rejected / 0 held / 0 unknown · attempted: 6",
+      "retained": "Original acknowledgements: 2 / 2 retained unchanged · missing: none",
+      "effects": "Known effect ledger: 3 · unknown outcomes do not establish total effects",
+      "replacement": "Replacement write: accepted",
+      "impact": "User-transition outcome: not measured. Deliberate stale-probe rejections are not uninterrupted migration.",
+      "cleanup": "Cleanup: local memory only; no external resources created.",
+      "writeRows": [
+        [
+          "SYN-691",
+          "writer-old",
+          "41",
+          "10",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-692",
+          "writer-old",
+          "41",
+          "20",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-693",
+          "writer-new",
+          "42",
+          "30",
+          "accepted",
+          "Presented writer/epoch pair has an active synthetic grant."
+        ],
+        [
+          "SYN-694",
+          "writer-old",
+          "41",
+          "40",
+          "rejected",
+          "Writer/epoch pair is not authorized."
+        ],
+        [
+          "SYN-695",
+          "writer-new",
+          "41",
+          "50",
+          "rejected",
+          "Writer/epoch pair is not authorized."
+        ],
+        [
+          "SYN-696",
+          "writer-old",
+          "41",
+          "60",
+          "rejected",
+          "Writer/epoch pair is not authorized."
+        ]
+      ],
+      "effectRows": [
+        [
+          "SYN-691",
+          "10",
+          "writer-old",
+          "41"
+        ],
+        [
+          "SYN-692",
+          "20",
+          "writer-old",
+          "41"
+        ],
+        [
+          "SYN-693",
+          "30",
+          "writer-new",
+          "42"
+        ]
+      ],
+      "assertions": "PASS — Old authority fenced before replacement admission\nPASS — Only the current exact writer/epoch pair accepts new effects\nPASS — Delayed writes and stale-grant replay cannot regain old authority\nPASS — Both originally acknowledged effects retained exactly once and unchanged",
+      "trace": "1. begin-acknowledged: Two fixed effects were acknowledged at writer-old@41 before handoff.\n2. fence-confirmed: Confirmed synthetic receipt revokes writer-old@41 before granting writer-new@42.\n3. retention-readback: Synthetic readback retains both original IDs and their exact payloads.\n4. replacement-write: SYN-693: writer-new@42 — accepted. Presented writer/epoch pair has an active synthetic grant.\n5. competing-write: SYN-694: writer-old@41 — rejected. Writer/epoch pair is not authorized.\n6. competing-write: SYN-695: writer-new@41 — rejected. Writer/epoch pair is not authorized.\n7. stale-grant-rejected: Replayed writer-old@41 grant cannot replace the confirmed writer-new@42 authority.\n8. competing-write: SYN-696: writer-old@41 — rejected. Writer/epoch pair is not authorized.\n9. verification: PASS: 2/2 original acknowledgements retained. Unknown observations are not successful writes or proven rejections.",
+      "history": [
+        [
+          "1",
+          "confirmed / complete",
+          "PASS",
+          "2 / 2",
+          "incorrect",
+          "Inspect attempt 1"
+        ],
+        [
+          "2",
+          "bypassed / complete",
+          "FAIL",
+          "2 / 2",
+          "correct",
+          "Inspect attempt 2"
+        ],
+        [
+          "3",
+          "unavailable / complete",
+          "UNKNOWN",
+          "2 / 2",
+          "correct",
+          "Inspect attempt 3"
+        ],
+        [
+          "4",
+          "unavailable / missing-effect",
+          "FAIL",
+          "1 / 2",
+          "correct",
+          "Inspect attempt 4"
+        ],
+        [
+          "5",
+          "confirmed / missing-effect",
+          "FAIL",
+          "1 / 2",
+          "correct",
+          "Inspect attempt 5"
+        ],
+        [
+          "6",
+          "confirmed / complete",
+          "PASS",
+          "2 / 2",
+          "correct",
+          "Inspect attempt 6"
+        ]
+      ],
+      "prediction": "Learning prediction: correct · predicted PASS · measured PASS. Safety result unchanged.",
+      "alert": "Retained proof capacity is six attempts; reset explicitly to clear it.",
+      "activeElement": "retained-title"
+    },
+    {
+      "name": "sixth configuration: competing writers and missing acknowledgement both FAIL",
+      "phase": "Phase: complete",
+      "gate": "Safety gate: FAIL",
+      "authority": "Authority: writer-old@41 · high-water epoch: 42 · receipt: bypassed",
+      "grants": "Active grants: writer-old@41, writer-new@42",
+      "replay": "Stale grant replay: regained",
+      "writes": "Write observations: 5 accepted / 1 rejected / 0 held / 0 unknown · attempted: 6",
+      "retained": "Original acknowledgements: 1 / 2 retained unchanged · missing: SYN-692",
+      "effects": "Known effect ledger: 4 · unknown outcomes do not establish total effects",
+      "replacement": "Replacement write: accepted",
+      "impact": "User-transition outcome: not measured. Deliberate stale-probe rejections are not uninterrupted migration.",
+      "cleanup": "Cleanup: local memory only; no external resources created.",
+      "writeRows": [
+        [
+          "SYN-691",
+          "writer-old",
+          "41",
+          "10",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-692",
+          "writer-old",
+          "41",
+          "20",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-693",
+          "writer-new",
+          "42",
+          "30",
+          "accepted",
+          "Presented writer/epoch pair has an active synthetic grant."
+        ],
+        [
+          "SYN-694",
+          "writer-old",
+          "41",
+          "40",
+          "accepted",
+          "Presented writer/epoch pair has an active synthetic grant."
+        ],
+        [
+          "SYN-695",
+          "writer-new",
+          "41",
+          "50",
+          "rejected",
+          "Writer/epoch pair is not authorized."
+        ],
+        [
+          "SYN-696",
+          "writer-old",
+          "41",
+          "60",
+          "accepted",
+          "Presented writer/epoch pair has an active synthetic grant."
+        ]
+      ],
+      "effectRows": [
+        [
+          "SYN-691",
+          "10",
+          "writer-old",
+          "41"
+        ],
+        [
+          "SYN-693",
+          "30",
+          "writer-new",
+          "42"
+        ],
+        [
+          "SYN-694",
+          "40",
+          "writer-old",
+          "41"
+        ],
+        [
+          "SYN-696",
+          "60",
+          "writer-old",
+          "41"
+        ]
+      ],
+      "assertions": "FAIL — Old authority fenced before replacement admission\nFAIL — Only the current exact writer/epoch pair accepts new effects\nFAIL — Delayed writes and stale-grant replay cannot regain old authority\nFAIL — Both originally acknowledged effects retained exactly once and unchanged",
+      "trace": "1. begin-acknowledged: Two fixed effects were acknowledged at writer-old@41 before handoff.\n2. fence-bypassed: Deliberately broken fixture grants the replacement without revoking the old writer.\n3. retention-fault: Synthetic readback omits acknowledged SYN-692; the original acknowledgement remains in evidence.\n4. replacement-write: SYN-693: writer-new@42 — accepted. Presented writer/epoch pair has an active synthetic grant.\n5. competing-write: SYN-694: writer-old@41 — accepted. Presented writer/epoch pair has an active synthetic grant.\n6. competing-write: SYN-695: writer-new@41 — rejected. Writer/epoch pair is not authorized.\n7. stale-grant-regained: Broken fixture lets writer-old@41 regain authority; observed epoch regresses below high-water 42.\n8. competing-write: SYN-696: writer-old@41 — accepted. Presented writer/epoch pair has an active synthetic grant.\n9. verification: FAIL: 1/2 original acknowledgements retained. Unknown observations are not successful writes or proven rejections.",
+      "history": [
+        [
+          "1",
+          "bypassed / missing-effect",
+          "FAIL",
+          "1 / 2",
+          "not checked",
+          "Inspect attempt 1"
+        ]
+      ],
+      "prediction": "Learning prediction not checked.",
+      "alert": "",
+      "activeElement": "prediction"
+    },
+    {
+      "name": "invalid authority is associated, rejected and mutation-free",
+      "phase": "Phase: idle",
+      "gate": "Safety gate: not evaluated",
+      "authority": "Authority: not observed",
+      "grants": "Active grants: not observed",
+      "replay": "Stale grant replay: not attempted",
+      "writes": "Write observations: not measured",
+      "retained": "Original acknowledgements: not verified",
+      "effects": "Known effect ledger: not observed",
+      "replacement": "Replacement write: not attempted",
+      "impact": "User-transition outcome: not measured. Deliberate stale-probe rejections are not uninterrupted migration.",
+      "cleanup": "Cleanup: local memory only; no external resources created.",
+      "writeRows": [],
+      "effectRows": [],
+      "assertions": "Safety assertions have not been evaluated.",
+      "trace": "No attempt started.",
+      "history": [],
+      "prediction": "Learning prediction not checked.",
+      "alert": "Configuration authority requires an exact primitive enum value.",
+      "activeElement": "authority"
+    },
+    {
+      "name": "invalid retention is associated, rejected and mutation-free",
+      "phase": "Phase: idle",
+      "gate": "Safety gate: not evaluated",
+      "authority": "Authority: not observed",
+      "grants": "Active grants: not observed",
+      "replay": "Stale grant replay: not attempted",
+      "writes": "Write observations: not measured",
+      "retained": "Original acknowledgements: not verified",
+      "effects": "Known effect ledger: not observed",
+      "replacement": "Replacement write: not attempted",
+      "impact": "User-transition outcome: not measured. Deliberate stale-probe rejections are not uninterrupted migration.",
+      "cleanup": "Cleanup: local memory only; no external resources created.",
+      "writeRows": [],
+      "effectRows": [],
+      "assertions": "Safety assertions have not been evaluated.",
+      "trace": "No attempt started.",
+      "history": [],
+      "prediction": "Learning prediction not checked.",
+      "alert": "Configuration retention requires an exact primitive enum value.",
+      "activeElement": "retention"
+    },
+    {
+      "name": "forced skipped/repeated controls remain guarded by actual model state",
+      "phase": "Phase: begun",
+      "gate": "Safety gate: not evaluated",
+      "authority": "Authority: writer-old@41 · high-water epoch: 41 · receipt: initial",
+      "grants": "Active grants: writer-old@41",
+      "replay": "Stale grant replay: not attempted",
+      "writes": "Write observations: not measured",
+      "retained": "Original acknowledgements: not verified",
+      "effects": "Known effect ledger: 2 · unknown outcomes do not establish total effects",
+      "replacement": "Replacement write: not attempted",
+      "impact": "User-transition outcome: not measured. Deliberate stale-probe rejections are not uninterrupted migration.",
+      "cleanup": "Cleanup: local memory only; no external resources created.",
+      "writeRows": [
+        [
+          "SYN-691",
+          "writer-old",
+          "41",
+          "10",
+          "accepted",
+          "Acknowledged before transfer."
+        ],
+        [
+          "SYN-692",
+          "writer-old",
+          "41",
+          "20",
+          "accepted",
+          "Acknowledged before transfer."
+        ]
+      ],
+      "effectRows": [
+        [
+          "SYN-691",
+          "10",
+          "writer-old",
+          "41"
+        ],
+        [
+          "SYN-692",
+          "20",
+          "writer-old",
+          "41"
+        ]
+      ],
+      "assertions": "Safety assertions have not been evaluated.",
+      "trace": "1. begin-acknowledged: Two fixed effects were acknowledged at writer-old@41 before handoff.",
+      "history": [],
+      "prediction": "Learning prediction not checked.",
+      "alert": "Action requires phase idle; current phase is begun.",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "all six phases reset inputs, locks, errors, proof, predictions and history; native form.reset remains callable",
+      "phase": "Phase: idle",
+      "gate": "Safety gate: not evaluated",
+      "authority": "Authority: not observed",
+      "grants": "Active grants: not observed",
+      "replay": "Stale grant replay: not attempted",
+      "writes": "Write observations: not measured",
+      "retained": "Original acknowledgements: not verified",
+      "effects": "Known effect ledger: not observed",
+      "replacement": "Replacement write: not attempted",
+      "impact": "User-transition outcome: not measured. Deliberate stale-probe rejections are not uninterrupted migration.",
+      "cleanup": "Cleanup: local memory only; no external resources created.",
+      "writeRows": [],
+      "effectRows": [],
+      "assertions": "Safety assertions have not been evaluated.",
+      "trace": "No attempt started.",
+      "history": [],
+      "prediction": "Learning prediction not checked.",
+      "alert": "",
+      "activeElement": "begin-handoff"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp-probes",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-SpNhFhPXeEUTOyynXzvYJozJQvyC2r3ioVtGOE1++Gw='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Connecting to 'https://synthetic.invalid/S069-csp-only' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Fetch API cannot load https://synthetic.invalid/S069-csp-only. Refused to connect because it violates the document's Content Security Policy."
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "probeRequests": [],
+  "probeResponses": [],
+  "screenshots": [
+    {
+      "file": "evidence\\browser-2026-11-03T20-05-07-640Z-failure.png",
+      "sha256": "532428fccad83e6629104dcb5d36689a0d61a9f8b15f06531efafc1fe419a528"
+    },
+    {
+      "file": "evidence\\browser-2026-11-03T20-05-07-640Z-unknown.png",
+      "sha256": "5fb913ae586e4931c2845221d25df204499ef6d0794eaa97ac68228fb90d2eb8"
+    }
+  ],
+  "cleanup": {
+    "closeAwaited": true,
+    "closed": true
+  },
+  "browserVersion": "156.0.4314.50",
+  "narrowViewport": {
+    "width": 360,
+    "bodyOverflow": false,
+    "visibleKeyboardFocus": true
+  },
+  "csp": {
+    "inlineRan": false,
+    "connection": "TypeError",
+    "violations": [
+      {
+        "directive": "script-src-elem",
+        "blocked": "inline"
+      },
+      {
+        "directive": "connect-src",
+        "blocked": "https://synthetic.invalid/S069-csp-only"
+      }
+    ]
+  },
+  "completedAtUtc": "2026-11-03T20:05:14.319Z"
+}

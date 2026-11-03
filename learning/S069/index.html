@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'self'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S069 — Fenced writer epoch handoff</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#lesson-main">Skip to rehearsal</a>
+  <header>
+    <p class="training-banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p>A-S069 · D-S069 · SC-S069 · frozen S</p>
+    <h1>Transfer authority, not just the writer route</h1>
+    <p>Fence writer-old at epoch 41 before admitting writer-new at epoch 42. A delayed write or replayed old grant must not regain authority. Keep every acknowledged effect.</p>
+  </header>
+  <main id="lesson-main" tabindex="-1">
+    <noscript>This rehearsal requires local JavaScript. No result can be measured with scripts disabled.</noscript>
+    <section aria-labelledby="instructions-title">
+      <h2 id="instructions-title">One bounded synthetic handoff</h2>
+      <ol>
+        <li>Choose an authority fixture and retained-data fixture. Defaults demonstrate the required safe order.</li>
+        <li>Begin with two acknowledged effects. Transfer authority before probing the replacement and competing stale tokens.</li>
+        <li>Replay the old grant. Verify all six write observations and the two original acknowledgements.</li>
+        <li>Check a learning prediction, inspect retained proof, then compare an unsafe or unknown attempt.</li>
+      </ol>
+      <p>The confirmed receipt assumes an atomic authoritative fence; it does not implement one. “Bypassed” deliberately models a broken authority service. “Unavailable” supplies no authoritative receipt: replacement admission is held and stale outcomes are unknown.</p>
+    </section>
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Operator controls</h2>
+      <p id="config-help">Six fixed configurations, six write observations per attempt, six retained attempts. Settings lock at Begin. No arbitrary writer IDs, epochs, payloads, endpoints or clocks.</p>
+      <form id="handoff-controls" novalidate>
+        <fieldset id="assumptions">
+          <legend>Synthetic conditions</legend>
+          <div>
+            <label for="authority">Authority receipt</label>
+            <select id="authority" aria-describedby="config-help">
+              <option value="confirmed" selected>Confirmed fence, then replacement grant</option>
+              <option value="bypassed">Unsafe: replacement grant without fencing</option>
+              <option value="unavailable">Unknown: authority receipt unavailable</option>
+            </select>
+          </div>
+          <div>
+            <label for="retention">Acknowledged-data readback</label>
+            <select id="retention" aria-describedby="config-help">
+              <option value="complete" selected>Both original effects retained unchanged</option>
+              <option value="missing-effect">Fault: acknowledged SYN-692 is missing</option>
+            </select>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button id="begin-handoff" type="submit">1. Begin handoff</button>
+          <button id="transfer-epoch" type="button" disabled>2. Transfer epoch</button>
+          <button id="probe-writers" type="button" disabled>3. Probe competing writers</button>
+          <button id="replay-grant" type="button" disabled>4. Replay stale grant</button>
+          <button id="verify-effects" type="button" disabled>5. Verify retained effects</button>
+        </div>
+      </form>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <div class="actions">
+        <button id="next-attempt" type="button" disabled>New attempt · retain history</button>
+        <button id="reset-rehearsal" type="button">Reset rehearsal and history</button>
+      </div>
+      <p>Reset or reload clears browser memory only. There are no external resources to clean up.</p>
+    </section>
+    <section aria-labelledby="results-title" aria-live="polite">
+      <h2 id="results-title">Measured synthetic result</h2>
+      <p id="phase">Phase: idle</p>
+      <p id="gate" class="verdict">Safety gate: not evaluated</p>
+      <p id="authority-state">Authority: not observed</p>
+      <p id="active-grants">Active grants: not observed</p>
+      <p id="replay-outcome">Stale grant replay: not attempted</p>
+      <p id="write-counts">Write observations: not measured</p>
+      <p id="retained-counts">Original acknowledgements: not verified</p>
+      <p id="effect-count">Known effect ledger: not observed</p>
+      <p id="replacement-outcome">Replacement write: not attempted</p>
+      <p id="impact">User-transition outcome: not measured. Deliberate stale-probe rejections are not uninterrupted migration.</p>
+      <p id="cleanup">Cleanup: local memory only; no external resources created.</p>
+      <p>Unknown means evidence is unavailable, not rejected or zero effects. The ledger contains known synthetic effects only; an unknown observation is never counted as a successful write.</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Synthetic write observations">
+        <table>
+          <caption>Fixed write observations · baseline, replacement, stale tokens</caption>
+          <thead><tr><th scope="col">Operation</th><th scope="col">Writer</th><th scope="col">Epoch</th><th scope="col">Payload</th><th scope="col">Outcome</th><th scope="col">Evidence</th></tr></thead>
+          <tbody id="write-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Known retained synthetic effects">
+        <table>
+          <caption>Known effect ledger · original acknowledgements remain separately recorded in history</caption>
+          <thead><tr><th scope="col">Operation</th><th scope="col">Payload</th><th scope="col">Writer</th><th scope="col">Epoch</th></tr></thead>
+          <tbody id="effect-rows"></tbody>
+        </table>
+      </div>
+      <ul id="assertions"><li>Safety assertions have not been evaluated.</li></ul>
+      <h3>Ordered trace</h3>
+      <ol id="trace"><li>No attempt started.</li></ol>
+    </section>
+    <section aria-labelledby="prediction-title">
+      <h2 id="prediction-title">Check your learning prediction</h2>
+      <p id="prediction-help">This checks your understanding only. A correct prediction of FAIL does not make the handoff safe.</p>
+      <form id="prediction-controls" novalidate>
+        <label for="prediction">Predict safety verdict</label>
+        <select id="prediction" aria-describedby="prediction-help" disabled>
+          <option value="" selected>Choose PASS, FAIL or UNKNOWN</option>
+          <option value="PASS">PASS</option>
+          <option value="FAIL">FAIL</option>
+          <option value="UNKNOWN">UNKNOWN</option>
+        </select>
+        <button id="check-prediction" type="submit" disabled>Check prediction</button>
+      </form>
+      <p id="prediction-result">Learning prediction not checked.</p>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained attempts</h2>
+      <p id="history-count">Retained attempts: 0 / 6</p>
+      <p id="history-limit">Earlier results remain until explicit reset or reload.</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Retained synthetic attempt history">
+        <table>
+          <caption>Completed proof · at most six attempts, no silent eviction</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Fixtures</th><th scope="col">Safety</th><th scope="col">Original effects</th><th scope="col">Prediction</th><th scope="col">Inspect</th></tr></thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+      <section id="retained-detail" hidden>
+        <h3 id="retained-title" tabindex="-1">Retained proof</h3>
+        <pre id="retained-proof"></pre>
+        <button id="hide-retained" type="button">Close retained proof</button>
+      </section>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Source and limits</h2>
+      <p>README S069: “Fence the previous writer before accepting writes through the replacement.” D-S069: “Only the authorized epoch writes; stale writers are rejected and acknowledged data is retained.”</p>
+      <p>Every receipt, write, fault and effect here is synthetic. No actual database epochs, lease, fencing protocol, concurrent writers, native host or production Node.js 24 behavior is certified. There are no Azure-management calls, accounts, credentials, IaC, deployments, spending, random events or background work.</p>
+      <p>B-S069 native proof and D-S069/source-parent completion remain unfulfilled. This lesson earns at most one frozen S unit after independent parent acceptance; tests and evidence earn no extra credit.</p>
+      <p><a href="README.md">Lesson instructions and evidence</a> · <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft Open Source Disclaimer</a></p>
+    </section>
+  </main>
+  <footer>Educational demonstration only. No Microsoft endorsement, platform guarantee, five-nines claim or service-level agreement.</footer>
+</body>
+</html>
