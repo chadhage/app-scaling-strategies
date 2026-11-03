@@ -1,0 +1,241 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else Object.defineProperty(root, 'C003Contract', { value: factory() });
+}(globalThis, function () {
+  'use strict';
+
+  const SCHEMA_VERSION = '1.0.0';
+  const STATUSES = Object.freeze(['planned', 'documented-supported', 'qualified', 'unsupported', 'unknown']);
+  const HOSTS = Object.freeze(['app-service', 'container-apps', 'aks', 'functions', 'unselected']);
+  const FORMATS = Object.freeze(['code', 'container', 'function-code', 'code-or-container']);
+  const SUPPORT = Object.freeze(['documented-supported', 'unsupported', 'unknown']);
+  const MECHANISMS = Object.freeze([
+    'deployment-slots', 'controlled-slot-swap', 'native-auto-swap',
+    'http-automatic-scaling-with-slot-traffic', 'external-routing',
+    'single-revision', 'multiple-revisions', 'rolling-deployment',
+    'weighted-routing', 'flex-deployment-slots', 'flex-rolling-site-update', 'host-required'
+  ]);
+  const FLAG_KEYS = Object.freeze([
+    'liveAzureExecutionApproved', 'iacGenerationApproved', 'scaffoldApproved',
+    'deploymentApproved', 'identityRegistrationApproved', 'expenditureApproved'
+  ]);
+  const TARGET_KEYS = Object.freeze(['os', 'sku', 'subscription', 'resourceGroup', 'region']);
+  const ROW_KEYS = Object.freeze([
+    'id', 'title', 'host', 'format', 'runtime', 'os', 'mechanism', 'status',
+    'documentedSupport', 'adapter', 'qualified', 'nativeEvidence',
+    'firstPlannedNativeTarget', 'reason', 'sourceIds', 'constraints'
+  ]);
+
+  function isObject(value) {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  /** @param {unknown} matrix @returns {import('./matrix-contract').ValidationResult} */
+  function validateMatrix(matrix) {
+    const errors = [];
+    function error(path, message) {
+      if (errors.length < 32) errors.push(path + ': ' + message);
+    }
+    function exactObject(value, keys, path) {
+      if (!isObject(value)) {
+        error(path, 'must be an object');
+        return false;
+      }
+      if (Object.keys(value).some(key => !keys.includes(key))) error(path, 'unexpected property');
+      keys.forEach(key => {
+        if (!Object.hasOwn(value, key)) error(path + '.' + key, 'required');
+      });
+      return true;
+    }
+    function equal(value, expected, path) {
+      if (value !== expected) error(path, 'must equal ' + JSON.stringify(expected));
+    }
+    function oneOf(value, values, path) {
+      if (!values.includes(value)) error(path, 'unknown enum value');
+    }
+    function text(value, path, max) {
+      if (typeof value !== 'string' || value.trim().length === 0 || value.length > max) {
+        error(path, 'must be nonempty text of at most ' + max + ' characters');
+        return false;
+      }
+      return true;
+    }
+    function id(value, path) {
+      if (typeof value !== 'string' || !/^[a-z][a-z0-9-]{0,79}$/.test(value)) {
+        error(path, 'must be a stable lowercase identifier');
+        return false;
+      }
+      return true;
+    }
+    function list(value, path, min, max) {
+      if (!Array.isArray(value) || value.length < min || value.length > max) {
+        error(path, 'must be an array with ' + min + '..' + max + ' entries');
+        return false;
+      }
+      return true;
+    }
+    function references(value, path, sourceIds) {
+      if (!list(value, path, 1, 12)) return;
+      const seen = new Set();
+      value.forEach(ref => {
+        if (!sourceIds.has(ref)) error(path, 'unknown source reference');
+        if (seen.has(ref)) error(path, 'duplicate source reference');
+        seen.add(ref);
+      });
+    }
+
+    if (!exactObject(matrix, [
+      'schemaVersion', 'kind', 'cardId', 'scope', 'provenance', 'design', 'permissions', 'sources', 'rows'
+    ], 'matrix')) return { valid: false, errors };
+    equal(matrix.schemaVersion, SCHEMA_VERSION, 'schemaVersion');
+    equal(matrix.kind, 'host-format-capability-matrix', 'kind');
+    equal(matrix.cardId, 'C003', 'cardId');
+    equal(matrix.scope, 'local-documented-only', 'scope');
+    const provenance = matrix.provenance;
+    if (exactObject(provenance, [
+      'baselineCommit', 'readmePath', 'backlogPath', 'approvalArtifact', 'approvalSourceCommit',
+      'documentationReview', 'reviewedAtUtc', 'reviewNote'
+    ], 'provenance')) {
+      equal(provenance.baselineCommit, 'a1411c1fd7b081e7772db0ac96eb61d697452c86', 'provenance.baselineCommit');
+      equal(provenance.readmePath, 'README.md', 'provenance.readmePath');
+      equal(provenance.backlogPath, '.docs\\wiki\\backlog.md', 'provenance.backlogPath');
+      equal(provenance.approvalArtifact, 'capability\\C001\\approved-contract.js', 'provenance.approvalArtifact');
+      equal(provenance.approvalSourceCommit, '26747d4fbbd51235c612dbd9d8c92ab335aef78e', 'provenance.approvalSourceCommit');
+      oneOf(provenance.documentationReview, ['baseline-only', 'researcher-documented'], 'provenance.documentationReview');
+      if (provenance.documentationReview === 'baseline-only') {
+        equal(provenance.reviewedAtUtc, null, 'provenance.reviewedAtUtc');
+      } else if (typeof provenance.reviewedAtUtc !== 'string' ||
+        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(provenance.reviewedAtUtc) ||
+        !Number.isFinite(Date.parse(provenance.reviewedAtUtc)) ||
+        new Date(provenance.reviewedAtUtc).toISOString().slice(0, 19) !== provenance.reviewedAtUtc.slice(0, 19)) {
+        error('provenance.reviewedAtUtc', 'a documentation review needs a UTC timestamp');
+      }
+      text(provenance.reviewNote, 'provenance.reviewNote', 1200);
+    }
+    const design = matrix.design;
+    if (exactObject(design, [
+      'runtime', 'framework', 'hosting', 'testTooling', 'productionRuntimeValidated', 'firstNativeTarget', 'target'
+    ], 'design')) {
+      equal(design.runtime, 'Node.js 24 LTS', 'design.runtime');
+      equal(design.framework, 'Express', 'design.framework');
+      equal(design.hosting, 'App Service Linux', 'design.hosting');
+      equal(design.testTooling, 'Node.js 22.23.4', 'design.testTooling');
+      equal(design.productionRuntimeValidated, false, 'design.productionRuntimeValidated');
+      equal(design.firstNativeTarget, 'App Service: code deployment slots', 'design.firstNativeTarget');
+      if (exactObject(design.target, TARGET_KEYS, 'design.target')) {
+        TARGET_KEYS.forEach(key => equal(design.target[key], null, 'design.target.' + key));
+      }
+    }
+    if (exactObject(matrix.permissions, FLAG_KEYS.concat(['maximumLiveAzureRuns', 'authorizedCloudSpend']), 'permissions')) {
+      FLAG_KEYS.forEach(key => equal(matrix.permissions[key], false, 'permissions.' + key));
+      equal(matrix.permissions.maximumLiveAzureRuns, 0, 'permissions.maximumLiveAzureRuns');
+      equal(matrix.permissions.authorizedCloudSpend, 0, 'permissions.authorizedCloudSpend');
+    }
+    const sourceIds = new Set();
+    if (list(matrix.sources, 'sources', 1, 32)) {
+      matrix.sources.forEach((source, i) => {
+        const path = 'sources[' + i + ']';
+        if (!exactObject(source, ['id', 'title', 'url', 'baselinePath', 'verification'], path)) return;
+        id(source.id, path + '.id');
+        if (sourceIds.has(source.id)) error(path + '.id', 'duplicate identifier');
+        sourceIds.add(source.id);
+        text(source.title, path + '.title', 160);
+        if (typeof source.url !== 'string' || source.url.length > 300 ||
+          !/^https:\/\/learn\.microsoft\.com\/(?:[a-z]{2}-[a-z]{2}\/)?azure\/[a-z0-9/-]+$/.test(source.url)) {
+          error(path + '.url', 'must be a direct HTTPS Microsoft Learn Azure documentation URL');
+        }
+        oneOf(source.baselinePath, ['README.md', '.docs\\wiki\\backlog.md'], path + '.baselinePath');
+        oneOf(source.verification, ['baseline-only', 'researcher-documented'], path + '.verification');
+        if (source.verification === 'researcher-documented' && provenance?.documentationReview !== 'researcher-documented') {
+          error(path + '.verification', 'reviewed sources require documentation review provenance');
+        }
+      });
+    }
+    let firstTargetCount = 0;
+    const rowIds = new Set();
+    if (list(matrix.rows, 'rows', 1, 64)) {
+      matrix.rows.forEach((row, i) => {
+        const path = 'rows[' + i + ']';
+        if (!exactObject(row, ROW_KEYS, path)) return;
+        id(row.id, path + '.id');
+        if (rowIds.has(row.id)) error(path + '.id', 'duplicate identifier');
+        rowIds.add(row.id);
+        text(row.title, path + '.title', 160);
+        text(row.reason, path + '.reason', 1200);
+        oneOf(row.host, HOSTS, path + '.host');
+        oneOf(row.format, FORMATS, path + '.format');
+        oneOf(row.runtime, ['unselected', 'nodejs', 'java-spring-boot'], path + '.runtime');
+        oneOf(row.os, ['windows', 'linux', 'unspecified', 'unapproved'], path + '.os');
+        oneOf(row.mechanism, MECHANISMS, path + '.mechanism');
+        oneOf(row.status, STATUSES, path + '.status');
+        oneOf(row.documentedSupport, SUPPORT, path + '.documentedSupport');
+        oneOf(row.adapter, ['planned', 'not-applicable'], path + '.adapter');
+        equal(row.qualified, false, path + '.qualified');
+        if (!Array.isArray(row.nativeEvidence) || row.nativeEvidence.length !== 0) {
+          error(path + '.nativeEvidence', 'no native qualification evidence exists in local-only v1');
+        }
+        if (row.status === 'qualified') error(path + '.status', 'qualified is reserved; local-only v1 has no native evidence');
+        if (typeof row.firstPlannedNativeTarget !== 'boolean') error(path + '.firstPlannedNativeTarget', 'must be boolean');
+        if (row.status !== 'planned' && row.status !== 'qualified' && row.status !== row.documentedSupport) {
+          error(path + '.status', 'must match documented support unless explicitly planned');
+        }
+        equal(row.adapter, row.documentedSupport === 'unsupported' ? 'not-applicable' : 'planned', path + '.adapter');
+        if (row.documentedSupport === 'unsupported') equal(row.status, 'unsupported', path + '.status');
+        if ((row.host === 'container-apps' || row.host === 'aks') && row.format !== 'container') {
+          error(path + '.format', 'this host requires the container format');
+        }
+        if (row.firstPlannedNativeTarget === true) {
+          firstTargetCount++;
+          const first = { host: 'app-service', format: 'code', runtime: 'unselected', os: 'unapproved',
+            mechanism: 'deployment-slots', status: 'planned', documentedSupport: 'documented-supported', adapter: 'planned' };
+          Object.keys(first).forEach(key => equal(row[key], first[key], path + '.' + key));
+        }
+        if ((row.mechanism === 'native-auto-swap' && (row.os === 'linux' || row.format === 'container')) ||
+          row.mechanism === 'http-automatic-scaling-with-slot-traffic' || row.mechanism === 'flex-deployment-slots') {
+          equal(row.status, 'unsupported', path + '.status');
+          equal(row.documentedSupport, 'unsupported', path + '.documentedSupport');
+        }
+        references(row.sourceIds, path + '.sourceIds', sourceIds);
+        const constraintIds = new Set();
+        if (list(row.constraints, path + '.constraints', 1, 12)) {
+          row.constraints.forEach((constraint, j) => {
+            const cp = path + '.constraints[' + j + ']';
+            if (!exactObject(constraint, ['id', 'text', 'sourceIds'], cp)) return;
+            id(constraint.id, cp + '.id');
+            if (constraintIds.has(constraint.id)) error(cp + '.id', 'duplicate constraint identifier');
+            constraintIds.add(constraint.id);
+            text(constraint.text, cp + '.text', 1200);
+            references(constraint.sourceIds, cp + '.sourceIds', sourceIds);
+          });
+        }
+      });
+    }
+    if (firstTargetCount !== 1) error('rows', 'exactly one first planned native target is required');
+    return { valid: errors.length === 0, errors };
+  }
+
+  /**
+   * @param {unknown} matrix
+   * @param {import('./matrix-contract').MatrixFilters} [filters]
+   * @returns {import('./matrix-contract').MatrixRow[]}
+   */
+  function filterRows(matrix, filters) {
+    if (!validateMatrix(matrix).valid) return [];
+    filters = filters === undefined ? {} : filters;
+    if (!isObject(filters) || Object.keys(filters).some(key => !['host', 'format', 'status', 'query'].includes(key))) return [];
+    for (const [key, values] of [['host', HOSTS], ['format', FORMATS], ['status', STATUSES]]) {
+      if (filters[key] !== undefined && filters[key] !== '' && !values.includes(filters[key])) return [];
+    }
+    if (filters.query !== undefined && (typeof filters.query !== 'string' || filters.query.length > 200)) return [];
+    const query = (filters.query || '').trim().toLowerCase();
+    return matrix.rows.filter(row =>
+      (!filters.host || row.host === filters.host) &&
+      (!filters.format || row.format === filters.format) &&
+      (!filters.status || row.status === filters.status) &&
+      (!query || [row.id, row.title, row.reason, row.runtime, row.os, row.mechanism]
+        .concat(row.constraints.map(constraint => constraint.text)).join(' ').toLowerCase().includes(query)));
+  }
+
+  return Object.freeze({ SCHEMA_VERSION, STATUSES, HOSTS, FORMATS, MECHANISMS, FLAG_KEYS, TARGET_KEYS, validateMatrix, filterRows });
+}));

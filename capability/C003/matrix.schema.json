@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:app-scaling-strategies:C003:host-format-matrix:1.0.0",
+  "title": "C003 local documented-only host/format matrix v1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "cardId", "scope", "provenance", "design", "permissions", "sources", "rows"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "kind": { "const": "host-format-capability-matrix" },
+    "cardId": { "const": "C003" },
+    "scope": { "const": "local-documented-only" },
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["baselineCommit", "readmePath", "backlogPath", "approvalArtifact", "approvalSourceCommit", "documentationReview", "reviewedAtUtc", "reviewNote"],
+      "properties": {
+        "baselineCommit": { "const": "a1411c1fd7b081e7772db0ac96eb61d697452c86" },
+        "readmePath": { "const": "README.md" },
+        "backlogPath": { "const": ".docs\\wiki\\backlog.md" },
+        "approvalArtifact": { "const": "capability\\C001\\approved-contract.js" },
+        "approvalSourceCommit": { "const": "26747d4fbbd51235c612dbd9d8c92ab335aef78e" },
+        "documentationReview": { "$ref": "#/$defs/review" },
+        "reviewedAtUtc": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$" },
+        "reviewNote": { "$ref": "#/$defs/text" }
+      },
+      "allOf": [{
+        "if": { "properties": { "documentationReview": { "const": "baseline-only" } } },
+        "then": { "properties": { "reviewedAtUtc": { "const": null } } },
+        "else": { "properties": { "reviewedAtUtc": { "type": "string" } } }
+      }]
+    },
+    "design": {
+      "type": "object", "additionalProperties": false,
+      "required": ["runtime", "framework", "hosting", "testTooling", "productionRuntimeValidated", "firstNativeTarget", "target"],
+      "properties": {
+        "runtime": { "const": "Node.js 24 LTS" },
+        "framework": { "const": "Express" },
+        "hosting": { "const": "App Service Linux" },
+        "testTooling": { "const": "Node.js 22.23.4" },
+        "productionRuntimeValidated": { "const": false },
+        "firstNativeTarget": { "const": "App Service: code deployment slots" },
+        "target": {
+          "type": "object", "additionalProperties": false,
+          "required": ["os", "sku", "subscription", "resourceGroup", "region"],
+          "properties": { "os": { "const": null }, "sku": { "const": null }, "subscription": { "const": null }, "resourceGroup": { "const": null }, "region": { "const": null } }
+        }
+      }
+    },
+    "permissions": {
+      "type": "object", "additionalProperties": false,
+      "required": ["liveAzureExecutionApproved", "iacGenerationApproved", "scaffoldApproved", "deploymentApproved", "identityRegistrationApproved", "expenditureApproved", "maximumLiveAzureRuns", "authorizedCloudSpend"],
+      "properties": {
+        "liveAzureExecutionApproved": { "const": false },
+        "iacGenerationApproved": { "const": false },
+        "scaffoldApproved": { "const": false },
+        "deploymentApproved": { "const": false },
+        "identityRegistrationApproved": { "const": false },
+        "expenditureApproved": { "const": false },
+        "maximumLiveAzureRuns": { "const": 0 },
+        "authorizedCloudSpend": { "const": 0 }
+      }
+    },
+    "sources": { "type": "array", "minItems": 1, "maxItems": 32, "items": { "$ref": "#/$defs/source" } },
+    "rows": {
+      "type": "array", "minItems": 1, "maxItems": 64,
+      "items": { "$ref": "#/$defs/row" },
+      "contains": { "properties": { "firstPlannedNativeTarget": { "const": true } }, "required": ["firstPlannedNativeTarget"] },
+      "minContains": 1, "maxContains": 1
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,79}$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 1200, "pattern": "\\S" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 160, "pattern": "\\S" },
+    "review": { "enum": ["baseline-only", "researcher-documented"] },
+    "status": { "enum": ["planned", "documented-supported", "qualified", "unsupported", "unknown"] },
+    "support": { "enum": ["documented-supported", "unsupported", "unknown"] },
+    "host": { "enum": ["app-service", "container-apps", "aks", "functions", "unselected"] },
+    "format": { "enum": ["code", "container", "function-code", "code-or-container"] },
+    "mechanism": { "enum": ["deployment-slots", "controlled-slot-swap", "native-auto-swap", "http-automatic-scaling-with-slot-traffic", "external-routing", "single-revision", "multiple-revisions", "rolling-deployment", "weighted-routing", "flex-deployment-slots", "flex-rolling-site-update", "host-required"] },
+    "refs": { "type": "array", "minItems": 1, "maxItems": 12, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "title", "url", "baselinePath", "verification"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "title": { "$ref": "#/$defs/title" },
+        "url": { "type": "string", "maxLength": 300, "pattern": "^https://learn\\.microsoft\\.com/(?:[a-z]{2}-[a-z]{2}/)?azure/[a-z0-9/-]+$" },
+        "baselinePath": { "enum": ["README.md", ".docs\\wiki\\backlog.md"] },
+        "verification": { "$ref": "#/$defs/review" }
+      }
+    },
+    "constraint": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "text", "sourceIds"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "text": { "$ref": "#/$defs/text" }, "sourceIds": { "$ref": "#/$defs/refs" } }
+    },
+    "row": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "title", "host", "format", "runtime", "os", "mechanism", "status", "documentedSupport", "adapter", "qualified", "nativeEvidence", "firstPlannedNativeTarget", "reason", "sourceIds", "constraints"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "title": { "$ref": "#/$defs/title" },
+        "host": { "$ref": "#/$defs/host" }, "format": { "$ref": "#/$defs/format" },
+        "runtime": { "enum": ["unselected", "nodejs", "java-spring-boot"] },
+        "os": { "enum": ["windows", "linux", "unspecified", "unapproved"] },
+        "mechanism": { "$ref": "#/$defs/mechanism" },
+        "status": { "$ref": "#/$defs/status", "not": { "const": "qualified" }, "description": "Qualified is reserved; local-only v1 cannot contain a qualified row." },
+        "documentedSupport": { "$ref": "#/$defs/support" },
+        "adapter": { "enum": ["planned", "not-applicable"] },
+        "qualified": { "const": false },
+        "nativeEvidence": { "type": "array", "maxItems": 0 },
+        "firstPlannedNativeTarget": { "type": "boolean" },
+        "reason": { "$ref": "#/$defs/text" },
+        "sourceIds": { "$ref": "#/$defs/refs" },
+        "constraints": { "type": "array", "minItems": 1, "maxItems": 12, "items": { "$ref": "#/$defs/constraint" } }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "firstPlannedNativeTarget": { "const": true } } },
+          "then": { "properties": {
+            "host": { "const": "app-service" }, "format": { "const": "code" }, "runtime": { "const": "unselected" },
+            "os": { "const": "unapproved" }, "mechanism": { "const": "deployment-slots" }, "status": { "const": "planned" },
+            "documentedSupport": { "const": "documented-supported" }, "adapter": { "const": "planned" }
+          } }
+        },
+        { "if": { "properties": { "status": { "const": "documented-supported" } } }, "then": { "properties": { "documentedSupport": { "const": "documented-supported" } } } },
+        { "if": { "properties": { "status": { "const": "unsupported" } } }, "then": { "properties": { "documentedSupport": { "const": "unsupported" } } } },
+        { "if": { "properties": { "status": { "const": "unknown" } } }, "then": { "properties": { "documentedSupport": { "const": "unknown" } } } },
+        {
+          "if": { "properties": { "documentedSupport": { "const": "unsupported" } } },
+          "then": { "properties": { "adapter": { "const": "not-applicable" }, "status": { "const": "unsupported" } } },
+          "else": { "properties": { "adapter": { "const": "planned" } } }
+        },
+        {
+          "if": { "properties": { "host": { "enum": ["container-apps", "aks"] } } },
+          "then": { "properties": { "format": { "const": "container" } } }
+        },
+        {
+          "if": { "anyOf": [
+            { "properties": { "mechanism": { "const": "native-auto-swap" } }, "anyOf": [{ "properties": { "os": { "const": "linux" } } }, { "properties": { "format": { "const": "container" } } }] },
+            { "properties": { "mechanism": { "enum": ["http-automatic-scaling-with-slot-traffic", "flex-deployment-slots"] } } }
+          ] },
+          "then": { "properties": { "status": { "const": "unsupported" }, "documentedSupport": { "const": "unsupported" } } }
+        }
+      ]
+    }
+  },
+  "$comment": "matrix-contract.js additionally checks unique source/row/constraint identifiers, resolvable source references, review provenance, valid dates, and semantic consistency. Schema-consistent imported claims are not authenticated facts or authority."
+}
