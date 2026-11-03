@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "sourceId": "S097",
+  "cardId": "A-S097",
+  "parentId": "D-S097",
+  "packet": "LP-COMPARE",
+  "kano": "S",
+  "kanoUnit": "A-S097",
+  "technicalEntryGate": "SOURCE",
+  "owner": "worker-A-S097",
+  "title": "Warm and cold rollback standby",
+  "objective": "Compare warm/cold rollback standby; detect a violated recovery promise.",
+  "entry": "index.html",
+  "mode": "synthetic",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "preconditions": [
+    "Modern browser with local JavaScript; no server, account or framework",
+    "Fixed complete synthetic retention trace covers 0–300 seconds inclusive",
+    "Rollback request at synthetic second 240; required capacity is 10 units",
+    "Ready retained capacity must be fresh, compatible and sufficient throughout retention"
+  ],
+  "actions": [
+    "Choose warm, cold, insufficient-capacity or unobserved standby and a 6 or 24 second budget",
+    "Choose promise met, promise violated or unverified; check separate promise and answer verdicts",
+    "Compare fixed warm/cold references and inspect selected phase durations, capacity and retention gap",
+    "Reset current controls with keyboard or mouse while retaining every earlier outcome and original budget"
+  ],
+  "syntheticInputs": {
+    "fixtures": ["warm-ready", "cold-gap", "capacity-shortfall", "missing-evidence"],
+    "budgetsSeconds": [6, 24],
+    "answers": ["promise-met", "promise-violated", "unverified"],
+    "retentionSeconds": 300,
+    "rollbackAtSeconds": 240,
+    "requiredCapacity": 10,
+    "warmRecoverySeconds": 4,
+    "coldRecoverySeconds": 20,
+    "coldExtraDelaySeconds": 16,
+    "phaseDurationsSeconds": {
+      "warm-ready": [0, 0, 2, 2],
+      "cold-gap": [4, 12, 2, 2],
+      "capacity-shortfall": [0, 0, 2, 2],
+      "missing-evidence": [0, null, 2, 2]
+    },
+    "maxAttempts": 6,
+    "historyLifetime": "Privately issued immutable in-memory state; current reset preserves history and fixed allowance"
+  },
+  "expectedAssertions": [
+    "Warm ready compatible retained capacity meets the declared recovery budget",
+    "Cold readiness gap and 20 second recovery violate the original 6 second promise",
+    "A 24 second timing budget does not repair lost readiness inside retention",
+    "Fresh probes and fast timing cannot substitute for sufficient retained and recovered capacity",
+    "Missing selected readiness, compatibility and warm-up evidence yields unknown, not reference-derived success",
+    "A correct failure or unknown answer passes only its decision verifier",
+    "Success + failure + unknown equals all retained synthetic promise checks, including earlier failures after reset",
+    "Invalid input, unissued or altered state, duplicate decisions and excess checks cannot append a result",
+    "Actual isolated browser DOM, keyboard, announced errors, reset, retained history and restrictive CSP pass"
+  ],
+  "limits": [
+    "Fixed synthetic teaching data only; no actual standby, rollback, measured recovery, deployment or costs",
+    "No actual recovery-budget, user-journey, native Azure, source-parent or reliability certification",
+    "IaC N/A; no cloud, identity, credentials, deployment, spend, packages, framework or shared-root changes",
+    "Existing Node 22 tooling, offline Playwright 1.56.1 and signed Edge 156 only; not production Node 24",
+    "Read-only verification by default; CAPTURE_BROWSER_EVIDENCE=1 is deliberate capture only",
+    "Only published isolated.cjs 53c0c0d, SHA256 86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055; no abandoned prototype",
+    "LP-COMPARE S companion only, not X002 or packet closure; no extra test, plumbing or refinement credit"
+  ],
+  "evidence": {
+    "source": "evidence/source-contract.json",
+    "bdd": "standby-promise.feature",
+    "assertionRed": "evidence/red.json",
+    "iac": "evidence/iac-decision.json",
+    "focused": "evidence/focused-green.json",
+    "browser": "evidence/browser-acceptance.json",
+    "canonicalIntegrity": "evidence/content-index.json"
+  },
+  "acceptance": {
+    "workerResult": "Verification and publication are separate from parent-owned empirical acceptance",
+    "reviewer": "Parent controller only",
+    "acceptedAtUtc": null,
+    "credit": "At most one A-S097 frozen S unit; evidence, tests and tooling earn no extra credit",
+    "nativeSibling": "B-S097 remains separate and incomplete",
+    "sourceParent": "D-S097 and its prerequisite D-S001 remain incomplete"
+  }
+}

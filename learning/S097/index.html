@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; img-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S097 — Warm and cold rollback standby</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S097: Warm and cold rollback standby</h1>
+    <p>Compare warm/cold rollback standby; detect a violated recovery promise.</p>
+    <p><strong>A-S097 / D-S097 / LP-COMPARE / Kano S</strong> — one portable learning unit, not the comparison delighter.</p>
+    <section aria-labelledby="instructions-title">
+      <h2 id="instructions-title">Declare and check the promise</h2>
+      <p>The complete fixed trace covers retention <strong>0–300 s inclusive</strong>.
+        Rollback is requested at <strong>240 s</strong>; demand is <strong>10 capacity units</strong>.
+        Ready retained capacity must remain fresh, compatible and sufficient throughout that window,
+        then recover within the original budget.</p>
+      <p>Warm recovery takes 4 s. Cold recovery takes 20 s, including 16 s of reactivation and warm-up.
+        These numbers and operations are synthetic teaching data: no clock wait, deployment,
+        actual rollback, resource charge or recovery-budget certification occurs.</p>
+      <ol>
+        <li>Try the default cold standby with “Promise met”: inspect the failure and unsafe answer.</li>
+        <li>Reset, choose “Promise violated”: the answer can pass while the promise still fails.</li>
+        <li>Try 24 s: timing can pass, but the cold retention gap remains a broken commitment.</li>
+        <li>Try warm, insufficient capacity and missing evidence; earlier outcomes stay counted.</li>
+      </ol>
+    </section>
+    <form id="rehearsal-controls" aria-label="Synthetic recovery promise controls">
+      <div>
+        <label for="fixture">Selected standby trace</label>
+        <select id="fixture" name="fixture">
+          <option value="cold-gap" selected>Cold rollback standby — readiness gap</option>
+          <option value="warm-ready">Warm retained standby — ready throughout</option>
+          <option value="capacity-shortfall">Fresh probes, insufficient capacity</option>
+          <option value="missing-evidence">Unobserved readiness and recovery</option>
+        </select>
+      </div>
+      <div>
+        <label for="budget">Original recovery budget (synthetic seconds)</label>
+        <select id="budget" name="budget">
+          <option value="6" selected>6 s</option>
+          <option value="24">24 s</option>
+        </select>
+      </div>
+      <div>
+        <label for="answer">Operator's promise verdict</label>
+        <select id="answer" name="answer">
+          <option value="promise-met" selected>Promise met</option>
+          <option value="promise-violated">Promise violated</option>
+          <option value="unverified">Unverified</option>
+        </select>
+      </div>
+      <div class="buttons">
+        <button id="check-promise" type="submit">Check recovery promise</button>
+        <button id="reset-rehearsal" type="button">Reset current rehearsal</button>
+      </div>
+    </form>
+    <p id="current-status" role="status" aria-live="polite"></p>
+    <p id="error" role="alert" tabindex="-1" hidden></p>
+    <noscript><p>This local lesson needs browser JavaScript; no account, server or framework is required.</p></noscript>
+    <section id="result" aria-labelledby="result-title" aria-live="polite" hidden>
+      <h2 id="result-title">Current synthetic check</h2>
+      <p id="verdict"></p>
+      <p id="decision-verifier"></p>
+      <p id="recovery-impact"></p>
+      <p id="retention-gate"></p>
+      <p id="selected-capacity"></p>
+      <ul id="reasons"></ul>
+      <h3>Warm/cold references under this same declared budget</h3>
+      <p id="cold-delay"></p>
+      <div class="table-scroll">
+        <table>
+          <caption>Fixed reference data; not two accepted native runs</caption>
+          <thead><tr><th scope="col">Standby</th><th scope="col">Retention coverage</th><th scope="col">Minimum ready / required capacity</th><th scope="col">Recovery</th><th scope="col">Timing</th><th scope="col">Promise</th></tr></thead>
+          <tbody id="comparison"></tbody>
+        </table>
+      </div>
+      <h3>Selected rollback phase trace</h3>
+      <p>Offsets start at the synthetic rollback request at 240 s. Unknown duration prevents a known total; reference timings cannot fill missing selected evidence.</p>
+      <table>
+        <caption id="trace-caption"></caption>
+        <thead><tr><th scope="col">Phase</th><th scope="col">Duration</th><th scope="col">Cumulative recovery offset</th></tr></thead>
+        <tbody id="trace"></tbody>
+      </table>
+      <p>One attempted synthetic promise check:
+        success <strong id="sample-success">0</strong>,
+        failure <strong id="sample-failure">0</strong>,
+        unknown <strong id="sample-unknown">0</strong>.
+        A correct failure/unknown answer is not a successful recovery promise.</p>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained session history</h2>
+      <p>Attempted checks <strong id="total-attempted">0</strong> =
+        success <strong id="total-success">0</strong> +
+        failure <strong id="total-failure">0</strong> +
+        unknown <strong id="total-unknown">0</strong>.
+        <span id="history-evidence">No evidence yet.</span></p>
+      <p>At most six checks. Reset restores only current controls and clears the current result/error;
+        it preserves every original budget, outcome and remaining allowance. Reload starts a separate in-memory session.</p>
+      <ol id="history"></ol>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Limits and cleanup</h2>
+      <p id="cleanup">No external resources exist. Reset is local current-rehearsal cleanup; it never erases retained failures or unknowns.</p>
+      <p>Fixed synthetic capacity, readiness, compatibility, routing and recovery labels only.
+        No actual standby/rollback, user journey, recovery-budget, Azure cost or reliability certification.
+        No management calls, credentials, identity, cloud, deployment or spend. IaC N/A.</p>
+      <p>B-S097, D-S097 and source prerequisite D-S001 remain incomplete. Node 22 is test tooling;
+        no production Node 24 or native-platform validation is claimed. Tests, evidence and repeated runs earn no extra Kano credit.
+        Only the parent controller can accept this one S unit.</p>
+    </section>
+  </main>
+</body>
+</html>

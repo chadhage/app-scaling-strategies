@@ -1,0 +1,10 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { evaluate } = require('./red-model.stub.cjs');
+
+test('cold standby violates the recovery promise despite eventual recovery', () => {
+  const observed = evaluate({ fixture: 'cold-gap', budgetSeconds: 6, answer: 'promise-met' });
+  assert.equal(observed.acceptance, 'failure');
+});
