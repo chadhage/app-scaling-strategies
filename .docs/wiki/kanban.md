@@ -2,7 +2,7 @@
 
 ## Purpose and current state
 
-Decompose all 171 parents in [backlog.md](backlog.md) into independently owned, testable delivery slices. This is a pull-system design, not a claim that the application or its demos have been implemented.
+Decompose all 171 parents in [backlog.md](backlog.md) into independently owned, testable delivery slices. The inventory below is the source contract; the [live execution ledger](flow-state.json) records admitted work, owners, empirical acceptance, published commits/tags, blockers, and actual Kano totals. Planning inventory is not implementation evidence.
 
 The inventory contains **414 cards**:
 
@@ -11,9 +11,11 @@ The inventory contains **414 cards**:
 - 150 native-proof cards, B-S001 through B-S150.
 - 6 optional delighters, X001-X006.
 
-Planned Kano mix: **28 dissatisfiers, 380 satisfiers, 6 delighters**. These inventory numbers do not earn completion credit. At creation, Done and all quota reservations are zero.
+Planned Kano mix: **28 dissatisfiers, 380 satisfiers, 6 delighters**. These inventory numbers do not earn completion credit. Done and reservations started at zero; consult the [live execution ledger](flow-state.json) for current totals.
 
 The selected policy is **cumulative completion totals**, with each delighter's satisfiers completed in the **same named delivery packet**. No calendar sprint or simultaneous wall-clock completion is required.
+
+Accepted checkpoint, 2026-11-03: **6 satisfiers Done, 0 dissatisfiers, 0 delighters**. The six portable lessons passed 282 independently rerun automated checks plus recorded real-browser checks, and their implementation commits and annotated tags are published on `main`. These are synthetic learning deliverables, not native Azure proof or completed source-demo parents. Execution is paused for C001 operator approval.
 
 ## TOC
 
@@ -32,7 +34,7 @@ The selected policy is **cumulative completion totals**, with each delighter's s
 
 | To Do | In Progress | Done |
 | --- | --- | --- |
-| Admit ready cards up to the replenishment limit. Initial seed order: A-S001, A-S003, A-S006, A-S008, A-S002, A-S021, A-S031, A-S041. | Empty. Nobody is preassigned work. | Empty. Planning this document does not complete implementation cards. |
+| C001 awaits operator approval and is not pullable. Ready A-S031/A-S041 and other admitted lessons are held by the agreed approval pause; see [live state](flow-state.json). | None at this checkpoint; the first wave is accepted and safely paused. | [A-S001](../../learning/S001/index.html), [A-S002](../../learning/S002/index.html), [A-S003](../../learning/S003/index.html), [A-S006](../../learning/S006/index.html), [A-S008](../../learning/S008/index.html), [A-S021](../../learning/S021/index.html). Evidence and publication references are in the live ledger. |
 
 Let N be the number of active contributors:
 
@@ -41,7 +43,7 @@ Let N be the number of active contributors:
 - Review, tests, integration, and acceptance remain inside In Progress; there is no separate testing/review queue.
 - Pairing or swarming consumes the participating contributors' capacity on the same card.
 
-The tables below are an **unadmitted inventory**, not another workflow column and not a giant To Do queue. Unsatisfied prerequisites are visible entry conditions. Only cards that are immediately actionable and have reserved quota/capacity enter To Do.
+The tables below are an **unadmitted inventory**, not another workflow column and not a giant To Do queue. Returned remainders or approval-blocked cards may remain in the To Do bucket with `readiness=false` and a concrete blocker; they still count against its admitted queue limit. Only ready admitted cards with reserved quota/capacity are pullable, and global dispatch pauses take precedence.
 
 All 150 A cards can start from the supplied source and the portable lesson contract below. Native B cards genuinely need a safe harness, fixtures, and a qualified target. Pretending those dependencies do not exist would not create independent work.
 
@@ -104,7 +106,9 @@ There are 150 independently actionable learning satisfiers and only 28 planned D
 
 ## Atomic card contract
 
-Every listed row is one card, one accountable owner/pair, one independently reviewable PR, and one observable acceptance result.
+Every listed row is one card, one accountable owner/pair, one independently reviewable changeset, and one observable acceptance result. Normal publication is a scoped, labeled commit with an annotated tag on `main`; temporary recovery branches and reviewer-assisted PRs are used only when safe integration requires them.
+
+Implementation order is BDD specification, genuine behavioral TDD red, the IaC step (or an explicit N/A for a resource-free lesson), implementation/refactoring, green tests and actual browser checks, scoped tagged publication, and parent-owned empirical acceptance. A worker cannot award its own Done credit. Subdivision preserves the original `kanoUnit`; partial work does not manufacture extra value.
 
 - **Size target:** A cards take 1-2 focused hours; C, B, and X cards target 2-4 focused hours after entry gates are satisfied. These are slicing limits, not delivery estimates.
 - **Refine before admission:** If a card needs a new research decision, multiple independent behaviors, or more than four focused hours, split it before pulling. Revalidate coverage and Kano classes; artificial splits do not manufacture extra value.
@@ -131,7 +135,7 @@ Each lesson must add a worked, testable exercise rather than copying the backlog
 4. Use separate namespaces: learning/Snnn, native/Snnn, capability/Cnnn, and delight/Xnnn. A/B siblings can progress concurrently when their own gates pass; B never waits merely for A's UI work.
 5. Narrow dependencies to actual consumed capabilities. Contract-conforming components can be developed with explicit fixtures; parent-level release conditions are not blanket coding dependencies.
 6. Preallocate approved leases for admitted native work. Provisioning queues, missing access, undecided stack choices, and unavailable reviewers are not hidden in To Do.
-7. A blocker stays flagged in In Progress and counts against WIP. Swarm to finish rather than opening another card; do not add a fourth workflow column.
+7. Attempt bounded same-card recovery first. Return an incomplete remainder to To Do with `readiness=false` and a concrete blocker when it cannot finish; never pull it again until its gates pass. Preserve the original Kano unit and any verified partial evidence without awarding an unfulfilled unit. Do not add a fourth workflow column.
 8. For unavoidable long observations, implement a bounded, resumable collection slice and report its evidence limit. Do not promise five-nines proof merely to close a four-hour card.
 9. Review ready PRs before pulling new work. Investigate cards older than one focused working day; remove causes of waiting instead of inflating WIP.
 10. If an accepted credit is invalidated, surface the debt and stop new D/L admission until valid evidence restores the constraints. Never conceal a failed acceptance or invent compensating satisfiers.
@@ -717,4 +721,4 @@ At every replenishment:
 6. Publish throughput and cycle time by Kano class, not just totals; never treat planned inventory as completed value.
 7. Preserve security/cost/cleanup gates even when quotas delay admission; keep unsafe live features disabled.
 
-No application, Azure resource, deployment, or implementation card is completed by creating this document. The [source acceptance and evidence policy](backlog.md#completion-and-evidence-policy) and [Microsoft disclaimer](../../README.md#microsoft-open-source-disclaimer) continue to apply.
+Creating this document completes no application, Azure resource, deployment, or implementation card. Current accepted learning deliverables and their limits are recorded separately in the [live execution ledger](flow-state.json); no parent or native proof is implied by an A-card result. The [source acceptance and evidence policy](backlog.md#completion-and-evidence-policy) and [Microsoft disclaimer](../../README.md#microsoft-open-source-disclaimer) continue to apply.
