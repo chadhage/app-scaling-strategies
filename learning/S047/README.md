@@ -44,7 +44,7 @@ Historical proof is append-only. A **deliberate** additional browser capture, no
 
 ```powershell
 $env:CAPTURE_BROWSER_EVIDENCE = '1'
-try { node .\learning\S047\capture.cjs browser-004 }
+try { node .\learning\S047\capture.cjs browser-005 }
 finally { Remove-Item Env:\CAPTURE_BROWSER_EVIDENCE -ErrorAction SilentlyContinue }
 ```
 
@@ -60,7 +60,9 @@ The first tooling capture retains a Windows PowerShell module-autoload failure. 
 
 The first browser capture retains 14 passing groups and a CSP-probe timeout. DevTools evaluation was not a valid test of page-origin dynamic evaluation. The corrected CSP probe loads a local page script under the actual page policy; its evidence separately records debugger evaluation. No CSP or browser security setting was weakened.
 
-The first publication stopped at its whitespace guard before commit/tag/push. Native Windows stdout/stderr must remain byte-exact, so these raw transcripts are explicitly binary artifacts. The unchanged native CRLF IaC decision has a scoped CR-at-EOL whitespace declaration; all normal source whitespace checks still apply. The rejected guard output, original attributes/summary, and earlier seal are retained. The final explicit seal includes that older seal; no historical capture is overwritten.
+The first publication stopped at its whitespace guard before commit/tag/push. A later unaccepted candidate (`52f12803f6c6`) reached the remote, but its committed-blob audit caught Git normalizing 24 source/snapshot files. That candidate and its audit remain immutable, with no acceptance or additional Kano unit.
+
+The final lesson-scoped file policy disables Git text conversion because evidence binds exact bytes. Raw process transcripts and frozen snapshots are binary artifacts. Normal blank-at-EOL/EOF and space-before-tab checks remain, with CR recognized as a Windows line terminator. Integrity now checks Git's filtered blob hash against every exact local byte without writing Git objects; the worker also audits the actual committed blobs after publication. Rejected guard output, original attributes/summaries, and earlier seals remain retained; the final explicit seal includes older seals rather than overwriting them.
 
 Relevant To Do refinement: **B-S047 remains unclaimed and not ready** without CORE, DATA, AKS, C028, C074, a qualified native driver/gateway, approved target and lease. Its future check must observe actual native HTTP/2/gRPC continuation separately from browser-proxy behavior. D-S047 also needs P003, BASE, and its original acceptance. No native/source-parent completion, extra testing/plumbing unit, cloud/IaC generation, deployment, identity registration, or spending is included here.
 

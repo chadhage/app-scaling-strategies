@@ -65,6 +65,14 @@ check('every captured command retains its actual exits, stdout/stderr bytes and 
     assert.equal(sha256(content), guard[stream].sha256);
   }
   assert.match(bytes('evidence/publication-check.stdout.txt').toString('utf8'), /iac-na\.json:1: trailing whitespace/);
+  const audit = read('evidence/publication-byte-audit.json');
+  assert.equal(audit.verifier, 'FAIL');
+  assert.equal(audit.checked, 99);
+  assert.equal(audit.mismatches.length, 24);
+  assert.equal(audit.publication.commit, '52f12803f6c65adb42ad6864ed320a2bb6164598');
+  assert.equal(audit.publication.remoteVerified, true);
+  const attributes = audit.mismatches.find((item) => item.path.endsWith('/.gitattributes'));
+  assert.equal(attributes.workingSha256, sha256(bytes('evidence/publication-byte-audit-red/attributes.source.snapshot')));
 });
 
 check('loadable stub and genuine checkpoint RED are frozen and replayable, never auto-discovered', () => {
@@ -165,6 +173,19 @@ check('actual browser and signed offline tooling evidence have no native or prod
   assert.equal(summary.sourceParentComplete, false);
   assert.equal(summary.earnedUnits, 0);
   assert.equal(summary.acceptance, 'Pending parent empirical acceptance; worker does not Accept.');
+});
+
+check('Git publication filtering preserves every exact owned byte without writing objects', () => {
+  const repo = path.resolve(owned, '..', '..');
+  for (const relative of files(owned)) {
+    const content = bytes(relative);
+    const expected = crypto.createHash('sha1').update(`blob ${content.length}\0`).update(content).digest('hex');
+    // --path is a Git tree path, not a Windows filesystem path.
+    const repoRelative = ['learning', 'S047', relative].join('/');
+    const filtered = spawnSync('git', ['hash-object', `--path=${repoRelative}`, '--stdin'], { cwd: repo, input: content });
+    assert.equal(filtered.status, 0, `${relative}: ${filtered.stderr?.toString('utf8')}`);
+    assert.equal(filtered.stdout.toString('utf8').trim(), expected, `Publication would change ${relative}`);
+  }
 });
 
 console.log(JSON.stringify({ verifier: 'PASS', sealedFiles: Object.keys(seal.files).length, integrityCheckGroups: checks.length, checks, frozenRedReplayExit: 1 }, null, 2));
