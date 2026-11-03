@@ -1,0 +1,37 @@
+(function (root, factory) {
+  'use strict';
+  const fixtures = factory();
+  if (typeof module === 'object' && module.exports) module.exports = fixtures;
+  else root.S060Fixtures = fixtures;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const freeze = (value) => {
+    if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  };
+  return freeze({
+    baseline: [
+      { id: 'S060-001', totalCents: 1200 },
+      { id: 'S060-002', totalCents: 2300 },
+    ],
+    compatible: [
+      { id: 'S060-001', totalCents: 1200, note: 'Retained synthetic order' },
+      { id: 'S060-002', totalCents: 2300, note: 'Retained synthetic order' },
+      { id: 'S060-003', totalCents: 500, note: 'New committed v2 write' },
+    ],
+    irreversible: [
+      { id: 'S060-001', minorUnits: 1200, currency: 'USD' },
+      { id: 'S060-002', minorUnits: 2300, currency: 'USD' },
+      { id: 'S060-003', minorUnits: 700, currency: 'EUR' },
+    ],
+    expected: {
+      compatible: { USD: 4000 },
+      irreversible: { USD: 3500, EUR: 700 },
+    },
+    budgetMs: 10,
+    maxHistory: 12,
+  });
+}));

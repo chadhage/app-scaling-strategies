@@ -1,0 +1,924 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S060",
+  "workerId": "worker-A-S060",
+  "mode": "synthetic",
+  "entry": "learning\\S060\\index.html",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "startedAtUtc": "2026-11-03T19:28:03.625Z",
+  "captureExplicitlyEnabled": true,
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "publication": "53c0c0d"
+  },
+  "outcome": "PASS",
+  "observations": [
+    {
+      "name": "initial unknown, empty sample is no evidence",
+      "phase": "Phase: ready | active code: v1 | schema: v1",
+      "result": "Recovery result: UNKNOWN - no attempted recovery observed.",
+      "impact": "Synthetic user impact: not yet observed.",
+      "metrics": "Recovery attempts: 0 | success: 0 | failure: 0 | unknown: 0 | safe aborts: 0 | success fraction: no evidence",
+      "observed": "Observed effects: none. Empty evidence is not success.",
+      "committed": [
+        [
+          "S060-001",
+          "{\"totalCents\":1200}"
+        ],
+        [
+          "S060-002",
+          "{\"totalCents\":2300}"
+        ]
+      ],
+      "history": [
+        [
+          "No recovery decisions yet."
+        ]
+      ],
+      "trace": "Training rehearsal - synthetic data - not a live Azure result\nMode: not evolved; application v1; schema v1.\nCommitted IDs: S060-001, S060-002.\nEvolve the schema, then choose a recovery path. No recovery observation exists.",
+      "alert": "",
+      "capacity": "Retained decisions: 0/12",
+      "activeElement": ""
+    },
+    {
+      "name": "stale state guard is visible and data/history unchanged",
+      "phase": "Phase: evolved | active code: v2 | schema: expanded",
+      "result": "Recovery result: UNKNOWN - no attempted recovery observed.",
+      "impact": "Synthetic user impact: not yet observed.",
+      "metrics": "Recovery attempts: 0 | success: 0 | failure: 0 | unknown: 0 | safe aborts: 0 | success fraction: no evidence",
+      "observed": "Observed effects: none. Empty evidence is not success.",
+      "committed": [
+        [
+          "S060-001",
+          "{\"totalCents\":1200,\"note\":\"Retained synthetic order\"}"
+        ],
+        [
+          "S060-002",
+          "{\"totalCents\":2300,\"note\":\"Retained synthetic order\"}"
+        ],
+        [
+          "S060-003",
+          "{\"totalCents\":500,\"note\":\"New committed v2 write\"}"
+        ]
+      ],
+      "history": [
+        [
+          "No recovery decisions yet."
+        ]
+      ],
+      "trace": "Training rehearsal - synthetic data - not a live Azure result\nMode: compatible; application v2; schema expanded.\nCommitted IDs: S060-001, S060-002, S060-003.\nEvolve the schema, then choose a recovery path. No recovery observation exists.",
+      "alert": "Schema evolution requires ready state; reset the rehearsal first.",
+      "capacity": "Retained decisions: 0/12",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "compatible keyboard rollback preserves all committed v2 data and expanded schema",
+      "phase": "Phase: recovered | active code: v1 | schema: expanded",
+      "result": "Recovery result: SUCCESS - all committed IDs and per-currency totals read within the synthetic budget.",
+      "impact": "Synthetic user impact: correct fixed read journey.",
+      "metrics": "Recovery attempts: 1 | success: 1 | failure: 0 | unknown: 0 | safe aborts: 0 | success fraction: 1/1",
+      "observed": "Observed effects: 3/3 | totals: USD 4000 | expected: USD 4000 | latency: 7 ms / 10 ms budget",
+      "committed": [
+        [
+          "S060-001",
+          "{\"totalCents\":1200,\"note\":\"Retained synthetic order\"}"
+        ],
+        [
+          "S060-002",
+          "{\"totalCents\":2300,\"note\":\"Retained synthetic order\"}"
+        ],
+        [
+          "S060-003",
+          "{\"totalCents\":500,\"note\":\"New committed v2 write\"}"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ]
+      ],
+      "trace": "Training rehearsal - synthetic data - not a live Azure result\nMode: compatible; application v1; schema expanded.\nCommitted IDs: S060-001, S060-002, S060-003.\nDecision #1: rollback; success; attempted=true.\nCompatible application rollback: v1 reads all committed IDs and totals; the expanded schema stays in place. No down migration.\nCommitted fixture preserved: true.\nObserved IDs: S060-001, S060-002, S060-003.",
+      "alert": "",
+      "capacity": "Retained decisions: 1/12",
+      "activeElement": "reset-rehearsal"
+    },
+    {
+      "name": "reset retains success but current result becomes unknown",
+      "phase": "Phase: ready | active code: v1 | schema: v1",
+      "result": "Recovery result: UNKNOWN - no attempted recovery observed.",
+      "impact": "Synthetic user impact: not yet observed.",
+      "metrics": "Recovery attempts: 1 | success: 1 | failure: 0 | unknown: 0 | safe aborts: 0 | success fraction: 1/1",
+      "observed": "Observed effects: none. Empty evidence is not success.",
+      "committed": [
+        [
+          "S060-001",
+          "{\"totalCents\":1200}"
+        ],
+        [
+          "S060-002",
+          "{\"totalCents\":2300}"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ]
+      ],
+      "trace": "Training rehearsal - synthetic data - not a live Azure result\nMode: not evolved; application v1; schema v1.\nCommitted IDs: S060-001, S060-002.\nEvolve the schema, then choose a recovery path. No recovery observation exists.",
+      "alert": "",
+      "capacity": "Retained decisions: 1/12",
+      "activeElement": "mode"
+    },
+    {
+      "name": "unsafe irreversible reversal is blocked, not successful migration",
+      "phase": "Phase: evolved | active code: v2 | schema: v2-only",
+      "result": "Recovery result: SAFE ABORT - unsafe reversal blocked; no recovery migration.",
+      "impact": "Synthetic user impact: no exposure; v2 remains active.",
+      "metrics": "Recovery attempts: 1 | success: 1 | failure: 0 | unknown: 0 | safe aborts: 1 | success fraction: 1/1",
+      "observed": "Observed effects: unobserved | totals: unobserved | expected: USD 3500 + EUR 700 | latency: unobserved / 10 ms budget",
+      "committed": [
+        [
+          "S060-001",
+          "{\"minorUnits\":1200,\"currency\":\"USD\"}"
+        ],
+        [
+          "S060-002",
+          "{\"minorUnits\":2300,\"currency\":\"USD\"}"
+        ],
+        [
+          "S060-003",
+          "{\"minorUnits\":700,\"currency\":\"EUR\"}"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "2",
+          "irreversible",
+          "rollback",
+          "safe-abort",
+          "v2",
+          "unobserved",
+          "unobserved"
+        ]
+      ],
+      "trace": "Training rehearsal - synthetic data - not a live Azure result\nMode: irreversible; application v2; schema v2-only.\nCommitted IDs: S060-001, S060-002, S060-003.\nDecision #2: rollback; safe-abort; attempted=false.\nUnsafe reversal rejected: v1 requires totalCents and USD-only values; v2-only records include EUR. Choose explicit forward recovery.\nCommitted fixture preserved: true.\nObserved IDs: unobserved.",
+      "alert": "",
+      "capacity": "Retained decisions: 2/12",
+      "activeElement": "forward"
+    },
+    {
+      "name": "explicit forward recovery preserves all IDs and both currency totals",
+      "phase": "Phase: recovered | active code: v2.1 | schema: v2-only",
+      "result": "Recovery result: SUCCESS - all committed IDs and per-currency totals read within the synthetic budget.",
+      "impact": "Synthetic user impact: correct fixed read journey.",
+      "metrics": "Recovery attempts: 2 | success: 2 | failure: 0 | unknown: 0 | safe aborts: 1 | success fraction: 2/2",
+      "observed": "Observed effects: 3/3 | totals: USD 3500 + EUR 700 | expected: USD 3500 + EUR 700 | latency: 7 ms / 10 ms budget",
+      "committed": [
+        [
+          "S060-001",
+          "{\"minorUnits\":1200,\"currency\":\"USD\"}"
+        ],
+        [
+          "S060-002",
+          "{\"minorUnits\":2300,\"currency\":\"USD\"}"
+        ],
+        [
+          "S060-003",
+          "{\"minorUnits\":700,\"currency\":\"EUR\"}"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "2",
+          "irreversible",
+          "rollback",
+          "safe-abort",
+          "v2",
+          "unobserved",
+          "unobserved"
+        ],
+        [
+          "3",
+          "irreversible",
+          "forward",
+          "success",
+          "v2.1",
+          "3/3",
+          "USD 3500 + EUR 700"
+        ]
+      ],
+      "trace": "Training rehearsal - synthetic data - not a live Azure result\nMode: irreversible; application v2.1; schema v2-only.\nCommitted IDs: S060-001, S060-002, S060-003.\nDecision #3: forward; success; attempted=true.\nExplicit forward recovery: v2.1 reads all committed IDs and currency totals without reversing the v2-only data contract.\nCommitted fixture preserved: true.\nObserved IDs: S060-001, S060-002, S060-003.",
+      "alert": "",
+      "capacity": "Retained decisions: 3/12",
+      "activeElement": "reset-rehearsal"
+    },
+    {
+      "name": "missing committed read is failure despite retained durable fixture",
+      "phase": "Phase: recovered | active code: v1 | schema: expanded",
+      "result": "Recovery result: FAILURE - the read omitted a committed effect.",
+      "impact": "Synthetic user impact: interrupted; missing committed read.",
+      "metrics": "Recovery attempts: 3 | success: 2 | failure: 1 | unknown: 0 | safe aborts: 1 | success fraction: 2/3",
+      "observed": "Observed effects: 2/3 | totals: USD 3500 | expected: USD 4000 | latency: 7 ms / 10 ms budget",
+      "committed": [
+        [
+          "S060-001",
+          "{\"totalCents\":1200,\"note\":\"Retained synthetic order\"}"
+        ],
+        [
+          "S060-002",
+          "{\"totalCents\":2300,\"note\":\"Retained synthetic order\"}"
+        ],
+        [
+          "S060-003",
+          "{\"totalCents\":500,\"note\":\"New committed v2 write\"}"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "2",
+          "irreversible",
+          "rollback",
+          "safe-abort",
+          "v2",
+          "unobserved",
+          "unobserved"
+        ],
+        [
+          "3",
+          "irreversible",
+          "forward",
+          "success",
+          "v2.1",
+          "3/3",
+          "USD 3500 + EUR 700"
+        ],
+        [
+          "4",
+          "compatible",
+          "rollback",
+          "failure",
+          "v1",
+          "2/3",
+          "USD 3500"
+        ]
+      ],
+      "trace": "Training rehearsal - synthetic data - not a live Azure result\nMode: compatible; application v1; schema expanded.\nCommitted IDs: S060-001, S060-002, S060-003.\nDecision #4: rollback; failure; attempted=true.\nSynthetic interrupted journey: missing a committed row in the read result. Durable records are unchanged; recovery did not hide the failure.\nCommitted fixture preserved: true.\nObserved IDs: S060-001, S060-002.",
+      "alert": "",
+      "capacity": "Retained decisions: 4/12",
+      "activeElement": "reset-rehearsal"
+    },
+    {
+      "name": "unavailable forward read is unknown and remains in denominator",
+      "phase": "Phase: recovered | active code: v2.1 | schema: v2-only",
+      "result": "Recovery result: UNKNOWN - read evidence unavailable; attempt retained.",
+      "impact": "Synthetic user impact: unverified; not successful.",
+      "metrics": "Recovery attempts: 4 | success: 2 | failure: 1 | unknown: 1 | safe aborts: 1 | success fraction: 2/4",
+      "observed": "Observed effects: unobserved | totals: unobserved | expected: USD 3500 + EUR 700 | latency: unobserved / 10 ms budget",
+      "committed": [
+        [
+          "S060-001",
+          "{\"minorUnits\":1200,\"currency\":\"USD\"}"
+        ],
+        [
+          "S060-002",
+          "{\"minorUnits\":2300,\"currency\":\"USD\"}"
+        ],
+        [
+          "S060-003",
+          "{\"minorUnits\":700,\"currency\":\"EUR\"}"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "2",
+          "irreversible",
+          "rollback",
+          "safe-abort",
+          "v2",
+          "unobserved",
+          "unobserved"
+        ],
+        [
+          "3",
+          "irreversible",
+          "forward",
+          "success",
+          "v2.1",
+          "3/3",
+          "USD 3500 + EUR 700"
+        ],
+        [
+          "4",
+          "compatible",
+          "rollback",
+          "failure",
+          "v1",
+          "2/3",
+          "USD 3500"
+        ],
+        [
+          "5",
+          "irreversible",
+          "forward",
+          "unknown",
+          "v2.1",
+          "unobserved",
+          "unobserved"
+        ]
+      ],
+      "trace": "Training rehearsal - synthetic data - not a live Azure result\nMode: irreversible; application v2.1; schema v2-only.\nCommitted IDs: S060-001, S060-002, S060-003.\nDecision #5: forward; unknown; attempted=true.\nObservation unavailable: the attempted recovery remains unverified and stays in the denominator.\nCommitted fixture preserved: true.\nObserved IDs: unobserved.",
+      "alert": "",
+      "capacity": "Retained decisions: 5/12",
+      "activeElement": "reset-rehearsal"
+    },
+    {
+      "name": "reset retains failed and unknown outcomes and returns keyboard focus",
+      "phase": "Phase: ready | active code: v1 | schema: v1",
+      "result": "Recovery result: UNKNOWN - no attempted recovery observed.",
+      "impact": "Synthetic user impact: not yet observed.",
+      "metrics": "Recovery attempts: 4 | success: 2 | failure: 1 | unknown: 1 | safe aborts: 1 | success fraction: 2/4",
+      "observed": "Observed effects: none. Empty evidence is not success.",
+      "committed": [
+        [
+          "S060-001",
+          "{\"totalCents\":1200}"
+        ],
+        [
+          "S060-002",
+          "{\"totalCents\":2300}"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "2",
+          "irreversible",
+          "rollback",
+          "safe-abort",
+          "v2",
+          "unobserved",
+          "unobserved"
+        ],
+        [
+          "3",
+          "irreversible",
+          "forward",
+          "success",
+          "v2.1",
+          "3/3",
+          "USD 3500 + EUR 700"
+        ],
+        [
+          "4",
+          "compatible",
+          "rollback",
+          "failure",
+          "v1",
+          "2/3",
+          "USD 3500"
+        ],
+        [
+          "5",
+          "irreversible",
+          "forward",
+          "unknown",
+          "v2.1",
+          "unobserved",
+          "unobserved"
+        ]
+      ],
+      "trace": "Training rehearsal - synthetic data - not a live Azure result\nMode: not evolved; application v1; schema v1.\nCommitted IDs: S060-001, S060-002.\nEvolve the schema, then choose a recovery path. No recovery observation exists.",
+      "alert": "",
+      "capacity": "Retained decisions: 5/12",
+      "activeElement": "mode"
+    },
+    {
+      "name": "invalid input guard is visible, focused and non-mutating",
+      "phase": "Phase: ready | active code: v1 | schema: v1",
+      "result": "Recovery result: UNKNOWN - no attempted recovery observed.",
+      "impact": "Synthetic user impact: not yet observed.",
+      "metrics": "Recovery attempts: 4 | success: 2 | failure: 1 | unknown: 1 | safe aborts: 1 | success fraction: 2/4",
+      "observed": "Observed effects: none. Empty evidence is not success.",
+      "committed": [
+        [
+          "S060-001",
+          "{\"totalCents\":1200}"
+        ],
+        [
+          "S060-002",
+          "{\"totalCents\":2300}"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "2",
+          "irreversible",
+          "rollback",
+          "safe-abort",
+          "v2",
+          "unobserved",
+          "unobserved"
+        ],
+        [
+          "3",
+          "irreversible",
+          "forward",
+          "success",
+          "v2.1",
+          "3/3",
+          "USD 3500 + EUR 700"
+        ],
+        [
+          "4",
+          "compatible",
+          "rollback",
+          "failure",
+          "v1",
+          "2/3",
+          "USD 3500"
+        ],
+        [
+          "5",
+          "irreversible",
+          "forward",
+          "unknown",
+          "v2.1",
+          "unobserved",
+          "unobserved"
+        ]
+      ],
+      "trace": "Training rehearsal - synthetic data - not a live Azure result\nMode: not evolved; application v1; schema v1.\nCommitted IDs: S060-001, S060-002.\nEvolve the schema, then choose a recovery path. No recovery observation exists.",
+      "alert": "mode: unsupported value.",
+      "capacity": "Retained decisions: 5/12",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "forced recovery before evolution is rejected by state guard",
+      "phase": "Phase: ready | active code: v1 | schema: v1",
+      "result": "Recovery result: UNKNOWN - no attempted recovery observed.",
+      "impact": "Synthetic user impact: not yet observed.",
+      "metrics": "Recovery attempts: 4 | success: 2 | failure: 1 | unknown: 1 | safe aborts: 1 | success fraction: 2/4",
+      "observed": "Observed effects: none. Empty evidence is not success.",
+      "committed": [
+        [
+          "S060-001",
+          "{\"totalCents\":1200}"
+        ],
+        [
+          "S060-002",
+          "{\"totalCents\":2300}"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "2",
+          "irreversible",
+          "rollback",
+          "safe-abort",
+          "v2",
+          "unobserved",
+          "unobserved"
+        ],
+        [
+          "3",
+          "irreversible",
+          "forward",
+          "success",
+          "v2.1",
+          "3/3",
+          "USD 3500 + EUR 700"
+        ],
+        [
+          "4",
+          "compatible",
+          "rollback",
+          "failure",
+          "v1",
+          "2/3",
+          "USD 3500"
+        ],
+        [
+          "5",
+          "irreversible",
+          "forward",
+          "unknown",
+          "v2.1",
+          "unobserved",
+          "unobserved"
+        ]
+      ],
+      "trace": "Training rehearsal - synthetic data - not a live Azure result\nMode: not evolved; application v1; schema v1.\nCommitted IDs: S060-001, S060-002.\nEvolve the schema, then choose a recovery path. No recovery observation exists.",
+      "alert": "Recovery requires evolved state; evolve and commit the v2 fixture first.",
+      "capacity": "Retained decisions: 5/12",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "bounded capacity cannot be bypassed by reset and never erases failures",
+      "phase": "Phase: ready | active code: v1 | schema: v1",
+      "result": "Recovery result: UNKNOWN - no attempted recovery observed.",
+      "impact": "Synthetic user impact: not yet observed.",
+      "metrics": "Recovery attempts: 11 | success: 9 | failure: 1 | unknown: 1 | safe aborts: 1 | success fraction: 9/11",
+      "observed": "Observed effects: none. Empty evidence is not success.",
+      "committed": [
+        [
+          "S060-001",
+          "{\"totalCents\":1200}"
+        ],
+        [
+          "S060-002",
+          "{\"totalCents\":2300}"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "2",
+          "irreversible",
+          "rollback",
+          "safe-abort",
+          "v2",
+          "unobserved",
+          "unobserved"
+        ],
+        [
+          "3",
+          "irreversible",
+          "forward",
+          "success",
+          "v2.1",
+          "3/3",
+          "USD 3500 + EUR 700"
+        ],
+        [
+          "4",
+          "compatible",
+          "rollback",
+          "failure",
+          "v1",
+          "2/3",
+          "USD 3500"
+        ],
+        [
+          "5",
+          "irreversible",
+          "forward",
+          "unknown",
+          "v2.1",
+          "unobserved",
+          "unobserved"
+        ],
+        [
+          "6",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "7",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "8",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "9",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "10",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "11",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "12",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ]
+      ],
+      "trace": "Training rehearsal - synthetic data - not a live Azure result\nMode: not evolved; application v1; schema v1.\nCommitted IDs: S060-001, S060-002.\nEvolve the schema, then choose a recovery path. No recovery observation exists.",
+      "alert": "History limit: 12 retained decisions. Reload for a new, empty workbook.",
+      "capacity": "Retained decisions: 12/12 - history limit reached; reload only if you intend to discard this workbook.",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "enforced CSP blocks inline code, evaluation, connection and form probes",
+      "phase": "Phase: ready | active code: v1 | schema: v1",
+      "result": "Recovery result: UNKNOWN - no attempted recovery observed.",
+      "impact": "Synthetic user impact: not yet observed.",
+      "metrics": "Recovery attempts: 11 | success: 9 | failure: 1 | unknown: 1 | safe aborts: 1 | success fraction: 9/11",
+      "observed": "Observed effects: none. Empty evidence is not success.",
+      "committed": [
+        [
+          "S060-001",
+          "{\"totalCents\":1200}"
+        ],
+        [
+          "S060-002",
+          "{\"totalCents\":2300}"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "2",
+          "irreversible",
+          "rollback",
+          "safe-abort",
+          "v2",
+          "unobserved",
+          "unobserved"
+        ],
+        [
+          "3",
+          "irreversible",
+          "forward",
+          "success",
+          "v2.1",
+          "3/3",
+          "USD 3500 + EUR 700"
+        ],
+        [
+          "4",
+          "compatible",
+          "rollback",
+          "failure",
+          "v1",
+          "2/3",
+          "USD 3500"
+        ],
+        [
+          "5",
+          "irreversible",
+          "forward",
+          "unknown",
+          "v2.1",
+          "unobserved",
+          "unobserved"
+        ],
+        [
+          "6",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "7",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "8",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "9",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "10",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "11",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ],
+        [
+          "12",
+          "compatible",
+          "rollback",
+          "success",
+          "v1",
+          "3/3",
+          "USD 4000"
+        ]
+      ],
+      "trace": "Training rehearsal - synthetic data - not a live Azure result\nMode: not evolved; application v1; schema v1.\nCommitted IDs: S060-001, S060-002.\nEvolve the schema, then choose a recovery path. No recovery observation exists.",
+      "alert": "History limit: 12 retained decisions. Reload for a new, empty workbook.",
+      "capacity": "Retained decisions: 12/12 - history limit reached; reload only if you intend to discard this workbook.",
+      "activeElement": "input-error"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp-probes",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-XhKC6CrGtuRYuq7pUsWGMfplnGIGzlVh0FPDrAlkrqY='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Connecting to 'https://s060.invalid/connection-probe' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Fetch API cannot load https://s060.invalid/connection-probe. Refused to connect because it violates the document's Content Security Policy."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Sending form data to 'https://s060.invalid/form-probe' violates the following Content Security Policy directive: \"form-action 'none'\". The request has been blocked.\n"
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "probeRequests": [],
+  "probeResponses": [],
+  "cleanup": {
+    "browserCloseAwaited": true,
+    "result": "closed",
+    "serversStarted": 0
+  },
+  "testedSourceHashes": {
+    "index.html": "6b65cf9ed87e6011faa8a83f074d47b76db0a8b19b4d1ad853f5c02bdd61e550",
+    "styles.css": "917da05eff69c1d283d37405df4652da42fd1be4bf127af0638e4078cbdbae82",
+    "fixtures.js": "2df7440e92b3a12d52f51b302969526803d0b9e1f42c262560c9d4d340af01cf",
+    "model.js": "2594dae834d648d7ce2a99483532350f4e387a0d291b3bffe72a53b207ebd1b5",
+    "app.js": "a3892ba201430639b0beb9b9ff4950100ab04ea113d5ee9f8245478fb683e1b8",
+    "tests\\browser.test.cjs": "1ae8f1cc76b3fbcb7060f1bf7f5921c15e408f2a23a69a7ab9338aebe76871bd",
+    "tests\\csp-probe.js": "bdea98ebf58ee4f15b5f592651793924fc96cf668d910ebb777d49828f92007c"
+  },
+  "browserVersion": "156.0.4314.50",
+  "cspAttempt": {
+    "pageLoadedScript": true,
+    "evalError": "EvalError",
+    "fetchError": "TypeError",
+    "done": true
+  },
+  "cspViolations": [
+    {
+      "effectiveDirective": "script-src-elem",
+      "blockedURI": "inline",
+      "disposition": "enforce"
+    },
+    {
+      "effectiveDirective": "script-src",
+      "blockedURI": "eval",
+      "disposition": "enforce"
+    },
+    {
+      "effectiveDirective": "connect-src",
+      "blockedURI": "https://s060.invalid/connection-probe",
+      "disposition": "enforce"
+    },
+    {
+      "effectiveDirective": "form-action",
+      "blockedURI": "https://s060.invalid/form-probe",
+      "disposition": "enforce"
+    }
+  ],
+  "inlineRan": false,
+  "evalRan": false,
+  "completedAtUtc": "2026-11-03T19:28:09.093Z"
+}

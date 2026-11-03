@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S060",
+  "parentId": "D-S060",
+  "kano": "S",
+  "kanoUnit": "A-S060",
+  "packet": "SC-S060",
+  "owner": "worker-A-S060",
+  "reviewer": "Parent coordinator; independent empirical acceptance pending",
+  "acceptedAtUtc": null,
+  "mode": "synthetic",
+  "configuration": "Local-file standard HTML/CSS/JavaScript; two starting orders, one committed v2 write, three observation fixtures, 12 retained decisions",
+  "sourceAcceptance": "Compatible rollback preserves data; irreversible changes invoke explicit forward recovery, not a fake successful reversal.",
+  "sourceProvenance": "evidence/source-contract.json",
+  "bdd": "schema-recovery.feature",
+  "behavioralRed": {
+    "reference": "evidence/red/run.json",
+    "tests": 1,
+    "assertionFailures": 1,
+    "actual": "v2",
+    "expected": "v1",
+    "missingCodeOrTools": false,
+    "snapshotsAutoDiscovered": false
+  },
+  "iac": {
+    "status": "N/A",
+    "reference": "evidence/iac-decision.json",
+    "stage": "After genuine behavioral RED and before implementation"
+  },
+  "verification": {
+    "initialFocusedGreen": "evidence/initial-green/run.json",
+    "modelAndSurfaceGreen": "evidence/green/run.json",
+    "syntax": "evidence/syntax-002/run.json",
+    "browser": "evidence/browser.json",
+    "fullFocusedAcceptance": "evidence/acceptance/run.json",
+    "tooling": "evidence/tooling.json",
+    "contentIntegrity": "evidence/content-index.json",
+    "preservedUnqualifiedCspProbe": "evidence/csp-probe-qualification/qualification.json",
+    "ordinaryTestsWriteProof": false,
+    "browserCaptureRequires": "CAPTURE_BROWSER_EVIDENCE=1"
+  },
+  "userImpact": {
+    "compatibleRollback": "Synthetic success only with all 3 IDs, USD 4000 and 7 ms within the 10 ms budget; expanded schema remains.",
+    "unsafeReversal": "Safe abort before exposure; v2 and all committed records remain; not an attempted or successful recovery.",
+    "forwardRecovery": "Explicit v2.1 forward recovery, 3 IDs, USD 3500 and EUR 700; never labeled successful reversal.",
+    "missingRead": "Synthetic interrupted journey; 2/3 observed effects, despite 3 committed records remaining.",
+    "unavailableRead": "Unknown attempted journey, included in the denominator, not counted as success.",
+    "reset": "Baseline data/controls restored without deleting historical outcomes or changing prior denominators."
+  },
+  "cleanup": {
+    "externalResourcesCreated": false,
+    "serversStarted": 0,
+    "browserClose": "Awaited in finally",
+    "history": "In-memory, bounded; reset retains it, reload intentionally clears it."
+  },
+  "publication": "Authorized publisher record in .git/kanban-orchestrator/published/A-S060.json binds the implementation commit, annotated tag and checked remote refs without self-referential bundle hashes.",
+  "limits": [
+    "No actual database migration/rollback/restore or retained-state proof from a portable model.",
+    "No native Azure, production24, source-parent or five-nines certification.",
+    "No cloud/IaC/scaffold/identity/deploy/spend/packages/framework/root/shared edits.",
+    "Only the published browser helper is used; its known unattended lifecycle limitation remains unqualified.",
+    "B-S060/D-S060 remain incomplete. Parent alone accepts this one S unit once."
+  ]
+}

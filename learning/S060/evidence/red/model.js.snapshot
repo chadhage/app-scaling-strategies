@@ -1,0 +1,27 @@
+(function (root, factory) {
+  'use strict';
+  const fixtures = typeof module === 'object' && module.exports
+    ? require('./fixtures.js') : root.S060Fixtures;
+  const model = factory(fixtures);
+  if (typeof module === 'object' && module.exports) module.exports = model;
+  else root.S060Model = model;
+}(typeof globalThis === 'object' ? globalThis : this, function (fixtures) {
+  'use strict';
+  const BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
+  function createState() {
+    return { phase: 'ready', mode: null, activeVersion: 'v1', schema: 'v1',
+      committed: fixtures.baseline, history: [] };
+  }
+  function transition(state, action) {
+    if (action.type === 'evolve') return { ...state, phase: 'evolved',
+      mode: action.mode, activeVersion: 'v2',
+      schema: action.mode === 'compatible' ? 'expanded' : 'v2-only',
+      committed: fixtures[action.mode] };
+    return state;
+  }
+  function summarize() {
+    return { attempted: 0, success: 0, failure: 0, unknown: 0, safeAborts: 0,
+      successFraction: null };
+  }
+  return { BANNER, MAX_HISTORY: fixtures.maxHistory, createState, transition, summarize };
+}));

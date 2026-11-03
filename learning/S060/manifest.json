@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S060",
+  "sourceId": "S060",
+  "parentId": "D-S060",
+  "kano": "S",
+  "kanoUnit": "A-S060",
+  "packet": "SC-S060",
+  "owner": "worker-A-S060",
+  "entryGate": "SOURCE",
+  "title": "Rollback after schema evolution",
+  "entryPoint": "learning/S060/index.html",
+  "feature": "learning/S060/schema-recovery.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Roll back after schema evolution; distinguish compatible reversal from required forward recovery.",
+  "sourceAcceptance": "Compatible rollback preserves data; irreversible changes invoke explicit forward recovery, not a fake successful reversal.",
+  "sourceDependency": "D-S054 is a source-parent prerequisite, not a claim that native database evolution has been conducted.",
+  "preconditions": [
+    "A modern browser with local HTML, CSS and JavaScript support.",
+    "Two fixed v1 synthetic orders, total USD 3500 minor units.",
+    "The old v1 contract requires totalCents and assumes USD.",
+    "No database, account, endpoint, credentials, framework or Azure subscription."
+  ],
+  "actions": [
+    "Choose compatible additive evolution or the declared irreversible-for-v1 currency contract.",
+    "Evolve and commit a fixed new v2 write before recovery.",
+    "Choose complete, missing-row or unavailable synthetic read observations.",
+    "Request application rollback to v1 or explicit forward recovery to v2.1.",
+    "Inspect data, read effects, totals, timing, outcome and retained history.",
+    "Reset the rehearsal without deleting earlier failed, unknown or safe-abort outcomes."
+  ],
+  "input": "learning/S060/fixtures.js",
+  "assertions": [
+    "Compatible application rollback retains the expanded schema, all three committed orders and USD 4000.",
+    "Unsafe v1 reversal of the v2-only currency contract is rejected before exposure, not counted as recovery success.",
+    "Explicit forward recovery preserves three interpretable effects, USD 3500 and EUR 700.",
+    "A missing committed read is failure even though the durable fixture is unchanged.",
+    "An unavailable read is unknown; failures and unknowns stay in the attempted-journey denominator.",
+    "Exact actions, fixed enum inputs, authentic immutable states and a 12-decision history bound are enforced."
+  ],
+  "bounds": {
+    "startingOrders": 2,
+    "evolvedOrders": 3,
+    "retainedDecisions": 12,
+    "syntheticBudgetMs": 10,
+    "availableReadMs": 7,
+    "modes": ["compatible", "irreversible"],
+    "paths": ["rollback", "forward"],
+    "observations": ["complete", "missing-row", "unavailable"],
+    "arbitraryDataOrEndpoints": false
+  },
+  "iac": {
+    "status": "N/A",
+    "decisionStage": "After genuine behavioral RED and before behavior implementation",
+    "decision": "learning/S060/evidence/iac-decision.json",
+    "reason": "Resource-free local synthetic lesson; no cloud, IaC, scaffold, identity, deployment or spending is authorized."
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "purpose": "Existing Node22 tooling only; not production24 certification.",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing signed Microsoft Edge 156",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "dependenciesChanged": false
+  },
+  "history": "Memory only; reset retains all decisions. At 12 decisions the workbook stops. Reload intentionally erases the entire workbook.",
+  "limits": [
+    "Every order, schema change, commit, version, read and timing value is synthetic.",
+    "Irreversible means unsafe for the declared old contract; no real down migration or backup restore is modeled.",
+    "No real database migration/rollback, native Azure, production24, source-parent or five-nines proof.",
+    "B-S060 and D-S060 real data/host acceptance remain separate and unfulfilled.",
+    "The published browser helper's known unattended lifecycle limitation remains unqualified; the abandoned prototype is not used.",
+    "One frozen S unit; tests, plumbing and refinement earn no additional credit."
+  ]
+}

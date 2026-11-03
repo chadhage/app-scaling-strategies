@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S060 · Rollback after schema evolution</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to operator controls</a>
+  <header>
+    <p id="training-banner" class="training">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p>A-S060 · D-S060 · SC-S060 · one frozen S unit</p>
+    <h1>Rollback after schema evolution</h1>
+    <p>Roll back after schema evolution; distinguish compatible reversal from required forward recovery.</p>
+  </header>
+  <main>
+    <section aria-labelledby="contract-title">
+      <h2 id="contract-title">The contract that decides recovery</h2>
+      <p>Two synthetic orders start at USD 3500 minor units. v1 requires <code>totalCents</code> and assumes USD.
+        Evolving commits a third order before recovery, so discarding new writes cannot count as success.</p>
+      <ul>
+        <li><strong>Compatible:</strong> additive notes retain <code>totalCents</code>; the new USD 500 order remains readable by v1.
+          Roll back the application, not the schema. Expected: 3 orders, USD 4000.</li>
+        <li><strong>Irreversible for v1:</strong> remove <code>totalCents</code>, store currency-aware minor units and commit EUR 700.
+          v1 cannot interpret that contract. Expected: 3 orders, USD 3500 and EUR 700. Explicit v2.1 forward recovery is required.</li>
+      </ul>
+      <p>No down migration, backup restore, conversion to USD or actual database transaction is modeled.
+        “Irreversible” is relative to the declared v1 contract, not a claim that every real migration is unrecoverable.</p>
+    </section>
+
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Conduct one recovery</h2>
+      <form id="controls" tabindex="-1">
+        <fieldset id="configuration">
+          <legend>1. Choose and evolve the synthetic schema</legend>
+          <label for="mode">Schema change</label>
+          <select id="mode" required>
+            <option value="compatible">Compatible · retain old fields, add notes</option>
+            <option value="irreversible">Irreversible for v1 · currency-aware data</option>
+          </select>
+          <button id="evolve" type="submit">Evolve schema + commit v2 write</button>
+        </fieldset>
+        <fieldset id="recovery-configuration" disabled>
+          <legend>2. Choose observed evidence, then a recovery path</legend>
+          <label for="observation">Synthetic read observation</label>
+          <select id="observation" required>
+            <option value="complete">Complete · all committed reads</option>
+            <option value="missing-row">Failure · read omits the new committed row</option>
+            <option value="unavailable">Unknown · read observation unavailable</option>
+          </select>
+          <div class="buttons">
+            <button id="rollback" type="button">Roll application back to v1</button>
+            <button id="forward" type="button">Explicit forward recovery to v2.1</button>
+          </div>
+        </fieldset>
+        <button id="reset-rehearsal" type="button">Reset rehearsal · retain history</button>
+      </form>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <p>Enter evolves; Space or Enter activates a focused recovery or reset button. Configuration locks after evolution.
+        Reset restores the initial controls and data, <strong>not</strong> the retained results.</p>
+      <p id="capacity"></p>
+      <noscript>This exercise requires JavaScript. No recovery result is available without it.</noscript>
+    </section>
+
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Measured synthetic result</h2>
+      <div id="status" role="status" aria-live="polite">
+        <p id="phase"></p>
+        <p id="result"></p>
+        <p id="impact"></p>
+      </div>
+      <p id="metrics"></p>
+      <p>The event boundary is the recovery action and its fixed three-order read journey. All attempted recoveries,
+        including failures and unknowns, remain in the denominator. A rejected unsafe reversal is a separate safe abort.
+        The synthetic budget is 10 ms; an available fixed read takes 7 ms. Neither number measures a real system.</p>
+      <h3>Committed synthetic data</h3>
+      <div class="table-wrap">
+        <table>
+          <caption id="committed-caption">Current committed fixture</caption>
+          <thead><tr><th scope="col">Order ID</th><th scope="col">Stored fields</th></tr></thead>
+          <tbody id="committed"></tbody>
+        </table>
+      </div>
+      <p id="observed"></p>
+      <h3>Trace</h3>
+      <pre id="trace" tabindex="0"></pre>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained recovery decisions</h2>
+      <div class="table-wrap">
+        <table>
+          <caption>At most 12 decisions, including safe aborts; retained across reset, memory only</caption>
+          <thead>
+            <tr><th scope="col">#</th><th scope="col">Schema mode</th><th scope="col">Requested path</th>
+              <th scope="col">Result</th><th scope="col">Active code</th><th scope="col">Read effects</th><th scope="col">Observed totals</th></tr>
+          </thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+      <p>At capacity the exercise stops; reset cannot delete a failure to make room. Reload intentionally starts a new
+        empty workbook and loses this page's memory. There is no storage, account, endpoint or arbitrary data input.</p>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Source acceptance and limits</h2>
+      <p>Exact D-S060 acceptance: “Compatible rollback preserves data; irreversible changes invoke explicit forward recovery,
+        not a fake successful reversal.”</p>
+      <p>This portable model does not prove a real database migration, rollback, restored committed state, native Azure
+        behavior, production Node.js 24 support, five-nines reliability or completion of B-S060/D-S060.
+        IaC is N/A; no cloud, identity, deployment or spending is involved.</p>
+      <p><a href="README.md">Run instructions and evidence</a> ·
+        <a href="../../README.md#f-n-tier-and-version-compatibility">Source S060</a></p>
+    </section>
+  </main>
+  <footer>All orders, versions, writes, reads, timing and outcomes are deterministic synthetic fixtures.</footer>
+</body>
+</html>

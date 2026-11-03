@@ -1,0 +1,17 @@
+### F. N-tier and version compatibility
+
+Source: [n-tier and version compatibility](../../README.md#f-n-tier-and-version-compatibility).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S051 | P0 | Add **Old frontend to new API** with compatible and breaking response fixtures. | Old client journeys still function under the compatible contract; breaking changes fail the gate visibly. | none |
+| D-S052 | P0 | Add **New frontend to old API** while routing deliberately remains mixed. | New clients tolerate supported old contracts; required unsupported features do not silently return success. | none |
+| D-S053 | P0 | Add deployment-version versus API-contract controls, adapters, and client-upgrade paths. | A stable compatible route can migrate all consumers; a breaking API cannot be force-rerouted and declared uninterrupted. | D-S051, D-S052 |
+| D-S054 | P0 | Add staged **Expand, migrate, contract** data operations while both versions serve journeys. | Old/new consumers remain valid during overlap; contraction is blocked until dependent consumers/work disappear. | none |
+| D-S055 | P1 | Add cache payload/version namespaces and mixed-version readers. | Compatible translation/versioning preserves correctness; incompatible cached objects fail explicitly. | none |
+| D-S056 | P0 | Add old/new event producers and consumers with schema compatibility switches. | Events remain interpretable and effects correct across overlap; incompatible producers are blocked before expansion. | none |
+| D-S057 | P1 | Add cached old HTML with immutable old/new assets and deploy/retire controls. | Existing pages resolve required assets correctly; early asset removal produces a visible failing result. | none |
+| D-S058 | P1 | Add durable workflow version pinning and incompatible execution-history fixtures. | Existing histories continue under the correct version strategy; unexpected replay/history behavior is detected. | P004 |
+| D-S059 | P1 | Add configuration-schema/flag version changes across mixed deployments. | Both versions interpret approved shared configuration consistently; incompatible publication is gated. | D-S010 |
+| D-S060 | P0 | Add rollback-compatible and irreversible schema/data change modes. | Compatible rollback preserves data; irreversible changes invoke explicit forward recovery, not a fake successful reversal. | D-S054 |
+

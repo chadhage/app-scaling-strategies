@@ -1,0 +1,215 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('../model.js');
+const fixtures = require('../fixtures.js');
+const evolve = (mode = 'compatible', state = model.createState()) =>
+  model.transition(state, { type: 'evolve', mode });
+const recover = (state, path = 'rollback', observation = 'complete') =>
+  model.transition(state, { type: 'recover', path, observation });
+const reset = (state) => model.transition(state, { type: 'reset' });
+
+test('compatible reversal preserves every committed v2 write without reversing the expanded schema', () => {
+  const evolved = evolve();
+  const before = JSON.stringify(evolved.committed);
+  const recovered = recover(evolved);
+  assert.equal(recovered.activeVersion, 'v1');
+  assert.equal(recovered.phase, 'recovered');
+  assert.equal(recovered.schema, 'expanded');
+  assert.equal(JSON.stringify(recovered.committed), before);
+  assert.equal(recovered.committed.length, 3);
+  assert.equal(recovered.committed[2].totalCents, 500);
+  assert.equal(recovered.committed[2].note, 'New committed v2 write');
+  const entry = recovered.history[0];
+  assert.equal(entry.outcome, 'success');
+  assert.equal(entry.path, 'rollback');
+  assert.equal(entry.dataPreserved, true);
+  assert.deepEqual(entry.expectedTotals, { USD: 4000 });
+  assert.deepEqual(entry.observedTotals, { USD: 4000 });
+  assert.deepEqual(entry.observedIds, fixtures.compatible.map((row) => row.id));
+  assert.equal(entry.latencyMs, 7);
+  assert.equal(entry.budgetMs, 10);
+  assert.deepEqual(model.summarize(recovered), {
+    attempted: 1, success: 1, failure: 0, unknown: 0, safeAborts: 0, successFraction: '1/1',
+  });
+});
+
+test('initial state has no positive evidence and two fixed v1 orders', () => {
+  const initial = model.createState();
+  assert.equal(initial.phase, 'ready');
+  assert.equal(initial.activeVersion, 'v1');
+  assert.deepEqual(initial.committed, fixtures.baseline);
+  assert.deepEqual(model.summarize(initial), {
+    attempted: 0, success: 0, failure: 0, unknown: 0, safeAborts: 0, successFraction: null,
+  });
+});
+
+test('unsafe irreversible rollback is an explicit safe abort, not an attempted or successful migration', () => {
+  const evolved = evolve('irreversible');
+  const blocked = recover(evolved);
+  assert.equal(blocked.phase, 'evolved');
+  assert.equal(blocked.activeVersion, 'v2');
+  assert.equal(blocked.schema, 'v2-only');
+  assert.strictEqual(blocked.committed, evolved.committed);
+  assert.equal(blocked.history[0].outcome, 'safe-abort');
+  assert.equal(blocked.history[0].attempted, false);
+  assert.equal(blocked.history[0].observedIds, null);
+  assert.match(blocked.history[0].reason, /v1.*totalCents.*USD/i);
+  assert.deepEqual(model.summarize(blocked), {
+    attempted: 0, success: 0, failure: 0, unknown: 0, safeAborts: 1, successFraction: null,
+  });
+});
+
+test('explicit forward recovery after rejected reversal preserves distinct currency meaning and all effects', () => {
+  const evolved = evolve('irreversible');
+  const blocked = recover(evolved);
+  const forward = recover(blocked, 'forward');
+  assert.equal(forward.activeVersion, 'v2.1');
+  assert.equal(forward.schema, 'v2-only');
+  assert.equal(forward.phase, 'recovered');
+  assert.strictEqual(forward.committed, evolved.committed);
+  assert.deepEqual(forward.history.map((entry) => entry.outcome), ['safe-abort', 'success']);
+  const entry = forward.history[1];
+  assert.equal(entry.path, 'forward');
+  assert.equal(entry.activeVersion, 'v2.1');
+  assert.deepEqual(entry.expectedTotals, { USD: 3500, EUR: 700 });
+  assert.deepEqual(entry.observedTotals, { USD: 3500, EUR: 700 });
+  assert.equal(entry.observedIds.length, 3);
+  assert.match(entry.reason, /forward recovery/i);
+  assert.equal(model.summarize(forward).successFraction, '1/1');
+});
+
+test('compatible evolution may also use forward recovery without claiming rollback', () => {
+  const forward = recover(evolve(), 'forward');
+  assert.equal(forward.activeVersion, 'v2.1');
+  assert.equal(forward.history[0].path, 'forward');
+  assert.equal(forward.history[0].outcome, 'success');
+  assert.deepEqual(forward.history[0].observedTotals, { USD: 4000 });
+});
+
+for (const [mode, path] of [['compatible', 'rollback'], ['irreversible', 'forward']]) {
+  test(`${mode} ${path}: missing committed read is failure even though the durable fixture is unchanged`, () => {
+    const evolved = evolve(mode);
+    const recovered = recover(evolved, path, 'missing-row');
+    assert.strictEqual(recovered.committed, evolved.committed);
+    const entry = recovered.history[0];
+    assert.equal(entry.outcome, 'failure');
+    assert.equal(entry.attempted, true);
+    assert.equal(entry.observedIds.length, 2);
+    assert.equal(entry.expectedIds.length, 3);
+    assert.equal(entry.dataPreserved, true);
+    assert.match(entry.reason, /missing.*committed/i);
+    assert.deepEqual(model.summarize(recovered), {
+      attempted: 1, success: 0, failure: 1, unknown: 0, safeAborts: 0, successFraction: '0/1',
+    });
+  });
+  test(`${mode} ${path}: unavailable observation stays unknown and in the denominator`, () => {
+    const recovered = recover(evolve(mode), path, 'unavailable');
+    const entry = recovered.history[0];
+    assert.equal(entry.outcome, 'unknown');
+    assert.equal(entry.observedIds, null);
+    assert.equal(entry.observedTotals, null);
+    assert.equal(entry.latencyMs, null);
+    assert.deepEqual(model.summarize(recovered), {
+      attempted: 1, success: 0, failure: 0, unknown: 1, safeAborts: 0, successFraction: '0/1',
+    });
+  });
+}
+
+test('reset restores controls and starting data but cannot erase failed and unknown history', () => {
+  const failed = recover(evolve(), 'rollback', 'missing-row');
+  const firstReset = reset(failed);
+  const unknown = recover(evolve('irreversible', firstReset), 'forward', 'unavailable');
+  const finalReset = reset(unknown);
+  assert.equal(finalReset.phase, 'ready');
+  assert.equal(finalReset.mode, null);
+  assert.equal(finalReset.activeVersion, 'v1');
+  assert.equal(finalReset.schema, 'v1');
+  assert.deepEqual(finalReset.committed, fixtures.baseline);
+  assert.deepEqual(finalReset.history.map((entry) => entry.outcome), ['failure', 'unknown']);
+  assert.deepEqual(finalReset.history.map((entry) => entry.sequence), [1, 2]);
+  assert.deepEqual(model.summarize(finalReset), {
+    attempted: 2, success: 0, failure: 1, unknown: 1, safeAborts: 0, successFraction: '0/2',
+  });
+  assert.equal(failed.history.length, 1);
+});
+
+test('model rejects out-of-order evolution, recovery and replay of a completed recovery', () => {
+  assert.throws(() => recover(model.createState()), /requires evolved/i);
+  const evolved = evolve();
+  assert.throws(() => evolve('compatible', evolved), /requires ready/i);
+  assert.throws(() => recover(recover(evolved)), /requires evolved/i);
+  assert.equal(evolved.history.length, 0);
+});
+
+test('fixed enum values and exact action shapes reject hostile or stale inputs without mutations', () => {
+  const initial = model.createState();
+  const evolved = evolve();
+  const bad = [
+    null, undefined, [], 'evolve', {},
+    { type: 'evolve', mode: 'COMPATIBLE' },
+    { type: 'evolve', mode: '<img src=x onerror=alert(1)>' },
+    { type: 'evolve', mode: 'compatible', endpoint: 'https://invalid.example' },
+    { type: 'reset', extra: true },
+    { type: 'clear-history' },
+    Object.create({ type: 'reset' }),
+  ];
+  for (const action of bad) assert.throws(() => model.transition(initial, action), /action|mode|unsupported/i);
+  for (const path of ['restore-backup', '', 1, null]) {
+    assert.throws(() => model.transition(evolved, { type: 'recover', path, observation: 'complete' }), /path/i);
+  }
+  for (const observation of ['success', '', false, null]) {
+    assert.throws(() => model.transition(evolved, { type: 'recover', path: 'forward', observation }), /observation/i);
+  }
+  assert.throws(() => model.transition(evolved, {
+    type: 'recover', path: 'forward', observation: 'complete', force: true,
+  }), /action/i);
+  assert.equal(initial.phase, 'ready');
+  assert.equal(evolved.history.length, 0);
+});
+
+test('only authentic immutable states can be used, and exported fixture data cannot be mutated', () => {
+  for (const forged of [null, {}, { ...model.createState() }, JSON.parse(JSON.stringify(evolve()))]) {
+    assert.throws(() => model.transition(forged, { type: 'reset' }), /state/i);
+    assert.throws(() => model.summarize(forged), /state/i);
+  }
+  const evolved = evolve();
+  assert.ok(Object.isFrozen(evolved));
+  assert.ok(Object.isFrozen(evolved.committed[2]));
+  assert.throws(() => { evolved.committed[2].totalCents = 0; }, TypeError);
+  const recovered = recover(evolved);
+  assert.ok(Object.isFrozen(recovered.history[0].observedTotals));
+  assert.throws(() => recovered.history.push({}), TypeError);
+  assert.throws(() => { fixtures.expected.irreversible.EUR = 0; }, TypeError);
+});
+
+test('bounded retained history rejects a thirteenth decision and reset never bypasses the limit', () => {
+  let state = model.createState();
+  for (let index = 0; index < model.MAX_HISTORY; index += 1) {
+    state = recover(evolve('compatible', state));
+    state = reset(state);
+  }
+  assert.equal(state.history.length, 12);
+  assert.deepEqual(state.history.map((entry) => entry.sequence),
+    Array.from({ length: 12 }, (_, index) => index + 1));
+  assert.throws(() => evolve('compatible', state), /history.*12/i);
+  const resetAgain = reset(state);
+  assert.equal(resetAgain.history.length, 12);
+  assert.equal(model.summarize(resetAgain).successFraction, '12/12');
+});
+
+test('blocked unsafe reversals also consume bounded evidence capacity', () => {
+  let state = evolve('irreversible');
+  for (let index = 0; index < 12; index += 1) state = recover(state);
+  assert.throws(() => recover(state, 'forward'), /history.*12/i);
+  assert.equal(state.activeVersion, 'v2');
+  assert.equal(model.summarize(state).safeAborts, 12);
+  assert.equal(model.summarize(state).attempted, 0);
+});
+
+test('identical synthetic actions produce identical data, observations and history', () => {
+  const run = () => recover(recover(evolve('irreversible')), 'forward', 'missing-row');
+  assert.deepEqual(run(), run());
+  assert.equal(model.BANNER, 'Training rehearsal - synthetic data - not a live Azure result');
+});
