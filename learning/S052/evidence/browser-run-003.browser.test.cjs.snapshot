@@ -1,0 +1,343 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { createHash } = require('node:crypto');
+const { test } = require('node:test');
+const root = path.resolve(__dirname, '..');
+const repo = path.resolve(root, '..', '..');
+const helperPath = path.join(repo, 'testing', 'browser', 'isolated.cjs');
+const helperSha256 = createHash('sha256').update(fs.readFileSync(helperPath)).digest('hex');
+assert.equal(helperSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+const { openIsolatedLesson } = require(helperPath);
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+
+function proofHashes() {
+  const result = {};
+  function walk(directory) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const target = path.join(directory, entry.name);
+      if (entry.isDirectory()) walk(target);
+      else result[path.relative(root, target)] = createHash('sha256').update(fs.readFileSync(target)).digest('hex');
+    }
+  }
+  walk(path.join(root, 'evidence'));
+  return result;
+}
+
+test('actual isolated Edge DOM, keyboard, errors, failures, history, reset and restrictive CSP', async () => {
+  const before = proofHashes();
+  const report = {
+    cardId: 'A-S052', executionMode: 'synthetic', startedAtUtc: new Date().toISOString(),
+    helper: 'testing\\browser\\isolated.cjs', helperSha256, helperPublication: '53c0c0d',
+    node: process.version,
+    playwrightVersion: require(path.join(repo, 'testing', 'browser', 'node_modules', 'playwright', 'package.json')).version,
+    observations: [], pageErrors: [], exerciseNetworkRequests: [], escapedProbeRequests: [],
+    cleanup: { awaitedFinallyClose: false, pageClosed: false },
+    passed: false,
+  };
+  let session;
+  let failure;
+  try {
+    session = await openIsolatedLesson('learning\\S052\\index.html');
+    report.browserVersion = session.browserVersion;
+    const page = session.page;
+    page.on('pageerror', (error) => report.pageErrors.push(error.message));
+    const requests = [];
+    page.on('request', (request) => { if (!request.url().startsWith('file:')) requests.push(request.url()); });
+    await page.route('**/*', (route) => {
+      if (!route.request().url().startsWith('file:')) {
+        report.escapedProbeRequests.push(route.request().url());
+        return route.abort('blockedbyclient');
+      }
+      return route.continue();
+    });
+    const snapshot = async (label) => {
+      const dom = await page.evaluate(() => {
+        const get = (id) => document.getElementById(id);
+        const fields = ['routing', 'requirement', 'policy', 'oldCondition'];
+        return {
+          title: document.title, activeElement: document.activeElement.id || document.activeElement.className,
+          banner: document.querySelector('.banner').textContent,
+          progress: get('progress').textContent, outcome: get('outcome').dataset.outcome,
+          outcomeText: get('outcome').textContent, metrics: get('metrics').textContent,
+          coverage: get('coverage').textContent, error: get('error').textContent,
+          prediction: get('prediction-result').textContent, verdict: get('prediction-result').dataset.verdict,
+          trace: [...get('trace').rows].map((row) => row.textContent),
+          history: [...get('history').children].map((item) => ({ outcome: item.dataset.outcome, text: item.textContent })),
+          configurationDisabled: get('configuration').disabled,
+          values: Object.fromEntries(fields.map((id) => [id, get(id).value])),
+          inputsEffectivelyDisabled: fields.map((id) => get(id).matches(':disabled')),
+          buttons: Object.fromEntries(['start', 'step', 'again', 'check'].map((id) => [id, get(id).matches(':disabled')])),
+          nativeFormReset: typeof get('controls').reset,
+        };
+      });
+      report.observations.push({ label, observedAtUtc: new Date().toISOString(), dom });
+      return dom;
+    };
+    const expectOutcome = async (expected) => assert.equal(await page.locator('#outcome').getAttribute('data-outcome'), expected);
+    const tabTo = async (id) => {
+      for (let index = 0; index < 16; index += 1) {
+        if (await page.evaluate(() => document.activeElement.id) === id) return;
+        await page.keyboard.press('Tab');
+      }
+      assert.fail(`Keyboard did not reach ${id}`);
+    };
+    const choose = async (changes = {}) => {
+      const values = { routing: 'mixed', requirement: 'base', policy: 'contract-aware', oldCondition: 'supported', ...changes };
+      for (const [id, value] of Object.entries(values)) await page.locator(`#${id}`).selectOption(value);
+    };
+    const conduct = async (changes = {}) => {
+      await choose(changes);
+      await page.locator('#start').click();
+      for (let index = 0; index < 4; index += 1) await page.locator('#step').click();
+      assert.equal(await page.locator('#trace tr').count(), 4);
+    };
+    const another = async () => page.locator('#again').click();
+    const assertReset = async (label) => {
+      const dom = await snapshot(label);
+      assert.deepEqual(dom.values, { routing: 'mixed', requirement: 'base', policy: 'contract-aware', oldCondition: 'supported' });
+      assert.equal(dom.outcome, 'unknown');
+      assert.equal(dom.history.length, 0);
+      assert.equal(dom.trace.length, 0);
+      assert.equal(dom.error, '');
+      assert.equal(dom.verdict, 'none');
+      assert.equal(dom.nativeFormReset, 'function');
+      assert.equal(dom.activeElement, 'routing');
+      assert.equal(await page.locator('#prediction').inputValue(), '');
+      assert.equal(dom.configurationDisabled, false);
+    };
+
+    let dom = await snapshot('initial actual DOM');
+    assert.equal(dom.banner, 'Training rehearsal - synthetic data - not a live Azure result');
+    assert.equal(dom.outcome, 'unknown');
+    assert.equal(dom.nativeFormReset, 'function');
+    await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement.className), 'skip');
+    await page.keyboard.press('Enter');
+    await tabTo('start');
+    await page.keyboard.press('Enter');
+    dom = await snapshot('keyboard start locks effective configuration');
+    assert.equal(dom.activeElement, 'step');
+    assert.ok(dom.inputsEffectivelyDisabled.every(Boolean));
+    await page.keyboard.press('Space');
+    dom = await snapshot('one observed response cannot establish aggregate success');
+    assert.equal(dom.trace.length, 1);
+    assert.equal(dom.outcome, 'unknown');
+    assert.equal(dom.history.length, 0);
+    await page.locator('#controls').dispatchEvent('submit');
+    dom = await snapshot('out-of-order repeated start rejected without progress');
+    assert.match(dom.error, /phase/i);
+    assert.equal(dom.trace.length, 1);
+    for (let index = 0; index < 3; index += 1) await page.locator('#step').press('Space');
+    await expectOutcome('success');
+    dom = await snapshot('keyboard mixed-route base success');
+    assert.equal(dom.activeElement, 'prediction');
+    assert.match(dom.metrics, /Success 4.*Failure 0.*Unknown 0.*HTTP 200 4.*Old 2.*New 2/);
+    assert.ok(dom.trace[0].includes('api-v1 / profile.v1'));
+    assert.ok(dom.trace[1].includes('api-v2 / profile.v2'));
+    await page.keyboard.press('Home');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Enter');
+    dom = await snapshot('keyboard prediction PASS is separate from success outcome');
+    assert.equal(dom.verdict, 'PASS');
+    assert.equal(dom.outcome, 'success');
+
+    await another();
+    await page.evaluate(() => {
+      const option = document.createElement('option');
+      option.value = 'tampered'; option.textContent = 'Tampered';
+      document.getElementById('routing').append(option);
+    });
+    await page.locator('#routing').selectOption('tampered');
+    await page.locator('#start').click();
+    dom = await snapshot('invalid DOM select value is a handled input error');
+    assert.match(dom.error, /configuration/i);
+    assert.equal(dom.trace.length, 0);
+    assert.equal(dom.history.length, 1);
+    assert.equal(dom.outcome, 'unknown');
+    await page.locator('#reset-rehearsal').press('Enter');
+    await assertReset('keyboard reset clears invalid input, history, trace and prediction');
+    await page.locator('#step').dispatchEvent('click');
+    dom = await snapshot('disabled out-of-order request also rejected by model guard');
+    assert.match(dom.error, /phase/i);
+    assert.equal(dom.trace.length, 0);
+    await page.locator('#reset-rehearsal').click();
+
+    await conduct({ requirement: 'optional-timezone' });
+    await expectOutcome('success');
+    dom = await snapshot('optional unsupported feature is unavailable without invented value');
+    assert.match(dom.metrics, /Optional unavailable 2/);
+    assert.ok(dom.trace[0].includes('"timeZone":null'));
+    assert.ok(dom.trace[0].includes('rendered-feature-unavailable'));
+    await another();
+    await conduct({ requirement: 'required-timezone' });
+    await expectOutcome('failure');
+    dom = await snapshot('required unsupported feature fails despite HTTP 200');
+    assert.match(dom.metrics, /Success 2.*Failure 2.*HTTP 200 4/);
+    assert.ok(dom.trace[0].includes('explicit-unsupported'));
+    await page.locator('#prediction').selectOption('success');
+    await page.locator('#check').click();
+    assert.equal(await page.locator('#prediction-result').getAttribute('data-verdict'), 'FAIL');
+    await expectOutcome('failure');
+    await page.locator('#prediction').selectOption('failure');
+    await page.locator('#check').click();
+    assert.equal(await page.locator('#prediction-result').getAttribute('data-verdict'), 'PASS');
+    await expectOutcome('failure');
+    await snapshot('correct and incorrect predictions never rewrite failed user journeys');
+    await another();
+    await conduct({ requirement: 'required-timezone', policy: 'status-only' });
+    await expectOutcome('failure');
+    dom = await snapshot('unsafe success-shaped claims are independently rejected');
+    assert.match(dom.metrics, /Silent success rejected 2/);
+    assert.ok(dom.trace[0].includes('claims-success'));
+    assert.ok(dom.trace[0].includes('Silent success rejected'));
+    await another();
+    await conduct({ oldCondition: 'malformed', policy: 'status-only' });
+    await expectOutcome('failure');
+    dom = await snapshot('malformed old base response cannot hide behind 200');
+    assert.ok(dom.trace[0].includes('displayName is absent'));
+    await another();
+    await conduct({ oldCondition: 'timeout' });
+    await expectOutcome('failure');
+    await snapshot('observed old timeouts are known failures');
+    await another();
+    await conduct({ oldCondition: 'unobserved', requirement: 'required-timezone' });
+    await expectOutcome('unknown');
+    dom = await snapshot('withheld old observation remains unknown, not success or a known timeout');
+    assert.match(dom.metrics, /Success 2.*Failure 0.*Unknown 2.*HTTP 200 2/);
+    assert.ok(dom.trace[0].includes('no response body'));
+    assert.equal(dom.history[1].outcome, 'failure');
+    await another();
+    await conduct({ routing: 'new-only', requirement: 'required-timezone' });
+    await expectOutcome('success');
+    dom = await snapshot('new-only success explicitly has zero old-contract coverage');
+    assert.match(dom.coverage, /not established: no old API requests/);
+    await another();
+    await conduct({ routing: 'old-only', requirement: 'required-timezone' });
+    await expectOutcome('failure');
+    dom = await snapshot('eight retained attempts preserve all failures and unknowns');
+    assert.deepEqual(dom.history.map((item) => item.outcome), [
+      'success', 'failure', 'failure', 'failure', 'failure', 'unknown', 'success', 'failure',
+    ]);
+    assert.equal(dom.buttons.again, true);
+    assert.match(dom.progress, /History limit reached/);
+    await page.locator('#again').dispatchEvent('click');
+    dom = await snapshot('forced ninth attempt is rejected instead of pruning history');
+    assert.match(dom.error, /History holds 8.*reset/i);
+    assert.equal(dom.history.length, 8);
+    assert.equal(dom.trace.length, 4);
+    await page.locator('#reset-rehearsal').press('Space');
+    await assertReset('explicit keyboard reset at history bound restores exact initial state');
+    await page.locator('#start').click();
+    await page.locator('#step').click();
+    await page.locator('#reset-rehearsal').click();
+    await assertReset('active-attempt reset clears partial trace without false completed history');
+
+    const initialResources = await page.evaluate(() => performance.getEntriesByType('resource').map((item) => item.name));
+    assert.ok(initialResources.every((url) => url.startsWith('file:')));
+    report.exerciseNetworkRequests = requests.slice();
+    assert.deepEqual(report.exerciseNetworkRequests, []);
+    report.csp = await page.evaluate(async () => {
+      const violations = globalThis.__s052Violations = [];
+      const listener = (event) => violations.push({ directive: event.effectiveDirective, blockedURI: event.blockedURI });
+      globalThis.__s052CspListener = listener;
+      document.addEventListener('securitypolicyviolation', listener);
+      globalThis.__s052InlineRan = false;
+      globalThis.__s052HandlerRan = false;
+      globalThis.__s052DynamicRan = false;
+      globalThis.__s052DynamicBlocked = false;
+      globalThis.__s052DynamicProbeDone = false;
+      const inline = document.createElement('script');
+      inline.textContent = 'globalThis.__s052InlineRan = true';
+      document.head.append(inline);
+      const button = document.createElement('button');
+      button.setAttribute('onclick', 'globalThis.__s052HandlerRan = true');
+      document.body.append(button); button.click();
+      let connectBlocked = false;
+      try { await fetch('https://s052.invalid/csp-probe'); } catch { connectBlocked = true; }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      inline.remove(); button.remove();
+      return {
+        violations, connectBlocked,
+        inlineRan: globalThis.__s052InlineRan, handlerRan: globalThis.__s052HandlerRan,
+      };
+    });
+    // CDP evaluations may bypass unsafe-eval; probe from a real click in a self-hosted script.
+    await page.evaluate(() => new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.id = 's052-csp-probe-script';
+      script.src = new URL('tests/csp-probe.js', location.href).href;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('Could not load the owned CSP probe'));
+      document.head.append(script);
+    }));
+    await page.locator('#s052-dynamic-probe').click();
+    await page.waitForFunction(() => globalThis.__s052DynamicProbeDone
+      && globalThis.__s052Violations.some((item) => item.directive === 'script-src'));
+    const dynamic = await page.evaluate(() => {
+      document.getElementById('s052-dynamic-probe').remove();
+      document.getElementById('s052-csp-probe-script').remove();
+      return {
+        violations: globalThis.__s052Violations,
+        dynamicBlocked: globalThis.__s052DynamicBlocked,
+        dynamicRan: globalThis.__s052DynamicRan,
+      };
+    });
+    Object.assign(report.csp, dynamic);
+    // A CSP-cancelled form can leave Edge's automation navigation wait pending; probe it last.
+    report.csp.violations = await page.evaluate(async () => {
+      const form = document.createElement('form');
+      form.action = 'https://s052.invalid/form-probe';
+      form.method = 'post';
+      document.body.append(form); form.submit();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      form.remove();
+      document.removeEventListener('securitypolicyviolation', globalThis.__s052CspListener);
+      return globalThis.__s052Violations;
+    });
+    assert.equal(report.csp.inlineRan, false);
+    assert.equal(report.csp.handlerRan, false);
+    assert.equal(report.csp.dynamicRan, false);
+    assert.equal(report.csp.dynamicBlocked, true);
+    assert.equal(report.csp.connectBlocked, true);
+    const directives = report.csp.violations.map((item) => item.directive);
+    for (const directive of ['script-src-elem', 'script-src-attr', 'script-src', 'connect-src', 'form-action']) {
+      assert.ok(directives.includes(directive), `Missing actual CSP violation: ${directive}`);
+    }
+    assert.deepEqual(report.escapedProbeRequests, []);
+    assert.deepEqual(report.pageErrors, []);
+    await snapshot('CSP probes blocked and lesson remains responsive');
+    report.passed = true;
+  } catch (error) {
+    failure = error;
+    report.failure = { name: error.name, message: error.message, stack: error.stack };
+  } finally {
+    if (session) {
+      try {
+        await session.close();
+        report.cleanup.awaitedFinallyClose = true;
+        report.cleanup.pageClosed = session.page.isClosed();
+      } catch (error) {
+        report.passed = false;
+        report.cleanup.error = error.message;
+        failure = failure ? new AggregateError([failure, error], 'Browser check and cleanup failed') : error;
+      }
+    }
+    report.completedAtUtc = new Date().toISOString();
+    if (capture) {
+      const run = process.env.BROWSER_EVIDENCE_RUN;
+      if (!/^browser-run-\d{3}$/.test(run || '')) throw new Error('Deliberate capture needs a unique browser-run-NNN identifier');
+      fs.writeFileSync(path.join(root, 'evidence', `${run}.observations.json`), `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+      if (report.passed && !failure) fs.writeFileSync(path.join(root, 'evidence', 'browser.json'), `${JSON.stringify(report, null, 2)}\n`);
+    } else {
+      assert.deepEqual(proofHashes(), before, 'Ordinary browser verification must not modify retained proof');
+    }
+  }
+  if (failure) throw failure;
+  assert.equal(report.cleanup.awaitedFinallyClose, true);
+  assert.equal(report.cleanup.pageClosed, true);
+  console.log(`Observed ${report.observations.length} actual DOM checkpoints; ${report.browserVersion}; CSP directives verified; awaited cleanup complete.`);
+});

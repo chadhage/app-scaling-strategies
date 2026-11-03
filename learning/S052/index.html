@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'none'; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; media-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S052 — New frontend to old API</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#lesson">Skip to lesson</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S052 — New frontend to old API</h1>
+    <p>A-S052 · D-S052 · SC-S052 · one frozen S unit</p>
+  </header>
+  <main id="lesson">
+    <section aria-labelledby="objective">
+      <h2 id="objective">Keep the supported contract; do not fake a required feature</h2>
+      <p>The new frontend is already loaded. Routing propagation may still send its requests
+        to the old backend. Work through four fixed synthetic <code>GET /profile</code>
+        requests and inspect the <em>effective</em> destination of each one.</p>
+      <p><code>api-v1 / profile.v1</code> returns <code>profileId</code> and
+        <code>displayName</code>. <code>api-v2 / profile.v2</code> also returns
+        <code>timeZone</code>. All fixture profiles are synthetic. A 200 response is
+        not evidence that a required field or feature works.</p>
+      <ol>
+        <li>Start with the supported base profile and mixed routing; send all four requests.</li>
+        <li>Try optional timeZone: show its absence on old APIs without inventing a value.</li>
+        <li>Require timeZone, then compare explicit incompatibility with a status-only success claim.</li>
+        <li>Try missing observations, timeouts and a malformed old response. Compare the retained results.</li>
+      </ol>
+    </section>
+    <section aria-labelledby="conduct">
+      <h2 id="conduct">Conduct a bounded rehearsal</h2>
+      <p id="bounds">Four requests per attempt; eight completed attempts retained in memory.
+        No retries, random data, real API calls or credentials. Configuration locks until the attempt finishes.</p>
+      <form id="controls" novalidate aria-describedby="bounds">
+        <fieldset id="configuration">
+          <legend>New frontend and effective old/new routing</legend>
+          <label for="routing">Effective route sequence</label>
+          <select id="routing" name="routing">
+            <option value="mixed">Mixed: old → new → old → new</option>
+            <option value="old-only">Propagation stalled: all old</option>
+            <option value="new-only">Propagation complete: all new (no old coverage)</option>
+          </select>
+          <label for="requirement">Declared journey requirement</label>
+          <select id="requirement" name="requirement">
+            <option value="base">Base profile — supported by both APIs</option>
+            <option value="optional-timezone">Base profile with optional timeZone</option>
+            <option value="required-timezone">Required timeZone — only the new API supports it</option>
+          </select>
+          <label for="policy">New frontend handling</label>
+          <select id="policy" name="policy">
+            <option value="contract-aware">Contract-aware — explicit unsupported required feature</option>
+            <option value="status-only">Unsafe status-only — claim success for any HTTP 200</option>
+          </select>
+          <label for="oldCondition">Old API response condition</label>
+          <select id="oldCondition" name="oldCondition">
+            <option value="supported">Supported profile.v1 — HTTP 200, no timeZone</option>
+            <option value="malformed">Malformed profile.v1 — HTTP 200, displayName missing</option>
+            <option value="timeout">Observed timeout — known interruption</option>
+            <option value="unobserved">Response observation withheld — unknown result</option>
+          </select>
+        </fieldset>
+        <button id="start" type="submit">Start attempt</button>
+      </form>
+      <div class="actions">
+        <button id="step" type="button" disabled>Send next request</button>
+        <button id="again" type="button" disabled>Another attempt — retain history</button>
+        <button id="reset-rehearsal" type="button">Reset rehearsal — clear history</button>
+      </div>
+      <p id="error" role="alert" aria-live="assertive"></p>
+      <p id="progress" role="status" aria-live="polite">Ready. Start an attempt.</p>
+    </section>
+    <section aria-labelledby="results">
+      <h2 id="results">Required-journey result, independent of HTTP status</h2>
+      <p id="outcome" class="outcome" data-outcome="unknown">Unknown — no completed attempt.</p>
+      <p id="metrics">Attempted 0/4 · Success 0 · Failure 0 · Unknown 0 · HTTP 200 0</p>
+      <p id="coverage">Old API compatibility is not established.</p>
+      <p id="scope">Synthetic compatibility is not completed migration, native routing proof or a live Azure result.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Observed synthetic requests from frontend-v2</caption>
+          <thead><tr>
+            <th scope="col">Request</th><th scope="col">Effective API / contract</th>
+            <th scope="col">Response / feature</th><th scope="col">Frontend claim</th>
+            <th scope="col">Independent outcome and reason</th>
+          </tr></thead>
+          <tbody id="trace"></tbody>
+        </table>
+      </div>
+      <fieldset id="prediction-controls" disabled>
+        <legend>Check your prediction — not the user outcome</legend>
+        <label for="prediction">Expected aggregate outcome</label>
+        <select id="prediction">
+          <option value="">Choose an outcome</option>
+          <option value="success">Success</option>
+          <option value="failure">Failure</option>
+          <option value="unknown">Unknown</option>
+        </select>
+        <button id="check" type="button">Check prediction</button>
+      </fieldset>
+      <p id="prediction-result" role="status" aria-live="polite" data-verdict="none">Not checked.</p>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained completed attempts</h2>
+      <p>Failures and unknowns stay in the record. Another attempt never prunes them.
+        The ninth attempt is blocked. Explicit reset or page reload clears this in-memory history.</p>
+      <ol id="history"></ol>
+    </section>
+    <section aria-labelledby="limits">
+      <h2 id="limits">Evidence limits and source</h2>
+      <p>This fixed local model measures synthetic response counts and required-contract results,
+        not real network latency, API compatibility in production, deployment propagation, authentication,
+        native Azure behavior, Node 24 production support or five-nines reliability.
+        B-S052 and D-S052 are not completed by this lesson. No Azure account, identity registration,
+        infrastructure, packages, framework, deployment or spending is needed or authorized.</p>
+      <p>Source <a href="../../README.md#f-n-tier-and-version-compatibility">S052</a>:
+        remain compatible while routing propagation leaves requests on the old backend.
+        <a href="../../.docs/wiki/backlog.md#f-n-tier-and-version-compatibility">D-S052</a>:
+        new clients tolerate supported old contracts; required unsupported features do not silently return success.</p>
+      <p>Educational examples are provided “AS IS”, without warranties or guarantees.
+        No Microsoft endorsement, certification or SLA is implied.
+        Read the <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft disclaimer</a>.</p>
+    </section>
+  </main>
+  <noscript>This synthetic lesson requires local JavaScript. No result can be established while it is disabled.</noscript>
+</body>
+</html>

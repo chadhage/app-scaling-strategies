@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S052",
+  "sourceId": "S052",
+  "parentId": "D-S052",
+  "packet": "SC-S052",
+  "kano": "S",
+  "kanoUnit": "A-S052",
+  "owner": "worker-A-S052",
+  "entryGate": "SOURCE",
+  "title": "New frontend to old API: reject success-shaped incompatibility",
+  "entryPoint": "learning/S052/index.html",
+  "feature": "learning/S052/new-frontend.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Send new-frontend requests to old APIs during mixed effective routing; preserve supported old contracts and reject success for unavailable required features.",
+  "sourceAcceptance": "New clients tolerate supported old contracts; required unsupported features do not silently return success.",
+  "preconditions": [
+    "Standard local browser HTML, CSS and JavaScript; no server or account.",
+    "frontend-v2 is loaded before four fixed GET /profile requests.",
+    "api-v1/profile.v1 supplies profileId and displayName but not timeZone.",
+    "api-v2/profile.v2 supplies the same base contract and timeZone.",
+    "Mixed effective routing is old, new, old, new; it is not inferred from desired routing."
+  ],
+  "actions": [
+    "Choose effective routing, base/optional/required feature, frontend handling and old-response condition.",
+    "Start and manually send each of the four requests.",
+    "Inspect response shape, frontend claim and independently checked required-journey outcome.",
+    "Check a prediction separately from the actual outcome.",
+    "Retain the completed attempt or explicitly reset all defaults and history."
+  ],
+  "syntheticInput": "learning/S052/model.js: fixed profile-synthetic / Aster / Etc/UTC fixture",
+  "assertions": [
+    "Supported old contracts satisfy the new frontend's base profile journey.",
+    "Optional absence is visible without inventing timeZone.",
+    "Required timeZone absence fails even for HTTP 200 or status-only success claims.",
+    "Malformed base contracts and observed timeouts fail; withheld observations remain unknown.",
+    "Successful new responses never erase old failures or unknowns.",
+    "New-only success explicitly has no old-API compatibility coverage.",
+    "All four requests must finish before aggregate success can be established.",
+    "Exact input/state guards and eight-attempt retained history prevent silent mutation or pruning."
+  ],
+  "bounds": {
+    "requestsPerAttempt": 4,
+    "maximumRetainedAttempts": 8,
+    "effectiveRoutePresets": 3,
+    "requirementPresets": 3,
+    "frontendPolicies": 2,
+    "oldResponseConditions": 4,
+    "retries": 0
+  },
+  "iac": {
+    "status": "N/A",
+    "reference": "learning/S052/evidence/iac.json",
+    "decisionStage": "After genuine loadable-stub assertion RED and before implementation.",
+    "reason": "Resource-free local synthetic lesson; no infrastructure, cloud or deployment authorized."
+  },
+  "testRuntime": {
+    "node": "22.23.4, existing test tooling only",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156.0.4314.50",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "productionNode24Certification": false,
+    "dependencyChanges": false
+  },
+  "limits": [
+    "Deterministic four-request in-memory compatibility model, not an actual HTTP client/server or routing protocol.",
+    "A synthetic compatibility success is not a completed migration, native/platform guarantee or five-nines result.",
+    "No credentials, authentication, identity registration, cloud, IaC, scaffold, deployment or spending.",
+    "History lasts until explicit reset or page reload; it is never silently pruned.",
+    "B-S052 and D-S052 native/source-parent acceptance remain separate and unfulfilled.",
+    "One frozen S unit; tests, plumbing and refinement earn no additional units.",
+    "Published browser helper's known unattended lifecycle limitation remains; no abandoned prototype is used."
+  ]
+}

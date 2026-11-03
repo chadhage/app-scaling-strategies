@@ -1,0 +1,70 @@
+Feature: A new frontend remains honest while requests still reach the old API
+  # A-S052 / D-S052 / SC-S052; one frozen S unit, synthetic only.
+  Background:
+    Given the visible banner "Training rehearsal - synthetic data - not a live Azure result"
+    And frontend-v2 sends four fixed synthetic profile requests
+    And mixed effective routing is old, new, old, new
+    And api-v1 returns profile.v1 with profileId and displayName but no timeZone
+    And api-v2 returns profile.v2 with the same base fields and timeZone
+
+  Scenario: Preserve the supported old contract rather than requiring the new deployment
+    Given the new frontend requires only the base profile
+    When all four requests are stepped with contract-aware handling
+    Then both old API responses render the supported profile
+    And the synthetic outcome is success with four successful requests
+    And this is not proof of completed migration or native routing propagation
+
+  Scenario: An optional unavailable feature is visibly unavailable, not fabricated
+    Given timeZone is optional for the declared journey
+    When a request reaches api-v1
+    Then the base profile renders with timeZone explicitly unavailable
+    And no default timeZone is invented
+    And the optional absence alone is not a failed required journey
+
+  Scenario Outline: Required unsupported features never silently pass
+    Given timeZone is required for the declared journey
+    And the frontend policy is <policy>
+    When all mixed-route requests finish
+    Then the old API can return HTTP 200 without satisfying timeZone
+    And the aggregate synthetic outcome is failure
+    And the two successful new-API requests do not erase the two old-API failures
+    And any frontend success-shaped claim is rejected by the independent verifier
+    Examples:
+      | policy         |
+      | contract-aware |
+      | status-only    |
+
+  Scenario: Transport success cannot conceal a broken supported old response
+    Given api-v1 returns HTTP 200 with name instead of required displayName
+    When the new frontend requests the base profile
+    Then the old requests fail the required contract even with status-only handling
+
+  Scenario: Missing evidence and a known interruption are different outcomes
+    Given the old response observation is withheld
+    When all four requests are attempted
+    Then two new requests succeed and two old results are unknown
+    And the aggregate outcome is unknown, never success
+    When the old condition instead is an observed timeout
+    Then the two old requests and the aggregate outcome are failure
+
+  Scenario: A new-only success does not establish old-contract compatibility
+    Given effective routing is new, new, new, new
+    When all four required-feature requests finish
+    Then the synthetic outcome is success
+    But old-API coverage is zero and compatibility with old APIs is not established
+
+  Scenario: Guard phase, configuration, predictions and retained history
+    Given all inputs must be exact allowlisted strings with no extra fields
+    Then malformed inputs and out-of-order actions are rejected without advancing
+    And configuration is fixed throughout an active attempt
+    And checking a prediction cannot change any user outcome
+    And another attempt retains every completed success, failure and unknown
+    And the ninth attempt is blocked instead of pruning eight retained results
+
+  Scenario: Keyboard, explicit reset and restrictive CSP remain usable
+    When an operator uses only Tab, Enter and Space for the exercise
+    Then labels, progress, errors, request evidence and outcomes are accessible
+    And reset restores exact defaults and clears history, trace, prediction and errors
+    And the form reset method is not shadowed by a named control
+    And inline script, inline handlers, dynamic code and network connections are blocked
+    And ordinary verification does not rewrite retained proof

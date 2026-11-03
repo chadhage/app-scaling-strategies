@@ -1,0 +1,37 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S052 = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULTS = Object.freeze({
+    routing: 'mixed',
+    requirement: 'base',
+    policy: 'contract-aware',
+    oldCondition: 'supported',
+  });
+  function createState() {
+    return {
+      phase: 'ready', config: DEFAULTS, current: null, history: [], prediction: null,
+    };
+  }
+  function transition(state, action, payload) {
+    if (action === 'reset') return createState();
+    if (action === 'start') {
+      return {
+        ...state, phase: 'running', config: payload,
+        current: {
+          id: state.history.length + 1, rows: [], cursor: 0, outcome: 'unknown',
+          metrics: { attempted: 0, success: 0, failure: 0, unknown: 0 },
+        },
+      };
+    }
+    if (action === 'step' && state.current) {
+      const current = { ...state.current, cursor: state.current.cursor + 1 };
+      return { ...state, current, phase: current.cursor === 4 ? 'complete' : 'running' };
+    }
+    return state;
+  }
+  return Object.freeze({ DEFAULTS, createState, transition });
+}));
