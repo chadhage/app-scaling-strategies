@@ -15,7 +15,9 @@ Planned Kano mix: **28 dissatisfiers, 380 satisfiers, 6 delighters**. These inve
 
 The selected policy is **cumulative completion totals**, with each delighter's satisfiers completed in the **same named delivery packet**. No calendar sprint or simultaneous wall-clock completion is required.
 
-Accepted checkpoint, 2026-11-03: **6 satisfiers Done, 0 dissatisfiers, 0 delighters**. The six portable lessons passed 282 independently rerun automated checks plus recorded real-browser checks, and their implementation commits and annotated tags are published on `main`. These are synthetic learning deliverables, not native Azure proof or completed source-demo parents. Execution is paused for C001 operator approval.
+Accepted checkpoint, 2026-11-03: **6 satisfiers Done, 0 dissatisfiers, 0 delighters**. The six portable lessons passed 282 independently rerun automated checks plus recorded real-browser checks, and their implementation commits and annotated tags are published on `main`. These are synthetic learning deliverables, not native Azure proof or completed source-demo parents.
+
+The operator subsequently approved C001 design and local implementation: portable HTML/JS lessons, a proposed Node.js 24 LTS/Express control API on App Service Linux, single-tenant Microsoft Entra ID with invited guests, Azure Storage Tables/Queues/Blob for control state, App Service code slots as the first planned native target, and Bicep as the preferred future IaC format. Node.js 22.23.4 remains test tooling. **No IaC generation, identity registration, live Azure execution, deployment, or expenditure is approved.** Exact target/SKU/region and separate scaffold/deployment approvals remain required.
 
 ## TOC
 
@@ -34,7 +36,7 @@ Accepted checkpoint, 2026-11-03: **6 satisfiers Done, 0 dissatisfiers, 0 delight
 
 | To Do | In Progress | Done |
 | --- | --- | --- |
-| C001 awaits operator approval and is not pullable. Ready A-S031/A-S041 and other admitted lessons are held by the agreed approval pause; see [live state](flow-state.json). | None at this checkpoint; the first wave is accepted and safely paused. | [A-S001](../../learning/S001/index.html), [A-S002](../../learning/S002/index.html), [A-S003](../../learning/S003/index.html), [A-S006](../../learning/S006/index.html), [A-S008](../../learning/S008/index.html), [A-S021](../../learning/S021/index.html). Evidence and publication references are in the live ledger. |
+| C001 is approved for its local contract/guard implementation. Next ready lessons: A-S031, A-S041, A-S004, A-S005, A-S007; see [live state](flow-state.json). | Current claims, owners, and empirical review are recorded in the live ledger; native work remains gated. | [A-S001](../../learning/S001/index.html), [A-S002](../../learning/S002/index.html), [A-S003](../../learning/S003/index.html), [A-S006](../../learning/S006/index.html), [A-S008](../../learning/S008/index.html), [A-S021](../../learning/S021/index.html). Evidence and publication references are in the live ledger. |
 
 Let N be the number of active contributors:
 
