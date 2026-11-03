@@ -173,15 +173,25 @@ test('runtime is local only, renderers are text-only and CSP forbids active remo
 
 test('narrow owned attributes preserve raw captures without disabling runtime whitespace checks', () => {
   const attributes = read('.gitattributes');
-  assert.match(attributes, /^\* text eol=lf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol/m);
+  assert.match(attributes, /^\* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol/m);
   assert.match(attributes, /evidence\/\*\.source\.txt -text/);
   assert.match(attributes, /evidence\/\*\.tap\.txt -text -whitespace/);
   const raw = execFileSync('git', ['check-attr', 'text', 'whitespace', '--', 'learning\\S076\\evidence\\red-qualified.tap.txt'], { cwd: repo, encoding: 'utf8' });
   assert.match(raw, /text: unset/);
   assert.match(raw, /whitespace: unset/);
   const runtime = execFileSync('git', ['check-attr', 'text', 'whitespace', '--', 'learning\\S076\\model.js'], { cwd: repo, encoding: 'utf8' });
-  assert.match(runtime, /text: set/);
+  assert.match(runtime, /text: unset/);
   assert.match(runtime, /whitespace: blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol/);
+  const correction = json('evidence\\publication-canonical-correction.json');
+  assert.equal(correction.exitCode, 1);
+  assert.deepEqual(correction.summary, { tests: 57, pass: 43, fail: 14 });
+  assert.equal(correction.assertionFailures, 14);
+  for (const item of [correction.source, correction.log, correction.stderr]) {
+    assert.equal(hash(path.join(repo, item.path)), item.sha256);
+  }
+  const initialGreen = json('evidence\\green-final.json');
+  assert.equal(hash(local('evidence\\publication-01-integrity-test-cjs.source.txt')),
+    initialGreen.sourceHashes['integrity.test.cjs']);
 });
 
 test('sealed owned proof index and actual browser checks remain byte-preserved on ordinary reruns', () => {

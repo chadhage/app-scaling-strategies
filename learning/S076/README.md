@@ -105,12 +105,21 @@ The corrected guard accepts the parent wrapper only when every underlying
 failure is an actual assertion; the unchanged tests/stub were rerun as
 `red-qualified`. No module, syntax, tool or runtime failure qualifies as RED.
 
-Narrow owned `.gitattributes` preserves raw CRLF snapshots and TAP bytes.
+Lesson-local `.gitattributes` preserves exact authored source, raw CRLF snapshots and TAP bytes.
 Source snapshots are hashed as bytes, while canonical Git blobs are qualified
 separately. Whole mutable source files need not equal a later working tree.
 RED snapshot names end in `.source.txt`, not auto-discovered test filenames.
 Only raw logs and verbatim source-document snapshots relax whitespace lint;
 runtime source retains whitespace checks. Historical captures are append-only.
+The first successful publication exposed a separate persistence defect:
+`text eol=lf` normalized 14 authored files while their retained hashes described
+the original CRLF bytes. A read-only check of all 57 indexed canonical Git
+blobs produced 43 passes and 14 genuine assertion failures. That raw check,
+its source, the first publication and pre-correction files remain retained.
+The corrected **lesson-local** `-text` policy preserves exact bytes in Git;
+it does not disable runtime whitespace validation or change shared attributes,
+model behavior, CSP, or historical captures. Canonical published blobs are
+checked again before reporting the final publication.
 
 IaC: **N/A**, explicitly recorded after qualified RED and before implementation.
 No cloud, IaC, scaffold, identity, credentials, deployment or expenditure.
