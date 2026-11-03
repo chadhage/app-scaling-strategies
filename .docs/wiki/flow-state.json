@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 503,
+  "revision": 511,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-03T19:58:18.0307376Z",
+  "updatedAtUtc": "2026-11-03T20:05:12.9231597Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -39,7 +39,7 @@
   },
   "kanoDone": {
     "D": 2,
-    "S": 79,
+    "S": 80,
     "L": 0
   },
   "reservations": {
@@ -14660,10 +14660,10 @@
       "parents": [
         "D-S067"
       ],
-      "state": "In Progress",
+      "state": "Done",
       "readiness": false,
       "owner": "worker-A-S067",
-      "blocker": "Published; controller empirical review and acceptance pending.",
+      "blocker": null,
       "result": {
         "schemaVersion": 1,
         "cardId": "A-S067",
@@ -14738,7 +14738,33 @@
       },
       "admittedAtUtc": "2026-11-03T19:40:19.5864017Z",
       "authorization": "local-synthetic-only",
-      "claimedAtUtc": "2026-11-03T19:40:40.0458448Z"
+      "claimedAtUtc": "2026-11-03T19:40:40.0458448Z",
+      "review": {
+        "cardId": "A-S067",
+        "accepted": true,
+        "reviewer": "parent-controller",
+        "commit": "0e4c21715c555f1aa1e67a54d3fcbee2fea89c96",
+        "tag": "kanban/A-S067/0e4c21715c55",
+        "focusedTestsPassed": true,
+        "focusedTestCases": 32,
+        "reportedNodeChecksIncludingBrowser": 33,
+        "browserObserved": true,
+        "browserObservedBy": "25ead907-f162-4ed1-add0-008f015bb178",
+        "actualBrowserObservations": 15,
+        "browserEvidence": "learning\\S067\\evidence\\browser-acceptance.json",
+        "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+        "remoteVerified": true,
+        "ownedScopeVerified": true,
+        "bddReviewed": true,
+        "genuineRedGreenReviewed": true,
+        "executionMode": "synthetic-fixed-reader-lag-and-freshness-routing",
+        "nativeAzureProof": false,
+        "realDatabaseLagOrFreshnessProof": false,
+        "sourceParentComplete": false,
+        "iac": "N/A",
+        "reviewNotes": "Independently passed32 focused leaf cases; worker's33 includesone actual browser runner. Verified exact owned scope, remote annotated tag and main ancestry. Reviewed exact S067/D-S067 contract, BDD andeight assertion RED failures against a loadable stub withone passing baseline. Thirty-two configurations keepone primary/one reader fixed: primary version12/tick12 is explicit known-current fixture data. Direct version7 withfive-tick lag fails a zero-tick contract; version10 exactly meets a two-tick budget but fails strict freshness. Watermark gating chooses a sufficient known reader or primary without advancing/repairing the lagging reader. Unknown reader watermark and absent returned-read evidence remain unknown even if the selected route is known. Reviewed15 signed-Edge keyboard/error/prediction/reset/history/CSP observations, six-attempt non-evicting bound, published helper and awaited close. This differs from S061 expansion: fixed-reader controlled lag, synthetic ticks rather than elapsed DB time. Raw/canonical Git proof remains qualified. No actual DB lag/freshness/read-your-writes, Azure, Node24 or original source-parent/D-S061 completion is certified."
+      },
+      "acceptedAtUtc": "2026-11-03T20:04:19.9505359Z"
     },
     {
       "technicalEntryGate": "SOURCE",
@@ -14823,6 +14849,48 @@
       "admittedAtUtc": "2026-11-03T19:57:49.2906807Z",
       "authorization": "local-synthetic-only",
       "claimedAtUtc": "2026-11-03T19:58:15.0640907Z"
+    },
+    {
+      "technicalEntryGate": "SOURCE",
+      "kano": "S",
+      "priority": "P1",
+      "kanoUnit": "A-S072",
+      "deliver": "Compare unbounded and coalesced refill; identify a database-overloading stampede.",
+      "packet": "SC-S072",
+      "id": "A-S072",
+      "parents": [
+        "D-S072"
+      ],
+      "state": "In Progress",
+      "readiness": true,
+      "owner": "worker-A-S072",
+      "blocker": null,
+      "result": null,
+      "publication": null,
+      "admittedAtUtc": "2026-11-03T20:04:20.5856141Z",
+      "authorization": "local-synthetic-only",
+      "claimedAtUtc": "2026-11-03T20:04:46.6692462Z"
+    },
+    {
+      "technicalEntryGate": "SOURCE",
+      "kano": "S",
+      "priority": "P1",
+      "kanoUnit": "A-S073",
+      "deliver": "Lose cache access; an empty user profile must not be a successful fallback.",
+      "packet": "SC-S073",
+      "id": "A-S073",
+      "parents": [
+        "D-S073"
+      ],
+      "state": "In Progress",
+      "readiness": true,
+      "owner": "worker-A-S073",
+      "blocker": null,
+      "result": null,
+      "publication": null,
+      "admittedAtUtc": "2026-11-03T20:04:20.610775Z",
+      "authorization": "local-synthetic-only",
+      "claimedAtUtc": "2026-11-03T20:04:49.882246Z"
     }
   ],
   "workers": [
@@ -15484,7 +15552,7 @@
       "id": "worker-A-S067",
       "cardId": "A-S067",
       "agentId": "25ead907-f162-4ed1-add0-008f015bb178",
-      "status": "result_received",
+      "status": "accepted",
       "dispatchedAtUtc": "2026-11-03T19:40:19.7229551Z",
       "reportedAtUtc": "2026-11-03T19:57:22.3096361Z"
     },
@@ -15515,16 +15583,31 @@
       "agentId": "57fa7c80-aad7-43dd-822d-31bdc3be37b2",
       "id": "worker-A-S071",
       "dispatchedAtUtc": "2026-11-03T19:57:49.4171124Z"
+    },
+    {
+      "id": "worker-A-S072",
+      "status": "running",
+      "agentId": "6f6440e3-9917-4174-b227-e98caad519be",
+      "cardId": "A-S072",
+      "dispatchedAtUtc": "2026-11-03T20:04:20.8521419Z"
+    },
+    {
+      "id": "worker-A-S073",
+      "status": "running",
+      "agentId": "9763e924-a265-4eaa-afb6-089c5fe6efbc",
+      "cardId": "A-S073",
+      "dispatchedAtUtc": "2026-11-03T20:04:21.3152579Z"
     }
   ],
   "completedParents": [],
   "admittedReadyIds": [],
   "plannedNextIds": [
-    "A-S067",
     "A-S068",
     "A-S069",
     "A-S070",
-    "A-S071"
+    "A-S071",
+    "A-S072",
+    "A-S073"
   ],
   "blockedReasons": [],
   "stopNewDispatch": false,
@@ -15893,14 +15976,47 @@
     {
       "id": "OP-CATALOG-SNAPSHOT-REFRESH-76",
       "title": "Refreshing the learner catalog from the 76-unit checkpoint",
-      "state": "In Progress",
+      "state": "Done",
       "readiness": false,
       "owner": "worker-OP-CATALOG-SNAPSHOT-REFRESH-76",
       "agentId": "274861da-5192-45f8-a465-12aa6c548404",
       "kanoCredit": 0,
       "sourceCommit": "01675ac8d4230c51dad027b67a1971d8d3490d74",
       "blocker": null,
-      "result": null,
+      "result": {
+        "id": "OP-CATALOG-SNAPSHOT-REFRESH-76",
+        "accepted": true,
+        "reviewer": "parent-controller",
+        "commit": "3488007a712920a40efbe15b6a420e5d0881e8c1",
+        "tag": "kanban/flow-catalog-refresh/3488007a7129",
+        "sourceCommit": "01675ac8d4230c51dad027b67a1971d8d3490d74",
+        "sourceAcceptedOriginalUnits": 76,
+        "catalogEntries": 152,
+        "acceptedPortableLessonsInSnapshot": 61,
+        "focusedLeafCasesPassed": 209,
+        "tapNodeCasesIncludingParentGroups": 212,
+        "actualBrowserLeafGroupsProduced": 66,
+        "actualUnifiedBrowserLeafGroupsIndependentlyPassed": 12,
+        "actualPracticeNavigationsIndependentlyPassed": 61,
+        "exactSyntheticBannersIndependentlyPassed": 61,
+        "normalRerunOwnedFilesIndependentlyPreserved": 245,
+        "historicalProofFilesIndependentlyVerified": 147,
+        "historicalManifestSha256": "1464484d63e4cb2b884b709c8d91bdd4685802b1ea813b949f56fe677e0f1c4b",
+        "previousSnapshotsIndependentlyHashVerified": 3,
+        "generatedCatalogSha256": "e354a72d5a15a2b0f8fce8a5c22ed1b0826bef1897e40cd1245e420ab1822d6a",
+        "remoteVerified": true,
+        "ownedScopeVerified": true,
+        "bddReviewed": true,
+        "genuineRedGreenReviewed": true,
+        "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+        "kanoCredit": 0,
+        "nativeQualified": 0,
+        "sourceParentsCompleted": 0,
+        "H001Complete": false,
+        "H002Complete": false,
+        "production24Validated": false,
+        "note": "Parent independently passed all209 affected leaf cases across15 files and12 actual unified Edge groups, including61 practice-page navigations/exact banners and conducting accepted S001 synthetic PASS/FAIL/reset with preserved query/AND filters. All245 owned source/proof files remained byte-identical across the browser rerun. Independently verified147 historical proof bytes/sizes, manifest hash, allthree11/20/36-practice archives and current61-practice generated hash. Genuine corrected RED hasthree coverage/source/count assertion failures andone passing negative gate on unchanged old snapshot; initial enum-authoring and pre-stage warning-wrapper failures remain historical, not qualified proof. One immutable76-unit source, not live availability; A-S062+ remain unavailable in this snapshot. No schemas, functional APIs, authority or original card/parent/native completion is added; zero S/D/L credits."
+      },
       "scope": "C005-C008 and local-harness fixed-source metadata/tests/evidence only; parent owns shared ledger and documentation.",
       "nativeProof": false,
       "H001Complete": false,
@@ -15909,7 +16025,9 @@
       "assignedAtUtc": "2026-11-03T19:38:34.358393Z",
       "expectedAcceptedUnits": 76,
       "expectedPortablePractices": 61,
-      "claimedAtUtc": "2026-11-03T19:39:30.6915765Z"
+      "claimedAtUtc": "2026-11-03T19:39:30.6915765Z",
+      "acceptedAtUtc": "2026-11-03T20:04:20.5490895Z",
+      "resultPath": "capability\\C005\\evidence\\op-catalog-snapshot-refresh-76-01675ac8d423\\result-final.json"
     }
   ]
 }
