@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>S026 — Slow image pull or startup</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="startup.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S026 — Slow image pull or startup</h1>
+    <p>A-S026 · D-S026 · SC-S026 · one frozen Kano S unit</p>
+    <p>Keep the old GA deployment serving while an immutable candidate image is pulled and initialized.
+      A downloaded image alone is not readiness.</p>
+  </header>
+  <main>
+    <section aria-labelledby="preconditions">
+      <h2 id="preconditions">Model preconditions and limits</h2>
+      <p>GA is assumed healthy with sufficient overlap capacity. The candidate is assumed compatible.
+        Each tick supplies exactly three successful, in-budget <strong>synthetic</strong> requests.
+        These assumptions are not measured Azure behavior or business-journey evidence.</p>
+      <p>Pull and initialization are sequential. Both require observed success before handoff.
+        At the selected tick the model attempts one guarded handoff; before then GA serves.
+        Choosing an answer cannot bypass that guard. No real image is downloaded or started.</p>
+      <p>The fixed candidate reference uses a synthetic SHA256 digest, not a mutable tag.
+        Ticks are deterministic steps, not elapsed seconds. No timers, services, accounts or network are needed.</p>
+    </section>
+    <section id="exercise" aria-labelledby="controls-heading" tabindex="-1">
+      <h2 id="controls-heading">Conduct the rehearsal</h2>
+      <p>Choose delays, inject a condition, select an observation tick, then predict whether handoff is allowed.
+        Check the trace and compare a waiting run with a ready run.</p>
+      <form id="exercise-form" novalidate>
+        <label for="pull-ticks">Image pull duration (synthetic ticks)</label>
+        <select id="pull-ticks" name="pullTicks">
+          <option value="1">1 tick</option>
+          <option value="2" selected>2 ticks</option>
+          <option value="3">3 ticks</option>
+        </select>
+        <label for="startup-ticks">Initialization duration after pull (synthetic ticks)</label>
+        <select id="startup-ticks" name="startupTicks">
+          <option value="1">1 tick</option>
+          <option value="2" selected>2 ticks</option>
+          <option value="3">3 ticks</option>
+        </select>
+        <label for="fault">Candidate condition</label>
+        <select id="fault" name="fault">
+          <option value="none">Observed successful pull and startup</option>
+          <option value="pull-failure">Image pull fails at completion boundary</option>
+          <option value="startup-failure">Initialization fails after successful pull</option>
+          <option value="unobserved">Candidate observations missing</option>
+        </select>
+        <label for="observe-tick">Attempt handoff at synthetic tick</label>
+        <select id="observe-tick" name="observeTick">
+          <option value="0">0</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+        <label for="prediction">Your predicted guard decision</label>
+        <select id="prediction" name="prediction">
+          <option value="HOLD">HOLD — retain GA serving</option>
+          <option value="ALLOW">ALLOW — initialized candidate eligible</option>
+        </select>
+        <div class="actions">
+          <button id="check-handoff" type="submit">Check handoff</button>
+          <button id="restart-lesson" type="button">Reset lesson</button>
+        </div>
+      </form>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+    </section>
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Current synthetic result</h2>
+      <div id="current-result" role="status" aria-live="polite" aria-atomic="true">
+        <p id="outcome-result">UNKNOWN — not checked</p>
+        <p id="permission-result">Handoff not checked.</p>
+        <p id="verifier-result">Answer verifier not checked.</p>
+        <p id="checks-result">Two required completion checks, not user journeys.</p>
+        <p id="traffic-result">No synthetic requests checked.</p>
+      </div>
+      <p id="impact-result">Real user impact UNMEASURED. No native migration or reliability proof.</p>
+      <p id="image-result"></p>
+      <pre id="current-trace" tabindex="0" aria-label="Current synthetic trace">No checked trace.</pre>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained session history</h2>
+      <p id="history-count">0 / 8 checked runs</p>
+      <p>Changing controls invalidates the current result, not earlier runs. Eight runs fit; the ninth is rejected
+        without eviction. Reset or reload explicitly clears this in-memory-only session.</p>
+      <ol id="history"></ol>
+    </section>
+    <section aria-labelledby="worked-heading">
+      <h2 id="worked-heading">Worked comparison</h2>
+      <p>With pull 2 and initialization 2, check tick 3 with HOLD: one completion succeeds, one is unknown,
+        and all 12 requests stay on GA. Check tick 4 with ALLOW: both succeed, 12 earlier requests stay on GA,
+        and the final three reach the candidate. Inject initialization failure at tick 4: all 15 stay on GA.</p>
+      <p>PASS only means your prediction matched the guard. FAILURE describes a candidate completion check,
+        not an invented GA outage. UNKNOWN is insufficient completion evidence, not success.
+        Native B-S026 and the full source demo remain separate, unverified work.</p>
+      <p>Use Tab, arrow keys and Enter. Reset returns focus to image pull duration.
+        See <a href="README.md">lesson instructions and evidence limits</a>.</p>
+    </section>
+  </main>
+</body>
+</html>

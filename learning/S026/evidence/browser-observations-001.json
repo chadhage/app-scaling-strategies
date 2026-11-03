@@ -1,0 +1,306 @@
+{
+  "cardId": "A-S026",
+  "workerId": "worker-A-S026",
+  "packet": "SC-S026",
+  "mode": "synthetic-only",
+  "startedAtUtc": "2026-11-03T17:06:55.317Z",
+  "finishedAtUtc": "2026-11-03T17:06:59.822Z",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "browserVersion": "156.0.4314.50",
+  "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "helperPublishedCommit": "53c0c0d",
+  "topLevelError": null,
+  "cleanupError": null,
+  "observations": [
+    {
+      "name": "offline surface has exact banner and no invented initial evidence",
+      "passed": true,
+      "actual": {
+        "outcome": "UNKNOWN — not checked",
+        "permission": "Handoff not checked.",
+        "verifier": "Answer verifier not checked.",
+        "checks": "Two required completion checks, not user journeys.",
+        "traffic": "No synthetic requests checked.",
+        "impact": "Real user impact UNMEASURED. No native migration or reliability proof.",
+        "trace": "No checked trace.",
+        "historyCount": "0 / 8 checked runs",
+        "summaries": [],
+        "error": null,
+        "focus": ""
+      }
+    },
+    {
+      "name": "keyboard delayed image pull retains all six requests on GA",
+      "passed": true,
+      "actual": {
+        "outcome": "UNKNOWN — completion evidence insufficient; GA retained",
+        "permission": "HOLD — final serving ga-v1",
+        "verifier": "Verifier PASS — predicted HOLD; answer only",
+        "checks": "Completion checks: success 0 · failure 0 · unknown 2 (2 required)",
+        "traffic": "Synthetic requests: success 6 · failure 0 · unknown 0; GA 6 · candidate 0",
+        "impact": "No candidate admissions; no migration demonstrated. Real user impact UNMEASURED.",
+        "trace": "t=0 [synthetic] | PULLING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=1 [synthetic] | PULLING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0",
+        "historyCount": "1 / 8 checked runs",
+        "summaries": [
+          "Run 1 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 3, init 2, tick 1, none, predicted HOLD"
+        ],
+        "error": null,
+        "focus": "check-handoff"
+      }
+    },
+    {
+      "name": "pulled but still initializing is not ready and changing controls invalidates the display",
+      "passed": true,
+      "actual": {
+        "outcome": "UNKNOWN — completion evidence insufficient; GA retained",
+        "permission": "HOLD — final serving ga-v1",
+        "verifier": "Verifier PASS — predicted HOLD; answer only",
+        "checks": "Completion checks: success 1 · failure 0 · unknown 1 (2 required)",
+        "traffic": "Synthetic requests: success 12 · failure 0 · unknown 0; GA 12 · candidate 0",
+        "impact": "No candidate admissions; no migration demonstrated. Real user impact UNMEASURED.",
+        "trace": "t=0 [synthetic] | PULLING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=1 [synthetic] | INITIALIZING | pull success | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=2 [synthetic] | INITIALIZING | pull success | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=3 [synthetic] | INITIALIZING | pull success | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0",
+        "historyCount": "2 / 8 checked runs",
+        "summaries": [
+          "Run 1 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 3, init 2, tick 1, none, predicted HOLD",
+          "Run 2 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 1, init 3, tick 3, none, predicted HOLD"
+        ],
+        "error": null,
+        "focus": "check-handoff"
+      }
+    },
+    {
+      "name": "successful initialization alone unlocks the selected handoff tick",
+      "passed": true,
+      "actual": {
+        "outcome": "SUCCESS — pull and initialization observed successful",
+        "permission": "ALLOW — final serving candidate-v2",
+        "verifier": "Verifier PASS — predicted ALLOW; answer only",
+        "checks": "Completion checks: success 2 · failure 0 · unknown 0 (2 required)",
+        "traffic": "Synthetic requests: success 15 · failure 0 · unknown 0; GA 12 · candidate 3",
+        "impact": "Three synthetic candidate admissions only. Real user impact UNMEASURED; not native migration or reliability proof.",
+        "trace": "t=0 [synthetic] | PULLING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=1 [synthetic] | INITIALIZING | pull success | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=2 [synthetic] | INITIALIZING | pull success | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=3 [synthetic] | INITIALIZING | pull success | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=4 [synthetic] | READY | pull success | init success | ready true | serving candidate-v2 | GA successes 0 | candidate successes 3",
+        "historyCount": "3 / 8 checked runs",
+        "summaries": [
+          "Run 1 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 3, init 2, tick 1, none, predicted HOLD",
+          "Run 2 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 1, init 3, tick 3, none, predicted HOLD",
+          "Run 3 [synthetic] · SUCCESS · ALLOW · verifier PASS · pull 1, init 3, tick 4, none, predicted ALLOW"
+        ],
+        "error": null,
+        "focus": "check-handoff"
+      }
+    },
+    {
+      "name": "failed immutable pull is visible while every synthetic request stays on GA",
+      "passed": true,
+      "actual": {
+        "outcome": "FAILURE — candidate completion failed; GA retained",
+        "permission": "HOLD — final serving ga-v1",
+        "verifier": "Verifier PASS — predicted HOLD; answer only",
+        "checks": "Completion checks: success 0 · failure 1 · unknown 1 (2 required)",
+        "traffic": "Synthetic requests: success 9 · failure 0 · unknown 0; GA 9 · candidate 0",
+        "impact": "No candidate admissions; no migration demonstrated. Real user impact UNMEASURED.",
+        "trace": "t=0 [synthetic] | PULLING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=1 [synthetic] | PULLING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=2 [synthetic] | PULL FAILED | pull failure | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0",
+        "historyCount": "4 / 8 checked runs",
+        "summaries": [
+          "Run 1 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 3, init 2, tick 1, none, predicted HOLD",
+          "Run 2 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 1, init 3, tick 3, none, predicted HOLD",
+          "Run 3 [synthetic] · SUCCESS · ALLOW · verifier PASS · pull 1, init 3, tick 4, none, predicted ALLOW",
+          "Run 4 [synthetic] · FAILURE · HOLD · verifier PASS · pull 2, init 2, tick 2, pull-failure, predicted HOLD"
+        ],
+        "error": null,
+        "focus": "check-handoff"
+      }
+    },
+    {
+      "name": "failed initialization does not admit users after a successful pull",
+      "passed": true,
+      "actual": {
+        "outcome": "FAILURE — candidate completion failed; GA retained",
+        "permission": "HOLD — final serving ga-v1",
+        "verifier": "Verifier PASS — predicted HOLD; answer only",
+        "checks": "Completion checks: success 1 · failure 1 · unknown 0 (2 required)",
+        "traffic": "Synthetic requests: success 15 · failure 0 · unknown 0; GA 15 · candidate 0",
+        "impact": "No candidate admissions; no migration demonstrated. Real user impact UNMEASURED.",
+        "trace": "t=0 [synthetic] | PULLING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=1 [synthetic] | PULLING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=2 [synthetic] | INITIALIZING | pull success | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=3 [synthetic] | INITIALIZING | pull success | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=4 [synthetic] | STARTUP FAILED | pull success | init failure | ready false | serving ga-v1 | GA successes 3 | candidate successes 0",
+        "historyCount": "5 / 8 checked runs",
+        "summaries": [
+          "Run 1 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 3, init 2, tick 1, none, predicted HOLD",
+          "Run 2 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 1, init 3, tick 3, none, predicted HOLD",
+          "Run 3 [synthetic] · SUCCESS · ALLOW · verifier PASS · pull 1, init 3, tick 4, none, predicted ALLOW",
+          "Run 4 [synthetic] · FAILURE · HOLD · verifier PASS · pull 2, init 2, tick 2, pull-failure, predicted HOLD",
+          "Run 5 [synthetic] · FAILURE · HOLD · verifier PASS · pull 2, init 2, tick 4, startup-failure, predicted HOLD"
+        ],
+        "error": null,
+        "focus": "check-handoff"
+      }
+    },
+    {
+      "name": "wrong operator answer is FAIL, never a forced handoff",
+      "passed": true,
+      "actual": {
+        "outcome": "FAILURE — candidate completion failed; GA retained",
+        "permission": "HOLD — final serving ga-v1",
+        "verifier": "Verifier FAIL — predicted ALLOW; answer only",
+        "checks": "Completion checks: success 1 · failure 1 · unknown 0 (2 required)",
+        "traffic": "Synthetic requests: success 15 · failure 0 · unknown 0; GA 15 · candidate 0",
+        "impact": "No candidate admissions; no migration demonstrated. Real user impact UNMEASURED.",
+        "trace": "t=0 [synthetic] | PULLING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=1 [synthetic] | PULLING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=2 [synthetic] | INITIALIZING | pull success | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=3 [synthetic] | INITIALIZING | pull success | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=4 [synthetic] | STARTUP FAILED | pull success | init failure | ready false | serving ga-v1 | GA successes 3 | candidate successes 0",
+        "historyCount": "6 / 8 checked runs",
+        "summaries": [
+          "Run 1 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 3, init 2, tick 1, none, predicted HOLD",
+          "Run 2 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 1, init 3, tick 3, none, predicted HOLD",
+          "Run 3 [synthetic] · SUCCESS · ALLOW · verifier PASS · pull 1, init 3, tick 4, none, predicted ALLOW",
+          "Run 4 [synthetic] · FAILURE · HOLD · verifier PASS · pull 2, init 2, tick 2, pull-failure, predicted HOLD",
+          "Run 5 [synthetic] · FAILURE · HOLD · verifier PASS · pull 2, init 2, tick 4, startup-failure, predicted HOLD",
+          "Run 6 [synthetic] · FAILURE · HOLD · verifier FAIL · pull 2, init 2, tick 4, startup-failure, predicted ALLOW"
+        ],
+        "error": null,
+        "focus": "check-handoff"
+      }
+    },
+    {
+      "name": "missing observations remain UNKNOWN at tick six and retain prior failure evidence",
+      "passed": true,
+      "actual": {
+        "outcome": "UNKNOWN — completion evidence insufficient; GA retained",
+        "permission": "HOLD — final serving ga-v1",
+        "verifier": "Verifier PASS — predicted HOLD; answer only",
+        "checks": "Completion checks: success 0 · failure 0 · unknown 2 (2 required)",
+        "traffic": "Synthetic requests: success 21 · failure 0 · unknown 0; GA 21 · candidate 0",
+        "impact": "No candidate admissions; no migration demonstrated. Real user impact UNMEASURED.",
+        "trace": "t=0 [synthetic] | OBSERVATION MISSING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=1 [synthetic] | OBSERVATION MISSING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=2 [synthetic] | OBSERVATION MISSING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=3 [synthetic] | OBSERVATION MISSING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=4 [synthetic] | OBSERVATION MISSING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=5 [synthetic] | OBSERVATION MISSING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0\nt=6 [synthetic] | OBSERVATION MISSING | pull unknown | init unknown | ready false | serving ga-v1 | GA successes 3 | candidate successes 0",
+        "historyCount": "7 / 8 checked runs",
+        "summaries": [
+          "Run 1 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 3, init 2, tick 1, none, predicted HOLD",
+          "Run 2 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 1, init 3, tick 3, none, predicted HOLD",
+          "Run 3 [synthetic] · SUCCESS · ALLOW · verifier PASS · pull 1, init 3, tick 4, none, predicted ALLOW",
+          "Run 4 [synthetic] · FAILURE · HOLD · verifier PASS · pull 2, init 2, tick 2, pull-failure, predicted HOLD",
+          "Run 5 [synthetic] · FAILURE · HOLD · verifier PASS · pull 2, init 2, tick 4, startup-failure, predicted HOLD",
+          "Run 6 [synthetic] · FAILURE · HOLD · verifier FAIL · pull 2, init 2, tick 4, startup-failure, predicted ALLOW",
+          "Run 7 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 2, init 2, tick 6, unobserved, predicted HOLD"
+        ],
+        "error": null,
+        "focus": "check-handoff"
+      }
+    },
+    {
+      "name": "keyboard history details retain trace and the ninth run is rejected without eviction",
+      "passed": true,
+      "actual": {
+        "outcome": "UNKNOWN — not checked",
+        "permission": "Handoff not checked.",
+        "verifier": "Answer verifier not checked.",
+        "checks": "Two required completion checks, not user journeys.",
+        "traffic": "No synthetic requests checked.",
+        "impact": "Real user impact UNMEASURED. No native migration or reliability proof.",
+        "trace": "No checked trace.",
+        "historyCount": "8 / 8 checked runs",
+        "summaries": [
+          "Run 1 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 3, init 2, tick 1, none, predicted HOLD",
+          "Run 2 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 1, init 3, tick 3, none, predicted HOLD",
+          "Run 3 [synthetic] · SUCCESS · ALLOW · verifier PASS · pull 1, init 3, tick 4, none, predicted ALLOW",
+          "Run 4 [synthetic] · FAILURE · HOLD · verifier PASS · pull 2, init 2, tick 2, pull-failure, predicted HOLD",
+          "Run 5 [synthetic] · FAILURE · HOLD · verifier PASS · pull 2, init 2, tick 4, startup-failure, predicted HOLD",
+          "Run 6 [synthetic] · FAILURE · HOLD · verifier FAIL · pull 2, init 2, tick 4, startup-failure, predicted ALLOW",
+          "Run 7 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 2, init 2, tick 6, unobserved, predicted HOLD",
+          "Run 8 [synthetic] · UNKNOWN · HOLD · verifier PASS · pull 2, init 2, tick 6, unobserved, predicted HOLD"
+        ],
+        "error": "History limit: 8 checked runs; reset explicitly to start again.",
+        "focus": "input-error"
+      }
+    },
+    {
+      "name": "keyboard reset clears all history and errors, restores defaults and focuses pull control",
+      "passed": true,
+      "actual": {
+        "outcome": "UNKNOWN — not checked",
+        "permission": "Handoff not checked.",
+        "verifier": "Answer verifier not checked.",
+        "checks": "Two required completion checks, not user journeys.",
+        "traffic": "No synthetic requests checked.",
+        "impact": "Real user impact UNMEASURED. No native migration or reliability proof.",
+        "trace": "No checked trace.",
+        "historyCount": "0 / 8 checked runs",
+        "summaries": [],
+        "error": null,
+        "focus": "pull-ticks"
+      }
+    },
+    {
+      "name": "malformed DOM input receives a focused error without a record and reset recovers",
+      "passed": true,
+      "actual": {
+        "rejected": {
+          "outcome": "UNKNOWN — not checked",
+          "permission": "Handoff not checked.",
+          "verifier": "Answer verifier not checked.",
+          "checks": "Two required completion checks, not user journeys.",
+          "traffic": "No synthetic requests checked.",
+          "impact": "Real user impact UNMEASURED. No native migration or reliability proof.",
+          "trace": "No checked trace.",
+          "historyCount": "0 / 8 checked runs",
+          "summaries": [],
+          "error": "Invalid configuration: non-canonical pull-ticks",
+          "focus": "input-error"
+        },
+        "recovered": {
+          "outcome": "UNKNOWN — not checked",
+          "permission": "Handoff not checked.",
+          "verifier": "Answer verifier not checked.",
+          "checks": "Two required completion checks, not user journeys.",
+          "traffic": "No synthetic requests checked.",
+          "impact": "Real user impact UNMEASURED. No native migration or reliability proof.",
+          "trace": "No checked trace.",
+          "historyCount": "0 / 8 checked runs",
+          "summaries": [],
+          "error": null,
+          "focus": "pull-ticks"
+        }
+      }
+    },
+    {
+      "name": "real CSP denies inline script, inline handler and connection before the route guard",
+      "passed": true,
+      "actual": {
+        "csp": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'",
+        "enforced": {
+          "inline": false,
+          "handler": false,
+          "violations": [
+            {
+              "directive": "script-src-elem",
+              "blockedURI": "inline"
+            },
+            {
+              "directive": "script-src-attr",
+              "blockedURI": "inline"
+            },
+            {
+              "directive": "connect-src",
+              "blockedURI": "https://s026-csp.invalid/blocked"
+            }
+          ],
+          "fetch": "TypeError"
+        },
+        "routedExternalRequests": 0
+      }
+    },
+    {
+      "name": "ordinary interactions have no page errors, remote requests or unlabelled controls",
+      "passed": true,
+      "actual": {
+        "uniqueIds": true,
+        "controlsLabelled": true,
+        "noHorizontalPageOverflow": true,
+        "skipTarget": "#exercise",
+        "pageErrors": [],
+        "attemptedNetwork": []
+      }
+    }
+  ],
+  "pageErrors": [],
+  "attemptedNetwork": [],
+  "awaitedFinallyCloseResolved": true,
+  "limits": "Actual local DOM and CSP enforcement only; not native Azure, Node24 or production behavior. Known helper lifecycle limitation remains."
+}

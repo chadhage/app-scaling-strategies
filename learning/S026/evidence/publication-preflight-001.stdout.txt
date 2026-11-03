@@ -1,0 +1,774 @@
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:1: trailing whitespace.
++Feature: S026 slow image pull and container initialization
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:2: trailing whitespace.
++  # A-S026 / D-S026 / SC-S026 / frozen Kano S / SOURCE
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:3: trailing whitespace.
++  # Source README S026: Keep production serving while the candidate downloads
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:4: trailing whitespace.
++  # its image and initializes. This is a local synthetic rehearsal only.
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:5: trailing whitespace.
++  Background:
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:6: trailing whitespace.
++    Given the banner "Training rehearsal - synthetic data - not a live Azure result"
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:7: trailing whitespace.
++    And a fixed synthetic GA image and a fixed immutable candidate image
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:8: trailing whitespace.
++    And three successful synthetic requests per observation tick
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:9: trailing whitespace.
++    And no cloud resources, network, credentials, timers or real container
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:10: trailing whitespace.
++    And image pull and initialization each take one to three synthetic ticks
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:11: trailing whitespace.
++    And the operator chooses a handoff observation from tick zero through six
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:12: trailing whitespace.
++
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:13: trailing whitespace.
++  Scenario: Slow pull retains the old serving deployment
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:14: trailing whitespace.
++    Given pull takes three ticks and initialization takes two ticks
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:15: trailing whitespace.
++    When the operator checks handoff at tick one and predicts HOLD
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:16: trailing whitespace.
++    Then both completion checks are unknown and candidate readiness is UNKNOWN
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:17: trailing whitespace.
++    And all six synthetic requests remain on GA and none reach the candidate
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:18: trailing whitespace.
++    And the answer verifier is PASS but no migration is claimed
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:19: trailing whitespace.
++
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:20: trailing whitespace.
++  Scenario: Successful pull does not mean successful initialization
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:21: trailing whitespace.
++    Given pull takes one tick and initialization takes three ticks
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:22: trailing whitespace.
++    When handoff is checked at tick three
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:23: trailing whitespace.
++    Then the pull check succeeds and the initialization check is unknown
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:24: trailing whitespace.
++    And GA continues serving and permission is HOLD
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:25: trailing whitespace.
++    When handoff is checked at tick four with prediction ALLOW
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:26: trailing whitespace.
++    Then candidate readiness is SUCCESS and the answer verifier is PASS
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:27: trailing whitespace.
++    And only the final tick's three requests move to the initialized candidate
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:28: trailing whitespace.
++    And earlier trace rows remain on GA
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:29: trailing whitespace.
++
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:30: trailing whitespace.
++  Scenario Outline: Explicit startup failures never receive user traffic
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:31: trailing whitespace.
++    Given pull takes two ticks and initialization takes two ticks
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:32: trailing whitespace.
++    And the fault is <fault>
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:33: trailing whitespace.
++    When handoff is checked at tick <tick> with prediction HOLD
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:34: trailing whitespace.
++    Then readiness is FAILURE with <success> successful completion checks
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:35: trailing whitespace.
++    And there is one failed completion check and <unknown> unknown checks
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:36: trailing whitespace.
++    And every synthetic request stays on GA
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:37: trailing whitespace.
++    Examples:
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:38: trailing whitespace.
++      | fault           | tick | success | unknown |
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:39: trailing whitespace.
++      | pull-failure    | 2    | 0       | 1       |
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:40: trailing whitespace.
++      | startup-failure | 4    | 1       | 0       |
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:41: trailing whitespace.
++
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:42: trailing whitespace.
++  Scenario: Missing evidence and a wrong answer cannot force admission
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:43: trailing whitespace.
++    Given candidate observations are missing
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:44: trailing whitespace.
++    When handoff is checked at tick six with prediction ALLOW
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:45: trailing whitespace.
++    Then readiness is UNKNOWN and both completion checks remain unknown
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:46: trailing whitespace.
++    And permission is HOLD and the answer verifier is FAIL
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:47: trailing whitespace.
++    And all twenty-one synthetic requests remain on GA
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:48: trailing whitespace.
++
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:49: trailing whitespace.
++  Scenario: Retained bounded evidence is not silently rewritten
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:50: trailing whitespace.
++    Given an earlier failed run and a later successful run
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:51: trailing whitespace.
++    When controls change
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:52: trailing whitespace.
++    Then the current display becomes unchecked but both original runs remain
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:53: trailing whitespace.
++    And each history row retains its own configuration, trace and verifier
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:54: trailing whitespace.
++    And a ninth checked run is rejected without evicting any of eight runs
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:55: trailing whitespace.
++    And malformed inputs, forged results and malformed state are rejected
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:56: trailing whitespace.
++
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:57: trailing whitespace.
++  Scenario: Keyboard, reset and offline safety
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:58: trailing whitespace.
++    When the operator uses Tab, arrow keys and Enter
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:59: trailing whitespace.
++    Then labelled native controls conduct the same exercise
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:60: trailing whitespace.
++    And an invalid value produces a focused alert without adding history
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:61: trailing whitespace.
++    And Reset lesson clears errors and history and focuses the pull control
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:62: trailing whitespace.
++    And the reset button does not shadow the native form reset method
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:63: trailing whitespace.
++    And CSP blocks inline code, inline handlers and external connections
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:64: trailing whitespace.
++    And actual browser checks use the qualified isolated helper and await cleanup
+learning/S026/evidence/red-001-image-startup.feature.snapshot.txt:65: trailing whitespace.
++    And ordinary verification does not write historical proof
+learning/S026/evidence/red-001-startup.js.snapshot.txt:1: trailing whitespace.
++(function (root, factory) {
+learning/S026/evidence/red-001-startup.js.snapshot.txt:2: trailing whitespace.
++  "use strict";
+learning/S026/evidence/red-001-startup.js.snapshot.txt:3: trailing whitespace.
++  const api = factory();
+learning/S026/evidence/red-001-startup.js.snapshot.txt:4: trailing whitespace.
++  if (typeof module === "object" && module.exports) module.exports = api;
+learning/S026/evidence/red-001-startup.js.snapshot.txt:5: trailing whitespace.
++  else root.S026 = api;
+learning/S026/evidence/red-001-startup.js.snapshot.txt:6: trailing whitespace.
++})(globalThis, function () {
+learning/S026/evidence/red-001-startup.js.snapshot.txt:7: trailing whitespace.
++  "use strict";
+learning/S026/evidence/red-001-startup.js.snapshot.txt:8: trailing whitespace.
++  const IMAGE = `candidate-v2@sha256:${"b".repeat(64)}`;
+learning/S026/evidence/red-001-startup.js.snapshot.txt:9: trailing whitespace.
++  function createState() {
+learning/S026/evidence/red-001-startup.js.snapshot.txt:10: trailing whitespace.
++    return { version: 1, runs: [] };
+learning/S026/evidence/red-001-startup.js.snapshot.txt:11: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.js.snapshot.txt:12: trailing whitespace.
++  function evaluate(configuration) {
+learning/S026/evidence/red-001-startup.js.snapshot.txt:13: trailing whitespace.
++    return {
+learning/S026/evidence/red-001-startup.js.snapshot.txt:14: trailing whitespace.
++      image: IMAGE,
+learning/S026/evidence/red-001-startup.js.snapshot.txt:15: trailing whitespace.
++      observedTick: configuration.observeTick,
+learning/S026/evidence/red-001-startup.js.snapshot.txt:16: trailing whitespace.
++      candidateOutcome: "SUCCESS",
+learning/S026/evidence/red-001-startup.js.snapshot.txt:17: trailing whitespace.
++      permission: "ALLOW",
+learning/S026/evidence/red-001-startup.js.snapshot.txt:18: trailing whitespace.
++      verifier: "PASS",
+learning/S026/evidence/red-001-startup.js.snapshot.txt:19: trailing whitespace.
++      checks: { success: 2, failure: 0, unknown: 0 },
+learning/S026/evidence/red-001-startup.js.snapshot.txt:20: trailing whitespace.
++      traffic: { old: 0, candidate: 3, success: 3, failure: 0, unknown: 0 },
+learning/S026/evidence/red-001-startup.js.snapshot.txt:21: trailing whitespace.
++      trace: [{
+learning/S026/evidence/red-001-startup.js.snapshot.txt:22: trailing whitespace.
++        tick: 0, phase: "READY", pull: "success", initialization: "success",
+learning/S026/evidence/red-001-startup.js.snapshot.txt:23: trailing whitespace.
++        ready: true, serving: "candidate-v2", oldSuccess: 0, candidateSuccess: 3
+learning/S026/evidence/red-001-startup.js.snapshot.txt:24: trailing whitespace.
++      }]
+learning/S026/evidence/red-001-startup.js.snapshot.txt:25: trailing whitespace.
++    };
+learning/S026/evidence/red-001-startup.js.snapshot.txt:26: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.js.snapshot.txt:27: trailing whitespace.
++  function recordRun(state, configuration) {
+learning/S026/evidence/red-001-startup.js.snapshot.txt:28: trailing whitespace.
++    return {
+learning/S026/evidence/red-001-startup.js.snapshot.txt:29: trailing whitespace.
++      version: 1,
+learning/S026/evidence/red-001-startup.js.snapshot.txt:30: trailing whitespace.
++      runs: [...state.runs, {
+learning/S026/evidence/red-001-startup.js.snapshot.txt:31: trailing whitespace.
++        id: state.runs.length + 1, configuration, result: evaluate(configuration)
+learning/S026/evidence/red-001-startup.js.snapshot.txt:32: trailing whitespace.
++      }]
+learning/S026/evidence/red-001-startup.js.snapshot.txt:33: trailing whitespace.
++    };
+learning/S026/evidence/red-001-startup.js.snapshot.txt:34: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.js.snapshot.txt:35: trailing whitespace.
++  return { createState, evaluate, recordRun };
+learning/S026/evidence/red-001-startup.js.snapshot.txt:36: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:1: trailing whitespace.
++"use strict";
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:2: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:3: trailing whitespace.
++const test = require("node:test");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:4: trailing whitespace.
++const assert = require("node:assert/strict");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:5: trailing whitespace.
++const { createState, evaluate, recordRun } = require("../startup.js");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:6: trailing whitespace.
++const defaults = { pullTicks: 2, startupTicks: 2, fault: "none", observeTick: 3, prediction: "HOLD" };
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:7: trailing whitespace.
++const configuration = (changes = {}) => ({ ...defaults, ...changes });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:8: trailing whitespace.
++const copy = (value) => JSON.parse(JSON.stringify(value));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:9: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:10: trailing whitespace.
++test("slow image pull keeps every observation and request on GA", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:11: trailing whitespace.
++  const result = evaluate(configuration({ pullTicks: 3, observeTick: 1 }));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:12: trailing whitespace.
++  assert.equal(result.permission, "HOLD");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:13: trailing whitespace.
++  assert.equal(result.candidateOutcome, "UNKNOWN");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:14: trailing whitespace.
++  assert.equal(result.verifier, "PASS");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:15: trailing whitespace.
++  assert.deepEqual(result.checks, { success: 0, failure: 0, unknown: 2 });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:16: trailing whitespace.
++  assert.equal(result.trace.length, 2);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:17: trailing whitespace.
++  assert.ok(result.trace.every((row) => row.phase === "PULLING" && row.serving === "ga-v1" && !row.ready));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:18: trailing whitespace.
++  assert.deepEqual(result.traffic, { old: 6, candidate: 0, success: 6, failure: 0, unknown: 0 });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:19: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:20: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:21: trailing whitespace.
++test("successful image pull cannot precede completed initialization", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:22: trailing whitespace.
++  const result = evaluate(configuration({ pullTicks: 1, startupTicks: 3, observeTick: 3 }));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:23: trailing whitespace.
++  assert.equal(result.permission, "HOLD");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:24: trailing whitespace.
++  assert.equal(result.candidateOutcome, "UNKNOWN");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:25: trailing whitespace.
++  assert.deepEqual(result.checks, { success: 1, failure: 0, unknown: 1 });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:26: trailing whitespace.
++  assert.equal(result.trace.at(-1).phase, "INITIALIZING");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:27: trailing whitespace.
++  assert.equal(result.traffic.old, 12);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:28: trailing whitespace.
++  assert.equal(result.traffic.candidate, 0);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:29: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:30: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:31: trailing whitespace.
++test("readiness begins at the exact successful initialization boundary", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:32: trailing whitespace.
++  const result = evaluate(configuration({ observeTick: 4, prediction: "ALLOW" }));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:33: trailing whitespace.
++  assert.equal(result.candidateOutcome, "SUCCESS");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:34: trailing whitespace.
++  assert.equal(result.permission, "ALLOW");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:35: trailing whitespace.
++  assert.equal(result.verifier, "PASS");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:36: trailing whitespace.
++  assert.deepEqual(result.checks, { success: 2, failure: 0, unknown: 0 });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:37: trailing whitespace.
++  assert.equal(result.trace.length, 5);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:38: trailing whitespace.
++  assert.ok(result.trace.slice(0, -1).every((row) => !row.ready && row.serving === "ga-v1"));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:39: trailing whitespace.
++  assert.equal(result.trace.at(-1).serving, "candidate-v2");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:40: trailing whitespace.
++  assert.deepEqual(result.traffic, { old: 12, candidate: 3, success: 15, failure: 0, unknown: 0 });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:41: trailing whitespace.
++  assert.match(result.image, /^candidate-v2@sha256:b{64}$/);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:42: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:43: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:44: trailing whitespace.
++test("an already ready candidate waits until the operator's selected handoff tick", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:45: trailing whitespace.
++  const result = evaluate(configuration({ pullTicks: 1, startupTicks: 1, observeTick: 6, prediction: "ALLOW" }));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:46: trailing whitespace.
++  assert.equal(result.traffic.old, 18);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:47: trailing whitespace.
++  assert.equal(result.traffic.candidate, 3);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:48: trailing whitespace.
++  assert.ok(result.trace.slice(0, -1).every((row) => row.serving === "ga-v1"));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:49: trailing whitespace.
++  assert.ok(result.trace.slice(2).every((row) => row.ready));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:50: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:51: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:52: trailing whitespace.
++test("failed immutable image pull is visible without candidate admissions", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:53: trailing whitespace.
++  const result = evaluate(configuration({ fault: "pull-failure", observeTick: 2 }));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:54: trailing whitespace.
++  assert.equal(result.candidateOutcome, "FAILURE");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:55: trailing whitespace.
++  assert.equal(result.permission, "HOLD");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:56: trailing whitespace.
++  assert.deepEqual(result.checks, { success: 0, failure: 1, unknown: 1 });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:57: trailing whitespace.
++  assert.equal(result.trace.at(-1).phase, "PULL FAILED");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:58: trailing whitespace.
++  assert.equal(result.traffic.old, 9);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:59: trailing whitespace.
++  assert.equal(result.traffic.candidate, 0);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:60: trailing whitespace.
++  assert.equal(result.traffic.failure, 0, "Startup failure is not a fabricated user interruption.");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:61: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:62: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:63: trailing whitespace.
++test("container startup failure remains ineligible after successful pull", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:64: trailing whitespace.
++  const result = evaluate(configuration({ fault: "startup-failure", observeTick: 4 }));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:65: trailing whitespace.
++  assert.equal(result.candidateOutcome, "FAILURE");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:66: trailing whitespace.
++  assert.equal(result.permission, "HOLD");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:67: trailing whitespace.
++  assert.deepEqual(result.checks, { success: 1, failure: 1, unknown: 0 });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:68: trailing whitespace.
++  assert.equal(result.trace.at(-1).phase, "STARTUP FAILED");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:69: trailing whitespace.
++  assert.equal(result.traffic.old, 15);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:70: trailing whitespace.
++  assert.equal(result.traffic.candidate, 0);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:71: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:72: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:73: trailing whitespace.
++test("a future injected failure is not evidence before its observed boundary", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:74: trailing whitespace.
++  for (const fault of ["pull-failure", "startup-failure"]) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:75: trailing whitespace.
++    const result = evaluate(configuration({ fault, observeTick: 1 }));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:76: trailing whitespace.
++    assert.equal(result.candidateOutcome, "UNKNOWN");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:77: trailing whitespace.
++    assert.deepEqual(result.checks, { success: 0, failure: 0, unknown: 2 });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:78: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:79: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:80: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:81: trailing whitespace.
++test("missing candidate observations stay UNKNOWN even after ample synthetic time", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:82: trailing whitespace.
++  const result = evaluate(configuration({ fault: "unobserved", observeTick: 6 }));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:83: trailing whitespace.
++  assert.equal(result.candidateOutcome, "UNKNOWN");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:84: trailing whitespace.
++  assert.equal(result.permission, "HOLD");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:85: trailing whitespace.
++  assert.deepEqual(result.checks, { success: 0, failure: 0, unknown: 2 });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:86: trailing whitespace.
++  assert.ok(result.trace.every((row) => row.phase === "OBSERVATION MISSING" && !row.ready));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:87: trailing whitespace.
++  assert.deepEqual(result.traffic, { old: 21, candidate: 0, success: 21, failure: 0, unknown: 0 });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:88: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:89: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:90: trailing whitespace.
++test("wrong prediction fails the verifier without bypassing the readiness guard", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:91: trailing whitespace.
++  const result = evaluate(configuration({ prediction: "ALLOW" }));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:92: trailing whitespace.
++  assert.equal(result.verifier, "FAIL");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:93: trailing whitespace.
++  assert.equal(result.permission, "HOLD");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:94: trailing whitespace.
++  assert.equal(result.traffic.candidate, 0);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:95: trailing whitespace.
++  assert.equal(evaluate(configuration({ observeTick: 4 })).verifier, "FAIL");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:96: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:97: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:98: trailing whitespace.
++test("correctly predicting HOLD on a failure passes the answer, not the migration", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:99: trailing whitespace.
++  const result = evaluate(configuration({ fault: "pull-failure", observeTick: 6 }));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:100: trailing whitespace.
++  assert.equal(result.verifier, "PASS");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:101: trailing whitespace.
++  assert.equal(result.candidateOutcome, "FAILURE");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:102: trailing whitespace.
++  assert.equal(result.traffic.candidate, 0);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:103: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:104: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:105: trailing whitespace.
++test("all 504 finite configurations preserve timing, traffic and outcome invariants", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:106: trailing whitespace.
++  for (let pullTicks = 1; pullTicks <= 3; pullTicks++) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:107: trailing whitespace.
++    for (let startupTicks = 1; startupTicks <= 3; startupTicks++) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:108: trailing whitespace.
++      for (let observeTick = 0; observeTick <= 6; observeTick++) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:109: trailing whitespace.
++        for (const fault of ["none", "pull-failure", "startup-failure", "unobserved"]) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:110: trailing whitespace.
++          for (const prediction of ["HOLD", "ALLOW"]) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:111: trailing whitespace.
++            const result = evaluate({ pullTicks, startupTicks, observeTick, fault, prediction });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:112: trailing whitespace.
++            const ready = fault === "none" && observeTick >= pullTicks + startupTicks;
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:113: trailing whitespace.
++            const failed = (fault === "pull-failure" && observeTick >= pullTicks)
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:114: trailing whitespace.
++              || (fault === "startup-failure" && observeTick >= pullTicks + startupTicks);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:115: trailing whitespace.
++            assert.equal(result.candidateOutcome, ready ? "SUCCESS" : failed ? "FAILURE" : "UNKNOWN");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:116: trailing whitespace.
++            assert.equal(result.permission, ready ? "ALLOW" : "HOLD");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:117: trailing whitespace.
++            assert.equal(result.verifier, prediction === result.permission ? "PASS" : "FAIL");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:118: trailing whitespace.
++            assert.equal(result.trace.length, observeTick + 1);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:119: trailing whitespace.
++            assert.equal(result.checks.success + result.checks.failure + result.checks.unknown, 2);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:120: trailing whitespace.
++            assert.equal(result.traffic.success, 3 * (observeTick + 1));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:121: trailing whitespace.
++            assert.equal(result.traffic.old + result.traffic.candidate, result.traffic.success);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:122: trailing whitespace.
++            assert.equal(result.traffic.candidate, ready ? 3 : 0);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:123: trailing whitespace.
++            for (const row of result.trace) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:124: trailing whitespace.
++              assert.equal(row.ready, fault === "none" && row.tick >= pullTicks + startupTicks);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:125: trailing whitespace.
++              assert.equal(row.serving, ready && row.tick === observeTick ? "candidate-v2" : "ga-v1");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:126: trailing whitespace.
++              assert.equal(row.oldSuccess + row.candidateSuccess, 3);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:127: trailing whitespace.
++            }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:128: trailing whitespace.
++          }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:129: trailing whitespace.
++        }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:130: trailing whitespace.
++      }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:131: trailing whitespace.
++    }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:132: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:133: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:134: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:135: trailing whitespace.
++test("evaluation is deterministic, independent and does not mutate configuration", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:136: trailing whitespace.
++  const input = Object.freeze(configuration());
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:137: trailing whitespace.
++  const first = evaluate(input);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:138: trailing whitespace.
++  const second = evaluate(input);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:139: trailing whitespace.
++  assert.deepEqual(first, second);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:140: trailing whitespace.
++  first.trace[0].serving = "forged";
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:141: trailing whitespace.
++  assert.notEqual(second.trace[0].serving, "forged");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:142: trailing whitespace.
++  assert.deepEqual(input, defaults);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:143: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:144: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:145: trailing whitespace.
++test("numeric controls reject coercion, fractions and out-of-bounds values", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:146: trailing whitespace.
++  for (const field of ["pullTicks", "startupTicks", "observeTick"]) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:147: trailing whitespace.
++    for (const value of ["2", null, undefined, true, NaN, Infinity, -1, 1.5, 7]) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:148: trailing whitespace.
++      assert.throws(() => evaluate(configuration({ [field]: value })), /Invalid configuration/);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:149: trailing whitespace.
++    }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:150: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:151: trailing whitespace.
++  for (const field of ["pullTicks", "startupTicks"]) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:152: trailing whitespace.
++    for (const value of [0, 4]) assert.throws(() => evaluate(configuration({ [field]: value })), /Invalid configuration/);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:153: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:154: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:155: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:156: trailing whitespace.
++test("configuration rejects unknown enums and missing or extra keys", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:157: trailing whitespace.
++  for (const fault of ["", "NONE", "unknown", "none ", {}, null]) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:158: trailing whitespace.
++    assert.throws(() => evaluate(configuration({ fault })), /Invalid configuration/);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:159: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:160: trailing whitespace.
++  for (const prediction of ["", "hold", "ADMIT", true, null]) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:161: trailing whitespace.
++    assert.throws(() => evaluate(configuration({ prediction })), /Invalid configuration/);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:162: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:163: trailing whitespace.
++  for (const key of Object.keys(defaults)) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:164: trailing whitespace.
++    const input = configuration();
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:165: trailing whitespace.
++    delete input[key];
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:166: trailing whitespace.
++    assert.throws(() => evaluate(input), /Invalid configuration/);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:167: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:168: trailing whitespace.
++  for (const input of [null, [], "none", { ...defaults, image: "mutable:latest" }]) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:169: trailing whitespace.
++    assert.throws(() => evaluate(input), /Invalid configuration/);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:170: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:171: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:172: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:173: trailing whitespace.
++test("configuration rejects prototypes, symbols and accessors without invoking getters", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:174: trailing whitespace.
++  let getterCalls = 0;
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:175: trailing whitespace.
++  const accessor = configuration();
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:176: trailing whitespace.
++  Object.defineProperty(accessor, "fault", { enumerable: true, get() { getterCalls++; return "none"; } });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:177: trailing whitespace.
++  const symbol = configuration();
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:178: trailing whitespace.
++  symbol[Symbol("extra")] = "none";
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:179: trailing whitespace.
++  for (const input of [Object.assign(Object.create({ extra: 1 }), defaults), symbol, accessor]) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:180: trailing whitespace.
++    assert.throws(() => evaluate(input), /Invalid configuration/);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:181: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:182: trailing whitespace.
++  assert.equal(getterCalls, 0);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:183: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:184: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:185: trailing whitespace.
++test("initial state is empty, versioned and independently allocated", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:186: trailing whitespace.
++  assert.deepEqual(createState(), { version: 1, runs: [] });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:187: trailing whitespace.
++  assert.notEqual(createState().runs, createState().runs);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:188: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:189: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:190: trailing whitespace.
++test("history retains failure, unknown and success with their original configurations", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:191: trailing whitespace.
++  let state = createState();
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:192: trailing whitespace.
++  for (const changes of [{ fault: "pull-failure", observeTick: 2 }, {}, { observeTick: 4, prediction: "ALLOW" }]) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:193: trailing whitespace.
++    state = recordRun(state, configuration(changes));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:194: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:195: trailing whitespace.
++  assert.deepEqual(state.runs.map((run) => run.result.candidateOutcome), ["FAILURE", "UNKNOWN", "SUCCESS"]);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:196: trailing whitespace.
++  assert.deepEqual(state.runs.map((run) => run.id), [1, 2, 3]);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:197: trailing whitespace.
++  assert.equal(state.runs[0].configuration.fault, "pull-failure");
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:198: trailing whitespace.
++  assert.equal(state.runs[2].configuration.observeTick, 4);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:199: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:200: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:201: trailing whitespace.
++test("recording copies inputs and previous history instead of sharing mutable records", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:202: trailing whitespace.
++  const input = configuration();
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:203: trailing whitespace.
++  const empty = createState();
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:204: trailing whitespace.
++  const first = recordRun(empty, input);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:205: trailing whitespace.
++  input.observeTick = 6;
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:206: trailing whitespace.
++  assert.equal(first.runs[0].configuration.observeTick, 3);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:207: trailing whitespace.
++  const saved = copy(first);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:208: trailing whitespace.
++  const second = recordRun(first, configuration({ observeTick: 4, prediction: "ALLOW" }));
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:209: trailing whitespace.
++  second.runs[0].result.trace[0].phase = "forged";
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:210: trailing whitespace.
++  assert.deepEqual(first, saved);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:211: trailing whitespace.
++  assert.equal(empty.runs.length, 0);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:212: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:213: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:214: trailing whitespace.
++test("eight runs fit and the ninth is rejected without silent eviction or mutation", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:215: trailing whitespace.
++  let state = createState();
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:216: trailing whitespace.
++  for (let index = 0; index < 8; index++) state = recordRun(state, configuration());
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:217: trailing whitespace.
++  const saved = copy(state);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:218: trailing whitespace.
++  assert.equal(state.runs.length, 8);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:219: trailing whitespace.
++  assert.throws(() => recordRun(state, configuration()), /History limit/);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:220: trailing whitespace.
++  assert.deepEqual(state, saved);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:221: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:222: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:223: trailing whitespace.
++test("state guards reject wrong schema, identity, version and array shape", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:224: trailing whitespace.
++  const valid = recordRun(createState(), configuration());
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:225: trailing whitespace.
++  const wrongId = copy(valid);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:226: trailing whitespace.
++  wrongId.runs[0].id = 2;
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:227: trailing whitespace.
++  const sparse = { version: 1, runs: new Array(1) };
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:228: trailing whitespace.
++  const extraArray = copy(valid);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:229: trailing whitespace.
++  extraArray.runs.extra = true;
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:230: trailing whitespace.
++  for (const state of [null, [], {}, { version: 2, runs: [] }, { version: 1, runs: [], extra: true },
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:231: trailing whitespace.
++    { version: 1, runs: {} }, wrongId, sparse, extraArray]) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:232: trailing whitespace.
++    assert.throws(() => recordRun(state, configuration()), /Invalid state/);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:233: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:234: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:235: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:236: trailing whitespace.
++test("state guards reject forged historical results and changed configurations", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:237: trailing whitespace.
++  const valid = recordRun(createState(), configuration());
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:238: trailing whitespace.
++  const alteredResult = copy(valid);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:239: trailing whitespace.
++  alteredResult.runs[0].result.permission = "ALLOW";
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:240: trailing whitespace.
++  const alteredTrace = copy(valid);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:241: trailing whitespace.
++  alteredTrace.runs[0].result.trace[0].serving = "candidate-v2";
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:242: trailing whitespace.
++  const alteredConfiguration = copy(valid);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:243: trailing whitespace.
++  alteredConfiguration.runs[0].configuration.observeTick = 6;
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:244: trailing whitespace.
++  const addedResultField = copy(valid);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:245: trailing whitespace.
++  addedResultField.runs[0].result.liveAzure = true;
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:246: trailing whitespace.
++  for (const state of [alteredResult, alteredTrace, alteredConfiguration, addedResultField]) {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:247: trailing whitespace.
++    assert.throws(() => recordRun(state, configuration()), /Invalid state/);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:248: trailing whitespace.
++  }
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:249: trailing whitespace.
++});
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:250: trailing whitespace.
++
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:251: trailing whitespace.
++test("state accessors and prototype overrides are rejected without executing getters", () => {
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:252: trailing whitespace.
++  let getterCalls = 0;
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:253: trailing whitespace.
++  const accessor = { version: 1 };
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:254: trailing whitespace.
++  Object.defineProperty(accessor, "runs", { enumerable: true, get() { getterCalls++; return []; } });
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:255: trailing whitespace.
++  assert.throws(() => recordRun(accessor, configuration()), /Invalid state/);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:256: trailing whitespace.
++  assert.throws(() => recordRun(Object.assign(Object.create({ unsafe: true }), createState()), configuration()), /Invalid state/);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:257: trailing whitespace.
++  assert.equal(getterCalls, 0);
+learning/S026/evidence/red-001-startup.test.cjs.snapshot.txt:258: trailing whitespace.
++});
+learning/S026/evidence/red-001.stdout.txt:11: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:13: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:35: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:37: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:61: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:63: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:87: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:89: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:114: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:117: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:142: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:145: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:170: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:173: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:198: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:201: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:225: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:227: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:252: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:255: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:280: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:283: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:383: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:391: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:421: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:423: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:468: trailing whitespace.
++    
+learning/S026/evidence/red-001.stdout.txt:470: trailing whitespace.
++    

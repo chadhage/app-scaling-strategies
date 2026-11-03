@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "sourceId": "S026",
+  "cardId": "A-S026",
+  "parentId": "D-S026",
+  "packet": "SC-S026",
+  "kano": "S",
+  "kanoUnit": "A-S026",
+  "owner": "worker-A-S026",
+  "mode": "synthetic-only",
+  "entry": "index.html",
+  "objective": "Keep the old serving deployment on duty throughout slow or failed immutable image pull and initialization; never admit a candidate before both completion checks succeed.",
+  "configuration": {
+    "host": "Local file in isolated headless Microsoft Edge",
+    "pullTicks": [1, 2, 3],
+    "startupTicks": [1, 2, 3],
+    "observationTicks": [0, 1, 2, 3, 4, 5, 6],
+    "conditions": ["none", "pull-failure", "startup-failure", "unobserved"],
+    "predictions": ["HOLD", "ALLOW"],
+    "candidateImage": "candidate-v2@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "requestsPerTick": 3,
+    "maximumHistory": 8
+  },
+  "preconditions": [
+    "Healthy GA and sufficient overlap capacity are assumed, not measured.",
+    "A compatible immutable candidate and successful in-budget synthetic requests are fixtures.",
+    "Pull and initialization completion evidence are sequential and both required."
+  ],
+  "actions": ["Choose delays and condition", "Choose observation tick and prediction", "Check handoff", "Inspect retained trace", "Reset lesson"],
+  "expectedAssertions": [
+    "Old GA serves all ticks before successful initialization and the selected handoff.",
+    "Waiting, missing observations, failed pull and failed initialization keep candidate admissions at zero.",
+    "A ready candidate receives only three final-tick synthetic admissions.",
+    "Prediction correctness is independent from candidate outcome and cannot force admission.",
+    "Invalid input or state and a ninth run are rejected without mutating retained evidence."
+  ],
+  "verifier": {
+    "redAssertionsFailed": 20,
+    "redAssertionsPassed": 2,
+    "modelChecks": 22,
+    "finiteConfigurationsChecked": 504,
+    "browserLeafChecks": 13,
+    "browserParentGroups": 1,
+    "scope": "Local model consistency, actual DOM/keyboard/error/reset/failure/CSP behavior; not native validation."
+  },
+  "proof": {
+    "bdd": "image-startup.feature",
+    "sourceContract": "evidence/source-contract-001.json",
+    "red": "evidence/red-001.json",
+    "iac": "evidence/iac-n-a.json",
+    "initialGreen": "evidence/green-001.json",
+    "tooling": "evidence/tooling-001.json",
+    "browser": "evidence/browser-001.json",
+    "browserObservations": "evidence/browser-observations-001.json",
+    "publicationPreflight": "evidence/publication-preflight-001.json",
+    "finalReadOnlyGreen": "evidence/green-003.json"
+  },
+  "tooling": {
+    "node": "22.23.4 tooling only",
+    "playwright": "1.56.1 offline",
+    "edge": "156.0.4314.50 installed and Microsoft-signed",
+    "helperPublishedCommit": "53c0c0d",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "helperLifecycleLimit": "Not a fully qualified unattended runner; abandoned recovery prototype is unqualified."
+  },
+  "userImpact": "UNMEASURED for real users. All traffic and completion checks are synthetic. Candidate failures do not invent GA interruptions.",
+  "cleanup": "Awaited isolated browser close in finally; session history is memory-only and resettable.",
+  "publication": "Implementation commit and annotated kanban/A-S026/<12sha> marker are resolved by the authorized publisher; no self-referential commit hash is invented.",
+  "reviewer": null,
+  "acceptedAtUtc": null,
+  "acceptance": "Parent-owned independent review required; this worker cannot award Done.",
+  "remainingLocalToDo": [],
+  "nativeRemainder": {
+    "cardId": "B-S026",
+    "readiness": false,
+    "blocker": "CORE, DATA and IMAGEHOST gates, approved target/access and immutable-image/startup fixtures, and separate native execution authority are outstanding."
+  },
+  "limits": [
+    "No native Azure, real container, production Node24 or source-parent certification.",
+    "No IaC, cloud resources, identity, scaffold, deployment, expenditure, packages or browser downloads.",
+    "Ordinary verification preserves proof; CAPTURE_BROWSER_EVIDENCE=1 is deliberate append-only capture.",
+    "One frozen satisfier unit; tests, refinements and repeated checks earn no extra credit."
+  ]
+}

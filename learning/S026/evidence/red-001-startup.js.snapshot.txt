@@ -1,0 +1,36 @@
+(function (root, factory) {
+  "use strict";
+  const api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  else root.S026 = api;
+})(globalThis, function () {
+  "use strict";
+  const IMAGE = `candidate-v2@sha256:${"b".repeat(64)}`;
+  function createState() {
+    return { version: 1, runs: [] };
+  }
+  function evaluate(configuration) {
+    return {
+      image: IMAGE,
+      observedTick: configuration.observeTick,
+      candidateOutcome: "SUCCESS",
+      permission: "ALLOW",
+      verifier: "PASS",
+      checks: { success: 2, failure: 0, unknown: 0 },
+      traffic: { old: 0, candidate: 3, success: 3, failure: 0, unknown: 0 },
+      trace: [{
+        tick: 0, phase: "READY", pull: "success", initialization: "success",
+        ready: true, serving: "candidate-v2", oldSuccess: 0, candidateSuccess: 3
+      }]
+    };
+  }
+  function recordRun(state, configuration) {
+    return {
+      version: 1,
+      runs: [...state.runs, {
+        id: state.runs.length + 1, configuration, result: evaluate(configuration)
+      }]
+    };
+  }
+  return { createState, evaluate, recordRun };
+});
