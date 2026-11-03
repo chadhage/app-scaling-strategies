@@ -1,0 +1,45 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S036Lesson = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
+  const MAX_RUNS = 6;
+  const DEFAULTS = Object.freeze({
+    configuration: 'compatible', token: 'valid-prior', observation: 'observed'
+  });
+  function createState() {
+    return { phase: 'empty', current: null, history: [] };
+  }
+  function loadForm(state, config) {
+    return {
+      phase: 'old-page', current: { id: state.history.length + 1, config: { ...config } },
+      history: [...state.history]
+    };
+  }
+  function cutOver(state) {
+    return { ...state, phase: 'cutover' };
+  }
+  function submit(state) {
+    const result = {
+      status: 'unknown', submission: 'unknown', continuity: 'unknown',
+      checks: {
+        oldKeyReadable: 'unknown', application: 'unknown',
+        requestIntegrity: 'unknown', cookieBinding: 'unknown'
+      },
+      failedChecks: [],
+      metrics: { accepted: null, rejected: null, unknown: 1, effects: null }
+    };
+    const record = {
+      id: state.current.id, config: { ...state.current.config }, result,
+      trace: ['v1 rendered synthetic form.', 'Cut over to v2.', 'Observation unknown.']
+    };
+    return { ...state, phase: 'complete', history: [...state.history, record] };
+  }
+  function resetCurrent(state) {
+    return { phase: 'empty', current: null, history: [...state.history] };
+  }
+  return Object.freeze({ BANNER, MAX_RUNS, DEFAULTS, createState, loadForm, cutOver, submit, resetCurrent });
+}));

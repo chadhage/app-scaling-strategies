@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S036",
+  "workerId": "worker-A-S036",
+  "kano": "S",
+  "kanoUnit": "A-S036",
+  "packet": "SC-S036",
+  "source": "S036",
+  "parent": "D-S036",
+  "title": "Existing form submission",
+  "objective": "Submit a form issued on v1 after cutover to v2; preserve valid prior submissions under compatible anti-forgery configuration while rejecting forged or unpaired requests.",
+  "entryGate": "SOURCE",
+  "authorization": "local-synthetic-only",
+  "mode": "synthetic-only",
+  "trainingLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "entryPoint": "learning\\S036\\index.html",
+  "feature": "learning\\S036\\existing-form.feature",
+  "tests": [
+    "learning\\S036\\tests\\model.test.cjs",
+    "learning\\S036\\tests\\syntax.test.cjs",
+    "learning\\S036\\tests\\browser.test.cjs",
+    "learning\\S036\\tests\\integrity.test.cjs"
+  ],
+  "testCommand": "node .\\learning\\S036\\tests\\capture.cjs all",
+  "browserCommand": "node .\\learning\\S036\\tests\\capture.cjs browser",
+  "captureCommand": "$env:CAPTURE_BROWSER_EVIDENCE='1'; node .\\learning\\S036\\tests\\capture.cjs all",
+  "evidence": "learning\\S036\\evidence.json",
+  "infrastructure": "N/A: resource-free offline browser lesson; no IaC or resource operations.",
+  "fixtureVersion": "S036-old-form-v1",
+  "preconditions": [
+    "v1 rendered one old form with synthetic request/cookie pair A, fixture key OLD and application A",
+    "v2 always checks old-key readability, application boundary, request integrity and cookie binding",
+    "No real identity, token, cookie, secret, registration or cryptographic implementation"
+  ],
+  "actions": [
+    "Choose compatible, retired-old-key or changed-application configuration",
+    "Choose valid prior, forged, missing-cookie or foreign-pair condition",
+    "Choose observed or missing response",
+    "Load the form on v1, cut over to v2, submit exactly once",
+    "Inspect separate assertion, submission, continuity, check and effect measurements",
+    "Reset current with defaults and focus restored; retain completed history"
+  ],
+  "syntheticInputTrace": {
+    "compatibleValid": ["v1 issued old form", "v2 retains key OLD and application A", "ACCEPTED / SUCCESS / continuity preserved / one synthetic effect"],
+    "compatibleForged": ["v1 issued old form", "v2 retains strict validation", "REJECTED / safety SUCCESS / continuity not tested / zero effects"],
+    "incompatibleValid": ["v1 issued old form", "v2 lacks old key or changes application boundary", "REJECTED / FAILURE / continuity interrupted / zero effects"],
+    "missingObservation": ["v1 issued old form", "route changes to v2", "UNKNOWN / no invented status, acceptance, rejection or effects"]
+  },
+  "expectedAssertions": [
+    "Compatible validation accepts a valid prior request/cookie pair exactly once",
+    "Forged, missing-cookie and foreign-pair submissions remain rejected",
+    "Retired old keys and changed application boundaries interrupt valid old forms without disabling checks",
+    "Missing observations remain unknown, not zero effects or successful continuity",
+    "All 24 fixture combinations are deterministic",
+    "Malformed inputs, skipped phases, repeated submissions, forged histories and exhausted bounds reject without mutation",
+    "Completed failure/success/unknown traces remain immutable across keyboard reset",
+    "Actual file-browser CSP blocks inline code/handlers/styles, connections, form navigation, base changes and workers"
+  ],
+  "limits": [
+    "One form, one cutover and one submission per rehearsal",
+    "Six completed histories with no eviction; reset retains them and reload clears page memory",
+    "Reset before submission discards only unsubmitted setup",
+    "Synthetic fixture checks are not real authentication, anti-forgery security or exactly-once effect certification",
+    "No native Azure, Node24 production, source-parent or reliability proof"
+  ],
+  "dependencies": [],
+  "nativeRemainderGates": ["CORE", "DATA", "HOST"],
+  "testTooling": {
+    "node": "22.23.4 tooling only",
+    "playwright": "1.56.1 existing offline dependency",
+    "browser": "156.0.4314.50 installed Microsoft-signed Edge",
+    "helper": "testing\\browser\\isolated.cjs / openIsolatedLesson",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "helperPublishedCommit": "53c0c0d",
+    "lifecycle": "Each isolated session is closed in an awaited finally. Known helper lifecycle limits remain; no abandoned prototype."
+  },
+  "nativeProof": false,
+  "productionNode24Validated": false,
+  "parentComplete": false,
+  "acceptance": "Parent-owned empirical acceptance pending; no worker-awarded Done credit."
+}

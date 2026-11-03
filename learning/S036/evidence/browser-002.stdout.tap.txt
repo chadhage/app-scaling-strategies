@@ -1,0 +1,99 @@
+TAP version 13
+# Subtest: A-S036 actual isolated DOM, keyboard, error, reset, failure and CSP observations
+    # Subtest: file lesson loads with exact banner, unmeasured result and callable native reset
+    ok 1 - file lesson loads with exact banner, unmeasured result and callable native reset
+      ---
+      duration_ms: 362.615
+      type: 'test'
+      ...
+    # Subtest: native Tab, arrows and Enter conduct a compatible old-form acceptance
+    ok 2 - native Tab, arrows and Enter conduct a compatible old-form acceptance
+      ---
+      duration_ms: 686.6223
+      type: 'test'
+      ...
+    # Subtest: a DOM-enabled duplicate submit rejects without changing result, history or effects
+    ok 3 - a DOM-enabled duplicate submit rejects without changing result, history or effects
+      ---
+      duration_ms: 226.6786
+      type: 'test'
+      ...
+    # Subtest: keyboard reset restores defaults and focus while retaining completed history
+    ok 4 - keyboard reset restores defaults and focus while retaining completed history
+      ---
+      duration_ms: 263.1686
+      type: 'test'
+      ...
+    # Subtest: retiring the old key interrupts a valid old form; no validation bypass is offered
+    ok 5 - retiring the old key interrupts a valid old form; no validation bypass is offered
+      ---
+      duration_ms: 316.5668
+      type: 'test'
+      ...
+    # Subtest: a changed application boundary also rejects valid prior tokens
+    ok 6 - a changed application boundary also rejects valid prior tokens
+      ---
+      duration_ms: 210.5717
+      type: 'test'
+      ...
+    # Subtest: compatible validation still rejects forged request tokens, not a continuity success
+    ok 7 - compatible validation still rejects forged request tokens, not a continuity success
+      ---
+      duration_ms: 205.8111
+      type: 'test'
+      ...
+    # Subtest: missing observations remain unknown, including acceptance, rejection and effects
+    ok 8 - missing observations remain unknown, including acceptance, rejection and effects
+      ---
+      duration_ms: 185.5043
+      type: 'test'
+      ...
+    # Subtest: missing cookie rejects; six histories retain earlier failures and unknown at the bound
+    ok 9 - missing cookie rejects; six histories retain earlier failures and unknown at the bound
+      ---
+      duration_ms: 313.1886
+      type: 'test'
+      ...
+    # Subtest: reload clears page memory and foreign pairing remains rejected in a fresh rehearsal
+    ok 10 - reload clears page memory and foreign pairing remains rejected in a fresh rehearsal
+      ---
+      duration_ms: 630.8257
+      type: 'test'
+      ...
+    # Subtest: tampered input and early submission produce focused errors without erasing history
+    ok 11 - tampered input and early submission produce focused errors without erasing history
+      ---
+      duration_ms: 260.4757
+      type: 'test'
+      ...
+    # Subtest: retained details and trace remain keyboard accessible without narrow-viewport overflow
+    ok 12 - retained details and trace remain keyboard accessible without narrow-viewport overflow
+      ---
+      duration_ms: 109.8293
+      type: 'test'
+      ...
+    # Subtest: real CSP blocks inline code, handlers, styles, connections, form, base and blob worker
+    ok 13 - real CSP blocks inline code, handlers, styles, connections, form, base and blob worker
+      ---
+      duration_ms: 78.9513
+      type: 'test'
+      ...
+    1..13
+ok 1 - A-S036 actual isolated DOM, keyboard, error, reset, failure and CSP observations
+  ---
+  duration_ms: 8763.6234
+  type: 'test'
+  ...
+# {"signatureHost":"pwsh.exe","signatureCommand":"$ErrorActionPreference='Stop'; $p='C:\\\\Program Files (x86)\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe'; $s=Get-AuthenticodeSignature -LiteralPath $p; [ordered]@{path=$p;version=(Get-Item -LiteralPath $p).VersionInfo.ProductVersion;status=[string]$s.Status;signer=$s.SignerCertificate.Subject}|ConvertTo-Json -Compress","signatureStdout":"{\\"path\\":\\"C:\\\\\\\\Program Files (x86)\\\\\\\\Microsoft\\\\\\\\Edge\\\\\\\\Application\\\\\\\\msedge.exe\\",\\"version\\":\\"156.0.4314.50\\",\\"status\\":\\"Valid\\",\\"signer\\":\\"CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US\\"}\\r\\n","signatureStderr":"","signatureExitCode":0}
+# {"node":"v22.23.4","playwrightVersion":"1.56.1","helperSha256":"86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055","helperPublishedCommit":"53c0c0d","signatureStatus":"Valid"}
+# {"browserVersion":"156.0.4314.50","observations":[{"config":{"configuration":"retired-key"},"result":"Synthetic assertion FAILURE\\n\\nSubmission: REJECTED. Synthetic HTTP: 400. Valid-prior continuity: interrupted.\\n\\nA valid prior form was interrupted. Do not repair this by disabling validation.\\n\\nSynthetic accepted\\n0\\nSynthetic rejected\\n1\\nSynthetic unknown\\n0\\nSynthetic effects\\n0\\noldKeyReadable: FAIL\\napplication: PASS\\nrequestIntegrity: PASS\\ncookieBinding: PASS","trace":["v1 rendered the old form with synthetic request/cookie pair A, fixture key OLD and application A.Route v1 -> v2; old fixture key is unavailable; application A is unchanged. All four validation checks remain required.v2 REJECTED valid-prior; synthetic HTTP 400; failed checks: oldKeyReadable; effects 0; valid-prior continuity interrupted."],"metrics":{"Synthetic accepted":"0","Synthetic rejected":"1","Synthetic unknown":"0","Synthetic effects":"0"}},{"config":{"configuration":"changed-application"},"result":"Synthetic assertion FAILURE\\n\\nSubmission: REJECTED. Synthetic HTTP: 400. Valid-prior continuity: interrupted.\\n\\nA valid prior form was interrupted. Do not repair this by disabling validation.\\n\\nSynthetic accepted\\n0\\nSynthetic rejected\\n1\\nSynthetic unknown\\n0\\nSynthetic effects\\n0\\noldKeyReadable: PASS\\napplication: FAIL\\nrequestIntegrity: PASS\\ncookieBinding: PASS","trace":["v1 rendered the old form with synthetic request/cookie pair A, fixture key OLD and application A.Route v1 -> v2; old fixture key is retained; application boundary changed to B. All four validation checks remain required.v2 REJECTED valid-prior; synthetic HTTP 400; failed checks: application; effects 0; valid-prior continuity interrupted."],"metrics":{"Synthetic accepted":"0","Synthetic rejected":"1","Synthetic unknown":"0","Synthetic effects":"0"}},{"config":{"token":"forged"},"result":"Synthetic assertion SUCCESS\\n\\nSubmission: REJECTED. Synthetic HTTP: 400. Valid-prior continuity: not-tested.\\n\\nStrict rejection succeeded; valid-prior continuity was NOT TESTED.\\n\\nSynthetic accepted\\n0\\nSynthetic rejected\\n1\\nSynthetic unknown\\n0\\nSynthetic effects\\n0\\noldKeyReadable: PASS\\napplication: PASS\\nrequestIntegrity: FAIL\\ncookieBinding: PASS","trace":["v1 rendered the old form with synthetic request/cookie pair A, fixture key OLD and application A.Route v1 -> v2; old fixture key is retained and application A is unchanged. All four validation checks remain required.v2 REJECTED forged; synthetic HTTP 400; failed checks: requestIntegrity; effects 0; valid-prior continuity not-tested."],"metrics":{"Synthetic accepted":"0","Synthetic rejected":"1","Synthetic unknown":"0","Synthetic effects":"0"}},{"config":{"observation":"missing"},"result":"Synthetic assertion UNKNOWN\\n\\nSubmission: UNKNOWN. Synthetic HTTP: UNKNOWN. Valid-prior continuity: unknown.\\n\\nNo submission evidence. Do not infer acceptance, rejection or zero effects.\\n\\nSynthetic accepted\\nUNKNOWN\\nSynthetic rejected\\nUNKNOWN\\nSynthetic unknown\\n1\\nSynthetic effects\\nUNKNOWN\\noldKeyReadable: UNKNOWN\\napplication: UNKNOWN\\nrequestIntegrity: UNKNOWN\\ncookieBinding: UNKNOWN","trace":["v1 rendered the old form with synthetic request/cookie pair A, fixture key OLD and application A.Route v1 -> v2; old fixture key is retained and application A is unchanged. All four validation checks remain required.No submission observation: validation, HTTP status and synthetic effects UNKNOWN."],"metrics":{"Synthetic accepted":"UNKNOWN","Synthetic rejected":"UNKNOWN","Synthetic unknown":"1","Synthetic effects":"UNKNOWN"}},{"config":{"token":"missing-cookie"},"result":"Synthetic assertion SUCCESS\\n\\nSubmission: REJECTED. Synthetic HTTP: 400. Valid-prior continuity: not-tested.\\n\\nStrict rejection succeeded; valid-prior continuity was NOT TESTED.\\n\\nSynthetic accepted\\n0\\nSynthetic rejected\\n1\\nSynthetic unknown\\n0\\nSynthetic effects\\n0\\noldKeyReadable: PASS\\napplication: PASS\\nrequestIntegrity: PASS\\ncookieBinding: FAIL","trace":["v1 rendered the old form with synthetic request/cookie pair A, fixture key OLD and application A.Route v1 -> v2; old fixture key is retained and application A is unchanged. All four validation checks remain required.v2 REJECTED missing-cookie; synthetic HTTP 400; failed checks: cookieBinding; effects 0; valid-prior continuity not-tested."],"metrics":{"Synthetic accepted":"0","Synthetic rejected":"1","Synthetic unknown":"0","Synthetic effects":"0"}},{"config":{"token":"foreign-pair"},"result":"Synthetic assertion SUCCESS\\n\\nSubmission: REJECTED. Synthetic HTTP: 400. Valid-prior continuity: not-tested.\\n\\nStrict rejection succeeded; valid-prior continuity was NOT TESTED.\\n\\nSynthetic accepted\\n0\\nSynthetic rejected\\n1\\nSynthetic unknown\\n0\\nSynthetic effects\\n0\\noldKeyReadable: PASS\\napplication: PASS\\nrequestIntegrity: PASS\\ncookieBinding: FAIL","trace":["v1 rendered the old form with synthetic request/cookie pair A, fixture key OLD and application A.Route v1 -> v2; old fixture key is retained and application A is unchanged. All four validation checks remain required.v2 REJECTED foreign-pair; synthetic HTTP 400; failed checks: cookieBinding; effects 0; valid-prior continuity not-tested."],"metrics":{"Synthetic accepted":"0","Synthetic rejected":"1","Synthetic unknown":"0","Synthetic effects":"0"}}],"cspViolations":[{"directive":"script-src-elem","blockedURI":"inline"},{"directive":"script-src-attr","blockedURI":"inline"},{"directive":"style-src-elem","blockedURI":"inline"},{"directive":"connect-src","blockedURI":"https://example.invalid/s036-connect"},{"directive":"base-uri","blockedURI":"https://example.invalid/"},{"directive":"worker-src","blockedURI":"blob"},{"directive":"base-uri","blockedURI":""},{"directive":"form-action","blockedURI":"https://example.invalid/s036-form?"}],"externalRequestsReachingGuard":0,"pageErrors":[],"expectedCspConsoleErrors":9,"realUserImpact":"UNMEASURED; all observations are the synthetic fixture"}
+# {"cleanup":{"pageClosed":true,"browserDisconnected":true},"helperLifecyclePrototypeUsed":false}
+1..1
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10145.7617

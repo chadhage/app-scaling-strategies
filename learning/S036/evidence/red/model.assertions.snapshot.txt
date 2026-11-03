@@ -1,0 +1,54 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('../antiforgery.js');
+
+function run(overrides = {}, initial = model.createState()) {
+  return model.submit(model.cutOver(model.loadForm(initial, { ...model.DEFAULTS, ...overrides })));
+}
+
+test('compatible v2 accepts a valid token issued with the old v1 form exactly once', () => {
+  const state = run();
+  const { result, trace } = state.history[0];
+  assert.equal(state.phase, 'complete');
+  assert.equal(trace.length, 3);
+  assert.equal(result.submission, 'accepted');
+  assert.equal(result.status, 'success');
+  assert.equal(result.continuity, 'preserved');
+  assert.deepEqual(result.metrics, { accepted: 1, rejected: 0, unknown: 0, effects: 1 });
+  assert.ok(Object.values(result.checks).every((check) => check === 'pass'));
+});
+
+for (const token of ['forged', 'missing-cookie', 'foreign-pair']) {
+  test(`compatible v2 rejects ${token} without effects or claiming valid-prior continuity`, () => {
+    const { result } = run({ token }).history[0];
+    assert.equal(result.submission, 'rejected');
+    assert.equal(result.status, 'success');
+    assert.equal(result.continuity, 'not-tested');
+    assert.deepEqual(result.metrics, { accepted: 0, rejected: 1, unknown: 0, effects: 0 });
+    assert.ok(result.failedChecks.length > 0);
+  });
+}
+
+for (const [configuration, failedCheck] of [
+  ['retired-key', 'oldKeyReadable'], ['changed-application', 'application']
+]) {
+  test(`a valid prior form fails under ${configuration}; validation is not weakened`, () => {
+    const { result } = run({ configuration }).history[0];
+    assert.equal(result.submission, 'rejected');
+    assert.equal(result.status, 'failure');
+    assert.equal(result.continuity, 'interrupted');
+    assert.deepEqual(result.failedChecks, [failedCheck]);
+    assert.equal(result.metrics.effects, 0);
+  });
+}
+
+test('missing observations stay unknown with no fabricated acceptance or effect measurements', () => {
+  const { result } = run({ observation: 'missing' }).history[0];
+  assert.equal(result.submission, 'unknown');
+  assert.equal(result.status, 'unknown');
+  assert.equal(result.continuity, 'unknown');
+  assert.ok(Object.values(result.checks).every((check) => check === 'unknown'));
+  assert.deepEqual(result.metrics, { accepted: null, rejected: null, unknown: 1, effects: null });
+});
