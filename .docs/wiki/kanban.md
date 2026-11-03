@@ -15,7 +15,7 @@ Planned Kano mix: **28 dissatisfiers, 380 satisfiers, 6 delighters**. These inve
 
 The selected policy is **cumulative completion totals**, with each delighter's satisfiers completed in the **same named delivery packet**. No calendar sprint or simultaneous wall-clock completion is required.
 
-Accepted checkpoint, 2026-11-03: **6 satisfiers Done, 0 dissatisfiers, 0 delighters**. The six portable lessons passed 282 independently rerun automated checks plus recorded real-browser checks, and their implementation commits and annotated tags are published on `main`. These are synthetic learning deliverables, not native Azure proof or completed source-demo parents.
+Accepted checkpoint, 2026-11-03: **11 satisfiers Done, 1 dissatisfier, 0 delighters**. The eleven portable lessons and C001 local contract guard passed 609 independently rerun automated checks plus recorded real-browser checks; their implementation commits and annotated tags are published on `main`. These are synthetic learning deliverables and a local approval-contract guard, not native Azure proof, production Node.js 24 validation, or completed source-demo parents. Operational tooling and its tests earn no additional Kano credit.
 
 The operator subsequently approved C001 design and local implementation: portable HTML/JS lessons, a proposed Node.js 24 LTS/Express control API on App Service Linux, single-tenant Microsoft Entra ID with invited guests, Azure Storage Tables/Queues/Blob for control state, App Service code slots as the first planned native target, and Bicep as the preferred future IaC format. Node.js 22.23.4 remains test tooling. **No IaC generation, identity registration, live Azure execution, deployment, or expenditure is approved.** Exact target/SKU/region and separate scaffold/deployment approvals remain required.
 
@@ -36,7 +36,7 @@ The operator subsequently approved C001 design and local implementation: portabl
 
 | To Do | In Progress | Done |
 | --- | --- | --- |
-| C001 is approved for its local contract/guard implementation. Next ready lessons: A-S031, A-S041, A-S004, A-S005, A-S007; see [live state](flow-state.json). | Current claims, owners, and empirical review are recorded in the live ledger; native work remains gated. | [A-S001](../../learning/S001/index.html), [A-S002](../../learning/S002/index.html), [A-S003](../../learning/S003/index.html), [A-S006](../../learning/S006/index.html), [A-S008](../../learning/S008/index.html), [A-S021](../../learning/S021/index.html). Evidence and publication references are in the live ledger. |
+| Ready admitted cards and blocked remainders are recorded in [live state](flow-state.json); only ready, unowned work is pullable. | Current claims, owners, dependencies, and empirical review are recorded in the live ledger; native work remains gated. | [C001](../../capability/C001/index.html), [A-S001](../../learning/S001/index.html), [A-S002](../../learning/S002/index.html), [A-S003](../../learning/S003/index.html), [A-S004](../../learning/S004/index.html), [A-S005](../../learning/S005/index.html), [A-S006](../../learning/S006/index.html), [A-S007](../../learning/S007/index.html), [A-S008](../../learning/S008/index.html), [A-S021](../../learning/S021/index.html), [A-S031](../../learning/S031/index.html), [A-S041](../../learning/S041/index.html). Evidence and publication references are in the live ledger. |
 
 Let N be the number of active contributors:
 
@@ -48,6 +48,8 @@ Let N be the number of active contributors:
 The tables below are an **unadmitted inventory**, not another workflow column and not a giant To Do queue. Returned remainders or approval-blocked cards may remain in the To Do bucket with `readiness=false` and a concrete blocker; they still count against its admitted queue limit. Only ready admitted cards with reserved quota/capacity are pullable, and global dispatch pauses take precedence.
 
 All 150 A cards can start from the supplied source and the portable lesson contract below. Native B cards genuinely need a safe harness, fixtures, and a qualified target. Pretending those dependencies do not exist would not create independent work.
+
+Parallel file-lesson browser checks can use the verified [isolated headless helper](../../testing/browser/isolated.cjs). Its explicit offline Playwright 1.56.1 and signed installed Edge pairing passed eight independently rerun real-browser isolation checks without weakening TLS or disabling the browser sandbox. Network fixtures need separately guarded, caller-owned loopback support; do not bypass the file helper's path/network guards or steal another worker's integrated-browser foreground.
 
 ## Kano value and completion policy
 
