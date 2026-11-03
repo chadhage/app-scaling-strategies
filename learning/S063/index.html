@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; child-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>S063 · Database resize or parallel capacity?</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script defer src="model.js"></script>
+  <script defer src="lesson.js"></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to operator controls</a>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <header>
+      <p>A-S063 · D-S063 · SC-S063 · one S unit</p>
+      <h1>Database resize or parallel capacity?</h1>
+      <p>Compare data-tier resize/failover paths; identify operations that are not online.</p>
+      <p>Reconnects and transaction outcomes must meet declared budgets where supported.
+        A restart-required resize stays <strong>NOT ONLINE</strong>, even with generous budgets.
+        Parallel capacity is an alternative only when separately supported and synchronized.</p>
+    </header>
+    <section aria-labelledby="preconditions">
+      <h2 id="preconditions">Declared rehearsal envelope</h2>
+      <p>Two fixed paths, three synthetic transactions and at most six comparisons.
+        All timings are fixture values in milliseconds from the modeled transition start,
+        not live measurements or platform guarantees. Budgets are inclusive, from 0 to 5000 ms.</p>
+      <p>Bounded in-place: reconnect 420 ms, transaction recovery 560 ms.
+        Parallel failover: 180 ms and 320 ms. Restart-required resize: 2400 ms and 3100 ms,
+        and explicitly disruptive regardless of the budget.</p>
+      <p>Preflight-blocked paths have no timing observations and zero started transition transactions;
+        all three are reported as not run. Missing timings or an unresolved in-flight transaction
+        prevent a pass. Known failures dominate uncertainty.</p>
+    </section>
+    <section aria-labelledby="controls">
+      <h2 id="controls">Operator controls</h2>
+      <form id="comparison-form" novalidate>
+        <div class="fields">
+          <label for="path">Path to inspect
+            <select id="path" name="path">
+              <option value="in-place">In-place resize</option>
+              <option value="parallel-failover">Parallel-capacity failover</option>
+            </select>
+          </label>
+          <label for="fixture">Synthetic capability fixture
+            <select id="fixture" name="fixture">
+              <option value="bounded-resize">Bounded resize + supported parallel path</option>
+              <option value="restart-required">Restart-required resize + supported parallel path</option>
+              <option value="parallel-unavailable">Bounded resize; parallel path unsupported</option>
+              <option value="unverified">Neither path qualified</option>
+            </select>
+          </label>
+          <label for="readiness">Parallel capacity readiness
+            <select id="readiness" name="readiness" aria-describedby="ready-help">
+              <option value="ready">Synchronized and ready</option>
+              <option value="not-ready">Not synchronized — block handoff</option>
+              <option value="unknown">Readiness unknown</option>
+            </select>
+          </label>
+          <label for="transaction">In-flight transaction fixture
+            <select id="transaction" name="transaction">
+              <option value="recovered">Recovered once</option>
+              <option value="failed">Known failed transaction</option>
+              <option value="unresolved">Outcome unresolved</option>
+            </select>
+          </label>
+          <label for="observation">Timing evidence
+            <select id="observation" name="observation">
+              <option value="complete">Fixed reconnect and recovery observations</option>
+              <option value="missing">Timing observations missing</option>
+            </select>
+          </label>
+          <label for="reconnectBudgetMs">Reconnect budget (ms)
+            <input id="reconnectBudgetMs" name="reconnectBudgetMs" type="text" inputmode="numeric" maxlength="4" value="600" required aria-describedby="budget-help">
+          </label>
+          <label for="recoveryBudgetMs">Transaction-recovery budget (ms)
+            <input id="recoveryBudgetMs" name="recoveryBudgetMs" type="text" inputmode="numeric" maxlength="4" value="800" required aria-describedby="budget-help">
+          </label>
+        </div>
+        <p id="ready-help">Readiness gates only the parallel path; a version/capacity label alone proves nothing.</p>
+        <p id="budget-help">Whole milliseconds, 0–5000. No decimals, exponent notation, whitespace or implicit conversion.</p>
+        <div class="buttons">
+          <button type="submit" id="compare">Compare both paths</button>
+          <button type="button" id="clear-lesson">Reset rehearsal</button>
+        </div>
+        <p id="error" role="alert" hidden></p>
+      </form>
+      <p id="run-summary" role="status" aria-live="polite">Ready. No comparisons retained.</p>
+    </section>
+    <section id="results" aria-labelledby="result-heading" hidden>
+      <h2 id="result-heading">Synthetic path comparison</h2>
+      <div class="table-scroll">
+        <table>
+          <caption>Same inputs and budgets; selected path is marked “inspected”. No native qualification.</caption>
+          <thead>
+            <tr><th scope="col">Path</th><th scope="col">Capability fixture</th><th scope="col">Verdict</th><th scope="col">Reconnect</th><th scope="col">Transaction recovery</th><th scope="col">Transaction accounting</th></tr>
+          </thead>
+          <tbody id="comparison-rows"></tbody>
+        </table>
+      </div>
+      <h3 id="trace-heading">Inspected path trace</h3>
+      <ol id="trace" aria-labelledby="trace-heading"></ol>
+      <h3>Inspected path transaction outcomes</h3>
+      <ul id="transaction-rows"></ul>
+      <p id="impact"></p>
+      <p id="native-limit"></p>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained comparisons <span id="history-count">0 / 6</span></h2>
+      <p>Memory only. Changing controls does not erase results; only reset or page reload clears them.</p>
+      <ol id="history"></ol>
+    </section>
+    <footer>
+      <h2>Limits and next evidence</h2>
+      <p>A passed exercise means only that this deterministic model meets its declared synthetic assertions.
+        It does not prove a native database resize/failover, Azure support, zero physical interruption,
+        production Node.js 24 behavior, source-parent completion or five-nines reliability.</p>
+      <p>B-S063 and D-S063 remain incomplete. Native qualification requires an approved target/SKU/region,
+        an explicitly supported operation, actual reconnect and transaction observations, interruption budgets
+        and separate authorization. No cloud calls, real data, credentials, authentication, identity registration,
+        infrastructure or deployment occur here.</p>
+      <p><a href="README.md">Source, exercise instructions and reproducible verification</a></p>
+    </footer>
+  </main>
+</body>
+</html>

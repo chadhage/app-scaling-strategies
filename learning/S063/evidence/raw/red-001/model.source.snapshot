@@ -1,0 +1,22 @@
+(function expose(root) {
+  'use strict';
+  const DEFAULTS = Object.freeze({
+    path: 'in-place',
+    fixture: 'bounded-resize',
+    readiness: 'ready',
+    transaction: 'recovered',
+    observation: 'complete',
+    reconnectBudgetMs: 600,
+    recoveryBudgetMs: 800,
+  });
+  function evaluate(input) {
+    return {
+      input: { ...input },
+      selected: { path: input.path, verdict: 'UNKNOWN', reconnectMs: null, recoveryMs: null },
+      comparison: [],
+    };
+  }
+  const api = Object.freeze({ DEFAULTS, evaluate });
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S063 = api;
+}(globalThis));

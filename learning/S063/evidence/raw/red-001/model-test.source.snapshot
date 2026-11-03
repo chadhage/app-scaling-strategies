@@ -1,0 +1,14 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('../model.js');
+
+test('supported synthetic resize recovers three transactions within declared budgets', () => {
+  const result = model.evaluate(model.DEFAULTS);
+  assert.equal(result.selected.verdict, 'PASSED');
+  assert.equal(result.selected.reconnectMs, 420);
+  assert.equal(result.selected.recoveryMs, 560);
+  assert.equal(result.selected.transactions.completed, 3);
+  assert.equal(result.comparison.length, 2);
+});

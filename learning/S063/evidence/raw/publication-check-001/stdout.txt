@@ -1,0 +1,306 @@
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:1: trailing whitespace.
++Feature: Compare database resize and parallel-capacity paths honestly
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:2: trailing whitespace.
++  This is A-S063, one frozen S unit in SC-S063, from S063 and D-S063.
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:3: trailing whitespace.
++  Training rehearsal - synthetic data - not a live Azure result
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:4: trailing whitespace.
++
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:5: trailing whitespace.
++  Background:
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:6: trailing whitespace.
++    Given only fixed synthetic capability and transaction fixtures
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:7: trailing whitespace.
++    And three synthetic transactions, bounded integer budgets and six retained runs
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:8: trailing whitespace.
++    And no Azure, database, authentication, deployment or infrastructure access
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:9: trailing whitespace.
++
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:10: trailing whitespace.
++  Scenario: Compare two supported fixture paths inside the declared budgets
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:11: trailing whitespace.
++    Given the bounded-resize fixture and synchronized parallel capacity
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:12: trailing whitespace.
++    And reconnect and transaction-recovery budgets of 600 and 800 milliseconds
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:13: trailing whitespace.
++    When I compare in-place resize with parallel-capacity failover
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:14: trailing whitespace.
++    Then both synthetic paths pass their measured budgets and recover all three transactions
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:15: trailing whitespace.
++    And neither result qualifies a native platform operation
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:16: trailing whitespace.
++
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:17: trailing whitespace.
++  Scenario: A restart-required resize is not online even with generous budgets
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:18: trailing whitespace.
++    Given the restart-required fixture and synchronized parallel capacity
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:19: trailing whitespace.
++    When I compare paths with budgets of 5000 milliseconds
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:20: trailing whitespace.
++    Then the in-place path fails with NOT ONLINE
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:21: trailing whitespace.
++    And the supported synthetic parallel path may pass
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:22: trailing whitespace.
++    And raising a budget cannot convert a disruptive operation into an online guarantee
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:23: trailing whitespace.
++
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:24: trailing whitespace.
++  Scenario: Parallel capacity must be separately supported and ready
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:25: trailing whitespace.
++    Given the parallel-unavailable fixture or an unsynchronized parallel destination
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:26: trailing whitespace.
++    When I compare paths
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:27: trailing whitespace.
++    Then the parallel handoff is blocked and fails
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:28: trailing whitespace.
++    And no reconnect or transaction-recovery observations are fabricated for that blocked path
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:29: trailing whitespace.
++
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:30: trailing whitespace.
++  Scenario: Missing evidence and unresolved transaction outcomes remain unknown
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:31: trailing whitespace.
++    Given unverified capability, unknown readiness, missing timing evidence or an unresolved transaction
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:32: trailing whitespace.
++    When I compare paths without another known failure
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:33: trailing whitespace.
++    Then the affected result is UNKNOWN, not passed
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:34: trailing whitespace.
++    And an unresolved transaction remains in the three-started denominator
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:35: trailing whitespace.
++
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:36: trailing whitespace.
++  Scenario: A known failure dominates uncertainty
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:37: trailing whitespace.
++    Given a failed transaction or a measured reconnect above its budget
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:38: trailing whitespace.
++    And some other observation is unknown
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:39: trailing whitespace.
++    When I compare paths
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:40: trailing whitespace.
++    Then the affected result is FAILED with its reasons and user impact retained
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:41: trailing whitespace.
++
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:42: trailing whitespace.
++  Scenario: Exact budget boundaries are inclusive
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:43: trailing whitespace.
++    Given the bounded-resize fixture reconnect of 420 and recovery of 560 milliseconds
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:44: trailing whitespace.
++    When budgets equal those measurements
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:45: trailing whitespace.
++    Then the in-place path passes
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:46: trailing whitespace.
++    But a budget one millisecond lower fails its corresponding check
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:47: trailing whitespace.
++
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:48: trailing whitespace.
++  Scenario: Invalid inputs, forged state and history overflow cannot change prior results
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:49: trailing whitespace.
++    Given a valid immutable run history
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:50: trailing whitespace.
++    When an extra field, invalid enum, non-integer budget, altered result or seventh run is submitted
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:51: trailing whitespace.
++    Then an explicit error preserves every previous run
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:52: trailing whitespace.
++    And only an explicit reset or page reload clears the in-memory history
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:53: trailing whitespace.
++
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:54: trailing whitespace.
++  Scenario: Actual browser keyboard, failure, error, reset and CSP behavior
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:55: trailing whitespace.
++    Given the standalone lesson and the exact training banner
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:56: trailing whitespace.
++    When I use only keyboard controls to compare paths and reset
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:57: trailing whitespace.
++    Then both the selected trace and comparison are visible and history is retained
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:58: trailing whitespace.
++    And invalid input focuses its control and a disruptive result is visibly FAILED
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:59: trailing whitespace.
++    And reset restores defaults, clears history and returns focus to the path control
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:60: trailing whitespace.
++    And inline script, dynamic evaluation and external connections are blocked by CSP
+learning/S063/evidence/raw/red-001/bdd.source.snapshot:61: trailing whitespace.
++    And normal verification never rewrites retained proof
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:1: trailing whitespace.
++'use strict';
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:2: trailing whitespace.
++
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:3: trailing whitespace.
++const test = require('node:test');
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:4: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:5: trailing whitespace.
++const model = require('../model.js');
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:6: trailing whitespace.
++
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:7: trailing whitespace.
++test('supported synthetic resize recovers three transactions within declared budgets', () => {
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:8: trailing whitespace.
++  const result = model.evaluate(model.DEFAULTS);
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:9: trailing whitespace.
++  assert.equal(result.selected.verdict, 'PASSED');
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:10: trailing whitespace.
++  assert.equal(result.selected.reconnectMs, 420);
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:11: trailing whitespace.
++  assert.equal(result.selected.recoveryMs, 560);
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:12: trailing whitespace.
++  assert.equal(result.selected.transactions.completed, 3);
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:13: trailing whitespace.
++  assert.equal(result.comparison.length, 2);
+learning/S063/evidence/raw/red-001/model-test.source.snapshot:14: trailing whitespace.
++});
+learning/S063/evidence/raw/red-001/model.source.snapshot:1: trailing whitespace.
++(function expose(root) {
+learning/S063/evidence/raw/red-001/model.source.snapshot:2: trailing whitespace.
++  'use strict';
+learning/S063/evidence/raw/red-001/model.source.snapshot:3: trailing whitespace.
++  const DEFAULTS = Object.freeze({
+learning/S063/evidence/raw/red-001/model.source.snapshot:4: trailing whitespace.
++    path: 'in-place',
+learning/S063/evidence/raw/red-001/model.source.snapshot:5: trailing whitespace.
++    fixture: 'bounded-resize',
+learning/S063/evidence/raw/red-001/model.source.snapshot:6: trailing whitespace.
++    readiness: 'ready',
+learning/S063/evidence/raw/red-001/model.source.snapshot:7: trailing whitespace.
++    transaction: 'recovered',
+learning/S063/evidence/raw/red-001/model.source.snapshot:8: trailing whitespace.
++    observation: 'complete',
+learning/S063/evidence/raw/red-001/model.source.snapshot:9: trailing whitespace.
++    reconnectBudgetMs: 600,
+learning/S063/evidence/raw/red-001/model.source.snapshot:10: trailing whitespace.
++    recoveryBudgetMs: 800,
+learning/S063/evidence/raw/red-001/model.source.snapshot:11: trailing whitespace.
++  });
+learning/S063/evidence/raw/red-001/model.source.snapshot:12: trailing whitespace.
++  function evaluate(input) {
+learning/S063/evidence/raw/red-001/model.source.snapshot:13: trailing whitespace.
++    return {
+learning/S063/evidence/raw/red-001/model.source.snapshot:14: trailing whitespace.
++      input: { ...input },
+learning/S063/evidence/raw/red-001/model.source.snapshot:15: trailing whitespace.
++      selected: { path: input.path, verdict: 'UNKNOWN', reconnectMs: null, recoveryMs: null },
+learning/S063/evidence/raw/red-001/model.source.snapshot:16: trailing whitespace.
++      comparison: [],
+learning/S063/evidence/raw/red-001/model.source.snapshot:17: trailing whitespace.
++    };
+learning/S063/evidence/raw/red-001/model.source.snapshot:18: trailing whitespace.
++  }
+learning/S063/evidence/raw/red-001/model.source.snapshot:19: trailing whitespace.
++  const api = Object.freeze({ DEFAULTS, evaluate });
+learning/S063/evidence/raw/red-001/model.source.snapshot:20: trailing whitespace.
++  if (typeof module === 'object' && module.exports) module.exports = api;
+learning/S063/evidence/raw/red-001/model.source.snapshot:21: trailing whitespace.
++  else root.S063 = api;
+learning/S063/evidence/raw/red-001/model.source.snapshot:22: trailing whitespace.
++}(globalThis));
+learning/S063/evidence/raw/red-001/stdout.txt:12: trailing whitespace.
++    
+learning/S063/evidence/raw/red-001/stdout.txt:15: trailing whitespace.
++    
+learning/S063/evidence/raw/source/source-backlog.snapshot:1: trailing whitespace.
++| D-S063 | P1 | Add data-tier in-place scale versus supported parallel-capacity/failover paths. | Reconnects and transaction outcomes meet budgets where supported; disruptive native operations remain failed/unsupported, not assumed online. | none |
+learning/S063/evidence/raw/source/source-card.snapshot:1: trailing whitespace.
++| A-S063 | D-S063 | S | Compare data-tier resize/failover paths; identify operations that are not online. | SOURCE |
+learning/S063/evidence/raw/source/source-native-sibling.snapshot:1: trailing whitespace.
++| B-S063 | D-S063 | S | Conduct one approved native data-capacity change; verify reconnects, transactions, and stated interruption limits. | CORE, DATA, HOST, REPLICA |
+learning/S063/evidence/raw/source/source-packet-rule.snapshot:1: trailing whitespace.
++Packet membership is fixed before admission. This register overrides default membership for its named cards; every other A/B card belongs to SC-Snnn, and every other capability card belongs to its first listed source parent. A card has one packet, not duplicate packet credits.
+learning/S063/evidence/raw/source/source-parent-rule.snapshot:1: trailing whitespace.
++## Parent completion and traceability
+learning/S063/evidence/raw/source/source-parent-rule.snapshot:2: trailing whitespace.
++
+learning/S063/evidence/raw/source/source-parent-rule.snapshot:3: trailing whitespace.
++- Every one of the 150 D-S parents has exactly two required children: A-Snnn and B-Snnn.
+learning/S063/evidence/raw/source/source-parent-rule.snapshot:4: trailing whitespace.
++- H001-H012, P001-P007, and W001-W002 are covered by their explicitly mapped C cards; a shared card counts once, not once per parent.
+learning/S063/evidence/raw/source/source-parent-rule.snapshot:5: trailing whitespace.
++- Optional X cards do not block source-parent acceptance.
+learning/S063/evidence/raw/source/source-parent-rule.snapshot:6: trailing whitespace.
++- A source parent is complete only when its required children, original prerequisite parents, target-configuration evidence, and all original acceptance clauses pass. The original backlog remains authoritative.
+learning/S063/evidence/raw/source/source-parent-rule.snapshot:7: trailing whitespace.
++- Component work can proceed against approved contracts before another whole parent is finished; this removes false coding handoffs without removing live-release obligations.
+learning/S063/evidence/raw/source/source-parent-rule.snapshot:8: trailing whitespace.
++- A-only completion provides a real learning asset but does not establish a native demo, uninterrupted user migration, or five-nines reliability.
+learning/S063/evidence/raw/source/source-parent-rule.snapshot:9: trailing whitespace.
++- Native proof must preserve the source distinction among verification verdict, user impact, and cleanup. An expected failure can be educationally correct while still recording interrupted users.
+learning/S063/evidence/raw/source/source-parent-rule.snapshot:10: trailing whitespace.
++- Unfinished functionality, unsupported platforms, proxy outage experiments, and insufficient statistical evidence remain explicitly labeled.
+learning/S063/evidence/raw/source/source-parent-rule.snapshot:11: trailing whitespace.
++
+learning/S063/evidence/raw/source/source-parent-rule.snapshot:11: new blank line at EOF.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:1: trailing whitespace.
++## Atomic card contract
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:2: trailing whitespace.
++
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:3: trailing whitespace.
++Every listed row is one card, one accountable owner/pair, one independently reviewable changeset, and one observable acceptance result. Normal publication is a scoped, labeled commit with an annotated tag on `main`; temporary recovery branches and reviewer-assisted PRs are used only when safe integration requires them.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:4: trailing whitespace.
++
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:5: trailing whitespace.
++Implementation order is BDD specification, genuine behavioral TDD red, the IaC step (or an explicit N/A for a resource-free lesson), implementation/refactoring, green tests and actual browser checks, scoped tagged publication, and parent-owned empirical acceptance. A worker cannot award its own Done credit. Subdivision preserves the original `kanoUnit`; partial work does not manufacture extra value.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:6: trailing whitespace.
++
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:7: trailing whitespace.
++- **Size target:** A cards take 1-2 focused hours; C, B, and X cards target 2-4 focused hours after entry gates are satisfied. These are slicing limits, not delivery estimates.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:8: trailing whitespace.
++- **Refine before admission:** If a card needs a new research decision, multiple independent behaviors, or more than four focused hours, split it before pulling. Revalidate coverage and Kano classes; artificial splits do not manufacture extra value.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:9: trailing whitespace.
++- **Inputs:** Parent source, versioned contract, named fixture/configuration, technical gate, quota reservation, and any approved lease are available.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:10: trailing whitespace.
++- **Ownership:** One card owns its module/fixture namespace. A and B siblings do not share files, PRs, or mutable test leases.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:11: trailing whitespace.
++- **Done:** Scoped behavior is usable, its stated check passes, relevant tests are automated, review/merge is complete, documentation and evidence are attached, and the behavior is available through its declared preview or harness surface.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:12: trailing whitespace.
++- **Evidence:** Record card/parent IDs, mode, configuration/host, commit, test/run reference, verifier result, user-impact result, cleanup result, owner, reviewer, packet, and accepted time.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:13: trailing whitespace.
++- **No false completion:** A replay is not native evidence. Unsupported/unverified positive behavior cannot pass as a native success. A negative experiment may pass its verifier while clearly reporting interrupted users.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:14: trailing whitespace.
++- **No bonus credits:** Multiple parents, commits, test cases, repeated runs, and duplicated fixtures do not increase a card's Kano count.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:15: trailing whitespace.
++
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:16: trailing whitespace.
++### Portable A-card lesson contract
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:17: trailing whitespace.
++
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:18: trailing whitespace.
++An A card delivers a standalone, browser-openable lesson bundle with a small interactive exercise: choose an action or condition, inspect a synthetic trace, and check the expected outcome. Use standard HTML/browser behavior so an approved application framework or Azure subscription is not needed to begin.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:19: trailing whitespace.
++
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:20: trailing whitespace.
++Each bundle declares source ID, objective, preconditions, actions, synthetic input/trace, expected assertions, and limits. It prominently says **Training rehearsal - synthetic data - not a live Azure result**, makes no management calls, contains no credentials, and supports keyboard operation.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:21: trailing whitespace.
++
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:22: trailing whitespace.
++Each lesson must add a worked, testable exercise rather than copying the backlog sentence. Keep it portable for later mounting by C041. The native implementation and evidence remain a separate B card, and the source demo is not complete until both required slices and its original acceptance gates pass.
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:23: trailing whitespace.
++
+learning/S063/evidence/raw/source/source-portable-contract.snapshot:23: new blank line at EOF.
+learning/S063/evidence/raw/source/source-readme.snapshot:1: trailing whitespace.
++| S063 | **Database vertical scaling:** Validate reconnects and transaction recovery; use parallel capacity if the operation exceeds interruption budgets. |
+learning/S063/evidence/raw/tooling/identity.json:1: trailing whitespace.
++{
+learning/S063/evidence/raw/tooling/identity.json:2: trailing whitespace.
++  "cardId": "A-S063",
+learning/S063/evidence/raw/tooling/identity.json:3: trailing whitespace.
++  "recordedAtUtc": "2026-11-03T19:31:04.8813684Z",
+learning/S063/evidence/raw/tooling/identity.json:4: trailing whitespace.
++  "node": "v22.23.4",
+learning/S063/evidence/raw/tooling/identity.json:5: trailing whitespace.
++  "playwrightVersion": "1.56.1",
+learning/S063/evidence/raw/tooling/identity.json:6: trailing whitespace.
++  "edgePath": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+learning/S063/evidence/raw/tooling/identity.json:7: trailing whitespace.
++  "edgeVersion": "156.0.4314.50",
+learning/S063/evidence/raw/tooling/identity.json:8: trailing whitespace.
++  "edgeSignatureStatus": "Valid",
+learning/S063/evidence/raw/tooling/identity.json:9: trailing whitespace.
++  "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+learning/S063/evidence/raw/tooling/identity.json:10: trailing whitespace.
++  "edgeSha256": "f87d927bed3597f19c70af67bc786dd22e4eca3b5c7cc050336a016bb42f7fda",
+learning/S063/evidence/raw/tooling/identity.json:11: trailing whitespace.
++  "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+learning/S063/evidence/raw/tooling/identity.json:12: trailing whitespace.
++  "helperPublication": "53c0c0d",
+learning/S063/evidence/raw/tooling/identity.json:13: trailing whitespace.
++  "qualification": "Existing offline Node22/PW1.56.1/signed Edge156 test tooling only; no production24 or native Azure certification."
+learning/S063/evidence/raw/tooling/identity.json:14: trailing whitespace.
++}
