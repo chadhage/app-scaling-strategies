@@ -51,7 +51,7 @@ Implementation work is tracked in the [web demonstration harness backlog](.docs/
 
 ## Try the local demonstrations
 
-1. Open the [local scenario catalog](capability/C005/index.html) directly in a browser. It lists all 150 source scenarios and the two guided workflows without a server or Azure account.
+1. Open the [local learner harness](capability/local-harness/index.html) directly in a browser. Search and filter all 150 scenarios and two guided workflows, inspect preparation and limits, then open an accepted portable lesson. The underlying [source catalog](capability/C005/index.html) is also available separately; neither view needs a server or Azure account.
 2. Select an available, accepted portable lesson and conduct its synthetic controls, failure cases, and reset. The catalog explicitly identifies its historical acceptance snapshot; its availability labels are not a live feed.
 3. Use the [live Kanban and accepted-demo links](.docs/wiki/kanban.md) for newer accepted work, implementation evidence, and native-proof blockers.
 
