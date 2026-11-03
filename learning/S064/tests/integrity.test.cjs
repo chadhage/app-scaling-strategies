@@ -18,7 +18,7 @@ const owned = (relative) => {
 };
 const raw = (relative) => fs.readFileSync(owned(relative));
 const json = (relative) => JSON.parse(raw(relative).toString('utf8'));
-const index = () => json('evidence\\integrity.json');
+const index = () => json('evidence\\integrity-002.json');
 const receipt = (label) => json(path.join('evidence', 'raw', label, 'run.json'));
 function walk(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -33,8 +33,8 @@ test('integrity index covers the entire owned bundle except its exact self-refer
   assert.equal(proof.cardId, 'A-S064');
   assert.equal(proof.kanoUnit, 'A-S064');
   assert.deepEqual(proof.exclusions.sort(), [
-    path.join('evidence', 'integrity.json'),
-    ...['stdout.txt', 'stderr.txt', 'run.json'].map((name) => path.join('evidence', 'raw', 'integrity', name)),
+    path.join('evidence', 'integrity-002.json'),
+    ...['stdout.txt', 'stderr.txt', 'run.json'].map((name) => path.join('evidence', 'raw', 'integrity-002', name)),
   ].sort());
   assert.deepEqual(proof.files.map((entry) => entry.path).sort(), walk(folder).filter((file) => !proof.exclusions.includes(file)).sort());
   assert.ok(proof.files.length >= 60);
@@ -113,7 +113,11 @@ test('retained RED is a loadable semantic assertion failure and precedes explici
   const stub = context.module.exports;
   assert.equal(stub.run(stub.createState(), stub.DEFAULTS).history[0].verdict, 'unknown');
   assert.match(raw('evidence\\red\\model.test.cjs.snapshot').toString('utf8'), /assert\.equal\(result\.verdict, 'success'/);
-  assert.equal(hash(raw('evidence\\red\\shard-handoff.feature.snapshot')), hash(raw('shard-handoff.feature')));
+  const rawFeature = raw('evidence\\red\\shard-handoff.feature.snapshot');
+  const gitFeature = execFileSync('git', ['show', 'HEAD:learning/S064/shard-handoff.feature'], { cwd: repo });
+  assert.notEqual(hash(rawFeature), hash(canonical(rawFeature)), 'Original CRLF proof must remain byte-exact, not silently normalized');
+  assert.equal(hash(canonical(rawFeature)), hash(canonical(raw('shard-handoff.feature'))));
+  assert.equal(hash(canonical(rawFeature)), hash(gitFeature), 'The retained feature must also qualify the canonical LF Git blob');
   const iac = json('evidence\\iac-stage.json');
   assert.equal(iac.status, 'N/A');
   assert.ok(Date.parse(receipt('red-snapshots').finishedAtUtc) <= Date.parse(red.startedAtUtc));
@@ -121,6 +125,9 @@ test('retained RED is a loadable semantic assertion failure and precedes explici
   assert.ok(Date.parse(iac.recordedAtUtc) <= Date.parse(receipt('green').startedAtUtc));
   assert.equal(receipt('green').exitCode, 0);
   assert.equal(receipt('syntax').exitCode, 0);
+  assert.equal(receipt('green-002').exitCode, 0);
+  assert.equal(receipt('syntax-002').exitCode, 0);
+  assert.equal(receipt('canonical-source').exitCode, 0);
   assert.equal(walk(path.join(folder, 'evidence', 'red')).some((name) => /\.(?:js|cjs)$/.test(name)), false);
 });
 
@@ -154,6 +161,9 @@ test('every retained raw execution stream matches its receipt and diagnostic fai
   const cspDiagnostic = JSON.parse(raw(receipt('csp-diagnostic').stdout.file).toString('utf8'));
   assert.equal(cspDiagnostic.csp.evalRan, true, 'Preserved invalid DevTools probe must not be relabeled as CSP enforcement');
   assert.equal(cspDiagnostic.csp.evalBlocked, false);
+  assert.equal(receipt('lf-diagnostic').exitCode, 1);
+  assert.equal(receipt('lf-diagnostic').expectedExitCode, 1);
+  assert.match(raw(receipt('lf-diagnostic').stderr.file).toString('utf8'), /Raw proof must remain exact/);
 });
 
 test('existing offline runtime and Microsoft-signed Edge match only the published helper qualification', () => {

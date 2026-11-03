@@ -7,9 +7,10 @@ const { createHash } = require('node:crypto');
 const folder = path.resolve(__dirname, '..');
 const repo = path.resolve(folder, '..', '..');
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const indexName = 'integrity-002.json';
 const exclusions = [
-  path.join('evidence', 'integrity.json'),
-  ...['stdout.txt', 'stderr.txt', 'run.json'].map((name) => path.join('evidence', 'raw', 'integrity', name)),
+  path.join('evidence', indexName),
+  ...['stdout.txt', 'stderr.txt', 'run.json'].map((name) => path.join('evidence', 'raw', 'integrity-002', name)),
 ];
 function walk(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -19,7 +20,7 @@ function walk(directory) {
   });
 }
 if (process.argv[2] !== '--capture') throw new Error('Explicit --capture is required; normal integrity verification is read-only.');
-const indexPath = path.join(folder, 'evidence', 'integrity.json');
+const indexPath = path.join(folder, 'evidence', indexName);
 if (fs.existsSync(indexPath)) throw new Error('Retained integrity proof will not be overwritten.');
 const files = walk(folder)
   .filter((file) => !exclusions.includes(path.relative(folder, file)))
@@ -41,6 +42,10 @@ fs.writeFileSync(indexPath, `${JSON.stringify({
   cardId: 'A-S064', kanoUnit: 'A-S064', packet: 'SC-S064', workerId: 'worker-A-S064',
   createdAtUtc: new Date().toISOString(), node: process.version,
   headAtQualification: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim(),
+  supersedes: {
+    index: 'evidence/integrity.json', commit: '21ae6c8a57adcf4d18ffc6856d4b6968b0815437',
+    reason: 'Retain the first index and all raw bytes; correct the raw-RED versus canonical-LF source comparison and qualify the Git source representation explicitly.',
+  },
   exclusions,
   exclusionReason: 'Only this self-referential index and its own raw command receipt/streams. Receipt stream hashes are independently verified on subsequent read-only runs.',
   files,
