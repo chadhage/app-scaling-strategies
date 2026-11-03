@@ -1,0 +1,153 @@
+{
+  "cardId": "A-S007",
+  "workerId": "worker-A-S007",
+  "runtime": "Node.js v22.23.4",
+  "pathBase": "learning/S007",
+  "sequence": [
+    {
+      "stage": "BDD first",
+      "artifact": "session-boundary.feature",
+      "observation": "The feature was written before model.js or executable tests."
+    },
+    {
+      "stage": "Behavioral red",
+      "details": "evidence/red-run.json",
+      "output": "evidence/red.txt",
+      "tests": 45,
+      "passed": 4,
+      "failed": 41,
+      "exitCode": 1
+    },
+    {
+      "stage": "IaC",
+      "status": "N/A",
+      "details": "evidence/iac.json",
+      "observation": "Explicit resource-free N/A recorded after red and before implementation."
+    },
+    {
+      "stage": "First implemented model green",
+      "output": "evidence/model-green.txt",
+      "tests": 45,
+      "passed": 45,
+      "failed": 0,
+      "exitCode": 0
+    },
+    {
+      "stage": "Fail-closed binding validation refinement red",
+      "observedAtUtc": "2026-11-03T13:30:31.3018195Z",
+      "command": "node --test --test-reporter=spec --test-name-pattern=\"a fixture cannot be silently rebound\" learning\\S007\\tests\\session-boundary.test.cjs",
+      "output": "evidence/refinement-red.txt",
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "exitCode": 1,
+      "observation": "Missing expected exception when invalid state rebound the known admitted-blue fixture to green."
+    },
+    {
+      "stage": "Implementation and refinement green",
+      "observedAtUtc": "2026-11-03T13:31:06.2629192Z",
+      "command": "node --test --test-reporter=spec learning\\S007\\tests\\session-boundary.test.cjs learning\\S007\\tests\\lesson-assets.test.cjs",
+      "output": "evidence/implementation-check.txt",
+      "tests": 66,
+      "passed": 66,
+      "failed": 0,
+      "exitCode": 0
+    },
+    {
+      "stage": "Syntax",
+      "observedAtUtc": "2026-11-03T13:31:48.9710276Z",
+      "command": "node --check <each listed JavaScript file>",
+      "output": "evidence/syntax.txt",
+      "files": [
+        "model.js",
+        "app.js",
+        "tests/session-boundary.test.cjs",
+        "tests/lesson-assets.test.cjs",
+        "evidence/red-stub.js"
+      ],
+      "exitCodes": [0, 0, 0, 0, 0]
+    },
+    {
+      "stage": "Lifecycle/completion evidence refinement red",
+      "observedAtUtc": "2026-11-03T13:33:37.6324274Z",
+      "command": "node --test --test-reporter=spec --test-name-pattern=\"invalid fixture closure|finish snapshot without\" learning\\S007\\tests\\session-boundary.test.cjs",
+      "output": "evidence/state-evidence-red.txt",
+      "tests": 2,
+      "passed": 0,
+      "failed": 2,
+      "exitCode": 1,
+      "observation": "Invalid closure and missing before/after finish transition were accepted; implementation now rejects both."
+    },
+    {
+      "stage": "All behavior and assets green",
+      "observedAtUtc": "2026-11-03T13:34:12.9965353Z",
+      "output": "evidence/green.txt",
+      "tests": 68,
+      "passed": 68,
+      "failed": 0,
+      "exitCode": 0
+    },
+    {
+      "stage": "Final-model syntax before browser",
+      "observedAtUtc": "2026-11-03T13:34:53.2772664Z",
+      "output": "evidence/syntax-final.txt",
+      "exitCodes": [0, 0, 0, 0, 0]
+    },
+    {
+      "stage": "Actual real-browser UI",
+      "firstObservedAtUtc": "2026-11-03T13:40:02.593Z",
+      "lastObservedAtUtc": "2026-11-03T13:41:47.502Z",
+      "record": "evidence/browser-observations.json",
+      "blocks": 5,
+      "passed": true,
+      "observation": "Own fresh visible forceNew file page; actual keyboard, safe/unsafe choices, invalid data, Reset and rollback. No Node mocks counted."
+    },
+    {
+      "stage": "Publication-ready focused green",
+      "observedAtUtc": "2026-11-03T13:43:56.6652095Z",
+      "output": "evidence/green-final.txt",
+      "tests": 68,
+      "passed": 68,
+      "failed": 0,
+      "exitCode": 0
+    },
+    {
+      "stage": "Publication-ready JavaScript and JSON syntax",
+      "observedAtUtc": "2026-11-03T13:43:57.5308209Z",
+      "output": "evidence/syntax-publish.txt",
+      "files": [
+        "model.js",
+        "app.js",
+        "tests/session-boundary.test.cjs",
+        "tests/lesson-assets.test.cjs",
+        "tests/verify-evidence.cjs",
+        "evidence/red-stub.js"
+      ],
+      "exitCodes": [0, 0, 0, 0, 0, 0],
+      "jsonOutput": "evidence/json-syntax.txt"
+    },
+    {
+      "stage": "Publication whitespace preflight and evidence-preserving repair",
+      "observedAtUtc": "2026-11-03T13:46:02.552Z",
+      "record": "evidence/publication-preflight.json",
+      "observation": "The publisher stopped before commit on raw Node diagnostic trailing spaces. Byte-exact original output was gzip-preserved; only trailing whitespace in the readable report was normalized. No source behavior or gate was bypassed."
+    },
+    {
+      "stage": "Post-format evidence and asset verification",
+      "observedAtUtc": "2026-11-03T13:47:01.3287829Z",
+      "output": "evidence/assets-post-format.txt",
+      "tests": 10,
+      "passed": 10,
+      "failed": 0,
+      "exitCode": 0,
+      "syntax": "evidence/syntax-evidence.txt",
+      "artifactValidation": "evidence/evidence-validation.txt",
+      "observation": "The artifact validator verifies the raw archive digest and exact whitespace-only transformation; these are existing asset assertions, not additional Kano units."
+    }
+  ],
+  "limits": [
+    "These are real Node invocations, not browser evidence.",
+    "The original 45 behavioral tests remain; additional boundary/limit/asset assertions were added after the initial red.",
+    "No commit history has been manufactured to imply staged red/green commits."
+  ]
+}

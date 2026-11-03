@@ -1,0 +1,989 @@
+✔ baseline is an explicit synthetic fixture, not invented request history (2.7737ms)
+✖ unready green blocks the new-session boundary (1.2434ms)
+✖ cold green cannot become the new-session target (0.3311ms)
+✖ incompatible green cannot become the new-session target (0.1894ms)
+✖ compatible-state readiness enables but does not itself switch admission (0.1978ms)
+✖ nominal 100 percent is not the observed admission boundary (0.2336ms)
+✖ ready green receives new sessions even when nominal weight remains zero (0.2616ms)
+✔ switching admission does not move, replay, or mutate the admitted blue cart (0.3269ms)
+✖ observed cohorts include green starts and blue pinned reads and completions (2.2732ms)
+✖ admitted blue journey finishes once with its original subject and cart (1.2301ms)
+✖ idle pinned client blocks retirement after active journey and work finish (1.0883ms)
+✖ pending blue work is a separate retirement blocker (0.5662ms)
+✖ active admitted work blocks retirement even after pinned resolution and retention (0.3424ms)
+✖ elapsed retention does not fabricate a completed drain (0.2535ms)
+✖ completed drain cannot bypass rollback retention (0.3757ms)
+✖ guarded retirement succeeds only after drain and retention, while green stays usable (0.3477ms)
+✖ pinned reconnect closes the old binding and preserves state at a new boundary (0.3856ms)
+✖ blue work effect is completed once, not counted as an HTTP request (0.2777ms)
+✖ rollback changes new admission but preserves admitted green sessions (0.3003ms)
+✖ rollback after the declared retention window is rejected, not promised (0.2504ms)
+✖ restarting cutover after rollback establishes a fresh retention deadline (0.2768ms)
+✖ deliberately forced retirement records interruption and lost work, never safety success (0.2558ms)
+✖ a pinned request after forced retirement is actual modeled failure evidence (0.3703ms)
+✔ early nominal-weight or guard observations are not a completed migration claim (0.4191ms)
+✖ readiness degradation blocks new green admissions without moving blue journeys (0.3502ms)
+✖ invalid command 1 is rejected without changing domain data (0.2521ms)
+✖ invalid command 2 is rejected without changing domain data (0.2036ms)
+✖ invalid command 3 is rejected without changing domain data (0.1514ms)
+✖ invalid command 4 is rejected without changing domain data (0.1922ms)
+✖ invalid command 5 is rejected without changing domain data (0.1992ms)
+✖ invalid command 6 is rejected without changing domain data (0.1853ms)
+✖ invalid command 7 is rejected without changing domain data (0.1776ms)
+✖ invalid command 8 is rejected without changing domain data (0.1812ms)
+✖ invalid command 9 is rejected without changing domain data (0.1136ms)
+✖ invalid command 10 is rejected without changing domain data (0.9195ms)
+✖ invalid command 11 is rejected without changing domain data (0.2628ms)
+✖ invalid command 12 is rejected without changing domain data (0.19ms)
+✖ invalid command 13 is rejected without changing domain data (0.179ms)
+✖ invalid command 14 is rejected without changing domain data (0.1703ms)
+✖ invalid command 15 is rejected without changing domain data (0.1774ms)
+✖ invalid command 16 is rejected without changing domain data (0.2345ms)
+✖ invalid command 17 is rejected without changing domain data (0.204ms)
+✖ unknown session finish and reserved reconnect identity cannot fabricate work (0.5525ms)
+✖ state schema corruption fails closed instead of reporting a passing rehearsal (0.7983ms)
+✔ transitions do not mutate a previous observation snapshot (0.3121ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 4
+ℹ fail 41
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 218.9881
+
+✖ failing tests:
+
+test at learning\S007\tests\session-boundary.test.cjs:35:1
+✖ unready green blocks the new-session boundary (1.2434ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'blocked'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:37:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'blocked',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:43:3
+✖ cold green cannot become the new-session target (0.3311ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'not-ready'
+         ^
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:45:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'not-ready',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:43:3
+✖ incompatible green cannot become the new-session target (0.1894ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'not-ready'
+         ^
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:45:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'not-ready',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:51:1
+✖ compatible-state readiness enables but does not itself switch admission (0.1978ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  false !== true
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:53:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:57:1
+✖ nominal 100 percent is not the observed admission boundary (0.2336ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 100
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:61:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 100,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:67:1
+✖ ready green receives new sessions even when nominal weight remains zero (0.2616ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  'blue' !== 'green'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:70:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'blue',
+    expected: 'green',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:84:1
+✖ observed cohorts include green starts and blue pinned reads and completions (2.2732ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+  + []
+  - [
+  -   [
+  -     'new-green-001',
+  -     'green',
+  -     'start'
+  -   ],
+  -   [
+  -     'old-pinned',
+  -     'blue',
+  -     'read'
+  -   ],
+  -   [
+  -     'old-journey',
+  -     'blue',
+  -     'finish'
+  -   ]
+  - ]
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:88:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ [ 'new-green-001', 'green', 'start' ], [ 'old-pinned', 'blue', 'read' ], [ 'old-journey', 'blue', 'finish' ] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:99:1
+✖ admitted blue journey finishes once with its original subject and cart (1.2301ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  1 !== 2
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:106:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:115:1
+✖ idle pinned client blocks retirement after active journey and work finish (1.0883ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 1
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:120:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:127:1
+✖ pending blue work is a separate retirement blocker (0.5662ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 1
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:132:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:137:1
+✖ active admitted work blocks retirement even after pinned resolution and retention (0.3424ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 1
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:141:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:146:1
+✖ elapsed retention does not fabricate a completed drain (0.2535ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  false !== true
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:149:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:155:1
+✖ completed drain cannot bypass rollback retention (0.3757ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  false !== true
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:158:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:166:1
+✖ guarded retirement succeeds only after drain and retention, while green stays usable (0.3477ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:168:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:178:1
+✖ pinned reconnect closes the old binding and preserves state at a new boundary (0.3856ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  'idle' !== 'closed'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:181:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'idle',
+    expected: 'closed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:189:1
+✖ blue work effect is completed once, not counted as an HTTP request (0.2777ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 1
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:191:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:200:1
+✖ rollback changes new admission but preserves admitted green sessions (0.3003ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - 'green'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:206:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'green',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:215:1
+✖ rollback after the declared retention window is rejected, not promised (0.2504ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'blocked'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:217:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'blocked',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:221:1
+✖ restarting cutover after rollback establishes a fresh retention deadline (0.2768ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  null !== 4
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:224:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: 4,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:228:1
+✖ deliberately forced retirement records interruption and lost work, never safety success (0.2558ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:230:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:241:1
+✖ a pinned request after forced retirement is actual modeled failure evidence (0.3703ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+  + []
+  - [
+  -   [
+  -     'blue',
+  -     'unavailable',
+  -     false
+  -   ]
+  - ]
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:243:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ [ 'blue', 'unavailable', false ] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:254:1
+✖ readiness degradation blocks new green admissions without moving blue journeys (0.3502ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'blocked'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:257:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'blocked',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 1 is rejected without changing domain data (0.2521ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 2 is rejected without changing domain data (0.2036ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 3 is rejected without changing domain data (0.1514ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 4 is rejected without changing domain data (0.1922ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 5 is rejected without changing domain data (0.1992ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 6 is rejected without changing domain data (0.1853ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 7 is rejected without changing domain data (0.1776ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 8 is rejected without changing domain data (0.1812ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 9 is rejected without changing domain data (0.1136ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 10 is rejected without changing domain data (0.9195ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 11 is rejected without changing domain data (0.2628ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 12 is rejected without changing domain data (0.19ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 13 is rejected without changing domain data (0.179ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 14 is rejected without changing domain data (0.1703ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 15 is rejected without changing domain data (0.1774ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 16 is rejected without changing domain data (0.2345ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:275:3
+✖ invalid command 17 is rejected without changing domain data (0.204ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:278:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:284:1
+✖ unknown session finish and reserved reconnect identity cannot fabricate work (0.5525ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'not-implemented'
+  - 'invalid-input'
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:287:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'not-implemented',
+    expected: 'invalid-input',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at learning\S007\tests\session-boundary.test.cjs:293:1
+✖ state schema corruption fails closed instead of reporting a passing rehearsal (0.7983ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S007\tests\session-boundary.test.cjs:296:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid rehearsal state/i,
+    operator: 'throws',
+    diff: 'simple'
+  }

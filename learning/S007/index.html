@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>S007 — Move new sessions; finish old journeys</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p class="eyebrow">A-S007 · S · kanoUnit A-S007 · parent D-S007 · source S007 · packet SC-S007</p>
+    <h1>Move new sessions.<br>Finish old journeys.</h1>
+    <p class="lede">A new admission boundary is not a request-weight change. Retain blue until observed old work finishes, pinned clients are resolved, <em>and</em> rollback retention ends.</p>
+  </header>
+  <main>
+    <section aria-labelledby="objective">
+      <h2 id="objective">Objective &amp; fixture preconditions</h2>
+      <p>Move NEW sessions to ready green while the already admitted blue cart completes with its original subject and valid state. Then explain why zero active journeys, 100% nominal weight, or an expired timer alone is insufficient to retire blue.</p>
+      <ul>
+        <li><code>old-journey</code>: active on blue; schema 1, subject <code>learner-old</code>, cart <code>item-A</code>, revision 1. Its one finish request must produce revision 2 and one receipt.</li>
+        <li><code>old-pinned</code>: idle, but still bound to blue with its own <code>item-P</code> cart. It remains a dependency even when no request is currently running.</li>
+        <li><code>old-work</code>: one pending blue effect. Completion must record exactly one <code>effect-old-work</code>, not fabricate a request or replay lost work.</li>
+        <li>Green starts unassessed. The readiness check represents a warm, compatible schema-1 fixture, not a real health probe or session-store migration.</li>
+        <li>Rollback retention lasts <strong>ten synthetic clock minutes after cutover</strong>. Advancing that clock does not finish work. No real-time observation is implied.</li>
+      </ul>
+      <p>Open this file with local JavaScript enabled. Everything is held in this tab: no requests to servers, management calls, credentials, cookies, or persistent application storage.</p>
+    </section>
+
+    <section aria-labelledby="recipe">
+      <h2 id="recipe">Worked exercise</h2>
+      <ol>
+        <li>Apply <strong>Switch NEW admission to green</strong> before readiness: expect rejection. Apply <strong>Check green readiness</strong> with the compatible fixture, then switch. Old bindings must not change.</li>
+        <li>Apply <strong>Record nominal green weight</strong> at 100%. This is advisory only. Apply <strong>Admit a NEW session</strong> with <code>new-green-001</code>, then <strong>Read through old pinned client</strong>. The actual request table must show green <em>and</em> blue, regardless of the displayed weight.</li>
+        <li>Try <strong>Guarded retirement</strong>: reject. Finish the admitted old journey, reconnect the idle pinned client at a new green session boundary, and finish the blue work. Inspect the cart, receipt, and one effect.</li>
+        <li>Drain is now complete, but rollback retention is still open. Guarded retirement must still reject. Advance the clock by ten minutes, then retire blue. Green remains available.</li>
+        <li><strong>Counterexample:</strong> Reset; check compatible green and switch admission. Select <strong>UNSAFE: force blue retirement</strong>, then read the old pinned client. Observe interrupted sessions, lost work, and an unavailable request. The safety verdict is FAIL, not a successful migration.</li>
+      </ol>
+      <details>
+        <summary>Two additional experiments</summary>
+        <p>Reset; check compatible green; record 100% nominal green weight <em>without switching</em>; admit a session. Its observed start still reaches blue. Finish that extra blue session by its ID before retirement.</p>
+        <p>During retention, admit a green session and roll back NEW admission to blue. Finish the admitted green session by its ID: it stays on green. Rollback does not teleport or kill already admitted journeys. This exercise offers rollback only within the declared retention window.</p>
+      </details>
+    </section>
+
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Choose one synthetic action</h2>
+      <form id="exercise" tabindex="-1" novalidate aria-describedby="keyboard-help">
+        <p id="keyboard-help">Tab between controls; use arrow keys to select and Enter or Space to activate a button. Expected rejection is useful evidence, not completed migration.</p>
+        <label for="action">Action</label>
+        <select id="action" name="action" aria-describedby="action-help">
+          <option value="check-green">Check green readiness</option>
+          <option value="set-weight">Record nominal green weight (advisory only)</option>
+          <option value="switch-new">Switch NEW admission to green</option>
+          <option value="admit-new">Admit a NEW session using the ID below</option>
+          <option value="read-pinned">Read through old pinned client</option>
+          <option value="finish-old">Finish admitted old blue journey</option>
+          <option value="reconnect-pinned">Reconnect idle pinned client at a NEW green boundary</option>
+          <option value="finish-work">Finish pending blue work once</option>
+          <option value="tick">Advance SYNTHETIC clock</option>
+          <option value="retire">Guarded retirement</option>
+          <option value="rollback">Roll back NEW admission during retention</option>
+          <option value="finish-session">Finish an admitted session using the ID below</option>
+          <option value="force-retire">UNSAFE: force blue retirement (counterexample)</option>
+        </select>
+        <p id="action-help"></p>
+        <div class="controls">
+          <div>
+            <label for="readiness">Green readiness fixture</label>
+            <select id="readiness" name="readiness">
+              <option value="compatible">Warm + compatible schema-1 state</option>
+              <option value="cold">Cold / not warmed — reject new green admission</option>
+              <option value="incompatible">Incompatible state — reject new green admission</option>
+            </select>
+          </div>
+          <div>
+            <label for="session-id">Session ID (admit or finish by ID)</label>
+            <input id="session-id" name="sessionId" value="new-green-001" maxlength="64" spellcheck="false" autocomplete="off" aria-describedby="id-help">
+            <p id="id-help" class="hint">Unique, 1–32 lowercase letters/digits/hyphens, beginning with a letter.</p>
+          </div>
+          <div>
+            <label for="nominal-weight">Nominal green weight (%)</label>
+            <input id="nominal-weight" name="nominalWeight" value="100" inputmode="numeric" autocomplete="off" aria-describedby="weight-help">
+            <p id="weight-help" class="hint">Whole number 0–100. Does not select service or unpin clients.</p>
+          </div>
+          <div>
+            <label for="clock-minutes">Synthetic minutes to advance</label>
+            <input id="clock-minutes" name="clockMinutes" value="10" inputmode="numeric" autocomplete="off" aria-describedby="clock-help">
+            <p id="clock-help" class="hint">Whole number 1–120. This is not a wall-clock wait.</p>
+          </div>
+        </div>
+        <p id="unsafe-warning" class="warning" hidden><strong>Deliberately unsafe counterexample.</strong> This bypasses retirement gates and can interrupt old users or lose work. It does not demonstrate uninterrupted service.</p>
+        <div class="buttons">
+          <button type="submit" id="apply-action">Apply synthetic action</button>
+          <button type="button" id="reset-rehearsal" class="secondary">Reset rehearsal</button>
+        </div>
+      </form>
+      <p id="action-status" role="status" aria-live="polite" aria-atomic="true"></p>
+      <noscript>Local JavaScript is required. No migration outcome is established while it is disabled.</noscript>
+    </section>
+
+    <section aria-labelledby="observations-title">
+      <h2 id="observations-title">Observed synthetic state</h2>
+      <p id="safety-verdict" class="verdict"></p>
+      <p id="user-impact"></p>
+      <div class="versions">
+        <section class="blue" aria-labelledby="blue-title">
+          <h3 id="blue-title">Blue · admitted old journeys</h3>
+          <p id="blue-state"></p>
+          <p id="blue-observed"></p>
+        </section>
+        <section class="green" aria-labelledby="green-title">
+          <h3 id="green-title">Green · new admission candidate</h3>
+          <p id="green-state"></p>
+          <p id="green-observed"></p>
+        </section>
+      </div>
+      <dl class="facts">
+        <div><dt>NEW session target</dt><dd id="admission-target"></dd></div>
+        <div><dt>Nominal green weight</dt><dd id="displayed-weight"></dd></div>
+        <div><dt>Synthetic clock</dt><dd id="clock-state"></dd></div>
+        <div><dt>Blue work</dt><dd id="work-state"></dd></div>
+      </dl>
+      <div class="gates">
+        <section aria-labelledby="drain-title">
+          <h3 id="drain-title">1. Drain / unresolved-client gate</h3>
+          <p id="drain-state"></p>
+          <ul id="drain-blockers"></ul>
+        </section>
+        <section aria-labelledby="retention-title">
+          <h3 id="retention-title">2. Separate rollback-retention gate</h3>
+          <p id="retention-state"></p>
+          <p>Drain can finish before retention, or retention can expire before drain. Neither substitutes for the other.</p>
+        </section>
+      </div>
+      <h3>Guarded blue retirement</h3>
+      <p id="retirement-state"></p>
+      <ul id="retirement-blockers"></ul>
+      <h3>Session bindings and valid state</h3>
+      <div class="table-wrap" role="region" aria-label="Synthetic sessions" tabindex="0">
+        <table>
+          <caption>Fixture bindings; an idle pinned session is still a dependency</caption>
+          <thead><tr><th scope="col">Session / cohort</th><th scope="col">Bound service</th><th scope="col">Status / pin</th><th scope="col">Subject / cart / schema</th><th scope="col">Revision / receipt</th></tr></thead>
+          <tbody id="session-rows"></tbody>
+        </table>
+      </div>
+      <h3>Actual modeled request observations</h3>
+      <p>These are model dispatches, <strong>not HTTP traffic or Azure logs</strong>. The counters below come from these rows, not nominal percentages. No request is invented for the starting fixtures or for work completion.</p>
+      <p id="request-counts"></p>
+      <div class="table-wrap" role="region" aria-label="Synthetic request observations" tabindex="0">
+        <table>
+          <caption>One row per executed modeled request, with state evidence</caption>
+          <thead><tr><th scope="col"># / session / cohort</th><th scope="col">Operation</th><th scope="col">Observed service</th><th scope="col">Outcome</th><th scope="col">State evidence</th></tr></thead>
+          <tbody id="request-rows"></tbody>
+        </table>
+      </div>
+      <h3>Action trace</h3>
+      <ol id="event-trace"></ol>
+      <details>
+        <summary>Inspect full synthetic state and request snapshots</summary>
+        <pre id="raw-state"></pre>
+      </details>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Limits, verification &amp; cleanup</h2>
+      <ul>
+        <li>All session, readiness, cart, receipt, work, timer, and routing facts are synthetic in-memory fixtures. Known-fixture coverage is not discovery of real clients or proof of compatible real stores, cookies, caches, authentication, TLS, proxies, or application state.</li>
+        <li>No live Azure/native proof, real-user continuity, source-parent completion, or availability/SLO claim. Unknown real clients/work would require additional observation and explicit retirement policy in the native B-S007 slice.</li>
+        <li>Rollback here affects NEW admission only; it is not a data rollback or proof that a real deployment can revert. Admitted green work remains green.</li>
+        <li>Trace limits: 30 sessions, 120 request observations, 200 actions, 10,000 synthetic minutes. A reached limit rejects further relevant actions; Reset begins a fresh bounded rehearsal.</li>
+        <li><strong>IaC: N/A.</strong> No resources, infrastructure, packages, frameworks, runtime hosting, or deployment choices are required or created.</li>
+        <li>Reset clears all model state, results, errors, controls, and trace in this tab. Closing/reloading also discards state. No shared files or other lessons are changed by the exercise.</li>
+      </ul>
+      <p><a href="session-boundary.feature">BDD feature</a> · <a href="lesson.json">Lesson manifest</a> · <a href="evidence.json">Evidence and honest verification limits</a>. Worker publication is not parent acceptance or Kano credit.</p>
+    </section>
+  </main>
+</body>
+</html>

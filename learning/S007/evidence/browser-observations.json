@@ -1,0 +1,246 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S007",
+  "workerId": "worker-A-S007",
+  "mode": "synthetic",
+  "nativeProof": false,
+  "evidenceKind": "real-integrated-browser",
+  "tool": "openBrowserPage(forceNew=true), followed by runPlaywrightCode against the returned real page",
+  "fileUrl": "file:///C:/Users/chhage/repos/app-scaling-strategies/learning/S007/index.html",
+  "pageId": "fe46a535-2d33-4d2f-b369-92f44c1c91a5",
+  "forceNew": true,
+  "passed": true,
+  "inspectionOnlyPageId": "2f83ceec-41d3-4a06-bbc9-ca8e222d3d26",
+  "inspectionOnlyPageLimit": "The earlier prepared file page was not used for acceptance. A fresh owned forceNew page was opened after the explicit S041 handoff.",
+  "browser": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.144.0 Chrome/150.0.7871.250 Electron/43.8.3 Safari/537.36",
+    "visibility": "visible",
+    "initialDocumentHasFocus": false,
+    "focusObservation": "The integrated host initially reported document.hasFocus() false. Real Tab/Arrow/Enter operations nevertheless changed the actual active element and applied the selected action, as asserted below. No hidden-tab or forced-click pass is claimed.",
+    "nativeReset": true,
+    "nativeSubmit": true,
+    "csp": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'",
+    "scriptSources": ["model.js", "app.js"],
+    "label": "Training rehearsal - synthetic data - not a live Azure result"
+  },
+  "runs": [
+    {
+      "id": "keyboard-and-baseline",
+      "passed": true,
+      "observedAtUtc": "2026-11-03T13:40:02.593Z",
+      "assertions": [
+        "Owned forceNew file page is actually visible",
+        "Prominent training label is visible",
+        "Exact synthetic/not-live label matches",
+        "Native form reset/submit methods are not shadowed",
+        "Fixture baseline has no invented request/action history",
+        "Keyboard Tab reaches the skip link",
+        "Skip-link Enter and Tab reach the action selector",
+        "Keyboard arrows select the unready switch action",
+        "Keyboard tabs reach Apply without a pointer",
+        "Keyboard Enter visibly rejects unready green admission",
+        "Expected rejection is announced through the status output",
+        "Rejected switch creates no request observations",
+        "No HTTP requests or page errors during this observed block"
+      ],
+      "observed": {
+        "outcome": {
+          "ok": false,
+          "code": "blocked",
+          "message": "Green must be warm and state-compatible before new admission moves."
+        },
+        "requestCount": 0,
+        "eventCount": 1,
+        "urlHashAfterSkipLink": "#exercise"
+      },
+      "httpRequests": [],
+      "pageErrors": []
+    },
+    {
+      "id": "safe-drain-and-retention",
+      "passed": true,
+      "observedAtUtc": "2026-11-03T13:40:26.560Z",
+      "assertions": [
+        "Owned page remains visible",
+        "Nominal 100 percent is recorded only as advisory",
+        "Actual new/pinned request observations are mixed green and blue",
+        "Admitted old journey was not moved",
+        "Guarded retirement rejects unresolved old journey, pinned client and work",
+        "Known blue drain becomes visibly complete",
+        "Rollback retention remains visibly open after drain",
+        "Completed drain still cannot bypass retention",
+        "Blue retires only after both independent gates",
+        "Actual old completion preserves before/after state and one receipt",
+        "Blue work records its one expected effect separately",
+        "Safe path has no modeled interruption or lost work",
+        "Green admitted journeys still finish validly after blue retires",
+        "Safe modeled retirement verdict is visibly PASS",
+        "No HTTP requests or page errors in safe path"
+      ],
+      "observed": {
+        "nominalGreenPercent": 100,
+        "initialRequestServices": ["green", "blue"],
+        "drainCompleteBeforeRetentionExpiry": true,
+        "retirementRejectedWhileRetentionOpen": true,
+        "retirement": "guarded",
+        "blueAliveAfterRetirement": false,
+        "greenAliveAfterRetirement": true,
+        "interruptedSessions": [],
+        "lostWork": [],
+        "verdict": "PASS — modeled retirement gates satisfied."
+      },
+      "followUpDomReadAtUtc": "2026-11-03T13:41:03.635Z",
+      "followUpDomRead": {
+        "requestCount": 6,
+        "blueRequests": 2,
+        "greenRequests": 4,
+        "oldFinish": {
+          "sequence": 3,
+          "sessionId": "old-journey",
+          "cohort": "admitted-blue",
+          "version": "blue",
+          "operation": "finish",
+          "status": "ok",
+          "stateValid": true,
+          "before": { "schema": 1, "subject": "learner-old", "cart": ["item-A"], "revision": 1, "receipt": null },
+          "after": { "schema": 1, "subject": "learner-old", "cart": ["item-A"], "revision": 2, "receipt": "receipt-old-journey" }
+        },
+        "work": { "id": "old-work", "version": "blue", "status": "complete", "effects": 1, "output": "effect-old-work" }
+      },
+      "httpRequests": [],
+      "pageErrors": []
+    },
+    {
+      "id": "unsafe-counterexample",
+      "passed": true,
+      "observedAtUtc": "2026-11-03T13:41:03.635Z",
+      "assertions": [
+        "Previous safe DOM really contains six requests: blue 2, green 4",
+        "Unsafe choice has a prominent explicit counterexample warning",
+        "Unsafe command really removes blue in the local model",
+        "Both unresolved old clients are explicitly interrupted",
+        "Pending blue work is lost, not claimed complete or replayed",
+        "Executed pinned request to retired blue has unavailable/no-valid-state evidence",
+        "Unsafe safety verdict is visibly FAIL",
+        "User impact reports actual interruption/loss/failure without a continuity claim",
+        "No HTTP requests or page errors in unsafe block"
+      ],
+      "observed": {
+        "verdict": "FAIL — premature synthetic retirement or failed requests.",
+        "impact": "2 interrupted session(s); 1 lost work item(s); 1 failed observed request(s). This is not a successful migration.",
+        "requests": [
+          {
+            "sequence": 1,
+            "sessionId": "old-pinned",
+            "cohort": "pinned-blue",
+            "version": "blue",
+            "operation": "read",
+            "status": "unavailable",
+            "stateValid": false,
+            "before": { "schema": 1, "subject": "learner-pinned", "cart": ["item-P"], "revision": 1, "receipt": null },
+            "after": { "schema": 1, "subject": "learner-pinned", "cart": ["item-P"], "revision": 1, "receipt": null }
+          }
+        ],
+        "work": { "id": "old-work", "version": "blue", "status": "lost", "effects": 0, "output": null },
+        "damage": { "interruptedSessions": ["old-journey", "old-pinned"], "lostWork": ["old-work"] },
+        "eventCount": 4
+      },
+      "httpRequests": [],
+      "pageErrors": []
+    },
+    {
+      "id": "invalid-data-and-reset",
+      "passed": true,
+      "observedAtUtc": "2026-11-03T13:41:25.996Z",
+      "assertions": [
+        "Page is visible during invalid-data checks",
+        "Incompatible readiness is explicitly rejected",
+        "Incompatible green cannot receive new sessions",
+        "Non-finite weight rejected without changing domain data or counters",
+        "Negative time rejected without changing domain data or counters",
+        "Malformed session ID rejected without changing domain data or counters",
+        "Tampered unknown action fails closed with no fabricated observations",
+        "Keyboard Tab reaches Reset from Apply",
+        "Keyboard Enter Reset clears errors, trace and request observations",
+        "Reset restores all fixture state, pins, work and admission",
+        "Reset restores each visible control default",
+        "Reset removes the unsafe warning",
+        "No HTTP requests or page errors in invalid-data/Reset block"
+      ],
+      "inputs": {
+        "readiness": "incompatible",
+        "nominalWeight": "NaN",
+        "clockMinutes": "-1",
+        "sessionId": "<bad>",
+        "action": "A non-existent select value was assigned through the real DOM; the resulting unsupported selection was submitted through the real Apply button."
+      },
+      "observedRejections": [
+        "Nominal weight must be a finite integer from 0 to 100.",
+        "Advance a finite whole number of synthetic minutes from 1 to 120, within the clock limit.",
+        "Use a unique session ID: 1–32 lowercase letters/digits/hyphens, beginning with a letter; reconnect identity is reserved.",
+        "Unknown or malformed action. No requests or domain state changed."
+      ],
+      "observedAfterKeyboardReset": {
+        "controls": { "action": "check-green", "readiness": "compatible", "sessionId": "new-green-001", "weight": "100", "minutes": "10" },
+        "requestCount": 0,
+        "eventCount": 0,
+        "status": "ready: Fixture loaded. No requests observed yet.",
+        "verdict": "PENDING — retirement and observation incomplete."
+      },
+      "httpRequests": [],
+      "pageErrors": []
+    },
+    {
+      "id": "session-boundary-rollback",
+      "passed": true,
+      "observedAtUtc": "2026-11-03T13:41:47.502Z",
+      "assertions": [
+        "Owned page remains visible for rollback checks",
+        "Retention rollback changes NEW admission and keeps both services available",
+        "Previously admitted green journey remains bound to green",
+        "Observed rollback cohorts are green start, blue start, green finish",
+        "Admitted green journey finishes with valid preserved state after rollback",
+        "Final actual Reset clears all experiment observations and restores baseline",
+        "Native reset and submit are still intact after all interactions",
+        "Actual DOM retains no-connect/no-form-action CSP",
+        "No HTTP requests or page errors in rollback/final cleanup block"
+      ],
+      "observed": {
+        "requests": [
+          { "sessionId": "new-green-001", "version": "green", "operation": "start", "stateValid": true },
+          { "sessionId": "after-rollback", "version": "blue", "operation": "start", "stateValid": true },
+          { "sessionId": "new-green-001", "version": "green", "operation": "finish", "stateValid": true }
+        ],
+        "greenState": { "schema": 1, "subject": "learner-new-green-001", "cart": ["item-N"], "revision": 2, "receipt": "receipt-new-green-001" },
+        "admission": "blue",
+        "blueAlive": true,
+        "greenAlive": true
+      },
+      "httpRequests": [],
+      "pageErrors": []
+    }
+  ],
+  "cleanup": {
+    "resetObserved": true,
+    "observedAtUtc": "2026-11-03T13:41:47.502Z",
+    "finalRequestCount": 0,
+    "finalEventCount": 0,
+    "sessionCount": 2,
+    "status": "ready: Fixture loaded. No requests observed yet.",
+    "foregroundReleasedTo": "S031, followed by S005",
+    "furtherBrowserActionsPlanned": false
+  },
+  "monitoring": {
+    "httpRequestsObservedDuringChecks": 0,
+    "pageErrorsObservedDuringChecks": 0,
+    "scope": "Per-block request/pageerror listeners after opening the file page, not an audit of initial browser-resource loads or other pages.",
+    "interaction": "Real browser native keyboard events and ordinary visible locator clicks/selects/fills; no force-click, direct model invocation, Node DOM mock, or injected passing result."
+  },
+  "limits": [
+    "These actual browser checks validate the synthetic exercise UI only, not Azure/native behavior or real-user continuity.",
+    "The observation clock is the local synthetic model clock, not a measured drain or retention wait.",
+    "The unsafe verifier assertions passed precisely because the exercise visibly reported interrupted users/lost work and a FAIL safety verdict.",
+    "The earlier prepared page and sibling hidden-page failures are not counted as S007 acceptance.",
+    "JSON records preserve the actual tool-returned assertions and selected DOM observations; no screenshot or native evidence is implied."
+  ]
+}
