@@ -92,7 +92,8 @@ C008 does not edit the root README, weaken C005's checker, refresh its pin or
 claim that the snapshot represents the current checkout.
 
 Ordinary browser verification **does not write or delete observations**. To
-deliberately capture or refresh `evidence\browser-observations.json`:
+deliberately capture or refresh
+`evidence\browser-observations.published-helper.json`:
 
 ```powershell
 $env:CAPTURE_BROWSER_EVIDENCE='1'
@@ -104,8 +105,37 @@ try {
 ```
 
 Only the exact string `1` enables capture, and only after success and awaited
-browser cleanup. A failed capture preserves prior observations. Independent
-reruns and maintenance earn no additional value credit.
+browser cleanup. A failed capture preserves prior observations. Both normal
+capture-unset reruns and captures preserve the earlier
+`evidence\browser-observations.json` byte-for-byte. Independent reruns and
+maintenance earn no additional value credit.
+
+### Final browser provenance gate
+
+The final test verifies the helper's exact SHA256 **before importing it**:
+`86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055`.
+It also compares the source with published commit
+`53c0c0d82cc1db6780a87ac2b1085734af6d5c60`, checks the hash again after awaited
+cleanup, and verifies that the abandoned `lifecycle.cjs` dependency was not
+imported. No shared helper or tooling files are edited by C008.
+
+An earlier browser attempt imported experimental helper SHA
+`ee69b2fe04d846f065758326407f424d4d74c64d717c3bbe72983cca66ff4e01`.
+Its raw `browser-iteration-2-failure.txt` remains **historical and unqualified**;
+`prototype-browser-history.json` explains the chronology without reconstructing
+an overwritten uncommitted observation file. The lifecycle-recovery prototype
+is **not qualified, active or shipped**.
+
+The original committed `browser-observations.json` already records the
+published `86c80...` helper after a later intentional capture. It and its
+associated earlier logs are unchanged; they are not falsely relabeled as
+prototype observations. The new final actual all-152 DOM/keyboard/empty/error/
+reset/CSP pass actively enforces the published provenance gate and is recorded
+separately in `browser-observations.published-helper.json` and
+`provenance-browser-green.txt`, with published provenance and awaited cleanup.
+`provenance-red.txt` preserves the real missing-gate assertion failure before
+the test was corrected. `provenance-browser-rerun.txt` records a successful
+capture-unset run with both proof files' SHA256 values unchanged.
 
 `evidence.json` records BDD → loadable stub → **three genuine behavioral RED
 assertions** → IaC N/A → implementation/refinement → focused GREEN/syntax/shared
@@ -117,8 +147,8 @@ Browser tests use only existing `testing\browser\isolated.cjs` /
 156.0.4314.50**, and Node.js **22.23.4** test tooling. They await `close()` in
 `finally`. No package install, browser download, foreground lease, unsafe flag or
 root/package/framework change is involved. Production Node.js **24** remains
-unvalidated. The helper's actual imported worktree hash is recorded; C008 does
-not modify or claim ownership of shared helper changes.
+unvalidated. The final helper's exact published provenance is enforced and
+recorded; earlier prototype attempts remain historical, not qualified.
 
 Actual browser checks cover all 152 rendered preparations, canonical source and
 prerequisite/evidence text, every unchanged matrix reason/constraint, keyboard

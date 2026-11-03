@@ -14,6 +14,21 @@
   "mode": "local-resource-free-browser-preparation",
   "configuration": "Direct file: HTML/JavaScript/CSS; no server or cloud configuration. Existing Node.js 22.23.4 is test tooling only; production Node.js 24 remains unvalidated.",
   "scope": "Preparation and limitations for every S001-S150 and W001/W002. No C006 search, C007 filters, catalog re-extraction, copied metadata/approval authority, root/package/framework changes or native execution.",
+  "browserProvenanceGate": {
+    "publishedHelperCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+    "requiredSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "verifiedBeforeImportAndAfterCleanup": true,
+    "finalObservationArtifact": "evidence\\browser-observations.published-helper.json",
+    "historicalObservationArtifact": "evidence\\browser-observations.json",
+    "priorCommittedObservationHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "priorCommittedObservationNote": "The original 7b8cd47 committed observation already records the published helper after a later intentional capture. It is preserved unchanged, not mislabeled as experimental.",
+    "earlierPrototypeHelperSha256": "ee69b2fe04d846f065758326407f424d4d74c64d717c3bbe72983cca66ff4e01",
+    "prototypeHistoryArtifact": "evidence\\prototype-browser-history.json",
+    "earlierPrototypeAttemptsQualified": false,
+    "abandonedLifecycleDependencyImportedByFinalTest": false,
+    "lifecyclePrototypeQualifiedActiveOrShipped": false,
+    "sharedHelperOrToolingEditsByC008": false
+  },
   "authorities": {
     "catalog": "capability\\C005\\catalog-data.js",
     "catalogContract": "capability\\C005\\catalog-contract.js",
@@ -69,7 +84,7 @@
       "artifact": "evidence\\green.txt",
       "testsPassed": 42,
       "testsFailed": 0,
-      "result": "All-entry object reuse, availability/BASE/workflow distinctions, immutable zero envelope, missing/malformed/version/ID/native/parent/risk/approval/matrix rejection, authority failure, surface/CSP/accessibility and evidence-lifecycle assertions."
+      "result": "All-entry object reuse, availability/BASE/workflow distinctions, immutable zero envelope, missing/malformed/version/ID/native/parent/risk/approval/matrix rejection, authority failure, surface/CSP/accessibility and observation-preservation assertions."
     },
     {
       "stage": "shared contract regression",
@@ -103,7 +118,8 @@
       "result": "First attempt stopped before browser launch because inherited Windows PowerShell 5.1 could not load its signature module; switched to the installed verified PowerShell 7 executable with errors terminating. The next actual run passed ten groups but exposed a test keyboard-sequence error: Enter opened the native Windows select popup, so the subsequent Tab did not leave the selector. Removed that premature Enter, retained strict focus assertions, documented native keyboard navigation and made lesson navigation independently select S001. No browser safety flag or application assertion was weakened."
     },
     {
-      "stage": "actual isolated headless browser",
+      "stage": "earlier committed browser observations — published hash recorded",
+      "status": "earlier-published-helper-observation-preserved",
       "artifacts": ["evidence\\browser-green.txt", "evidence\\browser-observations.json"],
       "nodeTestsPassed": 13,
       "acceptanceGroups": 12,
@@ -112,10 +128,12 @@
       "signature": "Local Authenticode Valid; Microsoft Corporation signer recorded in observations.",
       "playwright": "1.56.1, existing offline tooling",
       "helper": "testing\\browser\\isolated.cjs",
+      "helperSourceSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+      "provenanceClarification": "The original committed report already records the published helper after a later intentional capture. Earlier prototype attempts remain separately historical and unqualified. The new final QA test actively enforces exact published provenance before import and does not qualify lifecycle recovery.",
       "api": "openIsolatedLesson(relativeRepoPath)",
       "checks": "Exactly all 152 ID/title choices; actual Tab/arrows/Enter skip/open/focus/announcements and original lesson navigation; unavailable scenarios/workflows; six approvals, five target unknowns, immutable zero boundary and cleanup uncertainty; all 152 actual DOM preparations with exact objectives/implementation/acceptance/prerequisites/source links/common excerpts and every unchanged C003 reason/constraint; keyboard reset/empty; nine invalid input kinds with stale-claim clearing and recovery; async race; literal source text; 320px reflow; genuinely CSP-denied inline code and connection probe; no application remote requests or page errors.",
       "cleanup": "close() awaited in finally before any observation write",
-      "capture": "Final successful observations deliberately captured only with CAPTURE_BROWSER_EVIDENCE exactly 1.",
+      "capture": "Earlier committed observations deliberately captured with CAPTURE_BROWSER_EVIDENCE exactly 1; preserved unchanged. The new separate report supplies the explicit final provenance gate.",
       "mockBrowser": false,
       "foregroundLease": false,
       "unsafeLaunchFlags": false,
@@ -123,6 +141,7 @@
     },
     {
       "stage": "ordinary browser rerun preserves observations",
+      "status": "earlier-observation-preservation-check",
       "artifact": "evidence\\browser-rerun.txt",
       "nodeTestsPassed": 13,
       "acceptanceGroups": 12,
@@ -131,15 +150,68 @@
       "observationSha256Before": "a736a62b84e4f89c5034df843c171a52232ab099de836108c7e307617d6d0357",
       "observationSha256After": "a736a62b84e4f89c5034df843c171a52232ab099de836108c7e307617d6d0357",
       "valueCreditsEarnedByRerun": 0
+    },
+    {
+      "stage": "published-helper provenance QA RED",
+      "artifacts": ["evidence\\provenance-red.txt", "evidence\\provenance-red-assertion.cjs.txt"],
+      "testsPassed": 5,
+      "testsFailed": 1,
+      "result": "A real assertion failed because the browser test did not require the published helper hash. Preserved before adding the pre-import gate and separate final proof path. Same C008 unit; existing resource-free IaC N/A remains unchanged."
+    },
+    {
+      "stage": "published-helper focused GREEN and syntax",
+      "artifacts": ["evidence\\provenance-focused-green.txt", "evidence\\provenance-syntax.txt"],
+      "focusedTestsPassed": 42,
+      "syntaxFilesChecked": 5,
+      "result": "Model/surface assertions including exact published provenance before import pass; all owned JS/CJS parse. Shared helper still equals the published source and exact required hash. No tooling edits or installs."
+    },
+    {
+      "stage": "provenance history consistency correction",
+      "artifact": "evidence\\prototype-browser-history.json",
+      "result": "An initial QA annotation incorrectly assumed the original committed observation was experimental. A strict consistency assertion found its actual helper hash was already published86c80, not assumedee69. Inspection confirmed its a736 observation hash and original bytes were unchanged. Corrected only the annotation and recaptured the separate new QA report explicitly; no original proof was altered. Earlier experimental raw failure logs remain historical and unqualified. The overwritten uncommitted earlier JSON is not reconstructed or claimed as a retained artifact."
+    },
+    {
+      "stage": "final actual browser — published helper provenance verified",
+      "artifacts": ["evidence\\browser-observations.published-helper.json", "evidence\\provenance-browser-green.txt"],
+      "status": "passed",
+      "helperPublishedCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+      "helperSourceSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+      "nodeTestsPassed": 13,
+      "actualAcceptanceGroups": 12,
+      "actualDomPreparationViews": 152,
+      "engine": "Signed Microsoft Edge 156.0.4314.50",
+      "playwright": "1.56.1, existing offline tooling",
+      "result": "All original actual DOM/source/preparation/keyboard/empty/error/reset/race/reflow/CSP checks passed against the byte-verified published helper. Its abandoned lifecycle dependency was not imported. The earlier committed published-hash observation is preserved unchanged; earlier experimental attempts are separately historical and unqualified.",
+      "cleanup": "close() awaited in finally; final proof written only after successful cleanup and repeated provenance checks",
+      "capture": "CAPTURE_BROWSER_EVIDENCE exactly 1 writes only the separate published-helper observation artifact.",
+      "historicalObservationSha256Before": "a736a62b84e4f89c5034df843c171a52232ab099de836108c7e307617d6d0357",
+      "historicalObservationSha256After": "a736a62b84e4f89c5034df843c171a52232ab099de836108c7e307617d6d0357",
+      "lifecyclePrototypeQualifiedActiveOrShipped": false,
+      "valueCreditsEarnedByCorrection": 0
+    },
+    {
+      "stage": "published-helper capture-unset rerun preserves both proof files",
+      "artifact": "evidence\\provenance-browser-rerun.txt",
+      "status": "passed",
+      "captureEnvironment": "unset",
+      "helperPublishedCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+      "helperSourceSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+      "nodeTestsPassed": 13,
+      "actualAcceptanceGroups": 12,
+      "actualDomPreparationViews": 152,
+      "result": "All actual browser checks passed again with the published helper and awaited cleanup. Both in-test Buffer equality and independent SHA256 checks confirmed no historical or final observation write/deletion.",
+      "historicalObservationSha256BeforeAndAfter": "a736a62b84e4f89c5034df843c171a52232ab099de836108c7e307617d6d0357",
+      "publishedHelperObservationSha256BeforeAndAfter": "8d75c64cd10618d68613910f8adcca36de9e25fc6dfc36aea6d6a9010ddd0013",
+      "valueCreditsEarnedByRerun": 0
     }
   ],
   "verifierResult": {
-    "localPreparation": "passed focused automated assertions and actual all-entry headless DOM/keyboard checks",
+    "localPreparation": "passed focused automated assertions and final actual all-entry headless DOM/keyboard checks with the exact published86c80 helper and awaited cleanup",
     "nativeVerification": "unverified; no native run",
     "wholeCurrentCheckoutSourceParity": "failed after later non-owner README documentation; disclosed separately from passed immutable pinned integrity"
   },
   "userImpactResult": "Local preparation/navigation/reset observed; native clients, routing, state, effects and interruption outcomes not measured.",
-  "cleanupResult": "Owned isolated browser closed in finally. Local reset clears only selection; no cloud deletion, lease release or native cleanup outcome claimed.",
+  "cleanupResult": "Published-helper isolated browser close awaited in finally before final evidence capture. This does not qualify or ship the abandoned lifecycle recovery prototype. Local reset clears only selection; no cloud deletion, lease release or native cleanup outcome claimed.",
   "safety": {
     "maximumLiveAzureRuns": 0,
     "authorizedCloudSpend": 0,
@@ -161,6 +233,7 @@
   "acceptedAtUtc": null,
   "acceptanceAuthority": "Controller empirical acceptance only. Worker publication/reporting is not Done and never invokes Accept.",
   "limitations": [
+    "Earlier ee69 prototype attempts are preserved historical, unqualified records. The original committed observation already records published86c80 and remains unchanged. The separate final pass actively enforces the exact published provenance gate; lifecycle recovery is not qualified, active or shipped.",
     "Historical catalog availability is deliberately not current state. Later files/publications do not become accepted learning links.",
     "No concrete native target/service/format, identity, lease, price or risk classification is invented; per-entry support remains unknown and C003 limitations remain unchanged.",
     "Strict whole-current-checkout source parity now fails due later root README documentation; passed pinned reproducibility is not mislabeled as current-source equality.",

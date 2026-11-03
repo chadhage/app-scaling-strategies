@@ -51,3 +51,14 @@ Feature: Read every source entry's preparation without granting native authority
     When tests run without CAPTURE_BROWSER_EVIDENCE exactly 1
     Then observations are neither rewritten nor deleted
     And no additional Kano credit or native proof is earned
+
+  Scenario: Final browser evidence uses only the published helper
+    Given the published helper at 53c0c0d82cc1 has SHA256 86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055
+    And earlier ee69 prototype observations are historical and not qualified
+    When the final actual browser check imports its helper
+    Then its exact hash and published source must be verified before import
+    And the abandoned lifecycle.cjs dependency must not be imported or claimed shipped
+    And final published-helper observations are captured separately only with CAPTURE_BROWSER_EVIDENCE exactly 1
+    And historical proof remains byte-for-byte unchanged
+    And the real all-152 check passes and close is awaited in finally
+    And a normal capture-unset rerun preserves both proof files

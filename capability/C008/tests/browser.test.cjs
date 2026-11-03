@@ -12,7 +12,8 @@ const catalog = require('../../C005/catalog-data.js');
 const helperPath = path.resolve(__dirname, '..', '..', '..', 'testing', 'browser', 'isolated.cjs');
 const helperRequire = createRequire(helperPath);
 const helperSourceSha256 = createHash('sha256').update(readFileSync(helperPath)).digest('hex');
-const { openIsolatedLesson } = require(helperPath);
+const PUBLISHED_HELPER_COMMIT = '53c0c0d82cc1db6780a87ac2b1085734af6d5c60';
+const PUBLISHED_HELPER_SHA256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
 
 function signedEdge() {
   const executable = path.join(process.env['ProgramFiles(x86)'], 'Microsoft', 'Edge', 'Application', 'msedge.exe');
@@ -26,7 +27,20 @@ function signedEdge() {
 }
 
 test('C008 real isolated browser preparation, keyboard, reset, errors, CSP and all-152 coverage', { timeout: 180000 }, async t => {
-  const reportPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
+  assert.equal(helperSourceSha256, PUBLISHED_HELPER_SHA256, 'Only the published helper may supply final browser evidence.');
+  const helperSource = readFileSync(helperPath, 'utf8');
+  const publishedSource = execFileSync('git', ['--no-pager', 'show', `${PUBLISHED_HELPER_COMMIT}:testing/browser/isolated.cjs`], {
+    cwd: path.resolve(__dirname, '..', '..', '..'), encoding: 'utf8', timeout: 15000
+  });
+  assert.equal(helperSource.replace(/\r\n/g, '\n'), publishedSource.replace(/\r\n/g, '\n'));
+  assert.doesNotMatch(helperSource, /require\(['"]\.\/lifecycle\.cjs['"]\)/);
+  const { openIsolatedLesson } = require(helperPath);
+  const lifecyclePath = path.join(path.dirname(helperPath), 'lifecycle.cjs');
+  assert.equal(Object.hasOwn(require.cache, lifecyclePath), false, 'The abandoned lifecycle prototype must not be imported.');
+  const reportPath = path.join(__dirname, '..', 'evidence', 'browser-observations.published-helper.json');
+  const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
+  const historicalPrevious = await fs.readFile(historicalPath);
+  const historicalRecord = JSON.parse(historicalPrevious.toString('utf8'));
   const previous = await fs.readFile(reportPath).catch(error => {
     if (error.code === 'ENOENT') return null;
     throw error;
@@ -332,7 +346,18 @@ test('C008 real isolated browser preparation, keyboard, reset, errors, CSP and a
       engine: 'Microsoft Edge (Chromium)', browserVersion, signature, playwrightVersion,
       nodeVersion: process.version, productionNode24Validated: false,
       helper: 'testing\\browser\\isolated.cjs', helperApi: 'openIsolatedLesson', helperSourceSha256,
-      helperProvenance: 'Exact imported shared-helper worktree hash; unchanged by C008. File-only API, no foreground or loopback lease.',
+      helperPublishedCommit: PUBLISHED_HELPER_COMMIT, helperExpectedSha256: PUBLISHED_HELPER_SHA256,
+      helperPublishedSourceMatches: true, experimentalLifecycleDependencyImported: false,
+      helperProvenance: 'Exact hash and published source verified before import. Published file-only helper, no abandoned lifecycle dependency, tooling edits, foreground or loopback lease.',
+      historicalObservations: {
+        path: 'evidence\\browser-observations.json',
+        status: historicalRecord.helperSourceSha256 === PUBLISHED_HELPER_SHA256
+          ? 'earlier-published-helper-observation-preserved'
+          : 'historical-unqualified-experimental-helper',
+        sha256: createHash('sha256').update(historicalPrevious).digest('hex'),
+        helperSourceSha256: historicalRecord.helperSourceSha256,
+        authoritativeForFinalBrowserGate: false
+      },
       lesson: 'capability\\C008\\index.html', actualDomAndKeyboard: true, mockedBrowser: false,
       unsafeLaunchFlagsUsed: false, integratedForegroundUsed: false,
       sourcePin: catalog.source.commit, coverage, checks, cspObservation, pageErrors, remoteRequests,
@@ -344,16 +369,21 @@ test('C008 real isolated browser preparation, keyboard, reset, errors, CSP and a
     await session.close();
   }
   report.browserCleanup = 'completed by awaited close() in finally';
+  assert.equal(createHash('sha256').update(readFileSync(helperPath)).digest('hex'), PUBLISHED_HELPER_SHA256);
+  assert.equal(Object.hasOwn(require.cache, lifecyclePath), false);
+  assert.deepEqual(await fs.readFile(historicalPath), historicalPrevious, 'historical prototype proof must remain byte-for-byte unchanged');
+  report.historicalObservations.preservedByteForByte = true;
   if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') {
     await fs.writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
-    console.log('C008 explicit browser observation capture requested with CAPTURE_BROWSER_EVIDENCE=1.');
+    console.log('C008 explicit published-helper observation capture requested with CAPTURE_BROWSER_EVIDENCE=1; historical proof preserved.');
   } else {
     const after = await fs.readFile(reportPath).catch(error => {
       if (error.code === 'ENOENT') return null;
       throw error;
     });
     assert.deepEqual(after, previous, 'ordinary verification must preserve existing observations byte-for-byte');
-    console.log('C008 ordinary verification preserved browser observations without write or deletion.');
+    console.log('C008 ordinary verification preserved final and historical browser observations without write or deletion.');
   }
+  console.log(`C008 published helper: ${PUBLISHED_HELPER_COMMIT}; SHA256 ${helperSourceSha256}; abandoned lifecycle dependency not imported.`);
   console.log(`C008 actual browser: signed Edge ${browserVersion}; Playwright ${playwrightVersion}; ${coverage.count} preparation views; ${checks.length} acceptance groups; close awaited.`);
 });

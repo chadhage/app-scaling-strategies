@@ -86,6 +86,14 @@ test('RED sources remain non-discovered snapshots and IaC N/A precedes implement
 
 test('browser evidence is opt-in exactly 1 and sessions close in finally', () => {
   const browser = read('tests\\browser.test.cjs');
+  assert.equal(browser.includes('86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055'), true,
+    'final browser test must reject helper bytes other than published provenance');
+  assert.ok(browser.includes('53c0c0d82cc1'));
+  assert.ok(browser.includes('browser-observations.published-helper.json'));
+  assert.ok(browser.includes('historicalPrevious'));
+  const provenanceGate = browser.indexOf('assert.equal(helperSourceSha256, PUBLISHED_HELPER_SHA256');
+  const helperImport = browser.indexOf('const { openIsolatedLesson } = require(helperPath)');
+  assert.ok(provenanceGate >= 0 && helperImport > provenanceGate, 'verify helper provenance before importing it');
   assert.match(browser, /process\.env\.CAPTURE_BROWSER_EVIDENCE === '1'/);
   assert.doesNotMatch(browser, /fs\.(?:rm|unlink|truncate)/);
   assert.match(browser, /finally \{\s+await session\.close\(\);/);

@@ -1,0 +1,10 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+test('final browser test must reject helper bytes other than published provenance', () => {
+  const browser = fs.readFileSync(path.join(__dirname, 'browser.test.cjs'), 'utf8');
+  assert.equal(browser.includes('86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055'), true,
+    'final browser test must reject helper bytes other than published provenance');
+});
