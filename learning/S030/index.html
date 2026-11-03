@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; frame-src 'none'; object-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S030 — Warm-up overload</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="warmup.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S030 — Warm-up overload</h1>
+    <p>Limit initialization concurrency so candidate preparation does not overwhelm shared dependencies.</p>
+  </header>
+  <main>
+    <section aria-labelledby="model-title">
+      <h2 id="model-title">One plan, two preparation strategies</h2>
+      <p>Compare starting every candidate at once with a bounded batch size. Existing GA journeys and initialization share a database and cache. No deployment, network call or traffic switch occurs.</p>
+      <ul>
+        <li>Each candidate takes exactly <strong>two synthetic ticks</strong> to initialize, using <strong>2 database + 1 cache units</strong> per tick. Batches do not overlap; failed initialization is not retried.</li>
+        <li>Four GA journeys arrive per tick, using <strong>4 database + 4 cache units</strong> in total. Overload means demand is strictly greater than capacity.</li>
+        <li>An overloaded tick fails all four journeys: <strong>250 ms</strong> instead of <strong>50 ms</strong>, against a <strong>100 ms</strong> budget. Candidates in that batch fail initialization at its completion boundary.</li>
+        <li>SUCCESS requires every candidate initialized, every journey within budget, and preparation within its tick budget. Missing observations produce UNKNOWN, not a pass.</li>
+      </ul>
+      <p>Worked exercise: six candidates with bound two, database eight, cache six and budget eight take six ticks safely; simultaneous preparation takes two ticks but overloads both dependencies. A bound of one protects journeys yet takes twelve ticks and misses the preparation budget.</p>
+      <p>Preconditions: isolated compatible candidates, a fixed four-journey baseline and sufficient GA capacity before preparation. These are fixture assumptions, not established Azure behavior. Different durations have different journey denominators; do not compare raw success counts as equal exposure.</p>
+    </section>
+
+    <section id="exercise" tabindex="-1" aria-labelledby="exercise-title">
+      <h2 id="exercise-title">Conduct the comparison</h2>
+      <form id="comparison-form" novalidate>
+        <div class="controls">
+          <div><label for="candidate-count">Candidates (2–12)</label><input id="candidate-count" type="number" min="2" max="12" step="1" value="6" required></div>
+          <div><label for="bounded-limit">Bounded initialization concurrency (1–candidate count)</label><input id="bounded-limit" type="number" min="1" max="12" step="1" value="2" required></div>
+          <div><label for="db-capacity">Database capacity units per tick (4–24)</label><input id="db-capacity" type="number" min="4" max="24" step="1" value="8" required></div>
+          <div><label for="cache-capacity">Cache capacity units per tick (4–20)</label><input id="cache-capacity" type="number" min="4" max="20" step="1" value="6" required></div>
+          <div><label for="init-budget">Initialization budget in ticks (2–24)</label><input id="init-budget" type="number" min="2" max="24" step="1" value="8" required></div>
+          <div><label for="observations">Synthetic observations</label><select id="observations"><option value="complete">Complete dependency, initialization and journey observations</option><option value="missing">Observations missing — outcome unknown</option></select></div>
+          <div><label for="prediction">Predict the bounded run outcome</label><select id="prediction"><option value="SUCCESS">SUCCESS — dependencies and both budgets satisfied</option><option value="FAILURE">FAILURE — overload or preparation budget exceeded</option><option value="UNKNOWN">UNKNOWN — observations missing</option></select></div>
+        </div>
+        <p><button id="check-comparison" type="submit">Check comparison</button> <button id="clear-history" type="button">Reset lesson and clear history</button></p>
+      </form>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <p id="status" role="status" aria-live="polite">Not run — no evidence yet.</p>
+      <div id="current-result" hidden>
+        <h3 id="bounded-outcome"></h3>
+        <p id="answer-verifier"></p>
+        <div id="current-comparison"></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained comparisons</h2>
+      <p id="history-count">0 / 8 comparisons</p>
+      <p>Changes invalidate the current display but retain earlier configurations, traces, failures and answers. Eight comparisons fit; a ninth requires explicit reset. History is memory-only and clears on reload or reset.</p>
+      <div id="history"></div>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Evidence limits</h2>
+      <p>PASS only checks your prediction. A predicted FAILURE remains a failed synthetic run. UNKNOWN is insufficient evidence. User impact: synthetic fixture only; real users UNMEASURED. No native Azure support, source-parent completion, production Node.js 24 qualification or five-nines claim.</p>
+      <p>Use Tab to reach controls, arrow keys for selections and Enter to check. Expand retained comparisons with Enter or Space. Reset clears all errors and evidence and returns focus to candidate count.</p>
+      <p><a href="README.md">Source contract, model assumptions and verification instructions</a></p>
+    </section>
+    <noscript>This lesson needs local JavaScript. No evidence has been collected.</noscript>
+  </main>
+</body>
+</html>

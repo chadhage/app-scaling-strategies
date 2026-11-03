@@ -1,0 +1,35 @@
+(function (root, factory) {
+  "use strict";
+  const api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  else root.S030 = api;
+}(typeof globalThis === "object" ? globalThis : this, function () {
+  "use strict";
+  const defaults = Object.freeze({
+    instances: 6, concurrency: 2, dbCapacity: 8, cacheCapacity: 6,
+    initBudget: 8, observations: "complete"
+  });
+  function initialState() { return { nextId: 1, runs: [] }; }
+  function emptyRun(mode) {
+    return {
+      mode, concurrency: 0, plannedTicks: 0, durationTicks: null,
+      budgetTicks: 0, withinBudget: null, outcome: "UNKNOWN",
+      dependencies: {
+        database: { capacity: 0, peakLoad: null, overloadedTicks: null },
+        cache: { capacity: 0, peakLoad: null, overloadedTicks: null }
+      },
+      initialization: { attempted: 0, success: 0, failure: 0, unknown: 0 },
+      journeys: {
+        attempted: 0, success: 0, failure: 0, unknown: 0,
+        budgetMs: 100, maxLatencyMs: null
+      },
+      trace: []
+    };
+  }
+  function analyze() {
+    return { simultaneous: emptyRun("simultaneous"), bounded: emptyRun("bounded") };
+  }
+  function recordRun(state) { return state; }
+  function validateState() { return true; }
+  return Object.freeze({ defaults, initialState, analyze, recordRun, validateState });
+}));
