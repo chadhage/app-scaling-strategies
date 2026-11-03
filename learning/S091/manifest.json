@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "A-S091",
+  "sourceId": "S091",
+  "parentId": "D-S091",
+  "kano": "S",
+  "kanoUnit": "A-S091",
+  "packet": "SC-S091",
+  "owner": "worker-A-S091",
+  "mode": "synthetic",
+  "title": "Candidate crashes during warm-up",
+  "objective": "Crash a warming candidate; distinguish safe abort from completed migration.",
+  "entry": "index.html",
+  "assets": ["index.html", "model.js", "app.js", "styles.css"],
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "technicalEntryGate": "SOURCE",
+  "preconditions": {
+    "oldDeployment": "fictional old-v1 epoch 1, 100% baseline routing",
+    "candidateDeployment": "fictional candidate-v2 epoch 2, WARMING at 0%",
+    "productionJourneysPerReplay": 3,
+    "requiredCandidateInstances": 2,
+    "originalJourneyBudgetMs": 250,
+    "requiredJourneyContract": ["session preserved", "saved state preserved", "one business effect", "original latency budget"],
+    "attemptLimit": 6
+  },
+  "actions": ["choose fixed candidate / operator-instruction trace", "choose expected conclusion", "rehearse and check", "inspect retained ledger and raw trace", "reset"],
+  "fixtures": ["guarded-crash", "forced-exposure", "production-regression", "missing-evidence", "healthy-migration"],
+  "assertions": [
+    "Warming crash blocks admission and visibly aborts before exposure.",
+    "Existing production must meet the original journey contract before a safe abort can pass.",
+    "Safe abort is not completed migration and an empty sample has no transition evidence.",
+    "Late recovery retains all earlier exposure and interrupted transitions.",
+    "Unknown started transitions remain counted without success credit.",
+    "Only the fully ready comparison observes successful candidate-version transition journeys.",
+    "Strict bounded state/input guards preserve immutable attempt history.",
+    "Keyboard/reset/error UX and enforced local CSP are verified in the actual browser."
+  ],
+  "sourceContract": "evidence/source-contract.json",
+  "bdd": "candidate-crash.feature",
+  "evidence": "evidence/verification-summary.json",
+  "iac": "N/A",
+  "limits": [
+    "Synthetic trace records only, including crash, gate bypass, readiness, abort and recovery.",
+    "No real process/resource fault, cloud, identity, credentials, management call, deployment or spend.",
+    "Existing Node22 / offline Playwright1.56.1 / signed installed Edge156 test tooling only.",
+    "Not production Node24, native B-S091, real readiness/abort/production continuity, D-S028 or D-S091 completion.",
+    "One frozen S unit; parent-only empirical acceptance and no extra testing/refinement credit."
+  ]
+}

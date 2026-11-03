@@ -1,0 +1,110 @@
+'use strict';
+
+(function start() {
+  const lesson = globalThis.S091Lesson;
+  const byId = (id) => document.getElementById(id);
+  const form = byId('lesson-form');
+  const fixture = byId('fixture');
+  const conclusion = byId('conclusion');
+  const run = byId('run-lesson');
+  const error = byId('input-error');
+  let session = lesson.createSession();
+  const text = (id, value) => { byId(id).textContent = String(value); };
+  const outcome = (id, value, initial) => {
+    text(id, value || initial);
+    byId(id).dataset.outcome = value || 'not-run';
+  };
+
+  function clearError() {
+    error.hidden = true;
+    error.textContent = '';
+  }
+
+  function render() {
+    const totals = lesson.summarize(session);
+    const latest = session.history.at(-1);
+    text('attempt-count', totals.attempts);
+    text('safe-abort-count', totals.safeAborts);
+    text('migration-count', totals.completedMigrations);
+    text('interrupted-run-count', totals.interruptedRuns);
+    text('unknown-run-count', totals.unknownRuns);
+    text('production-successes', totals.production.successes);
+    text('production-interruptions', totals.production.interruptions);
+    text('production-unknown', totals.production.unknown);
+    text('transition-attempts', totals.transitions.attempted);
+    text('transition-successes', totals.transitions.successes);
+    text('transition-interruptions', totals.transitions.interruptions);
+    text('transition-unknown', totals.transitions.unknown);
+    text('transition-rate', totals.transitions.successRate === null
+      ? 'No transition evidence' : `${(totals.transitions.successRate * 100).toFixed(2)}% of started synthetic transitions`);
+    run.disabled = totals.attempts >= lesson.LIMIT;
+    outcome('observed-outcome', latest?.outcome, 'Not run');
+    outcome('acceptance', latest?.acceptance, 'Not run');
+    outcome('conclusion-check', latest?.conclusionCheck, 'Not checked');
+    text('acceptance-reason', latest?.acceptanceReason || 'No source acceptance result is claimed before a rehearsal.');
+    text('conclusion-reason', latest?.conclusionReason || 'Choose the conclusion supported by the fixture observations.');
+    text('candidate-state', latest?.candidateState || 'WARMING · baseline only');
+    text('abort-status', latest?.abortStatus || 'Not attempted');
+    text('route-evidence', !latest ? 'Baseline fixture only'
+      : latest.effectiveRouting.observed ? 'Observed synthetic current routing' : 'Unverified; last-known baseline is not current evidence');
+    text('old-route', !latest ? '100%' : latest.effectiveRouting.oldPercent === null ? 'Unknown' : `${latest.effectiveRouting.oldPercent}%`);
+    text('candidate-route', !latest ? '0%' : latest.effectiveRouting.candidatePercent === null ? 'Unknown' : `${latest.effectiveRouting.candidatePercent}%`);
+    text('peak-exposure', !latest ? 'Not observed' : latest.peakCandidateExposure === null ? 'Unknown' : `${latest.peakCandidateExposure} synthetic journeys`);
+    text('retention', latest ? `old-v1: ${latest.retention.old}; candidate-v2: ${latest.retention.candidate}` : 'old-v1 serving; candidate-v2 not admitted · baseline only');
+    text('trace', latest ? JSON.stringify({
+      fixture: latest.input.fixture, readiness: latest.readiness, trace: latest.trace,
+      productionJourneys: latest.productionJourneys, transitionJourneys: latest.transitionJourneys,
+    }, null, 2) : 'No trace recorded. A click replays fixed teaching data; it never manipulates a real process or resource.');
+    const history = byId('history');
+    history.replaceChildren();
+    for (const record of session.history) {
+      const row = document.createElement('tr');
+      const transitioned = record.transitionJourneys;
+      const cells = [
+        record.attempt, record.input.fixture, record.outcome, record.acceptance, record.conclusionCheck,
+        `${transitioned.length} started / ${transitioned.filter((journey) => journey.outcome === 'success').length} succeeded / ${transitioned.filter((journey) => journey.outcome === 'failure').length} interrupted / ${transitioned.filter((journey) => journey.outcome === 'unknown').length} unknown`,
+        `${record.productionJourneys.filter((journey) => journey.outcome === 'failure').length} interrupted / ${record.productionJourneys.filter((journey) => journey.outcome === 'unknown').length} unknown`,
+        record.peakCandidateExposure === null ? 'Unknown' : record.peakCandidateExposure,
+      ];
+      for (const value of cells) {
+        const cell = document.createElement('td');
+        cell.textContent = String(value);
+        row.append(cell);
+      }
+      history.append(row);
+    }
+  }
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    try {
+      const next = lesson.runLesson(session, { fixture: fixture.value, conclusion: conclusion.value });
+      session = next;
+      clearError();
+      render();
+      text('lesson-status', `Attempt ${session.history.length} recorded. Earlier results remain retained.`);
+    } catch (failure) {
+      error.textContent = failure.message;
+      error.hidden = false;
+      text('lesson-status', 'Rejected; prior results and counters are unchanged.');
+      error.focus();
+    }
+  });
+
+  for (const select of [fixture, conclusion]) {
+    select.addEventListener('change', () => {
+      clearError();
+      text('lesson-status', 'Selection changed. Recorded history is retained until Reset rehearsal.');
+    });
+  }
+
+  byId('reset-lesson').addEventListener('click', () => {
+    session = lesson.resetSession(session);
+    HTMLFormElement.prototype.reset.call(form);
+    clearError();
+    render();
+    text('lesson-status', 'Reset complete. Defaults and the empty baseline are restored.');
+    fixture.focus();
+  });
+  render();
+}());

@@ -1,0 +1,15 @@
+'use strict';
+
+(function expose(root) {
+  function createSession() {
+    return Object.freeze({ schemaVersion: 1, history: Object.freeze([]) });
+  }
+
+  function runLesson(session) {
+    return session;
+  }
+
+  const api = Object.freeze({ createSession, runLesson });
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S091Lesson = api;
+}(typeof globalThis === 'object' ? globalThis : this));

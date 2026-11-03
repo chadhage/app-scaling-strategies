@@ -1,0 +1,27 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createSession, runLesson } = require('../model.js');
+
+test('the resource-free lesson API loads and starts with a frozen empty history', () => {
+  const session = createSession();
+  assert.equal(session.schemaVersion, 1);
+  assert.deepEqual(session.history, []);
+  assert.ok(Object.isFrozen(session));
+  assert.ok(Object.isFrozen(session.history));
+});
+
+test('warming crash is visibly aborted before exposure, without migration credit', () => {
+  const next = runLesson(createSession(), { fixture: 'guarded-crash', conclusion: 'safe-abort' });
+  assert.equal(next.history.length, 1, 'A warming crash must record one observable teaching attempt.');
+  const result = next.history[0];
+  assert.equal(result.outcome, 'safe-abort');
+  assert.equal(result.acceptance, 'pass');
+  assert.equal(result.conclusionCheck, 'pass');
+  assert.equal(result.peakCandidateExposure, 0);
+  assert.equal(result.transitionJourneys.length, 0);
+  assert.equal(result.completedMigration, false);
+  assert.equal(result.productionJourneys.filter((journey) => journey.outcome === 'success').length, 3);
+  assert.deepEqual(result.trace.map((event) => event.candidateState), ['WARMING', 'CRASHED', 'CRASHED', 'ABORTED']);
+});

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S091 · Candidate warm-up crash rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p id="training-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S091 · Candidate crashes during warm-up</h1>
+    <p><strong>A-S091 · D-S091 · SC-S091 · Kano S</strong></p>
+    <p>Crash a warming candidate; distinguish safe abort from completed migration. Every crash, gate, routing change and recovery below is a fictional trace record, never a real process or resource action.</p>
+
+    <section aria-labelledby="envelope-heading">
+      <h2 id="envelope-heading">Fixed preconditions and teaching envelope</h2>
+      <ul>
+        <li>Each click independently replays old-v1 epoch 1 at 100%, with candidate-v2 epoch 2 WARMING at 0%. No real clock, endpoints or users are involved.</li>
+        <li>Three production journeys retain session, saved state and exactly one effect within a fixed <strong>250 ms</strong> original end-to-end budget.</li>
+        <li>Candidate admission requires two ready instances plus fixed dependency, configuration, authentication, compatible-state and journey checks.</li>
+        <li>Six attempts maximum. Failed and unknown started transitions stay counted. Requests that never move off old-v1 are not successful migrations.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Conduct the rehearsal</h2>
+      <form id="lesson-form">
+        <div class="controls">
+          <label for="fixture">Candidate condition / operator instruction
+            <select id="fixture" aria-describedby="fixture-help">
+              <option value="guarded-crash" selected>Crash + honor admission gate</option>
+              <option value="forced-exposure">Crash + ignore gate (unsafe trace comparison)</option>
+              <option value="production-regression">Crash + abort, but production returns a slow 200</option>
+              <option value="missing-evidence">Crash + missing routing / journey observations</option>
+              <option value="healthy-migration">No crash + fully ready migration comparison</option>
+            </select>
+          </label>
+          <label for="conclusion">Your expected conclusion
+            <select id="conclusion" aria-describedby="conclusion-help">
+              <option value="safe-abort" selected>Safe abort before exposure</option>
+              <option value="completed-migration">Completed migration</option>
+              <option value="interrupted-transition">Interrupted transition / continuity failure</option>
+              <option value="unknown">Unknown / insufficient evidence</option>
+            </select>
+          </label>
+        </div>
+        <p id="fixture-help">The unsafe comparison is data showing what a bypass would cause. It does not execute or permit any real fault.</p>
+        <p id="conclusion-help">The observed outcome is independent of your choice. A correct negative-test conclusion does not make interrupted users successful.</p>
+        <div class="buttons">
+          <button id="run-lesson" type="submit">Rehearse and check</button>
+          <button id="reset-lesson" type="button">Reset rehearsal</button>
+        </div>
+        <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      </form>
+      <p id="lesson-status" role="status" aria-live="polite">Choose a fixture; no rehearsal has run.</p>
+      <p>Use Tab, select arrow keys, and Enter/Space. Reset clears memory-only history and returns focus to the first selector. Reload also clears the rehearsal.</p>
+    </section>
+
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Latest result: separate evidence from your conclusion</h2>
+      <div class="result-grid">
+        <article>
+          <h3>Observed outcome</h3>
+          <p id="observed-outcome" data-outcome="not-run">Not run</p>
+          <p>Candidate state: <strong id="candidate-state">WARMING · baseline only</strong></p>
+          <p>Abort record: <strong id="abort-status">Not attempted</strong></p>
+        </article>
+        <article>
+          <h3>Source safety acceptance</h3>
+          <p id="acceptance" data-outcome="not-run">Not run</p>
+          <p id="acceptance-reason">No source acceptance result is claimed before a rehearsal.</p>
+        </article>
+        <article>
+          <h3>Your conclusion check</h3>
+          <p id="conclusion-check" data-outcome="not-run">Not checked</p>
+          <p id="conclusion-reason">Choose the conclusion supported by the fixture observations.</p>
+        </article>
+      </div>
+      <p id="route-evidence">Baseline fixture only</p>
+      <p>Current old-v1 route: <strong id="old-route">100%</strong> · candidate-v2 route: <strong id="candidate-route">0%</strong></p>
+      <p>Peak candidate exposure: <strong id="peak-exposure">Not observed</strong></p>
+      <p id="retention">old-v1 serving; candidate-v2 not admitted · baseline only</p>
+    </section>
+
+    <section aria-labelledby="counts-heading">
+      <h2 id="counts-heading">Retained accounting across independent replays</h2>
+      <dl class="counts">
+        <div><dt>Attempts / 6</dt><dd id="attempt-count">0</dd></div>
+        <div><dt>Safe aborts</dt><dd id="safe-abort-count">0</dd></div>
+        <div><dt>Completed migrations</dt><dd id="migration-count">0</dd></div>
+        <div><dt>Interrupted runs</dt><dd id="interrupted-run-count">0</dd></div>
+        <div><dt>Unknown runs</dt><dd id="unknown-run-count">0</dd></div>
+      </dl>
+      <p>Old-v1 production journeys: <strong id="production-successes">0</strong> succeeded · <strong id="production-interruptions">0</strong> interrupted · <strong id="production-unknown">0</strong> unknown.</p>
+      <p>Started transitions: <strong id="transition-attempts">0</strong> total · <strong id="transition-successes">0</strong> succeeded · <strong id="transition-interruptions">0</strong> interrupted · <strong id="transition-unknown">0</strong> unknown.</p>
+      <p id="transition-rate">No transition evidence</p>
+      <p>A safe abort has zero completed migrations. A recovered route does not erase past exposure. This tiny, correlated synthetic sample is not five-nines proof.</p>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained attempt ledger</h2>
+      <div class="table-scroll" role="region" aria-label="Attempt ledger" tabindex="0">
+        <table>
+          <caption>Prior outcomes remain unchanged until explicit reset or reload.</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Fixture</th><th scope="col">Observed outcome</th><th scope="col">Safety</th><th scope="col">Conclusion</th><th scope="col">Transitions</th><th scope="col">Production</th><th scope="col">Peak exposure</th></tr></thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <details>
+      <summary>Inspect fixed readiness, lifecycle and client-observed trace data</summary>
+      <pre id="trace">No trace recorded.</pre>
+    </details>
+    <footer>
+      <p>No cloud, credentials, identity, backend, IaC, installation or deployment. CSP blocks connections, inline scripts, objects, frames and form navigation. Native B-S091, original D-S028 and source-parent D-S091 acceptance remain separate and incomplete.</p>
+      <p><a href="README.md">Source, exercise, evidence and remaining gates</a>. Educational material is provided AS IS; no Microsoft endorsement, support, certification or reliability guarantee.</p>
+    </footer>
+  </main>
+</body>
+</html>
