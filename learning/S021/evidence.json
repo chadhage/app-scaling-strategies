@@ -53,6 +53,8 @@
       "Required dependencies block on failed, missing, unknown, or ambiguous observations",
       "Missing/stale aggregate samples do not become extra blanket gates",
       "Empty or ambiguous declared required pools fail closed",
+      "Unspecified array entries in required pool or dependency identities fail closed rather than disappearing",
+      "Every trace event and rendered entry retains its own synthetic label",
       "Keyboard edits and independent expected-versus-observed prediction checks",
       "Separate verification, actual user-impact categories, cleanup, and native-proof limits"
     ],
@@ -67,6 +69,7 @@
     ]
   },
   "tdd": {
+    "initialAttemptRecord": "Original red/green captures below are preserved unchanged. Latest incremental regression results are in handoffContinuation.tdd.",
     "focusedTestCommand": "node --test --test-reporter=tap learning\\S021\\tests\\readiness.test.cjs",
     "red": {
       "stage": "After BDD and focused assertions, before readiness behavior implementation",
@@ -198,14 +201,16 @@
       "Earlier owned pages intermittently returned Page not found. Only newly force-opened private pages were used for recovery.",
       "A default click timed out waiting for stability. Successful regression clicks used locator.click({force:true}); real keyboard operations used page.keyboard.press without programmatic DOM event injection.",
       "The complete recorded preset/keyboard/optional-gate regression above used primaryVerifiedPageId. Preliminary successful safe-click/read checks also occurred on owned pages ef452b86-84a4-406a-b611-4525007a79af and 4a622eed-2f2a-482e-9cc3-6585b72b93f2.",
-      "A later viewport/reset browser probe returned Page not found. It is not counted as passed; no mobile-layout or browser-reset certification is claimed.",
+      "Original attempt: a later viewport/reset probe returned Page not found and was not counted as passed. The handoff continuation independently verified keyboard Reset below; mobile layout remains unverified.",
       "Resource Timing returned an empty list in this file context. It is not treated as an egress audit. The lesson has only local scripts/styles and connect-src 'none'."
     ],
-    "result": "Required interactive acceptance verified; optional viewport/reset browser check unverified"
+    "latestVerifiedPageId": "81662796-4971-47c4-b48c-cbd8cba2a842",
+    "continuationEvidencePath": "learning\\S021\\evidence\\handoff-browser.json",
+    "result": "Original interactive core evidence preserved; handoff continuation reloaded the page and verified keyboard Reset, malformed inputs, and individually synthetic trace labels. Mobile viewport remains unverified."
   },
   "verificationVerdict": {
     "result": "pass",
-    "scope": "Synthetic required-instance admission behavior, focused automated tests, and observed interactive core flows only",
+    "scope": "Synthetic required-instance admission behavior, malformed identity-contract fail-closed regression, individual synthetic trace labels, focused automated tests, and observed keyboard core/Reset flows only",
     "notAClaimOf": ["B-S021 native proof", "D-S021/source completion", "Actual user migration", "Uninterrupted transition", "Reliability certification", "Five-nines success"]
   },
   "publicationPreflightRecovery": {
@@ -241,7 +246,87 @@
     "persistentApplicationState": false,
     "retainedFiles": "Only the owned lesson, fixtures, tests, and evidence",
     "browser": "Private tool handles were intermittently evicted; no shared-tab navigation or global close was attempted",
-    "recovery": "Reset reconstructs the deterministic unready fixture; fixture construction is covered by node:test. Browser reset itself was not successfully observed."
+    "recovery": "Original browser Reset observation was incomplete. Handoff continuation successfully pressed Reset twice after custom inputs and compared controls, status, table, and trace; both restored the deterministic one-unready fixture."
+  },
+  "handoffContinuation": {
+    "handoffPath": ".git\\kanban-orchestrator\\handoff.json",
+    "handoffObserved": { "ready": true, "stoppedLessonWrites": true },
+    "claimCommand": ".\\.git\\kanban-orchestrator\\state.ps1 -Action Claim -CardId A-S021 -WorkerId worker-A-S021",
+    "claimExitCode": 0,
+    "preservedInitialModuleCommit": "c67cd424b11d9d860130b8a607cd673c057aec6f",
+    "stageOrder": [
+      "Inspect preserved BDD, current tests, source, contract, and existing evidence after atomic Claim.",
+      "Add BDD scenarios and four substantive Node built-in regression tests before changing implementation.",
+      "Capture genuine regression RED: 44 passing existing tests and four new failing assertions.",
+      "IaC explicitly N/A: no cloud resources, authentication, deployment, or generation.",
+      "Materialize sparse identity entries for validation; label every trace event and rendered trace line synthetic; update related lesson preconditions.",
+      "Capture focused GREEN and syntax checks, and reload the actual owned browser page for keyboard/Reset/invalid-data assertions.",
+      "Publish only incremental owned lesson changes through the unchanged serialized publisher; external final result supplies actual SHA/tag."
+    ],
+    "tdd": {
+      "command": "node --test --test-reporter=tap learning\\S021\\tests\\readiness.test.cjs",
+      "runtime": "Node.js v22.23.4",
+      "red": {
+        "startedAtUtc": "2026-11-03T09:24:23.8653823Z",
+        "finishedAtUtc": "2026-11-03T09:24:24.3170035Z",
+        "exitCode": 1,
+        "tests": 48,
+        "passed": 44,
+        "failed": 4,
+        "artifactPath": "learning\\S021\\evidence\\handoff-regression-red.txt",
+        "failingBehaviors": [
+          "A sparse required pool turned an unready candidate into an optional exclusion and allowed admission.",
+          "An entirely unspecified required pool allowed admission.",
+          "A sparse required dependency contract silently omitted an unspecified required check.",
+          "Trace events lacked individual synthetic executionMode provenance."
+        ],
+        "representativeFailures": ["true !== false", "trace.every(event => event.executionMode === synthetic) was false"],
+        "provenance": "Actual assertions against the preserved working implementation. No source was removed or reverted to manufacture RED; all 44 existing tests still passed."
+      },
+      "green": {
+        "startedAtUtc": "2026-11-03T09:25:35.0291781Z",
+        "finishedAtUtc": "2026-11-03T09:25:35.5581453Z",
+        "exitCode": 0,
+        "tests": 48,
+        "passed": 48,
+        "failed": 0,
+        "skipped": 0,
+        "artifactPath": "learning\\S021\\evidence\\handoff-regression-green.txt"
+      },
+      "syntaxChecks": {
+        "commands": [
+          "node --check learning\\S021\\readiness.js",
+          "node --check learning\\S021\\app.js",
+          "node --check learning\\S021\\fixtures.js"
+        ],
+        "exitCode": 0
+      },
+      "captureNormalization": "Both new TAP files preserve assertion results and runner counts. Local absolute repository prefixes are removed and runner-generated trailing whitespace is trimmed.",
+      "preservedOriginalEvidenceSha256": {
+        "learning\\S021\\evidence\\red.txt": "443b0914c3fb9e6bda895fd5e33ed48da67d542a5c22ebd6ce454a0c770da98f",
+        "learning\\S021\\evidence\\green.txt": "9d6874b6542c47ca98f0843d920f852fe700563e605f949926edc26dc0bbe7b9"
+      }
+    },
+    "browser": {
+      "evidencePath": "learning\\S021\\evidence\\handoff-browser.json",
+      "pageId": "81662796-4971-47c4-b48c-cbd8cba2a842",
+      "actualPageReloadedAfterFix": true,
+      "keyboardCore": "pass",
+      "keyboardResetAndRepeatedReset": "pass",
+      "missingEvidenceViaControls": "pass",
+      "malformedContractCasesViaBrowserModelApi": 9,
+      "individuallySyntheticTraceLabels": "pass",
+      "noPageErrorsOrNonlocalRequestsDuringObservedInteractions": "pass; bounded observation, not an egress audit"
+    },
+    "iac": {
+      "status": "N/A",
+      "reason": "The incremental fix remains entirely in the portable local SOURCE lesson. No cloud/IaC generation, credentials, management calls, framework approval, or resource deployment is involved."
+    },
+    "publication": {
+      "command": ".\\.git\\kanban-orchestrator\\publish.ps1 -CardId A-S021 -WorkerId worker-A-S021 -Paths @('learning\\S021') -Message '[A-S021][S][BDD,TDD,browser,evidence] Reject incomplete readiness contracts and label synthetic traces'",
+      "actualCommitAndTag": "Recorded by the publisher and the external A-S021-final.json result after publication; not guessed or self-referential here.",
+      "acceptance": "Controller review and acceptance only; no worker Done/Kano credit."
+    }
   },
   "limitations": [
     "All readiness inputs, dependency observations, identities, clocks, and traces are synthetic; no Azure endpoint or management API is contacted.",
@@ -249,7 +334,7 @@
     "The aggregate sample is intentionally not a required route-validation check; actual route correctness is unknown.",
     "One readiness snapshot does not prove a stable-readiness window, capacity, compatibility, authentication, user-journey continuity, or race-free real admission.",
     "Actual user impact remains unknown in all five interruption categories; no transition success percentage is computed.",
-    "Browser-tool handle/stability limitations and the unverified optional viewport/reset probe are recorded above.",
+    "Original browser handle/stability limitations are preserved above. The continuation verified keyboard Reset, while mobile viewport and alternate-browser checks remain unverified.",
     "Controller review/acceptance is separate from worker publication. No completion credit is self-awarded."
   ]
 }

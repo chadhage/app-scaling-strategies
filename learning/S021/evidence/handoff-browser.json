@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S021",
+  "workerId": "worker-A-S021",
+  "executionMode": "synthetic",
+  "format": "Condensed record of assertions executed through actual browser tools, not a screenshot or a raw tool transcript.",
+  "pagePath": "learning\\S021\\index.html",
+  "pageId": "81662796-4971-47c4-b48c-cbd8cba2a842",
+  "openCommand": "openBrowserPage with forceNew=true and the file URL for pagePath; the local absolute user prefix is omitted.",
+  "tools": ["openBrowserPage", "runPlaywrightCode"],
+  "isolation": "Retained the worker's own forceNew pageId from preflight and reloaded that same page after handoff and again after the fix. No shared tab, global navigation, or browser close was used.",
+  "keyboardMethod": "Scoped Playwright focus followed by actual page.keyboard.press calls. No select value assignments or synthetic DOM-event dispatch were used for UI checks.",
+  "beforeFix": {
+    "command": "page.reload(); evaluate S021Readiness.evaluatePool on a one-unready fixture after delete input.requiredCandidateIds[1]",
+    "expectedAdmission": "BLOCK",
+    "observedAdmission": "ALLOW",
+    "observedCandidateB": {
+      "required": false,
+      "state": "not_ready",
+      "evidenceState": "unready",
+      "ageMs": 5000
+    },
+    "contractInvalidEventPresent": false,
+    "allTraceEventsIndividuallySynthetic": false,
+    "result": "Reproduced the unsafe required-contract omission before implementation."
+  },
+  "reloadedKeyboardRegression": {
+    "capturedAtUtc": "2026-11-03T09:25:34.969Z",
+    "command": "page.reload(); focus each named preset and press Enter; use Home/ArrowDown/Tab/Enter on instance, condition, and prediction controls; assert rendered DOM after each action.",
+    "assertions": [
+      "All required fresh-ready starts with ALLOW.",
+      "Select candidate-b and Unready by keyboard; Tab reaches apply-condition; Enter changes admission to BLOCK and the row to Not ready.",
+      "The unchanged ALLOW prediction reports FAIL rather than overriding the BLOCK gate.",
+      "Home on expected admission, Tab, Enter changes verification to PASS for expected BLOCK and observed BLOCK.",
+      "Stale required evidence starts with BLOCK; candidate-b shows age 30001 ms and current readiness Unknown.",
+      "Healthy sample only starts with BLOCK while the aggregate sample remains healthy and candidate-b/c show Unknown.",
+      "Every rendered trace entry starts with synthetic followed by the separator.",
+      "The exact training/synthetic/not-live banner is visible.",
+      "Request/pageerror listeners spanning reload and these actions assert no non-file request protocols and no page errors."
+    ],
+    "result": "pass"
+  },
+  "resetAndInvalidEvidenceControls": {
+    "capturedAtUtc": "2026-11-03T09:26:21.438Z",
+    "command": "Use Enter on the all-ready preset; End/ArrowUp/Tab/Enter selects and applies Missing evidence. Then customize optional candidate, sample, dependency, and prediction controls, press Enter on Reset exercise twice, and compare complete semantic DOM snapshots.",
+    "missingRequiredEvidenceBlocked": true,
+    "missingOptionalEvidenceAllowed": true,
+    "missingAggregateSampleNotABlanketVeto": true,
+    "wrongPredictionDidNotOverrideAdmission": true,
+    "keyboardReset": true,
+    "repeatedResetIdentical": true,
+    "resetControls": {
+      "instance": "candidate-b",
+      "condition": "unready",
+      "sample": "healthy",
+      "optional": "failed",
+      "expected": "BLOCK"
+    },
+    "resetAssertions": [
+      "PASS for expected BLOCK and observed BLOCK.",
+      "Table restores fresh unready candidate-b and failed optional candidate-shadow.",
+      "Controls, live result, table, and trace are identical after both Resets; the evaluation audit counter is intentionally outside this semantic comparison.",
+      "All 14 reset trace entries retain individual synthetic labels."
+    ],
+    "pageErrorsObserved": 0,
+    "nonLocalRequestsObserved": 0,
+    "result": "pass"
+  },
+  "malformedInputRegression": {
+    "capturedAtUtc": "2026-11-03T09:26:39.613Z",
+    "command": "page.evaluate calls the loaded S021Readiness.evaluatePool API for each malformed fixture; throw unless admission is BLOCK, the expected event exists, and all trace events have executionMode=synthetic.",
+    "scope": "Actual browser-exported model API, not unsupported UI input. Malformed contract declarations are not selectable through the learner controls.",
+    "cases": [
+      { "input": "absent input", "admission": "BLOCK", "event": "contract.invalid" },
+      { "input": "sparse required pool with an unready omitted candidate", "admission": "BLOCK", "event": "contract.invalid" },
+      { "input": "entirely unspecified required pool", "admission": "BLOCK", "event": "contract.invalid" },
+      { "input": "sparse required dependency contract", "admission": "BLOCK", "event": "contract.invalid" },
+      { "input": "null required identity", "admission": "BLOCK", "event": "contract.invalid" },
+      { "input": "duplicate required identity", "admission": "BLOCK", "event": "contract.invalid" },
+      { "input": "string observation timestamp", "admission": "BLOCK", "event": "candidate.clock" },
+      { "input": "missing required record", "admission": "BLOCK", "event": "candidate.missing-record" },
+      { "input": "wrong deployment identity", "admission": "BLOCK", "event": "candidate.identity" }
+    ],
+    "allTraceEventsIndividuallySynthetic": true,
+    "result": "pass"
+  },
+  "observedSafetyAndOutcomes": {
+    "csp": "default-src 'none'; connect-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'",
+    "scriptSources": ["readiness.js", "fixtures.js", "app.js"],
+    "passwordFields": 0,
+    "impact": "Unknown — 0 actual transitions observed; no success rate calculated. No migration was performed.",
+    "cleanup": "LOCAL ONLY — 0 resources created; 0 deleted; no stored state or remote cleanup. Reset restores the fixture, not an Azure environment.",
+    "iac": "N/A"
+  },
+  "limitations": [
+    "Synthetic local file rehearsal only: no live Azure, native B-S021, real-user, route-correctness, or reliability proof.",
+    "Malformed contract cases exercised the browser-loaded model API; missing evidence and Reset were also exercised through actual keyboard-operated learner controls.",
+    "Observed request/error assertions cover only this page reload and the recorded interactions, not an operating-system-wide egress audit.",
+    "No mobile viewport, alternate browser, or screenshot claim is made."
+  ]
+}

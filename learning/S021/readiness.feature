@@ -99,6 +99,24 @@ Feature: Admit only a completely evidenced required candidate pool
     Then admission is "BLOCK"
     And the trace reports an invalid required-pool contract
 
+  Scenario Outline: An unspecified required identity cannot silently disappear
+    Given the named required candidates otherwise have fresh ready evidence
+    When the <declaration> contains an unspecified array entry
+    Then admission is "BLOCK"
+    And the trace includes "contract.invalid"
+    And the unspecified entry is not treated as an optional exclusion
+
+    Examples:
+      | declaration                  |
+      | required routing pool        |
+      | required dependency contract |
+
+  Scenario: Every trace entry keeps its synthetic provenance when copied
+    When any synthetic scenario is evaluated
+    Then every trace event has executionMode "synthetic"
+    And every rendered trace entry starts with "synthetic"
+    And sequence numbers remain contiguous from 1
+
   Scenario: Keyboard editing changes the observed verdict and prediction check
     Given the all-required-fresh-ready preset is selected
     When I use labeled keyboard-operable controls to select candidate-b

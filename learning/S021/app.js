@@ -48,7 +48,7 @@
       return row;
     }));
     byId("trace").replaceChildren(...result.trace.map((event) =>
-      textElement("li", `${event.code} · ${event.subject} · ${event.detail}`)));
+      textElement("li", `${event.executionMode} · ${event.code} · ${event.subject} · ${event.detail}`)));
     byId("impact-summary").textContent = "Unknown — 0 actual transitions observed; no success rate calculated. No migration was performed.";
     byId("model-effect").textContent = result.allowAdmission ?
       "Model effect: the required pool is eligible only within this readiness contract. No users are routed; route correctness and real health remain unknown." :

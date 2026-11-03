@@ -218,6 +218,39 @@ for (const [name, update] of [
   });
 }
 
+test("a gap in the required pool cannot turn an unready candidate into an optional exclusion", () => {
+  const input = pool();
+  input.candidates[1].evidence.state = "unready";
+  delete input.requiredCandidateIds[1];
+  const result = evaluatePool(input);
+  assert.equal(result.allowAdmission, false);
+  assert.ok(hasEvent(result, "contract.invalid"));
+});
+
+test("an entirely unspecified required pool is not vacuously ready", () => {
+  const input = pool();
+  input.requiredCandidateIds = new Array(1);
+  const result = evaluatePool(input);
+  assert.equal(result.allowAdmission, false);
+  assert.ok(hasEvent(result, "contract.invalid"));
+});
+
+test("a gap in the required dependency contract cannot silently remove a required check", () => {
+  const input = pool();
+  input.requiredDependencyIds.length += 1;
+  const result = evaluatePool(input);
+  assert.equal(result.allowAdmission, false);
+  assert.ok(hasEvent(result, "contract.invalid"));
+});
+
+test("every ordered trace event explicitly retains synthetic provenance", () => {
+  const result = evaluatePool(pool());
+  assert.ok(result.trace.length > 0);
+  assert.ok(result.trace.every((event) => event.executionMode === "synthetic"));
+  assert.deepEqual(result.trace.map((event) => event.sequence),
+    result.trace.map((_, index) => index + 1));
+});
+
 test("actual user impact remains unknown in all five interruption categories", () => {
   const result = evaluatePool(pool());
   assert.deepEqual(result.userImpact.categories.map((entry) => entry.id),

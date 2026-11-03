@@ -11,7 +11,7 @@
 
   function validIds(value, allowEmpty) {
     return Array.isArray(value) && (allowEmpty || value.length > 0) &&
-      value.every((id) => typeof id === "string" && id.trim().length > 0) &&
+      [...value].every((id) => typeof id === "string" && id.trim().length > 0) &&
       new Set(value).size === value.length;
   }
 
@@ -20,7 +20,7 @@
     const trace = [];
     const blockingReasons = [];
     const record = (code, subject, detail) => {
-      trace.push({ sequence: trace.length + 1, code, subject, detail });
+      trace.push({ sequence: trace.length + 1, executionMode: "synthetic", code, subject, detail });
     };
     const requiredIds = Array.isArray(input.requiredCandidateIds) ?
       input.requiredCandidateIds.filter((id) => typeof id === "string" && id.trim()) : [];
