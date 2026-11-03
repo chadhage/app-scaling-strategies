@@ -1,0 +1,42 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S027 = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const LIMITS = Object.freeze({ runs: 8, revisions: 32 });
+  function createSession() {
+    return {
+      schemaVersion: 1,
+      revision: 0,
+      config: { fixture: 'error-500', prediction: 'HOLD' },
+      history: [],
+    };
+  }
+  function evaluate(config) {
+    return {
+      fixture: config.fixture,
+      response: { status: 200, location: null, body: null },
+      checks: { status: 'SUCCESS', business: 'SUCCESS' },
+      counts: { success: 2, failure: 0, unknown: 0 },
+      readiness: 'SUCCESS',
+      decision: 'ADMIT',
+      prediction: config.prediction,
+      verifier: 'PASS',
+      trace: ['Synthetic stub: accepts any health response.'],
+      syntheticUsersMoved: 0,
+      realJourneys: 'UNMEASURED',
+    };
+  }
+  function configure(state, config) {
+    return { ...state, config: { ...config } };
+  }
+  function conduct(state) {
+    return { ...state };
+  }
+  function validateSession() {
+    return true;
+  }
+  return Object.freeze({ LIMITS, createSession, evaluate, configure, conduct, validateSession });
+}));

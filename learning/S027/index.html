@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S027 — False-positive health response</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="probe.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S027 — False-positive health response</h1>
+    <p>Reject an error, redirect, or misleading 200 before candidate eligibility.
+      A healthy-looking response is not proof of a working business path.</p>
+    <p>Card A-S027 · parent D-S027 · packet SC-S027 · one frozen S unit</p>
+  </header>
+  <main>
+    <section aria-labelledby="instructions-title">
+      <h2 id="instructions-title">The contract, not just “HTTP 200”</h2>
+      <p>Only the <strong>original status 200 AND a matching business payload</strong>
+        permit eligibility. The payload must have <code>ready: true</code>,
+        <code>candidate: "candidate-v2"</code> and <code>profileId: "training-profile"</code>.
+        Redirects are not followed; absent evidence is unknown, never success.</p>
+      <ol>
+        <li>Choose 500, redirect, or misleading 200. Predict HOLD, then check.</li>
+        <li>For misleading 200, predict ADMIT. The wrong answer fails; the gate still holds.</li>
+        <li>Compare the valid 200 control and the 200 with unobserved business evidence.</li>
+      </ol>
+      <p>Preconditions: one fixed candidate, isolated synthetic profile, two assertions per check.
+        No server, subscription, sign-in or setup is needed. No real network probe occurs.</p>
+    </section>
+
+    <form id="exercise" tabindex="-1" aria-labelledby="exercise-title" novalidate>
+      <h2 id="exercise-title">Conduct the synthetic check</h2>
+      <label for="fixture">Probe fixture</label>
+      <select id="fixture" name="fixture" aria-describedby="fixture-help">
+        <option value="error-500">500 — error response</option>
+        <option value="redirect-302">302 — redirect to sign-in</option>
+        <option value="misleading-200">200 — misleading ready flag, wrong profile</option>
+        <option value="ready-200">200 — valid status and business payload</option>
+        <option value="unobserved-200">200 — business evidence unobserved</option>
+      </select>
+      <p id="fixture-help">Finite recorded values only. These choices do not call an endpoint.</p>
+      <label for="prediction">Predict eligibility</label>
+      <select id="prediction" name="prediction">
+        <option value="HOLD">HOLD — do not admit the candidate</option>
+        <option value="ADMIT">ADMIT — both assertions should pass</option>
+      </select>
+      <div class="actions">
+        <button id="check-candidate" type="submit">Check candidate</button>
+        <button id="clear-session" type="button">Reset lesson and history</button>
+      </div>
+      <p id="problem" role="alert" tabindex="-1" hidden></p>
+      <p id="session-status" role="status" aria-live="polite">No checks yet. Eight runs and 32 setting changes maximum.</p>
+    </form>
+
+    <section id="result" aria-labelledby="result-title" hidden>
+      <h2 id="result-title" tabindex="-1">Current synthetic result</h2>
+      <p id="verdict" role="status" aria-live="polite"></p>
+      <dl>
+        <dt>Original HTTP status</dt><dd id="response-status"></dd>
+        <dt>Strict status assertion</dt><dd id="status-check"></dd>
+        <dt>Business assertion</dt><dd id="business-check"></dd>
+        <dt>Readiness</dt><dd id="readiness"></dd>
+        <dt>Eligibility gate</dt><dd id="gate"></dd>
+        <dt>Prediction verifier</dt><dd id="prediction-verifier"></dd>
+      </dl>
+      <p>Two synthetic assertions: success <strong id="success-count"></strong>,
+        failure <strong id="failure-count"></strong>,
+        unknown <strong id="unknown-count"></strong>.</p>
+      <h3>Synthetic original response</h3>
+      <pre id="raw-response"></pre>
+      <h3>Synthetic decision trace</h3>
+      <ol id="trace"></ol>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained synthetic history</h2>
+      <p>Prior failures, unknowns, answers and traces stay until explicit reset or page reload.
+        A ninth check is rejected without eviction. Changing settings invalidates only the current result.</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Synthetic history, horizontally scrollable">
+        <table>
+          <caption id="history-count">0 / 8 retained checks</caption>
+          <thead><tr><th scope="col">Run</th><th scope="col">Fixture / original status</th>
+            <th scope="col">Status / business</th><th scope="col">Success / failure / unknown</th>
+            <th scope="col">Readiness / gate</th><th scope="col">Prediction / verifier</th>
+            <th scope="col">Retained trace</th></tr></thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">What this does not prove</h2>
+      <p id="impact">Existing synthetic routing: v1 100%, v2 0% (fixture invariant).
+        Synthetic users moved: 0. Real user journeys: UNMEASURED, zero attempts.</p>
+      <p>ADMIT means eligibility only, not a performed promotion. PASS means your prediction
+        matched the gate, not a successful migration. A correct rejection is a safe hold,
+        not uninterrupted user transition. Zero attempts cannot prove reliability.</p>
+      <p>Memory-only lesson; reset/reload clears it. No Azure operations, credentials, IaC,
+        identity registration, deployment, expenditure, production Node24 validation,
+        native-host proof, completed D-S027 or five-nines claim.</p>
+      <p>Use Tab, arrow keys and Enter. Reset restores the first fixture and focuses it.
+        Errors receive focus. The CSP blocks connections and inline scripts/handlers.</p>
+    </section>
+  </main>
+  <footer>
+    <a href="../../README.md#c-readiness-and-warm-up">Source S027</a> ·
+    <a href="../../.docs/wiki/backlog.md#c-readiness-and-warm-up">Backlog D-S027</a> ·
+    <a href="README.md">Lesson instructions and evidence</a> ·
+    <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft Open Source Disclaimer</a>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S027",
+  "packet": "SC-S027",
+  "mode": "synthetic",
+  "startedAtUtc": "2026-11-03T17:21:08.274Z",
+  "helper": "testing\\browser\\isolated.cjs",
+  "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "helperPublishedCommit": "53c0c0d",
+  "checks": [
+    {
+      "name": "exact banner, native controls and keyboard skip link load",
+      "verifier": "PASS",
+      "observed": {
+        "title": "S027 — False-positive health response",
+        "banner": "Training rehearsal - synthetic data - not a live Azure result",
+        "checks": 0
+      }
+    },
+    {
+      "name": "500 fails original status, leaves business unknown, predicts safe hold",
+      "verifier": "PASS",
+      "observed": {
+        "verdict": "Synthetic readiness FAILURE; eligibility HOLD; prediction PASS. No promotion performed.",
+        "counts": [
+          "0",
+          "1",
+          "1"
+        ],
+        "trace": "Synthetic fixture error-500; no HTTP request was made.Original status 500; redirects are not followed.Strict status assertion: FAILURE; only original status 200 is accepted.Business assertion: UNKNOWN; not evaluated after rejected status.HOLD: synthetic eligibility only; no promotion or user migration is performed."
+      }
+    },
+    {
+      "name": "arrow-key 302 selection rejects the redirect without navigating",
+      "verifier": "PASS",
+      "observed": {
+        "originalStatus": "302",
+        "trace": "Synthetic fixture redirect-302; no HTTP request was made.Original status 302; redirects are not followed (Location /sign-in).Strict status assertion: FAILURE; only original status 200 is accepted.Business assertion: UNKNOWN; not evaluated after rejected status.HOLD: synthetic eligibility only; no promotion or user migration is performed.",
+        "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/learning/S027/index.html#exercise"
+      }
+    },
+    {
+      "name": "misleading 200 rejects wrong profile even when the learner predicts ADMIT",
+      "verifier": "PASS",
+      "observed": {
+        "verdict": "Synthetic readiness FAILURE; eligibility HOLD; prediction FAIL. No promotion performed.",
+        "rawResponse": "{\n  \"status\": 200,\n  \"location\": null,\n  \"body\": {\n    \"ready\": true,\n    \"candidate\": \"candidate-v2\",\n    \"profileId\": \"wrong-profile\"\n  }\n}"
+      }
+    },
+    {
+      "name": "valid 200 passes both assertions without reporting a performed promotion",
+      "verifier": "PASS",
+      "observed": {
+        "verdict": "Synthetic readiness SUCCESS; eligibility ADMIT; prediction PASS. No promotion performed.",
+        "impact": "Existing synthetic routing: v1 100%, v2 0% (fixture invariant).\n        Synthetic users moved: 0. Real user journeys: UNMEASURED, zero attempts."
+      }
+    },
+    {
+      "name": "unobserved business response remains UNKNOWN and holds eligibility",
+      "verifier": "PASS",
+      "observed": {
+        "verdict": "Synthetic readiness UNKNOWN; eligibility HOLD; prediction PASS. No promotion performed.",
+        "counts": [
+          "1",
+          "0",
+          "1"
+        ]
+      }
+    },
+    {
+      "name": "settings invalidate only current output and retain prior configurations and failed answers",
+      "verifier": "PASS",
+      "observed": {
+        "retainedChecks": 5,
+        "currentInvalidated": true,
+        "historyText": "1error-500 / 500FAILURE / UNKNOWN0 / 1 / 1FAILURE / HOLDHOLD / PASSRun 1 synthetic trace{\n  \"run\": 1,\n  \"revision\": 0,\n  \"config\": {\n    \"fixture\": \"error-500\",\n    \"prediction\": \"HOLD\"\n  },\n  \"result\": {\n    \"fixture\": \"error-500\",\n    \"response\": {\n      \"status\": 500,\n      \"location\": null,\n      \"body\": {\n        \"error\": \"synthetic-unavailable\"\n      }\n    },\n    \"checks\": {\n      \"status\": \"FAILURE\",\n      \"business\": \"UNKNOWN\"\n    },\n    \"counts\": {\n      \"success\": 0,\n      \"failure\": 1,\n      \"unknown\": 1\n    },\n    \"readiness\": \"FAILURE\",\n    \"decision\": \"HOLD\",\n    \"prediction\": \"HOLD\",\n    \"verifier\": \"PASS\",\n    \"trace\": [\n      \"Synthetic fixture error-500; no HTTP request was made.\",\n      \"Original status 500; redirects are not followed.\",\n      \"Strict status assertion: FAILURE; only original status 200 is accepted.\",\n      \"Business assertion: UNKNOWN; not evaluated after rejected status.\",\n      \"HOLD: synthetic eligibility only; no promotion or user migration is performed.\"\n    ],\n    \"syntheticUsersMoved\": 0,\n    \"realJourneys\": \"UNMEASURED\"\n  }\n}2redirect-302 / 302FAILURE / UNKNOWN0 / 1 / 1FAILURE / HOLDHOLD / PASSRun 2 synthetic trace{\n  \"run\": 2,\n  \"revision\": 1,\n  \"config\": {\n    \"fixture\": \"redirect-302\",\n    \"prediction\": \"HOLD\"\n  },\n  \"result\": {\n    \"fixture\": \"redirect-302\",\n    \"response\": {\n      \"status\": 302,\n      \"location\": \"/sign-in\",\n      \"body\": null\n    },\n    \"checks\": {\n      \"status\": \"FAILURE\",\n      \"business\": \"UNKNOWN\"\n    },\n    \"counts\": {\n      \"success\": 0,\n      \"failure\": 1,\n      \"unknown\": 1\n    },\n    \"readiness\": \"FAILURE\",\n    \"decision\": \"HOLD\",\n    \"prediction\": \"HOLD\",\n    \"verifier\": \"PASS\",\n    \"trace\": [\n      \"Synthetic fixture redirect-302; no HTTP request was made.\",\n      \"Original status 302; redirects are not followed (Location /sign-in).\",\n      \"Strict status assertion: FAILURE; only original status 200 is accepted.\",\n      \"Business assertion: UNKNOWN; not evaluated after rejected status.\",\n      \"HOLD: synthetic eligibility only; no promotion or user migration is performed.\"\n    ],\n    \"syntheticUsersMoved\": 0,\n    \"realJourneys\": \"UNMEASURED\"\n  }\n}3misleading-200 / 200SUCCESS / FAILURE1 / 1 / 0FAILURE / HOLDADMIT / FAILRun 3 synthetic trace{\n  \"run\": 3,\n  \"revision\": 3,\n  \"config\": {\n    \"fixture\": \"misleading-200\",\n    \"prediction\": \"ADMIT\"\n  },\n  \"result\": {\n    \"fixture\": \"misleading-200\",\n    \"response\": {\n      \"status\": 200,\n      \"location\": null,\n      \"body\": {\n        \"ready\": true,\n        \"candidate\": \"candidate-v2\",\n        \"profileId\": \"wrong-profile\"\n      }\n    },\n    \"checks\": {\n      \"status\": \"SUCCESS\",\n      \"business\": \"FAILURE\"\n    },\n    \"counts\": {\n      \"success\": 1,\n      \"failure\": 1,\n      \"unknown\": 0\n    },\n    \"readiness\": \"FAILURE\",\n    \"decision\": \"HOLD\",\n    \"prediction\": \"ADMIT\",\n    \"verifier\": \"FAIL\",\n    \"trace\": [\n      \"Synthetic fixture misleading-200; no HTTP request was made.\",\n      \"Original status 200; redirects are not followed.\",\n      \"Strict status assertion: SUCCESS; only original status 200 is accepted.\",\n      \"Business assertion: FAILURE; ready=true AND candidate=candidate-v2 AND profileId=training-profile required.\",\n      \"HOLD: synthetic eligibility only; no promotion or user migration is performed.\"\n    ],\n    \"syntheticUsersMoved\": 0,\n    \"realJourneys\": \"UNMEASURED\"\n  }\n}4ready-200 / 200SUCCESS / SUCCESS2 / 0 / 0SUCCESS / ADMITADMIT / PASSRun 4 synthetic trace{\n  \"run\": 4,\n  \"revision\": 4,\n  \"config\": {\n    \"fixture\": \"ready-200\",\n    \"prediction\": \"ADMIT\"\n  },\n  \"result\": {\n    \"fixture\": \"ready-200\",\n    \"response\": {\n      \"status\": 200,\n      \"location\": null,\n      \"body\": {\n        \"ready\": true,\n        \"candidate\": \"candidate-v2\",\n        \"profileId\": \"training-profile\"\n      }\n    },\n    \"checks\": {\n      \"status\": \"SUCCESS\",\n      \"business\": \"SUCCESS\"\n    },\n    \"counts\": {\n      \"success\": 2,\n      \"failure\": 0,\n      \"unknown\": 0\n    },\n    \"readiness\": \"SUCCESS\",\n    \"decision\": \"ADMIT\",\n    \"prediction\": \"ADMIT\",\n    \"verifier\": \"PASS\",\n    \"trace\": [\n      \"Synthetic fixture ready-200; no HTTP request was made.\",\n      \"Original status 200; redirects are not followed.\",\n      \"Strict status assertion: SUCCESS; only original status 200 is accepted.\",\n      \"Business assertion: SUCCESS; ready=true AND candidate=candidate-v2 AND profileId=training-profile required.\",\n      \"ADMIT: synthetic eligibility only; no promotion or user migration is performed.\"\n    ],\n    \"syntheticUsersMoved\": 0,\n    \"realJourneys\": \"UNMEASURED\"\n  }\n}5unobserved-200 / 200SUCCESS / UNKNOWN1 / 0 / 1UNKNOWN / HOLDHOLD / PASSRun 5 synthetic trace{\n  \"run\": 5,\n  \"revision\": 6,\n  \"config\": {\n    \"fixture\": \"unobserved-200\",\n    \"prediction\": \"HOLD\"\n  },\n  \"result\": {\n    \"fixture\": \"unobserved-200\",\n    \"response\": {\n      \"status\": 200,\n      \"location\": null,\n      \"body\": null\n    },\n    \"checks\": {\n      \"status\": \"SUCCESS\",\n      \"business\": \"UNKNOWN\"\n    },\n    \"counts\": {\n      \"success\": 1,\n      \"failure\": 0,\n      \"unknown\": 1\n    },\n    \"readiness\": \"UNKNOWN\",\n    \"decision\": \"HOLD\",\n    \"prediction\": \"HOLD\",\n    \"verifier\": \"PASS\",\n    \"trace\": [\n      \"Synthetic fixture unobserved-200; no HTTP request was made.\",\n      \"Original status 200; redirects are not followed.\",\n      \"Strict status assertion: SUCCESS; only original status 200 is accepted.\",\n      \"Business assertion: UNKNOWN; body unobserved, not successful.\",\n      \"HOLD: synthetic eligibility only; no promotion or user migration is performed.\"\n    ],\n    \"syntheticUsersMoved\": 0,\n    \"realJourneys\": \"UNMEASURED\"\n  }\n}"
+      }
+    },
+    {
+      "name": "forged DOM fixture is rejected with a focused alert and reset recovers",
+      "verifier": "PASS",
+      "observed": {
+        "focusedError": "Check blocked: Config fixture is unsupported.",
+        "afterReset": "Lesson reset. History and errors cleared; defaults restored."
+      }
+    },
+    {
+      "name": "ninth check is rejected without evicting any of eight retained failures",
+      "verifier": "PASS",
+      "observed": {
+        "checks": 8,
+        "rejection": "Check blocked: Run limit eight (8) reached; reset to continue. No history was evicted."
+      }
+    },
+    {
+      "name": "retained traces and repeated reset are keyboard operable without reset shadowing",
+      "verifier": "PASS",
+      "observed": {
+        "resetIsNativeMethod": true,
+        "keyboardDetailsOpened": true,
+        "retainedAfterReset": 0
+      }
+    },
+    {
+      "name": "actual CSP blocks inline code, inline handlers and fetch before the route guard",
+      "verifier": "PASS",
+      "observed": {
+        "inlineRan": false,
+        "handlerRan": false,
+        "violations": [
+          {
+            "directive": "script-src-elem",
+            "blockedURI": "inline"
+          },
+          {
+            "directive": "script-src-attr",
+            "blockedURI": "inline"
+          },
+          {
+            "directive": "connect-src",
+            "blockedURI": "https://example.invalid/s027-csp"
+          }
+        ],
+        "connection": "TypeError",
+        "nonFileRequestsReachedGuard": 0
+      }
+    },
+    {
+      "name": "narrow viewport preserves controls, local resources and an error-free lesson",
+      "verifier": "PASS",
+      "observed": {
+        "viewport": 375,
+        "documentWidth": 375,
+        "resources": [],
+        "frameCount": 0
+      }
+    }
+  ],
+  "pageErrors": [],
+  "nonFileRequestsReachedGuard": 0,
+  "cleanup": "AWAITED_CLOSE_RESOLVED",
+  "browserVersion": "156.0.4314.50",
+  "completedAtUtc": "2026-11-03T17:21:10.922Z",
+  "verifier": "PASS"
+}
