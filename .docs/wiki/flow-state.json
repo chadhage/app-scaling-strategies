@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 551,
+  "revision": 556,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-03T20:28:48.0964082Z",
+  "updatedAtUtc": "2026-11-03T20:30:51.5096188Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -38,9 +38,9 @@
     "packet": "s_p >= 6 * (l_p + rlp + 1), with all six named distinct companions Done"
   },
   "kanoDone": {
-    "L": 0,
-    "S": 87,
-    "D": 2
+    "S": 88,
+    "D": 2,
+    "L": 0
   },
   "reservations": {
     "D": 0,
@@ -15347,10 +15347,10 @@
       "parents": [
         "D-S072"
       ],
-      "state": "In Progress",
+      "state": "Done",
       "readiness": false,
       "owner": "worker-A-S072",
-      "blocker": "Published; controller empirical review and acceptance pending.",
+      "blocker": null,
       "result": {
         "cardId": "A-S072",
         "workerId": "worker-A-S072",
@@ -15429,7 +15429,34 @@
       },
       "admittedAtUtc": "2026-11-03T20:04:20.5856141Z",
       "authorization": "local-synthetic-only",
-      "claimedAtUtc": "2026-11-03T20:04:46.6692462Z"
+      "claimedAtUtc": "2026-11-03T20:04:46.6692462Z",
+      "review": {
+        "cardId": "A-S072",
+        "accepted": true,
+        "reviewer": "parent-controller",
+        "commit": "db46dee71e6b2bc3c16bf31b7f98a4b8e8c99a15",
+        "tag": "kanban/A-S072/db46dee71e6b",
+        "focusedTestsPassed": true,
+        "focusedTestCases": 24,
+        "reportedNodeChecksIncludingBrowserAndParent": 36,
+        "reportedCombinedLeafChecks": 35,
+        "browserObserved": true,
+        "browserObservedBy": "6f6440e3-9917-4174-b227-e98caad519be",
+        "actualBrowserLeafChecks": 11,
+        "browserEvidence": "learning\\S072\\evidence\\raw\\browser-observed.json",
+        "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+        "remoteVerified": true,
+        "ownedScopeVerified": true,
+        "bddReviewed": true,
+        "genuineRedGreenReviewed": true,
+        "executionMode": "synthetic-cold-cache-coalesced-and-bounded-refill",
+        "nativeAzureProof": false,
+        "realConcurrentRefillOrDatabaseLoadProof": false,
+        "sourceParentComplete": false,
+        "iac": "N/A",
+        "reviewNotes": "Independently passed24 focused leaf cases; worker total36 comprises35 leaves including11 actual browser checks, plusone parent. Verified exact owned scope, remote annotated tag and main ancestry. Reviewed exact S072/D-S072 contract, BDD and loadable-stub assertion RED actual0/expected8. Eight virtual-time-zero same-key misses with DB concurrency2/refill40ms start8 queries and reject6; coalescing usesone refill to serveall8 while preserving the earlier six failures. Four different keys still requirefour refills and can overload; bounded concurrency1 avoids DB overload but completes at160ms, leavingfour original80ms-budget failures. A bound2 meets inclusive80ms for all8. Missing latency observations remain unknown in the original denominator and cannot mask overload/deadline failures. Reviewed signed-Edge keyboard/error/reset/history/CSP checks,12-run non-evicting bound, published helper and completed awaited close. All62 published files and45 raw artifacts are qualified in producer integrity; earlier CRLF/Git-tree qualifier failures remain historical. No actual concurrency/refill/DB load/latency, Azure, Node24 or original source-parent completion is certified."
+      },
+      "acceptedAtUtc": "2026-11-03T20:30:22.5364023Z"
     },
     {
       "technicalEntryGate": "SOURCE",
@@ -16068,6 +16095,27 @@
       "admittedAtUtc": "2026-11-03T20:28:04.5908268Z",
       "authorization": "local-synthetic-only",
       "claimedAtUtc": "2026-11-03T20:28:39.8791666Z"
+    },
+    {
+      "technicalEntryGate": "SOURCE",
+      "kano": "S",
+      "priority": "P0",
+      "kanoUnit": "A-S081",
+      "deliver": "Advance desired/observed states; a warm boolean cannot bypass routing/drain gates.",
+      "packet": "SC-S081",
+      "id": "A-S081",
+      "parents": [
+        "D-S081"
+      ],
+      "state": "In Progress",
+      "readiness": true,
+      "owner": "worker-A-S081",
+      "blocker": null,
+      "result": null,
+      "publication": null,
+      "admittedAtUtc": "2026-11-03T20:30:22.82831Z",
+      "authorization": "local-synthetic-only",
+      "claimedAtUtc": "2026-11-03T20:30:50.2039444Z"
     }
   ],
   "workers": [
@@ -16767,7 +16815,7 @@
     },
     {
       "id": "worker-A-S072",
-      "status": "result_received",
+      "status": "accepted",
       "agentId": "6f6440e3-9917-4174-b227-e98caad519be",
       "cardId": "A-S072",
       "dispatchedAtUtc": "2026-11-03T20:04:20.8521419Z",
@@ -16831,17 +16879,24 @@
       "dispatchedAtUtc": "2026-11-03T20:28:05.0521052Z",
       "cardId": "A-S080",
       "id": "worker-A-S080"
+    },
+    {
+      "id": "worker-A-S081",
+      "cardId": "A-S081",
+      "dispatchedAtUtc": "2026-11-03T20:30:22.9251612Z",
+      "agentId": "997c8db6-499e-43ee-b24c-cb6019a2a8c0",
+      "status": "running"
     }
   ],
   "completedParents": [],
   "admittedReadyIds": [],
   "plannedNextIds": [
-    "A-S072",
     "A-S076",
     "A-S077",
     "A-S078",
     "A-S079",
-    "A-S080"
+    "A-S080",
+    "A-S081"
   ],
   "blockedReasons": [],
   "stopNewDispatch": false,
