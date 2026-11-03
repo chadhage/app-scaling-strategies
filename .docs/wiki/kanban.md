@@ -36,7 +36,7 @@ The operator subsequently approved C001 design and local implementation: portabl
 
 Start with the [unified local learner UI](../../capability/local-harness/index.html). Its search, filters, preparation, and accepted-lesson journey passed independent end-to-end browser checks. This completed integration earns no additional Kano credit and does not complete H001/H002 or native source parents.
 
-The refreshed catalog exposes 20 accepted portable lessons from the explicit committed snapshot `3565746a0882`, not live availability. The earlier snapshot and 93 historical proof files remain byte-for-byte preserved; newer accepted lessons remain linked below until a later deliberate refresh. This data maintenance earns no additional completion credit.
+The refreshed catalog exposes 36 accepted portable lessons from the explicit committed snapshot `d3548de61f4b`, not live availability. Both earlier snapshots and 121 historical proof files remain byte-for-byte preserved; newer accepted lessons remain linked below until a later deliberate refresh. This data maintenance earns no additional completion credit.
 
 | To Do | In Progress | Done |
 | --- | --- | --- |
