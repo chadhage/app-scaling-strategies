@@ -9,7 +9,7 @@ const { createHash, randomUUID } = require('node:crypto');
 const { createRequire } = require('node:module');
 const { execFileSync } = require('node:child_process');
 const catalog = require('../../C005/catalog-data.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-3565746a0882/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-51-d3548de61f4b/generation.json');
 const helperPath = path.resolve(__dirname, '..', '..', '..', 'testing', 'browser', 'isolated.cjs');
 const helperRequire = createRequire(helperPath);
 const helperSourceSha256 = createHash('sha256').update(readFileSync(helperPath)).digest('hex');
@@ -39,7 +39,7 @@ test('C008 real isolated browser preparation, keyboard, reset, errors, CSP and a
   const lifecyclePath = path.join(path.dirname(helperPath), 'lifecycle.cjs');
   assert.equal(Object.hasOwn(require.cache, lifecyclePath), false, 'The abandoned lifecycle prototype must not be imported.');
   const reportPath = path.join(__dirname, '..', 'evidence',
-    `browser-op-catalog-snapshot-refresh-3565746a0882-${randomUUID()}.json`);
+    `browser-op-catalog-snapshot-refresh-51-d3548de61f4b-${randomUUID()}.json`);
   const publishedHistoricalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.published-helper.json');
   const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
   const historicalPrevious = await fs.readFile(historicalPath);
@@ -104,7 +104,8 @@ test('C008 real isolated browser preparation, keyboard, reset, errors, CSP and a
       assert.ok(snapshot.includes(catalog.acceptanceSnapshot.commitTimeUtc));
       assert.ok(snapshot.includes(catalog.acceptanceSnapshot.ledgerUpdatedAtUtc));
       assert.match(snapshot, /Historical committed snapshot, not live availability/);
-      assert.match(await page.locator('#preparation-status').innerText(), /150 scenarios · 2 workflows · 20 accepted synthetic lessons/);
+      assert.match(await page.locator('#preparation-status').innerText(),
+        new RegExp(`150 scenarios · 2 workflows · ${generation.acceptedPortableLessons} accepted synthetic lessons`));
     });
     await check('actual Tab, arrows and Enter operate skip, select and open with visible focus and announcements', async () => {
       await page.reload({ waitUntil: 'load' });
@@ -144,7 +145,7 @@ test('C008 real isolated browser preparation, keyboard, reset, errors, CSP and a
       await restore();
     });
     await check('unaccepted files and workflow-only entries stay unavailable rather than becoming native or completed parents', async () => {
-      for (const id of ['S018', 'S019', 'W001', 'W002']) {
+      for (const id of ['S035', 'S036', 'W001', 'W002']) {
         await open(id);
         assert.equal(await page.locator('.lesson-link').count(), 0);
         assert.equal(await page.locator('#learning-preparation').getAttribute('data-learning-mode'),
@@ -351,7 +352,7 @@ test('C008 real isolated browser preparation, keyboard, reset, errors, CSP and a
     });
     assert.equal(checks.length, 12);
     report = {
-      schemaVersion: 1, cardId: 'C008', operation: 'OP-CATALOG-SNAPSHOT-REFRESH', status: 'passed',
+      schemaVersion: 1, cardId: 'C008', operation: 'OP-CATALOG-SNAPSHOT-REFRESH-51', status: 'passed',
       observedAtUtc: new Date().toISOString(), mode: 'actual-isolated-headless',
       engine: 'Microsoft Edge (Chromium)', browserVersion, signature, playwrightVersion,
       nodeVersion: process.version, productionNode24Validated: false,

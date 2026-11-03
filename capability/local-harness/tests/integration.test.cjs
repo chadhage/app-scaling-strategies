@@ -11,7 +11,7 @@ const vm = require('node:vm');
 const searchApi = require('../../C006/search.js');
 const filterApi = require('../../C007/catalog-filters.js');
 const preparationApi = require('../../C008/preparation.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-3565746a0882/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-51-d3548de61f4b/generation.json');
 const ids = items => items.map(item => item.entry.id);
 
 function assertClosed(result) {
@@ -132,7 +132,7 @@ test('workflows and later lessons retain unsupported / unavailable modes, CONTAI
   assert.equal(result.preparation.entry.prerequisites.inheritsBase, false);
   assert.match(result.preparation.entry.prerequisites.additional, /^CONTAINER,/);
   assert.match(result.preparation.catalog.common.dependencyRules.text, /P002 OR P003/);
-  const later = await compose(catalog, matrix, { entryId: 'S018' });
+  const later = await compose(catalog, matrix, { entryId: 'S035' });
   assert.equal(later.preparation.learningMode, 'unavailable-learning');
   assert.equal(later.preparation.entry.learning.href, null);
 });

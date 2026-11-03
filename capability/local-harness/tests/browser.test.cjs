@@ -9,7 +9,7 @@ const { createHash, randomUUID } = require('node:crypto');
 const { createRequire } = require('node:module');
 const { execFileSync } = require('node:child_process');
 const catalog = require('../../C005/catalog-data.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-3565746a0882/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-51-d3548de61f4b/generation.json');
 const repo = path.resolve(__dirname, '..', '..', '..');
 const helperPath = path.join(repo, 'testing', 'browser', 'isolated.cjs');
 const helperRequire = createRequire(helperPath);
@@ -18,7 +18,7 @@ const PUBLISHED_HELPER_SHA256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
 const reportPath = path.join(__dirname, '..', 'evidence',
-  `browser-op-catalog-snapshot-refresh-3565746a0882-${randomUUID()}.json`);
+  `browser-op-catalog-snapshot-refresh-51-d3548de61f4b-${randomUUID()}.json`);
 
 async function previousReport() {
   return fs.readFile(historicalPath).catch(error => {
@@ -68,6 +68,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
   let lessonObservation;
   let cspObservation;
   const practiceLinks = [];
+  const practiceNavigations = [];
   async function check(name, run) {
     await t.test(name, async () => {
       await run();
@@ -141,10 +142,10 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       assert.equal(await page.locator('#catalog-error').isVisible(), false);
       assert.equal(await page.locator('#preparation').isVisible(), false);
     });
-    await check('all twenty accepted lessons pass through real readiness controls, keyboard preparation and original practice links', async () => {
+    await check('all thirty-six accepted lessons pass through real readiness, keyboard preparation and actual practice navigation', async () => {
       await choose('readiness-filter', 'portable-available');
       assert.deepEqual(await actualIds(), generation.acceptedPortableIds);
-      assert.equal(await page.locator('#matching-entries > article').count(), 20);
+      assert.equal(await page.locator('#matching-entries > article').count(), generation.acceptedPortableLessons);
       for (const id of generation.acceptedPortableIds) {
         await open(id);
         const entry = catalog.entries.find(candidate => candidate.id === id);
@@ -155,6 +156,18 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
         assert.equal(await page.locator('#preparation-body .parent-status').textContent(),
           `Source parent ${entry.parentId}: ${entry.parent.status}; completed: ${entry.parent.completed}. ${entry.parent.reason}`);
         practiceLinks.push({ id, href });
+        const popup = page.waitForEvent('popup');
+        await page.locator('.lesson-link').focus();
+        await page.keyboard.press('Enter');
+        const lesson = await popup;
+        children.add(lesson);
+        lesson.on('pageerror', error => pageErrors.push(error.message));
+        lesson.on('request', request => { if (/^https?:/i.test(request.url())) remoteRequests.push(request.url()); });
+        await lesson.waitForLoadState('load');
+        assert.ok(lesson.url().endsWith(`/learning/${id}/index.html`), id);
+        assert.match(await lesson.locator('body').innerText(), /synthetic|training rehearsal/i);
+        practiceNavigations.push({ id, href, loadedUrl: lesson.url(), syntheticTrainingObserved: true });
+        await lesson.close();
         await page.locator('#back-results').focus();
         await page.keyboard.press('Enter');
         assert.equal(await page.locator('#preparation').isVisible(), false);
@@ -162,6 +175,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       }
       assert.deepEqual(practiceLinks, catalog.entries.filter(entry => entry.learning.available)
         .map(entry => ({ id: entry.id, href: entry.learning.href })));
+      assert.deepEqual(practiceNavigations.map(item => item.id), generation.acceptedPortableIds);
       await reset();
     });
     await check('keyboard skip, query plus three AND filters, exact preparation and focus form one continuous journey', async () => {
@@ -284,7 +298,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       await reset();
     });
     await check('unavailable lessons and workflow CONTAINER/BASE distinctions retain exact preparation and all unapproved limits', async () => {
-      await open('S018');
+      await open('S035');
       assert.equal(await page.locator('.lesson-link').count(), 0);
       assert.equal(await page.locator('#preparation-body').getAttribute('data-learning-mode'), 'unavailable-learning');
       await reset();
@@ -413,7 +427,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
     });
     assert.equal(checks.length, 12);
     report = {
-      operation: 'OP-CATALOG-SNAPSHOT-REFRESH', status: 'passed', observedAtUtc: new Date().toISOString(),
+      operation: 'OP-CATALOG-SNAPSHOT-REFRESH-51', status: 'passed', observedAtUtc: new Date().toISOString(),
       mode: 'actual-isolated-headless', mockedBrowser: false, browserVersion, signature, playwrightVersion,
       nodeVersion: process.version, productionNode24Validated: false,
       helper: 'testing\\browser\\isolated.cjs', helperApi: 'openIsolatedLesson',
@@ -422,7 +436,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       foregroundLeaseUsed: false, unsafeLaunchFlagsUsed: false,
       entry: 'capability\\local-harness\\index.html',
       sourcePin: catalog.source.commit, historicalAvailabilityNotLive: true, originalDomEntryCount: 152,
-      generationSha256: generation.data.sha256, acceptedPracticeDestinations: practiceLinks,
+      generationSha256: generation.data.sha256, acceptedPracticeDestinations: practiceLinks, practiceNavigations,
       historicalPortableLessons: practiceLinks.length, unknownSupport: 152, nativeRunnable: 0,
       combinedSelection: { query: '  BLUE-GREEN  ', host: 'aks', risk: 'unclassified', readiness: 'portable-available', entryId: 'S001' },
       exactPreparationSectionsSha256: Object.fromEntries(['dependencyRules', 'operatingLimits', 'sharedDefinitionOfDone', 'acceptanceAndEvidence']

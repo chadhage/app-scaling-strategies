@@ -16,7 +16,7 @@ needed. [Microsoft disclaimer](../../README.md#microsoft-open-source-disclaimer)
 
 ## Three different preparation modes
 
-- **Accepted synthetic practice:** twenty original lesson links from C005's
+- **Accepted synthetic practice:** thirty-six original lesson links from C005's
   historical snapshot. Read each lesson's own preconditions, synthetic inputs,
   controls, assertions and limitations. **Training rehearsal — synthetic data —
   not a live Azure result.**
@@ -43,18 +43,19 @@ matrix checks to C003. It verifies the unchanged C001 artifact through C001's
 existing cryptographic integrity guard. Ready views hold references to the
 shared catalog, selected entry, matrix and approval artifact, not copied metadata
 or approval tables. There is no extraction, filesystem/ledger discovery, JSON
-import or new catalog. Zero-credit `OP-CATALOG-SNAPSHOT-REFRESH` changes only
+import or new catalog. Zero-credit `OP-CATALOG-SNAPSHOT-REFRESH-51` changes only
 C005's generated snapshot and necessary test/proof bindings, not preparation,
 catalog schemas/APIs or the authorities.
 
 - Catalog: `capability\C005\catalog-data.js`, one immutable generated module.
-- Source/availability pin: `3565746a0882916a91d492a8d2514f881a52812d`,
-  annotated source tag `kanban/flow-admin/3565746a0882`.
+- Source/availability pin: `d3548de61f4b800c8b0c911c7091b5e4826b5547`,
+  annotated source tag `kanban/flow-admin/d3548de61f4b`.
   The shared commit time and ledger-update time are displayed. This is
   **historical snapshot availability, not live state**.
-  Accepted IDs are S001–S017, S021, S031 and S041. S018/S019 and later work
-  are not discovered. C005's `generation.json` under
-  `evidence\op-catalog-snapshot-refresh-3565746a0882` binds source, hashes and IDs.
+  Accepted IDs are S001–S034, S037 and S041. S035/S036 and other unaccepted or
+  later work are not discovered. C005's `generation.json` under
+  `evidence\op-catalog-snapshot-refresh-51-d3548de61f4b` binds source, hashes and IDs.
+  Both previous catalogs and all 121 earlier proof files remain byte-preserved.
 - Capability authority: unchanged C003 matrix and constraints. All 17
   configurations, exact reasons and exact constraints can be inspected; none is
   assigned to an entry. Documented-supported is not implemented or qualified.
@@ -100,7 +101,7 @@ This operation does not edit those documents or weaken the CLI.
 
 Ordinary browser verification **does not write or delete observations**. To
 deliberately append a fresh uniquely named
-`evidence\browser-op-catalog-snapshot-refresh-3565746a0882-*.json`:
+`evidence\browser-op-catalog-snapshot-refresh-51-d3548de61f4b-*.json`:
 
 ```powershell
 $env:CAPTURE_BROWSER_EVIDENCE='1'

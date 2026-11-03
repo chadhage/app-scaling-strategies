@@ -9,7 +9,7 @@ const { createHash } = require('node:crypto');
 const root = path.resolve(__dirname, '..', '..', '..');
 const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 const sharedPublication = '219a2c0c20e095a1b8d5a8e66f19d8a3299b4329';
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-3565746a0882/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-51-d3548de61f4b/generation.json');
 
 test('the standalone surface has labeled keyboard controls and separate live, error and empty states', () => {
   const html = read('index.html');
@@ -53,12 +53,12 @@ test('original accepted bytes remain intact; only catalog data binds to the repr
     const pinned = execFileSync('git', ['--no-pager', 'show', `${sharedPublication}:${file}`],
       { cwd: root, encoding: 'utf8' });
     const current = fs.readFileSync(file === 'capability/C005/catalog-data.js'
-      ? path.join(root, generation.previous.path) : path.join(root, ...file.split('/')), 'utf8');
+      ? path.join(root, generation.original.path) : path.join(root, ...file.split('/')), 'utf8');
     assert.equal(current.replace(/\r\n/g, '\n'), pinned.replace(/\r\n/g, '\n'), file);
   }
   execFileSync('git', ['merge-base', '--is-ancestor', sharedPublication, 'HEAD'], { cwd: root });
   const generated = fs.readFileSync(path.join(root, generation.data.path));
-  assert.equal(generation.sourceCommit, '3565746a0882916a91d492a8d2514f881a52812d');
+  assert.equal(generation.sourceCommit, 'd3548de61f4b800c8b0c911c7091b5e4826b5547');
   assert.equal(createHash('sha256').update(generated).digest('hex'), generation.data.sha256);
   assert.equal(require('../../C005/catalog-data.js').source.commit, generation.sourceCommit);
   assert.equal(require('../../C005/catalog-source.cjs').PINNED_COMMIT, generation.sourceCommit);

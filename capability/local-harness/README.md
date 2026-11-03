@@ -5,6 +5,9 @@ C005/C006/C007/C008 modules. It is not a new Kano unit, architecture, project,
 management console, native executor, or completion of H002/H001.
 **OP-CATALOG-SNAPSHOT-REFRESH** subsequently refreshes one fixed historical C005
 generation and necessary consumer proof bindings only, also for zero credit.
+**OP-CATALOG-SNAPSHOT-REFRESH-51** now refreshes exactly one later fixed
+51-unit/36-practice snapshot; both preceding catalogs and all earlier proof stay
+byte-for-byte historical.
 
 Open `capability\local-harness\index.html` directly in a browser with JavaScript.
 No install, server, framework, dependency, account, credential or cloud access is
@@ -49,19 +52,19 @@ The original `evidence\provider-integrity.json` records **13 original consumed
 interfaces**, accepted publication commits and exact fingerprints. Twelve remain
 unchanged. Tests still verify the thirteenth's old accepted data baseline against
 C005's byte-preserved snapshot archive, then verify the active data against
-`capability\C005\evidence\op-catalog-snapshot-refresh-3565746a0882\generation.json`
+`capability\C005\evidence\op-catalog-snapshot-refresh-51-d3548de61f4b\generation.json`
 and deterministic extraction. No original fingerprint check is dropped; the new
 generation binding is not self-acceptance. All APIs, declarations and authorities
 remain unchanged.
 
 Availability remains the C005 historical source/acceptance pin
-**`3565746a0882916a91d492a8d2514f881a52812d`**, annotated source tag
-**`kanban/flow-admin/3565746a0882`**, commit time
-**`2026-11-03T16:33:12.000Z`**, ledger update
-**`2026-11-03T16:33:04.9855089Z`**. The UI displays those values and pinned source
-links. It is **not live availability**. Twenty accepted snapshot lessons are
-available: S001–S017, S021, S031 and S041. Later files do not silently refresh it.
-The source's 33 accepted units are not reclassified or credited by this operation.
+**`d3548de61f4b800c8b0c911c7091b5e4826b5547`**, annotated source tag
+**`kanban/flow-admin/d3548de61f4b`**, commit time
+**`2026-11-03T17:53:06.000Z`**, ledger update
+**`2026-11-03T17:53:04.9511414Z`**. The UI displays those values and pinned source
+links. It is **not live availability**. Thirty-six accepted snapshot lessons are
+available: S001–S034, S037 and S041. Later files do not silently refresh it.
+The source's 51 accepted units are not reclassified or credited by this operation.
 
 - Portable practice is distinct from native runnable/qualified and source-parent
   completion. Native flags and all source-parent completion flags remain false.
@@ -129,7 +132,7 @@ finally { Remove-Item Env:\CAPTURE_BROWSER_EVIDENCE }
 
 Capture happens only after successful checks and awaited child/helper cleanup,
 using exclusive creation of a uniquely named
-`evidence\browser-op-catalog-snapshot-refresh-3565746a0882-*.json`. All old proof
+`evidence\browser-op-catalog-snapshot-refresh-51-d3548de61f4b-*.json`. All old proof
 stays byte-for-byte unchanged and is not relabeled as a current browser run.
 The browser suite verifies the published helper's exact bytes **before import**
 and after cleanup:
@@ -171,9 +174,24 @@ No provider, root attribute or shared tooling file was changed.
 
 Final scoped results are in `result.json`; raw command evidence and hashes remain
 in this namespace. Publication/operational review does not grant extra credits.
-The later snapshot refresh has separate C005 operational result/evidence, a
+The preceding twenty-lesson refresh has separate historical C005 result/evidence, a
 genuine **11 !== 20** RED, and new real browser checks of all 20 original
 practice destinations through readiness selection and keyboard preparation.
 It preserves the original composition result and all earlier browser proof.
+
+The current fixed-source refresh records genuine **20 !== 36** and newly
+accepted S018 behavioral RED before IaC N/A, then reuses the unchanged generator.
+Its C005 evidence directory is
+`capability\C005\evidence\op-catalog-snapshot-refresh-51-d3548de61f4b`.
+Fresh browser coverage opens all 36 original practice destinations from real
+readiness selection and keyboard preparation, without claiming their native
+qualification. All 121 earlier proof files, including both earlier catalog
+generations' proof, remain unchanged. Exact-current-checkout source checks may
+truthfully reject later README/backlog drift even when this historical generation
+is reproducible. Operational acceptance remains parent-only.
+The current scoped result is the C005 operation's `result.json`; final normal
+browser verification is `browser-readonly-confirmed-02.json` in that directory.
+It passes all 71 browser cases while preserving all 143 existing proof files,
+including the new 36-practice captures, without appending or modifying any file.
 
 [Microsoft Open Source Disclaimer](../../README.md#microsoft-open-source-disclaimer).
