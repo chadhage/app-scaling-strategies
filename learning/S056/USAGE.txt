@@ -1,0 +1,69 @@
+A-S056 / D-S056 / SC-S056 — event-schema evolution
+
+Open learning\S056\index.html directly in a standard browser.
+Training rehearsal - synthetic data - not a live Azure result
+
+The precise source objective is to mix producer/consumer schemas and choose
+compatibility checks BEFORE introducing a new producer. Four independent test
+journeys cover old->old, old->new, new->old and new->new. Each starts with its own
+empty hypothetical consumer ledger; this is not broker fan-out or double credit.
+Old events intend 1250 cents and new events intend 2500 cents. Their 7500-cent
+test sum is not an account balance. The fixed account/event names are synthetic.
+
+Worked exercise:
+1. Keep additive / tolerant / all contracts AND effects / complete. Inspect all
+   four checks, then request introduction: success, 4 correct effects, 7500 cents.
+2. Try renamed: the new consumer succeeds, but the old consumer cannot read the
+   new field. Failure blocks expansion before the producer is introduced.
+3. Try unit-drift with full checks: all shapes are interpretable, but the two new
+   event journeys credit 25 rather than 2500 cents. Failure, observed sum 2550.
+4. Choose shape-only, new-only or withhold-old: absent effect/old-reader evidence
+   is UNKNOWN, never success. Strict old readers also reject additive fields.
+
+Tab/Shift+Tab traverses controls; arrows choose options; Enter/Space operates
+buttons and retained-history details. One prediction is independent of the
+measured result. Up to eight decisions retain every configuration and receipt.
+A ninth start is refused, never silently pruned. Reset all clears state/history,
+restores defaults and returns focus to schema. Reload also clears in-memory state.
+The reset-all button deliberately does not shadow HTMLFormElement.reset.
+
+Repository-root PowerShell verification (read-only to committed proof):
+  node --test learning\S056\tests\model.test.cjs learning\S056\tests\surface.test.cjs learning\S056\tests\integrity.test.cjs
+  node --test learning\S056\tests\browser.test.cjs
+  node --check learning\S056\model.js
+  node --check learning\S056\app.js
+
+An intentional browser-proof refresh only:
+  $env:CAPTURE_BROWSER_EVIDENCE='1'
+  node --test learning\S056\tests\browser.test.cjs
+  Remove-Item Env:\CAPTURE_BROWSER_EVIDENCE
+No ordinary test writes historical observations. Browser capture reports actual
+DOM, keyboard, errors, failures, reset, restrictive CSP probes and awaited cleanup.
+The published testing\browser\isolated.cjs is hash-pinned to
+86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055 (53c0c0d).
+openIsolatedLesson is closed with awaited finally; no foreground-browser lease,
+unsafe browser flags, downloads or abandoned lifecycle prototype is used.
+The helper's known unattended lifecycle limitation is NOT certified away.
+
+Evidence:
+- source-contract.json plus source-*.snapshot: exact source rows/contracts and
+  runtime SC packet rule. Raw CRLF snippets are binary-preserved; tests separately
+  compare canonical LF excerpts to immutable Git blobs, not raw working-tree hashes.
+- red\: loadable pre-implementation model/test/BDD snapshots, raw assertion-fail
+  TAP and command/timestamp/hash metadata. Snapshots are not test-discovered.
+- iac.json: N/A recorded after the real assertion RED, before implementation.
+- green\: focused model/surface/integrity results; syntax\: syntax evidence.
+- browser.json: deliberately captured actual Edge observations.
+- sequence.json: observed BDD/stub/RED/IaC/refactor ordering and hash-qualified
+  archived verification failures. The first browser run found a stale prediction
+  selection between attempts; the fixed UI clears it. An initial focused run
+  exposed inherited NODE_TEST_CONTEXT suppressing the RED replay; its subprocess
+  now removes that test-runner marker. Neither failure is presented as a pass.
+- tooling.json: actual installed Edge 156 file hash and Valid Microsoft signature.
+
+Existing Node 22.23.4, offline Playwright 1.56.1 and signed installed Edge 156 are
+test tooling only. No packages/framework were added. There is no real broker,
+protocol proof, authentication, registration, credential, management call, cloud,
+IaC, scaffold, deployment or spending. These results do NOT certify production
+Node 24, Azure behavior, B-S056 or D-S056 completion. The parent alone accepts
+one frozen S unit; tests/plumbing/refinement add no credits.

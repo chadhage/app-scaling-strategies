@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'">
+  <title>S056 — Event-schema compatibility before producer introduction</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Check the old consumer before introducing a new producer</h1>
+    <p>S056 · A-S056 · D-S056 · SC-S056 · one frozen S unit</p>
+  </header>
+  <main id="exercise" tabindex="-1">
+    <section aria-labelledby="objective">
+      <h2 id="objective">Objective and fixed input</h2>
+      <p>Mix old/new producers and old/new consumers. Check interpretation <strong>and intended business effects</strong> before expanding the new producer.</p>
+      <p>The old event intends a 1250-cent credit; the new event intends 2500 cents to <code>account-synthetic</code>. Each matrix cell is an independent hypothetical consumer journey. The 7500-cent test sum is <strong>not</strong> one account credited by four deliveries.</p>
+      <ol>
+        <li>Choose the new payload, old reader and preflight evidence.</li>
+        <li>Start preflight and inspect four checks: old→old, old→new, new→old, new→new.</li>
+        <li>Request introduction. A failure <em>or unknown</em> blocks expansion. Inspect the retained receipt and check your prediction.</li>
+      </ol>
+      <p>Precondition: the new reader supports old <code>amountCents</code> and new <code>amountMinor</code> contracts. The old reader requires <code>amountCents</code>. New payloads also add <code>currency: "USD"</code>. A strict old reader rejects added fields.</p>
+    </section>
+
+    <section aria-labelledby="choices-title">
+      <h2 id="choices-title">Operator controls</h2>
+      <form id="controls" autocomplete="off" novalidate>
+        <fieldset id="configuration">
+          <legend>Pin one preflight configuration</legend>
+          <label for="schema">New producer schema
+            <select id="schema" name="schema">
+              <option value="additive" selected>Additive: amountCents = 2500, plus currency</option>
+              <option value="renamed">Breaking rename: amountMinor = 2500</option>
+              <option value="unit-drift">Semantic defect: amountCents = 25 (dollars mislabeled cents)</option>
+            </select>
+          </label>
+          <label for="oldReader">Old consumer policy
+            <select id="oldReader" name="oldReader">
+              <option value="tolerant" selected>Tolerate unknown fields; require amountCents</option>
+              <option value="strict">Reject added fields; require exact old shape</option>
+            </select>
+          </label>
+          <label for="checks">Compatibility checks
+            <select id="checks" name="checks">
+              <option value="contracts-effects" selected>All old/new contracts AND business effects</option>
+              <option value="shape-only">All reader shapes ONLY — effects unmeasured</option>
+              <option value="new-only">New consumer ONLY — old compatibility unmeasured</option>
+            </select>
+          </label>
+          <label for="observation">Synthetic observation condition
+            <select id="observation" name="observation">
+              <option value="complete" selected>Return every selected check receipt</option>
+              <option value="withhold-old">Withhold old-consumer receipts</option>
+            </select>
+          </label>
+        </fieldset>
+        <div class="buttons">
+          <button id="start" type="submit">Start preflight</button>
+          <button id="step" type="button" disabled>Inspect next check</button>
+          <button id="introduce" type="button" disabled>Request producer introduction</button>
+          <button id="again" type="button" disabled>Another attempt — retain history</button>
+          <button id="reset-all" type="button">Reset all — clear history</button>
+        </div>
+        <p id="error" role="alert" aria-live="assertive"></p>
+        <p id="progress" aria-live="polite"></p>
+        <div class="prediction-controls">
+          <label for="prediction">Predict the measured compatibility outcome
+            <select id="prediction" name="prediction" disabled>
+              <option value="" selected>Choose an outcome</option>
+              <option value="success">success</option>
+              <option value="failure">failure</option>
+              <option value="unknown">unknown</option>
+            </select>
+          </label>
+          <button id="check" type="button" disabled>Check one prediction</button>
+        </div>
+        <p id="prediction-result" data-verdict="none" aria-live="polite">No prediction checked. Prediction accuracy never changes the compatibility result.</p>
+      </form>
+    </section>
+
+    <section aria-labelledby="results-title">
+      <h2 id="results-title">Measured synthetic result</h2>
+      <p id="outcome" data-outcome="unknown" role="status" aria-live="polite">UNKNOWN — no checks yet.</p>
+      <p id="gate" data-decision="pending"></p>
+      <p id="metrics"></p>
+      <p id="coverage"></p>
+      <div class="scroll" tabindex="0" aria-label="Compatibility matrix, scroll horizontally if needed">
+        <table>
+          <caption>Fixed four-cell compatibility matrix — raw synthetic payloads and receipts</caption>
+          <thead><tr><th scope="col">Producer → consumer</th><th scope="col">Payload</th><th scope="col">Intended cents</th><th scope="col">Interpretation</th><th scope="col">Observed credit</th><th scope="col">Outcome / reason</th></tr></thead>
+          <tbody id="trace"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained attempts</h2>
+      <p>At most eight decisions, with every configuration and receipt retained in this page. Nothing is silently pruned. Expand an attempt with Enter or Space. Explicit Reset all or page reload clears this in-memory history.</p>
+      <ol id="history"></ol>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Evidence limits</h2>
+      <p>This finite model has no event broker, schema registry, network, durable storage, retries, authentication or registration. No real account, identity or credentials are used. Consumer fan-out, ordering, delivery guarantees and real business effects are not demonstrated.</p>
+      <p>Local Node 22 tests and offline Playwright 1.56.1 / signed Edge 156 observations are test tooling only. They do not certify production Node 24, native Azure behavior, B-S056 or completion of D-S056. No cloud, IaC, scaffolding, deployment or spending is authorized. IaC: N/A.</p>
+      <p>Keyboard: Tab / Shift+Tab between controls; arrow keys choose options; Enter or Space activates buttons. Reset returns focus to the schema choice. A passing prediction is not a successful migration.</p>
+    </section>
+  </main>
+</body>
+</html>

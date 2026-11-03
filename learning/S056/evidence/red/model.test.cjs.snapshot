@@ -1,0 +1,22 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { test } = require('node:test');
+const model = require(process.env.S056_MODEL_PATH || path.join(__dirname, '..', 'model.js'));
+
+function checked(config = {}, state = model.createState()) {
+  let next = model.start(state, { ...model.DEFAULTS, ...config });
+  for (let index = 0; index < 4; index += 1) next = model.step(next);
+  return next;
+}
+
+test('complete compatible overlap introduces the new producer only after four checks', () => {
+  const ready = checked();
+  const decided = model.decide(ready);
+  assert.equal(decided.introduced, true, 'complete compatible overlap must unlock the synthetic introduction');
+  assert.equal(model.summarize(decided).outcome, 'success');
+  assert.equal(model.summarize(decided).expectedCents, 7500);
+  assert.equal(model.summarize(decided).observedCents, 7500);
+  assert.equal(decided.history.length, 1);
+});

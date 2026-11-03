@@ -1,0 +1,29 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.SchemaLesson = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULTS = Object.freeze({
+    schema: 'additive', oldReader: 'tolerant',
+    checks: 'contracts-effects', observation: 'complete',
+  });
+  function createState() {
+    return { phase: 'ready', config: null, rows: [], history: [], introduced: false, outcome: 'unknown' };
+  }
+  function start(state, config) {
+    return { ...state, config: { ...config }, phase: 'checking', rows: [] };
+  }
+  function step(state) {
+    const rows = [...state.rows, { outcome: 'unknown' }];
+    return { ...state, rows, phase: rows.length === 4 ? 'checked' : 'checking' };
+  }
+  function decide(state) {
+    return { ...state, phase: 'decided', introduced: false, outcome: 'unknown' };
+  }
+  function another(state) { return { ...createState(), history: state.history }; }
+  function predict(state) { return state; }
+  function summarize(state) { return { outcome: state.outcome, introduced: state.introduced }; }
+  return Object.freeze({ DEFAULTS, createState, start, step, decide, another, predict, summarize });
+}));
