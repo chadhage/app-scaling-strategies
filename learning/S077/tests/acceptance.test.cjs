@@ -1,0 +1,91 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('../model.js');
+const run = (handler, firstOutcome, state = model.createRehearsal()) =>
+  model.redeliver(model.expireLock(model.deliver(state, { handler, firstOutcome })));
+
+test('loadable lesson exposes ready state and all operator actions', () => {
+  assert.equal(model.createRehearsal().phase, 'ready');
+  assert.equal(model.createRehearsal().config, null);
+  for (const action of ['deliver', 'expireLock', 'redeliver', 'newAttempt', 'reset', 'checkPrediction']) {
+    assert.equal(typeof model[action], 'function');
+  }
+});
+
+test('ledger protection distinguishes repeated delivery from a second business effect', () => {
+  const { result } = run('ledger', 'committed');
+  assert.equal(result.verdict, 'PASS');
+  assert.equal(result.deliveries, 2);
+  assert.equal(result.repeatedDeliveries, 1);
+  assert.equal(result.knownEffects, 1);
+  assert.equal(result.duplicateEffects, 0);
+  assert.equal(result.knownTotal, 10);
+  assert.equal(result.deliveryLedger[1].outcome, 'duplicate-suppressed');
+  assert.equal(new Set(result.deliveryLedger.map((row) => row.messageId)).size, 1);
+  assert.equal(new Set(result.deliveryLedger.map((row) => row.businessKey)).size, 1);
+});
+
+test('blind application repeats the business effect and remains FAIL after a correct interpretation', () => {
+  const state = run('blind', 'committed');
+  assert.equal(state.result.verdict, 'FAIL');
+  assert.equal(state.result.deliveries, 2);
+  assert.equal(state.result.repeatedDeliveries, 1);
+  assert.equal(state.result.knownEffects, 2);
+  assert.equal(state.result.duplicateEffects, 1);
+  assert.equal(state.result.knownTotal, 20);
+  assert.equal(state.result.businessLedger.length, 2);
+  assert.equal(model.checkPrediction(state, 'FAIL').correct, true);
+  assert.equal(state.history[0].verdict, 'FAIL');
+});
+
+for (const handler of ['ledger', 'blind']) {
+  test(`observed failure before commit still creates one effect on ${handler} redelivery`, () => {
+    const { result } = run(handler, 'not-committed');
+    assert.equal(result.verdict, 'PASS');
+    assert.equal(result.knownEffects, 1);
+    assert.equal(result.knownTotal, 10);
+    assert.equal(result.unresolvedEffects, 0);
+    assert.equal(result.deliveryLedger[0].outcome, 'not-committed');
+    assert.equal(result.deliveryLedger[1].outcome, 'applied');
+  });
+}
+
+test('unresolved first effect is held for reconciliation, not counted as absent or successful', () => {
+  const { result } = run('ledger', 'unresolved');
+  assert.equal(result.verdict, 'UNKNOWN');
+  assert.equal(result.deliveries, 2);
+  assert.equal(result.knownEffects, 0);
+  assert.equal(result.unresolvedEffects, 1);
+  assert.deepEqual(result.possibleEffects, [0, 1]);
+  assert.equal(result.deliveryLedger[1].outcome, 'held-unresolved');
+});
+
+test('blind redelivery preserves uncertainty rather than inventing success or a known duplicate', () => {
+  const { result } = run('blind', 'unresolved');
+  assert.equal(result.verdict, 'UNKNOWN');
+  assert.equal(result.knownEffects, 1);
+  assert.equal(result.unresolvedEffects, 1);
+  assert.deepEqual(result.possibleEffects, [1, 2]);
+  assert.equal(result.duplicateEffects, 0);
+});
+
+test('a later protected success retains the original failed ledgers unchanged', () => {
+  const failed = run('blind', 'committed');
+  assert.equal(failed.result.verdict, 'FAIL');
+  const original = JSON.stringify(failed);
+  const passed = run('ledger', 'committed', model.newAttempt(failed));
+  assert.deepEqual(passed.history.map((entry) => entry.verdict), ['FAIL', 'PASS']);
+  assert.equal(passed.history[0], failed.result);
+  assert.equal(JSON.stringify(failed), original);
+});
+
+test('redelivery is rejected before explicit modeled lock expiry', () => {
+  const ready = model.createRehearsal();
+  assert.throws(() => model.redeliver(ready), /expired/i);
+  const locked = model.deliver(ready, { handler: 'ledger', firstOutcome: 'committed' });
+  assert.throws(() => model.redeliver(locked), /expired/i);
+  assert.equal(ready.phase, 'ready');
+  assert.equal(locked.phase, 'locked');
+});

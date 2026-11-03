@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S077 · Message redelivery</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S077 · Message redelivery</h1>
+    <p>Redeliver one message; distinguish repeated delivery from repeated business effects.</p>
+    <section aria-labelledby="preconditions">
+      <h2 id="preconditions">One message, one intended credit</h2>
+      <p>Message <strong>MSG-077</strong>, business key <strong>ORDER-077:credit</strong>, intended effect <strong>+10 synthetic units once</strong>. The first delivery remains unacknowledged. Expire its modeled lock, then deliver that same message again.</p>
+      <p>The ledger handler checks a stable business key before applying work. It suppresses a known duplicate and holds an unresolved outcome for reconciliation. The blind handler applies each delivery. These are deterministic in-memory rules, not a transactional or durable idempotency implementation.</p>
+      <p>No server, broker, Azure account, credentials, install or network access is needed. Values and lock expiry are synthetic; no time passes. History lasts only while this page is open.</p>
+    </section>
+
+    <section aria-labelledby="conduct">
+      <h2 id="conduct">Conduct the rehearsal</h2>
+      <p>Choose conditions, deliver, expire the lock, redeliver once, then check your interpretation. Tab, arrow keys, Enter and Space operate the standard controls.</p>
+      <form id="configuration" novalidate>
+        <label for="handler">Business-effect handling</label>
+        <select id="handler" name="handler" aria-describedby="handler-help">
+          <option value="ledger">Check modeled effect ledger</option>
+          <option value="blind">Blindly apply every delivery</option>
+        </select>
+        <p id="handler-help">Ledger protection is only a teaching rule. Real atomicity, identity and recovery require separate native proof.</p>
+        <label for="first-outcome">First delivery business observation</label>
+        <select id="first-outcome" name="firstOutcome">
+          <option value="committed">Committed; acknowledgement lost</option>
+          <option value="not-committed">Observed failure before commit</option>
+          <option value="unresolved">Outcome unresolved</option>
+        </select>
+        <button id="deliver-message" type="submit">1. Deliver message</button>
+      </form>
+      <div class="actions">
+        <button id="expire-lock" type="button" disabled>2. Expire modeled lock</button>
+        <button id="redeliver-message" type="button" disabled>3. Redeliver same message</button>
+      </div>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <p id="phase" role="status">Phase: ready</p>
+      <p id="attempt-count">Attempt: 1 / 6</p>
+    </section>
+
+    <section aria-labelledby="observations">
+      <h2 id="observations">Observe deliveries and business effects separately</h2>
+      <div aria-live="polite">
+        <p id="verdict">Synthetic business result: not evaluated</p>
+        <p id="impact">Business impact: not evaluated</p>
+        <p id="metrics">No synthetic deliveries observed.</p>
+        <p id="uncertainty">No business-effect conclusion yet.</p>
+        <p id="reason"></p>
+      </div>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Delivery ledger">
+        <table>
+          <caption>Delivery ledger · synthetic</caption>
+          <thead><tr><th scope="col">Delivery</th><th scope="col">Message</th><th scope="col">Business key</th><th scope="col">Lock</th><th scope="col">Processing observation</th></tr></thead>
+          <tbody id="delivery-ledger"></tbody>
+        </table>
+      </div>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Known business-effect ledger">
+        <table>
+          <caption>Known business-effect ledger · synthetic; unresolved is not zero</caption>
+          <thead><tr><th scope="col">Effect</th><th scope="col">Delivery</th><th scope="col">Business key</th><th scope="col">Credit</th></tr></thead>
+          <tbody id="business-ledger"></tbody>
+        </table>
+      </div>
+      <h3>Synthetic trace</h3>
+      <ol id="trace"><li>No attempt started.</li></ol>
+    </section>
+
+    <section aria-labelledby="interpret">
+      <h2 id="interpret">Check your interpretation</h2>
+      <p>PASS requires exactly one known effect and no unresolved outcome. FAIL means a known duplicate effect. UNKNOWN means the first effect remains unresolved; a missing ledger entry is not a successful no-op. A correct answer never changes a failed business result.</p>
+      <form id="interpretation" novalidate>
+        <label for="prediction">Which business result is supported?</label>
+        <select id="prediction" name="prediction" disabled>
+          <option value="">Choose a result</option>
+          <option value="PASS">PASS</option>
+          <option value="FAIL">FAIL</option>
+          <option value="UNKNOWN">UNKNOWN</option>
+        </select>
+        <button id="check-prediction" type="submit" disabled>Check interpretation</button>
+      </form>
+      <p id="prediction-result" role="status">Interpretation not checked.</p>
+    </section>
+
+    <section aria-labelledby="retained">
+      <h2 id="retained">Retained attempts</h2>
+      <p id="history-count">Retained attempts: 0 / 6</p>
+      <p>New attempt restores defaults without erasing earlier results or ledgers. At six results, full reset is required. Reset or page reload clears this in-memory history.</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Attempt history">
+        <table>
+          <caption>Business results are never rewritten by later attempts</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Handler</th><th scope="col">First outcome</th><th scope="col">Result</th><th scope="col">Deliveries</th><th scope="col">Known effects</th><th scope="col">Duplicate effects</th><th scope="col">Unresolved</th></tr></thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+      <div id="history-ledgers"></div>
+      <div class="actions">
+        <button id="new-attempt" type="button" disabled>New attempt · keep history</button>
+        <button id="reset-rehearsal" type="button">Reset rehearsal and history</button>
+      </div>
+    </section>
+
+    <footer>
+      <h2>Scope and limits</h2>
+      <p>A-S077 · frozen S · SC-S077 · D-S077. Two deliveries of one fixed synthetic message; six retained attempts. No actual broker lock, redelivery, concurrent transaction, durable store, production Node.js 24 or native Azure behavior is certified. B-S077 and D-S077 remain incomplete.</p>
+      <p>This lesson does not replace S075 consumer expansion, S076 retirement, S078 scheduler fencing or S084 command idempotency. <a href="README.md">Instructions and evidence</a> · <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft Open Source Disclaimer</a>. Demonstration targets are not Microsoft service-level agreements.</p>
+    </footer>
+  </main>
+</body>
+</html>

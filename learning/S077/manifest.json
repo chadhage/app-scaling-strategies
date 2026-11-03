@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S077",
+  "sourceId": "S077",
+  "parentId": "D-S077",
+  "nativeSibling": "B-S077",
+  "kano": "S",
+  "kanoUnit": "A-S077",
+  "packet": "SC-S077",
+  "owner": "worker-A-S077",
+  "entryGate": "SOURCE",
+  "title": "Message redelivery: repeated delivery is not repeated business work",
+  "entryPoint": "learning/S077/index.html",
+  "feature": "learning/S077/message-redelivery.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Redeliver one message; distinguish repeated delivery from repeated business effects.",
+  "sourceAcceptance": "Preserve one business effect even when the broker delivers a message again.",
+  "parentAcceptance": "Redelivered messages produce one intended effect; duplicates and unresolved outcomes remain visible.",
+  "preconditions": [
+    "Standalone modern browser; no broker, server, subscription, credentials or installation.",
+    "One in-memory synthetic message MSG-077 and stable business key ORDER-077:credit.",
+    "One intended credit of 10 synthetic units; first delivery remains unacknowledged.",
+    "Explicit modeled lock expiry permits exactly one additional delivery; no timer or real settlement."
+  ],
+  "actions": [
+    "Choose ledger protection or blind application and the first business outcome.",
+    "Deliver the message and inspect the first delivery and any known effect.",
+    "Expire the modeled lock, then redeliver the same message once.",
+    "Compare delivery and business-effect ledgers; interpret PASS, FAIL or UNKNOWN.",
+    "Retain up to six attempts or explicitly reset all in-memory state and history."
+  ],
+  "input": "learning/S077/model.js",
+  "trace": "At most two deliveries, two known business effects and six immutable in-memory attempt histories.",
+  "assertions": [
+    "Ledger protection suppresses a known duplicate while retaining the second delivery.",
+    "Blind application after a known first commit exposes two effects and FAIL.",
+    "Observed failure before commit still produces one effect on redelivery.",
+    "Unresolved first effects stay UNKNOWN, including after a known blind reapplication.",
+    "Known effects, duplicate effects and unresolved outcomes are counted separately.",
+    "Wrong order, forged state, invalid enum or additional input cannot advance state.",
+    "Correct learner interpretation never rewrites failed effects or retained history.",
+    "Actual DOM, keyboard, errors, reset, failure, unknown and enforced CSP are checked."
+  ],
+  "bounds": {
+    "configurations": 6,
+    "messages": 1,
+    "intendedEffectUnits": 10,
+    "maximumDeliveries": 2,
+    "maximumKnownEffects": 2,
+    "maximumUnresolvedEffects": 1,
+    "retainedAttempts": 6,
+    "arbitraryEndpointsPayloadsTimersOrLoad": false
+  },
+  "iac": {
+    "status": "N/A",
+    "decision": "learning/S077/evidence/iac-decision.json",
+    "resourcesCreated": 0
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156.0.4314.50",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperPublication": "53c0c0d",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "dependencyChanges": false
+  },
+  "limits": [
+    "Deterministic in-memory rules only; no actual broker lock expiry, settlement or redelivery.",
+    "The ledger handler is a teaching rule, not atomic or durable business-effect storage.",
+    "No actual broker redelivery, idempotency or durable business-effect certification.",
+    "B-S077 and D-S077 remain incomplete; native identity, atomicity, recovery and redelivery need their own proof.",
+    "Not replacement S075 consumer expansion, S076 retirement, S078 scheduler fencing or S084 command idempotency.",
+    "No production Node24, native/source-parent, five-nines or unattended browser lifecycle certification.",
+    "Published browser helper only; abandoned lifecycle prototype is unqualified.",
+    "File-origin Worker rejection precedes CSP; worker-src enforcement is not independently qualified.",
+    "Synthetic data only; no cloud, IaC, credentials, deployment, downloads, installs or spending.",
+    "One frozen S unit; tests, plumbing and refinement earn no additional credit."
+  ]
+}

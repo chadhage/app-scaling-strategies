@@ -1,0 +1,27 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.Lesson077 = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const fixture = { messageId: 'MSG-077', businessKey: 'ORDER-077:credit', amount: 10, maxAttempts: 6 };
+  const createRehearsal = () => ({
+    phase: 'ready', config: null, deliveries: [], effects: [], events: [],
+    result: null, history: [],
+  });
+  const deliver = (state, config) => ({ ...state, phase: 'locked', config });
+  const expireLock = (state) => ({ ...state, phase: 'expired' });
+  const redeliver = (state) => {
+    const result = {
+      attempt: state.history.length + 1, verdict: 'UNKNOWN', deliveries: 0,
+      repeatedDeliveries: 0, knownEffects: 0, duplicateEffects: 0, unresolvedEffects: 0,
+      knownTotal: 0, possibleEffects: [0, 0], deliveryLedger: [], businessLedger: [],
+    };
+    return { ...state, phase: 'complete', result, history: [...state.history, result] };
+  };
+  const newAttempt = (state) => ({ ...createRehearsal(), history: state.history });
+  const reset = () => createRehearsal();
+  const checkPrediction = (state, choice) => ({ correct: state.result.verdict === choice });
+  return { fixture, createRehearsal, deliver, expireLock, redeliver, newAttempt, reset, checkPrediction };
+}));

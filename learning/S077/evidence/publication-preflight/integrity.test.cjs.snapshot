@@ -1,0 +1,297 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const vm = require('node:vm');
+const { spawnSync } = require('node:child_process');
+const root = path.resolve(__dirname, '..');
+const repo = path.resolve(root, '..', '..');
+const bytes = (file) => fs.readFileSync(path.join(root, file));
+const json = (file) => JSON.parse(bytes(file).toString('utf8'));
+const sha = (data) => crypto.createHash('sha256').update(data).digest('hex');
+const canonical = (data) => Buffer.from(data.toString('utf8').replace(/\r\n/g, '\n'));
+const git = (args, input) => {
+  const run = spawnSync('git', args, { cwd: repo, input, encoding: null });
+  assert.equal(run.error, undefined);
+  assert.equal(run.status, 0, String(run.stderr));
+  return run.stdout;
+};
+const row = (text, id) => text.split(/\r?\n/).find((line) => line.startsWith(`| ${id} |`));
+const contract = (text) => text.slice(text.indexOf('## Atomic card contract'),
+  text.indexOf('## Concurrent pull and one-piece flow'));
+const packet = (text) => text.split(/\r?\n/).find((line) => line.startsWith('Packet membership is fixed'));
+const files = (directory = root) => fs.readdirSync(directory, { withFileTypes: true })
+  .flatMap((entry) => entry.isDirectory() ? files(path.join(directory, entry.name))
+    : [path.relative(root, path.join(directory, entry.name))]).sort();
+
+test('exact S077 source, D-S077 acceptance, portable A/card contract and fixed packet bind one unit', () => {
+  const source = json('evidence\\source-contract.json');
+  for (const [field, expected] of Object.entries({
+    cardId: 'A-S077', parentId: 'D-S077', nativeSibling: 'B-S077',
+    kano: 'S', kanoUnit: 'A-S077', packet: 'SC-S077', owner: 'worker-A-S077',
+    ownedScope: 'learning\\S077\\**', entryGate: 'SOURCE',
+  })) assert.equal(source[field], expected);
+  assert.equal(source.sourceReadBeforeBehaviorDesign, true);
+  assert.match(source.baselineCommit, /^[a-f0-9]{40}$/);
+  assert.equal(source.sourceRow,
+    '| S077 | **Message redelivery:** Preserve one business effect even when the broker delivers a message again. |');
+  assert.equal(source.backlogRow,
+    '| D-S077 | P0 | Add lock expiry/redelivery and a business-effect ledger. | Redelivered messages produce one intended effect; duplicates and unresolved outcomes remain visible. | none |');
+  assert.equal(source.cardRow,
+    '| A-S077 | D-S077 | S | Redeliver one message; distinguish repeated delivery from repeated business effects. | SOURCE |');
+  assert.equal(source.nativeRow,
+    '| B-S077 | D-S077 | S | Conduct one lock-expiry/redelivery cycle; verify one effect and honest processing outcome. | CORE, DATA, HOST |');
+  assert.match(source.atomicAndPortableContract, /genuine behavioral TDD red/);
+  assert.match(source.atomicAndPortableContract, /### Portable A-card lesson contract/);
+  assert.match(source.packetRule, /every other A\/B card belongs to SC-Snnn/);
+  assert.match(source.distinction, /Not replacement S075/);
+  assert.match(source.acceptanceBoundary, /B-S077 and D-S077 remain incomplete/);
+});
+
+test('raw CRLF source and canonical immutable Git blobs preserve exact acceptance independently', () => {
+  const source = json('evidence\\source-contract.json');
+  assert.equal(source.files.length, 3);
+  const working = [];
+  const committed = [];
+  for (const entry of source.files) {
+    const raw = bytes(entry.snapshot);
+    const blob = bytes(entry.gitSnapshot);
+    assert.equal(raw.length, entry.rawBytes);
+    assert.equal(sha(raw), entry.rawSha256, entry.snapshot);
+    assert.equal(raw.includes(Buffer.from('\r\n')), entry.rawHasCRLF);
+    assert.equal(entry.rawHasCRLF, true);
+    assert.equal(sha(canonical(raw)), entry.rawCanonicalSha256);
+    assert.deepEqual(blob, git(['cat-file', 'blob', entry.gitBlob]));
+    assert.equal(blob.length, entry.gitBytes);
+    assert.equal(sha(blob), entry.gitSha256);
+    assert.equal(canonical(raw).equals(canonical(blob)), entry.wholeFileCanonicalEquality);
+    assert.equal(entry.exactAcceptanceSlicesMatch, true);
+    assert.equal(git(['rev-parse', `${source.baselineCommit}:${entry.path.replace(/\\/g, '/')}`]).toString().trim(), entry.gitBlob);
+    working.push(raw.toString('utf8'));
+    committed.push(blob.toString('utf8'));
+  }
+  for (const [index, id] of [[0, 'S077'], [1, 'D-S077'], [2, 'A-S077'], [2, 'B-S077']]) {
+    assert.equal(row(working[index], id), row(committed[index], id));
+  }
+  assert.equal(row(working[0], 'S077'), source.sourceRow);
+  assert.equal(row(working[1], 'D-S077'), source.backlogRow);
+  assert.equal(contract(working[2]), source.atomicAndPortableContract);
+  assert.deepEqual(canonical(Buffer.from(contract(working[2]))), canonical(Buffer.from(contract(committed[2]))));
+  assert.equal(packet(working[2]), source.packetRule);
+  assert.equal(packet(committed[2]), source.packetRule);
+});
+
+test('non-discovered original BDD, loadable stub and unchanged acceptance tests bind eight real RED assertions', () => {
+  const red = json('evidence\\red\\run.json');
+  assert.equal(red.exitCode, 1);
+  assert.equal(red.tests, 9);
+  assert.equal(red.passed, 1);
+  assert.equal(red.failed, 8);
+  assert.equal(red.assertionFailures, 8);
+  assert.equal(red.missingCodeOrTools, false);
+  assert.equal(red.spawnError, null);
+  assert.equal(red.signal, null);
+  const stdout = bytes('evidence\\red\\stdout.raw');
+  const stderr = bytes('evidence\\red\\stderr.raw');
+  assert.equal(sha(stdout), red.rawStdoutSha256);
+  assert.equal(sha(stderr), red.rawStderrSha256);
+  const text = stdout.toString() + stderr.toString();
+  assert.equal((text.match(/code: 'ERR_ASSERTION'/g) || []).length, 8);
+  assert.doesNotMatch(text, /MODULE_NOT_FOUND|Cannot find module|ENOENT|SyntaxError|ReferenceError|TypeError:/);
+  assert.equal(red.snapshots.length, 3);
+  for (const entry of red.snapshots) {
+    const data = bytes(entry.snapshot);
+    assert.ok(entry.snapshot.endsWith('.snapshot'));
+    assert.doesNotMatch(entry.snapshot, /\.(?:test\.cjs|js|cjs)$/);
+    assert.equal(data.length, entry.bytes);
+    assert.equal(sha(data), entry.sha256, entry.snapshot);
+    if (entry.source !== 'model.js') assert.deepEqual(canonical(bytes(entry.source)), canonical(data));
+  }
+  const context = { module: { exports: {} } };
+  vm.runInNewContext(bytes('evidence\\red\\model.js.snapshot').toString('utf8'), context);
+  const stub = context.module.exports;
+  const state = stub.redeliver(stub.expireLock(stub.deliver(stub.createRehearsal(),
+    { handler: 'ledger', firstOutcome: 'committed' })));
+  assert.equal(state.result.verdict, 'UNKNOWN');
+  assert.throws(() => assert.equal(state.result.verdict, 'PASS'), { code: 'ERR_ASSERTION' });
+  assert.notEqual(sha(canonical(bytes('model.js'))), red.sourceHashes['model.js']);
+});
+
+test('source → behavioral RED → IaC N/A → implementation green ordering is preserved', () => {
+  const source = json('evidence\\source-contract.json');
+  const red = json('evidence\\red\\run.json');
+  const iac = json('evidence\\iac-decision.json');
+  const green = json('evidence\\focused-green\\run.json');
+  assert.equal(iac.status, 'N/A');
+  assert.equal(iac.afterRedCompletedAtUtc, red.completedAtUtc);
+  assert.match(iac.stage, /before behavior implementation/);
+  assert.match(iac.reason, /Resource-free local synthetic message-redelivery lesson/);
+  assert.equal(iac.resourcesCreated, 0);
+  assert.equal(iac.managementCalls, 0);
+  assert.equal(iac.generatedInfrastructureFiles, 0);
+  assert.ok(Date.parse(source.capturedAtUtc) <= Date.parse(red.startedAtUtc));
+  assert.ok(Date.parse(red.completedAtUtc) < Date.parse(iac.decidedAtUtc));
+  assert.ok(Date.parse(iac.decidedAtUtc) < Date.parse(green.startedAtUtc));
+});
+
+test('focused green and deliberate browser capture preserve raw output and canonical tested sources', () => {
+  for (const [mode, expected] of [['focused-green', 20], ['browser-green', 1]]) {
+    const run = json(`evidence\\${mode}\\run.json`);
+    const stdout = bytes(`evidence\\${mode}\\stdout.raw`);
+    const stderr = bytes(`evidence\\${mode}\\stderr.raw`);
+    assert.equal(run.exitCode, 0);
+    assert.equal(run.tests, expected);
+    assert.equal(run.passed, expected);
+    assert.equal(run.failed, 0);
+    assert.equal(run.assertionFailures, 0);
+    assert.equal(run.missingCodeOrTools, false);
+    assert.equal(run.spawnError, null);
+    assert.equal(run.signal, null);
+    assert.equal(sha(stdout), run.rawStdoutSha256);
+    assert.equal(sha(stderr), run.rawStderrSha256);
+    assert.equal(run.browserCaptureExplicitlyEnabled, mode === 'browser-green');
+    for (const [file, hash] of Object.entries(run.sourceHashes)) {
+      assert.equal(sha(canonical(bytes(file))), hash, file);
+    }
+  }
+});
+
+test('actual isolated browser observes delivery/effect differences, honest uncertainty, keyboard, errors, reset and CSP', () => {
+  const browser = json('evidence\\browser-acceptance.json');
+  const tooling = json('evidence\\tooling.json');
+  assert.equal(browser.outcome, 'PASS');
+  assert.equal(browser.captureExplicitlyEnabled, true);
+  assert.equal(browser.runtime, 'v22.23.4');
+  assert.equal(browser.playwrightVersion, '1.56.1');
+  assert.equal(browser.browserVersion, '156.0.4314.50');
+  assert.equal(browser.cleanup.awaitedFinallyClose, true);
+  assert.equal(browser.observations.length, 15);
+  const blind = browser.observations.find((entry) => entry.name === 'blind reapplication repeats the business effect');
+  assert.match(blind.verdict, /FAIL$/);
+  assert.equal(blind.deliveries.length, 2);
+  assert.equal(blind.effects.length, 2);
+  const protectedRun = browser.observations.find((entry) => entry.name === 'same redelivery with protection has one intended effect and retained failure');
+  assert.match(protectedRun.verdict, /PASS$/);
+  assert.equal(protectedRun.effects.length, 1);
+  assert.deepEqual(protectedRun.history.map((entry) => entry[3]), ['FAIL', 'PASS']);
+  const unknown = browser.observations.find((entry) => entry.name === 'unresolved protected effect is held, not absent or passed');
+  assert.match(unknown.verdict, /UNKNOWN$/);
+  assert.equal(unknown.effects.length, 0);
+  assert.match(unknown.metrics, /unresolved effects: 1/);
+  const bounded = browser.observations.find((entry) => entry.name.startsWith('seventh attempt refused'));
+  assert.equal(bounded.history.length, 6);
+  assert.match(bounded.error, /Six attempts/);
+  assert.deepEqual(browser.keyboard.resetPhases, ['ready', 'locked', 'expired', 'complete']);
+  assert.equal(browser.keyboard.resetFocus, 'deliver-message');
+  assert.equal(browser.keyboard.visibleFocusOutlinePx, 3);
+  assert.equal(browser.keyboard.narrowViewportWidth, 390);
+  assert.equal(browser.keyboard.arrowSelect, true);
+  assert.equal(browser.keyboard.enterAndSpaceActions, true);
+  assert.equal(browser.keyboard.tabToInterpretationCheck, true);
+  assert.deepEqual(browser.exerciseNetworkRequests, []);
+  assert.deepEqual(browser.probeResponses, []);
+  assert.deepEqual(browser.pageErrors, []);
+  assert.ok(browser.consoleErrors.every((entry) => entry.stage === 'csp'));
+  assert.equal(browser.helper.publication, '53c0c0d');
+  assert.equal(browser.helper.sha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+  assert.equal(sha(fs.readFileSync(path.join(repo, browser.helper.path))), browser.helper.sha256);
+  for (const [file, hash] of Object.entries(browser.sourceHashes)) assert.equal(sha(canonical(bytes(file))), hash, file);
+  for (const [field, value] of Object.entries(browser.cspChecks)) assert.equal(value, field !== 'bypassCSP', field);
+  for (const directive of ['script-src', 'script-src-elem', 'connect-src', 'base-uri', 'form-action', 'style-src-elem']) {
+    assert.ok(browser.cspViolations.some((entry) => entry.directive === directive && entry.disposition === 'enforce'), directive);
+  }
+  assert.match(browser.workerBoundary, /before a worker-src CSP event.*not independently qualified/);
+  const source = bytes('tests\\browser.test.cjs').toString('utf8');
+  assert.match(source, /process\.env\.CAPTURE_BROWSER_EVIDENCE === '1'/);
+  assert.match(source, /finally \{[\s\S]*await session\.close\(\)/);
+  assert.doesNotMatch(source, /chromium\.launch|browser\.newContext|bypassCSP:\s*true|--no-sandbox/);
+  assert.equal(tooling.node, browser.runtime);
+  assert.equal(tooling.playwright, browser.playwrightVersion);
+  assert.equal(tooling.edgeVersion, browser.browserVersion);
+  assert.equal(tooling.signatureStatus, 'Valid');
+  assert.match(tooling.signer, /CN=Microsoft Corporation/);
+  assert.equal(tooling.helperSha256, browser.helper.sha256);
+  assert.equal(tooling.downloadsOrInstalls, false);
+  assert.equal(tooling.productionNode24Validated, false);
+});
+
+test('all owned JavaScript has successful syntax evidence bound to canonical source', () => {
+  const syntax = json('evidence\\syntax.json');
+  assert.equal(syntax.outcome, 'PASS');
+  assert.equal(syntax.runtime, 'v22.23.4');
+  assert.deepEqual(syntax.checks.map((entry) => entry.file).sort(), files().filter((file) => /\.(?:js|cjs)$/.test(file)));
+  for (const entry of syntax.checks) {
+    assert.equal(entry.exitCode, 0, entry.file);
+    assert.equal(entry.signal, null);
+    assert.equal(entry.spawnError, null);
+    assert.equal(entry.sourceCanonicalSha256, sha(canonical(bytes(entry.file))), entry.file);
+    assert.equal(entry.rawStdoutSha256, sha(Buffer.from(entry.stdoutBase64, 'base64')));
+    assert.equal(entry.rawStderrSha256, sha(Buffer.from(entry.stderrBase64, 'base64')));
+    assert.doesNotThrow(() => new vm.Script(bytes(entry.file).toString('utf8'), { filename: entry.file }));
+  }
+});
+
+test('sealed owned content preserves raw bytes and qualifies canonical Git clean-filter identities', () => {
+  const index = json('evidence\\content-index.json');
+  assert.equal(index.cardId, 'A-S077');
+  assert.equal(index.algorithm, 'SHA256');
+  assert.equal(index.excludedSelf, 'evidence\\content-index.json');
+  assert.deepEqual(index.files.map((entry) => entry.file).sort(), files().filter((file) => file !== index.excludedSelf));
+  for (const entry of index.files) {
+    const data = entry.hashMode === 'raw' ? bytes(entry.file) : canonical(bytes(entry.file));
+    assert.equal(data.length, entry.bytes, entry.file);
+    assert.equal(sha(data), entry.sha256, entry.file);
+    assert.equal(entry.hashMode === 'raw', /\.(?:raw|snapshot)$/.test(entry.file), entry.file);
+    const gitPath = `learning/S077/${entry.file.replace(/\\/g, '/')}`;
+    if (entry.hashMode === 'raw') {
+      assert.equal(git(['check-attr', '-z', 'text', '--', gitPath]).toString().split('\0')[2], 'unset', entry.file);
+    }
+    assert.equal(git(['hash-object', '--stdin', `--path=${gitPath}`], bytes(entry.file)).toString().trim(),
+      entry.expectedGitBlobSha1, entry.file);
+  }
+});
+
+test('actual owned HEAD blobs match sealed content after publication; pre-publication is explicitly unqualified', (context) => {
+  const tracked = git(['ls-tree', '-r', '--name-only', 'HEAD', '--', 'learning/S077']).toString().trim();
+  if (!tracked) {
+    context.diagnostic('A-S077 not yet published: only clean-filter integrity is qualified; rerun actual HEAD checks after publication.');
+    return;
+  }
+  const index = json('evidence\\content-index.json');
+  const expected = [...index.files.map((entry) => `learning/S077/${entry.file.replace(/\\/g, '/')}`),
+    'learning/S077/evidence/content-index.json'].sort();
+  assert.deepEqual(tracked.split(/\r?\n/).sort(), expected);
+  for (const entry of index.files) {
+    const gitPath = `learning/S077/${entry.file.replace(/\\/g, '/')}`;
+    const blob = git(['rev-parse', `HEAD:${gitPath}`]).toString().trim();
+    assert.equal(blob, entry.expectedGitBlobSha1, entry.file);
+    assert.equal(sha(git(['cat-file', 'blob', blob])), entry.sha256, entry.file);
+  }
+  assert.deepEqual(git(['show', 'HEAD:learning/S077/evidence/content-index.json']), canonical(bytes('evidence\\content-index.json')));
+});
+
+test('evidence and refinement preserve native/parent remainder and one parent-accepted credit only', () => {
+  const manifest = json('manifest.json');
+  const evidence = json('evidence.json');
+  const refinement = json('evidence\\refinement.json');
+  assert.equal(manifest.cardId, 'A-S077');
+  assert.equal(evidence.verifier, 'PASS');
+  assert.equal(evidence.mode, 'synthetic');
+  assert.equal(evidence.acceptance.status, 'pending parent empirical acceptance');
+  assert.equal(evidence.acceptance.acceptedAtUtc, null);
+  assert.equal(evidence.acceptance.reviewer, null);
+  assert.equal(evidence.publication.parentAcceptOnly, true);
+  for (const value of Object.values(evidence.native)) assert.equal(value, false);
+  for (const key of ['source', 'bdd', 'red', 'iac', 'focusedGreen', 'browserGreen', 'browser', 'tooling', 'syntax', 'integrity', 'refinement']) {
+    assert.equal(fs.existsSync(path.join(root, evidence[key])), true, key);
+  }
+  assert.equal(refinement.units, 1);
+  assert.equal(refinement.extraCardsCreated, 0);
+  assert.equal(refinement.sharedToDoEdits, false);
+  assert.equal(refinement.parentAcceptanceRequired, true);
+  assert.equal(refinement.remaining.find((entry) => entry.id === 'B-S077').readiness, false);
+  assert.equal(refinement.remaining.find((entry) => entry.id === 'D-S077').complete, false);
+});

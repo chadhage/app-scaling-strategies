@@ -1,0 +1,950 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S077",
+  "workerId": "worker-A-S077",
+  "mode": "synthetic",
+  "entry": "learning\\S077\\index.html",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "startedAtUtc": "2026-11-03T20:29:38.896Z",
+  "captureExplicitlyEnabled": true,
+  "outcome": "PASS",
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "publication": "53c0c0d",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055"
+  },
+  "observations": [
+    {
+      "name": "locked first delivery records only one effect",
+      "phase": "Phase: locked",
+      "verdict": "Synthetic business result: not evaluated",
+      "impact": "Business impact: not evaluated",
+      "metrics": "Observed deliveries: 1; known effects: 1. Redelivery not yet verified.",
+      "uncertainty": "No business-effect conclusion yet.",
+      "deliveries": [
+        [
+          "1",
+          "MSG-077",
+          "ORDER-077:credit",
+          "held",
+          "applied"
+        ]
+      ],
+      "effects": [
+        [
+          "E1",
+          "1",
+          "ORDER-077:credit",
+          "+10"
+        ]
+      ],
+      "history": [],
+      "retainedLedgers": [],
+      "interpretation": "Interpretation not checked.",
+      "trace": "Delivery #1 committed +10 synthetic units; acknowledgement lost.",
+      "error": "",
+      "focus": "expire-lock"
+    },
+    {
+      "name": "expired lock adds no effect and is not yet a business result",
+      "phase": "Phase: expired",
+      "verdict": "Synthetic business result: not evaluated",
+      "impact": "Business impact: not evaluated",
+      "metrics": "Observed deliveries: 1; known effects: 1. Redelivery not yet verified.",
+      "uncertainty": "No business-effect conclusion yet.",
+      "deliveries": [
+        [
+          "1",
+          "MSG-077",
+          "ORDER-077:credit",
+          "expired",
+          "applied"
+        ]
+      ],
+      "effects": [
+        [
+          "E1",
+          "1",
+          "ORDER-077:credit",
+          "+10"
+        ]
+      ],
+      "history": [],
+      "retainedLedgers": [],
+      "interpretation": "Interpretation not checked.",
+      "trace": "Delivery #1 committed +10 synthetic units; acknowledgement lost.\nModeled lock expired. The same message can be delivered again; expiry itself creates no business effect.",
+      "error": "",
+      "focus": "redeliver-message"
+    },
+    {
+      "name": "out-of-order redelivery rejected without progress",
+      "phase": "Phase: ready",
+      "verdict": "Synthetic business result: not evaluated",
+      "impact": "Business impact: not evaluated",
+      "metrics": "No synthetic deliveries observed.",
+      "uncertainty": "No business-effect conclusion yet.",
+      "deliveries": [],
+      "effects": [],
+      "history": [],
+      "retainedLedgers": [],
+      "interpretation": "Interpretation not checked.",
+      "trace": "No attempt started.",
+      "error": "This action requires phase expired; current phase is ready.",
+      "focus": "input-error"
+    },
+    {
+      "name": "tampered handler rejected and focused",
+      "phase": "Phase: ready",
+      "verdict": "Synthetic business result: not evaluated",
+      "impact": "Business impact: not evaluated",
+      "metrics": "No synthetic deliveries observed.",
+      "uncertainty": "No business-effect conclusion yet.",
+      "deliveries": [],
+      "effects": [],
+      "history": [],
+      "retainedLedgers": [],
+      "interpretation": "Interpretation not checked.",
+      "trace": "No attempt started.",
+      "error": "Choose a listed handler.",
+      "focus": "input-error"
+    },
+    {
+      "name": "missing first-outcome selection rejected",
+      "phase": "Phase: ready",
+      "verdict": "Synthetic business result: not evaluated",
+      "impact": "Business impact: not evaluated",
+      "metrics": "No synthetic deliveries observed.",
+      "uncertainty": "No business-effect conclusion yet.",
+      "deliveries": [],
+      "effects": [],
+      "history": [],
+      "retainedLedgers": [],
+      "interpretation": "Interpretation not checked.",
+      "trace": "No attempt started.",
+      "error": "Choose a listed first business outcome.",
+      "focus": "input-error"
+    },
+    {
+      "name": "blind reapplication repeats the business effect",
+      "phase": "Phase: complete",
+      "verdict": "Synthetic business result: FAIL",
+      "impact": "Business impact: duplicate business effect observed",
+      "metrics": "Deliveries: 2; repeated deliveries: 1; known effects: 2; duplicate effects: 1; unresolved effects: 0; known credit: 20 synthetic units.",
+      "uncertainty": "Possible business-effect count: 2 through 2. Unresolved outcomes are not assumed absent.",
+      "deliveries": [
+        [
+          "1",
+          "MSG-077",
+          "ORDER-077:credit",
+          "expired",
+          "applied"
+        ],
+        [
+          "2",
+          "MSG-077",
+          "ORDER-077:credit",
+          "new-lock",
+          "applied"
+        ]
+      ],
+      "effects": [
+        [
+          "E1",
+          "1",
+          "ORDER-077:credit",
+          "+10"
+        ],
+        [
+          "E2",
+          "2",
+          "ORDER-077:credit",
+          "+10"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "blind",
+          "committed",
+          "FAIL",
+          "2",
+          "2",
+          "1",
+          "0"
+        ]
+      ],
+      "retainedLedgers": [
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    },\n    {\n      \"effectId\": \"E2\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    2,\n    2\n  ],\n  \"reason\": \"The same business key received two known credits. Repeated delivery became a duplicate business effect.\"\n}"
+      ],
+      "interpretation": "Interpretation not checked.",
+      "trace": "Delivery #1 committed +10 synthetic units; acknowledgement lost.\nModeled lock expired. The same message can be delivered again; expiry itself creates no business effect.\nDelivery #2: applied. The same business key received two known credits. Repeated delivery became a duplicate business effect.",
+      "error": "",
+      "focus": "prediction"
+    },
+    {
+      "name": "empty interpretation is an error, not success",
+      "phase": "Phase: complete",
+      "verdict": "Synthetic business result: FAIL",
+      "impact": "Business impact: duplicate business effect observed",
+      "metrics": "Deliveries: 2; repeated deliveries: 1; known effects: 2; duplicate effects: 1; unresolved effects: 0; known credit: 20 synthetic units.",
+      "uncertainty": "Possible business-effect count: 2 through 2. Unresolved outcomes are not assumed absent.",
+      "deliveries": [
+        [
+          "1",
+          "MSG-077",
+          "ORDER-077:credit",
+          "expired",
+          "applied"
+        ],
+        [
+          "2",
+          "MSG-077",
+          "ORDER-077:credit",
+          "new-lock",
+          "applied"
+        ]
+      ],
+      "effects": [
+        [
+          "E1",
+          "1",
+          "ORDER-077:credit",
+          "+10"
+        ],
+        [
+          "E2",
+          "2",
+          "ORDER-077:credit",
+          "+10"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "blind",
+          "committed",
+          "FAIL",
+          "2",
+          "2",
+          "1",
+          "0"
+        ]
+      ],
+      "retainedLedgers": [
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    },\n    {\n      \"effectId\": \"E2\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    2,\n    2\n  ],\n  \"reason\": \"The same business key received two known credits. Repeated delivery became a duplicate business effect.\"\n}"
+      ],
+      "interpretation": "Interpretation not checked.",
+      "trace": "Delivery #1 committed +10 synthetic units; acknowledgement lost.\nModeled lock expired. The same message can be delivered again; expiry itself creates no business effect.\nDelivery #2: applied. The same business key received two known credits. Repeated delivery became a duplicate business effect.",
+      "error": "Choose PASS, FAIL or UNKNOWN.",
+      "focus": "input-error"
+    },
+    {
+      "name": "correctly identifying FAIL does not rewrite duplicate effects",
+      "phase": "Phase: complete",
+      "verdict": "Synthetic business result: FAIL",
+      "impact": "Business impact: duplicate business effect observed",
+      "metrics": "Deliveries: 2; repeated deliveries: 1; known effects: 2; duplicate effects: 1; unresolved effects: 0; known credit: 20 synthetic units.",
+      "uncertainty": "Possible business-effect count: 2 through 2. Unresolved outcomes are not assumed absent.",
+      "deliveries": [
+        [
+          "1",
+          "MSG-077",
+          "ORDER-077:credit",
+          "expired",
+          "applied"
+        ],
+        [
+          "2",
+          "MSG-077",
+          "ORDER-077:credit",
+          "new-lock",
+          "applied"
+        ]
+      ],
+      "effects": [
+        [
+          "E1",
+          "1",
+          "ORDER-077:credit",
+          "+10"
+        ],
+        [
+          "E2",
+          "2",
+          "ORDER-077:credit",
+          "+10"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "blind",
+          "committed",
+          "FAIL",
+          "2",
+          "2",
+          "1",
+          "0"
+        ]
+      ],
+      "retainedLedgers": [
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    },\n    {\n      \"effectId\": \"E2\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    2,\n    2\n  ],\n  \"reason\": \"The same business key received two known credits. Repeated delivery became a duplicate business effect.\"\n}"
+      ],
+      "interpretation": "Correct; evidence supports FAIL. The same business key received two known credits. Repeated delivery became a duplicate business effect. Business result and history are unchanged.",
+      "trace": "Delivery #1 committed +10 synthetic units; acknowledgement lost.\nModeled lock expired. The same message can be delivered again; expiry itself creates no business effect.\nDelivery #2: applied. The same business key received two known credits. Repeated delivery became a duplicate business effect.",
+      "error": "",
+      "focus": "check-prediction"
+    },
+    {
+      "name": "same redelivery with protection has one intended effect and retained failure",
+      "phase": "Phase: complete",
+      "verdict": "Synthetic business result: PASS",
+      "impact": "Business impact: one intended effect observed",
+      "metrics": "Deliveries: 2; repeated deliveries: 1; known effects: 1; duplicate effects: 0; unresolved effects: 0; known credit: 10 synthetic units.",
+      "uncertainty": "Possible business-effect count: 1 through 1. Unresolved outcomes are not assumed absent.",
+      "deliveries": [
+        [
+          "1",
+          "MSG-077",
+          "ORDER-077:credit",
+          "expired",
+          "applied"
+        ],
+        [
+          "2",
+          "MSG-077",
+          "ORDER-077:credit",
+          "new-lock",
+          "duplicate-suppressed"
+        ]
+      ],
+      "effects": [
+        [
+          "E1",
+          "1",
+          "ORDER-077:credit",
+          "+10"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "blind",
+          "committed",
+          "FAIL",
+          "2",
+          "2",
+          "1",
+          "0"
+        ],
+        [
+          "2",
+          "ledger",
+          "committed",
+          "PASS",
+          "2",
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "retainedLedgers": [
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    },\n    {\n      \"effectId\": \"E2\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    2,\n    2\n  ],\n  \"reason\": \"The same business key received two known credits. Repeated delivery became a duplicate business effect.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"duplicate-suppressed\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    1\n  ],\n  \"reason\": \"Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.\"\n}"
+      ],
+      "interpretation": "Interpretation not checked.",
+      "trace": "Delivery #1 committed +10 synthetic units; acknowledgement lost.\nModeled lock expired. The same message can be delivered again; expiry itself creates no business effect.\nDelivery #2: duplicate-suppressed. Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.",
+      "error": "",
+      "focus": "prediction"
+    },
+    {
+      "name": "unresolved protected effect is held, not absent or passed",
+      "phase": "Phase: complete",
+      "verdict": "Synthetic business result: UNKNOWN",
+      "impact": "Business impact: unresolved business outcome; no success claim",
+      "metrics": "Deliveries: 2; repeated deliveries: 1; known effects: 0; duplicate effects: 0; unresolved effects: 1; known credit: 0 synthetic units.",
+      "uncertainty": "Possible business-effect count: 0 through 1. Unresolved outcomes are not assumed absent.",
+      "deliveries": [
+        [
+          "1",
+          "MSG-077",
+          "ORDER-077:credit",
+          "expired",
+          "unresolved"
+        ],
+        [
+          "2",
+          "MSG-077",
+          "ORDER-077:credit",
+          "new-lock",
+          "held-unresolved"
+        ]
+      ],
+      "effects": [],
+      "history": [
+        [
+          "1",
+          "blind",
+          "committed",
+          "FAIL",
+          "2",
+          "2",
+          "1",
+          "0"
+        ],
+        [
+          "2",
+          "ledger",
+          "committed",
+          "PASS",
+          "2",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "3",
+          "ledger",
+          "unresolved",
+          "UNKNOWN",
+          "2",
+          "0",
+          "0",
+          "1"
+        ]
+      ],
+      "retainedLedgers": [
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    },\n    {\n      \"effectId\": \"E2\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    2,\n    2\n  ],\n  \"reason\": \"The same business key received two known credits. Repeated delivery became a duplicate business effect.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"duplicate-suppressed\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    1\n  ],\n  \"reason\": \"Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"unresolved\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"held-unresolved\"\n    }\n  ],\n  \"businessLedger\": [],\n  \"possibleEffects\": [\n    0,\n    1\n  ],\n  \"reason\": \"The first business outcome is unresolved. A missing record cannot prove zero effects or successful processing.\"\n}"
+      ],
+      "interpretation": "Interpretation not checked.",
+      "trace": "Delivery #1 outcome unresolved; absence of evidence is not evidence of no effect.\nModeled lock expired. The same message can be delivered again; expiry itself creates no business effect.\nDelivery #2: held-unresolved. The first business outcome is unresolved. A missing record cannot prove zero effects or successful processing.",
+      "error": "",
+      "focus": "prediction"
+    },
+    {
+      "name": "blind reapplication cannot settle earlier uncertainty",
+      "phase": "Phase: complete",
+      "verdict": "Synthetic business result: UNKNOWN",
+      "impact": "Business impact: unresolved business outcome; no success claim",
+      "metrics": "Deliveries: 2; repeated deliveries: 1; known effects: 1; duplicate effects: 0; unresolved effects: 1; known credit: 10 synthetic units.",
+      "uncertainty": "Possible business-effect count: 1 through 2. Unresolved outcomes are not assumed absent.",
+      "deliveries": [
+        [
+          "1",
+          "MSG-077",
+          "ORDER-077:credit",
+          "expired",
+          "unresolved"
+        ],
+        [
+          "2",
+          "MSG-077",
+          "ORDER-077:credit",
+          "new-lock",
+          "applied"
+        ]
+      ],
+      "effects": [
+        [
+          "E1",
+          "2",
+          "ORDER-077:credit",
+          "+10"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "blind",
+          "committed",
+          "FAIL",
+          "2",
+          "2",
+          "1",
+          "0"
+        ],
+        [
+          "2",
+          "ledger",
+          "committed",
+          "PASS",
+          "2",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "3",
+          "ledger",
+          "unresolved",
+          "UNKNOWN",
+          "2",
+          "0",
+          "0",
+          "1"
+        ],
+        [
+          "4",
+          "blind",
+          "unresolved",
+          "UNKNOWN",
+          "2",
+          "1",
+          "0",
+          "1"
+        ]
+      ],
+      "retainedLedgers": [
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    },\n    {\n      \"effectId\": \"E2\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    2,\n    2\n  ],\n  \"reason\": \"The same business key received two known credits. Repeated delivery became a duplicate business effect.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"duplicate-suppressed\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    1\n  ],\n  \"reason\": \"Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"unresolved\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"held-unresolved\"\n    }\n  ],\n  \"businessLedger\": [],\n  \"possibleEffects\": [\n    0,\n    1\n  ],\n  \"reason\": \"The first business outcome is unresolved. A missing record cannot prove zero effects or successful processing.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"unresolved\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    2\n  ],\n  \"reason\": \"The first business outcome is unresolved. A missing record cannot prove zero effects or successful processing.\"\n}"
+      ],
+      "interpretation": "Interpretation not checked.",
+      "trace": "Delivery #1 outcome unresolved; absence of evidence is not evidence of no effect.\nModeled lock expired. The same message can be delivered again; expiry itself creates no business effect.\nDelivery #2: applied. The first business outcome is unresolved. A missing record cannot prove zero effects or successful processing.",
+      "error": "",
+      "focus": "prediction"
+    },
+    {
+      "name": "protected redelivery recovers observed failure before commit",
+      "phase": "Phase: complete",
+      "verdict": "Synthetic business result: PASS",
+      "impact": "Business impact: one intended effect observed",
+      "metrics": "Deliveries: 2; repeated deliveries: 1; known effects: 1; duplicate effects: 0; unresolved effects: 0; known credit: 10 synthetic units.",
+      "uncertainty": "Possible business-effect count: 1 through 1. Unresolved outcomes are not assumed absent.",
+      "deliveries": [
+        [
+          "1",
+          "MSG-077",
+          "ORDER-077:credit",
+          "expired",
+          "not-committed"
+        ],
+        [
+          "2",
+          "MSG-077",
+          "ORDER-077:credit",
+          "new-lock",
+          "applied"
+        ]
+      ],
+      "effects": [
+        [
+          "E1",
+          "2",
+          "ORDER-077:credit",
+          "+10"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "blind",
+          "committed",
+          "FAIL",
+          "2",
+          "2",
+          "1",
+          "0"
+        ],
+        [
+          "2",
+          "ledger",
+          "committed",
+          "PASS",
+          "2",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "3",
+          "ledger",
+          "unresolved",
+          "UNKNOWN",
+          "2",
+          "0",
+          "0",
+          "1"
+        ],
+        [
+          "4",
+          "blind",
+          "unresolved",
+          "UNKNOWN",
+          "2",
+          "1",
+          "0",
+          "1"
+        ],
+        [
+          "5",
+          "ledger",
+          "not-committed",
+          "PASS",
+          "2",
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "retainedLedgers": [
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    },\n    {\n      \"effectId\": \"E2\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    2,\n    2\n  ],\n  \"reason\": \"The same business key received two known credits. Repeated delivery became a duplicate business effect.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"duplicate-suppressed\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    1\n  ],\n  \"reason\": \"Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"unresolved\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"held-unresolved\"\n    }\n  ],\n  \"businessLedger\": [],\n  \"possibleEffects\": [\n    0,\n    1\n  ],\n  \"reason\": \"The first business outcome is unresolved. A missing record cannot prove zero effects or successful processing.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"unresolved\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    2\n  ],\n  \"reason\": \"The first business outcome is unresolved. A missing record cannot prove zero effects or successful processing.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"not-committed\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    1\n  ],\n  \"reason\": \"Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.\"\n}"
+      ],
+      "interpretation": "Interpretation not checked.",
+      "trace": "Delivery #1 failed before commit; observed no business effect, no acknowledgement.\nModeled lock expired. The same message can be delivered again; expiry itself creates no business effect.\nDelivery #2: applied. Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.",
+      "error": "",
+      "focus": "prediction"
+    },
+    {
+      "name": "blind redelivery after known noncommit has one effect",
+      "phase": "Phase: complete",
+      "verdict": "Synthetic business result: PASS",
+      "impact": "Business impact: one intended effect observed",
+      "metrics": "Deliveries: 2; repeated deliveries: 1; known effects: 1; duplicate effects: 0; unresolved effects: 0; known credit: 10 synthetic units.",
+      "uncertainty": "Possible business-effect count: 1 through 1. Unresolved outcomes are not assumed absent.",
+      "deliveries": [
+        [
+          "1",
+          "MSG-077",
+          "ORDER-077:credit",
+          "expired",
+          "not-committed"
+        ],
+        [
+          "2",
+          "MSG-077",
+          "ORDER-077:credit",
+          "new-lock",
+          "applied"
+        ]
+      ],
+      "effects": [
+        [
+          "E1",
+          "2",
+          "ORDER-077:credit",
+          "+10"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "blind",
+          "committed",
+          "FAIL",
+          "2",
+          "2",
+          "1",
+          "0"
+        ],
+        [
+          "2",
+          "ledger",
+          "committed",
+          "PASS",
+          "2",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "3",
+          "ledger",
+          "unresolved",
+          "UNKNOWN",
+          "2",
+          "0",
+          "0",
+          "1"
+        ],
+        [
+          "4",
+          "blind",
+          "unresolved",
+          "UNKNOWN",
+          "2",
+          "1",
+          "0",
+          "1"
+        ],
+        [
+          "5",
+          "ledger",
+          "not-committed",
+          "PASS",
+          "2",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "6",
+          "blind",
+          "not-committed",
+          "PASS",
+          "2",
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "retainedLedgers": [
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    },\n    {\n      \"effectId\": \"E2\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    2,\n    2\n  ],\n  \"reason\": \"The same business key received two known credits. Repeated delivery became a duplicate business effect.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"duplicate-suppressed\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    1\n  ],\n  \"reason\": \"Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"unresolved\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"held-unresolved\"\n    }\n  ],\n  \"businessLedger\": [],\n  \"possibleEffects\": [\n    0,\n    1\n  ],\n  \"reason\": \"The first business outcome is unresolved. A missing record cannot prove zero effects or successful processing.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"unresolved\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    2\n  ],\n  \"reason\": \"The first business outcome is unresolved. A missing record cannot prove zero effects or successful processing.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"not-committed\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    1\n  ],\n  \"reason\": \"Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"not-committed\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    1\n  ],\n  \"reason\": \"Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.\"\n}"
+      ],
+      "interpretation": "Interpretation not checked.",
+      "trace": "Delivery #1 failed before commit; observed no business effect, no acknowledgement.\nModeled lock expired. The same message can be delivered again; expiry itself creates no business effect.\nDelivery #2: applied. Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.",
+      "error": "",
+      "focus": "prediction"
+    },
+    {
+      "name": "seventh attempt refused with all six histories retained",
+      "phase": "Phase: complete",
+      "verdict": "Synthetic business result: PASS",
+      "impact": "Business impact: one intended effect observed",
+      "metrics": "Deliveries: 2; repeated deliveries: 1; known effects: 1; duplicate effects: 0; unresolved effects: 0; known credit: 10 synthetic units.",
+      "uncertainty": "Possible business-effect count: 1 through 1. Unresolved outcomes are not assumed absent.",
+      "deliveries": [
+        [
+          "1",
+          "MSG-077",
+          "ORDER-077:credit",
+          "expired",
+          "not-committed"
+        ],
+        [
+          "2",
+          "MSG-077",
+          "ORDER-077:credit",
+          "new-lock",
+          "applied"
+        ]
+      ],
+      "effects": [
+        [
+          "E1",
+          "2",
+          "ORDER-077:credit",
+          "+10"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "blind",
+          "committed",
+          "FAIL",
+          "2",
+          "2",
+          "1",
+          "0"
+        ],
+        [
+          "2",
+          "ledger",
+          "committed",
+          "PASS",
+          "2",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "3",
+          "ledger",
+          "unresolved",
+          "UNKNOWN",
+          "2",
+          "0",
+          "0",
+          "1"
+        ],
+        [
+          "4",
+          "blind",
+          "unresolved",
+          "UNKNOWN",
+          "2",
+          "1",
+          "0",
+          "1"
+        ],
+        [
+          "5",
+          "ledger",
+          "not-committed",
+          "PASS",
+          "2",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "6",
+          "blind",
+          "not-committed",
+          "PASS",
+          "2",
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "retainedLedgers": [
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    },\n    {\n      \"effectId\": \"E2\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    2,\n    2\n  ],\n  \"reason\": \"The same business key received two known credits. Repeated delivery became a duplicate business effect.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"applied\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"duplicate-suppressed\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    1\n  ],\n  \"reason\": \"Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"unresolved\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"held-unresolved\"\n    }\n  ],\n  \"businessLedger\": [],\n  \"possibleEffects\": [\n    0,\n    1\n  ],\n  \"reason\": \"The first business outcome is unresolved. A missing record cannot prove zero effects or successful processing.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"unresolved\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    2\n  ],\n  \"reason\": \"The first business outcome is unresolved. A missing record cannot prove zero effects or successful processing.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"not-committed\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    1\n  ],\n  \"reason\": \"Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.\"\n}",
+        "{\n  \"deliveryLedger\": [\n    {\n      \"delivery\": 1,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"expired\",\n      \"outcome\": \"not-committed\"\n    },\n    {\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"lock\": \"new-lock\",\n      \"outcome\": \"applied\"\n    }\n  ],\n  \"businessLedger\": [\n    {\n      \"effectId\": \"E1\",\n      \"delivery\": 2,\n      \"messageId\": \"MSG-077\",\n      \"businessKey\": \"ORDER-077:credit\",\n      \"amount\": 10\n    }\n  ],\n  \"possibleEffects\": [\n    1,\n    1\n  ],\n  \"reason\": \"Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.\"\n}"
+      ],
+      "interpretation": "Interpretation not checked.",
+      "trace": "Delivery #1 failed before commit; observed no business effect, no acknowledgement.\nModeled lock expired. The same message can be delivered again; expiry itself creates no business effect.\nDelivery #2: applied. Two deliveries produced exactly one known intended effect; repeat delivery is not repeat business work.",
+      "error": "Six attempts are retained; explicitly reset rehearsal and history.",
+      "focus": "input-error"
+    },
+    {
+      "name": "complete full reset clears errors, ledgers, interpretation and history",
+      "phase": "Phase: ready",
+      "verdict": "Synthetic business result: not evaluated",
+      "impact": "Business impact: not evaluated",
+      "metrics": "No synthetic deliveries observed.",
+      "uncertainty": "No business-effect conclusion yet.",
+      "deliveries": [],
+      "effects": [],
+      "history": [],
+      "retainedLedgers": [],
+      "interpretation": "Interpretation not checked.",
+      "trace": "No attempt started.",
+      "error": "",
+      "focus": "deliver-message"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-j5T0FcCWM13yk03taih5n4yWcxjsQVwl9Yn+1xncyMw='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Loading the script 'https://example.invalid/s077-csp-probe.js' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Connecting to 'https://example.invalid/s077-csp-connect' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Fetch API cannot load https://example.invalid/s077-csp-connect. Refused to connect because it violates the document's Content Security Policy."
+    },
+    {
+      "stage": "csp",
+      "text": "Setting the document's base URI to 'https://example.invalid/' violates the following Content Security Policy directive: \"base-uri 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Applying inline style violates the following Content Security Policy directive 'style-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-HFtyL98xopkPJSrkZZ6/rzrDXoHmVbcolpk46VKTJRI='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Sending form data to 'https://example.invalid/s077-csp-form?' violates the following Content Security Policy directive: \"form-action 'none'\". The request has been blocked.\n"
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "probeRequests": [
+    {
+      "url": "https://example.invalid/s077-csp-probe.js",
+      "method": "GET"
+    }
+  ],
+  "probeResponses": [],
+  "cspViolations": [
+    {
+      "directive": "script-src",
+      "blockedURI": "eval",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "script-src-elem",
+      "blockedURI": "inline",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "script-src-elem",
+      "blockedURI": "https://example.invalid/s077-csp-probe.js",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "connect-src",
+      "blockedURI": "https://example.invalid/s077-csp-connect",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "base-uri",
+      "blockedURI": "https://example.invalid/",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "style-src-elem",
+      "blockedURI": "inline",
+      "disposition": "enforce"
+    },
+    {
+      "directive": "form-action",
+      "blockedURI": "https://example.invalid/s077-csp-form?",
+      "disposition": "enforce"
+    }
+  ],
+  "cleanup": {
+    "awaitedFinallyClose": true
+  },
+  "sourceHashes": {
+    "index.html": "63f435a64ea4c959bde174110768081292041baa6692a3df4e0567ada52d9baa",
+    "styles.css": "9c56e6aa180cf2b4510859991f67d6f2163ea346f9f869df0fde9c24afde0a48",
+    "model.js": "f34425d5ad36337831ffb7938e64c6eefdc39b25eed5f0b93950fe2d9c3f7037",
+    "app.js": "5aedbe09ce6d1195f1be506bed82ce2ca9a13f5ae09366924eb3f7084d1ead00",
+    "tests\\browser.test.cjs": "499af635989c1efaa3ce080200746eaf9b07f278f04b8e20923515245a39b156",
+    "tests\\csp-probe.js": "b5220a31704bae3531657ae83e647fd08624d2a578d95b73836752cd6e419c72"
+  },
+  "browserVersion": "156.0.4314.50",
+  "keyboard": {
+    "enterAndSpaceActions": true,
+    "arrowSelect": true,
+    "tabToInterpretationCheck": true,
+    "resetFocus": "deliver-message",
+    "visibleFocusOutlinePx": 3,
+    "narrowViewportWidth": 390,
+    "resetPhases": [
+      "ready",
+      "locked",
+      "expired",
+      "complete"
+    ]
+  },
+  "cspChecks": {
+    "dynamicEvaluationBlocked": true,
+    "inlineScriptBlocked": true,
+    "externalScriptBlocked": true,
+    "connectBlocked": true,
+    "baseBlocked": true,
+    "inlineStyleBlocked": true,
+    "formBlocked": true,
+    "noRemoteResponse": true,
+    "bypassCSP": false
+  },
+  "workerBoundary": "File-origin Worker creation was rejected before a worker-src CSP event; worker-src is declared but its enforcement is not independently qualified.",
+  "completedAtUtc": "2026-11-03T20:29:42.384Z"
+}

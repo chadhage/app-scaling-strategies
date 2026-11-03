@@ -1,0 +1,81 @@
+Feature: S077 distinguishes a repeated delivery from a repeated business effect
+  A-S077 is one frozen S unit in SC-S077, parent D-S077.
+  Training rehearsal - synthetic data - not a live Azure result
+  This bounded in-memory model is not a real broker or durable idempotency proof.
+
+  Background:
+    Given one synthetic message MSG-077 for business key ORDER-077:credit
+    And one intended credit of 10 synthetic units
+    And at most two deliveries and six retained attempts
+
+  Scenario: A lost acknowledgement permits delivery again without another effect
+    Given the first delivery committed the credit but its acknowledgement was lost
+    And the handler checks the modeled business-effect ledger
+    When the operator delivers the message, expires its lock and redelivers it once
+    Then both deliveries carry the same message and business key
+    And repeated deliveries is 1 while known business effects is 1
+    And the second delivery is duplicate-suppressed
+    And the synthetic business result is PASS, not native certification
+
+  Scenario: Blind reapplication duplicates a business effect
+    Given the first delivery committed but its acknowledgement was lost
+    And the handler blindly applies each delivery
+    When the operator expires the lock and redelivers the message
+    Then there are 2 deliveries and 2 known effects totaling 20 synthetic units
+    And the result is FAIL even if the learner correctly identifies the failure
+
+  Scenario Outline: An observed failure before commit still needs one effect
+    Given the first delivery is observed not to have committed
+    And the handler is <handler>
+    When the operator expires the lock and redelivers the message
+    Then exactly 1 effect totaling 10 synthetic units is observed
+    And the synthetic result is PASS
+    Examples:
+      | handler |
+      | ledger  |
+      | blind   |
+
+  Scenario: An unresolved first effect cannot be declared absent or successful
+    Given the first delivery's business outcome is unresolved
+    And the handler checks the modeled business-effect ledger
+    When the operator expires the lock and redelivers the message
+    Then the second delivery is held-unresolved rather than blindly applied
+    And known effects is 0, unresolved effects is 1 and possible effects is 0 through 1
+    And the result is UNKNOWN, not a successful no-op
+
+  Scenario: Blind redelivery cannot remove first-delivery uncertainty
+    Given the first delivery's business outcome is unresolved
+    And the handler blindly applies each delivery
+    When the operator expires the lock and redelivers the message
+    Then known effects is 1 and unresolved effects is 1
+    And possible effects is 1 through 2
+    And the result is UNKNOWN rather than PASS or an invented duplicate
+
+  Scenario: Retain failure while comparing a later protected attempt
+    Given a completed blind-reapplication failure
+    When a new attempt completes with ledger protection
+    Then the earlier failed delivery and effect ledgers are unchanged in history
+    And history contains both FAIL and PASS
+    And a seventh attempt is rejected until explicit full reset
+
+  Scenario: Invalid actions and input do not change state
+    Given a configuring, locked, expired or completed attempt
+    When an out-of-order action, extra input, invalid enum or forged state is supplied
+    Then the action is rejected without changing the prior state or history
+    And the browser announces and focuses the error
+
+  Scenario: Keyboard operation and full reset are honest
+    Given standard keyboard-operable controls and visible focus
+    When Enter, Space and select arrow keys conduct the exercise
+    Then delivery, lock expiry, redelivery, interpretation and history are observable
+    When the rehearsal is explicitly reset in any phase
+    Then defaults, counters, ledgers, prediction, errors and history are cleared
+    And focus returns to Deliver message
+    And form.reset remains a callable native method
+
+  Scenario: The standalone lesson refuses active remote content
+    Given a file-openable lesson with external local scripts and styles only
+    When driver probes attempt inline scripts, evaluation, remote scripts or connections
+    And inline style, base URI replacement or form submission
+    Then enforced CSP blocks them without a remote response
+    And the exercise itself makes no management or network requests

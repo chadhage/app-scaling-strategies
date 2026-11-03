@@ -1,0 +1,72 @@
+# S077 · Message redelivery
+
+**Training rehearsal - synthetic data - not a live Azure result**
+
+Open [index.html](index.html) directly in a modern browser. No server, broker, Azure account, credentials, framework or install is needed.
+
+## Exact source and scope
+
+- README S077: **Message redelivery:** Preserve one business effect even when the broker delivers a message again.
+- D-S077: Add lock expiry/redelivery and a business-effect ledger. Acceptance: redelivered messages produce one intended effect; duplicates and unresolved outcomes remain visible.
+- A-S077, frozen **S**, packet **SC-S077**, gate **SOURCE**: Redeliver one message; distinguish repeated delivery from repeated business effects.
+- Owned namespace: `learning\S077\**`; owner `worker-A-S077`. One unit only; tests, plumbing and refinement earn no additional credit.
+
+The exact source rows, portable/atomic contract and packet rule were read and captured **before behavior design** in [source-contract.json](evidence/source-contract.json). Byte-exact working-tree CRLF snapshots and immutable canonical Git blobs are retained independently.
+
+This exercise follows **one message through lock expiry and one redelivery**, not consumer expansion (S075), consumer retirement (S076), scheduler fencing (S078) or command retry idempotency (S084).
+
+## Conduct the exercise
+
+1. Choose **Check modeled effect ledger** or **Blindly apply every delivery**, and the first business observation.
+2. **Deliver message** records delivery #1. The first acknowledgement never settles.
+3. **Expire modeled lock** makes the same message eligible for delivery again. Expiry itself creates no business effect.
+4. **Redeliver same message** records delivery #2. Compare the delivery ledger, known business-effect ledger, counters, uncertainty and trace.
+5. Choose **PASS**, **FAIL** or **UNKNOWN**, then **Check interpretation**. Correctly identifying failure does not turn it into business success.
+6. **New attempt · keep history** restores defaults while retaining every earlier result and both ledgers. After six results, explicitly **Reset rehearsal and history**.
+
+Tab, arrow keys, Enter and Space operate the standard controls. Invalid input or action order is announced and focused without advancing state. Full reset works in every phase and clears defaults, active ledgers, metrics, errors, invalid markers, interpretation and history, then focuses **Deliver message**. Neither form shadows the native `form.reset()` method.
+
+## Fixture and expected assertions
+
+One fixed synthetic message **MSG-077** carries business key **ORDER-077:credit**. The intended effect is **+10 synthetic units once**. Both deliveries use that same identity; the known effect ledger records each applied credit separately.
+
+| First business observation | Handler | Deliveries / repeated | Known / duplicate / unresolved effects | Result |
+| --- | --- | --- | --- | --- |
+| Committed; acknowledgement lost | Ledger | 2 / 1 | 1 / 0 / 0; +10 units | **PASS**: second delivery is duplicate-suppressed. |
+| Committed; acknowledgement lost | Blind | 2 / 1 | 2 / 1 / 0; +20 units | **FAIL**: repeated business effect. |
+| Observed failure before commit | Either | 2 / 1 | 1 / 0 / 0; +10 units | **PASS**: redelivery supplies the missing effect. |
+| Unresolved first outcome | Ledger | 2 / 1 | 0 / 0 / 1; possible effects 0–1 | **UNKNOWN**: second delivery is held-unresolved for reconciliation. |
+| Unresolved first outcome | Blind | 2 / 1 | 1 / 0 / 1; possible effects 1–2 | **UNKNOWN**: a known later effect cannot resolve the earlier one. |
+
+Unknown is not absent, nor an invented known duplicate. A ledger with no known rows cannot certify that no effect occurred. The model never retries or resolves an unknown outcome automatically.
+
+The envelope is six configurations, one message, at most two deliveries and two known effects, one unresolved effect and six retained attempts. Exact input shape/types/enums, action order, authentic immutable state and immutable history are enforced. No arbitrary endpoints, payloads, timers, real users or background load are accepted. History is in memory only; reset or reload clears it.
+
+## BDD → RED → IaC N/A → green → browser
+
+[message-redelivery.feature](message-redelivery.feature) preceded a loadable stub. The unchanged nine acceptance cases initially produced **eight actual `ERR_ASSERTION` failures**, with one passing case—not missing code, packages or tooling. Original BDD, stub and acceptance tests have non-auto-discovered `.snapshot` names beside byte-exact [raw RED](evidence/red/run.json). [IaC N/A](evidence/iac-decision.json) was recorded after RED and before implementation.
+
+From the repository root, normal verification is **read-only**:
+
+```powershell
+$env:CAPTURE_BROWSER_EVIDENCE=$null
+node --test --test-reporter=spec --test-concurrency=1 .\learning\S077\tests\acceptance.test.cjs .\learning\S077\tests\model.test.cjs .\learning\S077\tests\surface.test.cjs .\learning\S077\tests\integrity.test.cjs .\learning\S077\tests\browser.test.cjs
+```
+
+Tests cover all six configurations, invalid inputs, wrong-order/forged-state guards, immutable history, retained failures, bounds, syntax and raw/canonical source integrity. The isolated actual browser checks success, failure, unknown, counters and ledgers, interpretation, keyboard/focus, tampered input, errors, reset in every phase, the history bound, narrow viewport and enforced CSP.
+
+Historical capture is deliberately separate: `tests\capture.cjs` accepts only `source`, `red`, `iac-na`, `focused-green` or `browser-green`; `tests\seal.cjs` accepts only `syntax` or `index`. They exclusively create proof and refuse overwrite. **Do not rerun capture/seal as ordinary verification.** `CAPTURE_BROWSER_EVIDENCE=1` is used only for deliberate browser capture; reruns without it preserve all retained proof.
+
+Browser tooling is the already available **Node 22.23.4 / offline Playwright 1.56.1 / Microsoft-signed Edge 156.0.4314.50**. Only published `testing\browser\isolated.cjs` (`53c0c0d`, SHA256 `86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055`) is used, with `openIsolatedLesson` and awaited `finally` close. No integrated-browser foreground lease, download, install, unsafe flags or abandoned lifecycle prototype is used. Its documented unattended lifecycle limitation remains unqualified.
+
+CSP is checked for dynamic evaluation, inline/external scripts, inline styles, connections, base URI and form actions. File-origin Worker creation is rejected **before** a worker-src CSP event; worker-src is declared, but its separate enforcement is **not qualified**. Driver probes are not lesson network activity, and no probe receives a remote response.
+
+## Evidence and remaining work
+
+[manifest.json](manifest.json) is the discoverable standalone contract. [evidence.json](evidence.json) links raw runs, browser observations, syntax, tooling and the content index. Narrow owned `.gitattributes` preserves raw evidence without CRLF normalization; read-only integrity checks qualify clean-filter identities before publication and actual owned HEAD blobs afterwards.
+
+This is not actual broker redelivery, durable deduplication, transactional atomicity, an exactly-once guarantee, production Node.js 24 validation, a benchmark or native Azure proof. A real implementation must independently establish stable business identity, atomic effect/deduplication behavior, concurrent-worker safety, settlement/lock limits, durable recovery and reconciliation of ambiguous outcomes.
+
+**B-S077 and D-S077 remain incomplete**, with readiness false for native work until their approvals, adapter, durable fixture and actual broker/effect evidence exist. The owned [refinement record](evidence/refinement.json) preserves that genuine remainder; no unowned To Do entry is edited or extra unit created. Only the parent may accept A-S077 once after empirical review.
+
+This lesson inherits the [Microsoft Open Source Disclaimer](../../README.md#microsoft-open-source-disclaimer). Demonstration targets are not Microsoft service-level agreements.
