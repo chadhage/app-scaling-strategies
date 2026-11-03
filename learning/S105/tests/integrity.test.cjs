@@ -12,6 +12,8 @@ const root = path.resolve(__dirname, '..');
 const repo = path.resolve(root, '..', '..');
 const evidence = path.join(root, 'evidence');
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const lf = (bytes) => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+const sameText = (actual, historicalRaw) => assert.deepEqual(lf(actual), lf(historicalRaw));
 const read = (file) => fs.readFileSync(path.join(root, ...file.split('/')), 'utf8');
 const json = (file) => JSON.parse(read(file));
 const source = json('evidence/source.json');
@@ -120,7 +122,19 @@ test('actual loadable-stub assertion RED preceded resource-free IaC N/A and impl
   assert.ok(Date.parse(red.finishedAtUtc) <= Date.parse(na.recordedAtUtc));
   const stub = red.snapshots.find((snapshot) => snapshot.source === 'model.js');
   assert.notEqual(hash(fs.readFileSync(path.join(root, 'model.js'))), stub.sha256);
-  assert.equal(hash(fs.readFileSync(path.join(root, 'lesson.feature'))), red.snapshots.find((snapshot) => snapshot.source === 'lesson.feature').sha256);
+  sameText(fs.readFileSync(path.join(root, 'lesson.feature')),
+    raw(red.snapshots.find((snapshot) => snapshot.source === 'lesson.feature')));
+});
+
+test('canonical LF source compares separately to independently checked historical CRLF bytes', () => {
+  const red = json('evidence/red-001.json');
+  const feature = raw(red.snapshots.find((snapshot) => snapshot.source === 'lesson.feature'));
+  const canonical = lf(feature);
+  assert.notDeepEqual(feature, canonical);
+  assert.notEqual(hash(feature), hash(canonical));
+  sameText(canonical, feature);
+  sameText(feature, canonical);
+  assert.throws(() => sameText(Buffer.from(canonical.toString('utf8').replace('DATA ONLY', 'LIVE DATA')), feature));
 });
 
 test('manifest preserves one synthetic original S unit and explicitly leaves native/source acceptance incomplete', () => {
@@ -220,12 +234,12 @@ test('actual browser transcript proves the local observations and preserves the 
   assert.match(steps[14].dom.error.text, /^MODEL_UNAVAILABLE:/);
   assert.ok(steps[14].dom.controls.every((control) => control.disabled));
   for (const snapshot of passed.snapshots) {
-    assert.equal(hash(fs.readFileSync(path.join(root, ...snapshot.source.split('/')))), snapshot.sha256);
+    sameText(fs.readFileSync(path.join(root, ...snapshot.source.split('/'))), raw(snapshot));
   }
 });
 
 test('every retained run record has verifiable raw output and source provenance', () => {
-  const records = fs.readdirSync(evidence).filter((file) => /^(?:red|green|syntax|browser)-\d{3}\.json$/.test(file));
+  const records = fs.readdirSync(evidence).filter((file) => /^(?:red|green|syntax|browser|canonical)-\d{3}\.json$/.test(file));
   assert.ok(records.includes('red-001.json'));
   for (const file of records) {
     const record = JSON.parse(fs.readFileSync(path.join(evidence, file), 'utf8'));

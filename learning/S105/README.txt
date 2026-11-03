@@ -42,6 +42,7 @@ This is one original S unit; tests, repairs, evidence and refinement add no cred
 Read-only verification, from the repository root in PowerShell
   node --test .\learning\S105\tests\model.test.cjs .\learning\S105\tests\integrity.test.cjs
   node .\learning\S105\tools\syntax.cjs
+  node .\learning\S105\tools\canonical.cjs
   node .\learning\S105\tools\browser.cjs
 
 The browser runner checks the exact published testing\browser\isolated.cjs
@@ -68,6 +69,11 @@ Evidence and chronology
   stub was unchanged, before implementation.
 - evidence\green-*.json / syntax-*.json: actual focused and syntax runs with raw
   source/output provenance, retained append-only.
+- evidence\canonical-*.json: the same focused suite runs against an explicit
+  in-memory LF source projection. Historical raw evidence is excluded from that
+  projection and its hashes stay exact. This catches LF-checkout proof-comparison
+  mistakes without rewriting CRLF files or normalizing archived raw bytes.
+  Canonical Git blob equality is qualified separately after publication.
 - evidence\browser-*.json: actual DOM, keyboard, error, reset, failure and CSP
   observations; raw chronology and provenance accompany each deliberate capture.
   browser-001 records a pre-browser tooling failure: the legacy powershell.exe
@@ -79,7 +85,7 @@ Evidence and chronology
   blockers. It neither admits a new card nor mutates the shared board.
 
 Normal verification does not rewrite proofs. Test capture is also deliberate:
-CAPTURE_TEST_EVIDENCE=1 node .\learning\S105\tools\capture-run.cjs green|syntax
+CAPTURE_TEST_EVIDENCE=1 node .\learning\S105\tools\capture-run.cjs green|syntax|canonical
 Source capture, RED and IaC N/A are historical stage producers, not normal tests.
 Publication and parent-owned review are separate. A worker does not self-Accept
 or claim that the source parent or native sibling is Done.

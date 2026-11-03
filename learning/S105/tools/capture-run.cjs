@@ -13,9 +13,10 @@ const commands = {
   red: ['--test', path.join(root, 'tests', 'model.test.cjs')],
   green: ['--test', path.join(root, 'tests', 'model.test.cjs'), path.join(root, 'tests', 'integrity.test.cjs')],
   syntax: [path.join(root, 'tools', 'syntax.cjs')],
+  canonical: [path.join(root, 'tools', 'canonical.cjs')],
 };
 if (process.env.CAPTURE_TEST_EVIDENCE !== '1' || process.argv.length !== 3 || !Object.hasOwn(commands, stage)) {
-  throw new Error('Deliberate capture only: CAPTURE_TEST_EVIDENCE=1 node tools\\capture-run.cjs red|green|syntax');
+  throw new Error('Deliberate capture only: CAPTURE_TEST_EVIDENCE=1 node tools\\capture-run.cjs red|green|syntax|canonical');
 }
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 let attempt = 1;
@@ -33,7 +34,7 @@ const snapshotFiles = stage === 'red'
   : ['.gitattributes', 'README.txt', 'lesson.feature', 'model.js', 'lesson.js', 'index.html',
     'lesson.css', 'manifest.json', 'remainder.json', 'tests/model.test.cjs', 'tests/integrity.test.cjs',
     'tools/browser.cjs', 'tools/syntax.cjs', 'tools/capture-run.cjs', 'tools/capture-source.cjs',
-    'tools/record-iac-na.cjs'];
+    'tools/record-iac-na.cjs', 'tools/canonical.cjs'];
 const snapshots = snapshotFiles.map((file) => ({
   source: file,
   ...save(file.replaceAll('/', '--'), fs.readFileSync(path.join(root, ...file.split('/')))),
