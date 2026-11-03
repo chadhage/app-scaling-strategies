@@ -1,0 +1,70 @@
+Feature: A-S101 stable getProfile endpoint, independent backend releases
+  # README S101; backlog D-S101; portable A-S101; packet SC-S101.
+  # All observations are deterministic synthetic fixtures, never network calls.
+  Background:
+    Given two existing synthetic callers use "https://profiles.training.invalid/api/getProfile"
+    And both require API contract "profile.v1" independently of backend release names
+    And their signed-in profile navigation and 100 ms journey budget are required
+    And the page says "Training rehearsal - synthetic data - not a live Azure result"
+
+  Scenario: Compatible deployment change preserves complete existing caller journeys
+    Given the compatible candidate is selected
+    When the operator switches the configured backend from blue to green
+    And measures both existing caller journeys
+    Then both observed backend releases change
+    And neither caller changes hostname, endpoint, API contract, identity, or navigation
+    And two uninterrupted synthetic transitions are measured
+
+  Scenario Outline: HTTP 200 is insufficient for a complete journey
+    Given the "<condition>" candidate is selected
+    When the operator switches to green and measures both journeys
+    Then HTTP 200 and the observed green backend do not conceal "<failure>"
+    And the verifier fails and the user impact is an interrupted transition
+    And selecting the expected negative outcome does not award migration success
+    Examples:
+      | condition           | failure                    |
+      | breaking-contract   | incompatible profile.v2    |
+      | authentication-loss | unexpected synthetic logout |
+      | navigation-loss     | broken profile navigation  |
+      | endpoint-change     | changed public hostname    |
+      | over-budget         | over-budget latency        |
+
+  Scenario: Configured routing is not observed migration
+    Given the stale-route candidate is selected
+    When the operator switches the configured backend to green and measures
+    Then both callers are still observed on blue
+    And the measured outcome is not-transitioned, not successful
+
+  Scenario: Missing completion evidence stays unknown
+    Given the missing-observation candidate is selected
+    When the operator switches to green and measures
+    Then the browser caller passes and the service caller completion is unknown
+    And both started journeys remain in the denominator
+    And the combined measured outcome is unknown, not successful
+
+  Scenario: Measurement before switching is rejected
+    When a measurement is requested in the prepared state
+    Then a typed state error is reported without mutation or an invented attempt
+
+  Scenario: Strict inputs and retained history cannot be forged
+    When an unknown condition, coerced type, extra command field, or forged state is submitted
+    Then a typed guard rejects it without changing the current state
+
+  Scenario: Rollback and reset preserve an earlier interruption
+    Given a breaking-contract measurement has interrupted both callers
+    When the operator restores blue and resets the controls
+    Then the configured route and form defaults return to their initial state
+    And both interrupted attempts and their exact observations remain in history
+    And a subsequent compatible run cannot overwrite those failures
+
+  Scenario: The session is bounded without silently evicting evidence
+    Given the eight-run or forty-action limit is reached
+    When another action would exceed the declared limit
+    Then a visible limit error preserves the existing record
+
+  Scenario: Actual standalone browser controls and policy
+    When the lesson is opened as a local file in the approved isolated browser
+    Then switch, measure, outcome check, rollback, and reset work with keyboard input
+    And errors are announced and focused without unsafe HTML insertion
+    And CSP blocks inline script, foreign script, and connection attempts
+    And deliberate evidence capture is separate from read-only normal verification

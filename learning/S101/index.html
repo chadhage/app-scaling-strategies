@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>S101 — Stable getProfile endpoint</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#operator-controls">Skip to operator controls</a>
+  <main>
+    <p id="training-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S101: Change the backend, keep the caller contract</h1>
+    <p>Keep a public <code>getProfile</code> endpoint stable while switching backend releases.
+      Existing browser and service callers must still complete their signed-in profile journeys.</p>
+    <section aria-labelledby="contract-heading">
+      <h2 id="contract-heading">Declared synthetic contract</h2>
+      <dl>
+        <dt>Caller endpoint and hostname</dt><dd><code>https://profiles.training.invalid/api/getProfile</code> (text only; never requested)</dd>
+        <dt>Existing callers</dt><dd><code>browser-v1</code> and <code>service-v1</code>, both requiring <code>profile.v1</code></dd>
+        <dt>API contract</dt><dd>String profile ID and display name, string reader roles; additive optional fields are allowed.</dd>
+        <dt>Deployment releases</dt><dd><code>release-blue-17</code> → <code>release-green-42</code>; these are not API versions.</dd>
+        <dt>Complete journey</dt><dd>Same synthetic identity, signed-in profile navigation, and summed before/after latency ≤ 100 ms.</dd>
+      </dl>
+      <p>Preconditions: two already-signed-in synthetic callers on blue. Green is a fixed fixture,
+        not a deployed server. There is no real gateway, DNS, authentication, or backend connection.</p>
+    </section>
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Conduct one switch</h2>
+      <ol>
+        <li>Select a candidate condition, then switch the configured route to green.</li>
+        <li>Measure both callers. Compare the actual backend release, endpoint, contract, and complete journey.</li>
+        <li>Check your predicted outcome. Restore blue or reset without erasing earlier failures.</li>
+      </ol>
+      <form id="operator-controls">
+        <label for="condition">Candidate condition</label>
+        <select id="condition" name="condition">
+          <option value="compatible">Compatible green release (additive field, same API)</option>
+          <option value="breaking-contract">HTTP 200, incompatible profile.v2 payload</option>
+          <option value="authentication-loss">HTTP 200, unexpected synthetic logout</option>
+          <option value="navigation-loss">HTTP 200, broken profile navigation</option>
+          <option value="endpoint-change">HTTP 200, caller-facing hostname changes</option>
+          <option value="stale-route">Configured green, actually still blue</option>
+          <option value="missing-observation">Service caller completion not observed</option>
+          <option value="over-budget">HTTP 200, complete journey takes 140 ms</option>
+        </select>
+        <button id="switch-backend" type="submit">1. Switch to green</button>
+      </form>
+      <div class="actions">
+        <button id="measure-journeys" type="button" disabled>2. Measure callers</button>
+        <button id="restore-blue" type="button" disabled>Restore blue route</button>
+        <button id="reset-rehearsal" type="button">Reset controls; retain history</button>
+      </div>
+      <p id="operator-status" role="status" aria-live="polite">Prepared on blue; no migration measured.</p>
+      <p id="error-panel" role="alert" tabindex="-1" hidden></p>
+      <noscript><p class="error">JavaScript is required for this local exercise. No live operations are available.</p></noscript>
+    </section>
+    <section id="result-panel" aria-labelledby="result-heading" tabindex="-1">
+      <h2 id="result-heading">Measured result, not route intent</h2>
+      <p id="outcome" data-outcome="unmeasured">Not measured.</p>
+      <dl>
+        <dt>Verifier</dt><dd id="verifier">Not run</dd>
+        <dt>User impact</dt><dd id="user-impact">No observed transition</dd>
+        <dt>Cleanup / routing</dt><dd id="cleanup-status">No resources created. Synthetic route is blue.</dd>
+      </dl>
+      <p id="explanation">HTTP 200 and a configured green route alone cannot prove migration.</p>
+      <ul id="caller-results" class="caller-results"></ul>
+      <label for="expected-outcome">Predict the combined measured outcome</label>
+      <select id="expected-outcome" name="expected-outcome">
+        <option value="positive">Positive: both complete journeys pass and move</option>
+        <option value="negative">Negative: a required journey clause fails</option>
+        <option value="unknown">Unknown: completion evidence is missing</option>
+        <option value="not-transitioned">Not transitioned: callers never moved</option>
+      </select>
+      <button id="check-outcome" type="button" disabled>3. Check my explanation</button>
+      <p id="learner-check" role="status" aria-live="polite" data-verdict="unchecked">Not checked.</p>
+    </section>
+    <section aria-labelledby="totals-heading">
+      <h2 id="totals-heading">Retained session totals</h2>
+      <dl class="totals">
+        <dt>Attempted caller transitions</dt><dd id="attempted">0</dd>
+        <dt>Successful transitions</dt><dd id="successful">0</dd>
+        <dt>Interrupted transitions</dt><dd id="interrupted">0</dd>
+        <dt>Unknown started outcomes</dt><dd id="unknown">0</dd>
+        <dt>Not transitioned</dt><dd id="not-transitioned">0</dd>
+      </dl>
+      <p id="denominator">Empty sample: no migration evidence.</p>
+      <ol id="history"></ol>
+      <details>
+        <summary>Retained operator action history</summary>
+        <ol id="action-history"></ol>
+      </details>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits and source acceptance</h2>
+      <p>At most eight run IDs and forty accepted operator actions per page session; one measurement
+        per run and two callers per measurement. Limits reject additional actions rather than discarding evidence.
+        Reset restores controls and blue routing, retaining prior observations in memory. Reload starts a new
+        session and discards in-memory history; committed test evidence is separate.</p>
+      <p>All timings and observations are deterministic synthetic fixtures, not live measurements.
+        A matched negative explanation is educational success, not uninterrupted migration.
+        Missing completion remains unknown. Old-only callers do not prove migration.</p>
+      <p>A-S101 is one portable satisfier in SC-S101. B-S101 and D-S101 remain incomplete.
+        No production Node.js 24, native Azure behavior, DNS convergence, gateway, identity, or
+        reliability guarantee is certified. Browser tooling has a documented unqualified lifecycle limitation.</p>
+      <p><a href="README.md">Lesson instructions and evidence</a> ·
+        <a href="../../README.md#scenario-catalog">Source S101</a> ·
+        <a href="../../.docs/wiki/backlog.md">Authoritative D-S101 acceptance</a> ·
+        <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft Open Source Disclaimer</a></p>
+      <p>This rehearsal does not imply Microsoft endorsement, support, or a Microsoft SLA.</p>
+    </section>
+  </main>
+</body>
+</html>

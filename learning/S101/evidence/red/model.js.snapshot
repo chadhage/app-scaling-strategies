@@ -1,0 +1,29 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.StableEndpointLesson = api;
+}(globalThis, function () {
+  'use strict';
+  const constants = Object.freeze({
+    endpoint: 'https://profiles.training.invalid/api/getProfile',
+    apiContract: 'profile.v1',
+    backendReleases: { blue: 'release-blue-17', green: 'release-green-42' },
+    callers: ['browser-v1', 'service-v1'],
+    conditions: ['compatible', 'breaking-contract', 'authentication-loss', 'navigation-loss',
+      'endpoint-change', 'stale-route', 'missing-observation', 'over-budget'],
+    budgetMs: 100,
+    maxRuns: 8,
+    maxActions: 40,
+  });
+  function createState() {
+    return { schemaVersion: 1, runId: 1, phase: 'prepared', backend: 'blue',
+      condition: 'compatible', history: [] };
+  }
+  function act(state) { return state; }
+  function results() { return []; }
+  function summary() {
+    return { attempted: 0, successful: 0, interrupted: 0, unknown: 0, notTransitioned: 0 };
+  }
+  return { constants, createState, act, results, summary };
+}));
