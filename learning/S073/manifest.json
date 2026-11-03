@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "A-S073",
+  "sourceId": "S073",
+  "parentId": "D-S073",
+  "nativeSibling": "B-S073",
+  "packet": "SC-S073",
+  "kano": "S",
+  "kanoUnit": "A-S073",
+  "title": "Cache unavailable: required profile recovery",
+  "entry": "index.html",
+  "mode": "synthetic",
+  "trainingBanner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Lose cache access; an empty user profile must not be a successful fallback.",
+  "preconditions": ["One fixed synthetic profile at revision 7", "Budgets and observations are finite synthetic fixtures", "No real identity, session, cache service or durable store"],
+  "actions": ["Configure", "Run synthetic attempt", "Predict and check", "New attempt retaining history", "Reset rehearsal"],
+  "inputs": {
+    "cache": ["available", "lost", "unknown"],
+    "recovery": ["durable", "empty", "fail"],
+    "durable": ["correct", "stale", "wrong", "empty", "unavailable", "unknown"],
+    "budgetMs": [80, 110, 150]
+  },
+  "expectedAssertions": ["Only exact required state within budget can succeed", "Empty state always fails", "Unknown proof is not success", "Known budget failure overrides unknown state", "Six attempts remain until explicit reset"],
+  "limits": ["No actual outage or durable recovery certification", "No production Node.js 24, native Azure or source-parent completion claim", "No cloud, authentication, credentials, listener or persistence"],
+  "bdd": "cache-outage.feature",
+  "evidence": "evidence.json",
+  "keyboard": true,
+  "resourceCount": 0
+}

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S073 — Cache loss and required profile recovery</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to operator controls</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S073: Cache access lost</h1>
+    <p>Recover the required synthetic profile within the declared budget. A quick empty object is never a successful fallback.</p>
+    <p>A-S073 · D-S073 · SC-S073 · frozen S · one local learning unit</p>
+  </header>
+  <main>
+    <section aria-labelledby="contract-title">
+      <h2 id="contract-title">Declare the recovery contract</h2>
+      <p><strong>Required state:</strong> synthetic-profile-073, revision 7, label “Sample learner 073”, dark theme, saved items synthetic-item-1 and synthetic-item-2. Every field must remain intact.</p>
+      <p><strong>Preconditions:</strong> one fixed, entirely fictional profile and one deterministic attempt at a time. Cache success costs 10 synthetic ms. Observed cache loss costs 20 ms; durable recovery adds 90 ms (110 ms total). Equality to the budget is permitted.</p>
+      <p>SUCCESS means known correct state within budget. FAILURE includes missing, wrong, stale, unavailable or over-budget state. UNKNOWN means the observation is missing, never a successful recovery. A known missed budget is still FAILURE if state is unknown.</p>
+      <p>Choose controls, run once, inspect the trace, predict the classification, then check. Checking tests your reasoning; it cannot change the measured result.</p>
+    </section>
+    <section aria-labelledby="controls-title" id="controls">
+      <h2 id="controls-title">Operator controls</h2>
+      <p id="phase" role="status">Phase: configuring</p>
+      <form id="attempt-form" novalidate>
+        <fieldset id="configuration">
+          <legend>Configure one synthetic attempt</legend>
+          <label for="cache">Cache observation</label>
+          <select id="cache" name="cache">
+            <option value="lost" selected>Cache access lost</option>
+            <option value="available">Known correct cache read (baseline)</option>
+            <option value="unknown">Cache observation missing</option>
+          </select>
+          <label for="recovery">When cache access is lost</label>
+          <select id="recovery" name="recovery">
+            <option value="durable" selected>Use durable recovery receipt</option>
+            <option value="empty">Substitute an empty profile (unsafe comparison)</option>
+            <option value="fail">Return explicit failure</option>
+          </select>
+          <label for="durable">Synthetic durable receipt</label>
+          <select id="durable" name="durable">
+            <option value="correct" selected>Exact required profile, revision 7</option>
+            <option value="stale">Stale profile, revision 6</option>
+            <option value="wrong">Different synthetic profile ID</option>
+            <option value="empty">Empty profile {}</option>
+            <option value="unavailable">Explicitly unavailable</option>
+            <option value="unknown">Returned-profile receipt missing</option>
+          </select>
+          <label for="budget">Total journey budget (synthetic ms)</label>
+          <select id="budget" name="budget">
+            <option value="80">80 — durable path is too slow</option>
+            <option value="110">110 — exact durable boundary</option>
+            <option value="150" selected>150 — durable path fits</option>
+          </select>
+        </fieldset>
+        <button id="run-attempt" type="submit">Run synthetic attempt</button>
+      </form>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <form id="check-form" novalidate>
+        <fieldset id="prediction-controls" disabled>
+          <legend>Inspect the result, then check your prediction</legend>
+          <label for="prediction">Classification prediction</label>
+          <select id="prediction" name="prediction" aria-describedby="prediction-result">
+            <option value="" selected>Choose a classification</option>
+            <option value="SUCCESS">SUCCESS</option>
+            <option value="FAILURE">FAILURE</option>
+            <option value="UNKNOWN">UNKNOWN</option>
+          </select>
+          <button id="check-result" type="submit">Check prediction</button>
+        </fieldset>
+      </form>
+      <p id="prediction-result" role="status">Prediction not checked.</p>
+      <div class="actions">
+        <button id="new-attempt" type="button" disabled>New attempt (retain history)</button>
+        <button id="reset-rehearsal" type="button" aria-describedby="reset-help">Reset rehearsal and history</button>
+      </div>
+      <p id="reset-help">Reset deliberately clears all six local attempt slots, traces, predictions and errors. It restores defaults and focus; no live or durable state is touched.</p>
+      <p id="history-count">Retained attempts: 0 / 6</p>
+      <p>Use Tab, arrow keys, Enter and Space for the controls. Attempts are locked after running; check before starting another. At six attempts, reset is required.</p>
+    </section>
+    <section aria-labelledby="outcome-title">
+      <h2 id="outcome-title">Observed synthetic result</h2>
+      <p id="outcome" role="status" aria-live="polite">Not evaluated — no recovery proof.</p>
+      <p id="metrics">No attempt measured.</p>
+      <p id="detail"></p>
+      <h3>Returned profile observation</h3>
+      <pre id="profile">No returned profile observation.</pre>
+      <h3>Deterministic trace</h3>
+      <ol id="trace"><li>No attempt started.</li></ol>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained attempt history</h2>
+      <p id="totals">Measured attempts: 0; SUCCESS 0; FAILURE 0; UNKNOWN 0. No recovery proof.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>All results, including unchecked, failed and unknown attempts, remain until explicit reset.</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Configuration</th><th scope="col">Actual result</th><th scope="col">Timing / state</th><th scope="col">Learning check</th><th scope="col">Retained trace</th></tr></thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Limits and native remainder</h2>
+      <p>This finite model has no network, persistence, real identity, authentication, sessions or credentials. All profile IDs, contents, receipts and timings are synthetic; no Azure management API or cache service is called.</p>
+      <p>A browser lesson pass is not actual cache-outage or durable-profile recovery certification, five-nines continuity evidence, production Node.js 24 support, or completion of B-S073 / D-S073. The native sibling still needs CORE, DATA, HOST and approved real recovery observations within budgets.</p>
+      <p>Open this HTML file directly. Closing or reloading discards this page's memory. IaC, cloud resources, packages and deployment are not required or authorized.</p>
+    </section>
+  </main>
+</body>
+</html>

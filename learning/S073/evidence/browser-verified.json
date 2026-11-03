@@ -1,0 +1,291 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S073",
+  "workerId": "worker-A-S073",
+  "mode": "synthetic",
+  "entry": "learning\\S073\\index.html",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "startedAtUtc": "2026-11-03T20:15:23.146Z",
+  "captureExplicitlyEnabled": true,
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "publication": "53c0c0d",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055"
+  },
+  "outcome": "PASS",
+  "observations": [
+    {
+      "name": "Malformed DOM budget rejected before any observation",
+      "phase": "Phase: configuring",
+      "outcome": "Not evaluated — no recovery proof.",
+      "metrics": "No attempt measured.",
+      "profile": "No returned profile observation.",
+      "trace": "No attempt started.",
+      "history": "",
+      "totals": "Measured attempts: 0; SUCCESS 0; FAILURE 0; UNKNOWN 0. No recovery proof.",
+      "prediction": "Prediction not checked.",
+      "error": "Choose a supported budget value.",
+      "focus": "budget"
+    },
+    {
+      "name": "Fast empty profile fails even when the learner predicts success",
+      "phase": "Phase: checked",
+      "outcome": "FAILURE — EMPTY_PROFILE",
+      "metrics": "Elapsed: 20 synthetic ms; budget: 150 ms; required state: invalid.",
+      "profile": "{}",
+      "trace": "20 ms | cache | Cache access lost; no cached profile returned.\n20 ms | empty substitute | An empty object was substituted: required state is missing.\n20 ms | assertion | FAILURE: EMPTY_PROFILE. An empty object is not the required profile, even when returned quickly.",
+      "history": "1cache=lost; recovery=empty; durable=correct; budget=150FAILURE: EMPTY_PROFILE20 / 150 ms; state=falseSUCCESS: incorrectTrace for attempt 120 ms | cache | Cache access lost; no cached profile returned.\n20 ms | empty substitute | An empty object was substituted: required state is missing.\n20 ms | assertion | FAILURE: EMPTY_PROFILE. An empty object is not the required profile, even when returned quickly.",
+      "totals": "Measured attempts: 1; SUCCESS 0; FAILURE 1; UNKNOWN 0. All observed results counted; a learning check cannot change them.",
+      "prediction": "Prediction incorrect; actual result remains FAILURE.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "Exact required durable state succeeds at the 110 ms boundary",
+      "phase": "Phase: checked",
+      "outcome": "SUCCESS — DURABLE_PROFILE_VERIFIED",
+      "metrics": "Elapsed: 110 synthetic ms; budget: 110 ms; required state: valid.",
+      "profile": "{\n  \"id\": \"synthetic-profile-073\",\n  \"revision\": 7,\n  \"label\": \"Sample learner 073\",\n  \"preferences\": {\n    \"theme\": \"dark\"\n  },\n  \"savedItems\": [\n    \"synthetic-item-1\",\n    \"synthetic-item-2\"\n  ]\n}",
+      "trace": "20 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt preserves every required synthetic field.\n110 ms | assertion | SUCCESS: DURABLE_PROFILE_VERIFIED. The durable receipt preserves every required synthetic field.",
+      "history": "1cache=lost; recovery=empty; durable=correct; budget=150FAILURE: EMPTY_PROFILE20 / 150 ms; state=falseSUCCESS: incorrectTrace for attempt 120 ms | cache | Cache access lost; no cached profile returned.\n20 ms | empty substitute | An empty object was substituted: required state is missing.\n20 ms | assertion | FAILURE: EMPTY_PROFILE. An empty object is not the required profile, even when returned quickly.2cache=lost; recovery=durable; durable=correct; budget=110SUCCESS: DURABLE_PROFILE_VERIFIED110 / 110 ms; state=trueSUCCESS: correctTrace for attempt 220 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt preserves every required synthetic field.\n110 ms | assertion | SUCCESS: DURABLE_PROFILE_VERIFIED. The durable receipt preserves every required synthetic field.",
+      "totals": "Measured attempts: 2; SUCCESS 1; FAILURE 1; UNKNOWN 0. All observed results counted; a learning check cannot change them.",
+      "prediction": "Prediction correct; actual result remains SUCCESS.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "Correct state still fails a known 80 ms budget",
+      "phase": "Phase: checked",
+      "outcome": "FAILURE — BUDGET_EXCEEDED",
+      "metrics": "Elapsed: 110 synthetic ms; budget: 80 ms; required state: valid.",
+      "profile": "{\n  \"id\": \"synthetic-profile-073\",\n  \"revision\": 7,\n  \"label\": \"Sample learner 073\",\n  \"preferences\": {\n    \"theme\": \"dark\"\n  },\n  \"savedItems\": [\n    \"synthetic-item-1\",\n    \"synthetic-item-2\"\n  ]\n}",
+      "trace": "20 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt preserves every required synthetic field.\n110 ms | assertion | FAILURE: BUDGET_EXCEEDED. Measured 110 synthetic ms exceeds the 80 ms budget. State validity: true.",
+      "history": "1cache=lost; recovery=empty; durable=correct; budget=150FAILURE: EMPTY_PROFILE20 / 150 ms; state=falseSUCCESS: incorrectTrace for attempt 120 ms | cache | Cache access lost; no cached profile returned.\n20 ms | empty substitute | An empty object was substituted: required state is missing.\n20 ms | assertion | FAILURE: EMPTY_PROFILE. An empty object is not the required profile, even when returned quickly.2cache=lost; recovery=durable; durable=correct; budget=110SUCCESS: DURABLE_PROFILE_VERIFIED110 / 110 ms; state=trueSUCCESS: correctTrace for attempt 220 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt preserves every required synthetic field.\n110 ms | assertion | SUCCESS: DURABLE_PROFILE_VERIFIED. The durable receipt preserves every required synthetic field.3cache=lost; recovery=durable; durable=correct; budget=80FAILURE: BUDGET_EXCEEDED110 / 80 ms; state=trueFAILURE: correctTrace for attempt 320 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt preserves every required synthetic field.\n110 ms | assertion | FAILURE: BUDGET_EXCEEDED. Measured 110 synthetic ms exceeds the 80 ms budget. State validity: true.",
+      "totals": "Measured attempts: 3; SUCCESS 1; FAILURE 2; UNKNOWN 0. All observed results counted; a learning check cannot change them.",
+      "prediction": "Prediction correct; actual result remains FAILURE.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "Missing durable receipt remains unknown",
+      "phase": "Phase: checked",
+      "outcome": "UNKNOWN — DURABLE_RECEIPT_UNKNOWN",
+      "metrics": "Elapsed: 110 synthetic ms; budget: 150 ms; required state: unknown.",
+      "profile": "No returned profile observation.",
+      "trace": "20 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The returned-profile receipt is missing. Recovery remains unverified.\n110 ms | assertion | UNKNOWN: DURABLE_RECEIPT_UNKNOWN. The returned-profile receipt is missing. Recovery remains unverified.",
+      "history": "1cache=lost; recovery=empty; durable=correct; budget=150FAILURE: EMPTY_PROFILE20 / 150 ms; state=falseSUCCESS: incorrectTrace for attempt 120 ms | cache | Cache access lost; no cached profile returned.\n20 ms | empty substitute | An empty object was substituted: required state is missing.\n20 ms | assertion | FAILURE: EMPTY_PROFILE. An empty object is not the required profile, even when returned quickly.2cache=lost; recovery=durable; durable=correct; budget=110SUCCESS: DURABLE_PROFILE_VERIFIED110 / 110 ms; state=trueSUCCESS: correctTrace for attempt 220 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt preserves every required synthetic field.\n110 ms | assertion | SUCCESS: DURABLE_PROFILE_VERIFIED. The durable receipt preserves every required synthetic field.3cache=lost; recovery=durable; durable=correct; budget=80FAILURE: BUDGET_EXCEEDED110 / 80 ms; state=trueFAILURE: correctTrace for attempt 320 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt preserves every required synthetic field.\n110 ms | assertion | FAILURE: BUDGET_EXCEEDED. Measured 110 synthetic ms exceeds the 80 ms budget. State validity: true.4cache=lost; recovery=durable; durable=unknown; budget=150UNKNOWN: DURABLE_RECEIPT_UNKNOWN110 / 150 ms; state=unknownUNKNOWN: correctTrace for attempt 420 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The returned-profile receipt is missing. Recovery remains unverified.\n110 ms | assertion | UNKNOWN: DURABLE_RECEIPT_UNKNOWN. The returned-profile receipt is missing. Recovery remains unverified.",
+      "totals": "Measured attempts: 4; SUCCESS 1; FAILURE 2; UNKNOWN 1. All observed results counted; a learning check cannot change them.",
+      "prediction": "Prediction correct; actual result remains UNKNOWN.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "Six retained attempts, repeated-check and seventh-attempt guards",
+      "phase": "Phase: checked",
+      "outcome": "FAILURE — EXPLICIT_FAILURE",
+      "metrics": "Elapsed: 20 synthetic ms; budget: 150 ms; required state: unknown.",
+      "profile": "No returned profile observation.",
+      "trace": "20 ms | cache | Cache access lost; no cached profile returned.\n20 ms | explicit failure | Operation failed explicitly. No synthetic profile was fabricated.\n20 ms | assertion | FAILURE: EXPLICIT_FAILURE. An explicit unavailable result is honest failure, not uninterrupted recovery.",
+      "history": "1cache=lost; recovery=empty; durable=correct; budget=150FAILURE: EMPTY_PROFILE20 / 150 ms; state=falseSUCCESS: incorrectTrace for attempt 120 ms | cache | Cache access lost; no cached profile returned.\n20 ms | empty substitute | An empty object was substituted: required state is missing.\n20 ms | assertion | FAILURE: EMPTY_PROFILE. An empty object is not the required profile, even when returned quickly.2cache=lost; recovery=durable; durable=correct; budget=110SUCCESS: DURABLE_PROFILE_VERIFIED110 / 110 ms; state=trueSUCCESS: correctTrace for attempt 220 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt preserves every required synthetic field.\n110 ms | assertion | SUCCESS: DURABLE_PROFILE_VERIFIED. The durable receipt preserves every required synthetic field.3cache=lost; recovery=durable; durable=correct; budget=80FAILURE: BUDGET_EXCEEDED110 / 80 ms; state=trueFAILURE: correctTrace for attempt 320 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt preserves every required synthetic field.\n110 ms | assertion | FAILURE: BUDGET_EXCEEDED. Measured 110 synthetic ms exceeds the 80 ms budget. State validity: true.4cache=lost; recovery=durable; durable=unknown; budget=150UNKNOWN: DURABLE_RECEIPT_UNKNOWN110 / 150 ms; state=unknownUNKNOWN: correctTrace for attempt 420 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The returned-profile receipt is missing. Recovery remains unverified.\n110 ms | assertion | UNKNOWN: DURABLE_RECEIPT_UNKNOWN. The returned-profile receipt is missing. Recovery remains unverified.5cache=lost; recovery=durable; durable=stale; budget=150FAILURE: STALE_PROFILE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 520 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | Revision 6 is stale; revision 7 is required.\n110 ms | assertion | FAILURE: STALE_PROFILE. Revision 6 is stale; revision 7 is required.6cache=lost; recovery=fail; durable=correct; budget=150FAILURE: EXPLICIT_FAILURE20 / 150 ms; state=unknownFAILURE: correctTrace for attempt 620 ms | cache | Cache access lost; no cached profile returned.\n20 ms | explicit failure | Operation failed explicitly. No synthetic profile was fabricated.\n20 ms | assertion | FAILURE: EXPLICIT_FAILURE. An explicit unavailable result is honest failure, not uninterrupted recovery.",
+      "totals": "Measured attempts: 6; SUCCESS 1; FAILURE 4; UNKNOWN 1. All observed results counted; a learning check cannot change them.",
+      "prediction": "Prediction correct; actual result remains FAILURE.",
+      "error": "This action requires the observed phase.",
+      "focus": "input-error"
+    },
+    {
+      "name": "Keyboard reset clears full history, guards, trace, prediction and metrics",
+      "phase": "Phase: configuring",
+      "outcome": "Not evaluated — no recovery proof.",
+      "metrics": "No attempt measured.",
+      "profile": "No returned profile observation.",
+      "trace": "No attempt started.",
+      "history": "",
+      "totals": "Measured attempts: 0; SUCCESS 0; FAILURE 0; UNKNOWN 0. No recovery proof.",
+      "prediction": "Prediction not checked.",
+      "error": "",
+      "focus": "cache"
+    },
+    {
+      "name": "Additional native-DOM synthetic condition: WRONG_PROFILE",
+      "phase": "Phase: checked",
+      "outcome": "FAILURE — WRONG_PROFILE",
+      "metrics": "Elapsed: 110 synthetic ms; budget: 150 ms; required state: invalid.",
+      "profile": "{\n  \"id\": \"synthetic-other-073\",\n  \"revision\": 7,\n  \"label\": \"Sample learner 073\",\n  \"preferences\": {\n    \"theme\": \"dark\"\n  },\n  \"savedItems\": [\n    \"synthetic-item-1\",\n    \"synthetic-item-2\"\n  ]\n}",
+      "trace": "20 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The receipt belongs to a different synthetic profile.\n110 ms | assertion | FAILURE: WRONG_PROFILE. The receipt belongs to a different synthetic profile.",
+      "history": "1cache=lost; recovery=durable; durable=wrong; budget=150FAILURE: WRONG_PROFILE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 120 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The receipt belongs to a different synthetic profile.\n110 ms | assertion | FAILURE: WRONG_PROFILE. The receipt belongs to a different synthetic profile.",
+      "totals": "Measured attempts: 1; SUCCESS 0; FAILURE 1; UNKNOWN 0. All observed results counted; a learning check cannot change them.",
+      "prediction": "Prediction correct; actual result remains FAILURE.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "Additional native-DOM synthetic condition: EMPTY_PROFILE",
+      "phase": "Phase: checked",
+      "outcome": "FAILURE — EMPTY_PROFILE",
+      "metrics": "Elapsed: 110 synthetic ms; budget: 150 ms; required state: invalid.",
+      "profile": "{}",
+      "trace": "20 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt is empty; required state is missing.\n110 ms | assertion | FAILURE: EMPTY_PROFILE. The durable receipt is empty; required state is missing.",
+      "history": "1cache=lost; recovery=durable; durable=wrong; budget=150FAILURE: WRONG_PROFILE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 120 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The receipt belongs to a different synthetic profile.\n110 ms | assertion | FAILURE: WRONG_PROFILE. The receipt belongs to a different synthetic profile.2cache=lost; recovery=durable; durable=empty; budget=150FAILURE: EMPTY_PROFILE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 220 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt is empty; required state is missing.\n110 ms | assertion | FAILURE: EMPTY_PROFILE. The durable receipt is empty; required state is missing.",
+      "totals": "Measured attempts: 2; SUCCESS 0; FAILURE 2; UNKNOWN 0. All observed results counted; a learning check cannot change them.",
+      "prediction": "Prediction correct; actual result remains FAILURE.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "Additional native-DOM synthetic condition: DURABLE_UNAVAILABLE",
+      "phase": "Phase: checked",
+      "outcome": "FAILURE — DURABLE_UNAVAILABLE",
+      "metrics": "Elapsed: 110 synthetic ms; budget: 150 ms; required state: invalid.",
+      "profile": "No returned profile observation.",
+      "trace": "20 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable path explicitly failed to return required state.\n110 ms | assertion | FAILURE: DURABLE_UNAVAILABLE. The durable path explicitly failed to return required state.",
+      "history": "1cache=lost; recovery=durable; durable=wrong; budget=150FAILURE: WRONG_PROFILE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 120 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The receipt belongs to a different synthetic profile.\n110 ms | assertion | FAILURE: WRONG_PROFILE. The receipt belongs to a different synthetic profile.2cache=lost; recovery=durable; durable=empty; budget=150FAILURE: EMPTY_PROFILE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 220 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt is empty; required state is missing.\n110 ms | assertion | FAILURE: EMPTY_PROFILE. The durable receipt is empty; required state is missing.3cache=lost; recovery=durable; durable=unavailable; budget=150FAILURE: DURABLE_UNAVAILABLE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 320 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable path explicitly failed to return required state.\n110 ms | assertion | FAILURE: DURABLE_UNAVAILABLE. The durable path explicitly failed to return required state.",
+      "totals": "Measured attempts: 3; SUCCESS 0; FAILURE 3; UNKNOWN 0. All observed results counted; a learning check cannot change them.",
+      "prediction": "Prediction correct; actual result remains FAILURE.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "Additional native-DOM synthetic condition: CACHE_OBSERVATION_UNKNOWN",
+      "phase": "Phase: checked",
+      "outcome": "UNKNOWN — CACHE_OBSERVATION_UNKNOWN",
+      "metrics": "Elapsed: unknown synthetic ms; budget: 150 ms; required state: unknown.",
+      "profile": "No returned profile observation.",
+      "trace": "? ms | cache | No cache observation receipt; recovery cannot be inferred.\n? ms | assertion | UNKNOWN: CACHE_OBSERVATION_UNKNOWN. Cache access was not observed. No fallback or returned profile is invented.",
+      "history": "1cache=lost; recovery=durable; durable=wrong; budget=150FAILURE: WRONG_PROFILE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 120 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The receipt belongs to a different synthetic profile.\n110 ms | assertion | FAILURE: WRONG_PROFILE. The receipt belongs to a different synthetic profile.2cache=lost; recovery=durable; durable=empty; budget=150FAILURE: EMPTY_PROFILE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 220 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt is empty; required state is missing.\n110 ms | assertion | FAILURE: EMPTY_PROFILE. The durable receipt is empty; required state is missing.3cache=lost; recovery=durable; durable=unavailable; budget=150FAILURE: DURABLE_UNAVAILABLE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 320 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable path explicitly failed to return required state.\n110 ms | assertion | FAILURE: DURABLE_UNAVAILABLE. The durable path explicitly failed to return required state.4cache=unknown; recovery=durable; durable=correct; budget=150UNKNOWN: CACHE_OBSERVATION_UNKNOWNunknown / 150 ms; state=unknownUNKNOWN: correctTrace for attempt 4? ms | cache | No cache observation receipt; recovery cannot be inferred.\n? ms | assertion | UNKNOWN: CACHE_OBSERVATION_UNKNOWN. Cache access was not observed. No fallback or returned profile is invented.",
+      "totals": "Measured attempts: 4; SUCCESS 0; FAILURE 3; UNKNOWN 1. All observed results counted; a learning check cannot change them.",
+      "prediction": "Prediction correct; actual result remains UNKNOWN.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "Additional native-DOM synthetic condition: CACHE_PROFILE_VERIFIED",
+      "phase": "Phase: checked",
+      "outcome": "SUCCESS — CACHE_PROFILE_VERIFIED",
+      "metrics": "Elapsed: 10 synthetic ms; budget: 150 ms; required state: valid.",
+      "profile": "{\n  \"id\": \"synthetic-profile-073\",\n  \"revision\": 7,\n  \"label\": \"Sample learner 073\",\n  \"preferences\": {\n    \"theme\": \"dark\"\n  },\n  \"savedItems\": [\n    \"synthetic-item-1\",\n    \"synthetic-item-2\"\n  ]\n}",
+      "trace": "10 ms | cache | Exact required profile returned. The recovery choice was not used.\n10 ms | assertion | SUCCESS: CACHE_PROFILE_VERIFIED. The exact required synthetic profile was read from cache; no fallback was attempted.",
+      "history": "1cache=lost; recovery=durable; durable=wrong; budget=150FAILURE: WRONG_PROFILE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 120 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The receipt belongs to a different synthetic profile.\n110 ms | assertion | FAILURE: WRONG_PROFILE. The receipt belongs to a different synthetic profile.2cache=lost; recovery=durable; durable=empty; budget=150FAILURE: EMPTY_PROFILE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 220 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt is empty; required state is missing.\n110 ms | assertion | FAILURE: EMPTY_PROFILE. The durable receipt is empty; required state is missing.3cache=lost; recovery=durable; durable=unavailable; budget=150FAILURE: DURABLE_UNAVAILABLE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 320 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable path explicitly failed to return required state.\n110 ms | assertion | FAILURE: DURABLE_UNAVAILABLE. The durable path explicitly failed to return required state.4cache=unknown; recovery=durable; durable=correct; budget=150UNKNOWN: CACHE_OBSERVATION_UNKNOWNunknown / 150 ms; state=unknownUNKNOWN: correctTrace for attempt 4? ms | cache | No cache observation receipt; recovery cannot be inferred.\n? ms | assertion | UNKNOWN: CACHE_OBSERVATION_UNKNOWN. Cache access was not observed. No fallback or returned profile is invented.5cache=available; recovery=empty; durable=correct; budget=150SUCCESS: CACHE_PROFILE_VERIFIED10 / 150 ms; state=trueSUCCESS: correctTrace for attempt 510 ms | cache | Exact required profile returned. The recovery choice was not used.\n10 ms | assertion | SUCCESS: CACHE_PROFILE_VERIFIED. The exact required synthetic profile was read from cache; no fallback was attempted.",
+      "totals": "Measured attempts: 5; SUCCESS 1; FAILURE 3; UNKNOWN 1. All observed results counted; a learning check cannot change them.",
+      "prediction": "Prediction correct; actual result remains SUCCESS.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "Additional native-DOM synthetic condition: BUDGET_EXCEEDED",
+      "phase": "Phase: checked",
+      "outcome": "FAILURE — BUDGET_EXCEEDED",
+      "metrics": "Elapsed: 110 synthetic ms; budget: 80 ms; required state: unknown.",
+      "profile": "No returned profile observation.",
+      "trace": "20 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The returned-profile receipt is missing. Recovery remains unverified.\n110 ms | assertion | FAILURE: BUDGET_EXCEEDED. Measured 110 synthetic ms exceeds the 80 ms budget. State validity: unknown.",
+      "history": "1cache=lost; recovery=durable; durable=wrong; budget=150FAILURE: WRONG_PROFILE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 120 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The receipt belongs to a different synthetic profile.\n110 ms | assertion | FAILURE: WRONG_PROFILE. The receipt belongs to a different synthetic profile.2cache=lost; recovery=durable; durable=empty; budget=150FAILURE: EMPTY_PROFILE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 220 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable receipt is empty; required state is missing.\n110 ms | assertion | FAILURE: EMPTY_PROFILE. The durable receipt is empty; required state is missing.3cache=lost; recovery=durable; durable=unavailable; budget=150FAILURE: DURABLE_UNAVAILABLE110 / 150 ms; state=falseFAILURE: correctTrace for attempt 320 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The durable path explicitly failed to return required state.\n110 ms | assertion | FAILURE: DURABLE_UNAVAILABLE. The durable path explicitly failed to return required state.4cache=unknown; recovery=durable; durable=correct; budget=150UNKNOWN: CACHE_OBSERVATION_UNKNOWNunknown / 150 ms; state=unknownUNKNOWN: correctTrace for attempt 4? ms | cache | No cache observation receipt; recovery cannot be inferred.\n? ms | assertion | UNKNOWN: CACHE_OBSERVATION_UNKNOWN. Cache access was not observed. No fallback or returned profile is invented.5cache=available; recovery=empty; durable=correct; budget=150SUCCESS: CACHE_PROFILE_VERIFIED10 / 150 ms; state=trueSUCCESS: correctTrace for attempt 510 ms | cache | Exact required profile returned. The recovery choice was not used.\n10 ms | assertion | SUCCESS: CACHE_PROFILE_VERIFIED. The exact required synthetic profile was read from cache; no fallback was attempted.6cache=lost; recovery=durable; durable=unknown; budget=80FAILURE: BUDGET_EXCEEDED110 / 80 ms; state=unknownFAILURE: correctTrace for attempt 620 ms | cache | Cache access lost; no cached profile returned.\n110 ms | durable recovery | The returned-profile receipt is missing. Recovery remains unverified.\n110 ms | assertion | FAILURE: BUDGET_EXCEEDED. Measured 110 synthetic ms exceeds the 80 ms budget. State validity: unknown.",
+      "totals": "Measured attempts: 6; SUCCESS 1; FAILURE 4; UNKNOWN 1. All observed results counted; a learning check cannot change them.",
+      "prediction": "Prediction correct; actual result remains FAILURE.",
+      "error": "",
+      "focus": "reset-rehearsal"
+    },
+    {
+      "name": "Reset also clears an unchecked attempt and visible prediction error",
+      "phase": "Phase: configuring",
+      "outcome": "Not evaluated — no recovery proof.",
+      "metrics": "No attempt measured.",
+      "profile": "No returned profile observation.",
+      "trace": "No attempt started.",
+      "history": "",
+      "totals": "Measured attempts: 0; SUCCESS 0; FAILURE 0; UNKNOWN 0. No recovery proof.",
+      "prediction": "Prediction not checked.",
+      "error": "",
+      "focus": "cache"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-X8P8582g75ArARcF+iazwUioe0xNyQzJz0s+ARJMe/o='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Applying inline style violates the following Content Security Policy directive 'style-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-LxDK2hxfKcAxpyLSngOk2n7Pv+SwW6bsMRDWkdJBHqE='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Loading the script 'https://synthetic.invalid/blocked-script.js' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Connecting to 'https://synthetic.invalid/blocked-fetch' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp",
+      "text": "Fetch API cannot load https://synthetic.invalid/blocked-fetch. Refused to connect because it violates the document's Content Security Policy."
+    },
+    {
+      "stage": "csp",
+      "text": "Framing 'https://synthetic.invalid/' violates the following Content Security Policy directive: \"frame-src 'none'\". The request has been blocked.\n"
+    },
+    {
+      "stage": "csp",
+      "text": "Sending form data to 'https://synthetic.invalid/blocked-form' violates the following Content Security Policy directive: \"form-action 'none'\". The request has been blocked.\n"
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "probeRequests": [
+    {
+      "url": "https://synthetic.invalid/blocked-script.js",
+      "method": "GET"
+    }
+  ],
+  "probeResponses": [],
+  "egressGuardHits": [],
+  "cleanup": {
+    "awaitedFinallyClose": true
+  },
+  "canonicalSourceHashes": {
+    "index.html": "cf21b3275cc4063f824d6412dff58866f6df6ac5923eeda35b88cc1b71ea41ec",
+    "styles.css": "93fb2a1e3a39c1692c20c4aebf8a8e5b40092578cad39001e16e4ab7b001cb8c",
+    "model.js": "8f1684be1605af729868e051742b33ae1ea1ef412bfc3a24971f995c768078c3",
+    "app.js": "92d957f6d15b8e2d60b391c1232c015fa64ea97be0dafa3a0daa9e00d9decb39",
+    "tests\\browser.test.cjs": "abac5dd1b070878da5bee8e6ca541d5e606f09c7b62b859895e0f5b4c19b6109",
+    "tests\\csp-probe.js": "a7426ddb29f812937752df9c97ce33c298d8564d893113fca578404ebe2f2f2c"
+  },
+  "browserVersion": "156.0.4314.50",
+  "csp": {
+    "violations": [
+      {
+        "directive": "script-src-elem",
+        "blockedURI": "inline"
+      },
+      {
+        "directive": "style-src-elem",
+        "blockedURI": "inline"
+      },
+      {
+        "directive": "script-src-elem",
+        "blockedURI": "https://synthetic.invalid/blocked-script.js"
+      },
+      {
+        "directive": "connect-src",
+        "blockedURI": "https://synthetic.invalid/blocked-fetch"
+      },
+      {
+        "directive": "frame-src",
+        "blockedURI": "https://synthetic.invalid"
+      },
+      {
+        "directive": "form-action",
+        "blockedURI": "https://synthetic.invalid/blocked-form"
+      }
+    ],
+    "fetchRejected": true,
+    "inlineExecuted": false,
+    "inlineGlobalAbsent": true,
+    "inlineStyleAbsent": true
+  },
+  "actualSyntheticAttempts": 13,
+  "completedAtUtc": "2026-11-03T20:15:26.847Z",
+  "domSnapshot": {
+    "path": "evidence\\browser-final\\dom.snapshot",
+    "rawSha256": "141c2d1550758b037e600d2087d1f92e28b07c78cef274bd560845e7923e8778"
+  }
+}

@@ -1,0 +1,47 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { evaluate } = require('..\\model.js');
+const input = (overrides = {}) => ({
+  cache: 'lost', recovery: 'durable', durable: 'correct', budgetMs: 150, ...overrides,
+});
+
+test('empty profile after cache loss must never pass', () => {
+  const result = evaluate(input({ recovery: 'empty' }));
+  assert.equal(result.classification, 'FAILURE');
+  assert.equal(result.reason, 'EMPTY_PROFILE');
+  assert.equal(result.requiredStateValid, false);
+  assert.deepEqual(result.profile, {});
+});
+
+test('exact required durable profile at the budget is successful', () => {
+  const result = evaluate(input({ budgetMs: 110 }));
+  assert.equal(result.classification, 'SUCCESS');
+  assert.equal(result.elapsedMs, 110);
+  assert.equal(result.profile.id, 'synthetic-profile-073');
+  assert.equal(result.profile.revision, 7);
+  assert.equal(result.requiredStateValid, true);
+});
+
+test('correct durable state cannot hide an over-budget interruption', () => {
+  const result = evaluate(input({ budgetMs: 80 }));
+  assert.equal(result.classification, 'FAILURE');
+  assert.equal(result.reason, 'BUDGET_EXCEEDED');
+  assert.equal(result.elapsedMs, 110);
+  assert.equal(result.requiredStateValid, true);
+});
+
+test('unknown durable receipt is not a successful profile recovery', () => {
+  const result = evaluate(input({ durable: 'unknown' }));
+  assert.equal(result.classification, 'UNKNOWN');
+  assert.equal(result.profile, null);
+  assert.equal(result.requiredStateValid, null);
+});
+
+test('explicit failure neither supplies empty state nor claims success', () => {
+  const result = evaluate(input({ recovery: 'fail' }));
+  assert.equal(result.classification, 'FAILURE');
+  assert.equal(result.reason, 'EXPLICIT_FAILURE');
+  assert.equal(result.profile, null);
+});
