@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S005",
+  "kano": "S",
+  "kanoUnit": "A-S005",
+  "parentId": "D-S005",
+  "sourceId": "S005",
+  "packet": "LP-RINGS",
+  "title": "Move one tenant without split ownership",
+  "mode": "synthetic-training",
+  "entrypoint": "index.html",
+  "objective": "Synchronize one synthetic tenant, atomically fence its old owner and change its route, then measure requests and effects without touching other tenants.",
+  "preconditions": [
+    "A browser with local JavaScript enabled; no service, subscription, login or package installation.",
+    "S005-fixture-v1 starts cedar, birch and maple on source with exclusive source fence 1.",
+    "The target copy starts at revision 0; each action consumes one explicit synthetic step."
+  ],
+  "actions": [
+    "Observe a routed request",
+    "Synchronize selected tenant",
+    "Transfer selected ownership and route",
+    "Apply one synthetic write",
+    "Run one synthetic background job",
+    "Replay source worker with captured fence 1",
+    "Inject a selected-tenant dual-owner fixture",
+    "Inspect and reject an unrelated-route drift proposal",
+    "Reset"
+  ],
+  "syntheticInput": {
+    "fixture": "S005-fixture-v1",
+    "tenants": ["cedar", "birch", "maple"],
+    "initialSourceCredits": [120, 160, 200],
+    "initialSourceRevision": 1,
+    "initialTargetRevision": 0,
+    "clock": "integer synthetic steps, initially 0; no wall clock, timer, random input or network",
+    "stepLimit": 80,
+    "write": "+5 toy credits and +1 revision",
+    "backgroundJob": "+1 fulfilled toy job and +1 revision"
+  },
+  "expectedAssertions": [
+    "An unsynchronized or dual-owner migration blocks without effects.",
+    "A successful handoff increments the fence once and leaves exactly one target owner.",
+    "Configured routing is not an observed request; observation and per-site effects are separately recorded.",
+    "A captured source worker cannot write after the fence advances.",
+    "Other tenants' routes, data, ownership, observations and effects remain unchanged.",
+    "An unsafe unrelated-tenant proposal is identified and rejected rather than applied.",
+    "Unknown or extra input fails closed; native form Reset restores all state."
+  ],
+  "specification": "migration.feature",
+  "workedTrace": "evidence\\worked-trace.json",
+  "tests": ["migration.test.cjs", "bundle.test.cjs"],
+  "realBrowserVerifier": "browser.check.cjs",
+  "evidence": "evidence.json",
+  "iac": {
+    "status": "not-applicable",
+    "reason": "Only a portable local HTML/JS/CSS training bundle; no resources, registrations, deployments or management operations."
+  },
+  "limits": [
+    "Synthetic single-process atomicity and an integer fence are teaching models, not distributed ownership or database synchronization.",
+    "No native Azure, database, authentication, durability, concurrency, latency or availability proof.",
+    "No automatic rollback, live migration, persistent storage, external URL input or actual background worker.",
+    "Reset discards in-memory state; at most 80 steps and 80 trace entries per rehearsal.",
+    "Production runtime/auth design approval is not permission for resources, IaC, registration or spending.",
+    "B-S005 and the original source-demo acceptance gates remain separate."
+  ]
+}

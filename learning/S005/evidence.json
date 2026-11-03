@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S005",
+  "workerId": "worker-A-S005",
+  "kano": "S",
+  "kanoUnit": "A-S005",
+  "parentIds": ["D-S005"],
+  "sourceId": "S005",
+  "packet": "LP-RINGS",
+  "mode": "synthetic-training",
+  "pathBase": "learning\\S005",
+  "sourceContract": {
+    "source": "..\\..\\README.md",
+    "backlog": "..\\..\\.docs\\wiki\\backlog.md",
+    "portableAContract": "..\\..\\.docs\\wiki\\kanban.md",
+    "specification": "migration.feature",
+    "manifest": "manifest.json"
+  },
+  "configuration": {
+    "host": "Local browser file URI; portable standard HTML/JavaScript/CSS",
+    "fixture": "S005-fixture-v1",
+    "tenants": ["cedar", "birch", "maple"],
+    "clock": "Explicit integer synthetic action steps; initial 0, maximum 80; no timer, wall clock or random input",
+    "nodeTestTooling": "v22.23.4",
+    "credentials": false,
+    "networkOrManagementInterface": false,
+    "externalDependencies": []
+  },
+  "stages": {
+    "order": ["BDD", "loadable stub", "behavioral red", "IaC N/A", "implementation and refactoring", "green and syntax", "actual browser", "scoped publication", "parent acceptance"],
+    "bdd": {
+      "path": "migration.feature",
+      "writtenBeforeStubAndImplementation": true
+    },
+    "behavioralRed": {
+      "runner": "Node built-in node:test",
+      "command": "node --test --test-reporter=tap learning\\S005\\migration.test.cjs",
+      "output": "evidence\\red.txt",
+      "rawOutput": "evidence\\red.txt.gz",
+      "run": "evidence\\red-run.json",
+      "savedStubReproduction": "evidence\\red-reproduction.txt",
+      "savedStubReproductionRaw": "evidence\\red-reproduction.txt.gz",
+      "savedStubReproductionRun": "evidence\\red-reproduction-run.json",
+      "loadableStub": "evidence\\migration.stub.cjs",
+      "testSourceAtRun": "evidence\\migration.initial-red.cjs",
+      "exitCode": 1,
+      "tests": 37,
+      "passed": 1,
+      "failed": 36,
+      "interpretation": "Fixture/module load passed. Actual behavior assertions failed against a no-op implementation; not a missing module, parser error or manufactured failure.",
+      "stubSha256": "3a02d69b708742f5f931b826a96ac2f64e6d46ecb2f1ea0f21bc506e5df6241d",
+      "behaviorTestsSha256": "40cebd30042bc0cfd9fc43e607fb214c4959ad98de0302ead678f7f408d7f3c3"
+    },
+    "inputGuardRed": {
+      "output": "evidence\\input-guard-red.txt",
+      "rawOutput": "evidence\\input-guard-red.txt.gz",
+      "run": "evidence\\input-guard-red-run.json",
+      "modelSnapshot": "evidence\\migration.input-guard-red.cjs",
+      "tests": "migration.test.cjs",
+      "exitCode": 1,
+      "testCount": 40,
+      "passed": 37,
+      "failed": 3,
+      "interpretation": "Actual inherited-field joined-key collision, symbol-field and nonenumerable-field regressions failed before replacing the key guard with exact own-key validation.",
+      "modelSha256": "c2900a8c2b2baa41da3149e268ba44c2bc2c15eec0546a6d6c2a522e971c8f52"
+    },
+    "iac": {
+      "status": "not-applicable",
+      "recordedAfterRedBeforeImplementation": true,
+      "reason": "A resource-free local HTML/JS/CSS training bundle. No IaC, cloud resources, identity registrations, management operations or spending are needed or authorized."
+    },
+    "implementation": {
+      "model": "migration.js",
+      "view": "lesson.js",
+      "page": "index.html",
+      "stylesheet": "lesson.css",
+      "modelSha256": "92aeb87fb8937a75cad31d60c8ebc7666da726d6628f7338a26e17326ab898e0",
+      "viewSha256": "3e7534e273e2f4ba13e928ccaec6dce718115f5dcd724199da3d8f8e1b54f21a"
+    },
+    "green": {
+      "command": "node --test --test-reporter=tap learning\\S005\\migration.test.cjs learning\\S005\\bundle.test.cjs",
+      "output": "evidence\\green.txt",
+      "run": "evidence\\green-run.json",
+      "exitCode": 0,
+      "tests": 48,
+      "passed": 48,
+      "failed": 0,
+      "behaviorTestsSha256": "be214cb9f2abdf7f17a66fc32fcec4e7ee662ccd124526ca37402b405bf1985b",
+      "scope": "40 pure-model behavior checks and 8 static bundle-contract checks, not a DOM fixture and not browser evidence"
+    },
+    "syntax": {
+      "output": "evidence\\syntax.txt",
+      "exitCode": 0,
+      "filesChecked": ["migration.js", "lesson.js", "migration.test.cjs", "bundle.test.cjs", "browser.check.cjs", "evidence\\migration.stub.cjs", "evidence\\migration.initial-red.cjs", "evidence\\migration.input-guard-red.cjs"]
+    },
+    "integrity": {
+      "output": "evidence\\integrity.txt",
+      "checksPassed": 11,
+      "scope": "Owned relative references, seven provenance hashes, exact raw TAP archives, both red reproductions, worked trace, actual browser artifact consistency, syntax records, JSON/whitespace and honest acceptance limits. This validator did not simulate a browser."
+    }
+  },
+  "browser": {
+    "status": "passed",
+    "required": true,
+    "verified": true,
+    "deferredToolsDiscoveredBeforeUse": true,
+    "page": "index.html",
+    "scheme": "file",
+    "forceNew": true,
+    "pageId": "6c349ee0-6afc-451f-a188-f519a71faf0f",
+    "priorPageId": "59172965-f001-40c2-9284-2d21804df747",
+    "partialAttempts": "evidence\\browser-attempts.json",
+    "realPageVerifier": "browser.check.cjs",
+    "verifierSha256": "2fba0cf30b35a2386b12a697b5e0b4ce3bd0b35cce68475d4fcff0984b10f104",
+    "actualResetRed": "evidence\\browser-reset-red.json",
+    "actualGreen": "evidence\\browser-green.json",
+    "assertionsPassed": 43,
+    "trustedKeyboardSubmissions": 24,
+    "trustedNativeResets": 6,
+    "keyboardVerified": true,
+    "resetVerified": true,
+    "unsafeAndUnknownInputsVerified": true,
+    "visiblePageAtStartAndFinish": true,
+    "pageOrConsoleErrors": 0,
+    "httpOrHttpsRequests": 0,
+    "forcedClicks": false,
+    "skippedAssertions": false,
+    "nodeDomFixtureUsed": false,
+    "pointerLimit": "Prior ordinary pointer actionability attempts timed out on the earlier shared foreground page and are not counted. Required behavior was verified with trusted native keyboard actions.",
+    "resetFix": "Actual visible-page red exposed reset-event microtask ordering. The fixture selection is now restored before synchronous rendering, without replacing native reset or submit methods."
+  },
+  "expectedAssertions": [
+    "Unsynchronized and dual-owner transfers block without tenant effects.",
+    "Only the selected tenant changes route and exclusive ownership; its fence advances once.",
+    "The old captured source fence cannot produce post-handoff work.",
+    "Intention, configured routing, observed synthetic requests and site-attributed effects are separate.",
+    "Other tenants' complete model snapshots remain intact; a drift proposal is rejected, not applied.",
+    "Unsupported input fails closed; Reset restores the initial in-memory fixture."
+  ],
+  "workedTrace": {
+    "path": "evidence\\worked-trace.json",
+    "mode": "synthetic-engine-worked-trace-not-browser-evidence",
+    "steps": 9,
+    "result": "Unsynchronized, stale-fence and unrelated-tenant proposals block; one target write and one target job; unrelated complete model snapshots unchanged."
+  },
+  "rawTapPreservation": {
+    "manifest": "evidence\\raw-tap-archives.json",
+    "format": "gzip of exact original TAP bytes, with original and presentation SHA-256 values",
+    "presentationNormalization": "Only trailing spaces/tabs are removed from .txt copies to pass the shared publication whitespace check. Actual failure diagnostics, counts and outcomes remain unchanged; gzip archives preserve every original byte."
+  },
+  "userImpact": {
+    "positive": "A selected synthetic tenant moves after synchronization; subsequent synthetic requests and one write/job are attributed only to target.",
+    "negative": "Unsafe attempts are safe aborts before new effects, not successful uninterrupted migrations.",
+    "nativeUsersOrLiveAvailabilityMeasured": false
+  },
+  "cleanup": {
+    "resourcesCreated": 0,
+    "servicesStarted": 0,
+    "credentialsUsed": 0,
+    "reset": "Six trusted native keyboard Resets restored selected cedar, heading, all tenant rows, observations, effects, clock 0 and empty trace in the actual browser.",
+    "persistence": "In-memory only; reload or Reset discards the synthetic run."
+  },
+  "publication": {
+    "method": "Required scoped shared publisher; exact commit and annotated tag recorded in the worker final report after publication.",
+    "implementationCommit": null,
+    "annotatedTag": null,
+    "status": "ready-for-required-scoped-publication-at-evidence-assembly",
+    "resolution": "This file is part of the implementation changeset. The required shared publisher and worker final result record its exact commit and annotated tag after Git creates them; no pre-publication hash is guessed."
+  },
+  "review": {
+    "owner": "worker-A-S005",
+    "reviewer": null,
+    "acceptedAtUtc": null,
+    "controllerAcceptancePending": true,
+    "doneOrKanoCreditGrantedByWorker": false
+  },
+  "limits": [
+    "Synthetic local memory only; no actual database, Azure, management or background-worker operation.",
+    "Single-process atomicity and fence tokens are teaching models, not distributed ownership or a database replication protocol.",
+    "No native routing, latency, transaction isolation, durability, authentication, interruption rate or availability proof.",
+    "The unsafe dual-owner fixture intentionally violates selected-tenant ownership; operational attempts must block until Reset.",
+    "The unrelated-route fault is only a rejected candidate snapshot; actual unrelated tenant state remains intact.",
+    "Node behavioral/static checks are not a real browser; incomplete browser attempts are preserved and do not satisfy the browser gate.",
+    "At most 80 synthetic steps/trace entries per rehearsal; Reset/reload discards state.",
+    "Production runtime/auth design approval is not resource, IaC, identity-registration, cloud-execution or spending permission.",
+    "This is only A-S005. B-S005 and D-S005 parent/native acceptance remain separate; no bonus credit for tests, evidence or recovery."
+  ]
+}

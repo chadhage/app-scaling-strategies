@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S005 — Move one tenant without split ownership</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="migration.js" defer></script>
+  <script src="lesson.js" defer></script>
+</head>
+<body>
+  <header class="page-header">
+    <p class="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p class="eyebrow">A-S005 · D-S005 · S · LP-RINGS</p>
+    <h1>Move one tenant.<br>Keep one owner.</h1>
+    <p>Copy a tenant's toy data, fence its old owner, and change only that tenant's
+      route. Then observe where requests and effects actually go.</p>
+  </header>
+
+  <main>
+    <section class="panel" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">Your rehearsal</h2>
+      <p>Start by attempting a transfer without synchronization. It should block.
+        Then synchronize → transfer → observe → write/job → replay the old worker.</p>
+      <p class="scope-note"><strong>Fixture S005-fixture-v1.</strong> Three invented tenants,
+        local memory only. Clock: <strong id="clock">0 / 80 synthetic steps</strong>.
+        No elapsed-time measurement, real database, network, login or cloud operation.</p>
+
+      <form id="migration-controls">
+        <div class="selection">
+          <label for="tenant-id">Selected tenant</label>
+          <select id="tenant-id" name="tenantId" aria-describedby="tenant-help">
+            <option value="cedar" selected>cedar</option>
+            <option value="birch">birch</option>
+            <option value="maple">maple</option>
+          </select>
+          <p id="tenant-help">Migration intent: <strong>target</strong>.
+            Every action is tenant-scoped; the other two tenants must stay intact.</p>
+        </div>
+        <fieldset>
+          <legend>1 · Observe, prepare, transfer</legend>
+          <div class="buttons">
+            <button type="submit" name="operation" value="read" id="observe">Observe routed request</button>
+            <button type="submit" name="operation" value="sync" id="synchronize">Synchronize selected tenant</button>
+            <button type="submit" name="operation" value="migrate" id="migrate" class="primary">Transfer ownership and route</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>2 · Verify exclusive effects</legend>
+          <div class="buttons">
+            <button type="submit" name="operation" value="write" id="write">Apply one write (+5 credits)</button>
+            <button type="submit" name="operation" value="job" id="job">Run one routed background job</button>
+            <button type="submit" name="operation" value="source-worker" id="source-worker">Replay source worker (fence 1)</button>
+          </div>
+          <p>A captured source fence is valid before handoff and stale afterwards.
+            A write or job before handoff also makes an earlier data copy stale.</p>
+        </fieldset>
+        <fieldset class="unsafe">
+          <legend>3 · Explicitly unsafe synthetic rehearsals</legend>
+          <div class="buttons">
+            <button type="submit" name="operation" value="dual-ownership" id="dual-owner">Load dual-owner fixture</button>
+            <button type="submit" name="operation" value="audit-unrelated" id="audit-unrelated">Inspect unrelated-route drift proposal</button>
+          </div>
+          <p>Dual ownership affects only the selected tenant's synthetic flags and must
+            block operations. Reset to recover. The drift proposal is inspected and
+            rejected, never applied to the other tenant.</p>
+        </fieldset>
+        <button type="reset" id="reset-rehearsal">Reset rehearsal</button>
+      </form>
+      <noscript>This interactive rehearsal requires local JavaScript. No cloud service is needed.</noscript>
+    </section>
+
+    <section class="panel" aria-labelledby="result-heading">
+      <h2 id="result-heading">Last action: intent is not observation</h2>
+      <div id="result" role="status" aria-live="polite" aria-atomic="true">
+        <p id="verdict">Ready — no action attempted.</p>
+        <p id="reason">Choose an action to inspect its synthetic result.</p>
+        <p id="impact">User-transition outcome: not attempted.</p>
+      </div>
+      <dl class="facts">
+        <div><dt>Action tenant</dt><dd id="event-tenant">None</dd></div>
+        <div><dt>Action's intended destination</dt><dd id="intended-destination">Not attempted</dd></div>
+        <div><dt>Observed destination in this action</dt><dd id="action-observed">No request sampled</dd></div>
+        <div><dt>Business effect delta in this action</dt><dd id="effect-deltas">source W0/J0 · target W0/J0</dd></div>
+        <div><dt>Synchronization copies in this action</dt><dd id="copy-count">0 toy records</dd></div>
+        <div><dt>Applied-state unrelated-tenant check</dt><dd id="isolation">No action to compare</dd></div>
+      </dl>
+      <p id="proposal-result">No unsafe proposal inspected.</p>
+      <p id="ownership-invariant">Ownership: one owner per tenant.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="tenant-heading">
+      <h2 id="tenant-heading">Selected tenant: <span id="selected-tenant">cedar</span></h2>
+      <dl class="facts">
+        <div><dt>Configured route now</dt><dd id="configured-route">source</dd></div>
+        <div><dt>Exclusive owner / active fence</dt><dd id="owners">source / 1</dd></div>
+        <div><dt>Data synchronization gate</dt><dd id="sync-status">Not synchronized</dd></div>
+        <div><dt>Last observed request (sample step)</dt><dd id="last-observation">No request sampled</dd></div>
+        <div><dt>Source cumulative effects</dt><dd id="source-effects">0 writes · 0 jobs</dd></div>
+        <div><dt>Target cumulative effects</dt><dd id="target-effects">0 writes · 0 jobs</dd></div>
+      </dl>
+      <p>A handoff does not relabel an old observation. The source copy becomes
+        historical after transfer; target is then the only permitted writer/worker.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="all-tenants-heading">
+      <h2 id="all-tenants-heading">All tenant snapshots</h2>
+      <p>Data columns show toy credits / revision / fulfilled jobs.
+        Effect columns show cumulative writes / jobs; a copy is not a business effect.</p>
+      <div class="table-region" role="region" aria-label="All tenant snapshots, scroll horizontally if needed" tabindex="0">
+        <table>
+          <caption>Compare the unrelated tenants before and after each action.</caption>
+          <thead>
+            <tr><th scope="col">Tenant</th><th scope="col">Route</th><th scope="col">Owners</th>
+              <th scope="col">Fence</th><th scope="col">Source data</th><th scope="col">Target data</th>
+              <th scope="col">Source effects</th><th scope="col">Target effects</th></tr>
+          </thead>
+          <tbody id="tenants"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Synthetic trace</h2>
+      <p>Oldest first; up to 80 entries. Each command consumes one step until the
+        80-step limit, then operations block until Reset.</p>
+      <p id="trace-empty">No actions yet.</p>
+      <div class="table-region" role="region" aria-label="Synthetic trace, scroll horizontally if needed" tabindex="0">
+        <table>
+          <caption>Intended and observed destinations and actual effect deltas are separate.</caption>
+          <thead>
+            <tr><th scope="col">Step</th><th scope="col">Tenant / action</th><th scope="col">Intended</th>
+              <th scope="col">Route after</th><th scope="col">Observed request</th><th scope="col">Verdict / reason</th>
+              <th scope="col">Actual effect delta</th></tr>
+          </thead>
+          <tbody id="trace"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel limits" aria-labelledby="limits-heading">
+      <h2 id="limits-heading">What this does not prove</h2>
+      <p>The local atomic transfer, data copy and fence are teaching models, not
+        database synchronization, distributed locking, durability, authentication,
+        latency, availability or native Azure evidence. Reload/Reset discards all state.</p>
+      <p><strong>IaC: N/A.</strong> This resource-free local bundle needs no deployment,
+        identity registration, subscription or spending. Production runtime/auth design
+        approval is not resource, IaC, registration or expenditure permission.</p>
+      <p>Source <strong>S005</strong>, parent <strong>D-S005</strong>; native
+        <strong>B-S005</strong> and original parent acceptance remain separate.</p>
+      <p>See <a href="README.md">exercise and validation notes</a>,
+        <a href="manifest.json">portable manifest</a>,
+        <a href="migration.feature">BDD contract</a> and
+        <a href="evidence.json">scoped evidence</a>.</p>
+    </section>
+  </main>
+  <footer>Local synthetic training only · No credentials or management calls.</footer>
+</body>
+</html>

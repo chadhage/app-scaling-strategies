@@ -1,0 +1,46 @@
+{
+  "cardId": "A-S005",
+  "pageId": "6c349ee0-6afc-451f-a188-f519a71faf0f",
+  "forceNew": true,
+  "page": "index.html",
+  "scheme": "file",
+  "tool": "runPlaywrightCode",
+  "result": "Error: native keyboard Reset restores baseline (unknown tenant)",
+  "classification": "Actual visible-page lesson defect, not hidden-tab actionability",
+  "rawFollowUpObservation": {
+    "visibility": "visible",
+    "hasFocus": true,
+    "focused": "reset-rehearsal",
+    "tenant": "cedar",
+    "options": [
+      { "value": "cedar", "selected": true, "defaultSelected": true },
+      { "value": "birch", "selected": false, "defaultSelected": false },
+      { "value": "maple", "selected": false, "defaultSelected": false },
+      { "value": "__proto__", "selected": false, "defaultSelected": false }
+    ],
+    "fields": {
+      "clock": "0 / 80 synthetic steps",
+      "last-observation": "No request sampled",
+      "source-effects": "Not available",
+      "target-effects": "Not available",
+      "trace-empty": "No actions yet.",
+      "reason": "Choose an action to inspect its synthetic result.",
+      "selected-tenant": "Unsupported selection",
+      "configured-route": "Not available"
+    },
+    "traceRows": 0,
+    "rows": [
+      "cedar\tsource\tsource\t1\t120 / 1 / 0\t0 / 0 / 0\t0 / 0\t0 / 0",
+      "birch\tsource\tsource\t1\t160 / 1 / 0\t0 / 0 / 0\t0 / 0\t0 / 0",
+      "maple\tsource\tsource\t1\t200 / 1 / 0\t0 / 0 / 0\t0 / 0\t0 / 0"
+    ],
+    "trusted": { "submits": "23", "resets": "5" },
+    "nativeMethods": true
+  },
+  "cause": "A reset-event microtask rendered the selected panel before the native form default restored the select value.",
+  "fixRequirement": "Reset the known fixture selection before synchronous rendering while leaving HTMLFormElement.reset and submit native; strengthen the real-browser Reset check to include the selected heading.",
+  "limits": [
+    "The interrupted full browser run is not counted as passed.",
+    "The recorded native input events and visible-page DOM observation are actual browser evidence, not a Node DOM fixture."
+  ]
+}
