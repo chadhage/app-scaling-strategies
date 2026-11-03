@@ -1,0 +1,40 @@
+(function (scope) {
+  'use strict';
+
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+
+  const baseline = [{ id: 'L001', writtenBy: 'v1', payload: { units: 6 } }];
+  const newWrites = [
+    { id: 'L002', writtenBy: 'v2', payload: { direction: 'reserve', quantity: 3 } },
+    { id: 'L003', writtenBy: 'v2', payload: { direction: 'release', quantity: 1 } },
+  ];
+  const fixture = freeze({
+    id: 'S098-fixed-reservation-ledger-v1',
+    baseline,
+    newWrites,
+    committed: [...baseline, ...newWrites],
+    expectedEffects: [{ id: 'L001', delta: 6 }, { id: 'L002', delta: 3 }, { id: 'L003', delta: -1 }],
+    expectedTotal: 8,
+    oldSnapshotTotal: 6,
+    readBudgetMs: 10,
+    observedReadMs: 7,
+    maxDecisions: 12,
+    plans: {
+      'compatible-rollback': { target: 'v1-compatible', supported: true },
+      'baseline-only': { target: 'v1-baseline-only', supported: false },
+      'discard-new-writes': { target: 'v1-old-snapshot', supported: false },
+      'forward-recovery': { target: 'v2.1', supported: true },
+    },
+    observations: ['complete', 'missing', 'corrupt', 'unknown'],
+    predictions: ['SUCCESS', 'FAILURE', 'UNKNOWN', 'REJECTED'],
+  });
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = fixture;
+  else scope.S098Fixture = fixture;
+}(typeof globalThis !== 'undefined' ? globalThis : this));

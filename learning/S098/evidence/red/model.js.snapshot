@@ -1,0 +1,33 @@
+(function (scope) {
+  'use strict';
+
+  const fixture = typeof module !== 'undefined' && module.exports
+    ? require('.\\fixtures.js') : scope.S098Fixture;
+
+  function create() {
+    return {
+      runId: 1, phase: 'BASELINE', servingVersion: 'v1', ledger: fixture.baseline,
+      history: [], trace: [], decision: null, learningVerdict: 'NOT_CHECKED',
+    };
+  }
+  function applyNewWrites(state) { return state; }
+  function recover(state) {
+    return {
+      ...state,
+      decision: {
+        outcome: 'UNKNOWN', retainedEffects: state.ledger.length, interpretedEffects: [],
+        expectedTotal: fixture.expectedTotal, observedTotal: null, observedReadMs: null,
+        desiredVersion: 'v2', effectiveVersion: state.servingVersion,
+        explanation: 'Loadable behavioral stub has not qualified recovery.',
+      },
+    };
+  }
+  function checkPrediction(state) { return state; }
+  function reset(state) { return { ...create(), runId: state.runId + 1, history: state.history }; }
+  function summary() {
+    return { decisions: 0, attempted: 0, success: 0, failure: 0, unknown: 0, rejected: 0, remaining: 12 };
+  }
+  const api = { create, applyNewWrites, recover, checkPrediction, reset, summary };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else scope.S098Lesson = api;
+}(typeof globalThis !== 'undefined' ? globalThis : this));

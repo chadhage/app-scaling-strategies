@@ -1,0 +1,156 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const zlib = require('node:zlib');
+const { spawnSync } = require('node:child_process');
+const { root, repo, read, sha, lf, git, acceptance, filesBelow, rawProtected, HELPER_SHA } = require('.\\provenance.cjs');
+const json = (name) => JSON.parse(read(name));
+
+test('raw CRLF source and recorded canonical Git contracts are immutable and exact', () => {
+  const source = json('evidence\\source-contract.json');
+  const working = [];
+  const committed = [];
+  for (const item of source.sources) {
+    const raw = zlib.gunzipSync(read(item.workingSnapshot));
+    const baseline = zlib.gunzipSync(read(item.gitSnapshot));
+    assert.equal(sha(raw), item.workingSha256);
+    assert.equal(raw.length, item.workingBytes);
+    assert.equal(sha(baseline), item.gitSha256);
+    assert.equal(sha(lf(raw)), item.workingCanonicalSha256);
+    assert.equal(sha(lf(baseline)), item.gitCanonicalSha256);
+    assert.equal(raw.includes(Buffer.from('\r\n')), item.workingContainsCRLF);
+    assert.equal(item.workingContainsCRLF, true, 'raw source CRLF was not normalized away');
+    assert.equal(sha(git(['show', `${source.baseline}:${item.gitPath}`])), item.gitSha256);
+    assert.equal(git(['rev-parse', `${source.baseline}:${item.gitPath}`]).toString().trim(), item.gitBlob);
+    working.push(raw.toString());
+    committed.push(baseline.toString());
+  }
+  assert.deepEqual(acceptance(...working), source.acceptance);
+  assert.deepEqual(acceptance(...committed), source.acceptance);
+  const current = source.sources.map((item) => fs.readFileSync(path.join(repo, item.path), 'utf8'));
+  assert.deepEqual(acceptance(...current), source.acceptance);
+  assert.equal(source.kano, 'S');
+  assert.equal(source.kanoUnit, 'A-S098');
+  assert.equal(source.packet, 'LP-COMPARE');
+  assert.equal(source.sourceReadBeforeBehaviorDesign, true);
+});
+
+test('BDD then 17 genuine stub assertion failures then IaC N/A are preserved in order', () => {
+  const bdd = json('evidence\\bdd.json');
+  const red = json('evidence\\red.json');
+  const iac = json('evidence\\iac-decision.json');
+  const source = json('evidence\\source-contract.json');
+  assert.equal(sha(read('evidence\\raw\\bdd.feature.snapshot')), bdd.featureSha256);
+  assert.equal(sha(lf(read('write-aware-recovery.feature'))), bdd.featureCanonicalSha256);
+  assert.ok(Date.parse(source.capturedAtUtc) <= Date.parse(bdd.recordedAtUtc));
+  assert.ok(Date.parse(bdd.recordedAtUtc) <= Date.parse(red.startedAtUtc));
+  assert.ok(Date.parse(red.completedAtUtc) <= Date.parse(iac.decidedAtUtc));
+  assert.equal(red.exitCode, 1);
+  assert.equal(red.tests, 17);
+  assert.equal(red.fail, 17);
+  assert.equal(red.assertionFailures, 17);
+  assert.equal(red.missingCodeOrTools, false);
+  assert.equal(red.spawnError, null);
+  assert.equal(iac.status, 'N/A');
+  assert.equal(iac.actualDataOperations, false);
+  assert.equal(iac.beforeImplementation, true);
+  for (const item of json('evidence\\red\\snapshots.json')) {
+    assert.ok(item.snapshot.endsWith('.snapshot'));
+    assert.equal(sha(read(item.snapshot)), item.sha256);
+    assert.equal(sha(lf(read(item.snapshot))), item.canonicalSha256);
+  }
+});
+
+test('original RED snapshots replay in memory without restoring or editing normal source', () => {
+  const before = filesBelow().map((file) => [file, sha(read(file))]);
+  const script = `
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const Module = require('node:module');
+    const root = ${JSON.stringify(root)};
+    const load = (name, filename, overrides) => {
+      const module = new Module(filename);
+      module.filename = filename;
+      module.paths = Module._nodeModulePaths(path.dirname(filename));
+      const normal = module.require.bind(module);
+      module.require = (request) => Object.hasOwn(overrides, request) ? overrides[request] : normal(request);
+      module._compile(fs.readFileSync(path.join(root, 'evidence', 'red', name), 'utf8'), filename);
+      return module.exports;
+    };
+    const fixture = load('fixtures.js.snapshot', path.join(root, 'fixtures.js'), {});
+    const model = load('model.js.snapshot', path.join(root, 'model.js'), { '.\\\\fixtures.js': fixture });
+    load('model.test.cjs.snapshot', path.join(root, 'tests', 'model.test.cjs'), {
+      '..\\\\fixtures.js': fixture, '..\\\\model.js': model
+    });
+  `;
+  const environment = { ...process.env };
+  // An inherited child-v8 test context emits binary IPC instead of standalone TAP.
+  delete environment.NODE_TEST_CONTEXT;
+  const result = spawnSync(process.execPath, ['-e', script], {
+    cwd: repo, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024, env: environment,
+  });
+  assert.equal(result.status, 1);
+  assert.equal(result.error, undefined);
+  assert.match(result.stdout, /# tests 17/);
+  assert.match(result.stdout, /# fail 17/);
+  assert.equal((result.stdout.match(/code: 'ERR_ASSERTION'/g) || []).length, 17);
+  assert.doesNotMatch(result.stdout + result.stderr, /MODULE_NOT_FOUND|Cannot find module|ENOENT|ReferenceError|SyntaxError|TypeError/);
+  assert.deepEqual(filesBelow().map((file) => [file, sha(read(file))]), before);
+});
+
+test('captured raw runs and qualified offline helper retain honest provenance', () => {
+  for (const stage of ['red', 'green', 'focused']) {
+    if (!fs.existsSync(path.join(root, `evidence\\${stage}.json`))) continue;
+    const record = json(`evidence\\${stage}.json`);
+    assert.equal(sha(zlib.gunzipSync(read(record.stdoutFile))), record.rawStdoutSha256);
+    assert.equal(sha(zlib.gunzipSync(read(record.stderrFile))), record.rawStderrSha256);
+    if (stage !== 'red') {
+      assert.equal(record.exitCode, 0);
+      assert.equal(record.fail, 0);
+    }
+  }
+  const failure = json('evidence\\tooling-unqualified.json');
+  assert.equal(sha(read('evidence\\raw\\tooling-unqualified-driver.snapshot')), failure.driverSha256);
+  assert.equal(sha(zlib.gunzipSync(read('evidence\\raw\\tooling-unqualified.stdout.raw.gz'))), failure.rawStdoutSha256);
+  assert.equal(sha(zlib.gunzipSync(read('evidence\\raw\\tooling-unqualified.stderr.raw.gz'))), failure.rawStderrSha256);
+  assert.equal(failure.exitCode, 1);
+  const replayFailure = json('evidence\\integrity-unqualified.json');
+  const repair = json('evidence\\integrity-qualification-repair.json');
+  assert.equal(replayFailure.exitCode, 1);
+  assert.equal(sha(read('evidence\\raw\\integrity-unqualified-driver.snapshot')), repair.driverSha256);
+  assert.equal(sha(zlib.gunzipSync(read('evidence\\raw\\integrity-unqualified.stdout.raw.gz'))), replayFailure.rawStdoutSha256);
+  assert.equal(sha(zlib.gunzipSync(read('evidence\\raw\\integrity-unqualified.stderr.raw.gz'))), replayFailure.rawStderrSha256);
+  const tooling = json('evidence\\tooling.json');
+  const helper = fs.readFileSync(path.join(repo, 'testing\\browser\\isolated.cjs'));
+  assert.equal(sha(helper), HELPER_SHA);
+  const canonicalHelper = git(['show', `${tooling.helperCommit}:testing/browser/isolated.cjs`]);
+  assert.equal(sha(canonicalHelper), tooling.helperCanonicalGitSha256);
+  assert.equal(sha(lf(helper)), sha(canonicalHelper));
+  assert.equal(tooling.abandonedLifecyclePrototypeQualified, false);
+  assert.equal(tooling.nativeOrNode24Certification, false);
+});
+
+test('completed content index qualifies canonical Git source and exact protected raw bytes', (t) => {
+  if (!fs.existsSync(path.join(root, 'evidence\\content-index.json'))) {
+    t.skip('Pre-index stage: final index is deliberately written once after captured runs, then verified read-only.');
+    return;
+  }
+  const index = json('evidence\\content-index.json');
+  assert.equal(index.excludesOnlySelf, true);
+  const expected = filesBelow().filter((file) => file !== 'evidence\\content-index.json');
+  assert.deepEqual(index.entries.map((entry) => entry.file), expected);
+  for (const item of index.entries) {
+    const raw = read(item.file);
+    assert.equal(item.rawProtected, rawProtected(item.file));
+    assert.equal(sha(item.rawProtected ? raw : lf(raw)), item.canonicalGitSha256, item.file);
+    if (item.rawProtected) {
+      assert.equal(sha(raw), item.workingSha256, item.file);
+      assert.equal(raw.length, item.bytes, item.file);
+    }
+  }
+  const attributes = read('.gitattributes').toString().trim().split(/\r?\n/);
+  assert.deepEqual(attributes, ['evidence/raw/** -text', 'evidence/red/** -text']);
+});

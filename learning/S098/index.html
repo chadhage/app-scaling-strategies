@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'">
+  <title>S098 — Recovery after new writes</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#lesson-main">Skip to exercise</a>
+  <header>
+    <p id="synthetic-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Recovery after new writes</h1>
+    <p>S098 · A-S098 · frozen satisfier S · LP-COMPARE</p>
+  </header>
+  <main id="lesson-main" tabindex="-1">
+    <section aria-labelledby="objective-title">
+      <h2 id="objective-title">Preserve the committed effects, not just old software</h2>
+      <p>Start with fixed reservation L001 = 6 units. Apply v2’s fixed reserve +3 and release −1:
+        all three effects must still read correctly as <strong>8 units</strong> after compatible rollback or forward recovery.
+        The old 6-unit snapshot is no longer correct.</p>
+      <p>This is a memory-only workbook, with no real writes or recovery operations. The payload contracts are fixed;
+        no schema migration is performed. The illustrative read budget is 10 ms; available synthetic reads take 7 ms.</p>
+      <ol>
+        <li>Apply the fixed v2 writes.</li>
+        <li>Choose a recovery plan and read observation; rehearse the decision.</li>
+        <li>Predict the result and check your interpretation. A learner PASS is not a successful recovery.</li>
+        <li>Reset to compare another plan. Reset retains history, failures and denominators.</li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Operator controls</h2>
+      <form id="exercise" data-run-id="1">
+        <button type="button" id="apply-writes">Apply fixed v2 writes</button>
+        <label for="recovery-plan">Recovery plan</label>
+        <select id="recovery-plan" disabled>
+          <option value="compatible-rollback" selected>Compatible rollback — v1 adapter preserves all effects</option>
+          <option value="baseline-only">Unsafe rollback — v1 baseline-only reader</option>
+          <option value="discard-new-writes">Unsafe rollback — restore old snapshot, discard new writes</option>
+          <option value="forward-recovery">Explicit forward recovery — v2.1</option>
+        </select>
+        <label for="read-observation">Synthetic read observation</label>
+        <select id="read-observation" disabled>
+          <option value="complete" selected>Complete — every signed effect is correct</option>
+          <option value="missing">Failure — release L003 is missing from the read</option>
+          <option value="corrupt">Failure — release L003 is incorrectly read as +1</option>
+          <option value="unknown">Unknown — no read evidence</option>
+        </select>
+        <button type="submit" id="rehearse-recovery" disabled>Rehearse selected recovery</button>
+        <label for="prediction">Predict the recovery outcome</label>
+        <select id="prediction" disabled>
+          <option value="SUCCESS" selected>SUCCESS — every committed effect verified</option>
+          <option value="FAILURE">FAILURE — observed effects are missing or incorrect</option>
+          <option value="UNKNOWN">UNKNOWN — evidence is unavailable</option>
+          <option value="REJECTED">REJECTED — unsafe plan, safe abort</option>
+        </select>
+        <button type="button" id="check-interpretation" disabled>Check interpretation</button>
+        <button type="button" id="reset-lesson">Reset rehearsal — keep history</button>
+      </form>
+      <p id="lesson-error" role="alert" tabindex="-1" hidden></p>
+      <p id="capacity-notice">At most 12 decisions, including safe rejections. Reload deliberately clears all in-memory history.</p>
+    </section>
+
+    <section aria-labelledby="result-title" aria-live="polite" aria-atomic="true">
+      <h2 id="result-title">Current teaching evidence</h2>
+      <dl class="metrics">
+        <div><dt>Phase</dt><dd id="phase">BASELINE</dd></div>
+        <div><dt>Effective teaching version</dt><dd id="effective-version">v1</dd></div>
+        <div><dt>Requested version</dt><dd id="desired-version">NOT_REQUESTED</dd></div>
+        <div><dt>Recovery outcome</dt><dd id="recovery-outcome">NOT_ATTEMPTED</dd></div>
+        <div><dt>Retained effects</dt><dd id="retained-effects">1</dd></div>
+        <div><dt>Correct committed total</dt><dd id="committed-total">6</dd></div>
+        <div><dt>Interpreted effects</dt><dd id="interpreted-effects">No recovery read</dd></div>
+        <div><dt>Observed read total</dt><dd id="observed-total">No observation</dd></div>
+        <div><dt>Synthetic read / budget</dt><dd id="read-budget">No observation / 10 ms</dd></div>
+        <div><dt>Learner verifier</dt><dd id="learning-verdict">NOT_CHECKED</dd></div>
+      </dl>
+      <p id="result-explanation">Apply the fixed new writes before recovery.</p>
+    </section>
+
+    <section aria-labelledby="ledger-title">
+      <h2 id="ledger-title">Stored fixed ledger — never deleted by a recovery plan</h2>
+      <div class="table-scroll">
+        <table>
+          <caption>Committed teaching records; recovery observations are shown separately below</caption>
+          <thead><tr><th scope="col">ID</th><th scope="col">Writer</th><th scope="col">Stored payload</th><th scope="col">Correct signed effect</th></tr></thead>
+          <tbody id="ledger-body"></tbody>
+        </table>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <caption>Observed interpretation — a missing or corrupted read cannot qualify recovery</caption>
+          <thead><tr><th scope="col">Observed ID</th><th scope="col">Observed signed effect</th></tr></thead>
+          <tbody id="read-body"></tbody>
+        </table>
+      </div>
+      <ol id="trace-list" aria-label="Current synthetic action trace"></ol>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained decision history</h2>
+      <p>Rejected plans are safe aborts, separate from attempted recoveries. Failed and unknown attempts never become successes after reset.</p>
+      <dl class="metrics">
+        <div><dt>All decisions</dt><dd id="total-decisions">0</dd></div>
+        <div><dt>Attempted recoveries</dt><dd id="total-attempted">0</dd></div>
+        <div><dt>Successful</dt><dd id="total-success">0</dd></div>
+        <div><dt>Failed</dt><dd id="total-failure">0</dd></div>
+        <div><dt>Unknown</dt><dd id="total-unknown">0</dd></div>
+        <div><dt>Rejected</dt><dd id="total-rejected">0</dd></div>
+        <div><dt>Success / attempted</dt><dd id="success-fraction">No sample</dd></div>
+        <div><dt>Decisions remaining</dt><dd id="remaining-decisions">12</dd></div>
+      </dl>
+      <div class="table-scroll">
+        <table>
+          <caption>One immutable recovery outcome per decision; a learner answer does not reclassify it</caption>
+          <thead><tr><th scope="col">Decision / run</th><th scope="col">Plan</th><th scope="col">Observation</th><th scope="col">Recovery</th><th scope="col">Retained / read effects</th><th scope="col">Read / correct total</th><th scope="col">Effective version</th><th scope="col">Learner</th></tr></thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      <p>Keyboard: Tab, Enter and Space operate standard controls. Errors receive focus; reset restores defaults and control focus, not historical counts.
+        Reload is the explicit history-discard action. There is no persistence, server, account or network service.</p>
+      <p>S098: Preserve and interpret data created by the new version. D-S098: New committed state remains interpretable and correct;
+        rollback cannot silently discard or corrupt writes. The source prerequisite is D-S060.</p>
+      <p>Only A-S098 is delivered. This is not native B-S098, source-parent completion, actual committed-write/compatibility/rollback/recovery proof,
+        production Node.js 24 validation or five-nines certification. No cloud, IaC, identity, credentials, deployment or spending is authorized.</p>
+      <p><a href="README.md">Lesson contract, evidence and verification</a> ·
+        <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft Open Source Disclaimer</a></p>
+    </footer>
+  </main>
+</body>
+</html>
