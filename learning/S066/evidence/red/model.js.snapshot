@@ -1,0 +1,21 @@
+(function (root, factory) {
+  'use strict';
+  const fixtures = typeof module === 'object' && module.exports
+    ? require('./fixtures.js') : root.CommitFixtures066;
+  const api = factory(fixtures);
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else Object.defineProperty(root, 'CommitLesson066', { value: api });
+}(typeof globalThis === 'object' ? globalThis : this, function (fixtures) {
+  'use strict';
+  function createLesson() {
+    const snapshot = () => Object.freeze({
+      phase: 'idle', config: fixtures.defaults, original: Object.freeze([]),
+      result: null, history: Object.freeze([]), trace: Object.freeze([]), prediction: null,
+    });
+    return Object.freeze({
+      snapshot, begin: snapshot, fault: snapshot, reconcile: snapshot,
+      recover: snapshot, predict: snapshot, next: snapshot, reset: snapshot,
+    });
+  }
+  return Object.freeze({ createLesson, fixtures });
+}));

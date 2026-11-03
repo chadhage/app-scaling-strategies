@@ -1,0 +1,105 @@
+{
+  "cardId": "A-S066",
+  "parentId": "D-S066",
+  "siblingId": "B-S066",
+  "owner": "worker-A-S066",
+  "kano": "S",
+  "kanoUnit": "A-S066",
+  "packet": "SC-S066",
+  "mode": "synthetic",
+  "workerVerification": "PASS",
+  "parentAcceptance": "Pending independent parent empirical review; worker does not Accept or award Done credit.",
+  "sourceContract": "evidence/source-contract.json",
+  "acceptanceMapping": [
+    {
+      "source": "README S066: Reconcile uncertain outcomes without applying a transaction twice.",
+      "behavior": "Failover loses all commit acknowledgements; authoritative reconciliation precedes recovery. Safe recovery reuses committed receipts, retries only confirmed aborts with the original operation key and unchanged payload, and holds unresolved outcomes.",
+      "checks": ["model.test.cjs: ordered lifecycle", "model.test.cjs: all nine configurations", "browser.test.cjs: lost acknowledgements and reconciled original outcomes"],
+      "evidence": "evidence/browser.json"
+    },
+    {
+      "source": "D-S066: Retries do not duplicate effects.",
+      "behavior": "All three safe-policy configurations have zero duplicate effects; complete receipts yield three known effects. Unsafe fresh-key comparison exposes one or two duplicate effects and fails the gate.",
+      "checks": ["model.test.cjs: default safe recovery", "model.test.cjs: resolved committed/aborted receipts", "model.test.cjs: blind fresh-key retry", "browser.test.cjs: UNKNOWN, PASS and known-duplicate FAIL paths"],
+      "evidence": ["evidence/browser-unknown.png", "evidence/browser-failure.png"]
+    },
+    {
+      "source": "D-S066: committed, failed, and unresolved outcomes are attributed honestly.",
+      "behavior": "Original and recovered attribution are separate and include all three operations. A terminal abort is not a missing lookup. Missing evidence stays unresolved, failure dominates uncertainty, and original failures/three interrupted responses remain after successful recovery.",
+      "checks": ["model.test.cjs: receipt classification", "model.test.cjs: holding a confirmed abort", "model.test.cjs: separate prediction verifier and retained history", "browser.test.cjs: inspect retained proof"],
+      "evidence": "evidence/browser.json"
+    }
+  ],
+  "observedWorkedResults": {
+    "defaultSafe": {
+      "original": { "committed": 1, "failed": 1, "unresolved": 1 },
+      "recovered": { "committed": 2, "failed": 0, "unresolved": 1 },
+      "effects": [2, 3],
+      "duplicates": [0, 0],
+      "gate": "UNKNOWN",
+      "interruptedCommitResponses": 3
+    },
+    "blindFreshKeys": {
+      "original": { "committed": 1, "failed": 1, "unresolved": 1 },
+      "recovered": { "committed": 1, "failed": 1, "unresolved": 1 },
+      "effects": [4, 5],
+      "duplicates": [1, 2],
+      "gate": "FAIL",
+      "interruptedCommitResponses": 3
+    },
+    "resolvedSafe": {
+      "recovered": { "committed": 3, "failed": 0, "unresolved": 0 },
+      "effects": [3, 3],
+      "duplicates": [0, 0],
+      "gate": "PASS",
+      "interruptedCommitResponses": 3,
+      "uninterruptedMigrationProven": false
+    }
+  },
+  "provenance": {
+    "bdd": "commit-outcomes.feature",
+    "genuineRed": "evidence/red/run.json",
+    "redTests": 15,
+    "redAssertionFailures": 14,
+    "missingCodeOrTools": false,
+    "iacAfterRedBeforeImplementation": "evidence/iac-decision.json",
+    "initialModelGreen": "evidence/verification/model-green.json",
+    "actualBrowserAndInitialGreen": "evidence/verification/initial-green.json",
+    "initialSyntax": "evidence/verification/syntax.json",
+    "syntax": "evidence/verification/publication-syntax.json",
+    "canonicalGitAndExactRawIntegrity": "evidence/content-index.json",
+    "initialNormalReadOnlyFocusedVerification": "evidence/verification/focused-green.json",
+    "normalReadOnlyFocusedVerification": "evidence/verification/publication-green.json",
+    "publicationGuardAndPriorSeal": "evidence/raw/publication/first-guard.json",
+    "browserHelperPublication": "53c0c0d",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055"
+  },
+  "cleanup": {
+    "browserCloseAwaitedInFinally": true,
+    "browserSessionClosed": true,
+    "cloudResourcesCreated": false,
+    "exerciseExternalEffects": false,
+    "lessonHistory": "In-memory, bounded at six attempts, explicit reset/reload clears.",
+    "proof": "Retained; normal verification read-only."
+  },
+  "remainingWork": [
+    {
+      "id": "B-S066",
+      "readyFromThisLesson": false,
+      "requiredGates": ["CORE", "DATA", "HOST", "REPLICA"],
+      "blocker": "No approved native commit/failover target or actual reconciliation/effect-count experiment is supplied by this portable model.",
+      "newUnitCreated": false
+    },
+    {
+      "id": "D-S066",
+      "complete": false,
+      "blocker": "Original native acceptance requires both required children and actual source acceptance evidence."
+    }
+  ],
+  "exclusions": [
+    "Actual database commit, transaction, deduplication, replication and failover proof.",
+    "Production Node24, native Azure, source-parent completion, uninterrupted migration, five-nines or unattended-runner certification.",
+    "Cloud/IaC/scaffold/identity/deploy/spend/packages/framework/root/shared edits, downloads or unsafe flags.",
+    "Extra Kano credit for tests, evidence, tooling, plumbing or refinement."
+  ]
+}

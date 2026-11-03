@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S066",
+  "sourceId": "S066",
+  "parentId": "D-S066",
+  "siblingId": "B-S066",
+  "kano": "S",
+  "kanoUnit": "A-S066",
+  "packet": "SC-S066",
+  "owner": "worker-A-S066",
+  "entryGate": "SOURCE",
+  "title": "Database failover during commit: reconcile uncertain outcomes without duplicate effects",
+  "entryPoint": "learning/S066/index.html",
+  "feature": "learning/S066/commit-outcomes.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Fail during commit; classify committed, failed, and unresolved outcomes without duplicating effects.",
+  "sourceAcceptance": "Retries do not duplicate effects; committed, failed, and unresolved outcomes are attributed honestly.",
+  "preconditions": [
+    "A modern browser opens local HTML, CSS and JavaScript; no server or account.",
+    "Three fixed synthetic operations each intend exactly one effect under a fixed original operation key and payload.",
+    "The fault loses all three commit acknowledgements; acknowledgement loss is not evidence of non-commit.",
+    "Reconciliation supplies an authoritative commit receipt, a terminal abort receipt and selected later evidence.",
+    "A terminal abort cannot later commit. A same-key retry after confirmed abort produces one effect and receipt in an assumed synthetic durable deduplication ledger.",
+    "Missing or unavailable lookup evidence cannot authorize a retry or establish an abort."
+  ],
+  "actions": [
+    "Choose later evidence for SYN-663 and one bounded recovery policy.",
+    "Begin three commits, then inject failover before commit acknowledgements arrive.",
+    "Reconcile original committed, failed and unresolved outcomes from supplied receipts.",
+    "Apply recovery; inspect original and recovered attribution, effect bounds and duplicate counts.",
+    "Check a learning prediction separately from gate, user impact and cleanup.",
+    "Inspect retained proof, start a new attempt retaining history or explicitly reset all local memory."
+  ],
+  "input": "learning/S066/fixtures.js",
+  "assertions": [
+    "Lost acknowledgements leave three unresolved outcomes before authoritative reconciliation.",
+    "Only terminal abort evidence classifies an original attempt as failed; missing lookup stays unresolved.",
+    "Safe recovery reuses committed receipts, retries confirmed aborts once with original keys and unchanged payloads, and holds unresolved operations.",
+    "Blind new-key retries duplicate a known committed effect; duplicate risk remains bounded but unresolved when evidence is unavailable.",
+    "Known missing or duplicate effects fail the gate; unresolved outcomes without a known failure yield UNKNOWN, never PASS.",
+    "Original failures and three interrupted commit responses remain visible even after all effects recover.",
+    "Strict inputs, ordered lifecycle, immutable detached snapshots and six-attempt retained history are guarded."
+  ],
+  "bounds": {
+    "operationsPerAttempt": 3,
+    "intendedEffectsPerOperation": 1,
+    "completedAttempts": 6,
+    "configurations": 9,
+    "receipt": ["unavailable", "committed", "aborted"],
+    "recovery": ["same-key", "hold", "new-key"],
+    "retryLimitPerOperation": 1,
+    "arbitraryEndpointsKeysOrPayloads": false,
+    "clockOrRandomness": false
+  },
+  "iac": {
+    "status": "N/A",
+    "decisionStage": "After genuine behavioral RED and before behavior implementation",
+    "decision": "learning/S066/evidence/iac-decision.json",
+    "redReference": "learning/S066/evidence/red/run.json",
+    "reason": "Resource-free local synthetic lesson; no cloud/IaC/scaffold/identity/deploy/spend."
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "purpose": "Existing Node22 test tooling only; not production Node24 certification.",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "dependencyChanges": false
+  },
+  "limits": [
+    "Every operation, receipt, effect, fault and recovery result is deterministic synthetic data.",
+    "No actual database commit, transaction, durable deduplication, replication, concurrency or failover proof.",
+    "No real authentication, registration, credentials, Azure calls, IaC, deployment or expenditure.",
+    "A successful recovery gate or learning verifier does not erase the three interrupted commit responses or prove uninterrupted migration.",
+    "At most six attempts are retained in browser memory; explicit reset or reload clears history.",
+    "No production Node24, native platform, source-parent completion or five-nines certification.",
+    "The abandoned browser lifecycle prototype is unqualified; no unattended-runner certification.",
+    "B-S066 and the original D-S066 native acceptance remain separate and unfulfilled.",
+    "One frozen S unit; tests, evidence and refinement earn no additional units."
+  ]
+}

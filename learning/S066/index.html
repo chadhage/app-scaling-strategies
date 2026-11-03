@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S066 · Reconcile a commit whose acknowledgement was lost</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to rehearsal controls</a>
+  <header>
+    <p class="training">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S066 · Did the transaction commit?</h1>
+    <p>A-S066 · D-S066 · SC-S066 · one frozen S learning unit</p>
+    <p>Fail during commit, reconcile authoritative receipts, and avoid applying the same operation twice.</p>
+  </header>
+  <main>
+    <section aria-labelledby="instructions-title">
+      <h2 id="instructions-title">Three operations, one effect each</h2>
+      <p>Each fixed operation SYN-661, SYN-662 and SYN-663 intends exactly one synthetic effect.
+        Failover loses all three commit acknowledgements. A timeout is neither a commit receipt nor an abort receipt.</p>
+      <p>Reconciliation supplies a durable commit receipt for SYN-661 and a <strong>terminal abort</strong>
+        for SYN-662. Choose later evidence for SYN-663. Missing evidence is never proof of abort.</p>
+      <ol>
+        <li>Choose the uncertain receipt and recovery policy. Begin commits, then inject failover.</li>
+        <li>Reconcile original outcomes before applying recovery. Inspect both original and recovered attribution.</li>
+        <li>Compare effect bounds and duplicates. Predict the gate; a correct learning answer does not repair failed users.</li>
+        <li>Try another bounded attempt with retained history, or explicitly reset all local memory.</li>
+      </ol>
+      <p class="assumption">Fixture assumptions: authoritative receipts cover the original commit attempt.
+        A terminal abort cannot later commit. A confirmed-abort retry with the original operation key and unchanged
+        payload produces one effect and its receipt in a synthetic durable deduplication ledger.
+        This ledger is an assumption, not an implementation or proof of a database guarantee.</p>
+    </section>
+    <section id="controls" aria-labelledby="controls-title" tabindex="-1">
+      <h2 id="controls-title">Conduct the commit fault</h2>
+      <form id="lesson-controls">
+        <fieldset id="assumptions">
+          <legend>Fixed for this attempt · 9 possible combinations</legend>
+          <label for="receipt">Later SYN-663 evidence</label>
+          <select id="receipt" name="receipt">
+            <option value="unavailable" selected>Lookup unavailable · outcome unresolved</option>
+            <option value="committed">Authoritative committed receipt · one original effect</option>
+            <option value="aborted">Authoritative terminal abort · zero original effects</option>
+          </select>
+          <label for="recovery">Recovery policy</label>
+          <select id="recovery" name="recovery">
+            <option value="same-key" selected>Reconcile then same-key retry · hold unresolved</option>
+            <option value="hold">Hold all · do not retry even a confirmed abort</option>
+            <option value="new-key">Unsafe comparison · blindly retry all with fresh keys</option>
+          </select>
+        </fieldset>
+        <div class="actions">
+          <button type="button" id="begin-commit">1. Begin three commits</button>
+          <button type="button" id="inject-fault" disabled>2. Fail over during commit</button>
+          <button type="button" id="reconcile" disabled>3. Reconcile receipts</button>
+          <button type="button" id="apply-recovery" disabled>4. Apply recovery and measure</button>
+        </div>
+      </form>
+      <p id="input-error" role="alert" hidden></p>
+      <div id="status" role="status" aria-live="polite" aria-atomic="true">
+        <p id="phase">Phase: idle</p>
+        <p id="gate">Effect reconciliation gate: not evaluated</p>
+        <p id="impact">Fault impact: not injected</p>
+        <p id="original-counts">Original commit outcomes: not observed</p>
+        <p id="recovered-counts">Recovered outcomes: not evaluated</p>
+        <p id="effects">Effects: not observed · intended: 3</p>
+        <p id="duplicates">Duplicates: not evaluated</p>
+        <p id="cleanup">Cleanup: local memory only; no resources created</p>
+      </div>
+      <h3>Original attempt evidence</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Original commit evidence, horizontally scrollable">
+        <table>
+          <caption>Original attribution is retained even after successful recovery</caption>
+          <thead><tr><th scope="col">Operation / original key</th><th scope="col">Original outcome</th><th scope="col">Original effects</th><th scope="col">Evidence</th></tr></thead>
+          <tbody id="original-rows"></tbody>
+        </table>
+      </div>
+      <section id="recovery-detail" hidden aria-labelledby="recovery-title">
+        <h3 id="recovery-title">Recovered effect inventory</h3>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Recovered effects, horizontally scrollable">
+          <table>
+            <caption>Committed = exactly one known effect; failed = known missing/duplicate; unresolved = uncertain count</caption>
+            <thead><tr><th scope="col">Operation</th><th scope="col">Original outcome</th><th scope="col">Recovery action</th><th scope="col">Submitted key</th><th scope="col">Added effects</th><th scope="col">Total effects</th><th scope="col">Duplicate bounds</th><th scope="col">Recovered outcome</th></tr></thead>
+            <tbody id="result-rows"></tbody>
+          </table>
+        </div>
+        <p>Failure dominates uncertainty. A zero-duplicate count alone is insufficient if an intended effect is missing.
+          All three lost commit responses remain interrupted even when recovery knows every effect.</p>
+      </section>
+      <h3>Deterministic synthetic trace</h3>
+      <pre id="trace">No attempt started.</pre>
+      <form id="prediction-controls">
+        <label for="prediction">Predict the effect reconciliation gate</label>
+        <select id="prediction" name="prediction" disabled>
+          <option value="" selected>Choose PASS, FAIL or UNKNOWN</option>
+          <option value="PASS">PASS · all three effects known exactly once</option>
+          <option value="FAIL">FAIL · known missing or duplicate effects</option>
+          <option value="UNKNOWN">UNKNOWN · unresolved without a known failure</option>
+        </select>
+        <button type="button" id="check-prediction" disabled>Check prediction</button>
+      </form>
+      <p id="prediction-result" role="status">Learning prediction not checked.</p>
+      <div class="actions">
+        <button type="button" id="new-attempt" disabled>New attempt · retain history</button>
+        <button type="button" id="reset-rehearsal">Reset rehearsal and history</button>
+      </div>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained attempts</h2>
+      <p id="history-count">Retained attempts: 0 / 6</p>
+      <p id="capacity">No silent eviction. At six completed attempts, explicitly reset to continue.</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Retained attempts, horizontally scrollable">
+        <table>
+          <caption>History is local memory; reset or reload clears it. Inspect the full proof for each attempt.</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Evidence / policy</th><th scope="col">Original C / F / U</th><th scope="col">Recovered C / F / U</th><th scope="col">Effects</th><th scope="col">Duplicates</th><th scope="col">Gate</th><th scope="col">Prediction</th><th scope="col">Full proof</th></tr></thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+      <section id="retained-detail" hidden aria-labelledby="retained-title">
+        <h3 id="retained-title" tabindex="-1">Retained proof</h3>
+        <pre id="retained-proof"></pre>
+      </section>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">What this does not prove</h2>
+      <p>This bounded, deterministic portable model runs entirely in browser memory. Three operations per attempt,
+        nine combinations, at most six retained attempts, no clock, real database, transaction, replication,
+        durable storage, concurrency, actual commit or failover. No real authentication, registration, credentials,
+        cloud calls, management access, IaC, deployment or spending.</p>
+      <p>Receipt authority and retry completion are supplied fixtures, not measured native behavior.
+        UNKNOWN is not success. A correct prediction is only a learning-verifier result.
+        B-S066 and the original D-S066 native acceptance remain unfulfilled. No production Node.js 24,
+        source-parent completion, uninterrupted migration, five-nines, or platform support claim.</p>
+      <p><a href="README.md">Worked example and verification</a> ·
+        <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft open-source disclaimer</a>.
+        This training is not a Microsoft service-level agreement or endorsement.</p>
+    </section>
+    <noscript><p role="alert">Enable JavaScript for this local synthetic exercise. No result has been observed.</p></noscript>
+  </main>
+</body>
+</html>

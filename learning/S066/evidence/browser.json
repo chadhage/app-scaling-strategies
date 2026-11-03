@@ -1,0 +1,1094 @@
+{
+  "cardId": "A-S066",
+  "workerId": "worker-A-S066",
+  "mode": "synthetic",
+  "outcome": "PASS",
+  "entry": "learning\\S066\\index.html",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "startedAtUtc": "2026-11-03T19:45:57.679Z",
+  "captureExplicitlyEnabled": true,
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "publication": "53c0c0d"
+  },
+  "observations": [
+    {
+      "name": "initial empty sample is not success",
+      "phase": "Phase: idle",
+      "gate": "Effect reconciliation gate: not evaluated",
+      "impact": "Fault impact: not injected",
+      "originalCounts": "Original commit outcomes: not observed",
+      "recoveredCounts": "Recovered outcomes: not evaluated",
+      "effects": "Effects: not observed · intended: 3",
+      "duplicates": "Duplicates: not evaluated",
+      "originalRows": [],
+      "recoveredRows": [],
+      "history": [],
+      "prediction": "Learning prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "controls"
+    },
+    {
+      "name": "invalid injected select rejected without a commit",
+      "phase": "Phase: idle",
+      "gate": "Effect reconciliation gate: not evaluated",
+      "impact": "Fault impact: not injected",
+      "originalCounts": "Original commit outcomes: not observed",
+      "recoveredCounts": "Recovered outcomes: not evaluated",
+      "effects": "Effects: not observed · intended: 3",
+      "duplicates": "Duplicates: not evaluated",
+      "originalRows": [],
+      "recoveredRows": [],
+      "history": [],
+      "prediction": "Learning prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "Configuration values must be exact enumerable primitive string choices.",
+      "activeElement": "receipt"
+    },
+    {
+      "name": "lost acknowledgements before reconciliation",
+      "phase": "Phase: uncertain",
+      "gate": "Effect reconciliation gate: not evaluated",
+      "impact": "Fault impact: 3 interrupted commit responses · recovery: not evaluated · no uninterrupted migration proven",
+      "originalCounts": "Original commit outcomes: 0 committed / 0 failed / 3 unresolved",
+      "recoveredCounts": "Recovered outcomes: not evaluated",
+      "effects": "Original effect bounds: 0..3 · intended: 3",
+      "duplicates": "Duplicates: not evaluated",
+      "originalRows": [
+        [
+          "SYN-661 / SYN-KEY-661",
+          "unresolved",
+          "0..1",
+          "Commit acknowledgement lost; timeout alone proves neither commit nor abort."
+        ],
+        [
+          "SYN-662 / SYN-KEY-662",
+          "unresolved",
+          "0..1",
+          "Commit acknowledgement lost; timeout alone proves neither commit nor abort."
+        ],
+        [
+          "SYN-663 / SYN-KEY-663",
+          "unresolved",
+          "0..1",
+          "Commit acknowledgement lost; timeout alone proves neither commit nor abort."
+        ]
+      ],
+      "recoveredRows": [],
+      "history": [],
+      "prediction": "Learning prediction not checked.",
+      "trace": "Attempt 1: issue three synthetic commits with fixed original keys and payloads.\nFailover during commit: all three acknowledgements are lost; three client responses interrupted.\nBefore authoritative reconciliation: 0 committed, 0 failed, 3 unresolved.",
+      "alert": "",
+      "activeElement": "reconcile"
+    },
+    {
+      "name": "authoritative reconciliation separates commit, abort and unresolved",
+      "phase": "Phase: reconciled",
+      "gate": "Effect reconciliation gate: not evaluated",
+      "impact": "Fault impact: 3 interrupted commit responses · recovery: not evaluated · no uninterrupted migration proven",
+      "originalCounts": "Original commit outcomes: 1 committed / 1 failed / 1 unresolved",
+      "recoveredCounts": "Recovered outcomes: not evaluated",
+      "effects": "Original effect bounds: 1..2 · intended: 3",
+      "duplicates": "Duplicates: not evaluated",
+      "originalRows": [
+        [
+          "SYN-661 / SYN-KEY-661",
+          "committed",
+          "1",
+          "Authoritative durable commit receipt (synthetic fixture)."
+        ],
+        [
+          "SYN-662 / SYN-KEY-662",
+          "failed",
+          "0",
+          "Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption)."
+        ],
+        [
+          "SYN-663 / SYN-KEY-663",
+          "unresolved",
+          "0..1",
+          "Lookup unavailable; not an abort receipt. Original effect may be zero or one."
+        ]
+      ],
+      "recoveredRows": [],
+      "history": [],
+      "prediction": "Learning prediction not checked.",
+      "trace": "Attempt 1: issue three synthetic commits with fixed original keys and payloads.\nFailover during commit: all three acknowledgements are lost; three client responses interrupted.\nBefore authoritative reconciliation: 0 committed, 0 failed, 3 unresolved.\nSYN-661: committed. Authoritative durable commit receipt (synthetic fixture).\nSYN-662: failed. Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption).\nSYN-663: unresolved. Lookup unavailable; not an abort receipt. Original effect may be zero or one.\nOnly a terminal abort proves non-commit; absent/unavailable records are not terminal proof.",
+      "alert": "",
+      "activeElement": "apply-recovery"
+    },
+    {
+      "name": "safe recovery remains UNKNOWN; correct prediction is separate",
+      "phase": "Phase: complete",
+      "gate": "Effect reconciliation gate: UNKNOWN",
+      "impact": "Fault impact: 3 interrupted commit responses · recovery: UNVERIFIED · no uninterrupted migration proven",
+      "originalCounts": "Original commit outcomes: 1 committed / 1 failed / 1 unresolved",
+      "recoveredCounts": "Recovered outcomes: 2 committed / 0 failed / 1 unresolved",
+      "effects": "Effects: 2..3 · intended: 3",
+      "duplicates": "Duplicates: 0",
+      "originalRows": [
+        [
+          "SYN-661 / SYN-KEY-661",
+          "committed",
+          "1",
+          "Authoritative durable commit receipt (synthetic fixture)."
+        ],
+        [
+          "SYN-662 / SYN-KEY-662",
+          "failed",
+          "0",
+          "Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption)."
+        ],
+        [
+          "SYN-663 / SYN-KEY-663",
+          "unresolved",
+          "0..1",
+          "Lookup unavailable; not an abort receipt. Original effect may be zero or one."
+        ]
+      ],
+      "recoveredRows": [
+        [
+          "SYN-661",
+          "committed",
+          "Reuse committed receipt; do not reapply.",
+          "No new submission",
+          "0",
+          "1",
+          "0",
+          "committed"
+        ],
+        [
+          "SYN-662",
+          "failed",
+          "Retry terminal abort once with original key and unchanged payload.",
+          "SYN-KEY-662",
+          "1",
+          "1",
+          "0",
+          "committed"
+        ],
+        [
+          "SYN-663",
+          "unresolved",
+          "Hold unresolved operation; unavailable evidence cannot authorize retry.",
+          "No new submission",
+          "0",
+          "0..1",
+          "0",
+          "unresolved"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "unavailable / same-key",
+          "1 / 1 / 1",
+          "2 / 0 / 1",
+          "2..3",
+          "0",
+          "UNKNOWN",
+          "UNKNOWN: correct",
+          "Inspect attempt 1"
+        ]
+      ],
+      "prediction": "Learning verifier: PASS · predicted UNKNOWN, observed UNKNOWN. Fault impact and effect inventory unchanged.",
+      "trace": "Attempt 1: issue three synthetic commits with fixed original keys and payloads.\nFailover during commit: all three acknowledgements are lost; three client responses interrupted.\nBefore authoritative reconciliation: 0 committed, 0 failed, 3 unresolved.\nSYN-661: committed. Authoritative durable commit receipt (synthetic fixture).\nSYN-662: failed. Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption).\nSYN-663: unresolved. Lookup unavailable; not an abort receipt. Original effect may be zero or one.\nOnly a terminal abort proves non-commit; absent/unavailable records are not terminal proof.\nSYN-661: Reuse committed receipt; do not reapply. Effects 1..1; committed.\nSYN-662: Retry terminal abort once with original key and unchanged payload. Effects 1..1; committed.\nSYN-663: Hold unresolved operation; unavailable evidence cannot authorize retry. Effects 0..1; unresolved.\nEffect reconciliation gate UNKNOWN. Original failures and all three interrupted responses are retained.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "repeat recovery rejected; known duplicate dominates unresolved risk",
+      "phase": "Phase: complete",
+      "gate": "Effect reconciliation gate: FAIL",
+      "impact": "Fault impact: 3 interrupted commit responses · recovery: INTERRUPTED · no uninterrupted migration proven",
+      "originalCounts": "Original commit outcomes: 1 committed / 1 failed / 1 unresolved",
+      "recoveredCounts": "Recovered outcomes: 1 committed / 1 failed / 1 unresolved",
+      "effects": "Effects: 4..5 · intended: 3",
+      "duplicates": "Duplicates: 1..2",
+      "originalRows": [
+        [
+          "SYN-661 / SYN-KEY-661",
+          "committed",
+          "1",
+          "Authoritative durable commit receipt (synthetic fixture)."
+        ],
+        [
+          "SYN-662 / SYN-KEY-662",
+          "failed",
+          "0",
+          "Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption)."
+        ],
+        [
+          "SYN-663 / SYN-KEY-663",
+          "unresolved",
+          "0..1",
+          "Lookup unavailable; not an abort receipt. Original effect may be zero or one."
+        ]
+      ],
+      "recoveredRows": [
+        [
+          "SYN-661",
+          "committed",
+          "Blind fresh-key retry; new receipt confirms one additional effect.",
+          "SYN-RETRY-SYN-661",
+          "1",
+          "2",
+          "1",
+          "failed"
+        ],
+        [
+          "SYN-662",
+          "failed",
+          "Blind fresh-key retry; new receipt confirms one additional effect.",
+          "SYN-RETRY-SYN-662",
+          "1",
+          "1",
+          "0",
+          "committed"
+        ],
+        [
+          "SYN-663",
+          "unresolved",
+          "Blind fresh-key retry; new receipt confirms one additional effect.",
+          "SYN-RETRY-SYN-663",
+          "1",
+          "1..2",
+          "0..1",
+          "unresolved"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "unavailable / same-key",
+          "1 / 1 / 1",
+          "2 / 0 / 1",
+          "2..3",
+          "0",
+          "UNKNOWN",
+          "UNKNOWN: correct",
+          "Inspect attempt 1"
+        ],
+        [
+          "2",
+          "unavailable / new-key",
+          "1 / 1 / 1",
+          "1 / 1 / 1",
+          "4..5",
+          "1..2",
+          "FAIL",
+          "Not checked",
+          "Inspect attempt 2"
+        ]
+      ],
+      "prediction": "Learning prediction not checked.",
+      "trace": "Attempt 2: issue three synthetic commits with fixed original keys and payloads.\nFailover during commit: all three acknowledgements are lost; three client responses interrupted.\nBefore authoritative reconciliation: 0 committed, 0 failed, 3 unresolved.\nSYN-661: committed. Authoritative durable commit receipt (synthetic fixture).\nSYN-662: failed. Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption).\nSYN-663: unresolved. Lookup unavailable; not an abort receipt. Original effect may be zero or one.\nOnly a terminal abort proves non-commit; absent/unavailable records are not terminal proof.\nSYN-661: Blind fresh-key retry; new receipt confirms one additional effect. Effects 2..2; failed.\nSYN-662: Blind fresh-key retry; new receipt confirms one additional effect. Effects 1..1; committed.\nSYN-663: Blind fresh-key retry; new receipt confirms one additional effect. Effects 1..2; unresolved.\nEffect reconciliation gate FAIL. Original failures and all three interrupted responses are retained.",
+      "alert": "Action requires reconciled phase; current phase is complete.",
+      "activeElement": ""
+    },
+    {
+      "name": "blind fresh-key retry duplicates committed effects; wrong prediction cannot repair it",
+      "phase": "Phase: complete",
+      "gate": "Effect reconciliation gate: FAIL",
+      "impact": "Fault impact: 3 interrupted commit responses · recovery: INTERRUPTED · no uninterrupted migration proven",
+      "originalCounts": "Original commit outcomes: 1 committed / 1 failed / 1 unresolved",
+      "recoveredCounts": "Recovered outcomes: 1 committed / 1 failed / 1 unresolved",
+      "effects": "Effects: 4..5 · intended: 3",
+      "duplicates": "Duplicates: 1..2",
+      "originalRows": [
+        [
+          "SYN-661 / SYN-KEY-661",
+          "committed",
+          "1",
+          "Authoritative durable commit receipt (synthetic fixture)."
+        ],
+        [
+          "SYN-662 / SYN-KEY-662",
+          "failed",
+          "0",
+          "Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption)."
+        ],
+        [
+          "SYN-663 / SYN-KEY-663",
+          "unresolved",
+          "0..1",
+          "Lookup unavailable; not an abort receipt. Original effect may be zero or one."
+        ]
+      ],
+      "recoveredRows": [
+        [
+          "SYN-661",
+          "committed",
+          "Blind fresh-key retry; new receipt confirms one additional effect.",
+          "SYN-RETRY-SYN-661",
+          "1",
+          "2",
+          "1",
+          "failed"
+        ],
+        [
+          "SYN-662",
+          "failed",
+          "Blind fresh-key retry; new receipt confirms one additional effect.",
+          "SYN-RETRY-SYN-662",
+          "1",
+          "1",
+          "0",
+          "committed"
+        ],
+        [
+          "SYN-663",
+          "unresolved",
+          "Blind fresh-key retry; new receipt confirms one additional effect.",
+          "SYN-RETRY-SYN-663",
+          "1",
+          "1..2",
+          "0..1",
+          "unresolved"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "unavailable / same-key",
+          "1 / 1 / 1",
+          "2 / 0 / 1",
+          "2..3",
+          "0",
+          "UNKNOWN",
+          "UNKNOWN: correct",
+          "Inspect attempt 1"
+        ],
+        [
+          "2",
+          "unavailable / new-key",
+          "1 / 1 / 1",
+          "1 / 1 / 1",
+          "4..5",
+          "1..2",
+          "FAIL",
+          "PASS: incorrect",
+          "Inspect attempt 2"
+        ]
+      ],
+      "prediction": "Learning verifier: FAIL · predicted PASS, observed FAIL. Fault impact and effect inventory unchanged.",
+      "trace": "Attempt 2: issue three synthetic commits with fixed original keys and payloads.\nFailover during commit: all three acknowledgements are lost; three client responses interrupted.\nBefore authoritative reconciliation: 0 committed, 0 failed, 3 unresolved.\nSYN-661: committed. Authoritative durable commit receipt (synthetic fixture).\nSYN-662: failed. Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption).\nSYN-663: unresolved. Lookup unavailable; not an abort receipt. Original effect may be zero or one.\nOnly a terminal abort proves non-commit; absent/unavailable records are not terminal proof.\nSYN-661: Blind fresh-key retry; new receipt confirms one additional effect. Effects 2..2; failed.\nSYN-662: Blind fresh-key retry; new receipt confirms one additional effect. Effects 1..1; committed.\nSYN-663: Blind fresh-key retry; new receipt confirms one additional effect. Effects 1..2; unresolved.\nEffect reconciliation gate FAIL. Original failures and all three interrupted responses are retained.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "full previous unknown proof and original failure are inspectable",
+      "phase": "Phase: complete",
+      "gate": "Effect reconciliation gate: FAIL",
+      "impact": "Fault impact: 3 interrupted commit responses · recovery: INTERRUPTED · no uninterrupted migration proven",
+      "originalCounts": "Original commit outcomes: 1 committed / 1 failed / 1 unresolved",
+      "recoveredCounts": "Recovered outcomes: 1 committed / 1 failed / 1 unresolved",
+      "effects": "Effects: 4..5 · intended: 3",
+      "duplicates": "Duplicates: 1..2",
+      "originalRows": [
+        [
+          "SYN-661 / SYN-KEY-661",
+          "committed",
+          "1",
+          "Authoritative durable commit receipt (synthetic fixture)."
+        ],
+        [
+          "SYN-662 / SYN-KEY-662",
+          "failed",
+          "0",
+          "Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption)."
+        ],
+        [
+          "SYN-663 / SYN-KEY-663",
+          "unresolved",
+          "0..1",
+          "Lookup unavailable; not an abort receipt. Original effect may be zero or one."
+        ]
+      ],
+      "recoveredRows": [
+        [
+          "SYN-661",
+          "committed",
+          "Blind fresh-key retry; new receipt confirms one additional effect.",
+          "SYN-RETRY-SYN-661",
+          "1",
+          "2",
+          "1",
+          "failed"
+        ],
+        [
+          "SYN-662",
+          "failed",
+          "Blind fresh-key retry; new receipt confirms one additional effect.",
+          "SYN-RETRY-SYN-662",
+          "1",
+          "1",
+          "0",
+          "committed"
+        ],
+        [
+          "SYN-663",
+          "unresolved",
+          "Blind fresh-key retry; new receipt confirms one additional effect.",
+          "SYN-RETRY-SYN-663",
+          "1",
+          "1..2",
+          "0..1",
+          "unresolved"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "unavailable / same-key",
+          "1 / 1 / 1",
+          "2 / 0 / 1",
+          "2..3",
+          "0",
+          "UNKNOWN",
+          "UNKNOWN: correct",
+          "Inspect attempt 1"
+        ],
+        [
+          "2",
+          "unavailable / new-key",
+          "1 / 1 / 1",
+          "1 / 1 / 1",
+          "4..5",
+          "1..2",
+          "FAIL",
+          "PASS: incorrect",
+          "Inspect attempt 2"
+        ]
+      ],
+      "prediction": "Learning verifier: FAIL · predicted PASS, observed FAIL. Fault impact and effect inventory unchanged.",
+      "trace": "Attempt 2: issue three synthetic commits with fixed original keys and payloads.\nFailover during commit: all three acknowledgements are lost; three client responses interrupted.\nBefore authoritative reconciliation: 0 committed, 0 failed, 3 unresolved.\nSYN-661: committed. Authoritative durable commit receipt (synthetic fixture).\nSYN-662: failed. Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption).\nSYN-663: unresolved. Lookup unavailable; not an abort receipt. Original effect may be zero or one.\nOnly a terminal abort proves non-commit; absent/unavailable records are not terminal proof.\nSYN-661: Blind fresh-key retry; new receipt confirms one additional effect. Effects 2..2; failed.\nSYN-662: Blind fresh-key retry; new receipt confirms one additional effect. Effects 1..1; committed.\nSYN-663: Blind fresh-key retry; new receipt confirms one additional effect. Effects 1..2; unresolved.\nEffect reconciliation gate FAIL. Original failures and all three interrupted responses are retained.",
+      "alert": "",
+      "activeElement": "retained-title"
+    },
+    {
+      "name": "authoritative committed evidence recovers exactly once but retains three interrupted responses",
+      "phase": "Phase: complete",
+      "gate": "Effect reconciliation gate: PASS",
+      "impact": "Fault impact: 3 interrupted commit responses · recovery: RECOVERED · no uninterrupted migration proven",
+      "originalCounts": "Original commit outcomes: 2 committed / 1 failed / 0 unresolved",
+      "recoveredCounts": "Recovered outcomes: 3 committed / 0 failed / 0 unresolved",
+      "effects": "Effects: 3 · intended: 3",
+      "duplicates": "Duplicates: 0",
+      "originalRows": [
+        [
+          "SYN-661 / SYN-KEY-661",
+          "committed",
+          "1",
+          "Authoritative durable commit receipt (synthetic fixture)."
+        ],
+        [
+          "SYN-662 / SYN-KEY-662",
+          "failed",
+          "0",
+          "Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption)."
+        ],
+        [
+          "SYN-663 / SYN-KEY-663",
+          "committed",
+          "1",
+          "Authoritative durable commit receipt (synthetic fixture)."
+        ]
+      ],
+      "recoveredRows": [
+        [
+          "SYN-661",
+          "committed",
+          "Reuse committed receipt; do not reapply.",
+          "No new submission",
+          "0",
+          "1",
+          "0",
+          "committed"
+        ],
+        [
+          "SYN-662",
+          "failed",
+          "Retry terminal abort once with original key and unchanged payload.",
+          "SYN-KEY-662",
+          "1",
+          "1",
+          "0",
+          "committed"
+        ],
+        [
+          "SYN-663",
+          "committed",
+          "Reuse committed receipt; do not reapply.",
+          "No new submission",
+          "0",
+          "1",
+          "0",
+          "committed"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "unavailable / same-key",
+          "1 / 1 / 1",
+          "2 / 0 / 1",
+          "2..3",
+          "0",
+          "UNKNOWN",
+          "UNKNOWN: correct",
+          "Inspect attempt 1"
+        ],
+        [
+          "2",
+          "unavailable / new-key",
+          "1 / 1 / 1",
+          "1 / 1 / 1",
+          "4..5",
+          "1..2",
+          "FAIL",
+          "PASS: incorrect",
+          "Inspect attempt 2"
+        ],
+        [
+          "3",
+          "committed / same-key",
+          "2 / 1 / 0",
+          "3 / 0 / 0",
+          "3",
+          "0",
+          "PASS",
+          "PASS: correct",
+          "Inspect attempt 3"
+        ]
+      ],
+      "prediction": "Learning verifier: PASS · predicted PASS, observed PASS. Fault impact and effect inventory unchanged.",
+      "trace": "Attempt 3: issue three synthetic commits with fixed original keys and payloads.\nFailover during commit: all three acknowledgements are lost; three client responses interrupted.\nBefore authoritative reconciliation: 0 committed, 0 failed, 3 unresolved.\nSYN-661: committed. Authoritative durable commit receipt (synthetic fixture).\nSYN-662: failed. Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption).\nSYN-663: committed. Authoritative durable commit receipt (synthetic fixture).\nOnly a terminal abort proves non-commit; absent/unavailable records are not terminal proof.\nSYN-661: Reuse committed receipt; do not reapply. Effects 1..1; committed.\nSYN-662: Retry terminal abort once with original key and unchanged payload. Effects 1..1; committed.\nSYN-663: Reuse committed receipt; do not reapply. Effects 1..1; committed.\nEffect reconciliation gate PASS. Original failures and all three interrupted responses are retained.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "two confirmed aborts retried with original keys and unchanged payloads",
+      "phase": "Phase: complete",
+      "gate": "Effect reconciliation gate: PASS",
+      "impact": "Fault impact: 3 interrupted commit responses · recovery: RECOVERED · no uninterrupted migration proven",
+      "originalCounts": "Original commit outcomes: 1 committed / 2 failed / 0 unresolved",
+      "recoveredCounts": "Recovered outcomes: 3 committed / 0 failed / 0 unresolved",
+      "effects": "Effects: 3 · intended: 3",
+      "duplicates": "Duplicates: 0",
+      "originalRows": [
+        [
+          "SYN-661 / SYN-KEY-661",
+          "committed",
+          "1",
+          "Authoritative durable commit receipt (synthetic fixture)."
+        ],
+        [
+          "SYN-662 / SYN-KEY-662",
+          "failed",
+          "0",
+          "Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption)."
+        ],
+        [
+          "SYN-663 / SYN-KEY-663",
+          "failed",
+          "0",
+          "Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption)."
+        ]
+      ],
+      "recoveredRows": [
+        [
+          "SYN-661",
+          "committed",
+          "Reuse committed receipt; do not reapply.",
+          "No new submission",
+          "0",
+          "1",
+          "0",
+          "committed"
+        ],
+        [
+          "SYN-662",
+          "failed",
+          "Retry terminal abort once with original key and unchanged payload.",
+          "SYN-KEY-662",
+          "1",
+          "1",
+          "0",
+          "committed"
+        ],
+        [
+          "SYN-663",
+          "failed",
+          "Retry terminal abort once with original key and unchanged payload.",
+          "SYN-KEY-663",
+          "1",
+          "1",
+          "0",
+          "committed"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "unavailable / same-key",
+          "1 / 1 / 1",
+          "2 / 0 / 1",
+          "2..3",
+          "0",
+          "UNKNOWN",
+          "UNKNOWN: correct",
+          "Inspect attempt 1"
+        ],
+        [
+          "2",
+          "unavailable / new-key",
+          "1 / 1 / 1",
+          "1 / 1 / 1",
+          "4..5",
+          "1..2",
+          "FAIL",
+          "PASS: incorrect",
+          "Inspect attempt 2"
+        ],
+        [
+          "3",
+          "committed / same-key",
+          "2 / 1 / 0",
+          "3 / 0 / 0",
+          "3",
+          "0",
+          "PASS",
+          "PASS: correct",
+          "Inspect attempt 3"
+        ],
+        [
+          "4",
+          "aborted / same-key",
+          "1 / 2 / 0",
+          "3 / 0 / 0",
+          "3",
+          "0",
+          "PASS",
+          "Not checked",
+          "Inspect attempt 4"
+        ]
+      ],
+      "prediction": "Learning prediction not checked.",
+      "trace": "Attempt 4: issue three synthetic commits with fixed original keys and payloads.\nFailover during commit: all three acknowledgements are lost; three client responses interrupted.\nBefore authoritative reconciliation: 0 committed, 0 failed, 3 unresolved.\nSYN-661: committed. Authoritative durable commit receipt (synthetic fixture).\nSYN-662: failed. Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption).\nSYN-663: failed. Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption).\nOnly a terminal abort proves non-commit; absent/unavailable records are not terminal proof.\nSYN-661: Reuse committed receipt; do not reapply. Effects 1..1; committed.\nSYN-662: Retry terminal abort once with original key and unchanged payload. Effects 1..1; committed.\nSYN-663: Retry terminal abort once with original key and unchanged payload. Effects 1..1; committed.\nEffect reconciliation gate PASS. Original failures and all three interrupted responses are retained.",
+      "alert": "",
+      "activeElement": "prediction"
+    },
+    {
+      "name": "no duplicate alone is insufficient; held terminal abort is missing its intended effect",
+      "phase": "Phase: complete",
+      "gate": "Effect reconciliation gate: FAIL",
+      "impact": "Fault impact: 3 interrupted commit responses · recovery: INTERRUPTED · no uninterrupted migration proven",
+      "originalCounts": "Original commit outcomes: 1 committed / 1 failed / 1 unresolved",
+      "recoveredCounts": "Recovered outcomes: 1 committed / 1 failed / 1 unresolved",
+      "effects": "Effects: 1..2 · intended: 3",
+      "duplicates": "Duplicates: 0",
+      "originalRows": [
+        [
+          "SYN-661 / SYN-KEY-661",
+          "committed",
+          "1",
+          "Authoritative durable commit receipt (synthetic fixture)."
+        ],
+        [
+          "SYN-662 / SYN-KEY-662",
+          "failed",
+          "0",
+          "Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption)."
+        ],
+        [
+          "SYN-663 / SYN-KEY-663",
+          "unresolved",
+          "0..1",
+          "Lookup unavailable; not an abort receipt. Original effect may be zero or one."
+        ]
+      ],
+      "recoveredRows": [
+        [
+          "SYN-661",
+          "committed",
+          "Hold; no new submission.",
+          "No new submission",
+          "0",
+          "1",
+          "0",
+          "committed"
+        ],
+        [
+          "SYN-662",
+          "failed",
+          "Hold; no new submission.",
+          "No new submission",
+          "0",
+          "0",
+          "0",
+          "failed"
+        ],
+        [
+          "SYN-663",
+          "unresolved",
+          "Hold; no new submission.",
+          "No new submission",
+          "0",
+          "0..1",
+          "0",
+          "unresolved"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "unavailable / same-key",
+          "1 / 1 / 1",
+          "2 / 0 / 1",
+          "2..3",
+          "0",
+          "UNKNOWN",
+          "UNKNOWN: correct",
+          "Inspect attempt 1"
+        ],
+        [
+          "2",
+          "unavailable / new-key",
+          "1 / 1 / 1",
+          "1 / 1 / 1",
+          "4..5",
+          "1..2",
+          "FAIL",
+          "PASS: incorrect",
+          "Inspect attempt 2"
+        ],
+        [
+          "3",
+          "committed / same-key",
+          "2 / 1 / 0",
+          "3 / 0 / 0",
+          "3",
+          "0",
+          "PASS",
+          "PASS: correct",
+          "Inspect attempt 3"
+        ],
+        [
+          "4",
+          "aborted / same-key",
+          "1 / 2 / 0",
+          "3 / 0 / 0",
+          "3",
+          "0",
+          "PASS",
+          "Not checked",
+          "Inspect attempt 4"
+        ],
+        [
+          "5",
+          "unavailable / hold",
+          "1 / 1 / 1",
+          "1 / 1 / 1",
+          "1..2",
+          "0",
+          "FAIL",
+          "Not checked",
+          "Inspect attempt 5"
+        ]
+      ],
+      "prediction": "Learning prediction not checked.",
+      "trace": "Attempt 5: issue three synthetic commits with fixed original keys and payloads.\nFailover during commit: all three acknowledgements are lost; three client responses interrupted.\nBefore authoritative reconciliation: 0 committed, 0 failed, 3 unresolved.\nSYN-661: committed. Authoritative durable commit receipt (synthetic fixture).\nSYN-662: failed. Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption).\nSYN-663: unresolved. Lookup unavailable; not an abort receipt. Original effect may be zero or one.\nOnly a terminal abort proves non-commit; absent/unavailable records are not terminal proof.\nSYN-661: Hold; no new submission. Effects 1..1; committed.\nSYN-662: Hold; no new submission. Effects 0..0; failed.\nSYN-663: Hold; no new submission. Effects 0..1; unresolved.\nEffect reconciliation gate FAIL. Original failures and all three interrupted responses are retained.",
+      "alert": "",
+      "activeElement": "prediction"
+    },
+    {
+      "name": "six attempts retained without eviction; bypassed disabled control still rejects overflow",
+      "phase": "Phase: complete",
+      "gate": "Effect reconciliation gate: FAIL",
+      "impact": "Fault impact: 3 interrupted commit responses · recovery: INTERRUPTED · no uninterrupted migration proven",
+      "originalCounts": "Original commit outcomes: 2 committed / 1 failed / 0 unresolved",
+      "recoveredCounts": "Recovered outcomes: 1 committed / 2 failed / 0 unresolved",
+      "effects": "Effects: 5 · intended: 3",
+      "duplicates": "Duplicates: 2",
+      "originalRows": [
+        [
+          "SYN-661 / SYN-KEY-661",
+          "committed",
+          "1",
+          "Authoritative durable commit receipt (synthetic fixture)."
+        ],
+        [
+          "SYN-662 / SYN-KEY-662",
+          "failed",
+          "0",
+          "Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption)."
+        ],
+        [
+          "SYN-663 / SYN-KEY-663",
+          "committed",
+          "1",
+          "Authoritative durable commit receipt (synthetic fixture)."
+        ]
+      ],
+      "recoveredRows": [
+        [
+          "SYN-661",
+          "committed",
+          "Blind fresh-key retry; new receipt confirms one additional effect.",
+          "SYN-RETRY-SYN-661",
+          "1",
+          "2",
+          "1",
+          "failed"
+        ],
+        [
+          "SYN-662",
+          "failed",
+          "Blind fresh-key retry; new receipt confirms one additional effect.",
+          "SYN-RETRY-SYN-662",
+          "1",
+          "1",
+          "0",
+          "committed"
+        ],
+        [
+          "SYN-663",
+          "committed",
+          "Blind fresh-key retry; new receipt confirms one additional effect.",
+          "SYN-RETRY-SYN-663",
+          "1",
+          "2",
+          "1",
+          "failed"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "unavailable / same-key",
+          "1 / 1 / 1",
+          "2 / 0 / 1",
+          "2..3",
+          "0",
+          "UNKNOWN",
+          "UNKNOWN: correct",
+          "Inspect attempt 1"
+        ],
+        [
+          "2",
+          "unavailable / new-key",
+          "1 / 1 / 1",
+          "1 / 1 / 1",
+          "4..5",
+          "1..2",
+          "FAIL",
+          "PASS: incorrect",
+          "Inspect attempt 2"
+        ],
+        [
+          "3",
+          "committed / same-key",
+          "2 / 1 / 0",
+          "3 / 0 / 0",
+          "3",
+          "0",
+          "PASS",
+          "PASS: correct",
+          "Inspect attempt 3"
+        ],
+        [
+          "4",
+          "aborted / same-key",
+          "1 / 2 / 0",
+          "3 / 0 / 0",
+          "3",
+          "0",
+          "PASS",
+          "Not checked",
+          "Inspect attempt 4"
+        ],
+        [
+          "5",
+          "unavailable / hold",
+          "1 / 1 / 1",
+          "1 / 1 / 1",
+          "1..2",
+          "0",
+          "FAIL",
+          "Not checked",
+          "Inspect attempt 5"
+        ],
+        [
+          "6",
+          "committed / new-key",
+          "2 / 1 / 0",
+          "1 / 2 / 0",
+          "5",
+          "2",
+          "FAIL",
+          "FAIL: correct",
+          "Inspect attempt 6"
+        ]
+      ],
+      "prediction": "Learning verifier: PASS · predicted FAIL, observed FAIL. Fault impact and effect inventory unchanged.",
+      "trace": "Attempt 6: issue three synthetic commits with fixed original keys and payloads.\nFailover during commit: all three acknowledgements are lost; three client responses interrupted.\nBefore authoritative reconciliation: 0 committed, 0 failed, 3 unresolved.\nSYN-661: committed. Authoritative durable commit receipt (synthetic fixture).\nSYN-662: failed. Authoritative terminal abort receipt; original attempt cannot later commit (fixture assumption).\nSYN-663: committed. Authoritative durable commit receipt (synthetic fixture).\nOnly a terminal abort proves non-commit; absent/unavailable records are not terminal proof.\nSYN-661: Blind fresh-key retry; new receipt confirms one additional effect. Effects 2..2; failed.\nSYN-662: Blind fresh-key retry; new receipt confirms one additional effect. Effects 1..1; committed.\nSYN-663: Blind fresh-key retry; new receipt confirms one additional effect. Effects 2..2; failed.\nEffect reconciliation gate FAIL. Original failures and all three interrupted responses are retained.",
+      "alert": "Six-attempt capacity reached; explicitly reset.",
+      "activeElement": ""
+    },
+    {
+      "name": "explicit reset clears completed proof, errors, history, locks and predictions",
+      "phase": "Phase: idle",
+      "gate": "Effect reconciliation gate: not evaluated",
+      "impact": "Fault impact: not injected",
+      "originalCounts": "Original commit outcomes: not observed",
+      "recoveredCounts": "Recovered outcomes: not evaluated",
+      "effects": "Effects: not observed · intended: 3",
+      "duplicates": "Duplicates: not evaluated",
+      "originalRows": [],
+      "recoveredRows": [],
+      "history": [],
+      "prediction": "Learning prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "begin-commit"
+    },
+    {
+      "name": "reset from committing restores exact defaults and keyboard focus",
+      "phase": "Phase: idle",
+      "gate": "Effect reconciliation gate: not evaluated",
+      "impact": "Fault impact: not injected",
+      "originalCounts": "Original commit outcomes: not observed",
+      "recoveredCounts": "Recovered outcomes: not evaluated",
+      "effects": "Effects: not observed · intended: 3",
+      "duplicates": "Duplicates: not evaluated",
+      "originalRows": [],
+      "recoveredRows": [],
+      "history": [],
+      "prediction": "Learning prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "begin-commit"
+    },
+    {
+      "name": "reset from uncertain restores exact defaults and keyboard focus",
+      "phase": "Phase: idle",
+      "gate": "Effect reconciliation gate: not evaluated",
+      "impact": "Fault impact: not injected",
+      "originalCounts": "Original commit outcomes: not observed",
+      "recoveredCounts": "Recovered outcomes: not evaluated",
+      "effects": "Effects: not observed · intended: 3",
+      "duplicates": "Duplicates: not evaluated",
+      "originalRows": [],
+      "recoveredRows": [],
+      "history": [],
+      "prediction": "Learning prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "begin-commit"
+    },
+    {
+      "name": "reset from reconciled restores exact defaults and keyboard focus",
+      "phase": "Phase: idle",
+      "gate": "Effect reconciliation gate: not evaluated",
+      "impact": "Fault impact: not injected",
+      "originalCounts": "Original commit outcomes: not observed",
+      "recoveredCounts": "Recovered outcomes: not evaluated",
+      "effects": "Effects: not observed · intended: 3",
+      "duplicates": "Duplicates: not evaluated",
+      "originalRows": [],
+      "recoveredRows": [],
+      "history": [],
+      "prediction": "Learning prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "begin-commit"
+    },
+    {
+      "name": "narrow viewport contains tables and keyboard reset remains usable",
+      "phase": "Phase: idle",
+      "gate": "Effect reconciliation gate: not evaluated",
+      "impact": "Fault impact: not injected",
+      "originalCounts": "Original commit outcomes: not observed",
+      "recoveredCounts": "Recovered outcomes: not evaluated",
+      "effects": "Effects: not observed · intended: 3",
+      "duplicates": "Duplicates: not evaluated",
+      "originalRows": [],
+      "recoveredRows": [],
+      "history": [],
+      "prediction": "Learning prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "begin-commit"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp-probes",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-Ooj7rxLjDl62hz4GRBlXWBd5RnOkbmuPsYfbnrOe+2k='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Connecting to 'http://127.0.0.1:1/s066-csp-probe' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Fetch API cannot load http://127.0.0.1:1/s066-csp-probe. Refused to connect because it violates the document's Content Security Policy."
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "probeRequests": [],
+  "probeResponses": [],
+  "screenshots": [
+    {
+      "file": "browser-unknown.png",
+      "sha256": "4869c4affa217589886d4819833fcf800021e98a801946f27fcbcecb787ca72f",
+      "bytes": 276690
+    },
+    {
+      "file": "browser-failure.png",
+      "sha256": "88f44d33ce020a1cc2739660163ce501055e7c2195d78d4a61a743b14b5b9469",
+      "bytes": 283597
+    }
+  ],
+  "cleanup": {
+    "closeAwaited": true,
+    "closed": true,
+    "ownedHeadlessSessionOnly": true
+  },
+  "testedSourceHashes": {
+    "index.html": "e59ca65031926b886034a09b9a229bc8887415f4fdbe41102f15dd446af2ed45",
+    "styles.css": "0d3d43616ea71067ddcf33c3d123e6c58f6a56f8afda1c86985490bc6a2ca55e",
+    "fixtures.js": "db0fbb2128feac1e481d77440080d94599afa4c2a7cc92a2fac9f17af1257b3d",
+    "model.js": "abd410508207ce241002676ce0de644afeb75289412bf9a090be4f48d932b1cd",
+    "app.js": "0a783ac6a7af586171907b9a1ba5a618018254f1a4fa2590db3e726829c856b1",
+    "manifest.json": "95cdc1631a8d338680ff34b18503d30f03af9a8d7388a2e58349d129f8e136fb",
+    "commit-outcomes.feature": "f2591b12d1eb07d8e18abec4dae3cd79e95262047f4bf6dbe2ef1f341bdb1180",
+    "tests\\browser.test.cjs": "3ae734ff6580924dd842c9a7309c8eff8f3cc265766b8c62a1ca27f20eb35fce"
+  },
+  "browserVersion": "156.0.4314.50",
+  "narrowViewport": {
+    "width": 360,
+    "bodyOverflow": false,
+    "visibleKeyboardFocus": true
+  },
+  "csp": {
+    "inlineRan": false,
+    "connection": "TypeError",
+    "violations": [
+      {
+        "directive": "script-src-elem",
+        "blockedURI": "inline"
+      },
+      {
+        "directive": "connect-src",
+        "blockedURI": "http://127.0.0.1:1/s066-csp-probe"
+      }
+    ]
+  },
+  "completedAtUtc": "2026-11-03T19:46:04.846Z"
+}

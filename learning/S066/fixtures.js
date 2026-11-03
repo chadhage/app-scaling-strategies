@@ -1,0 +1,22 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else Object.defineProperty(root, 'CommitFixtures066', { value: api });
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const operations = Object.freeze([
+    Object.freeze({ id: 'SYN-661', key: 'SYN-KEY-661', payload: 'synthetic-effect-661', receipt: 'committed' }),
+    Object.freeze({ id: 'SYN-662', key: 'SYN-KEY-662', payload: 'synthetic-effect-662', receipt: 'aborted' }),
+    Object.freeze({ id: 'SYN-663', key: 'SYN-KEY-663', payload: 'synthetic-effect-663', receipt: 'selected' }),
+  ]);
+  return Object.freeze({
+    operations,
+    defaults: Object.freeze({ receipt: 'unavailable', recovery: 'same-key' }),
+    receipts: Object.freeze(['unavailable', 'committed', 'aborted']),
+    recoveries: Object.freeze(['same-key', 'hold', 'new-key']),
+    maxAttempts: 6,
+    interruptedResponses: 3,
+    label: 'Training rehearsal - synthetic data - not a live Azure result',
+  });
+}));
