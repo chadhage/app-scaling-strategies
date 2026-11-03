@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S108 — Valid traffic behind mismatched WAF policy</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="lesson.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S108: valid traffic, mismatched policy</h1>
+    <p>A healthy page response can hide a blocked API or script. Compare the complete candidate journey, then measure recovery instead of trusting a restored policy label.</p>
+  </header>
+  <main id="exercise" tabindex="-1">
+    <section aria-labelledby="scope-title">
+      <h2 id="scope-title">One fixed fictional route</h2>
+      <p><code>training-candidate-route</code> has one valid fictional session and three benign request labels. Its profile journey requires <strong>all three</strong>: page, profile API, and script asset.</p>
+      <p>Policy, rule, traffic, asset, routing and authentication observations are teaching <strong>DATA ONLY</strong>. These labels are not fetched. No real WAF, network, resource, auth or route changes; no denial bypasses.</p>
+      <p>Preconditions: open this complete bundle in a JavaScript-capable browser. Limit: four comparisons, sixteen action records. History is retained in this page until explicit reset or reload, not durable storage.</p>
+    </section>
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Conduct the comparison</h2>
+      <ol>
+        <li>Choose fixed policy and recovery observations; apply the fictional policy.</li>
+        <li>Inspect the three authored request observations. Pending evidence stays unknown.</li>
+        <li>Restore the fixed baseline label, then measure recovery observations.</li>
+        <li>Compare outcomes and retained failures. Repeat or explicitly reset.</li>
+      </ol>
+      <form id="comparison-form" novalidate>
+        <label for="policy">Policy observation fixture</label>
+        <select id="policy" name="policy">
+          <option value="journey-block">Mismatch: valid API blocked</option>
+          <option value="asset-block">Mismatch: required script blocked</option>
+          <option value="matched">Matched policy</option>
+          <option value="missing-observation">Script observation unavailable</option>
+        </select>
+        <label for="recovery">Recovery observation fixture</label>
+        <select id="recovery" name="recovery">
+          <option value="complete">Complete baseline observations</option>
+          <option value="blocked-asset">Restored label, script still blocked</option>
+          <option value="missing-asset">Restored label, script unobserved</option>
+        </select>
+        <div class="actions">
+          <button id="apply-policy" type="submit">1. Apply fictional policy</button>
+          <button id="inspect-traffic" type="button" disabled>2. Inspect valid traffic</button>
+          <button id="restore-policy" type="button" disabled>3. Restore baseline label</button>
+          <button id="verify-recovery" type="button" disabled>4. Measure recovery</button>
+          <button id="reset-lesson" type="button">Reset lesson and history</button>
+        </div>
+      </form>
+      <p id="error" role="alert" tabindex="-1" hidden></p>
+      <noscript><p>JavaScript is required for this local exercise. No result has been observed.</p></noscript>
+    </section>
+    <section aria-labelledby="results-title">
+      <h2 id="results-title">Measured synthetic outcomes</h2>
+      <p id="status" role="status" aria-live="polite" data-result="unknown">Loading local fixture; no observation yet.</p>
+      <p id="policy-state"></p>
+      <p id="comparison-result"></p>
+      <p id="recovery-result"></p>
+      <p id="metrics"></p>
+      <p id="recovery-metrics"></p>
+      <p>Positive = all three required observations allow the valid journey. Negative = a known blocked journey request or required asset. Unknown = missing evidence without a proven interruption. These are measured fixture results, not native Azure proof.</p>
+      <div class="table-scroll">
+        <table>
+          <caption>Authored request observations for the latest comparison and recovery</caption>
+          <thead><tr><th scope="col">Request label</th><th scope="col">Kind</th><th scope="col">Comparison</th><th scope="col">Recovery</th></tr></thead>
+          <tbody id="requests"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained action history</h2>
+      <p>Restoration does not erase a failed comparison. Each inspection or recovery attempts one complete journey and three request observations.</p>
+      <ol id="history"></ol>
+    </section>
+    <footer>
+      <p>A-S108 / D-S108 / SC-S108; one original S unit. IaC N/A: resource-free browser lesson. B-S108 and real sandbox policy recovery remain unverified; D-S108 is not complete.</p>
+      <p>Node 22 test tooling and the approved offline Playwright 1.56.1 / signed Edge 156 pair are not production Node 24, native-platform or availability validation.</p>
+    </footer>
+  </main>
+</body>
+</html>
