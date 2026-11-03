@@ -6,6 +6,7 @@ Implementation work is tracked in the [web demonstration harness backlog](.docs/
 
 ## TOC
 
+- [Try the local demonstrations](#try-the-local-demonstrations)
 - [Problem Statement](#problem-statement)
 - [Scope](#scope)
 - [Goal Statement](#goal-statement)
@@ -47,6 +48,18 @@ Implementation work is tracked in the [web demonstration harness backlog](.docs/
 - [Recommended demonstration sequence](#recommended-demonstration-sequence)
 - [Microsoft Open Source Disclaimer](#microsoft-open-source-disclaimer)
 - [Sources](#sources)
+
+## Try the local demonstrations
+
+1. Open the [local scenario catalog](capability/C005/index.html) directly in a browser. It lists all 150 source scenarios and the two guided workflows without a server or Azure account.
+2. Select an available, accepted portable lesson and conduct its synthetic controls, failure cases, and reset. The catalog explicitly identifies its historical acceptance snapshot; its availability labels are not a live feed.
+3. Use the [live Kanban and accepted-demo links](.docs/wiki/kanban.md) for newer accepted work, implementation evidence, and native-proof blockers.
+
+The [versioned getProfile fixture](capability/C020/README.md) and [isolated lesson host](capability/C041/README.md) have separate bounded, loopback-only launch and cleanup instructions. Their HTTP-backed interfaces cannot be run by simply opening their HTML files. Follow their own instructions rather than exposing the listeners publicly.
+
+Local lessons and fixtures use synthetic data. A successful rehearsal, a documented platform capability, and a qualified native Azure result are different evidence levels. These local runs do not establish native support, production Node.js 24 validation, completed source-demo parents, or the five-nines transition goal.
+
+The approved scope is design and local implementation only. **IaC generation, identity registration, live Azure execution, deployment, and expenditure remain unapproved.** Node.js 22.23.4 is the validated test-tooling runtime; Node.js 24 LTS with Express on App Service Linux remains the proposed production design.
 
 ## Problem Statement
 
