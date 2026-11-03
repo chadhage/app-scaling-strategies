@@ -1,0 +1,67 @@
+{
+  "recordedAtUtc": "2026-11-03T17:01:38.698Z",
+  "sourceCommit": "aa1c86ffcc5b86472528df9b6ede25728142a710",
+  "source": "S023 in README.md; there is no separate S023 source directory in this checkout.",
+  "card": {
+    "technicalEntryGate": "SOURCE",
+    "kano": "S",
+    "priority": "P1",
+    "kanoUnit": "A-S023",
+    "deliver": "Warm a representative business path; detect a shallow probe that missed a failing transaction.",
+    "packet": "SC-S023",
+    "id": "A-S023",
+    "parents": [
+      "D-S023"
+    ],
+    "state": "In Progress",
+    "readiness": true,
+    "owner": "worker-A-S023",
+    "blocker": null,
+    "result": null,
+    "publication": null,
+    "admittedAtUtc": "2026-11-03T16:56:02.6659219Z",
+    "authorization": "local-implementation-only",
+    "claimedAtUtc": "2026-11-03T16:57:00.1525003Z"
+  },
+  "packet": {
+    "id": "SC-S023",
+    "kanoUnit": "A-S023",
+    "additionalCompanions": [],
+    "reason": "SC-S023 is the implicit source packet for A/B-S023, not a delighter packet."
+  },
+  "refinement": "One bounded A-card exercise; no extra test, plumbing or refinement unit. B-S023/native parent remains separate and unqualified.",
+  "sources": [
+    {
+      "path": "README.md",
+      "sha256": "826c1e3b1f1f8866f05d45f3d6b9eca5c06e901a2b67737774ad18aa1607e4d1",
+      "startLine": 225,
+      "endLine": 235,
+      "excerpt": "\n| ID | Scenario and required behavior |\n| --- | --- |\n| S021 | **Per-instance readiness:** Verify every required candidate instance, not whichever instance answers one endpoint probe. |\n| S022 | **Dependency-aware readiness:** Validate required database, cache, messaging, and service connectivity before admitting users. |\n| S023 | **Representative journey warm-up:** Exercise safe login, read, and transaction paths using isolated test fixtures. |\n| S024 | **Production-configuration validation:** Confirm effective production settings work without accidentally executing production background work. |\n| S025 | **Runtime and cache warm-up:** Prime JVM/JIT, application initialization, connection pools, and critical caches before exposure. |\n| S026 | **Slow image pull or startup:** Keep production serving while the candidate downloads its image and initializes. |\n| S027 | **False-positive health response:** Reject candidates whose probe returns an error, redirect, or misleading success response. |\n| S028 | **Warm-up timeout:** Abort explicitly and leave existing production routing intact. |",
+      "excerptSha256": "5176eba6ff08e108fbb36957a8f58ac34e4f4775bd7c402c035ace27821c3c14"
+    },
+    {
+      "path": ".docs\\wiki\\backlog.md",
+      "sha256": "40b4d8e2ab4774f47de029f97dd8ff4e267d9412292c3c47f72726b002831418",
+      "startLine": 187,
+      "endLine": 195,
+      "excerpt": "| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |\n| --- | --- | --- | --- | --- |\n| D-S021 | P0 | Add per-instance probe status and **Make one candidate instance unready**. | One healthy response cannot approve the whole required pool; stale/failed instances block unsafe admission. | none |\n| D-S022 | P0 | Add required dependency switches and effective readiness checks for data, cache, queue, and services. | A missing required dependency blocks promotion; optional dependencies are not blindly allowed to eject all healthy capacity. | none |\n| D-S023 | P1 | Add **Warm representative journeys** using isolated login/read/transaction fixtures. | Readiness requires real safe business-path evidence; fixture transactions and external effects stay isolated. | none |\n| D-S024 | P1 | Add **Validate with production settings** and a slot/configuration difference viewer. | Candidate readiness reflects effective target settings and identity/network access; background work cannot accidentally run twice. | P001, D-S022 |\n| D-S025 | P1 | Add cold/warm runtime comparison and JVM/bean/cache/pool initialization controls. | Client latency and actual initialization evidence show warm-up effectiveness; unsupported or unmeasured routes are disclosed. | P007 |\n| D-S026 | P1 | Add delayed/failed immutable image pull and container-startup fixtures. | Existing GA traffic continues while candidate startup fails or waits; readiness does not precede successful initialization. | IMAGEHOST |\n| D-S027 | P0 | Add probe fixtures returning 500, redirects, and misleading 200 responses. | Strict status and business assertions reject false readiness; no successful-health-only promotion is reported. | none |",
+      "excerptSha256": "b81e38609c6e2f8f332026206c38f494c8dd2e8a3480c53be0c68b8d186a3a9f"
+    },
+    {
+      "path": ".docs\\wiki\\kanban.md",
+      "sha256": "aa7cbedda232b09bfe7890f2e7969715be314ec72f9ca0bf9b1617ecb1e26a3e",
+      "startLine": 117,
+      "endLine": 153,
+      "excerpt": "Every listed row is one card, one accountable owner/pair, one independently reviewable changeset, and one observable acceptance result. Normal publication is a scoped, labeled commit with an annotated tag on `main`; temporary recovery branches and reviewer-assisted PRs are used only when safe integration requires them.\n\nImplementation order is BDD specification, genuine behavioral TDD red, the IaC step (or an explicit N/A for a resource-free lesson), implementation/refactoring, green tests and actual browser checks, scoped tagged publication, and parent-owned empirical acceptance. A worker cannot award its own Done credit. Subdivision preserves the original `kanoUnit`; partial work does not manufacture extra value.\n\n- **Size target:** A cards take 1-2 focused hours; C, B, and X cards target 2-4 focused hours after entry gates are satisfied. These are slicing limits, not delivery estimates.\n- **Refine before admission:** If a card needs a new research decision, multiple independent behaviors, or more than four focused hours, split it before pulling. Revalidate coverage and Kano classes; artificial splits do not manufacture extra value.\n- **Inputs:** Parent source, versioned contract, named fixture/configuration, technical gate, quota reservation, and any approved lease are available.\n- **Ownership:** One card owns its module/fixture namespace. A and B siblings do not share files, PRs, or mutable test leases.\n- **Done:** Scoped behavior is usable, its stated check passes, relevant tests are automated, review/merge is complete, documentation and evidence are attached, and the behavior is available through its declared preview or harness surface.\n- **Evidence:** Record card/parent IDs, mode, configuration/host, commit, test/run reference, verifier result, user-impact result, cleanup result, owner, reviewer, packet, and accepted time.\n- **No false completion:** A replay is not native evidence. Unsupported/unverified positive behavior cannot pass as a native success. A negative experiment may pass its verifier while clearly reporting interrupted users.\n- **No bonus credits:** Multiple parents, commits, test cases, repeated runs, and duplicated fixtures do not increase a card's Kano count.\n\n### Portable A-card lesson contract\n\nAn A card delivers a standalone, browser-openable lesson bundle with a small interactive exercise: choose an action or condition, inspect a synthetic trace, and check the expected outcome. Use standard HTML/browser behavior so an approved application framework or Azure subscription is not needed to begin.\n\nEach bundle declares source ID, objective, preconditions, actions, synthetic input/trace, expected assertions, and limits. It prominently says **Training rehearsal - synthetic data - not a live Azure result**, makes no management calls, contains no credentials, and supports keyboard operation.\n\nEach lesson must add a worked, testable exercise rather than copying the backlog sentence. Keep it portable for later mounting by C041. The native implementation and evidence remain a separate B card, and the source demo is not complete until both required slices and its original acceptance gates pass.\n\n## Concurrent pull and one-piece flow\n\n1. Replenish by parent priority, age, available capability, and customer value. Prefer a ready safety/enabling slice once its quota exists; do not finish the entire lesson lane before enabling live value. Choose ready satisfiers when quota blocks a D/L.\n2. Contributors pull one card; no bulk assignment or starting the next card while the previous PR awaits review.\n3. Keep registries discoverable from per-card manifests instead of concurrent edits to one central list. Version shared ports/contracts before implementation against them.\n4. Use separate namespaces: learning/Snnn, native/Snnn, capability/Cnnn, and delight/Xnnn. A/B siblings can progress concurrently when their own gates pass; B never waits merely for A's UI work.\n5. Narrow dependencies to actual consumed capabilities. Contract-conforming components can be developed with explicit fixtures; parent-level release conditions are not blanket coding dependencies.\n6. Preallocate approved leases for admitted native work. Provisioning queues, missing access, undecided stack choices, and unavailable reviewers are not hidden in To Do.\n7. Attempt bounded same-card recovery first. Return an incomplete remainder to To Do with `readiness=false` and a concrete blocker when it cannot finish; never pull it again until its gates pass. Preserve the original Kano unit and any verified partial evidence without awarding an unfulfilled unit. Do not add a fourth workflow column.\n8. For unavoidable long observations, implement a bounded, resumable collection slice and report its evidence limit. Do not promise five-nines proof merely to close a four-hour card.\n9. Review ready PRs before pulling new work. Investigate cards older than one focused working day; remove causes of waiting instead of inflating WIP.\n10. If an accepted credit is invalidated, surface the debt and stop new D/L admission until valid evidence restores the constraints. Never conceal a failed acceptance or invent compensating satisfiers.\n\n## Entry gates and independence\n\nComma-separated gates mean AND. The following aliases are explicit capability contracts:",
+      "excerptSha256": "81cc393748e99485d5e275f4b39ae4ed42ceca59e06ca308c7e2e949f502910b"
+    },
+    {
+      "path": ".docs\\wiki\\kanban.md",
+      "sha256": "aa7cbedda232b09bfe7890f2e7969715be314ec72f9ca0bf9b1617ecb1e26a3e",
+      "startLine": 364,
+      "endLine": 365,
+      "excerpt": "| A-S023 | D-S023 | S | Warm a representative business path; detect a shallow probe that missed a failing transaction. | SOURCE |\n| B-S023 | D-S023 | S | Warm one real synthetic business journey; verify readiness evidence and isolated effects. | CORE, DATA, HOST |",
+      "excerptSha256": "e6d9f0e11522c4acf4f1bfdf8483c8c1d026d20fa342f02cf6086cda966d7780"
+    }
+  ]
+}

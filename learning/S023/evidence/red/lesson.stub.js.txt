@@ -1,0 +1,38 @@
+(function (root, factory) {
+  'use strict';
+  const lesson = factory();
+  if (typeof module === 'object' && module.exports) module.exports = lesson;
+  else root.S023Lesson = lesson;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+
+  const DEFAULTS = Object.freeze({
+    mode: 'shallow', fixture: 'transaction-rejected', budgetMs: 150, isolated: true
+  });
+  const MAX_RUNS = 6;
+
+  function createSession() {
+    return { version: 1, history: [] };
+  }
+
+  function evaluate(config, id = 1) {
+    return {
+      id, config: { ...config },
+      endpoint: { status: 200, durationMs: 10, observation: 'success' },
+      outcome: 'unknown', ready: false,
+      reason: 'Loadable behavioral stub: business path has not been evaluated.',
+      steps: ['login', 'read', 'transaction'].map(name => ({
+        name, observation: 'not-run', status: null, durationMs: null,
+        detail: 'No business observation in this loadable stub.'
+      })),
+      metrics: { passed: 0, failed: 0, unmeasured: 3, journeyMs: null },
+      effects: { fixtureCommits: 0, externalWrites: 0, receipt: null }
+    };
+  }
+
+  function run(session, config) {
+    return { version: 1, history: [...session.history, evaluate(config, session.history.length + 1)] };
+  }
+
+  return Object.freeze({ DEFAULTS, MAX_RUNS, createSession, evaluate, run });
+}));

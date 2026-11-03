@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "id": "A-S023",
+  "sourceId": "S023",
+  "parentId": "D-S023",
+  "packet": "SC-S023",
+  "kano": "S",
+  "kanoUnit": "A-S023",
+  "title": "Representative journey warm-up",
+  "mode": "synthetic",
+  "entry": "index.html",
+  "objective": "Exercise safe isolated login, owned-profile read and transaction assertions; expose a rejected transaction missed by a shallow HTTP 200.",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "preconditions": ["Local browser", "fixture-v1", "No credentials or external operations"],
+  "actions": ["Choose shallow or representative check", "Choose isolated fixture condition", "Set whole-number journey budget", "Rehearse isolation guard", "Warm and assess", "Reset lesson"],
+  "bounds": { "maxObservations": 6, "minBudgetMs": 50, "maxBudgetMs": 500, "businessAssertions": 3 },
+  "defaults": { "mode": "shallow", "fixture": "transaction-rejected", "budgetMs": 150, "isolated": true },
+  "fixtures": ["healthy", "login-denied", "read-wrong-owner", "transaction-rejected", "transaction-unobserved"],
+  "syntheticTimingMs": { "endpoint": 10, "login": 15, "read": 25, "transaction": 60 },
+  "expectedAssertions": [
+    "Shallow HTTP 200 never approves business readiness",
+    "Only isolated login, owned-profile read, matching receipt and journey budget can produce synthetic success",
+    "Known business or budget failure fails readiness; missing evidence remains unknown",
+    "No path executes when the isolation guard fails",
+    "External writes are always zero; unobserved fixture commits are unknown, not zero",
+    "Malformed input/state and a seventh run preserve previous observations",
+    "Keyboard reset restores defaults, clears history/error/result and returns focus"
+  ],
+  "history": "Session-only, immutable observations; six retained until explicit reset or page reload; no silent eviction.",
+  "verification": {
+    "feature": "journey.feature",
+    "tests": ["tests/lesson.test.cjs", "tests/surface.test.cjs", "tests/browser.test.cjs"],
+    "normalVerification": "Read-only to committed proof",
+    "browserCapture": "CAPTURE_BROWSER_EVIDENCE=1 only for deliberate new proof",
+    "browserHelper": "testing\\browser\\isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055"
+  },
+  "limits": [
+    "Deterministic in-memory fixtures, not real HTTP, authentication, database or transaction operations",
+    "No actual warm-up, production routing, user migration, load test or reliability estimate",
+    "A-S023 only; B-S023 and original D-S023 acceptance remain unqualified",
+    "Node 22 test tooling only; not production Node 24 certification",
+    "IaC N/A; no cloud, identity registration, deployment, expenditure, packages or framework",
+    "Published browser helper retains its documented unattended lifecycle limitation"
+  ]
+}

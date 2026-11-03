@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S023 - Representative journey warm-up</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="lesson.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to lesson</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p>A-S023 / D-S023 / SC-S023 · fixture-v1 · Kano S</p>
+    <h1>Representative journey warm-up</h1>
+    <p>A healthy endpoint can hide a broken transaction. Require isolated login, an owned-profile read,
+      and a verified transaction receipt before calling the candidate ready.</p>
+  </header>
+  <main id="main">
+    <section aria-labelledby="instructions-heading">
+      <h2 id="instructions-heading">Conduct the comparison</h2>
+      <ol>
+        <li>Run the default shallow probe. Its HTTP 200 leaves business readiness <strong>unknown</strong>.</li>
+        <li>Select the representative path with the same rejected-transaction fixture. The transaction now <strong>fails</strong>.</li>
+        <li>Choose the healthy fixture. All three business assertions must pass within the journey budget.</li>
+        <li>Try a missing receipt, a 99 ms budget, or the isolation guard. Keep failures and unknowns in view.</li>
+      </ol>
+      <p>Preconditions: a local browser only. All identities, profiles, receipts and ledger markers are fixed,
+        in-memory training fixtures. No credentials, real accounts, network, payment, email or database operations.</p>
+    </section>
+
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Operator controls</h2>
+      <form id="journey-form" novalidate>
+        <div class="controls">
+          <label for="check-mode">Check
+            <select id="check-mode" name="check-mode">
+              <option value="shallow" selected>Shallow endpoint probe only</option>
+              <option value="representative">Representative login → read → transaction</option>
+            </select>
+          </label>
+          <label for="fixture">Isolated fixture condition
+            <select id="fixture" name="fixture">
+              <option value="healthy">Healthy business path</option>
+              <option value="login-denied">Login denied (403)</option>
+              <option value="read-wrong-owner">Read returns wrong profile owner (200)</option>
+              <option value="transaction-rejected" selected>Transaction rejected (409)</option>
+              <option value="transaction-unobserved">Transaction receipt unobserved</option>
+            </select>
+          </label>
+          <label for="budget-ms">Journey budget (50–500 ms, whole numbers)
+            <input id="budget-ms" name="budget-ms" type="number" min="50" max="500" step="1" value="150" aria-describedby="timing-help">
+          </label>
+        </div>
+        <p id="timing-help">Deterministic fixture timing: endpoint 10 ms separately; login 15 + read 25 + transaction 60 = 100 ms.
+          Unobserved or skipped steps have unknown journey latency, never zero.</p>
+        <label class="confirmation" for="isolated">
+          <input id="isolated" name="isolated" type="checkbox" checked>
+          Require isolated login/read/transaction fixtures. Uncheck to rehearse the pre-execution safety guard.
+        </label>
+        <div class="actions">
+          <button id="run-lesson" type="submit">Warm and assess</button>
+          <button id="reset-lesson" type="button">Reset lesson</button>
+        </div>
+      </form>
+      <p id="error" role="alert" tabindex="-1" hidden></p>
+      <p id="announcement" role="status" aria-live="polite">Ready for a synthetic observation.</p>
+    </section>
+
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Latest observation</h2>
+      <p id="outcome" data-outcome="not-assessed">Not assessed</p>
+      <p id="readiness">Candidate readiness: not assessed.</p>
+      <p id="reason">No business evidence has been collected.</p>
+      <dl class="metrics">
+        <div><dt>Endpoint</dt><dd id="endpoint-result">Not run</dd></div>
+        <div><dt>Business assertions passed</dt><dd id="passed">Not measured</dd></div>
+        <div><dt>Business assertions failed</dt><dd id="failed">Not measured</dd></div>
+        <div><dt>Business assertions unmeasured</dt><dd id="unmeasured">Not measured</dd></div>
+        <div><dt>Journey duration / budget</dt><dd id="duration">Not measured</dd></div>
+        <div><dt>Fixture-only commits</dt><dd id="fixture-commits">Not exercised</dd></div>
+        <div><dt>External writes</dt><dd id="external-writes">0 (no external operations exist)</dd></div>
+      </dl>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Latest synthetic journey trace">
+        <table>
+          <caption>Required business-path evidence (not endpoint availability)</caption>
+          <thead><tr><th scope="col">Step</th><th scope="col">Assertion</th><th scope="col">HTTP</th><th scope="col">Fixture ms</th><th scope="col">Evidence</th></tr></thead>
+          <tbody id="trace-body"></tbody>
+        </table>
+      </div>
+      <p>Existing-user exposure and transitions: <strong>not measured</strong>. Even a successful rehearsal
+        is not an uninterrupted migration or native readiness guarantee.</p>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained observation history</h2>
+      <p id="history-count">0/6 observations. History is session-only; reset or page reload clears it.</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Retained synthetic observation history">
+        <table>
+          <caption>Failures and unknowns are retained; no silent eviction after six observations</caption>
+          <thead><tr><th scope="col">Run</th><th scope="col">Check / fixture / isolation</th><th scope="col">Outcome</th><th scope="col">Pass / fail / unmeasured</th><th scope="col">Journey / budget ms</th><th scope="col">Fixture commits / external writes</th></tr></thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Scope and limits</h2>
+      <p>Source: S023 in <a href="../../README.md">README</a>, D-S023 in
+        <a href="../../.docs/wiki/backlog.md">backlog</a>, and the
+        <a href="../../.docs/wiki/kanban.md#portable-a-card-lesson-contract">portable A-card contract</a>.
+        Open <a href="README.md">lesson instructions and evidence</a> for reproducible checks.</p>
+      <p>No Azure, IaC, scaffold, identity registration, deployment, expenditure, production Node.js 24 validation
+        or native B-S023 proof. Source-parent acceptance remains incomplete. Six single-journey observations,
+        fixed fixture timings, no load model or reliability statistics. No data persists across reload.</p>
+      <p>Microsoft open-source demonstration: provided as-is, without warranties. These synthetic timings and
+        results are neither a Microsoft SLA nor a platform-support claim.</p>
+    </section>
+  </main>
+</body>
+</html>
