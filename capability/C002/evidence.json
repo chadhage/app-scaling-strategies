@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C002",
+  "workerId": "worker-C002",
+  "kano": "D",
+  "kanoUnit": "C002",
+  "parents": ["H001", "H003", "H012"],
+  "technicalEntryGate": "C001 accepted",
+  "scope": "One local end-to-end explicit run-envelope validation slice; result data only, no execution.",
+  "authority": {
+    "snapshot": "..\\C001\\approved-contract.js",
+    "guard": "..\\C001\\contract-guard.js",
+    "documentation": "..\\C001\\README.md",
+    "reuse": "Imported unchanged; C001 owns snapshot integrity and action consent. No separate approval implementation or approval defaults.",
+    "c001ApprovalSourceCommit": "26747d4fbbd51235c612dbd9d8c92ab335aef78e",
+    "c001SnapshotSha256": "d88600582af0d499bb0bd26a727e8f0840e724e133bda6284592bc2b4e346909",
+    "browserAuthorityLimit": "Bundled pinned snapshot only, not the current repository ledger or server-side authorization."
+  },
+  "contract": {
+    "bdd": "C002.feature",
+    "typedApi": "validator.d.ts",
+    "executableJsonSchema": "run-envelope-contract.js",
+    "validator": "validator.js",
+    "textParser": "json-input.js",
+    "operatorSurface": "index.html",
+    "documentation": "README.md",
+    "allObjectsClosedAndRequired": true,
+    "numericPolicy": "Finite safe-integer JSON numbers, no coercion or negative zero. Text parsing additionally rejects duplicate fields and precision-losing/underflowed numeric literals.",
+    "comparisonPolicy": "Every explicitly supplied min/max is inclusive and ordered; no missing bound is defaulted.",
+    "resultPolicy": "executed=false always. Rejections expose neither a validated envelope nor applied limits; valid results contain immutable copies.",
+    "parserSafetyDepth": 16
+  },
+  "sequence": [
+    "Created C002.feature before adding the loadable validator behavior stub and Node built-in tests.",
+    "Ran genuine behavioral RED: valid explicit local envelope expected true, loadable stub returned false.",
+    "Implemented schema-driven validation importing the existing C001 guard; validator-only GREEN passed 241 assertions/subtests.",
+    "Extended BDD for ambiguous JSON, added a loadable parser stub and genuine precision-loss behavioral RED.",
+    "Implemented exact safe-integer source checks and duplicate-field rejection, operator surface, and source/factory tests.",
+    "Ran focused GREEN including unchanged C001 authority regression and all C002 unit tests, then syntax checks.",
+    "After parent explicitly verified the shared headless helper, ran actual isolated Edge DOM/keyboard/error/reset/offline/dependency checks; no integrated foreground lease was requested."
+  ],
+  "tdd": {
+    "logFormatting": "Whitespace-only TAP separator lines were trimmed after the publisher diff --check rejected trailing spaces; assertions, observations, timings and failures are unchanged.",
+    "validatorRed": {
+      "command": "node --test --test-name-pattern=\"accepts the explicit in-range\" .\\capability\\C002\\tests\\validator.test.cjs",
+      "exitCode": 1,
+      "tests": 1,
+      "failed": 1,
+      "failure": "ERR_ASSERTION: false !== true; the module loaded and returned a behaviorally incomplete rejected result.",
+      "log": "evidence\\tdd-red.txt",
+      "missingPackageOrSyntaxFailure": false
+    },
+    "initialValidatorGreen": {
+      "command": "node --test .\\capability\\C002\\tests\\validator.test.cjs",
+      "exitCode": 0,
+      "tests": 241,
+      "passed": 241,
+      "failed": 0,
+      "log": "evidence\\validator-green.txt"
+    },
+    "precisionParserRed": {
+      "command": "node --test --test-name-pattern=\"rejects precision-losing integer-looking\" .\\capability\\C002\\tests\\json-input.test.cjs",
+      "exitCode": 1,
+      "tests": 1,
+      "failed": 1,
+      "failure": "ERR_ASSERTION: raw JSON.parse rounded 1.00000000000000001 into 1 instead of rejecting its source literal.",
+      "log": "evidence\\json-input-red.txt",
+      "missingPackageOrSyntaxFailure": false
+    },
+    "focusedGreen": {
+      "command": "node --test .\\capability\\C001\\tests\\*.test.cjs .\\capability\\C002\\tests\\*.test.cjs",
+      "exitCode": 0,
+      "tests": 286,
+      "passed": 286,
+      "failed": 0,
+      "skipped": 0,
+      "log": "evidence\\tdd-green.txt",
+      "coverage": [
+        "Each metric at inclusive minimum/maximum and outside both sides",
+        "Explicit changed limits alter comparisons; missing bounds have no defaults",
+        "Invalid/inverted ranges and cloud-bound escalation",
+        "Unknown/missing fields at every record level and invalid record shapes",
+        "Unsafe numeric types in metrics, live-run count and bounds",
+        "Non-enumerable fields, symbols, accessors without getter execution, inherited fields and prototype keys",
+        "Missing/drifted C001 approval and every restricted action",
+        "Caller immutability, copied/frozen results and unavailable schema/guard factories",
+        "Precision-losing and duplicate JSON inputs",
+        "C001 approval/probe/surface regression"
+      ]
+    }
+  },
+  "syntax": {
+    "command": "$failed=$false; $lines=foreach($file in Get-ChildItem .\\capability\\C002 -Recurse -File -Include *.js,*.cjs){$relative=Resolve-Path -Relative $file.FullName; node --check $relative; if($LASTEXITCODE -ne 0){$failed=$true}; \"node --check $relative => $LASTEXITCODE\"}; $lines | Tee-Object -FilePath .\\capability\\C002\\evidence\\syntax.txt; if($failed){exit 1}",
+    "exitCode": 0,
+    "files": 9,
+    "log": "evidence\\syntax.txt",
+    "typeDeclarationCompileQualification": false
+  },
+  "browser": {
+    "command": "node --test .\\capability\\C002\\tests\\browser.acceptance.cjs",
+    "exitCode": 0,
+    "testsIncludingParent": 10,
+    "passed": 10,
+    "failed": 0,
+    "mode": "isolated-headless",
+    "engine": "Microsoft Edge / Chromium",
+    "browserVersion": "156.0.4314.50",
+    "playwrightVersion": "1.56.1",
+    "sharedHelper": "..\\..\\testing\\browser\\isolated.cjs",
+    "helperVerifiedPublication": "eaf266c631d286a3dacb24c1caab9686f504a458",
+    "helperVerifiedTag": "kanban/flow-browser/eaf266c631d2",
+    "integratedBrowserUsed": false,
+    "foregroundLeaseRequestedOrHeld": false,
+    "log": "evidence\\browser-green.txt",
+    "observations": "evidence\\browser-observations.json",
+    "screenshots": ["evidence\\browser-valid.png", "evidence\\browser-invalid.png"],
+    "actualObservations": [
+      "Visible C001 pinned contract, all six false operation approval flags and exact JSON Schema; both input textareas initially empty.",
+      "Real Enter loads the explicitly labelled synthetic fixture; Tab/Tab/Enter validates and returns focus to the validation button.",
+      "Valid result executed=false, liveAzureRuns=0, cloudSpend=0 and productionRuntimeValidated=false.",
+      "Editing invalidates stale success; five out-of-range metric paths and exact intervals appear in the visible error table, plus the C001 zero-spend scope error.",
+      "Malformed JSON, missing limits, missing max endpoint, unknown SKU field, numeric string, precision-losing literal and duplicate JSON field are explicitly rejected.",
+      "Deployment action receives C001 DEPLOYMENT_NOT_APPROVED; non-local mode/live runs and positive cloud budget bounds receive SCOPE_ESCALATION.",
+      "Real keyboard Enter on Reset clears both inputs, stale result and error rows, resets aria-invalid, and focuses Envelope JSON.",
+      "Zero observed remote requests, normal-page script errors or CSP violations during monitored reload and interactions; the helper initial navigation precedes instrumentation.",
+      "The actual C001 guard script request is intentionally blocked on reload; validation and fixture buttons stay disabled with SURFACE_UNAVAILABLE.",
+      "Owned isolated session is closed in finally; actual page closure and browser disconnection are asserted."
+    ],
+    "notNodeDomMockEvidence": true
+  },
+  "limits": {
+    "operatingMode": "local-implementation-only",
+    "liveAzureRuns": 0,
+    "cloudSpend": 0,
+    "liveAzureExecutionApproved": false,
+    "iacGenerationApproved": false,
+    "scaffoldApproved": false,
+    "deploymentApproved": false,
+    "identityRegistrationApproved": false,
+    "expenditureApproved": false,
+    "nativeTargetQualified": false,
+    "managementCalls": 0,
+    "iac": "N/A — no resource definitions or infrastructure generation",
+    "testRuntime": "Node.js 22.23.4",
+    "productionDesignOnly": "Node.js 24 LTS / Express / App Service Linux",
+    "productionRuntimeQualified": false,
+    "syntheticFixtureOnly": {
+      "source": "synthetic-fixture.js",
+      "label": "C002 synthetic fixture: not Azure authorization or universal defaults",
+      "requestsPerSecond": [1, 100],
+      "concurrentUsers": [1, 20],
+      "durationSeconds": [1, 300],
+      "capacityUnits": [1, 4],
+      "cloudSpend": [0, 0],
+      "noUniversalDefaultsOrRealAzureLimits": true
+    },
+    "notClaimed": [
+      "Current-ledger freshness in the browser",
+      "Server-side authentication, authorization, roles, leases or execution enforcement",
+      "Actual load generation, capacity provisioning, price estimates or resource selection",
+      "Node 24 / Express runtime qualification or cross-engine browser certification",
+      "Native OS, SKU, subscription, resource group, region, tenant or production limits"
+    ]
+  },
+  "delivery": {
+    "localSliceComplete": true,
+    "usefulVerifiedScope": "One typed/schema-driven, fail-closed local validation predicate and actual operator browser surface.",
+    "additionalKanoUnits": 0,
+    "bonusClaimed": false,
+    "toDoRefinements": [],
+    "acceptance": "Parent/controller alone reviews and accepts; no self-credit."
+  }
+}

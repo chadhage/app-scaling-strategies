@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>C002 — local run-envelope validator</title>
+  <link rel="stylesheet" href="run-envelope.css">
+  <script defer src="../C001/approved-contract.js"></script>
+  <script defer src="../C001/contract-guard.js"></script>
+  <script defer src="run-envelope-contract.js"></script>
+  <script defer src="synthetic-fixture.js"></script>
+  <script defer src="json-input.js"></script>
+  <script defer src="validator.js"></script>
+  <script defer src="run-envelope-page.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">C002 · Kano D · H001 / H003 / H012 · local comparison only</p>
+      <h1>Validate a run envelope. Execute nothing.</h1>
+      <p>Supply both an envelope and every comparison bound. A valid result is data, not a run, an approval, a price quote, or provisioned capacity.</p>
+      <p class="boundary"><strong>Local-only. liveAzureRuns = 0. cloudSpend = 0 — forbidden, not an approved free resource.</strong></p>
+    </header>
+
+    <section aria-labelledby="authority-title">
+      <h2 id="authority-title">C001 authority — read-only</h2>
+      <p id="integrity" role="status">DENIED — C001 snapshot integrity has not been verified.</p>
+      <dl id="authority-summary"></dl>
+      <p>The browser verifies C001's bundled pinned snapshot, not the current repository ledger. This client predicate is not server-side identity, role, lease, or execution enforcement.</p>
+      <p><strong>Node.js 22.23.4 is local test tooling only. The Node.js 24 LTS / Express production design is not runtime qualification.</strong></p>
+      <p>Native OS, SKU, subscription, resource group, and region are unapproved. No tenant or production limits are invented. IaC: N/A.</p>
+      <details>
+        <summary>C001 immutable approval, provenance, and all false operation flags</summary>
+        <pre id="approval-json">Unavailable until C001 integrity passes.</pre>
+      </details>
+    </section>
+
+    <section aria-labelledby="contract-title">
+      <h2 id="contract-title">Visible local contract</h2>
+      <p>Every object is closed: all listed fields are required and unknown fields are rejected. Numeric inputs must be finite safe integers, with no coercion or negative zero. Every supplied min/max is inclusive and ordered.</p>
+      <p>Load, duration in seconds, and synthetic capacity units require positive comparison bounds. The supplied cloud budget interval must be [0, 0]. These are local input rules, not Azure/provider/production limits. Schema checks are supplemented by safe-number, ordered-range, comparison, and C001 authority checks.</p>
+      <details open>
+        <summary>Exact request JSON Schema</summary>
+        <pre id="schema-json">DENIED — schema unavailable.</pre>
+      </details>
+    </section>
+
+    <section aria-labelledby="validation-title">
+      <h2 id="validation-title">Local validation inputs</h2>
+      <p id="fixture-warning">There are no implicit limits. “Load synthetic local fixture” explicitly supplies visible example values; its limits are not universal defaults or real Azure authorization.</p>
+      <form id="validation-form" novalidate>
+        <button id="load-fixture" type="button" disabled>Load synthetic local fixture</button>
+        <div class="inputs">
+          <div>
+            <label for="envelope-input">Envelope JSON</label>
+            <p id="envelope-help">Use exactly the envelope fields in the schema. Only action “local.probe”, local mode, and zero live runs can validate.</p>
+            <textarea id="envelope-input" name="envelope" rows="20" spellcheck="false" autocomplete="off" aria-describedby="envelope-help" aria-invalid="false"></textarea>
+          </div>
+          <div>
+            <label for="limits-input">Explicit limits JSON</label>
+            <p id="limits-help">Supply every min and max, kind “local-comparison-only”, and a nonblank label. No approval or target fields are accepted.</p>
+            <textarea id="limits-input" name="limits" rows="20" spellcheck="false" autocomplete="off" aria-describedby="limits-help fixture-warning" aria-invalid="false"></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="validate" type="submit" disabled>Validate locally — no execution</button>
+          <button id="reset" type="reset">Reset inputs and result</button>
+        </div>
+      </form>
+
+      <p id="result" role="status" aria-live="polite" aria-atomic="true" tabindex="-1">DENIED — validation unavailable until all dependencies and C001 integrity pass. Nothing is executed.</p>
+      <div class="table-wrap">
+        <table id="field-errors" hidden>
+          <caption>Precise field errors — correct the supplied input, not the approval</caption>
+          <thead><tr><th scope="col">Field path</th><th scope="col">Code</th><th scope="col">Reason</th></tr></thead>
+          <tbody id="error-rows"></tbody>
+        </table>
+      </div>
+      <details open>
+        <summary>Read-only validation result</summary>
+        <pre id="result-json">No validation result. Nothing has been executed.</pre>
+      </details>
+    </section>
+    <noscript><p>DENIED — JavaScript is unavailable. No validation or operation is enabled.</p></noscript>
+  </main>
+</body>
+</html>
