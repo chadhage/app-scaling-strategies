@@ -1,0 +1,74 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const { getLog, encodeEvent, suffix } = require('../fixture.cjs');
+const { CursorSession, eventId, parseCursor, EVENT_COUNT } = require('../protocol.js');
+const { getProfileV1, getProfileV2 } = require('../../C020/profiles.cjs');
+const request = { profileId: 'synthetic-001', version: 'r1' };
+
+test('immutable ordered log reuses the actual unchanged C020 fixtures and stamps', () => {
+  const log = getLog(request);
+  assert.equal(log.length, EVENT_COUNT);
+  assert.deepEqual(log.map((event) => event.sequence), [1, 2, 3, 4, 5, 6]);
+  assert.equal(Object.isFrozen(log), true);
+  for (const event of log) {
+    const fixture = event.sequence % 2 ? getProfileV1 : getProfileV2;
+    assert.deepEqual(event.payload, fixture({ profileId: request.profileId }));
+    assert.equal(event.id, eventId(request.profileId, event.sequence));
+    assert.equal(event.streamVersion, 'r1');
+    assert.equal(Object.isFrozen(event.payload.profile.preferences.topics), true);
+  }
+});
+
+test('SSE wire bytes contain explicit id, event, one JSON data line and frame delimiter', () => {
+  const event = getLog(request)[0];
+  const bytes = encodeEvent(event);
+  assert.ok(Buffer.isBuffer(bytes));
+  assert.match(bytes.toString('utf8'), /^id: C027:r1:synthetic-001:000001\nevent: profile\ndata: \{/);
+  assert.equal(bytes.toString('utf8'), `id: ${event.id}\nevent: profile\ndata: ${JSON.stringify(event)}\n\n`);
+});
+
+test('ordered suffix starts strictly after the accepted cursor, not the last received cursor', () => {
+  const log = getLog(request);
+  assert.deepEqual(suffix(request, eventId(request.profileId, 1)).map((event) => event.sequence), [2, 3, 4, 5, 6]);
+  assert.deepEqual(suffix(request, eventId(request.profileId, 6)), []);
+  assert.deepEqual(suffix(request, 'START'), log);
+});
+
+test('received three but accepted one resumes from one, replaying two and three', () => {
+  const session = new CursorSession(request.profileId);
+  const log = getLog(request);
+  assert.equal(session.begin(), 'START');
+  session.opened();
+  for (const event of log.slice(0, 3)) {
+    assert.equal(session.receive({ id: event.id, data: JSON.stringify(event) }).queued, true);
+  }
+  assert.equal(session.snapshot().receivedCursor, eventId(request.profileId, 3));
+  assert.equal(session.snapshot().acceptedCursor, 'START');
+  session.acceptNext();
+  const before = session.snapshot();
+  session.disconnect();
+  assert.equal(session.begin(), eventId(request.profileId, 1));
+  session.opened();
+  for (const event of log.slice(1)) {
+    session.receive({ id: event.id, data: JSON.stringify(event) });
+    session.acceptNext();
+  }
+  assert.equal(session.snapshot().acceptedSequence, 6);
+  assert.deepEqual(session.snapshot().acceptedEvents.map((event) => event.sequence), [1, 2, 3, 4, 5, 6]);
+  assert.equal(before.acceptedSequence, 1, 'Previously returned evidence is immutable.');
+  assert.equal(Object.isFrozen(before), true);
+});
+
+test('invalid, future and foreign cursors reject instead of silently starting over', () => {
+  for (const [cursor, code] of [
+    ['', 'INVALID_CURSOR'], [null, 'INVALID_CURSOR'], ['1', 'INVALID_CURSOR'],
+    ['C027:r1:synthetic-001:000000', 'INVALID_CURSOR'],
+    ['C027:r1:synthetic-001:000007', 'FUTURE_CURSOR'],
+    ['C027:r1:synthetic-002:000001', 'CURSOR_STREAM_MISMATCH'],
+    ['C027:r2:synthetic-001:000001', 'CURSOR_STREAM_MISMATCH']
+  ]) {
+    assert.throws(() => parseCursor(cursor, request.profileId), { code });
+  }
+});

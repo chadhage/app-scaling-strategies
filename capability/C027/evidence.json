@@ -1,0 +1,114 @@
+{
+  "label": "[C027][S]",
+  "cardId": "C027",
+  "workerId": "worker-C027",
+  "parentId": "H005",
+  "kano": "S",
+  "kanoUnits": 1,
+  "technicalEntryGate": {
+    "cardId": "C020",
+    "observedState": "Done",
+    "fixtureCommit": "2dc471daab3ffa202d83aba2df443e280cad3656",
+    "unchangedFiles": [
+      "capability\\C020\\contract.js",
+      "capability\\C020\\profiles.cjs"
+    ]
+  },
+  "outcome": "local-verification-passed; scoped publication and parent acceptance are separate",
+  "workflow": {
+    "bdd": "C027.feature",
+    "loadableStub": "evidence\\stub-load.json",
+    "initialRed": {
+      "capture": "evidence\\tdd-red.json",
+      "tests": 5,
+      "failed": 5,
+      "exitCode": 1,
+      "reproduction": "evidence\\red-reproduction.json",
+      "snapshots": "evidence\\red\\*.txt; not auto-discovered"
+    },
+    "iac": "N/A: local-only C001 consent; no generator, infrastructure, deployment or cloud command",
+    "firstGreen": {
+      "capture": "evidence\\node-first-green-attempt.json",
+      "tests": 37,
+      "passed": 37
+    },
+    "auditRefinementRed": {
+      "capture": "evidence\\audit-red.json",
+      "tests": 1,
+      "failed": 1,
+      "reproduction": "evidence\\audit-red-reproduction.json"
+    },
+    "terminalNodeGreen": {
+      "capture": "evidence\\node-verified.json",
+      "tests": 43,
+      "passed": 43,
+      "failed": 0,
+      "coverage": "actual incremental HTTP SSE bytes/headers; every accepted-prefix suffix; C020 lineage; received vs accepted; disconnect/resume; gap/duplicate/invalid/future/foreign/conflicting cursors; honest unknown; bounds, consent, expiry, concurrency and surface"
+    },
+    "syntax": {
+      "capture": "evidence\\syntax-verified.json",
+      "executableFiles": 14,
+      "exitCode": 0
+    }
+  },
+  "terminalBrowser": {
+    "capture": "evidence\\browser-verified.json",
+    "proof": "evidence\\browser-c7d6f689-ce3c-40b6-ade5-bf8ce75bce01.json",
+    "screenshot": "evidence\\browser-c7d6f689-ce3c-40b6-ade5-bf8ce75bce01.png",
+    "checks": 13,
+    "outcome": "passed",
+    "engine": "Microsoft Edge 156.0.4314.50",
+    "playwright": "1.56.1",
+    "helper": "testing\\browser\\isolated.cjs",
+    "helperPublishedCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "api": "openIsolatedLesson",
+    "actualTransport": "unmodified native EventSource from trusted file page to the exact owned literal 127.0.0.1 listener; no route interception",
+    "bufferedLoopbackHelperUsed": false,
+    "openStreamObserved": true,
+    "receivedBeforeDisconnect": "C027:r1:synthetic-001:000003",
+    "acceptedBeforeDisconnect": "C027:r1:synthetic-001:000001",
+    "resumedSuffix": [2, 3, 4, 5, 6],
+    "acceptedFinalSequence": [1, 2, 3, 4, 5, 6],
+    "responseEndedAtOpenStreamAssertion": false,
+    "keyboardErrorResetCspVerified": true,
+    "nativeInvalidFutureForeignCursorOutcomes": "unknown to EventSource; server independently records typed HTTP 400/416/409; no success events",
+    "allCleanupPassed": true,
+    "normalVerification": "also rerun successfully with proofWrites=false and unchanged retained-proof inventory",
+    "historicalFirstAttempt": "evidence\\browser-822d53f8-a224-4a0c-9140-012f10f8a7db.json; retained, not terminal source proof"
+  },
+  "integrity": {
+    "seal": "evidence\\integrity.json",
+    "algorithm": "SHA-256",
+    "scope": "exact owned bytes and unchanged C001/C020/helper dependencies",
+    "verification": "tests\\integrity.cjs; --committed compares actual Git blobs",
+    "normalVerificationWritesProof": false,
+    "capture": "exclusive retained attempts; browser capture requires CAPTURE_BROWSER_EVIDENCE=1"
+  },
+  "scope": {
+    "syntheticBusinessData": true,
+    "testRuntime": "Node.js v22.23.4",
+    "listener": "literal 127.0.0.1 only; exact owned handle, ephemeral OS-selected port",
+    "maximumLifetimeMs": 900000,
+    "defaultLifetimeMs": 600000,
+    "perStreamLifetimeMs": 30000,
+    "durableStorage": false,
+    "exactlyOnce": false,
+    "nativeTargetQualified": false,
+    "nativeAzure": false,
+    "productionRuntimeValidated": false,
+    "liveAzureRuns": 0,
+    "authorizedCloudSpend": 0,
+    "foregroundLeaseUsed": false,
+    "packagesInstalled": 0,
+    "helperChanges": false,
+    "rootSharedChanges": false
+  },
+  "toDoReview": {
+    "C027": "One frozen S unit only. No extra credits. Parent alone accepts after empirical review.",
+    "B-S046": "Not ready from C027 alone: native CORE/DATA/CONTAINER and real transition/client-budget gates remain.",
+    "C028": "Separate native gRPC fixture/driver gate; SSE or buffered ordinary HTTP cannot substitute.",
+    "parentRollup": "This fixture alone does not close H005 or H006.",
+    "sharedBacklogEdited": false
+  }
+}

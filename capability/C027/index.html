@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="c027-origin" content="C027_ORIGIN">
+  <meta name="c027-ticket" content="C027_TICKET">
+  <title>C027 — received is not accepted</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="../C020/contract.js"></script>
+  <script defer src="protocol.js"></script>
+  <script defer src="page.js"></script>
+</head>
+<body>
+  <a class="skip" href="#conductor">Skip to SSE conductor</a>
+  <header>
+    <p>[C027][S] · H005 · immutable fixture r1</p>
+    <h1>Received is not accepted</h1>
+    <p>Synthetic C020 data · real loopback HTTP text/event-stream · native browser EventSource.</p>
+    <p>No cloud, durable storage, exactly-once, native Azure or production Node 24 certification.</p>
+  </header>
+  <main id="conductor" tabindex="-1">
+    <p id="runtime">Trusted conducting file required. Start the bounded C027 CLI and open its exact file URL.</p>
+    <p>Accept events explicitly. Disconnect discards unaccepted pending events, not the accepted cursor.
+      Resume creates a new EventSource from the last <strong>accepted</strong> event, never the browser's last receipt.</p>
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Conduct one local stream</h2>
+      <label for="profile">Synthetic profile</label>
+      <select id="profile">
+        <option value="synthetic-001">synthetic-001 — Avery Example</option>
+        <option value="synthetic-002">synthetic-002 — Jordan Sample</option>
+      </select>
+      <label for="mode">Declared stream mode</label>
+      <select id="mode">
+        <option value="normal">Ordered normal suffix</option>
+        <option value="gap">Intentional sequence gap</option>
+        <option value="duplicate">Intentional duplicate event</option>
+        <option value="invalid">Intentional invalid JSON</option>
+        <option value="drop">Intentional transport drop</option>
+      </select>
+      <div class="buttons">
+        <button id="connect" type="button" disabled>Connect / resume accepted</button>
+        <button id="accept" type="button" disabled>Accept next event</button>
+        <button id="disconnect" type="button" disabled>Disconnect stream</button>
+        <button id="reset-conductor" type="button">Reset conductor</button>
+      </div>
+    </section>
+    <section aria-labelledby="observation-title">
+      <h2 id="observation-title">Actual observations</h2>
+      <p id="status" role="status" aria-live="polite">NOT STARTED — no stream has been observed.</p>
+      <p id="error" role="alert"></p>
+      <dl>
+        <dt>Native EventSource readyState</dt><dd id="native-state">none</dd>
+        <dt>Last received cursor</dt><dd id="received">none</dd>
+        <dt>Last accepted cursor</dt><dd id="accepted">START</dd>
+        <dt>Accepted events</dt><dd id="accepted-count">0 / 6</dd>
+        <dt>Pending received events</dt><dd id="pending">none</dd>
+      </dl>
+      <p>The tail identifies this six-event fixture, not the end of the live HTTP response. A verified local
+        suffix proves only this observed attempt; it is not an uninterrupted-service or exactly-once guarantee.</p>
+      <pre id="observations" tabindex="0" aria-label="Immutable snapshot of local receipt and acceptance history">{}</pre>
+    </section>
+  </main>
+  <footer>Educational fixture provided AS IS. No Microsoft endorsement or SLA is implied.</footer>
+</body>
+</html>

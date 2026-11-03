@@ -1,0 +1,24 @@
+'use strict';
+
+class ProtocolError extends Error {
+  constructor(code, message, status = 400) {
+    super(message);
+    this.code = code;
+    this.status = status;
+  }
+}
+
+class CursorSession {
+  constructor(profileId) { this.profileId = profileId; }
+  begin() { return 'START'; }
+  opened() {}
+  receive() { return { queued: false }; }
+  acceptNext() { return null; }
+  disconnect() {}
+  snapshot() { return { acceptedCursor: 'START', receivedCursor: null, acceptedSequence: 0 }; }
+}
+
+module.exports = {
+  ProtocolError, CursorSession, VERSION: 'r1', START: 'START', EVENT_COUNT: 6,
+  eventId: () => 'stub', parseCursor: () => 0, expectedEvent: () => null
+};

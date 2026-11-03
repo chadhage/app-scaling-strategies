@@ -1,0 +1,2080 @@
+{
+  "label": "[C027][S]",
+  "cardId": "C027",
+  "attemptId": "c7d6f689-ce3c-40b6-ade5-bf8ce75bce01",
+  "outcome": "passed",
+  "runtime": "v22.23.4",
+  "captureRequested": true,
+  "proofWrites": true,
+  "startedAtUtc": "2026-11-03T17:14:43.587Z",
+  "mode": "trusted file page, actual native EventSource, no route interception",
+  "tooling": {
+    "helper": "testing\\browser\\isolated.cjs",
+    "verifiedPublishedCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "api": "openIsolatedLesson",
+    "loopbackFetchFulfillUsed": false,
+    "playwrightVersion": "1.56.1"
+  },
+  "scope": {
+    "synthetic": true,
+    "nativeAzure": false,
+    "durableStorage": false,
+    "exactlyOnce": false,
+    "productionRuntimeValidated": false,
+    "liveAzureRuns": 0,
+    "authorizedCloudSpend": 0,
+    "foregroundLeaseUsed": false
+  },
+  "sourceHashes": [
+    {
+      "path": "server.cjs",
+      "sha256": "4c42c2f46ef93cd03ff7c05787c268aaa0bf078dd156e8381f434bb639562ebb"
+    },
+    {
+      "path": "fixture.cjs",
+      "sha256": "2c82d4bd4840f6bd5f6f7b4da3c61eb64f3950292da2363c00c5c104b071efda"
+    },
+    {
+      "path": "protocol.js",
+      "sha256": "51f1e809f4ef261b69d57201dfaf778acea74fab46577e234507ad7b03e8a025"
+    },
+    {
+      "path": "index.html",
+      "sha256": "a9c9392c1c113114fe0710f11c44839663376c35e26e9950587772296e71fed2"
+    },
+    {
+      "path": "page.js",
+      "sha256": "564ae5957c43001b2f9e9c29c6c3bce819f3b196684496a17c7cdf2442ab99aa"
+    },
+    {
+      "path": "styles.css",
+      "sha256": "4f4b6b5d25e6cbfbd765202f3e2059b202314eb4472d9afaf15919e4ad54a4d0"
+    },
+    {
+      "path": "tests\\browser.cjs",
+      "sha256": "572776e1551124e50f04b58ba2638a8bf57efee4d0579ae01d0698bf1c4469e1"
+    }
+  ],
+  "checks": [
+    {
+      "name": "trusted file origin, native unmodified EventSource, exact owned SSE-path CSP and accessible initial unknown state",
+      "passed": true,
+      "observed": {
+        "constructor": "function EventSource() { [native code] }",
+        "close": "function close() { [native code] }",
+        "csp": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events; base-uri 'none'; form-action 'none'; object-src 'none'",
+        "endpoint": "http://127.0.0.1:60573"
+      }
+    },
+    {
+      "name": "multiple actual browser profile events arrived while native EventSource and the same HTTP response remain open",
+      "passed": true,
+      "observed": {
+        "received": [
+          {
+            "receivedCursor": "C027:r1:synthetic-001:000001",
+            "acceptedCursorBefore": "START"
+          },
+          {
+            "receivedCursor": "C027:r1:synthetic-001:000002",
+            "acceptedCursorBefore": "START"
+          },
+          {
+            "receivedCursor": "C027:r1:synthetic-001:000003",
+            "acceptedCursorBefore": "START"
+          }
+        ],
+        "nativeReadyState": 1,
+        "activeStreams": 1,
+        "responseEnds": 0,
+        "sends": [
+          {
+            "attempt": 1,
+            "eventId": "C027:r1:synthetic-001:000001",
+            "sequence": 1,
+            "sentAt": 1793726085507,
+            "bytes": 704
+          },
+          {
+            "attempt": 1,
+            "eventId": "C027:r1:synthetic-001:000002",
+            "sequence": 2,
+            "sentAt": 1793726085724,
+            "bytes": 704
+          },
+          {
+            "attempt": 1,
+            "eventId": "C027:r1:synthetic-001:000003",
+            "sequence": 3,
+            "sentAt": 1793726085939,
+            "bytes": 704
+          }
+        ]
+      }
+    },
+    {
+      "name": "real keyboard acceptance and disconnect retain event one, not the later received cursor",
+      "passed": true,
+      "observed": {
+        "streamId": "C027:r1:synthetic-001",
+        "streamVersion": "r1",
+        "receivedCursor": "C027:r1:synthetic-001:000003",
+        "receivedSequence": 3,
+        "acceptedCursor": "C027:r1:synthetic-001:000001",
+        "acceptedSequence": 1,
+        "pendingSequences": [],
+        "acceptedEvents": [
+          {
+            "eventContract": "C027.sse/1",
+            "streamId": "C027:r1:synthetic-001",
+            "streamVersion": "r1",
+            "id": "C027:r1:synthetic-001:000001",
+            "sequence": 1,
+            "kind": "profile.snapshot",
+            "payload": {
+              "apiContract": "getProfile/1",
+              "profile": {
+                "id": "synthetic-001",
+                "displayName": "Avery Example",
+                "email": "avery@example.invalid",
+                "preferences": {
+                  "locale": "en-GB",
+                  "theme": "dark",
+                  "topics": [
+                    "scaling",
+                    "versions"
+                  ]
+                }
+              },
+              "stamp": {
+                "tier": "getProfile",
+                "implementation": "v1",
+                "implementationVersion": "1.0.0",
+                "deploymentStamp": "C020-loopback-v1-r1",
+                "deploymentKind": "local-fixture-label-not-cloud",
+                "fixtureRevision": "C020-r1",
+                "profileCatalogVersion": "synthetic-profiles/1",
+                "dataKind": "synthetic"
+              }
+            }
+          }
+        ],
+        "receipts": [
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-001:000001",
+            "acceptedCursorBefore": "START",
+            "dataLength": 648,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000001\",\"sequence\":1,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "queued-not-accepted"
+          },
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-001:000002",
+            "acceptedCursorBefore": "START",
+            "dataLength": 648,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000002\",\"sequence\":2,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v2\",\"implementationVersion\":\"2.0.0\",\"deploymentStamp\":\"C020-loopback-v2-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "queued-not-accepted"
+          },
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-001:000003",
+            "acceptedCursorBefore": "START",
+            "dataLength": 648,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000003\",\"sequence\":3,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "queued-not-accepted"
+          }
+        ],
+        "attempts": [
+          {
+            "attempt": 1,
+            "acceptedAfter": "START"
+          }
+        ],
+        "transitions": [
+          {
+            "attempt": 1,
+            "phase": "disconnected",
+            "receivedCursor": "C027:r1:synthetic-001:000003",
+            "acceptedCursor": "C027:r1:synthetic-001:000001",
+            "discardedUnacceptedSequences": [
+              2,
+              3
+            ]
+          }
+        ],
+        "phase": "disconnected",
+        "error": null,
+        "tailSeen": false,
+        "transportOpen": false,
+        "outcome": "unknown"
+      }
+    },
+    {
+      "name": "native accepted-cursor resume replays the ordered suffix including previously received but unaccepted events; no receipt-header skipping",
+      "passed": true,
+      "observed": {
+        "requests": [
+          {
+            "attempt": 1,
+            "profileId": "synthetic-001",
+            "version": "r1",
+            "mode": "normal",
+            "acceptedAfter": "START",
+            "cursorSequence": 0,
+            "lastEventIdHeader": null,
+            "origin": "null",
+            "requestedAt": 1793726085290
+          },
+          {
+            "attempt": 2,
+            "profileId": "synthetic-001",
+            "version": "r1",
+            "mode": "normal",
+            "acceptedAfter": "C027:r1:synthetic-001:000001",
+            "cursorSequence": 1,
+            "lastEventIdHeader": null,
+            "origin": "null",
+            "requestedAt": 1793726086052
+          }
+        ],
+        "acceptedSequences": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "currentNativeState": 1,
+        "activeStreams": 1,
+        "responseEnds": 0
+      }
+    },
+    {
+      "name": "actual native gap is error/EVENT_GAP, closes EventSource and never advances acceptance",
+      "passed": true,
+      "observed": {
+        "streamId": "C027:r1:synthetic-001",
+        "streamVersion": "r1",
+        "receivedCursor": "C027:r1:synthetic-001:000002",
+        "receivedSequence": 2,
+        "acceptedCursor": "START",
+        "acceptedSequence": 0,
+        "pendingSequences": [],
+        "acceptedEvents": [],
+        "receipts": [
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-001:000002",
+            "acceptedCursorBefore": "START",
+            "dataLength": 648,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000002\",\"sequence\":2,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v2\",\"implementationVersion\":\"2.0.0\",\"deploymentStamp\":\"C020-loopback-v2-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "rejected"
+          }
+        ],
+        "attempts": [
+          {
+            "attempt": 1,
+            "acceptedAfter": "START"
+          }
+        ],
+        "transitions": [
+          {
+            "attempt": 1,
+            "phase": "error",
+            "code": "EVENT_GAP",
+            "message": "The next received sequence is not the contiguous ordered suffix.",
+            "acceptedCursor": "START"
+          }
+        ],
+        "phase": "error",
+        "error": {
+          "code": "EVENT_GAP",
+          "message": "The next received sequence is not the contiguous ordered suffix."
+        },
+        "tailSeen": false,
+        "transportOpen": false,
+        "outcome": "error"
+      }
+    },
+    {
+      "name": "actual native duplicate is error/DUPLICATE_EVENT, closes EventSource and never advances acceptance",
+      "passed": true,
+      "observed": {
+        "streamId": "C027:r1:synthetic-001",
+        "streamVersion": "r1",
+        "receivedCursor": "C027:r1:synthetic-001:000001",
+        "receivedSequence": 1,
+        "acceptedCursor": "START",
+        "acceptedSequence": 0,
+        "pendingSequences": [
+          1
+        ],
+        "acceptedEvents": [],
+        "receipts": [
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-001:000001",
+            "acceptedCursorBefore": "START",
+            "dataLength": 648,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000001\",\"sequence\":1,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "queued-not-accepted"
+          },
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-001:000001",
+            "acceptedCursorBefore": "START",
+            "dataLength": 648,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000001\",\"sequence\":1,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "rejected"
+          }
+        ],
+        "attempts": [
+          {
+            "attempt": 1,
+            "acceptedAfter": "START"
+          }
+        ],
+        "transitions": [
+          {
+            "attempt": 1,
+            "phase": "error",
+            "code": "DUPLICATE_EVENT",
+            "message": "Repeated received/accepted events are rejected, never accepted twice.",
+            "acceptedCursor": "START"
+          }
+        ],
+        "phase": "error",
+        "error": {
+          "code": "DUPLICATE_EVENT",
+          "message": "Repeated received/accepted events are rejected, never accepted twice."
+        },
+        "tailSeen": false,
+        "transportOpen": false,
+        "outcome": "error"
+      }
+    },
+    {
+      "name": "actual native invalid is error/INVALID_JSON, closes EventSource and never advances acceptance",
+      "passed": true,
+      "observed": {
+        "streamId": "C027:r1:synthetic-001",
+        "streamVersion": "r1",
+        "receivedCursor": "C027:r1:synthetic-001:000001",
+        "receivedSequence": 0,
+        "acceptedCursor": "START",
+        "acceptedSequence": 0,
+        "pendingSequences": [],
+        "acceptedEvents": [],
+        "receipts": [
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-001:000001",
+            "acceptedCursorBefore": "START",
+            "dataLength": 13,
+            "data": "{invalid-json",
+            "disposition": "rejected"
+          }
+        ],
+        "attempts": [
+          {
+            "attempt": 1,
+            "acceptedAfter": "START"
+          }
+        ],
+        "transitions": [
+          {
+            "attempt": 1,
+            "phase": "error",
+            "code": "INVALID_JSON",
+            "message": "The received SSE data is not valid JSON.",
+            "acceptedCursor": "START"
+          }
+        ],
+        "phase": "error",
+        "error": {
+          "code": "INVALID_JSON",
+          "message": "The received SSE data is not valid JSON."
+        },
+        "tailSeen": false,
+        "transportOpen": false,
+        "outcome": "error"
+      }
+    },
+    {
+      "name": "actual native drop is unknown/TRANSPORT_INTERRUPTED, closes EventSource and never advances acceptance",
+      "passed": true,
+      "observed": {
+        "streamId": "C027:r1:synthetic-001",
+        "streamVersion": "r1",
+        "receivedCursor": "C027:r1:synthetic-001:000002",
+        "receivedSequence": 2,
+        "acceptedCursor": "START",
+        "acceptedSequence": 0,
+        "pendingSequences": [],
+        "acceptedEvents": [],
+        "receipts": [
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-001:000001",
+            "acceptedCursorBefore": "START",
+            "dataLength": 648,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000001\",\"sequence\":1,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "queued-not-accepted"
+          },
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-001:000002",
+            "acceptedCursorBefore": "START",
+            "dataLength": 648,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000002\",\"sequence\":2,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v2\",\"implementationVersion\":\"2.0.0\",\"deploymentStamp\":\"C020-loopback-v2-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "queued-not-accepted"
+          }
+        ],
+        "attempts": [
+          {
+            "attempt": 1,
+            "acceptedAfter": "START"
+          }
+        ],
+        "transitions": [
+          {
+            "attempt": 1,
+            "phase": "unknown",
+            "code": "TRANSPORT_INTERRUPTED",
+            "message": "Native EventSource failed or closed before a verified local suffix; it exposes no HTTP status.",
+            "acceptedCursor": "START"
+          }
+        ],
+        "phase": "unknown",
+        "error": {
+          "code": "TRANSPORT_INTERRUPTED",
+          "message": "Native EventSource failed or closed before a verified local suffix; it exposes no HTTP status."
+        },
+        "tailSeen": false,
+        "transportOpen": false,
+        "outcome": "unknown"
+      }
+    },
+    {
+      "name": "reset clears cursors, unlocks profile selection and a second real C020 profile retains v1/v2 lineage",
+      "passed": true,
+      "observed": {
+        "streamId": "C027:r1:synthetic-002",
+        "streamVersion": "r1",
+        "receivedCursor": "C027:r1:synthetic-002:000006",
+        "receivedSequence": 6,
+        "acceptedCursor": "C027:r1:synthetic-002:000006",
+        "acceptedSequence": 6,
+        "pendingSequences": [],
+        "acceptedEvents": [
+          {
+            "eventContract": "C027.sse/1",
+            "streamId": "C027:r1:synthetic-002",
+            "streamVersion": "r1",
+            "id": "C027:r1:synthetic-002:000001",
+            "sequence": 1,
+            "kind": "profile.snapshot",
+            "payload": {
+              "apiContract": "getProfile/1",
+              "profile": {
+                "id": "synthetic-002",
+                "displayName": "Jordan Sample",
+                "email": "jordan@example.invalid",
+                "preferences": {
+                  "locale": "fr-FR",
+                  "theme": "light",
+                  "topics": []
+                }
+              },
+              "stamp": {
+                "tier": "getProfile",
+                "implementation": "v1",
+                "implementationVersion": "1.0.0",
+                "deploymentStamp": "C020-loopback-v1-r1",
+                "deploymentKind": "local-fixture-label-not-cloud",
+                "fixtureRevision": "C020-r1",
+                "profileCatalogVersion": "synthetic-profiles/1",
+                "dataKind": "synthetic"
+              }
+            }
+          },
+          {
+            "eventContract": "C027.sse/1",
+            "streamId": "C027:r1:synthetic-002",
+            "streamVersion": "r1",
+            "id": "C027:r1:synthetic-002:000002",
+            "sequence": 2,
+            "kind": "profile.snapshot",
+            "payload": {
+              "apiContract": "getProfile/1",
+              "profile": {
+                "id": "synthetic-002",
+                "displayName": "Jordan Sample",
+                "email": "jordan@example.invalid",
+                "preferences": {
+                  "locale": "fr-FR",
+                  "theme": "light",
+                  "topics": []
+                }
+              },
+              "stamp": {
+                "tier": "getProfile",
+                "implementation": "v2",
+                "implementationVersion": "2.0.0",
+                "deploymentStamp": "C020-loopback-v2-r1",
+                "deploymentKind": "local-fixture-label-not-cloud",
+                "fixtureRevision": "C020-r1",
+                "profileCatalogVersion": "synthetic-profiles/1",
+                "dataKind": "synthetic"
+              }
+            }
+          },
+          {
+            "eventContract": "C027.sse/1",
+            "streamId": "C027:r1:synthetic-002",
+            "streamVersion": "r1",
+            "id": "C027:r1:synthetic-002:000003",
+            "sequence": 3,
+            "kind": "profile.snapshot",
+            "payload": {
+              "apiContract": "getProfile/1",
+              "profile": {
+                "id": "synthetic-002",
+                "displayName": "Jordan Sample",
+                "email": "jordan@example.invalid",
+                "preferences": {
+                  "locale": "fr-FR",
+                  "theme": "light",
+                  "topics": []
+                }
+              },
+              "stamp": {
+                "tier": "getProfile",
+                "implementation": "v1",
+                "implementationVersion": "1.0.0",
+                "deploymentStamp": "C020-loopback-v1-r1",
+                "deploymentKind": "local-fixture-label-not-cloud",
+                "fixtureRevision": "C020-r1",
+                "profileCatalogVersion": "synthetic-profiles/1",
+                "dataKind": "synthetic"
+              }
+            }
+          },
+          {
+            "eventContract": "C027.sse/1",
+            "streamId": "C027:r1:synthetic-002",
+            "streamVersion": "r1",
+            "id": "C027:r1:synthetic-002:000004",
+            "sequence": 4,
+            "kind": "profile.snapshot",
+            "payload": {
+              "apiContract": "getProfile/1",
+              "profile": {
+                "id": "synthetic-002",
+                "displayName": "Jordan Sample",
+                "email": "jordan@example.invalid",
+                "preferences": {
+                  "locale": "fr-FR",
+                  "theme": "light",
+                  "topics": []
+                }
+              },
+              "stamp": {
+                "tier": "getProfile",
+                "implementation": "v2",
+                "implementationVersion": "2.0.0",
+                "deploymentStamp": "C020-loopback-v2-r1",
+                "deploymentKind": "local-fixture-label-not-cloud",
+                "fixtureRevision": "C020-r1",
+                "profileCatalogVersion": "synthetic-profiles/1",
+                "dataKind": "synthetic"
+              }
+            }
+          },
+          {
+            "eventContract": "C027.sse/1",
+            "streamId": "C027:r1:synthetic-002",
+            "streamVersion": "r1",
+            "id": "C027:r1:synthetic-002:000005",
+            "sequence": 5,
+            "kind": "profile.snapshot",
+            "payload": {
+              "apiContract": "getProfile/1",
+              "profile": {
+                "id": "synthetic-002",
+                "displayName": "Jordan Sample",
+                "email": "jordan@example.invalid",
+                "preferences": {
+                  "locale": "fr-FR",
+                  "theme": "light",
+                  "topics": []
+                }
+              },
+              "stamp": {
+                "tier": "getProfile",
+                "implementation": "v1",
+                "implementationVersion": "1.0.0",
+                "deploymentStamp": "C020-loopback-v1-r1",
+                "deploymentKind": "local-fixture-label-not-cloud",
+                "fixtureRevision": "C020-r1",
+                "profileCatalogVersion": "synthetic-profiles/1",
+                "dataKind": "synthetic"
+              }
+            }
+          },
+          {
+            "eventContract": "C027.sse/1",
+            "streamId": "C027:r1:synthetic-002",
+            "streamVersion": "r1",
+            "id": "C027:r1:synthetic-002:000006",
+            "sequence": 6,
+            "kind": "profile.snapshot",
+            "payload": {
+              "apiContract": "getProfile/1",
+              "profile": {
+                "id": "synthetic-002",
+                "displayName": "Jordan Sample",
+                "email": "jordan@example.invalid",
+                "preferences": {
+                  "locale": "fr-FR",
+                  "theme": "light",
+                  "topics": []
+                }
+              },
+              "stamp": {
+                "tier": "getProfile",
+                "implementation": "v2",
+                "implementationVersion": "2.0.0",
+                "deploymentStamp": "C020-loopback-v2-r1",
+                "deploymentKind": "local-fixture-label-not-cloud",
+                "fixtureRevision": "C020-r1",
+                "profileCatalogVersion": "synthetic-profiles/1",
+                "dataKind": "synthetic"
+              }
+            }
+          }
+        ],
+        "receipts": [
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-002:000001",
+            "acceptedCursorBefore": "START",
+            "dataLength": 630,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-002\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-002:000001\",\"sequence\":1,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-002\",\"displayName\":\"Jordan Sample\",\"email\":\"jordan@example.invalid\",\"preferences\":{\"locale\":\"fr-FR\",\"theme\":\"light\",\"topics\":[]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "queued-not-accepted"
+          },
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-002:000002",
+            "acceptedCursorBefore": "START",
+            "dataLength": 630,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-002\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-002:000002\",\"sequence\":2,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-002\",\"displayName\":\"Jordan Sample\",\"email\":\"jordan@example.invalid\",\"preferences\":{\"locale\":\"fr-FR\",\"theme\":\"light\",\"topics\":[]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v2\",\"implementationVersion\":\"2.0.0\",\"deploymentStamp\":\"C020-loopback-v2-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "queued-not-accepted"
+          },
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-002:000003",
+            "acceptedCursorBefore": "START",
+            "dataLength": 630,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-002\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-002:000003\",\"sequence\":3,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-002\",\"displayName\":\"Jordan Sample\",\"email\":\"jordan@example.invalid\",\"preferences\":{\"locale\":\"fr-FR\",\"theme\":\"light\",\"topics\":[]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "queued-not-accepted"
+          },
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-002:000004",
+            "acceptedCursorBefore": "START",
+            "dataLength": 630,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-002\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-002:000004\",\"sequence\":4,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-002\",\"displayName\":\"Jordan Sample\",\"email\":\"jordan@example.invalid\",\"preferences\":{\"locale\":\"fr-FR\",\"theme\":\"light\",\"topics\":[]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v2\",\"implementationVersion\":\"2.0.0\",\"deploymentStamp\":\"C020-loopback-v2-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "queued-not-accepted"
+          },
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-002:000005",
+            "acceptedCursorBefore": "START",
+            "dataLength": 630,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-002\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-002:000005\",\"sequence\":5,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-002\",\"displayName\":\"Jordan Sample\",\"email\":\"jordan@example.invalid\",\"preferences\":{\"locale\":\"fr-FR\",\"theme\":\"light\",\"topics\":[]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "queued-not-accepted"
+          },
+          {
+            "attempt": 1,
+            "receivedCursor": "C027:r1:synthetic-002:000006",
+            "acceptedCursorBefore": "START",
+            "dataLength": 630,
+            "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-002\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-002:000006\",\"sequence\":6,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-002\",\"displayName\":\"Jordan Sample\",\"email\":\"jordan@example.invalid\",\"preferences\":{\"locale\":\"fr-FR\",\"theme\":\"light\",\"topics\":[]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v2\",\"implementationVersion\":\"2.0.0\",\"deploymentStamp\":\"C020-loopback-v2-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+            "disposition": "queued-not-accepted"
+          }
+        ],
+        "attempts": [
+          {
+            "attempt": 1,
+            "acceptedAfter": "START"
+          }
+        ],
+        "transitions": [],
+        "phase": "verified-local",
+        "error": null,
+        "tailSeen": true,
+        "transportOpen": true,
+        "outcome": "verified-local"
+      }
+    },
+    {
+      "name": "actual native cursor probe INVALID_CURSOR receives no success event and is honestly unknown to EventSource",
+      "passed": true,
+      "observed": {
+        "cursor": "not-a-cursor",
+        "nativeObservation": {
+          "outcome": "unknown",
+          "eventType": "error",
+          "httpStatusExposed": false,
+          "readyStateAfterClose": 2,
+          "messages": 0
+        },
+        "serverObservation": {
+          "requestNumber": 8,
+          "status": 400,
+          "code": "INVALID_CURSOR",
+          "observedAt": 1793726090971
+        }
+      }
+    },
+    {
+      "name": "actual native cursor probe FUTURE_CURSOR receives no success event and is honestly unknown to EventSource",
+      "passed": true,
+      "observed": {
+        "cursor": "C027:r1:synthetic-002:000007",
+        "nativeObservation": {
+          "outcome": "unknown",
+          "eventType": "error",
+          "httpStatusExposed": false,
+          "readyStateAfterClose": 2,
+          "messages": 0
+        },
+        "serverObservation": {
+          "requestNumber": 9,
+          "status": 416,
+          "code": "FUTURE_CURSOR",
+          "observedAt": 1793726090977
+        }
+      }
+    },
+    {
+      "name": "actual native cursor probe CURSOR_STREAM_MISMATCH receives no success event and is honestly unknown to EventSource",
+      "passed": true,
+      "observed": {
+        "cursor": "C027:r1:synthetic-001:000001",
+        "nativeObservation": {
+          "outcome": "unknown",
+          "eventType": "error",
+          "httpStatusExposed": false,
+          "readyStateAfterClose": 2,
+          "messages": 0
+        },
+        "serverObservation": {
+          "requestNumber": 10,
+          "status": 409,
+          "code": "CURSOR_STREAM_MISMATCH",
+          "observedAt": 1793726090984
+        }
+      }
+    },
+    {
+      "name": "effective browser CSP blocks inline code and a forbidden path on this same owned listener; no foreign-port probe",
+      "passed": true,
+      "observed": {
+        "violations": [
+          {
+            "directive": "script-src-elem",
+            "blockedURI": "inline"
+          },
+          {
+            "directive": "connect-src",
+            "blockedURI": "http://127.0.0.1:60573/c027/forbidden-same-owned-listener"
+          }
+        ],
+        "fetchBlocked": true,
+        "inlineRan": false
+      }
+    }
+  ],
+  "requests": [
+    {
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/capability/C027/runtime-32e337bb-541d-4a1f-8281-4073b24f1e26.html",
+      "method": "GET",
+      "resourceType": "document"
+    },
+    {
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/capability/C027/styles.css",
+      "method": "GET",
+      "resourceType": "stylesheet"
+    },
+    {
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/capability/C020/contract.js",
+      "method": "GET",
+      "resourceType": "script"
+    },
+    {
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/capability/C027/protocol.js",
+      "method": "GET",
+      "resourceType": "script"
+    },
+    {
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/capability/C027/page.js",
+      "method": "GET",
+      "resourceType": "script"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=normal",
+      "method": "GET",
+      "resourceType": "eventsource"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=C027%3Ar1%3Asynthetic-001%3A000001&mode=normal",
+      "method": "GET",
+      "resourceType": "eventsource"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=gap",
+      "method": "GET",
+      "resourceType": "eventsource"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=duplicate",
+      "method": "GET",
+      "resourceType": "eventsource"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=invalid",
+      "method": "GET",
+      "resourceType": "eventsource"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=drop",
+      "method": "GET",
+      "resourceType": "eventsource"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&after=START&mode=normal",
+      "method": "GET",
+      "resourceType": "eventsource"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&mode=normal&after=not-a-cursor",
+      "method": "GET",
+      "resourceType": "eventsource"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&mode=normal&after=C027%3Ar1%3Asynthetic-002%3A000007",
+      "method": "GET",
+      "resourceType": "eventsource"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&mode=normal&after=C027%3Ar1%3Asynthetic-001%3A000001",
+      "method": "GET",
+      "resourceType": "eventsource"
+    }
+  ],
+  "responses": [
+    {
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/capability/C027/runtime-32e337bb-541d-4a1f-8281-4073b24f1e26.html",
+      "status": 200,
+      "contentType": "text/html"
+    },
+    {
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/capability/C027/styles.css",
+      "status": 200,
+      "contentType": "text/css"
+    },
+    {
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/capability/C020/contract.js",
+      "status": 200,
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/capability/C027/protocol.js",
+      "status": 200,
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "file:///C:/Users/chhage/repos/app-scaling-strategies/capability/C027/page.js",
+      "status": 200,
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=normal",
+      "status": 200,
+      "contentType": "text/event-stream; charset=utf-8"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=C027%3Ar1%3Asynthetic-001%3A000001&mode=normal",
+      "status": 200,
+      "contentType": "text/event-stream; charset=utf-8"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=gap",
+      "status": 200,
+      "contentType": "text/event-stream; charset=utf-8"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=duplicate",
+      "status": 200,
+      "contentType": "text/event-stream; charset=utf-8"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=invalid",
+      "status": 200,
+      "contentType": "text/event-stream; charset=utf-8"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=drop",
+      "status": 200,
+      "contentType": "text/event-stream; charset=utf-8"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&after=START&mode=normal",
+      "status": 200,
+      "contentType": "text/event-stream; charset=utf-8"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&mode=normal&after=not-a-cursor",
+      "status": 400,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&mode=normal&after=C027%3Ar1%3Asynthetic-002%3A000007",
+      "status": 416,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "url": "http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&mode=normal&after=C027%3Ar1%3Asynthetic-001%3A000001",
+      "status": 409,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING",
+    "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "Failed to load resource: the server responded with a status of 416 (Range Not Satisfiable)",
+    "Failed to load resource: the server responded with a status of 409 (Conflict)",
+    "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-oMDw9Rl1O9k3Z4LfP1q87Pm8VC9q/ElNHq0OzUFO9Ko='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked.",
+    "Connecting to 'http://127.0.0.1:60573/c027/forbidden-same-owned-listener' violates the following Content Security Policy directive: \"connect-src http://127.0.0.1:60573/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events\". The action has been blocked.",
+    "Fetch API cannot load http://127.0.0.1:60573/c027/forbidden-same-owned-listener. Refused to connect because it violates the document's Content Security Policy."
+  ],
+  "cleanup": {
+    "eventSourceClosed": true,
+    "browserClosed": true,
+    "serverClosed": true,
+    "connectionsClosed": true,
+    "conductingFileRemoved": true
+  },
+  "listener": {
+    "address": {
+      "address": "127.0.0.1",
+      "family": "IPv4",
+      "port": 60573
+    },
+    "pid": 69400,
+    "lease": {
+      "lifetimeMs": 180000,
+      "expiresAtUtc": "2026-11-03T17:17:43.747Z",
+      "bindAddress": "127.0.0.1",
+      "streamLifetimeMs": 30000,
+      "maxConcurrentStreams": 4,
+      "scope": "synthetic local memory, no foreground lease, no durable state"
+    },
+    "ownership": "exact returned owned http.Server handle; no foreign ports"
+  },
+  "browserVersion": "156.0.4314.50",
+  "beforeResume": {
+    "streamId": "C027:r1:synthetic-001",
+    "streamVersion": "r1",
+    "receivedCursor": "C027:r1:synthetic-001:000003",
+    "receivedSequence": 3,
+    "acceptedCursor": "C027:r1:synthetic-001:000001",
+    "acceptedSequence": 1,
+    "pendingSequences": [],
+    "acceptedEvents": [
+      {
+        "eventContract": "C027.sse/1",
+        "streamId": "C027:r1:synthetic-001",
+        "streamVersion": "r1",
+        "id": "C027:r1:synthetic-001:000001",
+        "sequence": 1,
+        "kind": "profile.snapshot",
+        "payload": {
+          "apiContract": "getProfile/1",
+          "profile": {
+            "id": "synthetic-001",
+            "displayName": "Avery Example",
+            "email": "avery@example.invalid",
+            "preferences": {
+              "locale": "en-GB",
+              "theme": "dark",
+              "topics": [
+                "scaling",
+                "versions"
+              ]
+            }
+          },
+          "stamp": {
+            "tier": "getProfile",
+            "implementation": "v1",
+            "implementationVersion": "1.0.0",
+            "deploymentStamp": "C020-loopback-v1-r1",
+            "deploymentKind": "local-fixture-label-not-cloud",
+            "fixtureRevision": "C020-r1",
+            "profileCatalogVersion": "synthetic-profiles/1",
+            "dataKind": "synthetic"
+          }
+        }
+      }
+    ],
+    "receipts": [
+      {
+        "attempt": 1,
+        "receivedCursor": "C027:r1:synthetic-001:000001",
+        "acceptedCursorBefore": "START",
+        "dataLength": 648,
+        "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000001\",\"sequence\":1,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+        "disposition": "queued-not-accepted"
+      },
+      {
+        "attempt": 1,
+        "receivedCursor": "C027:r1:synthetic-001:000002",
+        "acceptedCursorBefore": "START",
+        "dataLength": 648,
+        "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000002\",\"sequence\":2,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v2\",\"implementationVersion\":\"2.0.0\",\"deploymentStamp\":\"C020-loopback-v2-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+        "disposition": "queued-not-accepted"
+      },
+      {
+        "attempt": 1,
+        "receivedCursor": "C027:r1:synthetic-001:000003",
+        "acceptedCursorBefore": "START",
+        "dataLength": 648,
+        "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000003\",\"sequence\":3,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+        "disposition": "queued-not-accepted"
+      }
+    ],
+    "attempts": [
+      {
+        "attempt": 1,
+        "acceptedAfter": "START"
+      }
+    ],
+    "transitions": [
+      {
+        "attempt": 1,
+        "phase": "disconnected",
+        "receivedCursor": "C027:r1:synthetic-001:000003",
+        "acceptedCursor": "C027:r1:synthetic-001:000001",
+        "discardedUnacceptedSequences": [
+          2,
+          3
+        ]
+      }
+    ],
+    "phase": "disconnected",
+    "error": null,
+    "tailSeen": false,
+    "transportOpen": false,
+    "outcome": "unknown"
+  },
+  "acceptedResume": {
+    "streamId": "C027:r1:synthetic-001",
+    "streamVersion": "r1",
+    "receivedCursor": "C027:r1:synthetic-001:000006",
+    "receivedSequence": 6,
+    "acceptedCursor": "C027:r1:synthetic-001:000006",
+    "acceptedSequence": 6,
+    "pendingSequences": [],
+    "acceptedEvents": [
+      {
+        "eventContract": "C027.sse/1",
+        "streamId": "C027:r1:synthetic-001",
+        "streamVersion": "r1",
+        "id": "C027:r1:synthetic-001:000001",
+        "sequence": 1,
+        "kind": "profile.snapshot",
+        "payload": {
+          "apiContract": "getProfile/1",
+          "profile": {
+            "id": "synthetic-001",
+            "displayName": "Avery Example",
+            "email": "avery@example.invalid",
+            "preferences": {
+              "locale": "en-GB",
+              "theme": "dark",
+              "topics": [
+                "scaling",
+                "versions"
+              ]
+            }
+          },
+          "stamp": {
+            "tier": "getProfile",
+            "implementation": "v1",
+            "implementationVersion": "1.0.0",
+            "deploymentStamp": "C020-loopback-v1-r1",
+            "deploymentKind": "local-fixture-label-not-cloud",
+            "fixtureRevision": "C020-r1",
+            "profileCatalogVersion": "synthetic-profiles/1",
+            "dataKind": "synthetic"
+          }
+        }
+      },
+      {
+        "eventContract": "C027.sse/1",
+        "streamId": "C027:r1:synthetic-001",
+        "streamVersion": "r1",
+        "id": "C027:r1:synthetic-001:000002",
+        "sequence": 2,
+        "kind": "profile.snapshot",
+        "payload": {
+          "apiContract": "getProfile/1",
+          "profile": {
+            "id": "synthetic-001",
+            "displayName": "Avery Example",
+            "email": "avery@example.invalid",
+            "preferences": {
+              "locale": "en-GB",
+              "theme": "dark",
+              "topics": [
+                "scaling",
+                "versions"
+              ]
+            }
+          },
+          "stamp": {
+            "tier": "getProfile",
+            "implementation": "v2",
+            "implementationVersion": "2.0.0",
+            "deploymentStamp": "C020-loopback-v2-r1",
+            "deploymentKind": "local-fixture-label-not-cloud",
+            "fixtureRevision": "C020-r1",
+            "profileCatalogVersion": "synthetic-profiles/1",
+            "dataKind": "synthetic"
+          }
+        }
+      },
+      {
+        "eventContract": "C027.sse/1",
+        "streamId": "C027:r1:synthetic-001",
+        "streamVersion": "r1",
+        "id": "C027:r1:synthetic-001:000003",
+        "sequence": 3,
+        "kind": "profile.snapshot",
+        "payload": {
+          "apiContract": "getProfile/1",
+          "profile": {
+            "id": "synthetic-001",
+            "displayName": "Avery Example",
+            "email": "avery@example.invalid",
+            "preferences": {
+              "locale": "en-GB",
+              "theme": "dark",
+              "topics": [
+                "scaling",
+                "versions"
+              ]
+            }
+          },
+          "stamp": {
+            "tier": "getProfile",
+            "implementation": "v1",
+            "implementationVersion": "1.0.0",
+            "deploymentStamp": "C020-loopback-v1-r1",
+            "deploymentKind": "local-fixture-label-not-cloud",
+            "fixtureRevision": "C020-r1",
+            "profileCatalogVersion": "synthetic-profiles/1",
+            "dataKind": "synthetic"
+          }
+        }
+      },
+      {
+        "eventContract": "C027.sse/1",
+        "streamId": "C027:r1:synthetic-001",
+        "streamVersion": "r1",
+        "id": "C027:r1:synthetic-001:000004",
+        "sequence": 4,
+        "kind": "profile.snapshot",
+        "payload": {
+          "apiContract": "getProfile/1",
+          "profile": {
+            "id": "synthetic-001",
+            "displayName": "Avery Example",
+            "email": "avery@example.invalid",
+            "preferences": {
+              "locale": "en-GB",
+              "theme": "dark",
+              "topics": [
+                "scaling",
+                "versions"
+              ]
+            }
+          },
+          "stamp": {
+            "tier": "getProfile",
+            "implementation": "v2",
+            "implementationVersion": "2.0.0",
+            "deploymentStamp": "C020-loopback-v2-r1",
+            "deploymentKind": "local-fixture-label-not-cloud",
+            "fixtureRevision": "C020-r1",
+            "profileCatalogVersion": "synthetic-profiles/1",
+            "dataKind": "synthetic"
+          }
+        }
+      },
+      {
+        "eventContract": "C027.sse/1",
+        "streamId": "C027:r1:synthetic-001",
+        "streamVersion": "r1",
+        "id": "C027:r1:synthetic-001:000005",
+        "sequence": 5,
+        "kind": "profile.snapshot",
+        "payload": {
+          "apiContract": "getProfile/1",
+          "profile": {
+            "id": "synthetic-001",
+            "displayName": "Avery Example",
+            "email": "avery@example.invalid",
+            "preferences": {
+              "locale": "en-GB",
+              "theme": "dark",
+              "topics": [
+                "scaling",
+                "versions"
+              ]
+            }
+          },
+          "stamp": {
+            "tier": "getProfile",
+            "implementation": "v1",
+            "implementationVersion": "1.0.0",
+            "deploymentStamp": "C020-loopback-v1-r1",
+            "deploymentKind": "local-fixture-label-not-cloud",
+            "fixtureRevision": "C020-r1",
+            "profileCatalogVersion": "synthetic-profiles/1",
+            "dataKind": "synthetic"
+          }
+        }
+      },
+      {
+        "eventContract": "C027.sse/1",
+        "streamId": "C027:r1:synthetic-001",
+        "streamVersion": "r1",
+        "id": "C027:r1:synthetic-001:000006",
+        "sequence": 6,
+        "kind": "profile.snapshot",
+        "payload": {
+          "apiContract": "getProfile/1",
+          "profile": {
+            "id": "synthetic-001",
+            "displayName": "Avery Example",
+            "email": "avery@example.invalid",
+            "preferences": {
+              "locale": "en-GB",
+              "theme": "dark",
+              "topics": [
+                "scaling",
+                "versions"
+              ]
+            }
+          },
+          "stamp": {
+            "tier": "getProfile",
+            "implementation": "v2",
+            "implementationVersion": "2.0.0",
+            "deploymentStamp": "C020-loopback-v2-r1",
+            "deploymentKind": "local-fixture-label-not-cloud",
+            "fixtureRevision": "C020-r1",
+            "profileCatalogVersion": "synthetic-profiles/1",
+            "dataKind": "synthetic"
+          }
+        }
+      }
+    ],
+    "receipts": [
+      {
+        "attempt": 1,
+        "receivedCursor": "C027:r1:synthetic-001:000001",
+        "acceptedCursorBefore": "START",
+        "dataLength": 648,
+        "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000001\",\"sequence\":1,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+        "disposition": "queued-not-accepted"
+      },
+      {
+        "attempt": 1,
+        "receivedCursor": "C027:r1:synthetic-001:000002",
+        "acceptedCursorBefore": "START",
+        "dataLength": 648,
+        "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000002\",\"sequence\":2,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v2\",\"implementationVersion\":\"2.0.0\",\"deploymentStamp\":\"C020-loopback-v2-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+        "disposition": "queued-not-accepted"
+      },
+      {
+        "attempt": 1,
+        "receivedCursor": "C027:r1:synthetic-001:000003",
+        "acceptedCursorBefore": "START",
+        "dataLength": 648,
+        "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000003\",\"sequence\":3,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+        "disposition": "queued-not-accepted"
+      },
+      {
+        "attempt": 2,
+        "receivedCursor": "C027:r1:synthetic-001:000002",
+        "acceptedCursorBefore": "C027:r1:synthetic-001:000001",
+        "dataLength": 648,
+        "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000002\",\"sequence\":2,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v2\",\"implementationVersion\":\"2.0.0\",\"deploymentStamp\":\"C020-loopback-v2-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+        "disposition": "queued-not-accepted"
+      },
+      {
+        "attempt": 2,
+        "receivedCursor": "C027:r1:synthetic-001:000003",
+        "acceptedCursorBefore": "C027:r1:synthetic-001:000001",
+        "dataLength": 648,
+        "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000003\",\"sequence\":3,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+        "disposition": "queued-not-accepted"
+      },
+      {
+        "attempt": 2,
+        "receivedCursor": "C027:r1:synthetic-001:000004",
+        "acceptedCursorBefore": "C027:r1:synthetic-001:000001",
+        "dataLength": 648,
+        "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000004\",\"sequence\":4,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v2\",\"implementationVersion\":\"2.0.0\",\"deploymentStamp\":\"C020-loopback-v2-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+        "disposition": "queued-not-accepted"
+      },
+      {
+        "attempt": 2,
+        "receivedCursor": "C027:r1:synthetic-001:000005",
+        "acceptedCursorBefore": "C027:r1:synthetic-001:000001",
+        "dataLength": 648,
+        "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000005\",\"sequence\":5,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v1\",\"implementationVersion\":\"1.0.0\",\"deploymentStamp\":\"C020-loopback-v1-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+        "disposition": "queued-not-accepted"
+      },
+      {
+        "attempt": 2,
+        "receivedCursor": "C027:r1:synthetic-001:000006",
+        "acceptedCursorBefore": "C027:r1:synthetic-001:000001",
+        "dataLength": 648,
+        "data": "{\"eventContract\":\"C027.sse/1\",\"streamId\":\"C027:r1:synthetic-001\",\"streamVersion\":\"r1\",\"id\":\"C027:r1:synthetic-001:000006\",\"sequence\":6,\"kind\":\"profile.snapshot\",\"payload\":{\"apiContract\":\"getProfile/1\",\"profile\":{\"id\":\"synthetic-001\",\"displayName\":\"Avery Example\",\"email\":\"avery@example.invalid\",\"preferences\":{\"locale\":\"en-GB\",\"theme\":\"dark\",\"topics\":[\"scaling\",\"versions\"]}},\"stamp\":{\"tier\":\"getProfile\",\"implementation\":\"v2\",\"implementationVersion\":\"2.0.0\",\"deploymentStamp\":\"C020-loopback-v2-r1\",\"deploymentKind\":\"local-fixture-label-not-cloud\",\"fixtureRevision\":\"C020-r1\",\"profileCatalogVersion\":\"synthetic-profiles/1\",\"dataKind\":\"synthetic\"}}}",
+        "disposition": "queued-not-accepted"
+      }
+    ],
+    "attempts": [
+      {
+        "attempt": 1,
+        "acceptedAfter": "START"
+      },
+      {
+        "attempt": 2,
+        "acceptedAfter": "C027:r1:synthetic-001:000001"
+      }
+    ],
+    "transitions": [
+      {
+        "attempt": 1,
+        "phase": "disconnected",
+        "receivedCursor": "C027:r1:synthetic-001:000003",
+        "acceptedCursor": "C027:r1:synthetic-001:000001",
+        "discardedUnacceptedSequences": [
+          2,
+          3
+        ]
+      }
+    ],
+    "phase": "verified-local",
+    "error": null,
+    "tailSeen": true,
+    "transportOpen": true,
+    "outcome": "verified-local"
+  },
+  "screenshot": "capability\\C027\\evidence\\browser-c7d6f689-ce3c-40b6-ade5-bf8ce75bce01.png",
+  "finalListenerObservation": {
+    "lease": {
+      "lifetimeMs": 180000,
+      "expiresAtUtc": "2026-11-03T17:17:43.747Z",
+      "bindAddress": "127.0.0.1",
+      "streamLifetimeMs": 30000,
+      "maxConcurrentStreams": 4,
+      "scope": "synthetic local memory, no foreground lease, no durable state"
+    },
+    "activeStreams": 0,
+    "activeSockets": 1,
+    "activeTimers": 1,
+    "httpRequests": [
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=normal",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726085288
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=C027%3Ar1%3Asynthetic-001%3A000001&mode=normal",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726086051
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=gap",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726087604
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=duplicate",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726087875
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=invalid",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726088349
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=drop",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726088625
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&after=START&mode=normal",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726089332
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&mode=normal&after=not-a-cursor",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726090970
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&mode=normal&after=C027%3Ar1%3Asynthetic-002%3A000007",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726090976
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&mode=normal&after=C027%3Ar1%3Asynthetic-001%3A000001",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726090983
+      }
+    ],
+    "failures": [
+      {
+        "requestNumber": 8,
+        "status": 400,
+        "code": "INVALID_CURSOR",
+        "observedAt": 1793726090971
+      },
+      {
+        "requestNumber": 9,
+        "status": 416,
+        "code": "FUTURE_CURSOR",
+        "observedAt": 1793726090977
+      },
+      {
+        "requestNumber": 10,
+        "status": 409,
+        "code": "CURSOR_STREAM_MISMATCH",
+        "observedAt": 1793726090984
+      }
+    ],
+    "streamRequests": [
+      {
+        "attempt": 1,
+        "profileId": "synthetic-001",
+        "version": "r1",
+        "mode": "normal",
+        "acceptedAfter": "START",
+        "cursorSequence": 0,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726085290
+      },
+      {
+        "attempt": 2,
+        "profileId": "synthetic-001",
+        "version": "r1",
+        "mode": "normal",
+        "acceptedAfter": "C027:r1:synthetic-001:000001",
+        "cursorSequence": 1,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726086052
+      },
+      {
+        "attempt": 3,
+        "profileId": "synthetic-001",
+        "version": "r1",
+        "mode": "gap",
+        "acceptedAfter": "START",
+        "cursorSequence": 0,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726087604
+      },
+      {
+        "attempt": 4,
+        "profileId": "synthetic-001",
+        "version": "r1",
+        "mode": "duplicate",
+        "acceptedAfter": "START",
+        "cursorSequence": 0,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726087876
+      },
+      {
+        "attempt": 5,
+        "profileId": "synthetic-001",
+        "version": "r1",
+        "mode": "invalid",
+        "acceptedAfter": "START",
+        "cursorSequence": 0,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726088349
+      },
+      {
+        "attempt": 6,
+        "profileId": "synthetic-001",
+        "version": "r1",
+        "mode": "drop",
+        "acceptedAfter": "START",
+        "cursorSequence": 0,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726088626
+      },
+      {
+        "attempt": 7,
+        "profileId": "synthetic-002",
+        "version": "r1",
+        "mode": "normal",
+        "acceptedAfter": "START",
+        "cursorSequence": 0,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726089332
+      }
+    ],
+    "sends": [
+      {
+        "attempt": 1,
+        "eventId": "C027:r1:synthetic-001:000001",
+        "sequence": 1,
+        "sentAt": 1793726085507,
+        "bytes": 704
+      },
+      {
+        "attempt": 1,
+        "eventId": "C027:r1:synthetic-001:000002",
+        "sequence": 2,
+        "sentAt": 1793726085724,
+        "bytes": 704
+      },
+      {
+        "attempt": 1,
+        "eventId": "C027:r1:synthetic-001:000003",
+        "sequence": 3,
+        "sentAt": 1793726085939,
+        "bytes": 704
+      },
+      {
+        "attempt": 2,
+        "eventId": "C027:r1:synthetic-001:000002",
+        "sequence": 2,
+        "sentAt": 1793726086276,
+        "bytes": 704
+      },
+      {
+        "attempt": 2,
+        "eventId": "C027:r1:synthetic-001:000003",
+        "sequence": 3,
+        "sentAt": 1793726086484,
+        "bytes": 704
+      },
+      {
+        "attempt": 2,
+        "eventId": "C027:r1:synthetic-001:000004",
+        "sequence": 4,
+        "sentAt": 1793726086689,
+        "bytes": 704
+      },
+      {
+        "attempt": 2,
+        "eventId": "C027:r1:synthetic-001:000005",
+        "sequence": 5,
+        "sentAt": 1793726086890,
+        "bytes": 704
+      },
+      {
+        "attempt": 2,
+        "eventId": "C027:r1:synthetic-001:000006",
+        "sequence": 6,
+        "sentAt": 1793726087093,
+        "bytes": 704
+      },
+      {
+        "attempt": 3,
+        "eventId": "C027:r1:synthetic-001:000002",
+        "sequence": 2,
+        "sentAt": 1793726087809,
+        "bytes": 704
+      },
+      {
+        "attempt": 4,
+        "eventId": "C027:r1:synthetic-001:000001",
+        "sequence": 1,
+        "sentAt": 1793726088090,
+        "bytes": 704
+      },
+      {
+        "attempt": 4,
+        "eventId": "C027:r1:synthetic-001:000001",
+        "sequence": 1,
+        "sentAt": 1793726088294,
+        "bytes": 704
+      },
+      {
+        "attempt": 5,
+        "eventId": "C027:r1:synthetic-001:000001",
+        "sequence": 1,
+        "sentAt": 1793726088556,
+        "bytes": 69
+      },
+      {
+        "attempt": 6,
+        "eventId": "C027:r1:synthetic-001:000001",
+        "sequence": 1,
+        "sentAt": 1793726088835,
+        "bytes": 704
+      },
+      {
+        "attempt": 6,
+        "eventId": "C027:r1:synthetic-001:000002",
+        "sequence": 2,
+        "sentAt": 1793726089039,
+        "bytes": 704
+      },
+      {
+        "attempt": 7,
+        "eventId": "C027:r1:synthetic-002:000001",
+        "sequence": 1,
+        "sentAt": 1793726089536,
+        "bytes": 686
+      },
+      {
+        "attempt": 7,
+        "eventId": "C027:r1:synthetic-002:000002",
+        "sequence": 2,
+        "sentAt": 1793726089739,
+        "bytes": 686
+      },
+      {
+        "attempt": 7,
+        "eventId": "C027:r1:synthetic-002:000003",
+        "sequence": 3,
+        "sentAt": 1793726089942,
+        "bytes": 686
+      },
+      {
+        "attempt": 7,
+        "eventId": "C027:r1:synthetic-002:000004",
+        "sequence": 4,
+        "sentAt": 1793726090146,
+        "bytes": 686
+      },
+      {
+        "attempt": 7,
+        "eventId": "C027:r1:synthetic-002:000005",
+        "sequence": 5,
+        "sentAt": 1793726090361,
+        "bytes": 686
+      },
+      {
+        "attempt": 7,
+        "eventId": "C027:r1:synthetic-002:000006",
+        "sequence": 6,
+        "sentAt": 1793726090564,
+        "bytes": 686
+      }
+    ],
+    "responseEnds": 0,
+    "stopped": false,
+    "generatedFiles": [
+      "C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C027\\runtime-32e337bb-541d-4a1f-8281-4073b24f1e26.html"
+    ]
+  },
+  "sourceCleanup": {
+    "closed": true,
+    "readyState": 2,
+    "unloadClosed": false
+  },
+  "finalCleanupObservation": {
+    "lease": {
+      "lifetimeMs": 180000,
+      "expiresAtUtc": "2026-11-03T17:17:43.747Z",
+      "bindAddress": "127.0.0.1",
+      "streamLifetimeMs": 30000,
+      "maxConcurrentStreams": 4,
+      "scope": "synthetic local memory, no foreground lease, no durable state"
+    },
+    "activeStreams": 0,
+    "activeSockets": 0,
+    "activeTimers": 0,
+    "httpRequests": [
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=normal",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726085288
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=C027%3Ar1%3Asynthetic-001%3A000001&mode=normal",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726086051
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=gap",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726087604
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=duplicate",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726087875
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=invalid",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726088349
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-001&version=r1&after=START&mode=drop",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726088625
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&after=START&mode=normal",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726089332
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&mode=normal&after=not-a-cursor",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726090970
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&mode=normal&after=C027%3Ar1%3Asynthetic-002%3A000007",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726090976
+      },
+      {
+        "method": "GET",
+        "url": "/c027/fd3cd329f0780f488e2f3ddf678f20fea93f820a20505b30/events?profileId=synthetic-002&version=r1&mode=normal&after=C027%3Ar1%3Asynthetic-001%3A000001",
+        "origin": "null",
+        "host": "127.0.0.1:60573",
+        "credentialsPresent": false,
+        "receivedAt": 1793726090983
+      }
+    ],
+    "failures": [
+      {
+        "requestNumber": 8,
+        "status": 400,
+        "code": "INVALID_CURSOR",
+        "observedAt": 1793726090971
+      },
+      {
+        "requestNumber": 9,
+        "status": 416,
+        "code": "FUTURE_CURSOR",
+        "observedAt": 1793726090977
+      },
+      {
+        "requestNumber": 10,
+        "status": 409,
+        "code": "CURSOR_STREAM_MISMATCH",
+        "observedAt": 1793726090984
+      }
+    ],
+    "streamRequests": [
+      {
+        "attempt": 1,
+        "profileId": "synthetic-001",
+        "version": "r1",
+        "mode": "normal",
+        "acceptedAfter": "START",
+        "cursorSequence": 0,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726085290
+      },
+      {
+        "attempt": 2,
+        "profileId": "synthetic-001",
+        "version": "r1",
+        "mode": "normal",
+        "acceptedAfter": "C027:r1:synthetic-001:000001",
+        "cursorSequence": 1,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726086052
+      },
+      {
+        "attempt": 3,
+        "profileId": "synthetic-001",
+        "version": "r1",
+        "mode": "gap",
+        "acceptedAfter": "START",
+        "cursorSequence": 0,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726087604
+      },
+      {
+        "attempt": 4,
+        "profileId": "synthetic-001",
+        "version": "r1",
+        "mode": "duplicate",
+        "acceptedAfter": "START",
+        "cursorSequence": 0,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726087876
+      },
+      {
+        "attempt": 5,
+        "profileId": "synthetic-001",
+        "version": "r1",
+        "mode": "invalid",
+        "acceptedAfter": "START",
+        "cursorSequence": 0,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726088349
+      },
+      {
+        "attempt": 6,
+        "profileId": "synthetic-001",
+        "version": "r1",
+        "mode": "drop",
+        "acceptedAfter": "START",
+        "cursorSequence": 0,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726088626
+      },
+      {
+        "attempt": 7,
+        "profileId": "synthetic-002",
+        "version": "r1",
+        "mode": "normal",
+        "acceptedAfter": "START",
+        "cursorSequence": 0,
+        "lastEventIdHeader": null,
+        "origin": "null",
+        "requestedAt": 1793726089332
+      }
+    ],
+    "sends": [
+      {
+        "attempt": 1,
+        "eventId": "C027:r1:synthetic-001:000001",
+        "sequence": 1,
+        "sentAt": 1793726085507,
+        "bytes": 704
+      },
+      {
+        "attempt": 1,
+        "eventId": "C027:r1:synthetic-001:000002",
+        "sequence": 2,
+        "sentAt": 1793726085724,
+        "bytes": 704
+      },
+      {
+        "attempt": 1,
+        "eventId": "C027:r1:synthetic-001:000003",
+        "sequence": 3,
+        "sentAt": 1793726085939,
+        "bytes": 704
+      },
+      {
+        "attempt": 2,
+        "eventId": "C027:r1:synthetic-001:000002",
+        "sequence": 2,
+        "sentAt": 1793726086276,
+        "bytes": 704
+      },
+      {
+        "attempt": 2,
+        "eventId": "C027:r1:synthetic-001:000003",
+        "sequence": 3,
+        "sentAt": 1793726086484,
+        "bytes": 704
+      },
+      {
+        "attempt": 2,
+        "eventId": "C027:r1:synthetic-001:000004",
+        "sequence": 4,
+        "sentAt": 1793726086689,
+        "bytes": 704
+      },
+      {
+        "attempt": 2,
+        "eventId": "C027:r1:synthetic-001:000005",
+        "sequence": 5,
+        "sentAt": 1793726086890,
+        "bytes": 704
+      },
+      {
+        "attempt": 2,
+        "eventId": "C027:r1:synthetic-001:000006",
+        "sequence": 6,
+        "sentAt": 1793726087093,
+        "bytes": 704
+      },
+      {
+        "attempt": 3,
+        "eventId": "C027:r1:synthetic-001:000002",
+        "sequence": 2,
+        "sentAt": 1793726087809,
+        "bytes": 704
+      },
+      {
+        "attempt": 4,
+        "eventId": "C027:r1:synthetic-001:000001",
+        "sequence": 1,
+        "sentAt": 1793726088090,
+        "bytes": 704
+      },
+      {
+        "attempt": 4,
+        "eventId": "C027:r1:synthetic-001:000001",
+        "sequence": 1,
+        "sentAt": 1793726088294,
+        "bytes": 704
+      },
+      {
+        "attempt": 5,
+        "eventId": "C027:r1:synthetic-001:000001",
+        "sequence": 1,
+        "sentAt": 1793726088556,
+        "bytes": 69
+      },
+      {
+        "attempt": 6,
+        "eventId": "C027:r1:synthetic-001:000001",
+        "sequence": 1,
+        "sentAt": 1793726088835,
+        "bytes": 704
+      },
+      {
+        "attempt": 6,
+        "eventId": "C027:r1:synthetic-001:000002",
+        "sequence": 2,
+        "sentAt": 1793726089039,
+        "bytes": 704
+      },
+      {
+        "attempt": 7,
+        "eventId": "C027:r1:synthetic-002:000001",
+        "sequence": 1,
+        "sentAt": 1793726089536,
+        "bytes": 686
+      },
+      {
+        "attempt": 7,
+        "eventId": "C027:r1:synthetic-002:000002",
+        "sequence": 2,
+        "sentAt": 1793726089739,
+        "bytes": 686
+      },
+      {
+        "attempt": 7,
+        "eventId": "C027:r1:synthetic-002:000003",
+        "sequence": 3,
+        "sentAt": 1793726089942,
+        "bytes": 686
+      },
+      {
+        "attempt": 7,
+        "eventId": "C027:r1:synthetic-002:000004",
+        "sequence": 4,
+        "sentAt": 1793726090146,
+        "bytes": 686
+      },
+      {
+        "attempt": 7,
+        "eventId": "C027:r1:synthetic-002:000005",
+        "sequence": 5,
+        "sentAt": 1793726090361,
+        "bytes": 686
+      },
+      {
+        "attempt": 7,
+        "eventId": "C027:r1:synthetic-002:000006",
+        "sequence": 6,
+        "sentAt": 1793726090564,
+        "bytes": 686
+      }
+    ],
+    "responseEnds": 0,
+    "stopped": true,
+    "generatedFiles": []
+  },
+  "finishedAtUtc": "2026-11-03T17:14:51.437Z"
+}
