@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S062 · Connection-pool multiplication</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#lesson">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p>A-S062 · D-S062 · SC-S062 · one S unit</p>
+    <h1>Small pools multiply when instances scale out</h1>
+    <p>One frontend and one API instance form the baseline. Add instances, sum every
+      per-instance pool, and inspect shared connection pressure and journey latency.</p>
+  </header>
+  <main id="lesson" tabindex="-1">
+    <section aria-labelledby="instructions-title">
+      <h2 id="instructions-title">1. Declare the synthetic operating envelope</h2>
+      <p>Every modeled pool simultaneously requests its configured maximum. This is
+        a deliberately saturated, deterministic teaching workload, not measured database usage.
+        The limit below is your declared <strong>synthetic</strong> approval, not a platform quota.</p>
+      <p>Try defaults, then target <strong>4 frontend / 5 API instances</strong> to exceed
+        120 connections. In another attempt keep those counts but reduce the pools to
+        <strong>5 / 10</strong>. Compare the retained failure with the recovery.</p>
+      <form id="controls" novalidate>
+        <fieldset id="configuration">
+          <legend>Configure before observing the baseline; settings then lock</legend>
+          <div class="inputs">
+            <label for="frontendInstances">Target frontend instances (1–8)
+              <input id="frontendInstances" name="frontendInstances" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="2" required>
+            </label>
+            <label for="apiInstances">Target API instances (1–8)
+              <input id="apiInstances" name="apiInstances" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="3" required>
+            </label>
+            <label for="frontendPool">Connections per frontend instance (1–40)
+              <input id="frontendPool" name="frontendPool" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="10" required>
+            </label>
+            <label for="apiPool">Connections per API instance (1–40)
+              <input id="apiPool" name="apiPool" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="20" required>
+            </label>
+            <label for="connectionLimit">Synthetic approved total connections (1–640)
+              <input id="connectionLimit" name="connectionLimit" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="120" required>
+            </label>
+            <label for="journeyBudget">Synthetic journey budget, ms (80–2000)
+              <input id="journeyBudget" name="journeyBudget" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="300" required>
+            </label>
+            <label for="observation">Scaled observation
+              <select id="observation" name="observation">
+                <option value="complete" selected>Observe both checkpoints</option>
+                <option value="withhold-scaled">Withhold scaled telemetry</option>
+              </select>
+            </label>
+          </div>
+          <p>At least one tier must increase beyond its one-instance baseline.
+            Use whole decimal integers, without spaces, signs or exponent notation.</p>
+        </fieldset>
+        <div class="actions">
+          <button id="baseline" type="submit">Observe baseline</button>
+          <button id="scale" type="button" disabled>Scale &amp; observe</button>
+          <button id="again" type="button" disabled>Retain &amp; start another attempt</button>
+          <button id="reset-lesson" type="button">Reset all attempts &amp; defaults</button>
+        </div>
+      </form>
+      <p id="error" role="alert"></p>
+    </section>
+    <section aria-labelledby="results-title">
+      <h2 id="results-title">2. Inspect the two-checkpoint synthetic trace</h2>
+      <p id="progress"></p>
+      <p id="outcome" role="status" aria-live="polite" data-outcome="unknown"></p>
+      <p id="metrics"></p>
+      <p id="formula">Requested connections = frontend instances × frontend pool + API instances × API pool.
+        Accepted = min(requested, limit); refused = max(0, requested − limit).
+        Synthetic latency, ms = 80 + 2 × ceil(100 × requested / limit) + 200 if any connection is refused.</p>
+      <p>Both observations must succeed. Exhaustion or over-budget latency fails.
+        Missing or pending observations stay unknown unless another known failure already exists.
+        Configured ceilings are forecasts, never observed database evidence.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Fixed denominator: baseline and scaled checkpoint; all values are synthetic</caption>
+          <thead>
+            <tr><th scope="col">Checkpoint / pools</th><th scope="col">Configured request ceiling</th>
+              <th scope="col">Observed connections</th><th scope="col">Observed journey latency</th>
+              <th scope="col">Result</th></tr>
+          </thead>
+          <tbody id="trace"></tbody>
+        </table>
+      </div>
+      <div class="prediction">
+        <label for="prediction">Predict the completed attempt's result
+          <select id="prediction">
+            <option value="" selected>Choose a prediction</option>
+            <option value="success">success</option>
+            <option value="failure">failure</option>
+            <option value="unknown">unknown</option>
+          </select>
+        </label>
+        <button id="check" type="button" disabled>Check prediction</button>
+        <p id="prediction-result" role="status" data-verdict="none">Prediction not checked.</p>
+      </div>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">3. Compare retained attempts</h2>
+      <p id="history-bound"></p>
+      <ol id="history"></ol>
+      <p>History is in memory until explicit reset or page reload. Six attempts is a hard
+        bound; failures and unknowns are never silently removed.</p>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">What this rehearsal does not prove</h2>
+      <p>No real connection is opened, pool filled, instance scaled or database exhausted.
+        Idle/minimum pools, traffic distribution, other applications, retries, pool wait
+        queues and real database behavior are not modeled. A configured maximum is not
+        a measurement of current connections. All invented latency values are lesson rules.</p>
+      <p>No authentication, credentials, registration, Azure management, infrastructure,
+        deployment or spending. This does not certify native behavior, production Node.js 24,
+        B-S062, D-S062 or five-nines reliability. Native/source-parent acceptance remains incomplete.</p>
+      <noscript><p>This local exercise requires JavaScript. No synthetic result is established while it is disabled.</p></noscript>
+    </section>
+  </main>
+</body>
+</html>

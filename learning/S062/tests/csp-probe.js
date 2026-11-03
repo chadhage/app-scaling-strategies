@@ -1,0 +1,25 @@
+(function () {
+  'use strict';
+  const report = { externalProbeLoaded: true, violations: [], fetchRejected: false, done: false };
+  globalThis.__S062Csp = report;
+  document.addEventListener('securitypolicyviolation', (event) => {
+    report.violations.push({ directive: event.effectiveDirective, blockedURI: event.blockedURI });
+  });
+  const inline = document.createElement('script');
+  inline.textContent = 'globalThis.__S062InlineRan = true;';
+  document.head.append(inline);
+  const form = document.createElement('form');
+  form.action = 'https://example.invalid/s062-form-probe';
+  form.method = 'post';
+  document.body.append(form);
+  form.submit();
+  fetch('https://example.invalid/s062-connect-probe').catch(() => {
+    report.fetchRejected = true;
+  }).finally(() => {
+    setTimeout(() => {
+      inline.remove();
+      form.remove();
+      report.done = true;
+    }, 100);
+  });
+}());

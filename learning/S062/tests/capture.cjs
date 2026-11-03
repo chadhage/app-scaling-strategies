@@ -1,0 +1,89 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const root = path.resolve(__dirname, '..');
+const repo = path.resolve(root, '..', '..');
+const stage = process.argv[2];
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const lf = (bytes) => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+if (!['red', 'focused', 'browser', 'syntax', 'seal'].includes(stage)) throw new Error('Choose an explicit capture stage');
+if (stage === 'browser' && process.env.CAPTURE_BROWSER_EVIDENCE !== '1') {
+  throw new Error('Deliberate browser capture requires CAPTURE_BROWSER_EVIDENCE=1');
+}
+const evidence = path.join(root, 'evidence');
+fs.mkdirSync(evidence, { recursive: true });
+function write(file, value) {
+  fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
+}
+function walk(directory) {
+  return fs.readdirSync(directory, { withFileTypes: true })
+    .flatMap((entry) => entry.isDirectory() ? walk(path.join(directory, entry.name)) : [path.join(directory, entry.name)]);
+}
+if (stage === 'seal') {
+  const files = walk(root).filter((file) => !file.endsWith(`${path.sep}integrity.json`)).sort().map((file) => {
+    const relative = path.relative(root, file);
+    const bytes = fs.readFileSync(file);
+    const raw = relative.startsWith(`evidence${path.sep}raw${path.sep}`)
+      || relative.startsWith(`evidence${path.sep}red${path.sep}`)
+      || /\.(?:snapshot|tap|raw)$/.test(relative);
+    const git = spawnSync('git', ['hash-object', `--path=learning/S062/${relative.replaceAll('\\', '/')}`, file], { cwd: repo, encoding: 'utf8' });
+    if (git.status !== 0) throw new Error(git.stderr);
+    return { path: relative, kind: raw ? 'raw' : 'canonical-lf', sha256: hash(raw ? bytes : lf(bytes)), gitBlobSha1: git.stdout.trim() };
+  });
+  write(path.join(evidence, 'integrity.json'), { cardId: 'A-S062', createdAtUtc: new Date().toISOString(), files });
+} else if (stage === 'syntax') {
+  const checks = walk(root).filter((file) => /\.(?:js|cjs)$/.test(file)).sort().map((file) => {
+    const run = spawnSync(process.execPath, ['--check', file], { cwd: repo, encoding: 'utf8', windowsHide: true, timeout: 10000 });
+    return { file: path.relative(root, file), lfSha256: hash(lf(fs.readFileSync(file))), exitCode: run.status, stdout: run.stdout, stderr: run.stderr, error: run.error?.message || null };
+  });
+  const report = { cardId: 'A-S062', node: process.version, capturedAtUtc: new Date().toISOString(), passed: checks.every((check) => check.exitCode === 0 && !check.error), checks };
+  write(path.join(evidence, 'syntax.json'), report);
+  console.log(JSON.stringify(report, null, 2));
+  if (!report.passed) process.exitCode = 1;
+} else {
+  const folder = stage === 'red' ? path.join(evidence, 'red') : evidence;
+  fs.mkdirSync(folder, { recursive: true });
+  let name = stage === 'red' ? 'run' : `${stage}-run-001`;
+  if (stage !== 'red') {
+    let index = 1;
+    while (fs.existsSync(path.join(folder, `${name}.json`))) name = `${stage}-run-${String(++index).padStart(3, '0')}`;
+  }
+  const prefix = path.join(folder, name);
+  if (fs.existsSync(`${prefix}.json`)) throw new Error('Evidence exists; raw provenance is never overwritten');
+  const snapshotFiles = stage === 'red' ? ['connection-pools.feature', 'model.js', 'tests\\model.test.cjs', 'tests\\capture.cjs']
+    : stage === 'browser' ? ['tests\\browser.test.cjs', 'tests\\csp-probe.js'] : [];
+  const snapshots = snapshotFiles.map((file) => {
+    const bytes = fs.readFileSync(path.join(root, file));
+    const destination = path.join(folder, `${stage === 'red' ? '' : `${name}.`}${path.basename(file)}.snapshot`);
+    fs.writeFileSync(destination, bytes, { flag: 'wx' });
+    return { source: file, snapshot: path.relative(root, destination), rawSha256: hash(bytes), lfSha256: hash(lf(bytes)), crlfCount: (bytes.toString('utf8').match(/\r\n/g) || []).length };
+  });
+  const tests = stage === 'red' ? ['model'] : stage === 'browser' ? ['browser'] : ['model', 'surface', 'integrity'];
+  const args = ['--test', ...tests.map((file) => path.relative(repo, path.join(root, 'tests', `${file}.test.cjs`)))];
+  const startedAtUtc = new Date().toISOString();
+  const run = spawnSync(process.execPath, args, {
+    cwd: repo, windowsHide: true, timeout: 180000,
+    env: { ...process.env, ...(stage === 'browser' ? { BROWSER_EVIDENCE_RUN: name } : {}) },
+  });
+  const stdout = run.stdout || Buffer.alloc(0);
+  const stderr = run.stderr || Buffer.alloc(0);
+  fs.writeFileSync(`${prefix}.tap`, stdout, { flag: 'wx' });
+  fs.writeFileSync(`${prefix}.stderr.raw`, stderr, { flag: 'wx' });
+  write(`${prefix}.json`, {
+    cardId: 'A-S062', stage, command: [process.execPath, ...args], cwd: repo,
+    startedAtUtc, completedAtUtc: new Date().toISOString(), node: process.version,
+    exitCode: run.status, signal: run.signal, error: run.error?.message || null,
+    stdoutSha256: hash(stdout), stderrSha256: hash(stderr), snapshots,
+  });
+  process.stdout.write(stdout);
+  process.stderr.write(stderr);
+  if (run.error) throw run.error;
+  if (stage === 'red') {
+    if (run.status !== 1 || !stdout.includes(Buffer.from('ERR_ASSERTION'))
+        || /MODULE_NOT_FOUND|SyntaxError|ReferenceError|TypeError:/.test(stdout.toString())) {
+      throw new Error('RED must be real assertion failures, not missing code, broken tools, or an exception');
+    }
+  } else if (run.status !== 0) process.exitCode = run.status || 1;
+}

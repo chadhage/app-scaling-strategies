@@ -1,0 +1,278 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
+const { createHash } = require('node:crypto');
+const { test } = require('node:test');
+const root = path.resolve(__dirname, '..');
+const repo = path.resolve(root, '..', '..');
+const helper = path.join(repo, 'testing', 'browser', 'isolated.cjs');
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const helperSha256 = hash(fs.readFileSync(helper));
+assert.equal(helperSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+const { openIsolatedLesson } = require(helper);
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+
+function proofHashes() {
+  const result = {};
+  function walk(directory) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const file = path.join(directory, entry.name);
+      if (entry.isDirectory()) walk(file);
+      else result[path.relative(root, file)] = hash(fs.readFileSync(file));
+    }
+  }
+  walk(path.join(root, 'evidence'));
+  return result;
+}
+
+test('actual isolated Edge: multiplication, exhaustion, latency, unknowns, history, keyboard, errors, reset and CSP', async () => {
+  if (capture) assert.match(process.env.BROWSER_EVIDENCE_RUN || '', /^browser-run-\d{3}$/, 'Use the explicit capture runner');
+  const before = proofHashes();
+  const report = {
+    cardId: 'A-S062', parentId: 'D-S062', packet: 'SC-S062', executionMode: 'synthetic',
+    qualifiedRun: process.env.BROWSER_EVIDENCE_RUN || null, startedAtUtc: new Date().toISOString(),
+    helper: 'testing\\browser\\isolated.cjs', helperSha256, helperPublication: '53c0c0d',
+    node: process.version,
+    playwrightVersion: require(path.join(repo, 'testing', 'browser', 'node_modules', 'playwright', 'package.json')).version,
+    observations: [], pageErrors: [], exerciseNetworkRequests: [], escapedProbeRequests: [],
+    cleanup: { awaitedFinallyClose: false, pageClosed: false }, passed: false,
+    sources: ['model.js', 'app.js', 'index.html', 'styles.css', 'manifest.json', 'tests\\browser.test.cjs', 'tests\\csp-probe.js']
+      .map((file) => ({ path: file, lfSha256: hash(Buffer.from(fs.readFileSync(path.join(root, file), 'utf8').replace(/\r\n/g, '\n'))) })),
+  };
+  let session;
+  let failure;
+  try {
+    session = await openIsolatedLesson('learning\\S062\\index.html');
+    report.browserVersion = session.browserVersion;
+    const page = session.page;
+    const requests = [];
+    page.on('pageerror', (error) => report.pageErrors.push(error.message));
+    page.on('request', (request) => { if (!request.url().startsWith('file:')) requests.push(request.url()); });
+    await page.route('**/*', (route) => {
+      if (!route.request().url().startsWith('file:')) {
+        report.escapedProbeRequests.push(route.request().url());
+        return route.abort('blockedbyclient');
+      }
+      return route.continue();
+    });
+    const snapshot = async (label) => {
+      const dom = await page.evaluate(() => {
+        const get = (id) => document.getElementById(id);
+        return {
+          title: document.title, banner: document.querySelector('.banner').textContent,
+          activeElement: document.activeElement.id || document.activeElement.className,
+          outcome: get('outcome').dataset.outcome, result: get('outcome').textContent,
+          metrics: get('metrics').textContent, progress: get('progress').textContent,
+          trace: [...get('trace').rows].map((row) => ({ outcome: row.dataset.outcome, checkpoint: row.dataset.checkpoint, text: row.textContent })),
+          history: [...get('history').children].map((item) => ({ outcome: item.dataset.outcome, text: item.textContent })),
+          historyBound: get('history-bound').textContent, error: get('error').textContent,
+          values: Object.fromEntries(['frontendInstances', 'apiInstances', 'frontendPool', 'apiPool', 'connectionLimit', 'journeyBudget', 'observation', 'prediction'].map((id) => [id, get(id).value])),
+          configurationDisabled: get('configuration').disabled,
+          inputsEffectivelyDisabled: ['frontendInstances', 'apiInstances', 'frontendPool', 'apiPool', 'connectionLimit', 'journeyBudget', 'observation'].map((id) => get(id).matches(':disabled')),
+          buttons: Object.fromEntries(['baseline', 'scale', 'again', 'check'].map((id) => [id, get(id).disabled])),
+          prediction: get('prediction-result').textContent, verdict: get('prediction-result').dataset.verdict,
+          nativeFormReset: typeof get('controls').reset,
+        };
+      });
+      report.observations.push({ label, observedAtUtc: new Date().toISOString(), dom });
+      return dom;
+    };
+    const tabTo = async (id) => {
+      for (let index = 0; index < 24; index += 1) {
+        if (await page.evaluate(() => document.activeElement.id) === id) return;
+        await page.keyboard.press('Tab');
+      }
+      assert.fail(`Keyboard did not reach ${id}`);
+    };
+    const configure = async (changes = {}) => {
+      for (const [key, number] of Object.entries(changes)) {
+        if (key === 'observation') await page.locator(`#${key}`).selectOption(number);
+        else await page.locator(`#${key}`).fill(String(number));
+      }
+    };
+    const conduct = async (changes = {}) => {
+      await configure(changes);
+      await page.locator('#baseline').click();
+      await page.locator('#scale').click();
+    };
+    const another = async () => page.locator('#again').click();
+    const assertReset = async (label) => {
+      const dom = await snapshot(label);
+      assert.equal(dom.outcome, 'unknown');
+      assert.equal(dom.history.length, 0);
+      assert.ok(dom.trace.every((row) => row.outcome === 'unknown'));
+      assert.equal(dom.error, '');
+      assert.equal(dom.verdict, 'none');
+      assert.equal(dom.nativeFormReset, 'function');
+      assert.equal(dom.activeElement, 'frontendInstances');
+      assert.equal(dom.configurationDisabled, false);
+      assert.deepEqual(dom.values, {
+        frontendInstances: '2', apiInstances: '3', frontendPool: '10', apiPool: '20',
+        connectionLimit: '120', journeyBudget: '300', observation: 'complete', prediction: '',
+      });
+      assert.match(dom.metrics, /Attempted 0.*Success 0.*Failure 0.*Unknown 2.*pending 2/);
+    };
+
+    let dom = await snapshot('initial actual DOM: empty sample is unknown');
+    assert.equal(dom.banner, 'Training rehearsal - synthetic data - not a live Azure result');
+    assert.equal(dom.nativeFormReset, 'function');
+    assert.equal(dom.outcome, 'unknown');
+    await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement.className), 'skip');
+    await page.keyboard.press('Enter');
+    await tabTo('frontendPool');
+    await page.keyboard.press('Control+A');
+    await page.keyboard.type('1e2');
+    await tabTo('baseline');
+    await page.keyboard.press('Enter');
+    dom = await snapshot('keyboard malformed integer is a handled error without progress');
+    assert.match(dom.error, /canonical integer/);
+    assert.equal(dom.history.length, 0);
+    assert.equal(dom.configurationDisabled, false);
+    assert.match(dom.progress, /draft/);
+    await tabTo('reset-lesson');
+    await page.keyboard.press('Space');
+    await assertReset('keyboard reset clears malformed input and focuses first input');
+
+    await tabTo('baseline');
+    await page.keyboard.press('Enter');
+    dom = await snapshot('keyboard baseline locks config, records 30 requested and focuses scale');
+    assert.equal(dom.activeElement, 'scale');
+    assert.ok(dom.inputsEffectivelyDisabled.every(Boolean));
+    assert.equal(dom.outcome, 'unknown');
+    assert.match(dom.trace[0].text, /30 requested.*30 accepted.*130 ms.*success/);
+    assert.match(dom.metrics, /Attempted 1.*Success 1.*Failure 0.*Unknown 1.*pending 1/);
+    const baselineTrace = dom.trace;
+    await page.locator('#controls').dispatchEvent('submit');
+    dom = await snapshot('duplicate baseline is a handled phase error without trace mutation');
+    assert.match(dom.error, /phase/i);
+    assert.deepEqual(dom.trace, baselineTrace);
+    await page.locator('#frontendInstances').evaluate((input) => { input.value = '8'; });
+    await page.keyboard.press('Space');
+    dom = await snapshot('keyboard scaled observation uses locked state, not tampered disabled DOM');
+    assert.equal(dom.outcome, 'success');
+    assert.equal(dom.values.frontendInstances, '2');
+    assert.match(dom.trace[1].text, /80 requested \/ 120 limit.*80 accepted.*0 refused.*40 signed headroom.*214 ms/);
+    assert.equal(dom.history.length, 1);
+    assert.equal(dom.activeElement, 'again');
+    await page.locator('#check').click();
+    dom = await snapshot('missing prediction is handled and does not change measured success');
+    assert.match(dom.error, /choose a prediction/);
+    await page.locator('#prediction').selectOption('failure');
+    await tabTo('check');
+    await page.keyboard.press('Enter');
+    dom = await snapshot('wrong prediction RETRY is distinct from measured success');
+    assert.equal(dom.verdict, 'retry');
+    assert.equal(dom.outcome, 'success');
+    await page.locator('#prediction').selectOption('success');
+    await page.locator('#check').press('Space');
+    dom = await snapshot('correct keyboard prediction PASS does not manufacture evidence');
+    assert.equal(dom.verdict, 'pass');
+    assert.equal(dom.history.length, 1);
+
+    await another();
+    await conduct({ frontendInstances: 4, apiInstances: 5 });
+    dom = await snapshot('aggregate exhaustion: 140 requested, 20 refused, 514 ms; baseline still succeeds');
+    assert.equal(dom.outcome, 'failure');
+    assert.equal(dom.trace[0].outcome, 'success');
+    assert.match(dom.trace[1].text, /140 requested \/ 120 limit.*120 accepted.*20 refused.*-20 signed headroom.*514 ms.*connection exhaustion.*journey latency/);
+    assert.match(dom.metrics, /Attempted 2.*Success 1.*Failure 1.*Unknown 0/);
+    await page.locator('#scale').dispatchEvent('click');
+    dom = await snapshot('duplicate scaled action is rejected without history mutation');
+    assert.match(dom.error, /phase/i);
+    assert.equal(dom.history.length, 2);
+
+    await another();
+    await conduct({ frontendPool: 5, apiPool: 10 });
+    dom = await snapshot('tuned pool recovery preserves the previous failing attempt');
+    assert.equal(dom.outcome, 'success');
+    assert.match(dom.trace[1].text, /70 requested.*70 accepted.*0 refused.*198 ms/);
+    assert.deepEqual(dom.history.map((run) => run.outcome), ['success', 'failure', 'success']);
+    assert.match(dom.history[1].text, /pools 10\/20.*refused 20.*514 ms.*failure/);
+
+    await another();
+    await conduct({ frontendPool: 10, apiPool: 20, observation: 'withhold-scaled' });
+    dom = await snapshot('withheld over-limit forecast is unknown, not observed exhaustion or success');
+    assert.equal(dom.outcome, 'unknown');
+    assert.match(dom.trace[1].text, /140 requested \/ 120 limit.*over-limit.*unknown accepted.*unknown refused.*unknown ms.*unknown/);
+    assert.match(dom.metrics, /Success 1.*Failure 0.*Unknown 1.*pending 0/);
+
+    await another();
+    await conduct({ frontendInstances: 2, apiInstances: 2, connectionLimit: 60, journeyBudget: 279, observation: 'complete' });
+    dom = await snapshot('latency alone fails at the connection-limit boundary with zero refused');
+    assert.equal(dom.outcome, 'failure');
+    assert.match(dom.trace[1].text, /60 requested \/ 60 limit.*60 accepted.*0 refused.*0 signed headroom.*280 ms \/ 279 ms.*journey latency/);
+    assert.doesNotMatch(dom.trace[1].text, /exhaustion/);
+
+    await another();
+    await conduct({ connectionLimit: 20, journeyBudget: 300, observation: 'withhold-scaled' });
+    dom = await snapshot('known baseline failure dominates withheld scaled telemetry and fills the retention bound');
+    assert.equal(dom.outcome, 'failure');
+    assert.equal(dom.trace[0].outcome, 'failure');
+    assert.equal(dom.trace[1].outcome, 'unknown');
+    assert.match(dom.metrics, /Success 0.*Failure 1.*Unknown 1/);
+    assert.equal(dom.history.length, 6);
+    assert.equal(dom.buttons.again, true);
+    assert.match(dom.historyBound, /History limit reached/);
+    await page.locator('#again').dispatchEvent('click');
+    dom = await snapshot('six-attempt guard rejects a programmatic extra action without eviction');
+    assert.match(dom.error, /History limit/);
+    assert.equal(dom.history.length, 6);
+    assert.equal(dom.history[1].outcome, 'failure');
+    await tabTo('reset-lesson');
+    await page.keyboard.press('Enter');
+    await assertReset('reset after failure/unknown/history bound restores all defaults and clears history');
+    await page.locator('#baseline').click();
+    await page.locator('#reset-lesson').click();
+    await assertReset('reset also clears an unfinished locked attempt');
+
+    report.exerciseNetworkRequests = [...requests];
+    assert.deepEqual(report.exerciseNetworkRequests, []);
+    const originalURL = page.url();
+    await page.evaluate((url) => new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = url;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('Approved external CSP probe did not load'));
+      document.head.append(script);
+    }), pathToFileURL(path.join(root, 'tests', 'csp-probe.js')).href);
+    await page.waitForFunction(() => globalThis.__S062Csp?.done === true);
+    report.csp = await page.evaluate(() => ({
+      ...globalThis.__S062Csp, inlineRan: globalThis.__S062InlineRan === true,
+    }));
+    assert.equal(report.csp.externalProbeLoaded, true);
+    assert.equal(report.csp.inlineRan, false);
+    assert.equal(report.csp.fetchRejected, true);
+    for (const directive of ['script-src-elem', 'connect-src', 'form-action']) {
+      assert.ok(report.csp.violations.some((violation) => violation.directive === directive), directive);
+    }
+    assert.equal(page.url(), originalURL);
+    assert.deepEqual(report.escapedProbeRequests, []);
+    assert.deepEqual(report.pageErrors, []);
+    await snapshot('actual CSP blocked inline script, connect and form navigation; lesson remains reset');
+    report.passed = true;
+  } catch (error) {
+    failure = error;
+    report.failure = { message: error.message, stack: error.stack };
+  } finally {
+    if (session) {
+      try {
+        await session.close();
+        report.cleanup.awaitedFinallyClose = true;
+        report.cleanup.pageClosed = session.page.isClosed();
+      } catch (error) {
+        failure = failure ? new AggregateError([failure, error], 'Browser check and cleanup failed') : error;
+        report.cleanup.error = error.message;
+      }
+    }
+    report.passed = report.passed && !failure && report.cleanup.awaitedFinallyClose && report.cleanup.pageClosed;
+    report.completedAtUtc = new Date().toISOString();
+    if (capture) {
+      fs.writeFileSync(path.join(root, 'evidence', `${process.env.BROWSER_EVIDENCE_RUN}.observations.json`), `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+    } else assert.deepEqual(proofHashes(), before, 'Normal verification is read-only to proof');
+  }
+  if (failure) throw failure;
+  assert.equal(report.passed, true);
+});

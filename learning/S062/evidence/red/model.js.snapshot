@@ -1,0 +1,41 @@
+(function (root) {
+  'use strict';
+  const DEFAULTS = {
+    frontendInstances: 2, apiInstances: 3, frontendPool: 10, apiPool: 20,
+    connectionLimit: 120, journeyBudget: 300, observation: 'complete',
+  };
+  const MAX_ATTEMPTS = 6;
+  const parseConfig = (input) => ({ ...input });
+  const createState = () => ({ schemaVersion: 1, journal: [] });
+  function transition(state, action, input) {
+    if (action === 'reset') return createState();
+    return {
+      schemaVersion: 1,
+      journal: [...state.journal, action === 'baseline'
+        ? { action, config: parseConfig(input) } : { action }],
+    };
+  }
+  function inspect(state) {
+    let phase = 'draft';
+    let config = null;
+    const history = [];
+    for (const event of state.journal) {
+      if (event.action === 'baseline') { phase = 'baseline'; config = event.config; }
+      if (event.action === 'scale') { phase = 'complete'; history.push({ config, outcome: 'unknown' }); }
+      if (event.action === 'again') { phase = 'draft'; config = null; }
+    }
+    const samples = ['baseline', 'scaled'].map((checkpoint) => ({
+      checkpoint, demand: null, accepted: null, refused: null, headroom: null,
+      latencyMs: null, outcome: 'unknown', observed: false, pending: true,
+      forecast: 'unconfigured', reason: 'loadable-stub-unmeasured',
+    }));
+    return {
+      phase, config, attempt: history.length + (phase === 'complete' ? 0 : 1),
+      samples, history, outcome: 'unknown',
+      metrics: { attempted: 0, success: 0, failure: 0, unknown: 2, pending: 2 },
+    };
+  }
+  const api = { DEFAULTS, MAX_ATTEMPTS, parseConfig, createState, transition, inspect };
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.ConnectionPoolsLesson = api;
+}(typeof globalThis === 'object' ? globalThis : this));

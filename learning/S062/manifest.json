@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S062",
+  "sourceId": "S062",
+  "parentId": "D-S062",
+  "packet": "SC-S062",
+  "kano": "S",
+  "kanoUnit": "A-S062",
+  "owner": "worker-A-S062",
+  "entryGate": "SOURCE",
+  "title": "Connection-pool multiplication",
+  "entryPoint": "learning/S062/index.html",
+  "feature": "learning/S062/connection-pools.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Multiply per-instance pools during scaling; detect aggregate database-connection exhaustion.",
+  "sourceBehavior": "Keep aggregate database connections within limits as frontend/API instance counts increase.",
+  "sourceAcceptance": "Total connections stay within the approved data-tier limit; connection exhaustion and journey latency are detected.",
+  "preconditions": [
+    "Open local HTML in a JavaScript-enabled browser; no server, account, authentication or installation.",
+    "Baseline is one frontend and one API instance; at least one tier must scale out.",
+    "Every modeled pool is simultaneously saturated to its configured maximum.",
+    "The declared connection limit and journey budget are synthetic inputs, not real approval or a platform quota.",
+    "Two required checkpoint observations form the fixed denominator."
+  ],
+  "actions": [
+    "Choose target tier counts, per-instance pools, synthetic connection limit, journey budget and observation preset.",
+    "Observe the baseline, then scale and observe aggregate connections and synthetic journey latency.",
+    "Compare a 140-request exhaustion case with a 70-request tuned-pool recovery.",
+    "Check a prediction separately from measured success, failure or unknown.",
+    "Retain up to six attempts without pruning, or explicitly reset all defaults and history."
+  ],
+  "syntheticInput": "learning/S062/model.js: bounded pure deterministic saturation and latency rules",
+  "assertions": [
+    "Demand equals frontend instances times frontend pool plus API instances times API pool.",
+    "Only observed connections and latency can establish a successful checkpoint.",
+    "Refused connections or journey latency over budget visibly fail; equality at both budgets passes.",
+    "A withheld scaled sample remains unknown, even with a known over-limit configured forecast.",
+    "Known failure dominates missing or pending evidence and never disappears from retained history.",
+    "Strict input, exact journal shape, phase, payload and retention guards reject without state mutation.",
+    "Keyboard controls, explicit reset, handled errors and restrictive CSP work in the actual browser."
+  ],
+  "bounds": {
+    "targetInstancesPerTier": [1, 8],
+    "connectionsPerInstance": [1, 40],
+    "syntheticConnectionLimit": [1, 640],
+    "journeyBudgetMs": [80, 2000],
+    "checkpointObservationsPerAttempt": 2,
+    "maximumRetainedAttempts": 6,
+    "maximumJournalEvents": 17,
+    "observationPresets": 2,
+    "retries": 0
+  },
+  "iac": {
+    "status": "N/A",
+    "reference": "learning/S062/evidence/iac.json",
+    "decisionStage": "After genuine callable-stub assertion RED and before implementation.",
+    "reason": "Resource-free local synthetic lesson; no infrastructure, cloud or deployment authorized."
+  },
+  "testRuntime": {
+    "node": "22.23.4, existing test tooling only",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156.0.4314.50",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "productionNode24Certification": false,
+    "dependencyChanges": false
+  },
+  "limits": [
+    "No actual database connection, pool saturation, instance scaling or connection-exhaustion proof.",
+    "Configured maxima become demand only under this explicit synthetic saturation assumption.",
+    "Invented latency rules do not predict real journey latency or native database behavior.",
+    "Other clients, minimum/idle pools, pool wait queues, traffic skew, retries and dynamic admission are not modeled.",
+    "No real authentication, credentials, identity registration, cloud, infrastructure, deployment or spending.",
+    "No native, production Node.js 24, source-parent or five-nines certification.",
+    "History lasts until reset or reload and is never silently pruned.",
+    "B-S062 and D-S062 remain incomplete; parent alone may Accept A-S062.",
+    "Published browser helper only; known unattended lifecycle limitation remains and finally close is awaited."
+  ]
+}
