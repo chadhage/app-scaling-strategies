@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; img-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; font-src 'none'; media-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S042 — Long operation: drain or continue</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="long-work.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S042 — Long operation: drain or continue</h1>
+    <p>A-S042 · D-S042 · SC-S042 · satisfier S · resource-free synthetic rehearsal</p>
+  </header>
+  <main>
+    <section aria-labelledby="exerciseTitle">
+      <h2 id="exerciseTitle">One operation, one original deadline</h2>
+      <p>The read-only operation <code>synthetic-operation-042</code> starts at <strong>0 ms</strong>
+        and needs <strong>12 units / 12000 ms</strong>. Cutover is <strong>4000 ms</strong>.
+        Every timestamp and declared host limit below is a synthetic assumption, not an Azure guarantee.</p>
+      <p><strong>Drain:</strong> keep the admitted HTTP request on v1 for its remaining 8000 ms,
+        within both host and drain limits. Retaining a slot does not prevent worker recycling.</p>
+      <p><strong>Durable:</strong> persist 4 units plus the operation ID and original deadline
+        at 4000 ms; HTTP 202 is only acceptance. Retire the old HTTP host at 5000 ms.
+        A successor resumes 8 remaining units at 6000 ms and finishes at 14000 ms.</p>
+      <ol>
+        <li>Compare normal drain and durable runs with a 10000 ms HTTP limit.</li>
+        <li>Try forced termination and delayed retry. Inspect original elapsed time, not just retry duration.</li>
+        <li>Try missing result proof, predict the user outcome, then check your prediction.</li>
+        <li>Earlier failures stay in the six-run history. Reset explicitly to clear it.</li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="controlsTitle">
+      <h2 id="controlsTitle">Operator controls</h2>
+      <form id="lessonControls" novalidate>
+        <div class="controls">
+          <label for="mode">Approach
+            <select id="mode" name="mode">
+              <option value="drain">Supported HTTP drain</option>
+              <option value="durable">Durable asynchronous continuation</option>
+            </select>
+          </label>
+          <label for="condition">Synthetic condition
+            <select id="condition" name="condition" aria-describedby="conditionHelp">
+              <option value="normal">Normal transition</option>
+              <option value="forced-stop">Force-stop active work</option>
+              <option value="delayed-retry">Delayed retry / continuation</option>
+              <option value="missing-proof">Missing final result proof</option>
+            </select>
+          </label>
+          <label for="budgetMs">Original user budget (ms)
+            <input id="budgetMs" name="budgetMs" type="number" min="1" max="60000" step="1" value="18000" required>
+          </label>
+          <label for="drainMs">Drain window after cutover (ms)
+            <input id="drainMs" name="drainMs" type="number" min="0" max="12000" step="1" value="8000" required aria-describedby="drainHelp">
+          </label>
+          <label for="hostLimitMs">Declared HTTP limit per request (ms)
+            <input id="hostLimitMs" name="hostLimitMs" type="number" min="1" max="30000" step="1" value="16000" required>
+          </label>
+        </div>
+        <p id="conditionHelp">Force-stop interrupts the old HTTP request at 6000 ms or the active durable
+          successor at 8000 ms; no subsequent recovery is presumed. Delayed retry restarts HTTP at
+          8000 ms (finishes at 20000 ms) or resumes a durable checkpoint at 14000 ms (finishes at
+          22000 ms). Missing proof removes result identity/units, not the observed envelope timestamp.</p>
+        <p id="drainHelp">Drain is unused after a proved durable handoff. HTTP acceptance must still fit
+          the declared host limit. Exact-deadline completion is allowed; limits never extend themselves.</p>
+        <button id="runLesson" type="submit">Run synthetic rehearsal</button>
+      </form>
+      <button id="restoreDefaults" type="button" class="secondary">Reset rehearsal and history</button>
+      <p id="errorNotice" role="alert"></p>
+    </section>
+
+    <section aria-labelledby="resultTitle">
+      <h2 id="resultTitle">Current synthetic observation</h2>
+      <p id="userResult" role="status" aria-live="polite">UNKNOWN — no synthetic run yet.</p>
+      <p id="currentConfig">Results are snapshots of a run. Editing controls clears the current result, not history.</p>
+      <dl id="metrics"></dl>
+      <h3>Independent assertions</h3>
+      <ul id="checks"></ul>
+      <h3>Ordered synthetic trace</h3>
+      <ol id="trace"></ol>
+    </section>
+
+    <section aria-labelledby="predictionTitle">
+      <h2 id="predictionTitle">Check a prediction, not a reliability claim</h2>
+      <label for="prediction">Predicted synthetic user result
+        <select id="prediction">
+          <option value="completed">COMPLETED</option>
+          <option value="interrupted">INTERRUPTED</option>
+          <option value="unknown">UNKNOWN</option>
+        </select>
+      </label>
+      <button id="checkPrediction" type="button" disabled>Check prediction</button>
+      <p id="verification" role="status" aria-live="polite">NOT CHECKED</p>
+      <p>A passing prediction of interruption does not turn an interrupted user into a successful transition.</p>
+    </section>
+
+    <section aria-labelledby="historyTitle">
+      <h2 id="historyTitle">Retained run history (maximum six)</h2>
+      <p id="historySummary">0 attempted; 0 completed; 0 interrupted; 0 unknown.</p>
+      <ol id="history"></ol>
+      <p>Invalid controls do not create an attempt. A guard error clears the current result and keeps all earlier records.
+        History is in memory only; reset or reloading this page clears it.</p>
+    </section>
+
+    <aside aria-labelledby="limitsTitle">
+      <h2 id="limitsTitle">Limits and cleanup</h2>
+      <p>Native Azure result: <strong>UNKNOWN</strong>. No network, authentication, account, subscription,
+        resource, durable store, business write or real HTTP request is exercised. Synthetic checkpoints
+        do not certify actual durability, retries, exactly-once effects or host shutdown behavior.</p>
+      <p>B-S042 and D-S042 native acceptance remain unfulfilled. This lesson does not modify S041.
+        IaC: N/A. No deployment, identity registration, production Node.js 24 certification,
+        packages or cloud spend. Cleanup is the explicit in-memory reset.</p>
+    </aside>
+  </main>
+</body>
+</html>

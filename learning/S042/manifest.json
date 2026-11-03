@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S042",
+  "sourceId": "S042",
+  "parentId": "D-S042",
+  "kano": "S",
+  "kanoUnit": "A-S042",
+  "packet": "SC-S042",
+  "owner": "worker-A-S042",
+  "entryGate": "SOURCE",
+  "title": "Long operation: supported drain or durable continuation",
+  "entryPoint": "learning/S042/index.html",
+  "feature": "learning/S042/long-work.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Compare completion within declared HTTP/drain limits with checkpointed asynchronous continuation while retaining the same operation and original absolute user deadline.",
+  "preconditions": [
+    "A browser supporting standard local HTML, CSS and JavaScript.",
+    "One fixed read-only synthetic operation, 12 work units, start 0 ms and cutover 4000 ms.",
+    "No account, authentication, subscription, server, credentials or application framework."
+  ],
+  "actions": [
+    "Choose drain or durable continuation and one of four bounded synthetic conditions.",
+    "Set integer original user, drain and per-request HTTP limits.",
+    "Run, inspect measured synthetic elapsed time and ordered trace, predict and check the outcome.",
+    "Retain up to six immutable run records; reset explicitly by mouse or keyboard."
+  ],
+  "input": "learning/S042/long-work.js",
+  "syntheticInput": {
+    "mode": "drain",
+    "condition": "normal",
+    "budgetMs": 18000,
+    "drainMs": 8000,
+    "hostLimitMs": 16000
+  },
+  "trace": "Pure fixed integer-clock events, including operation ID and original absolute deadline on every event.",
+  "assertions": [
+    "Drain completes only within both declared host and drain limits.",
+    "Durable acceptance/checkpoint precedes old-host retirement; HTTP 202 is not completion.",
+    "Successor continues the same operation from four proved units, not from an invented fresh operation.",
+    "Retry-only time never replaces elapsed time from original admission; inclusive original deadlines apply.",
+    "Active-work termination and known budget/limit violations interrupt; unknown proof never becomes success.",
+    "Prediction verifier verdict and user-impact outcome remain separate.",
+    "Invalid input/state cannot retain a current success or erase historical failures.",
+    "Six runs maximum; explicit reset restores controls, prediction, history and keyboard focus."
+  ],
+  "iac": {
+    "status": "N/A",
+    "decision": "learning/S042/evidence/iac-na.json",
+    "order": "After genuine behavioral RED and before implementation"
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "playwright": "1.56.1",
+    "browser": "Microsoft-signed installed Edge 156.0.4314.50",
+    "helperCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "purpose": "Existing offline test tooling only; not production runtime certification",
+    "dependencyChanges": false
+  },
+  "limits": [
+    "No native Azure, real HTTP, durable storage, business write or exactly-once effect is tested.",
+    "All operation identities, host limits, checkpoints, receipts, timestamps and results are synthetic.",
+    "Native Azure result is always unknown; no reliability or five-nines claim.",
+    "B-S042 and D-S042 native acceptance remain unfulfilled; S041 is not changed.",
+    "No cloud, IaC, scaffold, identity registration, deployment, expenditure, downloads or packages.",
+    "History is in memory only, with six runs maximum; reloading also clears it.",
+    "The browser helper retains its documented unattended lifecycle limitation; its abandoned prototype is not used."
+  ]
+}

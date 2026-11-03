@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S042",
+  "mode": "actual-isolated-browser-observation-of-synthetic-lesson",
+  "captureFlag": "CAPTURE_BROWSER_EVIDENCE=1",
+  "startedAtUtc": "2026-11-03T18:09:43.530Z",
+  "finishedAtUtc": "2026-11-03T18:10:19.779Z",
+  "nodeVersion": "v22.23.4",
+  "browserVersion": "156.0.4314.50",
+  "playwrightVersion": "1.56.1",
+  "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "applicationHashes": {
+    "index.html": "9e0251a8f4b486e1b4f918cceecf0dc943482d1dd9ce77a1b97a9db5f0284ed1",
+    "app.js": "5251a8897b2af8e823da6c23966ca82cdd9a22f8b27d9db6827618fd51f901b9",
+    "long-work.js": "9b82c4b56afea7c338b03a4aa04747d37dfb49f3cc628c05e19d49c246fa7ae7",
+    "styles.css": "aba7186d46b020f556dbf4488e54ad36c36d21dc1caa054f70d72afafd5000de"
+  },
+  "observations": [
+    {
+      "name": "keyboard-default-drain-and-check",
+      "userResult": "COMPLETED — synthetic user result for run 1.",
+      "metrics": "Operation\nsynthetic-operation-042\nOriginal start (ms)\n0\nOriginal absolute deadline (ms)\n18000\nOriginal elapsed / observation (ms)\n12000\nRetry-only duration (ms)\nnot a retry\nProved completed units / 12\n12\nProved durable checkpoint units\n0\nNative Azure result\nUNKNOWN",
+      "assertions": "PASS — HTTP requires 12000 ms; declared per-request host limit is 16000 ms.\nPASS — 8000 ms remains at cutover; declared drain window is 8000 ms.\nPASS — No active work is discarded in this synthetic trace.\nPASS — Receipt proves the same operation ID and all 12 ordered work units.\nPASS — 12000 ms elapsed from original start 0; deadline stays 18000 ms, including retries.",
+      "trace": "0 ms — Admitted synthetic-operation-042: 12 units; original deadline 18000 ms from start 0. [operation synthetic-operation-042; original deadline 18000 ms]\n4000 ms — Stop new v1 admission; the old HTTP operation stays on v1. [operation synthetic-operation-042; original deadline 18000 ms]\n12000 ms — The same v1 HTTP operation returns its completion envelope before retirement. [operation synthetic-operation-042; original deadline 18000 ms]\n12000 ms — Synthetic receipt validates operation identity and exactly 12 of 12 work units. [operation synthetic-operation-042; original deadline 18000 ms]",
+      "history": "Run 1 — drain / normal — COMPLETED; original elapsed 12000 ms / deadline 18000 ms; prediction PASS.",
+      "verification": "PASS — predicted COMPLETED; user result stays COMPLETED.",
+      "error": "",
+      "focusedId": ""
+    },
+    {
+      "name": "forced-http-stop-kept-separate-from-verifier-pass",
+      "userResult": "INTERRUPTED — synthetic user result for run 2.",
+      "metrics": "Operation\nsynthetic-operation-042\nOriginal start (ms)\n0\nOriginal absolute deadline (ms)\n18000\nOriginal elapsed / observation (ms)\n6000\nRetry-only duration (ms)\nnot a retry\nProved completed units / 12\nUNKNOWN\nProved durable checkpoint units\n0\nNative Azure result\nUNKNOWN",
+      "assertions": "PASS — HTTP requires 12000 ms; declared per-request host limit is 16000 ms.\nPASS — 8000 ms remains at cutover; declared drain window is 8000 ms.\nFAIL — An active request or worker was terminated. A later receipt cannot erase that interruption.\nUNKNOWN — No completed-operation receipt is available.\nUNKNOWN — 6000 ms elapsed from original start 0; deadline stays 18000 ms, including retries.",
+      "trace": "0 ms — Admitted synthetic-operation-042: 12 units; original deadline 18000 ms from start 0. [operation synthetic-operation-042; original deadline 18000 ms]\n4000 ms — Stop new v1 admission; the old HTTP operation stays on v1. [operation synthetic-operation-042; original deadline 18000 ms]\n6000 ms — Active old HTTP work terminates at the first forced, host or drain boundary. [operation synthetic-operation-042; original deadline 18000 ms]",
+      "history": "Run 1 — drain / normal — COMPLETED; original elapsed 12000 ms / deadline 18000 ms; prediction PASS.\nRun 2 — drain / forced-stop — INTERRUPTED; original elapsed 6000 ms / deadline 18000 ms; prediction PASS.",
+      "verification": "PASS — predicted INTERRUPTED; user result stays INTERRUPTED.",
+      "error": "",
+      "focusedId": ""
+    },
+    {
+      "name": "durable-continues-past-http-limit",
+      "userResult": "COMPLETED — synthetic user result for run 3.",
+      "metrics": "Operation\nsynthetic-operation-042\nOriginal start (ms)\n0\nOriginal absolute deadline (ms)\n18000\nOriginal elapsed / observation (ms)\n14000\nRetry-only duration (ms)\nnot a retry\nProved completed units / 12\n12\nProved durable checkpoint units\n4\nNative Azure result\nUNKNOWN",
+      "assertions": "PASS — Checkpoint and HTTP acceptance need 4000 ms; declared HTTP limit is 10000 ms.\nPASS — 4 units, operation ID and original deadline persist before retirement; HTTP drain is not used.\nPASS — No active work is discarded in this synthetic trace.\nPASS — Receipt proves the same operation ID and all 12 ordered work units.\nPASS — 14000 ms elapsed from original start 0; deadline stays 18000 ms, including retries.",
+      "trace": "0 ms — Admitted synthetic-operation-042: 12 units; original deadline 18000 ms from start 0. [operation synthetic-operation-042; original deadline 18000 ms]\n4000 ms — Persist 4 units and the original operation/deadline. HTTP 202 is acceptance, not completion. [operation synthetic-operation-042; original deadline 18000 ms]\n5000 ms — Retire the old HTTP host after durable acceptance; no active operation remains there. [operation synthetic-operation-042; original deadline 18000 ms]\n6000 ms — Successor resumes the same operation from unit 4; deadline remains 18000 ms. [operation synthetic-operation-042; original deadline 18000 ms]\n14000 ms — Successor completion envelope arrives after the remaining 8 units. [operation synthetic-operation-042; original deadline 18000 ms]\n14000 ms — Synthetic receipt validates operation identity and exactly 12 of 12 work units. [operation synthetic-operation-042; original deadline 18000 ms]",
+      "history": "Run 1 — drain / normal — COMPLETED; original elapsed 12000 ms / deadline 18000 ms; prediction PASS.\nRun 2 — drain / forced-stop — INTERRUPTED; original elapsed 6000 ms / deadline 18000 ms; prediction PASS.\nRun 3 — durable / normal — COMPLETED; original elapsed 14000 ms / deadline 18000 ms; prediction NOT CHECKED.",
+      "verification": "NOT CHECKED",
+      "error": "",
+      "focusedId": "runLesson"
+    },
+    {
+      "name": "retry-fails-original-budget-despite-fast-attempt",
+      "userResult": "INTERRUPTED — synthetic user result for run 4.",
+      "metrics": "Operation\nsynthetic-operation-042\nOriginal start (ms)\n0\nOriginal absolute deadline (ms)\n18000\nOriginal elapsed / observation (ms)\n22000\nRetry-only duration (ms)\n8000\nProved completed units / 12\n12\nProved durable checkpoint units\n4\nNative Azure result\nUNKNOWN",
+      "assertions": "PASS — Checkpoint and HTTP acceptance need 4000 ms; declared HTTP limit is 10000 ms.\nPASS — 4 units, operation ID and original deadline persist before retirement; HTTP drain is not used.\nPASS — No active work is discarded in this synthetic trace.\nPASS — Receipt proves the same operation ID and all 12 ordered work units.\nFAIL — 22000 ms elapsed from original start 0; deadline stays 18000 ms, including retries.",
+      "trace": "0 ms — Admitted synthetic-operation-042: 12 units; original deadline 18000 ms from start 0. [operation synthetic-operation-042; original deadline 18000 ms]\n4000 ms — Persist 4 units and the original operation/deadline. HTTP 202 is acceptance, not completion. [operation synthetic-operation-042; original deadline 18000 ms]\n5000 ms — Retire the old HTTP host after durable acceptance; no active operation remains there. [operation synthetic-operation-042; original deadline 18000 ms]\n14000 ms — Successor resumes the same operation from unit 4; deadline remains 18000 ms. [operation synthetic-operation-042; original deadline 18000 ms]\n18000 ms — Original user deadline expires before the observed completion/termination; retry clocks do not replace it. [operation synthetic-operation-042; original deadline 18000 ms]\n22000 ms — Successor completion envelope arrives after the remaining 8 units. [operation synthetic-operation-042; original deadline 18000 ms]\n22000 ms — Synthetic receipt validates operation identity and exactly 12 of 12 work units. [operation synthetic-operation-042; original deadline 18000 ms]",
+      "history": "Run 1 — drain / normal — COMPLETED; original elapsed 12000 ms / deadline 18000 ms; prediction PASS.\nRun 2 — drain / forced-stop — INTERRUPTED; original elapsed 6000 ms / deadline 18000 ms; prediction PASS.\nRun 3 — durable / normal — COMPLETED; original elapsed 14000 ms / deadline 18000 ms; prediction NOT CHECKED.\nRun 4 — durable / delayed-retry — INTERRUPTED; original elapsed 22000 ms / deadline 18000 ms; prediction FAIL.",
+      "verification": "FAIL — predicted COMPLETED; user result stays INTERRUPTED.",
+      "error": "",
+      "focusedId": ""
+    },
+    {
+      "name": "missing-proof-unknown-with-failures-retained",
+      "userResult": "UNKNOWN — synthetic user result for run 5.",
+      "metrics": "Operation\nsynthetic-operation-042\nOriginal start (ms)\n0\nOriginal absolute deadline (ms)\n18000\nOriginal elapsed / observation (ms)\n14000\nRetry-only duration (ms)\nnot a retry\nProved completed units / 12\nUNKNOWN\nProved durable checkpoint units\n4\nNative Azure result\nUNKNOWN",
+      "assertions": "PASS — Checkpoint and HTTP acceptance need 4000 ms; declared HTTP limit is 10000 ms.\nPASS — 4 units, operation ID and original deadline persist before retirement; HTTP drain is not used.\nPASS — No active work is discarded in this synthetic trace.\nUNKNOWN — Envelope timing is known, but result identity and work-unit proof are missing.\nPASS — 14000 ms elapsed from original start 0; deadline stays 18000 ms, including retries.",
+      "trace": "0 ms — Admitted synthetic-operation-042: 12 units; original deadline 18000 ms from start 0. [operation synthetic-operation-042; original deadline 18000 ms]\n4000 ms — Persist 4 units and the original operation/deadline. HTTP 202 is acceptance, not completion. [operation synthetic-operation-042; original deadline 18000 ms]\n5000 ms — Retire the old HTTP host after durable acceptance; no active operation remains there. [operation synthetic-operation-042; original deadline 18000 ms]\n6000 ms — Successor resumes the same operation from unit 4; deadline remains 18000 ms. [operation synthetic-operation-042; original deadline 18000 ms]\n14000 ms — Successor completion envelope arrives after the remaining 8 units. [operation synthetic-operation-042; original deadline 18000 ms]\n14000 ms — Envelope has no operation/result proof. Correct completion remains unknown. [operation synthetic-operation-042; original deadline 18000 ms]",
+      "history": "Run 1 — drain / normal — COMPLETED; original elapsed 12000 ms / deadline 18000 ms; prediction PASS.\nRun 2 — drain / forced-stop — INTERRUPTED; original elapsed 6000 ms / deadline 18000 ms; prediction PASS.\nRun 3 — durable / normal — COMPLETED; original elapsed 14000 ms / deadline 18000 ms; prediction NOT CHECKED.\nRun 4 — durable / delayed-retry — INTERRUPTED; original elapsed 22000 ms / deadline 18000 ms; prediction FAIL.\nRun 5 — durable / missing-proof — UNKNOWN; original elapsed 14000 ms / deadline 18000 ms; prediction NOT CHECKED.",
+      "verification": "NOT CHECKED",
+      "error": "",
+      "focusedId": "runLesson"
+    },
+    {
+      "name": "malformed-controls-fail-closed-with-history",
+      "userResult": "UNKNOWN — no valid current run. Earlier records, if any, remain below.",
+      "metrics": "",
+      "assertions": "",
+      "trace": "",
+      "history": "Run 1 — drain / normal — COMPLETED; original elapsed 12000 ms / deadline 18000 ms; prediction PASS.\nRun 2 — drain / forced-stop — INTERRUPTED; original elapsed 6000 ms / deadline 18000 ms; prediction PASS.\nRun 3 — durable / normal — COMPLETED; original elapsed 14000 ms / deadline 18000 ms; prediction NOT CHECKED.\nRun 4 — durable / delayed-retry — INTERRUPTED; original elapsed 22000 ms / deadline 18000 ms; prediction FAIL.\nRun 5 — durable / missing-proof — UNKNOWN; original elapsed 14000 ms / deadline 18000 ms; prediction NOT CHECKED.",
+      "verification": "NOT CHECKED",
+      "error": "Mode must be drain or durable.",
+      "focusedId": "mode"
+    },
+    {
+      "name": "same-short-http-limit-fails-drain",
+      "userResult": "INTERRUPTED — synthetic user result for run 6.",
+      "metrics": "Operation\nsynthetic-operation-042\nOriginal start (ms)\n0\nOriginal absolute deadline (ms)\n18000\nOriginal elapsed / observation (ms)\n10000\nRetry-only duration (ms)\nnot a retry\nProved completed units / 12\nUNKNOWN\nProved durable checkpoint units\n0\nNative Azure result\nUNKNOWN",
+      "assertions": "FAIL — HTTP requires 12000 ms; declared per-request host limit is 10000 ms.\nPASS — 8000 ms remains at cutover; declared drain window is 8000 ms.\nFAIL — An active request or worker was terminated. A later receipt cannot erase that interruption.\nUNKNOWN — No completed-operation receipt is available.\nUNKNOWN — 10000 ms elapsed from original start 0; deadline stays 18000 ms, including retries.",
+      "trace": "0 ms — Admitted synthetic-operation-042: 12 units; original deadline 18000 ms from start 0. [operation synthetic-operation-042; original deadline 18000 ms]\n4000 ms — Stop new v1 admission; the old HTTP operation stays on v1. [operation synthetic-operation-042; original deadline 18000 ms]\n10000 ms — Active old HTTP work terminates at the first forced, host or drain boundary. [operation synthetic-operation-042; original deadline 18000 ms]",
+      "history": "Run 1 — drain / normal — COMPLETED; original elapsed 12000 ms / deadline 18000 ms; prediction PASS.\nRun 2 — drain / forced-stop — INTERRUPTED; original elapsed 6000 ms / deadline 18000 ms; prediction PASS.\nRun 3 — durable / normal — COMPLETED; original elapsed 14000 ms / deadline 18000 ms; prediction NOT CHECKED.\nRun 4 — durable / delayed-retry — INTERRUPTED; original elapsed 22000 ms / deadline 18000 ms; prediction FAIL.\nRun 5 — durable / missing-proof — UNKNOWN; original elapsed 14000 ms / deadline 18000 ms; prediction NOT CHECKED.\nRun 6 — drain / normal — INTERRUPTED; original elapsed 10000 ms / deadline 18000 ms; prediction NOT CHECKED.",
+      "verification": "NOT CHECKED",
+      "error": "",
+      "focusedId": "runLesson"
+    },
+    {
+      "name": "seventh-run-rejected-without-pruning",
+      "userResult": "UNKNOWN — no valid current run. Earlier records, if any, remain below.",
+      "metrics": "",
+      "assertions": "",
+      "trace": "",
+      "history": "Run 1 — drain / normal — COMPLETED; original elapsed 12000 ms / deadline 18000 ms; prediction PASS.\nRun 2 — drain / forced-stop — INTERRUPTED; original elapsed 6000 ms / deadline 18000 ms; prediction PASS.\nRun 3 — durable / normal — COMPLETED; original elapsed 14000 ms / deadline 18000 ms; prediction NOT CHECKED.\nRun 4 — durable / delayed-retry — INTERRUPTED; original elapsed 22000 ms / deadline 18000 ms; prediction FAIL.\nRun 5 — durable / missing-proof — UNKNOWN; original elapsed 14000 ms / deadline 18000 ms; prediction NOT CHECKED.\nRun 6 — drain / normal — INTERRUPTED; original elapsed 10000 ms / deadline 18000 ms; prediction NOT CHECKED.",
+      "verification": "NOT CHECKED",
+      "error": "Six runs are retained. Reset explicitly before starting another run.",
+      "focusedId": "runLesson"
+    },
+    {
+      "name": "keyboard-reset-restores-exact-defaults-and-focus",
+      "userResult": "UNKNOWN — no valid current run. Earlier records, if any, remain below.",
+      "metrics": "",
+      "assertions": "",
+      "trace": "",
+      "history": "",
+      "verification": "NOT CHECKED",
+      "error": "",
+      "focusedId": "mode"
+    },
+    {
+      "name": "inclusive-handoff-and-user-budget-boundaries",
+      "userResult": "COMPLETED — synthetic user result for run 1.",
+      "metrics": "Operation\nsynthetic-operation-042\nOriginal start (ms)\n0\nOriginal absolute deadline (ms)\n14000\nOriginal elapsed / observation (ms)\n14000\nRetry-only duration (ms)\nnot a retry\nProved completed units / 12\n12\nProved durable checkpoint units\n4\nNative Azure result\nUNKNOWN",
+      "assertions": "PASS — Checkpoint and HTTP acceptance need 4000 ms; declared HTTP limit is 4000 ms.\nPASS — 4 units, operation ID and original deadline persist before retirement; HTTP drain is not used.\nPASS — No active work is discarded in this synthetic trace.\nPASS — Receipt proves the same operation ID and all 12 ordered work units.\nPASS — 14000 ms elapsed from original start 0; deadline stays 14000 ms, including retries.",
+      "trace": "0 ms — Admitted synthetic-operation-042: 12 units; original deadline 14000 ms from start 0. [operation synthetic-operation-042; original deadline 14000 ms]\n4000 ms — Persist 4 units and the original operation/deadline. HTTP 202 is acceptance, not completion. [operation synthetic-operation-042; original deadline 14000 ms]\n5000 ms — Retire the old HTTP host after durable acceptance; no active operation remains there. [operation synthetic-operation-042; original deadline 14000 ms]\n6000 ms — Successor resumes the same operation from unit 4; deadline remains 14000 ms. [operation synthetic-operation-042; original deadline 14000 ms]\n14000 ms — Successor completion envelope arrives after the remaining 8 units. [operation synthetic-operation-042; original deadline 14000 ms]\n14000 ms — Synthetic receipt validates operation identity and exactly 12 of 12 work units. [operation synthetic-operation-042; original deadline 14000 ms]",
+      "history": "Run 1 — durable / normal — COMPLETED; original elapsed 14000 ms / deadline 14000 ms; prediction NOT CHECKED.",
+      "verification": "NOT CHECKED",
+      "error": "",
+      "focusedId": "runLesson"
+    },
+    {
+      "name": "known-late-result-outranks-unknown-proof",
+      "userResult": "INTERRUPTED — synthetic user result for run 3.",
+      "metrics": "Operation\nsynthetic-operation-042\nOriginal start (ms)\n0\nOriginal absolute deadline (ms)\n13999\nOriginal elapsed / observation (ms)\n14000\nRetry-only duration (ms)\nnot a retry\nProved completed units / 12\nUNKNOWN\nProved durable checkpoint units\n4\nNative Azure result\nUNKNOWN",
+      "assertions": "PASS — Checkpoint and HTTP acceptance need 4000 ms; declared HTTP limit is 4000 ms.\nPASS — 4 units, operation ID and original deadline persist before retirement; HTTP drain is not used.\nPASS — No active work is discarded in this synthetic trace.\nUNKNOWN — Envelope timing is known, but result identity and work-unit proof are missing.\nFAIL — 14000 ms elapsed from original start 0; deadline stays 13999 ms, including retries.",
+      "trace": "0 ms — Admitted synthetic-operation-042: 12 units; original deadline 13999 ms from start 0. [operation synthetic-operation-042; original deadline 13999 ms]\n4000 ms — Persist 4 units and the original operation/deadline. HTTP 202 is acceptance, not completion. [operation synthetic-operation-042; original deadline 13999 ms]\n5000 ms — Retire the old HTTP host after durable acceptance; no active operation remains there. [operation synthetic-operation-042; original deadline 13999 ms]\n6000 ms — Successor resumes the same operation from unit 4; deadline remains 13999 ms. [operation synthetic-operation-042; original deadline 13999 ms]\n13999 ms — Original user deadline expires before the observed completion/termination; retry clocks do not replace it. [operation synthetic-operation-042; original deadline 13999 ms]\n14000 ms — Successor completion envelope arrives after the remaining 8 units. [operation synthetic-operation-042; original deadline 13999 ms]\n14000 ms — Envelope has no operation/result proof. Correct completion remains unknown. [operation synthetic-operation-042; original deadline 13999 ms]",
+      "history": "Run 1 — durable / normal — COMPLETED; original elapsed 14000 ms / deadline 14000 ms; prediction NOT CHECKED.\nRun 2 — durable / normal — INTERRUPTED; original elapsed 14000 ms / deadline 13999 ms; prediction NOT CHECKED.\nRun 3 — durable / missing-proof — INTERRUPTED; original elapsed 14000 ms / deadline 13999 ms; prediction NOT CHECKED.",
+      "verification": "NOT CHECKED",
+      "error": "",
+      "focusedId": "runLesson"
+    },
+    {
+      "name": "forced-successor-stop-not-saved-by-checkpoint",
+      "userResult": "INTERRUPTED — synthetic user result for run 4.",
+      "metrics": "Operation\nsynthetic-operation-042\nOriginal start (ms)\n0\nOriginal absolute deadline (ms)\n18000\nOriginal elapsed / observation (ms)\n8000\nRetry-only duration (ms)\nnot a retry\nProved completed units / 12\nUNKNOWN\nProved durable checkpoint units\n4\nNative Azure result\nUNKNOWN",
+      "assertions": "PASS — Checkpoint and HTTP acceptance need 4000 ms; declared HTTP limit is 4000 ms.\nPASS — 4 units, operation ID and original deadline persist before retirement; HTTP drain is not used.\nFAIL — An active request or worker was terminated. A later receipt cannot erase that interruption.\nUNKNOWN — No completed-operation receipt is available.\nUNKNOWN — 8000 ms elapsed from original start 0; deadline stays 18000 ms, including retries.",
+      "trace": "0 ms — Admitted synthetic-operation-042: 12 units; original deadline 18000 ms from start 0. [operation synthetic-operation-042; original deadline 18000 ms]\n4000 ms — Persist 4 units and the original operation/deadline. HTTP 202 is acceptance, not completion. [operation synthetic-operation-042; original deadline 18000 ms]\n5000 ms — Retire the old HTTP host after durable acceptance; no active operation remains there. [operation synthetic-operation-042; original deadline 18000 ms]\n6000 ms — Successor resumes the same operation from unit 4; deadline remains 18000 ms. [operation synthetic-operation-042; original deadline 18000 ms]\n8000 ms — Force-stop the active successor. Only 4 checkpointed units remain proved; no further recovery is demonstrated. [operation synthetic-operation-042; original deadline 18000 ms]",
+      "history": "Run 1 — durable / normal — COMPLETED; original elapsed 14000 ms / deadline 14000 ms; prediction NOT CHECKED.\nRun 2 — durable / normal — INTERRUPTED; original elapsed 14000 ms / deadline 13999 ms; prediction NOT CHECKED.\nRun 3 — durable / missing-proof — INTERRUPTED; original elapsed 14000 ms / deadline 13999 ms; prediction NOT CHECKED.\nRun 4 — durable / forced-stop — INTERRUPTED; original elapsed 8000 ms / deadline 18000 ms; prediction NOT CHECKED.",
+      "verification": "NOT CHECKED",
+      "error": "",
+      "focusedId": "runLesson"
+    },
+    {
+      "name": "actual-csp-and-narrow-layout",
+      "violations": [
+        {
+          "directive": "script-src-elem",
+          "blockedURI": "inline"
+        },
+        {
+          "directive": "connect-src",
+          "blockedURI": "http://127.0.0.1:65420/s042-csp"
+        },
+        {
+          "directive": "form-action",
+          "blockedURI": "http://127.0.0.1:65420/s042-form"
+        }
+      ],
+      "inlineExecuted": false,
+      "fetchBlocked": true,
+      "networkRoutes": [],
+      "pageErrors": [],
+      "width": 320
+    }
+  ],
+  "awaitedFinallyClose": true,
+  "nativeAzureResult": "unknown",
+  "lifecycleQualification": "Feature evidence only; published helper known unattended lifecycle limitation is unchanged."
+}
