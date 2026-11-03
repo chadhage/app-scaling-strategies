@@ -29,6 +29,7 @@
     CATALOG_ALIAS: "catalog-production",
     SESSION_CONTRACT: "shared-v1"
   });
+  const SOURCE_INSTANCE_IDS = Object.freeze(["staging-1", "staging-2"]);
   const LIMITS = Object.freeze([
     "In-flight requests can be interrupted when former production workers recycle; retained slots are not retained workers.",
     "Long-lived connections (including WebSockets) and background work are not protected by a custom drain in a native swap.",
@@ -40,8 +41,16 @@
     "No native Azure observation, B-S002 proof, completed D-S002 parent, or reliability certification is provided."
   ]);
 
+  function isRecord(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+  }
+
   function runLesson(input = {}) {
-    const validObject = input !== null && typeof input === "object" && !Array.isArray(input);
+    const validObject = isRecord(input);
+    const inputValidation = {
+      isObject: validObject,
+      knownKeysOnly: validObject && Object.keys(input).every((key) => Object.hasOwn(DEFAULTS, key))
+    };
     const selection = { ...DEFAULTS };
     if (validObject) {
       for (const key of Object.keys(DEFAULTS)) {
@@ -52,6 +61,7 @@
       mode: "synthetic",
       state: "blocked",
       selection,
+      inputValidation,
       source: "staging",
       target: selection.target,
       effectiveSettings: {},
@@ -90,7 +100,7 @@
     }
 
     record("fixture", "Synthetic v1 production, v2 staging; two source instances; compatible shared state and overlap headroom are assumed, not measured.");
-    if (!validObject || Object.keys(input).some((key) => !Object.hasOwn(DEFAULTS, key)) ||
+    if (!inputValidation.isObject || !inputValidation.knownKeysOnly ||
         Object.entries(OPTIONS).some(([key, values]) => !values.includes(selection[key]))) {
       reject("invalid-selection", "Unrecognized selection: fail closed rather than invent platform support.");
     }
@@ -116,10 +126,10 @@
     result.effectiveSettings = { ...TARGET_SETTINGS };
     record("apply-target-settings", "Apply modeled production slot-specific APP_ENV=production, CATALOG_ALIAS=catalog-production, SESSION_CONTRACT=shared-v1 to staging v2.");
     record("restart-source", "Modeled source-instance restart after target settings are applied. Production v1 remains the serving target during preparation.");
-    for (let index = 0; index < 2; index += 1) {
+    for (const [index, id] of SOURCE_INSTANCE_IDS.entries()) {
       const ready = selection.readiness === "ready" || (selection.readiness === "unready" && index === 0);
       const instance = {
-        id: `staging-${index + 1}`,
+        id,
         status: ready ? 200 : selection.readiness === "misleading-500" ? 500 : 503,
         dependenciesReady: ready,
         journeyReady: ready,
@@ -156,7 +166,7 @@
     function check(id, ok, expected) {
       checks.push({ id, ok: Boolean(ok), expected });
     }
-    if (!result || typeof result !== "object") {
+    if (!isRecord(result)) {
       check("evidence-present", false, "A complete structured rehearsal result is required.");
       return { passed: false, scope: "educational-only", checks };
     }
@@ -164,6 +174,19 @@
     const trace = Array.isArray(result.trace) ? result.trace : [];
     const phases = trace.map((event) => event?.phase);
     const instances = Array.isArray(result.warmup?.instances) ? result.warmup.instances : [];
+    const completeInstances = instances.length === SOURCE_INSTANCE_IDS.length &&
+      SOURCE_INSTANCE_IDS.every((id) => instances.some((instance) =>
+        isRecord(instance) && instance.id === id && Number.isInteger(instance.status) &&
+        typeof instance.dependenciesReady === "boolean" && typeof instance.journeyReady === "boolean" &&
+        instance.configuration === "production"));
+    const inputValidation = result.inputValidation;
+    const validInputFlags = isRecord(inputValidation) &&
+      typeof inputValidation.isObject === "boolean" && typeof inputValidation.knownKeysOnly === "boolean" &&
+      (inputValidation.isObject || !inputValidation.knownKeysOnly);
+    const validSelectionShape = isRecord(result.selection) &&
+      Object.keys(selection).length === Object.keys(DEFAULTS).length &&
+      Object.keys(DEFAULTS).every((key) => Object.hasOwn(selection, key));
+    const validOptions = Object.entries(OPTIONS).every(([key, values]) => values.includes(selection[key]));
     const workers = result.formerWorkers || {};
     const workKeys = ["request", "connection", "backgroundJob"];
     check("synthetic-boundary",
@@ -181,18 +204,23 @@
     check("limits-preserved",
       Array.isArray(result.limits) && LIMITS.every((limit) => result.limits.includes(limit)),
       "Keep in-flight work, long-work, configuration, capacity, and evidence limitations visible.");
+    check("input-validation",
+      validInputFlags && validSelectionShape &&
+      (result.state !== "rehearsed" || (inputValidation.isObject && inputValidation.knownKeysOnly && validOptions)),
+      "Redacted input-shape flags explain rejected input; only valid selections can reach routing.");
 
     if (result.state === "blocked") {
       const codes = Array.isArray(result.reasons) ? result.reasons.map((reason) => reason?.code) : [];
       const hasJustifiedBlocker =
-        (codes.includes("invalid-selection") && Object.entries(OPTIONS).some(([key, values]) => !values.includes(selection[key]))) ||
+        (codes.includes("invalid-selection") && validInputFlags &&
+          (!inputValidation.isObject || !inputValidation.knownKeysOnly || !validOptions)) ||
         (codes.includes("unsupported-profile") && ["linux-code-auto", "container-auto"].includes(selection.profile)) ||
         (codes.includes("target") && selection.target !== "production") ||
         (codes.includes("target-settings") && selection.configuration === "source-only") ||
         (codes.includes("compatibility") && selection.configuration === "incompatible") ||
         (codes.includes("warmup-status") && selection.statusPolicy === "any-response") ||
         (codes.includes("readiness") && ["unready", "misleading-500"].includes(selection.readiness) &&
-          instances.length === 2 && instances.some((instance) =>
+          completeInstances && instances.some((instance) =>
             instance.status !== 200 || !instance.dependenciesReady || !instance.journeyReady));
       check("explicit-rejection", codes.length > 0 && hasJustifiedBlocker && phases.includes("blocked"),
         "Unsafe input or failed readiness has a concrete blocker.");
@@ -213,11 +241,12 @@
         "Supported manual code fixture; staging uses effective production settings and production is the target.");
       check("strict-readiness",
         selection.readiness === "ready" && selection.statusPolicy === "strict-200" &&
-        result.warmup?.path === "/readyz" && result.warmup.acceptedStatuses?.length === 1 &&
-        result.warmup.acceptedStatuses[0] === 200 && instances.length === 2 &&
+        result.warmup?.path === "/readyz" && Array.isArray(result.warmup.acceptedStatuses) &&
+        result.warmup.acceptedStatuses.length === 1 &&
+        result.warmup.acceptedStatuses[0] === 200 && completeInstances &&
         instances.every((instance) => instance.status === 200 && instance.dependenciesReady === true &&
           instance.journeyReady === true && instance.configuration === "production"),
-        "Both source instances pass meaningful /readyz and explicitly accepted HTTP 200.");
+        "Distinct staging-1 and staging-2 records pass meaningful /readyz and explicitly accepted HTTP 200.");
       const apply = phases.indexOf("apply-target-settings");
       const restart = phases.indexOf("restart-source");
       const firstWarmup = phases.indexOf("warmup-instance");

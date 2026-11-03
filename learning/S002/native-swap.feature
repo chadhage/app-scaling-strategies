@@ -67,10 +67,41 @@ Feature: A-S002 rehearses a prepared native slot swap without native-platform pr
     And actual request limits, maximum job duration, and real native timing remain unmeasured
     And no step adds compute or calls Azure
 
+  Scenario Outline: Corrupted readiness evidence cannot pass as a complete pool
+    Given a structured synthetic result with two named staging instances
+    And <corruption> is introduced into its readiness evidence
+    When the independent verifier checks the result
+    Then it returns an educational failure without throwing
+    And two records for one worker never establish readiness of both workers
+
+    Examples:
+      | corruption                                 |
+      | the second record duplicates staging-1     |
+      | a record has an unknown or missing identity |
+      | a record is null or not an instance object |
+      | the instance list contains an empty entry |
+      | a readiness field has an invalid type     |
+
+  Scenario: Invalid input remains an explainable negative teaching result
+    Given a non-object input or an unexpected input field
+    When the model rejects it before target preparation
+    Then production admissions remain v1 with no worker observation
+    And only redacted input-shape flags accompany the normalized selection
+    And the independent verifier can confirm that invalid-input rejection
+    And a fabricated invalid-selection reason with valid input cannot pass
+
+  Scenario: Changing conditions invalidates a previous educational check
+    Given a checked synthetic result
+    When I change a condition
+    Then the old result is visibly stale
+    And the checklist is cleared and disabled until I run again
+
   Scenario: Keyboard operation and reset have bounded local cleanup
     Given the file-browser lesson has visible labels, headings, limits, and a live status
     When I select conditions and activate the run and verifier buttons with the keyboard
     Then the resulting DOM distinguishes verifier, user impact, and cleanup
     When I reset the exercise
     Then only local selections, trace, checklist, and result state are cleared
+    And verification is disabled and keyboard focus returns to the profile control
+    And reset works after safe, blocked, invalid, and interrupted selections
     And no cloud cleanup is needed because no resources were created
