@@ -1,0 +1,25 @@
+## Acceptance and evidence
+
+### Definition of an interruption
+
+A recommended measurement unit is one declared user journey crossing a deployment or capacity transition. An interruption includes:
+
+- A user-visible error, timeout, or broken required connection.
+- Completion latency beyond the agreed journey budget.
+- Unexpected logout, lost session/form state, or broken navigation/assets.
+- Missing or duplicate business effects.
+- Data freshness, ordering, or consistency outside the declared contract.
+
+Retries or reconnects count as seamless only when correctness, state, and UX remain intact within the original journey budget. Unlimited retries or success-shaped fallbacks must not conceal failures.
+
+### Outcome classification
+
+| Outcome | Reporting treatment |
+| --- | --- |
+| Uninterrupted successful transition | Actual intended migration is evidenced and the complete journey passes all acceptance criteria. |
+| Safe abort before exposure | Existing production remains usable, but no completed user migration is claimed; report deployment aborts separately. |
+| Interrupted transition | Count the affected attempted journey as a failure, including failures preceding rollback. |
+| Unverified or unsupported result | Report missing evidence or platform limits explicitly; do not count the result as successful. |
+
+Users remaining entirely on the old deployment do not establish successful migration merely because their requests succeeded. Conversely, failed or uncertain started transitions must not be removed from the denominator.
+

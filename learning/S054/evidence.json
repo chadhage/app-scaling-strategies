@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S054",
+  "sourceId": "S054",
+  "parentId": "D-S054",
+  "kano": "S",
+  "kanoUnit": "A-S054",
+  "packet": "SC-S054",
+  "owner": "worker-A-S054",
+  "mode": "synthetic",
+  "configuration": "Four fixed read-only records; old legacyLabel and new modernLabel bridge readers; independent old consumers and old work; faithful/corrupt-first data; complete/partial/absent observations.",
+  "host": "Local file in existing isolated signed Microsoft Edge 156.0.4314.50; offline Playwright 1.56.1; Node.js 22.23.4 test tooling.",
+  "sourceContract": "evidence/source-contract.json",
+  "bdd": "expand-migrate-contract.feature",
+  "qualifiedRed": {
+    "reference": "evidence/red-002/run.json",
+    "tests": 26,
+    "passed": 1,
+    "failed": 25,
+    "assertionFailures": 25,
+    "missingCodeOrTools": false,
+    "snapshots": "Exact binary .snapshot files; not auto-discovered tests.",
+    "rawStreams": "Exact stdout/stderr bytes retained in gzip containers."
+  },
+  "earlierDiagnostic": {
+    "reference": "evidence/red/run.json",
+    "assertionFailures": 24,
+    "testPreconditionTypeErrors": 1,
+    "qualifiedRed": false,
+    "resolution": "Corrected the test precondition before the qualified RED; no model behavior was implemented between runs."
+  },
+  "iac": {
+    "status": "N/A",
+    "reference": "evidence/iac-decision.json",
+    "afterQualifiedRedBeforeImplementation": true
+  },
+  "focusedRuns": [
+    { "reference": "evidence/verification/green-001/run.json", "leafTests": 30, "passed": 30 },
+    { "reference": "evidence/verification/browser-001/run.json", "leafTests": 1, "passed": 1 },
+    { "reference": "evidence/verification/syntax-001/run.json", "syntaxChecks": 8, "exitCode": 0 },
+    { "reference": "evidence/verification/integrity-001/run.json", "leafTests": 9, "passed": 9 }
+  ],
+  "normalReadOnlyVerification": {
+    "result": "PASS",
+    "completedAtUtc": "2026-11-03T19:11:59.155Z",
+    "leafTests": 40,
+    "includesActualBrowserRerun": true,
+    "browserCaptureEnabled": false,
+    "savedProofBeforeSha256": "ca84e597db91d0f2d3aa0e0000d3d9ec9b68f54b61746edafe511851d6506e90",
+    "savedProofAfterSha256": "ca84e597db91d0f2d3aa0e0000d3d9ec9b68f54b61746edafe511851d6506e90",
+    "savedProofChanged": false,
+    "command": "node --test learning\\S054\\tests\\model.test.cjs learning\\S054\\tests\\surface.test.cjs learning\\S054\\tests\\integrity.test.cjs learning\\S054\\tests\\browser.test.cjs"
+  },
+  "verifierResult": "PASS for the bounded portable model only",
+  "userImpactResults": {
+    "additiveOverlap": "Eight observed old/new record reads pass without removing legacyLabel.",
+    "earlyContraction": "FAIL/BLOCKED, SAFE_ABORT; old structure retained; no completed migration claimed.",
+    "independentDependencies": "Old consumers block contraction; upgrading them does not finish old work; old work alone also blocks.",
+    "permittedContraction": "PASS/ALLOWED only after ordered verified migration and both dependency types disappear; four surviving new-reader reads pass.",
+    "corruptMigration": "Seven reads pass and one new-reader read fails; synthetic impact INTERRUPTED, retained after later blocked actions.",
+    "partialFaithful": "Two observed passes and six unknown reads; UNKNOWN/BLOCKED, never success.",
+    "absentCorrupt": "Zero observed reads, zero observed failures, eight unknown; no inference from the configured fixture.",
+    "partialCorrupt": "One observed pass, one observed failure, six unknown; known interruption dominates uncertainty."
+  },
+  "browserEvidence": {
+    "reference": "evidence/browser-001.json",
+    "deliberatelyCaptured": true,
+    "observations": 16,
+    "keyboard": "Actual Tab, Enter, Space, visible 3px focus and retained-trace disclosure checks passed.",
+    "guards": "Actual DOM input/lifecycle, locked controls, six-attempt and twelve-event checks passed without mutation.",
+    "reset": "Actual reset from failed/full history and active expanded overlap restored exact defaults, errors, focus and empty measurements.",
+    "csp": "Inline execution and outbound fetch blocked by enforced script/connect directives; no exercise network traffic or page errors.",
+    "smallViewport": "320px; no page-level horizontal overflow.",
+    "cleanup": "Awaited session.close() in finally; zero servers or foreground leases."
+  },
+  "integrity": {
+    "reference": "evidence/source-integrity.json",
+    "activeSourceFiles": 14,
+    "textPolicy": "Canonical LF Git-source hashes; published blobs rechecked after publication.",
+    "rawPolicy": "Original CRLF source excerpts, RED snapshots and raw stream containers remain binary and byte-identical."
+  },
+  "publication": {
+    "method": ".git\\kanban-orchestrator\\publish.ps1",
+    "scope": "learning\\S054",
+    "evidenceLabel": "[A-S054][S]",
+    "implementationCommit": "Authoritative hash and annotated kanban/A-S054/<12sha> marker are in the publisher receipt and state Report; do not confuse the source baseline with implementation.",
+    "receipt": ".git\\kanban-orchestrator\\published\\A-S054.json"
+  },
+  "reviewer": null,
+  "acceptedAtUtc": null,
+  "acceptance": "Parent-owned empirical review pending. Worker does not Accept or award Done credit.",
+  "limits": [
+    "No real database, SQL, migration, transaction, lock, concurrent-write or native Azure proof.",
+    "No source-parent completion, production Node.js 24 certification, availability or unattended lifecycle certification.",
+    "No cloud, IaC, scaffold, identity, registration, deploy, spend, package, framework, root or shared source changes.",
+    "Synthetic data only; B-S054 and D-S054 remain unfulfilled.",
+    "One frozen S unit; tests, evidence, tooling and refinement earn no additional units."
+  ]
+}

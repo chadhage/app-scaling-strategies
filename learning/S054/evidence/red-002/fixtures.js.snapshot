@@ -1,0 +1,14 @@
+(function (root, factory) {
+  'use strict';
+  const fixtures = factory();
+  if (typeof module === 'object' && module.exports) module.exports = fixtures;
+  else root.S054Fixtures = fixtures;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  return Object.freeze([
+    Object.freeze({ id: 'record-1', label: 'Synthetic amber' }),
+    Object.freeze({ id: 'record-2', label: 'Synthetic birch' }),
+    Object.freeze({ id: 'record-3', label: 'Synthetic cedar' }),
+    Object.freeze({ id: 'record-4', label: 'Synthetic dune' }),
+  ]);
+}));
