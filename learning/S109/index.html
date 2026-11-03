@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S109 — Outbound connection pressure rehearsal</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="lesson.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p>A-S109 · S109 / D-S109 · SC-S109 · one original Kano S unit</p>
+    <h1>Outbound connection pressure</h1>
+    <p>Raise fictional instance and connection demand, compare direct connections with pooling,
+      then inspect authored capacity and journey budgets. Missing native SNAT evidence stays unverified.</p>
+  </header>
+  <main>
+    <section aria-labelledby="how-heading">
+      <h2 id="how-heading">One bounded rehearsal</h2>
+      <p><strong>All connection, port, capacity, latency and SNAT fields are fixed fictional DATA ONLY.</strong>
+        Buttons read a small data table; they open no sockets and create no connection load.</p>
+      <p>Baseline reference: one fictional instance, twelve direct connections. The raised fixture has
+        four instances and demand of ninety-six. Pooling changes its modeled connections to twenty-four.</p>
+      <ol>
+        <li>Choose a fixed fixture and connection strategy; rehearse the authored demand.</li>
+        <li>Inspect the fixed observation. A requested action is not an observed success.</li>
+        <li>Compare model-port headroom with journey failures and the 150 ms p95 budget.</li>
+        <li>Try direct, pooled, budget-failure and missing-observation cases; retain at most six attempts.</li>
+      </ol>
+    </section>
+    <section id="controls" aria-labelledby="controls-heading" tabindex="-1">
+      <h2 id="controls-heading">Operator actions</h2>
+      <p id="boot-error" role="alert">Lesson unavailable until its local scripts load. Controls are disabled;
+        keep the complete bundle together and reload. No result has been verified.</p>
+      <form id="rehearsal-form" novalidate>
+        <label for="level">Fixed fictional fixture</label>
+        <select id="level" name="level" aria-describedby="scope" disabled>
+          <option value="baseline">1 instance — baseline demand 12</option>
+          <option value="raised">4 instances — raised demand 96</option>
+          <option value="ceiling">6 instances — journey-budget failure, demand 180</option>
+          <option value="missing">4 instances — missing observations, demand 96</option>
+        </select>
+        <label for="strategy">Fictional connection management</label>
+        <select id="strategy" name="strategy" disabled>
+          <option value="direct">Direct — one modeled connection per demand unit</option>
+          <option value="pooled">Pooled — authored reuse fixture, not a real pool</option>
+        </select>
+        <div class="actions">
+          <button id="rehearse" type="submit" disabled>Rehearse demand</button>
+          <button id="inspect" type="button" disabled>Inspect fixed observation</button>
+          <button id="reset-lesson" type="button" disabled>Reset lesson and history</button>
+        </div>
+        <p id="error" role="alert" hidden></p>
+      </form>
+    </section>
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Observed fictional results</h2>
+      <p id="status" role="status" aria-live="polite" data-result="unknown">No observations yet.</p>
+      <p id="counters">Attempts: 0 / 6; positive: 0; negative: 0; unknown: 0; pending: 0.</p>
+      <p id="summary">Baseline reference: 1 instance; 12 direct connections.</p>
+      <p id="metrics">Model ports, capacity and journey outcomes have not been inspected.</p>
+      <p id="capacity-result">Model-port capacity gate: unknown.</p>
+      <p id="journey-result">Journey gate: unknown. Budget: zero failures; p95 at most 150 ms.</p>
+      <p id="synthetic-snat">Fictional SNAT data: not inspected; never native evidence.</p>
+      <p id="native-snat"><strong>Native Azure SNAT: unverified.</strong> No native Azure SNAT evidence supplied.
+        App counts, model ports and fictional SNAT data are not proof.</p>
+      <p>A positive synthetic verifier means only that this authored fixture meets its model-port and
+        journey budgets. A negative fixture still records its interrupted fictional journeys.
+        Neither verdict certifies native network capacity.</p>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained trace</h2>
+      <p>Every pending and inspected event remains until explicit reset or reload.
+        Pending and unknown attempts never count as positive.</p>
+      <ol id="history" aria-label="Retained rehearsal events"></ol>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Preconditions and honest limits</h2>
+      <p id="scope">Open this complete bundle directly in a JavaScript-capable browser. Data and history are
+        in-memory, deterministic and bounded. No server, real load, resources, network changes, credentials,
+        identity, management calls, deployment, cloud spend, framework or IaC are used.</p>
+      <p>S109 requires sufficient outbound connectivity as instance and connection counts grow.
+        Original D-S109 acceptance requires native network capacity evidence and journey budgets;
+        unavailable SNAT signals remain unverified rather than inferred from app counts.</p>
+      <p>This lesson does not satisfy that native acceptance. B-S109 still requires CORE, DATA, HOST and C090;
+        D-S109 retains prerequisite P006. The source parent and native sibling remain incomplete.</p>
+      <p>Local Node 22, offline Playwright 1.56.1 and installed signed Edge 156 validate this lesson only,
+        not production Node 24, native Azure, five-nines availability or shared helper lifecycle recovery.
+        Tests, repairs, proof and refinement add no Kano credits.</p>
+    </section>
+  </main>
+</body>
+</html>
