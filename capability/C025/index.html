@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C025 — exact ranged-download resume</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/download.js" defer></script>
+  <script src="/page.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#conductor">Skip to conductor</a>
+  <main>
+    <header>
+      <p class="eyebrow">C025 · H005 · S · one local capability</p>
+      <h1>Resume the exact original bytes</h1>
+      <p>Synthetic C020 lineage · Real loopback HTTP Range · In-memory assembly only</p>
+      <p id="runtime">Checking local tooling and bounded listener…</p>
+      <p>No real files or credentials. No Azure Blob, native, durable, cloud or Node.js 24 certification.</p>
+    </header>
+
+    <section id="conductor" tabindex="-1" aria-labelledby="conduct-title">
+      <h2 id="conduct-title">1. Pin an immutable original</h2>
+      <form id="pin-form">
+        <div class="grid">
+          <label for="profile">Synthetic profile</label>
+          <select id="profile" disabled aria-describedby="target-help"></select>
+          <label for="version">Requested fixture version</label>
+          <select id="version" disabled aria-describedby="target-help"></select>
+        </div>
+        <p id="target-help">Pin once. Changing the request target does not change the pinned identity or ETag. Reset explicitly to choose a different original.</p>
+        <p id="target">No target loaded.</p>
+        <button id="pin" type="submit" disabled>Pin original manifest</button>
+      </form>
+
+      <h2>2. Fetch, pause and resume</h2>
+      <p>Every action below performs actual GET Range requests. Pausing means keeping the accepted bytes in this page without requesting more.</p>
+      <label for="range">HTTP Range header</label>
+      <input id="range" type="text" value="bytes=0-1023" maxlength="100" spellcheck="false" disabled aria-describedby="range-help">
+      <p id="range-help">Single inclusive ranges only: bytes=0-1023, bytes=1024-, bytes=-256. Invalid and unsatisfiable requests are sent to the real server and rejected visibly.</p>
+      <div class="actions">
+        <button id="fetch-range" type="button" disabled>Fetch selected range</button>
+        <button id="resume" type="button" disabled>Resume next range</button>
+        <button id="finish" type="button" disabled>Resume to completion</button>
+        <button id="reset" type="button" disabled>Reset assembly</button>
+      </div>
+      <p>Resume uses the first missing byte, 1024-byte chunks and the pinned <code>If-Range</code>. No automatic retry or replacement on version change.</p>
+    </section>
+
+    <section aria-labelledby="inspection-title">
+      <h2 id="inspection-title">3. Inspect real accepted bytes</h2>
+      <p id="status" role="status" aria-live="polite" aria-atomic="true">NOT STARTED — no bytes or hash verified.</p>
+      <p id="error" role="alert"></p>
+      <dl>
+        <dt>Pinned artifact</dt><dd id="identity">none</dd>
+        <dt>Pinned ETag</dt><dd id="etag">none</dd>
+        <dt>Accepted bytes</dt><dd id="accepted">0 / unknown</dd>
+        <dt>Inclusive accepted ranges</dt><dd id="ranges">none</dd>
+        <dt>Next missing byte cursor</dt><dd id="cursor">unknown — pin an original first</dd>
+        <dt>Original SHA-256</dt><dd id="original-hash">unknown</dd>
+        <dt>Real assembled SHA-256</dt><dd id="assembly-hash">not computed</dd>
+        <dt>Retained failed/unknown attempts</dt><dd id="failures">0</dd>
+      </dl>
+      <details>
+        <summary>Pinned immutable manifest and unchanged C020 lineage</summary>
+        <pre id="manifest" tabindex="0" role="region" aria-label="Pinned original manifest details">null</pre>
+      </details>
+      <details open>
+        <summary>Actual response intervals, cursors, failures and hash outcome</summary>
+        <pre id="observations" tabindex="0" role="region" aria-label="Actual response and assembly details">No observations.</pre>
+      </details>
+    </section>
+    <footer>
+      <p>Only complete coverage and a newly computed SHA-256 matching the original prove exact bytes. Complete coverage alone is not success. Earlier failures remain visible even after recovery.</p>
+      <p>Explicit Reset discards all in-memory bytes, identity, hashes and attempt history. Reload is not durable resume. The owned 127.0.0.1 listener expires within ten minutes by default (hard limit fifteen minutes).</p>
+    </footer>
+  </main>
+</body>
+</html>

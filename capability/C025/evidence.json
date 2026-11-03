@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "label": "[C025][S]",
+  "cardId": "C025",
+  "workerId": "worker-C025",
+  "parentId": "H005",
+  "kano": "S",
+  "kanoUnit": "C025",
+  "acceptance": "Deliver a ranged-download fixture; verify resumed bytes reproduce the original artifact.",
+  "entry": {
+    "cardId": "C020",
+    "stateAtClaim": "Done",
+    "acceptedCommit": "2dc471daab3ffa202d83aba2df443e280cad3656",
+    "reuse": "Import the unchanged contract.js and profiles.cjs providers; embed actual responses and observable lineage, not copies of provider code.",
+    "verification": "evidence\\provider-integrity.json"
+  },
+  "sequence": [
+    {
+      "stage": "BDD",
+      "status": "written before stub and behavioral RED",
+      "path": "C025.feature"
+    },
+    {
+      "stage": "loadable-stub",
+      "status": "verified",
+      "record": "evidence\\stub-load.json",
+      "retainedStub": "evidence\\red\\artifact.stub.cjs.txt",
+      "retainedTests": "evidence\\red\\artifact.initial.snapshot.cjs.txt"
+    },
+    {
+      "stage": "TDD-RED",
+      "exitCode": 1,
+      "tests": 3,
+      "passed": 0,
+      "failed": 3,
+      "failureKind": "Three genuine behavioral AssertionErrors after successful module load: missing bounded original bytes/hash, wrong range/cursor bounds, and absent invalid-input rejection.",
+      "record": "evidence\\tdd-red.json",
+      "rawStdout": "evidence\\tdd-red.stdout.gz"
+    },
+    {
+      "stage": "IaC",
+      "status": "N/A, recorded after RED and before implementation",
+      "record": "evidence\\iac-na.json"
+    },
+    {
+      "stage": "minimal-implementation",
+      "status": "implemented",
+      "behavior": "Four immutable 8192-byte binary originals derived from unchanged C020 providers; actual loopback GET/HEAD, single HTTP Range and strong validators; fail-closed in-memory byte assembler; small accessible conductor page.",
+      "firstFocusedGreen": {
+        "record": "evidence\\focused-first-green.json",
+        "tests": 114,
+        "passed": 114
+      },
+      "surfaceGreen": {
+        "record": "evidence\\focused-surface-green.json",
+        "tests": 117,
+        "passed": 117
+      }
+    },
+    {
+      "stage": "first-browser-driver-correction",
+      "record": "evidence\\browser-first-run.json",
+      "status": "Initial native-select picker focus assumption failed after one passing check; exact browser/server cleanup passed. The driver was corrected to focus the native select before real Tab, without application/helper/network bypass."
+    },
+    {
+      "stage": "refinement-RED",
+      "record": "evidence\\refinement-red.json",
+      "exitCode": 1,
+      "tests": 120,
+      "passed": 117,
+      "failed": 3,
+      "failureKind": "Three genuine AssertionErrors: final hash mismatch/unknown could be hidden by attempt-budget bookkeeping, and explicit null lifetime silently selected the default.",
+      "retainedSources": [
+        "evidence\\red\\download.refinement.js.txt",
+        "evidence\\red\\server.refinement.cjs.txt",
+        "evidence\\red\\download.refinement.snapshot.cjs.txt",
+        "evidence\\red\\http.refinement.snapshot.cjs.txt"
+      ]
+    },
+    {
+      "stage": "minimal-refactor",
+      "status": "complete",
+      "changes": [
+        "Complete hashing within the same HTTP attempt record, retaining the actual accepted interval/new bytes and explicit HASH_MISMATCH or HASH_UNKNOWN even at the budget boundary.",
+        "Validate exact own lifetime data fields; reject null/accessor/unknown options rather than silently defaulting.",
+        "Keyboard-focusable skip target and scrollable inspection regions."
+      ],
+      "record": "evidence\\focused-refactor-green.json",
+      "tests": 120,
+      "passed": 120
+    },
+    {
+      "stage": "RED-reproduction",
+      "status": "reproduced from retained exact .txt sources in isolated Node processes, with no working-source replacement or auto-discovered RED test",
+      "initial": {
+        "record": "evidence\\red-reproduction.json",
+        "exitCode": 1,
+        "tests": 3,
+        "passed": 0,
+        "failed": 3
+      },
+      "refinement": {
+        "record": "evidence\\refinement-red-reproduction.json",
+        "exitCode": 1,
+        "tests": 78,
+        "passed": 75,
+        "failed": 3
+      }
+    },
+    {
+      "stage": "focused-final-GREEN",
+      "record": "evidence\\focused-final-green.json",
+      "exitCode": 0,
+      "tests": 120,
+      "passed": 120,
+      "failed": 0,
+      "runtime": "v22.23.4",
+      "coverage": "Real whole binary HTTP bytes and independent SHA-256; interrupted/out-of-order/duplicate/overlap resume; normalized ranges and first-gap cursors; suffix/open/clamped/single-byte ranges; 400/404/405/412/416, unknown inputs, host/origin/body/query bounds, HEAD and strong validators; no mixed profile/version; corrupt or unavailable final hashing; retained failures; actual expiry and exact handle cleanup."
+    },
+    {
+      "stage": "syntax",
+      "record": "evidence\\syntax-final.json",
+      "exitCode": 0,
+      "checkedScripts": 13
+    },
+    {
+      "stage": "actual-browser",
+      "record": "evidence\\browser-acceptance.json",
+      "execution": "evidence\\browser-final-execution.json",
+      "outcome": "passed",
+      "checks": 15,
+      "engine": "sandboxed isolated headless Microsoft Edge (Chromium)",
+      "browserVersion": "156.0.4314.50",
+      "observed": "Actual DOM and real skip/Tab/Enter, pending-control locks, partial/pause/resume intervals/cursors, real 400/416 and 200 version-replacement rejection, retained failure recovery, independent whole original byte/hash comparison, keyboard reset/focus, second profile/version, unknown-profile manifest failure, deliberately unavailable hashing without fake success, and actual CSP inline-script blocking.",
+      "helperPublishedCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+      "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+      "transport": "Unchanged openIsolatedLoopback(relativeEntry, actualOwnedHttpServer): guarded real route.fetch GET/HEAD, same origin, no redirects. Not mocked business responses or native Chromium TCP qualification.",
+      "lifetimeMs": 180000,
+      "cleanup": "Await session.close, then exact owned server.close in nested finally; both observed closed.",
+      "capture": "CAPTURE_BROWSER_EVIDENCE=1 was set only for deliberate acceptance capture and removed afterward."
+    },
+    {
+      "stage": "normal-readonly-verification",
+      "record": "evidence\\readonly-verification.json",
+      "outcome": "passed",
+      "tests": 120,
+      "browserChecks": 15,
+      "syntaxScripts": 13,
+      "existingProofFilesChecked": 48,
+      "allExistingProofBytesUnchanged": true
+    },
+    {
+      "stage": "original-and-integrity-proof",
+      "originals": "evidence\\original-artifacts.json",
+      "unchangedDependencies": "evidence\\provider-integrity.json",
+      "ownedFileHashes": "evidence\\integrity.json",
+      "verificationCommand": "node .\\tests\\integrity.cjs"
+    }
+  ],
+  "scope": {
+    "syntheticOnly": true,
+    "realUserFilesOrCredentials": false,
+    "bindAddress": "127.0.0.1",
+    "defaultLifetimeMs": 600000,
+    "hardMaximumLifetimeMs": 900000,
+    "durableStorage": false,
+    "nativeTargetQualified": false,
+    "productionNode24Validated": false,
+    "cloudOrAzureBlobQualified": false,
+    "liveAzureRuns": 0,
+    "authorizedCloudSpend": 0,
+    "iacScaffoldIdentityOrDeployment": false,
+    "providerOrSharedEdits": false,
+    "dependenciesInstalled": false
+  },
+  "todoRefinement": {
+    "C025RemainingLocalAcceptanceItems": [],
+    "C025Readiness": "Verified local implementation and evidence; publisher permission ready. Publication and parent empirical acceptance are distinct gates.",
+    "prunedFromThisMission": [
+      "No duplicate provider, framework, dependency installation or shared helper work.",
+      "No native Azure Blob, durable restart/browser-reload resume, auth/identity or Node.js 24 certification.",
+      "No other protocol cards, additional Kano units or H005 parent completion."
+    ],
+    "uncompletedParentScope": "H005's broader n-tier/auth/database/cache/queue/worker/native assertions remain outside this one local satisfier.",
+    "acceptanceOwner": "Parent/controller alone, once."
+  }
+}

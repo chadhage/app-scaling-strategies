@@ -1,0 +1,201 @@
+'use strict';
+
+const fs = require('node:fs');
+const http = require('node:http');
+const path = require('node:path');
+const { getArtifact, parseRange, FixtureError, BYTE_LENGTH } = require('./artifact.cjs');
+const contract = require(path.join(__dirname, '..', 'C020', 'contract.js'));
+const { guardOperation } = require(path.join(__dirname, '..', 'C001', 'contract-guard.js'));
+
+const MAX_LIFETIME_MS = 15 * 60 * 1000;
+const DEFAULT_LIFETIME_MS = 10 * 60 * 1000;
+const assets = Object.freeze({
+  '/': ['index.html', 'text/html; charset=utf-8'],
+  '/download.js': ['download.js', 'text/javascript; charset=utf-8'],
+  '/page.js': ['page.js', 'text/javascript; charset=utf-8'],
+  '/styles.css': ['styles.css', 'text/css; charset=utf-8']
+});
+const CSP = "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; object-src 'none'";
+
+function strongCondition(value, wildcard = false) {
+  return typeof value === 'string' && ((wildcard && value === '*') || /^"[\x21\x23-\x7e]{1,90}"$/.test(value));
+}
+
+function makeServer(lease) {
+  const server = http.createServer({ maxHeaderSize: 4096 }, (request, response) => {
+    const common = {
+      'Cache-Control': 'no-store', 'Content-Security-Policy': CSP,
+      'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
+      'Cross-Origin-Resource-Policy': 'same-origin', 'X-C025-Scope': 'synthetic-loopback-only'
+    };
+    function send(status, value, type = 'application/json; charset=utf-8', extra = {}) {
+      const body = Buffer.isBuffer(value) ? value : Buffer.from(JSON.stringify(value));
+      response.writeHead(status, { ...common, 'Content-Type': type, 'Content-Length': body.length, ...extra });
+      response.end(request.method === 'HEAD' ? undefined : body);
+    }
+    function fail(status, code, message, extra) {
+      send(status, { error: { code, message }, dataKind: 'synthetic', localOnly: true }, undefined, extra);
+    }
+    try {
+      const host = `127.0.0.1:${server.address().port}`;
+      const origin = `http://${host}`;
+      if (request.socket.remoteAddress !== '127.0.0.1' || request.headers.host !== host) {
+        return fail(421, 'LOCAL_HOST_REQUIRED', 'Only the actual 127.0.0.1 listener is supported.');
+      }
+      if ((request.headers.origin && request.headers.origin !== origin) ||
+          request.headers['sec-fetch-site'] === 'cross-site') {
+        return fail(403, 'CROSS_ORIGIN_DENIED', 'Only this fixture origin may conduct a download.');
+      }
+      if (!['GET', 'HEAD'].includes(request.method)) {
+        return fail(405, 'METHOD_NOT_ALLOWED', 'Only read-only GET and HEAD are supported.', { Allow: 'GET, HEAD' });
+      }
+      if (request.headers['transfer-encoding'] || Number(request.headers['content-length'] || 0) !== 0) {
+        return fail(400, 'UNEXPECTED_BODY', 'Read-only fixture requests accept no body.');
+      }
+      if (!request.url || request.url.length > 1024) return fail(414, 'URL_TOO_LONG', 'The bounded fixture URL is too long.');
+      if (!request.url.startsWith('/') || request.url.startsWith('//') || request.url.includes('\\')) {
+        return fail(400, 'INVALID_URL', 'An origin-relative fixture URL is required.');
+      }
+      const url = new URL(request.url, origin);
+      if (url.origin !== origin || url.hash) return fail(400, 'INVALID_URL', 'Only a local URL without a fragment is accepted.');
+      if (url.pathname === '/api/manifest' || url.pathname === '/artifact') {
+        const keys = [...url.searchParams.keys()].sort();
+        if (keys.length !== 2 || keys[0] !== 'profileId' || keys[1] !== 'version') {
+          return fail(400, 'INVALID_QUERY', 'Exactly one profileId and one version are required; overrides are forbidden.');
+        }
+        const artifact = getArtifact({ profileId: url.searchParams.get('profileId'), version: url.searchParams.get('version') });
+        if (url.pathname === '/api/manifest') return send(200, artifact.manifest);
+        const { manifest, bytes } = artifact;
+        const headers = {
+          'Accept-Ranges': 'bytes', ETag: manifest.etag,
+          'X-C025-Artifact-Id': manifest.artifactId,
+          'X-C025-Artifact-Version': manifest.artifactVersion,
+          'X-C020-Deployment-Stamp': manifest.lineage.stamp.deploymentStamp
+        };
+        const ifMatch = request.headers['if-match'];
+        const ifRange = request.headers['if-range'];
+        if ((ifMatch !== undefined && !strongCondition(ifMatch, true)) ||
+            (ifRange !== undefined && !strongCondition(ifRange))) {
+          return fail(400, 'INVALID_VALIDATOR', 'Only a single strong ETag is supported (If-Match also accepts *).');
+        }
+        if (ifMatch !== undefined && ifMatch !== '*' && ifMatch !== manifest.etag) {
+          return fail(412, 'PRECONDITION_FAILED', 'If-Match does not identify this immutable artifact.', headers);
+        }
+        // If-Range mismatch ignores Range per HTTP semantics; the client must not append this 200 body.
+        if (request.method === 'HEAD' || request.headers.range === undefined ||
+            (ifRange !== undefined && ifRange !== manifest.etag)) {
+          return send(200, bytes, 'application/octet-stream', headers);
+        }
+        let range;
+        try {
+          range = parseRange(request.headers.range, bytes.length);
+        } catch (error) {
+          if (error.status === 416) {
+            return fail(416, error.code, error.message, { ...headers, 'Content-Range': `bytes */${bytes.length}` });
+          }
+          throw error;
+        }
+        return send(206, bytes.subarray(range.start, range.end + 1), 'application/octet-stream', {
+          ...headers, 'Content-Range': `bytes ${range.start}-${range.end}/${bytes.length}`
+        });
+      }
+      if (url.pathname === '/api/catalog') {
+        if (url.search) return fail(400, 'INVALID_QUERY', 'The catalog accepts no parameters.');
+        return send(200, {
+          cardId: 'C025', dataKind: 'synthetic', localOnly: true, transport: '127.0.0.1 HTTP',
+          nativeTargetQualified: false, productionRuntimeValidated: false,
+          durableStorage: false, liveAzureRuns: 0, authorizedCloudSpend: 0,
+          testRuntime: process.version, lease,
+          profiles: contract.profiles.map(({ id, displayName }) => ({ id, displayName })),
+          versions: ['r1', 'r2'], byteLength: BYTE_LENGTH
+        });
+      }
+      if (Object.hasOwn(assets, url.pathname)) {
+        if (url.search) return fail(400, 'INVALID_QUERY', 'Page assets accept no parameters.');
+        const [file, type] = assets[url.pathname];
+        return send(200, fs.readFileSync(path.join(__dirname, file)), type);
+      }
+      return fail(404, 'NOT_FOUND', 'No owned fixture asset or endpoint exists at this path.');
+    } catch (error) {
+      if (error instanceof FixtureError) return fail(error.status, error.code, error.message);
+      return fail(500, 'FIXTURE_UNAVAILABLE', 'No successful observation was made.');
+    }
+  });
+  server.requestTimeout = 5000;
+  server.headersTimeout = 5000;
+  server.keepAliveTimeout = 500;
+  server.maxHeadersCount = 40;
+  server.maxRequestsPerSocket = 64;
+  Object.defineProperty(server, 'c025Lease', { value: lease });
+  return server;
+}
+
+async function startLocal(options = {}) {
+  let fields;
+  try {
+    fields = Object.getOwnPropertyDescriptors(options);
+    if (Object.getPrototypeOf(options) !== Object.prototype ||
+        Reflect.ownKeys(fields).some((key) => key !== 'lifetimeMs') ||
+        (fields.lifetimeMs && (!fields.lifetimeMs.enumerable || !Object.hasOwn(fields.lifetimeMs, 'value')))) {
+      throw new TypeError();
+    }
+  } catch {
+    throw new Error('Only a bounded lifetimeMs option is accepted; host, port and approval overrides are forbidden.');
+  }
+  const lifetimeMs = fields.lifetimeMs ? fields.lifetimeMs.value : DEFAULT_LIFETIME_MS;
+  if (!Number.isSafeInteger(lifetimeMs) || lifetimeMs < 1 || lifetimeMs > MAX_LIFETIME_MS) {
+    throw new Error('lifetimeMs must be a positive integer at most 900000 (15 minutes).');
+  }
+  const file = path.join(__dirname, '..', '..', '.docs', 'wiki', 'flow-state.json');
+  let approval;
+  try { approval = JSON.parse(fs.readFileSync(file, 'utf8')).approvals?.C001; }
+  catch { throw new Error('Current C001 local consent is unavailable; no listener was started.'); }
+  const permission = await guardOperation('local.probe', approval);
+  if (!permission.allowed) throw new Error('Current C001 local consent denies this listener.');
+  const lease = Object.freeze({
+    lifetimeMs, expiresAtUtc: new Date(Date.now() + lifetimeMs).toISOString(),
+    bindAddress: '127.0.0.1', cleanup: 'exact owned http.Server; forced connection close at expiry'
+  });
+  const server = makeServer(lease);
+  const timer = setTimeout(() => {
+    server.closeAllConnections();
+    server.close();
+  }, lifetimeMs);
+  timer.unref();
+  server.once('close', () => clearTimeout(timer));
+  try {
+    await new Promise((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(0, '127.0.0.1', () => { server.removeListener('error', reject); resolve(); });
+    });
+  } catch (error) {
+    clearTimeout(timer);
+    server.close();
+    throw error;
+  }
+  return server;
+}
+
+if (require.main === module) {
+  if (process.argv.length !== 2) {
+    console.error('C025 accepts no CLI overrides. Its loopback listener expires after ten minutes.');
+    process.exitCode = 1;
+  } else {
+    startLocal().then((server) => {
+      console.log(JSON.stringify({
+        label: '[C025][S]', origin: `http://127.0.0.1:${server.address().port}`,
+        lease: server.c025Lease, dataKind: 'synthetic', testRuntime: process.version,
+        nativeTargetQualified: false, productionRuntimeValidated: false
+      }));
+      const close = () => { server.closeAllConnections(); server.close(); };
+      process.once('SIGINT', close);
+      process.once('SIGTERM', close);
+      server.once('close', () => {
+        process.removeListener('SIGINT', close);
+        process.removeListener('SIGTERM', close);
+      });
+    }).catch((error) => { console.error(error.message); process.exitCode = 1; });
+  }
+}
+
+module.exports = Object.freeze({ startLocal, MAX_LIFETIME_MS, DEFAULT_LIFETIME_MS, CSP });

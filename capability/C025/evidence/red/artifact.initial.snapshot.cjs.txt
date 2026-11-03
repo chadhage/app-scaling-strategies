@@ -1,0 +1,26 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
+const test = require('node:test');
+const { getArtifact, parseRange } = require('../artifact.cjs');
+
+test('immutable synthetic artifact is bounded, deterministic and really hashed', () => {
+  const first = getArtifact({ profileId: 'synthetic-001', version: 'r1' });
+  const second = getArtifact({ profileId: 'synthetic-001', version: 'r1' });
+  assert.equal(first.manifest.byteLength, 8192, 'The fixture must supply bounded original bytes, not a NOT_IMPLEMENTED label.');
+  assert.deepEqual(first.bytes, second.bytes);
+  assert.equal(first.bytes.length, first.manifest.byteLength);
+  assert.equal(createHash('sha256').update(first.bytes).digest('hex'), first.manifest.sha256);
+  assert.equal(first.manifest.etag, `"sha256-${first.manifest.sha256}"`);
+});
+
+test('a range resumes at the first byte after the accepted inclusive interval', () => {
+  assert.deepEqual(parseRange('bytes=0-1023', 8192), { start: 0, end: 1023, length: 1024 });
+  assert.deepEqual(parseRange('bytes=1024-', 8192), { start: 1024, end: 8191, length: 7168 });
+});
+
+test('invalid and unsatisfiable ranges reject instead of silently serving success', () => {
+  assert.throws(() => parseRange('bytes=9-1', 8192), { code: 'INVALID_RANGE' });
+  assert.throws(() => parseRange('bytes=8192-', 8192), { code: 'RANGE_UNSATISFIABLE', status: 416 });
+});
