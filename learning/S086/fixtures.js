@@ -1,0 +1,17 @@
+'use strict';
+
+(function expose(root) {
+  const fixtures = Object.freeze({
+    candidate: 'green-v2',
+    original: 'blue-v1',
+    lifetimeTicks: 2,
+    minimumDelay: 2,
+    maximumDelay: 5,
+    historyLimit: 6,
+    maxTraceEvents: 7,
+    health: Object.freeze(['healthy', 'unhealthy', 'missing']),
+    outcomes: Object.freeze(['SUCCESS', 'FAILURE', 'UNKNOWN']),
+  });
+  if (typeof module !== 'undefined' && module.exports) module.exports = fixtures;
+  else root.ReadinessFixtures = fixtures;
+}(typeof globalThis === 'undefined' ? this : globalThis));

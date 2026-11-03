@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; child-src 'none'; worker-src 'none'">
+  <title>S086 — Expired readiness is not approval</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#lesson">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Expired readiness is not approval</h1>
+    <p>S086 · A-S086 · D-S086 · SC-S086 · one frozen S unit · native sibling B-S086 remains incomplete</p>
+    <p>Expire readiness before promotion; force revalidation instead of trusting an old green snapshot.</p>
+  </header>
+  <main id="lesson" tabindex="-1">
+    <section aria-labelledby="instructions">
+      <h2 id="instructions">Worked exercise</h2>
+      <p>Preconditions: JavaScript enabled, fixed synthetic blue-v1 source and green-v2 candidate.
+        The initial healthy snapshot is from tick 0. An observation is fresh only at age <strong>less than 2 ticks</strong>.
+        At age 2 it expires. These invented ticks are not a real clock or Azure health threshold.</p>
+      <ol>
+        <li>Choose the next observation and elapsed ticks, then start.</li>
+        <li>Advance the clock to expire the original green. Attempt promotion: FAILURE safely blocks it.</li>
+        <li>Revalidate, then attempt promotion again. Healthy → SUCCESS, unhealthy → FAILURE, missing → UNKNOWN.</li>
+        <li>Alternatively, advance again after revalidation, before promotion: even refreshed green expires.</li>
+        <li>Predict the latest outcome and retain the whole attempt. New attempt keeps history; reset erases it.</li>
+      </ol>
+      <p>One revalidation, at most two advances, three promotion decisions and seven trace events per attempt.
+        At most six checked attempts; none is silently evicted.</p>
+    </section>
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Operator controls</h2>
+      <p id="error" role="alert" tabindex="-1" hidden></p>
+      <form id="lesson-controls" novalidate>
+        <fieldset id="configuration">
+          <legend>Fixed synthetic fixture (locked after Start)</legend>
+          <label for="health">Next revalidation observation</label>
+          <select id="health" name="health">
+            <option value="healthy">Healthy — fresh positive sample</option>
+            <option value="unhealthy">Unhealthy — fresh negative sample</option>
+            <option value="missing">Missing — no sample returned</option>
+          </select>
+          <label for="delay-ticks">Ticks per advance (integer 2–5)</label>
+          <input id="delay-ticks" name="delayTicks" type="number" min="2" max="5" step="1" value="2" required aria-describedby="delay-help">
+          <p id="delay-help">Each advance expires any known observation. No sleeps, randomness or wall-clock input.</p>
+        </fieldset>
+        <button id="start" type="submit">Start attempt</button>
+      </form>
+      <div class="actions">
+        <button id="advance" type="button" disabled>Advance synthetic clock</button>
+        <button id="promote" type="button" disabled>Attempt promotion</button>
+        <button id="revalidate" type="button" disabled>Revalidate now</button>
+      </div>
+      <p id="lesson-status" role="status" aria-live="polite">Ready to start.</p>
+      <noscript>This exercise requires JavaScript. No result has been observed.</noscript>
+    </section>
+    <section aria-labelledby="snapshot-heading">
+      <h2 id="snapshot-heading">Inspect the evidence</h2>
+      <dl class="facts">
+        <div><dt>Synthetic clock</dt><dd id="clock">Not started</dd></div>
+        <div><dt>Original green snapshot (retained, not authoritative)</dt><dd id="original-evidence">Not started</dd></div>
+        <div><dt>Latest revalidation / observation</dt><dd id="latest-evidence">Not started</dd></div>
+        <div><dt>Latest observation age / freshness</dt><dd id="evidence-age">Not started</dd></div>
+        <div><dt>Synthetic routing only</dt><dd id="route">blue-v1 100% / green-v2 0%</dd></div>
+      </dl>
+      <p id="promotion-result">Promotion outcome: not attempted.</p>
+      <p id="verifier-result">Verifier: not run.</p>
+      <p id="user-impact">Actual user-transition outcome: UNVERIFIED — no live user journeys.</p>
+      <p id="cleanup-result">Cleanup: N/A — no resources.</p>
+      <p>SUCCESS means only that the latest healthy observation was fresh at this synthetic promotion.
+        A safe FAILURE or UNKNOWN never exposes the candidate. A verifier PASS is not a successful user migration.</p>
+      <h3>Every promotion decision in this attempt</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Promotion decisions, horizontally scrollable">
+        <table>
+          <thead><tr><th scope="col">Outcome</th><th scope="col">Tick</th><th scope="col">Observation</th><th scope="col">Age</th><th scope="col">Reason / action</th><th scope="col">Synthetic route</th></tr></thead>
+          <tbody id="decisions"></tbody>
+        </table>
+      </div>
+      <h3>Deterministic trace</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Trace, horizontally scrollable">
+        <table>
+          <thead><tr><th scope="col">Step</th><th scope="col">Tick</th><th scope="col">Action</th><th scope="col">Evidence / gate</th></tr></thead>
+          <tbody id="trace"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="check-heading">
+      <h2 id="check-heading">Check and retain</h2>
+      <form id="prediction-form" novalidate>
+        <label for="prediction">Predict the latest promotion outcome</label>
+        <select id="prediction" name="prediction" disabled>
+          <option value="">Choose an outcome</option>
+          <option value="SUCCESS">SUCCESS — fresh healthy promotion</option>
+          <option value="FAILURE">FAILURE — known stale or unhealthy, blocked</option>
+          <option value="UNKNOWN">UNKNOWN — missing observation, blocked</option>
+        </select>
+        <button id="check" type="submit" disabled>Check prediction and retain</button>
+      </form>
+      <p id="learning-result" role="status" aria-live="polite">No learning check yet.</p>
+      <div class="actions">
+        <button id="new-attempt" type="button" disabled>New attempt (keep history)</button>
+        <button id="reset-lesson" type="button">Reset all local data</button>
+      </div>
+      <p id="history-full" hidden>Six attempts retained. Reset explicitly to clear them before starting another.</p>
+      <h3>Retained history — no eviction</h3>
+      <p id="totals">Retained attempts: 0; correct predictions: 0; decisions: 0; SUCCESS: 0; FAILURE: 0; UNKNOWN: 0.</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Retained attempts, horizontally scrollable">
+        <table>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Fixture / delay</th><th scope="col">All decisions</th><th scope="col">Latest outcome</th><th scope="col">Prediction / learning check</th></tr></thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+      <div id="history-details"></div>
+      <p>Complete observations, decisions and traces remain in memory across New attempt.
+        Explicit reset or reload clears everything. This is not durable controller storage.</p>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Scope and limits</h2>
+      <p>No actual readiness, health, time, promotion, routing or availability certification. No native Azure result,
+        source-parent completion, production Node.js 24 validation or five-nines claim.
+        B-S086 and D-S086 remain incomplete; parent-owned empirical acceptance is separate.</p>
+      <p>No cloud, IaC, scaffold, identity, credentials, deployment, expenditure, downloads, packages or frameworks.
+        No external calls, storage or real users. History and counts describe synthetic decisions only.
+        Repeated tests and refinement earn no additional Kano credit.</p>
+      <p><a href="README.md">Lesson contract, evidence and verification</a> ·
+        <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft Open Source Disclaimer</a></p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,81 @@
+Feature: Expired readiness cannot authorize synthetic promotion
+  A-S086 is one frozen S unit in SC-S086, parent D-S086.
+  Training rehearsal - synthetic data - not a live Azure result
+  The two-tick lifetime is an invented exercise bound, not an Azure threshold.
+
+  Background:
+    Given the fixed synthetic green-v2 candidate has a healthy observation at tick 0
+    And an observation is fresh only when its age is less than 2 synthetic ticks
+    And blue-v1 holds all synthetic routing before promotion
+
+  Scenario: An old green snapshot is safely rejected
+    When the operator advances the configured 2 to 5 ticks
+    And attempts promotion without revalidation
+    Then the promotion outcome is FAILURE because the snapshot expired
+    And candidate routing remains 0 percent
+    And the stale healthy snapshot and blocked decision remain in the trace
+
+  Scenario: Fresh positive revalidation permits promotion
+    Given the old green snapshot has expired
+    When the operator revalidates with the healthy fixture
+    And attempts promotion at the same synthetic tick
+    Then the promotion outcome is SUCCESS with observation age 0
+    And only synthetic candidate routing becomes 100 percent
+    And actual user-transition outcome remains unverified
+
+  Scenario: Fresh negative revalidation does not inherit old green
+    Given the old green snapshot has expired
+    When the operator revalidates with the unhealthy fixture
+    And attempts promotion
+    Then the promotion outcome is FAILURE
+    And candidate routing remains 0 percent
+    And the original healthy observation cannot override the latest observation
+
+  Scenario: Missing revalidation cannot silently reuse the old snapshot
+    Given the old green snapshot has expired
+    When the operator revalidates with the missing fixture
+    And attempts promotion
+    Then the promotion outcome is UNKNOWN and is not SUCCESS
+    And candidate routing remains 0 percent
+    And no observation timestamp or health is invented
+
+  Scenario: Revalidation is not a permanent approval
+    Given the operator has freshly revalidated the expired snapshot as healthy
+    When the operator advances the configured ticks again before promotion
+    And attempts promotion
+    Then the refreshed observation is expired and the outcome is FAILURE
+    And revalidation is required again outside this bounded attempt
+
+  Scenario: The exact lifetime boundary is closed
+    When observation age is 1 tick
+    Then a healthy observation is fresh
+    When observation age is exactly 2 ticks
+    Then promotion is blocked as expired
+
+  Scenario: Results and predictions have separate denominators
+    Given a stale promotion was blocked and fresh revalidation later permitted promotion
+    When the operator checks a SUCCESS prediction
+    Then the learning prediction is correct
+    And both the failed and successful promotion decisions are retained
+    And the historical failed decision is not rewritten as a success
+    And a correct prediction of FAILURE is not a successful promotion
+
+  Scenario: State and input guards reject without mutation
+    When an input has an extra field, inherited value, accessor, unknown enum, or noninteger delay
+    Or an action is repeated, out of order, or uses a changed observation without another decision
+    Then the operation is rejected atomically
+    And returned snapshots cannot mutate the model
+
+  Scenario: A bounded keyboard-operated lesson retains history until explicit reset
+    Given six attempts have been checked
+    Then a seventh attempt cannot start and none is evicted
+    And controls, errors, focus, history, and results are usable with Tab, Enter, and Space
+    When the operator resets all local data
+    Then inputs, clock, observations, predictions, errors, history, and counts return to defaults
+    And reset does not shadow the native form reset method
+
+  Scenario: Verification stays local and does not rewrite proof
+    Then the browser enforces local-only scripts and styles and blocks inline scripts, connections, frames, workers, and form submissions
+    And ordinary test runs do not overwrite evidence
+    And the published isolated browser helper is closed in an awaited finally
+    And no native readiness, health, time, promotion, source-parent, or production Node24 certification is claimed

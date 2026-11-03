@@ -1,0 +1,57 @@
+{
+  "cardId": "A-S086",
+  "parentId": "D-S086",
+  "nativeSiblingId": "B-S086",
+  "packet": "SC-S086",
+  "kano": "S",
+  "baseline": "f4d24227bd053ac30a80a833b197c8d7613d48e6",
+  "capturedAtUtc": "2026-11-03T20:57:32.050Z",
+  "qualification": "Working CRLF bytes preserved separately from canonical Git LF; only exact authoritative slices are compared across concurrent unrelated source updates.",
+  "observations": [
+    {
+      "path": "README.md",
+      "baseline": "f4d24227bd053ac30a80a833b197c8d7613d48e6",
+      "workingSnapshot": "evidence/raw/source/1-working.gz",
+      "gitSnapshot": "evidence/raw/source/1-git.gz",
+      "workingSHA256": "826c1e3b1f1f8866f05d45f3d6b9eca5c06e901a2b67737774ad18aa1607e4d1",
+      "gitSHA256": "852a82420f3b17a41c6aa56ae32fc1ba37829181654bcd6fa32fd00e88310519",
+      "workingCRLF": 584,
+      "canonicalGitLF": true,
+      "exactSlices": {
+        "S086": "| S086 | **Expired readiness evidence:** Revalidate health before promotion when readiness information becomes stale. |"
+      }
+    },
+    {
+      "path": ".docs/wiki/backlog.md",
+      "baseline": "f4d24227bd053ac30a80a833b197c8d7613d48e6",
+      "workingSnapshot": "evidence/raw/source/2-working.gz",
+      "gitSnapshot": "evidence/raw/source/2-git.gz",
+      "workingSHA256": "40b4d8e2ab4774f47de029f97dd8ff4e267d9412292c3c47f72726b002831418",
+      "gitSHA256": "9a414030b4ef63b5d90a0f6d89e1cbc30b0300bf194ad87b9e7e3d2912b59a65",
+      "workingCRLF": 483,
+      "canonicalGitLF": true,
+      "exactSlices": {
+        "D_S086": "| D-S086 | P0 | Add **Expire readiness evidence before promotion**. | Stale observations trigger revalidation or safe rejection; promotion cannot reuse an invalid health snapshot. | D-S021 |",
+        "completion": "## Completion and evidence policy\n\nThe source goal is:\n\n```text\nUninterrupted-transition success =\n    uninterrupted successful transition journeys\n    / all attempted transition journeys\n\nTarget >= 0.99999\n```\n\nThe UI must count errors, timeouts, over-budget latency, unexpected logout/state loss, missing/duplicate effects, and violated data contracts as interruptions. Unknown started outcomes cannot be excluded or presented as successful. Empty samples and users never moved to the candidate provide no migration proof.\n\nFor zero failures in independent comparable Bernoulli trials:\n\n```text\np_upper = 1 - 0.05^(1/n)\nn >= ceil(ln(0.05) / ln(1 - 0.00001)) = 299572\n```\n\nThe 299,572-trial figure is an illustrative one-sided 95% confidence bound, not a universal proof threshold. Correlated users within a swap, repeated requests from one user, changed operating envelopes, and outage emulation require explicit analysis and qualification.\n\nSuccessful educational execution of a negative test does not satisfy the uninterrupted-transition goal. Keep verification verdicts, actual user impact, and cleanup status independently visible.\n\nThis backlog inherits the [Microsoft Open Source Disclaimer](../../README.md#microsoft-open-source-disclaimer). It does not assign a license, imply Microsoft endorsement/support, or turn the five-nines target into a Microsoft service-level agreement."
+      }
+    },
+    {
+      "path": ".docs/wiki/kanban.md",
+      "baseline": "f4d24227bd053ac30a80a833b197c8d7613d48e6",
+      "workingSnapshot": "evidence/raw/source/3-working.gz",
+      "gitSnapshot": "evidence/raw/source/3-git.gz",
+      "workingSHA256": "39f76efcfc2ed14722a0db0f37fdb2f427e572fc5f996133d6b9763c0287f269",
+      "gitSHA256": "52369e82505c39a5c054decfcd9c7c3951735fc3a11e8fdd53f3f29a607592cf",
+      "workingCRLF": 740,
+      "canonicalGitLF": true,
+      "exactSlices": {
+        "A_S086": "| A-S086 | D-S086 | S | Expire readiness before promotion; force revalidation instead of trusting an old green snapshot. | SOURCE |",
+        "B_S086": "| B-S086 | D-S086 | S | Conduct one expired-readiness promotion attempt; verify safe gating and fresh evidence requirements. | CORE, DATA, HOST |",
+        "sourceGate": "| SOURCE | The supplied backlog and portable lesson contract; available now. |",
+        "atomic": "## Atomic card contract\n\nEvery listed row is one card, one accountable owner/pair, one independently reviewable changeset, and one observable acceptance result. Normal publication is a scoped, labeled commit with an annotated tag on `main`; temporary recovery branches and reviewer-assisted PRs are used only when safe integration requires them.\n\nImplementation order is BDD specification, genuine behavioral TDD red, the IaC step (or an explicit N/A for a resource-free lesson), implementation/refactoring, green tests and actual browser checks, scoped tagged publication, and parent-owned empirical acceptance. A worker cannot award its own Done credit. Subdivision preserves the original `kanoUnit`; partial work does not manufacture extra value.\n\n- **Size target:** A cards take 1-2 focused hours; C, B, and X cards target 2-4 focused hours after entry gates are satisfied. These are slicing limits, not delivery estimates.\n- **Refine before admission:** If a card needs a new research decision, multiple independent behaviors, or more than four focused hours, split it before pulling. Revalidate coverage and Kano classes; artificial splits do not manufacture extra value.\n- **Inputs:** Parent source, versioned contract, named fixture/configuration, technical gate, quota reservation, and any approved lease are available.\n- **Ownership:** One card owns its module/fixture namespace. A and B siblings do not share files, PRs, or mutable test leases.\n- **Done:** Scoped behavior is usable, its stated check passes, relevant tests are automated, review/merge is complete, documentation and evidence are attached, and the behavior is available through its declared preview or harness surface.\n- **Evidence:** Record card/parent IDs, mode, configuration/host, commit, test/run reference, verifier result, user-impact result, cleanup result, owner, reviewer, packet, and accepted time.\n- **No false completion:** A replay is not native evidence. Unsupported/unverified positive behavior cannot pass as a native success. A negative experiment may pass its verifier while clearly reporting interrupted users.\n- **No bonus credits:** Multiple parents, commits, test cases, repeated runs, and duplicated fixtures do not increase a card's Kano count.",
+        "portable": "### Portable A-card lesson contract\n\nAn A card delivers a standalone, browser-openable lesson bundle with a small interactive exercise: choose an action or condition, inspect a synthetic trace, and check the expected outcome. Use standard HTML/browser behavior so an approved application framework or Azure subscription is not needed to begin.\n\nEach bundle declares source ID, objective, preconditions, actions, synthetic input/trace, expected assertions, and limits. It prominently says **Training rehearsal - synthetic data - not a live Azure result**, makes no management calls, contains no credentials, and supports keyboard operation.\n\nEach lesson must add a worked, testable exercise rather than copying the backlog sentence. Keep it portable for later mounting by C041. The native implementation and evidence remain a separate B card, and the source demo is not complete until both required slices and its original acceptance gates pass.",
+        "packet": "Packet membership is fixed before admission. This register overrides default membership for its named cards; every other A/B card belongs to SC-Snnn, and every other capability card belongs to its first listed source parent. A card has one packet, not duplicate packet credits."
+      }
+    }
+  ]
+}

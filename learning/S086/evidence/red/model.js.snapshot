@@ -1,0 +1,22 @@
+'use strict';
+
+(function expose(root) {
+  function assessObservation() {
+    return { outcome: 'UNKNOWN', reason: 'STUB', age: null, route: 'blue-v1' };
+  }
+  function createLesson() {
+    const snapshot = () => ({
+      phase: 'idle',
+      current: null,
+      history: [],
+      totals: { attempts: 0, correct: 0, decisions: 0, SUCCESS: 0, FAILURE: 0, UNKNOWN: 0 },
+    });
+    return Object.freeze({
+      snapshot, start: snapshot, advance: snapshot, revalidate: snapshot,
+      promote: snapshot, check: snapshot, newAttempt: snapshot, reset: snapshot,
+    });
+  }
+  const api = Object.freeze({ assessObservation, createLesson });
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.ExpiredReadiness = api;
+}(typeof globalThis === 'undefined' ? this : globalThis));
