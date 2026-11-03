@@ -1,0 +1,166 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory(require('./approved-contract.js'), require('node:crypto').webcrypto);
+  } else {
+    Object.defineProperty(root, 'C001ContractGuard', { value: factory(root.C001ApprovedContract, root.crypto) });
+  }
+}(globalThis, function (snapshot, crypto) {
+  'use strict';
+
+  const snapshotSha256 = 'd88600582af0d499bb0bd26a727e8f0840e724e133bda6284592bc2b4e346909';
+  const localActions = Object.freeze(['local.summary', 'local.probe']);
+  const unresolvedNativeChoices = Object.freeze(['OS', 'SKU', 'subscription', 'resource group', 'region']);
+  const requiredChoices = Object.freeze([
+    'status', 'approvedAtUtc', 'decisionOwner', 'frontend', 'runtime', 'framework',
+    'hosting', 'authentication', 'authorization', 'firstNativeHost',
+    'firstNativeConfiguration', 'preferredIacFormat', 'testTooling'
+  ]);
+  const restrictedActions = Object.freeze({
+    'native.execute': ['LIVE_AZURE_NOT_APPROVED', 'Live Azure execution is not approved.'],
+    'native.provision': ['LIVE_AZURE_NOT_APPROVED', 'Live Azure provisioning is not approved.'],
+    'iac.generate': ['IAC_GENERATION_NOT_APPROVED', 'Bicep is a future preference; IaC generation is not approved.'],
+    'scaffold.generate': ['SCAFFOLD_NOT_APPROVED', 'Application scaffolding is not approved.'],
+    'deployment.execute': ['DEPLOYMENT_NOT_APPROVED', 'Deployment is not approved.'],
+    'identity.register': ['IDENTITY_REGISTRATION_NOT_APPROVED', 'Identity registration is not approved.'],
+    'spend.authorize': ['EXPENDITURE_NOT_APPROVED', 'Cloud expenditure is not approved.']
+  });
+
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+
+  function isRecord(value) {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function canonical(value, ancestors = new Set()) {
+    if (value === null || typeof value === 'string' || typeof value === 'boolean') return JSON.stringify(value);
+    if (typeof value === 'number' && Number.isFinite(value)) return JSON.stringify(value);
+    if (typeof value !== 'object' || ancestors.has(value) || ancestors.size > 16) {
+      throw new TypeError('Approval must be a finite JSON record.');
+    }
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    const keys = Reflect.ownKeys(descriptors);
+    if (keys.some((key) => typeof key !== 'string' || descriptors[key].get || descriptors[key].set)) {
+      throw new TypeError('Approval must contain only JSON data properties.');
+    }
+    ancestors.add(value);
+    let result;
+    if (Array.isArray(value)) {
+      if (Object.keys(value).length !== value.length) throw new TypeError('Approval arrays must be dense JSON arrays.');
+      result = `[${value.map((item) => canonical(item, ancestors)).join(',')}]`;
+    } else {
+      if (keys.some((key) => !descriptors[key].enumerable)) throw new TypeError('Approval fields must be enumerable.');
+      result = `{${keys.sort().map((key) => `${JSON.stringify(key)}:${canonical(descriptors[key].value, ancestors)}`).join(',')}}`;
+    }
+    ancestors.delete(value);
+    return result;
+  }
+
+  function reason(code, message, path) {
+    return path === undefined ? { code, message } : { code, message, path };
+  }
+
+  function differences(expected, candidate, path = '') {
+    if (canonical(expected) === canonical(candidate)) return [];
+    if (isRecord(expected) && isRecord(candidate)) {
+      return [...new Set([...Object.keys(expected), ...Object.keys(candidate)])].sort().flatMap((key) => {
+        const next = path ? `${path}.${key}` : key;
+        if (!Object.hasOwn(expected, key) || !Object.hasOwn(candidate, key)) return [next];
+        return differences(expected[key], candidate[key], next);
+      });
+    }
+    return [path || '$'];
+  }
+
+  async function validateApproval(candidate) {
+    const reasons = [];
+    let trusted = false;
+    if (!isRecord(snapshot) || !isRecord(snapshot.approval)) {
+      reasons.push(reason('SNAPSHOT_UNAVAILABLE', 'The operator-approved snapshot is unavailable; deny all probes.'));
+    } else if (!crypto || !crypto.subtle || typeof crypto.subtle.digest !== 'function') {
+      reasons.push(reason('INTEGRITY_UNAVAILABLE', 'Snapshot integrity checking is unavailable; deny all probes.'));
+    } else {
+      try {
+        const bytes = new TextEncoder().encode(canonical(snapshot));
+        const digest = await crypto.subtle.digest('SHA-256', bytes);
+        const actual = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+        trusted = actual === snapshotSha256;
+        if (!trusted) reasons.push(reason('SNAPSHOT_DRIFT', 'The bundled artifact differs from the pinned operator-approved snapshot.'));
+      } catch {
+        reasons.push(reason('INTEGRITY_UNAVAILABLE', 'Snapshot integrity could not be established; deny all probes.'));
+      }
+    }
+
+    try {
+      if (!isRecord(candidate)) {
+        reasons.push(reason('APPROVAL_MISSING', 'An explicit, current operator approval record is required.'));
+      } else {
+        canonical(candidate);
+        for (const field of requiredChoices) {
+          if (!Object.hasOwn(candidate, field)) {
+            reasons.push(reason('CHOICE_MISSING', 'A required approved choice is missing.', field));
+          } else if (typeof candidate[field] !== 'string' || !candidate[field].trim() ||
+              /^(tbd|unknown|unresolved|pending|not selected)$/i.test(candidate[field].trim())) {
+            reasons.push(reason('CHOICE_UNRESOLVED', 'A required approved choice is unresolved.', field));
+          }
+        }
+        if (trusted) {
+          for (const path of differences(snapshot.approval, candidate)) {
+            reasons.push(reason('APPROVAL_DRIFT', 'The supplied record differs from operator-approved consent.', path));
+          }
+        }
+      }
+    } catch {
+      reasons.push(reason('APPROVAL_INVALID', 'Approval input is not a readable, finite JSON record.'));
+    }
+
+    return freeze({
+      valid: trusted && reasons.length === 0,
+      reasons,
+      snapshotSha256,
+      unresolvedNativeChoices,
+      nativeReady: false,
+      productionRuntimeValidated: false
+    });
+  }
+
+  async function guardOperation(action, candidate) {
+    const validation = await validateApproval(candidate);
+    const reasons = [...validation.reasons];
+    const local = typeof action === 'string' && localActions.includes(action);
+    if (!local) {
+      if (typeof action === 'string' && Object.hasOwn(restrictedActions, action)) {
+        const [code, message] = restrictedActions[action];
+        reasons.push(reason(code, message));
+      } else {
+        reasons.push(reason('UNKNOWN_ACTION', 'Unknown action; only local.summary and local.probe can be allowed.'));
+      }
+      reasons.push(
+        reason('LOCAL_ONLY', 'Approval covers design and local implementation only. This guard never executes operations.'),
+        reason('ZERO_NATIVE_LIMIT', 'The maximum live Azure execution count is 0; native execution is forbidden.'),
+        reason('CLOUD_SPEND_FORBIDDEN', 'Authorized cloud spend is 0: expenditure is forbidden, not a quote for a free resource.'),
+        reason('NATIVE_TARGET_UNAPPROVED', 'Native-target OS, SKU, subscription, resource group, and region are unapproved; control-service Linux does not select native OS.')
+      );
+    }
+    return freeze({
+      action: typeof action === 'string' ? action : null,
+      allowed: local && validation.valid,
+      executed: false,
+      approvalValid: validation.valid,
+      reasons,
+      unresolvedNativeChoices,
+      nativeExecutionLimit: 0,
+      authorizedCloudSpend: 0,
+      nativeReady: false,
+      productionRuntimeValidated: false
+    });
+  }
+
+  return freeze({ validateApproval, guardOperation, snapshotSha256 });
+}));

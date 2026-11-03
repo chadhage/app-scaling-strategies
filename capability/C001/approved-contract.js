@@ -1,0 +1,64 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory();
+  } else {
+    Object.defineProperty(root, 'C001ApprovedContract', { value: factory() });
+  }
+}(globalThis, function () {
+  'use strict';
+
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+
+  return freeze({
+    schemaVersion: 1,
+    cardId: 'C001',
+    parentId: 'H001',
+    kano: 'D',
+    source: {
+      commit: '26747d4fbbd51235c612dbd9d8c92ab335aef78e',
+      path: '.docs\\wiki\\flow-state.json',
+      selector: 'approvals.C001'
+    },
+    approval: {
+      status: 'design-local-approved',
+      approvedAtUtc: '2026-11-03T13:14:06.8619564Z',
+      decisionOwner: 'repository-owner',
+      designAndLocalImplementationApproved: true,
+      frontend: 'Portable HTML/JavaScript lessons',
+      runtime: 'Node.js 24 LTS',
+      framework: 'Express',
+      hosting: 'App Service Linux',
+      authentication: 'Microsoft Entra ID: single tenant with invited guests',
+      authorization: 'Public catalog; server-enforced conductor/operator roles and lease ownership',
+      controlStorage: [
+        'Azure Storage Tables',
+        'Azure Storage Queues',
+        'Azure Blob Storage'
+      ],
+      firstNativeHost: 'App Service: code deployment slots',
+      firstNativeConfiguration: 'Planned only; OS, SKU, subscription, resource group, and region are not approved',
+      preferredIacFormat: 'Bicep',
+      testTooling: 'Node.js 22.23.4; not production runtime validation',
+      liveAzureExecutionApproved: false,
+      iacGenerationApproved: false,
+      scaffoldApproved: false,
+      deploymentApproved: false,
+      identityRegistrationApproved: false,
+      expenditureApproved: false,
+      operatingEnvelope: {
+        maximumLiveAzureRuns: 0,
+        nativeTargetQualified: false,
+        mode: 'local-implementation-only',
+        authorizedCloudSpend: 0,
+        concreteTargetApprovalRequired: true
+      }
+    }
+  });
+}));

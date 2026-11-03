@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C001",
+  "surface": "capability\\C001\\index.html",
+  "scheme": "file:",
+  "forceNew": true,
+  "initialPageId": "5ae3e172-273a-4bdb-9eb9-b1a9aaf49d7b",
+  "acceptedPageId": "b5062af5-7267-4374-a06e-3447d4c8c973",
+  "tool": "runPlaywrightCode",
+  "acceptance": {
+    "result": "passed",
+    "visiblePageAsserted": true,
+    "approvedChoicesVerified": [
+      "repository-owner",
+      "Portable HTML/JavaScript lessons",
+      "Node.js 24 LTS",
+      "Express",
+      "App Service Linux",
+      "Microsoft Entra ID: single tenant with invited guests",
+      "Public catalog; server-enforced conductor/operator roles and lease ownership",
+      "Azure Storage Tables; Azure Storage Queues; Azure Blob Storage",
+      "App Service: code deployment slots",
+      "Bicep"
+    ],
+    "approvalEditingControlCount": 0,
+    "immutableSnapshot": {
+      "artifactFrozen": true,
+      "approvalFrozen": true,
+      "storageArrayFrozen": true,
+      "runtimeMutationRejected": true,
+      "runtimeAfterAttempt": "Node.js 24 LTS"
+    },
+    "keyboardSequence": [
+      "Focus the labelled operation selector",
+      "Tab reaches Probe operation",
+      "Enter runs local.probe",
+      "Assert ALLOWED, executed=false, and retained button focus",
+      "Shift+Tab returns to the operation selector",
+      "ArrowDown twice selects native.execute",
+      "Tab then Enter probes native.execute",
+      "Assert DENIED, explicit reasons, executed=false, and both limits=0"
+    ],
+    "localProbe": {
+      "action": "local.probe",
+      "allowed": true,
+      "executed": false
+    },
+    "nativeProbe": {
+      "action": "native.execute",
+      "allowed": false,
+      "executed": false,
+      "reasons": [
+        "LIVE_AZURE_NOT_APPROVED",
+        "LOCAL_ONLY",
+        "ZERO_NATIVE_LIMIT",
+        "CLOUD_SPEND_FORBIDDEN",
+        "NATIVE_TARGET_UNAPPROVED"
+      ],
+      "nativeExecutionLimit": 0,
+      "authorizedCloudSpend": 0,
+      "visibleResult": "DENIED — native.execute. LIVE_AZURE_NOT_APPROVED: Live Azure execution is not approved. Nothing is executed."
+    },
+    "unresolvedNativeChoices": [
+      "OS: unapproved",
+      "SKU: unapproved",
+      "subscription: unapproved",
+      "resource group: unapproved",
+      "region: unapproved"
+    ],
+    "additionalInteractiveProbes": [
+      {"action": "local.summary", "allowed": true, "executed": false},
+      {"action": "native.provision", "allowed": false, "executed": false, "requiredReason": "LIVE_AZURE_NOT_APPROVED"},
+      {"action": "iac.generate", "allowed": false, "executed": false, "requiredReason": "IAC_GENERATION_NOT_APPROVED"},
+      {"action": "scaffold.generate", "allowed": false, "executed": false, "requiredReason": "SCAFFOLD_NOT_APPROVED"},
+      {"action": "deployment.execute", "allowed": false, "executed": false, "requiredReason": "DEPLOYMENT_NOT_APPROVED"},
+      {"action": "identity.register", "allowed": false, "executed": false, "requiredReason": "IDENTITY_REGISTRATION_NOT_APPROVED"},
+      {"action": "spend.authorize", "allowed": false, "executed": false, "requiredReason": "EXPENDITURE_NOT_APPROVED"},
+      {"action": "visitor.approve", "allowed": false, "executed": false, "requiredReason": "UNKNOWN_ACTION"}
+    ],
+    "runtimeGuardChecksInBrowser": [
+      {"input": "undefined", "action": "local.probe", "allowed": false, "observedReason": "APPROVAL_MISSING"},
+      {"input": "approved=true only", "action": "local.probe", "allowed": false, "observedReasonsInclude": ["CHOICE_MISSING", "APPROVAL_DRIFT"]},
+      {"input": "exact approval plus approved=true", "action": "local.probe", "allowed": false, "observedReason": "APPROVAL_DRIFT"},
+      {"input": "production runtime changed to Node.js 22.23.4", "action": "local.probe", "allowed": false, "observedReason": "APPROVAL_DRIFT"},
+      {"input": "liveAzureExecutionApproved changed to true", "action": "local.probe", "allowed": false, "observedReason": "APPROVAL_DRIFT"}
+    ],
+    "announcement": {"role": "status", "ariaLive": "polite"},
+    "httpRequestsDuringInteractiveAcceptance": [],
+    "pageErrorsDuringInteractiveAcceptance": [],
+    "csp": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'"
+  },
+  "excludedAttempts": [
+    {
+      "attempt": "Initial-page acceptance runner",
+      "observed": "The local ALLOWED status was visible, but JSON.parse failed with Unexpected end of JSON input because innerText was used on a pre inside collapsed details.",
+      "resolution": "Use textContent for hidden JSON. This partial runner is not counted as complete browser acceptance."
+    },
+    {
+      "attempt": "Subsequent initial-page keyboard and pointer checks",
+      "observed": "Tab/focus assertions did not progress reliably; clicking the heading timed out waiting for stability. A later live diagnostic reported document.visibilityState=hidden and document.hasFocus=false. bringToFront did not restore visibility.",
+      "resolution": "Coordinate a bounded browser window with sibling workers, open a replacement own forceNew file page, assert visibility, and run the complete keyboard acceptance there."
+    },
+    {
+      "attempt": "Optional production-page missing-guard diagnostic",
+      "observed": "Routing contract-guard.js to abort did not produce the expected missing-guard surface; page.waitForFunction timed out at 10000ms.",
+      "resolution": "The route was removed and the page reloaded in finally; the observed final snapshot was READY with the probe enabled. This is not claimed as browser proof of a missing dependency. Missing-snapshot/validator behavior is covered by namespaced Node VM unit tests."
+    }
+  ],
+  "boundaries": [
+    "The browser validates only the bundled pinned snapshot, not the current repository ledger.",
+    "The Node command separately reads current operator approval and denies source drift.",
+    "The page is not a server-side authentication, role, lease, or execution boundary.",
+    "No native operation, price quote, identity registration, resource, or production Node.js 24 validation was attempted.",
+    "Network/error listeners covered the accepted interactive checks, not a separately captured full initial-load trace."
+  ]
+}

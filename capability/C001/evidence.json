@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C001",
+  "parentId": "H001",
+  "kano": "D",
+  "decisionOwner": "repository-owner",
+  "approvalSource": {
+    "commit": "26747d4fbbd51235c612dbd9d8c92ab335aef78e",
+    "path": ".docs\\wiki\\flow-state.json",
+    "selector": "approvals.C001",
+    "snapshotSha256": "d88600582af0d499bb0bd26a727e8f0840e724e133bda6284592bc2b4e346909"
+  },
+  "sequence": [
+    {
+      "stage": "BDD",
+      "status": "written-before-behavior-stub",
+      "path": "capability\\C001\\C001.feature"
+    },
+    {
+      "stage": "loadable-minimal-stub",
+      "status": "verified",
+      "result": "Requiring contract-guard.js succeeded; validateApproval and guardOperation were functions. Stub returned NOT_IMPLEMENTED and valid=false."
+    },
+    {
+      "stage": "TDD-RED",
+      "command": "node --test --test-reporter=spec --test-name-pattern=\"valid operator snapshot allows only local probes\" capability\\C001\\tests\\contract.test.cjs",
+      "runtime": "v22.23.4",
+      "exitCode": 1,
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "failure": "Behavioral AssertionError: validation.valid was false, expected true. Module loaded successfully; no missing-import or syntax failure.",
+      "log": "capability\\C001\\evidence\\tdd-red.txt",
+      "logNormalization": "Only trailing spaces on two blank assertion-output lines were removed after the publication whitespace check. Test output, failure, timing, and exit result are otherwise unchanged."
+    },
+    {
+      "stage": "IaC",
+      "status": "N/A",
+      "recordedAfterRedBeforeImplementationAtUtc": "2026-11-03T13:23:15.1112255Z",
+      "reason": "This value unit only records and guards local consent. IaC generation, scaffolding, deployment, identity registration, live Azure operations, and expenditure are not approved. No resource definitions or IaC were generated."
+    },
+    {
+      "stage": "implementation",
+      "status": "complete",
+      "paths": [
+        "capability\\C001\\approved-contract.js",
+        "capability\\C001\\contract-guard.js",
+        "capability\\C001\\probe.cjs",
+        "capability\\C001\\index.html",
+        "capability\\C001\\contract-page.js",
+        "capability\\C001\\contract.css",
+        "capability\\C001\\README.md"
+      ],
+      "behavior": "Immutable approval artifact, independently pinned SHA-256, exact approval comparison, current-source Node probe, local-only action allowlist, explicit permanent native/IaC/scaffold/deploy/registration/spend denial, read-only browser surface."
+    },
+    {
+      "stage": "TDD-GREEN-initial",
+      "command": "node --test --test-reporter=spec capability\\C001\\tests\\contract.test.cjs capability\\C001\\tests\\probe.test.cjs",
+      "exitCode": 0,
+      "tests": 31,
+      "passed": 31,
+      "failed": 0,
+      "log": "capability\\C001\\evidence\\tdd-green.txt"
+    },
+    {
+      "stage": "surface-refinement",
+      "status": "complete",
+      "changes": [
+        "Show READY after successful snapshot validation, rather than a stale unavailable message.",
+        "Restore keyboard focus after asynchronous probing.",
+        "Clear stale allowance and decision JSON if validation later fails."
+      ],
+      "unitTests": "capability\\C001\\tests\\surface.test.cjs"
+    },
+    {
+      "stage": "browser",
+      "status": "passed",
+      "evidence": "capability\\C001\\evidence\\browser-acceptance.json",
+      "acceptedPageId": "b5062af5-7267-4374-a06e-3447d4c8c973",
+      "result": "Real read-only/immutability checks; Tab/Enter local allowance; Shift+Tab/ArrowDown/Tab/Enter native denial; all remaining restricted/unknown actions denied; explicit missing/spoof/drift runtime checks; no HTTP requests or page errors during accepted interactive checks.",
+      "excludedAttemptsRecorded": true
+    },
+    {
+      "stage": "TDD-GREEN-final",
+      "command": "node --test --test-reporter=spec capability\\C001\\tests\\contract.test.cjs capability\\C001\\tests\\probe.test.cjs capability\\C001\\tests\\surface.test.cjs",
+      "runtime": "v22.23.4",
+      "exitCode": 0,
+      "tests": 36,
+      "passed": 36,
+      "failed": 0,
+      "log": "capability\\C001\\evidence\\tdd-final-green.txt",
+      "observedAtUtc": "2026-11-03T13:32:47.8599788Z"
+    },
+    {
+      "stage": "syntax",
+      "command": "node --check <each owned .js/.cjs file, including tests>",
+      "checkedFiles": 7,
+      "exitCode": 0,
+      "log": "capability\\C001\\evidence\\syntax.txt"
+    },
+    {
+      "stage": "current-authority-cli",
+      "probes": [
+        {
+          "command": "node capability\\C001\\probe.cjs local.summary",
+          "exitCode": 0,
+          "allowed": true,
+          "executed": false,
+          "output": "capability\\C001\\evidence\\cli-local.json"
+        },
+        {
+          "command": "node capability\\C001\\probe.cjs native.execute",
+          "exitCode": 1,
+          "expectedDenial": true,
+          "allowed": false,
+          "executed": false,
+          "output": "capability\\C001\\evidence\\cli-native.json"
+        }
+      ],
+      "publishedApprovalComparison": "Node assert.deepStrictEqual confirmed approved-contract.js approval exactly matches approvals.C001 read from source commit 26747d4fbbd51235c612dbd9d8c92ab335aef78e via local git show.",
+      "evidenceJsonParseCheck": "passed"
+    },
+    {
+      "stage": "publication-preflight",
+      "firstAttempt": "Publisher stopped before commit/push because git diff --cached --check returned 2 for trailing spaces on blank lines 16 and 18 of tdd-red.txt.",
+      "correction": "Removed only those trailing spaces; no behavioral output or code was changed. Retrying the same scoped publication helper."
+    }
+  ],
+  "testPaths": [
+    "capability\\C001\\tests\\contract.test.cjs",
+    "capability\\C001\\tests\\probe.test.cjs",
+    "capability\\C001\\tests\\surface.test.cjs"
+  ],
+  "limits": {
+    "maximumLiveAzureRuns": 0,
+    "authorizedCloudSpend": 0,
+    "zeroSpendMeaning": "Forbidden, not an approved free resource or a price quote.",
+    "nativeTargetQualified": false,
+    "unapprovedNativeChoices": ["OS", "SKU", "subscription", "resource group", "region"],
+    "liveAzureExecutionApproved": false,
+    "iacGenerationApproved": false,
+    "scaffoldApproved": false,
+    "deploymentApproved": false,
+    "identityRegistrationApproved": false,
+    "expenditureApproved": false,
+    "productionRuntimeValidated": false,
+    "testRuntime": "Node.js v22.23.4",
+    "productionRuntimeTarget": "Node.js 24 LTS",
+    "fullExpressHarnessImplemented": false,
+    "nativeProofClaimed": false,
+    "browserChecksCurrentLedger": false,
+    "nodeProbeChecksCurrentLedger": true,
+    "browserDependencyMissingDiagnosticProved": false,
+    "browserDependencyMissingCoveredByNodeVmUnits": true,
+    "packagesInstalled": 0,
+    "globalRuntimeUpgraded": false,
+    "resourcesCreated": 0
+  }
+}
