@@ -103,6 +103,11 @@ changes in the initial commit. `committed-before-recovery.json` and the
 earlier worktree-only proof. The same A-S044 unit corrects byte preservation
 through a normal scoped follow-up commit, not an amended or force-pushed history.
 Final publication is qualified only after committed blobs match the sealed hashes.
+`committed-policy-cache.json` preserves a second failed blob check: a policy-only
+add retained 14 old normalized blobs via cached file stat entries. Only owned
+file mtimes were refreshed to make the authorized publisher re-read unchanged
+bytes; no staging, index reset, shared configuration or unowned cleanup bypass
+was used.
 
 The three `browser.failed-attempt-*.raw.json` records are retained, not counted
 as behavioral RED or successful browser proof: a Windows PowerShell 5 signature
