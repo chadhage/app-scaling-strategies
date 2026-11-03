@@ -9,7 +9,7 @@ const matrixContract = require('../../C003/matrix-contract.js');
 const filters = require('../catalog-filters.js');
 const ids = result => result.items.map(item => item.entry.id);
 const originalIds = catalog.entries.map(entry => entry.id);
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-51-d3548de61f4b/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-76-01675ac8d423/generation.json');
 
 test('C007 loads as a reusable module before any assertion about behavior', () => {
   assert.equal(typeof filters.filterCatalog, 'function');
@@ -73,7 +73,7 @@ test('risk remains UNCLASSIFIED for every priority; assessed risks have honest e
   assert.ok(catalog.entries.every(entry => entry.risk === 'unclassified'));
 });
 
-test('readiness separates thirty-six historical portable lessons, 116 unavailable, and zero native/parent claims', () => {
+test('readiness separates sixty-one historical portable lessons, 91 unavailable, and zero native/parent claims', () => {
   const accepted = filters.filterCatalog(catalog, matrix, { readiness: 'portable-available' });
   assert.deepEqual(ids(accepted), catalog.entries.filter(entry => entry.learning.available).map(entry => entry.id));
   assert.deepEqual(ids(accepted), generation.acceptedPortableIds);
@@ -86,8 +86,8 @@ test('readiness separates thirty-six historical portable lessons, 116 unavailabl
     assert.equal(result.valid, true);
     assert.deepEqual(ids(result), []);
   }
-  assert.ok(!ids(accepted).includes('S035'));
-  assert.ok(!ids(accepted).includes('S036'));
+  assert.ok(!ids(accepted).includes('S062'));
+  assert.ok(!ids(accepted).includes('S063'));
 });
 
 test('all filters intersect, independent of object order, with exclusions after risk and readiness', () => {
@@ -97,7 +97,7 @@ test('all filters intersect, independent of object order, with exclusions after 
     readiness: selection.readiness, risk: selection.risk, host: selection.host
   });
   assert.deepEqual(ids(result), ids(reversed));
-  const excludedIds = ['S002', 'S012', 'S014', 'S017', 'S024', 'S032', 'S033'];
+  const excludedIds = ['S002', 'S012', 'S014', 'S017', 'S024', 'S032', 'S033', 'S058'];
   assert.equal(result.items.length, generation.acceptedPortableLessons - excludedIds.length);
   assert.deepEqual(result.incompatible.map(item => item.entry.id), excludedIds);
   assert.ok(result.items.every(item => item.entry.learning.available && item.entry.risk === 'unclassified'));

@@ -11,7 +11,7 @@ const root = path.resolve(__dirname, '..');
 const repo = path.resolve(root, '..', '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const sha256 = value => createHash('sha256').update(value).digest('hex');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-51-d3548de61f4b/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-76-01675ac8d423/generation.json');
 
 test('the plain local surface loads only unchanged accepted providers and the small composition', () => {
   const html = read('index.html');
@@ -100,7 +100,7 @@ test('twelve unchanged interfaces and the archived thirteenth retain accepted ba
       checkedCommits.add(file.publication.commit);
     }
   }
-  assert.equal(generation.sourceCommit, 'd3548de61f4b800c8b0c911c7091b5e4826b5547');
+  assert.equal(generation.sourceCommit, '01675ac8d4230c51dad027b67a1971d8d3490d74');
   assert.equal(sha256(fs.readFileSync(path.join(repo, generation.data.path))), generation.data.sha256);
   assert.equal(require('../../C005/catalog-data.js').source.commit, generation.sourceCommit);
   assert.equal(require('../../C005/catalog-source.cjs').PINNED_COMMIT, generation.sourceCommit);

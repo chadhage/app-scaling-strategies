@@ -9,16 +9,17 @@ const { createHash, randomUUID } = require('node:crypto');
 const { createRequire } = require('node:module');
 const { execFileSync } = require('node:child_process');
 const catalog = require('../../C005/catalog-data.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-51-d3548de61f4b/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-76-01675ac8d423/generation.json');
 const repo = path.resolve(__dirname, '..', '..', '..');
 const helperPath = path.join(repo, 'testing', 'browser', 'isolated.cjs');
 const helperRequire = createRequire(helperPath);
 const PUBLISHED_HELPER_COMMIT = '53c0c0d82cc1db6780a87ac2b1085734af6d5c60';
 const PUBLISHED_HELPER_SHA256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+const TRAINING_BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
 const reportPath = path.join(__dirname, '..', 'evidence',
-  `browser-op-catalog-snapshot-refresh-51-d3548de61f4b-${randomUUID()}.json`);
+  `browser-op-catalog-snapshot-refresh-76-01675ac8d423-${randomUUID()}.json`);
 
 async function previousReport() {
   return fs.readFile(historicalPath).catch(error => {
@@ -142,7 +143,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       assert.equal(await page.locator('#catalog-error').isVisible(), false);
       assert.equal(await page.locator('#preparation').isVisible(), false);
     });
-    await check('all thirty-six accepted lessons pass through real readiness, keyboard preparation and actual practice navigation', async () => {
+    await check('all sixty-one accepted lessons pass through real readiness, keyboard preparation and actual practice navigation', async () => {
       await choose('readiness-filter', 'portable-available');
       assert.deepEqual(await actualIds(), generation.acceptedPortableIds);
       assert.equal(await page.locator('#matching-entries > article').count(), generation.acceptedPortableLessons);
@@ -165,8 +166,9 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
         lesson.on('request', request => { if (/^https?:/i.test(request.url())) remoteRequests.push(request.url()); });
         await lesson.waitForLoadState('load');
         assert.ok(lesson.url().endsWith(`/learning/${id}/index.html`), id);
-        assert.match(await lesson.locator('body').innerText(), /synthetic|training rehearsal/i);
-        practiceNavigations.push({ id, href, loadedUrl: lesson.url(), syntheticTrainingObserved: true });
+        const trainingBanner = await lesson.getByText(TRAINING_BANNER, { exact: true }).first().innerText();
+        assert.equal(trainingBanner, TRAINING_BANNER, id);
+        practiceNavigations.push({ id, href, loadedUrl: lesson.url(), syntheticTrainingObserved: true, trainingBanner });
         await lesson.close();
         await page.locator('#back-results').focus();
         await page.keyboard.press('Enter');
@@ -219,7 +221,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       lesson.on('request', request => { if (/^https?:/i.test(request.url())) remoteRequests.push(request.url()); });
       await lesson.waitForLoadState('load');
       assert.ok(lesson.url().endsWith('/learning/S001/index.html'));
-      assert.match(await lesson.locator('.banner').textContent(), /synthetic data - not a live Azure result/);
+      assert.equal(await lesson.locator('.banner').textContent(), TRAINING_BANNER);
       assert.equal(await lesson.locator('#verdict').getAttribute('data-verdict'), 'NOT_RUN');
       const actions = [];
       for (const id of ['warm', 'handoff', 'drain', 'elapse', 'retire']) {
@@ -248,7 +250,20 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       assert.equal(await lesson.locator('#admission-target').textContent(), 'v1');
       lessonObservation = { originalHref: catalog.entries[0].learning.href, actions, safeResult,
         unsafeVerdict: await lesson.locator('#verdict').textContent(), unsafeReason: await lesson.locator('#reason').textContent(),
-        nativeAzureResult: false };
+        trainingBanner: await lesson.locator('.banner').textContent(), nativeAzureResult: false };
+      await lesson.locator('#reset').focus();
+      await lesson.keyboard.press('Enter');
+      assert.equal(await lesson.locator('#verdict').getAttribute('data-verdict'), 'NOT_RUN');
+      assert.equal(await lesson.locator('#v1-state').textContent(), 'ACTIVE');
+      assert.equal(await lesson.locator('#admission-target').textContent(), 'v1');
+      assert.equal(await lesson.locator('#sample-count').textContent(),
+        'Attempted: 0 · proven successful: 0 · interrupted: 0');
+      lessonObservation.resetAfterNegative = {
+        verdict: await lesson.locator('#verdict').textContent(),
+        samples: await lesson.locator('#sample-count').textContent(),
+        v1: await lesson.locator('#v1-state').textContent(),
+        admission: await lesson.locator('#admission-target').textContent()
+      };
       await lesson.close();
       assert.equal(await page.locator('#preparation').isVisible(), true);
       assert.equal(await page.locator('#catalog-query').inputValue(), '  BLUE-GREEN  ');
@@ -298,7 +313,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       await reset();
     });
     await check('unavailable lessons and workflow CONTAINER/BASE distinctions retain exact preparation and all unapproved limits', async () => {
-      await open('S035');
+      await open('S062');
       assert.equal(await page.locator('.lesson-link').count(), 0);
       assert.equal(await page.locator('#preparation-body').getAttribute('data-learning-mode'), 'unavailable-learning');
       await reset();
@@ -427,7 +442,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
     });
     assert.equal(checks.length, 12);
     report = {
-      operation: 'OP-CATALOG-SNAPSHOT-REFRESH-51', status: 'passed', observedAtUtc: new Date().toISOString(),
+      operation: 'OP-CATALOG-SNAPSHOT-REFRESH-76', status: 'passed', observedAtUtc: new Date().toISOString(),
       mode: 'actual-isolated-headless', mockedBrowser: false, browserVersion, signature, playwrightVersion,
       nodeVersion: process.version, productionNode24Validated: false,
       helper: 'testing\\browser\\isolated.cjs', helperApi: 'openIsolatedLesson',

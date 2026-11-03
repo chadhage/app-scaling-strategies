@@ -1,0 +1,18 @@
+{
+  "operation": "OP-CATALOG-SNAPSHOT-REFRESH-76",
+  "observedAndRecordedAtUtc": "2026-11-03T19:56:44.182Z",
+  "recordKind": "retained-tool-return-observation-not-a-fabricated-process-stream",
+  "toolSession": "op76-publication",
+  "commandEvidence": "publication-command.ps1.txt",
+  "exitCode": 1,
+  "phase": "explicit owned path validation before git add/commit/tag/push",
+  "returnedError": "Exception: \nLine |\n  60 |              throw \"Not an explicit owned operation file: $file\"\n     |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n     | Not an explicit owned operation file: warning: in the working copy of 'capability/C007/README.md', CRLF will be replaced by LF the next time Git touches it",
+  "rootCause": "The operation wrapper merged native git stderr into stdout while discovering explicit changed paths. A normal CRLF-to-LF warning was incorrectly interpreted as a filename; the ownership guard correctly rejected it before staging.",
+  "browserFailure": false,
+  "testFailure": false,
+  "commitCreated": false,
+  "tagCreated": false,
+  "pushAttempted": false,
+  "oldPublisherGuardsChanged": false,
+  "correction": "publication-command-02.ps1.txt keeps stdout and stderr separate using ProcessStartInfo.ArgumentList and preserves diagnostics on stderr. All scope, whitespace, historical hash, mutex, main/tag, atomic-push and remote-verification guards remain enforced."
+}

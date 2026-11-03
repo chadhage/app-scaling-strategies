@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
-const catalog = require('../catalog-data.js');
+const catalog = require('../evidence/op-catalog-snapshot-refresh-76-01675ac8d423/catalog-data.d3548de61f4b.js.txt');
 const matrix = require('../../C003/matrix-data.js');
 const contract = require('../catalog-contract.js');
 const source = require('../catalog-source.cjs');
@@ -22,7 +22,7 @@ const acceptedUnits = ledger.cards.filter(source.acceptedLesson);
 const expectedIds = acceptedUnits.filter(card => /^A-S\d{3}$/.test(card.id))
   .map(card => card.id.slice(2)).sort();
 
-test('the fixed fifty-one-unit historical source exposes all 36 accepted portable lessons through every consumer', async () => {
+test('the archived fifty-one-unit historical source exposes all 36 accepted portable lessons through every consumer', async () => {
   assert.deepEqual(contract.validateCatalog(catalog, matrix), { valid: true, errors: [] });
   const accepted = catalog.entries.filter(entry => entry.learning.available);
   assert.equal(accepted.length, 36, 'the new snapshot must expose all thirty-six accepted portable lessons');

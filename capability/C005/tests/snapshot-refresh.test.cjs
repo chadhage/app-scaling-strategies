@@ -15,19 +15,19 @@ const { execFileSync } = require('node:child_process');
 const { createHash } = require('node:crypto');
 const vm = require('node:vm');
 const source = require('../catalog-source.cjs');
-const generation = require('../evidence/op-catalog-snapshot-refresh-51-d3548de61f4b/generation.json');
+const generation = require('../evidence/op-catalog-snapshot-refresh-76-01675ac8d423/generation.json');
 
-const FIXED_SOURCE = 'd3548de61f4b800c8b0c911c7091b5e4826b5547';
+const FIXED_SOURCE = '01675ac8d4230c51dad027b67a1971d8d3490d74';
 const repo = path.resolve(__dirname, '..', '..', '..');
-const evidence = path.join(__dirname, '..', 'evidence', 'op-catalog-snapshot-refresh-51-d3548de61f4b');
+const evidence = path.join(__dirname, '..', 'evidence', 'op-catalog-snapshot-refresh-76-01675ac8d423');
 const sha = value => createHash('sha256').update(value).digest('hex');
 const normalize = value => value.toString('utf8').replaceAll('\r\n', '\n');
 const git = args => execFileSync('git', ['--no-pager', ...args], { cwd: repo });
 
-test('the fixed historical generation exposes all 36 accepted portable lessons, not the old twenty', async () => {
+test('the fixed historical generation exposes all 61 accepted portable lessons, not the old thirty-six', async () => {
   assert.deepEqual(contract.validateCatalog(catalog, matrix), { valid: true, errors: [] });
   const accepted = catalog.entries.filter(entry => entry.learning.available);
-  assert.equal(accepted.length, 36, 'new-snapshot coverage must include every accepted portable lesson');
+  assert.equal(accepted.length, 61, 'new-snapshot coverage must include every accepted portable lesson');
   assert.equal(catalog.source.commit, FIXED_SOURCE);
   assert.equal(catalog.acceptanceSnapshot.commit, FIXED_SOURCE);
   assert.equal(catalog.acceptanceSnapshot.live, false);
@@ -50,22 +50,22 @@ test('the fixed historical generation exposes all 36 accepted portable lessons, 
     || entry.parent.completed || entry.support.status !== 'unknown' || entry.risk !== 'unclassified').length, 0);
 });
 
-test('generation fingerprints, all 51 accepted units and 36 lesson IDs derive from the immutable annotated source', () => {
+test('generation fingerprints, all 76 accepted units and 61 lesson IDs derive from the immutable annotated source', () => {
   assert.equal(generation.kind, 'fixed-historical-generation-binding-not-unit-acceptance');
   assert.equal(generation.sourceCommit, FIXED_SOURCE);
-  assert.equal(generation.sourceTag, 'kanban/flow-admin/d3548de61f4b');
+  assert.equal(generation.sourceTag, 'kanban/flow-admin/01675ac8d423');
   assert.equal(git(['cat-file', '-t', generation.sourceTag]).toString().trim(), 'tag');
   assert.equal(git(['rev-parse', generation.sourceTag]).toString().trim(), generation.sourceTagObject);
   assert.equal(git(['rev-parse', `${generation.sourceTag}^{}`]).toString().trim(), FIXED_SOURCE);
   const pinned = source.readPinnedSources();
   const ledger = JSON.parse(pinned.ledgerText);
   const accepted = ledger.cards.filter(source.acceptedLesson);
-  assert.equal(accepted.length, 51);
+  assert.equal(accepted.length, 76);
   assert.equal(generation.acceptedUnits, accepted.length);
   assert.deepEqual(generation.acceptedPortableIds,
     accepted.filter(card => /^A-S\d{3}$/.test(card.id)).map(card => card.id.slice(2)).sort());
   assert.equal(generation.acceptedPortableLessons, generation.acceptedPortableIds.length);
-  assert.equal(generation.acceptedPortableLessons, 36);
+  assert.equal(generation.acceptedPortableLessons, 61);
   assert.equal(sha(pinned.readme), catalog.source.readme.sha256);
   assert.equal(sha(pinned.backlog), catalog.source.backlog.sha256);
   assert.equal(sha(pinned.ledgerText), catalog.acceptanceSnapshot.ledgerSha256);
@@ -79,10 +79,11 @@ test('generation fingerprints, all 51 accepted units and 36 lesson IDs derive fr
   source.verifyLearningTargets(catalog);
 });
 
-test('both preceding catalogs and all historical proof remain intact; generator semantics change only its explicit pin', () => {
-  assert.equal(generation.previous.sha256, 'c5857b4c9b98ecf5d465f5d7a321dbf4d5164513d426f29ff42c721d592886ba');
+test('all three preceding catalogs and all historical proof remain intact; generator semantics change only its explicit pin', () => {
+  assert.equal(generation.previous.sha256, '17edc4bc779efdfa7fe6fe340c5d92c52bc700a10503c5da74f491020d99fbe4');
+  assert.equal(generation.intermediate.sha256, 'c5857b4c9b98ecf5d465f5d7a321dbf4d5164513d426f29ff42c721d592886ba');
   assert.equal(generation.original.sha256, '23a79f3203c06006d7b5bc1a17728d1a2d9c729b5e744dd4b4f2972b9c9a26bc');
-  for (const snapshot of [generation.original, generation.previous]) {
+  for (const snapshot of [generation.original, generation.intermediate, generation.previous]) {
     const archived = fs.readFileSync(path.join(repo, snapshot.path));
     assert.equal(sha(archived), snapshot.sha256);
     assert.equal(normalize(archived), normalize(git([
@@ -100,7 +101,7 @@ test('both preceding catalogs and all historical proof remain intact; generator 
     'capability/C005', 'capability/C006', 'capability/C007', 'capability/C008', 'capability/local-harness'])
     .toString().trim().split('\n').filter(file => /(?:^|\/)evidence(?:\/|\.json$)|\/result\.json$/.test(file))
     .map(file => file.replaceAll('/', '\\'));
-  assert.deepEqual(historical.files.map(file => file.path), historicalPaths);
+  assert.deepEqual(historical.files.map(file => file.path).sort(), historicalPaths.sort());
   assert.equal(historical.files.length, generation.preservation.files);
   for (const file of historical.files) {
     assert.equal(sha(fs.readFileSync(path.join(repo, file.path))), file.sha256, file.path);
@@ -127,14 +128,15 @@ test('exact-current-checkout CLI rejects controlled canonical drift while histor
 });
 
 test('new-snapshot RED precedes IaC N/A and uses the real old data, not a missing module or fabricated failure', () => {
-  const red = JSON.parse(fs.readFileSync(path.join(evidence, 'red.json'), 'utf8'));
+  const red = JSON.parse(fs.readFileSync(path.join(evidence, 'red-corrected-02.json'), 'utf8'));
   const iac = JSON.parse(fs.readFileSync(path.join(evidence, 'iac-na.json'), 'utf8'));
   assert.equal(red.exitCode, 1);
-  assert.match(red.stdout, /20 !== 36/);
+  assert.match(red.stdout, /36 !== 61/);
+  assert.match(red.stdout, /S035/);
   assert.match(red.stdout, /ERR_ASSERTION/);
   assert.doesNotMatch(red.stdout, /MODULE_NOT_FOUND|SyntaxError/);
-  assert.equal(sha(fs.readFileSync(path.join(evidence, 'red-snapshot-refresh-51.cjs.txt'))), red.assertionsSha256);
-  assert.equal(sha(fs.readFileSync(path.join(evidence, 'red-snapshot-refresh-51.feature.txt'))), red.bddSha256);
+  assert.equal(sha(fs.readFileSync(path.join(evidence, 'red-corrected-02.cjs.txt'))), red.assertionsSha256);
+  assert.equal(sha(fs.readFileSync(path.join(evidence, 'red-snapshot-refresh-76.feature.txt'))), red.bddSha256);
   assert.equal(red.oldCatalogSha256, generation.previous.sha256);
   assert.ok(Date.parse(iac.recordedAtUtc) >= Date.parse(red.completedAtUtc));
   assert.equal(iac.applicability, 'not-applicable');
@@ -149,7 +151,7 @@ test('all five browser suites gate published provenance and append new observati
     const gate = browser.indexOf('PUBLISHED_HELPER_SHA256,');
     assert.ok(gate >= 0 && gate < browser.indexOf('const { openIsolatedLesson } = require(helperPath)'), scope);
     assert.match(browser, /process\.env\.CAPTURE_BROWSER_EVIDENCE === '1'/);
-    assert.match(browser, /browser-op-catalog-snapshot-refresh-51-d3548de61f4b-\$\{randomUUID\(\)\}\.json/);
+    assert.match(browser, /browser-op-catalog-snapshot-refresh-76-01675ac8d423-\$\{randomUUID\(\)\}\.json/);
     assert.match(browser, /flag: 'wx'/);
     assert.doesNotMatch(browser, /fs\.(?:rm|unlink|truncate)/);
     assert.match(browser, /finally \{\s*await session\.close\(\)/);

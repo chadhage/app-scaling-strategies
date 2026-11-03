@@ -1,0 +1,112 @@
+$ErrorActionPreference = 'Stop'
+$operation = 'OP-CATALOG-SNAPSHOT-REFRESH-76'
+$worker = 'worker-OP-CATALOG-SNAPSHOT-REFRESH-76'
+$evidence = 'capability\C005\evidence\op-catalog-snapshot-refresh-76-01675ac8d423'
+$scopes = @('capability\C005', 'capability\C006', 'capability\C007', 'capability\C008', 'capability\local-harness')
+$message = '[flow][catalog-refresh][no-kano-credit] OP-CATALOG-SNAPSHOT-REFRESH-76 Refresh fixed 76-unit/61-practice historical catalog'
+function Run-Git([string[]]$Arguments) {
+    $output = & git --no-pager @Arguments 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "git $($Arguments -join ' ') failed ($LASTEXITCODE): $($output -join [Environment]::NewLine)" }
+    return $output
+}
+function Assert-Preserved {
+    $historical = Get-Content -LiteralPath "$evidence\historical-proof-hashes.json" -Raw | ConvertFrom-Json
+    foreach ($file in $historical.files) {
+        if ((Get-FileHash -LiteralPath $file.path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $file.sha256) {
+            throw "Historical proof changed: $($file.path)"
+        }
+    }
+    $generation = Get-Content -LiteralPath "$evidence\generation.json" -Raw | ConvertFrom-Json
+    if ($generation.sourceCommit -ne '01675ac8d4230c51dad027b67a1971d8d3490d74') { throw 'Immutable source binding changed.' }
+    foreach ($snapshot in @($generation.original, $generation.intermediate, $generation.previous, $generation.data)) {
+        if ((Get-FileHash -LiteralPath $snapshot.path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $snapshot.sha256) {
+            throw "Catalog bytes changed: $($snapshot.path)"
+        }
+    }
+    $integrity = Get-Content -LiteralPath "$evidence\syntax-and-integrity-01.json" -Raw | ConvertFrom-Json
+    foreach ($file in @($integrity.readonlyExtra.publishedHelper, $integrity.readonlyExtra.standardPublisher)) {
+        if ((Get-FileHash -LiteralPath $file.path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $file.sha256) {
+            throw "Published helper or standard publisher changed: $($file.path)"
+        }
+    }
+    $manifest = Get-Content -LiteralPath "$evidence\hashes.json" -Raw | ConvertFrom-Json
+    foreach ($file in $manifest.files) {
+        if ((Get-FileHash -LiteralPath $file.path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $file.sha256) {
+            throw "Verified owned bytes changed before publication: $($file.path)"
+        }
+    }
+}
+$mutex = [Threading.Mutex]::new($false, 'Local\AppScalingStrategies_KanbanPublisher_v1')
+$held = $false
+try {
+    $held = $mutex.WaitOne([TimeSpan]::FromSeconds(180))
+    if (-not $held) { throw 'Publisher mutex timed out; do not bypass serialization or remove index locks.' }
+    if ((Run-Git @('branch', '--show-current') | Out-String).Trim() -ne 'main') { throw 'Publication requires checked-out main.' }
+    $headBefore = (Run-Git @('rev-parse', 'HEAD') | Out-String).Trim()
+    $remoteBefore = @(Run-Git @('ls-remote', 'origin', 'refs/heads/main'))
+    if ($remoteBefore.Count -ne 1 -or ("$($remoteBefore[0])" -split '\s+')[0] -ne $headBefore) {
+        throw 'Shared main is not already synchronized; do not push unrelated unpublished work or reset the shared checkout.'
+    }
+    Assert-Preserved
+    $paths = @(
+        @(Run-Git (@('diff', '--name-only', 'HEAD', '--') + $scopes))
+        @(Run-Git (@('ls-files', '--others', '--exclude-standard', '--') + $scopes))
+    ) | ForEach-Object { "$_".Trim() } | Where-Object { $_ } | Sort-Object -Unique
+    if (-not $paths.Count) { throw 'No scoped operation files to publish.' }
+    foreach ($file in $paths) {
+        if ($file -notmatch '^capability/(?:C005|C006|C007|C008|local-harness)/' -or
+            [IO.Path]::IsPathRooted($file) -or $file -match '(^|/)\.\.(/|$)' -or
+            -not (Test-Path -LiteralPath $file -PathType Leaf)) {
+            throw "Not an explicit owned operation file: $file"
+        }
+    }
+    $fullMessage = "$message`n`nFixed source 01675ac8d4230c51dad027b67a1971d8d3490d74; 152 entries, 61 accepted portable practices, native0, source parents incomplete. One operational refresh; zero S/D/L credit; parent acceptance pending.`n`nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+    Run-Git (@('add', '--') + $paths) | Out-Host
+    Run-Git (@('diff', '--cached', '--check', '--') + $paths) | Out-Host
+    Run-Git (@('commit', '--only', '-m', $fullMessage, '--') + $paths) | Out-Host
+    $commit = (Run-Git @('rev-parse', 'HEAD') | Out-String).Trim()
+    if ((Run-Git @('rev-parse', "$commit^") | Out-String).Trim() -ne $headBefore) { throw 'Unexpected publication parent.' }
+    $committedPaths = @(Run-Git @('diff-tree', '--no-commit-id', '--name-only', '-r', $commit))
+    if (@(Compare-Object @($paths) @($committedPaths)).Count) { throw 'Commit paths differ from the explicit owned file list.' }
+    $tag = "kanban/flow-catalog-refresh/$($commit.Substring(0, 12))"
+    $resultHash = (Get-FileHash -LiteralPath "$evidence\result.json" -Algorithm SHA256).Hash.ToLowerInvariant()
+    $annotation = "$message; commit $commit; fixed source 01675ac8d4230c51dad027b67a1971d8d3490d74; result $evidence\result.json SHA256 $resultHash; focused 212 (209 leaves/3 parents), syntax33, browser71 (66 leaves/5 parents), 61 actual practice navigations, ordinary rerun71; all147 historical proofs preserved; native0; zero S/D/L credit; parent-only operational acceptance."
+    Run-Git @('tag', '-a', $tag, $commit, '-m', $annotation) | Out-Host
+    Run-Git @('push', '--atomic', 'origin', 'main', "refs/tags/$tag") | Out-Host
+    $refs = @(Run-Git @('ls-remote', 'origin', 'refs/heads/main', "refs/tags/$tag", "refs/tags/$tag^{}"))
+    $mainLine = @($refs | Where-Object { "$_" -match '\srefs/heads/main$' })
+    $tagLine = @($refs | Where-Object { "$_" -match ([regex]::Escape("refs/tags/$tag") + '$') })
+    $peeledLine = @($refs | Where-Object { "$_" -match ([regex]::Escape("refs/tags/$tag^{}") + '$') })
+    if ($mainLine.Count -ne 1 -or $tagLine.Count -ne 1 -or $peeledLine.Count -ne 1) { throw 'Remote main/annotated tag/peeled tag missing.' }
+    $remoteMain = ("$($mainLine[0])" -split '\s+')[0]
+    $remoteTagObject = ("$($tagLine[0])" -split '\s+')[0]
+    $remotePeeled = ("$($peeledLine[0])" -split '\s+')[0]
+    if ($remotePeeled -ne $commit) { throw 'Remote peeled tag does not identify this operation commit.' }
+    if ((Run-Git @('cat-file', '-t', $tag) | Out-String).Trim() -ne 'tag') { throw 'Publication tag is not annotated.' }
+    if ((Run-Git @('rev-parse', $tag) | Out-String).Trim() -ne $remoteTagObject) { throw 'Remote annotated tag object differs.' }
+    if ($remoteMain -ne $commit) { Run-Git @('fetch', '--no-tags', 'origin', 'main') | Out-Host }
+    Run-Git @('merge-base', '--is-ancestor', $commit, $remoteMain) | Out-Host
+    Assert-Preserved
+    if (@(Run-Git (@('status', '--porcelain', '--') + $scopes)).Count) { throw 'Owned operation scope is not clean after publication.' }
+    [ordered]@{
+        operation = $operation
+        worker = $worker
+        commit = $commit
+        tag = $tag
+        tagObject = $remoteTagObject
+        remoteMain = $remoteMain
+        remotePeeledTag = $remotePeeled
+        remoteVerified = $true
+        atomicMainAndAnnotatedTagPush = $true
+        mutex = 'Local\AppScalingStrategies_KanbanPublisher_v1'
+        explicitOwnedFileCount = $paths.Count
+        result = "$evidence\result.json"
+        resultSha256 = $resultHash
+        kanoCredits = @{ S = 0; D = 0; L = 0 }
+        parentOperationalAcceptance = 'pending-controller-only'
+        publishedAtUtc = [DateTime]::UtcNow.ToString('o')
+    } | ConvertTo-Json -Depth 10
+} finally {
+    if ($held) { $mutex.ReleaseMutex() }
+    $mutex.Dispose()
+}
