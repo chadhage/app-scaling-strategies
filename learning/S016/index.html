@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S016 — Autoscale oscillation</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <p class="training" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+  <main>
+    <h1>S016 — Autoscale oscillation</h1>
+    <p><strong>Objective:</strong> Apply suitable stabilization so repeated scale-out/scale-in does not repeatedly interrupt users. Compare the same ten-window demand trace with immediate scaling and with stabilization/cooldown.</p>
+    <p><strong>Preconditions and limits:</strong> Two synthetic ready instances initially; each serves 100 requests/second. Target = ceiling(demand / 100), from one to four instances. Scale-out takes one further observed window to become ready. No Azure account, service, server, management access or credentials are used.</p>
+    <noscript>This interactive synthetic lesson needs local JavaScript. No result has been observed.</noscript>
+
+    <section aria-labelledby="instructions-title">
+      <h2 id="instructions-title">Conduct the comparison</h2>
+      <ol>
+        <li>Keep the defaults and advance one window, or run the remaining bounded trace. Both lanes sample four synthetic clients per window, not the offered request rate.</li>
+        <li>At the first low window, the immediate lane removes an instance with a prior high-window continuation. The next high window queues while replacement capacity warms. Two-window down-stabilization avoids these reversals in the alternating trace.</li>
+        <li>Inspect requested and effective changes, direction reversals, unsafe removals, client budgets and unknowns separately. A PASS is a successful exercise; the immediate lane's deliberately interrupted users are not an uninterrupted result.</li>
+        <li>Archive/reset. Select the rebound trace with a four-window cooldown: fewer changes still FAIL when cooldown delays needed capacity. Four-window stabilization avoids scaling in during that short trough.</li>
+        <li>Try missing observations, HTTP 200/state loss, or high demand 360 plus a readiness failure. Earlier failures and unknowns survive later recovery.</li>
+      </ol>
+      <details>
+        <summary>Exact fixture rules and interpretation</summary>
+        <p>Alternating: H,L,H,L,H,L,H,L,H,L. Rebound: H,L,H,L,L,L,H,H,H,H. Each window is one synthetic time unit, not an Azure timer. Immediate scaling has no hold. The stabilized lane requires the chosen consecutive low windows before scaling in. Its cooldown starts at the last scale request and holds either direction until the declared interval has elapsed. Pending scale-out must finish or fail before another request.</p>
+        <p>A removed instance has one unfinished continuation when the previous window's demand exceeds the remaining capacity. Removing it interrupts one of four sampled clients. A sustained low window lets that teaching continuation finish; stabilization does not create a universal drain guarantee. Known queue = max(0, demand − ready × 100). Latency = 80 + ceiling(queue / (ready × 100) × 1000) ms; equality with the budget passes. Incorrect business state interrupts even with HTTP 200. Missing client or capacity observations are null, never zero or success.</p>
+        <p>PASS requires all ten windows, fewer scale requests and unsafe removals, zero stabilized interruptions/readiness failures, and complete observations in both lanes. Known stabilized failure takes precedence over UNKNOWN, but unknown counts remain. Healthy clients without demonstrated improvement are NOT_DEMONSTRATED. These are bounded teaching constants, not measured platform behavior or a five-nines claim.</p>
+      </details>
+    </section>
+
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Operator controls</h2>
+      <form id="oscillation-controls" novalidate>
+        <fieldset id="input-fields">
+          <legend>Configure before the first window (locked after observation)</legend>
+          <div class="inputs">
+            <label for="demand-pattern">Demand pattern
+              <select id="demand-pattern">
+                <option value="oscillating">Alternating high / low</option>
+                <option value="rebound">Short trough then sustained rebound</option>
+              </select>
+            </label>
+            <label for="low-demand">Low demand (20–190 requests/second)
+              <input id="low-demand" type="text" inputmode="numeric" value="60" maxlength="8">
+            </label>
+            <label for="high-demand">High demand (100–400 requests/second)
+              <input id="high-demand" type="text" inputmode="numeric" value="180" maxlength="8">
+            </label>
+            <label for="stabilization-windows">Down-stabilization (1–4 low windows)
+              <input id="stabilization-windows" type="text" inputmode="numeric" value="2" maxlength="8">
+            </label>
+            <label for="cooldown-windows">Cooldown (0–5 windows)
+              <input id="cooldown-windows" type="text" inputmode="numeric" value="2" maxlength="8">
+            </label>
+            <label for="latency-budget">Original journey budget (80–2000 ms)
+              <input id="latency-budget" type="text" inputmode="numeric" value="250" maxlength="8">
+            </label>
+          </div>
+          <button id="apply-inputs" type="submit">Apply declared fixture</button>
+        </fieldset>
+        <label for="observation-condition">Observation condition for the next window(s)
+          <select id="observation-condition">
+            <option value="complete">Complete observations</option>
+            <option value="missing-client">One client observation missing per lane</option>
+            <option value="capacity-unknown">Effective capacity unknown; no scale decision</option>
+            <option value="state-loss">HTTP 200 with incorrect business state</option>
+            <option value="readiness-failed">Fail a pending scale-out when readiness is due</option>
+          </select>
+        </label>
+        <div class="actions">
+          <button id="advance-window" type="button">Next shared window</button>
+          <button id="run-remaining" type="button">Run remaining windows</button>
+          <button id="restart-rehearsal" type="button">Archive run and reset</button>
+        </div>
+      </form>
+      <p>Use Tab, Enter and Space. Apply edits before running; the JSON records the active configuration. Observation conditions can change between windows. Forty commands/run and six archived runs/page are hard limits; existing evidence is never silently discarded.</p>
+      <p id="active-fixture"></p>
+      <p id="input-error" role="alert" hidden></p>
+      <p id="command-result" role="status" aria-live="polite"></p>
+    </section>
+
+    <section aria-labelledby="outcome-title">
+      <h2 id="outcome-title">Observed synthetic comparison</h2>
+      <p>Exercise verifier: <strong id="verdict">NOT_RUN</strong> · <span id="window-count">0 / 10 windows</span></p>
+      <p id="verdict-detail" aria-live="polite"></p>
+      <p>The verifier and each lane's user outcome are separate. A configured target or successful rule decision is not client evidence. Failed and unknown observations remain cumulative.</p>
+      <div class="comparison">
+        <article>
+          <h3>Immediate — disruptive comparator</h3>
+          <p>User outcome: <strong id="immediate-outcome">NOT_OBSERVED</strong></p>
+          <p id="immediate-capacity"></p>
+          <p id="immediate-changes"></p>
+          <p id="immediate-clients"></p>
+        </article>
+        <article>
+          <h3>Stabilized — chosen policy</h3>
+          <p>User outcome: <strong id="stabilized-outcome">NOT_OBSERVED</strong></p>
+          <p id="stabilized-capacity"></p>
+          <p id="stabilized-changes"></p>
+          <p id="stabilized-clients"></p>
+        </article>
+      </div>
+      <h3>Capacity, rule and queue observations</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Capacity trace; scroll horizontally if needed">
+        <table>
+          <thead><tr><th>Window / demand</th><th>Lane</th><th>Target / observed ready / pending</th><th>Decision / low streak / cooldown left</th><th>Queue rps / unsafe removal</th><th>Requested, ready or failed changes</th></tr></thead>
+          <tbody id="trace-rows"></tbody>
+        </table>
+      </div>
+      <h3>Client observations — original budgets retained</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Client trace; scroll horizontally if needed">
+        <table>
+          <thead><tr><th>Window / lane / client</th><th>Complete / HTTP</th><th>Latency / budget ms</th><th>Business state / effects</th><th>Outcome / reasons</th></tr></thead>
+          <tbody id="journey-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="archive-title">
+      <h2 id="archive-title">Retained prior runs (0)</h2>
+      <p>Archive/reset restores defaults and retains the complete prior state, including rejected commands and caught UI errors. Storage is page memory only. Copy the selectable JSON before reload/close; reset is not persistent storage.</p>
+      <ol id="archive-list"></ol>
+      <details>
+        <summary>Current run and retained evidence JSON</summary>
+        <pre id="run-evidence" tabindex="0" aria-label="Selectable synthetic run evidence"></pre>
+      </details>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Source lineage and remaining To Do</h2>
+      <p>A-S016 / D-S016 / canonical README S016 / SC-S016. One original frozen S unit; parent empirical acceptance is separate. This portable lesson has no runtime dependencies.</p>
+      <p>B-S016 remains To Do, gated by CORE, DATA, ASANY, C065, C066, an approved host/SKU/region and separate native authorization. It must observe actual scale behavior and cumulative user impact. D-S016 retains its original D-S011 and D-S015 prerequisites and shared acceptance gates. This rehearsal completes neither native proof nor its source-demo parent.</p>
+      <p>Only Node.js 22 test tooling and the already-installed offline Playwright 1.56.1 / signed Edge 156 pairing are used for local verification. Production Node.js 24, native support, cost, reliability and five-nines results remain unclaimed. No cloud, IaC, scaffold, identity, deployment, expenditure, package or framework work is performed.</p>
+      <h3>Microsoft Open Source Disclaimer</h3>
+      <p>Educational examples and guidance are provided “AS IS”, without warranties or guarantees except where required by applicable law or binding terms. Validate security, reliability, compatibility and cost before production use. Microsoft and Azure references imply no endorsement, sponsorship, certification or support. Project goals are not Microsoft SLAs. Microsoft and Azure are trademarks of the Microsoft group of companies. This disclaimer grants no license or redistribution rights and changes no applicable license, product term, support agreement or published SLA. See the repository README's full disclaimer.</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,33 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.OscillationRehearsal = factory();
+}(globalThis, function () {
+  'use strict';
+  const defaults = Object.freeze({
+    pattern: 'oscillating', lowRps: 60, highRps: 180,
+    stabilizationWindows: 2, cooldownWindows: 2, budgetMs: 250
+  });
+  const lane = () => ({ ready: 2, pending: null, lastChangeWindow: null, lowStreak: 0 });
+  function initial() {
+    return {
+      version: 1, config: { ...defaults }, cursor: 0, previousDemand: 0,
+      lanes: { immediate: lane(), stabilized: lane() }, observations: [], events: [],
+      lastResult: { verdict: 'READY', message: 'Configure and advance the shared synthetic demand trace.' }
+    };
+  }
+  function reduce(state) { return state; }
+  function summarize() {
+    const empty = () => ({
+      requestedChanges: 0, effectiveChanges: 0, reversals: 0, unsafeTransitions: 0,
+      readinessFailures: 0, attempts: 0, uninterrupted: 0, interrupted: 0,
+      unknown: 0, maxLatencyMs: null, maxQueueRps: null, currentReady: 2,
+      userOutcome: 'NOT_OBSERVED'
+    });
+    return {
+      windows: 0, totalWindows: 10, lanes: { immediate: empty(), stabilized: empty() },
+      verification: { verdict: 'NOT_RUN', message: 'No synthetic client observations yet.' }
+    };
+  }
+  return { defaults, initial, reduce, summarize };
+}));

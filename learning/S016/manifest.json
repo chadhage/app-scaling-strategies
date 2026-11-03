@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S016",
+  "workerId": "worker-A-S016",
+  "kano": "S",
+  "kanoUnit": "A-S016",
+  "packet": "SC-S016",
+  "source": "S016",
+  "parent": "D-S016",
+  "originalPrerequisites": ["D-S011", "D-S015"],
+  "title": "Autoscale oscillation",
+  "objective": "Apply suitable stabilization so repeated scale-out/scale-in does not repeatedly interrupt users; measure capacity reversals and cumulative client budgets without hiding failures or uncertainty.",
+  "entryGate": "SOURCE",
+  "authorization": "local-synthetic-only",
+  "mode": "synthetic-only",
+  "entryPoint": "learning\\S016\\index.html",
+  "feature": "learning\\S016\\autoscale-oscillation.feature",
+  "tests": [
+    "learning\\S016\\model.test.cjs",
+    "learning\\S016\\browser.test.cjs",
+    "learning\\S016\\integrity.test.cjs"
+  ],
+  "testCommand": "node learning\\S016\\verify.cjs all",
+  "browserCommand": "node learning\\S016\\verify.cjs browser",
+  "captureCommand": "$env:CAPTURE_BROWSER_EVIDENCE='1'; node learning\\S016\\verify.cjs all",
+  "evidence": "learning\\S016\\evidence.json",
+  "infrastructure": "N/A: resource-free offline lesson; no IaC or resource operations.",
+  "fixtureVersion": "S016-oscillation-v1",
+  "preconditions": ["Two ready instances per lane", "100 synthetic requests/second per instance", "One-window scale-out warm-up"],
+  "actions": ["Configure the bounded fixture", "Advance one shared window", "Run the remaining ten-window trace", "Change observation condition", "Archive/reset"],
+  "syntheticInputTrace": {
+    "oscillating": ["H", "L", "H", "L", "H", "L", "H", "L", "H", "L"],
+    "rebound": ["H", "L", "H", "L", "L", "L", "H", "H", "H", "H"],
+    "clientsPerLanePerWindow": 4,
+    "capacityBounds": [1, 4]
+  },
+  "expectedAssertions": [
+    "Suitable stabilization reduces scale requests and unsafe removals with no stabilized interruption or unknown observation",
+    "Cooldown cannot conceal queued clients exceeding their original latency budget",
+    "Earlier failures and unknowns remain cumulative after recovery",
+    "Requested capacity and effective readiness are distinct; HTTP 200 is not business correctness"
+  ],
+  "limits": ["10 windows/run", "40 commands/run", "6 page-memory archived runs", "No reload persistence", "No native, production runtime or reliability proof"],
+  "dependencies": [],
+  "testTooling": {
+    "node": "22.23.4",
+    "playwright": "1.56.1, already installed offline testing\\browser tooling",
+    "browser": "installed Microsoft-signed Edge 156",
+    "helper": "testing\\browser\\isolated.cjs / openIsolatedLesson",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "helperPublishedCommit": "53c0c0d"
+  },
+  "productionNode24Validated": false,
+  "nativeProof": false,
+  "parentComplete": false,
+  "acceptance": "Parent-owned empirical acceptance pending; worker cannot award Done credit."
+}
