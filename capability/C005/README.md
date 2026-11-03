@@ -1,0 +1,133 @@
+# C005 — source scenario catalog
+
+H002 · frozen **S** · one original unit `C005` · packet `LP-LEARN`.
+
+Open `index.html` directly in a browser. This local HTML/JS/CSS catalog has exactly
+**150 source scenarios, S001–S150, plus W001/W002**. It preserves canonical titles,
+required behaviors, source links and explicit availability distinctions. Category
+links and accepted-lesson links work with the keyboard. No server, install,
+framework, Azure access or production runtime is needed.
+
+## Availability is three different things
+
+- **Portable learning:** eleven lessons are linked because their A cards have
+  accepted Done reviews and matching published implementation/tag evidence in
+  the committed snapshot. They are synthetic training, not native Azure results.
+- **Native execution/qualification:** **false for all 152 entries**. No target is
+  qualified or made runnable. C003 remains the sole host/format matrix authority;
+  its documented support, unsupported combinations and unknowns are not
+  implementation, execution permission or native proof.
+- **Source parent:** incomplete for all entries. A lesson does not complete its
+  D-S parent; workflows remain planned. Original native and parent acceptance
+  gates are unchanged.
+
+Snapshot pin: **`1583da90c1013ba95fdf268d6901f8a14bdf900a`**.
+Commit time: **2026-11-03T14:23:19.000Z**.
+Ledger update: **2026-11-03T14:19:43.9325356Z**.
+The generator reads `git show <pin>:.docs/wiki/flow-state.json`, never the evolving
+worktree ledger. The UI discloses all three values and links that committed blob.
+This is **historical snapshot availability, not live state**. S009/S010 and any
+later files/publications stay conservatively unavailable until a deliberately
+reviewed committed-snapshot refresh; files and pending acceptance are insufficient.
+
+The accepted snapshot lessons are S001–S008, S021, S031 and S041. Their original
+lesson files are linked, never rewritten or copied.
+
+## Single reusable data contract — 1.0.0
+
+**Consumer entry point: `capability\C005\catalog-data.js`.** There is no second
+catalog JSON or independent metadata list. It is an immutable JSON-compatible
+UMD module: `require()` in Node, or `globalThis.C005Catalog` from a classic browser
+script. No JSON fetch is needed for `file:` browsing.
+
+- `catalog-contract.d.ts`: readonly versioned data/availability/source types.
+- `catalog-contract.js`: dependency-free closed-shape runtime validator,
+  exact ID/order/count checks, cross-field/UTC checks and local-only invariants.
+  It delegates matrix validation to **C003's existing validator**, not copied
+  host/approval rules.
+- `catalog-source.cjs`: deterministic source extractor/checker. README supplies
+  scenario title/objective/category; backlog supplies priority, implementation,
+  acceptance, dependency expressions and workflow metadata. All rows retain
+  pinned source document, section anchor and one-based source line.
+- `common`: verbatim source dependency notation, BASE/AND/OR rules, shared Done
+  requirements, lifecycle/operating limits, acceptance/evidence requirements.
+- `entries`: exactly S001…S150, W001, W002, in that order. Each has source
+  metadata, source-parent lineage, prerequisites, availability, reasons and links.
+
+```js
+const data = require('.\\capability\\C005\\catalog-data.js');
+const contract = require('.\\capability\\C005\\catalog-contract.js');
+const matrix = require('.\\capability\\C003\\matrix-data.js');
+contract.validateCatalog(data, matrix); // { valid: true, errors: [] }
+data.entries[0].title;                  // canonical README title
+data.entries[0].prerequisites;          // additional expression + inheritsBase
+data.common.dependencyRules;            // canonical BASE and AND/OR explanation
+contract.sourceHref(data, data.entries[0].sourceReferences[0]);
+```
+
+In browsers load C003's `matrix-contract.js` / `matrix-data.js`, then C005's
+`catalog-contract.js` / `catalog-data.js`. Check the returned validation result
+before rendering. Reject incompatible major/schema versions; do not silently
+drop unknown fields or convert unavailable/unknown into runnable.
+
+Structural validation does **not** authenticate arbitrary metadata or approval.
+Source authenticity/reproducibility is checked against pinned git blobs by
+`catalog-source.cjs --check`. There is no arbitrary JSON import UI. The public
+renderer exists for deterministic mounting and failure-state testing, not as an
+approval or publication API. It uses text nodes, not HTML injection.
+
+### C006 / C007 / C008 handoff and bounded To Do refinement
+
+All three cards require **accepted C005** data, in addition to C003. Preserve each
+original card, frozen S class and one original Kano unit; no new extraction unit.
+
+| Card | Reuse from this module | Remaining owned behavior |
+| --- | --- | --- |
+| C006 | `entries[].id`, `title`, `objective`, source/availability metadata | Exact/partial/empty/no-result title/objective search. |
+| C007 | Source `priority`, `category`, raw dependency expressions, `learning`, `native`, `support`; C003 reference | Host/risk/readiness filters with honest unsupported/unknown reasons. |
+| C008 | `implementation`, `acceptance`, `prerequisites`, `common` source excerpts/references | Understandable per-entry preparation and limits view. |
+
+**Risk is unclassified**, with a reason; the sources do not assign entry risk
+scores. Do not equate P0/P1/P2 with risk. Dependencies are canonical expressions,
+not inferred per-entry compatible-host lists or permission. C007 must retain
+unknowns or obtain a separately reviewed classification; it must not fabricate
+platform support from a generic scenario. W002 explicitly requires CONTAINER;
+every D-S entry additionally inherits BASE. Shared OR aliases are not all-host
+requirements. C008 must retain those distinctions and concrete limitations.
+
+C005 does not implement these search, filter or preparation behaviors. This
+catalog does not finish H002 or any original source-demo parent.
+
+## Reproducible checks and actual evidence
+
+```powershell
+node .\capability\C005\catalog-source.cjs --check
+node --test --test-reporter=spec .\capability\C005\tests\catalog.test.cjs .\capability\C005\tests\surface.test.cjs
+node --test --test-reporter=spec .\capability\C005\tests\browser.test.cjs
+```
+
+For a reviewed snapshot refresh, update the explicit pin in the extractor,
+review its committed ledger/acceptances, run `--write`, and rerun all checks.
+`--write` modifies only this namespace's generated data module; `--check` does
+not modify data. Both verify canonical README/backlog parity, accepted lesson
+files in git and the current checkout, and implementation ancestry. Neither
+reads or edits the evolving worktree ledger.
+
+`evidence.json` records BDD → loadable stub → genuine behavioral RED → IaC N/A →
+implementation → focused GREEN/syntax/source integrity → actual browser checks.
+RED source snapshots end in `.txt` and cannot become auto-discovered failing
+tests. Browser checks use only `testing\browser\isolated.cjs`'s
+`openIsolatedLesson(relativeRepoPath)`, existing offline Playwright **1.56.1** and
+installed signed Edge; `close()` is awaited in `finally`. No package install,
+unsafe browser flags, integrated foreground lease or mock browser is used.
+
+The CSP denies connections, inline scripts, images, frames, objects, workers and
+forms. Actual browser checks include denied inline code/connection probes,
+keyboard navigation into an existing lesson, every DOM ID/title/objective/source
+link, 320-pixel reflow, empty/error clearing and local-only claims. This is not a
+full WCAG or assistive-technology certification.
+
+No cloud/IaC/scaffold/identity/deploy/spend actions, root/package/framework changes,
+or extra Kano credits. Node.js **22.23.4** is test tooling only; production Node.js
+**24** remains unvalidated. C001 approvals and C003 matrix/limitations are
+consumed unchanged. [Microsoft disclaimer](../../README.md#microsoft-open-source-disclaimer).

@@ -1,0 +1,258 @@
+✔ C005 exposes exactly the 150 stable source scenarios and two workflows (18.4911ms)
+✔ one generated catalog is byte-reproducible from pinned canonical source and a committed ledger (1168.7818ms)
+✔ all canonical row titles, objectives, acceptance and dependencies retain source identity and line links (959.7964ms)
+✔ exactly eleven accepted Done snapshot lessons are linked; pending and absent cards are unavailable (2.0167ms)
+✔ accepted lesson targets exist at their actual implementation commits and the snapshot ancestry (12720.5966ms)
+✔ availability extraction rejects file-only, published-but-unaccepted and mismatched evidence (2725.2142ms)
+✔ the C003 contract remains the sole matrix authority, without copied permissions (49.35ms)
+✔ versioned catalog validation rejects wrong schema version (52.8891ms)
+✔ versioned catalog validation rejects additional root approval flag (41.7093ms)
+✔ versioned catalog validation rejects duplicate stable identifier (48.7795ms)
+✔ versioned catalog validation rejects missing scenario (22.8537ms)
+✔ versioned catalog validation rejects extra workflow (19.8589ms)
+✔ versioned catalog validation rejects empty catalog (17.2259ms)
+✔ versioned catalog validation rejects native qualification (39.6167ms)
+✔ versioned catalog validation rejects native execution (51.0603ms)
+✔ versioned catalog validation rejects synthetic native evidence (41.2451ms)
+✔ versioned catalog validation rejects completed parent (99.587ms)
+✔ versioned catalog validation rejects unexplained unknown (33.6435ms)
+✔ versioned catalog validation rejects inferred support (25.2959ms)
+✔ versioned catalog validation rejects inferred risk (30.7621ms)
+✔ versioned catalog validation rejects available without evidence (27.229ms)
+✔ versioned catalog validation rejects unavailable with learning link (33.3974ms)
+✔ versioned catalog validation rejects wrong learning destination (16.5134ms)
+✔ versioned catalog validation rejects workflow lesson (15.1064ms)
+✔ versioned catalog validation rejects malformed acceptance timestamp (22.9302ms)
+✔ versioned catalog validation rejects future acceptance timestamp (44.5407ms)
+✔ versioned catalog validation rejects live ledger claim (26.8699ms)
+✔ versioned catalog validation rejects future ledger timestamp (17.6101ms)
+✔ versioned catalog validation rejects mismatched source snapshot (15.6018ms)
+✔ versioned catalog validation rejects URL in canonical source path (18.4914ms)
+✔ versioned catalog validation rejects invalid source line (13.224ms)
+✔ versioned catalog validation rejects javascript source anchor (39.8633ms)
+✔ versioned catalog validation rejects invalid dependency notation (31.1206ms)
+✔ versioned catalog validation rejects erased BASE gate (14.1053ms)
+✔ malformed data fails closed without throwing (57.9537ms)
+✔ pinned source link construction rejects URLs, prototype names, missing pins and invalid lines (1.2928ms)
+✔ the module is recursively immutable and usable by classic browser scripts without fetching (171.3216ms)
+✔ shared preparation metadata remains verbatim source, with AND/OR and safety boundaries intact (21.9574ms)
+✔ local entry point has explicit scope, accessible status/error/empty states and no execution controls (50.893ms)
+✔ the CSP denies network and active content while keeping scripts and styles local (18.3717ms)
+✔ C003 data and validation authority are consumed unchanged from its accepted implementation commit (925.6017ms)
+✖ the data generator reads pinned git blobs, never the evolving ledger or discovery globs (3.5655ms)
+✔ readonly declarations cover the versioned data shape and deny all local native claims (1.4842ms)
+✔ intentional RED snapshots are plain text outside auto-discovered test filenames (3.3167ms)
+ℹ tests 44
+ℹ suites 0
+ℹ pass 43
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 20000.6189
+
+✖ failing tests:
+
+test at capability\C005\tests\surface.test.cjs:53:1
+✖ the data generator reads pinned git blobs, never the evolving ledger or discovery globs (3.5655ms)
+  AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /readdir|glob|git[^\n]*\b(?:add|commit|push|checkout|reset)\b/. Input:
+
+  "'use strict';\r\n" +
+    '\r\n' +
+    "const fs = require('node:fs');\r\n" +
+    "const path = require('node:path');\r\n" +
+    "const { execFileSync } = require('node:child_process');\r\n" +
+    "const { createHash } = require('node:crypto');\r\n" +
+    "const assert = require('node:assert/strict');\r\n" +
+    '\r\n' +
+    "const ROOT = path.resolve(__dirname, '..', '..');\r\n" +
+    "const PINNED_COMMIT = '1583da90c1013ba95fdf268d6901f8a14bdf900a';\r\n" +
+    'const SOURCE_PATHS = Object.freeze({\r\n' +
+    "  readme: 'README.md',\r\n" +
+    "  backlog: '.docs\\\\wiki\\\\backlog.md',\r\n" +
+    "  ledger: '.docs\\\\wiki\\\\flow-state.json'\r\n" +
+    '});\r\n' +
+    "const NATIVE_REASON = 'No accepted target-specific native proof is supplied by this catalog. Native execution and qualification remain false; separate target, safety and execution approvals are required. Documentation or a portable lesson is not native evidence.';\r\n" +
+    "const SUPPORT_REASON = 'Unknown for this entry: no concrete target configuration is selected or qualified. Consult the C003 documented-only matrix for configuration-specific unsupported/unknown reasons; a source objective is not a universal platform-support claim.';\r\n" +
+    "const RISK_REASON = 'The canonical source gives priority, prerequisites and operating limits, not a per-entry risk classification. Risk is unclassified; priority is not risk, permission or a cost estimate.';\r\n" +
+    "const PARENT_REASON = 'Planned source parent, not completed in the committed snapshot. Accepted portable learning does not satisfy native proof or the original parent acceptance gates.';\r\n" +
+    '\r\n' +
+    'function git(args) {\r\n' +
+    "  return execFileSync('git', ['--no-pager', ...args], { cwd: ROOT, encoding: 'utf8' });\r\n" +
+    '}\r\n' +
+    'function sha(text) {\r\n' +
+    "  return createHash('sha256').update(text).digest('hex');\r\n" +
+    '}\r\n' +
+    'function plain(text) {\r\n' +
+    "  return text.replace(/\\*\\*/g, '').replace(/`([^`]+)`/g, '$1').trim();\r\n" +
+    '}\r\n' +
+    'function anchor(text) {\r\n' +
+    "  return plain(text).toLowerCase().replace(/[^\\p{L}\\p{N}\\s-]/gu, '').replace(/\\s/g, '-');\r\n" +
+    '}\r\n' +
+    'function lines(text) {\r\n' +
+    "  return text.replace(/\\r\\n/g, '\\n').split('\\n');\r\n" +
+    '}\r\n' +
+    'function reference(document, line, heading) {\r\n' +
+    '  return { document, path: SOURCE_PATHS[document], line, anchor: anchor(heading) };\r\n' +
+    '}\r\n' +
+    'function unique(items, key) {\r\n' +
+    '  assert.equal(new Set(items.map(item => item[key])).size, items.length, `duplicate ${key}`);\r\n' +
+    '}\r\n' +
+    'function sourceRows(text, expression, document) {\r\n' +
+    "  let heading = '';\r\n" +
+    '  return lines(text).flatMap((line, index) => {\r\n' +
+    "    if (/^#{2,3} /.test(line)) heading = line.replace(/^#{2,3} /, '');\r\n" +
+    '    if (!expression.test(line)) return [];\r\n' +
+    "    assert.ok(!line.includes('\\\\|'), 'escaped table delimiters need an extractor update');\r\n" +
+    "    return [{ cells: line.split('|').slice(1, -1).map(cell => cell.trim()),\r\n" +
+    '      ref: reference(document, index + 1, heading), heading }];\r\n' +
+    '  });\r\n' +
+    '}\r\n' +
+    'function section(text, heading, document) {\r\n' +
+    '  const all = lines(text);\r\n' +
+    '  const start = all.findIndex(line => line === heading);\r\n' +
+    '  assert.notEqual(start, -1, `missing source section ${heading}`);\r\n' +
+    '  const end = all.findIndex((line, index) => index > start && /^#{1,2} /.test(line));\r\n' +
+    '  const last = end === -1 ? all.length : end;\r\n' +
+    '  return {\r\n' +
+    "    text: all.slice(start + 1, last).join('\\n').trim(),\r\n" +
+    "    reference: reference(document, start + 1, heading.replace(/^#+ /, ''))\r\n" +
+    '  };\r\n' +
+    '}\r\n' +
+    'function acceptedLesson(card) {\r\n' +
+    "  return card?.state === 'Done' && card.result?.outcome === 'published'\r\n" +
+    '    && card.review?.accepted === true && card.review.focusedTestsPassed === true\r\n' +
+    '    && card.review.browserObserved === true && card.review.remoteVerified === true\r\n' +
+    "    && /^[a-f0-9]{40}$/.test(card.publication?.commit || '')\r\n" +
+    '    && card.result.commit === card.publication.commit\r\n' +
+    '    && card.review.commit === card.publication.commit\r\n' +
+    '    && card.result.tag === card.publication.tag && card.review.tag === card.publication.tag\r\n' +
+    '    && card.publication.tag === `kanban/${card.id}/${card.publication.commit.slice(0, 12)}`\r\n' +
+    "    && typeof card.acceptedAtUtc === 'string' && Number.isFinite(Date.parse(card.acceptedAtUtc));\r\n" +
+    '}\r\n' +
+    'function learningFor(id, ledger) {\r\n' +
+    "  if (id.startsWith('W')) {\r\n" +
+    "    return { status: 'unavailable', available: false, cardId: null, href: null, evidence: null,\r\n" +
+    "      reason: 'No portable A-card lesson is defined for this integrated workflow. Its planned walkthrough and native execution are not delivered by the source catalog.' };\r\n" +
+    '  }\r\n' +
+    '  const cardId = `A-${id}`;\r\n' +
+    '  const card = ledger.cards.find(item => item.id === cardId);\r\n' +
+    '  if (!acceptedLesson(card)) {\r\n' +
+    "    return { status: 'unavailable', available: false, cardId, href: null, evidence: null,\r\n" +
+    "      reason: 'No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check.' };\r\n" +
+    '  }\r\n' +
+    "  return { status: 'accepted-snapshot', available: true, cardId,\r\n" +
+    '    href: `../../learning/${id}/index.html`,\r\n' +
+    '    evidence: { commit: card.publication.commit, tag: card.publication.tag, acceptedAtUtc: card.acceptedAtUtc },\r\n' +
+    "    reason: 'Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent.' };\r\n" +
+    '}\r\n' +
+    '\r\n' +
+    'function extractCatalog({ readme, backlog, ledgerText, commitTimeUtc }) {\r\n' +
+    '  const ledger = JSON.parse(ledgerText);\r\n' +
+    "  assert.equal(ledger.schemaVersion, 1, 'unsupported ledger version');\r\n" +
+    '  assert.ok(Array.isArray(ledger.cards) && Array.isArray(ledger.completedParents));\r\n' +
+    "  unique(ledger.cards, 'id');\r\n" +
+    "  const scenarios = sourceRows(readme, /^\\| S\\d{3} \\|/, 'readme');\r\n" +
+    "  const demos = sourceRows(backlog, /^\\| D-S\\d{3} \\|/, 'backlog');\r\n" +
+    "  const workflows = sourceRows(backlog, /^\\| W\\d{3} \\|/, 'backlog');\r\n" +
+    '  assert.equal(scenarios.length, 150);\r\n' +
+    '  assert.equal(demos.length, 150);\r\n' +
+    '  assert.equal(workflows.length, 2);\r\n' +
+    '  const demoById = new Map(demos.map(row => [row.cells[0].slice(2), row]));\r\n' +
+    '  const entries = scenarios.map((row, index) => {\r\n' +
+    '    const [id, description] = row.cells;\r\n' +
+    "    assert.equal(id, `S${String(index + 1).padStart(3, '0')}`);\r\n" +
+    '    const match = /^\\*\\*(.+?):\\*\\* (.+)$/.exec(description);\r\n' +
+    '    assert.ok(match, `${id} must retain an explicit source title and required behavior`);\r\n' +
+    '    const demo = demoById.get(id);\r\n' +
+    '    assert.ok(demo, `missing ${id} demo`);\r\n' +
+    '    assert.equal(demo.cells.length, 5);\r\n' +
+    '    return {\r\n' +
+    "      id, kind: 'scenario', parentId: demo.cells[0],\r\n" +
+    '      category: { id: row.heading.slice(0, 1), title: row.heading.slice(3) },\r\n' +
+    '      title: plain(match[1]), objective: plain(match[2]), priority: demo.cells[1],\r\n' +
+    '      implementation: plain(demo.cells[2]), acceptance: plain(demo.cells[3]),\r\n' +
+    '      prerequisites: { additional: demo.cells[4], inheritsBase: true },\r\n' +
+    '      sourceReferences: [row.ref, demo.ref]\r\n' +
+    '    };\r\n' +
+    '  });\r\n' +
+    '  workflows.forEach((row, index) => {\r\n' +
+    '    const [id, priority, implementation, acceptance, dependencies] = row.cells;\r\n' +
+    '    assert.equal(id, `W00${index + 1}`);\r\n' +
+    '    const title = /\\*\\*(.+?)\\*\\*/.exec(implementation);\r\n' +
+    '    assert.ok(title, `missing workflow title ${id}`);\r\n' +
+    '    entries.push({\r\n' +
+    "      id, kind: 'workflow', parentId: id,\r\n" +
+    "      category: { id: 'W', title: 'Integrated guided demonstrations' },\r\n" +
+    '      title: plain(title[1]), objective: plain(implementation), priority,\r\n' +
+    '      implementation: plain(implementation), acceptance: plain(acceptance),\r\n' +
+    '      prerequisites: { additional: dependencies, inheritsBase: false },\r\n' +
+    '      sourceReferences: [row.ref]\r\n' +
+    '    });\r\n' +
+    '  });\r\n' +
+    "  unique(entries, 'id');\r\n" +
+    '  for (const entry of entries) {\r\n' +
+    "    assert.ok(!ledger.completedParents.includes(entry.parentId), 'v1 does not certify completed source parents');\r\n" +
+    '    Object.assign(entry, {\r\n' +
+    "      risk: 'unclassified',\r\n" +
+    '      learning: learningFor(entry.id, ledger),\r\n' +
+    "      native: { status: 'unverified', runnable: false, qualified: false, evidence: [], reason: NATIVE_REASON },\r\n" +
+    "      support: { status: 'unknown', reason: SUPPORT_REASON },\r\n" +
+    "      parent: { completed: false, status: 'planned', reason: PARENT_REASON }\r\n" +
+    '    });\r\n' +
+    '  }\r\n' +
+    '  return {\r\n' +
+    "    schemaVersion: '1.0.0', kind: 'source-scenario-catalog', cardId: 'C005',\r\n" +
+    "    scope: 'local-source-derived-snapshot',\r\n" +
+    '    source: {\r\n' +
+    '      commit: PINNED_COMMIT, commitTimeUtc,\r\n' +
+    '      readme: { path: SOURCE_PATHS.readme, sha256: sha(readme) },\r\n' +
+    '      backlog: { path: SOURCE_PATHS.backlog, sha256: sha(backlog) }\r\n' +
+    '    },\r\n' +
+    '    acceptanceSnapshot: {\r\n' +
+    '      commit: PINNED_COMMIT, commitTimeUtc, ledgerPath: SOURCE_PATHS.ledger,\r\n' +
+    '      ledgerSha256: sha(ledgerText), ledgerUpdatedAtUtc: ledger.updatedAtUtc, live: false\r\n' +
+    '    },\r\n' +
+    '    capabilityMatrix: {\r\n' +
+    "      cardId: 'C003', schemaVersion: '1.0.0', sourceCommit: PINNED_COMMIT,\r\n" +
+    "      dataPath: 'capability\\\\C003\\\\matrix-data.js',\r\n" +
+    "      contractPath: 'capability\\\\C003\\\\matrix-contract.js', href: '../C003/index.html'\r\n" +
+    '    },\r\n' +
+    '    common: {\r\n' +
+    '      riskReason: RISK_REASON,\r\n' +
+    "      dependencyRules: section(backlog, '## Priorities and dependencies', 'backlog'),\r\n" +
+    "      sharedDefinitionOfDone: section(backlog, '## Shared definition of done', 'backlog'),\r\n" +
+    "      operatingLimits: section(readme, '## Lifecycle and safety gates', 'readme'),\r\n" +
+    "      acceptanceAndEvidence: section(readme, '## Acceptance and evidence', 'readme'),\r\n" +
+    "      workflowScope: 'Integrated workflows compose source scenarios; they are not two additional source strategies.'\r\n" +
+    '    },\r\n' +
+    '    entries\r\n' +
+    '  };\r\n' +
+    '}\r\n' +
+    'function readPinnedSources() {\r\n' +
+    "  const show = document => git(['show', `${PINNED_COMMIT}:${SOURCE_PATHS[document].replaceAll('\\\\', '/')}`]);\r\n" +
+    '  return {\r\n' +
+    "    readme: show('readme'), backlog: show('backlog'), ledgerText: show('ledger'),\r\n" +
+    "    commitTimeUtc: new Date(git(['show', '-s', '--format=%cI', PINNED_COMMIT]).trim()).toISOString()\r\n" +
+    '  };\r\n' +
+    '}\r\n' +
+    'function buildCatalog() {\r\n' +
+    '  return extractCatalog(readPinnedSources());\r\n' +
+    '}\r\n' +
+    'function serialize(catalog) {\r\n' +
+    "  return `(function (root, factory) {\\n  'use strict';\\n  if (typeof module === 'object' && module.exports) module.exports = factory();\\n  else Object.defineProperty(root, 'C005Catalog', { value: factory() });\\n}(globalThis, function () {\\n  'use strict';\\n  function freeze(value) {\\n    if (va"... 2184 more characters
+
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C005\tests\surface.test.cjs:57:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "'use strict';\r\n\r\nconst fs = require('node:fs');\r\nconst path = require('node:path');\r\nconst { execFileSync } = require('node:child_process');\r\nconst { createHash } = require('node:crypto');\r\nconst assert = require('node:assert/strict');\r\n\r\nconst ROOT = path.resolve(__dirname, '..', '..');\r\nconst PINNED_COMMIT = '1583da90c1013ba95fdf268d6901f8a14bdf900a';\r\nconst SOURCE_PATHS = Object.freeze({\r\n  readme: 'README.md',\r\n  backlog: '.docs\\\\wiki\\\\backlog.md',\r\n  ledger: '.docs\\\\wiki\\\\flow-state.json'\r\n});\r\nconst NATIVE_REASON = 'No accepted target-specific native proof is supplied by this catalog. Native execution and qualification remain false; separate target, safety and execution approvals are required. Documentation or a portable lesson is not native evidence.';\r\nconst SUPPORT_REASON = 'Unknown for this entry: no concrete target configuration is selected or qualified. Consult the C003 documented-only matrix for configuration-specific unsupported/unknown reasons; a source objective is not a universal platform-support claim.';\r\nconst RISK_REASON = 'The canonical source gives priority, prerequisites and operating limits, not a per-entry risk classification. Risk is unclassified; priority is not risk, permission or a cost estimate.';\r\nconst PARENT_REASON = 'Planned source parent, not completed in the committed snapshot. Accepted portable learning does not satisfy native proof or the original parent acceptance gates.';\r\n\r\nfunction git(args) {\r\n  return execFileSync('git', ['--no-pager', ...args], { cwd: ROOT, encoding: 'utf8' });\r\n}\r\nfunction sha(text) {\r\n  return createHash('sha256').update(text).digest('hex');\r\n}\r\nfunction plain(text) {\r\n  return text.replace(/\\*\\*/g, '').replace(/`([^`]+)`/g, '$1').trim();\r\n}\r\nfunction anchor(text) {\r\n  return plain(text).toLowerCase().replace(/[^\\p{L}\\p{N}\\s-]/gu, '').replace(/\\s/g, '-');\r\n}\r\nfunction lines(text) {\r\n  return text.replace(/\\r\\n/g, '\\n').split('\\n');\r\n}\r\nfunction reference(document, line, heading) {\r\n  return { document, path: SOURCE_PATHS[document], line, anchor: anchor(heading) };\r\n}\r\nfunction unique(items, key) {\r\n  assert.equal(new Set(items.map(item => item[key])).size, items.length, `duplicate ${key}`);\r\n}\r\nfunction sourceRows(text, expression, document) {\r\n  let heading = '';\r\n  return lines(text).flatMap((line, index) => {\r\n    if (/^#{2,3} /.test(line)) heading = line.replace(/^#{2,3} /, '');\r\n    if (!expression.test(line)) return [];\r\n    assert.ok(!line.includes('\\\\|'), 'escaped table delimiters need an extractor update');\r\n    return [{ cells: line.split('|').slice(1, -1).map(cell => cell.trim()),\r\n      ref: reference(document, index + 1, heading), heading }];\r\n  });\r\n}\r\nfunction section(text, heading, document) {\r\n  const all = lines(text);\r\n  const start = all.findIndex(line => line === heading);\r\n  assert.notEqual(start, -1, `missing source section ${heading}`);\r\n  const end = all.findIndex((line, index) => index > start && /^#{1,2} /.test(line));\r\n  const last = end === -1 ? all.length : end;\r\n  return {\r\n    text: all.slice(start + 1, last).join('\\n').trim(),\r\n    reference: reference(document, start + 1, heading.replace(/^#+ /, ''))\r\n  };\r\n}\r\nfunction acceptedLesson(card) {\r\n  return card?.state === 'Done' && card.result?.outcome === 'published'\r\n    && card.review?.accepted === true && card.review.focusedTestsPassed === true\r\n    && card.review.browserObserved === true && card.review.remoteVerified === true\r\n    && /^[a-f0-9]{40}$/.test(card.publication?.commit || '')\r\n    && card.result.commit === card.publication.commit\r\n    && card.review.commit === card.publication.commit\r\n    && card.result.tag === card.publication.tag && card.review.tag === card.publication.tag\r\n    && card.publication.tag === `kanban/${card.id}/${card.publication.commit.slice(0, 12)}`\r\n    && typeof card.acceptedAtUtc === 'string' && Number.isFinite(Date.parse(card.acceptedAtUtc));\r\n}\r\nfunction learningFor(id, ledger) {\r\n  if (id.startsWith('W')) {\r\n    return { status: 'unavailable', available: false, cardId: null, href: null, evidence: null,\r\n      reason: 'No portable A-card lesson is defined for this integrated workflow. Its planned walkthrough and native execution are not delivered by the source catalog.' };\r\n  }\r\n  const cardId = `A-${id}`;\r\n  const card = ledger.cards.find(item => item.id === cardId);\r\n  if (!acceptedLesson(card)) {\r\n    return { status: 'unavailable', available: false, cardId, href: null, evidence: null,\r\n      reason: 'No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check.' };\r\n  }\r\n  return { status: 'accepted-snapshot', available: true, cardId,\r\n    href: `../../learning/${id}/index.html`,\r\n    evidence: { commit: card.publication.commit, tag: card.publication.tag, acceptedAtUtc: card.acceptedAtUtc },\r\n    reason: 'Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent.' };\r\n}\r\n\r\nfunction extractCatalog({ readme, backlog, ledgerText, commitTimeUtc }) {\r\n  const ledger = JSON.parse(ledgerText);\r\n  assert.equal(ledger.schemaVersion, 1, 'unsupported ledger version');\r\n  assert.ok(Array.isArray(ledger.cards) && Array.isArray(ledger.completedParents));\r\n  unique(ledger.cards, 'id');\r\n  const scenarios = sourceRows(readme, /^\\| S\\d{3} \\|/, 'readme');\r\n  const demos = sourceRows(backlog, /^\\| D-S\\d{3} \\|/, 'backlog');\r\n  const workflows = sourceRows(backlog, /^\\| W\\d{3} \\|/, 'backlog');\r\n  assert.equal(scenarios.length, 150);\r\n  assert.equal(demos.length, 150);\r\n  assert.equal(workflows.length, 2);\r\n  const demoById = new Map(demos.map(row => [row.cells[0].slice(2), row]));\r\n  const entries = scenarios.map((row, index) => {\r\n    const [id, description] = row.cells;\r\n    assert.equal(id, `S${String(index + 1).padStart(3, '0')}`);\r\n    const match = /^\\*\\*(.+?):\\*\\* (.+)$/.exec(description);\r\n    assert.ok(match, `${id} must retain an explicit source title and required behavior`);\r\n    const demo = demoById.get(id);\r\n    assert.ok(demo, `missing ${id} demo`);\r\n    assert.equal(demo.cells.length, 5);\r\n    return {\r\n      id, kind: 'scenario', parentId: demo.cells[0],\r\n      category: { id: row.heading.slice(0, 1), title: row.heading.slice(3) },\r\n      title: plain(match[1]), objective: plain(match[2]), priority: demo.cells[1],\r\n      implementation: plain(demo.cells[2]), acceptance: plain(demo.cells[3]),\r\n      prerequisites: { additional: demo.cells[4], inheritsBase: true },\r\n      sourceReferences: [row.ref, demo.ref]\r\n    };\r\n  });\r\n  workflows.forEach((row, index) => {\r\n    const [id, priority, implementation, acceptance, dependencies] = row.cells;\r\n    assert.equal(id, `W00${index + 1}`);\r\n    const title = /\\*\\*(.+?)\\*\\*/.exec(implementation);\r\n    assert.ok(title, `missing workflow title ${id}`);\r\n    entries.push({\r\n      id, kind: 'workflow', parentId: id,\r\n      category: { id: 'W', title: 'Integrated guided demonstrations' },\r\n      title: plain(title[1]), objective: plain(implementation), priority,\r\n      implementation: plain(implementation), acceptance: plain(acceptance),\r\n      prerequisites: { additional: dependencies, inheritsBase: false },\r\n      sourceReferences: [row.ref]\r\n    });\r\n  });\r\n  unique(entries, 'id');\r\n  for (const entry of entries) {\r\n    assert.ok(!ledger.completedParents.includes(entry.parentId), 'v1 does not certify completed source parents');\r\n    Object.assign(entry, {\r\n      risk: 'unclassified',\r\n      learning: learningFor(entry.id, ledger),\r\n      native: { status: 'unverified', runnable: false, qualified: false, evidence: [], reason: NATIVE_REASON },\r\n      support: { status: 'unknown', reason: SUPPORT_REASON },\r\n      parent: { completed: false, status: 'planned', reason: PARENT_REASON }\r\n    });\r\n  }\r\n  return {\r\n    schemaVersion: '1.0.0', kind: 'source-scenario-catalog', cardId: 'C005',\r\n    scope: 'local-source-derived-snapshot',\r\n    source: {\r\n      commit: PINNED_COMMIT, commitTimeUtc,\r\n      readme: { path: SOURCE_PATHS.readme, sha256: sha(readme) },\r\n      backlog: { path: SOURCE_PATHS.backlog, sha256: sha(backlog) }\r\n    },\r\n    acceptanceSnapshot: {\r\n      commit: PINNED_COMMIT, commitTimeUtc, ledgerPath: SOURCE_PATHS.ledger,\r\n      ledgerSha256: sha(ledgerText), ledgerUpdatedAtUtc: ledger.updatedAtUtc, live: false\r\n    },\r\n    capabilityMatrix: {\r\n      cardId: 'C003', schemaVersion: '1.0.0', sourceCommit: PINNED_COMMIT,\r\n      dataPath: 'capability\\\\C003\\\\matrix-data.js',\r\n      contractPath: 'capability\\\\C003\\\\matrix-contract.js', href: '../C003/index.html'\r\n    },\r\n    common: {\r\n      riskReason: RISK_REASON,\r\n      dependencyRules: section(backlog, '## Priorities and dependencies', 'backlog'),\r\n      sharedDefinitionOfDone: section(backlog, '## Shared definition of done', 'backlog'),\r\n      operatingLimits: section(readme, '## Lifecycle and safety gates', 'readme'),\r\n      acceptanceAndEvidence: section(readme, '## Acceptance and evidence', 'readme'),\r\n      workflowScope: 'Integrated workflows compose source scenarios; they are not two additional source strategies.'\r\n    },\r\n    entries\r\n  };\r\n}\r\nfunction readPinnedSources() {\r\n  const show = document => git(['show', `${PINNED_COMMIT}:${SOURCE_PATHS[document].replaceAll('\\\\', '/')}`]);\r\n  return {\r\n    readme: show('readme'), backlog: show('backlog'), ledgerText: show('ledger'),\r\n    commitTimeUtc: new Date(git(['show', '-s', '--format=%cI', PINNED_COMMIT]).trim()).toISOString()\r\n  };\r\n}\r\nfunction buildCatalog() {\r\n  return extractCatalog(readPinnedSources());\r\n}\r\nfunction serialize(catalog) {\r\n  return `(function (root, factory) {\\n  'use strict';\\n  if (typeof module === 'object' && module.exports) module.exports = factory();\\n  else Object.defineProperty(root, 'C005Catalog', { value: factory() });\\n}(globalThis, function () {\\n  'use strict';\\n  function freeze(value) {\\n    if (va"... 2184 more characters,
+    expected: /readdir|glob|git[^\n]*\b(?:add|commit|push|checkout|reset)\b/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }

@@ -1,0 +1,124 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./catalog-contract.js'));
+  else {
+    const page = factory(root.C005Contract);
+    Object.defineProperty(root, 'C005Page', { value: page });
+    page.renderCatalog(root.C005Catalog, root.C003Matrix, root.document);
+  }
+}(globalThis, function (contract) {
+  'use strict';
+
+  function renderCatalog(catalog, matrix, document) {
+    const byId = id => document.getElementById(id);
+    const cards = byId('catalog-entries');
+    const categories = byId('categories');
+    const error = byId('catalog-error');
+    const empty = byId('catalog-empty');
+    const count = byId('catalog-count');
+    const snapshot = byId('snapshot-summary');
+    const snapshotSource = byId('snapshot-source');
+    function element(tag, text, className) {
+      const node = document.createElement(tag);
+      if (text !== undefined) node.textContent = text;
+      if (className) node.className = className;
+      return node;
+    }
+    function link(text, href, className) {
+      const node = element('a', text, className);
+      node.href = href;
+      return node;
+    }
+    function clear() {
+      cards.replaceChildren();
+      categories.replaceChildren();
+      snapshotSource.replaceChildren();
+    }
+    function failure(message) {
+      clear();
+      error.textContent = `Catalog unavailable: ${message} No previous cards or availability claims are retained.`;
+      error.hidden = false;
+      empty.hidden = false;
+      count.textContent = 'Catalog unavailable — counts and availability are unverified.';
+      snapshot.textContent = 'No validated committed snapshot. Do not infer availability from local files or this empty view.';
+      return false;
+    }
+    try {
+      if (!contract || typeof contract.validateCatalog !== 'function') return failure('C005 validation contract did not load.');
+      const validation = contract.validateCatalog(catalog, matrix);
+      if (!validation.valid) return failure(validation.errors.join('; '));
+      clear();
+      const source = catalog.acceptanceSnapshot;
+      snapshot.textContent = `As-of commit ${source.commit}; commit time ${source.commitTimeUtc}; ledger updated ${source.ledgerUpdatedAtUtc}. This is a committed historical snapshot, not live availability.`;
+      snapshotSource.append(link('Read the pinned committed ledger (not the worktree ledger)',
+        `https://github.com/chadhage/app-scaling-strategies/blob/${source.commit}/.docs/wiki/flow-state.json`));
+      const groups = new Map();
+      const navList = element('ul');
+      categories.append(navList);
+      for (const entry of catalog.entries) {
+        if (!groups.has(entry.category.id)) {
+          const section = element('section', undefined, 'source-group');
+          section.id = `section-${entry.category.id}`;
+          section.tabIndex = -1;
+          const heading = element('h2', `${entry.category.id}. ${entry.category.title}`);
+          heading.id = `heading-${entry.category.id}`;
+          section.setAttribute('aria-labelledby', heading.id);
+          section.append(heading);
+          cards.append(section);
+          groups.set(entry.category.id, section);
+          const item = element('li');
+          item.append(link(`${entry.category.id}. ${entry.category.title}`, `#${section.id}`));
+          navList.append(item);
+        }
+        const article = element('article', undefined, 'catalog-entry');
+        article.dataset.entryId = entry.id;
+        article.dataset.kind = entry.kind;
+        const heading = element('h3', `${entry.id} — ${entry.title}`);
+        heading.id = `entry-${entry.id}`;
+        article.id = entry.id;
+        article.setAttribute('aria-labelledby', heading.id);
+        article.append(heading, element('p', entry.objective, 'objective'));
+        const availability = element('dl');
+        function field(label, value, className) {
+          const term = element('dt', label);
+          const description = element('dd', undefined, className);
+          if (typeof value === 'string') description.textContent = value;
+          else description.append(value);
+          availability.append(term, description);
+          return description;
+        }
+        field('Source priority', `${entry.priority} — ordering guidance, not risk or permission.`);
+        const lesson = entry.learning;
+        const learning = field('Portable learning',
+          lesson.available ? 'Accepted in snapshot only. ' : 'Unavailable in snapshot. ', 'learning-status');
+        if (lesson.available) {
+          learning.append(link(`Open ${entry.id} accepted synthetic lesson`, lesson.href, 'lesson-link'));
+          learning.append(element('p', `Accepted ${lesson.evidence.acceptedAtUtc}; implementation ${lesson.evidence.commit}; annotated tag ${lesson.evidence.tag}.`));
+        }
+        learning.append(element('p', lesson.reason));
+        field('Native execution', `Not runnable; qualified: false. ${entry.native.reason}`, 'native-status');
+        const support = field('Target support', `${entry.support.reason} `, 'support-status');
+        support.append(link(`Read C003 configuration reasons for ${entry.id}`, catalog.capabilityMatrix.href));
+        field('Source parent', `${entry.parentId} — incomplete. ${entry.parent.reason}`, 'parent-status');
+        article.append(availability);
+        const sources = element('p', undefined, 'source-links');
+        for (const [index, reference] of entry.sourceReferences.entries()) {
+          if (index) sources.append(document.createTextNode(' · '));
+          const label = reference.document === 'readme' ? `README ${entry.id}` : `Backlog ${entry.parentId}`;
+          sources.append(link(`${label} (source line ${reference.line})`, contract.sourceHref(catalog, reference), 'source-link'));
+        }
+        article.append(sources);
+        groups.get(entry.category.id).append(article);
+      }
+      const accepted = catalog.entries.filter(entry => entry.learning.available).length;
+      count.textContent = `150 source scenarios · 2 guided workflows · ${accepted} accepted portable lessons in snapshot · 0 native runnable · 0 completed source parents.`;
+      error.textContent = '';
+      error.hidden = true;
+      empty.hidden = true;
+      return true;
+    } catch (caught) {
+      return failure(caught instanceof Error ? caught.message : 'Local data could not be rendered.');
+    }
+  }
+  return Object.freeze({ renderCatalog });
+}));
