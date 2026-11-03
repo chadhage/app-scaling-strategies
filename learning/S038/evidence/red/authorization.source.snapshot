@@ -1,0 +1,27 @@
+(function (root, factory) {
+  "use strict";
+  const api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  else root.TenantContinuity = api;
+}(typeof globalThis === "object" ? globalThis : this, function () {
+  "use strict";
+  const BANNER = "Training rehearsal - synthetic data - not a live Azure result";
+  const MAX_RUNS = 6;
+  function createState() { return { schemaVersion: 1, history: [] }; }
+  function conduct(state, config) {
+    return {
+      schemaVersion: 1,
+      history: [...state.history, {
+        id: state.history.length + 1,
+        config,
+        outcome: "UNKNOWN",
+        verifier: "UNVERIFIED",
+        counts: { attempted: 0, success: 0, failure: 0, unknown: 0 },
+        migratedTenants: [],
+        trace: []
+      }]
+    };
+  }
+  function reset() { return createState(); }
+  return { BANNER, MAX_RUNS, createState, conduct, reset };
+}));

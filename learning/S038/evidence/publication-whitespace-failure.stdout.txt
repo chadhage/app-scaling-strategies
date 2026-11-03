@@ -1,0 +1,252 @@
+learning/S038/evidence/iac-na.json:1: trailing whitespace.
++{
+learning/S038/evidence/iac-na.json:2: trailing whitespace.
++  "cardId": "A-S038",
+learning/S038/evidence/iac-na.json:3: trailing whitespace.
++  "stage": "after behavioral RED, before implementation",
+learning/S038/evidence/iac-na.json:4: trailing whitespace.
++  "status": "N/A",
+learning/S038/evidence/iac-na.json:5: trailing whitespace.
++  "reason": "This portable lesson is deterministic HTML, CSS and JavaScript with synthetic in-memory records. No cloud resource, infrastructure, server, lease, authentication, identity registration, deployment or expenditure is needed or authorized.",
+learning/S038/evidence/iac-na.json:6: trailing whitespace.
++  "precedingEvidence": "red.raw.json",
+learning/S038/evidence/iac-na.json:7: trailing whitespace.
++  "nativeRemainder": "B-S038 and the original D-S038 target-host gates remain unimplemented and unverified."
+learning/S038/evidence/iac-na.json:8: trailing whitespace.
++}
+learning/S038/evidence/red/assertion.source.snapshot:1: trailing whitespace.
++"use strict";
+learning/S038/evidence/red/assertion.source.snapshot:2: trailing whitespace.
++const test = require("node:test");
+learning/S038/evidence/red/assertion.source.snapshot:3: trailing whitespace.
++const assert = require("node:assert/strict");
+learning/S038/evidence/red/assertion.source.snapshot:4: trailing whitespace.
++const lesson = require("../authorization.js");
+learning/S038/evidence/red/assertion.source.snapshot:5: trailing whitespace.
++
+learning/S038/evidence/red/assertion.source.snapshot:6: trailing whitespace.
++const defaults = () => ({
+learning/S038/evidence/red/assertion.source.snapshot:7: trailing whitespace.
++  routes: { alba: "v2", birch: "v2" },
+learning/S038/evidence/red/assertion.source.snapshot:8: trailing whitespace.
++  policy: "isolated",
+learning/S038/evidence/red/assertion.source.snapshot:9: trailing whitespace.
++  assertions: { ownRead: true, rejectForeign: true, dataTenant: true }
+learning/S038/evidence/red/assertion.source.snapshot:10: trailing whitespace.
++});
+learning/S038/evidence/red/assertion.source.snapshot:11: trailing whitespace.
++
+learning/S038/evidence/red/assertion.source.snapshot:12: trailing whitespace.
++test("isolated permissions survive changed destinations with all 16 tenant probes attributed", () => {
+learning/S038/evidence/red/assertion.source.snapshot:13: trailing whitespace.
++  const state = lesson.conduct(lesson.createState(), defaults());
+learning/S038/evidence/red/assertion.source.snapshot:14: trailing whitespace.
++  const run = state.history[0];
+learning/S038/evidence/red/assertion.source.snapshot:15: trailing whitespace.
++  assert.deepEqual(run.counts, { attempted: 16, success: 16, failure: 0, unknown: 0 });
+learning/S038/evidence/red/assertion.source.snapshot:16: trailing whitespace.
++  assert.equal(run.outcome, "SUCCESS");
+learning/S038/evidence/red/assertion.source.snapshot:17: trailing whitespace.
++  assert.equal(run.verifier, "PASS");
+learning/S038/evidence/red/assertion.source.snapshot:18: trailing whitespace.
++  assert.deepEqual(run.migratedTenants, ["alba", "birch"]);
+learning/S038/evidence/red/assertion.source.snapshot:19: trailing whitespace.
++  assert.equal(run.trace.length, 16);
+learning/S038/evidence/red/assertion.source.snapshot:20: trailing whitespace.
++});
+learning/S038/evidence/red/authorization.source.snapshot:1: trailing whitespace.
++(function (root, factory) {
+learning/S038/evidence/red/authorization.source.snapshot:2: trailing whitespace.
++  "use strict";
+learning/S038/evidence/red/authorization.source.snapshot:3: trailing whitespace.
++  const api = factory();
+learning/S038/evidence/red/authorization.source.snapshot:4: trailing whitespace.
++  if (typeof module === "object" && module.exports) module.exports = api;
+learning/S038/evidence/red/authorization.source.snapshot:5: trailing whitespace.
++  else root.TenantContinuity = api;
+learning/S038/evidence/red/authorization.source.snapshot:6: trailing whitespace.
++}(typeof globalThis === "object" ? globalThis : this, function () {
+learning/S038/evidence/red/authorization.source.snapshot:7: trailing whitespace.
++  "use strict";
+learning/S038/evidence/red/authorization.source.snapshot:8: trailing whitespace.
++  const BANNER = "Training rehearsal - synthetic data - not a live Azure result";
+learning/S038/evidence/red/authorization.source.snapshot:9: trailing whitespace.
++  const MAX_RUNS = 6;
+learning/S038/evidence/red/authorization.source.snapshot:10: trailing whitespace.
++  function createState() { return { schemaVersion: 1, history: [] }; }
+learning/S038/evidence/red/authorization.source.snapshot:11: trailing whitespace.
++  function conduct(state, config) {
+learning/S038/evidence/red/authorization.source.snapshot:12: trailing whitespace.
++    return {
+learning/S038/evidence/red/authorization.source.snapshot:13: trailing whitespace.
++      schemaVersion: 1,
+learning/S038/evidence/red/authorization.source.snapshot:14: trailing whitespace.
++      history: [...state.history, {
+learning/S038/evidence/red/authorization.source.snapshot:15: trailing whitespace.
++        id: state.history.length + 1,
+learning/S038/evidence/red/authorization.source.snapshot:16: trailing whitespace.
++        config,
+learning/S038/evidence/red/authorization.source.snapshot:17: trailing whitespace.
++        outcome: "UNKNOWN",
+learning/S038/evidence/red/authorization.source.snapshot:18: trailing whitespace.
++        verifier: "UNVERIFIED",
+learning/S038/evidence/red/authorization.source.snapshot:19: trailing whitespace.
++        counts: { attempted: 0, success: 0, failure: 0, unknown: 0 },
+learning/S038/evidence/red/authorization.source.snapshot:20: trailing whitespace.
++        migratedTenants: [],
+learning/S038/evidence/red/authorization.source.snapshot:21: trailing whitespace.
++        trace: []
+learning/S038/evidence/red/authorization.source.snapshot:22: trailing whitespace.
++      }]
+learning/S038/evidence/red/authorization.source.snapshot:23: trailing whitespace.
++    };
+learning/S038/evidence/red/authorization.source.snapshot:24: trailing whitespace.
++  }
+learning/S038/evidence/red/authorization.source.snapshot:25: trailing whitespace.
++  function reset() { return createState(); }
+learning/S038/evidence/red/authorization.source.snapshot:26: trailing whitespace.
++  return { BANNER, MAX_RUNS, createState, conduct, reset };
+learning/S038/evidence/red/authorization.source.snapshot:27: trailing whitespace.
++}));
+learning/S038/evidence/red/bdd.feature.snapshot:1: trailing whitespace.
++Feature: S038 tenant authorization continuity after routing changes
+learning/S038/evidence/red/bdd.feature.snapshot:2: trailing whitespace.
++  # A-S038 / D-S038 / SC-S038; one frozen S unit, synthetic browser lesson only.
+learning/S038/evidence/red/bdd.feature.snapshot:3: trailing whitespace.
++  Background:
+learning/S038/evidence/red/bdd.feature.snapshot:4: trailing whitespace.
++    Given two synthetic members belong to tenants Alba and Birch respectively
+learning/S038/evidence/red/bdd.feature.snapshot:5: trailing whitespace.
++    And v1 and v2 are both directly reachable before and after the routing change
+learning/S038/evidence/red/bdd.feature.snapshot:6: trailing whitespace.
++    And each member may read only its own tenant's synthetic record
+learning/S038/evidence/red/bdd.feature.snapshot:7: trailing whitespace.
++    And both versions enforce that rule before the change
+learning/S038/evidence/red/bdd.feature.snapshot:8: trailing whitespace.
++    And no authentication, cloud, network, or persistent resource is used
+learning/S038/evidence/red/bdd.feature.snapshot:9: trailing whitespace.
++
+learning/S038/evidence/red/bdd.feature.snapshot:10: trailing whitespace.
++  Scenario: Change both destinations without changing tenant permissions
+learning/S038/evidence/red/bdd.feature.snapshot:11: trailing whitespace.
++    When the operator routes both tenants from v1 to v2
+learning/S038/evidence/red/bdd.feature.snapshot:12: trailing whitespace.
++    And selects own-read permission, forbidden-read rejection, and data-tenant assertions
+learning/S038/evidence/red/bdd.feature.snapshot:13: trailing whitespace.
++    And v2 retains the isolated policy
+learning/S038/evidence/red/bdd.feature.snapshot:14: trailing whitespace.
++    Then all 16 before/after, version, member, and own/foreign probes succeed
+learning/S038/evidence/red/bdd.feature.snapshot:15: trailing whitespace.
++    And forbidden reads explicitly return synthetic 403 with no data
+learning/S038/evidence/red/bdd.feature.snapshot:16: trailing whitespace.
++    And both routed destinations and direct reachable versions are attributed
+learning/S038/evidence/red/bdd.feature.snapshot:17: trailing whitespace.
++
+learning/S038/evidence/red/bdd.feature.snapshot:18: trailing whitespace.
++  Scenario: An unselected destination still needs authorization coverage
+learning/S038/evidence/red/bdd.feature.snapshot:19: trailing whitespace.
++    When Alba stays on v1 and Birch moves to v2
+learning/S038/evidence/red/bdd.feature.snapshot:20: trailing whitespace.
++    And v2 no longer checks the requesting member's tenant
+learning/S038/evidence/red/bdd.feature.snapshot:21: trailing whitespace.
++    Then both foreign reads on v2 after the change return synthetic 200 with foreign data
+learning/S038/evidence/red/bdd.feature.snapshot:22: trailing whitespace.
++    And the result is FAILURE with 14 successes, 2 failures, and 0 unknowns
+learning/S038/evidence/red/bdd.feature.snapshot:23: trailing whitespace.
++    And the trace identifies Alba's v2 failure as a direct reachable-version probe
+learning/S038/evidence/red/bdd.feature.snapshot:24: trailing whitespace.
++
+learning/S038/evidence/red/bdd.feature.snapshot:25: trailing whitespace.
++  Scenario: A successful own-read status can still expose another tenant's data
+learning/S038/evidence/red/bdd.feature.snapshot:26: trailing whitespace.
++    When v2 returns the other tenant's record for an authorized read
+learning/S038/evidence/red/bdd.feature.snapshot:27: trailing whitespace.
++    Then the data-tenant assertion fails for both v2 members after the change
+learning/S038/evidence/red/bdd.feature.snapshot:28: trailing whitespace.
++    And a 200 response alone cannot establish authorization continuity
+learning/S038/evidence/red/bdd.feature.snapshot:29: trailing whitespace.
++
+learning/S038/evidence/red/bdd.feature.snapshot:30: trailing whitespace.
++  Scenario: Over-restrictive permissions also break continuity
+learning/S038/evidence/red/bdd.feature.snapshot:31: trailing whitespace.
++    When v2 rejects authorized own-tenant reads after the change
+learning/S038/evidence/red/bdd.feature.snapshot:32: trailing whitespace.
++    Then both affected own-read probes fail
+learning/S038/evidence/red/bdd.feature.snapshot:33: trailing whitespace.
++    And correct rejection of foreign reads does not hide lost permissions
+learning/S038/evidence/red/bdd.feature.snapshot:34: trailing whitespace.
++
+learning/S038/evidence/red/bdd.feature.snapshot:35: trailing whitespace.
++  Scenario: Missing observations and missing assertions are not passes
+learning/S038/evidence/red/bdd.feature.snapshot:36: trailing whitespace.
++    When v2 responses after the change are unobserved
+learning/S038/evidence/red/bdd.feature.snapshot:37: trailing whitespace.
++    Then the result is UNKNOWN with 12 successes, 0 failures, and 4 unknowns
+learning/S038/evidence/red/bdd.feature.snapshot:38: trailing whitespace.
++    When the operator omits the forbidden-read rejection assertion
+learning/S038/evidence/red/bdd.feature.snapshot:39: trailing whitespace.
++    Then all 8 foreign-read probes are UNKNOWN even if their response is visible
+learning/S038/evidence/red/bdd.feature.snapshot:40: trailing whitespace.
++    And an observed failed assertion takes precedence over missing coverage
+learning/S038/evidence/red/bdd.feature.snapshot:41: trailing whitespace.
++
+learning/S038/evidence/red/bdd.feature.snapshot:42: trailing whitespace.
++  Scenario: Retain a failing run before a corrected run
+learning/S038/evidence/red/bdd.feature.snapshot:43: trailing whitespace.
++    Given a completed run exposed cross-tenant access
+learning/S038/evidence/red/bdd.feature.snapshot:44: trailing whitespace.
++    When the operator changes the policy and conducts a corrected run
+learning/S038/evidence/red/bdd.feature.snapshot:45: trailing whitespace.
++    Then both immutable configurations, traces, counts, and outcomes remain in history
+learning/S038/evidence/red/bdd.feature.snapshot:46: trailing whitespace.
++    And no more than 6 runs can be retained without an explicit reset
+learning/S038/evidence/red/bdd.feature.snapshot:47: trailing whitespace.
++    And unchanged inputs reproduce the same synthetic trace
+learning/S038/evidence/red/bdd.feature.snapshot:48: trailing whitespace.
++
+learning/S038/evidence/red/bdd.feature.snapshot:49: trailing whitespace.
++  Scenario: Reject invalid inputs or corrupted state without mutation
+learning/S038/evidence/red/bdd.feature.snapshot:50: trailing whitespace.
++    When a route, policy, assertion record, or history is invalid
+learning/S038/evidence/red/bdd.feature.snapshot:51: trailing whitespace.
++    Then the exercise reports an error without adding a run
+learning/S038/evidence/red/bdd.feature.snapshot:52: trailing whitespace.
++    And coercions, unexpected keys, accessors, sparse arrays, and forged results are rejected
+learning/S038/evidence/red/bdd.feature.snapshot:53: trailing whitespace.
++
+learning/S038/evidence/red/bdd.feature.snapshot:54: trailing whitespace.
++  Scenario: Operate, inspect, and reset with the keyboard
+learning/S038/evidence/red/bdd.feature.snapshot:55: trailing whitespace.
++    Then the exact training banner is prominent
+learning/S038/evidence/red/bdd.feature.snapshot:56: trailing whitespace.
++    And native controls, skip navigation, retained details, and reset work by keyboard
+learning/S038/evidence/red/bdd.feature.snapshot:57: trailing whitespace.
++    And changed controls hide stale current results but retain historical failures
+learning/S038/evidence/red/bdd.feature.snapshot:58: trailing whitespace.
++    And reset restores defaults, clears history and errors, and focuses the first route
+learning/S038/evidence/red/bdd.feature.snapshot:59: trailing whitespace.
++    And CSP blocks inline code, connections, images, frames, workers, and form submission
+learning/S038/evidence/tooling.json:1: trailing whitespace.
++{
+learning/S038/evidence/tooling.json:2: trailing whitespace.
++  "checkedAtUtc": "2026-11-03T17:46:56.1299999Z",
+learning/S038/evidence/tooling.json:3: trailing whitespace.
++  "node": "v22.23.4",
+learning/S038/evidence/tooling.json:4: trailing whitespace.
++  "playwright": "1.56.1",
+learning/S038/evidence/tooling.json:5: trailing whitespace.
++  "edgePath": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+learning/S038/evidence/tooling.json:6: trailing whitespace.
++  "edgeVersion": "156.0.4314.50",
+learning/S038/evidence/tooling.json:7: trailing whitespace.
++  "signatureStatus": "Valid",
+learning/S038/evidence/tooling.json:8: trailing whitespace.
++  "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+learning/S038/evidence/tooling.json:9: trailing whitespace.
++  "edgeSha256": "F87D927BED3597F19C70AF67BC786DD22E4ECA3B5C7CC050336A016BB42F7FDA",
+learning/S038/evidence/tooling.json:10: trailing whitespace.
++  "helperSha256": "86C80BC2CE52F828A96B176056706C60970BE4367B085DC0919D3BFCE86CC055",
+learning/S038/evidence/tooling.json:11: trailing whitespace.
++  "helperCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+learning/S038/evidence/tooling.json:12: trailing whitespace.
++  "qualification": "Existing local Node22 / offline PW1.56.1 / signed Edge156 tooling only; not production24, native Azure or source-parent proof."

@@ -1,0 +1,50 @@
+TAP version 13
+# Subtest: isolated permissions survive changed destinations with all 16 tenant probes attributed
+not ok 1 - isolated permissions survive changed destinations with all 16 tenant probes attributed
+  ---
+  duration_ms: 4.0242
+  type: 'test'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+    +   attempted: 0,
+    -   attempted: 16,
+        failure: 0,
+    +   success: 0,
+    -   success: 16,
+        unknown: 0
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    attempted: 16
+    success: 16
+    failure: 0
+    unknown: 0
+  actual:
+    attempted: 0
+    success: 0
+    failure: 0
+    unknown: 0
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.eval (eval at <anonymous> ([eval]:10:5), <anonymous>:17:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 16.7531
+Archived behavioral RED reproduced; expected assertion failure, not missing code or tools.

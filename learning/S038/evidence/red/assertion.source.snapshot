@@ -1,0 +1,20 @@
+"use strict";
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const lesson = require("../authorization.js");
+
+const defaults = () => ({
+  routes: { alba: "v2", birch: "v2" },
+  policy: "isolated",
+  assertions: { ownRead: true, rejectForeign: true, dataTenant: true }
+});
+
+test("isolated permissions survive changed destinations with all 16 tenant probes attributed", () => {
+  const state = lesson.conduct(lesson.createState(), defaults());
+  const run = state.history[0];
+  assert.deepEqual(run.counts, { attempted: 16, success: 16, failure: 0, unknown: 0 });
+  assert.equal(run.outcome, "SUCCESS");
+  assert.equal(run.verifier, "PASS");
+  assert.deepEqual(run.migratedTenants, ["alba", "birch"]);
+  assert.equal(run.trace.length, 16);
+});

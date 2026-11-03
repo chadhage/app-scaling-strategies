@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "sourceId": "S038",
+  "cardId": "A-S038",
+  "parentIds": ["D-S038"],
+  "kano": "S",
+  "kanoUnit": "A-S038",
+  "packet": "SC-S038",
+  "owner": "worker-A-S038",
+  "technicalEntryGate": "SOURCE",
+  "mode": "training-rehearsal",
+  "title": "Tenant authorization continuity",
+  "entry": "index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Change destinations for two tenants; select assertions that expose cross-tenant access while checking that authorized permissions are retained.",
+  "preconditions": [
+    "Alba and Birch each have a synthetic member and record; each member may read only its own tenant's record.",
+    "v1 and v2 remain directly reachable before and after the change; both are isolated before the change.",
+    "Both tenants initially route to v1. v1 stays isolated after the change.",
+    "This is an in-memory deterministic policy fixture, not real authentication or authorization against a service."
+  ],
+  "actions": [
+    "Choose the after-change v1 or v2 destination independently for each tenant.",
+    "Choose v2's after-change isolated, allow-foreign, wrong-data, deny-own, or unobserved policy.",
+    "Select own-read permission, foreign-read rejection, and data-tenant assertions.",
+    "Run the fixed before/after matrix, inspect every routed/direct observation, retain history, and reset explicitly."
+  ],
+  "syntheticInput": {
+    "tenants": ["alba", "birch"],
+    "versions": ["v1", "v2"],
+    "phases": ["before", "after"],
+    "readIntents": ["own", "foreign"],
+    "probesPerRun": 16,
+    "maxRetainedRuns": 6,
+    "storage": "Memory only; reload or explicit reset clears history."
+  },
+  "expectedAssertions": [
+    "Own reads retain a synthetic 200 response.",
+    "Foreign reads are explicitly rejected with synthetic 403 and no data.",
+    "Own-read data belongs to the requested tenant.",
+    "Missing observations or omitted applicable assertions are UNKNOWN, never success.",
+    "Observed selected assertion failures take precedence over unknown coverage.",
+    "Every reachable version is probed, even if not selected by a tenant's route."
+  ],
+  "results": {
+    "success": "All 16 probe outcomes succeed; verifier PASS is limited to this synthetic matrix.",
+    "failure": "At least one observed selected assertion fails; verifier FAIL.",
+    "unknown": "No selected assertion fails but at least one observation or required assertion is missing; verifier UNVERIFIED.",
+    "userImpact": "Synthetic only; real users UNMEASURED.",
+    "cleanup": "N/A — no resources."
+  },
+  "limits": [
+    "No cloud, IaC, server, lease, authentication, identity registration, credentials, deployment or spending.",
+    "No timers, randomness, network, browser storage, user-supplied URLs or arbitrary policy code.",
+    "No retirement or native-platform proof; a healthy direct endpoint does not imply both tenants migrated.",
+    "Node22, offline Playwright1.56.1 and signed Edge156 qualify local test tooling only; not production24 or five-nines reliability.",
+    "B-S038 and the original source-parent gates remain incomplete."
+  ]
+}
