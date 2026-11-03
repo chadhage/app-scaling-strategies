@@ -1,0 +1,830 @@
+learning/S035/evidence/browser-001.stdout.txt:12: trailing whitespace.
++        
+learning/S035/evidence/browser-001.stdout.txt:14: trailing whitespace.
++        
+learning/S035/evidence/browser-001.stdout.txt:44: trailing whitespace.
++        
+learning/S035/evidence/browser-001.stdout.txt:46: trailing whitespace.
++        
+learning/S035/evidence/browser-001.stdout.txt:118: trailing whitespace.
++        
+learning/S035/evidence/browser-001.stdout.txt:120: trailing whitespace.
++        
+learning/S035/evidence/browser-001.stdout.txt:146: trailing whitespace.
++        
+learning/S035/evidence/browser-001.stdout.txt:164: trailing whitespace.
++        
+learning/S035/evidence/browser-001.stdout.txt:166: trailing whitespace.
++        
+learning/S035/evidence/iac-na.json:1: trailing whitespace.
++{
+learning/S035/evidence/iac-na.json:2: trailing whitespace.
++  "cardId": "A-S035",
+learning/S035/evidence/iac-na.json:3: trailing whitespace.
++  "workerId": "worker-A-S035",
+learning/S035/evidence/iac-na.json:4: trailing whitespace.
++  "packet": "SC-S035",
+learning/S035/evidence/iac-na.json:5: trailing whitespace.
++  "kanoUnit": "A-S035",
+learning/S035/evidence/iac-na.json:6: trailing whitespace.
++  "kano": "S",
+learning/S035/evidence/iac-na.json:7: trailing whitespace.
++  "recordedAtUtc": "2026-11-03T17:37:02.5622959Z",
+learning/S035/evidence/iac-na.json:8: trailing whitespace.
++  "after": "red-001.json",
+learning/S035/evidence/iac-na.json:9: trailing whitespace.
++  "before": "Behavior implementation",
+learning/S035/evidence/iac-na.json:10: trailing whitespace.
++  "decision": "N/A",
+learning/S035/evidence/iac-na.json:11: trailing whitespace.
++  "reason": "Standalone deterministic HTML/JavaScript training lesson; no resources, listener, infrastructure, identity provider, registration, real token, credential, deployment or spending is required or authorized.",
+learning/S035/evidence/iac-na.json:12: trailing whitespace.
++  "red": {
+learning/S035/evidence/iac-na.json:13: trailing whitespace.
++    "tests": 20,
+learning/S035/evidence/iac-na.json:14: trailing whitespace.
++    "passed": 0,
+learning/S035/evidence/iac-na.json:15: trailing whitespace.
++    "failed": 20,
+learning/S035/evidence/iac-na.json:16: trailing whitespace.
++    "allFailureCodes": "ERR_ASSERTION",
+learning/S035/evidence/iac-na.json:17: trailing whitespace.
++    "loadableStub": true,
+learning/S035/evidence/iac-na.json:18: trailing whitespace.
++    "missingCodeOrToolFailure": false
+learning/S035/evidence/iac-na.json:19: trailing whitespace.
++  },
+learning/S035/evidence/iac-na.json:20: trailing whitespace.
++  "nativeSibling": "B-S035 remains a separate blocked native-proof card; A-only scope does not complete D-S035.",
+learning/S035/evidence/iac-na.json:21: trailing whitespace.
++  "productionNode24Qualified": false
+learning/S035/evidence/iac-na.json:22: trailing whitespace.
++}
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:1: trailing whitespace.
++Feature: S035 login callback during cutover
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:2: trailing whitespace.
++  # A-S035 / D-S035 / SC-S035; one frozen Kano S unit.
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:3: trailing whitespace.
++  # Training rehearsal - synthetic data - not a live Azure result
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:4: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:5: trailing whitespace.
++  Background:
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:6: trailing whitespace.
++    Given one synthetic learner starts login on v1 at 0 ms
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:7: trailing whitespace.
++    And routing cuts over to v2 at 40 ms
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:8: trailing whitespace.
++    And the original login budget is never restarted
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:9: trailing whitespace.
++    And no real identity provider, token, credential, network call or timer is used
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:10: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:11: trailing whitespace.
++  Scenario: Shared correlation and compatible callback complete the original login
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:12: trailing whitespace.
++    Given shared correlation, a matching synthetic state marker and a compatible callback
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:13: trailing whitespace.
++    And callback delay is 100 ms and the original budget is 500 ms
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:14: trailing whitespace.
++    When I start login, cut over, then deliver the callback
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:15: trailing whitespace.
++    Then v2 completes the original login at 160 ms with the original return path
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:16: trailing whitespace.
++    And the synthetic journey is SUCCESS with zero redirect hops or forced restart
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:17: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:18: trailing whitespace.
++  Scenario: Lost v1-local correlation is an interruption
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:19: trailing whitespace.
++    Given correlation is available only on v1
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:20: trailing whitespace.
++    When the callback reaches v2 after cutover
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:21: trailing whitespace.
++    Then the synthetic journey is FAILURE with STATE_LOST
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:22: trailing whitespace.
++    And a forced restart is identified as required but is not executed
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:23: trailing whitespace.
++    And no success-shaped replacement login is fabricated
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:24: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:25: trailing whitespace.
++  Scenario: A bounded redirect loop cannot count as authentication
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:26: trailing whitespace.
++    Given a redirect-loop callback path
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:27: trailing whitespace.
++    When the callback reaches v2 after cutover
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:28: trailing whitespace.
++    Then exactly three synthetic redirect hops are traced
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:29: trailing whitespace.
++    And the loop stops with FAILURE and no completed login
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:30: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:31: trailing whitespace.
++  Scenario: A mismatched synthetic correlation marker is rejected
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:32: trailing whitespace.
++    Given the returned synthetic state marker does not match
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:33: trailing whitespace.
++    When the callback reaches v2 after cutover
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:34: trailing whitespace.
++    Then the synthetic journey is FAILURE with STATE_MISMATCH
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:35: trailing whitespace.
++    And validation is not weakened to make migration look successful
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:36: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:37: trailing whitespace.
++  Scenario: End-to-end latency uses the original budget
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:38: trailing whitespace.
++    Given callback delay is 100 ms
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:39: trailing whitespace.
++    Then a budget of 160 ms succeeds
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:40: trailing whitespace.
++    But a budget of 159 ms fails even though login completes
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:41: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:42: trailing whitespace.
++  Scenario: Missing callback observations remain unknown
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:43: trailing whitespace.
++    Given callback observations are missing
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:44: trailing whitespace.
++    When I finish the synthetic exercise
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:45: trailing whitespace.
++    Then the synthetic journey is UNKNOWN
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:46: trailing whitespace.
++    And elapsed time, callback destination and completion are not invented
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:47: trailing whitespace.
++    And predicting UNKNOWN can pass the verifier without proving continuity
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:48: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:49: trailing whitespace.
++  Scenario: Prediction is independent of synthetic user impact
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:50: trailing whitespace.
++    Given correlation is available only on v1
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:51: trailing whitespace.
++    When I predict SUCCESS and finish the exercise
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:52: trailing whitespace.
++    Then the verifier is FAIL and the journey is FAILURE
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:53: trailing whitespace.
++    When a later run predicts FAILURE for the same condition
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:54: trailing whitespace.
++    Then the verifier is PASS and both failures remain in history
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:55: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:56: trailing whitespace.
++  Scenario: Invalid controls and out-of-order actions cannot change the run
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:57: trailing whitespace.
++    Given strict typed bounded inputs and a validated immutable state
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:58: trailing whitespace.
++    Then callback before cutover, repeated cutover and overlapping login are rejected
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:59: trailing whitespace.
++    And malformed, forged, sparse or oversized states are rejected
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:60: trailing whitespace.
++    And a seventh run is rejected without evicting any of the six retained runs
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:61: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:62: trailing whitespace.
++  Scenario: Keyboard operation, error recovery and reset are usable
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:63: trailing whitespace.
++    Given the standalone lesson is open with its exact training banner
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:64: trailing whitespace.
++    When I use Tab, native select keys and Enter
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:65: trailing whitespace.
++    Then I can start login, cut over, finish and inspect retained traces
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:66: trailing whitespace.
++    And invalid input focuses a visible alert without losing history
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:67: trailing whitespace.
++    And explicit reset restores defaults, clears only this lesson and focuses the first control
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:68: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:69: trailing whitespace.
++  Scenario: The browser enforces the local-only CSP
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:70: trailing whitespace.
++    Given only local external scripts and styles are permitted
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:71: trailing whitespace.
++    Then inline code and handlers, inline styles, connections, images, frames and workers are blocked
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:72: trailing whitespace.
++    And form submission and base changes are blocked
+learning/S035/evidence/red-001-callback.feature.snapshot.txt:73: trailing whitespace.
++    And the lesson makes no management or authentication request
+learning/S035/evidence/red-001-callback.js.snapshot.txt:1: trailing whitespace.
++(function (root, factory) {
+learning/S035/evidence/red-001-callback.js.snapshot.txt:2: trailing whitespace.
++  'use strict';
+learning/S035/evidence/red-001-callback.js.snapshot.txt:3: trailing whitespace.
++  const api = factory();
+learning/S035/evidence/red-001-callback.js.snapshot.txt:4: trailing whitespace.
++  if (typeof module === 'object' && module.exports) module.exports = api;
+learning/S035/evidence/red-001-callback.js.snapshot.txt:5: trailing whitespace.
++  else root.S035 = api;
+learning/S035/evidence/red-001-callback.js.snapshot.txt:6: trailing whitespace.
++}(typeof globalThis === 'object' ? globalThis : this, function () {
+learning/S035/evidence/red-001-callback.js.snapshot.txt:7: trailing whitespace.
++  'use strict';
+learning/S035/evidence/red-001-callback.js.snapshot.txt:8: trailing whitespace.
++  const MAX_HISTORY = 6;
+learning/S035/evidence/red-001-callback.js.snapshot.txt:9: trailing whitespace.
++  const DEFAULTS = {
+learning/S035/evidence/red-001-callback.js.snapshot.txt:10: trailing whitespace.
++    storeMode: 'shared', callbackPath: 'compatible', callbackState: 'matching',
+learning/S035/evidence/red-001-callback.js.snapshot.txt:11: trailing whitespace.
++    observations: 'complete', budgetMs: 500, delayMs: 100, prediction: 'SUCCESS',
+learning/S035/evidence/red-001-callback.js.snapshot.txt:12: trailing whitespace.
++  };
+learning/S035/evidence/red-001-callback.js.snapshot.txt:13: trailing whitespace.
++  function validateConfig(config) { return { ...config }; }
+learning/S035/evidence/red-001-callback.js.snapshot.txt:14: trailing whitespace.
++  function createLesson() { return { active: null, history: [] }; }
+learning/S035/evidence/red-001-callback.js.snapshot.txt:15: trailing whitespace.
++  function evaluate(config, id = 1) {
+learning/S035/evidence/red-001-callback.js.snapshot.txt:16: trailing whitespace.
++    return {
+learning/S035/evidence/red-001-callback.js.snapshot.txt:17: trailing whitespace.
++      id, config: validateConfig(config), outcome: 'UNKNOWN',
+learning/S035/evidence/red-001-callback.js.snapshot.txt:18: trailing whitespace.
++      reasons: ['CALLBACK_UNOBSERVED'], callbackVersion: null, elapsedMs: null,
+learning/S035/evidence/red-001-callback.js.snapshot.txt:19: trailing whitespace.
++      loginCompleted: null, correlationMatched: null, returnPath: null,
+learning/S035/evidence/red-001-callback.js.snapshot.txt:20: trailing whitespace.
++      redirectHops: null, restartRequired: null, budgetMs: config.budgetMs,
+learning/S035/evidence/red-001-callback.js.snapshot.txt:21: trailing whitespace.
++      counts: { success: 0, failure: 0, unknown: 1 },
+learning/S035/evidence/red-001-callback.js.snapshot.txt:22: trailing whitespace.
++      verifier: config.prediction === 'UNKNOWN' ? 'PASS' : 'FAIL',
+learning/S035/evidence/red-001-callback.js.snapshot.txt:23: trailing whitespace.
++      trace: [{ atMs: 0, version: 'v1', path: '/login', event: 'login-start', detail: 'Synthetic login started.' }],
+learning/S035/evidence/red-001-callback.js.snapshot.txt:24: trailing whitespace.
++    };
+learning/S035/evidence/red-001-callback.js.snapshot.txt:25: trailing whitespace.
++  }
+learning/S035/evidence/red-001-callback.js.snapshot.txt:26: trailing whitespace.
++  function startLogin(state, config) {
+learning/S035/evidence/red-001-callback.js.snapshot.txt:27: trailing whitespace.
++    return { history: state.history, active: { id: state.history.length + 1, stage: 'started', config: validateConfig(config) } };
+learning/S035/evidence/red-001-callback.js.snapshot.txt:28: trailing whitespace.
++  }
+learning/S035/evidence/red-001-callback.js.snapshot.txt:29: trailing whitespace.
++  function cutover(state) { return { history: state.history, active: { ...state.active, stage: 'cutover' } }; }
+learning/S035/evidence/red-001-callback.js.snapshot.txt:30: trailing whitespace.
++  function deliverCallback(state) {
+learning/S035/evidence/red-001-callback.js.snapshot.txt:31: trailing whitespace.
++    return { active: null, history: [...state.history, evaluate(state.active.config, state.active.id)] };
+learning/S035/evidence/red-001-callback.js.snapshot.txt:32: trailing whitespace.
++  }
+learning/S035/evidence/red-001-callback.js.snapshot.txt:33: trailing whitespace.
++  return { MAX_HISTORY, DEFAULTS, validateConfig, createLesson, evaluate, startLogin, cutover, deliverCallback };
+learning/S035/evidence/red-001-callback.js.snapshot.txt:34: trailing whitespace.
++}));
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:1: trailing whitespace.
++'use strict';
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:2: trailing whitespace.
++const test = require('node:test');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:3: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:4: trailing whitespace.
++const model = require('..\\callback.js');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:5: trailing whitespace.
++const config = (changes = {}) => ({ ...model.DEFAULTS, ...changes });
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:6: trailing whitespace.
++function run(state = model.createLesson(), changes = {}) {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:7: trailing whitespace.
++  return model.deliverCallback(model.cutover(model.startLogin(state, config(changes))));
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:8: trailing whitespace.
++}
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:9: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:10: trailing whitespace.
++test('default callback completes the original v1 login on v2 at 160 ms', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:11: trailing whitespace.
++  const result = run().history[0];
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:12: trailing whitespace.
++  assert.equal(result.outcome, 'SUCCESS');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:13: trailing whitespace.
++  assert.equal(result.callbackVersion, 'v2');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:14: trailing whitespace.
++  assert.equal(result.elapsedMs, 160);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:15: trailing whitespace.
++  assert.equal(result.loginCompleted, true);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:16: trailing whitespace.
++  assert.equal(result.correlationMatched, true);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:17: trailing whitespace.
++  assert.equal(result.returnPath, '/training/home');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:18: trailing whitespace.
++  assert.equal(result.redirectHops, 0);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:19: trailing whitespace.
++  assert.equal(result.restartRequired, false);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:20: trailing whitespace.
++  assert.deepEqual(result.counts, { success: 1, failure: 0, unknown: 0 });
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:21: trailing whitespace.
++  assert.equal(result.verifier, 'PASS');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:22: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:23: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:24: trailing whitespace.
++test('trace crosses cutover once and preserves the original start and return path', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:25: trailing whitespace.
++  const result = run().history[0];
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:26: trailing whitespace.
++  assert.deepEqual(result.trace.map((event) => [event.atMs, event.version, event.event]), [
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:27: trailing whitespace.
++    [0, 'v1', 'login-start'], [40, 'v2', 'cutover'], [140, 'v2', 'callback-arrived'],
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:28: trailing whitespace.
++    [160, 'v2', 'login-complete'],
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:29: trailing whitespace.
++  ]);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:30: trailing whitespace.
++  assert.equal(result.trace.at(-1).path, '/training/home');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:31: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:32: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:33: trailing whitespace.
++test('v1-local correlation loss fails rather than silently restarting', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:34: trailing whitespace.
++  const result = run(undefined, { storeMode: 'v1-only', prediction: 'FAILURE' }).history[0];
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:35: trailing whitespace.
++  assert.equal(result.outcome, 'FAILURE');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:36: trailing whitespace.
++  assert.deepEqual(result.reasons, ['STATE_LOST']);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:37: trailing whitespace.
++  assert.equal(result.correlationMatched, false);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:38: trailing whitespace.
++  assert.equal(result.loginCompleted, false);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:39: trailing whitespace.
++  assert.equal(result.returnPath, null);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:40: trailing whitespace.
++  assert.equal(result.restartRequired, true);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:41: trailing whitespace.
++  assert.equal(result.verifier, 'PASS');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:42: trailing whitespace.
++  assert.equal(result.trace.filter((event) => event.event === 'login-start').length, 1);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:43: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:44: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:45: trailing whitespace.
++test('redirect loop is detected after exactly three synthetic hops', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:46: trailing whitespace.
++  const result = run(undefined, { callbackPath: 'redirect-loop', prediction: 'FAILURE' }).history[0];
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:47: trailing whitespace.
++  assert.equal(result.outcome, 'FAILURE');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:48: trailing whitespace.
++  assert.deepEqual(result.reasons, ['REDIRECT_LOOP']);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:49: trailing whitespace.
++  assert.equal(result.redirectHops, 3);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:50: trailing whitespace.
++  assert.equal(result.trace.filter((event) => event.event === 'redirect').length, 3);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:51: trailing whitespace.
++  assert.equal(result.elapsedMs, 200);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:52: trailing whitespace.
++  assert.equal(result.loginCompleted, false);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:53: trailing whitespace.
++  assert.equal(result.trace.at(-1).event, 'loop-stopped');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:54: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:55: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:56: trailing whitespace.
++test('mismatched synthetic state is rejected without weakening validation', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:57: trailing whitespace.
++  const result = run(undefined, { callbackState: 'mismatch', prediction: 'FAILURE' }).history[0];
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:58: trailing whitespace.
++  assert.equal(result.outcome, 'FAILURE');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:59: trailing whitespace.
++  assert.deepEqual(result.reasons, ['STATE_MISMATCH']);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:60: trailing whitespace.
++  assert.equal(result.correlationMatched, false);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:61: trailing whitespace.
++  assert.equal(result.loginCompleted, false);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:62: trailing whitespace.
++  assert.equal(result.redirectHops, 0);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:63: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:64: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:65: trailing whitespace.
++test('original latency budget is inclusive and never restarted at cutover', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:66: trailing whitespace.
++  const exact = run(undefined, { budgetMs: 160 }).history[0];
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:67: trailing whitespace.
++  assert.equal(exact.outcome, 'SUCCESS');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:68: trailing whitespace.
++  const late = run(undefined, { budgetMs: 159, prediction: 'FAILURE' }).history[0];
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:69: trailing whitespace.
++  assert.equal(late.outcome, 'FAILURE');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:70: trailing whitespace.
++  assert.deepEqual(late.reasons, ['BUDGET_EXCEEDED']);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:71: trailing whitespace.
++  assert.equal(late.elapsedMs, 160);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:72: trailing whitespace.
++  assert.equal(late.loginCompleted, true);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:73: trailing whitespace.
++  assert.equal(late.budgetMs, 159);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:74: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:75: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:76: trailing whitespace.
++test('loop and original budget failure can both remain visible', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:77: trailing whitespace.
++  const result = run(undefined, { callbackPath: 'redirect-loop', budgetMs: 199 }).history[0];
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:78: trailing whitespace.
++  assert.deepEqual(result.reasons, ['REDIRECT_LOOP', 'BUDGET_EXCEEDED']);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:79: trailing whitespace.
++  assert.equal(result.outcome, 'FAILURE');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:80: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:81: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:82: trailing whitespace.
++test('missing observations stay unknown without invented terminal measurements', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:83: trailing whitespace.
++  const result = run(undefined, { observations: 'missing', prediction: 'UNKNOWN' }).history[0];
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:84: trailing whitespace.
++  assert.equal(result.outcome, 'UNKNOWN');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:85: trailing whitespace.
++  assert.deepEqual(result.counts, { success: 0, failure: 0, unknown: 1 });
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:86: trailing whitespace.
++  for (const key of ['elapsedMs', 'callbackVersion', 'loginCompleted', 'correlationMatched',
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:87: trailing whitespace.
++    'returnPath', 'redirectHops', 'restartRequired']) assert.equal(result[key], null, key);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:88: trailing whitespace.
++  assert.equal(result.trace.at(-1).event, 'callback-unobserved');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:89: trailing whitespace.
++  assert.equal(result.trace.at(-1).atMs, null);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:90: trailing whitespace.
++  assert.equal(result.verifier, 'PASS');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:91: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:92: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:93: trailing whitespace.
++test('prediction success cannot turn observed failure or unknown into success', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:94: trailing whitespace.
++  const failure = run(undefined, { storeMode: 'v1-only' }).history[0];
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:95: trailing whitespace.
++  const unknown = run(undefined, { observations: 'missing' }).history[0];
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:96: trailing whitespace.
++  assert.equal(failure.outcome, 'FAILURE');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:97: trailing whitespace.
++  assert.equal(failure.verifier, 'FAIL');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:98: trailing whitespace.
++  assert.equal(unknown.outcome, 'UNKNOWN');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:99: trailing whitespace.
++  assert.equal(unknown.verifier, 'FAIL');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:100: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:101: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:102: trailing whitespace.
++test('strict numeric bounds reject strings, fractions, nonfinite and out-of-range values', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:103: trailing whitespace.
++  for (const budgetMs of ['500', '', null, undefined, true, NaN, Infinity, 99, 2001, 150.5]) {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:104: trailing whitespace.
++    assert.throws(() => model.validateConfig(config({ budgetMs })), /budgetMs/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:105: trailing whitespace.
++  }
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:106: trailing whitespace.
++  for (const delayMs of ['100', null, NaN, -1, 1001, 1.5]) {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:107: trailing whitespace.
++    assert.throws(() => model.validateConfig(config({ delayMs })), /delayMs/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:108: trailing whitespace.
++  }
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:109: trailing whitespace.
++  assert.equal(run(undefined, { budgetMs: 100, delayMs: 0 }).history[0].outcome, 'SUCCESS');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:110: trailing whitespace.
++  assert.equal(run(undefined, { budgetMs: 2000, delayMs: 1000 }).history[0].elapsedMs, 1060);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:111: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:112: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:113: trailing whitespace.
++test('unknown enums and missing or extra configuration fields are rejected', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:114: trailing whitespace.
++  for (const key of ['storeMode', 'callbackPath', 'callbackState', 'observations', 'prediction']) {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:115: trailing whitespace.
++    assert.throws(() => model.validateConfig(config({ [key]: 'other' })), new RegExp(key));
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:116: trailing whitespace.
++  }
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:117: trailing whitespace.
++  const missing = config();
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:118: trailing whitespace.
++  delete missing.callbackState;
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:119: trailing whitespace.
++  assert.throws(() => model.validateConfig(missing), /configuration/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:120: trailing whitespace.
++  assert.throws(() => model.validateConfig(config({ extra: true })), /configuration/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:121: trailing whitespace.
++  assert.throws(() => model.validateConfig(null), /configuration/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:122: trailing whitespace.
++  assert.throws(() => model.validateConfig([]), /configuration/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:123: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:124: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:125: trailing whitespace.
++test('configuration getters, symbols, hidden fields and nonplain records never execute', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:126: trailing whitespace.
++  let called = false;
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:127: trailing whitespace.
++  const getter = config();
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:128: trailing whitespace.
++  Object.defineProperty(getter, 'budgetMs', { enumerable: true, get() { called = true; return 500; } });
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:129: trailing whitespace.
++  assert.throws(() => model.validateConfig(getter), /configuration/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:130: trailing whitespace.
++  assert.equal(called, false);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:131: trailing whitespace.
++  assert.throws(() => model.validateConfig({ ...config(), [Symbol('extra')]: 1 }), /configuration/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:132: trailing whitespace.
++  const hidden = config();
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:133: trailing whitespace.
++  Object.defineProperty(hidden, 'extra', { value: 1 });
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:134: trailing whitespace.
++  assert.throws(() => model.validateConfig(hidden), /configuration/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:135: trailing whitespace.
++  assert.throws(() => model.validateConfig(Object.assign(Object.create({}), config())), /configuration/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:136: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:137: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:138: trailing whitespace.
++test('strict lifecycle rejects callback before cutover and repeated or overlapping actions', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:139: trailing whitespace.
++  const idle = model.createLesson();
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:140: trailing whitespace.
++  assert.throws(() => model.cutover(idle), /start/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:141: trailing whitespace.
++  assert.throws(() => model.deliverCallback(idle), /cutover/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:142: trailing whitespace.
++  const started = model.startLogin(idle, config());
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:143: trailing whitespace.
++  assert.throws(() => model.startLogin(started, config()), /active/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:144: trailing whitespace.
++  assert.throws(() => model.deliverCallback(started), /cutover/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:145: trailing whitespace.
++  const switched = model.cutover(started);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:146: trailing whitespace.
++  assert.throws(() => model.cutover(switched), /already/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:147: trailing whitespace.
++  assert.throws(() => model.deliverCallback(run()), /cutover/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:148: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:149: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:150: trailing whitespace.
++test('each transition returns independent deeply frozen configuration and history', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:151: trailing whitespace.
++  const input = config();
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:152: trailing whitespace.
++  const initial = model.createLesson();
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:153: trailing whitespace.
++  const started = model.startLogin(initial, input);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:154: trailing whitespace.
++  input.storeMode = 'v1-only';
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:155: trailing whitespace.
++  assert.equal(started.active.config.storeMode, 'shared');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:156: trailing whitespace.
++  assert.equal(initial.active, null);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:157: trailing whitespace.
++  for (const value of [model.DEFAULTS, initial, initial.history, started, started.active, started.active.config]) {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:158: trailing whitespace.
++    assert.equal(Object.isFrozen(value), true);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:159: trailing whitespace.
++  }
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:160: trailing whitespace.
++  const finished = model.deliverCallback(model.cutover(started));
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:161: trailing whitespace.
++  for (const value of [finished, finished.history, finished.history[0], finished.history[0].trace,
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:162: trailing whitespace.
++    finished.history[0].trace[0], finished.history[0].counts]) assert.equal(Object.isFrozen(value), true);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:163: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:164: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:165: trailing whitespace.
++test('six runs retain prior failures and a seventh is rejected without eviction', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:166: trailing whitespace.
++  let state = model.createLesson();
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:167: trailing whitespace.
++  state = run(state, { storeMode: 'v1-only', prediction: 'SUCCESS' });
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:168: trailing whitespace.
++  for (let index = 1; index < model.MAX_HISTORY; index++) state = run(state);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:169: trailing whitespace.
++  const before = JSON.stringify(state);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:170: trailing whitespace.
++  assert.equal(state.history.length, 6);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:171: trailing whitespace.
++  assert.equal(state.history[0].outcome, 'FAILURE');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:172: trailing whitespace.
++  assert.equal(state.history[0].verifier, 'FAIL');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:173: trailing whitespace.
++  assert.deepEqual(state.history.map((item) => item.id), [1, 2, 3, 4, 5, 6]);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:174: trailing whitespace.
++  assert.throws(() => model.startLogin(state, config()), /six|6|history/i);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:175: trailing whitespace.
++  assert.equal(JSON.stringify(state), before);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:176: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:177: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:178: trailing whitespace.
++test('forged history results, configurations, traces, counts and identities are rejected', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:179: trailing whitespace.
++  const original = run(undefined, { storeMode: 'v1-only' });
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:180: trailing whitespace.
++  const mutations = [
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:181: trailing whitespace.
++    (state) => { state.history[0].outcome = 'SUCCESS'; },
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:182: trailing whitespace.
++    (state) => { state.history[0].config.storeMode = 'shared'; },
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:183: trailing whitespace.
++    (state) => { state.history[0].trace[0].version = 'v2'; },
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:184: trailing whitespace.
++    (state) => { state.history[0].counts.success = 1; },
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:185: trailing whitespace.
++    (state) => { state.history[0].id = 2; },
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:186: trailing whitespace.
++    (state) => { state.history[0].extra = true; },
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:187: trailing whitespace.
++  ];
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:188: trailing whitespace.
++  for (const mutate of mutations) {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:189: trailing whitespace.
++    const forged = JSON.parse(JSON.stringify(original));
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:190: trailing whitespace.
++    mutate(forged);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:191: trailing whitespace.
++    assert.throws(() => model.startLogin(forged, config()), /state|history/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:192: trailing whitespace.
++  }
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:193: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:194: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:195: trailing whitespace.
++test('sparse, decorated, oversized and accessor state containers are rejected', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:196: trailing whitespace.
++  const sparse = model.createLesson();
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:197: trailing whitespace.
++  const cases = [
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:198: trailing whitespace.
++    { active: null, history: new Array(1) },
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:199: trailing whitespace.
++    { active: null, history: Object.assign([], { extra: true }) },
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:200: trailing whitespace.
++    { active: null, history: Array(7).fill(null) },
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:201: trailing whitespace.
++    { active: null, history: [], extra: true },
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:202: trailing whitespace.
++    { active: { id: 2, stage: 'started', config: config() }, history: [] },
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:203: trailing whitespace.
++    { active: { id: 1, stage: 'other', config: config() }, history: [] },
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:204: trailing whitespace.
++    Object.create(sparse),
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:205: trailing whitespace.
++  ];
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:206: trailing whitespace.
++  let called = false;
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:207: trailing whitespace.
++  const getter = { history: [] };
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:208: trailing whitespace.
++  Object.defineProperty(getter, 'active', { enumerable: true, get() { called = true; return null; } });
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:209: trailing whitespace.
++  cases.push(getter);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:210: trailing whitespace.
++  for (const value of cases) assert.throws(() => model.startLogin(value, config()), /state|history|active/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:211: trailing whitespace.
++  assert.equal(called, false);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:212: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:213: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:214: trailing whitespace.
++test('missing observations never bypass input or state validation', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:215: trailing whitespace.
++  assert.throws(() => model.evaluate(config({ observations: 'missing', budgetMs: '500' })), /budgetMs/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:216: trailing whitespace.
++  assert.throws(() => model.evaluate(config(), 0), /id/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:217: trailing whitespace.
++  assert.throws(() => model.evaluate(config(), 7), /id/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:218: trailing whitespace.
++  assert.throws(() => model.evaluate(config(), '1'), /id/);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:219: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:220: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:221: trailing whitespace.
++test('bounded fixture matrix is deterministic and has exactly one journey per run', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:222: trailing whitespace.
++  let checked = 0;
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:223: trailing whitespace.
++  for (const storeMode of ['shared', 'v1-only']) {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:224: trailing whitespace.
++    for (const callbackPath of ['compatible', 'redirect-loop']) {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:225: trailing whitespace.
++      for (const callbackState of ['matching', 'mismatch']) {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:226: trailing whitespace.
++        for (const observations of ['complete', 'missing']) {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:227: trailing whitespace.
++          for (const budgetMs of [100, 160, 2000]) {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:228: trailing whitespace.
++            const input = config({ storeMode, callbackPath, callbackState, observations, budgetMs });
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:229: trailing whitespace.
++            const first = model.evaluate(input);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:230: trailing whitespace.
++            assert.deepEqual(first, model.evaluate(input));
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:231: trailing whitespace.
++            const expected = observations === 'missing' ? 'UNKNOWN'
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:232: trailing whitespace.
++              : storeMode === 'shared' && callbackPath === 'compatible'
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:233: trailing whitespace.
++                && callbackState === 'matching' && budgetMs >= 160 ? 'SUCCESS' : 'FAILURE';
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:234: trailing whitespace.
++            assert.equal(first.outcome, expected);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:235: trailing whitespace.
++            assert.equal(first.counts.success + first.counts.failure + first.counts.unknown, 1);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:236: trailing whitespace.
++            assert.ok(first.trace.length <= 8);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:237: trailing whitespace.
++            checked++;
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:238: trailing whitespace.
++          }
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:239: trailing whitespace.
++        }
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:240: trailing whitespace.
++      }
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:241: trailing whitespace.
++    }
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:242: trailing whitespace.
++  }
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:243: trailing whitespace.
++  assert.equal(checked, 48);
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:244: trailing whitespace.
++});
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:245: trailing whitespace.
++
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:246: trailing whitespace.
++test('reset is a fresh empty lesson rather than a mutation of retained evidence', () => {
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:247: trailing whitespace.
++  const previous = run(undefined, { storeMode: 'v1-only' });
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:248: trailing whitespace.
++  const reset = model.createLesson();
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:249: trailing whitespace.
++  assert.deepEqual(reset, { active: null, history: [] });
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:250: trailing whitespace.
++  assert.equal(previous.history[0].outcome, 'FAILURE');
+learning/S035/evidence/red-001-callback.test.cjs.snapshot.txt:251: trailing whitespace.
++});
+learning/S035/evidence/red-001.stdout.txt:12: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:15: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:38: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:61: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:106: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:109: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:134: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:137: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:162: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:165: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:190: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:193: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:218: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:224: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:252: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:255: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:280: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:283: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:391: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:393: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:418: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:421: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:509: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:512: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:537: trailing whitespace.
++    
+learning/S035/evidence/red-001.stdout.txt:540: trailing whitespace.
++    

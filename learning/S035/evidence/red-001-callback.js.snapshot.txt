@@ -1,0 +1,34 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S035 = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const MAX_HISTORY = 6;
+  const DEFAULTS = {
+    storeMode: 'shared', callbackPath: 'compatible', callbackState: 'matching',
+    observations: 'complete', budgetMs: 500, delayMs: 100, prediction: 'SUCCESS',
+  };
+  function validateConfig(config) { return { ...config }; }
+  function createLesson() { return { active: null, history: [] }; }
+  function evaluate(config, id = 1) {
+    return {
+      id, config: validateConfig(config), outcome: 'UNKNOWN',
+      reasons: ['CALLBACK_UNOBSERVED'], callbackVersion: null, elapsedMs: null,
+      loginCompleted: null, correlationMatched: null, returnPath: null,
+      redirectHops: null, restartRequired: null, budgetMs: config.budgetMs,
+      counts: { success: 0, failure: 0, unknown: 1 },
+      verifier: config.prediction === 'UNKNOWN' ? 'PASS' : 'FAIL',
+      trace: [{ atMs: 0, version: 'v1', path: '/login', event: 'login-start', detail: 'Synthetic login started.' }],
+    };
+  }
+  function startLogin(state, config) {
+    return { history: state.history, active: { id: state.history.length + 1, stage: 'started', config: validateConfig(config) } };
+  }
+  function cutover(state) { return { history: state.history, active: { ...state.active, stage: 'cutover' } }; }
+  function deliverCallback(state) {
+    return { active: null, history: [...state.history, evaluate(state.active.config, state.active.id)] };
+  }
+  return { MAX_HISTORY, DEFAULTS, validateConfig, createLesson, evaluate, startLogin, cutover, deliverCallback };
+}));

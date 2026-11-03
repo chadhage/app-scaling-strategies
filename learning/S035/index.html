@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S035 — Login callback during cutover</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="callback.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to exercise controls</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S035 — Login callback during cutover</h1>
+    <p>Start one login on v1, change routing, then deliver its callback to v2. Preserve correlation,
+      the original return path and the original latency budget, without loops or forced reauthentication.</p>
+    <p>A-S035 · D-S035 · packet SC-S035 · one Kano S unit · standalone synthetic lesson</p>
+  </header>
+  <main>
+    <section aria-labelledby="how">
+      <h2 id="how">Worked exercise</h2>
+      <ol>
+        <li>Keep the defaults and predict SUCCESS. Start login, cut over, then deliver the callback:
+          v1 starts at 0 ms, routing changes at 40 ms, v2 receives the callback at 140 ms and completes at 160 ms.</li>
+        <li>Choose v1-only state and predict FAILURE. v2 loses correlation and would require a forced restart.
+          No replacement login is executed. The failed journey remains in history.</li>
+        <li>Try the redirect-loop path: three synthetic hops stop with FAILURE, not unlimited retries.
+          Try a 159 ms budget: even a completed login is late.</li>
+        <li>Choose missing observations and predict UNKNOWN. A passing prediction does not prove a completed login.</li>
+      </ol>
+      <p>Precondition: one synthetic learner and compatible versions, except for your selected fault.
+        No real authentication, identity provider, token, key, credential or browser redirect is involved.
+        All time is synthetic; there are no timers or network calls.</p>
+    </section>
+    <section aria-labelledby="controls">
+      <h2 id="controls" tabindex="-1">Exercise controls</h2>
+      <form id="exercise" novalidate>
+        <fieldset id="configuration">
+          <legend>Choose conditions before starting; they are locked during the login</legend>
+          <div class="grid">
+            <label for="storeMode">Correlation and return-path state
+              <select id="storeMode" name="storeMode">
+                <option value="shared">Shared across v1 and v2</option>
+                <option value="v1-only">v1-only (lost on v2)</option>
+              </select>
+            </label>
+            <label for="callbackPath">Callback path on v2
+              <select id="callbackPath" name="callbackPath">
+                <option value="compatible">Compatible callback</option>
+                <option value="redirect-loop">Redirect loop (three-hop bound)</option>
+              </select>
+            </label>
+            <label for="callbackState">Returned synthetic state marker
+              <select id="callbackState" name="callbackState">
+                <option value="matching">Matches original marker</option>
+                <option value="mismatch">Mismatched marker (reject)</option>
+              </select>
+            </label>
+            <label for="observations">Callback observations
+              <select id="observations" name="observations">
+                <option value="complete">Complete trace</option>
+                <option value="missing">Missing terminal observations</option>
+              </select>
+            </label>
+            <label for="budgetMs">Original login budget (100–2000 ms)
+              <input id="budgetMs" name="budgetMs" type="number" min="100" max="2000" step="1" value="500" required>
+            </label>
+            <label for="delayMs">Callback delay after cutover (0–1000 ms)
+              <input id="delayMs" name="delayMs" type="number" min="0" max="1000" step="1" value="100" required>
+            </label>
+            <label for="prediction">Predict the synthetic journey
+              <select id="prediction" name="prediction">
+                <option value="SUCCESS">SUCCESS</option>
+                <option value="FAILURE">FAILURE</option>
+                <option value="UNKNOWN">UNKNOWN</option>
+              </select>
+            </label>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button id="startLogin" type="submit">1. Start login on v1</button>
+          <button id="cutover" type="button" disabled>2. Cut over to v2</button>
+          <button id="deliverCallback" type="button" disabled>3. Deliver callback and check</button>
+          <button id="resetLesson" type="button">Reset lesson and history</button>
+        </div>
+      </form>
+      <p id="error" role="alert" tabindex="-1" hidden></p>
+      <p id="status" role="status" aria-live="polite">Ready. Start login on v1.</p>
+    </section>
+    <section aria-labelledby="resultHeading">
+      <h2 id="resultHeading" tabindex="-1">Synthetic journey result</h2>
+      <p id="outcome">No checked journey yet.</p>
+      <p id="verifier">Verifier not run. Prediction accuracy and user impact are separate.</p>
+      <p id="journeyCounts">Success 0 / Failure 0 / Unknown 0.</p>
+      <dl id="metrics"></dl>
+      <div id="currentTrace"></div>
+      <p><strong>Real user impact: UNMEASURED.</strong> A rehearsal PASS is not native Azure evidence,
+        production Node.js 24 certification, source-parent completion or five-nines reliability.</p>
+    </section>
+    <section aria-labelledby="historyHeading">
+      <h2 id="historyHeading">Retained run history</h2>
+      <p id="historyCount">0 of 6 runs retained.</p>
+      <div id="history"></div>
+      <p>Six immutable runs maximum; no eviction. Editing controls hides the current result but keeps prior
+        conditions, predictions, failures and traces. History is memory-only and clears on reload or explicit reset.</p>
+    </section>
+    <section aria-labelledby="limits">
+      <h2 id="limits">Fixture rules and limits</h2>
+      <p>Cutover costs 40 ms. A compatible callback completes 20 ms after arrival. Each of at most three
+        loop hops costs 20 ms. Budget equality passes; elapsed time greater than the original budget fails.
+        Complete observations check v1-only state loss first, then marker mismatch, then loop behavior.
+        Missing callback observations cannot prove any terminal outcome.</p>
+      <p>This traces invented paths and markers, not an OAuth/OIDC implementation or security recommendation.
+        Native B-S035 requires a qualified host, safe fixture and separate approvals. No cloud, IaC,
+        scaffold, identity registration, deployment or spending is authorized.</p>
+      <p>Keyboard: use the skip link, Tab, native select arrow keys and Enter. Trace regions scroll with the keyboard;
+        history summaries expand with Enter or Space. Reset restores defaults and focuses the first control.</p>
+    </section>
+    <noscript><p>This synthetic exercise requires local JavaScript. No server or cloud access is needed.</p></noscript>
+  </main>
+</body>
+</html>
