@@ -1,0 +1,14 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const lesson = require('./model.js');
+
+test('exhausting the declared allowance allocates sandbox capacity without touching the reserve', () => {
+  const initial = lesson.createRun({ allowance: 4, extraUnits: 1, budgetMs: 250 });
+  const exhausted = lesson.act(initial, 'exhaust');
+  assert.equal(exhausted.allocatedTotal, 4,
+    'Exhaustion must consume the declared harness allowance, not remain at baseline');
+  assert.equal(exhausted.reservedUnits, 2);
+  assert.equal(initial.allocatedTotal, 2, 'The previous immutable state must be retained');
+});

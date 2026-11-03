@@ -1,0 +1,16 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S020Lesson = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULTS = Object.freeze({ allowance: 4, extraUnits: 1, budgetMs: 250 });
+  function createRun(config = DEFAULTS) {
+    return { config, reservedUnits: 2, allocatedTotal: 2 };
+  }
+  function act(run) {
+    return { ...run };
+  }
+  return Object.freeze({ DEFAULTS, createRun, act });
+}));

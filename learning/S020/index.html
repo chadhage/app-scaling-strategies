@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S020 - Quota or maximum-capacity exhaustion</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="lesson.js" defer></script>
+</head>
+<body>
+  <header>
+    <p class="banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Quota or maximum-capacity exhaustion</h1>
+    <p>A-S020 · D-S020 · SC-S020 · Kano S · local synthetic learning only</p>
+  </header>
+  <main>
+    <section aria-labelledby="objective">
+      <h2 id="objective">Protect existing service when expansion is refused</h2>
+      <p>Exhaust a declared harness allowance, request unsafe expansion, and attempt promotion.
+        The requested target must not consume the protected reserve or receive traffic after rejection.
+        Probe existing journeys rather than inferring continuity from a blocked button or HTTP 200.</p>
+      <p><strong>Fixture preconditions:</strong> two reserved units already serve four existing journeys per probe.
+        Each unit represents two journeys per synthetic window. The allowance includes the reserve.
+        Admitted sandbox units are held off-route; allocation is not evidence of candidate readiness.</p>
+      <ol>
+        <li>Apply a bounded configuration, then exhaust its sandbox allowance.</li>
+        <li>Request unsafe expansion beyond that allowance, then request promotion.</li>
+        <li>Probe reserved service with a healthy, over-budget, or missing-observations fixture.</li>
+        <li>Inspect the cumulative result and trace. Archive/reset to compare another run.</li>
+      </ol>
+    </section>
+
+    <p id="error" class="error" role="alert" tabindex="-1" hidden></p>
+    <section aria-labelledby="configuration-title">
+      <h2 id="configuration-title">1. Declare the local operating envelope</h2>
+      <p id="configuration-help">Whole numbers only. Configuration locks after the first action.
+        No subscription, region, SKU, or Azure quota is configured or tested.</p>
+      <form id="settings" novalidate aria-describedby="configuration-help">
+        <fieldset id="configuration-fields">
+          <legend>Capacity and existing-journey budget</legend>
+          <label for="allowance">Total harness allowance (3–6 units)</label>
+          <input id="allowance" name="allowance" type="number" min="3" max="6" step="1" value="4" required>
+          <label for="extra-units">Unsafe extra request (1–3 units above allowance)</label>
+          <input id="extra-units" name="extraUnits" type="number" min="1" max="3" step="1" value="1" required>
+          <label for="budget-ms">Existing-journey latency budget (100–500 ms)</label>
+          <input id="budget-ms" name="budgetMs" type="number" min="100" max="500" step="1" value="250" required>
+          <button id="apply-config" type="submit">Apply configuration</button>
+        </fieldset>
+      </form>
+      <p id="configuration-status">Default envelope: 4 total units, 1 unsafe extra unit, 250 ms budget.</p>
+    </section>
+
+    <section aria-labelledby="actions-title">
+      <h2 id="actions-title">2. Conduct bounded actions</h2>
+      <div class="actions">
+        <button id="exhaust" type="button">Exhaust sandbox allowance</button>
+        <button id="unsafe-expansion" type="button" disabled>Request unsafe expansion</button>
+        <button id="promote" type="button" disabled>Request promotion</button>
+      </div>
+      <label for="observation">Reserved-service observation fixture</label>
+      <select id="observation" aria-describedby="observation-help">
+        <option value="healthy">Healthy: 4 successful existing journeys</option>
+        <option value="over-budget">Over budget: 1 failed journey despite HTTP 200</option>
+        <option value="missing-observations">Missing observations: 2 successful, 2 unknown</option>
+      </select>
+      <p id="observation-help">A healthy journey takes 100 synthetic ms. The failure takes budget + 1 ms.
+        Missing observations have no invented HTTP status, latency, or state/effect result.
+        At most three four-journey probes per run; changing fixture never erases earlier evidence.</p>
+      <button id="probe" type="button" disabled>Probe reserved service</button>
+      <button id="archive-run" type="button">Archive and reset</button>
+      <p id="status" role="status" aria-live="polite">Ready for a synthetic exercise; no journeys observed.</p>
+    </section>
+
+    <section aria-labelledby="capacity-title">
+      <h2 id="capacity-title">3. Inspect capacity and admission</h2>
+      <p>Current run <output id="run-id">1</output>. All values below are synthetic.</p>
+      <dl>
+        <dt>Declared total allowance</dt><dd id="declared-allowance">4</dd>
+        <dt>Requested total units</dt><dd id="requested-total">2</dd>
+        <dt>Allocated total units</dt><dd id="allocated-total">2</dd>
+        <dt>Protected reserved units</dt><dd id="reserved-units">2</dd>
+        <dt>Admission rejection source</dt><dd id="rejection-source">Not attempted</dd>
+        <dt>Promotion</dt><dd id="promotion">not-requested</dd>
+        <dt>Existing journey route</dt><dd id="route">reserved-v1</dd>
+        <dt>Unsupported units beyond ceiling</dt><dd id="unsupported-units">0</dd>
+        <dt>Unsupported new journeys per window</dt><dd id="unsupported-journeys">0</dd>
+        <dt>Admitted sandbox journeys withheld per window</dt><dd id="withheld-journeys">0</dd>
+        <dt>New journeys promoted</dt><dd id="promoted-journeys">0</dd>
+      </dl>
+      <p>Unsupported demand is explicitly unmet. Admitted sandbox capacity remains off-route, not a
+        successful candidate migration. A harness admission rejection is <strong>not an Azure quota event</strong>.</p>
+    </section>
+
+    <section id="results" data-verdict="UNKNOWN" aria-labelledby="results-title">
+      <h2 id="results-title">4. Separate the verifier, user outcome, and cleanup</h2>
+      <p>Synthetic safety verifier: <strong id="verdict">UNKNOWN</strong></p>
+      <p id="reason">No reserved-service journeys have been observed.</p>
+      <dl>
+        <dt>Attempted existing journeys</dt><dd id="attempted">0</dd>
+        <dt>Successful existing journeys</dt><dd id="successful">0</dd>
+        <dt>Failed existing journeys</dt><dd id="failed">0</dd>
+        <dt>Unknown existing journeys</dt><dd id="unknown">0</dd>
+        <dt>User-impact outcome</dt><dd id="user-outcome">Not observed</dd>
+        <dt>Cleanup</dt><dd id="cleanup">N/A - no resources created</dd>
+        <dt>Native Azure quota</dt><dd id="native-quota">UNTESTED - no Azure operation was performed</dd>
+      </dl>
+      <p>A PASS applies only to this synthetic safety exercise. It does not claim that extra demand was
+        served, that a native quota was exhausted, or that a source-demo parent or reliability goal is complete.</p>
+      <h3>Synthetic existing-journey observations</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>Current run; attempted = successful + failed + unknown</caption>
+          <thead><tr><th>ID</th><th>Probe</th><th>Fixture</th><th>Route</th><th>HTTP</th><th>Latency ms</th><th>State/effect</th><th>Outcome</th></tr></thead>
+          <tbody id="samples"></tbody>
+        </table>
+      </div>
+      <h3>Retained action trace</h3>
+      <ol id="trace"></ol>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Archived runs</h2>
+      <p>Page-memory only: <output id="history-count">0</output> retained (maximum four);
+        <output id="pruned-count">0</output> older runs pruned. Refresh closes this rehearsal and clears history.
+        Empty resets do not create an archive.</p>
+      <div id="history"></div>
+    </section>
+    <noscript><p>This offline exercise needs local JavaScript. No cloud service is contacted.</p></noscript>
+  </main>
+  <footer>
+    <p><a href="../../README.md#b-actual-capacity-scaling-strategies">Exact source: README S020</a>
+      · <a href="README.md">Exercise instructions and evidence limits</a></p>
+    <p>No management calls, credentials, timers, storage writes, external assets, or actual resource operations.</p>
+  </footer>
+</body>
+</html>

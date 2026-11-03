@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S020",
+  "workerId": "worker-A-S020",
+  "kano": "S",
+  "kanoUnit": "A-S020",
+  "packet": "SC-S020",
+  "source": "S020",
+  "parent": "D-S020",
+  "sourceFile": "README.md",
+  "sourceText": "Preserve existing service using reserved capacity, block unsafe transitions, and report unsupported demand explicitly.",
+  "title": "Quota or maximum-capacity exhaustion",
+  "objective": "Exhaust a declared allowance, reject unsafe expansion and promotion, and measure preserved or interrupted reserved service without claiming an Azure quota event.",
+  "entryGate": "SOURCE",
+  "authorization": "local-synthetic-only",
+  "mode": "synthetic-only",
+  "entryPoint": "learning\\S020\\index.html",
+  "feature": "learning\\S020\\capacity-exhaustion.feature",
+  "testCommand": "node learning\\S020\\verify.cjs all",
+  "browserCommand": "node learning\\S020\\verify.cjs browser",
+  "captureCommand": "$env:CAPTURE_BROWSER_EVIDENCE='1'; node learning\\S020\\verify.cjs all",
+  "tests": [
+    "learning\\S020\\model.test.cjs",
+    "learning\\S020\\browser.test.cjs",
+    "learning\\S020\\integrity.test.cjs"
+  ],
+  "evidence": "learning\\S020\\evidence.json",
+  "infrastructure": "N/A: resource-free offline lesson; no IaC or resource operations.",
+  "fixtureVersion": "S020-capacity-v1",
+  "preconditions": [
+    "Two protected reserved units on reserved-v1",
+    "Two synthetic journeys per unit per window",
+    "Total harness allowance includes reserved and sandbox units",
+    "Sandbox admission alone does not establish readiness"
+  ],
+  "actions": [
+    "Apply bounded configuration before the first action",
+    "Exhaust sandbox allowance",
+    "Request unsafe expansion",
+    "Request promotion",
+    "Probe reserved service using one declared observation fixture",
+    "Archive and reset"
+  ],
+  "syntheticInputTrace": {
+    "defaultEnvelope": { "allowance": 4, "extraUnits": 1, "budgetMs": 250 },
+    "capacityTrace": { "requested": [2, 4, 5, 5], "allocated": [2, 4, 4, 4], "reserved": [2, 2, 2, 2] },
+    "healthyProbe": { "attempted": 4, "successful": 4, "failed": 0, "unknown": 0, "latencyMs": 100 },
+    "overBudgetProbe": { "attempted": 4, "successful": 3, "failed": 1, "unknown": 0, "failedHttpStatus": 200, "failedLatency": "budgetMs + 1" },
+    "missingProbe": { "attempted": 4, "successful": 2, "failed": 0, "unknown": 2 }
+  },
+  "expectedAssertions": [
+    "Exhaustion fills only the declared total allowance while two reserved units remain protected",
+    "Unsafe expansion is rejected by the harness admission limit, never labeled a native quota observation",
+    "Unallocated targets cannot be promoted and reserved-v1 routing remains unchanged",
+    "Unsupported new demand and withheld admitted sandbox demand are explicitly unserved",
+    "Actual synthetic reserved-journey samples determine PASS, FAIL, or UNKNOWN",
+    "Earlier failures and unknowns remain cumulative after later healthy samples and in archived history"
+  ],
+  "limits": [
+    "Allowance 3-6 total units; unsafe extra request 1-3; budget 100-500 ms, whole integers",
+    "Three ordered safety actions and at most three four-journey probes per run",
+    "Four page-memory archived runs with explicit pruning; no reload persistence",
+    "No native Azure, production runtime, source-parent, or reliability certification"
+  ],
+  "dependencies": [],
+  "testTooling": {
+    "node": "22.23.4",
+    "playwright": "1.56.1, already installed offline",
+    "browser": "installed Microsoft-signed Edge 156",
+    "helper": "testing\\browser\\isolated.cjs / openIsolatedLesson",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "helperPublishedCommit": "53c0c0d"
+  },
+  "productionNode24Validated": false,
+  "nativeProof": false,
+  "parentComplete": false,
+  "acceptance": "Parent-owned empirical acceptance pending; this is one frozen S unit, not worker-awarded Done."
+}
