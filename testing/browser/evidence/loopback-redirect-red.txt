@@ -1,0 +1,74 @@
+Command: node --test loopback.test.cjs
+Original exit code: 1
+Existing offline Playwright 1.56.1; live caller-owned http.Server; real signed headless Edge; sandbox and CSP retained.
+
+TAP version 13
+# Subtest: only a caller-owned live HTTP server bound to exact 127.0.0.1 can authorize loopback
+ok 1 - only a caller-owned live HTTP server bound to exact 127.0.0.1 can authorize loopback
+  ---
+  duration_ms: 93.1607
+  type: 'test'
+  ...
+# Subtest: loopback ownership anchors retain every local path guard including realpath escapes
+ok 2 - loopback ownership anchors retain every local path guard including realpath escapes
+  ---
+  duration_ms: 68.533
+  type: 'test'
+  ...
+# Subtest: parallel real loopback browsers fetch same-origin data and preserve response CSP isolation
+ok 3 - parallel real loopback browsers fetch same-origin data and preserve response CSP isolation
+  ---
+  duration_ms: 45606.7048
+  type: 'test'
+  ...
+# Real Chromium 156.0.4314.50; concurrent visible HTTP sessions; scope/v1/v2 responses; response CSP sandbox produces opaque child origin.
+# Subtest: real loopback context blocks cross-origin requests, writes, WebSockets, and service workers
+not ok 4 - real loopback context blocks cross-origin requests, writes, WebSockets, and service workers
+  ---
+  duration_ms: 8447.5073
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\testing\\browser\\loopback.test.cjs:197:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\testing\browser\loopback.test.cjs:230:10)
+    runNextTicks (node:internal/process/task_queues:64:5)
+    process.processImmediate (node:internal/timers:452:9)
+    process.callbackTrampoline (node:internal/async_hooks:130:17)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: an entry redirect outside the exact origin rejects and cleans its real browser and scratch
+not ok 5 - an entry redirect outside the exact origin rejects and cleans its real browser and scratch
+  ---
+  duration_ms: 4287.8536
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\testing\\browser\\loopback.test.cjs:250:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\testing\browser\loopback.test.cjs:263:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 3
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 60976.2946

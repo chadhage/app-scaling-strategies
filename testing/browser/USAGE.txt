@@ -75,3 +75,56 @@ distinct scratch directories and cleanup on success and error paths.
 
 Tested runtime: Node 22.23.4 / npm 10.9.9. This does NOT validate Node 24 production
 support, native Azure behavior, IaC, deployments, cloud spending, or Kano credit.
+
+EXPLICIT CALLER-OWNED LOOPBACK EXTENSION
+
+The original openIsolatedLesson(path) API and its eight tests remain file-only.
+There is a separate API for an already-approved, caller-owned synthetic listener:
+
+  const { openIsolatedLoopback } = require('.\\testing\\browser\\isolated.cjs');
+  async function checkHost(startHost) {
+    const fixture = await startHost(); // owned fixture returns { server, url, close }
+    let session;
+    try {
+      session = await openIsolatedLoopback('capability\\C041\\index.html', fixture.server);
+      // Use session.page for the real HTTP fixture's acceptance checks.
+    } finally {
+      try { if (session) await session.close(); } finally { await fixture.close(); }
+    }
+  }
+
+The second argument MUST be the actual, already-listening Node http.Server,
+not a URL, wrapper, arbitrary object, HTTPS server, or unstarted/closed server.
+Its bound address must be IPv4 127.0.0.1 and its actual port an integer 1..65535.
+The helper derives the literal HTTP origin from server.address(); no DNS,
+credentials, remote origins, TLS changes, listener startup, or dependency install.
+Invalid handles fail with ERR_LOOPBACK_SERVER before any browser launch.
+
+The first argument still passes all existing local path/realpath guards. It is
+an ownership anchor, NOT an arbitrary HTTP route: navigation is fixed to the
+derived origin's "/". The caller must serve that owned entry at "/" and retain
+its own consent, exact asset allowlist, hashes, Host/Origin checks, read-only
+behavior, bounded listener lifetime (maximum 15 minutes), and server cleanup.
+The helper does not prove that a listener body matches the anchor file.
+
+Loopback contexts permit only GET/HEAD to that exact owned origin while the
+server remains live at the same address/port. Other origins/ports, writes,
+WebSockets, and service workers are blocked for navigations and subrequests.
+All HTTP 3xx responses, including same-origin redirects, are deliberately denied.
+Playwright does not re-run route.continue() guards on redirect hops, so this API
+uses route.fetch({maxRedirects:0}) and fulfills non-3xx real server responses
+unchanged. This is guarded HTTP forwarding via Playwright, not mocked response
+content or evidence certifying Chromium's native TCP transport. The actual
+browser still enforces the returned CSP, CORS, and opaque-origin sandbox rules.
+Child response bytes and CSP preservation are checked in the real browser tests.
+There is no general-purpose proxy/server and no OS-level network sandbox claim.
+
+Browser/context/page isolation, sandboxing, private runtime and error cleanup
+match the file-only API. close() NEVER closes the caller's listener; the caller
+must close it in finally, including when opening the browser fails. For C020,
+which returns the actual server directly, pass that server as the second argument.
+
+npm test now runs the unchanged eight file-only tests plus five live-server guard
+and actual-browser tests, with the two test files free to run in parallel.
+New BDD, missing-behavior red, redirect refinement red, complete 13-test green,
+and post-run cleanup evidence are loopback.* and evidence\\loopback-*.

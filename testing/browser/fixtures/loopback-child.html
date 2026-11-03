@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Response-sandboxed child</title></head>
+<body>
+  <p>Unchanged synthetic child response</p>
+  <script>
+    let parentDenied = false;
+    try {
+      void parent.document;
+    } catch (error) {
+      parentDenied = error.name === 'SecurityError';
+    }
+    parent.postMessage({ kind: 'sandbox-proof', parentDenied }, '*');
+  </script>
+</body>
+</html>

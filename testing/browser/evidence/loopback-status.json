@@ -1,0 +1,80 @@
+{
+  "status": "verified-local-loopback-extension",
+  "api": "openIsolatedLoopback(relativeOwnedIndexPath, liveHttpServer) -> {page,browserVersion,close}",
+  "serverOwnership": "Caller-owned, already-live Node http.Server; helper neither starts nor closes it",
+  "entry": "Approved existing local realpath ownership anchor; HTTP navigation is fixed to derived origin root /",
+  "origin": "Only literal bound IPv4 127.0.0.1 and its actual explicit integer port; no URL strings or DNS",
+  "network": {
+    "methods": [
+      "GET",
+      "HEAD"
+    ],
+    "originRecheckedOnEveryRequest": true,
+    "allHttp3xxRejected": true,
+    "crossOriginRequestsAndRedirectsBlockedBeforeContact": true,
+    "webSocketsBlocked": true,
+    "serviceWorkersBlocked": true,
+    "transport": "Playwright route.fetch with maxRedirects=0; non-3xx real HTTP responses fulfilled unchanged",
+    "cspAndSandboxBypassed": false,
+    "childBodySha256Preserved": true,
+    "opaqueChildOriginVerified": true
+  },
+  "bdd": "loopback.feature written before tests/loadable stub/implementation",
+  "red": {
+    "output": "loopback-red.txt",
+    "source": "loopback-red-stub.cjs.txt",
+    "tests": 5,
+    "passed": 0,
+    "failed": 5,
+    "exitCode": 1,
+    "cause": "openIsolatedLoopback is not implemented; existing verified package/browser available"
+  },
+  "redirectRefinementRed": {
+    "output": "loopback-redirect-red.txt",
+    "source": "loopback-redirect-red-source.cjs.txt",
+    "tests": 5,
+    "passed": 3,
+    "failed": 2,
+    "cause": "Real redirect escaped the first-request-only route.continue guard; the separate service-worker assertion also assumed rejection instead of Playwright's blocked undefined registration result",
+    "fix": "No-follow real HTTP response forwarding; explicit all-3xx rejection; assert no active/served service worker rather than requiring a thrown registration error"
+  },
+  "redirectRefinementGreen": {
+    "output": "loopback-redirect-green.txt",
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "exitCode": 0
+  },
+  "completeGreen": {
+    "output": "loopback-green.txt",
+    "command": "npm test",
+    "originalFileOnlyTestsUnchanged": 8,
+    "newLoopbackTests": 5,
+    "tests": 13,
+    "passed": 13,
+    "failed": 0,
+    "exitCode": 0,
+    "browser": "Signed installed Microsoft Edge 156.0.4314.50, headless, Chromium sandbox enabled",
+    "playwright": "Existing pinned offline 1.56.1; no new install/download",
+    "actualHttpResponses": "scope.json plus synthetic v1/v2 getProfile endpoints",
+    "concurrentVisibleLoopbackSessions": 2
+  },
+  "cleanup": "loopback-cleanup.json; owned browser/process/profile cleanup; caller listeners remain caller-owned",
+  "publicationRecord": ".git\\kanban-orchestrator\\browser-loopback-publish.json",
+  "limitations": [
+    "Caller owns consent, strict asset allowlist, hashes, Host/Origin/method policies, maximum 15-minute listener lifetime, and listener shutdown",
+    "The local path is an ownership anchor, not a proof of the HTTP listener body or consent",
+    "Direct non-3xx read-only HTTP responses only; no redirect support",
+    "Page-network guards are not an OS network sandbox or native Chromium TCP evidence",
+    "Tested local Node 22.23.4 / Playwright 1.56.1 / Edge 156.0.4314.50 only",
+    "No Node24 production, native Azure, IaC, cloud, or Kano credit"
+  ],
+  "finalHarnessCleanupRegression": {
+    "output": "loopback-redirect-cleanup-green.txt",
+    "tests": 1,
+    "passed": 1,
+    "failed": 0,
+    "exitCode": 0,
+    "purpose": "Regression harness cleans an unexpectedly successful session instead of leaving scratch behind"
+  }
+}

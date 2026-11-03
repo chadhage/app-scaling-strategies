@@ -2,6 +2,7 @@
 
 const path = require('node:path');
 const fs = require('node:fs');
+const http = require('node:http');
 const { randomUUID } = require('node:crypto');
 const { pathToFileURL } = require('node:url');
 
@@ -63,8 +64,20 @@ async function resolveLesson(relativeRepoPath) {
   return realTarget;
 }
 
-async function openIsolatedLesson(relativeRepoPath) {
-  const target = await resolveLesson(relativeRepoPath);
+function loopbackOrigin(server) {
+  const address = server instanceof http.Server && server.listening ? server.address() : null;
+  if (!address || typeof address !== 'object'
+      || address.address !== '127.0.0.1' || address.family !== 'IPv4'
+      || !Number.isInteger(address.port) || address.port < 1 || address.port > 65535) {
+    const error = new Error('Invalid loopback server: expected a live Node http.Server bound only to 127.0.0.1 with an explicit port');
+    error.code = 'ERR_LOOPBACK_SERVER';
+    throw error;
+  }
+  return `http://127.0.0.1:${address.port}`;
+}
+
+async function openIsolatedPage(targetURL, server) {
+  const origin = server ? loopbackOrigin(server) : null;
   const scratch = path.join(runtime, `session-${randomUUID()}`);
   await fs.promises.mkdir(scratch);
   let browser;
@@ -96,10 +109,38 @@ async function openIsolatedLesson(relativeRepoPath) {
       timeout: 15000,
       env: { ...process.env, TEMP: scratch, TMP: scratch, TMPDIR: scratch },
     });
-    context = await browser.newContext();
+    context = await browser.newContext(origin ? { serviceWorkers: 'block', bypassCSP: false } : {});
+    if (origin) {
+      await context.route('**/*', async (route) => {
+        const request = route.request();
+        const url = new URL(request.url());
+        let owned = false;
+        try { owned = loopbackOrigin(server) === origin; } catch {}
+        if (!owned || url.protocol !== 'http:' || url.origin !== new URL(origin).origin
+            || !['GET', 'HEAD'].includes(request.method())) {
+          return route.abort('blockedbyclient');
+        }
+        let response;
+        try {
+          // route.continue() does not re-run the guard on subsequent redirect hops.
+          response = await route.fetch({ maxRedirects: 0, timeout: 15000 });
+          if (response.status() >= 300 && response.status() < 400) {
+            return await route.abort('blockedbyclient');
+          }
+          await route.fulfill({ response });
+        } catch {
+          await route.abort('failed').catch(() => {});
+        } finally {
+          if (response) await response.dispose().catch(() => {});
+        }
+      });
+      await context.routeWebSocket('**/*', (socket) => socket.close({
+        code: 1008, reason: 'Read-only loopback HTTP evidence only',
+      }));
+    }
     const page = await context.newPage();
     page.setDefaultTimeout(10000);
-    await page.goto(pathToFileURL(target).href, { waitUntil: 'load', timeout: 15000 });
+    await page.goto(targetURL, { waitUntil: 'load', timeout: 15000 });
     return { page, browserVersion: browser.version(), close };
   } catch (error) {
     try {
@@ -111,4 +152,15 @@ async function openIsolatedLesson(relativeRepoPath) {
   }
 }
 
-module.exports = { openIsolatedLesson };
+async function openIsolatedLesson(relativeRepoPath) {
+  const target = await resolveLesson(relativeRepoPath);
+  return openIsolatedPage(pathToFileURL(target).href);
+}
+
+async function openIsolatedLoopback(relativeOwnedIndexPath, server) {
+  const origin = loopbackOrigin(server);
+  await resolveLesson(relativeOwnedIndexPath);
+  return openIsolatedPage(`${origin}/`, server);
+}
+
+module.exports = { openIsolatedLesson, openIsolatedLoopback };

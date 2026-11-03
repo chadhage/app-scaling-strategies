@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Loopback HTTP fixture</title>
+</head>
+<body>
+  <form>
+    <label for="message">Message</label>
+    <input id="message" autocomplete="off">
+    <button type="submit">Read profiles</button>
+  </form>
+  <output id="reads">0</output>
+  <output id="result"></output>
+  <output id="child-origin"></output>
+  <output id="child-parent-denied"></output>
+  <script>
+    document.querySelector('form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const input = document.querySelector('#message').value;
+      const [scope, v1, v2] = await Promise.all([
+        '/scope.json', '/fixtures/v1/getProfile', '/fixtures/v2/getProfile',
+      ].map(async (url) => {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      }));
+      document.querySelector('#result').value = JSON.stringify({ input, scope, v1, v2 });
+      const reads = document.querySelector('#reads');
+      reads.value = String(Number(reads.value) + 1);
+    });
+    window.addEventListener('message', (event) => {
+      if (event.source !== document.querySelector('iframe').contentWindow
+          || event.data?.kind !== 'sandbox-proof') return;
+      document.querySelector('#child-origin').value = event.origin;
+      document.querySelector('#child-parent-denied').value = String(event.data.parentDenied);
+    });
+  </script>
+  <iframe title="Sandbox child" src="/child.html"></iframe>
+</body>
+</html>
