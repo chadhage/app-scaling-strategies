@@ -1,0 +1,88 @@
+TAP version 13
+# Subtest: real loopback HTTP exposes only the exact host and pinned lesson allowlist
+    # Subtest: approved child bytes are unchanged and response sandbox is independent of the iframe
+    ok 1 - approved child bytes are unchanged and response sandbox is independent of the iframe
+      ---
+      duration_ms: 35.3322
+      type: 'test'
+      ...
+    # Subtest: HEAD serves metadata without a body
+    ok 2 - HEAD serves metadata without a body
+      ---
+      duration_ms: 9.7671
+      type: 'test'
+      ...
+    # Subtest: repository, existing but unselected lessons, evidence, and management endpoints are absent
+    ok 3 - repository, existing but unselected lessons, evidence, and management endpoints are absent
+      ---
+      duration_ms: 19.8204
+      type: 'test'
+      ...
+    # Subtest: raw traversal, encoded paths, backslashes, and query selection are rejected before normalization
+    ok 4 - raw traversal, encoded paths, backslashes, and query selection are rejected before normalization
+      ---
+      duration_ms: 11.9144
+      type: 'test'
+      ...
+    # Subtest: non-read methods cannot dispatch management actions
+    ok 5 - non-read methods cannot dispatch management actions
+      ---
+      duration_ms: 31.012
+      type: 'test'
+      ...
+    # Subtest: non-loopback authority and DNS-rebinding Host headers are refused
+    ok 6 - non-loopback authority and DNS-rebinding Host headers are refused
+      ---
+      duration_ms: 9.8656
+      type: 'test'
+      ...
+    # Subtest: explicit foreign and opaque Origin headers receive no local asset grant
+    not ok 7 - explicit foreign and opaque Origin headers receive no local asset grant
+      ---
+      duration_ms: 8.7801
+      type: 'test'
+      location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C041\\tests\\server.test.cjs:89:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        null
+
+        200 !== 403
+
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 403
+      actual: 200
+      operator: 'strictEqual'
+      stack: |-
+        TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C041\tests\server.test.cjs:92:14)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C041\tests\server.test.cjs:89:3)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    1..7
+not ok 1 - real loopback HTTP exposes only the exact host and pinned lesson allowlist
+  ---
+  duration_ms: 862.89
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C041\\tests\\server.test.cjs:10:1'
+  failureType: 'subtestsFailed'
+  error: '1 subtest failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: helper rejects invalid ports and unbounded lifetimes
+ok 2 - helper rejects invalid ports and unbounded lifetimes
+  ---
+  duration_ms: 3.5452
+  type: 'test'
+  ...
+1..2
+# tests 9
+# suites 0
+# pass 7
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1569.2088

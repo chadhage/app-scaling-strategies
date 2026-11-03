@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C041",
+  "workerId": "worker-C041",
+  "kano": "S",
+  "kanoUnit": "C041",
+  "parents": ["H002", "H008"],
+  "technicalEntryGate": "C001 accepted; portable HTML/JavaScript local implementation only",
+  "entry": "index.html",
+  "status": "verified-local; independent-controller-acceptance-required",
+  "scope": {
+    "mode": "local synthetic training host",
+    "acceptedLessonIds": ["A-S001", "A-S003"],
+    "cloudCalls": 0,
+    "credentials": false,
+    "registration": false,
+    "expenditure": 0,
+    "managementDelegation": false,
+    "nativeOrParentProof": false,
+    "closedLessonEdits": false,
+    "rootAppEdits": false,
+    "frameworkDecision": "none; approved portable HTML/JavaScript"
+  },
+  "bdd": "C041.feature",
+  "catalog": "accepted-catalog.js",
+  "acceptanceSnapshot": "evidence\\accepted-ledger-snapshot.json",
+  "acceptedAssetProvenance": "evidence\\accepted-asset-provenance.json",
+  "red": {
+    "runner": "Node builtin node:test",
+    "run": "evidence\\red-run.json",
+    "log": "evidence\\red.txt",
+    "replayRun": "evidence\\red-replay-run.json",
+    "replayLog": "evidence\\red-replay.txt",
+    "rawLog": "evidence\\red.txt.gz",
+    "rawReplayLog": "evidence\\red-replay.txt.gz",
+    "loadableStub": "evidence\\red\\host-policy.cjs",
+    "exitCode": 1,
+    "tests": 30,
+    "passed": 26,
+    "failed": 4,
+    "reason": "Behavioral assertions: approved catalog and exact approved-ID resolution absent in loadable stub"
+  },
+  "green": {
+    "run": "evidence\\green-run.json",
+    "log": "evidence\\green.txt",
+    "exitCode": 0,
+    "tests": 53,
+    "passed": 53,
+    "failed": 0,
+    "behavioralAndRealHttpTests": 48,
+    "evidenceIntegrityTests": 5,
+    "boundary": "Policy, catalog integrity, real loopback HTTP and evidence validation; not browser proof"
+  },
+  "originBoundaryRefinementRed": {
+    "run": "evidence\\origin-red-run.json",
+    "log": "evidence\\origin-red.txt",
+    "rawLog": "evidence\\origin-red.txt.gz",
+    "exitCode": 1,
+    "observed": "An explicit opaque Origin received HTTP 200 instead of 403 before the guard; final HTTP and browser runs include the guard"
+  },
+  "syntax": "evidence\\syntax.json",
+  "browser": {
+    "status": "passed-real-browser",
+    "checks": "tests\\browser-checks.cjs",
+    "runner": "tests\\browser-run.cjs",
+    "observations": "evidence\\browser.json",
+    "attempts": "evidence\\browser-attempts.json",
+    "log": "evidence\\browser-run.txt",
+    "engine": "Microsoft Edge (Chromium) 156.0.4314.50",
+    "playwright": "1.56.1",
+    "mode": "fresh isolated headless session through verified guarded loopback API",
+    "verifiedHelperImported": true,
+    "unverifiedStubImported": false,
+    "integratedForegroundUsed": false,
+    "sharedTooling": {
+      "repoRelativePath": "testing\\browser\\isolated.cjs",
+      "commit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+      "tag": "kanban/flow-browser/53c0c0d82cc1"
+    },
+    "observed": [
+      "Native keyboard mounts without focus theft; enters real A-S001 controls, warms v2 to READY, completes its synthetic PASS, and returns to host with seven Shift+Tabs.",
+      "Real A-S003 child advances 5% to 25% with healthy observations; keyboard retry after a regression is blocked at 25%.",
+      "Both actual child response-body SHA-256 values match accepted pins and response CSP independently includes sandbox allow-scripts without same-origin.",
+      "Effective child origin and actual child message origins are null; parent/child DOM, parent API and child storage access throw SecurityError; frameElement is inaccessible.",
+      "Real CSP violations block injected inline script, connection and nested frame; real lesson scripts remain interactive.",
+      "Five unsolicited child messages trigger no requests, selection change, result forgery or management delegation; ten unknown/native/URL/path/alias selections are refused and remove the frame.",
+      "Exact isolated browser session and exact caller-owned loopback helper are closed in finally."
+    ],
+    "transportBoundary": "Guarded route.fetch(maxRedirects:0) forwards real owned-server responses unchanged. These are real DOM/CSP/keyboard checks, not certification of native Chromium TCP transport."
+  },
+  "sourceHashes": "evidence\\source-hashes.json",
+  "rawTapArchives": "evidence\\raw-tap-archives.json",
+  "logRepresentation": "Original raw RED TAP bytes are preserved as gzip with SHA-256 metadata. Readable copies remove only end-of-line whitespace and normalize CRLF to LF to satisfy publisher diff --check; outcomes and assertions are unchanged.",
+  "queueRefinements": "evidence\\queue-refinements.json",
+  "iac": {
+    "status": "N/A",
+    "reason": "No infrastructure, Azure execution, IaC generation, deployment, registration or expenditure authorized or performed"
+  },
+  "limitations": [
+    "Two explicitly reviewed offline accepted lessons only; no live catalog or revocation feed.",
+    "Child hashes pin exact reviewed Windows-checkout bytes; changed line endings fail closed and require explicit reviewed repinning, not silent normalization.",
+    "Requires bounded loopback response-level sandbox/CSP helper; file-URL execution is unsupported.",
+    "Not an arbitrary-content browser, Internet-egress containment system, authentication service, or production app.",
+    "A synthetic lesson result is not native Azure proof, parent-scenario completion, uptime measurement, or reliability certification.",
+    "Publication does not self-accept C041 or award Kano credit."
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C041",
+  "kanoUnit": "C041",
+  "queueEdited": false,
+  "creditAwarded": 0,
+  "source": {
+    "path": ".docs\\wiki\\flow-state.json",
+    "revision": 115,
+    "updatedAtUtc": "2026-11-03T14:45:54.7030896Z"
+  },
+  "observedQueue": {
+    "plannedNextIds": ["C004", "C005", "A-S011", "C020", "C041", "A-S010"],
+    "C020": "Published; independent controller review and acceptance pending at observation",
+    "C041": "Local verification complete; scoped publication and independent review remain",
+    "liveAzureExecutionApproved": false
+  },
+  "boundedRefinements": [
+    {
+      "candidate": "C045",
+      "existingKanoUnit": "C045",
+      "gate": "C020, C041",
+      "readiness": "Do not infer readiness before both independent controller acceptances",
+      "boundary": "Scope a future local GA/preview fixture demonstration to two explicitly isolated client sessions and separately observable synthetic identity/destination stamps. Test no cross-session storage/state bleed. C041 iframe isolation is not proof of actual identity, tenant isolation, GA/preview routing, or Azure behavior.",
+      "noNewAdmissionOrCredit": true
+    },
+    {
+      "candidate": "C042/C043",
+      "existingKanoUnits": ["C042", "C043"],
+      "gate": "C042 requires C016, C019, C035; C043 requires C042",
+      "readiness": "Original technical gates and separately approved management authority remain prerequisites",
+      "boundary": "Keep the reusable training host out of the workflow control plane. A child message or synthetic PASS must never start a workflow, grant a role, approve expenditure, or replace server-enforced authorization/lease validation. Add an explicit hostile-message negative to the future conductor's BDD rather than expanding C041 authority.",
+      "noNewAdmissionOrCredit": true
+    }
+  ]
+}
