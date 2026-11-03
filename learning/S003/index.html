@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>A-S003 — Journey-gated canary rehearsal</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script defer src="canary.js"></script>
+  <script defer src="lesson.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p class="eyebrow">A-S003 · Kano S · stable unit A-S003 · D-S003 / S003 · LP-RINGS</p>
+    <h1>Can the next canary cohort advance?</h1>
+    <p>Objective: advance a staged canary only after complete, fresh journey evidence.
+      Try a healthy stage, then see a regression stop the next increment.</p>
+  </header>
+
+  <main>
+    <section aria-labelledby="preconditions-heading">
+      <h2 id="preconditions-heading">Preconditions and operating envelope</h2>
+      <p>These are assumptions, not measured readiness: invented v1 and v2 are warm,
+        compatible, have overlap capacity, and preserve authentication and state.
+        v1 remains available for recovery. No application framework or hosting target is selected.</p>
+      <ul>
+        <li>20 invented users u01–u20 start on v1. Stable cohorts always expand in ID order.</li>
+        <li>Every complete journey must preserve login/session and state, create exactly one effect,
+          return HTTP 2xx, and finish within <strong>1000 ms</strong>. HTTP 200 alone is insufficient.</li>
+        <li>Observe all 20 users for the configured simulated window. Evidence expires after
+          <strong>60 seconds</strong> and belongs to one stage epoch only.</li>
+      </ul>
+    </section>
+
+    <section id="exercise" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">1. Configure the local rehearsal</h2>
+      <form id="configuration">
+        <div class="field">
+          <label for="stage-plan">Canary stages (% desired to v2)</label>
+          <select id="stage-plan" name="stage-plan">
+            <option value="5,25,50,100">5 → 25 → 50 → 100</option>
+            <option value="10,30,60,100">10 → 30 → 60 → 100</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="window-seconds">Observation window (simulated seconds)</label>
+          <select id="window-seconds" name="window-seconds">
+            <option value="30">30 seconds</option>
+            <option value="60">60 seconds</option>
+          </select>
+        </div>
+        <button id="start" type="submit" aria-describedby="reset-warning">Start new rehearsal</button>
+      </form>
+      <p id="reset-warning" class="note">A 5% rehearsal is already started. Starting again or clearing explicitly
+        discards this local history. Normal promotion and rollback never erase it.</p>
+
+      <h2>2. Observe, decide, inspect</h2>
+      <p>Worked path: record <strong>Safe complete journeys</strong>, promote from 5% to 25%,
+        then record <strong>Regressed journey</strong> and try another promotion.
+        Expect a blocked 50% increment, with the interruption retained. No real time elapses.</p>
+      <div class="field">
+        <label for="fixture">Synthetic observation condition</label>
+        <select id="fixture" aria-describedby="fixture-expectation">
+          <option value="safe">Safe complete journeys</option>
+          <option value="regressed">Regressed journey — HTTP 200, 1400 ms</option>
+          <option value="missing">Missing observations — no samples returned</option>
+          <option value="unknown">Unknown outcome — candidate journey unfinished</option>
+          <option value="partial">Partial routing — newest selected user stays on v1</option>
+          <option value="stale">Stale observation — arrives 61 seconds late</option>
+          <option value="short-window">Incomplete window — only 5 seconds observed</option>
+        </select>
+      </div>
+      <p id="fixture-expectation" class="expected"></p>
+      <div class="actions">
+        <button id="observe" type="button">Record selected observation</button>
+        <button id="promote" type="button" aria-describedby="promotion-help">Promote next cohort</button>
+        <button id="age" type="button">Advance simulated clock +61s</button>
+        <button id="rollback" type="button">Request synthetic rollback</button>
+      </div>
+      <p id="promotion-help" class="note">Blocked attempts are deliberately clickable so you can test the guard.
+        They record a refusal, not an increment. A failed or unknown attempted transition cannot be
+        repaired retroactively by a later passing probe; start a separate rehearsal to try a new transition.</p>
+      <noscript><p>JavaScript must be enabled for this local exercise. No scripts or data are downloaded.</p></noscript>
+      <p id="live-result" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></p>
+    </section>
+
+    <section aria-labelledby="decision-heading">
+      <h2 id="decision-heading">3. Check expected outcomes</h2>
+      <div class="metrics">
+        <p>Desired to v2<br><output id="desired-percent">5%</output></p>
+        <p>Actual latest destinations<br><output id="actual-destinations">Not observed</output></p>
+        <p>Next stage<br><output id="next-stage">25%</output></p>
+        <p>Simulated clock<br><output id="clock">T+0s</output></p>
+      </div>
+      <h3>Verification verdict — did the educational guard behave?</h3>
+      <p id="verification-verdict"></p>
+      <ul id="gate-reasons" aria-label="Current journey acceptance gates"></ul>
+      <h3>Journey / user impact — not the verifier verdict</h3>
+      <p id="journey-impact"></p>
+      <p id="routing-summary"></p>
+      <p class="note">Denominator = distinct users whose v1 → v2 transition was attempted.
+        Failed and unknown attempts stay in it. Successful unchanged v1 users and repeat probes
+        of already-moved v2 users never add migration credit. This is not a reliability estimate.</p>
+      <h3>Cleanup — separate from verification and migration</h3>
+      <p id="cleanup-result">No resources created. Local trace exists only in this page's memory.</p>
+      <button id="clear" type="button">Clear local rehearsal</button>
+    </section>
+
+    <section aria-labelledby="cohort-heading">
+      <h2 id="cohort-heading">Actual synthetic cohorts versus routing intent</h2>
+      <p>“Not observed” is not a destination. Changing desired traffic never manufactures actual evidence.
+        Each row represents one complete user journey, not a request-count percentage.</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable synthetic user destinations">
+        <table>
+          <caption>Latest snapshot only; prior observations remain in the trace and model history.</caption>
+          <thead>
+            <tr>
+              <th scope="col">User</th>
+              <th scope="col">Before</th>
+              <th scope="col">Desired</th>
+              <th scope="col">Actual observed</th>
+              <th scope="col">Latest journey assertions</th>
+              <th scope="col">Retained transition outcome</th>
+            </tr>
+          </thead>
+          <tbody id="cohort-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Synthetic action and evidence trace</h2>
+      <p id="trace-description">Each entry retains stage/epoch, simulated time, intent, observed destinations,
+        cohort additions and the attempted-outcome denominator. Earlier failures are not hidden by rollback.</p>
+      <ol id="trace" aria-describedby="trace-description"></ol>
+    </section>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Scope, limits and reproducibility</h2>
+      <ul>
+        <li>SOURCE-only learning exercise. IaC: <strong>N/A — no Azure resource is needed.</strong>
+          C001 runtime/authentication/hosting approval and separate scaffold/deploy approval are absent.</li>
+        <li>No credentials, cookies, browser storage, package dependencies, service workers,
+          management calls or network requests. State is local, ephemeral and not shared with other lessons.</li>
+        <li>Deterministic fixtures, 20 invented users and a simulated clock do not establish native routing,
+          authorization, production capacity, recovery, drain completion or old-destination retirement.</li>
+        <li>A negative educational verification can pass while a user is interrupted.
+          Neither B-S003 native proof nor full D-S003/source acceptance is delivered.
+          The sample proves no 99.999% reliability or uninterrupted live migration.</li>
+      </ul>
+      <p>Open <code>learning\S003\index.html</code> directly in a browser. From the repository root run
+        <code>node --test --test-reporter=tap learning\S003\canary.test.cjs</code>.
+        See <a href="canary.feature">Given/When/Then contract</a> and <a href="evidence.json">recorded evidence</a>.</p>
+    </section>
+  </main>
+
+  <footer>
+    <h2>Microsoft disclaimer</h2>
+    <p>Provided “AS IS” for education, without warranties or guarantees. References to Microsoft and Azure
+      identify products only; they imply no endorsement, sponsorship, certification or Microsoft support.
+      Microsoft and Azure are trademarks of the Microsoft group of companies. This is not a Microsoft SLA,
+      license grant, or production-readiness certification.</p>
+    <p><a href="../../README.md#microsoft-open-source-disclaimer">Repository Microsoft Open Source Disclaimer</a>
+      · <a href="https://learn.microsoft.com/azure/app-service/deploy-staging-slots" rel="noreferrer">Microsoft Learn: deployment slots and routing limits</a>.
+      External documentation opens only if you explicitly follow its link.</p>
+  </footer>
+</body>
+</html>

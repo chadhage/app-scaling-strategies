@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S003",
+  "workerId": "worker-A-S003",
+  "kano": "S",
+  "kanoUnit": "A-S003",
+  "parentId": "D-S003",
+  "sourceId": "S003",
+  "packet": "LP-RINGS",
+  "mode": "synthetic",
+  "technicalEntryGate": "SOURCE",
+  "entry": "learning\\S003\\index.html",
+  "acceptance": {
+    "status": "incomplete",
+    "verifiedScope": "BDD contract, portable assets, pure canary model, 26 focused Node tests and JavaScript syntax.",
+    "blocker": "Integrated browser opens the lesson but cannot reacquire either returned unique pageId. Real click, keyboard and changed-DOM verification could not execute.",
+    "browserAcceptanceSatisfied": false,
+    "eligibleForDoneCredit": false,
+    "reviewer": "Controller empirical review required; no acceptance claimed.",
+    "nativeBS003Proof": false,
+    "parentDS003Complete": false
+  },
+  "bdd": {
+    "path": "learning\\S003\\canary.feature",
+    "writtenBeforeTestsAndImplementation": true,
+    "scenarios": [
+      "Fresh complete journeys permit exactly the next increment.",
+      "HTTP 200 plus 1400-ms journey latency blocks expansion.",
+      "Authentication, state and business-effect assertions are acceptance gates.",
+      "Missing, unknown, partial, stale and short-window evidence fail closed.",
+      "Earlier stage evidence cannot validate a later epoch.",
+      "Failed and unknown attempts survive rechecks and requested rollback.",
+      "Configurable stages and windows do not double count unchanged users.",
+      "Explicit local cleanup and synthetic/native limits remain distinct."
+    ]
+  },
+  "tdd": {
+    "runtime": "Node.js v22.23.4",
+    "runner": "node:test with node:assert/strict; no manifest, packages or installs",
+    "command": "node --test --test-reporter=tap learning\\S003\\canary.test.cjs",
+    "red": {
+      "path": "learning\\S003\\evidence\\red.txt",
+      "exitCode": 1,
+      "tests": 23,
+      "passed": 0,
+      "failed": 23,
+      "cause": "Minimal importable behavior stub returned 0% and no-op actions. The first genuine assertion expected 5 but received 0; failures were behavior assertions, not missing tooling or imports.",
+      "capturedBeforeImplementation": true
+    },
+    "hardeningRed": {
+      "path": "learning\\S003\\evidence\\hardening-red.txt",
+      "exitCode": 1,
+      "tests": 26,
+      "passed": 25,
+      "failed": 1,
+      "cause": "Additional malformed-sample test exposed '(observation.users ?? []).map is not a function'.",
+      "fix": "Treat non-array sample payloads as missing evidence, retain the unknown attempt, and block promotion."
+    },
+    "green": {
+      "path": "learning\\S003\\evidence\\green.txt",
+      "exitCode": 0,
+      "tests": 26,
+      "passed": 26,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "syntax": {
+      "command": "node --check learning\\S003\\canary.js && node --check learning\\S003\\lesson.js",
+      "path": "learning\\S003\\evidence\\syntax.txt",
+      "exitCode": 0
+    },
+    "verifiedBehaviors": [
+      "Only one next cohort can be requested after fresh, complete, same-epoch journey evidence.",
+      "An HTTP 200 latency regression prevents the next increment and remains latched.",
+      "Authentication, state, completion and exactly-once effect failures block expansion.",
+      "Desired percentage does not manufacture actual destinations.",
+      "Missing or malformed samples, unknown outcomes, duplicate identities, incomplete windows and stale evidence cannot authorize expansion.",
+      "Successful unchanged v1 users and repeat observations of already-moved v2 users add no attempted migrations.",
+      "Failed and unknown attempted transitions remain in the denominator after later passing probes and rollback.",
+      "Rollback routing is requested, not assumed observed; a separate snapshot can observe all users on v1.",
+      "Both configurable four-stage plans reach the final synthetic stage without duplicate migration credit.",
+      "Restrictive CSP, local script references, labeled controls, a live result and honest scope are present in the portable assets."
+    ]
+  },
+  "iac": {
+    "status": "N/A",
+    "recordedIn": "learning\\S003\\manifest.json",
+    "reason": "SOURCE read-only synthetic exercise needs no Azure resource.",
+    "c001RuntimeAuthenticationHostingApproval": "absent",
+    "separateScaffoldDeployApproval": "absent",
+    "resourcesCreated": [],
+    "managementCalls": 0
+  },
+  "browser": {
+    "status": "blocked",
+    "required": true,
+    "verified": false,
+    "deferredToolsSearchedFirst": true,
+    "tools": [
+      "openBrowserPage",
+      "runPlaywrightCode",
+      "readPage",
+      "clickElement"
+    ],
+    "page": "learning\\S003\\index.html",
+    "scheme": "file",
+    "forceNew": true,
+    "attempts": [
+      {
+        "pageId": "d219831e-a1fc-40ba-84cf-eec6eae0eacd",
+        "openResult": "Returned the lesson title and initial accessibility snapshot, including the exact training banner.",
+        "title": "A-S003 — Journey-gated canary rehearsal",
+        "interactionAttempt": {
+          "tool": "runPlaywrightCode",
+          "intendedChecks": "Observe safe 5%, promote to 25%, observe a regressed journey, and assert that the 50% increment is blocked.",
+          "result": "Code execution failed: Page \"d219831e-a1fc-40ba-84cf-eec6eae0eacd\" not found",
+          "executed": false
+        },
+        "readAttempt": {
+          "tool": "readPage",
+          "result": "Page \"d219831e-a1fc-40ba-84cf-eec6eae0eacd\" not found"
+        }
+      },
+      {
+        "pageId": "38c16669-aae8-4d8e-ae1f-d2f6bf7ac56a",
+        "openResult": "Bounded recovery: a second forceNew open returned a new lesson page and initial accessibility snapshot.",
+        "interactionAttempt": {
+          "tool": "clickElement",
+          "selector": "#observe",
+          "intendedAction": "Click Record selected observation for the safe fixture.",
+          "result": "Page \"38c16669-aae8-4d8e-ae1f-d2f6bf7ac56a\" not found",
+          "executed": false
+        }
+      }
+    ],
+    "successfulClickAssertions": 0,
+    "successfulKeyboardAssertions": 0,
+    "changedDomAssertions": 0,
+    "networkOrConsoleVerification": "Not claimed; the interaction tools could not address the opened pages.",
+    "remainingAcceptance": [
+      "Use a functioning integrated-browser page handle with forceNew and retain that own pageId.",
+      "Actually record safe and regressed choices, promote safely once, then observe blocked expansion and retained user impact.",
+      "Operate the controls with real keyboard input and observe changed DOM/live status.",
+      "Exercise missing/unknown evidence, rollback retention and explicit local cleanup in the browser."
+    ]
+  },
+  "configuration": {
+    "population": 20,
+    "baseline": "v1",
+    "candidate": "v2",
+    "defaultStagesPercent": [5, 25, 50, 100],
+    "alternativeStagesPercent": [10, 30, 60, 100],
+    "observationWindowSeconds": [30, 60],
+    "evidenceLifetimeSeconds": 60,
+    "journeyBudgetMs": 1000,
+    "clock": "simulated; no real waiting or measurements",
+    "regressionFixture": "HTTP 200 and 1400-ms complete journey"
+  },
+  "verificationVerdict": "Unit-level positive and negative guard checks passed. Required real-browser interaction acceptance is blocked, so the card is incomplete.",
+  "journeyUserImpact": "Synthetic fixtures only. A negative guard verification can pass with an interrupted user; failures and unknowns are retained separately from the verifier verdict. No uninterrupted live migration is claimed.",
+  "cleanup": {
+    "cloudResources": "None created; no deletion required.",
+    "credentials": "None used or stored.",
+    "packages": "None installed.",
+    "backgroundProcesses": "None started; Node test and syntax commands completed.",
+    "persistentBrowserState": "Application code uses no cookies or browser storage; only local in-memory rehearsal state.",
+    "localReset": "An explicit Clear local rehearsal control is implemented; its real-browser interaction remains unverified.",
+    "browserPages": "Only two uniquely opened lesson pages were targeted. Their handles became inaccessible; closure is unverified. No shared tab was navigated.",
+    "trackedScope": "learning\\S003\\ only; no shared manifests, README, other lessons, Kanban or ledger edited manually."
+  },
+  "limitations": [
+    "Real click, keyboard and changed-DOM browser evidence is missing due to non-addressable returned pageIds; this is a blocker, not a pass.",
+    "All observations, destinations and user journeys are deterministic synthetic fixtures.",
+    "Twenty correlated invented users and a simulated clock establish no 99.999% reliability, native routing, production capacity, authentication enforcement or recovery guarantee.",
+    "v1 is retained; no real drain, retirement, rollback execution or external business effect is measured.",
+    "No framework, runtime/auth/hosting contract, scaffold/deploy approval or cloud execution is authorized.",
+    "B-S003 and full D-S003/source acceptance remain unfulfilled.",
+    "Failed/unknown transitions are deliberately conservative and cannot be retroactively repaired by a later passing probe; a new rehearsal is a separate attempt."
+  ],
+  "pathNormalization": "Commands and committed evidence use repository-relative paths; absolute user paths and any eventual publication SHA are omitted."
+}

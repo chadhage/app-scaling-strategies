@@ -1,0 +1,183 @@
+$ node --test --test-reporter=tap learning\S003\canary.test.cjs
+TAP version 13
+# Subtest: BDD: the first stable 5% cohort starts with one unverified attempted transition
+ok 1 - BDD: the first stable 5% cohort starts with one unverified attempted transition
+  ---
+  duration_ms: 3.2318
+  type: 'test'
+  ...
+# Subtest: BDD: fresh complete journeys permit one stage, not a jump or reused evidence
+ok 2 - BDD: fresh complete journeys permit one stage, not a jump or reused evidence
+  ---
+  duration_ms: 2.9798
+  type: 'test'
+  ...
+# Subtest: BDD: HTTP 200 with excessive journey latency blocks the next increment
+ok 3 - BDD: HTTP 200 with excessive journey latency blocks the next increment
+  ---
+  duration_ms: 0.5592
+  type: 'test'
+  ...
+# Subtest: BDD: the authentication journey gate blocks otherwise healthy HTTP responses
+ok 4 - BDD: the authentication journey gate blocks otherwise healthy HTTP responses
+  ---
+  duration_ms: 0.5114
+  type: 'test'
+  ...
+# Subtest: BDD: the state journey gate blocks otherwise healthy HTTP responses
+ok 5 - BDD: the state journey gate blocks otherwise healthy HTTP responses
+  ---
+  duration_ms: 0.304
+  type: 'test'
+  ...
+# Subtest: BDD: the effects journey gate blocks otherwise healthy HTTP responses
+ok 6 - BDD: the effects journey gate blocks otherwise healthy HTTP responses
+  ---
+  duration_ms: 1.2044
+  type: 'test'
+  ...
+# Subtest: BDD: the complete journey gate blocks otherwise healthy HTTP responses
+ok 7 - BDD: the complete journey gate blocks otherwise healthy HTTP responses
+  ---
+  duration_ms: 0.4551
+  type: 'test'
+  ...
+# Subtest: BDD: missing evidence cannot authorize expansion
+ok 8 - BDD: missing evidence cannot authorize expansion
+  ---
+  duration_ms: 0.6177
+  type: 'test'
+  ...
+# Subtest: BDD: unknown evidence cannot authorize expansion
+ok 9 - BDD: unknown evidence cannot authorize expansion
+  ---
+  duration_ms: 1.4941
+  type: 'test'
+  ...
+# Subtest: BDD: partial evidence cannot authorize expansion
+ok 10 - BDD: partial evidence cannot authorize expansion
+  ---
+  duration_ms: 1.2784
+  type: 'test'
+  ...
+# Subtest: BDD: stale evidence cannot authorize expansion
+ok 11 - BDD: stale evidence cannot authorize expansion
+  ---
+  duration_ms: 0.7041
+  type: 'test'
+  ...
+# Subtest: BDD: short-window evidence cannot authorize expansion
+ok 12 - BDD: short-window evidence cannot authorize expansion
+  ---
+  duration_ms: 0.521
+  type: 'test'
+  ...
+# Subtest: BDD: configured traffic is not an observed destination or a migrated user
+ok 13 - BDD: configured traffic is not an observed destination or a migrated user
+  ---
+  duration_ms: 0.6722
+  type: 'test'
+  ...
+# Subtest: BDD: freshness expires after 60 seconds and a fresh recheck does not add migrations
+ok 14 - BDD: freshness expires after 60 seconds and a fresh recheck does not add migrations
+  ---
+  duration_ms: 1.0999
+  type: 'test'
+  ...
+# Subtest: BDD: an earlier stage snapshot cannot validate new cohort admissions
+ok 15 - BDD: an earlier stage snapshot cannot validate new cohort admissions
+  ---
+  duration_ms: 1.5794
+  type: 'test'
+  ...
+# Subtest: BDD: regressed outcomes remain in the denominator after later safe evidence and rollback
+ok 16 - BDD: regressed outcomes remain in the denominator after later safe evidence and rollback
+  ---
+  duration_ms: 2.3177
+  type: 'test'
+  ...
+# Subtest: BDD: unknown outcomes remain in the denominator after later safe evidence and rollback
+ok 17 - BDD: unknown outcomes remain in the denominator after later safe evidence and rollback
+  ---
+  duration_ms: 1.1718
+  type: 'test'
+  ...
+# Subtest: BDD: missing outcomes remain in the denominator after later safe evidence and rollback
+ok 18 - BDD: missing outcomes remain in the denominator after later safe evidence and rollback
+  ---
+  duration_ms: 0.7732
+  type: 'test'
+  ...
+# Subtest: BDD: alternative stages and windows reach 100% without double counting unchanged users
+ok 19 - BDD: alternative stages and windows reach 100% without double counting unchanged users
+  ---
+  duration_ms: 3.0159
+  type: 'test'
+  ...
+# Subtest: BDD: invalid plans and non-positive or unbounded windows are rejected explicitly
+ok 20 - BDD: invalid plans and non-positive or unbounded windows are rejected explicitly
+  ---
+  duration_ms: 1.1265
+  type: 'test'
+  ...
+# Subtest: BDD: duplicate users and unknown destination values cannot satisfy complete evidence
+ok 21 - BDD: duplicate users and unknown destination values cannot satisfy complete evidence
+  ---
+  duration_ms: 0.6711
+  type: 'test'
+  ...
+# Subtest: BDD: missing assertion values stay unknown instead of becoming successful truthy values
+ok 22 - BDD: missing assertion values stay unknown instead of becoming successful truthy values
+  ---
+  duration_ms: 0.4905
+  type: 'test'
+  ...
+# Subtest: BDD: actions preserve prior snapshots and append an auditable trace
+ok 23 - BDD: actions preserve prior snapshots and append an auditable trace
+  ---
+  duration_ms: 0.5659
+  type: 'test'
+  ...
+# Subtest: malformed missing samples fail closed without throwing or fabricating migration
+not ok 24 - malformed missing samples fail closed without throwing or fabricating migration
+  ---
+  duration_ms: 0.6363
+  type: 'test'
+  location: 'learning\\S003\\canary.test.cjs:195:1'
+  failureType: 'testCodeFailure'
+  error: '(observation.users ?? []).map is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    recordObservation (learning\S003\canary.js:126:57)
+    TestContext.<anonymous> (learning\S003\canary.test.cjs:198:20)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: an unchanged v1 user's interruption blocks expansion without adding a migrated user
+ok 25 - an unchanged v1 user's interruption blocks expansion without adding a migrated user
+  ---
+  duration_ms: 0.9543
+  type: 'test'
+  ...
+# Subtest: the portable page declares restrictive CSP, local assets, accessible controls and honest scope
+ok 26 - the portable page declares restrictive CSP, local assets, accessible controls and honest scope
+  ---
+  duration_ms: 5.8172
+  type: 'test'
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 25
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 232.943
+
+Exit code: 1
