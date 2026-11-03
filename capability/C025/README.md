@@ -66,6 +66,11 @@ node .\tests\browser.cjs
 Pop-Location
 ```
 
+After publication, also run `node .\tests\integrity.cjs --committed` from this
+directory to compare every owned file (including the seal) with actual HEAD blobs.
+The owned `.gitattributes` disables Git EOL conversion: original RED snapshots and
+all SHA-sealed evidence must retain their exact recorded bytes during publication.
+
 The real browser runner verifies the published shared helper's exact SHA-256,
 calls only `openIsolatedLoopback(relativeEntry, actualOwnedHttpServer)`, uses a
 bounded owned listener, and awaits `session.close()` then the exact `server.close()`

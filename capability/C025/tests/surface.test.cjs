@@ -35,3 +35,9 @@ test('browser runner uses only exact published shared helper, deliberate capture
   assert.match(browser, /server\.close\(\(error\)/);
   assert.doesNotMatch(browser, /chromium\.launch|browserType\.launch|\.route\(|bypassCSP:\s*true|--no-sandbox|ignoreHTTPSErrors/);
 });
+
+test('sealed owned proof preserves exact bytes across Git publication, including original RED snapshots', () => {
+  const attributes = fs.readFileSync(path.join(root, '.gitattributes'), 'utf8');
+  assert.match(attributes, /^\* -text\r?$/m, 'Hash-sealed proof bytes must not be changed by Git EOL conversion.');
+  assert.doesNotMatch(attributes, /eol=/);
+});

@@ -155,6 +155,24 @@
       "unchangedDependencies": "evidence\\provider-integrity.json",
       "ownedFileHashes": "evidence\\integrity.json",
       "verificationCommand": "node .\\tests\\integrity.cjs"
+    },
+    {
+      "stage": "publication-persistence-refinement",
+      "firstPublishedCandidate": "b6cedf87b96285160151cc1ff09f723054aa41b2",
+      "firstRemotePushVerified": true,
+      "persistenceIssue": "Post-publication canonical-blob inspection found that Git's eol=lf converted CRLF working-source and retained RED snapshot bytes, invalidating the working-byte seal in the committed candidate. That candidate is not the final accepted deliverable.",
+      "genuineRed": {
+        "record": "evidence\\persistence-red.json",
+        "tests": 4,
+        "passed": 3,
+        "failed": 1,
+        "exitCode": 1
+      },
+      "minimalFix": "Disable text conversion within C025 only; preserve original historical proof/snapshot bytes; add read-only --committed verification against actual Git blobs. Re-publish the same single S unit, without rewriting/deleting the earlier commit or tag.",
+      "focusedGreen": "evidence\\persistence-green.json",
+      "syntax": "evidence\\syntax-persistence.json",
+      "normalReadonlyVerification": "evidence\\readonly-persistence.json",
+      "finalGate": "node .\\tests\\integrity.cjs --committed"
     }
   ],
   "scope": {
