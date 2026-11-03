@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "id": "A-S089",
+  "sourceId": "S089",
+  "parentId": "D-S089",
+  "nativeSiblingId": "B-S089",
+  "workerId": "worker-A-S089",
+  "kano": "S",
+  "kanoUnit": "A-S089",
+  "packet": "SC-S089",
+  "entryGate": "SOURCE",
+  "mode": "synthetic",
+  "entry": "index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Lose management connectivity; separate control-plane availability from data-plane service.",
+  "preconditions": [
+    "JavaScript enabled; standalone file browser lesson",
+    "Established blue-v1 route at synthetic epoch 7",
+    "Independent shared training harness remains available",
+    "Three fixed established-user journeys with a 100 synthetic millisecond budget"
+  ],
+  "actions": [
+    "Choose fixed route condition and recovery evidence",
+    "Prepare synthetic attempt",
+    "Lose only per-run management and observe rejected synthetic command",
+    "Sample established data journeys during the outage",
+    "Report the scoped fault via independent harness",
+    "Observe confirmed or missing recovery acknowledgement",
+    "Predict PASS, FAIL or UNKNOWN; check and retain",
+    "New attempt retains checked history; explicit reset clears local data"
+  ],
+  "syntheticFixture": "fixtures.js: independent, controller-dependent, service-error, missing-sample; recovery confirmed or missing",
+  "bounds": {
+    "inputCombinations": 8,
+    "journeysPerAttempt": 3,
+    "journeyBudgetSyntheticMs": 100,
+    "maxTraceEvents": 6,
+    "maxRetainedAttempts": 6
+  },
+  "assertions": [
+    "Loss of per-run management never changes the established route or epoch",
+    "Independent established samples can succeed while management is unavailable",
+    "Per-request controller dependency and service errors remain failures after recovery",
+    "Missing observations remain unknown and are not zero-latency successes",
+    "Independent harness reports exact fault scope and measured samples during control loss",
+    "Only confirmed recovery evidence restores control; missing acknowledgement is unknown",
+    "Control availability, data service, recovery, verification and prediction correctness are separate",
+    "Attempted equals success plus failure plus unknown, including retained negative attempts",
+    "Strict input/arity/phase guards precede mutation; snapshots are deep-frozen",
+    "No history eviction; reset is explicit and keyboard operable"
+  ],
+  "history": "Memory-only full checked attempts; no eviction. New attempt retains; explicit reset or reload clears all data. Active and retained metric rows must not be added.",
+  "stateGuards": "idle -> prepared -> outage -> sampled -> reported -> recovered/recovery-unknown -> checked; exact plain enum record and ordered single actions",
+  "sourceContract": "evidence/source-contract.json",
+  "bdd": "outage.feature",
+  "iac": "N/A",
+  "limits": [
+    "All connectivity, commands, routes, samples and recovery are synthetic trace data, not actual operations",
+    "No actual network, management connectivity, control outage, data-plane service or harness recovery certification",
+    "Established-user samples do not establish migrated-user success",
+    "B-S089 and D-S089 remain incomplete; no native Azure or five-nines result",
+    "Node22 is test tooling only; no production Node24 validation",
+    "Published browser helper has a known lifecycle limitation; individual bounded browser evidence is not unattended-runner qualification",
+    "No cloud, IaC, scaffold, identity, credentials, deploy, spend, packages, frameworks, downloads, unsafe flags or foreground leases"
+  ],
+  "acceptance": "Parent-owned empirical acceptance pending. One frozen S unit; tests, plumbing and refinement earn no additional credit."
+}

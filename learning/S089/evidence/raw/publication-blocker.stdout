@@ -1,0 +1,928 @@
+learning/S089/evidence/raw/red.stdout:17: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:19: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:43: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:45: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:69: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:71: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:95: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:97: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:121: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:123: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:148: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:151: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:175: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:177: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:202: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:205: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:230: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:233: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:257: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:259: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:348: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:354: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:380: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:382: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:406: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:408: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:433: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:436: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:460: trailing whitespace.
++    
+learning/S089/evidence/raw/red.stdout:462: trailing whitespace.
++    
+learning/S089/evidence/raw/tooling.stdout:1: trailing whitespace.
++{"version":"156.0.4314.50","signatureStatus":"Valid","signer":"CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"}
+learning/S089/evidence/red/fixtures.js.snapshot:1: trailing whitespace.
++'use strict';
+learning/S089/evidence/red/fixtures.js.snapshot:2: trailing whitespace.
++
+learning/S089/evidence/red/fixtures.js.snapshot:3: trailing whitespace.
++(function publish(root, factory) {
+learning/S089/evidence/red/fixtures.js.snapshot:4: trailing whitespace.
++  const api = factory();
+learning/S089/evidence/red/fixtures.js.snapshot:5: trailing whitespace.
++  if (typeof module === 'object' && module.exports) module.exports = api;
+learning/S089/evidence/red/fixtures.js.snapshot:6: trailing whitespace.
++  else root.S089Fixtures = api;
+learning/S089/evidence/red/fixtures.js.snapshot:7: trailing whitespace.
++})(globalThis, function fixtures() {
+learning/S089/evidence/red/fixtures.js.snapshot:8: trailing whitespace.
++  const freeze = (value) => {
+learning/S089/evidence/red/fixtures.js.snapshot:9: trailing whitespace.
++    if (value && typeof value === 'object') {
+learning/S089/evidence/red/fixtures.js.snapshot:10: trailing whitespace.
++      for (const child of Object.values(value)) freeze(child);
+learning/S089/evidence/red/fixtures.js.snapshot:11: trailing whitespace.
++      Object.freeze(value);
+learning/S089/evidence/red/fixtures.js.snapshot:12: trailing whitespace.
++    }
+learning/S089/evidence/red/fixtures.js.snapshot:13: trailing whitespace.
++    return value;
+learning/S089/evidence/red/fixtures.js.snapshot:14: trailing whitespace.
++  };
+learning/S089/evidence/red/fixtures.js.snapshot:15: trailing whitespace.
++  const journey = (id, status, latencyMs, reason) => ({
+learning/S089/evidence/red/fixtures.js.snapshot:16: trailing whitespace.
++    id: `training-user-${id}`, route: 'blue-v1', status, latencyMs, reason,
+learning/S089/evidence/red/fixtures.js.snapshot:17: trailing whitespace.
++  });
+learning/S089/evidence/red/fixtures.js.snapshot:18: trailing whitespace.
++  const complete = [
+learning/S089/evidence/red/fixtures.js.snapshot:19: trailing whitespace.
++    journey(1, 'success', 32, 'established-route-served'),
+learning/S089/evidence/red/fixtures.js.snapshot:20: trailing whitespace.
++    journey(2, 'success', 48, 'established-route-served'),
+learning/S089/evidence/red/fixtures.js.snapshot:21: trailing whitespace.
++    journey(3, 'success', 61, 'established-route-served'),
+learning/S089/evidence/red/fixtures.js.snapshot:22: trailing whitespace.
++  ];
+learning/S089/evidence/red/fixtures.js.snapshot:23: trailing whitespace.
++  return freeze({
+learning/S089/evidence/red/fixtures.js.snapshot:24: trailing whitespace.
++    ROUTE: { deployment: 'blue-v1', epoch: 7, established: true },
+learning/S089/evidence/red/fixtures.js.snapshot:25: trailing whitespace.
++    BOUNDS: { journeysPerAttempt: 3, journeyBudgetMs: 100, maxHistory: 6, maxTraceEvents: 6 },
+learning/S089/evidence/red/fixtures.js.snapshot:26: trailing whitespace.
++    CONDITIONS: {
+learning/S089/evidence/red/fixtures.js.snapshot:27: trailing whitespace.
++      independent: {
+learning/S089/evidence/red/fixtures.js.snapshot:28: trailing whitespace.
++        label: 'Independent established routes — complete samples',
+learning/S089/evidence/red/fixtures.js.snapshot:29: trailing whitespace.
++        policy: 'established-route', journeys: complete,
+learning/S089/evidence/red/fixtures.js.snapshot:30: trailing whitespace.
++      },
+learning/S089/evidence/red/fixtures.js.snapshot:31: trailing whitespace.
++      'controller-dependent': {
+learning/S089/evidence/red/fixtures.js.snapshot:32: trailing whitespace.
++        label: 'Bad policy — controller required on every request',
+learning/S089/evidence/red/fixtures.js.snapshot:33: trailing whitespace.
++        policy: 'controller-per-request',
+learning/S089/evidence/red/fixtures.js.snapshot:34: trailing whitespace.
++        journeys: [1, 2, 3].map((id) => journey(id, 'failure', 2, 'controller-required-but-unavailable')),
+learning/S089/evidence/red/fixtures.js.snapshot:35: trailing whitespace.
++      },
+learning/S089/evidence/red/fixtures.js.snapshot:36: trailing whitespace.
++      'service-error': {
+learning/S089/evidence/red/fixtures.js.snapshot:37: trailing whitespace.
++        label: 'Independent route — one service error',
+learning/S089/evidence/red/fixtures.js.snapshot:38: trailing whitespace.
++        policy: 'established-route',
+learning/S089/evidence/red/fixtures.js.snapshot:39: trailing whitespace.
++        journeys: [complete[0], journey(2, 'failure', 65, 'service-error'), complete[2]],
+learning/S089/evidence/red/fixtures.js.snapshot:40: trailing whitespace.
++      },
+learning/S089/evidence/red/fixtures.js.snapshot:41: trailing whitespace.
++      'missing-sample': {
+learning/S089/evidence/red/fixtures.js.snapshot:42: trailing whitespace.
++        label: 'Independent route — one missing completion observation',
+learning/S089/evidence/red/fixtures.js.snapshot:43: trailing whitespace.
++        policy: 'established-route',
+learning/S089/evidence/red/fixtures.js.snapshot:44: trailing whitespace.
++        journeys: [complete[0], complete[1], journey(3, 'unknown', null, 'completion-evidence-missing')],
+learning/S089/evidence/red/fixtures.js.snapshot:45: trailing whitespace.
++      },
+learning/S089/evidence/red/fixtures.js.snapshot:46: trailing whitespace.
++    },
+learning/S089/evidence/red/fixtures.js.snapshot:47: trailing whitespace.
++    RECOVERY: {
+learning/S089/evidence/red/fixtures.js.snapshot:48: trailing whitespace.
++      confirmed: { label: 'Confirmed synthetic control acknowledgement', control: 'available', outcome: 'confirmed' },
+learning/S089/evidence/red/fixtures.js.snapshot:49: trailing whitespace.
++      missing: { label: 'Missing acknowledgement — do not claim recovery', control: 'unknown', outcome: 'unverified' },
+learning/S089/evidence/red/fixtures.js.snapshot:50: trailing whitespace.
++    },
+learning/S089/evidence/red/fixtures.js.snapshot:51: trailing whitespace.
++  });
+learning/S089/evidence/red/fixtures.js.snapshot:52: trailing whitespace.
++});
+learning/S089/evidence/red/model.js.snapshot:1: trailing whitespace.
++'use strict';
+learning/S089/evidence/red/model.js.snapshot:2: trailing whitespace.
++
+learning/S089/evidence/red/model.js.snapshot:3: trailing whitespace.
++function createLesson() {
+learning/S089/evidence/red/model.js.snapshot:4: trailing whitespace.
++  const snapshot = () => ({
+learning/S089/evidence/red/model.js.snapshot:5: trailing whitespace.
++    phase: 'idle', attemptId: null, config: null,
+learning/S089/evidence/red/model.js.snapshot:6: trailing whitespace.
++    route: { deployment: 'blue-v1', epoch: 7, established: true },
+learning/S089/evidence/red/model.js.snapshot:7: trailing whitespace.
++    controlAvailability: 'available', harnessAvailability: 'available',
+learning/S089/evidence/red/model.js.snapshot:8: trailing whitespace.
++    faultScope: null, commandCounts: { attempted: 0, rejected: 0 },
+learning/S089/evidence/red/model.js.snapshot:9: trailing whitespace.
++    dataOutcome: 'not-sampled', recoveryOutcome: 'not-attempted', verification: 'PENDING',
+learning/S089/evidence/red/model.js.snapshot:10: trailing whitespace.
++    metrics: { attempted: 0, success: 0, failure: 0, unknown: 0 },
+learning/S089/evidence/red/model.js.snapshot:11: trailing whitespace.
++    retainedMetrics: { attempted: 0, success: 0, failure: 0, unknown: 0 },
+learning/S089/evidence/red/model.js.snapshot:12: trailing whitespace.
++    journeys: [], trace: [], harnessReport: null, prediction: null, predictionCorrect: null,
+learning/S089/evidence/red/model.js.snapshot:13: trailing whitespace.
++    userTransitionClaim: false, history: [],
+learning/S089/evidence/red/model.js.snapshot:14: trailing whitespace.
++  });
+learning/S089/evidence/red/model.js.snapshot:15: trailing whitespace.
++  return {
+learning/S089/evidence/red/model.js.snapshot:16: trailing whitespace.
++    snapshot, start: snapshot, loseManagement: snapshot, sampleJourneys: snapshot,
+learning/S089/evidence/red/model.js.snapshot:17: trailing whitespace.
++    reportFault: snapshot, recoverControl: snapshot, checkPrediction: snapshot,
+learning/S089/evidence/red/model.js.snapshot:18: trailing whitespace.
++    newAttempt: snapshot, reset: snapshot,
+learning/S089/evidence/red/model.js.snapshot:19: trailing whitespace.
++  };
+learning/S089/evidence/red/model.js.snapshot:20: trailing whitespace.
++}
+learning/S089/evidence/red/model.js.snapshot:21: trailing whitespace.
++
+learning/S089/evidence/red/model.js.snapshot:22: trailing whitespace.
++if (typeof module === 'object' && module.exports) module.exports = { createLesson };
+learning/S089/evidence/red/model.js.snapshot:23: trailing whitespace.
++else globalThis.S089Lesson = { createLesson };
+learning/S089/evidence/red/outage.feature.snapshot:1: trailing whitespace.
++Feature: Separate the lost per-run control path from established service
+learning/S089/evidence/red/outage.feature.snapshot:2: trailing whitespace.
++  Training rehearsal - synthetic data - not a live Azure result
+learning/S089/evidence/red/outage.feature.snapshot:3: trailing whitespace.
++  Source S089 / D-S089 / A-S089, frozen S unit in SC-S089.
+learning/S089/evidence/red/outage.feature.snapshot:4: trailing whitespace.
++  Connectivity, commands, routes, recovery and journeys are synthetic trace data.
+learning/S089/evidence/red/outage.feature.snapshot:5: trailing whitespace.
++
+learning/S089/evidence/red/outage.feature.snapshot:6: trailing whitespace.
++  Background:
+learning/S089/evidence/red/outage.feature.snapshot:7: trailing whitespace.
++    Given an established blue-v1 route at synthetic epoch 7
+learning/S089/evidence/red/outage.feature.snapshot:8: trailing whitespace.
++    And an independent shared training harness that remains available
+learning/S089/evidence/red/outage.feature.snapshot:9: trailing whitespace.
++    And three fixed journeys with a 100 synthetic millisecond budget
+learning/S089/evidence/red/outage.feature.snapshot:10: trailing whitespace.
++    And at most six retained attempts and six events per attempt
+learning/S089/evidence/red/outage.feature.snapshot:11: trailing whitespace.
++
+learning/S089/evidence/red/outage.feature.snapshot:12: trailing whitespace.
++  Scenario: Established routes do not require the controller on every request
+learning/S089/evidence/red/outage.feature.snapshot:13: trailing whitespace.
++    Given the independent fixture and confirmed recovery evidence
+learning/S089/evidence/red/outage.feature.snapshot:14: trailing whitespace.
++    When I prepare and lose only the per-run management path
+learning/S089/evidence/red/outage.feature.snapshot:15: trailing whitespace.
++    Then the synthetic management command is visibly rejected
+learning/S089/evidence/red/outage.feature.snapshot:16: trailing whitespace.
++    And the established route and epoch do not change
+learning/S089/evidence/red/outage.feature.snapshot:17: trailing whitespace.
++    When I sample the established journeys while management is unavailable
+learning/S089/evidence/red/outage.feature.snapshot:18: trailing whitespace.
++    Then attempted is 3, success is 3, failure is 0 and unknown is 0
+learning/S089/evidence/red/outage.feature.snapshot:19: trailing whitespace.
++    When the independent harness reports the fault and recovery acknowledgement
+learning/S089/evidence/red/outage.feature.snapshot:20: trailing whitespace.
++    Then data service is continuing, recovery is confirmed and verification is PASS
+learning/S089/evidence/red/outage.feature.snapshot:21: trailing whitespace.
++    And this is not a migrated-user or native-platform result
+learning/S089/evidence/red/outage.feature.snapshot:22: trailing whitespace.
++
+learning/S089/evidence/red/outage.feature.snapshot:23: trailing whitespace.
++  Scenario: Requiring management on every request interrupts service
+learning/S089/evidence/red/outage.feature.snapshot:24: trailing whitespace.
++    Given the controller-dependent fixture
+learning/S089/evidence/red/outage.feature.snapshot:25: trailing whitespace.
++    When I lose management, sample, report and recover
+learning/S089/evidence/red/outage.feature.snapshot:26: trailing whitespace.
++    Then all three established journeys fail because they require the unavailable controller
+learning/S089/evidence/red/outage.feature.snapshot:27: trailing whitespace.
++    And a confirmed recovery cannot erase those failures
+learning/S089/evidence/red/outage.feature.snapshot:28: trailing whitespace.
++    And verification is FAIL even if my prediction correctly identifies the failure
+learning/S089/evidence/red/outage.feature.snapshot:29: trailing whitespace.
++
+learning/S089/evidence/red/outage.feature.snapshot:30: trailing whitespace.
++  Scenario: An independent route can still have a real synthetic service error
+learning/S089/evidence/red/outage.feature.snapshot:31: trailing whitespace.
++    Given the service-error fixture
+learning/S089/evidence/red/outage.feature.snapshot:32: trailing whitespace.
++    When I lose management, sample, report and recover
+learning/S089/evidence/red/outage.feature.snapshot:33: trailing whitespace.
++    Then two journeys succeed and one fails with service-error
+learning/S089/evidence/red/outage.feature.snapshot:34: trailing whitespace.
++    And controller status is not used as a success-shaped data-plane fallback
+learning/S089/evidence/red/outage.feature.snapshot:35: trailing whitespace.
++
+learning/S089/evidence/red/outage.feature.snapshot:36: trailing whitespace.
++  Scenario: Missing observations and missing recovery acknowledgements stay unknown
+learning/S089/evidence/red/outage.feature.snapshot:37: trailing whitespace.
++    Given the missing-sample fixture
+learning/S089/evidence/red/outage.feature.snapshot:38: trailing whitespace.
++    When I lose management, sample and report
+learning/S089/evidence/red/outage.feature.snapshot:39: trailing whitespace.
++    Then two journeys succeed and one is unknown, not a zero-latency success
+learning/S089/evidence/red/outage.feature.snapshot:40: trailing whitespace.
++    When confirmed recovery is observed
+learning/S089/evidence/red/outage.feature.snapshot:41: trailing whitespace.
++    Then the control path is available but data service remains unverified
+learning/S089/evidence/red/outage.feature.snapshot:42: trailing whitespace.
++    Given instead complete independent samples and missing recovery evidence
+learning/S089/evidence/red/outage.feature.snapshot:43: trailing whitespace.
++    When I lose management, sample, report and recover
+learning/S089/evidence/red/outage.feature.snapshot:44: trailing whitespace.
++    Then data service is continuing but control availability and recovery are unknown
+learning/S089/evidence/red/outage.feature.snapshot:45: trailing whitespace.
++    And verification is UNKNOWN, not claimed recovery
+learning/S089/evidence/red/outage.feature.snapshot:46: trailing whitespace.
++
+learning/S089/evidence/red/outage.feature.snapshot:47: trailing whitespace.
++  Scenario: Fault reporting and recovery are independent of the lost run path
+learning/S089/evidence/red/outage.feature.snapshot:48: trailing whitespace.
++    When only the per-run management path is unavailable
+learning/S089/evidence/red/outage.feature.snapshot:49: trailing whitespace.
++    Then the shared harness can still report the scoped fault and its measured samples
+learning/S089/evidence/red/outage.feature.snapshot:50: trailing whitespace.
++    And only its fixed recovery evidence can confirm control restoration
+learning/S089/evidence/red/outage.feature.snapshot:51: trailing whitespace.
++    And no network, management or resource operation takes place
+learning/S089/evidence/red/outage.feature.snapshot:52: trailing whitespace.
++
+learning/S089/evidence/red/outage.feature.snapshot:53: trailing whitespace.
++  Scenario: Strict inputs and ordered actions cannot mutate an invalid state
+learning/S089/evidence/red/outage.feature.snapshot:54: trailing whitespace.
++    Given an invalid enum, extra property, accessor, inherited record or wrong action order
+learning/S089/evidence/red/outage.feature.snapshot:55: trailing whitespace.
++    When I attempt an action
+learning/S089/evidence/red/outage.feature.snapshot:56: trailing whitespace.
++    Then it fails visibly before any state mutation
+learning/S089/evidence/red/outage.feature.snapshot:57: trailing whitespace.
++    And all actions enforce their exact parameter counts
+learning/S089/evidence/red/outage.feature.snapshot:58: trailing whitespace.
++    And returned snapshots and caller inputs cannot alter the internal lesson state
+learning/S089/evidence/red/outage.feature.snapshot:59: trailing whitespace.
++
+learning/S089/evidence/red/outage.feature.snapshot:60: trailing whitespace.
++  Scenario: Retain negative and unknown attempts until explicit reset
+learning/S089/evidence/red/outage.feature.snapshot:61: trailing whitespace.
++    When I check a prediction and start a new attempt
+learning/S089/evidence/red/outage.feature.snapshot:62: trailing whitespace.
++    Then the full previous trace, samples, actual verdict and prediction remain
+learning/S089/evidence/red/outage.feature.snapshot:63: trailing whitespace.
++    And success plus failure plus unknown equals attempted in active and retained metrics
+learning/S089/evidence/red/outage.feature.snapshot:64: trailing whitespace.
++    And the seventh attempt is rejected without evicting history
+learning/S089/evidence/red/outage.feature.snapshot:65: trailing whitespace.
++    When I explicitly reset, including from a partial attempt
+learning/S089/evidence/red/outage.feature.snapshot:66: trailing whitespace.
++    Then all local state and history clear, defaults return and keyboard focus returns to the fixture
+learning/S089/evidence/red/outage.feature.snapshot:67: trailing whitespace.
++    And repeated reset is harmless
+learning/S089/evidence/red/outage.feature.snapshot:68: trailing whitespace.
++
+learning/S089/evidence/red/outage.feature.snapshot:69: trailing whitespace.
++  Scenario: A portable keyboard lesson has an enforced offline surface
+learning/S089/evidence/red/outage.feature.snapshot:70: trailing whitespace.
++    Given the exact synthetic banner, source attribution, limits and disclaimer
+learning/S089/evidence/red/outage.feature.snapshot:71: trailing whitespace.
++    When I use native keyboard controls for the complete rehearsal
+learning/S089/evidence/red/outage.feature.snapshot:72: trailing whitespace.
++    Then phase guards, errors, outcomes and retained history are visible
+learning/S089/evidence/red/outage.feature.snapshot:73: trailing whitespace.
++    And reset does not shadow the native form reset method
+learning/S089/evidence/red/outage.feature.snapshot:74: trailing whitespace.
++    And narrow layout remains usable
+learning/S089/evidence/red/outage.feature.snapshot:75: trailing whitespace.
++    And CSP blocks inline execution and connection attempts in the actual browser
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:1: trailing whitespace.
++'use strict';
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:2: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:3: trailing whitespace.
++const test = require('node:test');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:4: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:5: trailing whitespace.
++const { createLesson } = require('..\\model.js');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:6: trailing whitespace.
++const { CONDITIONS, BOUNDS, ROUTE } = require('..\\fixtures.js');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:7: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:8: trailing whitespace.
++const configuration = (condition = 'independent', recovery = 'confirmed') => ({ condition, recovery });
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:9: trailing whitespace.
++function throughReport(lesson, condition = 'independent', recovery = 'confirmed') {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:10: trailing whitespace.
++  lesson.start(configuration(condition, recovery));
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:11: trailing whitespace.
++  lesson.loseManagement();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:12: trailing whitespace.
++  lesson.sampleJourneys();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:13: trailing whitespace.
++  return lesson.reportFault();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:14: trailing whitespace.
++}
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:15: trailing whitespace.
++function completed(lesson, condition = 'independent', recovery = 'confirmed', prediction = 'PASS') {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:16: trailing whitespace.
++  throughReport(lesson, condition, recovery);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:17: trailing whitespace.
++  lesson.recoverControl();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:18: trailing whitespace.
++  return lesson.checkPrediction(prediction);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:19: trailing whitespace.
++}
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:20: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:21: trailing whitespace.
++test('loadable lesson exposes every action and a zero-sample idle state', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:22: trailing whitespace.
++  const lesson = createLesson();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:23: trailing whitespace.
++  for (const name of ['snapshot', 'start', 'loseManagement', 'sampleJourneys', 'reportFault',
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:24: trailing whitespace.
++    'recoverControl', 'checkPrediction', 'newAttempt', 'reset']) assert.equal(typeof lesson[name], 'function');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:25: trailing whitespace.
++  assert.equal(lesson.snapshot().phase, 'idle');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:26: trailing whitespace.
++  assert.deepEqual(lesson.snapshot().metrics, { attempted: 0, success: 0, failure: 0, unknown: 0 });
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:27: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:28: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:29: trailing whitespace.
++test('valid preparation records exact fixture, route and declared bounds', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:30: trailing whitespace.
++  const state = createLesson().start(configuration());
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:31: trailing whitespace.
++  assert.equal(state.phase, 'prepared');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:32: trailing whitespace.
++  assert.equal(state.attemptId, 1);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:33: trailing whitespace.
++  assert.deepEqual(state.config, configuration());
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:34: trailing whitespace.
++  assert.deepEqual(state.route, ROUTE);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:35: trailing whitespace.
++  assert.equal(state.trace[0].kind, 'prepared');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:36: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:37: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:38: trailing whitespace.
++test('management loss rejects its synthetic command without changing established routing', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:39: trailing whitespace.
++  const lesson = createLesson();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:40: trailing whitespace.
++  lesson.start(configuration());
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:41: trailing whitespace.
++  const state = lesson.loseManagement();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:42: trailing whitespace.
++  assert.equal(state.phase, 'outage');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:43: trailing whitespace.
++  assert.equal(state.controlAvailability, 'unavailable');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:44: trailing whitespace.
++  assert.equal(state.harnessAvailability, 'available');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:45: trailing whitespace.
++  assert.equal(state.faultScope, 'per-run-management');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:46: trailing whitespace.
++  assert.deepEqual(state.commandCounts, { attempted: 1, rejected: 1 });
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:47: trailing whitespace.
++  assert.deepEqual(state.route, ROUTE);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:48: trailing whitespace.
++  assert.equal(state.trace.at(-1).commandOutcome, 'rejected-control-unavailable');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:49: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:50: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:51: trailing whitespace.
++test('independent data samples succeed while management is unavailable', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:52: trailing whitespace.
++  const lesson = createLesson();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:53: trailing whitespace.
++  lesson.start(configuration());
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:54: trailing whitespace.
++  lesson.loseManagement();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:55: trailing whitespace.
++  const state = lesson.sampleJourneys();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:56: trailing whitespace.
++  assert.equal(state.phase, 'sampled');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:57: trailing whitespace.
++  assert.equal(state.controlAvailability, 'unavailable');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:58: trailing whitespace.
++  assert.equal(state.dataOutcome, 'continuing-established-service');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:59: trailing whitespace.
++  assert.deepEqual(state.metrics, { attempted: 3, success: 3, failure: 0, unknown: 0 });
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:60: trailing whitespace.
++  assert.deepEqual(state.journeys, CONDITIONS.independent.journeys);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:61: trailing whitespace.
++  assert.ok(state.journeys.every((entry) => entry.latencyMs <= BOUNDS.journeyBudgetMs));
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:62: trailing whitespace.
++  assert.equal(state.userTransitionClaim, false);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:63: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:64: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:65: trailing whitespace.
++test('a per-request controller dependency fails all established journeys despite later recovery', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:66: trailing whitespace.
++  const state = completed(createLesson(), 'controller-dependent', 'confirmed', 'FAIL');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:67: trailing whitespace.
++  assert.equal(state.verification, 'FAIL');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:68: trailing whitespace.
++  assert.equal(state.controlAvailability, 'available');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:69: trailing whitespace.
++  assert.equal(state.dataOutcome, 'interrupted');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:70: trailing whitespace.
++  assert.deepEqual(state.metrics, { attempted: 3, success: 0, failure: 3, unknown: 0 });
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:71: trailing whitespace.
++  assert.ok(state.journeys.every((entry) => entry.reason === 'controller-required-but-unavailable'));
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:72: trailing whitespace.
++  assert.equal(state.predictionCorrect, true);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:73: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:74: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:75: trailing whitespace.
++test('an independent service error remains a measured failure, never a healthy-controller fallback', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:76: trailing whitespace.
++  const state = completed(createLesson(), 'service-error', 'confirmed', 'FAIL');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:77: trailing whitespace.
++  assert.equal(state.verification, 'FAIL');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:78: trailing whitespace.
++  assert.deepEqual(state.metrics, { attempted: 3, success: 2, failure: 1, unknown: 0 });
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:79: trailing whitespace.
++  assert.equal(state.journeys[1].reason, 'service-error');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:80: trailing whitespace.
++  assert.equal(state.history[0].metrics.failure, 1);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:81: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:82: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:83: trailing whitespace.
++test('missing completion evidence is unknown and cannot become a zero-latency success', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:84: trailing whitespace.
++  const state = completed(createLesson(), 'missing-sample', 'confirmed', 'UNKNOWN');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:85: trailing whitespace.
++  assert.equal(state.verification, 'UNKNOWN');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:86: trailing whitespace.
++  assert.equal(state.dataOutcome, 'unverified');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:87: trailing whitespace.
++  assert.equal(state.controlAvailability, 'available');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:88: trailing whitespace.
++  assert.deepEqual(state.metrics, { attempted: 3, success: 2, failure: 0, unknown: 1 });
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:89: trailing whitespace.
++  assert.equal(state.journeys[2].latencyMs, null);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:90: trailing whitespace.
++  assert.equal(state.journeys[2].status, 'unknown');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:91: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:92: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:93: trailing whitespace.
++test('independent shared harness reports the scoped fault and exact samples during the outage', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:94: trailing whitespace.
++  const state = throughReport(createLesson(), 'service-error');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:95: trailing whitespace.
++  assert.equal(state.phase, 'reported');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:96: trailing whitespace.
++  assert.equal(state.controlAvailability, 'unavailable');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:97: trailing whitespace.
++  assert.equal(state.harnessAvailability, 'available');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:98: trailing whitespace.
++  assert.deepEqual(state.harnessReport, {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:99: trailing whitespace.
++    reporter: 'independent-training-harness', scope: 'per-run-management',
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:100: trailing whitespace.
++    commandOutcome: 'rejected-control-unavailable',
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:101: trailing whitespace.
++    metrics: { attempted: 3, success: 2, failure: 1, unknown: 0 },
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:102: trailing whitespace.
++  });
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:103: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:104: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:105: trailing whitespace.
++test('only confirmed recovery evidence restores control, retaining route and failure attribution', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:106: trailing whitespace.
++  const lesson = createLesson();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:107: trailing whitespace.
++  const before = throughReport(lesson, 'service-error');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:108: trailing whitespace.
++  const after = lesson.recoverControl();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:109: trailing whitespace.
++  assert.equal(after.phase, 'recovered');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:110: trailing whitespace.
++  assert.equal(after.recoveryOutcome, 'confirmed');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:111: trailing whitespace.
++  assert.equal(after.controlAvailability, 'available');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:112: trailing whitespace.
++  assert.deepEqual(after.route, before.route);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:113: trailing whitespace.
++  assert.deepEqual(after.journeys, before.journeys);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:114: trailing whitespace.
++  assert.deepEqual(after.metrics, before.metrics);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:115: trailing whitespace.
++  assert.equal(after.verification, 'FAIL');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:116: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:117: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:118: trailing whitespace.
++test('missing recovery acknowledgement keeps control unknown without changing observed data success', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:119: trailing whitespace.
++  const state = completed(createLesson(), 'independent', 'missing', 'UNKNOWN');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:120: trailing whitespace.
++  assert.equal(state.recoveryOutcome, 'unverified');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:121: trailing whitespace.
++  assert.equal(state.controlAvailability, 'unknown');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:122: trailing whitespace.
++  assert.equal(state.dataOutcome, 'continuing-established-service');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:123: trailing whitespace.
++  assert.deepEqual(state.metrics, { attempted: 3, success: 3, failure: 0, unknown: 0 });
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:124: trailing whitespace.
++  assert.equal(state.verification, 'UNKNOWN');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:125: trailing whitespace.
++  assert.equal(state.history[0].recoveryOutcome, 'unverified');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:126: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:127: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:128: trailing whitespace.
++test('prediction correctness is independent of the actual service verdict', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:129: trailing whitespace.
++  const state = completed(createLesson(), 'controller-dependent', 'confirmed', 'PASS');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:130: trailing whitespace.
++  assert.equal(state.phase, 'checked');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:131: trailing whitespace.
++  assert.equal(state.verification, 'FAIL');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:132: trailing whitespace.
++  assert.equal(state.prediction, 'PASS');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:133: trailing whitespace.
++  assert.equal(state.predictionCorrect, false);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:134: trailing whitespace.
++  assert.equal(state.history[0].verification, 'FAIL');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:135: trailing whitespace.
++  assert.equal(state.history[0].predictionCorrect, false);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:136: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:137: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:138: trailing whitespace.
++test('all out-of-order and repeated actions reject before mutation', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:139: trailing whitespace.
++  const lesson = createLesson();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:140: trailing whitespace.
++  const unchanged = (action) => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:141: trailing whitespace.
++    const before = lesson.snapshot();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:142: trailing whitespace.
++    assert.throws(action, /Invalid state/);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:143: trailing whitespace.
++    assert.deepEqual(lesson.snapshot(), before);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:144: trailing whitespace.
++  };
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:145: trailing whitespace.
++  for (const name of ['loseManagement', 'sampleJourneys', 'reportFault', 'recoverControl', 'newAttempt']) {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:146: trailing whitespace.
++    unchanged(() => lesson[name]());
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:147: trailing whitespace.
++  }
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:148: trailing whitespace.
++  unchanged(() => lesson.checkPrediction('PASS'));
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:149: trailing whitespace.
++  lesson.start(configuration());
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:150: trailing whitespace.
++  unchanged(() => lesson.start(configuration()));
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:151: trailing whitespace.
++  unchanged(() => lesson.sampleJourneys());
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:152: trailing whitespace.
++  lesson.loseManagement();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:153: trailing whitespace.
++  unchanged(() => lesson.loseManagement());
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:154: trailing whitespace.
++  lesson.sampleJourneys();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:155: trailing whitespace.
++  unchanged(() => lesson.recoverControl());
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:156: trailing whitespace.
++  lesson.reportFault();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:157: trailing whitespace.
++  lesson.recoverControl();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:158: trailing whitespace.
++  unchanged(() => lesson.recoverControl());
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:159: trailing whitespace.
++  lesson.checkPrediction('PASS');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:160: trailing whitespace.
++  unchanged(() => lesson.checkPrediction('PASS'));
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:161: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:162: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:163: trailing whitespace.
++test('exact plain enum records reject invalid values, extras, inherited data and accessors', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:164: trailing whitespace.
++  let getterRead = false;
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:165: trailing whitespace.
++  const getter = { recovery: 'confirmed' };
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:166: trailing whitespace.
++  Object.defineProperty(getter, 'condition', { enumerable: true, get() { getterRead = true; return 'independent'; } });
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:167: trailing whitespace.
++  for (const input of [null, [], {}, 'independent', { condition: 'independent' },
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:168: trailing whitespace.
++    configuration('not-a-fixture'), configuration('independent', 'pretend'),
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:169: trailing whitespace.
++    { ...configuration(), arbitraryCommand: 'fake' }, Object.create(configuration()), getter,
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:170: trailing whitespace.
++    { ...configuration(), [Symbol('extra')]: true }]) {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:171: trailing whitespace.
++    const lesson = createLesson();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:172: trailing whitespace.
++    const before = lesson.snapshot();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:173: trailing whitespace.
++    assert.throws(() => lesson.start(input), /Invalid input/);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:174: trailing whitespace.
++    assert.deepEqual(lesson.snapshot(), before);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:175: trailing whitespace.
++  }
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:176: trailing whitespace.
++  assert.equal(getterRead, false);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:177: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:178: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:179: trailing whitespace.
++test('every public action enforces exact argument counts and predictions are enumerated', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:180: trailing whitespace.
++  assert.throws(() => createLesson('extra'), /Invalid input/);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:181: trailing whitespace.
++  const lesson = createLesson();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:182: trailing whitespace.
++  assert.throws(() => lesson.snapshot('extra'), /Invalid input/);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:183: trailing whitespace.
++  assert.throws(() => lesson.start(), /Invalid input/);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:184: trailing whitespace.
++  assert.throws(() => lesson.start(configuration(), 'extra'), /Invalid input/);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:185: trailing whitespace.
++  lesson.start(configuration());
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:186: trailing whitespace.
++  for (const name of ['loseManagement', 'sampleJourneys', 'reportFault', 'recoverControl', 'newAttempt', 'reset']) {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:187: trailing whitespace.
++    assert.throws(() => lesson[name]('extra'), /Invalid input/);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:188: trailing whitespace.
++  }
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:189: trailing whitespace.
++  lesson.loseManagement();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:190: trailing whitespace.
++  lesson.sampleJourneys();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:191: trailing whitespace.
++  lesson.reportFault();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:192: trailing whitespace.
++  lesson.recoverControl();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:193: trailing whitespace.
++  for (const prediction of [undefined, null, 'success', { verdict: 'PASS' }]) {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:194: trailing whitespace.
++    assert.throws(() => lesson.checkPrediction(prediction), /Invalid input/);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:195: trailing whitespace.
++  }
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:196: trailing whitespace.
++  assert.throws(() => lesson.checkPrediction('PASS', 'extra'), /Invalid input/);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:197: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:198: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:199: trailing whitespace.
++test('caller configuration and deep-frozen snapshots cannot alter internal state', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:200: trailing whitespace.
++  const lesson = createLesson();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:201: trailing whitespace.
++  const input = configuration();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:202: trailing whitespace.
++  const state = lesson.start(input);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:203: trailing whitespace.
++  assert.deepEqual(state.config, configuration());
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:204: trailing whitespace.
++  input.condition = 'controller-dependent';
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:205: trailing whitespace.
++  assert.equal(lesson.snapshot().config.condition, 'independent');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:206: trailing whitespace.
++  assert.equal(Object.isFrozen(state), true);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:207: trailing whitespace.
++  assert.equal(Object.isFrozen(state.route), true);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:208: trailing whitespace.
++  assert.equal(Object.isFrozen(state.trace), true);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:209: trailing whitespace.
++  assert.throws(() => { state.route.epoch = 99; }, /read only/);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:210: trailing whitespace.
++  assert.throws(() => state.trace.push({ fake: true }), /extensible/);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:211: trailing whitespace.
++  assert.deepEqual(lesson.snapshot().route, ROUTE);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:212: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:213: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:214: trailing whitespace.
++test('new attempts retain complete positive, negative and unknown histories and denominators', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:215: trailing whitespace.
++  const lesson = createLesson();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:216: trailing whitespace.
++  completed(lesson);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:217: trailing whitespace.
++  const first = lesson.snapshot().history;
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:218: trailing whitespace.
++  assert.equal(first.length, 1);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:219: trailing whitespace.
++  lesson.newAttempt();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:220: trailing whitespace.
++  completed(lesson, 'service-error', 'confirmed', 'FAIL');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:221: trailing whitespace.
++  lesson.newAttempt();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:222: trailing whitespace.
++  const state = completed(lesson, 'missing-sample', 'confirmed', 'UNKNOWN');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:223: trailing whitespace.
++  assert.equal(state.history.length, 3);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:224: trailing whitespace.
++  assert.deepEqual(state.history[0], first[0]);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:225: trailing whitespace.
++  assert.deepEqual(state.history.map((entry) => entry.verification), ['PASS', 'FAIL', 'UNKNOWN']);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:226: trailing whitespace.
++  assert.deepEqual(state.retainedMetrics, { attempted: 9, success: 7, failure: 1, unknown: 1 });
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:227: trailing whitespace.
++  assert.equal(state.retainedMetrics.success + state.retainedMetrics.failure + state.retainedMetrics.unknown,
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:228: trailing whitespace.
++    state.retainedMetrics.attempted);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:229: trailing whitespace.
++  assert.ok(state.history.every((entry) => entry.trace.length === 6 && entry.journeys.length === 3));
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:230: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:231: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:232: trailing whitespace.
++test('six retained attempts are bounded without eviction; explicit reset restores capacity', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:233: trailing whitespace.
++  const lesson = createLesson();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:234: trailing whitespace.
++  for (let index = 0; index < BOUNDS.maxHistory; index++) {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:235: trailing whitespace.
++    if (index) lesson.newAttempt();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:236: trailing whitespace.
++    completed(lesson);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:237: trailing whitespace.
++  }
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:238: trailing whitespace.
++  const before = lesson.snapshot();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:239: trailing whitespace.
++  assert.equal(before.history.length, BOUNDS.maxHistory);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:240: trailing whitespace.
++  assert.throws(() => lesson.newAttempt(), /History full/);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:241: trailing whitespace.
++  assert.deepEqual(lesson.snapshot(), before);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:242: trailing whitespace.
++  lesson.reset();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:243: trailing whitespace.
++  assert.equal(lesson.snapshot().history.length, 0);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:244: trailing whitespace.
++  assert.equal(lesson.start(configuration()).attemptId, 1);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:245: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:246: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:247: trailing whitespace.
++test('reset from a partial outage or checked failure clears all local state and is idempotent', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:248: trailing whitespace.
++  const lesson = createLesson();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:249: trailing whitespace.
++  lesson.start(configuration());
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:250: trailing whitespace.
++  lesson.loseManagement();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:251: trailing whitespace.
++  assert.equal(lesson.snapshot().controlAvailability, 'unavailable');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:252: trailing whitespace.
++  const fresh = lesson.reset();
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:253: trailing whitespace.
++  assert.equal(fresh.phase, 'idle');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:254: trailing whitespace.
++  assert.equal(fresh.config, null);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:255: trailing whitespace.
++  assert.equal(fresh.controlAvailability, 'available');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:256: trailing whitespace.
++  assert.equal(fresh.harnessReport, null);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:257: trailing whitespace.
++  assert.deepEqual(fresh.trace, []);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:258: trailing whitespace.
++  assert.deepEqual(fresh.history, []);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:259: trailing whitespace.
++  assert.deepEqual(lesson.reset(), fresh);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:260: trailing whitespace.
++  completed(lesson, 'service-error', 'confirmed', 'FAIL');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:261: trailing whitespace.
++  assert.equal(lesson.snapshot().retainedMetrics.failure, 1);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:262: trailing whitespace.
++  assert.deepEqual(lesson.reset(), fresh);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:263: trailing whitespace.
++});
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:264: trailing whitespace.
++
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:265: trailing whitespace.
++test('all eight bounded fixtures are deterministic and partition every attempted journey', () => {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:266: trailing whitespace.
++  for (const condition of Object.keys(CONDITIONS)) {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:267: trailing whitespace.
++    for (const recovery of ['confirmed', 'missing']) {
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:268: trailing whitespace.
++      const verdict = ['controller-dependent', 'service-error'].includes(condition) ? 'FAIL'
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:269: trailing whitespace.
++        : condition === 'missing-sample' || recovery === 'missing' ? 'UNKNOWN' : 'PASS';
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:270: trailing whitespace.
++      const first = completed(createLesson(), condition, recovery, verdict);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:271: trailing whitespace.
++      const second = completed(createLesson(), condition, recovery, verdict);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:272: trailing whitespace.
++      assert.equal(first.verification, verdict);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:273: trailing whitespace.
++      assert.equal(first.predictionCorrect, true);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:274: trailing whitespace.
++      assert.deepEqual(first, second);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:275: trailing whitespace.
++      assert.equal(first.metrics.attempted, BOUNDS.journeysPerAttempt);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:276: trailing whitespace.
++      assert.equal(first.metrics.success + first.metrics.failure + first.metrics.unknown, first.metrics.attempted);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:277: trailing whitespace.
++      assert.equal(first.trace.length, BOUNDS.maxTraceEvents);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:278: trailing whitespace.
++      assert.deepEqual(first.trace.map((event) => event.atSyntheticMs), [0, 10, 20, 30, 40, 50]);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:279: trailing whitespace.
++      assert.deepEqual(first.route, ROUTE);
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:280: trailing whitespace.
++      assert.equal(first.harnessAvailability, 'available');
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:281: trailing whitespace.
++    }
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:282: trailing whitespace.
++  }
+learning/S089/evidence/red/tests-model.test.cjs.snapshot:283: trailing whitespace.
++});

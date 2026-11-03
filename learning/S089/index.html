@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>S089 — Control-plane outage rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#operator">Skip to operator controls</a>
+  <header>
+    <p class="banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p class="eyebrow">A-S089 · Satisfier · SC-S089 · standalone offline lesson</p>
+    <h1>S089 — Control-plane outage</h1>
+    <p>Lose management connectivity; separate control-plane availability from data-plane service.</p>
+    <p>All connectivity, commands, routes and recovery below are fixed <strong>synthetic trace data</strong>, not network or resource operations. Established routes should not require the controller for every request. The shared training harness is a separate reporting/recovery path.</p>
+  </header>
+  <main>
+    <section aria-labelledby="preconditions">
+      <h2 id="preconditions">Before you rehearse</h2>
+      <ul>
+        <li>JavaScript enabled; no server, account, CLI or cloud connection required.</li>
+        <li>Established blue-v1 route, synthetic epoch 7; no migration or routing change occurs.</li>
+        <li>Three fixed established-user samples per attempt; budget 100 synthetic milliseconds.</li>
+        <li>The fault affects only the per-run management path, never the shared harness.</li>
+        <li>Four fixtures × two recovery observations; six events and at most six retained attempts.</li>
+      </ul>
+    </section>
+    <section id="operator" aria-labelledby="operator-heading" tabindex="-1">
+      <h2 id="operator-heading">Operator controls — synthetic only</h2>
+      <p id="instructions">Prepare → lose management → sample data → report via harness → observe recovery → predict and retain. Each action is enabled only in its valid phase.</p>
+      <form id="scenario-form" aria-describedby="instructions">
+        <div class="choices">
+          <div>
+            <label for="condition">Established-route condition</label>
+            <select id="condition" name="condition">
+              <option value="independent">Independent routes — complete samples</option>
+              <option value="controller-dependent">Bad policy — controller on every request</option>
+              <option value="service-error">Independent route — one service error</option>
+              <option value="missing-sample">Independent route — one missing observation</option>
+            </select>
+          </div>
+          <div>
+            <label for="recovery-evidence">Harness recovery evidence</label>
+            <select id="recovery-evidence" name="recovery">
+              <option value="confirmed">Confirmed control acknowledgement</option>
+              <option value="missing">Missing acknowledgement — unknown</option>
+            </select>
+          </div>
+        </div>
+        <button id="start-run" type="submit">1. Prepare synthetic attempt</button>
+      </form>
+      <div class="actions" aria-label="Ordered synthetic actions">
+        <button id="lose-management" type="button" disabled>2. Lose per-run management</button>
+        <button id="sample-journeys" type="button" disabled>3. Sample established data journeys</button>
+        <button id="report-fault" type="button" disabled>4. Report via independent harness</button>
+        <button id="recover-control" type="button" disabled>5. Observe harness recovery</button>
+      </div>
+      <div class="prediction">
+        <label for="prediction">Predict the complete verification verdict</label>
+        <select id="prediction" disabled>
+          <option value="">Choose PASS, FAIL or UNKNOWN</option>
+          <option value="PASS">PASS — complete service and recovery evidence</option>
+          <option value="FAIL">FAIL — observed interrupted service</option>
+          <option value="UNKNOWN">UNKNOWN — evidence incomplete</option>
+        </select>
+        <button id="check-prediction" type="button" disabled>6. Check prediction and retain</button>
+      </div>
+      <div class="actions">
+        <button id="new-attempt" type="button" disabled>New attempt — keep history</button>
+        <button id="reset-lesson" type="button">Reset all local data</button>
+      </div>
+      <p id="status" role="status" aria-live="polite">Ready to prepare a synthetic attempt.</p>
+      <p id="error" class="error" role="alert" tabindex="-1" hidden></p>
+    </section>
+    <section aria-labelledby="results-heading">
+      <h2 id="results-heading">Separate observations</h2>
+      <p>Phase: <strong id="phase">idle</strong> · Route: <span id="route-state">blue-v1 · epoch 7 · established</span></p>
+      <div class="observations">
+        <article><h3>Per-run control availability</h3><p id="control-availability">available</p><p id="command-result">No synthetic command attempted.</p></article>
+        <article><h3>Established data service</h3><p id="data-outcome">not-sampled</p><p id="policy">No fixture selected.</p></article>
+        <article><h3>Independent shared harness</h3><p id="harness-status">available</p><p id="recovery-outcome">not-attempted</p></article>
+      </div>
+      <p id="verification" class="verdict">Verification: PENDING</p>
+      <p id="prediction-result">Prediction not checked.</p>
+      <p><strong>PASS</strong> needs three successful samples, a scoped harness report and confirmed recovery. <strong>FAIL</strong> records any observed interruption, even after recovery. <strong>UNKNOWN</strong> preserves missing sample or recovery evidence. A correct failure prediction is not successful service.</p>
+      <p>These are established users, not migrated users. No uninterrupted transition, source-parent completion, native support or five-nines reliability is claimed.</p>
+      <table class="metrics">
+        <caption>Attempted journeys = success + failure + unknown</caption>
+        <thead><tr><th scope="col">Sample set</th><th scope="col">Attempted</th><th scope="col">Success</th><th scope="col">Failure</th><th scope="col">Unknown</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Current</th><td id="active-attempted">0</td><td id="active-success">0</td><td id="active-failure">0</td><td id="active-unknown">0</td></tr>
+          <tr><th scope="row">Retained</th><td id="retained-attempted">0</td><td id="retained-success">0</td><td id="retained-failure">0</td><td id="retained-unknown">0</td></tr>
+        </tbody>
+      </table>
+      <p>Current and retained rows are separate; the current checked attempt also appears in retained history. Do not add the two rows.</p>
+      <table>
+        <caption>Fixed established-user observations during management loss</caption>
+        <thead><tr><th scope="col">Journey / route</th><th scope="col">Result</th><th scope="col">Synthetic ms</th><th scope="col">Evidence reason</th></tr></thead>
+        <tbody id="journey-rows"><tr><td colspan="4">No samples yet.</td></tr></tbody>
+      </table>
+    </section>
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Synthetic action trace</h2>
+      <p>Logical timestamps are fixed ordering labels, not actual elapsed times. The rejected control command cannot change blue-v1 or epoch 7.</p>
+      <ol id="trace"><li>No actions yet.</li></ol>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained attempts</h2>
+      <p id="history-note">0/6 retained attempts. No automatic eviction.</p>
+      <div id="history"><p>No retained attempts yet.</p></div>
+      <p>History is memory-only. New attempt keeps checked records; explicit reset or page reload clears everything. A partial attempt may be explicitly discarded with reset, never counted as success.</p>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Source, limits and disclaimer</h2>
+      <p>Exact acceptance and raw source provenance: <a href="evidence/source-contract.json">S089 / D-S089 / portable A contract</a>. The <a href="manifest.json">versioned manifest</a> and <a href="README.md">lesson instructions</a> declare this worked exercise.</p>
+      <p>No actual management connectivity, controller outage, data-plane service or harness recovery is certified. B-S089 and D-S089 remain incomplete. This is not production Node.js 24 validation or an unattended browser runner qualification. It is not a Microsoft SLA.</p>
+      <p>No cloud, IaC, scaffold, identity, credentials, deployment, spending, package installation, framework changes or downloads are involved. No telemetry or persistent browser storage is used.</p>
+      <p>The source examples are provided “AS IS” for educational and demonstration purposes, without warranties or guarantees. Microsoft and Azure references do not imply endorsement, sponsorship, certification or support. Validate security, reliability, compatibility and costs before production use.</p>
+    </section>
+  </main>
+  <footer><p>One frozen A-S089 satisfier. Publication and tests do not award acceptance; parent review is required.</p></footer>
+</body>
+</html>

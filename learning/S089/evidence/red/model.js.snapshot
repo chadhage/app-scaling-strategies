@@ -1,0 +1,23 @@
+'use strict';
+
+function createLesson() {
+  const snapshot = () => ({
+    phase: 'idle', attemptId: null, config: null,
+    route: { deployment: 'blue-v1', epoch: 7, established: true },
+    controlAvailability: 'available', harnessAvailability: 'available',
+    faultScope: null, commandCounts: { attempted: 0, rejected: 0 },
+    dataOutcome: 'not-sampled', recoveryOutcome: 'not-attempted', verification: 'PENDING',
+    metrics: { attempted: 0, success: 0, failure: 0, unknown: 0 },
+    retainedMetrics: { attempted: 0, success: 0, failure: 0, unknown: 0 },
+    journeys: [], trace: [], harnessReport: null, prediction: null, predictionCorrect: null,
+    userTransitionClaim: false, history: [],
+  });
+  return {
+    snapshot, start: snapshot, loseManagement: snapshot, sampleJourneys: snapshot,
+    reportFault: snapshot, recoverControl: snapshot, checkPrediction: snapshot,
+    newAttempt: snapshot, reset: snapshot,
+  };
+}
+
+if (typeof module === 'object' && module.exports) module.exports = { createLesson };
+else globalThis.S089Lesson = { createLesson };

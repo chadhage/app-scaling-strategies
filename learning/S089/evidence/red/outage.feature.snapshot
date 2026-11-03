@@ -1,0 +1,75 @@
+Feature: Separate the lost per-run control path from established service
+  Training rehearsal - synthetic data - not a live Azure result
+  Source S089 / D-S089 / A-S089, frozen S unit in SC-S089.
+  Connectivity, commands, routes, recovery and journeys are synthetic trace data.
+
+  Background:
+    Given an established blue-v1 route at synthetic epoch 7
+    And an independent shared training harness that remains available
+    And three fixed journeys with a 100 synthetic millisecond budget
+    And at most six retained attempts and six events per attempt
+
+  Scenario: Established routes do not require the controller on every request
+    Given the independent fixture and confirmed recovery evidence
+    When I prepare and lose only the per-run management path
+    Then the synthetic management command is visibly rejected
+    And the established route and epoch do not change
+    When I sample the established journeys while management is unavailable
+    Then attempted is 3, success is 3, failure is 0 and unknown is 0
+    When the independent harness reports the fault and recovery acknowledgement
+    Then data service is continuing, recovery is confirmed and verification is PASS
+    And this is not a migrated-user or native-platform result
+
+  Scenario: Requiring management on every request interrupts service
+    Given the controller-dependent fixture
+    When I lose management, sample, report and recover
+    Then all three established journeys fail because they require the unavailable controller
+    And a confirmed recovery cannot erase those failures
+    And verification is FAIL even if my prediction correctly identifies the failure
+
+  Scenario: An independent route can still have a real synthetic service error
+    Given the service-error fixture
+    When I lose management, sample, report and recover
+    Then two journeys succeed and one fails with service-error
+    And controller status is not used as a success-shaped data-plane fallback
+
+  Scenario: Missing observations and missing recovery acknowledgements stay unknown
+    Given the missing-sample fixture
+    When I lose management, sample and report
+    Then two journeys succeed and one is unknown, not a zero-latency success
+    When confirmed recovery is observed
+    Then the control path is available but data service remains unverified
+    Given instead complete independent samples and missing recovery evidence
+    When I lose management, sample, report and recover
+    Then data service is continuing but control availability and recovery are unknown
+    And verification is UNKNOWN, not claimed recovery
+
+  Scenario: Fault reporting and recovery are independent of the lost run path
+    When only the per-run management path is unavailable
+    Then the shared harness can still report the scoped fault and its measured samples
+    And only its fixed recovery evidence can confirm control restoration
+    And no network, management or resource operation takes place
+
+  Scenario: Strict inputs and ordered actions cannot mutate an invalid state
+    Given an invalid enum, extra property, accessor, inherited record or wrong action order
+    When I attempt an action
+    Then it fails visibly before any state mutation
+    And all actions enforce their exact parameter counts
+    And returned snapshots and caller inputs cannot alter the internal lesson state
+
+  Scenario: Retain negative and unknown attempts until explicit reset
+    When I check a prediction and start a new attempt
+    Then the full previous trace, samples, actual verdict and prediction remain
+    And success plus failure plus unknown equals attempted in active and retained metrics
+    And the seventh attempt is rejected without evicting history
+    When I explicitly reset, including from a partial attempt
+    Then all local state and history clear, defaults return and keyboard focus returns to the fixture
+    And repeated reset is harmless
+
+  Scenario: A portable keyboard lesson has an enforced offline surface
+    Given the exact synthetic banner, source attribution, limits and disclaimer
+    When I use native keyboard controls for the complete rehearsal
+    Then phase guards, errors, outcomes and retained history are visible
+    And reset does not shadow the native form reset method
+    And narrow layout remains usable
+    And CSP blocks inline execution and connection attempts in the actual browser
