@@ -1,0 +1,180 @@
+{
+  "cardId": "A-S059",
+  "mode": "synthetic",
+  "startedAtUtc": "2026-11-03T19:22:23.573Z",
+  "node": "v22.23.4",
+  "playwright": "1.56.1",
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "rawSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "publishedCommit": "53c0c0d"
+  },
+  "sources": [
+    {
+      "file": "index.html",
+      "rawSha256": "443c5370a137a0edbe0d617f7ba0f1af315ffda3d6f2810050ac9c71b8b2b815",
+      "canonicalSha256": "2e3f81aa0ece9213857f7183d741dbc63c445ef9d84069ffa4834855aa039e5e"
+    },
+    {
+      "file": "model.js",
+      "rawSha256": "1c0f4cf2e1d67f225c7785aa16955b1cf8fa348cc174e08723bbb440f12bbf66",
+      "canonicalSha256": "bcf9df7185cc433e733fc39c4df07585a4a9a75b9da3f35d9a0c0d0e8f8a48be"
+    },
+    {
+      "file": "lesson.js",
+      "rawSha256": "4f9e30c777a639b134da4951bfcdb493b90db71cdae352700433134a95a474b7",
+      "canonicalSha256": "f807e9baf9aa3dff11ad8b60282bde5a6b4bb2620e35fe723363fad9e14d4e9d"
+    },
+    {
+      "file": "lesson.css",
+      "rawSha256": "11d51f403bf156edb832cb635a8259c9901a19129706ae0987ab8dbb6a1d6700",
+      "canonicalSha256": "8e518b051be6b761a19fd560cb1912dc094545c1fed5115c9b65401ba6cad216"
+    },
+    {
+      "file": "manifest.json",
+      "rawSha256": "01287c9d348f650a4415daf6ed7b81ae2694a94d9df7e0c79aa98099e01d7030",
+      "canonicalSha256": "8fe48ac43c8b5f3eb178e7834f4dca740db2f64cab9bd3bc2ca4f026bc90217f"
+    }
+  ],
+  "checks": [
+    {
+      "name": "standalone banner, labels, declared fixture and no hidden execution",
+      "observed": {
+        "title": "S059 — Configuration-version overlap",
+        "banner": "Training rehearsal - synthetic data - not a live Azure result",
+        "gate": "NOT CHECKED"
+      }
+    },
+    {
+      "name": "real Tab, Enter and Space inspect then publish the compatible default",
+      "observed": {
+        "focus": [
+          "schema",
+          "budget",
+          "reader",
+          "inspect-draft"
+        ],
+        "readings": "old-v1\t2 (retries-v1)\textra retries after first attempt\t3\t3\tsuccess: Synthetic dependency succeeds on attempt 3.\nnew-v2\t2 (retries-v1)\textra retries after first attempt\t3\t3\tsuccess: Synthetic dependency succeeds on attempt 3.",
+        "published": "Published locally: retryBudget=2; retries-v1; new code=compatible.",
+        "announcement": "Published the exact inspected synthetic configuration."
+      }
+    },
+    {
+      "name": "editing invalidates the check; divergent meaning fails and cannot replace publication",
+      "observed": {
+        "gate": "FAIL",
+        "failed": "1",
+        "failureRow": "4 / inspect\tretryBudget=2; retries-v1; new code=reinterpreted\tFAIL\t1 / 1 / 0\tThe same shared setting has divergent meanings; publication is blocked even if both probes succeed.",
+        "publication": "Published locally: retryBudget=2; retries-v1; new code=compatible."
+      }
+    },
+    {
+      "name": "two successful probes do not hide different shared-setting meanings",
+      "observed": {
+        "gate": "FAIL",
+        "successes": "2",
+        "reason": "The same shared setting has divergent meanings; publication is blocked even if both probes succeed."
+      }
+    },
+    {
+      "name": "missing evidence is unknown and publication is explicitly blocked",
+      "observed": {
+        "gate": "UNKNOWN",
+        "unknown": "1",
+        "impact": "unverified"
+      }
+    },
+    {
+      "name": "new schema explicitly rejects the old reader without upgrading it",
+      "observed": {
+        "oldReader": "old-v1\t3 (attempts-v2)\tunrecognized schema\tnot established\t0\tfailure: Old code explicitly rejects attempts-v2; it was not upgraded.",
+        "gate": "FAIL"
+      }
+    },
+    {
+      "name": "matching meanings with an insufficient journey budget still fail",
+      "observed": {
+        "compatibility": "PASS",
+        "gate": "FAIL",
+        "failed": "2"
+      }
+    },
+    {
+      "name": "decimal and empty errors announce refusal, focus the field and preserve measured state",
+      "observed": {
+        "error": "retryBudget must be a single integer 0–4 (1–4 for attempts-v2). No measurement or publication changed.",
+        "focused": "budget",
+        "retainedRecords": 12
+      }
+    },
+    {
+      "name": "compatible recovery publishes while earlier failures and unknowns remain",
+      "observed": {
+        "recoveredGate": "PASS",
+        "retainedFailure": "4 / inspect\tretryBudget=2; retries-v1; new code=reinterpreted\tFAIL\t1 / 1 / 0\tThe same shared setting has divergent meanings; publication is blocked even if both probes succeed.",
+        "records": 14
+      }
+    },
+    {
+      "name": "history capacity refuses further actions without erasing any of 16 records",
+      "observed": {
+        "error": "History is full (16 actions). Explicitly reset to start a new rehearsal; no record was dropped.",
+        "historyDOM": "<tbody id=\"history\"><tr data-record=\"1\"><td>1 / inspect</td><td>retryBudget=2; retries-v1; new code=compatible</td><td>PASS</td><td>2 / 0 / 0</td><td>Both versions honor the approved shared meaning and complete the two synthetic journeys.</td></tr><tr data-record=\"2\"><td>2 / publish</td><td>retryBudget=2; retries-v1; new code=compatible</td><td>published</td><td>2 / 0 / 0</td><td>Published the exact inspected synthetic configuration.</td></tr><tr data-record=\"3\"><td>3 / publish</td><td>retryBudget=2; retries-v1; new code=reinterpreted</td><td>blocked</td><td>not measured</td><td>Blocked: inspect this exact draft before publication.</td></tr><tr data-record=\"4\"><td>4 / inspect</td><td>retryBudget=2; retries-v1; new code=reinterpreted</td><td>FAIL</td><td>1 / 1 / 0</td><td>The same shared setting has divergent meanings; publication is blocked even if both probes succeed.</td></tr><tr data-record=\"5\"><td>5 / publish</td><td>retryBudget=2; retries-v1; new code=reinterpreted</td><td>blocked</td><td>1 / 1 / 0</td><td>Blocked: FAIL. The same shared setting has divergent meanings; publication is blocked even if both probes succeed.</td></tr><tr data-record=\"6\"><td>6 / inspect</td><td>retryBudget=3; retries-v1; new code=reinterpreted</td><td>FAIL</td><td>2 / 0 / 0</td><td>The same shared setting has divergent meanings; publication is blocked even if both probes succeed.</td></tr><tr data-record=\"7\"><td>7 / publish</td><td>retryBudget=3; retries-v1; new code=reinterpreted</td><td>blocked</td><td>2 / 0 / 0</td><td>Blocked: FAIL. The same shared setting has divergent meanings; publication is blocked even if both probes succeed.</td></tr><tr data-record=\"8\"><td>8 / inspect</td><td>retryBudget=2; retries-v1; new code=unobserved</td><td>UNKNOWN</td><td>1 / 0 / 1</td><td>Missing new-reader observation; no successful journey can be inferred.</td></tr><tr data-record=\"9\"><td>9 / publish</td><td>retryBudget=2; retries-v1; new code=unobserved</td><td>blocked</td><td>1 / 0 / 1</td><td>Blocked: UNKNOWN. Missing new-reader observation; no successful journey can be inferred.</td></tr><tr data-record=\"10\"><td>10 / inspect</td><td>retryBudget=3; attempts-v2; new code=compatible</td><td>FAIL</td><td>1 / 1 / 0</td><td>Old code explicitly rejects attempts-v2; it was not upgraded.</td></tr><tr data-record=\"11\"><td>11 / publish</td><td>retryBudget=3; attempts-v2; new code=compatible</td><td>blocked</td><td>1 / 1 / 0</td><td>Blocked: FAIL. Old code explicitly rejects attempts-v2; it was not upgraded.</td></tr><tr data-record=\"12\"><td>12 / inspect</td><td>retryBudget=1; retries-v1; new code=compatible</td><td>FAIL</td><td>0 / 2 / 0</td><td>Approved meanings agree where observed, but the synthetic journey cannot finish within its attempt budget.</td></tr><tr data-record=\"13\"><td>13 / inspect</td><td>retryBudget=2; retries-v1; new code=compatible</td><td>PASS</td><td>2 / 0 / 0</td><td>Both versions honor the approved shared meaning and complete the two synthetic journeys.</td></tr><tr data-record=\"14\"><td>14 / publish</td><td>retryBudget=2; retries-v1; new code=compatible</td><td>published</td><td>2 / 0 / 0</td><td>Published the exact inspected synthetic configuration.</td></tr><tr data-record=\"15\"><td>15 / inspect</td><td>retryBudget=2; retries-v1; new code=compatible</td><td>PASS</td><td>2 / 0 / 0</td><td>Both versions honor the approved shared meaning and complete the two synthetic journeys.</td></tr><tr data-record=\"16\"><td>16 / inspect</td><td>retryBudget=2; retries-v1; new code=compatible</td><td>PASS</td><td>2 / 0 / 0</td><td>Both versions honor the approved shared meaning and complete the two synthetic journeys.</td></tr></tbody>"
+      }
+    },
+    {
+      "name": "Enter and Space reset restore defaults, clear local errors and focus the first control",
+      "observed": {
+        "focused": "schema",
+        "announcement": "Lesson reset. Local publication and retained history cleared; defaults restored. No external cleanup was needed.",
+        "records": 0,
+        "published": "Nothing published."
+      }
+    },
+    {
+      "name": "enforced CSP blocks inline code and connection before any external route",
+      "observed": {
+        "inlineExecuted": false,
+        "networkError": "TypeError",
+        "externalRoutedRequests": 0,
+        "violations": [
+          {
+            "directive": "script-src-elem",
+            "blockedURI": "inline"
+          },
+          {
+            "directive": "connect-src",
+            "blockedURI": "https://s059.synthetic.invalid/never-sent"
+          }
+        ],
+        "intentionalConsoleErrors": [
+          {
+            "phase": "intentional-csp-negative-probes",
+            "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-5HIKDoMSMXFGpaNVOnkOQ8l0FmFjb0GTcGvaLNfkhvA='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+          },
+          {
+            "phase": "intentional-csp-negative-probes",
+            "text": "Connecting to 'https://s059.synthetic.invalid/never-sent' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+          },
+          {
+            "phase": "intentional-csp-negative-probes",
+            "text": "Fetch API cannot load https://s059.synthetic.invalid/never-sent. Refused to connect because it violates the document's Content Security Policy."
+          }
+        ]
+      }
+    }
+  ],
+  "limits": "Local tooling pair only; not native Azure, distributed configuration, Node.js 24 production or source-parent proof.",
+  "browser": "156.0.4314.50",
+  "finalDOM": {
+    "banner": "Training rehearsal - synthetic data - not a live Azure result",
+    "gate": "NOT CHECKED",
+    "history": "No measured actions yet.",
+    "publication": "Nothing published.",
+    "focused": "schema"
+  },
+  "pageErrors": [],
+  "externalRoutedRequests": 0,
+  "sessionClosed": true,
+  "finishedAtUtc": "2026-11-03T19:22:29.205Z"
+}

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "id": "A-S059",
+  "sourceId": "S059",
+  "parentId": "D-S059",
+  "packet": "SC-S059",
+  "kano": "S",
+  "kanoUnit": "A-S059",
+  "title": "Configuration-version overlap",
+  "objective": "Interpret flags/configuration with old/new code; detect divergent meanings of one shared setting.",
+  "mode": "synthetic",
+  "entry": "index.html",
+  "preconditions": [
+    "A local browser with JavaScript; no account, server or Azure subscription.",
+    "Old and new synthetic readers overlap and receive one retryBudget value.",
+    "Approved retries-v1 means extra retries after the first attempt."
+  ],
+  "actions": [
+    "Choose schema, raw integer and new-code interpretation.",
+    "Inspect both synthetic readers and their attempt-3 journeys.",
+    "Attempt publication of that exact inspected draft.",
+    "Recover and compare retained failures, or explicitly reset."
+  ],
+  "syntheticFixture": {
+    "setting": "retryBudget",
+    "successAtAttempt": 3,
+    "oldReader": "retries-v1 only",
+    "newReaderModes": ["compatible", "reinterpreted", "unobserved"],
+    "maxTotalAttemptsPerProbe": 5,
+    "probesPerInspection": 2,
+    "maxRetainedActions": 16
+  },
+  "assertions": [
+    "Matching approved semantics and two successful journeys are required to publish.",
+    "Divergent meanings block publication even when both journeys succeed.",
+    "Unknown evidence and unsupported schemas cannot pass.",
+    "Edits invalidate checks; blocked publication preserves the prior value and history."
+  ],
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "limits": [
+    "No network, persistence, real retries, propagation or distributed configuration.",
+    "No credentials, authentication, cloud, IaC, registration, deployment or spend.",
+    "No native Azure, Node.js 24 production, source-parent or reliability certification.",
+    "Refresh or explicit reset clears in-memory evidence; export is not implemented."
+  ]
+}

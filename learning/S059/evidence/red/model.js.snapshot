@@ -1,0 +1,26 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S059 = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULT = Object.freeze({ schema: 'retries-v1', value: 2, reader: 'compatible' });
+  function createState() {
+    return { version: 1, draft: { ...DEFAULT }, check: null, published: null, history: [], nextId: 1 };
+  }
+  function evaluate(config) {
+    return {
+      config: { ...config }, compatibility: 'UNKNOWN', verdict: 'UNKNOWN',
+      metrics: { attempted: 2, successful: 0, failed: 0, unknown: 2 },
+      readings: [], trace: ['Loadable stub: shared configuration has not been interpreted.'],
+    };
+  }
+  function transition(state, action) {
+    if (action.type === 'edit') return { ...state, draft: { ...action.config }, check: null };
+    if (action.type === 'inspect') return { ...state, check: evaluate(state.draft) };
+    if (action.type === 'publish') return { ...state };
+    throw new TypeError('Unknown action');
+  }
+  return { DEFAULT, MAX_HISTORY: 16, createState, evaluate, transition };
+}));

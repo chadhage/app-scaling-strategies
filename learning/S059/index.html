@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; media-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S059 — Configuration-version overlap</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="lesson.js" defer></script>
+</head>
+<body>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Configuration-version overlap</h1>
+    <p>S059 · A-S059 · D-S059 · packet SC-S059 · Kano S (one unit)</p>
+    <p>Interpret one shared setting with old and new code. Detect a meaning change even when both versions appear healthy.</p>
+  </header>
+  <main>
+    <section aria-labelledby="contract-title">
+      <h2 id="contract-title">Worked contract</h2>
+      <p>Both deployed versions read the same synthetic <code>retryBudget</code> value. Under the approved <strong>retries-v1</strong> schema, it means <em>extra retries after the first attempt</em>. Thus a raw value of 2 permits 3 total attempts.</p>
+      <p>The synthetic dependency fails attempts 1 and 2, then succeeds on attempt 3. Compatible new code preserves the legacy meaning. Divergent new code treats that same value as <em>total attempts</em>. Changing the schema to attempts-v2 does not upgrade the old reader.</p>
+      <ol>
+        <li>Inspect the default draft: both readers allow 3 attempts and both journeys succeed. Publish that checked draft.</li>
+        <li>Choose divergent new code and inspect value 2: old code succeeds, new code fails. Try publishing; the prior publication must stay unchanged.</li>
+        <li>Try divergent value 3: both journeys succeed, but 4 versus 3 allowed attempts still blocks publication.</li>
+        <li>Try a missing observation or attempts-v2; uncertainty and unsupported readers never pass. Restore compatible retries-v1 value 2 and inspect again.</li>
+      </ol>
+      <p>Publication requires an exact-draft check, matching approved meanings and two successful journeys. Each inspection is two fresh synthetic probes, not a distributed rollout. Preparing compatible code precedes flag activation (source S010); no real deployment occurs here.</p>
+    </section>
+
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Operator controls</h2>
+      <form id="configuration-form" novalidate>
+        <label for="schema">Shared configuration schema</label>
+        <select id="schema" name="schema">
+          <option value="retries-v1">retries-v1 — extra retries after first attempt</option>
+          <option value="attempts-v2">attempts-v2 — total attempts (old reader unsupported)</option>
+        </select>
+        <label for="budget">retryBudget raw integer</label>
+        <input id="budget" name="budget" type="number" min="0" max="4" step="1" value="2" required aria-describedby="budget-help">
+        <p id="budget-help">Integers 0–4 for retries-v1; 1–4 for attempts-v2. No expressions, decimals or credentials.</p>
+        <label for="reader">New code interpretation / evidence</label>
+        <select id="reader" name="reader">
+          <option value="compatible">Compatible — preserves approved schema meaning</option>
+          <option value="reinterpreted">Divergent — reuses value as total attempts</option>
+          <option value="unobserved">Unknown — new-reader observation missing</option>
+        </select>
+        <div class="actions">
+          <button id="inspect-draft" type="submit">Inspect draft</button>
+          <button id="publish-draft" type="button">Attempt guarded publication</button>
+          <button id="start-over" type="button" aria-describedby="reset-help">Reset lesson</button>
+        </div>
+        <p id="reset-help">Explicit reset clears this page's local history and publication only. Refresh also starts over; nothing is persisted or sent.</p>
+      </form>
+      <p id="input-error" role="alert" hidden></p>
+      <p id="announcement" role="status" aria-live="polite" aria-atomic="true">Ready. Inspect the default shared configuration.</p>
+    </section>
+
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Current draft inspection</h2>
+      <p id="draft-state">Not inspected. Publication is blocked.</p>
+      <dl class="metrics">
+        <div><dt>Publication gate</dt><dd id="verdict">NOT CHECKED</dd></div>
+        <div><dt>Semantic compatibility</dt><dd id="compatibility">NOT CHECKED</dd></div>
+        <div><dt>Attempted probes</dt><dd id="attempted">0</dd></div>
+        <div><dt>Succeeded</dt><dd id="successful">0</dd></div>
+        <div><dt>Failed</dt><dd id="failed">0</dd></div>
+        <div><dt>Unknown</dt><dd id="unknown">0</dd></div>
+      </dl>
+      <p id="reason">A configured value alone proves nothing about its readers.</p>
+      <p>User impact: <strong id="user-impact">not measured</strong>. Cleanup: <strong>no external resources</strong>.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Same raw setting, independently interpreted readers</caption>
+          <thead><tr><th scope="col">Code</th><th scope="col">Raw setting</th><th scope="col">Observed meaning</th><th scope="col">Allowed attempts</th><th scope="col">Used attempts</th><th scope="col">Journey</th></tr></thead>
+          <tbody id="readings"><tr><td colspan="6">Inspect a draft to observe both readers.</td></tr></tbody>
+        </table>
+      </div>
+      <h3>Synthetic trace</h3>
+      <ol id="trace"><li>No probes run.</li></ol>
+      <h3>Published configuration</h3>
+      <p id="published">Nothing published.</p>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained action history</h2>
+      <p id="history-count">0 / 16 measured actions. No records are silently evicted.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Earlier failures, unknowns and blocked attempts survive recovery; explicit reset clears them</caption>
+          <thead><tr><th scope="col"># / action</th><th scope="col">Configuration</th><th scope="col">Outcome</th><th scope="col">Probe counts (success / failure / unknown)</th><th scope="col">Explanation</th></tr></thead>
+          <tbody id="history"><tr><td colspan="5">No measured actions yet.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Limits and evidence</h2>
+      <p>This finite in-memory model has two readers, one setting, at most five allowed attempts per probe, and 16 retained measured actions. It models no propagation timing, real retries, network, authentication, deployment or configuration store. Missing observations stay unknown. A successful negative test is not a successful user transition.</p>
+      <p>This is not native Azure evidence, real distributed-configuration proof, Node.js 24 production validation, five-nines certification or completion of B-S059, D-S059 or prerequisite D-S010. Actual browser checks qualify only the recorded local Node.js 22 / Playwright 1.56.1 / signed Edge 156 tooling pair.</p>
+      <p><a href="README.md">Source acceptance, BDD and reproducible checks</a> · <a href="configuration-overlap.feature">Behavior specification</a></p>
+    </section>
+    <noscript><p>This synthetic exercise requires local JavaScript. No result has been measured.</p></noscript>
+  </main>
+</body>
+</html>

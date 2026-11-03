@@ -1,0 +1,192 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const { createHash } = require('node:crypto');
+const { execFileSync } = require('node:child_process');
+const root = path.resolve(__dirname, '..', '..', '..');
+const lesson = path.resolve(__dirname, '..');
+const evidence = path.join(lesson, 'evidence');
+const bytes = (file) => fs.readFileSync(path.join(lesson, file));
+const json = (file) => JSON.parse(bytes(file).toString('utf8'));
+const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+const canonical = (value) => Buffer.from(value.toString('utf8').replace(/\r\n/g, '\n'));
+const source = json('evidence\\source-contract.json');
+const inventory = json('evidence\\integrity.json');
+
+function extract(file, startMarker, endMarker) {
+  const lines = fs.readFileSync(path.join(root, file), 'utf8').match(/[^\n]*\n|[^\n]+$/g);
+  const start = lines.findIndex((line) => line.replace(/\r?\n$/, '').startsWith(startMarker));
+  assert.ok(start >= 0, `exact source marker ${startMarker}`);
+  const end = endMarker
+    ? lines.findIndex((line, index) => index > start && line.replace(/\r?\n$/, '').startsWith(endMarker))
+    : start + 1;
+  assert.ok(end > start, `source excerpt end ${endMarker || startMarker}`);
+  return Buffer.from(lines.slice(start, end).join(''));
+}
+
+function blobId(value) {
+  return createHash('sha1').update(`blob ${value.length}\0`).update(value).digest('hex');
+}
+
+function gitFilteredId(file, value) {
+  return execFileSync('git', ['hash-object', `--path=learning\\S059\\${file}`, '--stdin'], {
+    cwd: root, input: value, encoding: 'utf8', windowsHide: true,
+  }).trim();
+}
+
+function rawRun(stage, expectedCode, expectedCount) {
+  const prefix = `evidence\\raw\\${stage}\\`;
+  const run = json(`${prefix}run.json`);
+  assert.equal(run.exitCode, expectedCode, `${stage} actual exit`);
+  assert.equal(run.signal, null);
+  assert.equal(run.error, null);
+  assert.equal(sha256(bytes(`${prefix}stdout.txt`)), run.stdoutSha256);
+  assert.equal(sha256(bytes(`${prefix}stderr.txt`)), run.stderrSha256);
+  const stdout = bytes(`${prefix}stdout.txt`).toString('utf8');
+  if (expectedCount !== null) assert.match(stdout, new RegExp(`# tests ${expectedCount}\\r?\\n`));
+  if (expectedCode === 0 && expectedCount !== null) {
+    assert.match(stdout, new RegExp(`# pass ${expectedCount}\\r?\\n`));
+    assert.match(stdout, /# fail 0\r?\n/);
+  }
+  return { run, stdout };
+}
+
+test('exact source acceptance, portable contract, frozen unit and packet remain verified', () => {
+  assert.equal(source.cardId, 'A-S059');
+  assert.equal(source.parentId, 'D-S059');
+  assert.equal(source.packet, 'SC-S059');
+  assert.equal(source.kano, 'S');
+  assert.equal(source.kanoUnit, 'A-S059');
+  for (const excerpt of source.excerpts) {
+    const saved = fs.readFileSync(path.join(evidence, excerpt.destination));
+    assert.equal(sha256(saved), excerpt.rawSha256, `raw source snapshot ${excerpt.destination}`);
+    assert.equal(sha256(canonical(saved)), excerpt.canonicalSha256);
+    assert.equal(sha256(canonical(extract(excerpt.source, excerpt.startMarker, excerpt.endMarker))), excerpt.canonicalSha256);
+  }
+  assert.match(bytes('evidence\\source-readme-row.snapshot').toString('utf8'),
+    /\| S059 \| \*\*Configuration-version overlap:\*\* Ensure old and new code interpret shared flags and configuration consistently\./);
+  assert.match(bytes('evidence\\source-backlog-row.snapshot').toString('utf8'),
+    /Both versions interpret approved shared configuration consistently; incompatible publication is gated\. \| D-S010 \|/);
+  assert.match(bytes('evidence\\source-card-row.snapshot').toString('utf8'),
+    /A-S059 \| D-S059 \| S \| Interpret flags\/configuration with old\/new code; detect divergent meanings of one shared setting\. \| SOURCE/);
+  assert.match(bytes('evidence\\source-portable-contract.snapshot').toString('utf8'),
+    /Training rehearsal - synthetic data - not a live Azure result/);
+});
+
+test('preserved loadable stub produced a genuine assertion RED before the IaC N/A and green', () => {
+  for (const snapshot of source.redSnapshots) {
+    const saved = fs.readFileSync(path.join(evidence, snapshot.destination));
+    assert.equal(sha256(saved), snapshot.rawSha256);
+    assert.equal(sha256(canonical(saved)), snapshot.canonicalSha256);
+    assert.ok(snapshot.destination.endsWith('.snapshot'));
+    if (snapshot.source !== 'model.js') {
+      assert.equal(sha256(canonical(bytes(snapshot.source))), snapshot.canonicalSha256);
+    }
+  }
+  const context = { module: { exports: {} } };
+  vm.runInNewContext(bytes('evidence\\red\\model.js.snapshot').toString('utf8'), context);
+  const stub = context.module.exports;
+  assert.equal(stub.transition(stub.createState(), { type: 'inspect' }).check.verdict, 'UNKNOWN');
+  assert.equal(require('..\\model.js').transition(require('..\\model.js').createState(), { type: 'inspect' }).check.verdict, 'PASS');
+  const red = rawRun('red', 1, 1);
+  assert.match(red.stdout, /ERR_ASSERTION/);
+  assert.match(red.stdout, /'UNKNOWN' !== 'PASS'/);
+  assert.doesNotMatch(red.stdout, /MODULE_NOT_FOUND|Cannot find module|not recognized|ENOENT/);
+  const iac = json('evidence\\iac-stage.json');
+  const green = rawRun('green', 0, 18);
+  assert.equal(iac.status, 'N/A');
+  assert.ok(Date.parse(source.capturedAtUtc) <= Date.parse(red.run.startedAtUtc));
+  assert.ok(Date.parse(red.run.finishedAtUtc) <= Date.parse(iac.recordedAtUtc));
+  assert.ok(Date.parse(iac.recordedAtUtc) < Date.parse(green.run.startedAtUtc));
+});
+
+test('saved raw provenance and CRLF snapshots remain exact, including Git clean filtering', () => {
+  assert.ok(inventory.rawEvidence.length > 10);
+  for (const entry of inventory.rawEvidence) {
+    const value = bytes(entry.file);
+    assert.equal(sha256(value), entry.rawSha256, entry.file);
+    assert.equal(gitFilteredId(entry.file, value), blobId(value), `${entry.file} must be -text`);
+  }
+  const attributes = bytes('.gitattributes').toString('utf8');
+  for (const rule of ['evidence/raw/** -text', 'evidence/red/** -text', 'evidence/source-*.snapshot -text']) {
+    assert.ok(attributes.includes(rule), rule);
+  }
+});
+
+test('current lesson and test sources match canonical LF hashes that Git will publish', () => {
+  assert.equal(inventory.cardId, 'A-S059');
+  assert.ok(inventory.sources.length >= 12);
+  for (const entry of inventory.sources) {
+    const value = bytes(entry.file);
+    const clean = canonical(value);
+    assert.equal(sha256(clean), entry.canonicalSha256, entry.file);
+    assert.equal(gitFilteredId(entry.file, value), blobId(clean), `Git canonical source ${entry.file}`);
+  }
+  const commit = process.env.S059_GIT_COMMIT;
+  if (commit) {
+    assert.match(commit, /^[a-f0-9]{40}$/);
+    for (const entry of [...inventory.sources, ...inventory.rawEvidence]) {
+      const objectPath = `learning/S059/${entry.file.replace(/\\/g, '/')}`;
+      const value = execFileSync('git', ['cat-file', 'blob', `${commit}:${objectPath}`], { cwd: root, windowsHide: true });
+      assert.equal(sha256(entry.rawSha256 ? value : canonical(value)),
+        entry.rawSha256 || entry.canonicalSha256, `published Git blob ${entry.file}`);
+    }
+  }
+});
+
+test('actual browser proof binds executed sources, all twelve checkpoints and awaited cleanup', () => {
+  const proof = json('evidence\\raw\\browser-session.json');
+  const signature = json('evidence\\raw\\edge-signature.json');
+  assert.equal(proof.cardId, 'A-S059');
+  assert.equal(proof.mode, 'synthetic');
+  assert.equal(proof.playwright, '1.56.1');
+  assert.match(proof.node, /^v22\./);
+  assert.match(proof.browser, /^156\./);
+  assert.equal(proof.browser, signature.version);
+  assert.equal(signature.signatureStatus, 'Valid');
+  assert.match(signature.signer, /Microsoft Corporation/);
+  assert.equal(signature.downloadsPerformed, false);
+  assert.equal(signature.chromiumSandbox, true);
+  assert.equal(proof.checks.length, 12);
+  assert.ok(proof.checks.every((entry) => entry.observed));
+  assert.equal(proof.sessionClosed, true);
+  assert.deepEqual(proof.pageErrors, []);
+  assert.equal(proof.externalRoutedRequests, 0);
+  assert.equal(proof.finalDOM.gate, 'NOT CHECKED');
+  assert.equal(proof.finalDOM.publication, 'Nothing published.');
+  assert.equal(proof.finalDOM.focused, 'schema');
+  for (const entry of proof.sources) {
+    assert.equal(sha256(canonical(bytes(entry.file))), entry.canonicalSha256, `browser-executed source ${entry.file}`);
+  }
+  const csp = proof.checks.find((entry) => entry.name.startsWith('enforced CSP')).observed;
+  assert.equal(csp.inlineExecuted, false);
+  assert.equal(csp.externalRoutedRequests, 0);
+  assert.ok(csp.violations.some((entry) => entry.directive === 'connect-src'));
+  rawRun('browser', 0, 13);
+});
+
+test('only the published approved browser helper and explicit offline tooling are qualified', () => {
+  const value = fs.readFileSync(path.join(root, source.helper.path));
+  assert.equal(sha256(canonical(value)), source.helper.canonicalSha256);
+  assert.equal(source.helper.approvedRawSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+  assert.equal(source.helper.publishedCommit, '53c0c0d');
+  assert.equal(source.tooling.productionNode24Validated, false);
+  const code = bytes('tests\\browser.test.cjs').toString('utf8');
+  assert.match(code, /openIsolatedLesson\('learning\\\\S059\\\\index\.html'\)/);
+  assert.match(code, /finally \{\s+await session\.close\(\);/);
+  assert.match(code, /process\.env\.CAPTURE_BROWSER_EVIDENCE === '1'/);
+  assert.match(code, /if \(capture\) fs\.writeFileSync/);
+  assert.doesNotMatch(code, /chromium\.launch|executablePath|--no-sandbox|bypassCSP:\s*true|prototype.*require/);
+});
+
+test('syntax provenance is successful and any completed integrity capture retains its own raw hashes', () => {
+  const syntax = rawRun('syntax', 0, null);
+  assert.match(syntax.stdout, /Syntax OK: model\.js/);
+  assert.match(syntax.stdout, /Syntax OK: lesson\.js/);
+  assert.match(syntax.stdout, /integrity\.test\.cjs/);
+  const runPath = path.join(evidence, 'raw', 'integrity', 'run.json');
+  if (fs.existsSync(runPath)) rawRun('integrity', 0, 7);
+});

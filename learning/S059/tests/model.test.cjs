@@ -1,0 +1,194 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { DEFAULT, MAX_HISTORY, createState, evaluate, transition } = require('..\\model.js');
+
+const config = (changes = {}) => ({ ...DEFAULT, ...changes });
+const edit = (state, changes) => transition(state, { type: 'edit', config: config(changes) });
+const inspect = (state) => transition(state, { type: 'inspect' });
+const publish = (state) => transition(state, { type: 'publish' });
+
+test('compatible shared configuration permits the same three attempts and gated publication', () => {
+  const initial = createState();
+  const checked = inspect(initial);
+  assert.equal(checked.check.verdict, 'PASS', 'approved shared meaning must pass before publication');
+  assert.equal(checked.check.compatibility, 'PASS');
+  assert.deepEqual(checked.check.readings.map((row) => row.totalAttempts), [3, 3]);
+  assert.deepEqual(checked.check.metrics, { attempted: 2, successful: 2, failed: 0, unknown: 0 });
+  assert.equal(initial.history.length, 0);
+  const published = publish(checked);
+  assert.deepEqual(published.published, config());
+  assert.deepEqual(published.history.map((entry) => entry.outcome), ['PASS', 'published']);
+});
+
+test('one shared setting with divergent meanings fails and never replaces an approved publication', () => {
+  const approved = publish(inspect(createState()));
+  const checked = inspect(edit(approved, { reader: 'reinterpreted' }));
+  assert.equal(checked.check.compatibility, 'FAIL');
+  assert.equal(checked.check.verdict, 'FAIL');
+  assert.deepEqual(checked.check.readings.map((row) => row.totalAttempts), [3, 2]);
+  assert.deepEqual(checked.check.metrics, { attempted: 2, successful: 1, failed: 1, unknown: 0 });
+  assert.equal(checked.check.userImpact, 'synthetic-interruption');
+  const blocked = publish(checked);
+  assert.deepEqual(blocked.published, approved.published);
+  assert.equal(blocked.history.at(-1).outcome, 'blocked');
+  assert.match(blocked.history.at(-1).reason, /FAIL/);
+});
+
+test('both journeys succeeding does not conceal divergent configuration meanings', () => {
+  const result = evaluate(config({ value: 3, reader: 'reinterpreted' }));
+  assert.deepEqual(result.readings.map((row) => row.totalAttempts), [4, 3]);
+  assert.equal(result.metrics.successful, 2);
+  assert.equal(result.compatibility, 'FAIL');
+  assert.equal(result.verdict, 'FAIL');
+  assert.match(result.reason, /meaning/);
+});
+
+test('new schema explicitly fails the old reader rather than pretending it was upgraded', () => {
+  const result = evaluate(config({ schema: 'attempts-v2', value: 3 }));
+  assert.equal(result.readings[0].status, 'unsupported');
+  assert.equal(result.readings[0].totalAttempts, null);
+  assert.equal(result.readings[0].journey, 'failure');
+  assert.equal(result.readings[1].totalAttempts, 3);
+  assert.equal(result.compatibility, 'FAIL');
+  assert.equal(result.verdict, 'FAIL');
+  assert.deepEqual(result.metrics, { attempted: 2, successful: 1, failed: 1, unknown: 0 });
+});
+
+test('missing new-reader evidence remains unknown and cannot authorize publication', () => {
+  const checked = inspect(edit(createState(), { reader: 'unobserved' }));
+  const result = checked.check;
+  assert.equal(result.compatibility, 'UNKNOWN');
+  assert.equal(result.verdict, 'UNKNOWN');
+  assert.equal(result.userImpact, 'unverified');
+  assert.deepEqual(result.metrics, { attempted: 2, successful: 1, failed: 0, unknown: 1 });
+  const blocked = publish(checked);
+  assert.equal(blocked.published, null);
+  assert.equal(blocked.history.at(-1).outcome, 'blocked');
+  assert.match(blocked.history.at(-1).reason, /UNKNOWN/);
+});
+
+test('consistent configuration still fails the gate when the bounded journey cannot finish', () => {
+  const result = evaluate(config({ value: 1 }));
+  assert.equal(result.compatibility, 'PASS');
+  assert.equal(result.verdict, 'FAIL');
+  assert.deepEqual(result.metrics, { attempted: 2, successful: 0, failed: 2, unknown: 0 });
+  assert.deepEqual(result.readings.map((row) => row.usedAttempts), [2, 2]);
+  const zero = evaluate(config({ value: 0 }));
+  assert.deepEqual(zero.readings.map((row) => row.totalAttempts), [1, 1]);
+  assert.equal(zero.metrics.failed, 2);
+});
+
+test('known failure dominates missing evidence without dropping unknown outcomes', () => {
+  const result = evaluate(config({ value: 0, reader: 'unobserved' }));
+  assert.equal(result.compatibility, 'UNKNOWN');
+  assert.equal(result.verdict, 'FAIL');
+  assert.deepEqual(result.metrics, { attempted: 2, successful: 0, failed: 1, unknown: 1 });
+});
+
+test('edits invalidate exact-draft authorization and preserve earlier measurements', () => {
+  for (const changes of [{ value: 3 }, { reader: 'reinterpreted' }, { schema: 'attempts-v2' }]) {
+    const checked = inspect(createState());
+    const changed = edit(checked, changes);
+    assert.equal(changed.check, null);
+    assert.deepEqual(changed.history, checked.history);
+    const blocked = publish(changed);
+    assert.equal(blocked.published, null);
+    assert.equal(blocked.history.at(-1).outcome, 'blocked');
+    assert.match(blocked.history.at(-1).reason, /inspect this exact draft/i);
+  }
+});
+
+test('failure and blocked attempts remain after compatible recovery', () => {
+  let state = publish(inspect(edit(createState(), { reader: 'reinterpreted' })));
+  const failureRecords = JSON.stringify(state.history);
+  state = publish(inspect(edit(state, {})));
+  assert.equal(state.published.reader, 'compatible');
+  assert.equal(JSON.stringify(state.history.slice(0, 2)), failureRecords);
+  assert.deepEqual(state.history.map((entry) => entry.outcome), ['FAIL', 'blocked', 'PASS', 'published']);
+});
+
+test('strict config and action guards reject invalid input without mutating state', () => {
+  const state = publish(inspect(createState()));
+  const before = JSON.stringify(state);
+  const bad = [
+    null, [], {}, config({ value: '2' }), config({ value: 2.5 }), config({ value: NaN }),
+    config({ value: Infinity }), config({ value: -1 }), config({ value: 5 }),
+    config({ schema: 'attempts-v2', value: 0 }), config({ schema: '__proto__' }),
+    config({ reader: 'unknown' }), { ...config(), arbitrary: true },
+    Object.assign(Object.create({ inherited: true }), config()),
+  ];
+  for (const input of bad) {
+    assert.throws(() => evaluate(input), /config|schema|reader|value/i);
+    assert.throws(() => transition(state, { type: 'edit', config: input }), /config|schema|reader|value/i);
+  }
+  for (const action of [null, {}, { type: 'delete' }, { type: 'inspect', extra: 1 }]) {
+    assert.throws(() => transition(state, action), /action/i);
+  }
+  assert.equal(JSON.stringify(state), before);
+});
+
+test('malformed state, forged check, publication and history are rejected', () => {
+  const checked = inspect(createState());
+  const clone = () => JSON.parse(JSON.stringify(checked));
+  const cases = [null, {}, { ...clone(), nextId: -1 }, { ...clone(), version: 2 },
+    { ...clone(), history: 'wrong' }, { ...clone(), extra: true }];
+  const forgedCheck = clone();
+  forgedCheck.check.config.reader = 'reinterpreted';
+  cases.push(forgedCheck);
+  const forgedVerdict = clone();
+  forgedVerdict.check.verdict = 'UNKNOWN';
+  cases.push(forgedVerdict);
+  const forgedPublication = clone();
+  forgedPublication.published = config();
+  cases.push(forgedPublication);
+  const forgedHistory = clone();
+  forgedHistory.history[0].outcome = 'UNKNOWN';
+  cases.push(forgedHistory);
+  for (const state of cases) assert.throws(() => publish(state), /state|check|history|publication/i);
+});
+
+test('history has a hard bound and never silently evicts an earlier result', () => {
+  let state = createState();
+  for (let i = 0; i < MAX_HISTORY; i++) state = inspect(state);
+  assert.equal(state.history.length, 16);
+  const before = JSON.stringify(state);
+  assert.throws(() => inspect(state), /history.*full/i);
+  assert.throws(() => publish(state), /history.*full/i);
+  assert.equal(JSON.stringify(state), before);
+  assert.equal(state.history[0].id, 1);
+  assert.equal(state.history.at(-1).id, 16);
+  const fresh = createState();
+  assert.equal(fresh.history.length, 0);
+  assert.deepEqual(fresh.draft, config());
+});
+
+test('all bounded supported combinations are deterministic with complete accounting', () => {
+  for (const schema of ['retries-v1', 'attempts-v2']) {
+    for (const reader of ['compatible', 'reinterpreted', 'unobserved']) {
+      for (let value = schema === 'retries-v1' ? 0 : 1; value <= 4; value++) {
+        const input = config({ schema, reader, value });
+        const result = evaluate(input);
+        assert.deepEqual(evaluate(input), result);
+        assert.equal(result.metrics.attempted, 2);
+        assert.equal(result.metrics.successful + result.metrics.failed + result.metrics.unknown, 2);
+        assert.equal(result.readings.length, 2);
+        if (result.verdict === 'PASS') {
+          assert.equal(result.compatibility, 'PASS');
+          assert.equal(result.metrics.successful, 2);
+        }
+        assert.ok(result.trace.length >= 3);
+      }
+    }
+  }
+});
+
+test('state, nested checks and historical results are immutable', () => {
+  const state = publish(inspect(createState()));
+  assert.ok(Object.isFrozen(state));
+  assert.ok(Object.isFrozen(state.draft));
+  assert.ok(Object.isFrozen(state.history));
+  assert.ok(Object.isFrozen(state.history[0].evaluation.readings[0]));
+  assert.throws(() => { state.check.verdict = 'UNKNOWN'; }, TypeError);
+  assert.throws(() => { state.history.length = 0; }, TypeError);
+});

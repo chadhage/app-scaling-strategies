@@ -1,0 +1,1117 @@
+learning/S059/evidence/raw/edge-signature.json:1: trailing whitespace.
++{
+learning/S059/evidence/raw/edge-signature.json:2: trailing whitespace.
++  "recordedAtUtc": "2026-11-03T19:22:21.8169914Z",
+learning/S059/evidence/raw/edge-signature.json:3: trailing whitespace.
++  "path": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+learning/S059/evidence/raw/edge-signature.json:4: trailing whitespace.
++  "version": "156.0.4314.50",
+learning/S059/evidence/raw/edge-signature.json:5: trailing whitespace.
++  "signatureStatus": "Valid",
+learning/S059/evidence/raw/edge-signature.json:6: trailing whitespace.
++  "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+learning/S059/evidence/raw/edge-signature.json:7: trailing whitespace.
++  "downloadsPerformed": false,
+learning/S059/evidence/raw/edge-signature.json:8: trailing whitespace.
++  "chromiumSandbox": true,
+learning/S059/evidence/raw/edge-signature.json:9: trailing whitespace.
++  "channel": "msedge"
+learning/S059/evidence/raw/edge-signature.json:10: trailing whitespace.
++}
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:1: trailing whitespace.
++'use strict';
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:2: trailing whitespace.
++const test = require('node:test');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:3: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:4: trailing whitespace.
++const fs = require('node:fs');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:5: trailing whitespace.
++const path = require('node:path');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:6: trailing whitespace.
++const vm = require('node:vm');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:7: trailing whitespace.
++const { createHash } = require('node:crypto');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:8: trailing whitespace.
++const { execFileSync } = require('node:child_process');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:9: trailing whitespace.
++const root = path.resolve(__dirname, '..', '..', '..');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:10: trailing whitespace.
++const lesson = path.resolve(__dirname, '..');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:11: trailing whitespace.
++const evidence = path.join(lesson, 'evidence');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:12: trailing whitespace.
++const bytes = (file) => fs.readFileSync(path.join(lesson, file));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:13: trailing whitespace.
++const json = (file) => JSON.parse(bytes(file).toString('utf8'));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:14: trailing whitespace.
++const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:15: trailing whitespace.
++const canonical = (value) => Buffer.from(value.toString('utf8').replace(/\r\n/g, '\n'));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:16: trailing whitespace.
++const source = json('evidence\\source-contract.json');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:17: trailing whitespace.
++const inventory = json('evidence\\integrity.json');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:18: trailing whitespace.
++
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:19: trailing whitespace.
++function extract(file, startMarker, endMarker) {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:20: trailing whitespace.
++  const lines = fs.readFileSync(path.join(root, file), 'utf8').match(/[^\n]*\n|[^\n]+$/g);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:21: trailing whitespace.
++  const start = lines.findIndex((line) => line.replace(/\r?\n$/, '').startsWith(startMarker));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:22: trailing whitespace.
++  assert.ok(start >= 0, `exact source marker ${startMarker}`);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:23: trailing whitespace.
++  const end = endMarker
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:24: trailing whitespace.
++    ? lines.findIndex((line, index) => index > start && line.replace(/\r?\n$/, '').startsWith(endMarker))
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:25: trailing whitespace.
++    : start + 1;
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:26: trailing whitespace.
++  assert.ok(end > start, `source excerpt end ${endMarker || startMarker}`);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:27: trailing whitespace.
++  return Buffer.from(lines.slice(start, end).join(''));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:28: trailing whitespace.
++}
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:29: trailing whitespace.
++
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:30: trailing whitespace.
++function blobId(value) {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:31: trailing whitespace.
++  return createHash('sha1').update(`blob ${value.length}\0`).update(value).digest('hex');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:32: trailing whitespace.
++}
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:33: trailing whitespace.
++
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:34: trailing whitespace.
++function gitFilteredId(file, value) {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:35: trailing whitespace.
++  return execFileSync('git', ['hash-object', `--path=learning\\S059\\${file}`, '--stdin'], {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:36: trailing whitespace.
++    cwd: root, input: value, encoding: 'utf8', windowsHide: true,
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:37: trailing whitespace.
++  }).trim();
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:38: trailing whitespace.
++}
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:39: trailing whitespace.
++
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:40: trailing whitespace.
++function rawRun(stage, expectedCode, expectedCount) {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:41: trailing whitespace.
++  const prefix = `evidence\\raw\\${stage}\\`;
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:42: trailing whitespace.
++  const run = json(`${prefix}run.json`);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:43: trailing whitespace.
++  assert.equal(run.exitCode, expectedCode, `${stage} actual exit`);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:44: trailing whitespace.
++  assert.equal(run.signal, null);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:45: trailing whitespace.
++  assert.equal(run.error, null);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:46: trailing whitespace.
++  assert.equal(sha256(bytes(`${prefix}stdout.txt`)), run.stdoutSha256);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:47: trailing whitespace.
++  assert.equal(sha256(bytes(`${prefix}stderr.txt`)), run.stderrSha256);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:48: trailing whitespace.
++  const stdout = bytes(`${prefix}stdout.txt`).toString('utf8');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:49: trailing whitespace.
++  if (expectedCount !== null) assert.match(stdout, new RegExp(`# tests ${expectedCount}\\r?\\n`));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:50: trailing whitespace.
++  if (expectedCode === 0 && expectedCount !== null) {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:51: trailing whitespace.
++    assert.match(stdout, new RegExp(`# pass ${expectedCount}\\r?\\n`));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:52: trailing whitespace.
++    assert.match(stdout, /# fail 0\r?\n/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:53: trailing whitespace.
++  }
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:54: trailing whitespace.
++  return { run, stdout };
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:55: trailing whitespace.
++}
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:56: trailing whitespace.
++
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:57: trailing whitespace.
++test('exact source acceptance, portable contract, frozen unit and packet remain verified', () => {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:58: trailing whitespace.
++  assert.equal(source.cardId, 'A-S059');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:59: trailing whitespace.
++  assert.equal(source.parentId, 'D-S059');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:60: trailing whitespace.
++  assert.equal(source.packet, 'SC-S059');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:61: trailing whitespace.
++  assert.equal(source.kano, 'S');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:62: trailing whitespace.
++  assert.equal(source.kanoUnit, 'A-S059');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:63: trailing whitespace.
++  for (const excerpt of source.excerpts) {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:64: trailing whitespace.
++    const saved = fs.readFileSync(path.join(evidence, excerpt.destination));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:65: trailing whitespace.
++    assert.equal(sha256(saved), excerpt.rawSha256, `raw source snapshot ${excerpt.destination}`);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:66: trailing whitespace.
++    assert.equal(sha256(canonical(saved)), excerpt.canonicalSha256);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:67: trailing whitespace.
++    assert.equal(sha256(canonical(extract(excerpt.source, excerpt.startMarker, excerpt.endMarker))), excerpt.canonicalSha256);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:68: trailing whitespace.
++  }
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:69: trailing whitespace.
++  assert.match(bytes('evidence\\source-readme-row.snapshot').toString('utf8'),
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:70: trailing whitespace.
++    /\| S059 \| \*\*Configuration-version overlap:\*\* Ensure old and new code interpret shared flags and configuration consistently\./);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:71: trailing whitespace.
++  assert.match(bytes('evidence\\source-backlog-row.snapshot').toString('utf8'),
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:72: trailing whitespace.
++    /Both versions interpret approved shared configuration consistently; incompatible publication is gated\. \| D-S010 \|/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:73: trailing whitespace.
++  assert.match(bytes('evidence\\source-card-row.snapshot').toString('utf8'),
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:74: trailing whitespace.
++    /A-S059 \| D-S059 \| S \| Interpret flags\/configuration with old\/new code; detect divergent meanings of one shared setting\. \| SOURCE/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:75: trailing whitespace.
++  assert.match(bytes('evidence\\source-portable-contract.snapshot').toString('utf8'),
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:76: trailing whitespace.
++    /Training rehearsal - synthetic data - not a live Azure result/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:77: trailing whitespace.
++});
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:78: trailing whitespace.
++
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:79: trailing whitespace.
++test('preserved loadable stub produced a genuine assertion RED before the IaC N/A and green', () => {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:80: trailing whitespace.
++  for (const snapshot of source.redSnapshots) {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:81: trailing whitespace.
++    const saved = fs.readFileSync(path.join(evidence, snapshot.destination));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:82: trailing whitespace.
++    assert.equal(sha256(saved), snapshot.rawSha256);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:83: trailing whitespace.
++    assert.equal(sha256(canonical(saved)), snapshot.canonicalSha256);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:84: trailing whitespace.
++    assert.ok(snapshot.destination.endsWith('.snapshot'));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:85: trailing whitespace.
++    if (snapshot.source !== 'model.js') {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:86: trailing whitespace.
++      assert.equal(sha256(canonical(bytes(snapshot.source))), snapshot.canonicalSha256);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:87: trailing whitespace.
++    }
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:88: trailing whitespace.
++  }
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:89: trailing whitespace.
++  const context = { module: { exports: {} } };
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:90: trailing whitespace.
++  vm.runInNewContext(bytes('evidence\\red\\model.js.snapshot').toString('utf8'), context);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:91: trailing whitespace.
++  const stub = context.module.exports;
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:92: trailing whitespace.
++  assert.equal(stub.transition(stub.createState(), { type: 'inspect' }).check.verdict, 'UNKNOWN');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:93: trailing whitespace.
++  assert.equal(require('..\\model.js').transition(require('..\\model.js').createState(), { type: 'inspect' }).check.verdict, 'PASS');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:94: trailing whitespace.
++  const red = rawRun('red', 1, 1);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:95: trailing whitespace.
++  assert.match(red.stdout, /ERR_ASSERTION/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:96: trailing whitespace.
++  assert.match(red.stdout, /'UNKNOWN' !== 'PASS'/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:97: trailing whitespace.
++  assert.doesNotMatch(red.stdout, /MODULE_NOT_FOUND|Cannot find module|not recognized|ENOENT/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:98: trailing whitespace.
++  const iac = json('evidence\\iac-stage.json');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:99: trailing whitespace.
++  const green = rawRun('green', 0, 18);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:100: trailing whitespace.
++  assert.equal(iac.status, 'N/A');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:101: trailing whitespace.
++  assert.ok(Date.parse(source.capturedAtUtc) <= Date.parse(red.run.startedAtUtc));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:102: trailing whitespace.
++  assert.ok(Date.parse(red.run.finishedAtUtc) <= Date.parse(iac.recordedAtUtc));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:103: trailing whitespace.
++  assert.ok(Date.parse(iac.recordedAtUtc) < Date.parse(green.run.startedAtUtc));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:104: trailing whitespace.
++});
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:105: trailing whitespace.
++
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:106: trailing whitespace.
++test('saved raw provenance and CRLF snapshots remain exact, including Git clean filtering', () => {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:107: trailing whitespace.
++  assert.ok(inventory.rawEvidence.length > 10);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:108: trailing whitespace.
++  for (const entry of inventory.rawEvidence) {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:109: trailing whitespace.
++    const value = bytes(entry.file);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:110: trailing whitespace.
++    assert.equal(sha256(value), entry.rawSha256, entry.file);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:111: trailing whitespace.
++    assert.equal(gitFilteredId(entry.file, value), blobId(value), `${entry.file} must be -text`);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:112: trailing whitespace.
++  }
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:113: trailing whitespace.
++  const attributes = bytes('.gitattributes').toString('utf8');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:114: trailing whitespace.
++  for (const rule of ['evidence/raw/** -text', 'evidence/red/** -text', 'evidence/source-*.snapshot -text']) {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:115: trailing whitespace.
++    assert.ok(attributes.includes(rule), rule);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:116: trailing whitespace.
++  }
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:117: trailing whitespace.
++});
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:118: trailing whitespace.
++
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:119: trailing whitespace.
++test('current lesson and test sources match canonical LF hashes that Git will publish', () => {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:120: trailing whitespace.
++  assert.equal(inventory.cardId, 'A-S059');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:121: trailing whitespace.
++  assert.ok(inventory.sources.length >= 12);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:122: trailing whitespace.
++  for (const entry of inventory.sources) {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:123: trailing whitespace.
++    const value = bytes(entry.file);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:124: trailing whitespace.
++    const clean = canonical(value);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:125: trailing whitespace.
++    assert.equal(sha256(clean), entry.canonicalSha256, entry.file);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:126: trailing whitespace.
++    assert.equal(gitFilteredId(entry.file, value), blobId(clean), `Git canonical source ${entry.file}`);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:127: trailing whitespace.
++  }
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:128: trailing whitespace.
++  const commit = process.env.S059_GIT_COMMIT;
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:129: trailing whitespace.
++  if (commit) {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:130: trailing whitespace.
++    assert.match(commit, /^[a-f0-9]{40}$/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:131: trailing whitespace.
++    for (const entry of [...inventory.sources, ...inventory.rawEvidence]) {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:132: trailing whitespace.
++      const objectPath = `learning/S059/${entry.file.replace(/\\/g, '/')}`;
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:133: trailing whitespace.
++      const value = execFileSync('git', ['cat-file', 'blob', `${commit}:${objectPath}`], { cwd: root, windowsHide: true });
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:134: trailing whitespace.
++      assert.equal(sha256(entry.rawSha256 ? value : canonical(value)),
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:135: trailing whitespace.
++        entry.rawSha256 || entry.canonicalSha256, `published Git blob ${entry.file}`);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:136: trailing whitespace.
++    }
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:137: trailing whitespace.
++  }
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:138: trailing whitespace.
++});
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:139: trailing whitespace.
++
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:140: trailing whitespace.
++test('actual browser proof binds executed sources, all twelve checkpoints and awaited cleanup', () => {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:141: trailing whitespace.
++  const proof = json('evidence\\raw\\browser-session.json');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:142: trailing whitespace.
++  const signature = json('evidence\\raw\\edge-signature.json');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:143: trailing whitespace.
++  assert.equal(proof.cardId, 'A-S059');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:144: trailing whitespace.
++  assert.equal(proof.mode, 'synthetic');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:145: trailing whitespace.
++  assert.equal(proof.playwright, '1.56.1');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:146: trailing whitespace.
++  assert.match(proof.node, /^v22\./);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:147: trailing whitespace.
++  assert.match(proof.browser, /^156\./);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:148: trailing whitespace.
++  assert.equal(proof.browser, signature.version);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:149: trailing whitespace.
++  assert.equal(signature.signatureStatus, 'Valid');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:150: trailing whitespace.
++  assert.match(signature.signer, /Microsoft Corporation/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:151: trailing whitespace.
++  assert.equal(signature.downloadsPerformed, false);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:152: trailing whitespace.
++  assert.equal(signature.chromiumSandbox, true);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:153: trailing whitespace.
++  assert.equal(proof.checks.length, 12);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:154: trailing whitespace.
++  assert.ok(proof.checks.every((entry) => entry.observed));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:155: trailing whitespace.
++  assert.equal(proof.sessionClosed, true);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:156: trailing whitespace.
++  assert.deepEqual(proof.pageErrors, []);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:157: trailing whitespace.
++  assert.equal(proof.externalRoutedRequests, 0);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:158: trailing whitespace.
++  assert.equal(proof.finalDOM.gate, 'NOT CHECKED');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:159: trailing whitespace.
++  assert.equal(proof.finalDOM.publication, 'Nothing published.');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:160: trailing whitespace.
++  assert.equal(proof.finalDOM.focused, 'schema');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:161: trailing whitespace.
++  for (const entry of proof.sources) {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:162: trailing whitespace.
++    assert.equal(sha256(canonical(bytes(entry.file))), entry.canonicalSha256, `browser-executed source ${entry.file}`);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:163: trailing whitespace.
++  }
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:164: trailing whitespace.
++  const csp = proof.checks.find((entry) => entry.name.startsWith('enforced CSP')).observed;
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:165: trailing whitespace.
++  assert.equal(csp.inlineExecuted, false);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:166: trailing whitespace.
++  assert.equal(csp.externalRoutedRequests, 0);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:167: trailing whitespace.
++  assert.ok(csp.violations.some((entry) => entry.directive === 'connect-src'));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:168: trailing whitespace.
++  rawRun('browser', 0, 13);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:169: trailing whitespace.
++});
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:170: trailing whitespace.
++
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:171: trailing whitespace.
++test('only the published approved browser helper and explicit offline tooling are qualified', () => {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:172: trailing whitespace.
++  const value = fs.readFileSync(path.join(root, source.helper.path));
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:173: trailing whitespace.
++  assert.equal(sha256(canonical(value)), source.helper.canonicalSha256);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:174: trailing whitespace.
++  assert.equal(source.helper.approvedRawSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:175: trailing whitespace.
++  assert.equal(source.helper.publishedCommit, '53c0c0d');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:176: trailing whitespace.
++  assert.equal(source.tooling.productionNode24Validated, false);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:177: trailing whitespace.
++  const code = bytes('tests\\browser.test.cjs').toString('utf8');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:178: trailing whitespace.
++  assert.match(code, /openIsolatedLesson\('learning\\\\S059\\\\index\.html'\)/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:179: trailing whitespace.
++  assert.match(code, /finally \{\s+await session\.close\(\);/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:180: trailing whitespace.
++  assert.match(code, /process\.env\.CAPTURE_BROWSER_EVIDENCE === '1'/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:181: trailing whitespace.
++  assert.match(code, /if \(capture\) fs\.writeFileSync/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:182: trailing whitespace.
++  assert.doesNotMatch(code, /chromium\.launch|executablePath|--no-sandbox|bypassCSP:\s*true|prototype.*require/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:183: trailing whitespace.
++});
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:184: trailing whitespace.
++
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:185: trailing whitespace.
++test('syntax provenance is successful and any completed integrity capture retains its own raw hashes', () => {
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:186: trailing whitespace.
++  const syntax = rawRun('syntax', 0, null);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:187: trailing whitespace.
++  assert.match(syntax.stdout, /Syntax OK: model\.js/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:188: trailing whitespace.
++  assert.match(syntax.stdout, /Syntax OK: lesson\.js/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:189: trailing whitespace.
++  assert.match(syntax.stdout, /integrity\.test\.cjs/);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:190: trailing whitespace.
++  const runPath = path.join(evidence, 'raw', 'integrity', 'run.json');
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:191: trailing whitespace.
++  if (fs.existsSync(runPath)) rawRun('integrity', 0, 7);
+learning/S059/evidence/raw/integrity/qualifier.source.snapshot:192: trailing whitespace.
++});
+learning/S059/evidence/raw/integrity/stdout.txt:24: trailing whitespace.
++    
+learning/S059/evidence/raw/integrity/stdout.txt:27: trailing whitespace.
++    
+learning/S059/evidence/raw/red/stdout.txt:11: trailing whitespace.
++    
+learning/S059/evidence/raw/red/stdout.txt:13: trailing whitespace.
++    
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:1: trailing whitespace.
++Feature: S059 shared configuration across old and new code
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:2: trailing whitespace.
++  # A-S059 / D-S059 / SC-S059 / frozen Kano S; synthetic learning only.
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:3: trailing whitespace.
++  Background:
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:4: trailing whitespace.
++    Given both synthetic deployments read the same "retryBudget" setting
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:5: trailing whitespace.
++    And the approved retries-v1 schema means extra retries after the first attempt
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:6: trailing whitespace.
++    And the synthetic dependency succeeds on attempt 3
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:7: trailing whitespace.
++    And retries-v1 values are integers from 0 through 4
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:8: trailing whitespace.
++    And attempts-v2 values are integers from 1 through 4
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:9: trailing whitespace.
++    And no setting is published before its exact draft passes inspection
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:10: trailing whitespace.
++
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:11: trailing whitespace.
++  Scenario: Compatible shared setting is interpreted and published consistently
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:12: trailing whitespace.
++    Given retryBudget is 2 in retries-v1
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:13: trailing whitespace.
++    And new code preserves the approved legacy meaning
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:14: trailing whitespace.
++    When I inspect the draft
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:15: trailing whitespace.
++    Then both readers permit 3 total attempts
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:16: trailing whitespace.
++    And 2 synthetic journeys succeed with no failures or unknowns
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:17: trailing whitespace.
++    And the compatibility and publication verdicts are PASS
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:18: trailing whitespace.
++    When I publish the inspected draft
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:19: trailing whitespace.
++    Then that exact configuration is published
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:20: trailing whitespace.
++
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:21: trailing whitespace.
++  Scenario: One shared value has divergent meanings
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:22: trailing whitespace.
++    Given retryBudget is 2 in retries-v1
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:23: trailing whitespace.
++    And new code reinterprets the value as total attempts
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:24: trailing whitespace.
++    When I inspect and attempt publication
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:25: trailing whitespace.
++    Then old code permits 3 attempts and new code permits 2
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:26: trailing whitespace.
++    And compatibility is FAIL and publication is blocked
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:27: trailing whitespace.
++    And 1 synthetic journey fails and the published configuration is unchanged
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:28: trailing whitespace.
++
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:29: trailing whitespace.
++  Scenario: Healthy probes cannot hide divergent meanings
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:30: trailing whitespace.
++    Given retryBudget is 3 in retries-v1
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:31: trailing whitespace.
++    And new code reinterprets the value as total attempts
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:32: trailing whitespace.
++    When I inspect the draft
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:33: trailing whitespace.
++    Then both synthetic journeys succeed
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:34: trailing whitespace.
++    But the meanings still disagree and publication is blocked
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:35: trailing whitespace.
++
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:36: trailing whitespace.
++  Scenario: A new schema is not supported by the old reader
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:37: trailing whitespace.
++    Given retryBudget is 3 in attempts-v2
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:38: trailing whitespace.
++    When I inspect and attempt publication
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:39: trailing whitespace.
++    Then old code explicitly rejects that schema
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:40: trailing whitespace.
++    And publication is blocked without pretending the old reader was migrated
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:41: trailing whitespace.
++
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:42: trailing whitespace.
++  Scenario: Missing new-reader evidence is unknown
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:43: trailing whitespace.
++    Given retryBudget is 2 in retries-v1
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:44: trailing whitespace.
++    And the new reader observation is unavailable
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:45: trailing whitespace.
++    When I inspect and attempt publication
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:46: trailing whitespace.
++    Then 1 synthetic journey is unknown and none is inferred successful
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:47: trailing whitespace.
++    And compatibility and publication are UNKNOWN and publication is blocked
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:48: trailing whitespace.
++
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:49: trailing whitespace.
++  Scenario: Consistent meanings do not guarantee a completed journey
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:50: trailing whitespace.
++    Given retryBudget is 1 in retries-v1
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:51: trailing whitespace.
++    And new code preserves the approved legacy meaning
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:52: trailing whitespace.
++    When I inspect the draft
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:53: trailing whitespace.
++    Then compatibility is PASS but both journeys fail before attempt 3
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:54: trailing whitespace.
++    And the overall verdict is FAIL and publication is blocked
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:55: trailing whitespace.
++
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:56: trailing whitespace.
++  Scenario: An edit invalidates an earlier passing check
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:57: trailing whitespace.
++    Given a passing draft was inspected
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:58: trailing whitespace.
++    When I edit its value or reader or schema
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:59: trailing whitespace.
++    And attempt publication without inspecting the new draft
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:60: trailing whitespace.
++    Then publication is blocked as unchecked
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:61: trailing whitespace.
++    And earlier measured outcomes remain in history
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:62: trailing whitespace.
++
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:63: trailing whitespace.
++  Scenario: Recovery cannot erase a measured failure
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:64: trailing whitespace.
++    Given a divergent configuration failed inspection and publication
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:65: trailing whitespace.
++    When I restore compatible code, inspect and publish
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:66: trailing whitespace.
++    Then the compatible publication succeeds
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:67: trailing whitespace.
++    And all earlier failure and blocked-publication records remain visible
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:68: trailing whitespace.
++
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:69: trailing whitespace.
++  Scenario: Invalid inputs and forged states cannot change a publication
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:70: trailing whitespace.
++    Given a valid published configuration
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:71: trailing whitespace.
++    When I submit a non-integer, out-of-range, extra-field or unknown-enum input
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:72: trailing whitespace.
++    Or submit a malformed state or forged passing check
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:73: trailing whitespace.
++    Then the operation raises an explicit validation error without mutation
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:74: trailing whitespace.
++
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:75: trailing whitespace.
++  Scenario: History is bounded without silently dropping evidence
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:76: trailing whitespace.
++    Given 16 measured actions are retained
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:77: trailing whitespace.
++    When I request another measured action
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:78: trailing whitespace.
++    Then it is refused until explicit reset
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:79: trailing whitespace.
++    And all 16 previous records remain unchanged
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:80: trailing whitespace.
++
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:81: trailing whitespace.
++  Scenario: Keyboard, error, reset and browser boundaries are real
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:82: trailing whitespace.
++    Given the standalone lesson is opened with its restrictive CSP
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:83: trailing whitespace.
++    Then the exact synthetic training banner is visible
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:84: trailing whitespace.
++    And all operator controls have labels and keyboard focus
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:85: trailing whitespace.
++    When I inspect, publish, encounter an input error and explicitly reset using keys
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:86: trailing whitespace.
++    Then results and retained history are rendered from the model
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:87: trailing whitespace.
++    And invalid input is announced without changing measured state
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:88: trailing whitespace.
++    And reset restores defaults, clears only local history and focuses the schema control
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:89: trailing whitespace.
++    And inline script execution and network connections remain blocked
+learning/S059/evidence/red/configuration-overlap.feature.snapshot:90: trailing whitespace.
++    And no native Azure, Node.js 24 production or distributed-configuration result is claimed
+learning/S059/evidence/red/model.js.snapshot:1: trailing whitespace.
++(function (root, factory) {
+learning/S059/evidence/red/model.js.snapshot:2: trailing whitespace.
++  'use strict';
+learning/S059/evidence/red/model.js.snapshot:3: trailing whitespace.
++  const api = factory();
+learning/S059/evidence/red/model.js.snapshot:4: trailing whitespace.
++  if (typeof module === 'object' && module.exports) module.exports = api;
+learning/S059/evidence/red/model.js.snapshot:5: trailing whitespace.
++  else root.S059 = api;
+learning/S059/evidence/red/model.js.snapshot:6: trailing whitespace.
++}(typeof globalThis === 'object' ? globalThis : this, function () {
+learning/S059/evidence/red/model.js.snapshot:7: trailing whitespace.
++  'use strict';
+learning/S059/evidence/red/model.js.snapshot:8: trailing whitespace.
++  const DEFAULT = Object.freeze({ schema: 'retries-v1', value: 2, reader: 'compatible' });
+learning/S059/evidence/red/model.js.snapshot:9: trailing whitespace.
++  function createState() {
+learning/S059/evidence/red/model.js.snapshot:10: trailing whitespace.
++    return { version: 1, draft: { ...DEFAULT }, check: null, published: null, history: [], nextId: 1 };
+learning/S059/evidence/red/model.js.snapshot:11: trailing whitespace.
++  }
+learning/S059/evidence/red/model.js.snapshot:12: trailing whitespace.
++  function evaluate(config) {
+learning/S059/evidence/red/model.js.snapshot:13: trailing whitespace.
++    return {
+learning/S059/evidence/red/model.js.snapshot:14: trailing whitespace.
++      config: { ...config }, compatibility: 'UNKNOWN', verdict: 'UNKNOWN',
+learning/S059/evidence/red/model.js.snapshot:15: trailing whitespace.
++      metrics: { attempted: 2, successful: 0, failed: 0, unknown: 2 },
+learning/S059/evidence/red/model.js.snapshot:16: trailing whitespace.
++      readings: [], trace: ['Loadable stub: shared configuration has not been interpreted.'],
+learning/S059/evidence/red/model.js.snapshot:17: trailing whitespace.
++    };
+learning/S059/evidence/red/model.js.snapshot:18: trailing whitespace.
++  }
+learning/S059/evidence/red/model.js.snapshot:19: trailing whitespace.
++  function transition(state, action) {
+learning/S059/evidence/red/model.js.snapshot:20: trailing whitespace.
++    if (action.type === 'edit') return { ...state, draft: { ...action.config }, check: null };
+learning/S059/evidence/red/model.js.snapshot:21: trailing whitespace.
++    if (action.type === 'inspect') return { ...state, check: evaluate(state.draft) };
+learning/S059/evidence/red/model.js.snapshot:22: trailing whitespace.
++    if (action.type === 'publish') return { ...state };
+learning/S059/evidence/red/model.js.snapshot:23: trailing whitespace.
++    throw new TypeError('Unknown action');
+learning/S059/evidence/red/model.js.snapshot:24: trailing whitespace.
++  }
+learning/S059/evidence/red/model.js.snapshot:25: trailing whitespace.
++  return { DEFAULT, MAX_HISTORY: 16, createState, evaluate, transition };
+learning/S059/evidence/red/model.js.snapshot:26: trailing whitespace.
++}));
+learning/S059/evidence/red/model.test.cjs.snapshot:1: trailing whitespace.
++'use strict';
+learning/S059/evidence/red/model.test.cjs.snapshot:2: trailing whitespace.
++const test = require('node:test');
+learning/S059/evidence/red/model.test.cjs.snapshot:3: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S059/evidence/red/model.test.cjs.snapshot:4: trailing whitespace.
++const { DEFAULT, MAX_HISTORY, createState, evaluate, transition } = require('..\\model.js');
+learning/S059/evidence/red/model.test.cjs.snapshot:5: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:6: trailing whitespace.
++const config = (changes = {}) => ({ ...DEFAULT, ...changes });
+learning/S059/evidence/red/model.test.cjs.snapshot:7: trailing whitespace.
++const edit = (state, changes) => transition(state, { type: 'edit', config: config(changes) });
+learning/S059/evidence/red/model.test.cjs.snapshot:8: trailing whitespace.
++const inspect = (state) => transition(state, { type: 'inspect' });
+learning/S059/evidence/red/model.test.cjs.snapshot:9: trailing whitespace.
++const publish = (state) => transition(state, { type: 'publish' });
+learning/S059/evidence/red/model.test.cjs.snapshot:10: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:11: trailing whitespace.
++test('compatible shared configuration permits the same three attempts and gated publication', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:12: trailing whitespace.
++  const initial = createState();
+learning/S059/evidence/red/model.test.cjs.snapshot:13: trailing whitespace.
++  const checked = inspect(initial);
+learning/S059/evidence/red/model.test.cjs.snapshot:14: trailing whitespace.
++  assert.equal(checked.check.verdict, 'PASS', 'approved shared meaning must pass before publication');
+learning/S059/evidence/red/model.test.cjs.snapshot:15: trailing whitespace.
++  assert.equal(checked.check.compatibility, 'PASS');
+learning/S059/evidence/red/model.test.cjs.snapshot:16: trailing whitespace.
++  assert.deepEqual(checked.check.readings.map((row) => row.totalAttempts), [3, 3]);
+learning/S059/evidence/red/model.test.cjs.snapshot:17: trailing whitespace.
++  assert.deepEqual(checked.check.metrics, { attempted: 2, successful: 2, failed: 0, unknown: 0 });
+learning/S059/evidence/red/model.test.cjs.snapshot:18: trailing whitespace.
++  assert.equal(initial.history.length, 0);
+learning/S059/evidence/red/model.test.cjs.snapshot:19: trailing whitespace.
++  const published = publish(checked);
+learning/S059/evidence/red/model.test.cjs.snapshot:20: trailing whitespace.
++  assert.deepEqual(published.published, config());
+learning/S059/evidence/red/model.test.cjs.snapshot:21: trailing whitespace.
++  assert.deepEqual(published.history.map((entry) => entry.outcome), ['PASS', 'published']);
+learning/S059/evidence/red/model.test.cjs.snapshot:22: trailing whitespace.
++});
+learning/S059/evidence/red/model.test.cjs.snapshot:23: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:24: trailing whitespace.
++test('one shared setting with divergent meanings fails and never replaces an approved publication', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:25: trailing whitespace.
++  const approved = publish(inspect(createState()));
+learning/S059/evidence/red/model.test.cjs.snapshot:26: trailing whitespace.
++  const checked = inspect(edit(approved, { reader: 'reinterpreted' }));
+learning/S059/evidence/red/model.test.cjs.snapshot:27: trailing whitespace.
++  assert.equal(checked.check.compatibility, 'FAIL');
+learning/S059/evidence/red/model.test.cjs.snapshot:28: trailing whitespace.
++  assert.equal(checked.check.verdict, 'FAIL');
+learning/S059/evidence/red/model.test.cjs.snapshot:29: trailing whitespace.
++  assert.deepEqual(checked.check.readings.map((row) => row.totalAttempts), [3, 2]);
+learning/S059/evidence/red/model.test.cjs.snapshot:30: trailing whitespace.
++  assert.deepEqual(checked.check.metrics, { attempted: 2, successful: 1, failed: 1, unknown: 0 });
+learning/S059/evidence/red/model.test.cjs.snapshot:31: trailing whitespace.
++  assert.equal(checked.check.userImpact, 'synthetic-interruption');
+learning/S059/evidence/red/model.test.cjs.snapshot:32: trailing whitespace.
++  const blocked = publish(checked);
+learning/S059/evidence/red/model.test.cjs.snapshot:33: trailing whitespace.
++  assert.deepEqual(blocked.published, approved.published);
+learning/S059/evidence/red/model.test.cjs.snapshot:34: trailing whitespace.
++  assert.equal(blocked.history.at(-1).outcome, 'blocked');
+learning/S059/evidence/red/model.test.cjs.snapshot:35: trailing whitespace.
++  assert.match(blocked.history.at(-1).reason, /FAIL/);
+learning/S059/evidence/red/model.test.cjs.snapshot:36: trailing whitespace.
++});
+learning/S059/evidence/red/model.test.cjs.snapshot:37: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:38: trailing whitespace.
++test('both journeys succeeding does not conceal divergent configuration meanings', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:39: trailing whitespace.
++  const result = evaluate(config({ value: 3, reader: 'reinterpreted' }));
+learning/S059/evidence/red/model.test.cjs.snapshot:40: trailing whitespace.
++  assert.deepEqual(result.readings.map((row) => row.totalAttempts), [4, 3]);
+learning/S059/evidence/red/model.test.cjs.snapshot:41: trailing whitespace.
++  assert.equal(result.metrics.successful, 2);
+learning/S059/evidence/red/model.test.cjs.snapshot:42: trailing whitespace.
++  assert.equal(result.compatibility, 'FAIL');
+learning/S059/evidence/red/model.test.cjs.snapshot:43: trailing whitespace.
++  assert.equal(result.verdict, 'FAIL');
+learning/S059/evidence/red/model.test.cjs.snapshot:44: trailing whitespace.
++  assert.match(result.reason, /meaning/);
+learning/S059/evidence/red/model.test.cjs.snapshot:45: trailing whitespace.
++});
+learning/S059/evidence/red/model.test.cjs.snapshot:46: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:47: trailing whitespace.
++test('new schema explicitly fails the old reader rather than pretending it was upgraded', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:48: trailing whitespace.
++  const result = evaluate(config({ schema: 'attempts-v2', value: 3 }));
+learning/S059/evidence/red/model.test.cjs.snapshot:49: trailing whitespace.
++  assert.equal(result.readings[0].status, 'unsupported');
+learning/S059/evidence/red/model.test.cjs.snapshot:50: trailing whitespace.
++  assert.equal(result.readings[0].totalAttempts, null);
+learning/S059/evidence/red/model.test.cjs.snapshot:51: trailing whitespace.
++  assert.equal(result.readings[0].journey, 'failure');
+learning/S059/evidence/red/model.test.cjs.snapshot:52: trailing whitespace.
++  assert.equal(result.readings[1].totalAttempts, 3);
+learning/S059/evidence/red/model.test.cjs.snapshot:53: trailing whitespace.
++  assert.equal(result.compatibility, 'FAIL');
+learning/S059/evidence/red/model.test.cjs.snapshot:54: trailing whitespace.
++  assert.equal(result.verdict, 'FAIL');
+learning/S059/evidence/red/model.test.cjs.snapshot:55: trailing whitespace.
++  assert.deepEqual(result.metrics, { attempted: 2, successful: 1, failed: 1, unknown: 0 });
+learning/S059/evidence/red/model.test.cjs.snapshot:56: trailing whitespace.
++});
+learning/S059/evidence/red/model.test.cjs.snapshot:57: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:58: trailing whitespace.
++test('missing new-reader evidence remains unknown and cannot authorize publication', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:59: trailing whitespace.
++  const checked = inspect(edit(createState(), { reader: 'unobserved' }));
+learning/S059/evidence/red/model.test.cjs.snapshot:60: trailing whitespace.
++  const result = checked.check;
+learning/S059/evidence/red/model.test.cjs.snapshot:61: trailing whitespace.
++  assert.equal(result.compatibility, 'UNKNOWN');
+learning/S059/evidence/red/model.test.cjs.snapshot:62: trailing whitespace.
++  assert.equal(result.verdict, 'UNKNOWN');
+learning/S059/evidence/red/model.test.cjs.snapshot:63: trailing whitespace.
++  assert.equal(result.userImpact, 'unverified');
+learning/S059/evidence/red/model.test.cjs.snapshot:64: trailing whitespace.
++  assert.deepEqual(result.metrics, { attempted: 2, successful: 1, failed: 0, unknown: 1 });
+learning/S059/evidence/red/model.test.cjs.snapshot:65: trailing whitespace.
++  const blocked = publish(checked);
+learning/S059/evidence/red/model.test.cjs.snapshot:66: trailing whitespace.
++  assert.equal(blocked.published, null);
+learning/S059/evidence/red/model.test.cjs.snapshot:67: trailing whitespace.
++  assert.equal(blocked.history.at(-1).outcome, 'blocked');
+learning/S059/evidence/red/model.test.cjs.snapshot:68: trailing whitespace.
++  assert.match(blocked.history.at(-1).reason, /UNKNOWN/);
+learning/S059/evidence/red/model.test.cjs.snapshot:69: trailing whitespace.
++});
+learning/S059/evidence/red/model.test.cjs.snapshot:70: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:71: trailing whitespace.
++test('consistent configuration still fails the gate when the bounded journey cannot finish', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:72: trailing whitespace.
++  const result = evaluate(config({ value: 1 }));
+learning/S059/evidence/red/model.test.cjs.snapshot:73: trailing whitespace.
++  assert.equal(result.compatibility, 'PASS');
+learning/S059/evidence/red/model.test.cjs.snapshot:74: trailing whitespace.
++  assert.equal(result.verdict, 'FAIL');
+learning/S059/evidence/red/model.test.cjs.snapshot:75: trailing whitespace.
++  assert.deepEqual(result.metrics, { attempted: 2, successful: 0, failed: 2, unknown: 0 });
+learning/S059/evidence/red/model.test.cjs.snapshot:76: trailing whitespace.
++  assert.deepEqual(result.readings.map((row) => row.usedAttempts), [2, 2]);
+learning/S059/evidence/red/model.test.cjs.snapshot:77: trailing whitespace.
++  const zero = evaluate(config({ value: 0 }));
+learning/S059/evidence/red/model.test.cjs.snapshot:78: trailing whitespace.
++  assert.deepEqual(zero.readings.map((row) => row.totalAttempts), [1, 1]);
+learning/S059/evidence/red/model.test.cjs.snapshot:79: trailing whitespace.
++  assert.equal(zero.metrics.failed, 2);
+learning/S059/evidence/red/model.test.cjs.snapshot:80: trailing whitespace.
++});
+learning/S059/evidence/red/model.test.cjs.snapshot:81: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:82: trailing whitespace.
++test('known failure dominates missing evidence without dropping unknown outcomes', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:83: trailing whitespace.
++  const result = evaluate(config({ value: 0, reader: 'unobserved' }));
+learning/S059/evidence/red/model.test.cjs.snapshot:84: trailing whitespace.
++  assert.equal(result.compatibility, 'UNKNOWN');
+learning/S059/evidence/red/model.test.cjs.snapshot:85: trailing whitespace.
++  assert.equal(result.verdict, 'FAIL');
+learning/S059/evidence/red/model.test.cjs.snapshot:86: trailing whitespace.
++  assert.deepEqual(result.metrics, { attempted: 2, successful: 0, failed: 1, unknown: 1 });
+learning/S059/evidence/red/model.test.cjs.snapshot:87: trailing whitespace.
++});
+learning/S059/evidence/red/model.test.cjs.snapshot:88: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:89: trailing whitespace.
++test('edits invalidate exact-draft authorization and preserve earlier measurements', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:90: trailing whitespace.
++  for (const changes of [{ value: 3 }, { reader: 'reinterpreted' }, { schema: 'attempts-v2' }]) {
+learning/S059/evidence/red/model.test.cjs.snapshot:91: trailing whitespace.
++    const checked = inspect(createState());
+learning/S059/evidence/red/model.test.cjs.snapshot:92: trailing whitespace.
++    const changed = edit(checked, changes);
+learning/S059/evidence/red/model.test.cjs.snapshot:93: trailing whitespace.
++    assert.equal(changed.check, null);
+learning/S059/evidence/red/model.test.cjs.snapshot:94: trailing whitespace.
++    assert.deepEqual(changed.history, checked.history);
+learning/S059/evidence/red/model.test.cjs.snapshot:95: trailing whitespace.
++    const blocked = publish(changed);
+learning/S059/evidence/red/model.test.cjs.snapshot:96: trailing whitespace.
++    assert.equal(blocked.published, null);
+learning/S059/evidence/red/model.test.cjs.snapshot:97: trailing whitespace.
++    assert.equal(blocked.history.at(-1).outcome, 'blocked');
+learning/S059/evidence/red/model.test.cjs.snapshot:98: trailing whitespace.
++    assert.match(blocked.history.at(-1).reason, /inspect this exact draft/i);
+learning/S059/evidence/red/model.test.cjs.snapshot:99: trailing whitespace.
++  }
+learning/S059/evidence/red/model.test.cjs.snapshot:100: trailing whitespace.
++});
+learning/S059/evidence/red/model.test.cjs.snapshot:101: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:102: trailing whitespace.
++test('failure and blocked attempts remain after compatible recovery', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:103: trailing whitespace.
++  let state = publish(inspect(edit(createState(), { reader: 'reinterpreted' })));
+learning/S059/evidence/red/model.test.cjs.snapshot:104: trailing whitespace.
++  const failureRecords = JSON.stringify(state.history);
+learning/S059/evidence/red/model.test.cjs.snapshot:105: trailing whitespace.
++  state = publish(inspect(edit(state, {})));
+learning/S059/evidence/red/model.test.cjs.snapshot:106: trailing whitespace.
++  assert.equal(state.published.reader, 'compatible');
+learning/S059/evidence/red/model.test.cjs.snapshot:107: trailing whitespace.
++  assert.equal(JSON.stringify(state.history.slice(0, 2)), failureRecords);
+learning/S059/evidence/red/model.test.cjs.snapshot:108: trailing whitespace.
++  assert.deepEqual(state.history.map((entry) => entry.outcome), ['FAIL', 'blocked', 'PASS', 'published']);
+learning/S059/evidence/red/model.test.cjs.snapshot:109: trailing whitespace.
++});
+learning/S059/evidence/red/model.test.cjs.snapshot:110: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:111: trailing whitespace.
++test('strict config and action guards reject invalid input without mutating state', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:112: trailing whitespace.
++  const state = publish(inspect(createState()));
+learning/S059/evidence/red/model.test.cjs.snapshot:113: trailing whitespace.
++  const before = JSON.stringify(state);
+learning/S059/evidence/red/model.test.cjs.snapshot:114: trailing whitespace.
++  const bad = [
+learning/S059/evidence/red/model.test.cjs.snapshot:115: trailing whitespace.
++    null, [], {}, config({ value: '2' }), config({ value: 2.5 }), config({ value: NaN }),
+learning/S059/evidence/red/model.test.cjs.snapshot:116: trailing whitespace.
++    config({ value: Infinity }), config({ value: -1 }), config({ value: 5 }),
+learning/S059/evidence/red/model.test.cjs.snapshot:117: trailing whitespace.
++    config({ schema: 'attempts-v2', value: 0 }), config({ schema: '__proto__' }),
+learning/S059/evidence/red/model.test.cjs.snapshot:118: trailing whitespace.
++    config({ reader: 'unknown' }), { ...config(), arbitrary: true },
+learning/S059/evidence/red/model.test.cjs.snapshot:119: trailing whitespace.
++    Object.assign(Object.create({ inherited: true }), config()),
+learning/S059/evidence/red/model.test.cjs.snapshot:120: trailing whitespace.
++  ];
+learning/S059/evidence/red/model.test.cjs.snapshot:121: trailing whitespace.
++  for (const input of bad) {
+learning/S059/evidence/red/model.test.cjs.snapshot:122: trailing whitespace.
++    assert.throws(() => evaluate(input), /config|schema|reader|value/i);
+learning/S059/evidence/red/model.test.cjs.snapshot:123: trailing whitespace.
++    assert.throws(() => transition(state, { type: 'edit', config: input }), /config|schema|reader|value/i);
+learning/S059/evidence/red/model.test.cjs.snapshot:124: trailing whitespace.
++  }
+learning/S059/evidence/red/model.test.cjs.snapshot:125: trailing whitespace.
++  for (const action of [null, {}, { type: 'delete' }, { type: 'inspect', extra: 1 }]) {
+learning/S059/evidence/red/model.test.cjs.snapshot:126: trailing whitespace.
++    assert.throws(() => transition(state, action), /action/i);
+learning/S059/evidence/red/model.test.cjs.snapshot:127: trailing whitespace.
++  }
+learning/S059/evidence/red/model.test.cjs.snapshot:128: trailing whitespace.
++  assert.equal(JSON.stringify(state), before);
+learning/S059/evidence/red/model.test.cjs.snapshot:129: trailing whitespace.
++});
+learning/S059/evidence/red/model.test.cjs.snapshot:130: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:131: trailing whitespace.
++test('malformed state, forged check, publication and history are rejected', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:132: trailing whitespace.
++  const checked = inspect(createState());
+learning/S059/evidence/red/model.test.cjs.snapshot:133: trailing whitespace.
++  const clone = () => JSON.parse(JSON.stringify(checked));
+learning/S059/evidence/red/model.test.cjs.snapshot:134: trailing whitespace.
++  const cases = [null, {}, { ...clone(), nextId: -1 }, { ...clone(), version: 2 },
+learning/S059/evidence/red/model.test.cjs.snapshot:135: trailing whitespace.
++    { ...clone(), history: 'wrong' }, { ...clone(), extra: true }];
+learning/S059/evidence/red/model.test.cjs.snapshot:136: trailing whitespace.
++  const forgedCheck = clone();
+learning/S059/evidence/red/model.test.cjs.snapshot:137: trailing whitespace.
++  forgedCheck.check.config.reader = 'reinterpreted';
+learning/S059/evidence/red/model.test.cjs.snapshot:138: trailing whitespace.
++  cases.push(forgedCheck);
+learning/S059/evidence/red/model.test.cjs.snapshot:139: trailing whitespace.
++  const forgedVerdict = clone();
+learning/S059/evidence/red/model.test.cjs.snapshot:140: trailing whitespace.
++  forgedVerdict.check.verdict = 'UNKNOWN';
+learning/S059/evidence/red/model.test.cjs.snapshot:141: trailing whitespace.
++  cases.push(forgedVerdict);
+learning/S059/evidence/red/model.test.cjs.snapshot:142: trailing whitespace.
++  const forgedPublication = clone();
+learning/S059/evidence/red/model.test.cjs.snapshot:143: trailing whitespace.
++  forgedPublication.published = config();
+learning/S059/evidence/red/model.test.cjs.snapshot:144: trailing whitespace.
++  cases.push(forgedPublication);
+learning/S059/evidence/red/model.test.cjs.snapshot:145: trailing whitespace.
++  const forgedHistory = clone();
+learning/S059/evidence/red/model.test.cjs.snapshot:146: trailing whitespace.
++  forgedHistory.history[0].outcome = 'UNKNOWN';
+learning/S059/evidence/red/model.test.cjs.snapshot:147: trailing whitespace.
++  cases.push(forgedHistory);
+learning/S059/evidence/red/model.test.cjs.snapshot:148: trailing whitespace.
++  for (const state of cases) assert.throws(() => publish(state), /state|check|history|publication/i);
+learning/S059/evidence/red/model.test.cjs.snapshot:149: trailing whitespace.
++});
+learning/S059/evidence/red/model.test.cjs.snapshot:150: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:151: trailing whitespace.
++test('history has a hard bound and never silently evicts an earlier result', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:152: trailing whitespace.
++  let state = createState();
+learning/S059/evidence/red/model.test.cjs.snapshot:153: trailing whitespace.
++  for (let i = 0; i < MAX_HISTORY; i++) state = inspect(state);
+learning/S059/evidence/red/model.test.cjs.snapshot:154: trailing whitespace.
++  assert.equal(state.history.length, 16);
+learning/S059/evidence/red/model.test.cjs.snapshot:155: trailing whitespace.
++  const before = JSON.stringify(state);
+learning/S059/evidence/red/model.test.cjs.snapshot:156: trailing whitespace.
++  assert.throws(() => inspect(state), /history.*full/i);
+learning/S059/evidence/red/model.test.cjs.snapshot:157: trailing whitespace.
++  assert.throws(() => publish(state), /history.*full/i);
+learning/S059/evidence/red/model.test.cjs.snapshot:158: trailing whitespace.
++  assert.equal(JSON.stringify(state), before);
+learning/S059/evidence/red/model.test.cjs.snapshot:159: trailing whitespace.
++  assert.equal(state.history[0].id, 1);
+learning/S059/evidence/red/model.test.cjs.snapshot:160: trailing whitespace.
++  assert.equal(state.history.at(-1).id, 16);
+learning/S059/evidence/red/model.test.cjs.snapshot:161: trailing whitespace.
++  const fresh = createState();
+learning/S059/evidence/red/model.test.cjs.snapshot:162: trailing whitespace.
++  assert.equal(fresh.history.length, 0);
+learning/S059/evidence/red/model.test.cjs.snapshot:163: trailing whitespace.
++  assert.deepEqual(fresh.draft, config());
+learning/S059/evidence/red/model.test.cjs.snapshot:164: trailing whitespace.
++});
+learning/S059/evidence/red/model.test.cjs.snapshot:165: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:166: trailing whitespace.
++test('all bounded supported combinations are deterministic with complete accounting', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:167: trailing whitespace.
++  for (const schema of ['retries-v1', 'attempts-v2']) {
+learning/S059/evidence/red/model.test.cjs.snapshot:168: trailing whitespace.
++    for (const reader of ['compatible', 'reinterpreted', 'unobserved']) {
+learning/S059/evidence/red/model.test.cjs.snapshot:169: trailing whitespace.
++      for (let value = schema === 'retries-v1' ? 0 : 1; value <= 4; value++) {
+learning/S059/evidence/red/model.test.cjs.snapshot:170: trailing whitespace.
++        const input = config({ schema, reader, value });
+learning/S059/evidence/red/model.test.cjs.snapshot:171: trailing whitespace.
++        const result = evaluate(input);
+learning/S059/evidence/red/model.test.cjs.snapshot:172: trailing whitespace.
++        assert.deepEqual(evaluate(input), result);
+learning/S059/evidence/red/model.test.cjs.snapshot:173: trailing whitespace.
++        assert.equal(result.metrics.attempted, 2);
+learning/S059/evidence/red/model.test.cjs.snapshot:174: trailing whitespace.
++        assert.equal(result.metrics.successful + result.metrics.failed + result.metrics.unknown, 2);
+learning/S059/evidence/red/model.test.cjs.snapshot:175: trailing whitespace.
++        assert.equal(result.readings.length, 2);
+learning/S059/evidence/red/model.test.cjs.snapshot:176: trailing whitespace.
++        if (result.verdict === 'PASS') {
+learning/S059/evidence/red/model.test.cjs.snapshot:177: trailing whitespace.
++          assert.equal(result.compatibility, 'PASS');
+learning/S059/evidence/red/model.test.cjs.snapshot:178: trailing whitespace.
++          assert.equal(result.metrics.successful, 2);
+learning/S059/evidence/red/model.test.cjs.snapshot:179: trailing whitespace.
++        }
+learning/S059/evidence/red/model.test.cjs.snapshot:180: trailing whitespace.
++        assert.ok(result.trace.length >= 3);
+learning/S059/evidence/red/model.test.cjs.snapshot:181: trailing whitespace.
++      }
+learning/S059/evidence/red/model.test.cjs.snapshot:182: trailing whitespace.
++    }
+learning/S059/evidence/red/model.test.cjs.snapshot:183: trailing whitespace.
++  }
+learning/S059/evidence/red/model.test.cjs.snapshot:184: trailing whitespace.
++});
+learning/S059/evidence/red/model.test.cjs.snapshot:185: trailing whitespace.
++
+learning/S059/evidence/red/model.test.cjs.snapshot:186: trailing whitespace.
++test('state, nested checks and historical results are immutable', () => {
+learning/S059/evidence/red/model.test.cjs.snapshot:187: trailing whitespace.
++  const state = publish(inspect(createState()));
+learning/S059/evidence/red/model.test.cjs.snapshot:188: trailing whitespace.
++  assert.ok(Object.isFrozen(state));
+learning/S059/evidence/red/model.test.cjs.snapshot:189: trailing whitespace.
++  assert.ok(Object.isFrozen(state.draft));
+learning/S059/evidence/red/model.test.cjs.snapshot:190: trailing whitespace.
++  assert.ok(Object.isFrozen(state.history));
+learning/S059/evidence/red/model.test.cjs.snapshot:191: trailing whitespace.
++  assert.ok(Object.isFrozen(state.history[0].evaluation.readings[0]));
+learning/S059/evidence/red/model.test.cjs.snapshot:192: trailing whitespace.
++  assert.throws(() => { state.check.verdict = 'UNKNOWN'; }, TypeError);
+learning/S059/evidence/red/model.test.cjs.snapshot:193: trailing whitespace.
++  assert.throws(() => { state.history.length = 0; }, TypeError);
+learning/S059/evidence/red/model.test.cjs.snapshot:194: trailing whitespace.
++});
+learning/S059/evidence/source-atomic-contract.snapshot:1: trailing whitespace.
++## Atomic card contract
+learning/S059/evidence/source-atomic-contract.snapshot:2: trailing whitespace.
++
+learning/S059/evidence/source-atomic-contract.snapshot:3: trailing whitespace.
++Every listed row is one card, one accountable owner/pair, one independently reviewable changeset, and one observable acceptance result. Normal publication is a scoped, labeled commit with an annotated tag on `main`; temporary recovery branches and reviewer-assisted PRs are used only when safe integration requires them.
+learning/S059/evidence/source-atomic-contract.snapshot:4: trailing whitespace.
++
+learning/S059/evidence/source-atomic-contract.snapshot:5: trailing whitespace.
++Implementation order is BDD specification, genuine behavioral TDD red, the IaC step (or an explicit N/A for a resource-free lesson), implementation/refactoring, green tests and actual browser checks, scoped tagged publication, and parent-owned empirical acceptance. A worker cannot award its own Done credit. Subdivision preserves the original `kanoUnit`; partial work does not manufacture extra value.
+learning/S059/evidence/source-atomic-contract.snapshot:6: trailing whitespace.
++
+learning/S059/evidence/source-atomic-contract.snapshot:7: trailing whitespace.
++- **Size target:** A cards take 1-2 focused hours; C, B, and X cards target 2-4 focused hours after entry gates are satisfied. These are slicing limits, not delivery estimates.
+learning/S059/evidence/source-atomic-contract.snapshot:8: trailing whitespace.
++- **Refine before admission:** If a card needs a new research decision, multiple independent behaviors, or more than four focused hours, split it before pulling. Revalidate coverage and Kano classes; artificial splits do not manufacture extra value.
+learning/S059/evidence/source-atomic-contract.snapshot:9: trailing whitespace.
++- **Inputs:** Parent source, versioned contract, named fixture/configuration, technical gate, quota reservation, and any approved lease are available.
+learning/S059/evidence/source-atomic-contract.snapshot:10: trailing whitespace.
++- **Ownership:** One card owns its module/fixture namespace. A and B siblings do not share files, PRs, or mutable test leases.
+learning/S059/evidence/source-atomic-contract.snapshot:11: trailing whitespace.
++- **Done:** Scoped behavior is usable, its stated check passes, relevant tests are automated, review/merge is complete, documentation and evidence are attached, and the behavior is available through its declared preview or harness surface.
+learning/S059/evidence/source-atomic-contract.snapshot:12: trailing whitespace.
++- **Evidence:** Record card/parent IDs, mode, configuration/host, commit, test/run reference, verifier result, user-impact result, cleanup result, owner, reviewer, packet, and accepted time.
+learning/S059/evidence/source-atomic-contract.snapshot:13: trailing whitespace.
++- **No false completion:** A replay is not native evidence. Unsupported/unverified positive behavior cannot pass as a native success. A negative experiment may pass its verifier while clearly reporting interrupted users.
+learning/S059/evidence/source-atomic-contract.snapshot:14: trailing whitespace.
++- **No bonus credits:** Multiple parents, commits, test cases, repeated runs, and duplicated fixtures do not increase a card's Kano count.
+learning/S059/evidence/source-atomic-contract.snapshot:15: trailing whitespace.
++
+learning/S059/evidence/source-atomic-contract.snapshot:15: new blank line at EOF.
+learning/S059/evidence/source-backlog-row.snapshot:1: trailing whitespace.
++| D-S059 | P1 | Add configuration-schema/flag version changes across mixed deployments. | Both versions interpret approved shared configuration consistently; incompatible publication is gated. | D-S010 |
+learning/S059/evidence/source-card-row.snapshot:1: trailing whitespace.
++| A-S059 | D-S059 | S | Interpret flags/configuration with old/new code; detect divergent meanings of one shared setting. | SOURCE |
+learning/S059/evidence/source-dependency-row.snapshot:1: trailing whitespace.
++| D-S010 | P1 | Add **Enable feature by cohort** and **Revert flag** using versioned compatible configuration. | Behavior changes without disruptive deployment; existing sessions and data remain valid; reversal does not conceal earlier failures. | none |
+learning/S059/evidence/source-flag-prerequisite.snapshot:1: trailing whitespace.
++| S010 | **Feature-flag activation:** Deploy compatible code first, then enable behavior progressively without another disruptive deployment. |
+learning/S059/evidence/source-native-row.snapshot:1: trailing whitespace.
++| B-S059 | D-S059 | S | Conduct one configuration-version change; verify mixed readers and explicit incompatible publication. | CORE, DATA, HOST |
+learning/S059/evidence/source-packet-rule.snapshot:1: trailing whitespace.
++Packet membership is fixed before admission. This register overrides default membership for its named cards; every other A/B card belongs to SC-Snnn, and every other capability card belongs to its first listed source parent. A card has one packet, not duplicate packet credits.
+learning/S059/evidence/source-parent-rule.snapshot:1: trailing whitespace.
++## Parent completion and traceability
+learning/S059/evidence/source-parent-rule.snapshot:2: trailing whitespace.
++
+learning/S059/evidence/source-parent-rule.snapshot:3: trailing whitespace.
++- Every one of the 150 D-S parents has exactly two required children: A-Snnn and B-Snnn.
+learning/S059/evidence/source-parent-rule.snapshot:4: trailing whitespace.
++- H001-H012, P001-P007, and W001-W002 are covered by their explicitly mapped C cards; a shared card counts once, not once per parent.
+learning/S059/evidence/source-parent-rule.snapshot:5: trailing whitespace.
++- Optional X cards do not block source-parent acceptance.
+learning/S059/evidence/source-parent-rule.snapshot:6: trailing whitespace.
++- A source parent is complete only when its required children, original prerequisite parents, target-configuration evidence, and all original acceptance clauses pass. The original backlog remains authoritative.
+learning/S059/evidence/source-parent-rule.snapshot:7: trailing whitespace.
++- Component work can proceed against approved contracts before another whole parent is finished; this removes false coding handoffs without removing live-release obligations.
+learning/S059/evidence/source-parent-rule.snapshot:8: trailing whitespace.
++- A-only completion provides a real learning asset but does not establish a native demo, uninterrupted user migration, or five-nines reliability.
+learning/S059/evidence/source-parent-rule.snapshot:9: trailing whitespace.
++- Native proof must preserve the source distinction among verification verdict, user impact, and cleanup. An expected failure can be educationally correct while still recording interrupted users.
+learning/S059/evidence/source-parent-rule.snapshot:10: trailing whitespace.
++- Unfinished functionality, unsupported platforms, proxy outage experiments, and insufficient statistical evidence remain explicitly labeled.
+learning/S059/evidence/source-parent-rule.snapshot:11: trailing whitespace.
++
+learning/S059/evidence/source-parent-rule.snapshot:11: new blank line at EOF.
+learning/S059/evidence/source-portable-contract.snapshot:1: trailing whitespace.
++### Portable A-card lesson contract
+learning/S059/evidence/source-portable-contract.snapshot:2: trailing whitespace.
++
+learning/S059/evidence/source-portable-contract.snapshot:3: trailing whitespace.
++An A card delivers a standalone, browser-openable lesson bundle with a small interactive exercise: choose an action or condition, inspect a synthetic trace, and check the expected outcome. Use standard HTML/browser behavior so an approved application framework or Azure subscription is not needed to begin.
+learning/S059/evidence/source-portable-contract.snapshot:4: trailing whitespace.
++
+learning/S059/evidence/source-portable-contract.snapshot:5: trailing whitespace.
++Each bundle declares source ID, objective, preconditions, actions, synthetic input/trace, expected assertions, and limits. It prominently says **Training rehearsal - synthetic data - not a live Azure result**, makes no management calls, contains no credentials, and supports keyboard operation.
+learning/S059/evidence/source-portable-contract.snapshot:6: trailing whitespace.
++
+learning/S059/evidence/source-portable-contract.snapshot:7: trailing whitespace.
++Each lesson must add a worked, testable exercise rather than copying the backlog sentence. Keep it portable for later mounting by C041. The native implementation and evidence remain a separate B card, and the source demo is not complete until both required slices and its original acceptance gates pass.
+learning/S059/evidence/source-portable-contract.snapshot:8: trailing whitespace.
++
+learning/S059/evidence/source-portable-contract.snapshot:8: new blank line at EOF.
+learning/S059/evidence/source-readme-row.snapshot:1: trailing whitespace.
++| S059 | **Configuration-version overlap:** Ensure old and new code interpret shared flags and configuration consistently. |
