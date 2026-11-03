@@ -1,0 +1,13 @@
+'use strict';
+
+(function expose(root) {
+  const create = () => ({ phase: 'idle', elapsed: 0 });
+  const start = (state, config) => ({ phase: 'warming', elapsed: 0, config });
+  const advance = (state) => ({ ...state, elapsed: state.elapsed + 1 });
+  const abort = (state) => ({ ...state });
+  const archiveReset = () => create();
+  const inspect = (state) => ({ ...state, verdict: 'unknown' });
+  const api = { create, start, advance, abort, archiveReset, inspect };
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.WarmupLesson = api;
+}(globalThis));

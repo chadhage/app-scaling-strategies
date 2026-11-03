@@ -1,0 +1,21 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const lesson = require(process.env.S028_MODEL_PATH
+  ? path.resolve(process.env.S028_MODEL_PATH) : '../warmup.js');
+
+test('deadline explicitly aborts warm-up instead of leaving preparation pending', () => {
+  let state = lesson.start(lesson.create(), {
+    timeout: 3, readyAfter: 5, routing: 'intact', receipt: 'success',
+  });
+  for (let second = 0; second < 3; second += 1) state = lesson.advance(state);
+  const result = lesson.inspect(state);
+  assert.equal(result.phase, 'aborted', 'expired warm-up must explicitly abort');
+  assert.equal(result.reason, 'WARM_UP_TIMEOUT');
+  assert.equal(result.verdict, 'success');
+  assert.equal(result.userOutcome, 'safe abort before exposure');
+  assert.deepEqual(result.commandRouting, { production: 100, candidate: 0 });
+  assert.equal(result.migrations.completed, 0);
+});

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; media-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S028 — Warm-up timeout</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="warmup.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S028 — Warm-up timeout</h1>
+    <p><strong>Objective:</strong> Expire preparation, leave the production routing command intact, and distinguish a safe abort from completed user migration.</p>
+    <p>Source S028: “Warm-up timeout: Abort explicitly and leave existing production routing intact.” D-S028 requires a configurable timeout, <strong>Abort preparation</strong>, a visible error, and a safe-abort result. A-S028 · frozen S · SC-S028 · SOURCE.</p>
+    <section aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">Conduct the rehearsal</h2>
+      <ol>
+        <li>Start the defaults. Advance three synthetic seconds: the deadline aborts warm-up before the candidate is ready.</li>
+        <li>Inspect the timeout error, unchanged 100/0 routing, production receipts and zero migrations. A correct safe abort is not a successful migration.</li>
+        <li>Archive/reset. Try <strong>Abort preparation</strong> early, or readiness at 2 seconds with a 4-second timeout. Early readiness is still preparation only.</li>
+        <li>Choose a drifted/missing routing witness or failed/unknown receipt. The verifier must report failure/unknown instead of assuming continuity.</li>
+      </ol>
+      <p>Precondition: a synthetic existing production version serves all traffic. One request receipt and routing observation are generated at start and each action. Time advances only on a button press; no timers, traffic switches or management calls run. Readiness must arrive strictly before the deadline.</p>
+    </section>
+
+    <form id="preparation-form" novalidate>
+      <fieldset id="configuration">
+        <legend>Bounded synthetic fixture</legend>
+        <div class="fields">
+          <label for="timeout">Warm-up timeout (seconds, 1–12)
+            <input id="timeout" name="timeoutSeconds" type="number" min="1" max="12" step="1" value="3" required>
+          </label>
+          <label for="ready-after">Candidate readiness after (seconds, 1–20)
+            <input id="ready-after" name="readinessSeconds" type="number" min="1" max="20" step="1" value="5" required>
+          </label>
+          <label for="routing">Observed routing witness
+            <select id="routing" name="routingWitness">
+              <option value="intact">Intact — production 100%, candidate 0%</option>
+              <option value="drift">Fault — production 90%, candidate 10%</option>
+              <option value="missing">Missing routing observation</option>
+            </select>
+          </label>
+          <label for="receipt">Production request receipt
+            <select id="receipt" name="receiptWitness">
+              <option value="success">Successful receipt</option>
+              <option value="failure">Interrupted request</option>
+              <option value="unknown">Unknown — receipt missing</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+      <div class="controls">
+        <button id="begin" type="submit">Start preparation</button>
+        <button id="advance" type="button" disabled>Advance 1 synthetic second</button>
+        <button id="abort" type="button" disabled>Abort preparation</button>
+        <button id="archive-run" type="button">Archive and reset</button>
+      </div>
+    </form>
+
+    <p id="validation-error" role="alert" tabindex="-1" hidden></p>
+    <section id="results" aria-labelledby="results-heading" aria-live="polite" tabindex="-1">
+      <h2 id="results-heading">Current run</h2>
+      <p id="phase"></p>
+      <p id="verdict"></p>
+      <p id="user-outcome"></p>
+      <p id="routing-result"></p>
+      <p id="metrics"></p>
+      <p id="migration"></p>
+      <p id="preparation-error" class="notice" hidden></p>
+      <p>Verifier success means only the declared synthetic assertion passed. Migration counters count executed migration operations (none). Drifted or missing routing evidence leaves exposure unverified; weights alone do not prove user migration. A failed request remains an interruption; missing evidence remains unknown.</p>
+    </section>
+
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Deterministic observation trace</h2>
+      <div class="table-wrap">
+        <table>
+          <caption>Start and each action record one synthetic production request; no live traffic is sent.</caption>
+          <thead><tr><th scope="col"># / action</th><th scope="col">Second</th><th scope="col">Phase / reason</th><th scope="col">Command production/candidate</th><th scope="col">Observed production/candidate</th><th scope="col">Receipt</th></tr></thead>
+          <tbody id="trace"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained run history</h2>
+      <p id="history-summary"></p>
+      <p>Up to three complete archives are retained in this page's memory, with counted eviction. Reset aborts an active preparation before archiving it. Empty resets do not consume history. Reload clears all history; there is no persistence.</p>
+      <ol id="history"></ol>
+    </section>
+    <footer>
+      <p>Limits: at most 12 advance actions per run; run identifiers 1–1000. At exhaustion, explicitly reload to clear page memory. Fixture faults are synthetic observations, not actions that alter production.</p>
+      <p>Local resource-free A-S028 only. No Azure resource, deployment, identity, IaC, native B-S028, production Node.js 24, completed D-S028, or five-nines claim is established.</p>
+      <p>Microsoft Open Source Disclaimer: provided as-is without warranties. Synthetic outcomes are not service guarantees. See the repository <a href="../../README.md#microsoft-open-source-disclaimer">disclaimer</a> and <a href="README.md">lesson instructions and evidence</a>.</p>
+    </footer>
+  </main>
+</body>
+</html>
