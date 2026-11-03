@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C020 · getProfile compatibility inspector</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="contract.js"></script>
+  <script defer src="inspector.js"></script>
+  <script defer src="page.js"></script>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">C020 · H005 · local fixture</p>
+    <h1>One profile contract. Two implementations.</h1>
+    <p class="boundary"><strong>Synthetic business data · Loopback HTTP only.</strong> No real identity verification,
+      server authorization, durable store, cloud deployment, slot, or container qualification is provided.</p>
+    <p>v1 and v2 identify implementations, not breaking API contracts. Both preserve <code>getProfile/1</code>.
+      Deployment stamps are fixed local fixture labels, not observations of Azure resources.</p>
+    <p id="runtime">Checking local tooling scope; no production-runtime validation.</p>
+    <form id="inspect-form">
+      <label for="profile-id">Explicit synthetic profile ID</label>
+      <input id="profile-id" name="profileId" value="synthetic-001" maxlength="64" autocomplete="off" spellcheck="false">
+      <p class="hint">Known fixtures: <code>synthetic-001</code> and <code>synthetic-002</code>. Other IDs fail; none default to healthy.</p>
+      <button id="inspect" type="submit" disabled>Inspect both implementations</button>
+    </form>
+    <p id="status" role="status" aria-live="polite">Not run — no profile observations.</p>
+    <section aria-labelledby="compatibility-heading">
+      <h2 id="compatibility-heading">Unchanged old consumer</h2>
+      <pre id="compatibility">No verified compatibility result.</pre>
+    </section>
+    <section aria-labelledby="stamps-heading">
+      <h2 id="stamps-heading">Server-owned version stamps</h2>
+      <pre id="stamps">No observed stamps.</pre>
+    </section>
+    <div class="responses">
+      <section aria-labelledby="v1-heading"><h2 id="v1-heading">v1 response</h2><pre id="v1">No observation.</pre></section>
+      <section aria-labelledby="v2-heading"><h2 id="v2-heading">v2 response</h2><pre id="v2">No observation.</pre></section>
+    </div>
+    <section aria-labelledby="candidate-heading">
+      <h2 id="candidate-heading">Inspect an observation, not an assertion of health</h2>
+      <p>The last verified v2 response is copied below for local experiments. Editing it does not change either fixture.
+        Missing stamps, forged versions, changed data, and invalid JSON must be rejected.</p>
+      <form id="candidate-form">
+        <label for="candidate-implementation">Expected implementation</label>
+        <select id="candidate-implementation"><option value="v2">v2</option><option value="v1">v1</option></select>
+        <label for="candidate">Candidate JSON for the profile ID above</label>
+        <textarea id="candidate" rows="12" maxlength="16384" spellcheck="false"></textarea>
+        <button id="validate" type="submit" disabled>Validate candidate response</button>
+      </form>
+      <p id="candidate-status" role="status" aria-live="polite">No candidate checked.</p>
+    </section>
+    <footer>C001 design: Node.js 24 LTS / Express / App Service Linux. This Node-builtin fixture is local test tooling,
+      not that deployed control API. Native OS, SKU, region, tenant, subscription, and resource group remain unapproved.
+      No IaC, registration, Azure management, or spending.</footer>
+  </main>
+</body>
+</html>

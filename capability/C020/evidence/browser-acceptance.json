@@ -1,0 +1,335 @@
+{
+  "cardId": "C020",
+  "startedAtUtc": "2026-11-03T14:38:25.134Z",
+  "outcome": "passed",
+  "mode": "isolated-headless",
+  "engine": "Microsoft Edge (Chromium)",
+  "testRuntime": "v22.23.4",
+  "businessData": "synthetic",
+  "nativeTargetQualified": false,
+  "productionRuntimeValidated": false,
+  "integratedForegroundLeaseUsed": false,
+  "checks": [
+    {
+      "name": "initial state has no successful observations and labels synthetic/local tooling",
+      "passed": true,
+      "observed": "Observed test tooling: v22.23.4. Not Node24/Express production validation."
+    },
+    {
+      "name": "real Tab/Enter submits BOTH implementations and exposes stable old-consumer semantics and differing stamps",
+      "passed": true,
+      "observed": {
+        "profile": {
+          "id": "synthetic-001",
+          "displayName": "Avery Example",
+          "email": "avery@example.invalid",
+          "preferences": {
+            "locale": "en-GB",
+            "theme": "dark",
+            "topics": [
+              "scaling",
+              "versions"
+            ]
+          }
+        },
+        "apiContract": "getProfile/1",
+        "stamps": [
+          {
+            "tier": "getProfile",
+            "implementation": "v1",
+            "implementationVersion": "1.0.0",
+            "deploymentStamp": "C020-loopback-v1-r1",
+            "deploymentKind": "local-fixture-label-not-cloud",
+            "fixtureRevision": "C020-r1",
+            "profileCatalogVersion": "synthetic-profiles/1",
+            "dataKind": "synthetic"
+          },
+          {
+            "tier": "getProfile",
+            "implementation": "v2",
+            "implementationVersion": "2.0.0",
+            "deploymentStamp": "C020-loopback-v2-r1",
+            "deploymentKind": "local-fixture-label-not-cloud",
+            "fixtureRevision": "C020-r1",
+            "profileCatalogVersion": "synthetic-profiles/1",
+            "dataKind": "synthetic"
+          }
+        ]
+      }
+    },
+    {
+      "name": "second immutable synthetic profile is compatible through BOTH actual HTTP implementations",
+      "passed": true,
+      "observed": {
+        "id": "synthetic-002",
+        "displayName": "Jordan Sample",
+        "email": "jordan@example.invalid",
+        "preferences": {
+          "locale": "fr-FR",
+          "theme": "light",
+          "topics": []
+        }
+      }
+    },
+    {
+      "name": "an unchanged actual v2 candidate validates without being mislabelled a new HTTP observation",
+      "passed": true,
+      "observed": "VALID LOCAL CANDIDATE — v2, getProfile/1; not a new HTTP observation."
+    },
+    {
+      "name": "actual DOM rejects forged implementation version",
+      "passed": true,
+      "observed": "REJECTED — STAMP_MISMATCH: The server-owned implementation/deployment stamp is missing or unexpected."
+    },
+    {
+      "name": "actual DOM rejects forged deployment stamp",
+      "passed": true,
+      "observed": "REJECTED — STAMP_MISMATCH: The server-owned implementation/deployment stamp is missing or unexpected."
+    },
+    {
+      "name": "actual DOM rejects missing stamp",
+      "passed": true,
+      "observed": "REJECTED — STAMP_MISMATCH: The server-owned implementation/deployment stamp is missing or unexpected."
+    },
+    {
+      "name": "actual DOM rejects breaking contract",
+      "passed": true,
+      "observed": "REJECTED — CONTRACT_MISMATCH: The response did not preserve getProfile/1."
+    },
+    {
+      "name": "actual DOM rejects changed nested business data",
+      "passed": true,
+      "observed": "REJECTED — PROFILE_MISMATCH: The response differs from the immutable expected synthetic profile."
+    },
+    {
+      "name": "actual DOM rejects wrong profile",
+      "passed": true,
+      "observed": "REJECTED — PROFILE_MISMATCH: The response differs from the immutable expected synthetic profile."
+    },
+    {
+      "name": "actual DOM rejects malformed and empty JSON instead of defaulting healthy",
+      "passed": true,
+      "observed": "INVALID_JSON for both"
+    },
+    {
+      "name": "actual browser HTTP ignores forged headers, rejects query overrides/unknown implementation, and keeps stamps coherent",
+      "passed": true,
+      "observed": {
+        "observed": [
+          {
+            "status": 200,
+            "verified": true,
+            "value": {
+              "apiContract": "getProfile/1",
+              "profile": {
+                "id": "synthetic-002",
+                "displayName": "Jordan Sample",
+                "email": "jordan@example.invalid",
+                "preferences": {
+                  "locale": "fr-FR",
+                  "theme": "light",
+                  "topics": []
+                }
+              },
+              "stamp": {
+                "tier": "getProfile",
+                "implementation": "v1",
+                "implementationVersion": "1.0.0",
+                "deploymentStamp": "C020-loopback-v1-r1",
+                "deploymentKind": "local-fixture-label-not-cloud",
+                "fixtureRevision": "C020-r1",
+                "profileCatalogVersion": "synthetic-profiles/1",
+                "dataKind": "synthetic"
+              }
+            },
+            "headerVersion": "1.0.0",
+            "headerDeployment": "C020-loopback-v1-r1"
+          },
+          {
+            "status": 200,
+            "verified": true,
+            "value": {
+              "apiContract": "getProfile/1",
+              "profile": {
+                "id": "synthetic-002",
+                "displayName": "Jordan Sample",
+                "email": "jordan@example.invalid",
+                "preferences": {
+                  "locale": "fr-FR",
+                  "theme": "light",
+                  "topics": []
+                }
+              },
+              "stamp": {
+                "tier": "getProfile",
+                "implementation": "v2",
+                "implementationVersion": "2.0.0",
+                "deploymentStamp": "C020-loopback-v2-r1",
+                "deploymentKind": "local-fixture-label-not-cloud",
+                "fixtureRevision": "C020-r1",
+                "profileCatalogVersion": "synthetic-profiles/1",
+                "dataKind": "synthetic"
+              }
+            },
+            "headerVersion": "2.0.0",
+            "headerDeployment": "C020-loopback-v2-r1"
+          }
+        ],
+        "oldConsumerEqual": true,
+        "implementationVersionDoesNotBreakOldConsumer": true,
+        "changedStampRejected": true,
+        "invalid": [
+          {
+            "status": 400,
+            "body": {
+              "error": {
+                "code": "INVALID_QUERY",
+                "message": "Exactly one profileId parameter is required; stamp overrides are forbidden."
+              },
+              "businessData": "synthetic",
+              "localOnly": true
+            }
+          },
+          {
+            "status": 400,
+            "body": {
+              "error": {
+                "code": "INVALID_QUERY",
+                "message": "Exactly one profileId parameter is required; stamp overrides are forbidden."
+              },
+              "businessData": "synthetic",
+              "localOnly": true
+            }
+          },
+          {
+            "status": 404,
+            "body": {
+              "error": {
+                "code": "NOT_FOUND",
+                "message": "No local fixture or inspection asset has that path."
+              },
+              "businessData": "synthetic",
+              "localOnly": true
+            }
+          }
+        ],
+        "immutable": true,
+        "nestedFrozen": true
+      }
+    },
+    {
+      "name": "actual DOM clears prior success after synthetic-999",
+      "passed": true,
+      "observed": "UNVERIFIED — OBSERVATION_FAILED: v1: UNKNOWN_PROFILE: HTTP 404; v2: UNKNOWN_PROFILE: HTTP 404"
+    },
+    {
+      "name": "actual DOM clears prior success after empty ID",
+      "passed": true,
+      "observed": "UNVERIFIED — OBSERVATION_FAILED: v1: INVALID_PROFILE_ID: HTTP 400; v2: INVALID_PROFILE_ID: HTTP 400"
+    },
+    {
+      "name": "monitored reload and interactions have no uncaught page errors or nonlocal requests",
+      "passed": true,
+      "observed": {
+        "pageErrors": [],
+        "requests": [
+          {
+            "url": "http://127.0.0.1:57074/",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/styles.css",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/contract.js",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/inspector.js",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/page.js",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/scope.json",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/fixtures/v1/getProfile?profileId=synthetic-001",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/fixtures/v2/getProfile?profileId=synthetic-001",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/fixtures/v1/getProfile?profileId=synthetic-002",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/fixtures/v2/getProfile?profileId=synthetic-002",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/fixtures/v1/getProfile?profileId=synthetic-002",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/fixtures/v2/getProfile?profileId=synthetic-002",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/fixtures/v1/getProfile?profileId=synthetic-001&implementationVersion=999",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/fixtures/v2/getProfile?profileId=synthetic-001&deploymentStamp=production",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/fixtures/v3/getProfile?profileId=synthetic-001",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/fixtures/v1/getProfile?profileId=synthetic-999",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/fixtures/v2/getProfile?profileId=synthetic-999",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/fixtures/v1/getProfile?profileId=",
+            "method": "GET"
+          },
+          {
+            "url": "http://127.0.0.1:57074/fixtures/v2/getProfile?profileId=",
+            "method": "GET"
+          }
+        ],
+        "monitoring": "listeners installed before the verified reload"
+      }
+    }
+  ],
+  "cleanup": {
+    "serverClosed": true,
+    "browserClosed": true,
+    "method": "exact owned http.Server handle closed in caller PID; no process-name termination"
+  },
+  "server": {
+    "pid": 36296,
+    "address": {
+      "address": "127.0.0.1",
+      "family": "IPv4",
+      "port": 57074
+    },
+    "ownership": "this process, exact returned http.Server handle"
+  },
+  "browserVersion": "156.0.4314.50",
+  "playwrightVersion": "1.56.1",
+  "screenshot": "capability\\C020\\evidence\\browser-profile.png",
+  "completedAtUtc": "2026-11-03T14:39:12.951Z"
+}
