@@ -1,0 +1,25 @@
+(function (root, factory) {
+  'use strict';
+  const fixture = factory();
+  if (typeof module === 'object' && module.exports) module.exports = fixture;
+  else root.S071Fixture = fixture;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  return Object.freeze({
+    id: 'S071-shared-cache-mixed-v1-v2',
+    BASE_CAPACITY: 4,
+    DEMAND_UNITS: 8,
+    BASE_MS: 20,
+    QUEUE_MS_PER_UNIT: 15,
+    EXPECTED_OPERATIONS: 18,
+    MAX_ATTEMPTS: 6,
+    PROFILE: Object.freeze({ name: 'Synthetic Ada', cartCount: 3 }),
+    DEFAULTS: Object.freeze({
+      targetCapacity: 8,
+      payloadMode: 'breaking',
+      resizeMode: 'continuous',
+      coverage: 'all',
+      budgetMs: 100,
+    }),
+  });
+}));

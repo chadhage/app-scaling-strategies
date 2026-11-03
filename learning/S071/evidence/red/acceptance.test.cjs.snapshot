@@ -1,0 +1,87 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fixture = require('../fixture.js');
+const model = require('../model.js');
+const run = (changes = {}) => model.probeMixedTraffic(model.resizeCache(
+  model.createRehearsal(), { ...fixture.DEFAULTS, ...changes }));
+
+test('BDD starts from a loadable fixture and callable state-machine stub', () => {
+  assert.equal(fixture.id, 'S071-shared-cache-mixed-v1-v2');
+  for (const name of ['createRehearsal', 'resizeCache', 'probeMixedTraffic', 'newAttempt', 'resetRehearsal']) {
+    assert.equal(typeof model[name], 'function');
+  }
+  assert.equal(model.createRehearsal().phase, 'configuring');
+});
+
+test('more cache capacity improves latency but cannot mask old-reader payload failures', () => {
+  const { result } = run({ targetCapacity: 12 });
+  assert.equal(result.gate, 'FAIL');
+  assert.equal(result.comparison.beforeWorstMs, 80);
+  assert.equal(result.comparison.afterWorstMs, 20);
+  assert.equal(result.comparison.beforePayloadFailures, 1);
+  assert.equal(result.comparison.afterPayloadFailures, 1);
+  assert.equal(result.metrics.payloadFailures, 3);
+  assert.equal(result.metrics.observed, 18);
+  assert.equal(result.rows.filter((row) => row.client === 'v1' && row.payloadStatus === 'FAIL').length, 3);
+});
+
+test('common payload plus continuous expansion preserves all mixed read/write journeys', () => {
+  const { result } = run({ payloadMode: 'compatible' });
+  assert.equal(result.gate, 'PASS');
+  assert.deepEqual(result.metrics, {
+    expected: 18, observed: 18, succeeded: 18, failed: 0, missing: 0,
+    payloadFailures: 0, accessFailures: 0, budgetFailures: 0,
+  });
+  assert.equal(result.rows.filter((row) => row.operation === 'write').length, 6);
+  assert.equal(result.rows.filter((row) => row.operation === 'read').length, 12);
+});
+
+test('a modeled resize access gap stays failed after the cache is reachable again', () => {
+  const { result } = run({ payloadMode: 'compatible', resizeMode: 'gap' });
+  assert.equal(result.gate, 'FAIL');
+  assert.equal(result.metrics.accessFailures, 6);
+  assert.equal(result.metrics.failed, 6);
+  assert.equal(result.rows.filter((row) => row.phase === 'after' && row.outcome === 'PASS').length, 6);
+});
+
+test('later capacity cannot erase earlier operations outside the original journey budget', () => {
+  const { result } = run({ payloadMode: 'compatible', budgetMs: 30 });
+  assert.equal(result.gate, 'FAIL');
+  assert.equal(result.metrics.budgetFailures, 6);
+  assert.equal(result.comparison.afterWorstMs, 20);
+  assert.equal(result.metrics.failed, 6);
+});
+
+test('v2-only observations do not prove compatibility for missing old readers and writers', () => {
+  const { result } = run({ coverage: 'new-only' });
+  assert.equal(result.gate, 'UNKNOWN');
+  assert.equal(result.metrics.observed, 9);
+  assert.equal(result.metrics.missing, 9);
+  assert.equal(result.metrics.failed, 0);
+});
+
+test('an empty observation set is UNKNOWN and never zero-failure success', () => {
+  const { result } = run({ coverage: 'none' });
+  assert.equal(result.gate, 'UNKNOWN');
+  assert.equal(result.metrics.observed, 0);
+  assert.equal(result.metrics.missing, 18);
+});
+
+test('unsupported resize is rejected without claiming the requested capacity was applied', () => {
+  const state = run({ payloadMode: 'compatible', resizeMode: 'unsupported' });
+  assert.equal(state.result.gate, 'FAIL');
+  assert.equal(state.operation.status, 'REJECTED');
+  assert.equal(state.operation.appliedCapacity, null);
+  assert.equal(state.result.comparison.afterWorstMs, null);
+});
+
+test('unverified native capability produces UNKNOWN and does not fabricate later phases', () => {
+  const state = run({ payloadMode: 'compatible', resizeMode: 'unverified' });
+  assert.equal(state.result.gate, 'UNKNOWN');
+  assert.equal(state.operation.status, 'UNKNOWN');
+  assert.equal(state.result.metrics.observed, 6);
+  assert.equal(state.result.metrics.missing, 12);
+  assert.equal(state.result.comparison.afterWorstMs, null);
+});

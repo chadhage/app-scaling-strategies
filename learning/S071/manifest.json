@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S071",
+  "sourceId": "S071",
+  "parentId": "D-S071",
+  "nativeSibling": "B-S071",
+  "kano": "S",
+  "kanoUnit": "A-S071",
+  "packet": "SC-S071",
+  "owner": "worker-A-S071",
+  "entryGate": "SOURCE",
+  "title": "Shared-cache expansion: capacity is not payload compatibility",
+  "entryPoint": "learning/S071/index.html",
+  "feature": "learning/S071/cache-resize.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Resize cache with mixed readers; detect payload incompatibility masked by extra capacity.",
+  "sourceAcceptance": "Scale cache capacity while keeping application access and payload compatibility intact.",
+  "parentAcceptance": "Actual cache behavior, payload compatibility, and journey budgets remain valid; native resize limitations are disclosed.",
+  "preconditions": [
+    "Standalone modern browser, no server, real cache, account, credentials or subscription.",
+    "One in-memory key holds Synthetic Ada / cart 3; both versions read and write it.",
+    "Fixed baseline capacity 4, demand 8, target 8 or 12; capacity units and latency are teaching values.",
+    "Original budget is frozen before resize and applies before, during and after the operation."
+  ],
+  "actions": [
+    "Declare target capacity, writer payload, resize condition, coverage and original budget.",
+    "Request the synthetic resize and freeze settings.",
+    "Probe old/new reads and writes across three phases and inspect trace and gate.",
+    "Check a PASS, FAIL or UNKNOWN interpretation independently of user impact.",
+    "Retain up to six attempts or explicitly reset all in-memory state."
+  ],
+  "input": "learning/S071/fixture.js",
+  "trace": "At most 18 observed operations and six immutable in-memory attempt histories.",
+  "assertions": [
+    "More capacity improves modeled latency but never masks an incompatible old-reader payload.",
+    "Complete compatible overlap passes only if access and every original budget also pass.",
+    "Access gaps and earlier budget failures remain counted after capacity improves.",
+    "Missing old clients, empty samples and unverified capability cannot prove success.",
+    "Unsupported resize is rejected without claiming target capacity was applied.",
+    "Strict inputs, immutable authentic states and bounded history prevent invalid progress.",
+    "Actual DOM, keyboard, errors, reset, failure, unknown and CSP checks cover the exercise."
+  ],
+  "bounds": {
+    "configurations": 528,
+    "baselineCapacity": 4,
+    "demandUnits": 8,
+    "targetCapacity": [8, 12],
+    "budgetMs": {"min": 20, "max": 120, "step": 10},
+    "requiredOperationsPerAttempt": 18,
+    "retainedAttempts": 6,
+    "sharedKeys": 1,
+    "arbitraryEndpointsPayloadsOrDurations": false
+  },
+  "iac": {
+    "status": "N/A",
+    "decision": "learning/S071/evidence/iac-decision.json",
+    "resourcesCreated": 0
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156.0.4314.50",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperPublication": "53c0c0d",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "dependencyChanges": false
+  },
+  "limits": [
+    "Synthetic deterministic interleaving only, not real concurrent cache traffic or measured network latency.",
+    "No actual cache resize, mixed-client or payload interoperability certification.",
+    "B-S071 and D-S071 remain incomplete; native service/SKU/topology limitations require their own observation.",
+    "No production Node24, native/source-parent, five-nines or unattended browser lifecycle certification.",
+    "Published helper only; abandoned lifecycle prototype is unqualified.",
+    "File-origin Worker rejection precedes CSP; worker-src enforcement is not independently qualified.",
+    "Synthetic data only; no cloud, IaC, credentials, deployment, downloads, installs or spending.",
+    "One frozen S unit; tests, plumbing and refinement do not earn extra credit."
+  ]
+}

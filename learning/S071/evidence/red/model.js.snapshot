@@ -1,0 +1,30 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S071Model = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  function createRehearsal() {
+    return { phase: 'configuring', attempt: 1, history: [], config: null, operation: null, result: null };
+  }
+  function resizeCache(state, config) {
+    return { ...state, phase: 'resized', config, operation: { status: 'UNKNOWN', appliedCapacity: null } };
+  }
+  function probeMixedTraffic(state) {
+    return {
+      ...state,
+      phase: 'observed',
+      result: {
+        gate: 'UNKNOWN',
+        rows: [],
+        metrics: { observed: 0, succeeded: 0, failed: 0, missing: 18, payloadFailures: 0, accessFailures: 0, budgetFailures: 0 },
+        comparison: { beforeWorstMs: null, afterWorstMs: null, beforePayloadFailures: 0, afterPayloadFailures: 0 },
+      },
+    };
+  }
+  return Object.freeze({
+    createRehearsal, resizeCache, probeMixedTraffic,
+    newAttempt: createRehearsal, resetRehearsal: createRehearsal,
+  });
+}));

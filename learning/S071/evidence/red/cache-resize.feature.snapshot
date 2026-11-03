@@ -1,0 +1,51 @@
+Feature: Shared-cache expansion keeps capacity and mixed-version correctness separate
+  The A-S071 rehearsal is synthetic, bounded and resource-free.
+  S071 and D-S071 native acceptance remain unproved.
+  Six operations run before, during and after a modeled resize:
+  v1 write, v1/v2 reads, v2 write, v1/v2 reads.
+  Demand is eight units; capacity starts at four units.
+  Modeled latency is 20 + max(0, 8 - capacity) * 15 milliseconds.
+  Both clients must preserve the same synthetic profile within the original budget.
+
+  Scenario: Extra capacity hides latency pressure but cannot repair a payload
+    Given both old and new clients read and write a shared synthetic cache
+      And the v2 writer emits schema 2 which the v1 reader cannot decode
+      And the original journey budget is 100 milliseconds
+    When the operator resizes from 4 to 12 units and probes all three phases
+    Then modeled worst latency improves from 80 to 20 milliseconds
+      But one old-reader payload failure in each phase remains a failure
+      And the overall journey result is FAIL, never a capacity-only PASS
+
+  Scenario: Compatible mixed readers and writers keep access and budgets
+    Given both writers emit the common schema 1 and both readers are observed
+    When a continuous modeled resize expands from 4 to 8 units
+    Then all 18 operations preserve access, payload and the 100 millisecond budget
+      And the synthetic result is PASS, not native certification
+
+  Scenario: A reconnect gap remains counted after access recovers
+    Given the modeled resize interrupts all six operations in its resize window
+    When compatible clients recover after expansion
+    Then the six failed accesses remain counted and the result is FAIL
+
+  Scenario: Later capacity does not erase original over-budget journeys
+    Given the original journey budget is 30 milliseconds
+    When a compatible continuous resize reduces latency to 20 milliseconds
+    Then the six earlier 80 millisecond operations remain failures
+
+  Scenario: Missing cohort evidence is unknown, not compatibility proof
+    Given only v2 operations or no operations are observed
+    When the operator requests a resize with mixed clients
+    Then missing old-reader and old-writer observations cannot yield PASS
+      And an otherwise failure-free result is UNKNOWN
+
+  Scenario: Unsupported or unverified resize is never claimed successful
+    Given the fixture declares the resize unsupported or its capability unverified
+    When the operator requests more capacity
+    Then unsupported is FAIL and unverified is UNKNOWN
+      And target capacity and unobserved phases are not fabricated
+
+  Scenario: Operator actions are guarded and history is bounded
+    Given only exact enums and integral 20 to 120 millisecond budgets in steps of 10 are allowed
+    Then probing before resize, resizing twice, forged state and invalid inputs are rejected
+      And completed results are immutable and retained for at most six attempts
+      And keyboard reset clears results, errors, prediction and history without shadowing form.reset
