@@ -1,0 +1,640 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S051",
+  "workerId": "worker-A-S051",
+  "mode": "synthetic",
+  "entry": "learning\\S051\\index.html",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "startedAtUtc": "2026-11-03T18:46:06.161Z",
+  "captureExplicitlyEnabled": true,
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "publication": "53c0c0d"
+  },
+  "browserVersion": "156.0.4314.50",
+  "outcome": "PASS",
+  "observations": [
+    {
+      "name": "state guard: run before opening rejected",
+      "phase": "Phase: idle · old frontend v1",
+      "gate": "Not evaluated — no compatibility gate result.",
+      "impact": "Not evaluated — no candidate proof.",
+      "metrics": "No candidate measurements.",
+      "preview": "Old page not opened.",
+      "journeys": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "Run candidate requires opened phase.",
+      "activeElement": ""
+    },
+    {
+      "name": "input guard: invalid select values rejected without candidate proof",
+      "phase": "Phase: idle · old frontend v1",
+      "gate": "Not evaluated — no compatibility gate result.",
+      "impact": "Not evaluated — no candidate proof.",
+      "metrics": "No candidate measurements.",
+      "preview": "Old page not opened.",
+      "journeys": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "Observation: select a listed observation mode.",
+      "activeElement": "open-old-page"
+    },
+    {
+      "name": "compatible additive response: three correct old-frontend renders; assumptions locked",
+      "phase": "Phase: complete · old frontend v1",
+      "gate": "Compatibility gate: PASS",
+      "impact": "Synthetic user impact: UNINTERRUPTED",
+      "metrics": "3 planned; 3 observed; 3 HTTP 200; 3 rendered correctly; 0 failed; 0 unobserved",
+      "preview": "Synthetic learner — 4 unread",
+      "journeys": [
+        [
+          "1: /api/profile",
+          "200",
+          "PASS",
+          "{\"id\":\"synthetic-051\",\"displayName\":\"Synthetic learner\",\"unreadCount\":2,\"theme\":\"new-api-theme\"}",
+          "Synthetic learner — 2 unread"
+        ],
+        [
+          "2: /api/profile",
+          "200",
+          "PASS",
+          "{\"id\":\"synthetic-051\",\"displayName\":\"Synthetic learner\",\"unreadCount\":3,\"theme\":\"new-api-theme\"}",
+          "Synthetic learner — 3 unread"
+        ],
+        [
+          "3: /api/profile",
+          "200",
+          "PASS",
+          "{\"id\":\"synthetic-051\",\"displayName\":\"Synthetic learner\",\"unreadCount\":4,\"theme\":\"new-api-theme\"}",
+          "Synthetic learner — 4 unread"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 3 rendered correctly; 0 failed; 0 unobserved",
+          "PASS",
+          "uninterrupted",
+          "PASS: predicted uninterrupted"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS. Predicted uninterrupted; actual impact uninterrupted.",
+      "trace": "1. old-page-opened: Frontend v1 consumes id, displayName and unreadCount. Baseline: Synthetic learner — 1 unread.\n2. new-api-selected: New API compatible fixture selected; same /api/profile, unchanged frontend v1. No network request.\n3. journey-pass: Request 1: HTTP 200; PASS. Synthetic learner — 2 unread\n4. journey-pass: Request 2: HTTP 200; PASS. Synthetic learner — 3 unread\n5. journey-pass: Request 3: HTTP 200; PASS. Synthetic learner — 4 unread",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "breaking renamed response: HTTP 200 fails visibly; correct failure prediction passes separately",
+      "phase": "Phase: complete · old frontend v1",
+      "gate": "Compatibility gate: FAIL",
+      "impact": "Synthetic user impact: INTERRUPTED",
+      "metrics": "3 planned; 3 observed; 3 HTTP 200; 0 rendered correctly; 3 failed; 0 unobserved",
+      "preview": "Old frontend cannot render the observed response.",
+      "journeys": [
+        [
+          "1: /api/profile",
+          "200",
+          "FAIL",
+          "{\"id\":\"synthetic-051\",\"profile\":{\"name\":\"Synthetic learner\"},\"unreadCount\":2}",
+          "displayName must be an own non-empty string field (at most 80 characters)."
+        ],
+        [
+          "2: /api/profile",
+          "200",
+          "FAIL",
+          "{\"id\":\"synthetic-051\",\"profile\":{\"name\":\"Synthetic learner\"},\"unreadCount\":3}",
+          "displayName must be an own non-empty string field (at most 80 characters)."
+        ],
+        [
+          "3: /api/profile",
+          "200",
+          "FAIL",
+          "{\"id\":\"synthetic-051\",\"profile\":{\"name\":\"Synthetic learner\"},\"unreadCount\":4}",
+          "displayName must be an own non-empty string field (at most 80 characters)."
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 3 rendered correctly; 0 failed; 0 unobserved",
+          "PASS",
+          "uninterrupted",
+          "PASS: predicted uninterrupted"
+        ],
+        [
+          "2",
+          "breaking / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 0 rendered correctly; 3 failed; 0 unobserved",
+          "FAIL",
+          "interrupted",
+          "PASS: predicted interrupted"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS. Predicted interrupted; actual impact interrupted.",
+      "trace": "1. old-page-opened: Frontend v1 consumes id, displayName and unreadCount. Baseline: Synthetic learner — 1 unread.\n2. new-api-selected: New API breaking fixture selected; same /api/profile, unchanged frontend v1. No network request.\n3. journey-fail: Request 1: HTTP 200; FAIL. displayName must be an own non-empty string field (at most 80 characters).\n4. journey-fail: Request 2: HTTP 200; FAIL. displayName must be an own non-empty string field (at most 80 characters).\n5. journey-fail: Request 3: HTTP 200; FAIL. displayName must be an own non-empty string field (at most 80 characters).",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "partial compatible response: missing observations remain unknown",
+      "phase": "Phase: complete · old frontend v1",
+      "gate": "Compatibility gate: UNKNOWN",
+      "impact": "Synthetic user impact: UNKNOWN",
+      "metrics": "3 planned; 1 observed; 1 HTTP 200; 1 rendered correctly; 0 failed; 2 unobserved",
+      "preview": "Synthetic learner — 2 unread",
+      "journeys": [
+        [
+          "1: /api/profile",
+          "200",
+          "PASS",
+          "{\"id\":\"synthetic-051\",\"displayName\":\"Synthetic learner\",\"unreadCount\":2,\"theme\":\"new-api-theme\"}",
+          "Synthetic learner — 2 unread"
+        ],
+        [
+          "2: /api/profile",
+          "UNKNOWN — not observed",
+          "UNKNOWN",
+          "UNKNOWN — not observed",
+          "Candidate response not observed; status, shape and rendering are unknown."
+        ],
+        [
+          "3: /api/profile",
+          "UNKNOWN — not observed",
+          "UNKNOWN",
+          "UNKNOWN — not observed",
+          "Candidate response not observed; status, shape and rendering are unknown."
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 3 rendered correctly; 0 failed; 0 unobserved",
+          "PASS",
+          "uninterrupted",
+          "PASS: predicted uninterrupted"
+        ],
+        [
+          "2",
+          "breaking / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 0 rendered correctly; 3 failed; 0 unobserved",
+          "FAIL",
+          "interrupted",
+          "PASS: predicted interrupted"
+        ],
+        [
+          "3",
+          "compatible / partial",
+          "3 planned; 1 observed; 1 HTTP 200; 1 rendered correctly; 0 failed; 2 unobserved",
+          "UNKNOWN",
+          "unknown",
+          "PASS: predicted unknown"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS. Predicted unknown; actual impact unknown.",
+      "trace": "1. old-page-opened: Frontend v1 consumes id, displayName and unreadCount. Baseline: Synthetic learner — 1 unread.\n2. new-api-selected: New API compatible fixture selected; same /api/profile, unchanged frontend v1. No network request.\n3. journey-pass: Request 1: HTTP 200; PASS. Synthetic learner — 2 unread\n4. journey-unknown: Request 2: status unknown; UNKNOWN. Candidate response not observed; status, shape and rendering are unknown.\n5. journey-unknown: Request 3: status unknown; UNKNOWN. Candidate response not observed; status, shape and rendering are unknown.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "known breaking result dominates partial uncertainty; wrong prediction does not waive interruption",
+      "phase": "Phase: complete · old frontend v1",
+      "gate": "Compatibility gate: FAIL",
+      "impact": "Synthetic user impact: INTERRUPTED",
+      "metrics": "3 planned; 1 observed; 1 HTTP 200; 0 rendered correctly; 1 failed; 2 unobserved",
+      "preview": "Old frontend cannot render the observed response.",
+      "journeys": [
+        [
+          "1: /api/profile",
+          "200",
+          "FAIL",
+          "{\"id\":\"synthetic-051\",\"profile\":{\"name\":\"Synthetic learner\"},\"unreadCount\":2}",
+          "displayName must be an own non-empty string field (at most 80 characters)."
+        ],
+        [
+          "2: /api/profile",
+          "UNKNOWN — not observed",
+          "UNKNOWN",
+          "UNKNOWN — not observed",
+          "Candidate response not observed; status, shape and rendering are unknown."
+        ],
+        [
+          "3: /api/profile",
+          "UNKNOWN — not observed",
+          "UNKNOWN",
+          "UNKNOWN — not observed",
+          "Candidate response not observed; status, shape and rendering are unknown."
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 3 rendered correctly; 0 failed; 0 unobserved",
+          "PASS",
+          "uninterrupted",
+          "PASS: predicted uninterrupted"
+        ],
+        [
+          "2",
+          "breaking / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 0 rendered correctly; 3 failed; 0 unobserved",
+          "FAIL",
+          "interrupted",
+          "PASS: predicted interrupted"
+        ],
+        [
+          "3",
+          "compatible / partial",
+          "3 planned; 1 observed; 1 HTTP 200; 1 rendered correctly; 0 failed; 2 unobserved",
+          "UNKNOWN",
+          "unknown",
+          "PASS: predicted unknown"
+        ],
+        [
+          "4",
+          "breaking / partial",
+          "3 planned; 1 observed; 1 HTTP 200; 0 rendered correctly; 1 failed; 2 unobserved",
+          "FAIL",
+          "interrupted",
+          "FAIL: predicted uninterrupted"
+        ]
+      ],
+      "prediction": "Prediction verifier: FAIL. Predicted uninterrupted; actual impact interrupted.",
+      "trace": "1. old-page-opened: Frontend v1 consumes id, displayName and unreadCount. Baseline: Synthetic learner — 1 unread.\n2. new-api-selected: New API breaking fixture selected; same /api/profile, unchanged frontend v1. No network request.\n3. journey-fail: Request 1: HTTP 200; FAIL. displayName must be an own non-empty string field (at most 80 characters).\n4. journey-unknown: Request 2: status unknown; UNKNOWN. Candidate response not observed; status, shape and rendering are unknown.\n5. journey-unknown: Request 3: status unknown; UNKNOWN. Candidate response not observed; status, shape and rendering are unknown.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "absent observations: even a selected breaking fixture is not unobserved failure evidence",
+      "phase": "Phase: complete · old frontend v1",
+      "gate": "Compatibility gate: UNKNOWN",
+      "impact": "Synthetic user impact: UNKNOWN",
+      "metrics": "3 planned; 0 observed; 0 HTTP 200; 0 rendered correctly; 0 failed; 3 unobserved",
+      "preview": "No candidate response observed.",
+      "journeys": [
+        [
+          "1: /api/profile",
+          "UNKNOWN — not observed",
+          "UNKNOWN",
+          "UNKNOWN — not observed",
+          "Candidate response not observed; status, shape and rendering are unknown."
+        ],
+        [
+          "2: /api/profile",
+          "UNKNOWN — not observed",
+          "UNKNOWN",
+          "UNKNOWN — not observed",
+          "Candidate response not observed; status, shape and rendering are unknown."
+        ],
+        [
+          "3: /api/profile",
+          "UNKNOWN — not observed",
+          "UNKNOWN",
+          "UNKNOWN — not observed",
+          "Candidate response not observed; status, shape and rendering are unknown."
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 3 rendered correctly; 0 failed; 0 unobserved",
+          "PASS",
+          "uninterrupted",
+          "PASS: predicted uninterrupted"
+        ],
+        [
+          "2",
+          "breaking / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 0 rendered correctly; 3 failed; 0 unobserved",
+          "FAIL",
+          "interrupted",
+          "PASS: predicted interrupted"
+        ],
+        [
+          "3",
+          "compatible / partial",
+          "3 planned; 1 observed; 1 HTTP 200; 1 rendered correctly; 0 failed; 2 unobserved",
+          "UNKNOWN",
+          "unknown",
+          "PASS: predicted unknown"
+        ],
+        [
+          "4",
+          "breaking / partial",
+          "3 planned; 1 observed; 1 HTTP 200; 0 rendered correctly; 1 failed; 2 unobserved",
+          "FAIL",
+          "interrupted",
+          "FAIL: predicted uninterrupted"
+        ],
+        [
+          "5",
+          "breaking / none",
+          "3 planned; 0 observed; 0 HTTP 200; 0 rendered correctly; 0 failed; 3 unobserved",
+          "UNKNOWN",
+          "unknown",
+          "PASS: predicted unknown"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS. Predicted unknown; actual impact unknown.",
+      "trace": "1. old-page-opened: Frontend v1 consumes id, displayName and unreadCount. Baseline: Synthetic learner — 1 unread.\n2. new-api-selected: New API breaking fixture selected; same /api/profile, unchanged frontend v1. No network request.\n3. journey-unknown: Request 1: status unknown; UNKNOWN. Candidate response not observed; status, shape and rendering are unknown.\n4. journey-unknown: Request 2: status unknown; UNKNOWN. Candidate response not observed; status, shape and rendering are unknown.\n5. journey-unknown: Request 3: status unknown; UNKNOWN. Candidate response not observed; status, shape and rendering are unknown.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "prediction guard: empty prediction rejected without altering gate or verifier",
+      "phase": "Phase: complete · old frontend v1",
+      "gate": "Compatibility gate: PASS",
+      "impact": "Synthetic user impact: UNINTERRUPTED",
+      "metrics": "3 planned; 3 observed; 3 HTTP 200; 3 rendered correctly; 0 failed; 0 unobserved",
+      "preview": "Synthetic learner — 4 unread",
+      "journeys": [
+        [
+          "1: /api/profile",
+          "200",
+          "PASS",
+          "{\"id\":\"synthetic-051\",\"displayName\":\"Synthetic learner\",\"unreadCount\":2,\"theme\":\"new-api-theme\"}",
+          "Synthetic learner — 2 unread"
+        ],
+        [
+          "2: /api/profile",
+          "200",
+          "PASS",
+          "{\"id\":\"synthetic-051\",\"displayName\":\"Synthetic learner\",\"unreadCount\":3,\"theme\":\"new-api-theme\"}",
+          "Synthetic learner — 3 unread"
+        ],
+        [
+          "3: /api/profile",
+          "200",
+          "PASS",
+          "{\"id\":\"synthetic-051\",\"displayName\":\"Synthetic learner\",\"unreadCount\":4,\"theme\":\"new-api-theme\"}",
+          "Synthetic learner — 4 unread"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 3 rendered correctly; 0 failed; 0 unobserved",
+          "PASS",
+          "uninterrupted",
+          "PASS: predicted uninterrupted"
+        ],
+        [
+          "2",
+          "breaking / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 0 rendered correctly; 3 failed; 0 unobserved",
+          "FAIL",
+          "interrupted",
+          "PASS: predicted interrupted"
+        ],
+        [
+          "3",
+          "compatible / partial",
+          "3 planned; 1 observed; 1 HTTP 200; 1 rendered correctly; 0 failed; 2 unobserved",
+          "UNKNOWN",
+          "unknown",
+          "PASS: predicted unknown"
+        ],
+        [
+          "4",
+          "breaking / partial",
+          "3 planned; 1 observed; 1 HTTP 200; 0 rendered correctly; 1 failed; 2 unobserved",
+          "FAIL",
+          "interrupted",
+          "FAIL: predicted uninterrupted"
+        ],
+        [
+          "5",
+          "breaking / none",
+          "3 planned; 0 observed; 0 HTTP 200; 0 rendered correctly; 0 failed; 3 unobserved",
+          "UNKNOWN",
+          "unknown",
+          "PASS: predicted unknown"
+        ],
+        [
+          "6",
+          "compatible / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 3 rendered correctly; 0 failed; 0 unobserved",
+          "PASS",
+          "uninterrupted",
+          "Not checked"
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "trace": "1. old-page-opened: Frontend v1 consumes id, displayName and unreadCount. Baseline: Synthetic learner — 1 unread.\n2. new-api-selected: New API compatible fixture selected; same /api/profile, unchanged frontend v1. No network request.\n3. journey-pass: Request 1: HTTP 200; PASS. Synthetic learner — 2 unread\n4. journey-pass: Request 2: HTTP 200; PASS. Synthetic learner — 3 unread\n5. journey-pass: Request 3: HTTP 200; PASS. Synthetic learner — 4 unread",
+      "alert": "Prediction: choose a listed synthetic user impact.",
+      "activeElement": "check-prediction"
+    },
+    {
+      "name": "history cap: eight retained assumptions/results/verifiers; no eviction",
+      "phase": "Phase: complete · old frontend v1",
+      "gate": "Compatibility gate: FAIL",
+      "impact": "Synthetic user impact: INTERRUPTED",
+      "metrics": "3 planned; 3 observed; 3 HTTP 200; 0 rendered correctly; 3 failed; 0 unobserved",
+      "preview": "Old frontend cannot render the observed response.",
+      "journeys": [
+        [
+          "1: /api/profile",
+          "200",
+          "FAIL",
+          "{\"id\":\"synthetic-051\",\"profile\":{\"name\":\"Synthetic learner\"},\"unreadCount\":2}",
+          "displayName must be an own non-empty string field (at most 80 characters)."
+        ],
+        [
+          "2: /api/profile",
+          "200",
+          "FAIL",
+          "{\"id\":\"synthetic-051\",\"profile\":{\"name\":\"Synthetic learner\"},\"unreadCount\":3}",
+          "displayName must be an own non-empty string field (at most 80 characters)."
+        ],
+        [
+          "3: /api/profile",
+          "200",
+          "FAIL",
+          "{\"id\":\"synthetic-051\",\"profile\":{\"name\":\"Synthetic learner\"},\"unreadCount\":4}",
+          "displayName must be an own non-empty string field (at most 80 characters)."
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "compatible / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 3 rendered correctly; 0 failed; 0 unobserved",
+          "PASS",
+          "uninterrupted",
+          "PASS: predicted uninterrupted"
+        ],
+        [
+          "2",
+          "breaking / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 0 rendered correctly; 3 failed; 0 unobserved",
+          "FAIL",
+          "interrupted",
+          "PASS: predicted interrupted"
+        ],
+        [
+          "3",
+          "compatible / partial",
+          "3 planned; 1 observed; 1 HTTP 200; 1 rendered correctly; 0 failed; 2 unobserved",
+          "UNKNOWN",
+          "unknown",
+          "PASS: predicted unknown"
+        ],
+        [
+          "4",
+          "breaking / partial",
+          "3 planned; 1 observed; 1 HTTP 200; 0 rendered correctly; 1 failed; 2 unobserved",
+          "FAIL",
+          "interrupted",
+          "FAIL: predicted uninterrupted"
+        ],
+        [
+          "5",
+          "breaking / none",
+          "3 planned; 0 observed; 0 HTTP 200; 0 rendered correctly; 0 failed; 3 unobserved",
+          "UNKNOWN",
+          "unknown",
+          "PASS: predicted unknown"
+        ],
+        [
+          "6",
+          "compatible / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 3 rendered correctly; 0 failed; 0 unobserved",
+          "PASS",
+          "uninterrupted",
+          "PASS: predicted uninterrupted"
+        ],
+        [
+          "7",
+          "breaking / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 0 rendered correctly; 3 failed; 0 unobserved",
+          "FAIL",
+          "interrupted",
+          "PASS: predicted interrupted"
+        ],
+        [
+          "8",
+          "breaking / complete",
+          "3 planned; 3 observed; 3 HTTP 200; 0 rendered correctly; 3 failed; 0 unobserved",
+          "FAIL",
+          "interrupted",
+          "PASS: predicted interrupted"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS. Predicted interrupted; actual impact interrupted.",
+      "trace": "1. old-page-opened: Frontend v1 consumes id, displayName and unreadCount. Baseline: Synthetic learner — 1 unread.\n2. new-api-selected: New API breaking fixture selected; same /api/profile, unchanged frontend v1. No network request.\n3. journey-fail: Request 1: HTTP 200; FAIL. displayName must be an own non-empty string field (at most 80 characters).\n4. journey-fail: Request 2: HTTP 200; FAIL. displayName must be an own non-empty string field (at most 80 characters).\n5. journey-fail: Request 3: HTTP 200; FAIL. displayName must be an own non-empty string field (at most 80 characters).",
+      "alert": "History full: eight results retained. Reset explicitly to clear them.",
+      "activeElement": "reset-rehearsal"
+    },
+    {
+      "name": "exact keyboard reset from completed failure and full history",
+      "phase": "Phase: idle · old frontend v1",
+      "gate": "Not evaluated — no compatibility gate result.",
+      "impact": "Not evaluated — no candidate proof.",
+      "metrics": "No candidate measurements.",
+      "preview": "Old page not opened.",
+      "journeys": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "open-old-page"
+    },
+    {
+      "name": "exact keyboard reset from opened work",
+      "phase": "Phase: idle · old frontend v1",
+      "gate": "Not evaluated — no compatibility gate result.",
+      "impact": "Not evaluated — no candidate proof.",
+      "metrics": "No candidate measurements.",
+      "preview": "Old page not opened.",
+      "journeys": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "open-old-page"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp-probes",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-q86cZ1P9jv3QpfvvW4+zsi/t5dVO14P3gJ0qevhsr2c='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Connecting to 'https://csp-probe.invalid/S051' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Fetch API cannot load https://csp-probe.invalid/S051. Refused to connect because it violates the document's Content Security Policy."
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "probeRequests": [],
+  "probeResponses": [],
+  "cleanup": {
+    "sessionCloseAwaited": true,
+    "serversStarted": 0,
+    "foregroundLeaseUsed": false
+  },
+  "testedSourceHashes": {
+    "index.html": "bf8e02b17657401c08d19370d3cb60c6929cd9de235f92dbfee35c7272e24db7",
+    "styles.css": "847f679316e634283314009d478e28e8cea93b40eadcd6c1bf325a0eff6d6a7a",
+    "fixtures.js": "236e4a10fba96555c6a8382df8bf6f0290faccf01e5d4669340750a9075fc2ff",
+    "model.js": "a36a608a5e4d1e7144d86695505945e8b255421ae31872cc1a021a2d138f6e1f",
+    "app.js": "a2348efe50feaa98c2da17f0e3445391897fdd1b859ba7a4cf8cac63c021e6dd",
+    "tests\\browser.test.cjs": "21bbd71061bedb4bfc26303c8dfbf425e52db0185a17f0234fb001e9b32abc51"
+  },
+  "keyboardFocusStyle": {
+    "style": "solid",
+    "width": "3px"
+  },
+  "smallViewport": {
+    "width": 320,
+    "pageWidth": 320,
+    "noPageHorizontalOverflow": true
+  },
+  "csp": {
+    "fetchRejected": true,
+    "inlineExecuted": false,
+    "violations": [
+      {
+        "effectiveDirective": "script-src-elem",
+        "blockedURI": "inline",
+        "disposition": "enforce"
+      },
+      {
+        "effectiveDirective": "connect-src",
+        "blockedURI": "https://csp-probe.invalid/S051",
+        "disposition": "enforce"
+      }
+    ]
+  },
+  "completedAtUtc": "2026-11-03T18:46:17.487Z"
+}

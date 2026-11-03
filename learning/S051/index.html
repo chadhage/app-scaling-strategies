@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S051 — Old frontend to new API</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S051 — Old frontend to new API</h1>
+    <p>Preserve contracts used by already-open browser pages. Keep frontend <strong>v1</strong>
+      unchanged while a new API serves either an additive response or a renamed, breaking field.</p>
+    <p>A-S051 · D-S051 · S · SC-S051. Three fixed synthetic GET <code>/api/profile</code>
+      journeys; no actual requests, account, credentials, authentication, deployment or cloud.</p>
+
+    <section aria-labelledby="contract-heading">
+      <h2 id="contract-heading">The already-open page's contract</h2>
+      <p>The old renderer requires its own string <code>id</code> and <code>displayName</code>
+        fields and integer <code>unreadCount</code>. Each rendered value must also match its
+        expected synthetic journey. Extra fields are ignored. HTTP 200 alone proves neither.</p>
+      <pre>{"id":"synthetic-051","displayName":"Synthetic learner","unreadCount":1}</pre>
+      <p>The new compatible API keeps those fields and adds <code>theme</code>.
+        The breaking API moves <code>displayName</code> to <code>profile.name</code>.
+        This unchanged frontend has no adapter for that shape.</p>
+    </section>
+
+    <form id="rehearsal-form" novalidate>
+      <fieldset id="configuration">
+        <legend>1. Choose assumptions, then open the old page to lock them</legend>
+        <div class="choices">
+          <label for="response">New API response
+            <select id="response" name="response">
+              <option value="compatible" selected>Compatible — retain fields, add theme</option>
+              <option value="breaking">Breaking — displayName becomes profile.name</option>
+            </select>
+          </label>
+          <label for="observation">Candidate observations
+            <select id="observation" name="observation">
+              <option value="complete" selected>Complete — observe all 3 journeys</option>
+              <option value="partial">Partial — observe only journey 1</option>
+              <option value="none">Absent — observe none</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+      <div class="actions">
+        <button id="open-old-page" type="button">Open old frontend v1</button>
+        <button id="run-candidate" type="button" disabled>Run new API journeys</button>
+        <button id="new-attempt" type="button" disabled>New attempt (retain history)</button>
+        <button id="reset-rehearsal" type="button">Reset rehearsal</button>
+      </div>
+    </form>
+    <p id="input-error" role="alert" hidden></p>
+    <p id="phase" role="status" aria-live="polite">Phase: idle · old frontend v1</p>
+
+    <section aria-labelledby="old-view-heading">
+      <h2 id="old-view-heading">Unchanged old frontend v1</h2>
+      <p id="old-preview">Old page not opened.</p>
+    </section>
+    <section aria-labelledby="result-heading" aria-live="polite">
+      <h2 id="result-heading">2. Inspect measured candidate results</h2>
+      <p id="gate">Not evaluated — no compatibility gate result.</p>
+      <p id="impact">Not evaluated — no candidate proof.</p>
+      <div id="result-detail" hidden>
+        <p id="metrics">No candidate measurements.</p>
+        <div class="table-scroll" tabindex="0" aria-label="Candidate response results">
+          <table>
+            <caption>Three fixed synthetic old-frontend journeys</caption>
+            <thead><tr><th>Request</th><th>Synthetic HTTP status</th><th>Old renderer</th><th>Received body</th><th>Visible result or reason</th></tr></thead>
+            <tbody id="journeys"></tbody>
+          </table>
+        </div>
+      </div>
+      <p>PASS requires all three observed journeys to render correctly. FAIL means at least
+        one known failure. UNKNOWN means incomplete proof without a known failure.
+        Missing responses have unknown status and shape, not inferred successes or errors.</p>
+    </section>
+
+    <section aria-labelledby="prediction-heading">
+      <h2 id="prediction-heading">3. Check your prediction, separately from user impact</h2>
+      <label for="prediction">Predict synthetic user impact
+        <select id="prediction" disabled>
+          <option value="" selected>Choose an impact</option>
+          <option value="uninterrupted">Uninterrupted</option>
+          <option value="interrupted">Interrupted</option>
+          <option value="unknown">Unknown</option>
+        </select>
+      </label>
+      <button id="check-prediction" type="button" disabled>Check prediction</button>
+      <p id="prediction-result" role="status">Prediction not checked.</p>
+      <p>A correct prediction of interruption passes this learning verifier, not the
+        compatibility gate. One prediction is retained per completed attempt.</p>
+    </section>
+
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Synthetic trace</h2>
+      <ol id="trace"><li>No attempt started.</li></ol>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained completed history (maximum 8)</h2>
+      <p>New attempt clears only current proof. Reset explicitly erases history and restores defaults.
+        Reloading the page also clears this in-memory rehearsal.</p>
+      <p id="history-limit" hidden>History full: eight results retained. Reset explicitly before another attempt.</p>
+      <div class="table-scroll" tabindex="0" aria-label="Retained attempt history">
+        <table>
+          <caption>Assumptions, measurements, gate, user impact and prediction</caption>
+          <thead><tr><th>Attempt</th><th>Assumptions</th><th>Measurements</th><th>Gate</th><th>Impact</th><th>Prediction verifier</th></tr></thead>
+          <tbody id="history"><tr><td colspan="6">No completed attempts.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      <p>Fixed synthetic fixtures only. No real API, routing, authentication, protocol, native
+        Azure, production Node.js 24 or five-nines proof. B-S051 and D-S051 native acceptance
+        remain separate. Existing Node.js 22 is test tooling only.</p>
+      <p><a href="README.md">Exercise instructions, bounds and verification</a></p>
+    </footer>
+  </main>
+</body>
+</html>

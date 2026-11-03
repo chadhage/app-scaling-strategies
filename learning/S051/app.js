@@ -1,0 +1,131 @@
+(function () {
+  'use strict';
+  const lesson = S051Model.createLesson();
+  const byId = (id) => document.getElementById(id);
+  const form = byId('rehearsal-form');
+  const response = byId('response');
+  const observation = byId('observation');
+  const prediction = byId('prediction');
+  const inputError = byId('input-error');
+  const text = (id, value) => { byId(id).textContent = value; };
+  function cell(row, value, preformatted = false) {
+    const td = document.createElement('td');
+    const target = preformatted ? document.createElement('pre') : td;
+    target.textContent = value;
+    if (preformatted) td.append(target);
+    row.append(td);
+  }
+  const measurements = (metrics) => `${metrics.planned} planned; ${metrics.observed} observed; `
+    + `${metrics.http200} HTTP 200; ${metrics.rendered} rendered correctly; `
+    + `${metrics.failed} failed; ${metrics.unobserved} unobserved`;
+  function render(state) {
+    const complete = state.phase === 'complete';
+    byId('configuration').disabled = state.phase !== 'idle';
+    byId('open-old-page').disabled = state.phase !== 'idle';
+    byId('run-candidate').disabled = state.phase !== 'opened';
+    byId('new-attempt').disabled = !complete || state.history.length >= S051Fixtures.maxAttempts;
+    prediction.disabled = !complete || Boolean(state.prediction);
+    byId('check-prediction').disabled = prediction.disabled;
+    prediction.value = state.prediction ? state.prediction.expected : '';
+    if (state.configuration) {
+      response.value = state.configuration.response;
+      observation.value = state.configuration.observation;
+    }
+    text('phase', `Phase: ${state.phase} · old frontend ${state.frontendVersion}`);
+    text('old-preview', state.current ? state.current.preview : state.baseline ? state.baseline.view : 'Old page not opened.');
+    text('gate', state.current ? `Compatibility gate: ${state.current.gate}` : 'Not evaluated — no compatibility gate result.');
+    text('impact', state.current ? `Synthetic user impact: ${state.current.impact.toUpperCase()}` : 'Not evaluated — no candidate proof.');
+    byId('result-detail').hidden = !state.current;
+    text('metrics', state.current ? measurements(state.current.metrics) : 'No candidate measurements.');
+    const rows = byId('journeys');
+    rows.replaceChildren();
+    if (state.current) {
+      for (const journey of state.current.journeys) {
+        const row = document.createElement('tr');
+        row.dataset.journey = String(journey.request);
+        cell(row, `${journey.request}: ${journey.path}`);
+        cell(row, journey.status === null ? 'UNKNOWN — not observed' : String(journey.status));
+        cell(row, journey.verdict);
+        cell(row, journey.body === null ? 'UNKNOWN — not observed' : journey.body, true);
+        cell(row, journey.reason || journey.view);
+        rows.append(row);
+      }
+    }
+    text('prediction-result', state.prediction
+      ? `Prediction verifier: ${state.prediction.verdict}. Predicted ${state.prediction.expected}; actual impact ${state.prediction.actual}.`
+      : 'Prediction not checked.');
+    const trace = byId('trace');
+    trace.replaceChildren();
+    for (const entry of state.trace.length ? state.trace : [{ event: 'idle', detail: 'No attempt started.' }]) {
+      const item = document.createElement('li');
+      item.textContent = entry.event === 'idle' ? entry.detail : `${entry.step}. ${entry.event}: ${entry.detail}`;
+      trace.append(item);
+    }
+    const history = byId('history');
+    history.replaceChildren();
+    if (!state.history.length) {
+      const row = document.createElement('tr');
+      cell(row, 'No completed attempts.');
+      row.firstElementChild.colSpan = 6;
+      history.append(row);
+    }
+    for (const entry of state.history) {
+      const row = document.createElement('tr');
+      row.dataset.attempt = String(entry.result.attempt);
+      cell(row, String(entry.result.attempt));
+      cell(row, `${entry.configuration.response} / ${entry.configuration.observation}`);
+      cell(row, measurements(entry.result.metrics));
+      cell(row, entry.result.gate);
+      cell(row, entry.result.impact);
+      cell(row, entry.prediction ? `${entry.prediction.verdict}: predicted ${entry.prediction.expected}` : 'Not checked');
+      history.append(row);
+    }
+    byId('history-limit').hidden = state.history.length < S051Fixtures.maxAttempts;
+  }
+  function clearError() {
+    inputError.hidden = true;
+    inputError.textContent = '';
+    response.removeAttribute('aria-invalid');
+    observation.removeAttribute('aria-invalid');
+    prediction.removeAttribute('aria-invalid');
+  }
+  function choices() {
+    if (!['compatible', 'breaking'].includes(response.value)) {
+      response.setAttribute('aria-invalid', 'true');
+      throw new Error('Response: select a listed new API response.');
+    }
+    if (!['complete', 'partial', 'none'].includes(observation.value)) {
+      observation.setAttribute('aria-invalid', 'true');
+      throw new Error('Observation: select a listed observation mode.');
+    }
+    return { response: response.value, observation: observation.value };
+  }
+  function act(action, nextFocus) {
+    clearError();
+    try {
+      const state = action();
+      render(state);
+      const target = byId(typeof nextFocus === 'function' ? nextFocus(state) : nextFocus);
+      if (target && !target.disabled) target.focus();
+    } catch (error) {
+      inputError.textContent = error.message;
+      inputError.hidden = false;
+    }
+  }
+  form.addEventListener('submit', (event) => event.preventDefault());
+  byId('open-old-page').addEventListener('click', () => act(() => lesson.open(choices()), 'run-candidate'));
+  byId('run-candidate').addEventListener('click', () => act(() => lesson.run(), 'prediction'));
+  byId('check-prediction').addEventListener('click', () => act(() => {
+    if (!['uninterrupted', 'interrupted', 'unknown'].includes(prediction.value)) {
+      prediction.setAttribute('aria-invalid', 'true');
+      throw new Error('Prediction: choose a listed synthetic user impact.');
+    }
+    return lesson.predict(prediction.value);
+  }, (state) => state.history.length < S051Fixtures.maxAttempts ? 'new-attempt' : 'reset-rehearsal'));
+  byId('new-attempt').addEventListener('click', () => act(() => lesson.next(), 'open-old-page'));
+  byId('reset-rehearsal').addEventListener('click', () => act(() => {
+    form.reset();
+    return lesson.reset();
+  }, 'open-old-page'));
+  render(lesson.snapshot());
+}());

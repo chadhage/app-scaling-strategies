@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S051",
+  "sourceId": "S051",
+  "parentId": "D-S051",
+  "kano": "S",
+  "kanoUnit": "A-S051",
+  "packet": "SC-S051",
+  "owner": "worker-A-S051",
+  "entryGate": "SOURCE",
+  "title": "Old frontend to new API: retain the consumed response contract",
+  "entryPoint": "learning/S051/index.html",
+  "feature": "learning/S051/old-frontend.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Keep an already-open frontend v1 unchanged, send three fixed journeys to a new API response fixture, and distinguish an additive compatible contract from a breaking renamed field.",
+  "preconditions": [
+    "A modern browser supporting local HTML, CSS and JavaScript.",
+    "The old frontend consumes id, displayName and an integer unreadCount.",
+    "A fixed baseline and three synthetic GET /api/profile journeys; no real requests.",
+    "No account, credentials, authentication, server, framework or Azure subscription."
+  ],
+  "actions": [
+    "Choose compatible or breaking new-API responses and complete, partial or absent observations.",
+    "Open the old frontend to lock assumptions, then run the candidate journeys.",
+    "Inspect response shapes, old-renderer assertions, measurements, gate and synthetic user impact.",
+    "Check a prediction independently from the compatibility gate and user impact.",
+    "Start another attempt with retained history or explicitly reset all in-memory state."
+  ],
+  "input": "learning/S051/fixtures.js",
+  "assertions": [
+    "An additive theme field leaves the consumed contract and all three rendered results correct.",
+    "Renaming displayName to profile.name fails the old renderer even with HTTP 200.",
+    "Unobserved responses remain unknown and are never inferred from the selected fixture.",
+    "One observed breaking result fails the gate even when other observations are unknown.",
+    "Configuration, lifecycle, immutable state and the eight-attempt history limit are guarded."
+  ],
+  "bounds": {
+    "attempts": 8,
+    "fixedJourneys": 3,
+    "responses": ["compatible", "breaking"],
+    "observations": ["complete", "partial", "none"],
+    "arbitraryPayloadsOrEndpoints": false
+  },
+  "iac": {
+    "status": "N/A",
+    "decisionStage": "After genuine loadable-stub behavioral RED and before behavior implementation.",
+    "redReference": "learning/S051/evidence/red/run.json",
+    "redCompletedAtUtc": "2026-11-03T18:38:50.823Z",
+    "reason": "Resource-free local synthetic lesson. Cloud, IaC, scaffolding, identity registration, deployment and expenditure are neither required nor authorized."
+  },
+  "testRuntime": {
+    "version": "Node.js 22.23.4",
+    "purpose": "Existing built-in node:test tooling only",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing signed Microsoft Edge 156",
+    "productionNode24Approval": false,
+    "dependencyChanges": false
+  },
+  "limits": [
+    "Every request, response, profile, HTTP status, rendered result and trace is synthetic.",
+    "This portable model proves no real HTTP transport, routing, authentication, protocol or Azure behavior.",
+    "No native/source-parent, production Node24, five-nines or unattended browser lifecycle certification.",
+    "History retains at most eight completed results in memory and is erased by explicit reset or page reload.",
+    "One frozen S unit only; no extra test, evidence, plumbing or refinement credit.",
+    "B-S051 and the original D-S051 native acceptance gates remain separate and unfulfilled.",
+    "Only learning/S051 is owned; no shared/root, dependency, framework or unsafe browser configuration changes."
+  ]
+}

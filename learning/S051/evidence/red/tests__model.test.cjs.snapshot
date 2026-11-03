@@ -1,0 +1,294 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fixtures = require('..\\fixtures.js');
+const { createLesson, renderOldResponse } = require('..\\model.js');
+const config = (response = 'compatible', observation = 'complete') => ({ response, observation });
+const complete = (response, observation) => {
+  const lesson = createLesson();
+  lesson.open(config(response, observation));
+  lesson.run();
+  return lesson;
+};
+
+test('loadable stub and fixed fixtures expose the complete callable API', () => {
+  const lesson = createLesson();
+  for (const name of ['snapshot', 'open', 'run', 'predict', 'next', 'reset']) {
+    assert.equal(typeof lesson[name], 'function');
+  }
+  assert.equal(typeof renderOldResponse, 'function');
+  assert.equal(fixtures.journeys.length, 3);
+  assert.equal(fixtures.maxAttempts, 8);
+});
+
+test('initial state has no fabricated candidate proof', () => {
+  const state = createLesson().snapshot();
+  assert.equal(state.phase, 'idle');
+  assert.equal(state.frontendVersion, 'v1');
+  assert.equal(state.configuration, null);
+  assert.equal(state.baseline, null);
+  assert.equal(state.current, null);
+  assert.equal(state.prediction, null);
+  assert.deepEqual(state.history, []);
+  assert.deepEqual(state.trace, []);
+});
+
+test('old renderer consumes retained typed fields and ignores the additive field', () => {
+  const result = renderOldResponse(fixtures.journeys[0].compatible.body);
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.value, fixtures.journeys[0].expected);
+  assert.equal(result.view, 'Synthetic learner — 2 unread');
+  assert.equal(result.reason, null);
+});
+
+test('a renamed field and invalid consumed types cannot render as a successful old journey', () => {
+  for (const body of [
+    fixtures.journeys[0].breaking.body,
+    { ...fixtures.baseline, displayName: null },
+    { ...fixtures.baseline, displayName: '' },
+    { ...fixtures.baseline, unreadCount: '1' },
+    { ...fixtures.baseline, unreadCount: -1 },
+    { ...fixtures.baseline, unreadCount: 1.5 },
+    { ...fixtures.baseline, unreadCount: NaN },
+    { ...fixtures.baseline, unreadCount: Infinity },
+    { ...fixtures.baseline, id: 51 },
+  ]) {
+    const result = renderOldResponse(body);
+    assert.equal(result.ok, false);
+    assert.equal(result.view, null);
+    assert.notEqual(result.reason, 'UNIMPLEMENTED');
+    assert.match(result.reason, /id|displayName|unreadCount/);
+  }
+});
+
+test('response accessors and inherited data are rejected without running getters', () => {
+  let getterCalls = 0;
+  const accessor = { ...fixtures.baseline };
+  Object.defineProperty(accessor, 'displayName', { get() { getterCalls++; return 'untrusted'; } });
+  for (const body of [null, [], Object.create(fixtures.baseline), accessor]) {
+    const result = renderOldResponse(body);
+    assert.equal(result.ok, false);
+    assert.notEqual(result.reason, 'UNIMPLEMENTED');
+  }
+  assert.equal(getterCalls, 0);
+});
+
+test('opening fixes the old frontend and baseline before the candidate can run', () => {
+  const lesson = createLesson();
+  const input = config();
+  const state = lesson.open(input);
+  assert.equal(state.phase, 'opened');
+  assert.equal(state.frontendVersion, 'v1');
+  assert.deepEqual(state.configuration, config());
+  assert.equal(state.baseline.view, 'Synthetic learner — 1 unread');
+  assert.equal(state.current, null);
+  assert.equal(state.trace[0].event, 'old-page-opened');
+  input.response = 'breaking';
+  assert.equal(lesson.snapshot().configuration.response, 'compatible');
+});
+
+test('compatible new API passes three actual old-renderer fixture assertions', () => {
+  const state = complete().snapshot();
+  assert.equal(state.phase, 'complete');
+  assert.equal(state.frontendVersion, 'v1');
+  assert.equal(state.current.gate, 'PASS');
+  assert.equal(state.current.impact, 'uninterrupted');
+  assert.deepEqual(state.current.metrics, {
+    planned: 3, observed: 3, http200: 3, rendered: 3, failed: 0, unobserved: 0,
+  });
+  assert.equal(state.current.preview, 'Synthetic learner — 4 unread');
+  assert.equal(state.current.attempt, 1);
+  assert.equal(state.history.length, 1);
+  assert.deepEqual(state.history[0].result, state.current);
+  for (const row of state.current.journeys) {
+    assert.equal(row.verdict, 'PASS');
+    assert.equal(row.status, 200);
+    assert.match(row.body, /"displayName"/);
+    assert.match(row.body, /"theme"/);
+    assert.equal(row.reason, null);
+  }
+});
+
+test('HTTP 200 plus three renamed fields fails the gate with visible interruption', () => {
+  const state = complete('breaking').snapshot();
+  assert.equal(state.phase, 'complete');
+  assert.equal(state.current.gate, 'FAIL');
+  assert.equal(state.current.impact, 'interrupted');
+  assert.deepEqual(state.current.metrics, {
+    planned: 3, observed: 3, http200: 3, rendered: 0, failed: 3, unobserved: 0,
+  });
+  assert.equal(state.current.preview, 'Old frontend cannot render the observed response.');
+  for (const row of state.current.journeys) {
+    assert.equal(row.verdict, 'FAIL');
+    assert.equal(row.status, 200);
+    assert.match(row.body, /"profile"/);
+    assert.match(row.reason, /displayName/);
+  }
+});
+
+for (const [response, observation, rendered, failed, unobserved, gate, impact] of [
+  ['compatible', 'partial', 1, 0, 2, 'UNKNOWN', 'unknown'],
+  ['compatible', 'none', 0, 0, 3, 'UNKNOWN', 'unknown'],
+  ['breaking', 'partial', 0, 1, 2, 'FAIL', 'interrupted'],
+  ['breaking', 'none', 0, 0, 3, 'UNKNOWN', 'unknown'],
+]) {
+  test(`${response}/${observation}: observed failures dominate uncertainty without inventing missing results`, () => {
+    const state = complete(response, observation).snapshot();
+    assert.equal(state.phase, 'complete');
+    const result = state.current;
+    assert.equal(result.gate, gate);
+    assert.equal(result.impact, impact);
+    assert.deepEqual(result.metrics, {
+      planned: 3, observed: rendered + failed, http200: rendered + failed,
+      rendered, failed, unobserved,
+    });
+    const missing = result.journeys.filter((row) => row.verdict === 'UNKNOWN');
+    assert.equal(missing.length, unobserved);
+    for (const row of missing) {
+      assert.equal(row.status, null);
+      assert.equal(row.body, null);
+      assert.equal(row.view, null);
+      assert.match(row.reason, /not observed/);
+    }
+    if (observation === 'none') assert.equal(result.preview, 'No candidate response observed.');
+  });
+}
+
+test('fixture outcomes and trace order are deterministic with no clock or random data', () => {
+  const first = complete('breaking', 'partial').snapshot();
+  const second = complete('breaking', 'partial').snapshot();
+  assert.equal(first.phase, 'complete');
+  assert.deepEqual(first, second);
+  assert.deepEqual(first.trace.map((row) => row.step), [1, 2, 3, 4, 5]);
+  assert.equal(first.trace[1].event, 'new-api-selected');
+});
+
+test('strict exact configuration rejects coercion, extras, inherited fields and accessors atomically', () => {
+  let getters = 0;
+  const accessor = { observation: 'complete' };
+  Object.defineProperty(accessor, 'response', { enumerable: true, get() { getters++; return 'compatible'; } });
+  const nonEnumerable = config();
+  Object.defineProperty(nonEnumerable, 'extra', { value: true });
+  const invalid = [
+    undefined, null, [], true, 1, 'compatible', {},
+    { response: 'compatible' }, { ...config(), extra: true },
+    Object.create(config()), accessor, nonEnumerable,
+    { ...config(), [Symbol('extra')]: 1 },
+    ...[null, false, 1, {}, 'COMPATIBLE', ' compatible', 'breaking '].map((response) => ({ ...config(), response })),
+    ...[null, false, 3, '', 'all', 'complete '].map((observation) => ({ ...config(), observation })),
+  ];
+  for (const input of invalid) {
+    const lesson = createLesson();
+    const before = lesson.snapshot();
+    assert.throws(() => lesson.open(input), /Invalid configuration/);
+    assert.deepEqual(lesson.snapshot(), before);
+  }
+  assert.equal(getters, 0);
+});
+
+test('private state cannot be changed through deeply frozen copied snapshots', () => {
+  const lesson = complete();
+  const snapshot = lesson.snapshot();
+  assert.equal(snapshot.phase, 'complete');
+  assert.notStrictEqual(snapshot, lesson.snapshot());
+  assert.equal(Object.isFrozen(snapshot), true);
+  assert.equal(Object.isFrozen(snapshot.current.metrics), true);
+  assert.equal(Object.isFrozen(snapshot.history[0].result.journeys), true);
+  assert.throws(() => { snapshot.current.gate = 'FAIL'; }, TypeError);
+  assert.throws(() => { snapshot.history.push({}); }, TypeError);
+  assert.equal(lesson.snapshot().current.gate, 'PASS');
+});
+
+test('state guards reject skipped, repeated and out-of-order actions without state mutation', () => {
+  const lesson = createLesson();
+  const unchanged = (action, message) => {
+    const before = lesson.snapshot();
+    assert.throws(action, message);
+    assert.deepEqual(lesson.snapshot(), before);
+  };
+  unchanged(() => lesson.run(), /requires opened/);
+  unchanged(() => lesson.predict('unknown'), /requires complete/);
+  unchanged(() => lesson.next(), /requires complete/);
+  lesson.open(config());
+  unchanged(() => lesson.open(config('breaking')), /requires idle/);
+  unchanged(() => lesson.next(), /requires complete/);
+  unchanged(() => lesson.predict('uninterrupted'), /requires complete/);
+  lesson.run();
+  unchanged(() => lesson.run(), /requires opened/);
+  unchanged(() => lesson.open(config()), /requires idle/);
+});
+
+test('a correct failure prediction passes its verifier but never changes failed user impact', () => {
+  const lesson = complete('breaking');
+  const before = lesson.snapshot();
+  const state = lesson.predict('interrupted');
+  assert.equal(state.phase, 'complete');
+  assert.deepEqual(state.current, before.current);
+  assert.deepEqual(state.prediction, { expected: 'interrupted', actual: 'interrupted', verdict: 'PASS' });
+  assert.deepEqual(state.history[0].prediction, state.prediction);
+  assert.equal(state.current.gate, 'FAIL');
+  assert.equal(state.current.impact, 'interrupted');
+  assert.throws(() => lesson.predict('interrupted'), /already checked/);
+});
+
+test('a wrong prediction fails independently and invalid predictions cannot change the result', () => {
+  const lesson = complete();
+  const before = lesson.snapshot();
+  for (const input of [undefined, null, '', true, 1, 'PASS', 'uninterrupted ', {}, []]) {
+    assert.throws(() => lesson.predict(input), /Invalid prediction/);
+    assert.deepEqual(lesson.snapshot(), before);
+  }
+  const state = lesson.predict('interrupted');
+  assert.equal(state.prediction.verdict, 'FAIL');
+  assert.equal(state.current.gate, 'PASS');
+  assert.equal(state.current.impact, 'uninterrupted');
+});
+
+test('a new attempt clears stale proof while retaining assumptions, measurements and verifier history', () => {
+  const lesson = complete('breaking', 'partial');
+  lesson.predict('interrupted');
+  const prior = lesson.snapshot().history[0];
+  const next = lesson.next();
+  assert.equal(next.phase, 'idle');
+  assert.equal(next.configuration, null);
+  assert.equal(next.baseline, null);
+  assert.equal(next.current, null);
+  assert.equal(next.prediction, null);
+  assert.deepEqual(next.trace, []);
+  assert.deepEqual(next.history, [prior]);
+  lesson.open(config());
+  const finished = lesson.run();
+  assert.equal(finished.current.attempt, 2);
+  assert.deepEqual(finished.history[0], prior);
+  assert.equal(finished.history[1].result.gate, 'PASS');
+});
+
+test('eight completed attempts are a hard limit rather than silently evicted history', () => {
+  const lesson = createLesson();
+  for (let attempt = 1; attempt <= fixtures.maxAttempts; attempt++) {
+    lesson.open(config());
+    const state = lesson.run();
+    assert.equal(state.phase, 'complete');
+    assert.equal(state.current.attempt, attempt);
+    if (attempt < fixtures.maxAttempts) lesson.next();
+  }
+  const before = lesson.snapshot();
+  assert.equal(before.history.length, 8);
+  assert.throws(() => lesson.next(), /History full/);
+  assert.deepEqual(lesson.snapshot(), before);
+  assert.deepEqual(before.history.map((entry) => entry.result.attempt), [1, 2, 3, 4, 5, 6, 7, 8]);
+});
+
+test('reset from complete or opened restores the exact initial model and restarts numbering', () => {
+  const lesson = complete('breaking');
+  lesson.predict('interrupted');
+  const initial = createLesson().snapshot();
+  const reset = lesson.reset();
+  assert.equal(reset.phase, 'idle');
+  assert.deepEqual(reset, initial);
+  lesson.open(config('compatible', 'none'));
+  assert.deepEqual(lesson.reset(), initial);
+  lesson.open(config());
+  assert.equal(lesson.run().current.attempt, 1);
+});

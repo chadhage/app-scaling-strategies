@@ -1,0 +1,27 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S051Model = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  function renderOldResponse() {
+    return { ok: false, value: null, view: null, reason: 'UNIMPLEMENTED' };
+  }
+  function createLesson() {
+    const state = {
+      phase: 'UNIMPLEMENTED', frontendVersion: 'v1', configuration: null,
+      baseline: null, current: null, prediction: null, history: [], trace: [],
+    };
+    const snapshot = () => state;
+    return {
+      snapshot,
+      open: snapshot,
+      run: snapshot,
+      predict: snapshot,
+      next: snapshot,
+      reset: snapshot,
+    };
+  }
+  return { createLesson, renderOldResponse };
+}));
