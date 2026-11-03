@@ -1,0 +1,159 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const zlib = require('node:zlib');
+const vm = require('node:vm');
+const root = path.resolve(__dirname, '..');
+const repo = path.resolve(root, '..', '..');
+const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
+const json = (file) => JSON.parse(read(file));
+const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const canonicalSha = (file) => sha(Buffer.from(read(file).replace(/\r\n/g, '\n')));
+const html = read('index.html');
+const model = read('model.js');
+const app = read('app.js');
+const manifest = json('manifest.json');
+const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+
+test('manifest traces exactly one portable S046 unit to its actual source, card and packet', () => {
+  const contract = json('evidence\\source-contract.json');
+  for (const [field, expected] of Object.entries({
+    cardId: 'A-S046', sourceId: 'S046', parentId: 'D-S046', kano: 'S',
+    kanoUnit: 'A-S046', packet: 'SC-S046', owner: 'worker-A-S046', entryGate: 'SOURCE',
+    executionMode: 'synthetic',
+  })) assert.equal(manifest[field], expected);
+  assert.equal(manifest.entryPoint, 'learning/S046/index.html');
+  assert.equal(manifest.bounds.retainedAttempts, 8);
+  assert.equal(manifest.bounds.fixedEvents, 6);
+  assert.equal(manifest.bounds.maximumResumeWireEvents, 5);
+  assert.equal(contract.source.row, '| S046 | **Server-sent events:** Resume from an event cursor without missing or duplicating user-visible events. |');
+  assert.match(contract.backlog.row, /ordered and complete; reconnection gaps are measured against the original budget/);
+  assert.match(contract.card.row, /Resume an SSE cursor; identify a gap hidden by a newly established stream/);
+  assert.match(contract.card.nativeSibling, /actual event order\/completeness and client budget/);
+  assert.match(contract.card.atomicAndPortableContract, /### Portable A-card lesson contract/);
+  assert.match(contract.card.atomicAndPortableContract, /parent-owned empirical acceptance/);
+  assert.match(contract.card.packetRule, /every other A\/B card belongs to SC-Snnn/);
+  for (const section of ['source', 'backlog']) {
+    const current = fs.readFileSync(path.join(repo, contract[section].path), 'utf8');
+    assert.ok(current.split(/\r?\n/).includes(contract[section].row));
+    assert.match(contract[section].sha256, /^[0-9a-f]{64}$/);
+  }
+});
+
+test('BDD and archived raw behavioral RED remain intact, loadable and non-auto-discovered', () => {
+  const red = json('evidence\\red\\run.json');
+  assert.equal(red.exitCode, 1);
+  assert.equal(red.spawnError, null);
+  assert.equal(red.loadableStubSmoke.outcome, 'unknown');
+  const stdout = zlib.gunzipSync(fs.readFileSync(path.join(root, 'evidence', 'red', 'stdout.raw.gz')));
+  const stderr = zlib.gunzipSync(fs.readFileSync(path.join(root, 'evidence', 'red', 'stderr.raw.gz')));
+  assert.equal(sha(stdout), red.rawStdoutSha256);
+  assert.equal(sha(stderr), red.rawStderrSha256);
+  assert.deepEqual(stdout, fs.readFileSync(path.join(root, 'evidence', 'red', 'red.tap')));
+  assert.match(stdout.toString(), /ERR_ASSERTION/);
+  assert.match(stdout.toString(), /actual: 'unknown'/);
+  assert.match(stdout.toString(), /expected: 'success'/);
+  assert.doesNotMatch(stdout.toString() + stderr.toString(), /MODULE_NOT_FOUND|ENOENT|command not found|Cannot find module/);
+  for (const [file, hash] of Object.entries(red.snapshots)) {
+    assert.ok(file.endsWith('.snapshot'));
+    assert.equal(sha(fs.readFileSync(path.join(root, 'evidence', 'red', file))), hash);
+  }
+  assert.equal(read('sse.feature'), read('evidence\\red\\sse.feature.snapshot'));
+  assert.ok(read('tests\\model.test.cjs').startsWith(read('evidence\\red\\model.test.cjs.snapshot')));
+  const context = {};
+  vm.runInNewContext(read('evidence\\red\\model.js.snapshot'), context);
+  assert.equal(context.S046.assess(context.S046.DEFAULTS).outcome, 'unknown');
+  const iac = json('evidence\\iac.json');
+  assert.equal(iac.status, 'N/A');
+  assert.equal(iac.afterRedCompletedAtUtc, red.completedAtUtc);
+  assert.ok(Date.parse(iac.recordedAtUtc) >= Date.parse(red.completedAtUtc));
+  assert.equal(manifest.iac.status, 'N/A');
+  assert.ok((read('sse.feature').match(/  Scenario:/g) || []).length >= 9);
+});
+
+test('browser and CommonJS model surfaces execute the same deterministic behavior', () => {
+  const context = {};
+  vm.runInNewContext(model, context);
+  const browser = context.S046.assess(context.S046.DEFAULTS);
+  const node = require('../model.js').assess(require('../model.js').DEFAULTS);
+  assert.deepEqual(JSON.parse(JSON.stringify(browser)), node);
+});
+
+test('portable HTML has unique referenced controls, native keyboard semantics and unshadowed reset', () => {
+  assert.equal(new Set(ids).size, ids.length);
+  assert.equal(html.split(manifest.requiredVisibleLabel).length - 1, 1);
+  assert.match(html, /<html lang="en">/);
+  assert.match(html, /id="input-error" role="alert" hidden/);
+  assert.match(html, /id="trace" tabindex="0"/);
+  assert.match(read('styles.css'), /:focus-visible\s*\{[^}]*outline:\s*3px/);
+  assert.match(read('styles.css'), /@media/);
+  for (const match of app.matchAll(/byId\('([^']+)'\)/g)) assert.ok(ids.includes(match[1]), match[1]);
+  for (const match of html.matchAll(/<label for="([^"]+)"/g)) assert.ok(ids.includes(match[1]), match[1]);
+  for (const match of html.matchAll(/<button\b([^>]*)>/g)) assert.match(match[1], /type="button"/);
+  assert.doesNotMatch(html, /\b(?:id|name)="reset"/i);
+  assert.match(app, /form\.reset\(\)/);
+  assert.match(app, /event\.preventDefault\(\)/);
+  assert.match(app, /Configuration is locked/);
+  assert.doesNotMatch(app, /innerHTML|outerHTML|insertAdjacentHTML/);
+  assert.doesNotMatch(html, /\son[a-z]+=["']|javascript:|https?:\/\//i);
+});
+
+test('restrictive file-page CSP and resource-free scripts have no execution or network escape', () => {
+  const policy = html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)[1];
+  for (const directive of [
+    "default-src 'none'", "script-src 'self'", "style-src 'self'", "connect-src 'none'",
+    "object-src 'none'", "base-uri 'none'", "form-action 'none'", "frame-src 'none'",
+  ]) assert.ok(policy.split(';').map((value) => value.trim()).includes(directive));
+  assert.doesNotMatch(policy, /unsafe|https?:|data:/);
+  assert.deepEqual([...html.matchAll(/<script src="([^"]+)" defer>/g)].map((match) => match[1]), ['model.js', 'app.js']);
+  assert.doesNotMatch(model + app, /\b(?:fetch|EventSource|WebSocket|XMLHttpRequest|eval|setInterval|setTimeout)\s*\(|Math\.random|Date\.now|localStorage|sessionStorage|sendBeacon/);
+  assert.equal(manifest.testRuntime.productionNode24Certification, false);
+  assert.ok(manifest.limits.some((limit) => /B-S046 and D-S046/.test(limit)));
+});
+
+test('retained successful browser proof names the exact tested source and authorized helper', () => {
+  const proof = json('evidence\\browser.json');
+  assert.equal(proof.cardId, 'A-S046');
+  assert.equal(proof.outcome, 'PASS');
+  assert.equal(proof.captureExplicitlyEnabled, true);
+  assert.equal(proof.playwrightVersion, '1.56.1');
+  assert.match(proof.browserVersion, /^156\./);
+  assert.equal(proof.helper.sha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+  assert.equal(proof.helper.publication, '53c0c0d');
+  assert.equal(proof.cleanup.closed, true);
+  assert.deepEqual(proof.pageErrors, []);
+  assert.deepEqual(proof.exerciseNetworkRequests, []);
+  assert.ok(proof.observations.length >= 15);
+  for (const [file, hash] of Object.entries(proof.testedSourceHashes)) assert.equal(canonicalSha(file), hash, file);
+  for (const directive of ['script-src-elem', 'connect-src', 'frame-src', 'form-action', 'object-src', 'base-uri', 'style-src-elem']) {
+    assert.ok(proof.cspViolations.some((violation) => violation.effectiveDirective === directive), directive);
+  }
+  const helper = path.join(repo, 'testing', 'browser', 'isolated.cjs');
+  assert.equal(sha(fs.readFileSync(helper)), proof.helper.sha256);
+  const testSource = read('tests\\browser.test.cjs');
+  assert.match(testSource, /process\.env\.CAPTURE_BROWSER_EVIDENCE === '1'/);
+  assert.match(testSource, /openIsolatedLesson\('learning\\\\S046\\\\index\.html'\)/);
+  assert.match(testSource, /finally\s*\{[\s\S]*await session\.close\(\)/);
+  assert.match(testSource, /if \(capture\) fs\.writeFileSync/);
+  assert.doesNotMatch(testSource, /chromium\.launch|bypassCSP:\s*true|--no-sandbox|ignoreHTTPSErrors:\s*true/);
+});
+
+test('every retained capture run preserves raw stdout/stderr and the exact browser test snapshot', () => {
+  const files = fs.readdirSync(path.join(root, 'evidence')).filter((file) => /^browser-run-\d{3}\.json$/.test(file));
+  assert.ok(files.length >= 1);
+  for (const file of files) {
+    const run = json(`evidence\\${file}`);
+    for (const stream of ['stdout', 'stderr']) {
+      const raw = zlib.gunzipSync(fs.readFileSync(path.join(root, 'evidence', run[stream].file)));
+      assert.equal(sha(raw), run[stream].sha256);
+    }
+    assert.equal(sha(fs.readFileSync(path.join(root, 'evidence', run.testSnapshot.file))), run.testSnapshot.sha256);
+    assert.equal(sha(fs.readFileSync(path.join(root, 'evidence', run.observations.file))), run.observations.sha256);
+    assert.ok([0, 1].includes(run.exitCode));
+  }
+  assert.ok(files.some((file) => json(`evidence\\${file}`).exitCode === 0));
+});

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S046",
+  "stage": "published-LF-proof-regression-RED",
+  "startedAtUtc": "2026-11-03T18:34:43.726Z",
+  "completedAtUtc": "2026-11-03T18:34:44.066Z",
+  "runtime": "v22.23.4",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "-e",
+    "const assert = require('node:assert/strict'); const fs = require('node:fs'); const { spawnSync } = require('node:child_process'); const committed = spawnSync('git', ['show', 'e71273393f17749dfa3b0a5defc96ca5a894ab7e:learning/S046/sse.feature']); assert.equal(committed.status, 0); assert.equal(committed.stdout.toString('utf8'), fs.readFileSync('learning\\\\S046\\\\evidence\\\\red\\\\sse.feature.snapshot', 'utf8'));"
+  ],
+  "baselinePublication": "e71273393f17749dfa3b0a5defc96ca5a894ab7e",
+  "exitCode": 1,
+  "assertion": "Committed LF BDD must compare semantically with preserved raw CRLF snapshot; byte-equality from original surface suite fails after Git normalization.",
+  "stdout": {
+    "file": "published-lf-red.stdout.raw.gz",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stderr": {
+    "file": "published-lf-red.stderr.raw.gz",
+    "sha256": "af31a8742d5a97e88995bbe7d99b7b8acb311f835928f7e5126d4ae60f0b9e93"
+  },
+  "surfaceSnapshot": {
+    "file": "published-lf-surface.cjs.snapshot",
+    "sha256": "8cfaf23260479e9ada84970b15fbe607b6a17255129fe1d3b93437269a597ef4"
+  }
+}

@@ -78,7 +78,10 @@ BDD in `sse.feature` preceded the loadable conservative stub and genuine
 `ERR_ASSERTION` RED (`unknown` versus expected `success`). `evidence\red\`
 retains raw stdout/stderr compressed without transformation, TAP, command/timestamps,
 hashes and exact `.snapshot` source/test/BDD files. Snapshots are intentionally
-not auto-discovered tests. The original failing assertion is retained in the green
+not auto-discovered tests. Raw snapshot hashes preserve original line endings;
+logical source comparisons use LF so published Git-normalized files remain valid.
+A real post-publication LF/raw-snapshot assertion RED is retained separately with
+its corrected regression check. The original failing assertion is retained in the green
 model suite. `evidence\iac.json` records resource-free **N/A** after RED and before
 implementation. Source/contract and exact tool provenance are retained separately.
 Browser proof records actual DOM, keyboard, input/phase guards, locked configuration,

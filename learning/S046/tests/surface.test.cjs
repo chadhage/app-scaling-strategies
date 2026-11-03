@@ -9,7 +9,7 @@ const zlib = require('node:zlib');
 const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const repo = path.resolve(root, '..', '..');
-const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
+const read = (file) => fs.readFileSync(path.join(root, file), 'utf8').replace(/\r\n/g, '\n');
 const json = (file) => JSON.parse(read(file));
 const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
 const canonicalSha = (file) => sha(Buffer.from(read(file).replace(/\r\n/g, '\n')));
@@ -81,6 +81,21 @@ test('browser and CommonJS model surfaces execute the same deterministic behavio
   const browser = context.S046.assess(context.S046.DEFAULTS);
   const node = require('../model.js').assess(require('../model.js').DEFAULTS);
   assert.deepEqual(JSON.parse(JSON.stringify(browser)), node);
+});
+
+test('published LF text compares canonically while raw Windows snapshots retain their original bytes', () => {
+  const regression = json('evidence\\published-lf-red.json');
+  assert.equal(regression.exitCode, 1);
+  for (const stream of ['stdout', 'stderr']) {
+    const raw = zlib.gunzipSync(fs.readFileSync(path.join(root, 'evidence', regression[stream].file)));
+    assert.equal(sha(raw), regression[stream].sha256);
+    if (stream === 'stderr') assert.match(raw.toString(), /ERR_ASSERTION/);
+  }
+  assert.equal(sha(fs.readFileSync(path.join(root, 'evidence', regression.surfaceSnapshot.file))), regression.surfaceSnapshot.sha256);
+  const rawBDD = fs.readFileSync(path.join(root, 'evidence', 'red', 'sse.feature.snapshot'), 'utf8');
+  assert.match(rawBDD, /\r\n/);
+  assert.doesNotMatch(read('evidence\\red\\sse.feature.snapshot'), /\r\n/);
+  assert.equal(read('sse.feature'), rawBDD.replace(/\r\n/g, '\n'));
 });
 
 test('portable HTML has unique referenced controls, native keyboard semantics and unshadowed reset', () => {
