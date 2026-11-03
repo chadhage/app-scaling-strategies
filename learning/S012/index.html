@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S012 — CPU/memory-driven scale-out</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#controls">Skip to operator controls</a>
+  <header>
+    <p class="banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S012 — CPU/memory-driven scale-out</h1>
+    <p>A-S012 · D-S012 · SC-S012 · one frozen satisfier (S), kanoUnit A-S012</p>
+    <p><strong>Objective:</strong> scale before resource saturation causes queuing or latency-budget violations.
+      A rule trigger and a requested instance are not evidence of effective capacity or successful users.</p>
+  </header>
+  <main>
+    <noscript><p class="error">JavaScript is required for the local rehearsal. No result can be established while it is disabled.</p></noscript>
+    <section aria-labelledby="fixture-title">
+      <h2 id="fixture-title">Declared synthetic fixture</h2>
+      <ul>
+        <li>Start: two ready instances. Each represents 100 CPU units, 100 memory units, and 100 requests/second.</li>
+        <li>Rule: CPU ≥ 70% <strong>OR</strong> memory ≥ 75% for two consecutive 10-second windows; add one instance.
+          Warm-up takes two more windows. Maximum: four instances. No automatic scale-in.</li>
+        <li>Percent = aggregate resource units ÷ ready instances, capped at 100% in the metric display.
+          Raw demand above 100% and saturation are retained separately.</li>
+        <li>Each <strong>Observe ten journeys</strong> samples ten fixed synthetic clients independently of metric windows.
+          A correct journey completes, preserves session/cart state, produces one effect, and meets its latency budget.</li>
+        <li>Latency model: 80 ms + ceil(queued requests/second ÷ service requests/second × 1000).
+          Saturation adds 300 ms + ceil(raw resource percent − 100). These are teaching constants, not Azure thresholds or performance predictions.</li>
+        <li>Missing data is UNKNOWN; unsupported profiles do not run. HTTP automatic scaling is not this CPU/memory rule.
+          Actual metric, SKU, plan and slot eligibility require separate native qualification.</li>
+      </ul>
+      <p><strong>Preconditions and limits:</strong> a modern browser with JavaScript; no server or cloud access.
+        No real CPU load, memory allocation, telemetry, autoscale profile, subscription, slots, identity, deployment, or spend.
+        Node.js 22 is test tooling only; production Node.js 24 and native B-S012/D-S012 acceptance are unvalidated.</p>
+    </section>
+    <section aria-labelledby="exercise-title">
+      <h2 id="exercise-title">Conduct the preemptive transition</h2>
+      <ol>
+        <li>Keep the defaults; observe ten baseline journeys.</li>
+        <li>Advance two metric windows. CPU triggers a request: requested 3, effective ready 2.</li>
+        <li>Observe ten journeys during warm-up; advance two more windows. Effective ready becomes 3 and CPU falls to 46.67%.</li>
+        <li>Observe ten post-scale journeys. Inspect added-instance use, all 30 outcomes, and the exercise verifier.</li>
+        <li>Reset, then try CPU 40 / memory 150 to trigger on memory alone.
+          Or CPU 260 / offered load 260 to measure saturation, queuing, and interruptions before recovery.</li>
+      </ol>
+      <p>Every action is explicit; nothing advances on a wall clock. Changing controls does not rewrite a recorded trace.
+        Apply changes before stepping. Apply restarts the breach streak but does not cancel an in-progress request.</p>
+    </section>
+    <section id="controls" aria-labelledby="controls-title">
+      <h2 id="controls-title">Operator controls</h2>
+      <form id="conduct-controls" novalidate>
+        <fieldset id="input-fields">
+          <legend>Next synthetic input</legend>
+          <div class="grid">
+            <label for="cpu-demand">Aggregate CPU demand (0–1200 units)
+              <input id="cpu-demand" name="cpuUnits" type="number" min="0" max="1200" step="1" value="140" required>
+            </label>
+            <label for="memory-demand">Aggregate memory demand (0–1200 units)
+              <input id="memory-demand" name="memoryUnits" type="number" min="0" max="1200" step="1" value="100" required>
+            </label>
+            <label for="offered-load">Offered load (0–1000 requests/second)
+              <input id="offered-load" name="offeredRps" type="number" min="0" max="1000" step="1" value="120" required>
+            </label>
+            <label for="latency-budget">Journey latency budget (80–1000 ms)
+              <input id="latency-budget" name="latencyBudgetMs" type="number" min="80" max="1000" step="1" value="250" required>
+            </label>
+            <label for="rule-profile">Synthetic rule/support profile
+              <select id="rule-profile" name="profile">
+                <option value="metric-rule">CPU/memory metric rule — supported teaching fixture only</option>
+                <option value="http-slot-unsupported">HTTP automatic scaling with slot traffic — unsupported fixture</option>
+                <option value="unverified-rule">Native metric/profile eligibility — unverified</option>
+              </select>
+            </label>
+            <label for="observation-condition">Deterministic observation condition
+              <select id="observation-condition" name="fault">
+                <option value="none">Healthy observations</option>
+                <option value="metrics-unknown">Missing CPU/memory metrics</option>
+                <option value="capacity-unknown">Missing effective-capacity/routing observation</option>
+                <option value="provision-failure">Provisioning fails during warm-up</option>
+                <option value="journey-unknown">One client observation missing</option>
+                <option value="journey-failure">One HTTP 200 has incorrect state / duplicate effect</option>
+              </select>
+            </label>
+          </div>
+          <button id="apply-inputs" type="submit">Apply demand and condition</button>
+        </fieldset>
+      </form>
+      <div class="actions">
+        <button id="advance-window" type="button">Advance metric window (10 synthetic seconds)</button>
+        <button id="observe-journeys" type="button">Observe ten journeys</button>
+        <button id="restart-rehearsal" type="button">Archive and reset rehearsal</button>
+      </div>
+      <p id="command-result" role="status" aria-live="polite"></p>
+      <p id="input-error" class="error" role="alert" hidden></p>
+      <p>All controls support Tab, Enter and Space. Maximum 80 commands/run and eight archived runs/page.
+        At the archive limit, export the selectable JSON and reload; old observations are never silently pruned.</p>
+    </section>
+    <section aria-labelledby="outcome-title">
+      <h2 id="outcome-title">Observed outcomes — separate the claims</h2>
+      <p class="verdict">Exercise verifier: <strong id="verdict">NOT_RUN</strong></p>
+      <p id="verdict-detail"></p>
+      <dl class="metrics">
+        <div><dt>Synthetic clock</dt><dd id="clock-value">0 seconds</dd></div>
+        <div><dt>Requested instances</dt><dd id="requested-value">2</dd></div>
+        <div><dt>Effective ready instances</dt><dd id="ready-value">2</dd></div>
+        <div><dt>Last metric CPU / memory</dt><dd id="metric-values">NOT_OBSERVED</dd></div>
+        <div><dt>Last rule decision</dt><dd id="rule-decision">NOT_RUN</dd></div>
+        <div><dt>Client observation result</dt><dd id="user-verdict">NOT_OBSERVED</dd></div>
+      </dl>
+      <p id="capacity-detail"></p>
+      <p id="user-counts"></p>
+      <p id="transition-counts"></p>
+      <p><strong>Metric and capacity observations are not client evidence.</strong> A later recovery never erases an earlier
+        interrupted, unknown, or failed observation. Ten-client synthetic samples do not establish an SLA, five-nines, or actual Azure migration.</p>
+    </section>
+    <section aria-labelledby="trace-title">
+      <h2 id="trace-title">Retained observations in this run</h2>
+      <div class="table-wrap" tabindex="0" aria-label="Metric observations, horizontally scrollable">
+        <table>
+          <caption>Metric windows and rule/capacity correlation</caption>
+          <thead><tr><th scope="col">Window / time</th><th scope="col">CPU / memory % (raw)</th><th scope="col">Requested / ready</th><th scope="col">Queue / saturation</th><th scope="col">Decision</th></tr></thead>
+          <tbody id="metric-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap" tabindex="0" aria-label="Capacity transitions, horizontally scrollable">
+        <table>
+          <caption>Capacity transition observations</caption>
+          <thead><tr><th scope="col">Transition / trigger</th><th scope="col">From → target</th><th scope="col">Requested / ready / failed time</th><th scope="col">Status</th></tr></thead>
+          <tbody id="transition-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap" tabindex="0" aria-label="Client journeys, horizontally scrollable">
+        <table>
+          <caption>Independent client correctness and latency observations</caption>
+          <thead><tr><th scope="col">Attempt / client / phase</th><th scope="col">Instance / HTTP</th><th scope="col">Latency / budget / queue</th><th scope="col">Auth / state / effects</th><th scope="col">Outcome / reason</th></tr></thead>
+          <tbody id="journey-rows"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="evidence-title">
+      <h2 id="evidence-title">Selectable synthetic evidence</h2>
+      <p>Copy this JSON before closing or reloading. Observations and reset archives are retained in page memory only;
+        there is no remote or persistent storage. Configuration at observation time is preserved with every sample.</p>
+      <details id="archived-runs">
+        <summary id="archive-title">Retained prior runs (0)</summary>
+        <ul id="archive-list"></ul>
+      </details>
+      <pre id="run-evidence" tabindex="0" aria-label="Selectable synthetic evidence JSON"></pre>
+    </section>
+    <section aria-labelledby="remaining-title">
+      <h2 id="remaining-title">Source lineage and genuine remaining gates</h2>
+      <p>Canonical README S012: <strong>CPU/memory-driven scale-out:</strong> scale before resource saturation causes queuing or latency-budget violations.
+        D-S012 additionally requires supported native metric-based configuration and correlated actual rules, capacity and client budgets.
+        Its P001 prerequisite and source-parent native acceptance are not fulfilled by A-S012.</p>
+      <p>B-S012 remains To Do, gated by CORE, DATA, ASANY, C066, an explicitly qualified target/SKU/region/metric/slot envelope,
+        and separate native authorization. Actual cloud/IaC, production Node.js 24, and source-parent proof remain unclaimed.
+        No extra credit is earned for tests, evidence, tooling, or refinement. Parent empirical acceptance of this single A card is separate.</p>
+    </section>
+  </main>
+  <footer>
+    <p>Educational examples are provided “AS IS”, without warranties or a reliability guarantee. Validate security,
+      compatibility, reliability, and cost independently. Microsoft/Azure references imply no endorsement, certification, or support.
+      No license, product term, support agreement, or published SLA is changed.</p>
+  </footer>
+</body>
+</html>
