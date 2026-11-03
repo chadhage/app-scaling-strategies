@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S009",
+  "workerId": "worker-A-S009",
+  "kano": "S",
+  "kanoUnit": "A-S009",
+  "parentId": "D-S009",
+  "sourceId": "S009",
+  "packet": "SC-S009",
+  "entryGate": "SOURCE",
+  "entry": "index.html",
+  "title": "Shadow getProfile: compare responses, contain effects",
+  "mode": "synthetic-only",
+  "nativeProof": false,
+  "sourceParentComplete": false,
+  "label": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Keep caller responses on the intended version, compare a separate candidate, and distinguish matching response bodies from safe write/notification behavior.",
+  "bdd": "shadow-profile.feature",
+  "evidence": "evidence.json",
+  "tests": [
+    "tests\\shadow-profile.test.cjs",
+    "tests\\lesson-assets.test.cjs",
+    "tests\\browser.test.cjs"
+  ],
+  "testCommand": "node --test --test-reporter=tap learning\\S009\\tests\\shadow-profile.test.cjs learning\\S009\\tests\\lesson-assets.test.cjs",
+  "browserTestCommand": "node --test --test-reporter=tap learning\\S009\\tests\\browser.test.cjs",
+  "browserTestPrerequisite": "The parent-verified testing\\browser\\isolated.cjs helper and its existing offline Playwright runtime; no dependencies are required for manual file-based use.",
+  "evidenceValidationCommand": "node learning\\S009\\tests\\verify-evidence.cjs",
+  "verification": {
+    "node": "36 focused tests passed; actual RED was 1 passed and 31 behavioral assertion failures.",
+    "browser": "Nine actual-DOM assertion groups passed in isolated headless Microsoft Edge 156.0.4314.50 via Playwright 1.56.1; helper session closed in finally.",
+    "browserEvidence": "evidence\\browser-observations.json",
+    "acceptance": "Pending parent/controller review; no worker-awarded acceptance or credit."
+  },
+  "preconditions": [
+    "Open index.html in a JavaScript-enabled browser; no server or packages are needed.",
+    "Choose only the supplied synthetic profiles; no real replay or supplied endpoint is supported.",
+    "Every production request records one synthetic profile-view write and one synthetic notification.",
+    "The candidate attempts the same effects through a separate sink, suppressed except in the explicitly unsafe fixture."
+  ],
+  "scenarios": [
+    "safe",
+    "discrepant",
+    "unsafe-duplicate",
+    "unknown",
+    "invalid profile/count",
+    "Reset"
+  ],
+  "bounds": {
+    "requestsPerBatch": [1, 3],
+    "totalRequestsBeforeReset": 30
+  },
+  "iac": {
+    "status": "N/A",
+    "evidence": "evidence\\iac.json"
+  },
+  "cleanup": "Reset clears all in-memory observations and restores controls. Reload or close also discards state. No storage, cloud resources, background work or external effects exist.",
+  "limits": [
+    "Response bodies and counters are deterministic synthetic observations, not live service measurements.",
+    "The UNKNOWN fixture withholds the candidate response after a suppressed effect attempt; its effect counts do not prove a real candidate is safe.",
+    "Matching bodies are not proof of safe external effects, performance, authorization, compatibility or readiness.",
+    "No native B-S009 result, completed D-S009 parent, acceptance or Kano credit is claimed."
+  ]
+}

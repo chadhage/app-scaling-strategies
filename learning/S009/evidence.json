@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S009",
+  "workerId": "worker-A-S009",
+  "kano": "S",
+  "kanoUnit": "A-S009",
+  "parentId": "D-S009",
+  "sourceId": "S009",
+  "packet": "SC-S009",
+  "entryGate": "SOURCE",
+  "mode": "synthetic-only",
+  "entryPoint": "learning\\S009\\index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Keep production caller responses on the intended version while a separate candidate is compared; inspect response discrepancies and independent business-write/notification counters.",
+  "configuration": {
+    "host": "Direct local file; no application server",
+    "framework": "None",
+    "dependenciesInstalled": false,
+    "productionVersions": ["v1", "v2"],
+    "candidateVersion": "The other version, never returned to the caller",
+    "profiles": ["synthetic-rowan", "synthetic-sage"],
+    "requestCountPerBatch": [1, 3],
+    "totalRequestBudget": 30,
+    "effectsPerProductionRequest": {
+      "profileViewWrites": 1,
+      "notifications": 1
+    },
+    "shadowSink": "Attempts one write and notification per request; suppresses both except in the explicitly unsafe synthetic fixture.",
+    "unknownFixture": "Candidate effect attempts are suppressed, then the response is withheld. Known synthetic sink counters cannot establish response equality or live safety.",
+    "responseComparison": "HTTP-like status plus business body fields, excluding handler-version metadata",
+    "storage": "In-memory only; no persistence, timers, network traffic or external effects"
+  },
+  "stages": {
+    "bdd": {
+      "order": 1,
+      "path": "learning\\S009\\shadow-profile.feature",
+      "writtenBeforeTests": true,
+      "timestampEvidence": "learning\\S009\\evidence\\red-run.json",
+      "coverage": [
+        "Safe shadow with production v1 and v2",
+        "Separate discrepant candidate fields",
+        "Matching response with unsafe duplicate business effects and notifications",
+        "Earlier unsafe history retained after later safe replay",
+        "Missing candidate response remains UNKNOWN",
+        "Invalid profile, version, scenario, count and fields fail closed",
+        "Finite 30-request budget",
+        "Keyboard operation and complete Reset without form method shadowing"
+      ],
+      "executionLimit": "First-written Gherkin specification; no Cucumber execution is claimed."
+    },
+    "tddRed": {
+      "order": 2,
+      "command": "node --test --test-reporter=tap learning\\S009\\tests\\shadow-profile.test.cjs",
+      "run": "learning\\S009\\evidence\\red-run.json",
+      "output": "learning\\S009\\evidence\\red.txt",
+      "losslessPreWhitespaceNormalizationOutput": "learning\\S009\\evidence\\red-original.txt.gz",
+      "executedStubSnapshot": "learning\\S009\\evidence\\red-stub.js",
+      "exitCode": 1,
+      "tests": 32,
+      "passed": 1,
+      "failed": 31,
+      "failureKind": "31 ERR_ASSERTION behavioral failures against a loadable model stub. No missing tool, import, package or module failure.",
+      "normalization": "Repository absolute path prefixes were removed; 60 trailing-whitespace runs were trimmed for git diff --check. Path-redacted pre-trim output is preserved losslessly in red-original.txt.gz; assertion details, durations and counts are unchanged."
+    },
+    "iac": {
+      "order": 3,
+      "status": "N/A",
+      "evidence": "learning\\S009\\evidence\\iac.json",
+      "reason": "SOURCE-only local synthetic lesson; no resources, management calls, credentials, registration, deployment or spend."
+    },
+    "implementationAndGreen": {
+      "order": 4,
+      "command": "node --test --test-reporter=tap learning\\S009\\tests\\shadow-profile.test.cjs learning\\S009\\tests\\lesson-assets.test.cjs",
+      "run": "learning\\S009\\evidence\\green-run.json",
+      "output": "learning\\S009\\evidence\\green.txt",
+      "exitCode": 0,
+      "tests": 36,
+      "passed": 36,
+      "failed": 0,
+      "skipped": 0,
+      "syntax": {
+        "output": "learning\\S009\\evidence\\syntax.txt",
+        "exitCode": 0,
+        "files": ["model.js", "app.js", "tests\\shadow-profile.test.cjs", "tests\\lesson-assets.test.cjs"]
+      },
+      "implementationAndRefactoring": [
+        "Pure immutable replay model builds independent caller and candidate responses.",
+        "Shared field comparator reports changed/missing fields and unknown response evidence.",
+        "Explicit shadow sink separates attempted, suppressed and recorded effects.",
+        "Cumulative counts derive from retained deterministic batch observations; a later safe batch cannot erase duplicates.",
+        "Input validation and total-budget admission occur before any request is added.",
+        "State integrity is revalidated against the known fixture before replay or aggregation.",
+        "Local DOM rendering uses textContent, labeled native controls and a native form reset with non-shadowing control IDs."
+      ]
+    },
+    "browser": {
+      "order": 5,
+      "status": "passed",
+      "command": "node --test --test-reporter=tap learning\\S009\\tests\\browser.test.cjs",
+      "run": "learning\\S009\\evidence\\browser-run.json",
+      "output": "learning\\S009\\evidence\\browser.txt",
+      "observations": "learning\\S009\\evidence\\browser-observations.json",
+      "mode": "isolated-headless",
+      "engine": "Microsoft Edge (Chromium)",
+      "browserVersion": "156.0.4314.50",
+      "playwrightVersion": "1.56.1",
+      "nodeVersion": "v22.23.4",
+      "helper": "testing\\browser\\isolated.cjs",
+      "exitCode": 0,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "observedAssertionGroups": 9,
+      "sessionClosedInFinally": true,
+      "nodeIsBrowserProof": false,
+      "nodeMockUsed": false,
+      "helperReadiness": "Used only after the parent explicitly verified the implementation and granted its use; no tooling edits or dependency installation.",
+      "integratedBrowserBeforeHelperHandoff": {
+        "arbiter": "1f2c720a-9f08-4aa3-8432-def3aa89b2ac",
+        "lease": "Explicitly requested, granted, RELEASE sent and acknowledged; no integrated lease remains.",
+        "forceNew": true,
+        "pageId": "00336e1e-a638-40fd-9a67-de1979c3fe0f",
+        "openedPath": "learning\\S009\\index.html",
+        "blocksCompleted": 2,
+        "status": "passed",
+        "observations": "learning\\S009\\evidence\\integrated-browser-observations.json",
+        "handoff": "Switched to verified isolated-headless helper on parent instruction; no further integrated actions."
+      },
+      "actualChecks": [
+        "Keyboard tab order, visible focus, Enter replay, native form reset/submit methods",
+        "Safe v1 caller / v2 candidate and intended v2 caller / v1 candidate",
+        "Two visible candidate field discrepancies without changing caller tier or points",
+        "MATCH plus UNSAFE with duplicate writes and notifications",
+        "Later SAFE retains all earlier unsafe effect counts and rows",
+        "Missing candidate response remains UNKNOWN while production answers",
+        "Six invalid counts and an invalid profile preserve all counters/history",
+        "Keyboard Reset restores all defaults and clears every observation/counter",
+        "Restrictive local CSP, zero HTTP(S) resource/interaction requests and zero observed page errors"
+      ]
+    }
+  },
+  "expectedAssertions": [
+    "Intended v1/v2 always answers callers; candidate never replaces that response.",
+    "Safe shadow records zero candidate writes/notifications and one suppressed attempt of each per request.",
+    "Discrepant tier/points are reported separately without changing the caller response.",
+    "Unsafe replay can MATCH while producing two effects instead of one per request; verdict remains UNSAFE.",
+    "UNKNOWN is not treated as MATCH or evidence of live readiness.",
+    "Invalid input preserves all previous requests and counters.",
+    "Reset clears all observations and restores all four default controls."
+  ],
+  "finalVerification": {
+    "focusedCommand": "node --test --test-reporter=tap learning\\S009\\tests\\shadow-profile.test.cjs learning\\S009\\tests\\lesson-assets.test.cjs",
+    "focusedRun": "learning\\S009\\evidence\\green-final-run.json",
+    "focusedOutput": "learning\\S009\\evidence\\green-final.txt",
+    "tests": 36,
+    "passed": 36,
+    "failed": 0,
+    "syntaxOutput": "learning\\S009\\evidence\\syntax-final.txt",
+    "syntaxFilesPassed": 7,
+    "syntaxExitCode": 0,
+    "jsonOutput": "learning\\S009\\evidence\\json-syntax.txt",
+    "jsonFilesParsed": 9,
+    "evidenceValidationCommand": "node learning\\S009\\tests\\verify-evidence.cjs",
+    "evidenceValidationOutput": "learning\\S009\\evidence\\evidence-validation.txt",
+    "browserSourceUnchangedAfterObservedRun": true,
+    "parentAcceptancePending": true
+  },
+  "cleanup": {
+    "action": "Reset, reload or close the tab; all application state is in-memory only.",
+    "resourcesCreated": 0,
+    "managementCalls": 0,
+    "realTrafficReplayed": 0,
+    "realExternalEffects": 0
+  },
+  "evidenceBoundaries": {
+    "paths": "Repository-relative only; local absolute prefixes are removed from committed runner output.",
+    "syntheticOnly": true,
+    "nativeProof": false,
+    "nativeBS009Complete": false,
+    "parentDS009Complete": false,
+    "parentAcceptancePending": true,
+    "workerAwardsCredit": false,
+    "noExtraKanoUnits": true
+  }
+}

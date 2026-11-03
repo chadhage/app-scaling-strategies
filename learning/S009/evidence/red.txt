@@ -1,0 +1,859 @@
+TAP version 13
+# Subtest: the model is loadable and begins with an explicitly synthetic empty state
+ok 1 - the model is loadable and begins with an explicitly synthetic empty state
+  ---
+  duration_ms: 4.1627
+  type: 'test'
+  ...
+# Subtest: safe replay serves only intended v1 and suppresses candidate effects
+not ok 2 - safe replay serves only intended v1 and suppresses candidate effects
+  ---
+  duration_ms: 1.207
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:25:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'NOT RUN' !== 'SAFE'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'SAFE'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:27:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: safe replay serves only intended v2 and suppresses candidate effects
+not ok 3 - safe replay serves only intended v2 and suppresses candidate effects
+  ---
+  duration_ms: 0.2916
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:25:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'NOT RUN' !== 'SAFE'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'SAFE'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:27:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: discrepant candidate fields are reported without changing the caller response
+not ok 4 - discrepant candidate fields are reported without changing the caller response
+  ---
+  duration_ms: 0.3753
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:50:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'DISCREPANT'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'DISCREPANT'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:53:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: matching responses cannot conceal unsafe duplicated writes and notifications
+not ok 5 - matching responses cannot conceal unsafe duplicated writes and notifications
+  ---
+  duration_ms: 0.243
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:67:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'UNSAFE'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'UNSAFE'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:69:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a later safe replay retains cumulative unsafe effects and earlier observations
+not ok 6 - a later safe replay retains cumulative unsafe effects and earlier observations
+  ---
+  duration_ms: 0.3064
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:84:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'NOT RUN' !== 'SAFE'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'SAFE'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:87:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: missing candidate response is UNKNOWN while production still answers and effects are suppressed
+not ok 7 - missing candidate response is UNKNOWN while production still answers and effects are suppressed
+  ---
+  duration_ms: 0.3004
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:96:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'UNKNOWN'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'UNKNOWN'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:98:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid unknown profile fails closed and preserves records and every counter
+not ok 8 - invalid unknown profile fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.2437
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid unknown production fails closed and preserves records and every counter
+not ok 9 - invalid unknown production fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.4271
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid unknown scenario fails closed and preserves records and every counter
+not ok 10 - invalid unknown scenario fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.6608
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid empty count fails closed and preserves records and every counter
+not ok 11 - invalid empty count fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.4647
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid whitespace count fails closed and preserves records and every counter
+not ok 12 - invalid whitespace count fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.2924
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid zero count fails closed and preserves records and every counter
+not ok 13 - invalid zero count fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.2344
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid negative count fails closed and preserves records and every counter
+not ok 14 - invalid negative count fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.2296
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid fractional count fails closed and preserves records and every counter
+not ok 15 - invalid fractional count fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.3052
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid overlarge count fails closed and preserves records and every counter
+not ok 16 - invalid overlarge count fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.2434
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid NaN count fails closed and preserves records and every counter
+not ok 17 - invalid NaN count fails closed and preserves records and every counter
+  ---
+  duration_ms: 1.055
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid infinite count fails closed and preserves records and every counter
+not ok 18 - invalid infinite count fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.1936
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid boolean count fails closed and preserves records and every counter
+not ok 19 - invalid boolean count fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.1776
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid exponent count fails closed and preserves records and every counter
+not ok 20 - invalid exponent count fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.1838
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid unknown field fails closed and preserves records and every counter
+not ok 21 - invalid unknown field fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.175
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid missing field fails closed and preserves records and every counter
+not ok 22 - invalid missing field fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.1764
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid null input fails closed and preserves records and every counter
+not ok 23 - invalid null input fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.1735
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid array input fails closed and preserves records and every counter
+not ok 24 - invalid array input fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.1734
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid string input fails closed and preserves records and every counter
+not ok 25 - invalid string input fails closed and preserves records and every counter
+  ---
+  duration_ms: 0.1711
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:133:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'NOT RUN'
+    - 'INVALID'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INVALID'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:137:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: the second profile is a separate synthetic fixture, not user-supplied traffic
+not ok 26 - the second profile is a separate synthetic fixture, not user-supplied traffic
+  ---
+  duration_ms: 0.3087
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:144:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'NOT RUN' !== 'SAFE'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'SAFE'
+  actual: 'NOT RUN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:146:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: request budget stops at 30 without discarding earlier unsafe evidence
+not ok 27 - request budget stops at 30 without discarding earlier unsafe evidence
+  ---
+  duration_ms: 0.3925
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:151:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    0 !== 30
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 30
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:154:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: pure replay does not mutate prior state or share mutable historical responses
+not ok 28 - pure replay does not mutate prior state or share mutable historical responses
+  ---
+  duration_ms: 0.4131
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:164:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    0 !== 2
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:172:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: corrupt or forged state is rejected instead of producing a safety verdict
+not ok 29 - corrupt or forged state is rejected instead of producing a safety verdict
+  ---
+  duration_ms: 0.4612
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:177:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception (TypeError).'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:178:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: comparison ignores object property order but retains status and body differences
+not ok 30 - comparison ignores object property order but retains status and body differences
+  ---
+  duration_ms: 0.1951
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:186:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'UNKNOWN' !== 'MATCH'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'MATCH'
+  actual: 'UNKNOWN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:187:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: comparison reports missing fields and never treats absent responses as a match
+not ok 31 - comparison reports missing fields and never treats absent responses as a match
+  ---
+  duration_ms: 0.1582
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:200:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'UNKNOWN'
+    - 'DISCREPANT'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'DISCREPANT'
+  actual: 'UNKNOWN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:205:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: Reset is a genuinely new clean state and cannot inherit responses or effects
+not ok 32 - Reset is a genuinely new clean state and cannot inherit responses or effects
+  ---
+  duration_ms: 0.2237
+  type: 'test'
+  location: 'learning\\S009\\tests\\shadow-profile.test.cjs:213:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    0 !== 1
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (learning\S009\tests\shadow-profile.test.cjs:220:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..32
+# tests 32
+# suites 0
+# pass 1
+# fail 31
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 242.4221

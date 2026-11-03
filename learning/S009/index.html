@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none';">
+  <title>A-S009 · Shadow getProfile rehearsal</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p class="eyebrow">A-S009 · Kano S · kanoUnit A-S009 · parent D-S009 · source S009 · SC-S009</p>
+    <h1>Shadow getProfile: compare responses, contain effects</h1>
+    <p class="intro">Production answers the caller. A separate candidate sees a synthetic copy. Does a matching response mean replay was safe?</p>
+    <nav aria-label="Lesson sections">
+      <a href="#exercise">Exercise</a>
+      <a href="#verification">Verification</a>
+      <a href="#impact">Effects and user impact</a>
+      <a href="#cleanup">Reset and cleanup</a>
+      <a href="#limits">Limits</a>
+    </nav>
+  </header>
+  <main>
+    <noscript><p>This local exercise needs JavaScript. No server, packages, account or network is required.</p></noscript>
+    <section aria-labelledby="objective">
+      <h2 id="objective">Objective and preconditions</h2>
+      <p>Keep caller responses on the <strong>intended production version</strong>, compare status and business fields with the other version, and check effects independently of response equality.</p>
+      <p>Both versions already exist as local fixtures. There is no deployment or routing change. Two fictional profiles are available; arbitrary profiles, endpoints and real traffic are not supported.</p>
+      <p><strong>A read-looking operation can still have effects.</strong> In this fixture, each production getProfile records one profile-view write and one notification. The candidate attempts the same actions through a separate shadow sink. A safe sink suppresses both; the explicitly unsafe fixture records duplicates <em>only in local counters</em>.</p>
+      <p><strong>Try:</strong> replay safe shadow, then discrepant response, then unsafe duplicate effects. Notice that unsafe responses still match. Replay safely again: the earlier duplicate counters must remain. Try unknown and invalid input, then Reset. Repeat with production v2.</p>
+    </section>
+
+    <section id="exercise" aria-labelledby="exercise-title">
+      <h2 id="exercise-title">Choose the next synthetic replay</h2>
+      <form id="shadow-controls" autocomplete="off">
+        <div class="choices">
+          <div>
+            <label for="production-version">Intended production version</label>
+            <select id="production-version" name="productionVersion">
+              <option value="v1">v1 answers callers</option>
+              <option value="v2">v2 answers callers</option>
+            </select>
+          </div>
+          <div>
+            <label for="profile-id">Synthetic profile</label>
+            <select id="profile-id" name="profileId">
+              <option value="synthetic-rowan">Synthetic Rowan</option>
+              <option value="synthetic-sage">Synthetic Sage</option>
+              <option value="invalid-fixture">Invalid profile (reject before replay)</option>
+            </select>
+          </div>
+          <div class="wide">
+            <label for="scenario">Candidate scenario</label>
+            <select id="scenario" name="scenario" aria-describedby="scenario-help">
+              <option value="safe">Safe: matching response, suppress candidate effects</option>
+              <option value="discrepant">Discrepant: changed tier and points, suppress effects</option>
+              <option value="unsafe-duplicate">Unsafe: matching response, duplicate synthetic effects</option>
+              <option value="unknown">Unknown: candidate response unavailable, suppress effects</option>
+            </select>
+            <p id="scenario-help" class="hint">The safe shadow sink suppresses candidate writes and notifications.</p>
+          </div>
+          <div>
+            <label for="request-count">Requests in this batch (1–3)</label>
+            <input id="request-count" name="requestCount" type="text" inputmode="numeric" maxlength="8" value="2" aria-describedby="count-help">
+            <p id="count-help" class="hint">Integers only. Empty, fractional and out-of-range values are rejected. Total budget: 30 before Reset.</p>
+          </div>
+          <p id="next-intent" class="hint">Next replay intent: v1 answers callers; v2 is the shadow candidate. No requests have run.</p>
+        </div>
+        <button id="run-shadow" type="submit">Replay synthetic getProfile</button>
+        <button id="reset-lesson" type="button" class="secondary">Reset</button>
+      </form>
+      <p id="live-status" role="status" aria-live="polite" aria-atomic="true">Ready. No synthetic requests have run.</p>
+    </section>
+
+    <section id="verification" aria-labelledby="verification-title">
+      <h2 id="verification-title">1. Inspect responses and discrepancies</h2>
+      <p>Latest attempt: <output id="verdict">NOT RUN</output></p>
+      <p id="verdict-detail">No synthetic requests have run.</p>
+      <p id="last-executed">No executed batch.</p>
+      <div class="responses">
+        <section aria-labelledby="production-title">
+          <h3 id="production-title">Caller response — intended production</h3>
+          <p id="production-version-observed">No caller response.</p>
+          <pre id="production-response">Not run.</pre>
+        </section>
+        <section aria-labelledby="candidate-title">
+          <h3 id="candidate-title">Candidate response — never returned to caller</h3>
+          <p id="candidate-version-observed">No candidate response.</p>
+          <pre id="candidate-response">Not run.</pre>
+        </section>
+      </div>
+      <p id="comparison">Business response comparison: NOT RUN.</p>
+      <p class="hint">Only status and business body are compared. Different handler-version metadata is expected. These panels show the first request in the last executed batch; every request and discrepancy is retained below.</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable response discrepancies">
+        <table>
+          <caption>Changed business fields in the last executed batch</caption>
+          <thead><tr><th scope="col">Request</th><th scope="col">Field</th><th scope="col">Production value</th><th scope="col">Candidate value</th></tr></thead>
+          <tbody id="difference-rows"><tr><td colspan="4">Not run.</td></tr></tbody>
+        </table>
+      </div>
+      <h3>Expected checks</h3>
+      <ul>
+        <li>Caller version must equal the intended production version, regardless of the candidate result.</li>
+        <li>Changed tier/points must be shown as DISCREPANT. Missing response evidence must be UNKNOWN, not a match.</li>
+        <li>Candidate recorded writes and notifications must be zero for safe shadow. Response MATCH does not override duplicated effects.</li>
+        <li>One expected write and notification per production request; any additional effect is a duplicate in this fixture.</li>
+      </ul>
+    </section>
+
+    <section id="impact" aria-labelledby="impact-title">
+      <h2 id="impact-title">2. Inspect business effects and notifications</h2>
+      <p><strong>All counts are synthetic.</strong> These cumulative counts include earlier batches, not just the latest attempt. Invalid attempts add nothing.</p>
+      <p>Caller requests: <output id="request-total">0</output> / 30 · Matching: <output id="match-total">0</output> · Discrepant: <output id="discrepant-total">0</output> · Unknown: <output id="unknown-total">0</output></p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable synthetic effect counters">
+        <table>
+          <caption>Production-only expectation versus recorded synthetic effects</caption>
+          <thead><tr><th scope="col">Effect</th><th scope="col">Expected</th><th scope="col">Production</th><th scope="col">Candidate recorded</th><th scope="col">Candidate suppressed</th><th scope="col">Total recorded</th><th scope="col">Extra duplicates</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Business effects (profile-view writes)</th><td id="expected-writes">0</td><td id="production-writes">0</td><td id="shadow-writes">0</td><td id="suppressed-writes">0</td><td id="total-writes">0</td><td id="duplicate-writes">0</td></tr>
+            <tr><th scope="row">Notifications</th><td id="expected-notifications">0</td><td id="production-notifications">0</td><td id="shadow-notifications">0</td><td id="suppressed-notifications">0</td><td id="total-notifications">0</td><td id="duplicate-notifications">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="cumulative-warning">No synthetic effects recorded.</p>
+      <p><strong>User impact:</strong> a discrepant candidate has not changed what callers received. An unsafe shadow can duplicate writes and contact users even when responses match. Here that harm is represented by counters only. A later safe replay does not undo the earlier unsafe outcome.</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable synthetic request history">
+        <table>
+          <caption>Executed request history; W = profile-view writes, N = notifications</caption>
+          <thead><tr><th scope="col">Batch / request</th><th scope="col">Caller response</th><th scope="col">Candidate response</th><th scope="col">Comparison / verdict</th><th scope="col">Production effects</th><th scope="col">Candidate effects</th></tr></thead>
+          <tbody id="request-rows"><tr><td colspan="6">No requests.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="cleanup" aria-labelledby="cleanup-title">
+      <h2 id="cleanup-title">3. Reset and cleanup</h2>
+      <p>Use Reset beside Replay to clear all counters, responses, discrepancies and history, and restore production v1, Synthetic Rowan, safe shadow and 2 requests. Close or reload the tab to discard the same in-memory state.</p>
+      <p>There is no persistent application storage, real notification, cloud resource, credential, background process, infrastructure or cost to clean up. IaC: <strong>N/A</strong>.</p>
+    </section>
+    <section id="limits" aria-labelledby="limits-title">
+      <h2 id="limits-title">Limits and native follow-up</h2>
+      <ul>
+        <li>Every profile, response, request and effect is a deterministic synthetic fixture. No HTTP request or real replay is made.</li>
+        <li>UNKNOWN deliberately withholds a response after the candidate's suppressed effect attempt. It cannot establish response correctness; known synthetic sink counts do not prove a real candidate is safe.</li>
+        <li>This finite exercise does not prove live platform routing, authorization, load behavior, data compatibility, notification isolation or production readiness.</li>
+        <li>Real shadow designs need an approved isolated environment, data handling, effect suppression and measured evidence. This lesson grants no permission to replay into production or cloud.</li>
+        <li>No native B-S009 result or completed D-S009 parent is claimed. Node tests are not browser proof; actual browser observations are recorded separately in evidence.json.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>Portable SOURCE lesson · synthetic data only · no Azure execution</footer>
+</body>
+</html>
