@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "sourceId": "S099",
+  "cardId": "A-S099",
+  "parentId": "D-S099",
+  "packet": "SC-S099",
+  "kano": "S",
+  "kanoUnit": "A-S099",
+  "technicalEntryGate": "SOURCE",
+  "owner": "worker-A-S099",
+  "title": "Rollback command fails",
+  "objective": "Fail rollback itself; reject a blindly repeated reversal with unknown effective routing.",
+  "entry": "index.html",
+  "mode": "synthetic",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "preconditions": [
+    "Modern browser with local JavaScript; no server, framework or Azure account",
+    "A fixed retained healthy compatible known-good deployment; this is an assumption, not measured service health",
+    "One failed synthetic rollback per rehearsal requests 100% known-good and 0% candidate",
+    "Routing snapshots and reconciliation outcomes are fixed teaching data, not real operations"
+  ],
+  "actions": [
+    "Choose one fixed trace and record its synthetic rollback failure",
+    "Reject blind reversal, inspect effective routing, reconcile only from fresh known routing, and inspect again before verification",
+    "Check synthetic recovery as success, failure or unknown independently of command failure",
+    "Reset the current rehearsal using mouse or keyboard while retaining bounded session history"
+  ],
+  "syntheticInputs": {
+    "traces": ["failed-before-apply", "failed-after-apply", "reconciliation-fails", "routing-unobserved"],
+    "actions": ["blind-repeat", "inspect-routing", "reconcile-known-good", "verify-recovery"],
+    "requestedRouting": { "stablePercent": 100, "candidatePercent": 0 },
+    "initialObservedRoutingFixtures": {
+      "failed-before-apply": { "stablePercent": 75, "candidatePercent": 25 },
+      "failed-after-apply": { "stablePercent": 100, "candidatePercent": 0 },
+      "reconciliation-fails": { "stablePercent": 50, "candidatePercent": 50 },
+      "routing-unobserved": null
+    },
+    "maxRehearsals": 4,
+    "maxChoicesPerRehearsal": 8,
+    "maxIssuedRollbackCommandsPerRehearsal": 1,
+    "maxIssuedReconciliationsPerRehearsal": 1,
+    "historyLifetime": "In-memory page session; reset preserves all runs and the fixed allowance"
+  },
+  "expectedAssertions": [
+    "The failed rollback and requested routing cannot establish observed routing or complete recovery",
+    "Blind repetition is rejected, retained in history and never issues a second rollback",
+    "Fresh inspection reconciles effective routing rather than guessing from an acknowledgement",
+    "Known-good service is retained; a reconciliation invalidates the previous observation and needs a fresh snapshot",
+    "A failed reconciliation produces failed recovery; unusable routing evidence produces unknown recovery",
+    "Success + failure + unknown equals all started synthetic rehearsals and command failures never disappear after recovery/reset",
+    "Exact input/state guards, bounded history, terminal guards, keyboard, focused errors, reset and enforced browser CSP work"
+  ],
+  "limits": [
+    "Rollback, faults, routing, preservation and reconciliation are DATA ONLY teaching traces, never resource, shell, process, file or network operations",
+    "Retained known-good health/compatibility is a fixed precondition; no real rollback, routing, continuity, native Azure or parent-demo certification",
+    "IaC N/A; no cloud, identity, credentials, deployment, spend, packages, framework or shared-root edits",
+    "Existing Node 22 test tooling, offline Playwright 1.56.1 and signed Edge 156 only; not production Node 24",
+    "Normal verification is read-only; CAPTURE_BROWSER_EVIDENCE=1 is deliberate producer capture only",
+    "Only published isolated.cjs 53c0c0d with SHA256 86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055; abandoned lifecycle prototype is unqualified"
+  ],
+  "evidence": {
+    "source": "evidence/source-contract.json",
+    "bdd": "rollback-failure.feature",
+    "assertionRed": "evidence/red.json",
+    "iac": "evidence/iac-decision.json",
+    "focused": "evidence/focused-green.json",
+    "browser": "evidence/browser-acceptance.json",
+    "canonicalIntegrity": "evidence/content-index.json"
+  },
+  "acceptance": {
+    "workerResult": "Verification/publication only; parent empirical acceptance is pending",
+    "reviewer": "Parent controller only",
+    "acceptedAtUtc": null,
+    "credit": "At most one A-S099 frozen S unit; no test, evidence, plumbing or refinement credit",
+    "nativeSibling": "B-S099 remains separate; D-S099 and its D-S098 prerequisite remain incomplete"
+  }
+}

@@ -1,0 +1,230 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const lesson = require('..\\model.js');
+
+function begin(trace = 'failed-before-apply') {
+  return lesson.startRun(lesson.createState(), trace);
+}
+
+function choices(state, ...actions) {
+  return actions.reduce((next, action) => lesson.act(next, action), state);
+}
+
+test('failed rollback keeps effective routing unknown and cannot complete', () => {
+  const state = begin();
+  const view = lesson.current(state);
+  assert.equal(view.commandStatus, 'failure');
+  assert.equal(view.observedRouting, null);
+  assert.equal(view.recovery, 'unknown');
+  assert.equal(view.complete, false);
+  assert.equal(view.rollbackAttempts, 1);
+});
+
+test('blind repeated reversal is rejected without issuing another rollback', () => {
+  const before = begin();
+  const after = lesson.act(before, 'blind-repeat');
+  const event = lesson.current(after).lastEvent;
+  assert.equal(event.accepted, false);
+  assert.equal(event.result, 'failure');
+  assert.equal(lesson.current(after).observedRouting, null);
+  assert.equal(lesson.current(after).rollbackAttempts, 1);
+  assert.equal(lesson.summary(after).blindRepeatsRejected, 1);
+  assert.equal(lesson.history(after).length, 2);
+  assert.equal(lesson.history(before).length, 1);
+});
+
+test('requested target cannot substitute for inspection even after an applied failure', () => {
+  const state = lesson.act(begin('failed-after-apply'), 'verify-recovery');
+  const view = lesson.current(state);
+  assert.equal(view.lastEvent.accepted, false);
+  assert.equal(view.lastEvent.result, 'unknown');
+  assert.equal(view.complete, false);
+  assert.equal(view.terminal, false);
+});
+
+test('inspection reveals unchanged effective routing without claiming completion', () => {
+  const state = lesson.act(begin(), 'inspect-routing');
+  const view = lesson.current(state);
+  assert.deepEqual(view.observedRouting, { stablePercent: 75, candidatePercent: 25, revision: 1 });
+  assert.deepEqual(view.requestedRouting, { stablePercent: 100, candidatePercent: 0 });
+  assert.equal(view.recovery, 'unknown');
+  assert.equal(view.knownGoodRetained, true);
+});
+
+test('known but incomplete routing fails recovery instead of passing a request', () => {
+  const state = choices(begin(), 'inspect-routing', 'verify-recovery');
+  const view = lesson.current(state);
+  assert.equal(view.recovery, 'failure');
+  assert.equal(view.complete, false);
+  assert.equal(view.terminal, true);
+  assert.equal(view.knownGoodRetained, true);
+  assert.equal(lesson.summary(state).recoveryFailure, 1);
+});
+
+test('fresh observed reconciliation preserves known-good and succeeds independently of command failure', () => {
+  const state = choices(begin(), 'inspect-routing', 'reconcile-known-good', 'inspect-routing', 'verify-recovery');
+  const view = lesson.current(state);
+  assert.equal(view.commandStatus, 'failure');
+  assert.equal(view.reconcileAttempts, 1);
+  assert.equal(view.recovery, 'success');
+  assert.equal(view.complete, true);
+  assert.equal(view.knownGoodRetained, true);
+  assert.deepEqual(view.observedRouting, { stablePercent: 100, candidatePercent: 0, revision: 2 });
+  assert.equal(lesson.summary(state).rollbackFailures, 1);
+  assert.equal(lesson.summary(state).recoverySuccess, 1);
+});
+
+test('a failed acknowledgement with inspected target needs no new routing command', () => {
+  const state = choices(begin('failed-after-apply'), 'inspect-routing', 'reconcile-known-good', 'verify-recovery');
+  const view = lesson.current(state);
+  assert.equal(view.reconcileAttempts, 0);
+  assert.equal(view.rollbackAttempts, 1);
+  assert.equal(view.recovery, 'success');
+  assert.equal(view.complete, true);
+});
+
+test('a reconciliation invalidates its old snapshot and a stale verification is rejected', () => {
+  let state = choices(begin(), 'inspect-routing', 'reconcile-known-good', 'verify-recovery');
+  let view = lesson.current(state);
+  assert.equal(view.observedRouting, null);
+  assert.equal(view.lastEvent.accepted, false);
+  assert.equal(view.lastEvent.result, 'unknown');
+  assert.equal(view.terminal, false);
+  assert.equal(view.complete, false);
+  state = choices(state, 'inspect-routing', 'verify-recovery');
+  view = lesson.current(state);
+  assert.equal(view.recovery, 'success');
+});
+
+test('failure of reconciliation itself remains a failure with honest incomplete routing', () => {
+  const state = choices(begin('reconciliation-fails'), 'inspect-routing', 'reconcile-known-good', 'inspect-routing', 'verify-recovery');
+  const view = lesson.current(state);
+  assert.equal(view.reconciliationStatus, 'failure');
+  assert.deepEqual(view.observedRouting, { stablePercent: 50, candidatePercent: 50, revision: 2 });
+  assert.equal(view.recovery, 'failure');
+  assert.equal(view.complete, false);
+  assert.equal(view.knownGoodRetained, true);
+  assert.equal(lesson.summary(state).reconciliationFailures, 1);
+  assert.equal(lesson.summary(state).rollbackFailures, 1);
+});
+
+test('unavailable routing blocks grounded reconciliation and yields unknown recovery', () => {
+  const state = choices(begin('routing-unobserved'), 'inspect-routing', 'reconcile-known-good', 'verify-recovery');
+  const view = lesson.current(state);
+  assert.equal(view.observedRouting, null);
+  assert.equal(view.reconcileAttempts, 0);
+  assert.equal(view.complete, false);
+  assert.equal(view.recovery, 'unknown');
+  assert.equal(view.terminal, true);
+  assert.equal(lesson.summary(state).recoveryUnknown, 1);
+});
+
+test('grounded reconciliation cannot be blindly repeated', () => {
+  const state = choices(begin('reconciliation-fails'), 'inspect-routing', 'reconcile-known-good', 'inspect-routing', 'reconcile-known-good');
+  const view = lesson.current(state);
+  assert.equal(view.reconcileAttempts, 1);
+  assert.equal(view.lastEvent.accepted, false);
+  assert.equal(view.lastEvent.result, 'failure');
+  assert.equal(view.observedRouting.stablePercent, 50);
+});
+
+test('unknown state cannot issue a reconciliation before any inspection', () => {
+  const state = lesson.act(begin(), 'reconcile-known-good');
+  const view = lesson.current(state);
+  assert.equal(view.lastEvent.accepted, false);
+  assert.equal(view.lastEvent.result, 'unknown');
+  assert.equal(view.reconcileAttempts, 0);
+  assert.equal(view.observedRouting, null);
+});
+
+test('reset retains failures and unknowns, and later success does not erase their denominator', () => {
+  let state = choices(begin('reconciliation-fails'), 'inspect-routing', 'reconcile-known-good', 'inspect-routing', 'verify-recovery');
+  const failureHistory = lesson.history(state);
+  state = lesson.resetCurrent(state);
+  assert.equal(lesson.current(state), null);
+  assert.deepEqual(lesson.history(state), failureHistory);
+  state = lesson.startRun(state, 'routing-unobserved');
+  state = choices(state, 'inspect-routing', 'verify-recovery');
+  state = lesson.resetCurrent(state);
+  state = lesson.startRun(state, 'failed-after-apply');
+  state = choices(state, 'inspect-routing', 'verify-recovery');
+  const summary = lesson.summary(state);
+  assert.equal(summary.started, 3);
+  assert.equal(summary.recoverySuccess, 1);
+  assert.equal(summary.recoveryFailure, 1);
+  assert.equal(summary.recoveryUnknown, 1);
+  assert.equal(summary.rollbackFailures, 3);
+  assert.equal(summary.reconciliationFailures, 1);
+  assert.equal(summary.recoverySuccess + summary.recoveryFailure + summary.recoveryUnknown, summary.started);
+  assert.deepEqual(lesson.history(state).slice(0, failureHistory.length), failureHistory);
+});
+
+test('four-run bound cannot be replenished by reset or append partial state', () => {
+  let state = lesson.createState();
+  for (let i = 0; i < lesson.LIMITS.maxRuns; i += 1) {
+    state = lesson.resetCurrent(lesson.startRun(state, 'failed-before-apply'));
+  }
+  const snapshot = JSON.stringify(state);
+  assert.throws(() => lesson.startRun(state, 'failed-before-apply'), /four|4|allowance/i);
+  assert.equal(JSON.stringify(state), snapshot);
+  assert.equal(lesson.summary(state).started, 4);
+  assert.equal(lesson.summary(state).recoveryUnknown, 4);
+});
+
+test('eight-choice bound retains rejected choices without issuing commands or dropping history', () => {
+  let state = begin();
+  for (let i = 0; i < lesson.LIMITS.maxChoices; i += 1) state = lesson.act(state, 'blind-repeat');
+  const snapshot = JSON.stringify(state);
+  assert.throws(() => lesson.act(state, 'blind-repeat'), /eight|8|choice/i);
+  assert.equal(JSON.stringify(state), snapshot);
+  assert.equal(lesson.history(state).length, 9);
+  assert.equal(lesson.summary(state).blindRepeatsRejected, 8);
+  assert.equal(lesson.current(state).rollbackAttempts, 1);
+});
+
+test('strict input guards reject arbitrary traces and actions before recording any result', () => {
+  for (const trace of ['', 'unknown', null, {}, ['failed-before-apply'], '__proto__']) {
+    assert.throws(() => lesson.startRun(lesson.createState(), trace), /trace/i);
+  }
+  const state = begin();
+  const snapshot = JSON.stringify(state);
+  for (const action of ['', 'reverse-live', null, {}, ['inspect-routing'], '__proto__']) {
+    assert.throws(() => lesson.act(state, action), /action/i);
+  }
+  assert.equal(JSON.stringify(state), snapshot);
+});
+
+test('strict state guards reject invented routing, malformed logs, sparse arrays and impossible terminal actions', () => {
+  const valid = begin();
+  const forgedRoute = { ...valid, effectiveRouting: { stablePercent: 100, candidatePercent: 0 } };
+  const sparseActions = JSON.parse(JSON.stringify(valid));
+  sparseActions.runs[0].actions = new Array(1);
+  const invalidLog = JSON.parse(JSON.stringify(valid));
+  invalidLog.runs[0].actions = ['invent-success'];
+  const wrongActive = { ...valid, activeRunId: 42 };
+  const inherited = Object.create(valid);
+  for (const state of [null, [], forgedRoute, sparseActions, invalidLog, wrongActive, inherited]) {
+    assert.throws(() => lesson.current(state), /state|action/i);
+    assert.throws(() => lesson.act(state, 'verify-recovery'), /state|action/i);
+  }
+  const terminal = choices(begin('failed-after-apply'), 'inspect-routing', 'verify-recovery');
+  assert.throws(() => lesson.act(terminal, 'inspect-routing'), /complete|terminal|reset/i);
+  const impossible = JSON.parse(JSON.stringify(terminal));
+  impossible.runs[0].actions.push('inspect-routing');
+  assert.throws(() => lesson.summary(impossible), /state|terminal|reset/i);
+});
+
+test('active runs and idle state have explicit guards, and model outputs are immutable', () => {
+  const idle = lesson.createState();
+  assert.equal(lesson.current(idle), null);
+  assert.throws(() => lesson.act(idle, 'inspect-routing'), /start|active/i);
+  const state = lesson.act(begin(), 'inspect-routing');
+  assert.throws(() => lesson.startRun(state, 'failed-after-apply'), /reset|active/i);
+  assert.ok(Object.isFrozen(state));
+  assert.ok(Object.isFrozen(state.runs));
+  assert.ok(Object.isFrozen(state.runs[0].actions));
+  assert.ok(Object.isFrozen(lesson.current(state).observedRouting));
+  assert.ok(Object.isFrozen(lesson.history(state)));
+  assert.ok(Object.isFrozen(lesson.summary(state)));
+});

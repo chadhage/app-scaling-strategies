@@ -1,0 +1,27 @@
+(function (root) {
+  'use strict';
+  const TRACES = Object.freeze([
+    { id: 'failed-before-apply', label: 'Failure before target applied' },
+    { id: 'failed-after-apply', label: 'Failure after target applied' },
+    { id: 'reconciliation-fails', label: 'Reconciliation also fails' },
+    { id: 'routing-unobserved', label: 'Routing snapshot unavailable' }
+  ]);
+  const ACTIONS = Object.freeze(['blind-repeat', 'inspect-routing', 'reconcile-known-good', 'verify-recovery']);
+  const LIMITS = Object.freeze({ maxRuns: 4, maxChoices: 8 });
+  function createState() { return { version: 1, runs: [], activeRunId: null }; }
+  function startRun(state, trace) {
+    const run = { id: state.runs.length + 1, trace, actions: [] };
+    return { version: 1, runs: state.runs.concat(run), activeRunId: run.id };
+  }
+  function act(state) { return state; }
+  function resetCurrent(state) { return { ...state, activeRunId: null }; }
+  function current(state) {
+    if (state.activeRunId === null) return null;
+    return { commandStatus: 'success', observedRouting: { stablePercent: 100, candidatePercent: 0 }, recovery: 'success', complete: true, rollbackAttempts: 1 };
+  }
+  function history() { return []; }
+  function summary(state) { return { started: state.runs.length, recoverySuccess: state.runs.length, recoveryFailure: 0, recoveryUnknown: 0 }; }
+  const api = { TRACES, ACTIONS, LIMITS, createState, startRun, act, resetCurrent, current, history, summary };
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.RollbackFailureLesson = api;
+}(typeof globalThis === 'object' ? globalThis : this));
