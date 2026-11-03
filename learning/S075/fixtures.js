@@ -1,0 +1,31 @@
+(function (root, factory) {
+  'use strict';
+  const fixtures = factory();
+  if (typeof module === 'object' && module.exports) module.exports = fixtures;
+  else root.S075Fixtures = fixtures;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+  return freeze({
+    source: 'S075', expectedEpoch: 2, maxAttempts: 6,
+    defaults: { additions: 'one', ownership: 'exclusive', delivery: 'complete', dedup: 'ledger' },
+    choices: {
+      additions: ['one', 'two'],
+      ownership: ['exclusive', 'overlap', 'stale-lock', 'unobserved'],
+      delivery: ['complete', 'redelivery', 'missing', 'unobserved'],
+      dedup: ['ledger', 'off'],
+    },
+    partitions: ['P0', 'P1', 'P2'],
+    events: [
+      { id: 'E01', partition: 'P0' }, { id: 'E02', partition: 'P0' },
+      { id: 'E03', partition: 'P1' }, { id: 'E04', partition: 'P1' },
+      { id: 'E05', partition: 'P2' }, { id: 'E06', partition: 'P2' },
+    ],
+  });
+}));

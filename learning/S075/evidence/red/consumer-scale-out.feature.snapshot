@@ -1,0 +1,53 @@
+Feature: S075 consumer scale-out with observed partition locks and business effects
+  # A-S075; D-S075; frozen S; SC-S075; synthetic only; six fixed events, three partitions.
+  Background:
+    Given consumer-0 initially owns P0, P1 and P2 at epoch 1
+    And each partition has two fixed synthetic events with one intended business effect each
+    And scale-out adds one or two consumers with an expected exclusive epoch-2 lock per partition
+    And a run uses only fixed enum choices and at most six retained attempts
+
+  Scenario: Coordinated expansion actually processes work on new consumers
+    When I add consumers using exclusive current locks
+    And process the complete fixed batch and verify
+    Then every added consumer has observed work
+    And all six events have exactly one effect and one valid owner
+    And the synthetic result is PASS
+
+  Scenario: Redelivery is not a duplicate business effect
+    When I process the redelivery fixture with the effect-key ledger enabled
+    Then seven deliveries produce six effects and one suppressed duplicate
+    And the result is PASS
+    When I repeat without effect-key deduplication
+    Then the repeated event has two effects and the result is FAIL
+
+  Scenario: Deduplication cannot repair duplicate partition ownership
+    When prior and new owners both claim moved partitions
+    Then duplicate owner partitions and stale lock claims are measured
+    And the result is FAIL even if the ledger prevents duplicate effects
+
+  Scenario: Invalid locks and missing work cannot appear successful
+    When a moved partition has an expired epoch-1 lock
+    Then the ownership result is FAIL even when six effects exist
+    When event E04 is missing
+    Then one missing event remains in the six-event denominator and the result is FAIL
+
+  Scenario: Unavailable evidence is not success
+    When ownership or delivery evidence is unavailable without a known failure
+    Then the result is UNKNOWN and all six events remain attributed
+    When duplicate ownership is known but delivery evidence is unavailable
+    Then the result is FAIL and unknown event observations remain visible
+
+  Scenario: Strict ordered actions, separate learning check and bounded retained history
+    Given inputs are exact allowlisted records with no arbitrary endpoints or event injection
+    Then malformed inputs, repeated or out-of-order actions do not mutate state
+    And predictions are checked separately from measured outcomes
+    And a new attempt retains all prior failures and unknowns
+    And a seventh attempt is rejected without eviction
+    And explicit reset clears inputs, errors, traces, outcomes, predictions and history
+
+  Scenario: Portable browser operation and evidence
+    Then the exact synthetic banner is prominent
+    And controls have labels, keyboard operation, visible focus, announced errors and reset focus
+    And CSP blocks inline code and outbound connections without unsafe exceptions
+    And normal verification is read-only and capture requires explicit opt-in
+    And no broker, consumer ownership, native Azure or source-parent completion is certified
