@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; media-src 'none'; manifest-src 'none'">
+  <title>S014 — Schedule and observe prewarmed capacity</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="schedule.js" defer></script>
+  <script src="lesson.js" defer></script>
+</head>
+<body>
+  <header>
+    <p class="banner" id="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S014: Schedule demand, then prove capacity was ready</h1>
+    <p>Provision and warm capacity before a known spike. A correct calendar is a plan, not a readiness observation or a client result.</p>
+  </header>
+  <main>
+    <section aria-labelledby="objective">
+      <h2 id="objective">Conduct the rehearsal</h2>
+      <p><strong>Objective:</strong> observe a supported synthetic schedule firing, additional units deploying and warming <em>strictly before</em> demand, and complete client journeys meeting their budget.</p>
+      <p><strong>Preconditions:</strong> two ready units; a declared 20-second demand window; synthetic observations only. No account, server, framework, or management access is needed.</p>
+      <ol>
+        <li>Choose demand time, lead, target capacity, provisioning and warm-up durations, and an observation fixture.</li>
+        <li>Activate <strong>Schedule demand spike</strong>. Compare the calendar with the observed deployed and ready counts.</li>
+        <li>Advance the logical clock in 5-second steps until the complete window ends, then <strong>Check outcome</strong>.</li>
+        <li>Try lead time <strong>5</strong>: the same correct calendar produces readiness at second 40, after demand begins at 30. Keep that failure, then conduct a healthy attempt.</li>
+      </ol>
+      <p id="timing-contract" class="contract">Fixture contract: each ready unit supports 40 requests/s; 10 journeys are sampled every 5 seconds at demand start and three subsequent times. All 40 must complete correctly within 800 ms. The clock is logical, not real time. These are teaching values, not Azure limits.</p>
+    </section>
+
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Configure the next attempt</h2>
+      <p>Edits apply only to the next attempt. An unfinished attempt cannot be replaced. Failed, unknown, unsupported, and incomplete records stay visible until an explicit reset or page reload.</p>
+      <form id="schedule-controls" novalidate aria-describedby="timing-contract">
+        <fieldset>
+          <legend>Known demand and prewarm plan — logical seconds</legend>
+          <div class="fields">
+            <label for="demand-at">Demand starts at (20–120 s)
+              <input id="demand-at" name="demandAt" type="number" min="20" max="120" step="1" value="30" required>
+            </label>
+            <label for="lead-seconds">Schedule lead time (0–120 s, no earlier than zero)
+              <input id="lead-seconds" name="lead" type="number" min="0" max="120" step="1" value="20" required>
+            </label>
+            <label for="provision-seconds">Provisioning duration (0–60 s)
+              <input id="provision-seconds" name="provision" type="number" min="0" max="60" step="1" value="8" required>
+            </label>
+            <label for="warm-seconds">Warm-up duration (0–60 s)
+              <input id="warm-seconds" name="warm" type="number" min="0" max="60" step="1" value="7" required>
+            </label>
+            <label for="target-units">Target units (3–8; baseline 2)
+              <input id="target-units" name="target" type="number" min="3" max="8" step="1" value="4" required>
+            </label>
+            <label for="demand-rate">Spike demand (1–320 requests/s)
+              <input id="demand-rate" name="demand" type="number" min="1" max="320" step="1" value="120" required>
+            </label>
+            <label for="observation-fixture" class="wide">Synthetic observation fixture
+              <select id="observation-fixture" name="fixture">
+                <option value="healthy">Healthy observed schedule, capacity and clients</option>
+                <option value="missed-trigger">Missed trigger despite a correct calendar</option>
+                <option value="provisioning-failure">Provisioning failure: extra units never deploy</option>
+                <option value="warmup-failure">Warm-up failure: deployed is not ready</option>
+                <option value="missing-readiness">Missing readiness observations: unknown capacity</option>
+                <option value="missing-clients">Missing client observations: no client success claim</option>
+                <option value="slow-clients">Ready but slow: complete journeys exceed 800 ms</option>
+                <option value="unsupported-schedule">Unqualified schedule support: no execution</option>
+              </select>
+            </label>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button id="schedule-demand" type="submit">Schedule demand spike</button>
+          <button id="advance-clock" type="button" disabled>Advance 5 logical seconds</button>
+          <button id="check-outcome" type="button" disabled>Check outcome</button>
+          <button id="restart-rehearsal" type="button">Reset rehearsal</button>
+        </div>
+      </form>
+      <p id="status" role="status" aria-live="polite" aria-atomic="true"></p>
+      <p id="input-errors" role="alert" hidden></p>
+      <p>Keyboard: Tab / Shift+Tab move focus; Enter submits the form or activates a button; Space activates a focused button. Reset calls the native form reset and clears only this lesson's memory.</p>
+    </section>
+
+    <section aria-labelledby="observations-title">
+      <h2 id="observations-title">Current attempt — observed, not inferred</h2>
+      <p id="attempt-plan">No calendar scheduled.</p>
+      <p id="outcome" class="outcome">No outcome yet.</p>
+      <dl class="metrics">
+        <div><dt>Logical clock</dt><dd id="observed-clock">0 s</dd></div>
+        <div><dt>Requested units (plan)</dt><dd id="requested-units">—</dd></div>
+        <div><dt>Observed deployed</dt><dd id="deployed-units">2</dd></div>
+        <div><dt>Observed ready</dt><dd id="ready-units">2</dd></div>
+        <div><dt>Traffic-eligible</dt><dd id="eligible-units">2</dd></div>
+        <div><dt>Observed first target-ready time</dt><dd id="first-ready">Not observed</dd></div>
+      </dl>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Observed synthetic timeline">
+        <table>
+          <caption>Synthetic trace — requested capacity and planned timestamps are not observed readiness</caption>
+          <thead><tr><th scope="col">Logical s</th><th scope="col">Observation</th><th scope="col">Requested</th><th scope="col">Deployed</th><th scope="col">Ready</th><th scope="col">Eligible</th><th scope="col">Effective requests/s</th><th scope="col">Detail</th></tr></thead>
+          <tbody id="trace-rows"></tbody>
+        </table>
+      </div>
+      <h3>Preserved assessments</h3>
+      <div id="assessments"><p>No assessment yet; an empty sample is not 100% success.</p></div>
+      <details id="client-details">
+        <summary>Individual synthetic client observations</summary>
+        <p>All sampled clients stay in the denominator, including interrupted and unknown clients. A known-success fraction is not a native reliability estimate.</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Individual client outcomes">
+          <table>
+            <caption>Complete-journey observations for the declared spike window</caption>
+            <thead><tr><th scope="col">Client</th><th scope="col">Sample s</th><th scope="col">Outcome</th><th scope="col">Completed</th><th scope="col">Latency ms</th><th scope="col">Correct payload</th><th scope="col">State intact</th><th scope="col">Reason</th></tr></thead>
+            <tbody id="client-rows"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Preserved attempt and action history</h2>
+      <p id="history-summary">No attempts.</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="All attempt outcomes">
+        <table>
+          <caption>Every attempt remains recorded; a later pass does not erase an earlier failure or unknown</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Fixture</th><th scope="col">Demand starts</th><th scope="col">Planned trigger</th><th scope="col">Observed trigger</th><th scope="col">Observed ready</th><th scope="col">Outcome</th><th scope="col">Client counts</th></tr></thead>
+          <tbody id="attempt-rows"></tbody>
+        </table>
+      </div>
+      <ol id="action-log"></ol>
+      <details id="record-details">
+        <summary>Full immutable lesson record (JSON)</summary>
+        <pre id="full-record" tabindex="0"></pre>
+      </details>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Limits and original remaining work</h2>
+      <p>This portable A-S014 rehearsal is one satisfier in SC-S014. It is not B-S014 native proof, completion of D-S014/P001, a production Node.js 24 qualification, or a five-nines claim. No credentials, management calls, infrastructure, deployment, or spending are involved.</p>
+      <p>Native B-S014 still needs CORE, DATA, ASANY, C066, the original P001 prerequisite, an explicitly qualified schedule-capable host/format and operating envelope, and separate execution approval. Observe the actual native schedule, ready-before-demand capacity, and client outcomes; do not infer them from this calendar.</p>
+      <p><a href="README.md">Lesson instructions and evidence</a> · <a href="../../README.md#b-actual-capacity-scaling-strategies">Original S014 source</a></p>
+    </section>
+  </main>
+</body>
+</html>

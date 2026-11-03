@@ -1,0 +1,344 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
+const helperPath = path.resolve(__dirname, '..', '..', 'testing', 'browser', 'isolated.cjs');
+const expectedHelperHash = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+const helperHash = crypto.createHash('sha256').update(fs.readFileSync(helperPath)).digest('hex');
+assert.equal(helperHash, expectedHelperHash, 'use only the published helper, not the inactive lifecycle prototype');
+const { openIsolatedLesson } = require(helperPath);
+const playwrightVersion = require(path.join(path.dirname(helperPath), 'node_modules', 'playwright', 'package.json')).version;
+assert.equal(playwrightVersion, '1.56.1', 'explicit approved offline pairing only');
+
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+const label = process.env.S014_BROWSER_EVIDENCE_LABEL || 'browser-observations';
+assert.match(label, /^[a-z][a-z0-9-]*$/);
+const output = path.join(__dirname, 'evidence', `${label}.json`);
+const screenshot = path.join(__dirname, 'evidence', `${label}.png`);
+if (capture && (fs.existsSync(output) || fs.existsSync(screenshot))) {
+  throw new Error('Browser proof is append-only. Use an intentional new S014_BROWSER_EVIDENCE_LABEL.');
+}
+
+test('real isolated Edge: S014 DOM, keyboard, observations, failures, reset and CSP', { timeout: 180000 }, async (t) => {
+  let session;
+  const observations = [];
+  const errors = [];
+  const completedNetwork = [];
+  const report = {
+    cardId: 'A-S014', workerId: 'worker-A-S014', mode: 'synthetic-only',
+    node: process.version, productionNode24Validated: false,
+    startedAtUtc: new Date().toISOString(),
+    helper: {
+      path: 'testing\\browser\\isolated.cjs',
+      commit: '53c0c0d82cc1db6780a87ac2b1085734af6d5c60',
+      sha256: helperHash, api: 'openIsolatedLesson', cleanup: 'awaited close in finally',
+      lifecycleQualification: 'Inactive recovery prototype is unqualified; this run does not qualify unattended lifecycle behavior.',
+    },
+    playwright: playwrightVersion, observations, errors, completedNetwork,
+  };
+  try {
+    const signature = spawnSync('pwsh.exe', ['-NoProfile', '-Command',
+      "$s=Get-AuthenticodeSignature -LiteralPath 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'; @{status=$s.Status.ToString();subject=$s.SignerCertificate.Subject}|ConvertTo-Json -Compress"],
+    { encoding: 'utf8', windowsHide: true, timeout: 20000 });
+    assert.equal(signature.status, 0, signature.stderr);
+    report.edgeSignature = JSON.parse(signature.stdout.trim());
+    assert.equal(report.edgeSignature.status, 'Valid');
+    assert.match(report.edgeSignature.subject, /Microsoft Corporation/);
+    session = await openIsolatedLesson('learning\\S014\\index.html');
+    const { page } = session;
+    report.browserVersion = session.browserVersion;
+    assert.match(session.browserVersion, /^156\./);
+    page.on('pageerror', (error) => errors.push(String(error)));
+    page.on('requestfinished', (request) => {
+      if (/^https?:/.test(request.url())) completedNetwork.push(request.url());
+    });
+
+    const record = async () => JSON.parse(await page.locator('#full-record').textContent());
+    const active = async () => (await record()).attempts.at(-1);
+    const restart = async () => {
+      await page.reload({ waitUntil: 'load' });
+      assert.equal((await record()).attempts.length, 0);
+    };
+    const configure = async (values = {}) => {
+      const ids = { demandAt: 'demand-at', lead: 'lead-seconds', provision: 'provision-seconds',
+        warm: 'warm-seconds', target: 'target-units', demand: 'demand-rate' };
+      for (const [key, value] of Object.entries(values)) {
+        if (key === 'fixture') await page.locator('#observation-fixture').selectOption(value);
+        else await page.locator(`#${ids[key]}`).fill(String(value));
+      }
+    };
+    const finish = async () => {
+      let steps = 0;
+      while (!(await active()).finished) {
+        assert.ok(++steps <= 28);
+        await page.locator('#advance-clock').click();
+      }
+      await page.locator('#check-outcome').click();
+      return active();
+    };
+    const conduct = async (values = {}) => {
+      await configure(values);
+      await page.locator('#schedule-demand').click();
+      return finish();
+    };
+    const scenario = async (name, body) => {
+      await t.test(name, async () => {
+        try {
+          const observed = await body();
+          observations.push({ name, result: 'pass', observed });
+        } catch (error) {
+          observations.push({ name, result: 'fail', error: String(error) });
+          throw error;
+        }
+      });
+    };
+
+    await scenario('standalone bootstrap, prominent exact banner and accessible native controls', async () => {
+      assert.equal(await page.title(), 'S014 — Schedule and observe prewarmed capacity');
+      assert.equal(await page.locator('#training-banner').textContent(),
+        'Training rehearsal - synthetic data - not a live Azure result');
+      assert.equal(await page.locator('#training-banner').isVisible(), true);
+      assert.ok(await page.locator('#training-banner').evaluate((element) => Number(getComputedStyle(element).fontWeight) >= 700));
+      assert.equal(await page.locator('#status').getAttribute('aria-live'), 'polite');
+      assert.equal(await page.locator('#input-errors').getAttribute('role'), 'alert');
+      assert.equal(await page.locator('#schedule-controls').evaluate((form) => typeof form.reset), 'function');
+      assert.equal(await page.locator('input').count(), 6);
+      for (const input of await page.locator('input, select').all()) {
+        assert.ok(await input.evaluate((element) => element.labels.length > 0));
+      }
+      return { fileURL: page.url(), inputCount: 6, resetIsNativeFunction: true };
+    });
+
+    await scenario('Tab, Shift+Tab, Enter and Space conduct an incomplete check then a complete healthy attempt', async () => {
+      await page.locator('#demand-at').focus();
+      await page.keyboard.press('Tab');
+      assert.equal(await page.locator('#lead-seconds').evaluate((element) => element === document.activeElement), true);
+      await page.keyboard.press('Shift+Tab');
+      assert.equal(await page.locator('#demand-at').evaluate((element) => element === document.activeElement), true);
+      await page.keyboard.press('Enter');
+      assert.equal((await active()).deployed, 2);
+      assert.equal((await active()).firstReadyAt, null);
+      await page.locator('#advance-clock').focus();
+      await page.keyboard.press('Space');
+      assert.equal((await active()).now, 5);
+      await page.locator('#check-outcome').focus();
+      await page.keyboard.press('Enter');
+      assert.equal((await active()).verdict, 'incomplete');
+      assert.equal((await active()).assessments[0].metrics.successFraction, null);
+      while (!(await active()).finished) {
+        await page.locator('#advance-clock').focus();
+        await page.keyboard.press('Space');
+      }
+      await page.locator('#check-outcome').focus();
+      await page.keyboard.press('Enter');
+      const run = await active();
+      assert.equal(run.verdict, 'pass');
+      assert.equal(run.startedAt, 10);
+      assert.equal(run.firstReadyAt, 25);
+      assert.equal(run.clients.length, 40);
+      assert.equal(run.assessments.length, 2);
+      assert.match(await page.locator('#outcome').textContent(), /^PASS/);
+      assert.equal(await page.locator('#deployed-units').textContent(), '4');
+      assert.equal(await page.locator('#first-ready').textContent(), '25 s');
+      assert.ok((await page.locator('#trace-rows').textContent()).includes('deployment observed'));
+      return { triggerObservedAt: 10, deploymentObservedAt: 18, readyObservedAt: 25,
+        demandAt: 30, completeClients: 40, retainedIncompleteAssessments: 1, verdict: run.verdict };
+    });
+
+    await scenario('late provisioning despite a correct calendar keeps eight interrupted clients', async () => {
+      await restart();
+      const run = await conduct({ lead: 5 });
+      assert.equal(run.scheduleAccepted, true);
+      assert.equal(run.firstReadyAt, 40);
+      assert.equal(run.verdict, 'fail');
+      assert.equal(run.assessments[0].metrics.interrupted, 8);
+      assert.match(await page.locator('#outcome').textContent(), /^FAIL/);
+      assert.match(await page.locator('#assessments').textContent(), /8 interrupted/);
+      await page.locator('#client-details summary').focus();
+      await page.keyboard.press('Space');
+      assert.equal(await page.locator('#client-rows tr').count(), 40);
+      return { calendarAccepted: true, observedReadyAt: 40, demandAt: 30,
+        clients: run.assessments[0].metrics };
+    });
+
+    await scenario('ready exactly at demand fails even when every client sample succeeds', async () => {
+      await restart();
+      const run = await conduct({ lead: 15 });
+      assert.equal(run.verdict, 'fail');
+      assert.equal(run.firstReadyAt, 30);
+      assert.equal(run.assessments[0].metrics.interrupted, 0);
+      return { readyAt: 30, demandAt: 30, successfulClients: 40, verdict: 'fail' };
+    });
+
+    for (const [fixture, detail] of [
+      ['missed-trigger', 'scheduler did not fire'],
+      ['provisioning-failure', 'Additional units not deployed'],
+      ['warmup-failure', 'Additional units not ready'],
+    ]) {
+      await scenario(`observed ${fixture} remains a failure`, async () => {
+        await restart();
+        const run = await conduct({ fixture });
+        assert.equal(run.verdict, 'fail');
+        assert.equal(run.firstReadyAt, null);
+        assert.equal(run.assessments[0].metrics.interrupted, 16);
+        assert.ok((await page.locator('#trace-rows').textContent()).includes(detail));
+        return { fixture, firstReadyAt: null, interruptedClients: 16, observedDetail: detail };
+      });
+    }
+
+    await scenario('ready capacity is not sufficient when complete clients exceed their budget', async () => {
+      await restart();
+      const run = await conduct({ fixture: 'slow-clients' });
+      assert.equal(run.firstReadyAt, 25);
+      assert.equal(run.verdict, 'fail');
+      assert.ok(run.clients.every((client) => client.completed && client.latencyMs === 1000));
+      assert.equal(run.assessments[0].metrics.interrupted, 40);
+      return { readyAt: 25, latencyMs: 1000, budgetMs: 800, interruptedClients: 40 };
+    });
+
+    for (const fixture of ['missing-readiness', 'missing-clients']) {
+      await scenario(`${fixture} is explicit unknown, not a calendar-derived success`, async () => {
+        await restart();
+        const run = await conduct({ fixture });
+        assert.equal(run.verdict, 'unknown');
+        assert.equal(run.assessments[0].metrics.unknown, 40);
+        assert.ok(run.clients.every((client) => client.completed === null && client.latencyMs === null));
+        assert.match(await page.locator('#outcome').textContent(), /^UNKNOWN/);
+        if (fixture === 'missing-readiness') {
+          assert.equal(await page.locator('#ready-units').textContent(), 'unknown / not observed');
+          assert.equal(await page.locator('#first-ready').textContent(), 'Not observed');
+        }
+        return { fixture, firstReadyAt: run.firstReadyAt, unknownClients: 40, sampledDenominator: 40 };
+      });
+    }
+
+    await scenario('unqualified schedule support is unsupported, with no execution or empty-sample pass', async () => {
+      await restart();
+      const run = await conduct({ fixture: 'unsupported-schedule' });
+      assert.equal(run.verdict, 'unsupported');
+      assert.equal(run.clients.length, 0);
+      assert.equal(run.startedAt, null);
+      assert.equal(run.assessments[0].metrics.successFraction, null);
+      assert.equal(await page.locator('#advance-clock').isDisabled(), true);
+      assert.match(await page.locator('#outcome').textContent(), /^UNSUPPORTED/);
+      return { verdict: 'unsupported', executed: false, clients: 0, successFraction: null };
+    });
+
+    await scenario('invalid inputs and active rescheduling are announced and do not rewrite observations', async () => {
+      await restart();
+      for (const value of ['', '-1', '1.5', '321']) {
+        await configure({ demand: value });
+        await page.locator('#schedule-demand').click();
+        assert.equal((await record()).attempts.length, 0);
+        assert.equal(await page.locator('#input-errors').isVisible(), true);
+      }
+      await configure({ demand: 120, lead: 31 });
+      await page.locator('#schedule-demand').click();
+      assert.match(await page.locator('#input-errors').textContent(), /before logical second zero/);
+      await configure({ lead: 20 });
+      await page.locator('#schedule-demand').click();
+      const original = await active();
+      await configure({ lead: 5 });
+      await page.locator('#schedule-demand').click();
+      assert.deepEqual(await active(), original);
+      assert.equal((await record()).actions.at(-1).disposition, 'invalid');
+      return { rejectedInputs: 5, activeAttemptPreserved: true, invalidActionsRecorded: 6 };
+    });
+
+    await scenario('a later pass retains earlier failed, unknown and unsupported attempts verbatim', async () => {
+      await restart();
+      await conduct({ lead: 5, fixture: 'healthy' });
+      await conduct({ lead: 20, fixture: 'missing-clients' });
+      await conduct({ fixture: 'unsupported-schedule' });
+      const earlier = (await record()).attempts;
+      await conduct({ fixture: 'healthy' });
+      const state = await record();
+      assert.deepEqual(state.attempts.slice(0, 3), earlier);
+      assert.deepEqual(state.attempts.map((run) => run.verdict), ['fail', 'unknown', 'unsupported', 'pass']);
+      assert.match(await page.locator('#history-summary').textContent(), /1 pass; 1 fail; 1 unknown; 1 unsupported/);
+      assert.equal(await page.locator('#attempt-rows tr').count(), 4);
+      if (capture) await page.screenshot({ path: screenshot, fullPage: true });
+      return { outcomes: ['fail', 'unknown', 'unsupported', 'pass'], earlierRecordsUnchanged: true };
+    });
+
+    await scenario('keyboard reset restores native controls, empty memory and visible focus without reset shadowing', async () => {
+      await configure({ lead: 9, fixture: 'missing-readiness' });
+      await page.locator('#restart-rehearsal').focus();
+      await page.keyboard.press('Space');
+      const state = await record();
+      assert.equal(state.attempts.length, 0);
+      assert.equal(state.actions.length, 0);
+      assert.equal(state.nextAttempt, 1);
+      assert.equal(await page.locator('#lead-seconds').inputValue(), '20');
+      assert.equal(await page.locator('#observation-fixture').inputValue(), 'healthy');
+      assert.equal(await page.locator('#schedule-controls').evaluate((form) => typeof form.reset), 'function');
+      assert.equal(await page.locator('#restart-rehearsal').evaluate((element) => element === document.activeElement), true);
+      assert.equal(await page.locator('#advance-clock').isDisabled(), true);
+      assert.equal(await page.locator('#check-outcome').isDisabled(), true);
+      const focus = await page.locator('#restart-rehearsal').evaluate((element) => ({
+        width: getComputedStyle(element).outlineWidth, style: getComputedStyle(element).outlineStyle,
+      }));
+      assert.ok(parseFloat(focus.width) >= 3);
+      assert.equal(focus.style, 'solid');
+      return { formResetType: 'function', restoredLead: '20', clearedAttempts: 0, focus };
+    });
+
+    await scenario('narrow viewport keeps controls within the page and tables keyboard-scrollable', async () => {
+      await page.setViewportSize({ width: 360, height: 800 });
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
+      const box = await page.locator('#schedule-demand').boundingBox();
+      assert.ok(box.x >= 0 && box.x + box.width <= 360);
+      assert.equal(await page.locator('[aria-label="Observed synthetic timeline"]').getAttribute('tabindex'), '0');
+      await page.setViewportSize({ width: 1280, height: 900 });
+      return { width: 360, horizontalPageOverflow: false, keyboardScrollableTables: true };
+    });
+
+    await scenario('CSP actually blocks injected inline script, inline handler and fetch', async () => {
+      const result = await page.evaluate(async () => {
+        const violations = [];
+        document.addEventListener('securitypolicyviolation', (event) => violations.push(event.effectiveDirective));
+        const script = document.createElement('script');
+        script.textContent = 'window.__s014InlineExecuted = true';
+        document.body.append(script);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('onclick', 'window.__s014HandlerExecuted = true');
+        document.body.append(button);
+        button.click();
+        let fetchRejected = false;
+        try { await fetch('https://example.invalid/s014-csp-probe'); } catch { fetchRejected = true; }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        script.remove();
+        button.remove();
+        return { violations, fetchRejected,
+          inlineExecuted: window.__s014InlineExecuted === true,
+          handlerExecuted: window.__s014HandlerExecuted === true };
+      });
+      assert.equal(result.fetchRejected, true);
+      assert.equal(result.inlineExecuted, false);
+      assert.equal(result.handlerExecuted, false);
+      assert.ok(result.violations.some((directive) => directive.startsWith('script-src')));
+      assert.ok(result.violations.includes('script-src-attr'));
+      assert.ok(result.violations.includes('connect-src'));
+      assert.deepEqual(completedNetwork, []);
+      return result;
+    });
+    assert.deepEqual(errors, [], 'no application JavaScript errors');
+    assert.deepEqual(completedNetwork, [], 'no completed external or management requests');
+  } finally {
+    try {
+      if (session) await session.close();
+      report.cleanup = session ? 'awaited close completed' : 'no browser session acquired';
+    } catch (error) {
+      report.cleanup = `close failed: ${String(error)}`;
+      throw error;
+    } finally {
+      report.completedAtUtc = new Date().toISOString();
+      if (capture) fs.writeFileSync(output, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+    }
+  }
+});

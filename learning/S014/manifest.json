@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S014",
+  "workerId": "worker-A-S014",
+  "kano": "S",
+  "kanoUnit": "A-S014",
+  "packet": "SC-S014",
+  "source": "S014",
+  "parent": "D-S014",
+  "originalPrerequisites": ["P001"],
+  "title": "Scheduled scaling: observe warm capacity before known demand",
+  "objective": "Distinguish a correct demand calendar from observed scheduled provisioning, prewarming, effective capacity and complete client outcomes.",
+  "entryGate": "SOURCE",
+  "authorization": "local-implementation-only",
+  "mode": "synthetic-only",
+  "entryPoint": "learning\\S014\\index.html",
+  "feature": "learning\\S014\\scheduled-scaling.feature",
+  "preconditions": ["Two ready baseline units", "A known 20-second demand window", "Declared synthetic schedule and client fixtures"],
+  "actions": ["Schedule demand spike", "Advance 5 logical seconds", "Check outcome", "Reset rehearsal"],
+  "syntheticInput": {
+    "demandAtSeconds": 30,
+    "leadSeconds": 20,
+    "provisionSeconds": 8,
+    "warmSeconds": 7,
+    "targetUnits": 4,
+    "demandRequestsPerSecond": 120,
+    "fixture": "healthy"
+  },
+  "syntheticTrace": ["trigger observed at 10 s", "deployment observed at 18 s", "readiness observed at 25 s", "demand samples at 30, 35, 40, 45 s", "window ends at 50 s"],
+  "expectedAssertions": [
+    "A synthetic scheduler trigger is observed, not inferred from the calendar",
+    "Target warm readiness is observed strictly before demand",
+    "Effective capacity at demand start supports declared requests per second",
+    "All four cohorts and all 40 complete correct client journeys are observed within 800 ms",
+    "Failed, unknown, unsupported, incomplete and invalid records cannot become passing evidence"
+  ],
+  "limits": ["Synthetic fixture values are not Azure limits", "No native schedule qualification", "No production Node 24 qualification", "No parent completion or reliability claim"],
+  "tests": [
+    "learning\\S014\\schedule.test.cjs",
+    "learning\\S014\\invariants.test.cjs",
+    "learning\\S014\\integrity.test.cjs",
+    "learning\\S014\\browser.test.cjs"
+  ],
+  "testCommand": "node --test --test-reporter=tap .\\learning\\S014\\schedule.test.cjs .\\learning\\S014\\invariants.test.cjs .\\learning\\S014\\integrity.test.cjs",
+  "browserCommand": "node --test --test-reporter=tap .\\learning\\S014\\browser.test.cjs",
+  "syntaxCommand": "node .\\learning\\S014\\tools\\syntax.cjs",
+  "evidence": "learning\\S014\\evidence.json",
+  "infrastructure": "N/A after behavioral RED and before implementation: resource-free offline lesson.",
+  "dependencies": [],
+  "testTooling": {
+    "node": "22.23.4 only",
+    "playwright": "Existing offline Playwright 1.56.1",
+    "browser": "Installed Microsoft-signed Edge 156.0.4314.50",
+    "helperCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "lifecycleLimit": "Inactive lifecycle prototype is unqualified; no unattended-runner qualification."
+  },
+  "productionNode24Validated": false,
+  "nativeProof": false,
+  "parentComplete": false,
+  "acceptance": "Parent-owned empirical acceptance pending; this worker cannot award Done credit."
+}

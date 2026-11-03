@@ -1,0 +1,18 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require(process.env.S014_MODEL_UNDER_TEST || './schedule.js');
+
+test('a calendar creates an observed attempt without inventing ready capacity', () => {
+  const initial = model.createState();
+  const scheduled = model.schedule(initial, {
+    demandAt: 30, lead: 20, provision: 8, warm: 7,
+    target: 4, demand: 120, fixture: 'healthy',
+  });
+  assert.equal(scheduled.attempts.length, 1, 'accepted calendar must create one synthetic attempt');
+  assert.equal(scheduled.attempts[0].deployed, 2, 'calendar entry alone must not deploy capacity');
+  assert.equal(scheduled.attempts[0].ready, 2, 'calendar entry alone must not prove readiness');
+  assert.equal(scheduled.attempts[0].firstReadyAt, null);
+  assert.equal(initial.attempts.length, 0, 'previous state must not be rewritten');
+});
