@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; font-src 'none'">
+  <title>S092 — Canary rollback does not erase interruptions</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#lesson-main">Skip to lesson</a>
+  <header>
+    <p id="synthetic-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p>A-S092 · S092 / D-S092 · SC-S092 · one frozen S unit</p>
+    <h1>Rollback does not erase interruptions</h1>
+    <p>Fail a measured canary, stop expansion and rehearse reversal. Keep the original failed journeys counted even when old recovery succeeds.</p>
+  </header>
+  <main id="lesson-main" tabindex="-1">
+    <section aria-labelledby="instructions-heading">
+      <h2 id="instructions-heading">One stage, separate results</h2>
+      <p><strong>Every canary, failure, expansion and rollback action below is teaching-trace data.</strong> No deployment or resource operation occurs.</p>
+      <p>Preconditions: eight fixed synthetic clients; ready retained <code>old-v1</code>; one 25% or 50% <code>candidate-v2</code> cohort. Only the two or four selected clients attempt a transition. Other old-only clients are comparisons, not migration successes.</p>
+      <ol>
+        <li>Start the measured canary, then observe its fixed synthetic journeys.</li>
+        <li>Attempt expansion. Failure or missing evidence rejects it and stops new candidate admission.</li>
+        <li>For a stopped canary, rehearse rollback and inspect desired versus observed routing.</li>
+        <li>Predict the original canary and recovery results, then check your answer.</li>
+      </ol>
+      <p>Default worked result: 4 attempted, 3 successful, <strong>1 interrupted</strong>; expansion rejected; confirmed rollback restores old; recovery SUCCESS but canary <strong>FAILURE</strong>. Recovery's eight checks do not enlarge the transition denominator.</p>
+    </section>
+    <form id="exercise" novalidate aria-describedby="bounds">
+      <fieldset id="configuration">
+        <legend>1. Configure a synthetic attempt</legend>
+        <div class="fields">
+          <label for="canary-stage">Measured canary cohort
+            <select id="canary-stage" name="stage">
+              <option value="25">25% — 2 selected clients</option>
+              <option value="50" selected>50% — 4 selected clients</option>
+            </select>
+          </label>
+          <label for="canary-observation">Synthetic canary observation
+            <select id="canary-observation" name="observation">
+              <option value="healthy">Healthy — all selected journeys pass</option>
+              <option value="failed" selected>Failed — first selected journey is HTTP 503</option>
+              <option value="missing">Missing — first selected outcome unknown</option>
+              <option value="mixed">Mixed — one interrupted and one unknown</option>
+            </select>
+          </label>
+          <label for="rollback-evidence">Synthetic rollback evidence
+            <select id="rollback-evidence" name="rollbackEvidence">
+              <option value="confirmed" selected>Confirmed — old routing and recovery observed</option>
+              <option value="missing">Missing — reversal and recovery unobserved</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+      <div class="controls" aria-label="Ordered rehearsal actions">
+        <button id="start-canary" type="submit">Start measured canary</button>
+        <button id="observe-canary" type="button" disabled>Observe synthetic canary</button>
+        <button id="attempt-expansion" type="button" disabled>Attempt expansion gate</button>
+        <button id="rehearse-rollback" type="button" disabled>Rehearse rollback</button>
+      </div>
+      <fieldset id="prediction-fields" disabled>
+        <legend>2. Predict two independent results</legend>
+        <div class="fields">
+          <label for="predict-transition">Original canary result
+            <select id="predict-transition" name="transition">
+              <option value="SUCCESS">SUCCESS — all selected journeys pass</option>
+              <option value="FAILURE" selected>FAILURE — at least one interruption</option>
+              <option value="UNKNOWN">UNKNOWN — missing evidence, no known failure</option>
+            </select>
+          </label>
+          <label for="predict-recovery">Old recovery evidence result
+            <select id="predict-recovery" name="recovery">
+              <option value="SUCCESS" selected>SUCCESS — old recovery observed</option>
+              <option value="UNKNOWN">UNKNOWN — old recovery evidence missing</option>
+              <option value="NOT_ATTEMPTED">NOT_ATTEMPTED — healthy stage, no reversal</option>
+            </select>
+          </label>
+        </div>
+        <button id="check-prediction" type="button">Check prediction</button>
+      </fieldset>
+      <p id="lesson-error" class="error" role="alert" tabindex="-1" hidden></p>
+      <div class="controls">
+        <button id="new-attempt" type="button" disabled>New attempt — keep history</button>
+        <button id="reset-lesson" type="button">Reset all local data</button>
+      </div>
+      <p id="bounds">16 allowlisted configurations; at most 6 checked attempts, with no eviction. No timers, random data, external services or storage. New attempt retains history; reset or reload clears all local data.</p>
+    </form>
+    <section aria-labelledby="results-heading">
+      <h2 id="results-heading">Observed lesson results</h2>
+      <p id="lesson-status" role="status" aria-live="polite">Ready for a synthetic canary.</p>
+      <div class="results-grid">
+        <div>
+          <h3>Original canary journeys</h3>
+          <dl>
+            <dt>Canary result</dt><dd id="transition-result">NOT_STARTED</dd>
+            <dt>Attempted transition journeys</dt><dd id="attempted-count">0</dd>
+            <dt>Uninterrupted canary successes</dt><dd id="successful-count">0</dd>
+            <dt>Interruptions</dt><dd id="interrupted-count">0</dd>
+            <dt>Unknown outcomes</dt><dd id="unknown-count">0</dd>
+            <dt>Old-only comparisons (excluded)</dt><dd id="old-only-count">0</dd>
+          </dl>
+        </div>
+        <div>
+          <h3>Containment and recovery</h3>
+          <dl>
+            <dt>Expansion gate</dt><dd id="expansion-result">NOT_REVIEWED</dd>
+            <dt>New candidate admission</dt><dd id="admission-result">NOT_STARTED</dd>
+            <dt>Desired candidate routing</dt><dd id="desired-routing">0%</dd>
+            <dt>Observed candidate routing</dt><dd id="observed-routing">0%</dd>
+            <dt>Old recovery result</dt><dd id="recovery-result">NOT_ATTEMPTED</dd>
+            <dt>Separate old recovery checks</dt><dd id="recovery-count">0</dd>
+            <dt>Learning prediction check</dt><dd id="learning-result">NOT_CHECKED</dd>
+          </dl>
+        </div>
+      </div>
+      <p class="notice">A learning PASS is not user-impact success. Successful old recovery never rewrites the original canary outcomes. A healthy stage only makes the next-stage gate eligible; another stage is not executed here.</p>
+      <h3>Session totals — checked history plus active attempt</h3>
+      <dl class="totals">
+        <dt>Attempted stages</dt><dd id="total-attempts">0</dd>
+        <dt>Attempted transition journeys</dt><dd id="total-attempted">0</dd>
+        <dt>Successful</dt><dd id="total-successful">0</dd>
+        <dt>Interrupted</dt><dd id="total-interrupted">0</dd>
+        <dt>Unknown</dt><dd id="total-unknown">0</dd>
+        <dt>Synthetic journey fraction</dt><dd id="total-fraction">No sample</dd>
+      </dl>
+      <p>Attempted = successful + interrupted + unknown. This tiny deterministic sample is not a user-continuity or five-nines certification.</p>
+    </section>
+    <section aria-labelledby="journeys-heading">
+      <h2 id="journeys-heading">Synthetic client observations</h2>
+      <p>Latencies and HTTP statuses are fixture values, not network measurements. Successful candidate journeys use 120 ms; old checks use 80 ms; failed HTTP 503 uses 60 ms. The illustrative journey budget is 250 ms.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Original journey outcomes stay immutable after recovery</caption>
+          <thead><tr><th scope="col">Synthetic client</th><th scope="col">Original group</th><th scope="col">Original outcome</th><th scope="col">Synthetic HTTP / ms</th><th scope="col">Current observed destination</th><th scope="col">Separate recovery</th></tr></thead>
+          <tbody id="journey-body"></tbody>
+        </table>
+      </div>
+      <p id="journey-empty">No canary has started.</p>
+    </section>
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Teaching trace</h2>
+      <p id="trace-empty">No actions recorded.</p>
+      <ol id="trace-list"></ol>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained checked attempts</h2>
+      <p id="history-count">0 of 6 checked attempts retained</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Failed and unknown attempts are never silently evicted</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Configuration</th><th scope="col">Canary</th><th scope="col">Original journey counts</th><th scope="col">Recovery</th><th scope="col">Learning check</th></tr></thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+      <p id="history-empty">No checked attempts yet.</p>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Evidence limits</h2>
+      <p>No native Azure canary failure, rollback, routing, authentication or user continuity is executed or certified. B-S092, D-S092 and their original dependencies remain incomplete. No production Node.js 24 validation, cloud, IaC, scaffold, identity, credentials, deployment, spending, packages or framework changes.</p>
+      <p>This is one deterministic, memory-only measured stage, not a full deployment pipeline, durable controller or live platform result. <a href="README.md">Read the exact source contract and verification instructions.</a></p>
+    </section>
+    <noscript><p class="error">Enable JavaScript for this synthetic lesson. No result has been observed.</p></noscript>
+  </main>
+</body>
+</html>

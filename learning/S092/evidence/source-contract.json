@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S092",
+  "workerId": "worker-A-S092",
+  "sourceId": "S092",
+  "parentId": "D-S092",
+  "siblingId": "B-S092",
+  "kano": "S",
+  "kanoUnit": "A-S092",
+  "packet": "SC-S092",
+  "entryGate": "SOURCE",
+  "baseline": "b0c3886657b7c8e05fe333097f2c247387ae6d7e",
+  "capturedAtUtc": "2026-11-03T21:33:45.032Z",
+  "sourceReadBeforeBehaviorDesign": true,
+  "acceptanceEqualsBaseline": true,
+  "readWorkflow": "Claim and exact authoritative README/backlog/atomic/portable/packet reads preceded the first owned file change.",
+  "nativeAcceptanceNotCompleted": true,
+  "sources": [
+    {
+      "path": "README.md",
+      "workingSnapshot": "evidence\\raw\\source\\readme.working.raw.gz",
+      "gitSnapshot": "evidence\\raw\\source\\readme.git.raw.gz",
+      "workingBytes": 46303,
+      "gitBytes": 45719,
+      "workingSha256": "826c1e3b1f1f8866f05d45f3d6b9eca5c06e901a2b67737774ad18aa1607e4d1",
+      "workingCanonicalSha256": "852a82420f3b17a41c6aa56ae32fc1ba37829181654bcd6fa32fd00e88310519",
+      "gitSha256": "852a82420f3b17a41c6aa56ae32fc1ba37829181654bcd6fa32fd00e88310519",
+      "gitCanonicalSha256": "852a82420f3b17a41c6aa56ae32fc1ba37829181654bcd6fa32fd00e88310519",
+      "workingContainsCRLF": true,
+      "fullCanonicalEqualsBaseline": true
+    },
+    {
+      "path": ".docs\\wiki\\backlog.md",
+      "workingSnapshot": "evidence\\raw\\source\\backlog.working.raw.gz",
+      "gitSnapshot": "evidence\\raw\\source\\backlog.git.raw.gz",
+      "workingBytes": 64336,
+      "gitBytes": 63853,
+      "workingSha256": "40b4d8e2ab4774f47de029f97dd8ff4e267d9412292c3c47f72726b002831418",
+      "workingCanonicalSha256": "9a414030b4ef63b5d90a0f6d89e1cbc30b0300bf194ad87b9e7e3d2912b59a65",
+      "gitSha256": "9a414030b4ef63b5d90a0f6d89e1cbc30b0300bf194ad87b9e7e3d2912b59a65",
+      "gitCanonicalSha256": "9a414030b4ef63b5d90a0f6d89e1cbc30b0300bf194ad87b9e7e3d2912b59a65",
+      "workingContainsCRLF": true,
+      "fullCanonicalEqualsBaseline": true
+    },
+    {
+      "path": ".docs\\wiki\\kanban.md",
+      "workingSnapshot": "evidence\\raw\\source\\kanban.working.raw.gz",
+      "gitSnapshot": "evidence\\raw\\source\\kanban.git.raw.gz",
+      "workingBytes": 88791,
+      "gitBytes": 88049,
+      "workingSha256": "6c2d8e8967bb11d859c08b2b126c0e675af9588e331da9dacc52f6b498ace8ec",
+      "workingCanonicalSha256": "08d25b293983216e8af8412b28034cea9a1f35b96c43722d479dad505a9f5e24",
+      "gitSha256": "08d25b293983216e8af8412b28034cea9a1f35b96c43722d479dad505a9f5e24",
+      "gitCanonicalSha256": "08d25b293983216e8af8412b28034cea9a1f35b96c43722d479dad505a9f5e24",
+      "workingContainsCRLF": true,
+      "fullCanonicalEqualsBaseline": true
+    }
+  ],
+  "acceptance": {
+    "readmeS092": "| S092 | **Candidate fails during canary:** Stop further exposure and reverse routing; count interruptions already experienced. |",
+    "backlogDS092": "| D-S092 | P0 | Add candidate failure during a measured canary stage. | Expansion stops and recovery executes; failed journeys remain in the attempted-transition denominator and interruption counts, not the success numerator. | D-S003 |",
+    "cardAS092": "| A-S092 | D-S092 | S | Fail a canary; failed journeys remain interruptions despite successful rollback. | SOURCE |",
+    "siblingBS092": "| B-S092 | D-S092 | S | Conduct one canary regression/recovery; verify stopped expansion and retained failure accounting. | CORE, DATA, HOST |",
+    "prerequisiteS003": "| S003 | **Progressive canary:** Move through small traffic increments with journey-based acceptance gates before each increase. |",
+    "prerequisiteDS003": "| D-S003 | P0 | Add configurable canary stages, observation windows, and **Promote next cohort** controls over the handoff workflow. | Expansion requires fresh journey evidence; regressions stop promotion; actual cohorts and interruptions are retained through rollback. | D-S001 |",
+    "sourceGate": "| SOURCE | The supplied backlog and portable lesson contract; available now. |",
+    "packet": "Packet membership is fixed before admission. This register overrides default membership for its named cards; every other A/B card belongs to SC-Snnn, and every other capability card belongs to its first listed source parent. A card has one packet, not duplicate packet credits.",
+    "atomic": "## Atomic card contract\n\nEvery listed row is one card, one accountable owner/pair, one independently reviewable changeset, and one observable acceptance result. Normal publication is a scoped, labeled commit with an annotated tag on `main`; temporary recovery branches and reviewer-assisted PRs are used only when safe integration requires them.\n\nImplementation order is BDD specification, genuine behavioral TDD red, the IaC step (or an explicit N/A for a resource-free lesson), implementation/refactoring, green tests and actual browser checks, scoped tagged publication, and parent-owned empirical acceptance. A worker cannot award its own Done credit. Subdivision preserves the original `kanoUnit`; partial work does not manufacture extra value.\n\n- **Size target:** A cards take 1-2 focused hours; C, B, and X cards target 2-4 focused hours after entry gates are satisfied. These are slicing limits, not delivery estimates.\n- **Refine before admission:** If a card needs a new research decision, multiple independent behaviors, or more than four focused hours, split it before pulling. Revalidate coverage and Kano classes; artificial splits do not manufacture extra value.\n- **Inputs:** Parent source, versioned contract, named fixture/configuration, technical gate, quota reservation, and any approved lease are available.\n- **Ownership:** One card owns its module/fixture namespace. A and B siblings do not share files, PRs, or mutable test leases.\n- **Done:** Scoped behavior is usable, its stated check passes, relevant tests are automated, review/merge is complete, documentation and evidence are attached, and the behavior is available through its declared preview or harness surface.\n- **Evidence:** Record card/parent IDs, mode, configuration/host, commit, test/run reference, verifier result, user-impact result, cleanup result, owner, reviewer, packet, and accepted time.\n- **No false completion:** A replay is not native evidence. Unsupported/unverified positive behavior cannot pass as a native success. A negative experiment may pass its verifier while clearly reporting interrupted users.\n- **No bonus credits:** Multiple parents, commits, test cases, repeated runs, and duplicated fixtures do not increase a card's Kano count.",
+    "portable": "### Portable A-card lesson contract\n\nAn A card delivers a standalone, browser-openable lesson bundle with a small interactive exercise: choose an action or condition, inspect a synthetic trace, and check the expected outcome. Use standard HTML/browser behavior so an approved application framework or Azure subscription is not needed to begin.\n\nEach bundle declares source ID, objective, preconditions, actions, synthetic input/trace, expected assertions, and limits. It prominently says **Training rehearsal - synthetic data - not a live Azure result**, makes no management calls, contains no credentials, and supports keyboard operation.\n\nEach lesson must add a worked, testable exercise rather than copying the backlog sentence. Keep it portable for later mounting by C041. The native implementation and evidence remain a separate B card, and the source demo is not complete until both required slices and its original acceptance gates pass.",
+    "interruptions": "### Definition of an interruption\n\nA recommended measurement unit is one declared user journey crossing a deployment or capacity transition. An interruption includes:\n\n- A user-visible error, timeout, or broken required connection.\n- Completion latency beyond the agreed journey budget.\n- Unexpected logout, lost session/form state, or broken navigation/assets.\n- Missing or duplicate business effects.\n- Data freshness, ordering, or consistency outside the declared contract.\n\nRetries or reconnects count as seamless only when correctness, state, and UX remain intact within the original journey budget. Unlimited retries or success-shaped fallbacks must not conceal failures.\n\n### Outcome classification\n\n| Outcome | Reporting treatment |\n| --- | --- |\n| Uninterrupted successful transition | Actual intended migration is evidenced and the complete journey passes all acceptance criteria. |\n| Safe abort before exposure | Existing production remains usable, but no completed user migration is claimed; report deployment aborts separately. |\n| Interrupted transition | Count the affected attempted journey as a failure, including failures preceding rollback. |\n| Unverified or unsupported result | Report missing evidence or platform limits explicitly; do not count the result as successful. |\n\nUsers remaining entirely on the old deployment do not establish successful migration merely because their requests succeeded. Conversely, failed or uncertain started transitions must not be removed from the denominator.\n\n### Five-nines transition metric\n\n```text\nUninterrupted-transition success =\n    uninterrupted successful transition journeys\n    / all attempted transition journeys\n\nTarget >= 0.99999\nAllowed interruption probability <= 0.00001\n```\n\nDefine the event boundary, affected population, observation window, and outcome attribution before running the demonstration. Report by hosting model, cohort, protocol, load, and failure condition as well as in aggregate.\n\nAn empty transition sample produces no evidence, not 100% success. Endpoint uptime, request throughput, average latency, and tail percentiles are useful diagnostics but do not replace the journey-based metric."
+  }
+}

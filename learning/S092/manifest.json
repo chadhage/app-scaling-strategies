@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S092",
+  "workerId": "worker-A-S092",
+  "sourceId": "S092",
+  "parentId": "D-S092",
+  "siblingId": "B-S092",
+  "kano": "S",
+  "kanoUnit": "A-S092",
+  "packet": "SC-S092",
+  "entryGate": "SOURCE",
+  "title": "Canary rollback does not erase interruptions",
+  "entry": "index.html",
+  "mode": "synthetic",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Fail a canary; failed journeys remain interruptions despite successful rollback.",
+  "preconditions": [
+    "JavaScript enabled; local file access to the standalone lesson",
+    "Eight fixed synthetic clients and a ready retained old-v1 destination",
+    "One measured 25 or 50 percent canary stage; illustrative 250 ms journey budget"
+  ],
+  "actions": [
+    "Start measured canary",
+    "Observe synthetic canary",
+    "Attempt expansion gate",
+    "Rehearse rollback",
+    "Check prediction",
+    "New attempt — keep history",
+    "Reset all local data"
+  ],
+  "syntheticInput": "16 allowlisted configurations, 2 or 4 attempted transition journeys per stage, 6 retained checked attempts",
+  "expectedAssertions": [
+    "Failed or unknown canary evidence stops admission and rejects expansion",
+    "Confirmed synthetic reversal restores observed old routing",
+    "Failed and unknown original journeys remain counted after successful recovery",
+    "Old-only comparisons and separate recovery checks never inflate the transition numerator or denominator",
+    "Missing rollback evidence leaves effective routing and recovery UNKNOWN",
+    "A correct failure prediction passes learning verification without changing user-impact FAILURE"
+  ],
+  "limits": [
+    "One measured stage; an eligible next stage is not executed",
+    "All canary, failure, expansion and rollback actions are teaching-trace data only",
+    "No native Azure canary, rollback, routing, authentication or user-continuity certification",
+    "No source-parent completion, production Node.js 24 validation or five-nines claim",
+    "Bounded memory-only history; reset or reload deliberately clears all local data"
+  ],
+  "managementCalls": false,
+  "credentials": false,
+  "nativeAcceptanceCompleted": false,
+  "parentAcceptance": "pending independent parent review"
+}

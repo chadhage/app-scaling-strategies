@@ -1,0 +1,298 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createLesson } = require('..\\model.js');
+const fixtures = require('..\\fixtures.js');
+const config = (overrides = {}) => ({ ...fixtures.DEFAULT_CONFIG, ...overrides });
+const expected = (input) => {
+  const attempted = Number(input.stage) * 8 / 100;
+  const interrupted = ['failed', 'mixed'].includes(input.observation) ? 1 : 0;
+  const unknown = ['missing', 'mixed'].includes(input.observation) ? 1 : 0;
+  return {
+    attempted, interrupted, unknown, successful: attempted - interrupted - unknown,
+    verdict: interrupted ? 'FAILURE' : unknown ? 'UNKNOWN' : 'SUCCESS',
+  };
+};
+function prepare(lesson, input = config()) {
+  lesson.start(input);
+  lesson.observe();
+  lesson.reviewExpansion();
+  if (input.observation !== 'healthy') lesson.rollback();
+}
+function finish(lesson, input = config(), prediction) {
+  prepare(lesson, input);
+  lesson.checkPrediction(prediction || {
+    transition: expected(input).verdict,
+    recovery: input.observation === 'healthy' ? 'NOT_ATTEMPTED'
+      : input.rollbackEvidence === 'confirmed' ? 'SUCCESS' : 'UNKNOWN',
+  });
+  return lesson.snapshot();
+}
+function rejectedUnchanged(lesson, action, code) {
+  const before = lesson.snapshot();
+  assert.throws(action, { code });
+  assert.deepEqual(lesson.snapshot(), before, 'rejection must be atomic');
+}
+
+test('the stub and final model are loadable with the complete public action surface', () => {
+  const lesson = createLesson();
+  for (const name of ['snapshot', 'start', 'observe', 'reviewExpansion', 'rollback', 'checkPrediction', 'newAttempt', 'reset']) {
+    assert.equal(typeof lesson[name], 'function', name);
+  }
+  assert.equal(lesson.snapshot().phase, 'IDLE');
+  assert.equal(Object.isFrozen(fixtures.CLIENT_IDS), true);
+  assert.equal(fixtures.BANNER, 'Training rehearsal - synthetic data - not a live Azure result');
+});
+
+test('starting each canary counts only its selected, not-yet-observed transition journeys', () => {
+  for (const stage of fixtures.STAGES) {
+    const lesson = createLesson();
+    const state = lesson.start(config({ stage }));
+    assert.equal(state.phase, 'CANARY_STARTED');
+    assert.equal(state.active.transition.attempted, Number(stage) * 8 / 100);
+    assert.equal(state.active.transition.successful, 0);
+    assert.equal(state.active.transition.unknown, state.active.transition.attempted);
+    assert.equal(state.active.transition.verdict, 'UNKNOWN');
+    assert.equal(state.active.comparison.length, 8 - state.active.transition.attempted);
+    assert.equal(state.totals.attempts, 1);
+    assert.equal(state.totals.checkedAttempts, 0);
+    assert.equal(state.totals.attempted, state.active.transition.attempted);
+  }
+});
+
+test('healthy stage success and eligible expansion never fabricate another executed stage', () => {
+  for (const stage of fixtures.STAGES) {
+    const state = finish(createLesson(), config({ stage, observation: 'healthy' }));
+    assert.equal(state.phase, 'CHECKED');
+    assert.equal(state.active.transition.verdict, 'SUCCESS');
+    assert.equal(state.active.transition.successful, Number(stage) * 8 / 100);
+    assert.equal(state.active.expansion.status, 'ELIGIBLE_NOT_EXECUTED');
+    assert.equal(state.active.expansion.allowed, true);
+    assert.equal(state.active.observedCandidatePercent, Number(stage));
+    assert.equal(state.active.recovery.verdict, 'NOT_ATTEMPTED');
+    assert.equal(state.active.prediction.verdict, 'PASS');
+    assert.equal(state.totals.fraction, 1);
+    assert.equal(state.active.trace.length, 4);
+  }
+});
+
+test('confirmed rollback succeeds but cannot erase a failed canary journey or inflate its numerator', () => {
+  const lesson = createLesson();
+  lesson.start(config());
+  const observed = lesson.observe();
+  assert.equal(observed.active.transition.interrupted, 1);
+  const originalJourneys = observed.active.transition.journeys;
+  lesson.reviewExpansion();
+  const recovered = lesson.rollback();
+  assert.deepEqual(recovered.active.transition.journeys, originalJourneys);
+  assert.equal(recovered.active.recovery.verdict, 'SUCCESS');
+  assert.equal(recovered.active.recovery.successful, 8);
+  assert.equal(recovered.active.observedCandidatePercent, 0);
+  assert.equal(recovered.active.transition.verdict, 'FAILURE');
+  assert.equal(recovered.totals.attempted, 4);
+  assert.equal(recovered.totals.successful, 3);
+  assert.equal(recovered.totals.interrupted, 1);
+  const checked = lesson.checkPrediction({ transition: 'FAILURE', recovery: 'SUCCESS' });
+  assert.equal(checked.active.prediction.verdict, 'PASS');
+  assert.equal(checked.totals.fraction, 0.75);
+  assert.equal(checked.totals.checkedAttempts, 1);
+});
+
+test('missing canary evidence is UNKNOWN and remains in the attempted denominator after recovery', () => {
+  const state = finish(createLesson(), config({ stage: '25', observation: 'missing' }));
+  assert.equal(state.active.transition.verdict, 'UNKNOWN');
+  assert.equal(state.active.expansion.allowed, false);
+  assert.equal(state.active.recovery.verdict, 'SUCCESS');
+  assert.equal(state.totals.attempted, 2);
+  assert.equal(state.totals.successful, 1);
+  assert.equal(state.totals.interrupted, 0);
+  assert.equal(state.totals.unknown, 1);
+  assert.equal(state.totals.fraction, 0.5);
+});
+
+test('known failure dominates uncertainty without discarding either affected journey', () => {
+  const state = finish(createLesson(), config({ stage: '25', observation: 'mixed' }));
+  assert.equal(state.active.transition.verdict, 'FAILURE');
+  assert.equal(state.totals.attempted, 2);
+  assert.equal(state.totals.successful, 0);
+  assert.equal(state.totals.interrupted, 1);
+  assert.equal(state.totals.unknown, 1);
+  assert.equal(state.active.recovery.verdict, 'SUCCESS');
+  assert.equal(state.active.prediction.verdict, 'PASS');
+});
+
+test('missing rollback evidence cannot establish reversed routing or successful recovery', () => {
+  const state = finish(createLesson(), config({ rollbackEvidence: 'missing' }));
+  assert.equal(state.active.recovery.verdict, 'UNKNOWN');
+  assert.equal(state.active.recovery.attempted, 8);
+  assert.equal(state.active.recovery.successful, 0);
+  assert.equal(state.active.recovery.unknown, 8);
+  assert.equal(state.active.observedCandidatePercent, null);
+  assert.equal(state.active.desiredCandidatePercent, 0);
+  assert.equal(state.active.transition.verdict, 'FAILURE');
+  assert.equal(state.totals.interrupted, 1);
+  assert.equal(state.totals.attempted, 4);
+});
+
+test('regression stops new admission and rejects expansion before reversal is evidenced', () => {
+  for (const observation of ['failed', 'missing', 'mixed']) {
+    const lesson = createLesson();
+    lesson.start(config({ observation }));
+    const state = lesson.observe();
+    assert.equal(state.active.candidateAdmissionOpen, false);
+    assert.equal(state.active.desiredCandidatePercent, 0);
+    assert.equal(state.active.observedCandidatePercent, 50);
+    const reviewed = lesson.reviewExpansion();
+    assert.equal(reviewed.active.expansion.status, 'REJECTED');
+    assert.equal(reviewed.active.expansion.allowed, false);
+    assert.equal(reviewed.active.observedCandidatePercent, 50);
+    assert.equal(reviewed.totals.attempted, 4);
+  }
+});
+
+test('configuration rejects wrong types, keys, prototypes and accessors without executing them', () => {
+  let accessorReads = 0;
+  const accessor = config();
+  Object.defineProperty(accessor, 'stage', { get() { accessorReads++; return '50'; }, enumerable: true });
+  const invalid = [
+    undefined, null, [], '50', 50, Object.create(config()), Object.assign(Object.create(null), config()),
+    config({ extra: 'no' }), { stage: '50', observation: 'failed' }, config({ stage: 50 }),
+    config({ stage: ' 50' }), config({ stage: '100' }), config({ observation: 'FAILED' }),
+    config({ rollbackEvidence: 'successful' }), accessor,
+  ];
+  for (const input of invalid) {
+    const lesson = createLesson();
+    rejectedUnchanged(lesson, () => lesson.start(input), 'ERR_INPUT');
+  }
+  assert.equal(accessorReads, 0);
+});
+
+test('predictions are exact guarded records and a wrong valid prediction does not repair user impact', () => {
+  const lesson = createLesson();
+  prepare(lesson);
+  for (const input of [null, [], {}, { transition: 'SUCCESS', recovery: 'SUCCESS', extra: true },
+    { transition: 'failure', recovery: 'SUCCESS' }, Object.create({ transition: 'FAILURE', recovery: 'SUCCESS' })]) {
+    rejectedUnchanged(lesson, () => lesson.checkPrediction(input), 'ERR_INPUT');
+  }
+  const state = lesson.checkPrediction({ transition: 'SUCCESS', recovery: 'SUCCESS' });
+  assert.equal(state.active.prediction.verdict, 'FAIL');
+  assert.equal(state.active.transition.verdict, 'FAILURE');
+  assert.equal(state.totals.interrupted, 1);
+  rejectedUnchanged(lesson, () => lesson.checkPrediction({ transition: 'FAILURE', recovery: 'SUCCESS' }), 'ERR_STATE');
+});
+
+test('adjacent-state guards reject skipped, repeated and inapplicable actions atomically', () => {
+  const lesson = createLesson();
+  for (const method of ['observe', 'reviewExpansion', 'rollback', 'newAttempt']) {
+    rejectedUnchanged(lesson, () => lesson[method](), 'ERR_STATE');
+  }
+  lesson.start(config());
+  rejectedUnchanged(lesson, () => lesson.start(config()), 'ERR_STATE');
+  rejectedUnchanged(lesson, () => lesson.reviewExpansion(), 'ERR_STATE');
+  rejectedUnchanged(lesson, () => lesson.rollback(), 'ERR_STATE');
+  lesson.observe();
+  rejectedUnchanged(lesson, () => lesson.observe(), 'ERR_STATE');
+  rejectedUnchanged(lesson, () => lesson.rollback(), 'ERR_STATE');
+  lesson.reviewExpansion();
+  rejectedUnchanged(lesson, () => lesson.reviewExpansion(), 'ERR_STATE');
+  rejectedUnchanged(lesson, () => lesson.checkPrediction({ transition: 'FAILURE', recovery: 'SUCCESS' }), 'ERR_STATE');
+  lesson.rollback();
+  rejectedUnchanged(lesson, () => lesson.rollback(), 'ERR_STATE');
+  const healthy = createLesson();
+  prepare(healthy, config({ observation: 'healthy' }));
+  rejectedUnchanged(healthy, () => healthy.rollback(), 'ERR_STATE');
+});
+
+test('snapshots and caller configuration cannot mutate active or retained evidence', () => {
+  const lesson = createLesson();
+  const input = config();
+  lesson.start(input);
+  input.stage = '25';
+  lesson.observe();
+  lesson.reviewExpansion();
+  lesson.rollback();
+  lesson.checkPrediction({ transition: 'FAILURE', recovery: 'SUCCESS' });
+  const original = lesson.snapshot();
+  assert.equal(original.active.transition.interrupted, 1);
+  const mutated = lesson.snapshot();
+  mutated.active.transition.journeys[0].outcome = 'SUCCESS';
+  mutated.history[0].transition.interrupted = 0;
+  mutated.history.length = 0;
+  mutated.totals.attempted = 0;
+  assert.deepEqual(lesson.snapshot(), original);
+});
+
+test('new attempts retain checked outcomes while active unchecked journeys stay counted', () => {
+  const lesson = createLesson();
+  const first = finish(lesson);
+  assert.equal(first.history.length, 1);
+  lesson.newAttempt();
+  let state = lesson.snapshot();
+  assert.equal(state.phase, 'IDLE');
+  assert.equal(state.totals.attempted, 4);
+  assert.equal(state.totals.interrupted, 1);
+  lesson.start(config({ stage: '25', observation: 'missing' }));
+  state = lesson.snapshot();
+  assert.equal(state.totals.attempts, 2);
+  assert.equal(state.totals.checkedAttempts, 1);
+  assert.equal(state.totals.attempted, 6);
+  assert.equal(state.totals.unknown, 2);
+  lesson.observe();
+  lesson.reviewExpansion();
+  lesson.rollback();
+  lesson.checkPrediction({ transition: 'UNKNOWN', recovery: 'SUCCESS' });
+  state = lesson.snapshot();
+  assert.equal(state.history.length, 2);
+  assert.equal(state.totals.successful, 4);
+  assert.equal(state.totals.interrupted, 1);
+  assert.equal(state.totals.unknown, 1);
+  assert.equal(state.totals.attempted, 6);
+  assert.equal(state.totals.checkedAttempts, 2);
+});
+
+test('six checked attempts remain intact and a seventh cannot start or evict history', () => {
+  const lesson = createLesson();
+  for (let i = 0; i < fixtures.MAX_ATTEMPTS; i++) {
+    const state = finish(lesson);
+    assert.equal(state.history.length, i + 1);
+    if (i < fixtures.MAX_ATTEMPTS - 1) lesson.newAttempt();
+  }
+  const state = lesson.snapshot();
+  assert.equal(state.totals.attempted, 24);
+  assert.equal(state.totals.successful, 18);
+  assert.equal(state.totals.interrupted, 6);
+  rejectedUnchanged(lesson, () => lesson.start(config()), 'ERR_LIMIT');
+  rejectedUnchanged(lesson, () => lesson.newAttempt(), 'ERR_LIMIT');
+});
+
+test('explicit reset clears every local outcome, trace, history and denominator', () => {
+  const lesson = createLesson();
+  const before = finish(lesson, config({ observation: 'mixed', rollbackEvidence: 'missing' }));
+  assert.equal(before.totals.attempted, 4);
+  const reset = lesson.reset();
+  assert.deepEqual(reset, createLesson().snapshot());
+  assert.equal(reset.active, null);
+  assert.equal(reset.history.length, 0);
+  assert.equal(reset.totals.fraction, null);
+  assert.equal(lesson.start(config()).phase, 'CANARY_STARTED');
+});
+
+test('all sixteen allowlisted configurations conserve counts and produce deterministic traces', () => {
+  let cases = 0;
+  for (const stage of fixtures.STAGES) for (const observation of fixtures.OBSERVATIONS) {
+    for (const rollbackEvidence of fixtures.ROLLBACK_EVIDENCE) {
+      const input = config({ stage, observation, rollbackEvidence });
+      const state = finish(createLesson(), input);
+      assert.equal(state.phase, 'CHECKED');
+      const want = expected(input);
+      for (const [key, value] of Object.entries(want)) assert.equal(state.active.transition[key], value, key);
+      assert.equal(state.totals.attempted, state.totals.successful + state.totals.interrupted + state.totals.unknown);
+      assert.equal(state.active.comparison.length + state.active.transition.attempted, 8);
+      assert.equal(state.active.prediction.verdict, 'PASS');
+      assert.deepEqual(state, finish(createLesson(), input));
+      cases++;
+    }
+  }
+  assert.equal(cases, 16);
+});

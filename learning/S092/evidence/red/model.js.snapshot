@@ -1,0 +1,34 @@
+'use strict';
+
+function createLesson() {
+  const snapshot = () => ({
+    phase: 'IDLE',
+    active: {
+      phase: 'IDLE',
+      transition: { attempted: 0, successful: 0, interrupted: 0, unknown: 0, verdict: 'UNKNOWN', journeys: [] },
+      comparison: [],
+      expansion: { status: 'NOT_REVIEWED', allowed: null },
+      recovery: { verdict: 'NOT_ATTEMPTED', attempted: 0, successful: 0, unknown: 0, journeys: [] },
+      prediction: { verdict: 'NOT_CHECKED' },
+      trace: [],
+      desiredCandidatePercent: 0,
+      observedCandidatePercent: 0,
+      candidateAdmissionOpen: false,
+    },
+    history: [],
+    totals: { attempts: 0, checkedAttempts: 0, attempted: 0, successful: 0, interrupted: 0, unknown: 0, fraction: null },
+  });
+  return {
+    snapshot,
+    start: snapshot,
+    observe: snapshot,
+    reviewExpansion: snapshot,
+    rollback: snapshot,
+    checkPrediction: snapshot,
+    newAttempt: snapshot,
+    reset: snapshot,
+  };
+}
+
+if (typeof module === 'object' && module.exports) module.exports = { createLesson };
+else globalThis.CanaryModel = { createLesson };
