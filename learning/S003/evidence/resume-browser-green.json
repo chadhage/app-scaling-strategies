@@ -1,0 +1,138 @@
+{
+  "cardId": "A-S003",
+  "workerId": "worker-A-S003",
+  "recordedAtUtc": "2026-11-03T09:32:02.2375192Z",
+  "page": "learning\\S003\\index.html",
+  "scheme": "file",
+  "forceNew": true,
+  "pageId": "65a33a15-9871-43f7-94b1-f7f2eb821adc",
+  "tools": ["openBrowserPage", "runPlaywrightCode"],
+  "deferredToolsSearchedBeforeUse": true,
+  "ownPageOnly": true,
+  "reloadedAfterImplementation": true,
+  "results": [
+    {
+      "id": "reloaded-healthy-and-regressed",
+      "actions": [
+        "Reload the owned file page; assert the exact visible training banner and CSP connect-src none.",
+        "Focus #fixture, press Tab then Enter on #observe; assert 1 v2 / 19 v1.",
+        "Press Tab then Enter on #promote; assert 25% desired and no reused actual observation.",
+        "Select regressed, hit-test and issue trusted native pointer clicks on #observe and #promote.",
+        "Assert desired remains 25%, journey-regression is visible, live status announces the block, and trace retains promotion-blocked."
+      ],
+      "observed": {
+        "passed": true,
+        "healthy": "5% to 25% via Tab/Enter",
+        "regression": "25% held; 50% blocked",
+        "journeyImpact": "5 attempted transitions: 4 recorded uninterrupted, 1 failed, 0 unknown/pending",
+        "failedSample": "u02, HTTP 200, 1400 ms",
+        "trustedPointerClicks": 2,
+        "pageErrors": 0,
+        "consoleErrors": 0,
+        "httpRequests": 0
+      }
+    },
+    {
+      "id": "rollback-clear-and-restart",
+      "actions": [
+        "Enter on #rollback after regression; compare trace length before/after.",
+        "Record a separate safe rollback observation, then try another promotion.",
+        "Enter on #clear, inspect disabled controls, empty rows/history, live text and focus.",
+        "Enter on focused #start and inspect the separate new rehearsal."
+      ],
+      "observed": {
+        "passed": true,
+        "rollbackDesired": "0%",
+        "rollbackActualBeforeObservation": "Not observed",
+        "rollbackActualAfterObservation": "0 v2 / 20 v1 / 0 unknown",
+        "failedUsersRetained": 1,
+        "rollbackTraceChange": "one appended entry; history retained",
+        "clear": "empty rows and trace; observe/promote/age/rollback/clear disabled; focus Start",
+        "restart": "fresh 5%; one pending attempt; only initial trace",
+        "pageErrors": 0
+      }
+    },
+    {
+      "id": "insufficient-and-invalid-data",
+      "actions": [
+        "Explicitly start a separate default rehearsal for each fixture.",
+        "Select each listed fixture, Enter on #observe then #promote, and check its visible reason and trace.",
+        "Inject users: [null] into one observation by temporarily wrapping the fixture generator, which restores itself immediately.",
+        "Observe and try promotion again; assert unknown impact and intact rendering."
+      ],
+      "observed": {
+        "passed": true,
+        "fixturesHeldAt5": ["missing", "unknown", "partial", "stale", "short-window", "malformed"],
+        "nullSample": "20 user rows, 3 trace entries, 1 unknown attempted journey; no crash or migration success",
+        "pageErrors": 0,
+        "httpRequests": 0
+      }
+    },
+    {
+      "id": "invalid-configuration-and-recovery",
+      "actions": [
+        "Record safe default evidence and retain its trace/destinations for comparison.",
+        "Inject test-only select options for duplicate stages 5,5,100 and a zero-second window.",
+        "Submit each invalid choice with Enter on #start; inspect #configuration-error and #live-result.",
+        "Clear, then try the invalid configuration again; verify it cannot reactivate the rehearsal.",
+        "Choose valid 10,30,60,100 and 60 seconds, remove injected options, and start again."
+      ],
+      "observed": {
+        "passed": true,
+        "invalidCases": ["duplicate stages", "zero window", "invalid start after Clear"],
+        "beforeClear": "Visible rejection; desired 5%, actual destinations and trace unchanged",
+        "afterClear": "No active rehearsal was started; actions remain disabled; no trace manufactured",
+        "validRecovery": "new 10% / 60s rehearsal with one initial entry; validation alert cleared",
+        "pageErrors": 0
+      }
+    },
+    {
+      "id": "configured-cohorts-expiry-and-keyboard-focus",
+      "actions": [
+        "Use the alternative plan with a 60-second window and record fresh safe evidence at every stage.",
+        "Assert intended and observed cohorts at every increment and no increment beyond 100%.",
+        "Start a default rehearsal, Tab to #observe, and inspect :focus-visible and computed outline.",
+        "Record safe evidence, advance the simulated clock 61 seconds, and try promotion.",
+        "Record fresh evidence and confirm only the next 25% stage becomes eligible."
+      ],
+      "observed": {
+        "passed": true,
+        "alternativeCohorts": [2, 6, 12, 20],
+        "finalBound": "100% / no next stage",
+        "expired": "blocked at 5%; fresh recheck permits 25%",
+        "focusVisible": true,
+        "computedOutlineWidth": "2.66667px",
+        "computedOutlineStyle": "solid",
+        "computedOutlineColor": "rgb(138, 67, 0)",
+        "scripts": ["canary.js", "lesson.js"],
+        "pageErrors": 0,
+        "consoleErrors": 0,
+        "httpRequests": 0
+      }
+    }
+  ],
+  "toolingRecoveries": [
+    {
+      "issue": "Locator click timed out waiting for visible/enabled/stable in the shared integrated browser, even after bringToFront.",
+      "recovery": "Scroll the owned target into view; verify geometry, enabled state and elementFromPoint target; use page.mouse.click; verify the resulting click event has isTrusted=true.",
+      "limits": "No forced locator clicks, DOM element.click calls or interactions with other page IDs were used."
+    },
+    {
+      "issue": "An initial browser assertion required a computed outline of exactly 3px and failed.",
+      "observation": "The real computed outline was 2.66667px, solid, with :focus-visible true; CSS still declares a 3px outline.",
+      "recovery": "Repeat the full scenario with a visible solid outline threshold of at least 2px rather than an exact computed-pixel equality. No product style was changed to manufacture this pass."
+    }
+  ],
+  "cleanup": {
+    "finalState": "After a final reload and healthy/regressed check, Enter on Clear left no active rehearsal, an empty trace and focus on Start.",
+    "runtimeInjections": "One-shot fixture wrapper restored itself; invalid select options were removed; a final reload discarded fixture changes. Final test-only pointer attributes were removed, and the original fixture generator and clean DOM state were asserted.",
+    "resources": "No cloud resources, credentials, packages or background services were created."
+  },
+  "limits": [
+    "Training rehearsal - synthetic data - not a live Azure result.",
+    "Only the integrated browser and this owned file page were tested; no cross-browser or screen-reader certification is claimed.",
+    "HTTP resource observation and runtime request/console/pageerror listeners covered the checked actions; no Azure management operation was attempted.",
+    "IaC is N/A; native B-S003 and full parent D-S003 acceptance remain outside this portable lesson.",
+    "Controller review and acceptance are pending; no Done or Kano credit is granted by this evidence."
+  ]
+}

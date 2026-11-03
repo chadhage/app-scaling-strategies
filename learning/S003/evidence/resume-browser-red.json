@@ -1,0 +1,38 @@
+{
+  "cardId": "A-S003",
+  "phase": "before incremental implementation",
+  "page": "learning\\S003\\index.html",
+  "scheme": "file",
+  "forceNew": true,
+  "pageId": "65a33a15-9871-43f7-94b1-f7f2eb821adc",
+  "scope": "Actual browser keyboard activation with an explicitly injected malformed synthetic observation; no file changes or management calls.",
+  "checks": [
+    {
+      "input": "makeObservation returns users: {} once",
+      "action": "Enter on #observe",
+      "observation": "The published non-array guard already handled the object payload without a page error.",
+      "red": false
+    },
+    {
+      "input": "makeObservation returns users: [null] once",
+      "action": "Enter on #observe",
+      "observedAtUtc": "2026-11-03T09:25:46.887Z",
+      "pageError": "Cannot read properties of null (reading 'id')",
+      "location": "learning\\S003\\lesson.js:96:56",
+      "observation": "The journey gate updated, but cohort rendering threw and the trace did not render the new observation.",
+      "red": true
+    }
+  ],
+  "pairedNodeRed": "learning\\S003\\evidence\\resume-red.txt",
+  "nodeResult": {
+    "tests": 30,
+    "passed": 27,
+    "failed": 3,
+    "exitCode": 1,
+    "failures": [
+      "The malformed fixture was not yet implemented.",
+      "Null sample entries crashed the lesson renderer.",
+      "Invalid configuration raised an uncaught RangeError instead of a visible rejection."
+    ]
+  }
+}

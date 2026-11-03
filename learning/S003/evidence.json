@@ -10,13 +10,20 @@
   "mode": "synthetic",
   "technicalEntryGate": "SOURCE",
   "entry": "learning\\S003\\index.html",
+  "recordedAtUtc": "2026-11-03T09:32:02.2375192Z",
+  "publicationLineage": {
+    "priorImplementationCommit": "2c0e9831fb0fd8630614b6bd616e2d1ea75afd7c",
+    "priorImplementationTag": "kanban/A-S003/2c0e9831fb0f",
+    "incrementalPublicationReceipt": ".git\\kanban-orchestrator\\published\\A-S003.json",
+    "note": "The publisher binds this evidence to the incremental commit and annotated tag after the evidence is written. Prior implementation, red logs and partial browser results are preserved."
+  },
   "acceptance": {
-    "status": "incomplete",
-    "verifiedScope": "BDD contract, portable assets, pure canary model, 26 focused Node tests and JavaScript syntax.",
-    "blocker": "Integrated browser opens the lesson but cannot reacquire either returned unique pageId. Real click, keyboard and changed-DOM verification could not execute.",
-    "browserAcceptanceSatisfied": false,
+    "status": "ready-for-controller-review",
+    "verifiedScope": "BDD contract, portable assets, 30 focused Node model/controller tests, JavaScript syntax, and actual reloaded browser keyboard, trusted pointer, invalid-data, reset and changed-DOM assertions.",
+    "blocker": null,
+    "browserAcceptanceSatisfied": true,
     "eligibleForDoneCredit": false,
-    "reviewer": "Controller empirical review required; no acceptance claimed.",
+    "reviewer": "Controller empirical review and acceptance pending; this worker does not grant Done or Kano credit.",
     "nativeBS003Proof": false,
     "parentDS003Complete": false
   },
@@ -31,13 +38,17 @@
       "Earlier stage evidence cannot validate a later epoch.",
       "Failed and unknown attempts survive rechecks and requested rollback.",
       "Configurable stages and windows do not double count unchanged users.",
-      "Explicit local cleanup and synthetic/native limits remain distinct."
+      "Explicit local cleanup and synthetic/native limits remain distinct.",
+      "Malformed sample lists remain inspectable without crashing the lesson.",
+      "Invalid configuration is visibly rejected without discarding existing evidence or manufacturing a cleared rehearsal.",
+      "Clear disables actions, restores Start focus, and permits a separate clean restart."
     ]
   },
   "tdd": {
     "runtime": "Node.js v22.23.4",
     "runner": "node:test with node:assert/strict; no manifest, packages or installs",
-    "command": "node --test --test-reporter=tap learning\\S003\\canary.test.cjs",
+    "command": "node --test --test-reporter=tap learning\\S003\\canary.test.cjs learning\\S003\\lesson.test.cjs",
+    "controllerTestScope": "lesson.test.cjs runs the actual lesson controller against a small in-memory DOM adapter. It does not substitute for the separately recorded real-browser checks.",
     "red": {
       "path": "learning\\S003\\evidence\\red.txt",
       "exitCode": 1,
@@ -56,7 +67,7 @@
       "cause": "Additional malformed-sample test exposed '(observation.users ?? []).map is not a function'.",
       "fix": "Treat non-array sample payloads as missing evidence, retain the unknown attempt, and block promotion."
     },
-    "green": {
+    "priorGreen": {
       "path": "learning\\S003\\evidence\\green.txt",
       "exitCode": 0,
       "tests": 26,
@@ -65,9 +76,30 @@
       "cancelled": 0,
       "skipped": 0
     },
+    "incrementalRed": {
+      "path": "learning\\S003\\evidence\\resume-red.txt",
+      "exitCode": 1,
+      "tests": 30,
+      "passed": 27,
+      "failed": 3,
+      "capturedBeforeImplementationChanges": true,
+      "cause": "The malformed fixture was absent; a null sample entry crashed rendering; invalid configuration escaped as a RangeError instead of a visible rejection.",
+      "pairedBrowserRed": "learning\\S003\\evidence\\resume-browser-red.json",
+      "fix": "Add the malformed fixture, tolerate null sample entries, and validate a prospective configuration before replacing the current rehearsal. Announce rejected configuration and clear its alert on explicit cleanup or valid restart."
+    },
+    "green": {
+      "path": "learning\\S003\\evidence\\resume-green.txt",
+      "exitCode": 0,
+      "tests": 30,
+      "passed": 30,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
     "syntax": {
       "command": "node --check learning\\S003\\canary.js && node --check learning\\S003\\lesson.js",
-      "path": "learning\\S003\\evidence\\syntax.txt",
+      "path": "learning\\S003\\evidence\\resume-syntax.txt",
+      "priorPath": "learning\\S003\\evidence\\syntax.txt",
       "exitCode": 0
     },
     "verifiedBehaviors": [
@@ -80,7 +112,10 @@
       "Failed and unknown attempted transitions remain in the denominator after later passing probes and rollback.",
       "Rollback routing is requested, not assumed observed; a separate snapshot can observe all users on v1.",
       "Both configurable four-stage plans reach the final synthetic stage without duplicate migration credit.",
-      "Restrictive CSP, local script references, labeled controls, a live result and honest scope are present in the portable assets."
+      "Restrictive CSP, local script references, labeled controls, a live result and honest scope are present in the portable assets.",
+      "Malformed payloads and null rows cannot crash cohort/trace rendering or authorize promotion.",
+      "Rejected stages/windows leave active observations and trace unchanged, and cannot reactivate a cleared rehearsal.",
+      "Explicit Clear removes local rows/history, disables five action controls, restores Start focus, and starts a separate attempt without leaked failures."
     ]
   },
   "iac": {
@@ -93,9 +128,9 @@
     "managementCalls": 0
   },
   "browser": {
-    "status": "blocked",
+    "status": "passed",
     "required": true,
-    "verified": false,
+    "verified": true,
     "deferredToolsSearchedFirst": true,
     "tools": [
       "openBrowserPage",
@@ -106,7 +141,16 @@
     "page": "learning\\S003\\index.html",
     "scheme": "file",
     "forceNew": true,
-    "attempts": [
+    "currentPageId": "65a33a15-9871-43f7-94b1-f7f2eb821adc",
+    "redChecks": "learning\\S003\\evidence\\resume-browser-red.json",
+    "greenChecks": "learning\\S003\\evidence\\resume-browser-green.json",
+    "priorBrowserSummary": {
+      "status": "blocked",
+      "successfulClickAssertions": 0,
+      "successfulKeyboardAssertions": 0,
+      "changedDomAssertions": 0
+    },
+    "priorBlockedAttempts": [
       {
         "pageId": "d219831e-a1fc-40ba-84cf-eec6eae0eacd",
         "openResult": "Returned the lesson title and initial accessibility snapshot, including the exact training banner.",
@@ -134,16 +178,12 @@
         }
       }
     ],
-    "successfulClickAssertions": 0,
-    "successfulKeyboardAssertions": 0,
-    "changedDomAssertions": 0,
-    "networkOrConsoleVerification": "Not claimed; the interaction tools could not address the opened pages.",
-    "remainingAcceptance": [
-      "Use a functioning integrated-browser page handle with forceNew and retain that own pageId.",
-      "Actually record safe and regressed choices, promote safely once, then observe blocked expansion and retained user impact.",
-      "Operate the controls with real keyboard input and observe changed DOM/live status.",
-      "Exercise missing/unknown evidence, rollback retention and explicit local cleanup in the browser."
-    ]
+    "trustedPointerClicksInFinalReloadCheck": 2,
+    "keyboardVerified": true,
+    "changedDomVerified": true,
+    "networkOrConsoleVerification": "Final reloaded checks observed zero page errors, console errors and HTTP(S) requests. CSP connect-src remains none. No external documentation links were followed.",
+    "remainingAcceptance": [],
+    "controllerAcceptancePending": true
   },
   "configuration": {
     "population": 20,
@@ -157,7 +197,7 @@
     "clock": "simulated; no real waiting or measurements",
     "regressionFixture": "HTTP 200 and 1400-ms complete journey"
   },
-  "verificationVerdict": "Unit-level positive and negative guard checks passed. Required real-browser interaction acceptance is blocked, so the card is incomplete.",
+  "verificationVerdict": "Focused model/controller and actual reloaded browser checks passed. Healthy evidence permits exactly one stage; regression or invalid evidence blocks expansion with retained impact. Controller review/publication acceptance is separate.",
   "journeyUserImpact": "Synthetic fixtures only. A negative guard verification can pass with an interrupted user; failures and unknowns are retained separately from the verifier verdict. No uninterrupted live migration is claimed.",
   "cleanup": {
     "cloudResources": "None created; no deletion required.",
@@ -165,12 +205,14 @@
     "packages": "None installed.",
     "backgroundProcesses": "None started; Node test and syntax commands completed.",
     "persistentBrowserState": "Application code uses no cookies or browser storage; only local in-memory rehearsal state.",
-    "localReset": "An explicit Clear local rehearsal control is implemented; its real-browser interaction remains unverified.",
-    "browserPages": "Only two uniquely opened lesson pages were targeted. Their handles became inaccessible; closure is unverified. No shared tab was navigated.",
+    "localReset": "Real Enter activation cleared rows/history, disabled five action controls and restored Start focus. Restart created only a fresh initial attempt; final browser state was explicitly cleared.",
+    "browserPages": "All resumed interactions used only forceNew page 65a33a15-9871-43f7-94b1-f7f2eb821adc. It remains open with no active rehearsal. Prior inaccessible page attempts are retained as history; no shared tab was navigated.",
     "trackedScope": "learning\\S003\\ only; no shared manifests, README, other lessons, Kanban or ledger edited manually."
   },
   "limitations": [
-    "Real click, keyboard and changed-DOM browser evidence is missing due to non-addressable returned pageIds; this is a blocker, not a pass.",
+    "Browser verification covers the integrated browser, not a cross-browser or assistive-technology certification.",
+    "Selector click actionability timed out while the integrated page could be hidden. Actual pointer checks used native page.mouse clicks after geometry, hit-target and enabled checks, and verified isTrusted=true.",
+    "Malformed null-row and invalid select-value tests deliberately injected local synthetic data; they are not live routing or security-boundary tests.",
     "All observations, destinations and user journeys are deterministic synthetic fixtures.",
     "Twenty correlated invented users and a simulated clock establish no 99.999% reliability, native routing, production capacity, authentication enforcement or recovery guarantee.",
     "v1 is retained; no real drain, retirement, rollback execution or external business effect is measured.",
@@ -178,5 +220,5 @@
     "B-S003 and full D-S003/source acceptance remain unfulfilled.",
     "Failed/unknown transitions are deliberately conservative and cannot be retroactively repaired by a later passing probe; a new rehearsal is a separate attempt."
   ],
-  "pathNormalization": "Commands and committed evidence use repository-relative paths; absolute user paths and any eventual publication SHA are omitted."
+  "pathNormalization": "Commands and committed evidence use repository-relative paths; private absolute user paths are omitted. The publication receipt/controller result provides the incremental SHA and tag rather than a self-referential commit field."
 }

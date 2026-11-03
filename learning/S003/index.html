@@ -51,9 +51,10 @@
             <option value="60">60 seconds</option>
           </select>
         </div>
-        <button id="start" type="submit" aria-describedby="reset-warning">Start new rehearsal</button>
+        <button id="start" type="submit" aria-describedby="reset-warning configuration-error">Start new rehearsal</button>
       </form>
-      <p id="reset-warning" class="note">A 5% rehearsal is already started. Starting again or clearing explicitly
+      <p id="configuration-error" role="alert" hidden></p>
+      <p id="reset-warning" class="note">A default 5% rehearsal starts automatically. Starting again or clearing explicitly
         discards this local history. Normal promotion and rollback never erase it.</p>
 
       <h2>2. Observe, decide, inspect</h2>
@@ -70,6 +71,7 @@
           <option value="partial">Partial routing — newest selected user stays on v1</option>
           <option value="stale">Stale observation — arrives 61 seconds late</option>
           <option value="short-window">Incomplete window — only 5 seconds observed</option>
+          <option value="malformed">Malformed data — samples are not a journey list</option>
         </select>
       </div>
       <p id="fixture-expectation" class="expected"></p>
@@ -151,7 +153,7 @@
           The sample proves no 99.999% reliability or uninterrupted live migration.</li>
       </ul>
       <p>Open <code>learning\S003\index.html</code> directly in a browser. From the repository root run
-        <code>node --test --test-reporter=tap learning\S003\canary.test.cjs</code>.
+        <code>node --test --test-reporter=tap learning\S003\canary.test.cjs learning\S003\lesson.test.cjs</code>.
         See <a href="canary.feature">Given/When/Then contract</a> and <a href="evidence.json">recorded evidence</a>.</p>
     </section>
   </main>

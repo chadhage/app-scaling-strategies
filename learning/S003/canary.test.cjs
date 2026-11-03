@@ -64,7 +64,8 @@ for (const [fixture, reason] of [
   ["unknown", "unknown-outcome"],
   ["partial", "routing-mismatch"],
   ["stale", "stale-observation"],
-  ["short-window", "short-window"]
+  ["short-window", "short-window"],
+  ["malformed", "missing-observation"]
 ]) {
   test(`BDD: ${fixture} evidence cannot authorize expansion`, () => {
     const run = observe(createRun(), fixture);

@@ -2,7 +2,7 @@
   "use strict";
 
   const POPULATION = 20;
-  const FIXTURES = ["safe", "regressed", "missing", "unknown", "partial", "stale", "short-window"];
+  const FIXTURES = ["safe", "regressed", "missing", "unknown", "partial", "stale", "short-window", "malformed"];
   const copy = value => structuredClone(value);
   const targetCount = run => run.desiredPercent * POPULATION / 100;
   const intended = (run, index) => index < targetCount(run) ? "v2" : "v1";
@@ -82,6 +82,7 @@
     }
     if (kind === "partial") user.destination = "v1";
     if (kind === "missing") observation.users = [];
+    if (kind === "malformed") observation.users = { unverified: "not a journey list" };
     return observation;
   }
 

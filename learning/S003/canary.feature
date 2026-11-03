@@ -43,6 +43,24 @@ Feature: Advance a staged canary only with fresh journey evidence
       | partial      | desired routing differs from destinations |
       | stale        | evidence is older than 60 seconds         |
       | short-window | the observation window is incomplete      |
+      | malformed    | the sample payload is not a journey list  |
+
+  Scenario: Invalid sample data remains inspectable instead of crashing the lesson
+    Given the 5% stage is awaiting observations
+    When the sample payload is null, an object, text or a list containing a null entry
+    Then the lesson still renders its current gate, user rows and trace
+    And the attempted journey stays unknown rather than becoming a successful migration
+    And a promotion attempt records a refusal without increasing desired traffic
+
+  Scenario: Rejected configuration does not destroy an existing or cleared rehearsal
+    Given a rehearsal has recorded observations and a trace
+    When I submit invalid stages or an invalid observation window
+    Then the rejection is visibly explained and announced without an uncaught error
+    And the current desired traffic, observations and trace are unchanged
+    When I explicitly clear the rehearsal and submit another invalid configuration
+    Then no active rehearsal or migration success is manufactured
+    When I submit a valid configuration
+    Then a separate rehearsal starts with only its own initial trace
 
   Scenario: Evidence expires and cannot be reused by a later stage
     Given the 5% stage has a safe complete observation
@@ -74,3 +92,6 @@ Feature: Advance a staged canary only with fresh journey evidence
     And no credentials, network call, Azure management action or resource deletion occurs
     And the lesson claims neither B-S003 native proof nor complete D-S003 acceptance
     And neither the finite synthetic sample nor its result proves 99.999% reliability
+    And action controls are disabled and keyboard focus returns to Start new rehearsal
+    When I start again
+    Then prior failed or unknown outcomes do not leak into the separate new rehearsal

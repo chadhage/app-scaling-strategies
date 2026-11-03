@@ -10,7 +10,8 @@
     unknown: "Expected: the newest candidate destination is v2 but the complete journey is unverified. Unknown is not success; promotion is blocked.",
     partial: "Expected: desired traffic exceeds actual v2 destinations because the newest selected user stays on v1. No fabricated migration; promotion is blocked.",
     stale: "Expected: the observation arrives 61 seconds late, beyond the 60-second lifetime. Even otherwise passing journeys cannot permit the next increment.",
-    "short-window": "Expected: only 5 simulated seconds are covered, less than the configured observation window. Promotion is blocked."
+    "short-window": "Expected: only 5 simulated seconds are covered, less than the configured observation window. Promotion is blocked.",
+    malformed: "Expected: the sample payload is not a list of journeys. Destinations and attempted outcomes stay unknown; promotion is blocked without crashing or clearing the trace."
   };
   const reasonText = {
     "missing-observation": "Missing observations: no complete current destination snapshot is available.",
@@ -93,7 +94,7 @@
 
   function renderCohorts() {
     const entries = Array.isArray(run.currentObservation?.users) ? run.currentObservation.users : [];
-    const snapshot = new Map(entries.map(user => [user.id, user]));
+    const snapshot = new Map(entries.map(user => [user?.id, user]));
     const rows = run.users.map((id, index) => {
       const sample = snapshot.get(id);
       const attempt = run.attempts.find(entry => entry.userId === id);
@@ -127,12 +128,31 @@
     }));
   }
 
+  function clearConfigurationError() {
+    element("configuration-error").textContent = "";
+    element("configuration-error").hidden = true;
+  }
+
   element("configuration").addEventListener("submit", event => {
     event.preventDefault();
-    run = model.createRun({
-      stages: element("stage-plan").value.split(",").map(Number),
-      windowSeconds: Number(element("window-seconds").value)
-    });
+    let next;
+    try {
+      next = model.createRun({
+        stages: element("stage-plan").value.split(",").map(Number),
+        windowSeconds: Number(element("window-seconds").value)
+      });
+    } catch (error) {
+      if (!(error instanceof RangeError)) throw error;
+      const message = `Configuration rejected — ${error.message} ${
+        run === null ? "No active rehearsal was started." : "The current rehearsal and trace are unchanged."
+      }`;
+      element("configuration-error").textContent = message;
+      element("configuration-error").hidden = false;
+      element("live-result").textContent = message;
+      return;
+    }
+    run = next;
+    clearConfigurationError();
     render();
   });
   element("fixture").addEventListener("change", () => {
@@ -145,6 +165,11 @@
   element("promote").addEventListener("click", () => { run = model.promote(run); render(); });
   element("age").addEventListener("click", () => { run = model.advanceClock(run); render(); });
   element("rollback").addEventListener("click", () => { run = model.rollback(run); render(); });
-  element("clear").addEventListener("click", () => { run = null; render(); element("start").focus(); });
+  element("clear").addEventListener("click", () => {
+    run = null;
+    clearConfigurationError();
+    render();
+    element("start").focus();
+  });
   render();
 })();
