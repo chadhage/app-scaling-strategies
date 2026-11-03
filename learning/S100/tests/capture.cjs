@@ -228,7 +228,7 @@ else if (stage === 'iac') {
     throw new Error('Browser evidence capture requires deliberate CAPTURE_BROWSER_EVIDENCE=1');
   }
   execute('browser-run', ['--test', path.join('learning', 'S100', 'tests', 'browser.test.cjs')]);
-} else if (stage === 'green' || stage === 'qualification-green') {
+} else if (stage === 'green' || stage === 'qualification-green' || stage === 'portability-green') {
   if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') throw new Error('Final green must run read-only browser verification');
   execute(stage, ['--test', '--test-concurrency=1',
     path.join('learning', 'S100', 'tests', 'model.test.cjs'),
@@ -245,4 +245,4 @@ else if (stage === 'iac') {
   ]).record);
   json(path.join('evidence', 'syntax.json'), { capturedAtUtc: utc(), results });
 } else if (stage === 'seal') seal();
-else throw new Error('Explicit source/red/iac/tooling/focused/browser/green/qualification-green/syntax/seal stage required');
+else throw new Error('Explicit source/red/iac/tooling/focused/browser/green/qualification-green/portability-green/syntax/seal stage required');

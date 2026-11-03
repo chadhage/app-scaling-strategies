@@ -57,6 +57,8 @@ The byte index excludes only itself. Raw snapshots, compressed archives and scre
 
 The first scoped publication attempt stopped before commit because the preserved CRLF snapshots were treated as text whitespace. Its actual gate diagnostics are retained; no RED snapshot was altered. The byte-qualification repair and repeated proof earn zero additional original credits. Initial green remains preserved; `qualification-green.json` records the tighter canonical checks.
 
+A post-publication canonical-blob check also caught the BDD binding assertion comparing raw CRLF capture with LF Git text. The actual assertion failure and published test snapshot are retained. Raw BDD bytes now bind to their preserved raw snapshot, while the current specification binds by canonical content. `portability-green.json` includes read-only execution of the surface assertions using verified Git clean-filter bytes, without writing a clone. This is the same A-S100 unit, not another mission or source-parent certification.
+
 Actual browser checks use only published `testing\browser\isolated.cjs` (53c0c0d; SHA256 `86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055`), `openIsolatedLesson`, and awaited `finally` cleanup. Existing offline Playwright 1.56.1 and Microsoft-signed Edge 156.0.4314.50 run on Node 22.23.4 test tooling. There are no downloads or installs. The helper's overall lifecycle deadline limitation remains; its abandoned recovery prototype is unqualified and unused.
 
 The actual browser observes keyboard, error, reset, negative/pass, positive, wrong-prediction/fail and unknown DOM results, plus CSP blocking inline script and connections. Browser evidence capture is opt-in; rerunning tests does not overwrite published proof.

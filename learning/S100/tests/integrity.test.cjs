@@ -135,6 +135,9 @@ test('captured command outputs are raw, successful, and sequenced BDD â†’ RED â†
   if (fs.existsSync(path.join(root, 'evidence', 'qualification-green.json'))) {
     records.push(json(path.join('evidence', 'qualification-green.json')));
   }
+  if (fs.existsSync(path.join(root, 'evidence', 'portability-green.json'))) {
+    records.push(json(path.join('evidence', 'portability-green.json')));
+  }
   for (const record of records) {
     assert.equal(record.exitStatus, record.stage === 'red' ? 1 : 0);
     assert.equal(record.error, null);
@@ -154,6 +157,11 @@ test('captured command outputs are raw, successful, and sequenced BDD â†’ RED â†
     const bytes = uncompressed(path.join('evidence', 'raw', `publication-gate-before-repair.${stream}.raw.gz`));
     assert.equal(hash(bytes), repair[`${stream}RawSha256`]);
   }
+  const binding = json(path.join('evidence', 'canonical-bdd-before-repair.json'));
+  assert.equal(binding.code, 'ERR_ASSERTION');
+  assert.equal(binding.remoteVerified, true);
+  assert.notEqual(binding.canonicalFeatureSha256, binding.originalRawBDDSha256);
+  assert.equal(binding.additionalOriginalCredits, 0);
 });
 
 test('tooling qualification is the approved offline pair and published helper, not production or lifecycle certification', () => {

@@ -5,6 +5,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
+const { spawnSync } = require('node:child_process');
+const vm = require('node:vm');
 
 const root = path.resolve(__dirname, '..');
 const read = (name) => fs.readFileSync(path.join(root, name), 'utf8');
@@ -76,7 +78,9 @@ test('BDD, source clauses and byte attributes are attached, with immutable raw s
   assert.match(read('.gitattributes'), /^evidence\/\*\*\/\*\.snapshot -text -diff$/m);
   assert.match(read('.gitattributes'), /^evidence\/\*\*\/\*\.gz -text -diff$/m);
   const bdd = JSON.parse(read(path.join('evidence', 'bdd.json')));
-  assert.equal(createHash('sha256').update(read('forced-work.feature')).digest('hex'), bdd.sourceSha256);
+  const rawBDD = fs.readFileSync(path.join(root, 'evidence', 'raw', 'bdd.feature.snapshot'));
+  assert.equal(createHash('sha256').update(rawBDD).digest('hex'), bdd.sourceSha256);
+  assert.equal(read('forced-work.feature').replace(/\r\n/g, '\n'), rawBDD.toString().replace(/\r\n/g, '\n'));
   const declarations = read('model.d.ts');
   assert.match(declarations, /readonly phase: Phase/);
   assert.match(declarations, /export type Action/);
@@ -91,4 +95,39 @@ test('native remainder is honestly not ready and refinement manufactures no unit
   assert.equal(remainder.ledgerMutation, false);
   assert.match(remainder.blocker, /authorization.*CORE.*DATA.*AKS.*C078/);
   assert.match(remainder.sourceParentObligations, /D-S042.*D-S049.*BASE/);
+});
+
+test('canonical Git clean-filter surface assertions execute read-only without materializing a clone', () => {
+  let checks = 0;
+  const repo = path.resolve(root, '..', '..');
+  function canonicalRead(target, encoding) {
+    const relative = path.relative(root, target);
+    assert.ok(relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+    const bytes = fs.readFileSync(target);
+    const preserved = relative.startsWith(`evidence${path.sep}`)
+      && ['.snapshot', '.gz', '.png'].includes(path.extname(relative));
+    const canonical = preserved ? bytes : Buffer.from(bytes.toString().replace(/\r\n/g, '\n'));
+    const oid = createHash('sha1').update(Buffer.from(`blob ${canonical.length}\0`)).update(canonical).digest('hex');
+    const gitPath = path.relative(repo, target).split(path.sep).join('/');
+    const git = spawnSync('git', ['hash-object', '--stdin', `--path=${gitPath}`], {
+      cwd: repo, encoding: null, input: bytes,
+    });
+    assert.equal(git.status, 0, git.stderr.toString());
+    assert.equal(git.stdout.toString().trim(), oid);
+    return encoding === 'utf8' ? canonical.toString() : canonical;
+  }
+  const source = canonicalRead(path.join(__dirname, 'surface.test.cjs'), 'utf8');
+  vm.runInNewContext(source, {
+    __dirname, Buffer, require(name) {
+      if (name === 'node:test') return (title, body) => {
+        if (title === 'canonical Git clean-filter surface assertions execute read-only without materializing a clone') return;
+        body();
+        checks++;
+      };
+      if (name === 'node:fs') return { readFileSync: canonicalRead };
+      assert.ok(name.startsWith('node:'));
+      return require(name);
+    },
+  }, { timeout: 10000 });
+  assert.equal(checks, 5);
 });
