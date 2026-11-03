@@ -1,0 +1,70 @@
+Feature: S048 batch job retirement, using synthetic data only
+  A-S048 is one frozen S unit in SC-S048, with source parent D-S048.
+  Training rehearsal - synthetic data - not a live Azure result
+  Six fixed items each commit one effect of 10 and take 10 synthetic milliseconds.
+  The original job budget starts before item 1; a replacement cannot restart it.
+
+  Scenario: Checkpoint is resumable work, not a completed job
+    Given the old worker has committed items 1 through 3
+    When the operator checkpoints at durable cursor 3 and retires the active worker
+    Then the job is resumable and not complete, with 3 items remaining
+    And no completed result is added to history yet
+    When a replacement resumes with a 20 millisecond delay and verifies the job
+    Then items 1 through 6 have exactly one effect each, totaling 60
+    And elapsed time is 80 milliseconds against the original 100 millisecond budget
+    And the synthetic verdict is passed
+
+  Scenario: Finish before retiring is a valid alternative
+    Given the old worker has committed items 1 through 3
+    When the operator finishes the remaining items before retiring
+    Then no checkpoint or replacement is required
+    And verification observes 6 unique items, 60 effects and 60 milliseconds
+
+  Scenario Outline: Stale checkpoint replay is not necessarily a duplicate effect
+    Given a durable stale checkpoint at cursor 1 and committed effects for items 1 through 3
+    When the worker retires and a replacement replays items 2 through 6
+    Then 2 replay attempts are measured
+    And with <policy> there are <duplicates> duplicate effects and a <verdict> verdict
+    And elapsed time is 100 milliseconds, without resetting the original budget
+    Examples:
+      | policy     | duplicates | verdict |
+      | idempotent | 0          | passed  |
+      | repeat     | 2          | failed  |
+
+  Scenario Outline: Retirement must not discard unfinished work or claim completion
+    Given the old worker has committed only items 1 through 3
+    When the operator selects <condition>
+    Then items 4 through 6 remain missing and the verdict is failed
+    And a declaration of completion cannot hide those missing items
+    Examples:
+      | condition                         |
+      | a local-only checkpoint           |
+      | retirement without a checkpoint   |
+      | falsely declaring the job complete |
+
+  Scenario: Missing evidence stays unknown
+    When the checkpoint cannot be observed or final effect observation is absent
+    Then unobserved coverage and effect totals are unknown, not zero or successful
+    And a known false completion, lost checkpoint or budget breach still fails
+
+  Scenario: Original bounded job budget
+    Given a durable current checkpoint and complete observation
+    Then an 80 millisecond total passes an 80 millisecond budget
+    And the same job fails a 79 millisecond budget
+    And retry or replacement never grants a new budget
+
+  Scenario: Bounded private state and retained history
+    Then only idle, active, retired and complete transitions are accepted
+    And invalid configurations, forged fields and invalid predictions cannot mutate state
+    And returned snapshots cannot mutate private state
+    And new attempts retain up to 8 completed results, including failures and unknowns
+    And a ninth attempt is blocked instead of evicting history
+    And the learning prediction verifier is separate from the job outcome
+
+  Scenario: Browser operation and explicit reset
+    Then the exact synthetic banner, assumptions, trace and individual checks are visible
+    And keyboard controls can start, retire, continue, predict and reset
+    And errors are announced without reusing an old successful current result
+    And explicit reset restores the exact defaults, focus, trace and empty history
+    And the reset button does not shadow form.reset
+    And CSP blocks inline execution and connections, without bypass flags

@@ -1,0 +1,272 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { DEFAULTS, validateConfig, createLesson } = require('..\\model.js');
+const config = (changes = {}) => ({ ...DEFAULTS, ...changes });
+function run(changes = {}) {
+  const lesson = createLesson();
+  lesson.start(config(changes));
+  lesson.retire();
+  const state = lesson.verify();
+  assert.equal(state.phase, 'complete');
+  return { lesson, state, result: state.result };
+}
+const check = (result, id) => result.checks.find((entry) => entry.id === id);
+
+test('loadable public API and deterministic defaults exist before behavior', () => {
+  assert.equal(typeof createLesson, 'function');
+  assert.equal(typeof validateConfig, 'function');
+  assert.equal(DEFAULTS.budgetMs, 100);
+  for (const action of ['snapshot', 'start', 'retire', 'verify', 'predict', 'next', 'reset']) {
+    assert.equal(typeof createLesson()[action], 'function');
+  }
+});
+
+test('durable checkpoint retirement leaves resumable work, never premature completion', () => {
+  const lesson = createLesson();
+  assert.equal(lesson.start(config()).phase, 'active');
+  const retired = lesson.retire();
+  assert.equal(retired.phase, 'retired');
+  assert.equal(retired.jobStatus, 'resumable-not-complete');
+  assert.equal(retired.progress.checkpointCursor, 3);
+  assert.equal(retired.progress.remainingItems, 3);
+  assert.equal(retired.result, null);
+  assert.deepEqual(retired.history, []);
+});
+
+test('current durable checkpoint resumes exactly once within original budget', () => {
+  const { state, result } = run();
+  assert.equal(result.verdict, 'passed');
+  assert.equal(result.userOutcome, 'completed-correctly');
+  assert.equal(state.jobStatus, 'completed');
+  assert.equal(result.metrics.uniqueItems, 6);
+  assert.equal(result.metrics.effectTotal, 60);
+  assert.equal(result.metrics.duplicateEffects, 0);
+  assert.equal(result.metrics.elapsedMs, 80);
+  assert.equal(result.metrics.budgetMs, 100);
+  assert.deepEqual(result.metrics.missingItems, []);
+  assert.deepEqual(result.metrics.effectCounts, [1, 1, 1, 1, 1, 1]);
+  assert.equal(state.history.length, 1);
+  assert.ok(result.checks.every((entry) => entry.status === 'pass'));
+});
+
+test('finish-before-retire completes old work without relying on any checkpoint', () => {
+  const { lesson, result } = run({
+    retirement: 'finish', checkpoint: 'unobserved', effects: 'repeat', resumeDelayMs: 1000,
+  });
+  assert.equal(result.verdict, 'passed');
+  assert.equal(result.metrics.elapsedMs, 60);
+  assert.equal(result.metrics.checkpointCursor, null);
+  assert.equal(result.metrics.remainingAtRetirement, 0);
+  assert.deepEqual(result.metrics.replayedItems, []);
+  assert.match(lesson.snapshot().trace.join('\n'), /Finished items 4-6 before retiring/);
+});
+
+test('stale durable checkpoint replay is safe with per-item idempotency', () => {
+  const { result } = run({ checkpoint: 'durable-stale' });
+  assert.equal(result.verdict, 'passed');
+  assert.equal(result.metrics.checkpointCursor, 1);
+  assert.deepEqual(result.metrics.replayedItems, [2, 3]);
+  assert.equal(result.metrics.duplicateEffects, 0);
+  assert.equal(result.metrics.effectTotal, 60);
+  assert.equal(result.metrics.elapsedMs, 100);
+});
+
+test('stale replay without protection records duplicate business effects', () => {
+  const { result } = run({ checkpoint: 'durable-stale', effects: 'repeat' });
+  assert.equal(result.verdict, 'failed');
+  assert.equal(result.userOutcome, 'interrupted');
+  assert.equal(result.metrics.uniqueItems, 6);
+  assert.equal(result.metrics.duplicateEffects, 2);
+  assert.equal(result.metrics.effectTotal, 80);
+  assert.deepEqual(result.metrics.effectCounts, [1, 2, 2, 1, 1, 1]);
+  assert.equal(check(result, 'coverage').status, 'pass');
+  assert.equal(check(result, 'effects').status, 'fail');
+});
+
+for (const [name, changes, falseClaim] of [
+  ['local-only checkpoint disappears with its host', { checkpoint: 'local-only' }, false],
+  ['forced retirement has no resumable checkpoint', { retirement: 'force' }, false],
+  ['false completion is detected rather than trusted', { retirement: 'false-complete' }, true],
+]) {
+  test(name, () => {
+    const { state, result } = run(changes);
+    assert.equal(result.verdict, 'failed');
+    assert.equal(state.jobStatus, 'incomplete');
+    assert.equal(result.metrics.uniqueItems, 3);
+    assert.equal(result.metrics.effectTotal, 30);
+    assert.deepEqual(result.metrics.missingItems, [4, 5, 6]);
+    assert.equal(result.metrics.falselyCompleted, falseClaim);
+    assert.equal(check(result, 'checkpoint').status, 'fail');
+  });
+}
+
+for (const changes of [{ checkpoint: 'unobserved' }, { observation: 'unobserved' }]) {
+  test(`missing evidence is unknown: ${JSON.stringify(changes)}`, () => {
+    const { state, result } = run(changes);
+    assert.equal(result.verdict, 'unknown');
+    assert.equal(state.jobStatus, 'unknown');
+    assert.equal(result.userOutcome, 'unverified');
+    for (const field of ['uniqueItems', 'effectTotal', 'duplicateEffects', 'missingItems', 'effectCounts']) {
+      assert.equal(result.metrics[field], null, field);
+    }
+    assert.equal(check(result, 'coverage').status, 'unknown');
+    assert.equal(check(result, 'effects').status, 'unknown');
+  });
+}
+
+test('known false completion dominates missing final observations without inventing totals', () => {
+  const { result } = run({ retirement: 'false-complete', observation: 'unobserved' });
+  assert.equal(result.verdict, 'failed');
+  assert.equal(result.metrics.effectTotal, null);
+  assert.equal(result.metrics.falselyCompleted, true);
+  assert.equal(check(result, 'terminal-state').status, 'fail');
+  assert.equal(check(result, 'coverage').status, 'unknown');
+});
+
+test('known lost checkpoint dominates absent final observations', () => {
+  const { result } = run({ checkpoint: 'local-only', observation: 'unobserved' });
+  assert.equal(result.verdict, 'failed');
+  assert.equal(check(result, 'checkpoint').status, 'fail');
+  assert.equal(check(result, 'coverage').status, 'unknown');
+});
+
+test('original total budget is inclusive and never restarted on replacement', () => {
+  assert.equal(run({ budgetMs: 80 }).result.verdict, 'passed');
+  const over = run({ budgetMs: 79 }).result;
+  assert.equal(over.verdict, 'failed');
+  assert.equal(over.metrics.elapsedMs, 80);
+  assert.equal(check(over, 'budget').status, 'fail');
+  assert.equal(run({ retirement: 'finish', budgetMs: 59 }).result.verdict, 'failed');
+});
+
+test('known budget failure dominates unknown effect observations', () => {
+  const { result } = run({ observation: 'unobserved', resumeDelayMs: 100, budgetMs: 100 });
+  assert.equal(result.verdict, 'failed');
+  assert.equal(result.metrics.elapsedMs, 160);
+  assert.equal(result.metrics.effectTotal, null);
+  assert.equal(check(result, 'budget').status, 'fail');
+  assert.equal(check(result, 'effects').status, 'unknown');
+});
+
+test('inputs require an exact plain data record and strict bounded integer types', () => {
+  const invalid = [
+    null, undefined, [], Object.create(DEFAULTS), { ...config(), extra: true },
+    ...['', 'wrong', null, 2].map((retirement) => config({ retirement })),
+    ...['missing', '', null].map((checkpoint) => config({ checkpoint })),
+    config({ effects: 'yes' }), config({ observation: 'yes' }),
+    ...[-1, 1001, 1.5, '20', NaN, Infinity, null, true].map((resumeDelayMs) => config({ resumeDelayMs })),
+    ...[0, 2001, 1.5, '100', NaN, -Infinity, false].map((budgetMs) => config({ budgetMs })),
+  ];
+  const missing = config();
+  delete missing.effects;
+  invalid.push(missing);
+  for (const input of invalid) assert.throws(() => validateConfig(input), /Invalid configuration/);
+  assert.deepEqual(validateConfig(config({ resumeDelayMs: 0, budgetMs: 1 })), config({ resumeDelayMs: 0, budgetMs: 1 }));
+  assert.deepEqual(validateConfig(config({ resumeDelayMs: 1000, budgetMs: 2000 })), config({ resumeDelayMs: 1000, budgetMs: 2000 }));
+});
+
+test('accessor and symbol fields are rejected without invoking untrusted getters', () => {
+  let getterCalls = 0;
+  const accessor = config();
+  Object.defineProperty(accessor, 'effects', { enumerable: true, get() { getterCalls++; return 'idempotent'; } });
+  assert.throws(() => validateConfig(accessor), /Invalid configuration/);
+  assert.equal(getterCalls, 0);
+  assert.throws(() => validateConfig({ ...config(), [Symbol('extra')]: 1 }), /Invalid configuration/);
+});
+
+test('wrong phases cannot mutate state or create history', () => {
+  const lesson = createLesson();
+  for (const method of ['retire', 'verify', 'next']) assert.throws(() => lesson[method](), /requires/);
+  assert.throws(() => lesson.predict('passed'), /requires/);
+  lesson.start(config());
+  const active = lesson.snapshot();
+  for (const action of [() => lesson.start(config()), () => lesson.verify(), () => lesson.next()]) {
+    assert.throws(action, /requires/);
+    assert.deepEqual(lesson.snapshot(), active);
+  }
+  lesson.retire();
+  assert.throws(() => lesson.retire(), /requires/);
+  lesson.verify();
+  assert.throws(() => lesson.verify(), /requires/);
+  assert.equal(lesson.snapshot().history.length, 1);
+});
+
+test('invalid configuration and caller mutation cannot alter locked job assumptions', () => {
+  const lesson = createLesson();
+  assert.throws(() => lesson.start(config({ budgetMs: '100' })), /Invalid configuration/);
+  assert.equal(lesson.snapshot().phase, 'idle');
+  const input = config();
+  lesson.start(input);
+  input.budgetMs = 1;
+  assert.equal(lesson.snapshot().config.budgetMs, 100);
+  assert.throws(() => { lesson.snapshot().config.budgetMs = 1; }, TypeError);
+  lesson.retire();
+  const done = lesson.verify();
+  assert.throws(() => { done.history[0].result.metrics.effectCounts.push(99); }, TypeError);
+  assert.equal(lesson.snapshot().result.metrics.effectTotal, 60);
+});
+
+test('negative learning prediction passes independently of failed job impact', () => {
+  const { lesson } = run({ retirement: 'false-complete' });
+  assert.throws(() => lesson.predict('success'), /Invalid prediction/);
+  assert.equal(lesson.snapshot().prediction, null);
+  const graded = lesson.predict('failed');
+  assert.equal(graded.prediction.verifier, 'PASS');
+  assert.equal(graded.result.verdict, 'failed');
+  assert.equal(graded.result.userOutcome, 'interrupted');
+  assert.equal(graded.history[0].prediction.verifier, 'PASS');
+  assert.throws(() => lesson.predict('passed'), /already checked/);
+});
+
+test('wrong and unknown predictions remain honest', () => {
+  assert.equal(run().lesson.predict('failed').prediction.verifier, 'FAIL');
+  const { lesson } = run({ observation: 'unobserved' });
+  assert.equal(lesson.predict('unknown').prediction.verifier, 'PASS');
+  assert.equal(lesson.snapshot().result.verdict, 'unknown');
+});
+
+test('new attempts clear current output and retain immutable bounded history', () => {
+  const lesson = createLesson();
+  for (let attempt = 1; attempt <= 8; attempt++) {
+    lesson.start(config({ retirement: attempt % 2 ? 'checkpoint' : 'false-complete' }));
+    lesson.retire();
+    const done = lesson.verify();
+    assert.equal(done.history.length, attempt);
+    assert.equal(done.history[attempt - 1].attempt, attempt);
+    lesson.predict(attempt % 2 ? 'passed' : 'failed');
+    const idle = lesson.next();
+    assert.equal(idle.phase, 'idle');
+    assert.equal(idle.result, null);
+    assert.equal(idle.prediction, null);
+    assert.equal(idle.history.length, attempt);
+  }
+  const before = lesson.snapshot();
+  assert.throws(() => lesson.start(config()), /History limit/);
+  assert.deepEqual(lesson.snapshot(), before);
+  assert.equal(before.history[1].result.verdict, 'failed');
+});
+
+test('reset from any phase discards history only explicitly and restores the exact initial state', () => {
+  const initial = createLesson().snapshot();
+  const { lesson } = run({ checkpoint: 'local-only' });
+  lesson.predict('failed');
+  assert.deepEqual(lesson.reset(), initial);
+  lesson.start(config({ budgetMs: 1 }));
+  assert.deepEqual(lesson.reset(), initial);
+  lesson.start(config());
+  lesson.retire();
+  assert.deepEqual(lesson.reset(), initial);
+  assert.ok(Object.isFrozen(initial));
+  assert.ok(Object.isFrozen(initial.history));
+});
+
+test('same finite inputs produce identical traces, results and retained assumptions', () => {
+  const first = run({ checkpoint: 'durable-stale', effects: 'repeat' }).state;
+  const second = run({ checkpoint: 'durable-stale', effects: 'repeat' }).state;
+  assert.equal(first.phase, 'complete');
+  assert.deepEqual(first, second);
+  assert.equal(first.history[0].config.checkpoint, 'durable-stale');
+  assert.match(first.trace.join('\n'), /original budget/i);
+});

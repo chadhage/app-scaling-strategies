@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S048",
+  "sourceId": "S048",
+  "parentId": "D-S048",
+  "kano": "S",
+  "kanoUnit": "A-S048",
+  "packet": "SC-S048",
+  "owner": "worker-A-S048",
+  "entryGate": "SOURCE",
+  "title": "Batch job retirement: finish or resume without false completion",
+  "entryPoint": "learning/S048/index.html",
+  "feature": "learning/S048/batch-retirement.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Retire an active synthetic batch worker only after finishing or retaining a usable checkpoint; distinguish resumable work, missing or duplicate effects, false completion and unknown proof.",
+  "preconditions": [
+    "A browser supporting standard local HTML, CSS and JavaScript.",
+    "Six fixed synthetic items, one effect of 10 and 10 synthetic milliseconds per processing attempt.",
+    "The old worker has committed items 1-3 before the retirement action.",
+    "No account, credentials, subscription, server, framework or real worker."
+  ],
+  "actions": [
+    "Choose a retirement action, checkpoint condition, replay policy, observation and bounded timing inputs.",
+    "Start the job; retire the active worker; continue or verify the job.",
+    "Inspect per-item effects, missing work, duplicates, elapsed time and separate synthetic checks.",
+    "Check a learning prediction independently of job impact.",
+    "Start another attempt while retaining completed history, or explicitly reset."
+  ],
+  "input": "learning/S048/model.js",
+  "assertions": [
+    "A durable checkpoint at retirement is resumable work, not a completed job.",
+    "A replacement completes all six items exactly once within the original budget.",
+    "Finishing before retirement does not require a checkpoint.",
+    "Stale checkpoint replay is safe only when duplicate effects are prevented.",
+    "Local-only checkpoints, forced retirement and false completion retain explicit missing work.",
+    "Unobserved effects remain unknown; known failures still dominate partial uncertainty.",
+    "Strict input and phase guards cannot mutate locked state or erase history."
+  ],
+  "bounds": {
+    "attempts": 8,
+    "fixedItems": 6,
+    "maximumReplacementAttempts": 5,
+    "resumeDelayMs": [0, 1000],
+    "originalBudgetMs": [1, 2000]
+  },
+  "iac": {
+    "status": "N/A",
+    "decisionStage": "Recorded after genuine loadable-stub behavioral RED and before implementation.",
+    "redReference": "learning/S048/evidence/red/run.json",
+    "redCompletedAtUtc": "2026-11-03T18:32:29.039Z",
+    "reason": "Resource-free local synthetic lesson; no cloud, IaC, scaffold, identity, deployment, expenditure or production-runtime work is authorized or needed."
+  },
+  "testRuntime": {
+    "version": "Node.js 22.23.4",
+    "purpose": "Existing built-in node:test tooling only",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing signed Microsoft Edge 156",
+    "productionNode24Approval": false,
+    "dependencyChanges": false
+  },
+  "limits": [
+    "All workers, checkpoints, effects, traces and elapsed times are synthetic.",
+    "No actual durable storage, host retirement, batch runtime, protocol or Azure result.",
+    "No identity, tokens, keys or authentication are needed or modeled.",
+    "History is in-memory only, bounded to eight results, and erased by explicit reset or page reload.",
+    "B-S048 and original D-S048 native acceptance remain separate and unfulfilled.",
+    "One frozen S unit only; tests, evidence and publication earn no extra units.",
+    "No shared edits, packages, framework, downloads, cloud resources, real credentials or unsafe browser flags.",
+    "The published helper's known unattended lifecycle limitation remains unqualified."
+  ]
+}

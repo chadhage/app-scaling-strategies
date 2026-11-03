@@ -1,0 +1,1293 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S048",
+  "workerId": "worker-A-S048",
+  "mode": "synthetic",
+  "startedAtUtc": "2026-11-03T18:37:52.557Z",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "publication": "53c0c0d"
+  },
+  "entry": "learning\\S048\\index.html",
+  "captureExplicitlyEnabled": true,
+  "outcome": "PASS",
+  "browserVersion": "156.0.4314.50",
+  "observations": [
+    {
+      "name": "strict input and state guards, no stale success",
+      "phase": "Phase: idle",
+      "job": "Job: not-started",
+      "verdict": "Not verified.",
+      "progress": "No job started.",
+      "metrics": "",
+      "itemEffects": [],
+      "checks": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "alert": "Invalid configuration: use exact plain fields and bounded values.",
+      "trace": "No attempt started.",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "durable checkpoint is resumable, not complete",
+      "phase": "Phase: retired",
+      "job": "Job: resumable-not-complete",
+      "verdict": "Not verified.",
+      "progress": "At retirement/pre-verification: 3 committed items; 3 remaining; checkpoint cursor 3; 30 synthetic ms. This is not a final completion verdict.",
+      "metrics": "",
+      "itemEffects": [],
+      "checks": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "alert": "",
+      "trace": "Job admitted at t=0 with original budget 100 ms.\nOld worker committed items 1-3: 3 unique effects, total 30, t=30 ms.\nDurable cursor 3 retained; old worker retired with 3 items remaining. Resumable is NOT complete.",
+      "activeElement": "verify-job"
+    },
+    {
+      "name": "correct bounded continuation, separate prediction PASS",
+      "phase": "Phase: complete",
+      "job": "Job: completed",
+      "verdict": "Synthetic verdict: PASSED | User impact: completed-correctly",
+      "progress": "At retirement/pre-verification: 3 committed items; 3 remaining; checkpoint cursor 3; 30 synthetic ms. This is not a final completion verdict.",
+      "metrics": "Unique items / expected6 / 6Missing required itemsnoneEffect total / expected60 / 60Duplicate effects0Replayed items attemptednoneDurable checkpoint cursor3Remaining at retirement3Falsely declared completenoKnown elapsed / original budget80 / 100 synthetic ms (observed-at-verification)",
+      "itemEffects": [
+        [
+          "1",
+          "1"
+        ],
+        [
+          "2",
+          "1"
+        ],
+        [
+          "3",
+          "1"
+        ],
+        [
+          "4",
+          "1"
+        ],
+        [
+          "5",
+          "1"
+        ],
+        [
+          "6",
+          "1"
+        ]
+      ],
+      "checks": [
+        {
+          "id": "checkpoint",
+          "cells": [
+            "Finish or durable continuation",
+            "PASS",
+            "Replacement used durable cursor 3; a checkpoint alone did not complete the job."
+          ]
+        },
+        {
+          "id": "coverage",
+          "cells": [
+            "All six required items",
+            "PASS",
+            "Items 1-6 are all observed."
+          ]
+        },
+        {
+          "id": "effects",
+          "cells": [
+            "One effect per item",
+            "PASS",
+            "0 duplicate effects; observed total 60, expected 60."
+          ]
+        },
+        {
+          "id": "terminal-state",
+          "cells": [
+            "No false completion",
+            "PASS",
+            "No required item remains unfinished."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Original job budget",
+            "PASS",
+            "80 ms known synthetic elapsed / 100 ms original budget; no clock restart."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "checkpoint; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "PASSED / completed-correctly",
+          "items 6/6; effects 60/60; duplicates 0; elapsed 80/100 ms",
+          "PASS (predicted passed)"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS | predicted passed; actual passed. Job impact is unchanged.",
+      "alert": "",
+      "trace": "Job admitted at t=0 with original budget 100 ms.\nOld worker committed items 1-3: 3 unique effects, total 30, t=30 ms.\nDurable cursor 3 retained; old worker retired with 3 items remaining. Resumable is NOT complete.\nReplacement starts after 20 ms delay; original budget is NOT restarted.\nReplacement attempted item 4 at t=60 ms, with idempotent effect policy.\nReplacement attempted item 5 at t=70 ms, with idempotent effect policy.\nReplacement attempted item 6 at t=80 ms, with idempotent effect policy.\nSynthetic verdict PASSED; user impact completed-correctly.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "stale checkpoint duplicate effects",
+      "phase": "Phase: complete",
+      "job": "Job: incomplete",
+      "verdict": "Synthetic verdict: FAILED | User impact: interrupted",
+      "progress": "At retirement/pre-verification: 3 committed items; 3 remaining; checkpoint cursor 1; 30 synthetic ms. This is not a final completion verdict.",
+      "metrics": "Unique items / expected6 / 6Missing required itemsnoneEffect total / expected80 / 60Duplicate effects2Replayed items attempted2, 3Durable checkpoint cursor1Remaining at retirement3Falsely declared completenoKnown elapsed / original budget100 / 100 synthetic ms (observed-at-verification)",
+      "itemEffects": [
+        [
+          "1",
+          "1"
+        ],
+        [
+          "2",
+          "2"
+        ],
+        [
+          "3",
+          "2"
+        ],
+        [
+          "4",
+          "1"
+        ],
+        [
+          "5",
+          "1"
+        ],
+        [
+          "6",
+          "1"
+        ]
+      ],
+      "checks": [
+        {
+          "id": "checkpoint",
+          "cells": [
+            "Finish or durable continuation",
+            "PASS",
+            "Replacement used durable cursor 1; a checkpoint alone did not complete the job."
+          ]
+        },
+        {
+          "id": "coverage",
+          "cells": [
+            "All six required items",
+            "PASS",
+            "Items 1-6 are all observed."
+          ]
+        },
+        {
+          "id": "effects",
+          "cells": [
+            "One effect per item",
+            "FAIL",
+            "2 duplicate effects; observed total 80, expected 60."
+          ]
+        },
+        {
+          "id": "terminal-state",
+          "cells": [
+            "No false completion",
+            "PASS",
+            "No required item remains unfinished."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Original job budget",
+            "PASS",
+            "100 ms known synthetic elapsed / 100 ms original budget; no clock restart."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "checkpoint; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "PASSED / completed-correctly",
+          "items 6/6; effects 60/60; duplicates 0; elapsed 80/100 ms",
+          "PASS (predicted passed)"
+        ],
+        [
+          "2",
+          "checkpoint; durable-stale; repeat; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 6/6; effects 80/60; duplicates 2; elapsed 100/100 ms",
+          "PASS (predicted failed)"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS | predicted failed; actual failed. Job impact is unchanged.",
+      "alert": "",
+      "trace": "Job admitted at t=0 with original budget 100 ms.\nOld worker committed items 1-3: 3 unique effects, total 30, t=30 ms.\nDurable cursor 1 retained; old worker retired with 3 items remaining. Resumable is NOT complete.\nReplacement starts after 20 ms delay; original budget is NOT restarted.\nReplacement attempted item 2 at t=60 ms, with repeat effect policy.\nReplacement attempted item 3 at t=70 ms, with repeat effect policy.\nReplacement attempted item 4 at t=80 ms, with repeat effect policy.\nReplacement attempted item 5 at t=90 ms, with repeat effect policy.\nReplacement attempted item 6 at t=100 ms, with repeat effect policy.\nSynthetic verdict FAILED; user impact interrupted.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "local-only checkpoint loses unfinished items",
+      "phase": "Phase: complete",
+      "job": "Job: incomplete",
+      "verdict": "Synthetic verdict: FAILED | User impact: interrupted",
+      "progress": "At retirement/pre-verification: 3 committed items; 3 remaining; checkpoint cursor unknown; 30 synthetic ms. This is not a final completion verdict.",
+      "metrics": "Unique items / expected3 / 6Missing required items4, 5, 6Effect total / expected30 / 60Duplicate effects0Replayed items attemptednoneDurable checkpoint cursorunknownRemaining at retirement3Falsely declared completenoKnown elapsed / original budget30 / 100 synthetic ms (observed-at-verification)",
+      "itemEffects": [
+        [
+          "1",
+          "1"
+        ],
+        [
+          "2",
+          "1"
+        ],
+        [
+          "3",
+          "1"
+        ],
+        [
+          "4",
+          "0"
+        ],
+        [
+          "5",
+          "0"
+        ],
+        [
+          "6",
+          "0"
+        ]
+      ],
+      "checks": [
+        {
+          "id": "checkpoint",
+          "cells": [
+            "Finish or durable continuation",
+            "FAIL",
+            "Three unfinished items have no usable continuation; retirement did not complete them."
+          ]
+        },
+        {
+          "id": "coverage",
+          "cells": [
+            "All six required items",
+            "FAIL",
+            "Missing required items: 4, 5, 6."
+          ]
+        },
+        {
+          "id": "effects",
+          "cells": [
+            "One effect per item",
+            "FAIL",
+            "0 duplicate effects; observed total 30, expected 60."
+          ]
+        },
+        {
+          "id": "terminal-state",
+          "cells": [
+            "No false completion",
+            "FAIL",
+            "Unfinished work is explicitly incomplete."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Original job budget",
+            "PASS",
+            "30 ms known synthetic elapsed / 100 ms original budget; no clock restart."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "checkpoint; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "PASSED / completed-correctly",
+          "items 6/6; effects 60/60; duplicates 0; elapsed 80/100 ms",
+          "PASS (predicted passed)"
+        ],
+        [
+          "2",
+          "checkpoint; durable-stale; repeat; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 6/6; effects 80/60; duplicates 2; elapsed 100/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "3",
+          "checkpoint; local-only; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS | predicted failed; actual failed. Job impact is unchanged.",
+      "alert": "",
+      "trace": "Job admitted at t=0 with original budget 100 ms.\nOld worker committed items 1-3: 3 unique effects, total 30, t=30 ms.\nLocal-only cursor 3 disappeared with the retired host. Items 4-6 are stranded.\nNo replacement can continue the remaining items in this selected failure case.\nSynthetic verdict FAILED; user impact interrupted.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "false completion retains missing work",
+      "phase": "Phase: complete",
+      "job": "Job: incomplete",
+      "verdict": "Synthetic verdict: FAILED | User impact: interrupted",
+      "progress": "At retirement/pre-verification: 3 committed items; 3 remaining; checkpoint cursor unknown; 30 synthetic ms. This is not a final completion verdict.",
+      "metrics": "Unique items / expected3 / 6Missing required items4, 5, 6Effect total / expected30 / 60Duplicate effects0Replayed items attemptednoneDurable checkpoint cursorunknownRemaining at retirement3Falsely declared completeyesKnown elapsed / original budget30 / 100 synthetic ms (observed-at-verification)",
+      "itemEffects": [
+        [
+          "1",
+          "1"
+        ],
+        [
+          "2",
+          "1"
+        ],
+        [
+          "3",
+          "1"
+        ],
+        [
+          "4",
+          "0"
+        ],
+        [
+          "5",
+          "0"
+        ],
+        [
+          "6",
+          "0"
+        ]
+      ],
+      "checks": [
+        {
+          "id": "checkpoint",
+          "cells": [
+            "Finish or durable continuation",
+            "FAIL",
+            "Three unfinished items have no usable continuation; retirement did not complete them."
+          ]
+        },
+        {
+          "id": "coverage",
+          "cells": [
+            "All six required items",
+            "FAIL",
+            "Missing required items: 4, 5, 6."
+          ]
+        },
+        {
+          "id": "effects",
+          "cells": [
+            "One effect per item",
+            "FAIL",
+            "0 duplicate effects; observed total 30, expected 60."
+          ]
+        },
+        {
+          "id": "terminal-state",
+          "cells": [
+            "No false completion",
+            "FAIL",
+            "Job was declared complete while 3 required items remained."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Original job budget",
+            "PASS",
+            "30 ms known synthetic elapsed / 100 ms original budget; no clock restart."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "checkpoint; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "PASSED / completed-correctly",
+          "items 6/6; effects 60/60; duplicates 0; elapsed 80/100 ms",
+          "PASS (predicted passed)"
+        ],
+        [
+          "2",
+          "checkpoint; durable-stale; repeat; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 6/6; effects 80/60; duplicates 2; elapsed 100/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "3",
+          "checkpoint; local-only; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "4",
+          "false-complete; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS | predicted failed; actual failed. Job impact is unchanged.",
+      "alert": "",
+      "trace": "Job admitted at t=0 with original budget 100 ms.\nOld worker committed items 1-3: 3 unique effects, total 30, t=30 ms.\nBUG rehearsal: job declared complete after only items 1-3. Three required items remain.\nNo replacement can continue the remaining items in this selected failure case.\nSynthetic verdict FAILED; user impact interrupted.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "forced retirement cannot resume",
+      "phase": "Phase: complete",
+      "job": "Job: incomplete",
+      "verdict": "Synthetic verdict: FAILED | User impact: interrupted",
+      "progress": "At retirement/pre-verification: 3 committed items; 3 remaining; checkpoint cursor unknown; 30 synthetic ms. This is not a final completion verdict.",
+      "metrics": "Unique items / expected3 / 6Missing required items4, 5, 6Effect total / expected30 / 60Duplicate effects0Replayed items attemptednoneDurable checkpoint cursorunknownRemaining at retirement3Falsely declared completenoKnown elapsed / original budget30 / 100 synthetic ms (observed-at-verification)",
+      "itemEffects": [
+        [
+          "1",
+          "1"
+        ],
+        [
+          "2",
+          "1"
+        ],
+        [
+          "3",
+          "1"
+        ],
+        [
+          "4",
+          "0"
+        ],
+        [
+          "5",
+          "0"
+        ],
+        [
+          "6",
+          "0"
+        ]
+      ],
+      "checks": [
+        {
+          "id": "checkpoint",
+          "cells": [
+            "Finish or durable continuation",
+            "FAIL",
+            "Three unfinished items have no usable continuation; retirement did not complete them."
+          ]
+        },
+        {
+          "id": "coverage",
+          "cells": [
+            "All six required items",
+            "FAIL",
+            "Missing required items: 4, 5, 6."
+          ]
+        },
+        {
+          "id": "effects",
+          "cells": [
+            "One effect per item",
+            "FAIL",
+            "0 duplicate effects; observed total 30, expected 60."
+          ]
+        },
+        {
+          "id": "terminal-state",
+          "cells": [
+            "No false completion",
+            "FAIL",
+            "Unfinished work is explicitly incomplete."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Original job budget",
+            "PASS",
+            "30 ms known synthetic elapsed / 100 ms original budget; no clock restart."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "checkpoint; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "PASSED / completed-correctly",
+          "items 6/6; effects 60/60; duplicates 0; elapsed 80/100 ms",
+          "PASS (predicted passed)"
+        ],
+        [
+          "2",
+          "checkpoint; durable-stale; repeat; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 6/6; effects 80/60; duplicates 2; elapsed 100/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "3",
+          "checkpoint; local-only; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "4",
+          "false-complete; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "5",
+          "force; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS | predicted failed; actual failed. Job impact is unchanged.",
+      "alert": "",
+      "trace": "Job admitted at t=0 with original budget 100 ms.\nOld worker committed items 1-3: 3 unique effects, total 30, t=30 ms.\nForced retirement without a checkpoint; committed items 1-3 remain, items 4-6 are stranded.\nNo replacement can continue the remaining items in this selected failure case.\nSynthetic verdict FAILED; user impact interrupted.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "unobserved checkpoint stays unknown",
+      "phase": "Phase: complete",
+      "job": "Job: unknown",
+      "verdict": "Synthetic verdict: UNKNOWN | User impact: unverified",
+      "progress": "At retirement/pre-verification: 3 committed items; 3 remaining; checkpoint cursor unknown; 30 synthetic ms. This is not a final completion verdict.",
+      "metrics": "Unique items / expectedunknown / 6Missing required itemsunknownEffect total / expectedunknown / 60Duplicate effectsunknownReplayed items attemptedunknownDurable checkpoint cursorunknownRemaining at retirement3Falsely declared completenoKnown elapsed / original budget50 / 100 synthetic ms (known-lower-bound-not-completion-proof)",
+      "itemEffects": [
+        [
+          "1",
+          "unknown"
+        ],
+        [
+          "2",
+          "unknown"
+        ],
+        [
+          "3",
+          "unknown"
+        ],
+        [
+          "4",
+          "unknown"
+        ],
+        [
+          "5",
+          "unknown"
+        ],
+        [
+          "6",
+          "unknown"
+        ]
+      ],
+      "checks": [
+        {
+          "id": "checkpoint",
+          "cells": [
+            "Finish or durable continuation",
+            "UNKNOWN",
+            "Checkpoint durability/cursor is unobserved; correct continuation is not established."
+          ]
+        },
+        {
+          "id": "coverage",
+          "cells": [
+            "All six required items",
+            "UNKNOWN",
+            "Final per-item observation unavailable; missing work is not zero."
+          ]
+        },
+        {
+          "id": "effects",
+          "cells": [
+            "One effect per item",
+            "UNKNOWN",
+            "Effect totals and duplicates are unknown, not successful."
+          ]
+        },
+        {
+          "id": "terminal-state",
+          "cells": [
+            "No false completion",
+            "UNKNOWN",
+            "Completion cannot be verified without final observation."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Original job budget",
+            "UNKNOWN",
+            "50 ms known synthetic elapsed / 100 ms original budget; no clock restart."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "checkpoint; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "PASSED / completed-correctly",
+          "items 6/6; effects 60/60; duplicates 0; elapsed 80/100 ms",
+          "PASS (predicted passed)"
+        ],
+        [
+          "2",
+          "checkpoint; durable-stale; repeat; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 6/6; effects 80/60; duplicates 2; elapsed 100/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "3",
+          "checkpoint; local-only; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "4",
+          "false-complete; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "5",
+          "force; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "6",
+          "checkpoint; unobserved; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "UNKNOWN / unverified",
+          "items unknown/6; effects unknown/60; duplicates unknown; elapsed 50/100 ms",
+          "PASS (predicted unknown)"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS | predicted unknown; actual unknown. Job impact is unchanged.",
+      "alert": "",
+      "trace": "Job admitted at t=0 with original budget 100 ms.\nOld worker committed items 1-3: 3 unique effects, total 30, t=30 ms.\nOld worker retired, but checkpoint evidence is unavailable; no resume cursor may be invented.\nContinuation observation stopped at t=50 ms: checkpoint remains unknown.\nFinal effect proof unavailable; coverage, effect totals and duplicates remain UNKNOWN.\nSynthetic verdict UNKNOWN; user impact unverified.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "unobserved final effects stay unknown",
+      "phase": "Phase: complete",
+      "job": "Job: unknown",
+      "verdict": "Synthetic verdict: UNKNOWN | User impact: unverified",
+      "progress": "At retirement/pre-verification: 3 committed items; 3 remaining; checkpoint cursor 3; 30 synthetic ms. This is not a final completion verdict.",
+      "metrics": "Unique items / expectedunknown / 6Missing required itemsunknownEffect total / expectedunknown / 60Duplicate effectsunknownReplayed items attemptedunknownDurable checkpoint cursor3Remaining at retirement3Falsely declared completenoKnown elapsed / original budget80 / 100 synthetic ms (known-lower-bound-not-completion-proof)",
+      "itemEffects": [
+        [
+          "1",
+          "unknown"
+        ],
+        [
+          "2",
+          "unknown"
+        ],
+        [
+          "3",
+          "unknown"
+        ],
+        [
+          "4",
+          "unknown"
+        ],
+        [
+          "5",
+          "unknown"
+        ],
+        [
+          "6",
+          "unknown"
+        ]
+      ],
+      "checks": [
+        {
+          "id": "checkpoint",
+          "cells": [
+            "Finish or durable continuation",
+            "PASS",
+            "Replacement used durable cursor 3; a checkpoint alone did not complete the job."
+          ]
+        },
+        {
+          "id": "coverage",
+          "cells": [
+            "All six required items",
+            "UNKNOWN",
+            "Final per-item observation unavailable; missing work is not zero."
+          ]
+        },
+        {
+          "id": "effects",
+          "cells": [
+            "One effect per item",
+            "UNKNOWN",
+            "Effect totals and duplicates are unknown, not successful."
+          ]
+        },
+        {
+          "id": "terminal-state",
+          "cells": [
+            "No false completion",
+            "UNKNOWN",
+            "Completion cannot be verified without final observation."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Original job budget",
+            "UNKNOWN",
+            "80 ms known synthetic elapsed / 100 ms original budget; no clock restart."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "checkpoint; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "PASSED / completed-correctly",
+          "items 6/6; effects 60/60; duplicates 0; elapsed 80/100 ms",
+          "PASS (predicted passed)"
+        ],
+        [
+          "2",
+          "checkpoint; durable-stale; repeat; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 6/6; effects 80/60; duplicates 2; elapsed 100/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "3",
+          "checkpoint; local-only; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "4",
+          "false-complete; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "5",
+          "force; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "6",
+          "checkpoint; unobserved; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "UNKNOWN / unverified",
+          "items unknown/6; effects unknown/60; duplicates unknown; elapsed 50/100 ms",
+          "PASS (predicted unknown)"
+        ],
+        [
+          "7",
+          "checkpoint; durable-current; idempotent; unobserved; delay 20 ms; original budget 100 ms",
+          "UNKNOWN / unverified",
+          "items unknown/6; effects unknown/60; duplicates unknown; elapsed 80/100 ms",
+          "PASS (predicted unknown)"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS | predicted unknown; actual unknown. Job impact is unchanged.",
+      "alert": "",
+      "trace": "Job admitted at t=0 with original budget 100 ms.\nOld worker committed items 1-3: 3 unique effects, total 30, t=30 ms.\nDurable cursor 3 retained; old worker retired with 3 items remaining. Resumable is NOT complete.\nReplacement starts after 20 ms delay; original budget is NOT restarted.\nReplacement attempted item 4 at t=60 ms, with idempotent effect policy.\nReplacement attempted item 5 at t=70 ms, with idempotent effect policy.\nReplacement attempted item 6 at t=80 ms, with idempotent effect policy.\nFinal effect proof unavailable; coverage, effect totals and duplicates remain UNKNOWN.\nSynthetic verdict UNKNOWN; user impact unverified.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "finish before retirement needs no checkpoint",
+      "phase": "Phase: complete",
+      "job": "Job: completed",
+      "verdict": "Synthetic verdict: PASSED | User impact: completed-correctly",
+      "progress": "At retirement/pre-verification: 6 committed items; 0 remaining; checkpoint cursor unknown; 60 synthetic ms. This is not a final completion verdict.",
+      "metrics": "Unique items / expected6 / 6Missing required itemsnoneEffect total / expected60 / 60Duplicate effects0Replayed items attemptednoneDurable checkpoint cursorunknownRemaining at retirement0Falsely declared completenoKnown elapsed / original budget60 / 100 synthetic ms (observed-at-verification)",
+      "itemEffects": [
+        [
+          "1",
+          "1"
+        ],
+        [
+          "2",
+          "1"
+        ],
+        [
+          "3",
+          "1"
+        ],
+        [
+          "4",
+          "1"
+        ],
+        [
+          "5",
+          "1"
+        ],
+        [
+          "6",
+          "1"
+        ]
+      ],
+      "checks": [
+        {
+          "id": "checkpoint",
+          "cells": [
+            "Finish or durable continuation",
+            "PASS",
+            "All work finished on the old worker before retirement; no checkpoint needed."
+          ]
+        },
+        {
+          "id": "coverage",
+          "cells": [
+            "All six required items",
+            "PASS",
+            "Items 1-6 are all observed."
+          ]
+        },
+        {
+          "id": "effects",
+          "cells": [
+            "One effect per item",
+            "PASS",
+            "0 duplicate effects; observed total 60, expected 60."
+          ]
+        },
+        {
+          "id": "terminal-state",
+          "cells": [
+            "No false completion",
+            "PASS",
+            "No required item remains unfinished."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Original job budget",
+            "PASS",
+            "60 ms known synthetic elapsed / 100 ms original budget; no clock restart."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "checkpoint; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "PASSED / completed-correctly",
+          "items 6/6; effects 60/60; duplicates 0; elapsed 80/100 ms",
+          "PASS (predicted passed)"
+        ],
+        [
+          "2",
+          "checkpoint; durable-stale; repeat; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 6/6; effects 80/60; duplicates 2; elapsed 100/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "3",
+          "checkpoint; local-only; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "4",
+          "false-complete; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "5",
+          "force; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "6",
+          "checkpoint; unobserved; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "UNKNOWN / unverified",
+          "items unknown/6; effects unknown/60; duplicates unknown; elapsed 50/100 ms",
+          "PASS (predicted unknown)"
+        ],
+        [
+          "7",
+          "checkpoint; durable-current; idempotent; unobserved; delay 20 ms; original budget 100 ms",
+          "UNKNOWN / unverified",
+          "items unknown/6; effects unknown/60; duplicates unknown; elapsed 80/100 ms",
+          "PASS (predicted unknown)"
+        ],
+        [
+          "8",
+          "finish; unobserved; repeat; complete; delay 1000 ms; original budget 100 ms",
+          "PASSED / completed-correctly",
+          "items 6/6; effects 60/60; duplicates 0; elapsed 60/100 ms",
+          "PASS (predicted passed)"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS | predicted passed; actual passed. Job impact is unchanged.",
+      "alert": "",
+      "trace": "Job admitted at t=0 with original budget 100 ms.\nOld worker committed items 1-3: 3 unique effects, total 30, t=30 ms.\nFinished items 4-6 before retiring the old worker at t=60 ms; no checkpoint required.\nSynthetic verdict PASSED; user impact completed-correctly.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "eighth result retained; ninth attempt blocked, not evicted",
+      "phase": "Phase: idle",
+      "job": "Job: not-started",
+      "verdict": "Not verified.",
+      "progress": "No job started.",
+      "metrics": "",
+      "itemEffects": [],
+      "checks": [],
+      "history": [
+        [
+          "1",
+          "checkpoint; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "PASSED / completed-correctly",
+          "items 6/6; effects 60/60; duplicates 0; elapsed 80/100 ms",
+          "PASS (predicted passed)"
+        ],
+        [
+          "2",
+          "checkpoint; durable-stale; repeat; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 6/6; effects 80/60; duplicates 2; elapsed 100/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "3",
+          "checkpoint; local-only; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "4",
+          "false-complete; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "5",
+          "force; durable-current; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items 3/6; effects 30/60; duplicates 0; elapsed 30/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "6",
+          "checkpoint; unobserved; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "UNKNOWN / unverified",
+          "items unknown/6; effects unknown/60; duplicates unknown; elapsed 50/100 ms",
+          "PASS (predicted unknown)"
+        ],
+        [
+          "7",
+          "checkpoint; durable-current; idempotent; unobserved; delay 20 ms; original budget 100 ms",
+          "UNKNOWN / unverified",
+          "items unknown/6; effects unknown/60; duplicates unknown; elapsed 80/100 ms",
+          "PASS (predicted unknown)"
+        ],
+        [
+          "8",
+          "finish; unobserved; repeat; complete; delay 1000 ms; original budget 100 ms",
+          "PASSED / completed-correctly",
+          "items 6/6; effects 60/60; duplicates 0; elapsed 60/100 ms",
+          "PASS (predicted passed)"
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "alert": "History limit: 8 results retained. Reset explicitly to erase them.",
+      "trace": "No attempt started.",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "known budget breach fails while effect proof remains unknown",
+      "phase": "Phase: complete",
+      "job": "Job: incomplete",
+      "verdict": "Synthetic verdict: FAILED | User impact: interrupted",
+      "progress": "At retirement/pre-verification: 3 committed items; 3 remaining; checkpoint cursor 3; 30 synthetic ms. This is not a final completion verdict.",
+      "metrics": "Unique items / expectedunknown / 6Missing required itemsunknownEffect total / expectedunknown / 60Duplicate effectsunknownReplayed items attemptedunknownDurable checkpoint cursor3Remaining at retirement3Falsely declared completenoKnown elapsed / original budget160 / 100 synthetic ms (known-lower-bound-not-completion-proof)",
+      "itemEffects": [
+        [
+          "1",
+          "unknown"
+        ],
+        [
+          "2",
+          "unknown"
+        ],
+        [
+          "3",
+          "unknown"
+        ],
+        [
+          "4",
+          "unknown"
+        ],
+        [
+          "5",
+          "unknown"
+        ],
+        [
+          "6",
+          "unknown"
+        ]
+      ],
+      "checks": [
+        {
+          "id": "checkpoint",
+          "cells": [
+            "Finish or durable continuation",
+            "PASS",
+            "Replacement used durable cursor 3; a checkpoint alone did not complete the job."
+          ]
+        },
+        {
+          "id": "coverage",
+          "cells": [
+            "All six required items",
+            "UNKNOWN",
+            "Final per-item observation unavailable; missing work is not zero."
+          ]
+        },
+        {
+          "id": "effects",
+          "cells": [
+            "One effect per item",
+            "UNKNOWN",
+            "Effect totals and duplicates are unknown, not successful."
+          ]
+        },
+        {
+          "id": "terminal-state",
+          "cells": [
+            "No false completion",
+            "UNKNOWN",
+            "Completion cannot be verified without final observation."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Original job budget",
+            "FAIL",
+            "160 ms known synthetic elapsed / 100 ms original budget; no clock restart."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "checkpoint; durable-current; idempotent; unobserved; delay 100 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items unknown/6; effects unknown/60; duplicates unknown; elapsed 160/100 ms",
+          "PASS (predicted failed)"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS | predicted failed; actual failed. Job impact is unchanged.",
+      "alert": "",
+      "trace": "Job admitted at t=0 with original budget 100 ms.\nOld worker committed items 1-3: 3 unique effects, total 30, t=30 ms.\nDurable cursor 3 retained; old worker retired with 3 items remaining. Resumable is NOT complete.\nReplacement starts after 100 ms delay; original budget is NOT restarted.\nReplacement attempted item 4 at t=140 ms, with idempotent effect policy.\nReplacement attempted item 5 at t=150 ms, with idempotent effect policy.\nReplacement attempted item 6 at t=160 ms, with idempotent effect policy.\nFinal effect proof unavailable; coverage, effect totals and duplicates remain UNKNOWN.\nSynthetic verdict FAILED; user impact interrupted.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "stale checkpoint with idempotent effects passes inclusive original budget",
+      "phase": "Phase: complete",
+      "job": "Job: completed",
+      "verdict": "Synthetic verdict: PASSED | User impact: completed-correctly",
+      "progress": "At retirement/pre-verification: 3 committed items; 3 remaining; checkpoint cursor 1; 30 synthetic ms. This is not a final completion verdict.",
+      "metrics": "Unique items / expected6 / 6Missing required itemsnoneEffect total / expected60 / 60Duplicate effects0Replayed items attempted2, 3Durable checkpoint cursor1Remaining at retirement3Falsely declared completenoKnown elapsed / original budget100 / 100 synthetic ms (observed-at-verification)",
+      "itemEffects": [
+        [
+          "1",
+          "1"
+        ],
+        [
+          "2",
+          "1"
+        ],
+        [
+          "3",
+          "1"
+        ],
+        [
+          "4",
+          "1"
+        ],
+        [
+          "5",
+          "1"
+        ],
+        [
+          "6",
+          "1"
+        ]
+      ],
+      "checks": [
+        {
+          "id": "checkpoint",
+          "cells": [
+            "Finish or durable continuation",
+            "PASS",
+            "Replacement used durable cursor 1; a checkpoint alone did not complete the job."
+          ]
+        },
+        {
+          "id": "coverage",
+          "cells": [
+            "All six required items",
+            "PASS",
+            "Items 1-6 are all observed."
+          ]
+        },
+        {
+          "id": "effects",
+          "cells": [
+            "One effect per item",
+            "PASS",
+            "0 duplicate effects; observed total 60, expected 60."
+          ]
+        },
+        {
+          "id": "terminal-state",
+          "cells": [
+            "No false completion",
+            "PASS",
+            "No required item remains unfinished."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Original job budget",
+            "PASS",
+            "100 ms known synthetic elapsed / 100 ms original budget; no clock restart."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "checkpoint; durable-current; idempotent; unobserved; delay 100 ms; original budget 100 ms",
+          "FAILED / interrupted",
+          "items unknown/6; effects unknown/60; duplicates unknown; elapsed 160/100 ms",
+          "PASS (predicted failed)"
+        ],
+        [
+          "2",
+          "checkpoint; durable-stale; idempotent; complete; delay 20 ms; original budget 100 ms",
+          "PASSED / completed-correctly",
+          "items 6/6; effects 60/60; duplicates 0; elapsed 100/100 ms",
+          "Not checked"
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "alert": "",
+      "trace": "Job admitted at t=0 with original budget 100 ms.\nOld worker committed items 1-3: 3 unique effects, total 30, t=30 ms.\nDurable cursor 1 retained; old worker retired with 3 items remaining. Resumable is NOT complete.\nReplacement starts after 20 ms delay; original budget is NOT restarted.\nReplacement attempted item 2 at t=60 ms, with idempotent effect policy.\nReplacement attempted item 3 at t=70 ms, with idempotent effect policy.\nReplacement attempted item 4 at t=80 ms, with idempotent effect policy.\nReplacement attempted item 5 at t=90 ms, with idempotent effect policy.\nReplacement attempted item 6 at t=100 ms, with idempotent effect policy.\nSynthetic verdict PASSED; user impact completed-correctly.",
+      "activeElement": "prediction"
+    },
+    {
+      "name": "exact keyboard reset from completed, active and retired phases",
+      "phase": "Phase: idle",
+      "job": "Job: not-started",
+      "verdict": "Not verified.",
+      "progress": "No job started.",
+      "metrics": "",
+      "itemEffects": [],
+      "checks": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "alert": "",
+      "trace": "No attempt started.",
+      "activeElement": "start-job"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp-probes",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-lFDmVpygNt0pQAHCBdQg97nspXoW+yEaifTB4fJ8QQE='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Connecting to 'http://127.0.0.1:9/s048-csp-probe' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Fetch API cannot load http://127.0.0.1:9/s048-csp-probe. Refused to connect because it violates the document's Content Security Policy."
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "probeRequests": [],
+  "cleanup": {
+    "sessionCloseAwaited": true,
+    "serversStarted": 0,
+    "foregroundLeaseUsed": false
+  },
+  "testedSourceHashes": {
+    "index.html": "9233699f09c30919e8aa5ca60c7fcb5617d6c08a92e381aeea4f4de93a2b2843",
+    "styles.css": "0c8abc5f7ea1e34b59f2952ba4f8d992f81b24dcd67e9a0441ed0d3d16ea8592",
+    "model.js": "c46a83e577d9a3d62c075bde623d224336fe1e972644e9738eb2b693da910f9f",
+    "app.js": "ce83cb9143f794e7f2a7dc70f17e72c599691e40b94bf0c7b2663a84efeec3a2",
+    "tests\\browser.test.cjs": "35a851d81fe0cc6641a6d09c24b6a8aa73e731ca44ae28395237beff7212c3d7"
+  },
+  "smallViewport": {
+    "width": 375,
+    "scrollWidth": 375,
+    "noPageHorizontalOverflow": true
+  },
+  "csp": {
+    "inlineExecuted": false,
+    "fetchRejected": true,
+    "violations": [
+      {
+        "effectiveDirective": "script-src-elem",
+        "blockedURI": "inline",
+        "disposition": "enforce"
+      },
+      {
+        "effectiveDirective": "connect-src",
+        "blockedURI": "http://127.0.0.1:9/s048-csp-probe",
+        "disposition": "enforce"
+      }
+    ]
+  },
+  "completedAtUtc": "2026-11-03T18:38:07.597Z"
+}

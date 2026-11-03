@@ -1,0 +1,24 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.BatchRetirementLesson = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULTS = Object.freeze({
+    retirement: 'checkpoint', checkpoint: 'durable-current', effects: 'idempotent',
+    observation: 'complete', resumeDelayMs: 20, budgetMs: 100,
+  });
+  function validateConfig(config) { return config; }
+  function createLesson() {
+    const snapshot = () => ({
+      phase: 'idle', jobStatus: 'UNIMPLEMENTED', config: null, progress: null,
+      result: null, history: [], trace: [], prediction: null,
+    });
+    return Object.freeze({
+      snapshot, start: snapshot, retire: snapshot, verify: snapshot,
+      predict: snapshot, next: snapshot, reset: snapshot,
+    });
+  }
+  return Object.freeze({ DEFAULTS, validateConfig, createLesson });
+}));

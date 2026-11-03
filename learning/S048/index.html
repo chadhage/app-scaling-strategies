@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S048 — Batch job retirement rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S048: Batch job retirement</h1>
+    <p>A-S048 · D-S048 · one frozen S unit · packet SC-S048</p>
+    <p><strong>Objective:</strong> finish a batch before retiring its host, or retain a usable
+      checkpoint and resume correctly. A checkpoint is not a completed job.</p>
+    <section aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">Fixed worked exercise</h2>
+      <p>Six synthetic items each commit one effect of 10. Every processing attempt costs
+        10 synthetic ms. Start commits items 1–3 on the old worker. Retire that active
+        worker, then continue or verify. Correct completion requires all six items,
+        exactly one effect each (total 60), within the original job budget.</p>
+      <p>Defaults: durable cursor 3, idempotent effects, 20 ms resume delay,
+        original budget 100 ms. Expect a resumable job at retirement, then correct
+        completion at 80 ms. A stale cursor 1 replays items 2–3: compare idempotency
+        against duplicate effects. Try falsely claiming completion after item 3.</p>
+      <p>Preconditions: local browser HTML/JS only. No account, credentials, subscription,
+        server or installation. All time, checkpoints, effects and worker identities
+        are synthetic; no Azure or batch-runtime calls occur.</p>
+    </section>
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">1. Choose assumptions and act</h2>
+      <p id="config-help">Assumptions lock at Start. The budget starts before item 1, not at
+        replacement. Checkpoint, replay and delay inputs are unused when finishing
+        before retirement. Forced retirement and false completion do not resume.</p>
+      <form id="rehearsal-form" novalidate>
+        <fieldset id="configuration" aria-describedby="config-help">
+          <legend>Synthetic operator controls</legend>
+          <div class="columns">
+            <label for="retirement">Retirement action
+              <select id="retirement" name="retirement">
+                <option value="checkpoint">Checkpoint, then retire</option>
+                <option value="finish">Finish work, then retire</option>
+                <option value="force">Force retire without checkpoint</option>
+                <option value="false-complete">Bug: declare incomplete job complete</option>
+              </select>
+            </label>
+            <label for="checkpoint">Checkpoint condition
+              <select id="checkpoint" name="checkpoint">
+                <option value="durable-current">Durable, current cursor 3</option>
+                <option value="durable-stale">Durable, stale cursor 1</option>
+                <option value="local-only">Local-only cursor, lost on retirement</option>
+                <option value="unobserved">Checkpoint evidence unobserved</option>
+              </select>
+            </label>
+            <label for="effects">Replay effect policy
+              <select id="effects" name="effects">
+                <option value="idempotent">Idempotent per-item effects</option>
+                <option value="repeat">Unsafe: apply every replay again</option>
+              </select>
+            </label>
+            <label for="observation">Final effect observation
+              <select id="observation" name="observation">
+                <option value="complete">Complete per-item observation</option>
+                <option value="unobserved">Final observation unavailable</option>
+              </select>
+            </label>
+            <label for="resume-delay-ms">Resume delay (0–1000 synthetic ms)
+              <input id="resume-delay-ms" name="resumeDelayMs" type="text" inputmode="numeric" value="20" autocomplete="off">
+            </label>
+            <label for="budget-ms">Original job budget (1–2000 synthetic ms)
+              <input id="budget-ms" name="budgetMs" type="text" inputmode="numeric" value="100" autocomplete="off">
+            </label>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button type="submit" id="start-job">Start job</button>
+          <button type="button" id="retire-worker" disabled>Retire active worker</button>
+          <button type="button" id="verify-job" disabled>Continue / verify job</button>
+          <button type="button" id="new-attempt" disabled>New attempt (retain history)</button>
+          <button type="button" id="reset-rehearsal">Reset rehearsal</button>
+        </div>
+      </form>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <p id="history-limit" hidden>Eight results retained. Reset explicitly to erase history before starting again.</p>
+      <div role="status" aria-live="polite">
+        <p id="phase">Phase: idle</p>
+        <p id="job-status">Job: not-started</p>
+        <p id="verdict">Not verified.</p>
+      </div>
+      <p id="progress">No job started.</p>
+    </section>
+    <section aria-labelledby="results-heading">
+      <h2 id="results-heading">2. Inspect evidence and predict</h2>
+      <div id="result-detail" hidden>
+        <dl id="metrics"></dl>
+        <div class="table-wrap">
+          <table>
+            <caption>Observed per-item effect counts (expected: one per item)</caption>
+            <thead><tr><th scope="col">Item</th><th scope="col">Effect count</th></tr></thead>
+            <tbody id="item-effects"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <caption>Independent synthetic checks</caption>
+            <thead><tr><th scope="col">Check</th><th scope="col">Result</th><th scope="col">Detail</th></tr></thead>
+            <tbody id="checks"></tbody>
+          </table>
+        </div>
+      </div>
+      <label for="prediction">Predict the synthetic job verdict
+        <select id="prediction" disabled>
+          <option value="">Choose a prediction</option>
+          <option value="passed">Passed: correct bounded completion</option>
+          <option value="failed">Failed: interrupted or incorrect work</option>
+          <option value="unknown">Unknown: insufficient evidence</option>
+        </select>
+      </label>
+      <button type="button" id="check-prediction" disabled>Check prediction</button>
+      <p id="prediction-result" role="status">Prediction not checked.</p>
+      <p>A correct prediction of a failure passes the learning verifier, but does not
+        turn interrupted work into successful completion.</p>
+    </section>
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Synthetic trace</h2>
+      <ol id="trace"><li>No attempt started.</li></ol>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained completed history (maximum 8)</h2>
+      <p>New attempt clears current results, not history. History is in-memory only;
+        Reset or page reload erases it. A checkpoint alone adds no completed result.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Completed attempts, including failures and unknowns</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Assumptions</th><th scope="col">Job verdict / impact</th><th scope="col">Metrics</th><th scope="col">Prediction verifier</th></tr></thead>
+          <tbody id="history"><tr><td colspan="5">No completed attempts.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits</h2>
+      <p>This finite model is not durable storage, a live batch service, a native
+        retirement protocol, a production Node.js 24 certification, or proof of
+        exactly-once delivery. B-S048 and D-S048 require separate native evidence.
+        No identities, tokens, keys or authentication are modeled.</p>
+      <p>Unknown effects are never counted as zero or successful. Known loss, false
+        completion or a budget breach still fails when other proof is unknown.
+        Timing is deterministic arithmetic, not measured browser or Azure latency.</p>
+      <noscript>This lesson needs local JavaScript; no result can be verified while it is disabled.</noscript>
+    </section>
+  </main>
+</body>
+</html>
