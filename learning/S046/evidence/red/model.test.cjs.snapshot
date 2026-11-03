@@ -1,0 +1,15 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('../model.js');
+
+test('saved Last-Event-ID resumes every ordered visible event within the original budget', () => {
+  const result = model.assess(model.DEFAULTS);
+  assert.equal(result.outcome, 'success');
+  assert.deepEqual(result.visibleIds, [
+    'evt-amber', 'evt-birch', 'evt-cedar', 'evt-delta', 'evt-elm', 'evt-fir',
+  ]);
+  assert.equal(result.streamOpen, true);
+  assert.equal(result.recoveryMs, 100);
+});

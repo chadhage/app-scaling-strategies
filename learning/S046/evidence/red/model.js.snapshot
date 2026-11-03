@@ -1,0 +1,20 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S046 = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULTS = Object.freeze({
+    cursor: 'saved', scenario: 'complete', replayPolicy: 'deduplicate',
+    reconnectMs: '40', budgetMs: '100',
+  });
+  function assess() {
+    return {
+      outcome: 'unknown',
+      visibleIds: ['evt-amber', 'evt-birch', 'evt-cedar'],
+      streamOpen: false, recoveryMs: null, checks: [],
+    };
+  }
+  return Object.freeze({ DEFAULTS, assess });
+}));

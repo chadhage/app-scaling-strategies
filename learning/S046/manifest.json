@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S046",
+  "sourceId": "S046",
+  "parentId": "D-S046",
+  "kano": "S",
+  "kanoUnit": "A-S046",
+  "packet": "SC-S046",
+  "owner": "worker-A-S046",
+  "entryGate": "SOURCE",
+  "title": "Server-sent events: resume the cursor without hidden gaps",
+  "entryPoint": "learning/S046/index.html",
+  "feature": "learning/S046/sse.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Resume a saved SSE event cursor and verify complete, ordered, exactly-once user-visible delivery against the original synthetic silence and recovery budget, not just a newly opened stream.",
+  "preconditions": [
+    "A browser with standard local HTML, CSS and JavaScript; no server or account.",
+    "The old stream rendered evt-amber, evt-birch and evt-cedar in that order.",
+    "The declared remaining fixture is evt-delta, evt-elm and evt-fir; IDs are opaque.",
+    "Synthetic time zero is the last old user-visible event; the original clock never restarts at stream-open."
+  ],
+  "actions": [
+    "Choose a saved, stale or absent cursor, bounded stream condition, replay policy and timing.",
+    "Start the old stream, cut over, then resume the SSE cursor.",
+    "Inspect stream establishment separately from missing, duplicate, reordered or unverified events and budget checks.",
+    "Check a prediction without changing the user outcome.",
+    "Start another attempt while retaining results, or explicitly reset all defaults and history."
+  ],
+  "input": "learning/S046/model.js#EVENTS",
+  "assertions": [
+    "Saved Last-Event-ID resumes strictly after the last rendered event.",
+    "A successful new stream with an expired replay window or tail-only cursor still fails completeness.",
+    "Wire replays are distinct from duplicate visible events; suppressed replay processing still consumes time.",
+    "Reordering fails even if the complete set of IDs is present.",
+    "First visible silence and total recovery are measured from the original last event; equality passes.",
+    "Incomplete observation remains unknown, unless a known failure already establishes interruption.",
+    "Input and state guards prevent silent advancement, history pruning and active configuration mutation."
+  ],
+  "bounds": {
+    "retainedAttempts": 8,
+    "fixedEvents": 6,
+    "maximumResumeWireEvents": 5,
+    "wireEventStepMs": 20,
+    "reconnectDelayMs": [0, 2000],
+    "originalBudgetMs": [1, 2000]
+  },
+  "iac": {
+    "status": "N/A",
+    "decisionStage": "After genuine loadable-stub behavioral RED and before implementation.",
+    "reference": "learning/S046/evidence/iac.json",
+    "reason": "Resource-free local synthetic lesson; no infrastructure, identity registration, cloud, deployment or expenditure is authorized."
+  },
+  "testRuntime": {
+    "node": "22.23.4, existing test tooling only",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing signed Microsoft Edge 156",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "productionNode24Certification": false,
+    "dependencyChanges": false
+  },
+  "limits": [
+    "All IDs, data, events and elapsed times are deterministic synthetic fixtures.",
+    "No actual EventSource, SSE server, transport migration, Azure calls or live latency measurements.",
+    "No identities, tokens, keys or credentials are required or introduced.",
+    "Deduplication covers only this fixed six-ID in-memory fixture, not a general exactly-once SSE guarantee.",
+    "History lasts until explicit reset or page reload; it is bounded and never silently pruned.",
+    "B-S046 and D-S046 native/source-parent acceptance remain separate and unfulfilled.",
+    "One frozen S unit; tests, plumbing and evidence do not earn additional completion credit."
+  ]
+}

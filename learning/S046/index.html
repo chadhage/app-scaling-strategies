@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S046 — Server-sent events: resume the cursor</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S046 — Server-sent events: resume the cursor</h1>
+    <p>Resume after the last rendered event, then prove order and completeness. A newly opened SSE stream is not evidence that the user missed nothing.</p>
+    <p><a href="../../README.md#e-in-flight-requests-and-long-lived-work">Source S046</a> ·
+      <a href="../../.docs/wiki/backlog.md#e-in-flight-requests-and-long-lived-work">D-S046</a> ·
+      A-S046 / SC-S046 / one S unit</p>
+  </header>
+  <main>
+    <section aria-labelledby="instructions">
+      <h2 id="instructions">Worked fixture and operating envelope</h2>
+      <p>Precondition: the old stream rendered <code>evt-amber → evt-birch → evt-cedar</code>. Its saved cursor is <code>evt-cedar</code>. The required suffix is <code>evt-delta → evt-elm → evt-fir</code>. These opaque IDs have the fixture's declared order, not a universal numeric SSE sequence.</p>
+      <ol>
+        <li>Choose a cursor, stream condition, replay policy and original budget before starting.</li>
+        <li>Start the old stream, cut over, then resume with the synthetic <code>Last-Event-ID</code> request.</li>
+        <li>Inspect the visible IDs, individual checks, timing and retained results. Try an expired replay window after a successful run.</li>
+        <li>Predict success, failure or unknown. A correct prediction is separate from the user's outcome.</li>
+      </ol>
+      <p id="timing-help">All times are simulated. Time zero is the last old visible event. Opening takes the chosen reconnect delay; each received wire event takes another 20 ms, including suppressed replays. Both silence and final recovery must fit the original budget; stream-open never restarts it. Exact equality passes.</p>
+      <p>No server, account, credentials, subscription or real EventSource is used. Six events, at most eight retained attempts, delays 0–2000 ms and budgets 1–2000 ms bound this exercise.</p>
+    </section>
+    <section id="exercise" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">Conduct the rehearsal</h2>
+      <form id="rehearsal-form" novalidate>
+        <fieldset id="configuration">
+          <legend>Configuration — locked during an attempt</legend>
+          <label for="cursor">Resume cursor</label>
+          <select id="cursor" name="cursor">
+            <option value="saved">Saved Last-Event-ID: evt-cedar</option>
+            <option value="stale">Older Last-Event-ID: evt-birch</option>
+            <option value="tail">No cursor — subscribe at live tail (evt-fir)</option>
+          </select>
+          <label for="scenario">Stream condition</label>
+          <select id="scenario" name="scenario">
+            <option value="complete">Complete replay window, ordered</option>
+            <option value="expired">Expired replay window — only evt-elm and evt-fir retained</option>
+            <option value="duplicate">Replay evt-delta twice on the wire</option>
+            <option value="reordered">Deliver evt-elm before evt-delta</option>
+            <option value="partial">Final event observation unavailable</option>
+            <option value="rejected">New stream rejected</option>
+          </select>
+          <label for="replay-policy">Replay handling</label>
+          <select id="replay-policy" name="replayPolicy">
+            <option value="deduplicate">Suppress already rendered event IDs</option>
+            <option value="render-all">Render every received event, including replays</option>
+          </select>
+          <label for="reconnect-ms">Reconnect delay (synthetic ms, 0–2000)</label>
+          <input id="reconnect-ms" name="reconnectMs" type="text" inputmode="numeric" value="40" aria-describedby="timing-help">
+          <label for="budget-ms">Original silence/recovery budget (synthetic ms, 1–2000)</label>
+          <input id="budget-ms" name="budgetMs" type="text" inputmode="numeric" value="100" aria-describedby="timing-help">
+        </fieldset>
+        <div class="actions">
+          <button id="start-stream" type="button">1. Start old stream</button>
+          <button id="cut-over" type="button" disabled>2. Cut over</button>
+          <button id="resume-stream" type="button" disabled>3. Resume SSE cursor</button>
+          <button id="new-attempt" type="button" disabled>Another attempt — retain history</button>
+          <button id="reset-rehearsal" type="button">Reset rehearsal — clear history</button>
+        </div>
+      </form>
+      <p id="input-error" role="alert" hidden></p>
+      <p id="phase" role="status">Phase: idle</p>
+      <p id="impact" role="status">Not evaluated — no completed attempt.</p>
+      <div id="result-detail" hidden>
+        <p id="evidence-status"></p>
+        <p id="metrics"></p>
+        <p id="visible-events"></p>
+        <div class="table-scroll">
+          <table>
+            <caption>Independent evidence checks — not just stream establishment</caption>
+            <thead><tr><th scope="col">Check</th><th scope="col">Verdict</th><th scope="col">Observed synthetic evidence</th></tr></thead>
+            <tbody id="checks"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="prediction">
+        <label for="prediction">Predict the user outcome after inspecting the trace</label>
+        <select id="prediction" disabled>
+          <option value="">Choose success, failure or unknown</option>
+          <option value="success">Success — uninterrupted synthetic transition</option>
+          <option value="failure">Failure — interrupted synthetic transition</option>
+          <option value="unknown">Unknown — unverified synthetic transition</option>
+        </select>
+        <button id="check-prediction" type="button" disabled>Check prediction</button>
+        <p id="prediction-result" role="status">Prediction not checked.</p>
+      </div>
+    </section>
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Synthetic event trace</h2>
+      <pre id="trace" tabindex="0" aria-label="Synthetic trace, keyboard scrollable">No attempt started.</pre>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained completed attempts</h2>
+      <p id="totals" role="status">Attempted: 0 · success: 0 · failure: 0 · unknown: 0</p>
+      <p>Another attempt preserves all results, including failures and unknowns. At eight results, start is blocked rather than silently deleting history. Explicit reset or page reload erases this in-memory history.</p>
+      <div class="table-scroll">
+        <table>
+          <caption>Original-budget attribution for every completed attempt</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Cursor / condition</th><th scope="col">Stream</th><th scope="col">User outcome</th><th scope="col">First gap / recovery / original budget (ms)</th></tr></thead>
+          <tbody id="history"><tr><td colspan="5">No completed attempts.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits and evidence level</h2>
+      <p>This finite replay fixture does not establish a general SSE retention, transport, reconnect or exactly-once guarantee. It performs no network or Azure operations and measures no live latency. Deduplication here is scoped to the six fixed synthetic IDs.</p>
+      <p>B-S046 native proof and D-S046 original acceptance remain unfulfilled. This lesson does not certify production Node.js 24, Azure support, five-nines reliability or a Microsoft SLA. IaC: N/A for this resource-free lesson.</p>
+      <p><a href="../../README.md#microsoft-open-source-disclaimer">Microsoft Open Source Disclaimer</a>: examples are provided “AS IS” for education, without warranties. Product names imply no Microsoft endorsement, certification or support.</p>
+    </section>
+  </main>
+  <noscript>This exercise requires standard browser JavaScript. No result is evaluated while scripts are unavailable.</noscript>
+</body>
+</html>
