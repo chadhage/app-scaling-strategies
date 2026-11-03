@@ -1,0 +1,22 @@
+(function (root, factory) {
+  "use strict";
+  const api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  else root.S029Readiness = api;
+})(typeof globalThis === "object" ? globalThis : this, function () {
+  "use strict";
+  const DEFAULTS = Object.freeze({
+    fixture: "flapping", windowSize: 3, freshnessTicks: 2, observationTick: 6, prediction: "HOLD"
+  });
+  function evaluate(configuration) {
+    return {
+      readiness: "UNKNOWN", decision: "HOLD", comparison: "HOLD", streak: 0,
+      checks: { success: 0, failure: 0, unknown: 3 },
+      candidateAdmissions: 0, route: "ga-v1",
+      verifier: configuration.prediction === "HOLD" ? "PASS" : "FAIL", trace: []
+    };
+  }
+  function initialState() { return { version: 1, history: [] }; }
+  function recordRun(state, configuration) { return state; }
+  return { DEFAULTS, MAX_HISTORY: 8, evaluate, initialState, recordRun };
+});

@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "sourceId": "S029",
+  "cardId": "A-S029",
+  "parentId": "D-S029",
+  "packet": "SC-S029",
+  "kano": "S",
+  "kanoUnit": "A-S029",
+  "owner": "worker-A-S029",
+  "mode": "synthetic-only",
+  "entry": "index.html",
+  "objective": "Reject intermittent green probes; require a fresh consecutive readiness window before synthetic candidate admission.",
+  "configuration": {
+    "host": "Local file in isolated headless Microsoft Edge",
+    "fixtures": ["flapping", "steady", "recovered", "missing"],
+    "windowSize": [2, 3, 4],
+    "freshnessTicks": [2, 3, 4],
+    "observationTicks": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    "predictions": ["HOLD", "ALLOW"],
+    "probeTicks": [1, 2, 3, 4, 5, 6],
+    "maximumHistory": 8,
+    "maximumFinalSyntheticAdmissions": 1
+  },
+  "preconditions": [
+    "Healthy GA and a compatible candidate are synthetic assumptions, not measured platform behavior.",
+    "Probes occur one tick apart only through tick six; missing and stale evidence is not success.",
+    "Every selected consecutive probe must be fresh and successful; thresholds are local lesson choices."
+  ],
+  "actions": [
+    "Choose sequence, window, freshness and inspection tick",
+    "Predict HOLD or ALLOW",
+    "Check readiness window",
+    "Inspect unsafe single-green comparison and retained traces",
+    "Reset lesson"
+  ],
+  "expectedAssertions": [
+    "Flapping S F S F S S at tick six with a three-probe window remains HOLD although the single-green comparison would ALLOW.",
+    "A recovered fresh complete window permits exactly one final synthetic admission.",
+    "Known failures block; missing, insufficient and stale checks remain unknown in the required-check denominator.",
+    "Wrong answers fail the answer verifier but cannot force admission or erase earlier failures.",
+    "Invalid input/state or a ninth run is rejected without changing retained history."
+  ],
+  "verifier": {
+    "redAssertionsFailed": 18,
+    "redAssertionsPassed": 2,
+    "modelChecks": 20,
+    "finiteConfigurationsChecked": 648,
+    "browserLeafChecks": 13,
+    "browserParentGroups": 1,
+    "scope": "Local model consistency and actual DOM, keyboard, error, reset, failure and CSP behavior; not native validation."
+  },
+  "proof": {
+    "bdd": "readiness.feature",
+    "sourceContract": "evidence/source-contract-001.json",
+    "red": "evidence/red-001.json",
+    "iac": "evidence/iac-n-a.json",
+    "modelGreen": "evidence/green-001.json",
+    "tooling": "evidence/tooling-001.json",
+    "browser": "evidence/browser-002.json",
+    "browserObservations": "evidence/browser-observations-002.json",
+    "preservedBrowserAttempt": "evidence/browser-001.json",
+    "finalReadOnlyGreen": "evidence/green-002.json"
+  },
+  "tooling": {
+    "node": "22.23.4 tooling only",
+    "playwright": "1.56.1 offline",
+    "edge": "156.0.4314.50 installed and Microsoft-signed",
+    "helperPublishedCommit": "53c0c0d",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "helperLifecycleLimit": "Not a fully qualified unattended runner; abandoned recovery prototype is unqualified."
+  },
+  "userImpact": "UNMEASURED for real users. Probe checks and the single final admission are synthetic; answer PASS is not migration success.",
+  "cleanup": "Awaited isolated browser close in finally; lesson history is in memory only and explicitly resettable.",
+  "publication": "Implementation commit and annotated kanban/A-S029/<12sha> marker are resolved by the authorized publisher; no self-referential commit hash is invented.",
+  "reviewer": null,
+  "acceptedAtUtc": null,
+  "acceptance": "Parent-owned independent review required; this worker cannot award Done.",
+  "remainingLocalToDo": [],
+  "nativeRemainder": {
+    "cardId": "B-S029",
+    "readiness": false,
+    "blocker": "CORE, DATA and HOST gates, qualified target/access, safe probe/admission fixtures and separate native execution authority are outstanding."
+  },
+  "limits": [
+    "No native Azure, real probes, production Node24 or source-parent certification.",
+    "No cloud, IaC, scaffold, identity, deployment, expenditure, package/framework change or download.",
+    "Ordinary verification preserves proof; CAPTURE_BROWSER_EVIDENCE=1 is deliberate append-only capture.",
+    "One frozen satisfier unit; tests, refinements and repeated checks earn no extra credit."
+  ]
+}

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>S029 — Flapping readiness rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="readiness.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to operator controls</a>
+  <p class="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+  <main>
+    <header>
+      <p>S029 · A-S029 · D-S029 · SC-S029 · one Kano S unit</p>
+      <h1>One green probe is not a stable window</h1>
+      <p>Compare an unsafe single-green rule with a fresh consecutive readiness window.
+        No management calls, live probes, credentials or Azure resources are involved.</p>
+    </header>
+    <section aria-labelledby="instructions">
+      <h2 id="instructions">Worked exercise</h2>
+      <p><strong>Preconditions:</strong> healthy GA and a compatible candidate are assumed, not measured.
+        Six synthetic probes occur one tick apart. No new probe arrives after tick 6.</p>
+      <ol>
+        <li>Check the default flapping sequence at tick 6: two recent greens still follow a failed probe.</li>
+        <li>Select Recovered and predict ALLOW: three fresh consecutive greens can pass.</li>
+        <li>Inspect at tick 9: old greens become unknown, not current readiness.</li>
+      </ol>
+      <p>Every selected probe must be successful and no older than the maximum age (inclusive).
+        A failed fresh probe blocks admission; missing, not-yet-observed or stale evidence is unknown.
+        The window is a count of consecutive one-tick probes, spanning count minus one ticks.
+        Thresholds are lesson choices, not Azure recommendations.</p>
+    </section>
+    <form id="exercise" tabindex="-1" novalidate aria-describedby="control-help">
+      <h2>Operator controls</h2>
+      <div class="controls">
+        <div>
+          <label for="fixture">Probe sequence</label>
+          <select id="fixture" name="fixture">
+            <option value="flapping" selected>Flapping: S F S F S S</option>
+            <option value="steady">Steady: S S S S S S</option>
+            <option value="recovered">Recovered: F S F S S S</option>
+            <option value="missing">Missing: S S S S ? S</option>
+          </select>
+        </div>
+        <div>
+          <label for="window-size">Required consecutive probes (2–4)</label>
+          <input id="window-size" name="windowSize" type="number" min="2" max="4" step="1" value="3" required>
+        </div>
+        <div>
+          <label for="freshness">Maximum probe age in ticks (2–4)</label>
+          <input id="freshness" name="freshnessTicks" type="number" min="2" max="4" step="1" value="2" required>
+        </div>
+        <div>
+          <label for="observe-tick">Inspect at synthetic tick (1–9)</label>
+          <input id="observe-tick" name="observationTick" type="number" min="1" max="9" step="1" value="6" required>
+        </div>
+        <div>
+          <label for="prediction">Predict the guarded decision</label>
+          <select id="prediction" name="prediction">
+            <option value="HOLD" selected>HOLD candidate admission</option>
+            <option value="ALLOW">ALLOW candidate admission</option>
+          </select>
+        </div>
+      </div>
+      <p id="control-help">S = success; F = failure; ? = unknown. Tab, arrow keys and Enter operate these native controls.
+        Changing controls clears only the current result. History holds at most eight checked runs in memory.</p>
+      <div class="actions">
+        <button id="check-window" type="submit">Check readiness window</button>
+        <button id="restart-lesson" type="button">Reset lesson</button>
+      </div>
+    </form>
+    <p id="input-error" role="alert" tabindex="-1" hidden></p>
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Synthetic result</h2>
+      <p id="notice">Choose controls and check the window.</p>
+      <p id="readiness-result" role="status" aria-live="polite">UNKNOWN — not checked</p>
+      <p id="decision-result">Guard not evaluated; candidate admissions 0.</p>
+      <p id="comparison-result">Single-green comparison not evaluated (unsafe; never drives admission).</p>
+      <p id="checks-result">Required probe checks not evaluated.</p>
+      <p id="verifier-result">Answer not checked.</p>
+      <p id="impact-result">Probe checks are not user journeys. Real user impact UNMEASURED; no native migration proof.</p>
+      <h3>Trace through the selected tick</h3>
+      <p>Each row is a hypothetical decision at that tick, not an earlier executed handoff.
+        At most one synthetic admission is attempted at the final selected tick.</p>
+      <pre id="current-trace" aria-label="Synthetic probe trace">Not checked.</pre>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained history</h2>
+      <p id="history-count">0 / 8 checked runs</p>
+      <ol id="history"></ol>
+      <p>Reset or reload clears this in-memory history explicitly. No storage or background timer is used.</p>
+    </section>
+    <footer><a href="README.md">Source contract, limits and verification</a></footer>
+  </main>
+</body>
+</html>
