@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 248,
+  "revision": 252,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-03T17:00:14.7486503Z",
+  "updatedAtUtc": "2026-11-03T17:07:38.9367851Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -39,12 +39,12 @@
   },
   "kanoDone": {
     "S": 36,
-    "L": 0,
-    "D": 2
+    "D": 2,
+    "L": 0
   },
   "reservations": {
-    "D": 0,
-    "L": 0
+    "L": 0,
+    "D": 0
   },
   "gateAliases": {
     "JAVA": "C097, C098, HOSTJAVA.",
@@ -8697,6 +8697,27 @@
       "admittedAtUtc": "2026-11-03T16:58:55.8524628Z",
       "authorization": "local-synthetic-only",
       "claimedAtUtc": "2026-11-03T16:59:32.4719755Z"
+    },
+    {
+      "technicalEntryGate": "SOURCE",
+      "kano": "S",
+      "priority": "P0",
+      "kanoUnit": "A-S027",
+      "deliver": "Choose between 500, redirect, and misleading 200 probes; identify false-positive readiness.",
+      "packet": "SC-S027",
+      "id": "A-S027",
+      "parents": [
+        "D-S027"
+      ],
+      "state": "In Progress",
+      "readiness": true,
+      "owner": "worker-A-S027",
+      "blocker": null,
+      "result": null,
+      "publication": null,
+      "admittedAtUtc": "2026-11-03T17:06:30.8768801Z",
+      "authorization": "local-synthetic-only",
+      "claimedAtUtc": "2026-11-03T17:07:11.9586692Z"
     }
   ],
   "workers": [
@@ -9044,16 +9065,24 @@
       "status": "running",
       "id": "worker-A-S026",
       "agentId": "6de0b167-13bb-405e-bc93-498de050d835"
+    },
+    {
+      "cardId": "A-S027",
+      "status": "running",
+      "agentId": "74f9c5b5-80b6-4676-a8a0-6e5f8acc96c0",
+      "id": "worker-A-S027",
+      "dispatchedAtUtc": "2026-11-03T17:06:31.0239888Z"
     }
   ],
   "completedParents": [],
   "admittedReadyIds": [],
   "plannedNextIds": [
-    "A-S025",
-    "A-S026",
+    "A-S027",
     "C027",
     "A-S023",
-    "A-S024"
+    "A-S024",
+    "A-S025",
+    "A-S026"
   ],
   "blockedReasons": [],
   "stopNewDispatch": false,
@@ -9098,12 +9127,13 @@
       "result": "Verified local unified learner UI; parent independently passed28 focused+11 actual browser checks, published c2876146; zero extra Kano credit."
     },
     {
-      "status": "running",
+      "status": "completed",
       "id": "REF-CATALOG-SNAPSHOT",
       "agentId": "c4cb4bde-0314-461b-896f-7e84ea305bd2",
       "kanoCredit": 0,
       "scope": "C005-C008 and local-harness necessary snapshot bindings only",
-      "objective": "One pinned33-unit/20-practice historical snapshot refresh"
+      "objective": "One pinned33-unit/20-practice historical snapshot refresh",
+      "result": "Fixed-source20-practice snapshot verified/published; parent passed202 focused+12 actual UI checks and exact93 old proof hashes; zero new units."
     }
   ],
   "operationalBlockers": [
@@ -9310,9 +9340,9 @@
     {
       "note": "Expose newly accepted portable lessons in the unified UI without live discovery, native qualification, provider-authority changes, or extra units; preserve previous snapshots/proof.",
       "id": "OP-CATALOG-SNAPSHOT-REFRESH",
-      "readiness": true,
+      "readiness": false,
       "scope": "Refresh one historical committed acceptance/source snapshot and necessary consumer proof/pin expectations only",
-      "state": "In Progress",
+      "state": "Done",
       "parent": "H002",
       "owner": "worker-OP-CATALOG-SNAPSHOT-REFRESH",
       "parentComplete": false,
@@ -9327,7 +9357,36 @@
       "agentId": "c4cb4bde-0314-461b-896f-7e84ea305bd2",
       "sourceCommit": "3565746a0882916a91d492a8d2514f881a52812d",
       "expectedAcceptedPractice": 20,
-      "startedAtUtc": "2026-11-03T16:34:44.7378079Z"
+      "startedAtUtc": "2026-11-03T16:34:44.7378079Z",
+      "result": {
+        "id": "OP-CATALOG-SNAPSHOT-REFRESH",
+        "accepted": true,
+        "reviewer": "parent-controller",
+        "reviewedAtUtc": "2026-11-03T17:06:30.7901897Z",
+        "commit": "aa1c86ffcc5b86472528df9b6ede25728142a710",
+        "tag": "kanban/flow-catalog-refresh/aa1c86ffcc5b",
+        "sourceCommit": "3565746a0882916a91d492a8d2514f881a52812d",
+        "catalogEntries": 152,
+        "acceptedPortableLessonsInSnapshot": 20,
+        "focusedLeafCasesPassed": 202,
+        "tapNodeCasesIncludingParentGroups": 205,
+        "actualBrowserLeafChecksProduced": 66,
+        "actualUnifiedBrowserLeafChecksIndependentlyPassed": 12,
+        "historicalProofFilesIndependentlyVerified": 93,
+        "oldSnapshotBytePreserved": true,
+        "normalRerunProofFilesVerifiedByProducer": 109,
+        "remoteVerified": true,
+        "ownedScopeVerified": true,
+        "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+        "kanoCredit": 0,
+        "nativeQualified": 0,
+        "sourceParentsCompleted": 0,
+        "H001Complete": false,
+        "H002Complete": false,
+        "production24Validated": false,
+        "note": "Parent independently passed202 affected leaf tests and12 real unified UI groups,20 practice links, and exact93 historical file hashes plus old/generated snapshot hashes.205 reported Node cases include three parent groups. Functional APIs/schemas/authority remain unchanged; one fixed historical source, not live availability. No new S/D/L credits."
+      },
+      "completedAtUtc": "2026-11-03T17:06:30.847504Z"
     }
   ]
 }
