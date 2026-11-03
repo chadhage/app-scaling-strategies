@@ -67,7 +67,7 @@
     "counting": "41 leaf checks plus one browser parent group; one model leaf also exercises 48 fixed retry/timing combinations. No extra Kano units.",
     "initialFullGreen": "learning\\S049\\evidence\\green\\focused-001.json",
     "initialFullGreenStdoutSha256": "48a496352f56f1864e4bd001354d522707983ea2583bae94b1824466244fb7fb",
-    "finalPublicationInputVerification": "learning\\S049\\evidence\\green\\focused-003.json",
+    "finalPublicationInputVerification": "learning\\S049\\evidence\\green\\focused-004.json",
     "normalVerification": {
       "browserCaptureVariable": "unset",
       "writesToRetainedProof": false,
@@ -82,10 +82,13 @@
     },
     "integrity": {
       "inventory": "learning\\S049\\evidence\\integrity.json",
-      "filesBound": 47,
+      "filesBound": 52,
       "algorithm": "SHA-256",
       "exclusions": "The inventory itself, this final index, and subsequent green-output wrappers are excluded to avoid self-reference. The published commit binds all owned files.",
-      "previousInventoryPreserved": "learning\\S049\\evidence\\verification\\integrity-pre-publication-001.snapshot"
+      "previousInventoriesPreserved": [
+        "learning\\S049\\evidence\\verification\\integrity-pre-publication-001.snapshot",
+        "learning\\S049\\evidence\\verification\\integrity-pre-publication-002.snapshot"
+      ]
     }
   },
   "browser": {
@@ -155,6 +158,12 @@
       "record": "learning\\S049\\evidence\\verification\\publication-preflight-001.json",
       "cause": "The first authorized publisher stopped before commit because original captured CRLF/TAP/DOM whitespace was still diffed as source.",
       "resolution": "Only owned raw-evidence attributes changed to -text -diff. All original proof bytes and the prior inventory remain preserved; current inventory and focused verification were renewed."
+    },
+    "sourceNormalizationRecovery": {
+      "record": "learning\\S049\\evidence\\verification\\publication-normalization-001.json",
+      "firstPublicationPreserved": "learning\\S049\\evidence\\verification\\publication-001.json",
+      "cause": "The first publication preserved every raw proof byte but Git core.autocrlf normalized 13 text-source files to LF while the verified source bindings referred to tested CRLF bytes.",
+      "resolution": "Only owned source attributes now preserve tested bytes with -text and cr-at-eol-aware whitespace checks. The unchanged runtime/test/browser source hashes, every original raw proof and both old inventories are preserved. A subsequent scoped commit/tag completes the same single S unit without rewriting history."
     }
   },
   "acceptance": {
