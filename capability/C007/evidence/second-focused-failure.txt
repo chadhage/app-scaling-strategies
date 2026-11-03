@@ -1,0 +1,826 @@
+node:assert:150
+  throw new AssertionError(obj);
+  ^
+
+AssertionError [ERR_ASSERTION]: readme changed; explicitly review and refresh the pin
++ actual - expected
+... Skipped lines
+
+  '# App Scaling Strategies\n' +
+    '\n' +
+    'Introduction...\n' +
+    '\n' +
+    'Implementation work is tracked in the [web demonstration harness backlog](.docs/wiki/backlog.md).\n' +
+...
+    '\n' +
++   '- [Try the local demonstrations](#try-the-local-demonstrations)\n' +
+    '- [Problem Statement](#problem-statement)\n' +
+    '- [Scope](#scope)\n' +
+    '- [Goal Statement](#goal-statement)\n' +
+    '- [Scenarios](#scenarios)\n' +
+    '- [Azure](#azure)\n' +
+...
+    '\n' +
++   '## Try the local demonstrations\n' +
++   '\n' +
++   '1. Open the [local scenario catalog](capability/C005/index.html) directly in a browser. It lists all 150 source scenarios and the two guided workflows without a server or Azure account.\n' +
++   '2. Select an available, accepted portable lesson and conduct its synthetic controls, failure cases, and reset. The catalog explicitly identifies its historical acceptance snapshot; its availability labels are not a live feed.\n' +
++   '3. Use the [live Kanban and accepted-demo links](.docs/wiki/kanban.md) for newer accepted work, implementation evidence, and native-proof blockers.\n' +
++   '\n' +
++   'The [versioned getProfile fixture](capability/C020/README.md) and [isolated lesson host](capability/C041/README.md) have separate bounded, loopback-only launch and cleanup instructions. Their HTTP-backed interfaces cannot be run by simply opening their HTML files. Follow their own instructions rather than exposing the listeners publicly.\n' +
++   '\n' +
++   'Local lessons and fixtures use synthetic data. A successful rehearsal, a documented platform capability, and a qualified native Azure result are different evidence levels. These local runs do not establish native support, production Node.js 24 validation, completed source-demo parents, or the five-nines transition goal.\n' +
++   '\n' +
++   'The approved scope is design and local implementation only. **IaC generation, identity registration, live Azure execution, deployment, and expenditure remain unapproved.** Node.js 22.23.4 is the validated test-tooling runtime; Node.js 24 LTS with Express on App Service Linux remains the proposed production design.\n' +
++   '\n' +
+    '## Problem Statement\n' +
+    '\n' +
+    'Scaling Web Applications under a high available operating conditions is challenging as the amount of tolerable disruption due to swap nears 0.\n' +
+    '\n' +
+    '## Scope\n' +
+...
+    '\n' +
++   '### Scenar'... 35540 more characters
+-   '### Scenario 1: Warm, overlapping blue-green handoff\n' +
+-   '\n' +
+-   '```gherkin\n' +
+-   'Scenario: Move users to a warmed candidate without abandoning existing work\n' +
+-   '    Given an Azure Web App has a live production deployment\n' +
+-   '        And the current and candidate deployments are independently routable\n' +
+-   '        And sufficient compute and dependency capacity exists for their overlap\n' +
+-   '    When a candidate slot or parallel deployment is provisioned\n' +
+-   '        And its endpoint and deployment identity are registered as WARMING\n' +
+-   '        And required instances, dependencies, configuration, and journeys pass readiness gates\n' +
+-   '        And its state is changed to READY\n' +
+-   '        And eligible new admissions are routed to the candidate\n' +
+-   '    Then migrated journeys preserve authentication, state, correctness, and latency budgets\n' +
+-   '        And already-admitted work finishes or continues through a tested durable handoff\n' +
+-   '        And actual routing and drain progress are verified\n' +
+-   '        And the old deployment remains available for remaining clients and required rollback\n' +
+-   '        And retirement occurs only after routing, drain, ownership, and retention gates pass\n' +
+-   '```\n' +
+-   '\n' +
+-   'This scenario uses controlled routing rather than assuming a native slot swap permits application-controlled draining. S002 covers native swaps separately. Creating another slot in the same plan still requires adequate shared capacity.\n' +
+-   '\n' +
+-   '### Scenario 2: Progressive cohort or A/B routing\n' +
+-   '\n' +
+-   '```gherkin\n' +
+-   'Scenario: Introduce a warmed candidate through stable traffic cohorts\n' +
+-   '    Given production and candidate deployments are ready and compatible\n' +
+-   '        And session, authentication, and persistent state remain valid across b'... 33901 more characters
+
+    at checkCurrentCanonical (C:\Users\chhage\repos\app-scaling-strategies\capability\C005\catalog-source.cjs:197:12)
+    at Object.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C005\catalog-source.cjs:206:3)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: '# App Scaling Strategies\n' +
+    '\n' +
+    'Introduction...\n' +
+    '\n' +
+    'Implementation work is tracked in the [web demonstration harness backlog](.docs/wiki/backlog.md).\n' +
+    '\n' +
+    '## TOC\n' +
+    '\n' +
+    '- [Try the local demonstrations](#try-the-local-demonstrations)\n' +
+    '- [Problem Statement](#problem-statement)\n' +
+    '- [Scope](#scope)\n' +
+    '- [Goal Statement](#goal-statement)\n' +
+    '- [Scenarios](#scenarios)\n' +
+    '- [Azure](#azure)\n' +
+    '  - [Web Apps](#web-apps)\n' +
+    '  - [Azure Container Apps](#azure-container-apps)\n' +
+    '  - [Azure Kubernetes Services](#azure-kubernetes-services)\n' +
+    '  - [Azure Function Apps](#azure-function-apps)\n' +
+    '  - [Azure Springboot](#azure-springboot)\n' +
+    '- [Alignment with the background](#alignment-with-the-background)\n' +
+    '- [Key findings](#key-findings)\n' +
+    '- [Foundational scenarios](#foundational-scenarios)\n' +
+    '  - [Scenario 1: Warm, overlapping blue-green handoff](#scenario-1-warm-overlapping-blue-green-handoff)\n' +
+    '  - [Scenario 2: Progressive cohort or A/B routing](#scenario-2-progressive-cohort-or-ab-routing)\n' +
+    '- [Scenario catalog](#scenario-catalog)\n' +
+    '  - [A. Deployment and traffic migration](#a-deployment-and-traffic-migration-strategies)\n' +
+    '  - [B. Capacity scaling](#b-actual-capacity-scaling-strategies)\n' +
+    '  - [C. Readiness and warm-up](#c-readiness-and-warm-up)\n' +
+    '  - [D. Sessions, authentication, and state](#d-sessions-authentication-and-user-state)\n' +
+    '  - [E. In-flight requests and long-lived work](#e-in-flight-requests-and-long-lived-work)\n' +
+    '  - [F. N-tier and version compatibility](#f-n-tier-and-version-compatibility)\n' +
+    '  - [G. Database and persistent data](#g-database-and-persistent-data-scaling)\n' +
+    '  - [H. Caches, queues, and workers](#h-caches-queues-and-background-workers)\n' +
+    '  - [I. State machine and orchestration](#i-state-machine-and-orchestration-correctness)\n' +
+    '  - [J. Failure containment and rollback](#j-failure-containment-and-rollback)\n' +
+    '  - [K. Networking, configuration, and routing](#k-networking-configuration-and-edge-routing)\n' +
+    '  - [L. Zones, regions, and failure domains](#l-availability-zones-regions-and-failure-domains)\n' +
+    '  - [M. Hosting-model-specific scenarios](#m-hosting-model-specific-scenarios)\n' +
+    '  - [N. Complete end-user journeys](#n-complete-end-user-journeys)\n' +
+    '  - [O. Demonstration and acceptance testing](#o-demonstration-and-acceptance-testing)\n' +
+    '- [Lifecycle and safety gates](#lifecycle-and-safety-gates)\n' +
+    '- [Acceptance and evidence](#acceptance-and-evidence)\n' +
+    '  - [Definition of an interruption](#definition-of-an-interruption)\n' +
+    '  - [Outcome classification](#outcome-classification)\n' +
+    '  - [Five-nines transition metric](#five-nines-transition-metric)\n' +
+    '  - [Statistical evidence](#statistical-evidence)\n' +
+    '  - [Demonstration record](#demonstration-record)\n' +
+    '- [Recommended demonstration sequence](#recommended-demonstration-sequence)\n' +
+    '- [Microsoft Open Source Disclaimer](#microsoft-open-source-disclaimer)\n' +
+    '- [Sources](#sources)\n' +
+    '\n' +
+    '## Try the local demonstrations\n' +
+    '\n' +
+    '1. Open the [local scenario catalog](capability/C005/index.html) directly in a browser. It lists all 150 source scenarios and the two guided workflows without a server or Azure account.\n' +
+    '2. Select an available, accepted portable lesson and conduct its synthetic controls, failure cases, and reset. The catalog explicitly identifies its historical acceptance snapshot; its availability labels are not a live feed.\n' +
+    '3. Use the [live Kanban and accepted-demo links](.docs/wiki/kanban.md) for newer accepted work, implementation evidence, and native-proof blockers.\n' +
+    '\n' +
+    'The [versioned getProfile fixture](capability/C020/README.md) and [isolated lesson host](capability/C041/README.md) have separate bounded, loopback-only launch and cleanup instructions. Their HTTP-backed interfaces cannot be run by simply opening their HTML files. Follow their own instructions rather than exposing the listeners publicly.\n' +
+    '\n' +
+    'Local lessons and fixtures use synthetic data. A successful rehearsal, a documented platform capability, and a qualified native Azure result are different evidence levels. These local runs do not establish native support, production Node.js 24 validation, completed source-demo parents, or the five-nines transition goal.\n' +
+    '\n' +
+    'The approved scope is design and local implementation only. **IaC generation, identity registration, live Azure execution, deployment, and expenditure remain unapproved.** Node.js 22.23.4 is the validated test-tooling runtime; Node.js 24 LTS with Express on App Service Linux remains the proposed production design.\n' +
+    '\n' +
+    '## Problem Statement\n' +
+    '\n' +
+    'Scaling Web Applications under a high available operating conditions is challenging as the amount of tolerable disruption due to swap nears 0.\n' +
+    '\n' +
+    '## Scope\n' +
+    '\n' +
+    'Demonstrate all the strategies to scale an n-tier, web application, with zero interruptions to the end user experience.\n' +
+    '\n' +
+    '## Goal Statement\n' +
+    '\n' +
+    'Swap users across application slots, with 99.999% success of achieving zero interruptions to the end user experience.\n' +
+    '\n' +
+    'To do so, the following scenarios below have been outlined\n' +
+    '\n' +
+    '## Scenarios\n' +
+    '\n' +
+    'This document expands the scenarios in [background.md](background.md) into a catalog of 150 demonstration and test candidates. The goal is to preserve complete user journeys, not merely endpoint availability.\n' +
+    '\n' +
+    'The catalog covers deployment, actual capacity scaling, n-tier compatibility, user state, and failure recovery across the hosting models in [flavors.md](flavors.md). These are proposed scenarios, not already-validated guarantees or platform SLAs.\n' +
+    '\n' +
+    '## Azure\n' +
+    '\n' +
+    '### Web Apps\n' +
+    '\n' +
+    '  -Deplyment models:\n' +
+    '\n' +
+    '    -Container\n' +
+    '\n' +
+    '    -Code\n' +
+    '\n' +
+    '### Azure Container Apps\n' +
+    '\n' +
+    '### Azure Kubernetes Services\n' +
+    '\n' +
+    '### Azure Function Apps\n' +
+    '\n' +
+    '### Azure Springboot\n' +
+    '\n' +
+    '## Alignment with the background\n' +
+    '\n' +
+    '| Background element | Demonstration implication |\n' +
+    '| --- | --- |\n' +
+    '| Problem Statement: tolerable disruption during a swap approaches zero. | Overlap old and new capacity, control admission, preserve state, and finish or safely transfer work before retirement. |\n' +
+    '| Scope: demonstrate strategies for scaling an n-tier web application without end-user interruptions. | Exercise frontend, API, database, cache, messaging, and worker tiers together; verify complete user journeys rather than isolated tier health. |\n' +
+    '| Goal Statement: swap users across application slots with 99.999% success in achieving zero interruptions. | Measure actual user-transition journeys, including correctness and latency, and report interruptions and uncertainty explicitly. |\n' +
+    '\n' +
+    'Deployment changes, capacity scaling, and failure recovery are separate axes. Moving traffic to another slot does not itself add compute, and scaling one tier can overload another.\n' +
+    '\n' +
+    'For App Service and eligible Functions plans, "slots" means actual deployment slots. For Container Apps and AKS, demonstrate equivalent revision or deployment transitions without pretending those platforms expose App Service slots.\n' +
+    '\n' +
+    'Before each demonstration, declare:\n' +
+    '\n' +
+    '- Hosting model, deployment format, SKU, region, and relevant platform limits.\n' +
+    '- User journeys, protocols, and compatibility requirements.\n' +
+    '- Minimum, normal, and peak load, including overlapping deployment demand.\n' +
+    '- Journey latency budgets and maximum supported request/job durations.\n' +
+    '- Dependency capacity, data freshness, ordering, and transaction guarantees.\n' +
+    '- Supported failure conditions and required surviving capacity.\n' +
+    '- Drain, rollback-retention, and recovery budgets.\n' +
+    '\n' +
+    'An unsupported combination or an outage outside the declared envelope must be reported as a limitation, not counted as a successful uninterrupted transition.\n' +
+    '\n' +
+    '## Key findings\n' +
+    '\n' +
+    '| Finding | Consequence |\n' +
+    '| --- | --- |\n' +
+    "| Deployment slots share the App Service plan's underlying instances. | Adding a slot does not add compute capacity. Reserve overlap headroom or use separate plans where necessary. Per-app placement does not create additional plan capacity. [Source][app-service-plans] |\n" +
+    '| A successful probe alone does not establish readiness. | Validate required dependencies, effective configuration, authentication, compatible state, and journey latency. App Service swap warm-up accepts any HTTP response by default unless acceptable statuses are configured. [Source][app-service-slots] |\n' +
+    '| Native App Service swaps recycle former production workers. | Long-running operations can be abandoned. Retaining the old slot does not prevent this recycling; use suitable draining, durable continuation, or independently controlled deployments. [Source][app-service-slots] |\n' +
+    '| Slot-routing cookies pin clients to a destination. | Configured traffic percentages do not prove every user has moved. Observe actual cohort movement and remaining old-destination traffic. [Source][app-service-slots] |\n' +
+    '| App Service automatic scaling and rule-based autoscale differ. | Select the supported mechanism for the workload. HTTP-based automatic scaling currently does not support deployment-slot traffic. [Source][app-service-scaling] |\n' +
+    '| Functions slot swaps do not guarantee zero downtime. | Executing functions can terminate. Validate execution recovery and consider supported alternative update strategies rather than assuming web-app swap behavior applies. [Source][functions-slots] |\n' +
+    '| Five-nines transition success is not five-nines uptime. | Measure whether affected user journeys complete uninterrupted across transitions, not merely whether an endpoint remains available. |\n' +
+    '\n' +
+    'For native swap warm-up, configure an appropriate `WEBSITE_SWAP_WARMUP_PING_PATH` and explicit `WEBSITE_SWAP_WARMUP_PING_STATUSES`. A successful status must correspond to meaningful readiness; it does not replace representative journey validation.\n' +
+    '\n' +
+    'Zero-percent traffic allocation is not an access-control boundary for a live staging endpoint. Protect candidate environments appropriately, and avoid warm-up or shadow traffic producing real duplicate side effects.\n' +
+    '\n' +
+    'Rollback limits blast radius but cannot erase interruptions already experienced. Likewise, external routing gives additional lifecycle control but does not eliminate possible platform restarts.\n' +
+    '\n' +
+    '## Foundational scenarios\n' +
+    '\n' +
+    'The original two scenarios are retained in intent, with unsafe promotion and immediate termination replaced by explicit safety gates.\n' +
+    '\n' +
+    '### Scenar'... 35540 more characters,
+  expected: '# App Scaling Strategies\n' +
+    '\n' +
+    'Introduction...\n' +
+    '\n' +
+    'Implementation work is tracked in the [web demonstration harness backlog](.docs/wiki/backlog.md).\n' +
+    '\n' +
+    '## TOC\n' +
+    '\n' +
+    '- [Problem Statement](#problem-statement)\n' +
+    '- [Scope](#scope)\n' +
+    '- [Goal Statement](#goal-statement)\n' +
+    '- [Scenarios](#scenarios)\n' +
+    '- [Azure](#azure)\n' +
+    '  - [Web Apps](#web-apps)\n' +
+    '  - [Azure Container Apps](#azure-container-apps)\n' +
+    '  - [Azure Kubernetes Services](#azure-kubernetes-services)\n' +
+    '  - [Azure Function Apps](#azure-function-apps)\n' +
+    '  - [Azure Springboot](#azure-springboot)\n' +
+    '- [Alignment with the background](#alignment-with-the-background)\n' +
+    '- [Key findings](#key-findings)\n' +
+    '- [Foundational scenarios](#foundational-scenarios)\n' +
+    '  - [Scenario 1: Warm, overlapping blue-green handoff](#scenario-1-warm-overlapping-blue-green-handoff)\n' +
+    '  - [Scenario 2: Progressive cohort or A/B routing](#scenario-2-progressive-cohort-or-ab-routing)\n' +
+    '- [Scenario catalog](#scenario-catalog)\n' +
+    '  - [A. Deployment and traffic migration](#a-deployment-and-traffic-migration-strategies)\n' +
+    '  - [B. Capacity scaling](#b-actual-capacity-scaling-strategies)\n' +
+    '  - [C. Readiness and warm-up](#c-readiness-and-warm-up)\n' +
+    '  - [D. Sessions, authentication, and state](#d-sessions-authentication-and-user-state)\n' +
+    '  - [E. In-flight requests and long-lived work](#e-in-flight-requests-and-long-lived-work)\n' +
+    '  - [F. N-tier and version compatibility](#f-n-tier-and-version-compatibility)\n' +
+    '  - [G. Database and persistent data](#g-database-and-persistent-data-scaling)\n' +
+    '  - [H. Caches, queues, and workers](#h-caches-queues-and-background-workers)\n' +
+    '  - [I. State machine and orchestration](#i-state-machine-and-orchestration-correctness)\n' +
+    '  - [J. Failure containment and rollback](#j-failure-containment-and-rollback)\n' +
+    '  - [K. Networking, configuration, and routing](#k-networking-configuration-and-edge-routing)\n' +
+    '  - [L. Zones, regions, and failure domains](#l-availability-zones-regions-and-failure-domains)\n' +
+    '  - [M. Hosting-model-specific scenarios](#m-hosting-model-specific-scenarios)\n' +
+    '  - [N. Complete end-user journeys](#n-complete-end-user-journeys)\n' +
+    '  - [O. Demonstration and acceptance testing](#o-demonstration-and-acceptance-testing)\n' +
+    '- [Lifecycle and safety gates](#lifecycle-and-safety-gates)\n' +
+    '- [Acceptance and evidence](#acceptance-and-evidence)\n' +
+    '  - [Definition of an interruption](#definition-of-an-interruption)\n' +
+    '  - [Outcome classification](#outcome-classification)\n' +
+    '  - [Five-nines transition metric](#five-nines-transition-metric)\n' +
+    '  - [Statistical evidence](#statistical-evidence)\n' +
+    '  - [Demonstration record](#demonstration-record)\n' +
+    '- [Recommended demonstration sequence](#recommended-demonstration-sequence)\n' +
+    '- [Microsoft Open Source Disclaimer](#microsoft-open-source-disclaimer)\n' +
+    '- [Sources](#sources)\n' +
+    '\n' +
+    '## Problem Statement\n' +
+    '\n' +
+    'Scaling Web Applications under a high available operating conditions is challenging as the amount of tolerable disruption due to swap nears 0.\n' +
+    '\n' +
+    '## Scope\n' +
+    '\n' +
+    'Demonstrate all the strategies to scale an n-tier, web application, with zero interruptions to the end user experience.\n' +
+    '\n' +
+    '## Goal Statement\n' +
+    '\n' +
+    'Swap users across application slots, with 99.999% success of achieving zero interruptions to the end user experience.\n' +
+    '\n' +
+    'To do so, the following scenarios below have been outlined\n' +
+    '\n' +
+    '## Scenarios\n' +
+    '\n' +
+    'This document expands the scenarios in [background.md](background.md) into a catalog of 150 demonstration and test candidates. The goal is to preserve complete user journeys, not merely endpoint availability.\n' +
+    '\n' +
+    'The catalog covers deployment, actual capacity scaling, n-tier compatibility, user state, and failure recovery across the hosting models in [flavors.md](flavors.md). These are proposed scenarios, not already-validated guarantees or platform SLAs.\n' +
+    '\n' +
+    '## Azure\n' +
+    '\n' +
+    '### Web Apps\n' +
+    '\n' +
+    '  -Deplyment models:\n' +
+    '\n' +
+    '    -Container\n' +
+    '\n' +
+    '    -Code\n' +
+    '\n' +
+    '### Azure Container Apps\n' +
+    '\n' +
+    '### Azure Kubernetes Services\n' +
+    '\n' +
+    '### Azure Function Apps\n' +
+    '\n' +
+    '### Azure Springboot\n' +
+    '\n' +
+    '## Alignment with the background\n' +
+    '\n' +
+    '| Background element | Demonstration implication |\n' +
+    '| --- | --- |\n' +
+    '| Problem Statement: tolerable disruption during a swap approaches zero. | Overlap old and new capacity, control admission, preserve state, and finish or safely transfer work before retirement. |\n' +
+    '| Scope: demonstrate strategies for scaling an n-tier web application without end-user interruptions. | Exercise frontend, API, database, cache, messaging, and worker tiers together; verify complete user journeys rather than isolated tier health. |\n' +
+    '| Goal Statement: swap users across application slots with 99.999% success in achieving zero interruptions. | Measure actual user-transition journeys, including correctness and latency, and report interruptions and uncertainty explicitly. |\n' +
+    '\n' +
+    'Deployment changes, capacity scaling, and failure recovery are separate axes. Moving traffic to another slot does not itself add compute, and scaling one tier can overload another.\n' +
+    '\n' +
+    'For App Service and eligible Functions plans, "slots" means actual deployment slots. For Container Apps and AKS, demonstrate equivalent revision or deployment transitions without pretending those platforms expose App Service slots.\n' +
+    '\n' +
+    'Before each demonstration, declare:\n' +
+    '\n' +
+    '- Hosting model, deployment format, SKU, region, and relevant platform limits.\n' +
+    '- User journeys, protocols, and compatibility requirements.\n' +
+    '- Minimum, normal, and peak load, including overlapping deployment demand.\n' +
+    '- Journey latency budgets and maximum supported request/job durations.\n' +
+    '- Dependency capacity, data freshness, ordering, and transaction guarantees.\n' +
+    '- Supported failure conditions and required surviving capacity.\n' +
+    '- Drain, rollback-retention, and recovery budgets.\n' +
+    '\n' +
+    'An unsupported combination or an outage outside the declared envelope must be reported as a limitation, not counted as a successful uninterrupted transition.\n' +
+    '\n' +
+    '## Key findings\n' +
+    '\n' +
+    '| Finding | Consequence |\n' +
+    '| --- | --- |\n' +
+    "| Deployment slots share the App Service plan's underlying instances. | Adding a slot does not add compute capacity. Reserve overlap headroom or use separate plans where necessary. Per-app placement does not create additional plan capacity. [Source][app-service-plans] |\n" +
+    '| A successful probe alone does not establish readiness. | Validate required dependencies, effective configuration, authentication, compatible state, and journey latency. App Service swap warm-up accepts any HTTP response by default unless acceptable statuses are configured. [Source][app-service-slots] |\n' +
+    '| Native App Service swaps recycle former production workers. | Long-running operations can be abandoned. Retaining the old slot does not prevent this recycling; use suitable draining, durable continuation, or independently controlled deployments. [Source][app-service-slots] |\n' +
+    '| Slot-routing cookies pin clients to a destination. | Configured traffic percentages do not prove every user has moved. Observe actual cohort movement and remaining old-destination traffic. [Source][app-service-slots] |\n' +
+    '| App Service automatic scaling and rule-based autoscale differ. | Select the supported mechanism for the workload. HTTP-based automatic scaling currently does not support deployment-slot traffic. [Source][app-service-scaling] |\n' +
+    '| Functions slot swaps do not guarantee zero downtime. | Executing functions can terminate. Validate execution recovery and consider supported alternative update strategies rather than assuming web-app swap behavior applies. [Source][functions-slots] |\n' +
+    '| Five-nines transition success is not five-nines uptime. | Measure whether affected user journeys complete uninterrupted across transitions, not merely whether an endpoint remains available. |\n' +
+    '\n' +
+    'For native swap warm-up, configure an appropriate `WEBSITE_SWAP_WARMUP_PING_PATH` and explicit `WEBSITE_SWAP_WARMUP_PING_STATUSES`. A successful status must correspond to meaningful readiness; it does not replace representative journey validation.\n' +
+    '\n' +
+    'Zero-percent traffic allocation is not an access-control boundary for a live staging endpoint. Protect candidate environments appropriately, and avoid warm-up or shadow traffic producing real duplicate side effects.\n' +
+    '\n' +
+    'Rollback limits blast radius but cannot erase interruptions already experienced. Likewise, external routing gives additional lifecycle control but does not eliminate possible platform restarts.\n' +
+    '\n' +
+    '## Foundational scenarios\n' +
+    '\n' +
+    'The original two scenarios are retained in intent, with unsafe promotion and immediate termination replaced by explicit safety gates.\n' +
+    '\n' +
+    '### Scenario 1: Warm, overlapping blue-green handoff\n' +
+    '\n' +
+    '```gherkin\n' +
+    'Scenario: Move users to a warmed candidate without abandoning existing work\n' +
+    '    Given an Azure Web App has a live production deployment\n' +
+    '        And the current and candidate deployments are independently routable\n' +
+    '        And sufficient compute and dependency capacity exists for their overlap\n' +
+    '    When a candidate slot or parallel deployment is provisioned\n' +
+    '        And its endpoint and deployment identity are registered as WARMING\n' +
+    '        And required instances, dependencies, configuration, and journeys pass readiness gates\n' +
+    '        And its state is changed to READY\n' +
+    '        And eligible new admissions are routed to the candidate\n' +
+    '    Then migrated journeys preserve authentication, state, correctness, and latency budgets\n' +
+    '        And already-admitted work finishes or continues through a tested durable handoff\n' +
+    '        And actual routing and drain progress are verified\n' +
+    '        And the old deployment remains available for remaining clients and required rollback\n' +
+    '        And retirement occurs only after routing, drain, ownership, and retention gates pass\n' +
+    '```\n' +
+    '\n' +
+    'This scenario uses controlled routing rather than assuming a native slot swap permits application-controlled draining. S002 covers native swaps separately. Creating another slot in the same plan still requires adequate shared capacity.\n' +
+    '\n' +
+    '### Scenario 2: Progressive cohort or A/B routing\n' +
+    '\n' +
+    '```gherkin\n' +
+    'Scenario: Introduce a warmed candidate through stable traffic cohorts\n' +
+    '    Given production and candidate deployments are ready and compatible\n' +
+    '        And session, authentication, and persistent state remain valid across b'... 33901 more characters,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.23.4
+✔ all four shared providers match accepted commits after checkout line endings and retain their original worktree hashes (765.2967ms)
+✖ shared source authenticity checker passes read-only without a second source extractor (1046.1688ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2084.5309
+
+✖ failing tests:
+
+test at capability\C007\tests\integrity.test.cjs:29:1
+✖ shared source authenticity checker passes read-only without a second source extractor (1046.1688ms)
+  Error: Command failed: C:\Program Files\nodejs\node.exe C:\Users\chhage\repos\app-scaling-strategies\capability\C005\catalog-source.cjs --check
+  node:assert:150
+    throw new AssertionError(obj);
+    ^
+
+  AssertionError [ERR_ASSERTION]: readme changed; explicitly review and refresh the pin
+  + actual - expected
+  ... Skipped lines
+
+    '# App Scaling Strategies\n' +
+      '\n' +
+      'Introduction...\n' +
+      '\n' +
+      'Implementation work is tracked in the [web demonstration harness backlog](.docs/wiki/backlog.md).\n' +
+  ...
+      '\n' +
+  +   '- [Try the local demonstrations](#try-the-local-demonstrations)\n' +
+      '- [Problem Statement](#problem-statement)\n' +
+      '- [Scope](#scope)\n' +
+      '- [Goal Statement](#goal-statement)\n' +
+      '- [Scenarios](#scenarios)\n' +
+      '- [Azure](#azure)\n' +
+  ...
+      '\n' +
+  +   '## Try the local demonstrations\n' +
+  +   '\n' +
+  +   '1. Open the [local scenario catalog](capability/C005/index.html) directly in a browser. It lists all 150 source scenarios and the two guided workflows without a server or Azure account.\n' +
+  +   '2. Select an available, accepted portable lesson and conduct its synthetic controls, failure cases, and reset. The catalog explicitly identifies its historical acceptance snapshot; its availability labels are not a live feed.\n' +
+  +   '3. Use the [live Kanban and accepted-demo links](.docs/wiki/kanban.md) for newer accepted work, implementation evidence, and native-proof blockers.\n' +
+  +   '\n' +
+  +   'The [versioned getProfile fixture](capability/C020/README.md) and [isolated lesson host](capability/C041/README.md) have separate bounded, loopback-only launch and cleanup instructions. Their HTTP-backed interfaces cannot be run by simply opening their HTML files. Follow their own instructions rather than exposing the listeners publicly.\n' +
+  +   '\n' +
+  +   'Local lessons and fixtures use synthetic data. A successful rehearsal, a documented platform capability, and a qualified native Azure result are different evidence levels. These local runs do not establish native support, production Node.js 24 validation, completed source-demo parents, or the five-nines transition goal.\n' +
+  +   '\n' +
+  +   'The approved scope is design and local implementation only. **IaC generation, identity registration, live Azure execution, deployment, and expenditure remain unapproved.** Node.js 22.23.4 is the validated test-tooling runtime; Node.js 24 LTS with Express on App Service Linux remains the proposed production design.\n' +
+  +   '\n' +
+      '## Problem Statement\n' +
+      '\n' +
+      'Scaling Web Applications under a high available operating conditions is challenging as the amount of tolerable disruption due to swap nears 0.\n' +
+      '\n' +
+      '## Scope\n' +
+  ...
+      '\n' +
+  +   '### Scenar'... 35540 more characters
+  -   '### Scenario 1: Warm, overlapping blue-green handoff\n' +
+  -   '\n' +
+  -   '```gherkin\n' +
+  -   'Scenario: Move users to a warmed candidate without abandoning existing work\n' +
+  -   '    Given an Azure Web App has a live production deployment\n' +
+  -   '        And the current and candidate deployments are independently routable\n' +
+  -   '        And sufficient compute and dependency capacity exists for their overlap\n' +
+  -   '    When a candidate slot or parallel deployment is provisioned\n' +
+  -   '        And its endpoint and deployment identity are registered as WARMING\n' +
+  -   '        And required instances, dependencies, configuration, and journeys pass readiness gates\n' +
+  -   '        And its state is changed to READY\n' +
+  -   '        And eligible new admissions are routed to the candidate\n' +
+  -   '    Then migrated journeys preserve authentication, state, correctness, and latency budgets\n' +
+  -   '        And already-admitted work finishes or continues through a tested durable handoff\n' +
+  -   '        And actual routing and drain progress are verified\n' +
+  -   '        And the old deployment remains available for remaining clients and required rollback\n' +
+  -   '        And retirement occurs only after routing, drain, ownership, and retention gates pass\n' +
+  -   '```\n' +
+  -   '\n' +
+  -   'This scenario uses controlled routing rather than assuming a native slot swap permits application-controlled draining. S002 covers native swaps separately. Creating another slot in the same plan still requires adequate shared capacity.\n' +
+  -   '\n' +
+  -   '### Scenario 2: Progressive cohort or A/B routing\n' +
+  -   '\n' +
+  -   '```gherkin\n' +
+  -   'Scenario: Introduce a warmed candidate through stable traffic cohorts\n' +
+  -   '    Given production and candidate deployments are ready and compatible\n' +
+  -   '        And session, authentication, and persistent state remain valid across b'... 33901 more characters
+
+      at checkCurrentCanonical (C:\Users\chhage\repos\app-scaling-strategies\capability\C005\catalog-source.cjs:197:12)
+      at Object.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C005\catalog-source.cjs:206:3)
+      at Module._compile (node:internal/modules/cjs/loader:1781:14)
+      at Object..js (node:internal/modules/cjs/loader:1913:10)
+      at Module.load (node:internal/modules/cjs/loader:1505:32)
+      at Function._load (node:internal/modules/cjs/loader:1309:12)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+      at node:internal/main/run_main_module:36:49 {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '# App Scaling Strategies\n' +
+      '\n' +
+      'Introduction...\n' +
+      '\n' +
+      'Implementation work is tracked in the [web demonstration harness backlog](.docs/wiki/backlog.md).\n' +
+      '\n' +
+      '## TOC\n' +
+      '\n' +
+      '- [Try the local demonstrations](#try-the-local-demonstrations)\n' +
+      '- [Problem Statement](#problem-statement)\n' +
+      '- [Scope](#scope)\n' +
+      '- [Goal Statement](#goal-statement)\n' +
+      '- [Scenarios](#scenarios)\n' +
+      '- [Azure](#azure)\n' +
+      '  - [Web Apps](#web-apps)\n' +
+      '  - [Azure Container Apps](#azure-container-apps)\n' +
+      '  - [Azure Kubernetes Services](#azure-kubernetes-services)\n' +
+      '  - [Azure Function Apps](#azure-function-apps)\n' +
+      '  - [Azure Springboot](#azure-springboot)\n' +
+      '- [Alignment with the background](#alignment-with-the-background)\n' +
+      '- [Key findings](#key-findings)\n' +
+      '- [Foundational scenarios](#foundational-scenarios)\n' +
+      '  - [Scenario 1: Warm, overlapping blue-green handoff](#scenario-1-warm-overlapping-blue-green-handoff)\n' +
+      '  - [Scenario 2: Progressive cohort or A/B routing](#scenario-2-progressive-cohort-or-ab-routing)\n' +
+      '- [Scenario catalog](#scenario-catalog)\n' +
+      '  - [A. Deployment and traffic migration](#a-deployment-and-traffic-migration-strategies)\n' +
+      '  - [B. Capacity scaling](#b-actual-capacity-scaling-strategies)\n' +
+      '  - [C. Readiness and warm-up](#c-readiness-and-warm-up)\n' +
+      '  - [D. Sessions, authentication, and state](#d-sessions-authentication-and-user-state)\n' +
+      '  - [E. In-flight requests and long-lived work](#e-in-flight-requests-and-long-lived-work)\n' +
+      '  - [F. N-tier and version compatibility](#f-n-tier-and-version-compatibility)\n' +
+      '  - [G. Database and persistent data](#g-database-and-persistent-data-scaling)\n' +
+      '  - [H. Caches, queues, and workers](#h-caches-queues-and-background-workers)\n' +
+      '  - [I. State machine and orchestration](#i-state-machine-and-orchestration-correctness)\n' +
+      '  - [J. Failure containment and rollback](#j-failure-containment-and-rollback)\n' +
+      '  - [K. Networking, configuration, and routing](#k-networking-configuration-and-edge-routing)\n' +
+      '  - [L. Zones, regions, and failure domains](#l-availability-zones-regions-and-failure-domains)\n' +
+      '  - [M. Hosting-model-specific scenarios](#m-hosting-model-specific-scenarios)\n' +
+      '  - [N. Complete end-user journeys](#n-complete-end-user-journeys)\n' +
+      '  - [O. Demonstration and acceptance testing](#o-demonstration-and-acceptance-testing)\n' +
+      '- [Lifecycle and safety gates](#lifecycle-and-safety-gates)\n' +
+      '- [Acceptance and evidence](#acceptance-and-evidence)\n' +
+      '  - [Definition of an interruption](#definition-of-an-interruption)\n' +
+      '  - [Outcome classification](#outcome-classification)\n' +
+      '  - [Five-nines transition metric](#five-nines-transition-metric)\n' +
+      '  - [Statistical evidence](#statistical-evidence)\n' +
+      '  - [Demonstration record](#demonstration-record)\n' +
+      '- [Recommended demonstration sequence](#recommended-demonstration-sequence)\n' +
+      '- [Microsoft Open Source Disclaimer](#microsoft-open-source-disclaimer)\n' +
+      '- [Sources](#sources)\n' +
+      '\n' +
+      '## Try the local demonstrations\n' +
+      '\n' +
+      '1. Open the [local scenario catalog](capability/C005/index.html) directly in a browser. It lists all 150 source scenarios and the two guided workflows without a server or Azure account.\n' +
+      '2. Select an available, accepted portable lesson and conduct its synthetic controls, failure cases, and reset. The catalog explicitly identifies its historical acceptance snapshot; its availability labels are not a live feed.\n' +
+      '3. Use the [live Kanban and accepted-demo links](.docs/wiki/kanban.md) for newer accepted work, implementation evidence, and native-proof blockers.\n' +
+      '\n' +
+      'The [versioned getProfile fixture](capability/C020/README.md) and [isolated lesson host](capability/C041/README.md) have separate bounded, loopback-only launch and cleanup instructions. Their HTTP-backed interfaces cannot be run by simply opening their HTML files. Follow their own instructions rather than exposing the listeners publicly.\n' +
+      '\n' +
+      'Local lessons and fixtures use synthetic data. A successful rehearsal, a documented platform capability, and a qualified native Azure result are different evidence levels. These local runs do not establish native support, production Node.js 24 validation, completed source-demo parents, or the five-nines transition goal.\n' +
+      '\n' +
+      'The approved scope is design and local implementation only. **IaC generation, identity registration, live Azure execution, deployment, and expenditure remain unapproved.** Node.js 22.23.4 is the validated test-tooling runtime; Node.js 24 LTS with Express on App Service Linux remains the proposed production design.\n' +
+      '\n' +
+      '## Problem Statement\n' +
+      '\n' +
+      'Scaling Web Applications under a high available operating conditions is challenging as the amount of tolerable disruption due to swap nears 0.\n' +
+      '\n' +
+      '## Scope\n' +
+      '\n' +
+      'Demonstrate all the strategies to scale an n-tier, web application, with zero interruptions to the end user experience.\n' +
+      '\n' +
+      '## Goal Statement\n' +
+      '\n' +
+      'Swap users across application slots, with 99.999% success of achieving zero interruptions to the end user experience.\n' +
+      '\n' +
+      'To do so, the following scenarios below have been outlined\n' +
+      '\n' +
+      '## Scenarios\n' +
+      '\n' +
+      'This document expands the scenarios in [background.md](background.md) into a catalog of 150 demonstration and test candidates. The goal is to preserve complete user journeys, not merely endpoint availability.\n' +
+      '\n' +
+      'The catalog covers deployment, actual capacity scaling, n-tier compatibility, user state, and failure recovery across the hosting models in [flavors.md](flavors.md). These are proposed scenarios, not already-validated guarantees or platform SLAs.\n' +
+      '\n' +
+      '## Azure\n' +
+      '\n' +
+      '### Web Apps\n' +
+      '\n' +
+      '  -Deplyment models:\n' +
+      '\n' +
+      '    -Container\n' +
+      '\n' +
+      '    -Code\n' +
+      '\n' +
+      '### Azure Container Apps\n' +
+      '\n' +
+      '### Azure Kubernetes Services\n' +
+      '\n' +
+      '### Azure Function Apps\n' +
+      '\n' +
+      '### Azure Springboot\n' +
+      '\n' +
+      '## Alignment with the background\n' +
+      '\n' +
+      '| Background element | Demonstration implication |\n' +
+      '| --- | --- |\n' +
+      '| Problem Statement: tolerable disruption during a swap approaches zero. | Overlap old and new capacity, control admission, preserve state, and finish or safely transfer work before retirement. |\n' +
+      '| Scope: demonstrate strategies for scaling an n-tier web application without end-user interruptions. | Exercise frontend, API, database, cache, messaging, and worker tiers together; verify complete user journeys rather than isolated tier health. |\n' +
+      '| Goal Statement: swap users across application slots with 99.999% success in achieving zero interruptions. | Measure actual user-transition journeys, including correctness and latency, and report interruptions and uncertainty explicitly. |\n' +
+      '\n' +
+      'Deployment changes, capacity scaling, and failure recovery are separate axes. Moving traffic to another slot does not itself add compute, and scaling one tier can overload another.\n' +
+      '\n' +
+      'For App Service and eligible Functions plans, "slots" means actual deployment slots. For Container Apps and AKS, demonstrate equivalent revision or deployment transitions without pretending those platforms expose App Service slots.\n' +
+      '\n' +
+      'Before each demonstration, declare:\n' +
+      '\n' +
+      '- Hosting model, deployment format, SKU, region, and relevant platform limits.\n' +
+      '- User journeys, protocols, and compatibility requirements.\n' +
+      '- Minimum, normal, and peak load, including overlapping deployment demand.\n' +
+      '- Journey latency budgets and maximum supported request/job durations.\n' +
+      '- Dependency capacity, data freshness, ordering, and transaction guarantees.\n' +
+      '- Supported failure conditions and required surviving capacity.\n' +
+      '- Drain, rollback-retention, and recovery budgets.\n' +
+      '\n' +
+      'An unsupported combination or an outage outside the declared envelope must be reported as a limitation, not counted as a successful uninterrupted transition.\n' +
+      '\n' +
+      '## Key findings\n' +
+      '\n' +
+      '| Finding | Consequence |\n' +
+      '| --- | --- |\n' +
+      "| Deployment slots share the App Service plan's underlying instances. | Adding a slot does not add compute capacity. Reserve overlap headroom or use separate plans where necessary. Per-app placement does not create additional plan capacity. [Source][app-service-plans] |\n" +
+      '| A successful probe alone does not establish readiness. | Validate required dependencies, effective configuration, authentication, compatible state, and journey latency. App Service swap warm-up accepts any HTTP response by default unless acceptable statuses are configured. [Source][app-service-slots] |\n' +
+      '| Native App Service swaps recycle former production workers. | Long-running operations can be abandoned. Retaining the old slot does not prevent this recycling; use suitable draining, durable continuation, or independently controlled deployments. [Source][app-service-slots] |\n' +
+      '| Slot-routing cookies pin clients to a destination. | Configured traffic percentages do not prove every user has moved. Observe actual cohort movement and remaining old-destination traffic. [Source][app-service-slots] |\n' +
+      '| App Service automatic scaling and rule-based autoscale differ. | Select the supported mechanism for the workload. HTTP-based automatic scaling currently does not support deployment-slot traffic. [Source][app-service-scaling] |\n' +
+      '| Functions slot swaps do not guarantee zero downtime. | Executing functions can terminate. Validate execution recovery and consider supported alternative update strategies rather than assuming web-app swap behavior applies. [Source][functions-slots] |\n' +
+      '| Five-nines transition success is not five-nines uptime. | Measure whether affected user journeys complete uninterrupted across transitions, not merely whether an endpoint remains available. |\n' +
+      '\n' +
+      'For native swap warm-up, configure an appropriate `WEBSITE_SWAP_WARMUP_PING_PATH` and explicit `WEBSITE_SWAP_WARMUP_PING_STATUSES`. A successful status must correspond to meaningful readiness; it does not replace representative journey validation.\n' +
+      '\n' +
+      'Zero-percent traffic allocation is not an access-control boundary for a live staging endpoint. Protect candidate environments appropriately, and avoid warm-up or shadow traffic producing real duplicate side effects.\n' +
+      '\n' +
+      'Rollback limits blast radius but cannot erase interruptions already experienced. Likewise, external routing gives additional lifecycle control but does not eliminate possible platform restarts.\n' +
+      '\n' +
+      '## Foundational scenarios\n' +
+      '\n' +
+      'The original two scenarios are retained in intent, with unsafe promotion and immediate termination replaced by explicit safety gates.\n' +
+      '\n' +
+      '### Scenar'... 35540 more characters,
+    expected: '# App Scaling Strategies\n' +
+      '\n' +
+      'Introduction...\n' +
+      '\n' +
+      'Implementation work is tracked in the [web demonstration harness backlog](.docs/wiki/backlog.md).\n' +
+      '\n' +
+      '## TOC\n' +
+      '\n' +
+      '- [Problem Statement](#problem-statement)\n' +
+      '- [Scope](#scope)\n' +
+      '- [Goal Statement](#goal-statement)\n' +
+      '- [Scenarios](#scenarios)\n' +
+      '- [Azure](#azure)\n' +
+      '  - [Web Apps](#web-apps)\n' +
+      '  - [Azure Container Apps](#azure-container-apps)\n' +
+      '  - [Azure Kubernetes Services](#azure-kubernetes-services)\n' +
+      '  - [Azure Function Apps](#azure-function-apps)\n' +
+      '  - [Azure Springboot](#azure-springboot)\n' +
+      '- [Alignment with the background](#alignment-with-the-background)\n' +
+      '- [Key findings](#key-findings)\n' +
+      '- [Foundational scenarios](#foundational-scenarios)\n' +
+      '  - [Scenario 1: Warm, overlapping blue-green handoff](#scenario-1-warm-overlapping-blue-green-handoff)\n' +
+      '  - [Scenario 2: Progressive cohort or A/B routing](#scenario-2-progressive-cohort-or-ab-routing)\n' +
+      '- [Scenario catalog](#scenario-catalog)\n' +
+      '  - [A. Deployment and traffic migration](#a-deployment-and-traffic-migration-strategies)\n' +
+      '  - [B. Capacity scaling](#b-actual-capacity-scaling-strategies)\n' +
+      '  - [C. Readiness and warm-up](#c-readiness-and-warm-up)\n' +
+      '  - [D. Sessions, authentication, and state](#d-sessions-authentication-and-user-state)\n' +
+      '  - [E. In-flight requests and long-lived work](#e-in-flight-requests-and-long-lived-work)\n' +
+      '  - [F. N-tier and version compatibility](#f-n-tier-and-version-compatibility)\n' +
+      '  - [G. Database and persistent data](#g-database-and-persistent-data-scaling)\n' +
+      '  - [H. Caches, queues, and workers](#h-caches-queues-and-background-workers)\n' +
+      '  - [I. State machine and orchestration](#i-state-machine-and-orchestration-correctness)\n' +
+      '  - [J. Failure containment and rollback](#j-failure-containment-and-rollback)\n' +
+      '  - [K. Networking, configuration, and routing](#k-networking-configuration-and-edge-routing)\n' +
+      '  - [L. Zones, regions, and failure domains](#l-availability-zones-regions-and-failure-domains)\n' +
+      '  - [M. Hosting-model-specific scenarios](#m-hosting-model-specific-scenarios)\n' +
+      '  - [N. Complete end-user journeys](#n-complete-end-user-journeys)\n' +
+      '  - [O. Demonstration and acceptance testing](#o-demonstration-and-acceptance-testing)\n' +
+      '- [Lifecycle and safety gates](#lifecycle-and-safety-gates)\n' +
+      '- [Acceptance and evidence](#acceptance-and-evidence)\n' +
+      '  - [Definition of an interruption](#definition-of-an-interruption)\n' +
+      '  - [Outcome classification](#outcome-classification)\n' +
+      '  - [Five-nines transition metric](#five-nines-transition-metric)\n' +
+      '  - [Statistical evidence](#statistical-evidence)\n' +
+      '  - [Demonstration record](#demonstration-record)\n' +
+      '- [Recommended demonstration sequence](#recommended-demonstration-sequence)\n' +
+      '- [Microsoft Open Source Disclaimer](#microsoft-open-source-disclaimer)\n' +
+      '- [Sources](#sources)\n' +
+      '\n' +
+      '## Problem Statement\n' +
+      '\n' +
+      'Scaling Web Applications under a high available operating conditions is challenging as the amount of tolerable disruption due to swap nears 0.\n' +
+      '\n' +
+      '## Scope\n' +
+      '\n' +
+      'Demonstrate all the strategies to scale an n-tier, web application, with zero interruptions to the end user experience.\n' +
+      '\n' +
+      '## Goal Statement\n' +
+      '\n' +
+      'Swap users across application slots, with 99.999% success of achieving zero interruptions to the end user experience.\n' +
+      '\n' +
+      'To do so, the following scenarios below have been outlined\n' +
+      '\n' +
+      '## Scenarios\n' +
+      '\n' +
+      'This document expands the scenarios in [background.md](background.md) into a catalog of 150 demonstration and test candidates. The goal is to preserve complete user journeys, not merely endpoint availability.\n' +
+      '\n' +
+      'The catalog covers deployment, actual capacity scaling, n-tier compatibility, user state, and failure recovery across the hosting models in [flavors.md](flavors.md). These are proposed scenarios, not already-validated guarantees or platform SLAs.\n' +
+      '\n' +
+      '## Azure\n' +
+      '\n' +
+      '### Web Apps\n' +
+      '\n' +
+      '  -Deplyment models:\n' +
+      '\n' +
+      '    -Container\n' +
+      '\n' +
+      '    -Code\n' +
+      '\n' +
+      '### Azure Container Apps\n' +
+      '\n' +
+      '### Azure Kubernetes Services\n' +
+      '\n' +
+      '### Azure Function Apps\n' +
+      '\n' +
+      '### Azure Springboot\n' +
+      '\n' +
+      '## Alignment with the background\n' +
+      '\n' +
+      '| Background element | Demonstration implication |\n' +
+      '| --- | --- |\n' +
+      '| Problem Statement: tolerable disruption during a swap approaches zero. | Overlap old and new capacity, control admission, preserve state, and finish or safely transfer work before retirement. |\n' +
+      '| Scope: demonstrate strategies for scaling an n-tier web application without end-user interruptions. | Exercise frontend, API, database, cache, messaging, and worker tiers together; verify complete user journeys rather than isolated tier health. |\n' +
+      '| Goal Statement: swap users across application slots with 99.999% success in achieving zero interruptions. | Measure actual user-transition journeys, including correctness and latency, and report interruptions and uncertainty explicitly. |\n' +
+      '\n' +
+      'Deployment changes, capacity scaling, and failure recovery are separate axes. Moving traffic to another slot does not itself add compute, and scaling one tier can overload another.\n' +
+      '\n' +
+      'For App Service and eligible Functions plans, "slots" means actual deployment slots. For Container Apps and AKS, demonstrate equivalent revision or deployment transitions without pretending those platforms expose App Service slots.\n' +
+      '\n' +
+      'Before each demonstration, declare:\n' +
+      '\n' +
+      '- Hosting model, deployment format, SKU, region, and relevant platform limits.\n' +
+      '- User journeys, protocols, and compatibility requirements.\n' +
+      '- Minimum, normal, and peak load, including overlapping deployment demand.\n' +
+      '- Journey latency budgets and maximum supported request/job durations.\n' +
+      '- Dependency capacity, data freshness, ordering, and transaction guarantees.\n' +
+      '- Supported failure conditions and required surviving capacity.\n' +
+      '- Drain, rollback-retention, and recovery budgets.\n' +
+      '\n' +
+      'An unsupported combination or an outage outside the declared envelope must be reported as a limitation, not counted as a successful uninterrupted transition.\n' +
+      '\n' +
+      '## Key findings\n' +
+      '\n' +
+      '| Finding | Consequence |\n' +
+      '| --- | --- |\n' +
+      "| Deployment slots share the App Service plan's underlying instances. | Adding a slot does not add compute capacity. Reserve overlap headroom or use separate plans where necessary. Per-app placement does not create additional plan capacity. [Source][app-service-plans] |\n" +
+      '| A successful probe alone does not establish readiness. | Validate required dependencies, effective configuration, authentication, compatible state, and journey latency. App Service swap warm-up accepts any HTTP response by default unless acceptable statuses are configured. [Source][app-service-slots] |\n' +
+      '| Native App Service swaps recycle former production workers. | Long-running operations can be abandoned. Retaining the old slot does not prevent this recycling; use suitable draining, durable continuation, or independently controlled deployments. [Source][app-service-slots] |\n' +
+      '| Slot-routing cookies pin clients to a destination. | Configured traffic percentages do not prove every user has moved. Observe actual cohort movement and remaining old-destination traffic. [Source][app-service-slots] |\n' +
+      '| App Service automatic scaling and rule-based autoscale differ. | Select the supported mechanism for the workload. HTTP-based automatic scaling currently does not support deployment-slot traffic. [Source][app-service-scaling] |\n' +
+      '| Functions slot swaps do not guarantee zero downtime. | Executing functions can terminate. Validate execution recovery and consider supported alternative update strategies rather than assuming web-app swap behavior applies. [Source][functions-slots] |\n' +
+      '| Five-nines transition success is not five-nines uptime. | Measure whether affected user journeys complete uninterrupted across transitions, not merely whether an endpoint remains available. |\n' +
+      '\n' +
+      'For native swap warm-up, configure an appropriate `WEBSITE_SWAP_WARMUP_PING_PATH` and explicit `WEBSITE_SWAP_WARMUP_PING_STATUSES`. A successful status must correspond to meaningful readiness; it does not replace representative journey validation.\n' +
+      '\n' +
+      'Zero-percent traffic allocation is not an access-control boundary for a live staging endpoint. Protect candidate environments appropriately, and avoid warm-up or shadow traffic producing real duplicate side effects.\n' +
+      '\n' +
+      'Rollback limits blast radius but cannot erase interruptions already experienced. Likewise, external routing gives additional lifecycle control but does not eliminate possible platform restarts.\n' +
+      '\n' +
+      '## Foundational scenarios\n' +
+      '\n' +
+      'The original two scenarios are retained in intent, with unsafe promotion and immediate termination replaced by explicit safety gates.\n' +
+      '\n' +
+      '### Scenario 1: Warm, overlapping blue-green handoff\n' +
+      '\n' +
+      '```gherkin\n' +
+      'Scenario: Move users to a warmed candidate without abandoning existing work\n' +
+      '    Given an Azure Web App has a live production deployment\n' +
+      '        And the current and candidate deployments are independently routable\n' +
+      '        And sufficient compute and dependency capacity exists for their overlap\n' +
+      '    When a candidate slot or parallel deployment is provisioned\n' +
+      '        And its endpoint and deployment identity are registered as WARMING\n' +
+      '        And required instances, dependencies, configuration, and journeys pass readiness gates\n' +
+      '        And its state is changed to READY\n' +
+      '        And eligible new admissions are routed to the candidate\n' +
+      '    Then migrated journeys preserve authentication, state, correctness, and latency budgets\n' +
+      '        And already-admitted work finishes or continues through a tested durable handoff\n' +
+      '        And actual routing and drain progress are verified\n' +
+      '        And the old deployment remains available for remaining clients and required rollback\n' +
+      '        And retirement occurs only after routing, drain, ownership, and retention gates pass\n' +
+      '```\n' +
+      '\n' +
+      'This scenario uses controlled routing rather than assuming a native slot swap permits application-controlled draining. S002 covers native swaps separately. Creating another slot in the same plan still requires adequate shared capacity.\n' +
+      '\n' +
+      '### Scenario 2: Progressive cohort or A/B routing\n' +
+      '\n' +
+      '```gherkin\n' +
+      'Scenario: Introduce a warmed candidate through stable traffic cohorts\n' +
+      '    Given production and candidate deployments are ready and compatible\n' +
+      '        And session, authentication, and persistent state remain valid across b'... 33901 more characters,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+  Node.js v22.23.4
+
+      at genericNodeError (node:internal/errors:983:15)
+      at wrappedFn (node:internal/errors:537:14)
+      at checkExecSyncError (node:child_process:916:11)
+      at execFileSync (node:child_process:952:15)
+      at TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C007\tests\integrity.test.cjs:30:18)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12) {
+    status: 1,
+    signal: null,
+    output: [ null, '', "node:assert:150\r\n  throw new AssertionError(obj);\r\n  ^\r\n\r\nAssertionError [ERR_ASSERTION]: readme changed; explicitly review and refresh the pin\r\n+ actual - expected\r\n... Skipped lines\r\n\r\n  '# App Scaling Strategies\\n' +\r\n    '\\n' +\r\n    'Introduction...\\n' +\r\n    '\\n' +\r\n    'Implementation work is tracked in the [web demonstration harness backlog](.docs/wiki/backlog.md).\\n' +\r\n...\r\n    '\\n' +\r\n+   '- [Try the local demonstrations](#try-the-local-demonstrations)\\n' +\r\n    '- [Problem Statement](#problem-statement)\\n' +\r\n    '- [Scope](#scope)\\n' +\r\n    '- [Goal Statement](#goal-statement)\\n' +\r\n    '- [Scenarios](#scenarios)\\n' +\r\n    '- [Azure](#azure)\\n' +\r\n...\r\n    '\\n' +\r\n+   '## Try the local demonstrations\\n' +\r\n+   '\\n' +\r\n+   '1. Open the [local scenario catalog](capability/C005/index.html) directly in a browser. It lists all 150 source scenarios and the two guided workflows without a server or Azure account.\\n' +\r\n+   '2. Select an available, accepted portable lesson and conduct its synthetic controls, failure cases, and reset. The catalog explicitly identifies its historical acceptance snapshot; its availability labels are not a live feed.\\n' +\r\n+   '3. Use the [live Kanban and accepted-demo links](.docs/wiki/kanban.md) for newer accepted work, implementation evidence, and native-proof blockers.\\n' +\r\n+   '\\n' +\r\n+   'The [versioned getProfile fixture](capability/C020/README.md) and [isolated lesson host](capability/C041/README.md) have separate bounded, loopback-only launch and cleanup instructions. Their HTTP-backed interfaces cannot be run by simply opening their HTML files. Follow their own instructions rather than exposing the listeners publicly.\\n' +\r\n+   '\\n' +\r\n+   'Local lessons and fixtures use synthetic data. A successful rehearsal, a documented platform capability, and a qualified native Azure result are different evidence levels. These local runs do not establish native support, production Node.js 24 validation, completed source-demo parents, or the five-nines transition goal.\\n' +\r\n+   '\\n' +\r\n+   'The approved scope is design and local implementation only. **IaC generation, identity registration, live Azure execution, deployment, and expenditure remain unapproved.** Node.js 22.23.4 is the validated test-tooling runtime; Node.js 24 LTS with Express on App Service Linux remains the proposed production design.\\n' +\r\n+   '\\n' +\r\n    '## Problem Statement\\n' +\r\n    '\\n' +\r\n    'Scaling Web Applications under a high available operating conditions is challenging as the amount of tolerable disruption due to swap nears 0.\\n' +\r\n    '\\n' +\r\n    '## Scope\\n' +\r\n...\r\n    '\\n' +\r\n+   '### Scenar'... 35540 more characters\r\n-   '### Scenario 1: Warm, overlapping blue-green handoff\\n' +\r\n-   '\\n' +\r\n-   '```gherkin\\n' +\r\n-   'Scenario: Move users to a warmed candidate without abandoning existing work\\n' +\r\n-   '    Given an Azure Web App has a live production deployment\\n' +\r\n-   '        And the current and candidate deployments are independently routable\\n' +\r\n-   '        And sufficient compute and dependency capacity exists for their overlap\\n' +\r\n-   '    When a candidate slot or parallel deployment is provisioned\\n' +\r\n-   '        And its endpoint and deployment identity are registered as WARMING\\n' +\r\n-   '        And required instances, dependencies, configuration, and journeys pass readiness gates\\n' +\r\n-   '        And its state is changed to READY\\n' +\r\n-   '        And eligible new admissions are routed to the candidate\\n' +\r\n-   '    Then migrated journeys preserve authentication, state, correctness, and latency budgets\\n' +\r\n-   '        And already-admitted work finishes or continues through a tested durable handoff\\n' +\r\n-   '        And actual routing and drain progress are verified\\n' +\r\n-   '        And the old deployment remains available for remaining clients and required rollback\\n' +\r\n-   '        And retirement occurs only after routing, drain, ownership, and retention gates pass\\n' +\r\n-   '```\\n' +\r\n-   '\\n' +\r\n-   'This scenario uses controlled routing rather than assuming a native slot swap permits application-controlled draining. S002 covers native swaps separately. Creating another slot in the same plan still requires adequate shared capacity.\\n' +\r\n-   '\\n' +\r\n-   '### Scenario 2: Progressive cohort or A/B routing\\n' +\r\n-   '\\n' +\r\n-   '```gherkin\\n' +\r\n-   'Scenario: Introduce a warmed candidate through stable traffic cohorts\\n' +\r\n-   '    Given production and candidate deployments are ready and compatible\\n' +\r\n-   '        And session, authentication, and persistent state remain valid across b'... 33901 more characters\r\n\r\n    at checkCurrentCanonical (C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C005\\catalog-source.cjs:197:12)\r\n    at Object.<anonymous> (C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C005\\catalog-source.cjs:206:3)\r\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1913:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1309:12)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49 {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: '# App Scaling Strategies\\n' +\r\n    '\\n' +\r\n    'Introduction...\\n' +\r\n    '\\n' +\r\n    'Implementation work is tracked in the [web demonstration harness backlog](.docs/wiki/backlog.md).\\n' +\r\n    '\\n' +\r\n    '## TOC\\n' +\r\n    '\\n' +\r\n    '- [Try the local demonstrations](#try-the-local-demonstrations)\\n' +\r\n    '- [Problem Statement](#problem-statement)\\n' +\r\n    '- [Scope](#scope)\\n' +\r\n    '- [Goal Statement](#goal-statement)\\n' +\r\n    '- [Scenarios](#scenarios)\\n' +\r\n    '- [Azure](#azure)\\n' +\r\n    '  - [Web Apps](#web-apps)\\n' +\r\n    '  - [Azure Container Apps](#azure-container-apps)\\n' +\r\n    '  - [Azure Kubernetes Services](#azure-kubernetes-services)\\n' +\r\n    '  - [Azure Function Apps](#azure-function-apps)\\n' +\r\n    '  - [Azure Springboot](#azure-springboot)\\n' +\r\n    '- [Alignment with the background](#alignment-with-the-background)\\n' +\r\n    '- [Key findings](#key-findings)\\n' +\r\n    '- [Foundational scenarios](#foundational-scenarios)\\n' +\r\n    '  - [Scenario 1: Warm, overlapping blue-green handoff](#scenario-1-warm-overlapping-blue-green-handoff)\\n' +\r\n    '  - [Scenario 2: Progressive cohort or A/B routing](#scenario-2-progressive-cohort-or-ab-routing)\\n' +\r\n    '- [Scenario catalog](#scenario-catalog)\\n' +\r\n    '  - [A. Deployment and traffic migration](#a-deployment-and-traffic-migration-strategies)\\n' +\r\n    '  - [B. Capacity scaling](#b-actual-capacity-scaling-strategies)\\n' +\r\n    '  - [C. Readiness and warm-up](#c-readiness-and-warm-up)\\n' +\r\n    '  - [D. Sessions, authentication, and state](#d-sessions-authentication-and-user-state)\\n' +\r\n    '  - [E. In-flight requests and long-lived work](#e-in-flight-requests-and-long-lived-work)\\n' +\r\n    '  - [F. N-tier and version compatibility](#f-n-tier-and-version-compatibility)\\n' +\r\n    '  - [G. Database and persistent data](#g-database-and-persistent-data-scaling)\\n' +\r\n    '  - [H. Caches, queues, and workers](#h-caches-queues-and-background-workers)\\n' +\r\n    '  - [I. State machine and orchestration](#i-state-machine-and-orchestration-correctness)\\n' +\r\n    '  - [J. Failure containment and rollback](#j-failure-containment-and-rollback)\\n' +\r\n    '  - [K. Networking, configuration, and routing](#k-networking-configuration-and-edge-routing)\\n' +\r\n    '  - [L. Zones, regions, and failure domains](#l-availability-zones-regions-and-failure-domains)\\n' +\r\n    '  - [M. Hosting-model-specific scenarios](#m-hosting-model-specific-scenarios)\\n' +\r\n    '  - [N. Complete end-user journeys](#n-complete-end-user-journeys)\\n' +\r\n    '  - [O. Demonstration and acceptance testing](#o-demonstration-and-acceptance-testing)\\n' +\r\n    '- [Lifecycle and safety gates](#lifecycle-and-safety-gates)\\n' +\r\n    '- [Acceptance and evidence](#acceptance-and-evidence)\\n' +\r\n    '  - [Definition of an interruption](#definition-of-an-interruption)\\n' +\r\n    '  - [Outcome classification](#outcome-classification)\\n' +\r\n    '  - [Five-nines transition metric](#five-nines-transition-metric)\\n' +\r\n    '  - [Statistical evidence](#statistical-evidence)\\n' +\r\n    '  - [Demonstration record](#demonstration-record)\\n' +\r\n    '- [Recommended demonstration sequence](#recommended-demonstration-sequence)\\n' +\r\n    '- [Microsoft Open Source Disclaimer](#microsoft-open-source-disclaimer)\\n' +\r\n    '- [Sources](#sources)\\n' +\r\n    '\\n' +\r\n    '## Try the local demonstrations\\n' +\r\n    '\\n' +\r\n    '1. Open the [local scenario catalog](capability/C005/index.html) directly in a browser. It lists all 150 source scenarios and the two guided workflows without a server or Azure account.\\n' +\r\n    '2. Select an available, accepted portable lesson and conduct its synthetic controls, failure cases, and reset. The catalog explicitly identifies its historical acceptance snapshot; its availability labels are not a live feed.\\n' +\r\n    '3. Use the [live Kanban and accepted-demo links](.docs/wiki/kanban.md) for newer accepted work, implementation evidence, and native-proof blockers.\\n' +\r\n    '\\n' +\r\n    'The [versioned getProfile fixture](capability/C020/README.md) and [isolated lesson host](capability/C041/README.md) have separate bounded, loopback-only launch and cleanup instructions. Their HTTP-backed interfaces cannot be run by simply opening their HTML files. Follow their own instructions rather than exposing the listeners publicly.\\n' +\r\n    '\\n' +\r\n    'Local lessons and fixtures use synthetic data. A successful rehearsal, a documented platform capability, and a qualified native Azure result are different evidence levels. These local runs do not establish native support, production Node"... 18933 more characters ],
+    pid: 60956,
+    stdout: '',
+    stderr: "node:assert:150\r\n  throw new AssertionError(obj);\r\n  ^\r\n\r\nAssertionError [ERR_ASSERTION]: readme changed; explicitly review and refresh the pin\r\n+ actual - expected\r\n... Skipped lines\r\n\r\n  '# App Scaling Strategies\\n' +\r\n    '\\n' +\r\n    'Introduction...\\n' +\r\n    '\\n' +\r\n    'Implementation work is tracked in the [web demonstration harness backlog](.docs/wiki/backlog.md).\\n' +\r\n...\r\n    '\\n' +\r\n+   '- [Try the local demonstrations](#try-the-local-demonstrations)\\n' +\r\n    '- [Problem Statement](#problem-statement)\\n' +\r\n    '- [Scope](#scope)\\n' +\r\n    '- [Goal Statement](#goal-statement)\\n' +\r\n    '- [Scenarios](#scenarios)\\n' +\r\n    '- [Azure](#azure)\\n' +\r\n...\r\n    '\\n' +\r\n+   '## Try the local demonstrations\\n' +\r\n+   '\\n' +\r\n+   '1. Open the [local scenario catalog](capability/C005/index.html) directly in a browser. It lists all 150 source scenarios and the two guided workflows without a server or Azure account.\\n' +\r\n+   '2. Select an available, accepted portable lesson and conduct its synthetic controls, failure cases, and reset. The catalog explicitly identifies its historical acceptance snapshot; its availability labels are not a live feed.\\n' +\r\n+   '3. Use the [live Kanban and accepted-demo links](.docs/wiki/kanban.md) for newer accepted work, implementation evidence, and native-proof blockers.\\n' +\r\n+   '\\n' +\r\n+   'The [versioned getProfile fixture](capability/C020/README.md) and [isolated lesson host](capability/C041/README.md) have separate bounded, loopback-only launch and cleanup instructions. Their HTTP-backed interfaces cannot be run by simply opening their HTML files. Follow their own instructions rather than exposing the listeners publicly.\\n' +\r\n+   '\\n' +\r\n+   'Local lessons and fixtures use synthetic data. A successful rehearsal, a documented platform capability, and a qualified native Azure result are different evidence levels. These local runs do not establish native support, production Node.js 24 validation, completed source-demo parents, or the five-nines transition goal.\\n' +\r\n+   '\\n' +\r\n+   'The approved scope is design and local implementation only. **IaC generation, identity registration, live Azure execution, deployment, and expenditure remain unapproved.** Node.js 22.23.4 is the validated test-tooling runtime; Node.js 24 LTS with Express on App Service Linux remains the proposed production design.\\n' +\r\n+   '\\n' +\r\n    '## Problem Statement\\n' +\r\n    '\\n' +\r\n    'Scaling Web Applications under a high available operating conditions is challenging as the amount of tolerable disruption due to swap nears 0.\\n' +\r\n    '\\n' +\r\n    '## Scope\\n' +\r\n...\r\n    '\\n' +\r\n+   '### Scenar'... 35540 more characters\r\n-   '### Scenario 1: Warm, overlapping blue-green handoff\\n' +\r\n-   '\\n' +\r\n-   '```gherkin\\n' +\r\n-   'Scenario: Move users to a warmed candidate without abandoning existing work\\n' +\r\n-   '    Given an Azure Web App has a live production deployment\\n' +\r\n-   '        And the current and candidate deployments are independently routable\\n' +\r\n-   '        And sufficient compute and dependency capacity exists for their overlap\\n' +\r\n-   '    When a candidate slot or parallel deployment is provisioned\\n' +\r\n-   '        And its endpoint and deployment identity are registered as WARMING\\n' +\r\n-   '        And required instances, dependencies, configuration, and journeys pass readiness gates\\n' +\r\n-   '        And its state is changed to READY\\n' +\r\n-   '        And eligible new admissions are routed to the candidate\\n' +\r\n-   '    Then migrated journeys preserve authentication, state, correctness, and latency budgets\\n' +\r\n-   '        And already-admitted work finishes or continues through a tested durable handoff\\n' +\r\n-   '        And actual routing and drain progress are verified\\n' +\r\n-   '        And the old deployment remains available for remaining clients and required rollback\\n' +\r\n-   '        And retirement occurs only after routing, drain, ownership, and retention gates pass\\n' +\r\n-   '```\\n' +\r\n-   '\\n' +\r\n-   'This scenario uses controlled routing rather than assuming a native slot swap permits application-controlled draining. S002 covers native swaps separately. Creating another slot in the same plan still requires adequate shared capacity.\\n' +\r\n-   '\\n' +\r\n-   '### Scenario 2: Progressive cohort or A/B routing\\n' +\r\n-   '\\n' +\r\n-   '```gherkin\\n' +\r\n-   'Scenario: Introduce a warmed candidate through stable traffic cohorts\\n' +\r\n-   '    Given production and candidate deployments are ready and compatible\\n' +\r\n-   '        And session, authentication, and persistent state remain valid across b'... 33901 more characters\r\n\r\n    at checkCurrentCanonical (C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C005\\catalog-source.cjs:197:12)\r\n    at Object.<anonymous> (C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C005\\catalog-source.cjs:206:3)\r\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1913:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1309:12)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49 {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: '# App Scaling Strategies\\n' +\r\n    '\\n' +\r\n    'Introduction...\\n' +\r\n    '\\n' +\r\n    'Implementation work is tracked in the [web demonstration harness backlog](.docs/wiki/backlog.md).\\n' +\r\n    '\\n' +\r\n    '## TOC\\n' +\r\n    '\\n' +\r\n    '- [Try the local demonstrations](#try-the-local-demonstrations)\\n' +\r\n    '- [Problem Statement](#problem-statement)\\n' +\r\n    '- [Scope](#scope)\\n' +\r\n    '- [Goal Statement](#goal-statement)\\n' +\r\n    '- [Scenarios](#scenarios)\\n' +\r\n    '- [Azure](#azure)\\n' +\r\n    '  - [Web Apps](#web-apps)\\n' +\r\n    '  - [Azure Container Apps](#azure-container-apps)\\n' +\r\n    '  - [Azure Kubernetes Services](#azure-kubernetes-services)\\n' +\r\n    '  - [Azure Function Apps](#azure-function-apps)\\n' +\r\n    '  - [Azure Springboot](#azure-springboot)\\n' +\r\n    '- [Alignment with the background](#alignment-with-the-background)\\n' +\r\n    '- [Key findings](#key-findings)\\n' +\r\n    '- [Foundational scenarios](#foundational-scenarios)\\n' +\r\n    '  - [Scenario 1: Warm, overlapping blue-green handoff](#scenario-1-warm-overlapping-blue-green-handoff)\\n' +\r\n    '  - [Scenario 2: Progressive cohort or A/B routing](#scenario-2-progressive-cohort-or-ab-routing)\\n' +\r\n    '- [Scenario catalog](#scenario-catalog)\\n' +\r\n    '  - [A. Deployment and traffic migration](#a-deployment-and-traffic-migration-strategies)\\n' +\r\n    '  - [B. Capacity scaling](#b-actual-capacity-scaling-strategies)\\n' +\r\n    '  - [C. Readiness and warm-up](#c-readiness-and-warm-up)\\n' +\r\n    '  - [D. Sessions, authentication, and state](#d-sessions-authentication-and-user-state)\\n' +\r\n    '  - [E. In-flight requests and long-lived work](#e-in-flight-requests-and-long-lived-work)\\n' +\r\n    '  - [F. N-tier and version compatibility](#f-n-tier-and-version-compatibility)\\n' +\r\n    '  - [G. Database and persistent data](#g-database-and-persistent-data-scaling)\\n' +\r\n    '  - [H. Caches, queues, and workers](#h-caches-queues-and-background-workers)\\n' +\r\n    '  - [I. State machine and orchestration](#i-state-machine-and-orchestration-correctness)\\n' +\r\n    '  - [J. Failure containment and rollback](#j-failure-containment-and-rollback)\\n' +\r\n    '  - [K. Networking, configuration, and routing](#k-networking-configuration-and-edge-routing)\\n' +\r\n    '  - [L. Zones, regions, and failure domains](#l-availability-zones-regions-and-failure-domains)\\n' +\r\n    '  - [M. Hosting-model-specific scenarios](#m-hosting-model-specific-scenarios)\\n' +\r\n    '  - [N. Complete end-user journeys](#n-complete-end-user-journeys)\\n' +\r\n    '  - [O. Demonstration and acceptance testing](#o-demonstration-and-acceptance-testing)\\n' +\r\n    '- [Lifecycle and safety gates](#lifecycle-and-safety-gates)\\n' +\r\n    '- [Acceptance and evidence](#acceptance-and-evidence)\\n' +\r\n    '  - [Definition of an interruption](#definition-of-an-interruption)\\n' +\r\n    '  - [Outcome classification](#outcome-classification)\\n' +\r\n    '  - [Five-nines transition metric](#five-nines-transition-metric)\\n' +\r\n    '  - [Statistical evidence](#statistical-evidence)\\n' +\r\n    '  - [Demonstration record](#demonstration-record)\\n' +\r\n    '- [Recommended demonstration sequence](#recommended-demonstration-sequence)\\n' +\r\n    '- [Microsoft Open Source Disclaimer](#microsoft-open-source-disclaimer)\\n' +\r\n    '- [Sources](#sources)\\n' +\r\n    '\\n' +\r\n    '## Try the local demonstrations\\n' +\r\n    '\\n' +\r\n    '1. Open the [local scenario catalog](capability/C005/index.html) directly in a browser. It lists all 150 source scenarios and the two guided workflows without a server or Azure account.\\n' +\r\n    '2. Select an available, accepted portable lesson and conduct its synthetic controls, failure cases, and reset. The catalog explicitly identifies its historical acceptance snapshot; its availability labels are not a live feed.\\n' +\r\n    '3. Use the [live Kanban and accepted-demo links](.docs/wiki/kanban.md) for newer accepted work, implementation evidence, and native-proof blockers.\\n' +\r\n    '\\n' +\r\n    'The [versioned getProfile fixture](capability/C020/README.md) and [isolated lesson host](capability/C041/README.md) have separate bounded, loopback-only launch and cleanup instructions. Their HTTP-backed interfaces cannot be run by simply opening their HTML files. Follow their own instructions rather than exposing the listeners publicly.\\n' +\r\n    '\\n' +\r\n    'Local lessons and fixtures use synthetic data. A successful rehearsal, a documented platform capability, and a qualified native Azure result are different evidence levels. These local runs do not establish native support, production Node"... 18933 more characters
+  }
