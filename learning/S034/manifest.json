@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "id": "A-S034",
+  "sourceId": "S034",
+  "parentId": "D-S034",
+  "kano": "S",
+  "kanoUnit": "A-S034",
+  "packet": "SC-S034",
+  "owner": "worker-A-S034",
+  "title": "Authentication-key continuity",
+  "mode": "synthetic",
+  "entry": "index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Compare overlapping validation-key labels with incompatible v1/v2 rotation for existing cookie and token fixtures; never relabel authentication failures as successful migration.",
+  "preconditions": [
+    "A modern browser with JavaScript; open index.html directly, with no server or account.",
+    "Public, non-secret fixture-old and fixture-next labels stand in for keys; validation is a deterministic lookup, not real authentication.",
+    "Each synthetic profile contributes two valid-credential journeys: old from v1 to v2 and next from v2 to v1."
+  ],
+  "actions": [
+    "Select cookie or token, overlap or incompatible rotation, 1 to 8 profiles, and complete or one missing observation.",
+    "Rehearse; inspect accepted, rejected and unknown counts, both version policies, tamper probes, verifier and migration verdict separately.",
+    "Compare another run or reset controls while retaining all recorded history."
+  ],
+  "fixture": {
+    "version": "s034-label-oracle-v1",
+    "keyLabels": ["fixture-old", "fixture-next"],
+    "credentialKinds": ["cookie", "token"],
+    "rotationModes": ["overlap", "drop-old"],
+    "observations": ["complete", "missing"]
+  },
+  "bounds": {
+    "profiles": [1, 8],
+    "journeysPerProfile": 2,
+    "maxJourneysPerRun": 16,
+    "maxHistory": 8,
+    "missingObservations": 1,
+    "networkCalls": 0
+  },
+  "assertions": [
+    "Compatible overlap accepts all observed valid cross-version credentials.",
+    "Incompatible policies reject valid cross-version credentials and migration remains failure even when the expected-negative verifier passes.",
+    "Missing replies stay unknown and in the attempted-journey denominator; observed failure takes precedence.",
+    "Tampered fixtures are rejected on both versions in both modes.",
+    "Invalid input or a ninth run cannot mutate history; reset preserves all prior failures and unknowns."
+  ],
+  "limits": [
+    "No real cookies, bearer tokens, signatures, key material, credentials or identity registrations.",
+    "No Azure management calls, IaC, cloud resources, deployments or expenditure.",
+    "No real authentication, native platform, source-parent completion, production Node.js 24 or availability certification.",
+    "History is in-memory for this page session only; reload starts a new session.",
+    "No wall-clock timing, token expiry, key propagation, issuer/audience negotiation or production rotation policy is modeled.",
+    "Node.js 22.23.4, offline Playwright 1.56.1 and installed signed Edge are test tooling only."
+  ],
+  "iac": "not-applicable",
+  "acceptance": "Parent-owned empirical review required; no self-awarded Done credit."
+}

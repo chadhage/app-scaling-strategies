@@ -1,0 +1,120 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
+
+const root = path.resolve(__dirname, '..', '..');
+const evidence = path.join(__dirname, 'evidence');
+const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const read = (file) => fs.readFileSync(path.join(root, file));
+const git = (...args) => {
+  const result = spawnSync('git', ['--no-pager', ...args], { cwd: root, encoding: 'utf8' });
+  if (result.status !== 0) throw new Error(result.stderr || `git failed: ${args.join(' ')}`);
+  return result.stdout.trim();
+};
+
+function nextName(stage) {
+  fs.mkdirSync(evidence, { recursive: true });
+  for (let index = 1; index < 1000; index += 1) {
+    const name = `${stage}-${String(index).padStart(3, '0')}`;
+    if (!fs.existsSync(path.join(evidence, `${name}.json`))) return name;
+  }
+  throw new Error('Evidence capture limit reached');
+}
+
+function write(name, value) {
+  fs.writeFileSync(path.join(evidence, name), value, { flag: 'wx' });
+}
+
+const stage = process.argv[2];
+if (stage === 'contract') {
+  const source = read('README.md').toString('utf8');
+  const backlog = read('.docs\\wiki\\backlog.md').toString('utf8');
+  const kanban = read('.docs\\wiki\\kanban.md').toString('utf8');
+  const inventory = JSON.parse(read('.git\\kanban-orchestrator\\inventory.json'));
+  const ledger = JSON.parse(read('.docs\\wiki\\flow-state.json'));
+  const card = inventory.cards.find((entry) => entry.id === 'A-S034');
+  const claim = ledger.cards.find((entry) => entry.id === 'A-S034');
+  if (claim.owner !== 'worker-A-S034' || claim.state !== 'In Progress') throw new Error('Claim required');
+  const name = nextName('source-contract');
+  const files = ['README.md', '.docs\\wiki\\backlog.md', '.docs\\wiki\\kanban.md',
+    'testing\\browser\\isolated.cjs', 'learning\\S034\\authentication-key-continuity.feature',
+    'learning\\S034\\manifest.json'];
+  write(`${name}.json`, `${JSON.stringify({
+    cardId: 'A-S034', workerId: 'worker-A-S034', packet: 'SC-S034',
+    capturedAtUtc: new Date().toISOString(), repositoryHead: git('rev-parse', 'HEAD'),
+    source: source.split(/\r?\n/).find((line) => line.startsWith('| S034 |')),
+    backlog: backlog.split(/\r?\n/).find((line) => line.startsWith('| D-S034 |')),
+    atomicCard: kanban.split(/\r?\n/).find((line) => line.startsWith('| A-S034 |')),
+    portableContract: kanban.slice(kanban.indexOf('### Portable A-card lesson contract'),
+      kanban.indexOf('## Concurrent pull and one-piece flow')),
+    card, claim,
+    packetNote: 'SC-S034 is the atomic A/B scenario packet identifier, not a delighter companion packet.',
+    files: files.map((file) => ({ path: file, sha256: hash(read(file)), lastCommit: git('log', '-1', '--format=%H', '--', file) || null })),
+  }, null, 2)}\n`);
+  console.log(name);
+} else if (stage === 'iac') {
+  const name = nextName('iac-n-a');
+  write(`${name}.json`, `${JSON.stringify({
+    cardId: 'A-S034', workerId: 'worker-A-S034', recordedAtUtc: new Date().toISOString(),
+    applicable: false, outcome: 'not-applicable',
+    reason: 'Resource-free local HTML/JavaScript label-oracle lesson; no cloud, IaC, identity registration, deployment, expenditure or packages.',
+    precedingRed: 'red-001.json',
+  }, null, 2)}\n`);
+  console.log(name);
+} else {
+  const stages = {
+    red: ['--test', 'learning\\S034\\tests\\model.test.cjs'],
+    green: ['--test', 'learning\\S034\\tests\\model.test.cjs'],
+    syntax: ['--test', 'learning\\S034\\tests\\syntax.test.cjs'],
+    integrity: ['--test', 'learning\\S034\\tests\\integrity.test.cjs'],
+    browser: ['--test', 'learning\\S034\\tests\\browser.test.cjs'],
+    'read-only-rerun': ['learning\\S034\\verify.cjs'],
+  };
+  const args = stages[stage];
+  if (!args) throw new Error('Expected contract, red, iac, green, syntax, integrity, browser or read-only-rerun');
+  if (stage === 'browser' && process.env.CAPTURE_BROWSER_EVIDENCE !== '1') {
+    throw new Error('Browser proof capture requires deliberate CAPTURE_BROWSER_EVIDENCE=1');
+  }
+  const name = nextName(stage);
+  const inputs = [
+    'authentication-key-continuity.feature', 'manifest.json', 'rotation.js', 'index.html',
+    'app.js', 'styles.css', 'tests\\model.test.cjs', 'tests\\browser.test.cjs',
+    'tests\\integrity.test.cjs', 'tests\\syntax.test.cjs', 'tests\\proof.cjs',
+    'verify.cjs', 'capture.cjs', 'README.md', 'evidence.json', '.gitattributes',
+  ].filter((file) => fs.existsSync(path.join(__dirname, file)));
+  const sources = inputs.map((file) => {
+    const bytes = fs.readFileSync(path.join(__dirname, file));
+    if (stage === 'red') write(`red-${file.replaceAll('\\', '-')}.snapshot.txt`, bytes);
+    return { path: file, sha256: hash(bytes) };
+  });
+  const proofBefore = stage === 'read-only-rerun' ? require('.\\tests\\proof.cjs').proofSnapshot() : null;
+  const startedAtUtc = new Date().toISOString();
+  const result = spawnSync(process.execPath, args, {
+    cwd: root, encoding: 'utf8', timeout: 180000,
+    env: { ...process.env, S034_CAPTURE_NAME: name },
+  });
+  const stdout = result.stdout || '';
+  const stderr = result.stderr || '';
+  const proofAfter = stage === 'read-only-rerun' ? require('.\\tests\\proof.cjs').proofSnapshot() : null;
+  const proofUnchanged = proofBefore ? JSON.stringify(proofBefore) === JSON.stringify(proofAfter) : null;
+  write(`${name}.stdout.txt`, stdout);
+  write(`${name}.stderr.txt`, stderr);
+  write(`${name}.json`, `${JSON.stringify({
+    cardId: 'A-S034', workerId: 'worker-A-S034', stage, startedAtUtc,
+    completedAtUtc: new Date().toISOString(), repositoryHead: git('rev-parse', 'HEAD'),
+    command: [process.execPath, ...args], node: process.version,
+    exitCode: result.status, signal: result.signal, error: result.error?.message || null,
+    stdout: `${name}.stdout.txt`, stderr: `${name}.stderr.txt`,
+    stdoutSha256: hash(stdout), stderrSha256: hash(stderr), sources,
+    browserEvidenceCapture: process.env.CAPTURE_BROWSER_EVIDENCE === '1',
+    proofBefore, proofAfter, proofUnchanged,
+    observation: fs.existsSync(path.join(evidence, `${name}.observation.json`)) ? `${name}.observation.json` : null,
+  }, null, 2)}\n`);
+  process.stdout.write(stdout);
+  process.stderr.write(stderr);
+  console.log(`Captured ${name}; actual exit ${result.status}`);
+  process.exitCode = proofUnchanged === false ? 1 : result.status ?? 1;
+}

@@ -1,0 +1,22 @@
+'use strict';
+
+(function expose(root) {
+  const DEFAULTS = Object.freeze({
+    credential: 'cookie', rotation: 'overlap', profiles: 2, observation: 'complete',
+  });
+
+  function compare(config) {
+    return {
+      configuration: { ...config },
+      counts: { attempted: config.profiles * 2, accepted: 0, rejected: 0, unknown: config.profiles * 2 },
+      migration: 'unknown',
+      verifier: 'unverified',
+      tamperRejected: false,
+      trace: [],
+    };
+  }
+
+  const api = Object.freeze({ DEFAULTS, compare });
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.KeyContinuity = api;
+}(typeof globalThis === 'object' ? globalThis : this));

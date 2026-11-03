@@ -1,0 +1,12 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { DEFAULTS, compare } = require('..\\rotation.js');
+
+test('compatible v1/v2 key overlap preserves every existing cookie journey', () => {
+  const result = compare({ ...DEFAULTS });
+  assert.equal(result.migration, 'success', 'compatible key overlap must preserve authentication across v1/v2');
+  assert.deepEqual(result.counts, { attempted: 4, accepted: 4, rejected: 0, unknown: 0 });
+  assert.equal(result.tamperRejected, true);
+});

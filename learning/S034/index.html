@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S034 — Authentication-key continuity</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="rotation.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to operator controls</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S034 — Authentication-key continuity</h1>
+    <p>Keep existing cookie/token validation compatible while v1 and v2 overlap during planned rotation.
+      An expected authentication failure is still a failed migration, not a successful user transition.</p>
+  </header>
+  <main>
+    <section aria-labelledby="how-heading">
+      <h2 id="how-heading">What this rehearsal measures</h2>
+      <ol>
+        <li>v1 issues public label <code>fixture-old</code>; v2 issues <code>fixture-next</code>.
+          These are labels, not cryptographic keys or real credentials.</li>
+        <li>Each synthetic profile attempts two valid-credential journeys:
+          old from v1 to v2, then next from v2 to v1. Overlap lets both versions validate both labels.</li>
+        <li>Compare overlap with incompatible policies: v1 accepts only old, v2 accepts only next.
+          Both must still reject tampered fixtures. Missing replies remain unknown.</li>
+      </ol>
+      <p>The denominator is <strong>all attempted cross-version journeys</strong>, including failures and unknowns.
+        Baseline and tamper guard probes are separate, not successful migrations.</p>
+    </section>
+    <section aria-labelledby="controls">
+      <h2 id="controls">Operator controls</h2>
+      <form id="rotation-form" novalidate>
+        <div class="controls">
+          <label for="credential">Credential fixture
+            <select id="credential" name="credential">
+              <option value="cookie">Cookie</option>
+              <option value="token">Token</option>
+            </select>
+          </label>
+          <label for="rotation">Validation-key policy
+            <select id="rotation" name="rotation">
+              <option value="overlap">Compatible: overlapping key labels</option>
+              <option value="drop-old">Incompatible: no cross-version overlap</option>
+            </select>
+          </label>
+          <label for="profiles">Profiles per direction (1–8)
+            <input id="profiles" name="profiles" type="text" inputmode="numeric" value="2" maxlength="2" aria-describedby="profile-help">
+          </label>
+          <label for="observation">Observed replies
+            <select id="observation" name="observation">
+              <option value="complete">Complete</option>
+              <option value="missing">One missing reply</option>
+            </select>
+          </label>
+        </div>
+        <p id="profile-help">Use one digit from 1 to 8; maximum 16 measured journeys per run.
+          A missing reply masks only the final v2 → v1 observation, never every known rejection.</p>
+        <div class="actions">
+          <button id="run" type="submit">Rehearse rotation</button>
+          <button id="reset-controls" type="button">Reset controls, retain history</button>
+        </div>
+        <p id="capacity">0 of 8 runs recorded.</p>
+        <p id="error" role="alert" tabindex="-1" hidden></p>
+      </form>
+    </section>
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading" tabindex="-1">Current result</h2>
+      <p id="summary" role="status">No current result. Choose controls and rehearse.</p>
+      <div id="result"></div>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained run history</h2>
+      <p>All runs, including failures and unknowns, remain here after reset. Limit: eight runs.
+        Reload starts a new page session; this is not durable hosting.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Recorded cross-version journeys; guard probes excluded</caption>
+          <thead><tr><th scope="col">Run</th><th scope="col">Configuration</th><th scope="col">Migration</th><th scope="col">Verifier</th><th scope="col">Attempted</th><th scope="col">Accepted</th><th scope="col">Rejected</th><th scope="col">Unknown</th></tr></thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits and safe interpretation</h2>
+      <p>This deterministic label lookup does not implement authentication or make cookies, bearer tokens,
+        signatures, identities or network calls. Cookie and token controls select fixture types, not protocols.</p>
+      <p>No token lifetime, propagation delay, real key storage, issuer/audience negotiation, Azure host,
+        deployment, cloud expenditure, Node.js 24 production support or source-parent completion is certified.</p>
+      <p>Production rotation needs separately qualified platform behavior and policy.
+        This demonstration is not a Microsoft SLA.
+        <a href="../../README.md#microsoft-open-source-disclaimer">Source disclaimer</a> ·
+        <a href="README.md">Lesson instructions and evidence</a></p>
+    </section>
+    <noscript>This exercise requires JavaScript. No runs or success claims are produced without it.</noscript>
+  </main>
+</body>
+</html>
