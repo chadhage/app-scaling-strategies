@@ -1,0 +1,152 @@
+{
+  "cardId": "A-S103",
+  "sourceId": "S103",
+  "parentId": "D-S103",
+  "packet": "SC-S103",
+  "owner": "worker-A-S103",
+  "outcome": "passed",
+  "mode": "synthetic",
+  "browserVersion": "156.0.4314.50",
+  "playwrightVersion": "1.56.1",
+  "nodeVersion": "v22.23.4",
+  "helperSHA256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "helperPublication": "53c0c0d",
+  "observations": [
+    {
+      "name": "initial truthful banner, unmeasured state and ready native controls",
+      "outcome": "passed",
+      "detail": {
+        "banner": "Training rehearsal - synthetic data - not a live Azure result",
+        "admitted": "old (synthetic only)",
+        "rows": 0
+      }
+    },
+    {
+      "name": "keyboard selects API hostname, rehearses four passes and admits candidate",
+      "outcome": "passed",
+      "detail": {
+        "selection": "Attempt 1: api.example.test / both-hosts / supported.",
+        "rows": [
+          "oldbrowserpasspasspasspasspass",
+          "oldservicepasspasspasspasspass",
+          "candidatebrowserpasspasspasspasspass",
+          "candidateservicepasspasspasspasspass"
+        ],
+        "gate": "Gate verifier pass; admission admitted. Every eligible destination/client check passed."
+      }
+    },
+    {
+      "name": "hostname mismatch rejects eligible candidate while old is retained",
+      "outcome": "passed",
+      "detail": {
+        "rows": [
+          "oldbrowserpasspasspasspasspass",
+          "oldservicepasspasspasspasspass",
+          "candidatebrowserfailpasspasspassfail",
+          "candidateservicefailpasspasspassfail"
+        ],
+        "gate": "Gate verifier pass; admission blocked. Candidate rejected: synthetic client outcome fail; old remains admitted.",
+        "cumulative": "6 pass / 2 fail / 0 unknown = 8 synthetic client observations."
+      }
+    },
+    {
+      "name": "TLS incompatibility cannot borrow the passing browser/client result",
+      "outcome": "passed",
+      "detail": {
+        "rows": [
+          "oldbrowserpasspasspasspasspass",
+          "oldservicepasspasspasspasspass",
+          "candidatebrowserpasspasspasspasspass",
+          "candidateservicepasspasspassfailfail"
+        ],
+        "gate": "Gate verifier pass; admission blocked. Candidate rejected: synthetic client outcome fail; old remains admitted."
+      }
+    },
+    {
+      "name": "unknown service trust remains counted and gated",
+      "outcome": "passed",
+      "detail": {
+        "rows": [
+          "oldbrowserpasspasspasspasspass",
+          "oldservicepasspasspasspasspass",
+          "candidatebrowserpasspasspasspasspass",
+          "candidateservicepassunknownpasspassunknown"
+        ],
+        "gate": "Gate verifier pass; admission blocked. Candidate rejected: synthetic client outcome unknown; old remains admitted."
+      }
+    },
+    {
+      "name": "unobserved TLS is not a synthetic continuity success",
+      "outcome": "passed",
+      "detail": {
+        "rows": [
+          "oldbrowserpasspasspasspasspass",
+          "oldservicepasspasspasspasspass",
+          "candidatebrowserpasspasspasspasspass",
+          "candidateservicepasspasspassunknownunknown"
+        ],
+        "cumulative": "15 pass / 3 fail / 2 unknown = 20 synthetic client observations."
+      }
+    },
+    {
+      "name": "duplicate/malformed/unmeasured errors and keyboard reset preserve history",
+      "outcome": "passed",
+      "detail": {
+        "malformedError": "Input rejected: Choose a fixed certificateId; arbitrary values are not accepted. Last valid state and history are retained.",
+        "unmeasuredError": "Input rejected: Rehearse checks before requesting admission. Last valid state and history are retained.",
+        "retainedAttempts": 5,
+        "cumulative": "15 pass / 3 fail / 2 unknown = 20 synthetic client observations.",
+        "resetFocus": "hostnameId"
+      }
+    },
+    {
+      "name": "six-attempt bound and reset cannot erase failed/unknown denominator",
+      "outcome": "passed",
+      "detail": {
+        "history": [
+          "Attempt 1: api.example.test / both-hosts / supported: 4 pass, 0 fail, 0 unknown; client outcome pass; admission admitted, gate verifier pass.",
+          "Attempt 2: api.example.test / app-only / supported: 2 pass, 2 fail, 0 unknown; client outcome fail; admission blocked, gate verifier pass.",
+          "Attempt 3: api.example.test / both-hosts / incompatible: 3 pass, 1 fail, 0 unknown; client outcome fail; admission blocked, gate verifier pass.",
+          "Attempt 4: api.example.test / trust-unknown / supported: 3 pass, 0 fail, 1 unknown; client outcome unknown; admission blocked, gate verifier pass.",
+          "Attempt 5: api.example.test / both-hosts / unobserved: 3 pass, 0 fail, 1 unknown; client outcome unknown; admission blocked, gate verifier pass.",
+          "Attempt 6: app.example.test / both-hosts / supported: 4 pass, 0 fail, 0 unknown; client outcome pass; admission admitted, gate verifier pass."
+        ],
+        "cumulative": "19 pass / 3 fail / 2 unknown = 24 synthetic client observations.",
+        "allowance": "6 of 6 measured attempts used."
+      }
+    },
+    {
+      "name": "real CSP enforcement rejects inline script and data connection without external traffic",
+      "outcome": "passed",
+      "detail": {
+        "inlineExecuted": false,
+        "connection": "blocked",
+        "violations": [
+          {
+            "directive": "script-src-elem",
+            "blockedURI": "inline"
+          },
+          {
+            "directive": "connect-src",
+            "blockedURI": "data"
+          }
+        ]
+      }
+    },
+    {
+      "name": "actual unavailable-model startup failure leaves controls disabled and no verified result",
+      "outcome": "passed",
+      "detail": {
+        "injection": "model unavailable before startup; not a real endpoint/TLS failure",
+        "error": "Lesson could not start. Reload the local files; no result is verified.",
+        "disabled": true,
+        "rows": 0
+      }
+    }
+  ],
+  "pageErrors": [],
+  "externalRequests": [],
+  "cleanup": "Awaited session.close() in finally completed for this run; broader unattended lifecycle remains unqualified.",
+  "limits": "Actual browser observations of fixed teaching data only; no real certificates, trust/TLS/DNS/endpoint changes, native Azure, production Node 24, or source-parent acceptance.",
+  "capturedAtUtc": "2026-11-03T22:37:50.344Z"
+}

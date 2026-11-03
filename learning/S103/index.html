@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>S103 — Synthetic certificate/hostname continuity</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+<main>
+  <p id="trainingBanner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+  <h1>S103: Certificate/hostname continuity</h1>
+  <p>A-S103 · D-S103 · SC-S103 · one frozen S unit. Every eligible destination must satisfy the required hostname and both client trust profiles.</p>
+  <p><strong>Fixed teaching DATA ONLY:</strong> no actual certificates, keys, trust/TLS/system/DNS changes, endpoints, or client probes. The “certificate” names below are synthetic labels, not certificate files.</p>
+  <noscript><p class="error">JavaScript is required for this local rehearsal. No outcome is verified without the lesson scripts.</p></noscript>
+  <p id="error" class="error" role="alert" tabindex="-1">Lesson scripts have not loaded. No outcome is verified; reload the local files if this message remains.</p>
+  <form id="lessonForm">
+    <fieldset id="controls" disabled>
+      <legend>Select a fixed teaching combination</legend>
+      <label for="hostnameId">Required hostname</label>
+      <select id="hostnameId" name="hostnameId">
+        <option value="app">app.example.test</option>
+        <option value="api">api.example.test</option>
+      </select>
+      <label for="certificateId">Candidate certificate label</label>
+      <select id="certificateId" name="certificateId">
+        <option value="both-hosts">Both hostnames / trusted / valid</option>
+        <option value="app-only">App hostname only / trusted / valid</option>
+        <option value="wrong-host">Wrong hostname / trusted / valid</option>
+        <option value="untrusted">Both hostnames / untrusted / valid</option>
+        <option value="expired">Both hostnames / trusted / expired</option>
+        <option value="trust-unknown">Both hostnames / service trust unknown</option>
+      </select>
+      <label for="inventoryId">Fixed destination inventory</label>
+      <select id="inventoryId" name="inventoryId">
+        <option value="supported">Candidate TLS supported by both clients</option>
+        <option value="incompatible">Candidate service-client TLS incompatible</option>
+        <option value="unobserved">Candidate service-client TLS unobserved</option>
+      </select>
+      <div class="actions">
+        <button id="rehearse" type="submit">Rehearse checks</button>
+        <button id="checkAdmission" type="button">Check candidate admission</button>
+        <button id="resetCurrent" type="button">Reset current controls</button>
+      </div>
+    </fieldset>
+  </form>
+  <p id="status" role="status" aria-live="polite">Unmeasured. Only old is admitted.</p>
+  <section aria-labelledby="currentHeading">
+    <h2 id="currentHeading">Measured combination and gate</h2>
+    <p id="measuredSelection">No measured combination.</p>
+    <p><strong>Admitted:</strong> <output id="admitted">old (synthetic only)</output></p>
+    <p id="activeResult">Unmeasured — no candidate approval.</p>
+    <p id="gateResult">Admission not checked.</p>
+    <div class="table-scroll">
+      <table>
+        <caption>Fixed synthetic observations — every eligible destination × required client</caption>
+        <thead><tr><th scope="col">Destination</th><th scope="col">Client</th><th scope="col">Hostname</th><th scope="col">Trust</th><th scope="col">Validity</th><th scope="col">TLS</th><th scope="col">Outcome</th></tr></thead>
+        <tbody id="measurements"></tbody>
+      </table>
+    </div>
+    <p id="excluded">Parked is fixed ineligible; it is not a success observation.</p>
+  </section>
+  <section aria-labelledby="historyHeading">
+    <h2 id="historyHeading">Retained rehearsal history</h2>
+    <p id="cumulative">0 pass / 0 fail / 0 unknown = 0 synthetic client observations.</p>
+    <p id="allowance">0 of 6 measured attempts used.</p>
+    <p>Reset clears only current selection/approval, not history or allowance. Reload starts a separate new rehearsal. A correct rejection passes the gate verifier, not failed or unknown client checks.</p>
+    <ol id="history"></ol>
+  </section>
+  <details>
+    <summary>Inspect fixed teaching inventory and certificate data</summary>
+    <p>Eligibility, hostname coverage, trust, validity, and TLS values cannot be edited. Old always uses the trusted both-hostnames baseline label.</p>
+    <pre id="teachingData"></pre>
+  </details>
+  <p><strong>Limits:</strong> No real client trust, TLS continuity, native Azure, production Node 24, B-S103, D-S103, or P006 acceptance is established. IaC N/A; this is local learning only.</p>
+</main>
+</body>
+</html>
