@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S047 — gRPC application continuation rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="stream.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S047: Continue the application, not the original gRPC stream</h1>
+    <p>Infrastructure closes the original stream at cutover. Use the application's last acknowledged result to request the next result on a new stream. Compare a <strong>synthetic native-shaped gRPC receipt</strong> with a separate <strong>browser-proxy observation</strong>.</p>
+    <p>Neither observation is a real protocol exchange. Ordinary HTTP 200, successful proxy output, and this lesson cannot prove native HTTP/2/gRPC continuation.</p>
+
+    <section aria-labelledby="instructions-title">
+      <h2 id="instructions-title">Conduct the bounded exercise</h2>
+      <ol>
+        <li>Choose how many results v1 acknowledged, a continuation policy, and the two evidence conditions.</li>
+        <li><strong>Start v1</strong>, then <strong>Cut over</strong> while its stream is active.</li>
+        <li><strong>Resume on v2</strong>, then <strong>Check result</strong>. Compare protocol/trailers, sequences, and the original budget.</li>
+        <li>Try ordinary HTTP, missing receipts, a dropped or repeated result, and a short budget. Reset retains outcomes, including unfinished attempts as UNKNOWN.</li>
+      </ol>
+      <p id="controls-help">Fixture: eight results numbered 1–8; 10 synthetic milliseconds per emitted result. The completion budget begins before cutover and is inclusive. These are lesson parameters, not Azure limits. No server, account, credentials, framework, or cloud access is needed.</p>
+    </section>
+
+    <form id="stream-controls" novalidate aria-describedby="controls-help">
+      <fieldset id="configuration">
+        <legend>Configuration — locked once v1 starts</legend>
+        <div class="grid">
+          <label for="acknowledged">Last result acknowledged by v1 (1–6)
+            <input id="acknowledged" name="acknowledged" type="number" min="1" max="6" step="1" value="3" inputmode="numeric" required>
+          </label>
+          <label for="continuation">Application continuation
+            <select id="continuation" name="continuation">
+              <option value="checkpoint">Resume after acknowledgement</option>
+              <option value="restart">Restart at result 1 — replay defect</option>
+              <option value="skip">Skip the next result — gap defect</option>
+              <option value="none">No continuation — assume the old stream survives</option>
+            </select>
+          </label>
+          <label for="native-evidence">Native-shaped wire receipt (synthetic)
+            <select id="native-evidence" name="nativeEvidence">
+              <option value="grpc">HTTP/2 + application/grpc + grpc-status 0</option>
+              <option value="ordinary-http">Ordinary HTTP/1.1 + JSON + HTTP 200</option>
+              <option value="missing-trailers">HTTP/2 gRPC — trailers missing</option>
+              <option value="grpc-error">HTTP 200 but grpc-status 14</option>
+              <option value="missing">Native wire receipts missing</option>
+            </select>
+          </label>
+          <label for="proxy-evidence">Browser-proxy observation (synthetic)
+            <select id="proxy-evidence" name="proxyEvidence">
+              <option value="complete">Observe every emitted result</option>
+              <option value="drop">Drop the last v2 result</option>
+              <option value="duplicate">Repeat the first v2 result</option>
+              <option value="missing">Proxy receipts missing</option>
+            </select>
+          </label>
+          <label for="resume-delay">Resume delay (0–1000 synthetic ms)
+            <input id="resume-delay" name="resumeDelayMs" type="number" min="0" max="1000" step="1" value="40" inputmode="numeric" required>
+          </label>
+          <label for="budget">Original completion budget (1–1000 synthetic ms)
+            <input id="budget" name="budgetMs" type="number" min="1" max="1000" step="1" value="200" inputmode="numeric" required>
+          </label>
+        </div>
+      </fieldset>
+      <div class="actions" aria-label="Ordered lesson actions">
+        <button id="start-stream" type="submit">1. Start v1</button>
+        <button id="cutover-stream" type="button" disabled>2. Cut over</button>
+        <button id="resume-stream" type="button" disabled>3. Resume on v2</button>
+        <button id="check-result" type="button" disabled>4. Check result</button>
+        <button id="reset-lesson" type="button">Reset lesson</button>
+      </div>
+    </form>
+    <p id="error-message" role="alert" tabindex="-1"></p>
+    <p id="phase" role="status" aria-live="polite"></p>
+
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Independent synthetic results</h2>
+      <p id="overall-result" role="status" aria-live="polite"></p>
+      <p id="native-result"></p>
+      <p id="proxy-result"></p>
+      <dl>
+        <dt>Native-shaped sequence accounting</dt><dd id="native-metrics"></dd>
+        <dt>Browser-proxy sequence accounting</dt><dd id="proxy-metrics"></dd>
+        <dt>Original-clock completion</dt><dd id="deadline-result"></dd>
+      </dl>
+      <p>FAIL takes precedence over UNSUPPORTED, then UNKNOWN, then PASS. A passed negative test still means an interrupted synthetic transition, not a successful migration.</p>
+      <details>
+        <summary>Full current synthetic receipt and assertions</summary>
+        <pre id="receipt"></pre>
+      </details>
+    </section>
+
+    <section aria-labelledby="trace-title">
+      <h2 id="trace-title">Current application trace</h2>
+      <ol id="trace"></ol>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained outcomes</h2>
+      <p id="history-count"></p>
+      <p>Eight newest full receipts in this page's memory only. Reset does not erase failures. Reloading or closing the page clears this local history.</p>
+      <ol id="history" aria-label="Retained synthetic attempts"></ol>
+    </section>
+
+    <footer>
+      <p>No resources are allocated; cleanup is local state reset. Native proof for B-S047 and the D-S047 parent remains separate and unperformed.</p>
+      <p>AS IS educational demonstration; no Microsoft endorsement, support, SLA, or five-nines guarantee. <a href="../../README.md">Source scenarios and project disclaimer</a>.</p>
+    </footer>
+  </main>
+</body>
+</html>

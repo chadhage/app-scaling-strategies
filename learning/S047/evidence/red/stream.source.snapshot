@@ -1,0 +1,41 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.GrpcLesson = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+
+  const DEFAULTS = Object.freeze({
+    acknowledged: 3,
+    continuation: 'checkpoint',
+    nativeEvidence: 'grpc',
+    proxyEvidence: 'complete',
+    resumeDelayMs: 40,
+    budgetMs: 200,
+  });
+
+  function createLesson() {
+    let state = { phase: 'ready', history: [], runId: 0 };
+    return {
+      snapshot() { return JSON.parse(JSON.stringify(state)); },
+      start(config) {
+        state = { ...state, phase: 'streaming', runId: state.runId + 1, config: { ...config } };
+      },
+      cutover() { state.phase = 'cutover'; },
+      resume() { state.phase = 'resumed'; },
+      verify() {
+        state.phase = 'checked';
+        state.result = {
+          verdict: 'UNKNOWN',
+          native: { resumeFrom: 1, records: [1, 2, 3, 1, 2, 3, 4, 5, 6, 7, 8] },
+          proxy: { verdict: 'UNKNOWN' },
+        };
+        return state.result;
+      },
+      reset() { state = { phase: 'ready', history: state.history, runId: state.runId }; },
+    };
+  }
+
+  return Object.freeze({ DEFAULTS, createLesson });
+}));

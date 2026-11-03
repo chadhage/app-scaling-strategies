@@ -1,0 +1,19 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createLesson, DEFAULTS } = require('../stream.js');
+
+test('checkpoint continuation requests the first unacknowledged result on a new stream', () => {
+  const lesson = createLesson();
+  lesson.start({ ...DEFAULTS });
+  lesson.cutover();
+  lesson.resume();
+  const result = lesson.verify();
+  assert.equal(result.native.resumeFrom, 4);
+  assert.equal(result.native.originalStreamSurvived, false);
+  assert.deepEqual(result.native.streamIds, ['synthetic-native-v1-1', 'synthetic-native-v2-1']);
+  assert.deepEqual(result.native.records, [1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.equal(result.elapsedMs, 120);
+  assert.equal(result.verdict, 'PASS');
+});
