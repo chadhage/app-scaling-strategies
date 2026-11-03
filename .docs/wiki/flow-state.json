@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 146,
+  "revision": 149,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-03T15:06:55.2304274Z",
+  "updatedAtUtc": "2026-11-03T15:29:01.3463704Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -39,8 +39,8 @@
   },
   "kanoDone": {
     "S": 19,
-    "D": 2,
-    "L": 0
+    "L": 0,
+    "D": 2
   },
   "reservations": {
     "D": 0,
@@ -5986,8 +5986,8 @@
       "agentId": "27b12c72-86ed-46da-9ba5-9490fe6bf6f2",
       "objective": "Add guarded caller-owned HTTP loopback browser verification for C020 and C041, preserving file-only isolation",
       "scope": "testing/browser and precise ignore only",
-      "status": "running",
-      "result": "Verified offline Playwright 1.56.1 plus signed Edge 156, eight real-browser tests, tagged publication eaf266c631d286a3dacb24c1caab9686f504a458; zero Kano credit.",
+      "status": "blocked",
+      "result": "No new verified fix. Active helper/package/tests restored to published53c0c0d. Confirmed startup/context-close bounds and Windows scratch-lock gaps; exact parent stall phase unproven. Prototype inactive; consumer successes remain separate.",
       "parentVerifiedFirstDelivery": true,
       "firstDeliveryIndependentChecks": 8
     },
@@ -6019,11 +6019,13 @@
     },
     {
       "id": "OWNED-LOOPBACK-BROWSER",
-      "status": "diagnosing-parent-combined-suite",
-      "reason": "Guarded loopback published and actual C020/C041 checks passed. Parent combined13 tooling test hung and was stopped by exact command ID; owner is diagnosing bounded combined-suite termination. Feature proof remains explicitly local and no extra value is credited.",
+      "status": "blocked-bounded-lifecycle-recovery",
+      "reason": "Individual fixture APIs and feature browser checks passed. Broader lifecycle bounds/recovery remain unverified; parent command was stopped with no final result. A conflicting cross-agent numeric-handle transcript is not attributable to it. Inactive prototype is archived, not shipped.",
       "agentId": "27b12c72-86ed-46da-9ba5-9490fe6bf6f2",
       "haltsLocalFeatureWork": false,
-      "scope": "C020 and C041 real-browser verification"
+      "scope": "C020 and C041 real-browser verification",
+      "reportCommit": "18ddae9187e2a3fd63479c8bb9cc721ff0830e5f",
+      "reportTag": "kanban/flow-browser-blocker/18ddae9187e2"
     }
   ],
   "refinements": [
@@ -6100,6 +6102,18 @@
       "tag": "kanban/C003/82789c163ff7",
       "commit": "82789c163ff7fc5467bd1105f03417e406871243",
       "kanoCredit": 0
+    }
+  ],
+  "operationalWork": [
+    {
+      "readiness": false,
+      "owner": null,
+      "state": "To Do",
+      "blocker": "Exact owned-process recovery and old/new real-browser suites must pass before any lifecycle fix can ship.",
+      "kanoCredit": 0,
+      "evidence": "testing/browser/evidence/lifecycle-blocked.json",
+      "lineage": "REF-BROWSER-QUALITY",
+      "id": "OP-BROWSER-BOUNDED-LIFECYCLE"
     }
   ]
 }
