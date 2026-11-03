@@ -9,6 +9,7 @@
 
   function createRehearsal() {
     return {
+      deployment: { lifecycle: 'completed' },
       rings: ['internal', 'pilot', 'limited', 'remaining'].map((id, index) => ({
         id,
         members: [`${id}-01`, `${id}-02`],
@@ -27,8 +28,15 @@
   }
 
   function attemptPromotion(state, choices = {}) {
+    const requestObject = choices !== null && typeof choices === 'object' && !Array.isArray(choices);
+    choices = requestObject ? choices : {};
+    const wellFormed = requestObject &&
+      ['ring', 'contract', 'window', 'observation'].every((field) => typeof choices[field] === 'string') &&
+      choices.tiers !== null && typeof choices.tiers === 'object' && !Array.isArray(choices.tiers) &&
+      TIER_NAMES.every((tier) => typeof choices.tiers[tier] === 'string');
     const updated = structuredClone(state);
     updated.attempts += 1;
+    const lifecycle = updated.deployment?.lifecycle;
     const desired = {
       ring: choices.ring ?? '(unspecified)',
       tiers: { ...choices.tiers },
@@ -46,6 +54,7 @@
       assertions: [],
       reasons: [],
       trace: [
+        `Deployment lifecycle: ${lifecycle ?? 'unknown'} (fixture); deployment completion does not authorize ring rollout.`,
         `Request: ${desired.ring}; next eligible ring: ${expectedRing ?? 'none'}.`,
         `Desired frontend/API/worker: ${TIER_NAMES.map((tier) => desired.tiers[tier] ?? 'unknown').join(' / ')}.`
       ],
@@ -63,6 +72,20 @@
       result.assertions.push({ id, label, status, expected, observed });
       if (status === 'fail' || status === 'unknown') result.reasons.push(`${label}: ${observed}`);
     }
+
+    record('request-input', 'Promotion input shape', wellFormed ? 'pass' : 'fail',
+      'A choices object with string ring, contract, window, observation, and three string tier versions.',
+      wellFormed ? 'All required promotion inputs have the declared types.' :
+        'Malformed or incomplete promotion choices; stop without inventing candidate journeys.');
+
+    const knownLifecycle = ['pending', 'running', 'completed', 'failed'].includes(lifecycle);
+    record('deployment-readiness', 'Deployment lifecycle readiness',
+      !knownLifecycle ? 'unknown' : lifecycle === 'completed' ? 'pass' : 'fail',
+      'Artifacts must finish deployment; ring rollout still needs its own compatibility and observation gates.',
+      !knownLifecycle ? 'Deployment lifecycle is unknown; artifact readiness is not proven.' :
+        `Deployment lifecycle is ${lifecycle} (fixture). ${lifecycle === 'completed' ?
+          'Tier artifacts are available, but ring rollout is not automatically approved.' :
+          'Tier artifacts are not ready for candidate routing.'}`);
 
     const index = updated.rings.indexOf(target);
     const predecessorsHealthy = index > 0 && updated.rings.slice(0, index).every((ring) =>

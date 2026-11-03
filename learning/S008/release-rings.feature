@@ -3,10 +3,33 @@ Feature: A-S008 release-ring promotion rehearsal
   # SOURCE-only synthetic exercise: not B-S008 native proof or parent completion.
 
   Background:
-    Given the internal ring has two synthetic members on frontend v2, API v2, and worker v2
+    Given the synthetic deployment lifecycle is completed with both tier versions available
+    And the internal ring has two synthetic members on frontend v2, API v2, and worker v2
     And pilot, limited, and remaining rings each have two synthetic members on all-v1 tiers
     And the internal observation window has completed with healthy synthetic journeys
     And the promotion window is open
+
+  Scenario: Completed deployment is not completed ring rollout
+    Then pilot, limited, and remaining still have pending ring rollout status on v1
+    When I attempt pilot with incompatible mixed tier versions
+    Then expansion is blocked while the deployment lifecycle remains completed
+    When I retry pilot with matching tiers and compatible healthy observations
+    Then only pilot advances to promoted ring rollout status
+    And the deployment lifecycle remains completed, not promoted
+    And the browser labels deployment lifecycle separately from ring rollout status
+
+  Scenario: Incomplete or unknown deployment cannot authorize candidate routing
+    Given the deployment lifecycle fixture is running, failed, or unknown
+    When I attempt an otherwise compatible pilot promotion
+    Then no candidate journey runs and verified ring routing stays unchanged
+    And a missing or unrecognized deployment lifecycle is UNKNOWN rather than PASS
+
+  Scenario: Malformed promotion input fails closed
+    Given promotion choices are null, a primitive, an array, or an incomplete typed object
+    When I attempt promotion
+    Then the input assertion fails without an uncaught exception
+    And no candidate journeys or successful user outcomes are invented
+    And Reset rehearsal restores all canonical choices and the initial independent lifecycle and rollout fixture
 
   Scenario: Promote the next ring with compatible tiers and shared contracts
     Given pilot requests frontend v2, API v2, and worker v2

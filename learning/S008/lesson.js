@@ -19,6 +19,9 @@
   }
 
   function renderRings() {
+    const lifecycle = state.deployment?.lifecycle ?? 'unknown';
+    byId('deployment-lifecycle').dataset.lifecycle = lifecycle;
+    byId('deployment-lifecycle').textContent = `Deployment lifecycle: ${lifecycle} (synthetic fixture). Artifact deployment is separate from ring rollout approval; a completed deployment does not promote rings.`;
     byId('rings').replaceChildren(...state.rings.map((ring) => {
       const element = row([
         ring.id,

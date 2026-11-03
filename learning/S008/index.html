@@ -31,6 +31,7 @@
       <p>Advance internal → pilot → limited → remaining in order. Within a ring, this fixture requires <strong>frontend v2 + API v2 + worker v2</strong>; mixed versions are explicitly incompatible.</p>
       <ul>
         <li>Eight fictional members, two per ring. Internal starts observed on v2; all other rings start pending on v1.</li>
+        <li>Deployment lifecycle starts completed: both v1 and v2 tier artifacts are already available in this fixture. Ring rollout status is separate; deployment completion does not authorize expansion.</li>
         <li>The shared dependency is used by every ring. Its dual contract accepts v1 and v2; v2-only breaks existing v1 consumers before they move.</li>
         <li>Predecessor observations must be healthy, the promotion window open, and the target observation at least 120 fixture seconds with two journeys within 800 ms each.</li>
         <li><strong>120 seconds is a synthetic fixture value, not elapsed time.</strong> The exercise runs immediately and collects no production telemetry.</li>
@@ -40,11 +41,12 @@
 
     <section aria-labelledby="membership-title">
       <h2 id="membership-title">Membership and last verified ring routing</h2>
+      <p id="deployment-lifecycle">Deployment lifecycle: completed (synthetic fixture). A completed deployment does not promote rings.</p>
       <p id="next-ring"></p>
       <div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable ring membership table">
         <table>
-          <caption>Desired choices do not overwrite verified routing. Failed and pending promotions remain visible.</caption>
-          <thead><tr><th scope="col">Ring</th><th scope="col">Members</th><th scope="col">Frontend / API / worker</th><th scope="col">State</th><th scope="col">Observation</th><th scope="col">Last attempt</th></tr></thead>
+          <caption>Desired choices do not overwrite verified routing. A completed deployment does not promote rings; failed and pending ring rollouts remain visible.</caption>
+          <thead><tr><th scope="col">Ring</th><th scope="col">Members</th><th scope="col">Frontend / API / worker</th><th scope="col">Ring rollout status</th><th scope="col">Observation</th><th scope="col">Last attempt</th></tr></thead>
           <tbody id="rings"></tbody>
         </table>
       </div>
@@ -52,7 +54,7 @@
 
     <section id="exercise" aria-labelledby="actions-title">
       <h2 id="actions-title">Choose conditions and promote one ring</h2>
-      <p>All choices are local synthetic inputs. Promotion first checks order, window, tier affinity, and every shared-contract consumer. Only safe preflight runs candidate journeys; observation failures stop further expansion.</p>
+      <p>All choices are local synthetic inputs. Promotion first validates the inputs and completed artifact deployment, then checks order, window, tier affinity, and every shared-contract consumer. Only safe preflight runs candidate journeys; observation failures stop further expansion.</p>
       <div class="choices">
         <div>
           <label for="ring">Ring to promote</label>
