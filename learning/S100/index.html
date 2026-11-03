@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S100 — Forced active work accounting</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <p id="training-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+      <h1>S100: Forced active work accounting</h1>
+      <p>Detect lost, retried, duplicated and unresolved work. A correct negative-test assertion can pass while users are interrupted.</p>
+      <p><strong>DATA ONLY:</strong> “Termination” and active work are fixed teaching records. No action kills a process or operates on a shell, file, network or resource.</p>
+    </header>
+    <section aria-labelledby="setup-heading">
+      <h2 id="setup-heading">1. Choose and start a rehearsal</h2>
+      <p>Preconditions: four attempted transition journeys (two requests, two jobs), old-v1 → new-v2, a fixed original 1000 ms budget, and at most four rehearsals per page session. All numbers are synthetic, not measured service limits.</p>
+      <p id="boot-status" role="status">Loading local scripts. If controls stay disabled, reopen the complete bundle with JavaScript enabled.</p>
+      <noscript><p role="alert">JavaScript is required for this local lesson. No live or cloud fallback exists.</p></noscript>
+      <form id="lesson-input" novalidate>
+        <label for="condition">Fixed teaching trace</label>
+        <select id="condition" name="condition">
+          <option value="forced" selected>Forced termination DATA — expected interruption</option>
+          <option value="orderly">Orderly handoff DATA — positive comparison</option>
+          <option value="gap">Observation gap DATA — unknown outcome</option>
+        </select>
+        <label for="prediction">Predict the synthetic user outcome</label>
+        <select id="prediction" name="prediction">
+          <option value="interrupted" selected>Interrupted</option>
+          <option value="uninterrupted">Uninterrupted</option>
+          <option value="unverified">Unverified</option>
+        </select>
+        <button id="start-work" type="submit" disabled>Start synthetic work</button>
+      </form>
+      <div class="actions" aria-label="Ordered rehearsal actions">
+        <button id="observe-work" type="button" disabled>2. Apply fixed trace DATA</button>
+        <button id="check-ledger" type="button" disabled>3. Check observed ledger</button>
+        <button id="reset-lesson" type="button">Reset current rehearsal</button>
+      </div>
+      <p id="allowance"></p>
+      <p>Reset restores inputs and focus, but retains all started rehearsals and the fixed allowance. Reset before checking records a cancelled, unverified attempt; existing observations remain. Reload starts a new in-memory synthetic session.</p>
+      <p id="error" role="alert" tabindex="-1" hidden></p>
+    </section>
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Separate educational verification from user impact</h2>
+      <dl class="results">
+        <dt>Educational verifier</dt><dd id="verifier">Not checked</dd>
+        <dt>Synthetic user impact</dt><dd id="user-impact">Unverified — no started journeys</dd>
+        <dt>Cleanup</dt><dd id="cleanup">Not applicable — data only; no resources created or terminated</dd>
+        <dt>Successful synthetic migration</dt><dd id="migration">Not established</dd>
+      </dl>
+      <p id="conclusion" role="status" aria-live="polite">Start, apply a fixed trace, then check.</p>
+    </section>
+    <section aria-labelledby="ledger-heading">
+      <h2 id="ledger-heading">Current or most recently retained work ledger</h2>
+      <p>Retries count as seamless only if correctness and the original budget survive. Lost, retry, duplicate and late counters overlap; they must not be summed into a unique affected-user count. Unknown means no usable completion evidence, not zero effects.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Fixed per-journey observations; all four attempts stay in the denominator</caption>
+          <thead><tr><th scope="col">Work</th><th scope="col">Kind</th><th scope="col">Outcome</th><th scope="col">Completed</th><th scope="col">Elapsed ms</th><th scope="col">Effects</th><th scope="col">Attempts</th><th scope="col">Observed epoch</th><th scope="col">Termination DATA</th></tr></thead>
+          <tbody id="work-ledger"></tbody>
+        </table>
+      </div>
+      <ol id="trace" aria-label="Retained action trace"></ol>
+    </section>
+    <section aria-labelledby="totals-heading">
+      <h2 id="totals-heading">All started journeys in this page session</h2>
+      <dl id="totals" class="metrics">
+        <dt>Attempted</dt><dd id="attempted">0</dd>
+        <dt>Uninterrupted</dt><dd id="uninterrupted">0</dd>
+        <dt>Interrupted</dt><dd id="interrupted">0</dd>
+        <dt>Unknown</dt><dd id="unknown">0</dd>
+        <dt>Lost</dt><dd id="lost">0</dd>
+        <dt>Retried</dt><dd id="retried">0</dd>
+        <dt>Duplicated</dt><dd id="duplicated">0</dd>
+        <dt>Unresolved</dt><dd id="unresolved">0</dd>
+        <dt>Over original budget</dt><dd id="late">0</dd>
+        <dt>Cancelled rehearsals</dt><dd id="cancelled">0</dd>
+      </dl>
+      <p id="fraction">0/0 - no evidence</p>
+      <p>Uninterrupted + interrupted + unknown = attempted. A confirmed-success fraction with unknowns is not a complete success rate, statistical reliability proof or a Microsoft SLA.</p>
+      <ol id="history" aria-label="Retained rehearsal history"></ol>
+    </section>
+    <footer>
+      <h2>Limits and traceability</h2>
+      <p>A-S100 / D-S100 / SC-S100; one frozen S unit. This lesson does not complete B-S100, D-S100 or their native prerequisites D-S042 and D-S049. It does not qualify Azure, hosting behavior, production Node.js 24 or five-nines reliability.</p>
+      <p>Standalone HTML/JavaScript only. No framework, packages, credentials, identity, deployment, IaC or spend. No Microsoft endorsement, support or license grant is implied.</p>
+      <p>See the local README, manifest, BDD specification and preserved evidence shipped with this bundle.</p>
+    </footer>
+  </main>
+</body>
+</html>

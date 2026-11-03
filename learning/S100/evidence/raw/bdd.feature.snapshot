@@ -1,0 +1,62 @@
+Feature: Account for forced termination of synthetic active work
+  The word termination refers only to four fixed teaching records.
+  No exercise action terminates a process or operates on a shell, file or resource.
+  A passing educational assertion is not evidence of uninterrupted user migration.
+
+  Background:
+    Given four attempted synthetic transition journeys, two requests and two jobs
+    And a fixed original journey budget of 1000 milliseconds
+    And the old-v1 and new-v2 labels are data, not actual deployments
+    And at most four rehearsals can start in one in-memory page session
+
+  Scenario: Expected interruption is educationally correct
+    Given the operator predicts interrupted users
+    When the operator starts work and applies the fixed forced-termination trace
+    And checks the observed ledger
+    Then lost work is 1, retried work is 2, duplicated work is 1 and unresolved work is 1
+    And 3 journeys are interrupted, 1 is unknown and 0 are uninterrupted
+    And all 4 attempted journeys remain in the denominator
+    And the educational verifier passes while successful migration is false
+    And cleanup is not applicable because the exercise operates on data only
+
+  Scenario: Orderly handoff is a measured positive comparison
+    Given the operator predicts uninterrupted users
+    When the operator starts work, applies the fixed orderly-handoff trace and checks
+    Then all 4 journeys finish on new-v2 with one effect within the original budget
+    And the educational verifier passes and the synthetic user outcome is uninterrupted
+    And no native platform, production runtime or source parent is certified
+
+  Scenario: A success-shaped prediction fails without erasing user impact
+    Given the operator predicts uninterrupted users
+    When the operator applies the fixed forced-termination trace and checks
+    Then the educational verifier fails
+    And the ledger still reports 3 interrupted and 1 unknown journey
+
+  Scenario: Missing observations cannot manufacture success
+    Given the operator selects the observation-gap trace
+    When the operator starts, applies the trace and checks
+    Then 4 outcomes are unknown and the educational verifier is unknown
+    And the confirmed-success fraction is 0 over all 4 attempted journeys
+
+  Scenario: Reset and another rehearsal retain previous attempts
+    Given an interrupted rehearsal has been checked
+    When the operator resets and conducts the orderly-handoff comparison
+    Then both ledgers remain visible and aggregate attempts are 8
+    And the earlier 3 interruptions and 1 unknown outcome remain counted
+
+  Scenario: Reset before checking cannot remove a started journey
+    Given four active synthetic journeys with no completion evidence
+    When the operator resets
+    Then the cancelled rehearsal is retained with 4 unknown outcomes
+    And reset after observation preserves any already observed losses and duplicates
+
+  Scenario: Typed inputs, state and phase are guarded
+    Then malformed objects, coercible values, unexpected keys and forged ledgers are rejected
+    And applying a trace before starting, checking before observation and a fifth start are rejected
+    And a rejected action leaves the previous immutable state intact
+
+  Scenario: The standalone browser surface is usable and constrained
+    Then the exact synthetic banner and separate verifier, user-impact and cleanup labels are visible
+    And keyboard actions, focused errors, ordered controls and reset work in the actual DOM
+    And ordinary verification does not rewrite owned evidence
+    And the browser blocks inline script and connections under the declared CSP

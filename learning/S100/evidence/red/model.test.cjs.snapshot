@@ -1,0 +1,198 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('..\\model.js');
+
+function complete(condition, prediction, state = model.createState()) {
+  state = model.transition(state, { type: 'start', input: { condition, prediction } });
+  state = model.transition(state, { type: 'observe' });
+  return model.transition(state, { type: 'check' });
+}
+
+test('forced active work is accounted; passing education still has interrupted users', () => {
+  const state = complete('forced', 'interrupted');
+  const totals = model.summarize(state);
+  assert.equal(totals.attempted, 4);
+  assert.equal(totals.lost, 1);
+  assert.equal(totals.retried, 2);
+  assert.equal(totals.duplicated, 1);
+  assert.equal(totals.unresolved, 1);
+  assert.equal(totals.late, 2);
+  assert.equal(totals.interrupted, 3);
+  assert.equal(totals.unknown, 1);
+  assert.equal(totals.uninterrupted, 0);
+  assert.equal(totals.confirmedSuccessFraction, '0/4 confirmed; 1 unknown');
+  const result = state.history[0].result;
+  assert.equal(result.verification, 'pass');
+  assert.equal(result.userImpact, 'interrupted');
+  assert.equal(result.successfulSyntheticMigration, false);
+  assert.equal(result.cleanup, 'not-applicable-data-only');
+  assert.equal(result.accountingComplete, true);
+  assert.equal(result.observationsComplete, false);
+});
+
+test('orderly comparison measures four timely, correct new-epoch journeys', () => {
+  const state = complete('orderly', 'uninterrupted');
+  const totals = model.summarize(state);
+  assert.equal(totals.uninterrupted, 4);
+  assert.equal(totals.interrupted + totals.unknown, 0);
+  assert.equal(totals.attempted, 4);
+  assert.equal(state.history[0].result.verification, 'pass');
+  assert.equal(state.history[0].result.successfulSyntheticMigration, true);
+  assert.equal(state.history[0].result.observationsComplete, true);
+  for (const work of state.history[0].work) {
+    assert.equal(work.observedEpoch, 'new-v2');
+    assert.equal(work.effectCount, 1);
+    assert.ok(work.elapsedMs <= 1000);
+  }
+});
+
+test('a wrong prediction fails the verifier without changing the interrupted ledger', () => {
+  const state = complete('forced', 'uninterrupted');
+  assert.equal(model.summarize(state).interrupted, 3);
+  assert.equal(state.history[0].result.verification, 'fail');
+  assert.equal(state.history[0].result.predictionMatched, false);
+  assert.equal(state.history[0].result.userImpact, 'interrupted');
+});
+
+test('missing observations retain all attempts and cannot pass as successful migration', () => {
+  for (const prediction of ['unverified', 'uninterrupted', 'interrupted']) {
+    const state = complete('gap', prediction);
+    const totals = model.summarize(state);
+    assert.equal(totals.attempted, 4);
+    assert.equal(totals.unknown, 4);
+    assert.equal(totals.unresolved, 4);
+    assert.equal(totals.uninterrupted, 0);
+    assert.equal(state.history[0].result.verification, 'unknown');
+    assert.equal(state.history[0].result.userImpact, 'unverified');
+    assert.equal(state.history[0].result.successfulSyntheticMigration, false);
+  }
+});
+
+test('reset preserves earlier interruptions, unknowns and the four-start allowance', () => {
+  let state = complete('forced', 'interrupted');
+  state = model.transition(state, { type: 'reset' });
+  assert.equal(state.phase, 'ready');
+  assert.equal(state.history.length, 1);
+  state = complete('orderly', 'uninterrupted', state);
+  assert.equal(model.summarize(state).attempted, 8);
+  assert.equal(model.summarize(state).uninterrupted, 4);
+  assert.equal(model.summarize(state).interrupted, 3);
+  assert.equal(model.summarize(state).unknown, 1);
+  for (let i = 0; i < 2; i++) {
+    state = model.transition(state, { type: 'reset' });
+    state = complete('gap', 'unverified', state);
+  }
+  state = model.transition(state, { type: 'reset' });
+  const before = JSON.stringify(state);
+  assert.throws(() => model.transition(state, {
+    type: 'start', input: { condition: 'orderly', prediction: 'uninterrupted' },
+  }), { code: 'ERR_LIMIT' });
+  assert.equal(JSON.stringify(state), before);
+  assert.equal(model.summarize(state).attempted, 16);
+});
+
+test('reset before observation retains cancelled unknown work; after observation retains impact', () => {
+  let state = model.transition(model.createState(), {
+    type: 'start', input: { condition: 'forced', prediction: 'interrupted' },
+  });
+  assert.equal(model.summarize(state).unknown, 4);
+  state = model.transition(state, { type: 'reset' });
+  assert.equal(state.history[0].stage, 'cancelled');
+  assert.equal(state.history[0].result.verification, 'unknown');
+  assert.equal(model.summarize(state).cancelled, 1);
+  assert.equal(model.summarize(state).attempted, 4);
+  assert.equal(model.summarize(state).unknown, 4);
+  state = model.transition(state, {
+    type: 'start', input: { condition: 'forced', prediction: 'interrupted' },
+  });
+  state = model.transition(state, { type: 'observe' });
+  state = model.transition(state, { type: 'reset' });
+  assert.equal(model.summarize(state).interrupted, 3);
+  assert.equal(model.summarize(state).unknown, 5);
+  assert.equal(model.summarize(state).lost, 1);
+  assert.equal(model.summarize(state).duplicated, 1);
+});
+
+test('strict typed action/input guards reject coercion, unexpected keys and accessors', () => {
+  const initial = model.createState();
+  const badInputs = [
+    null, [], 'forced', 1, true, {},
+    { condition: 'forced', prediction: 1 },
+    { condition: 0, prediction: 'interrupted' },
+    { condition: new String('forced'), prediction: 'interrupted' },
+    { condition: 'forced', prediction: 'interrupted', extra: true },
+    { condition: 'FORCED', prediction: 'interrupted' },
+    Object.create({ condition: 'forced', prediction: 'interrupted' }),
+    { get condition() { throw new Error('getter must not be invoked'); }, prediction: 'interrupted' },
+  ];
+  for (const input of badInputs) {
+    assert.throws(() => model.transition(initial, { type: 'start', input }), { code: 'ERR_INPUT' });
+  }
+  for (const action of [null, [], 'start', { type: 'observe', extra: true },
+    { type: 'unknown' }, { type: new String('reset') }]) {
+    assert.throws(() => model.transition(initial, action), { code: 'ERR_ACTION' });
+  }
+  assert.equal(model.summarize(initial).attempted, 0);
+  assert.equal(initial.history.length, 0);
+});
+
+test('state guards reject forged measurements, work, history, phases and property descriptors', () => {
+  const initial = model.createState();
+  const checked = complete('forced', 'interrupted');
+  const mutations = [
+    (s) => { s.schemaVersion = '1'; },
+    (s) => { s.phase = 'ready'; },
+    (s) => { s.currentRunId = NaN; },
+    (s) => { s.extra = true; },
+    (s) => { s.history[0].id = 2; },
+    (s) => { s.history[0].work[0].effectCount = 1; },
+    (s) => { s.history[0].work[1].elapsedMs = 100; },
+    (s) => { s.history[0].result.verification = 'pass-as-native'; },
+    (s) => { s.history[0].result.interrupted = 0; },
+    (s) => { s.history[0].trace.pop(); },
+  ];
+  for (const mutate of mutations) {
+    const forged = JSON.parse(JSON.stringify(checked));
+    mutate(forged);
+    assert.throws(() => model.transition(forged, { type: 'reset' }), { code: 'ERR_STATE' });
+    assert.throws(() => model.summarize(forged), { code: 'ERR_STATE' });
+  }
+  for (const forged of [null, [], {}, { ...initial, history: [,] },
+    Object.create(initial), { ...initial, get phase() { throw new Error('must not run'); } }]) {
+    assert.throws(() => model.summarize(forged), { code: 'ERR_STATE' });
+  }
+});
+
+test('phase guards reject skips and repeats, including a second termination observation', () => {
+  const initial = model.createState();
+  assert.throws(() => model.transition(initial, { type: 'observe' }), { code: 'ERR_PHASE' });
+  assert.throws(() => model.transition(initial, { type: 'check' }), { code: 'ERR_PHASE' });
+  const active = model.transition(initial, {
+    type: 'start', input: { condition: 'forced', prediction: 'interrupted' },
+  });
+  assert.throws(() => model.transition(active, { type: 'check' }), { code: 'ERR_PHASE' });
+  assert.throws(() => model.transition(active, {
+    type: 'start', input: { condition: 'orderly', prediction: 'uninterrupted' },
+  }), { code: 'ERR_PHASE' });
+  const observed = model.transition(active, { type: 'observe' });
+  assert.throws(() => model.transition(observed, { type: 'observe' }), { code: 'ERR_PHASE' });
+  const checked = model.transition(observed, { type: 'check' });
+  assert.throws(() => model.transition(checked, { type: 'check' }), { code: 'ERR_PHASE' });
+});
+
+test('transitions are immutable and deterministic, with no fixture clock or random input', () => {
+  const a = complete('forced', 'interrupted');
+  const b = complete('forced', 'interrupted');
+  assert.deepEqual(a, b);
+  assert.ok(Object.isFrozen(a));
+  assert.ok(Object.isFrozen(a.history));
+  assert.ok(Object.isFrozen(a.history[0].work[0]));
+  assert.throws(() => { a.history[0].work[0].effectCount = 99; }, TypeError);
+  const reset = model.transition(a, { type: 'reset' });
+  assert.equal(a.phase, 'checked');
+  assert.equal(reset.phase, 'ready');
+  assert.deepEqual(reset.history, a.history);
+  assert.equal(model.summarize(model.createState()).confirmedSuccessFraction, '0/0 - no evidence');
+});
