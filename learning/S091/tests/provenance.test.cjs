@@ -11,6 +11,7 @@ const lesson = path.resolve(__dirname, '..');
 const read = (name) => fs.readFileSync(path.join(lesson, ...name.split('/')));
 const parse = (name) => JSON.parse(read(name));
 const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const canonicalText = (bytes) => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
 const contract = parse('evidence/source-contract.json');
 const red = parse('evidence/red.json');
 const verifyBytes = (record) => {
@@ -82,7 +83,19 @@ test('BDD precedes genuine loadable-stub RED, which precedes the resource-free I
   }
   const feature = red.snapshots.find((item) => item.original === 'candidate-crash.feature');
   assert.equal(feature.sha256, bdd.sha256);
-  assert.equal(sha(read('candidate-crash.feature')), bdd.sha256);
+  const qualification = parse('evidence/canonical-source-red.json');
+  assert.equal(qualification.verified, true);
+  assert.equal(qualification.childExit, 1);
+  assert.match(verifyBytes(qualification.streams.stderr).toString('utf8'), /ERR_ASSERTION/);
+  const gitFeature = verifyBytes(qualification.gitFeature);
+  const historicalFeature = verifyBytes(feature);
+  assert.equal(sha(canonicalText(historicalFeature)), sha(gitFeature));
+  assert.equal(sha(canonicalText(read('candidate-crash.feature'))), sha(gitFeature));
+  const publishedSource = spawnSync('git', ['show', `${qualification.publication.commit}:learning/S091/candidate-crash.feature`], {
+    cwd: root, encoding: null, windowsHide: true,
+  });
+  assert.equal(publishedSource.status, 0, String(publishedSource.stderr));
+  assert.equal(sha(publishedSource.stdout), sha(gitFeature));
   const stub = red.snapshots.find((item) => item.original === 'model.js');
   assert.match(read(stub.path).toString('utf8'), /function runLesson\(session\) \{\r?\n    return session;/);
   assert.equal(iac.decision, 'N/A');

@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S091",
+  "workerId": "worker-A-S091",
+  "parentId": "D-S091",
+  "sourceId": "S091",
+  "packet": "SC-S091",
+  "kano": "S",
+  "kanoUnit": "A-S091",
+  "mode": "synthetic",
+  "preSealRecordedAtUtc": "2026-11-03T21:44:55.898Z",
+  "sourceHead": "541256d563853396745381b9aa5fffd8ee29148e",
+  "operatingEnvelope": {
+    "fixtures": 5,
+    "conclusions": 4,
+    "attemptLimit": 6,
+    "productionJourneysPerReplay": 3,
+    "requiredCandidateInstances": 2,
+    "originalJourneyBudgetMs": 250
+  },
+  "stages": {
+    "bdd": {
+      "record": "evidence/bdd.json",
+      "verdict": "specified before RED"
+    },
+    "red": {
+      "record": "evidence/red.json",
+      "verdict": "genuine assertion failure",
+      "tests": 2,
+      "passed": 1,
+      "failed": 1,
+      "childExit": 1,
+      "loadableStub": true
+    },
+    "iac": {
+      "record": "evidence/iac-decision.json",
+      "decision": "N/A",
+      "resourcesCreated": 0,
+      "managementCalls": 0,
+      "newPackages": 0,
+      "cloudSpend": 0
+    },
+    "focused": {
+      "record": "evidence/focused-003.json",
+      "verdict": "pass",
+      "tests": 25,
+      "failed": 0,
+      "behavior": 17,
+      "surface": 4,
+      "provenance": 4
+    },
+    "syntax": {
+      "record": "evidence/syntax-002.json",
+      "verdict": "pass",
+      "commands": 8
+    },
+    "browser": {
+      "record": "evidence/browser.json",
+      "acceptance": "evidence/browser-acceptance.json",
+      "verdict": "pass",
+      "parentTests": 1,
+      "actualCheckGroups": 11,
+      "nodeVersion": "v22.23.4",
+      "playwrightVersion": "1.56.1",
+      "browserVersion": "156.0.4314.50"
+    },
+    "integrity": {
+      "record": "evidence/integrity-002.json",
+      "index": "evidence/content-index.json",
+      "policy": "Final canonical/raw seal and actual integrity verdict follow this summary. Publication requires verified=true; the explicit final Git revision is verified after publication."
+    }
+  },
+  "actualBrowserObservedSyntheticAccounting": {
+    "attempts": 6,
+    "safeAborts": 2,
+    "completedMigrations": 1,
+    "interruptedRuns": 2,
+    "unknownRuns": 1,
+    "production": {
+      "successes": 14,
+      "interruptions": 1,
+      "unknown": 3
+    },
+    "startedTransitions": {
+      "attempted": 9,
+      "successes": 3,
+      "interruptions": 3,
+      "unknown": 3
+    }
+  },
+  "verifierVersusUserImpact": {
+    "guardedCrash": "Safety verifier and correct conclusion pass; three old-v1 production journeys stay valid, zero exposure, zero migration trials or credit.",
+    "forcedExposure": "Source safety verifier fails; correct negative-test conclusion passes. Three started synthetic transitions are interrupted despite later routing recovery.",
+    "productionRegression": "Abort before exposure is observed, but one old-only 400 ms / HTTP200 journey violates the 250 ms budget and fails continuity.",
+    "missingEvidence": "Safety acceptance unknown; three started transitions and three production observations remain unknown without success credit.",
+    "healthyComparison": "Three actual synthetic candidate-version journeys pass after all fixed readiness gates, with old standby retained."
+  },
+  "ordinaryVerification": {
+    "readOnly": true,
+    "ownedBrowserInventory": {
+      "before": {
+        "count": 46,
+        "sha256": "dbc06aca96fd28765f982e18d9e042d17375b8efcab0e72420971f830c23ba3b"
+      },
+      "after": {
+        "count": 46,
+        "sha256": "dbc06aca96fd28765f982e18d9e042d17375b8efcab0e72420971f830c23ba3b"
+      },
+      "unchanged": true
+    },
+    "captureOnly": "CAPTURE_BROWSER_EVIDENCE=1 deliberate author capture; historical raw proof is never auto-refreshed."
+  },
+  "cleanup": {
+    "awaitedCloseInFinally": true,
+    "completed": true,
+    "realScenarioProcessesOrResourcesManipulated": 0,
+    "cloudResourcesCreated": 0
+  },
+  "retainedFailure": {
+    "record": "evidence/focused.json",
+    "repair": "evidence/replay-repair.json",
+    "firstFocusedPasses": 24,
+    "firstFocusedFailures": 1,
+    "originalBehavioralRedUntouched": true
+  },
+  "publication": {
+    "method": "authorized publish.ps1 for learning\\S091 only",
+    "evidenceLabel": "[A-S091][S]",
+    "annotatedTagPrefix": "kanban/A-S091/",
+    "commitAndRemoteRefs": "external authorized publication/result record; cannot embed a self-referential implementation commit in its own bundle",
+    "latestQualifiedRevision": "Authorized same-card scoped publication after canonical-source repair; external result supplies final commit/tag."
+  },
+  "parentAcceptance": {
+    "reviewer": "parent",
+    "acceptedAtUtc": null,
+    "awardedDoneCredit": 0,
+    "onlyPotentialUnit": "A-S091 (S)"
+  },
+  "relevantRemainder": {
+    "B-S091": {
+      "readiness": false,
+      "blocker": "Native CORE/DATA/HOST, approved owned target/lease/fault/observation/recovery contract and separate cloud/IaC/scaffold/identity/deploy/spend approvals are not established."
+    },
+    "D-S091": {
+      "completed": false,
+      "required": [
+        "A-S091 parent acceptance",
+        "B-S091 native proof",
+        "original D-S028 prerequisite",
+        "original source/shared acceptance and target evidence"
+      ]
+    }
+  },
+  "limits": [
+    "Synthetic trace data only, including warming/crash/readiness/abort/gate bypass/recovery.",
+    "No production Node24, native Azure or real candidate/production continuity certification.",
+    "Published helper lifecycle limitation remains; no abandoned recovery prototype.",
+    "No extra testing, repeated-run, plumbing or refinement credit."
+  ],
+  "supersedesSummary": "evidence/verification-summary.json (retained, not rewritten)",
+  "canonicalSourceQualification": {
+    "redReference": "evidence/canonical-source-red.json",
+    "childExit": 1,
+    "actualAssertionFailure": true,
+    "originalRawBDDBytes": 3972,
+    "publishedGitLFBytes": 3906,
+    "canonicalFeatureSha256": "04881c9959ea83c30c9c6fda1078dd62d0b2da09eaf75d298c3e055c161de227",
+    "currentCanonicalMatch": true,
+    "historicalWorkingBytesPreserved": true,
+    "actualBrowserSourceCanonicalMatch": true,
+    "correction": "Compare canonical current feature and byte-preserved raw BDD snapshot to the pinned published LF Git feature, never raw-current equality across CRLF/LF.",
+    "verifiedBy": "evidence/focused-003.json",
+    "command": {
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "--eval",
+        "const fs = require('node:fs'); const assert = require('node:assert/strict'); const crypto = require('node:crypto'); const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex'); const bdd = JSON.parse(fs.readFileSync(\"learning\\\\S091\\\\evidence\\\\bdd.json\", 'utf8')); assert.equal(sha(fs.readFileSync(\"learning\\\\S091\\\\evidence\\\\raw\\\\runs\\\\canonical-source-red\\\\candidate-crash.feature.git.snapshot\")), bdd.sha256, 'Current Git LF source must not be compared as raw bytes to historical working CRLF proof.');"
+      ],
+      "status": 1
+    },
+    "bootstrap": {
+      "path": "evidence/raw/runs/canonical-source-red/assertion.cjs.snapshot",
+      "sha256": "9abc09ee4cd6d78144457ae73303dc5a5cdde524c44889315cef82833ba55263",
+      "bytes": 520
+    },
+    "firstPublication": {
+      "commit": "68af99db3f3b3ee620fca64e205a6f8b4be6e8ec",
+      "tag": "kanban/A-S091/68af99db3f3b",
+      "remoteVerified": true
+    },
+    "sameSingleKanoUnit": "A-S091 (S)",
+    "extraKanoCredit": 0
+  }
+}

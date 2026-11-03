@@ -1,0 +1,66 @@
+Feature: S091 candidate crash during warm-up
+  A-S091 is one frozen S unit in SC-S091, with source parent D-S091.
+  All crashes, gates, routing and journeys are fixed synthetic trace data.
+  Nothing kills a process, changes a resource or certifies Azure continuity.
+
+  Background:
+    Given fictional old-v1 epoch 1 serves three production journeys
+    And fictional candidate-v2 epoch 2 starts WARMING without user exposure
+    And each journey must preserve session, saved state and one business effect
+    And the fixed end-to-end journey budget is 250 milliseconds
+
+  Scenario: Crash is visibly aborted before exposure
+    When I choose "guarded-crash" and conclude "safe-abort"
+    Then the trace records WARMING, CRASHED, a blocked admission gate and ABORTED
+    And candidate exposure and attempted transition journeys are both zero
+    And all three production journeys remain on old-v1 and meet the contract
+    And safety acceptance and my conclusion check pass
+    But completed migrations and transition-success evidence remain zero
+
+  Scenario: Calling a safe abort a migration is a wrong conclusion
+    When I choose "guarded-crash" and conclude "completed-migration"
+    Then the observed outcome is still "safe-abort"
+    And my conclusion check fails without changing routing or history
+    And an empty transition denominator is shown as "No transition evidence"
+
+  Scenario: Ignoring the crash gate exposes the failed candidate
+    When I choose "forced-exposure" and conclude "interrupted-transition"
+    Then three started transition journeys fail on candidate-v2
+    And a later synthetic recovery restores old-v1 routing
+    But the peak exposure and all three interruptions remain counted
+    And safety acceptance fails even though my conclusion check passes
+
+  Scenario: An abort acknowledgement does not prove production continuity
+    When I choose "production-regression" and conclude "interrupted-transition"
+    Then candidate exposure stays zero and the abort is visible
+    But one old-v1 journey exceeds the original budget
+    And safety acceptance fails instead of declaring a safe abort or migration
+
+  Scenario: Missing observations cannot be relabeled as success
+    When I choose "missing-evidence" and conclude "unknown"
+    Then three commanded transition journeys remain started and unknown
+    And effective routing and production continuity are explicitly unverified
+    And no migration succeeds and safety acceptance is unknown
+    And the unknown started journeys remain in the transition denominator
+
+  Scenario: A healthy comparison provides actual synthetic migration evidence
+    When I choose "healthy-migration" and conclude "completed-migration"
+    Then the fixed readiness gates pass before candidate exposure
+    And all three transition journeys observe candidate-v2 and preserve the contract
+    And old-v1 is retained as standby rather than retired
+    And safety acceptance and my conclusion check pass
+
+  Scenario: Repeated work is bounded and retained
+    Given I have recorded six independent fixture replays
+    When I attempt a seventh replay or submit an invalid input or forged state
+    Then an accessible error rejects the request without changing prior results
+    And failures, safe aborts and unknowns are not pruned or reclassified
+
+  Scenario: Keyboard reset and local content policy
+    Given I can reach the fixture, conclusion, run and reset controls with Tab
+    When I activate them with Enter or Space and reset the rehearsal
+    Then defaults, counters, results and history are cleared
+    And focus returns to the fixture selector and native form.reset stays callable
+    And the exact banner is "Training rehearsal - synthetic data - not a live Azure result"
+    And enforced CSP blocks inline execution, connections and form navigation
+    And normal browser verification leaves source and historical evidence unchanged
