@@ -1,0 +1,33 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.S049Lesson = factory();
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULT_CONFIG = Object.freeze({
+    deduplication: 'atomic',
+    retryKey: 'same',
+    retryPayload: 'same',
+    retryResponse: 'received',
+    retryAfterMs: 30,
+    deadlineMs: 100,
+  });
+  const BOUNDS = Object.freeze({ maxRuns: 6, maxTimeMs: 1000, maxEffects: 2, maxTrace: 6 });
+  function createLesson() {
+    const state = {
+      schemaVersion: 1, phase: 'configure', config: { ...DEFAULT_CONFIG },
+      effects: [], trace: [], client: { status: 'not-sent', effectId: null, units: null },
+      elapsedMs: 0, postCount: 0, result: null, prediction: null, history: [],
+    };
+    const snapshot = () => JSON.parse(JSON.stringify(state));
+    return Object.freeze({
+      snapshot,
+      commitAndLoseResponse: snapshot,
+      retry: snapshot,
+      checkPrediction: snapshot,
+      newAttempt: snapshot,
+      reset: snapshot,
+    });
+  }
+  return Object.freeze({ DEFAULT_CONFIG, BOUNDS, createLesson });
+}));

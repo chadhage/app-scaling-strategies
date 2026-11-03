@@ -1,0 +1,123 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S049 — Ambiguous POST completion</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer="" src="model.js"></script>
+  <script defer="" src="lesson.js"></script>
+</head>
+<body>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S049: Ambiguous POST completion</h1>
+    <p>Commit one synthetic order, lose its response, then choose a controlled retry.
+      A lost reply is not a rollback. A retry is not automatically safe.</p>
+    <p><strong>Objective:</strong> distinguish one business effect with the correct client result
+      from duplicate effects, explicit rejection, and an unresolved client.</p>
+    <p>Source: <a href="../../README.md#e-in-flight-requests-and-long-lived-work">README S049</a>;
+      parent D-S049; card A-S049; frozen S; packet SC-S049.
+      <a href="README.md">Instructions and evidence</a>.</p>
+  </header>
+  <main>
+    <section aria-labelledby="preconditions">
+      <h2 id="preconditions">One fixed operation, bounded synthetic time</h2>
+      <p>The original request is POST synth-order for <strong>10 units</strong> with
+        <code>synth-key-A</code>. All keys, effects and amounts are synthetic.
+        No account, server, credentials, subscription or real request is used.</p>
+      <p>The atomic option assumes one shared, durable, atomic key + payload + remembered-result ledger.
+        This portable model does not prove a real transaction or distributed protocol.
+        A new key names a new operation; changing the payload with the old key is a conflict.</p>
+    </section>
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">1. Choose retry conditions</h2>
+      <p>Set conditions before the first POST. One retry only. All durations are simulated:
+        time starts at the initial commit and never restarts.</p>
+      <form id="controls" novalidate="">
+        <fieldset id="configuration">
+          <legend>Locked after initial commit</legend>
+          <label for="deduplication">Server ledger assumption</label>
+          <select id="deduplication" name="deduplication">
+            <option value="atomic">Atomic key + payload + result ledger</option>
+            <option value="none">No deduplication (unsafe)</option>
+          </select>
+          <label for="retry-key">Retry idempotency key</label>
+          <select id="retry-key" name="retryKey">
+            <option value="same">Same synth-key-A</option>
+            <option value="new">New synth-key-B (unsafe)</option>
+            <option value="missing">Missing key</option>
+          </select>
+          <label for="retry-payload">Retry payload</label>
+          <select id="retry-payload" name="retryPayload">
+            <option value="same">Same order, 10 units</option>
+            <option value="changed">Changed order, 20 units</option>
+          </select>
+          <label for="retry-response">Retry response delivery</label>
+          <select id="retry-response" name="retryResponse">
+            <option value="received">Received by client</option>
+            <option value="lost">Lost again; client unresolved</option>
+          </select>
+          <label for="retry-after">Retry observation time (synthetic ms, 0–1000)</label>
+          <input id="retry-after" name="retryAfterMs" type="number" min="0" max="1000" step="1" value="30" required="" style="">
+          <label for="deadline">Original deadline (synthetic ms, 1–1000)</label>
+          <input id="deadline" name="deadlineMs" type="number" min="1" max="1000" step="1" value="100" required="" style="">
+        </fieldset>
+        <button id="commit-post" type="submit">Commit POST; lose response</button>
+      </form>
+      <p id="error" role="alert" tabindex="-1" hidden=""></p>
+      <h2>2. Retry and inspect both sides</h2>
+      <button id="retry-post" type="button" disabled="">Retry POST once</button>
+      <p id="phase" role="status" aria-live="polite">Reset: exact defaults restored; all in-memory history and synthetic effects cleared.</p>
+      <dl class="metrics">
+        <dt>Business effects</dt><dd id="effect-count">0</dd>
+        <dt>Total committed units</dt><dd id="total-units">0</dd>
+        <dt>POST attempts</dt><dd id="post-count">0</dd>
+        <dt>Client observation</dt><dd id="client-result">not-sent</dd>
+        <dt>Original clock</dt><dd id="clock">0 / 100 synthetic ms</dd>
+      </dl>
+      <h3 id="outcome-title">Observed user-impact result</h3>
+      <p id="outcome" role="status" aria-live="polite" data-outcome="not-assessed">Not assessed</p>
+      <ul id="reasons" aria-labelledby="outcome-title"></ul>
+      <table>
+        <caption>Synthetic business-effect ledger (not an idempotency guarantee)</caption>
+        <thead><tr><th scope="col">Effect ID</th><th scope="col">Request key</th><th scope="col">Order</th><th scope="col">Units</th></tr></thead>
+        <tbody id="ledger"></tbody>
+      </table>
+      <h3 id="trace-title">Synthetic trace</h3>
+      <ol id="trace" aria-labelledby="trace-title"></ol>
+    </section>
+    <section aria-labelledby="prediction-title">
+      <h2 id="prediction-title">3. Check a prediction; retain the result</h2>
+      <p>Success needs exactly one effect and the correct client result within the original deadline.
+        Duplicate effects, a received rejection, or a deadline breach fail.
+        Without a known failure, a lost retry response stays unknown.</p>
+      <label for="prediction">Your prediction (scored separately from user impact)</label>
+      <select id="prediction" disabled="">
+        <option value="">Choose an outcome</option>
+        <option value="success">Success</option>
+        <option value="failure">Failure</option>
+        <option value="unknown">Unknown / explicitly unresolved</option>
+      </select>
+      <button id="check-prediction" type="button" disabled="">Check prediction and retain</button>
+      <p id="prediction-feedback" role="status" aria-live="polite"></p>
+      <button id="new-attempt" type="button" disabled="">New attempt; keep history</button>
+      <button id="reset-lesson" type="button">Reset lesson and clear history</button>
+      <p id="history-count">0 / 6 results retained</p>
+      <ol id="history" aria-label="Retained attempts"></ol>
+      <p id="history-limit" hidden="">Six results retained. Nothing was evicted. Reset explicitly to clear history.</p>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Limits and cleanup</h2>
+      <p>Six retained attempts, two POST attempts and at most two effects per attempt.
+        History is in this page's memory only; explicit reset or page reload clears it.
+        No browser storage, timers, management calls or network activity is needed.</p>
+      <p>All clocks, traces, HTTP-like status codes and ledger behavior are synthetic.
+        No native HTTP, real atomicity, retry safety, live Azure outcome, production Node.js 24,
+        source-parent completion or reliability certification is established.
+        B-S049 and the original D-S049 acceptance remain unfulfilled. IaC: N/A.</p>
+    </section>
+    <noscript>This lesson needs JavaScript to run the synthetic exercise. No result has been produced.</noscript>
+  </main>
+
+
+</body></html>

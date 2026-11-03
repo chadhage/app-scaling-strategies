@@ -1,0 +1,1474 @@
+learning/S049/evidence/preflight-browser.stdout.txt:1: trailing whitespace.
++{"path":"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe","version":"156.0.4314.50","signatureStatus":"Valid","signer":"CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"}
+learning/S049/evidence/red/feature.source.snapshot:1: trailing whitespace.
++Feature: S049 ambiguous POST completion
+learning/S049/evidence/red/feature.source.snapshot:2: trailing whitespace.
++  Training rehearsal - synthetic data - not a live Azure result
+learning/S049/evidence/red/feature.source.snapshot:3: trailing whitespace.
++  Source: README.md S049; parent D-S049; card A-S049; packet SC-S049.
+learning/S049/evidence/red/feature.source.snapshot:4: trailing whitespace.
++  One fixed synthetic order is worth 10 units. Its first POST commits once,
+learning/S049/evidence/red/feature.source.snapshot:5: trailing whitespace.
++  then loses its response. A lost response does not roll back that business effect.
+learning/S049/evidence/red/feature.source.snapshot:6: trailing whitespace.
++  The shared atomic-key ledger is a deterministic teaching assumption, not a
+learning/S049/evidence/red/feature.source.snapshot:7: trailing whitespace.
++  real transaction, HTTP request, distributed protocol, or Azure guarantee.
+learning/S049/evidence/red/feature.source.snapshot:8: trailing whitespace.
++
+learning/S049/evidence/red/feature.source.snapshot:9: trailing whitespace.
++  Scenario: Retry the same operation with the same key
+learning/S049/evidence/red/feature.source.snapshot:10: trailing whitespace.
++    Given the synthetic atomic key-and-payload ledger is selected
+learning/S049/evidence/red/feature.source.snapshot:11: trailing whitespace.
++    And the original deadline is 100 synthetic milliseconds
+learning/S049/evidence/red/feature.source.snapshot:12: trailing whitespace.
++    When the operator commits the POST and loses its response
+learning/S049/evidence/red/feature.source.snapshot:13: trailing whitespace.
++    Then one effect exists and the client is explicitly unresolved
+learning/S049/evidence/red/feature.source.snapshot:14: trailing whitespace.
++    When the operator retries the same payload and synth-key-A at 30 milliseconds
+learning/S049/evidence/red/feature.source.snapshot:15: trailing whitespace.
++    And receives the remembered result for synth-effect-1
+learning/S049/evidence/red/feature.source.snapshot:16: trailing whitespace.
++    Then the effect count remains one
+learning/S049/evidence/red/feature.source.snapshot:17: trailing whitespace.
++    And the client receives the original 10-unit result
+learning/S049/evidence/red/feature.source.snapshot:18: trailing whitespace.
++    And the outcome is success within the original deadline
+learning/S049/evidence/red/feature.source.snapshot:19: trailing whitespace.
++
+learning/S049/evidence/red/feature.source.snapshot:20: trailing whitespace.
++  Scenario Outline: A retry is not automatically safe
+learning/S049/evidence/red/feature.source.snapshot:21: trailing whitespace.
++    Given a committed POST with its response lost
+learning/S049/evidence/red/feature.source.snapshot:22: trailing whitespace.
++    When the operator retries using <condition>
+learning/S049/evidence/red/feature.source.snapshot:23: trailing whitespace.
++    Then the observable result is <result>
+learning/S049/evidence/red/feature.source.snapshot:24: trailing whitespace.
++    And a prediction never changes that user-impact result
+learning/S049/evidence/red/feature.source.snapshot:25: trailing whitespace.
++
+learning/S049/evidence/red/feature.source.snapshot:26: trailing whitespace.
++    Examples:
+learning/S049/evidence/red/feature.source.snapshot:27: trailing whitespace.
++      | condition                              | result                                             |
+learning/S049/evidence/red/feature.source.snapshot:28: trailing whitespace.
++      | no deduplication and the same key       | failure, two business effects                       |
+learning/S049/evidence/red/feature.source.snapshot:29: trailing whitespace.
++      | a different key                        | failure, two business effects                       |
+learning/S049/evidence/red/feature.source.snapshot:30: trailing whitespace.
++      | the same key and a changed payload      | failure, conflict rejection, one effect              |
+learning/S049/evidence/red/feature.source.snapshot:31: trailing whitespace.
++      | no key with atomic-key enforcement      | failure, missing-key rejection, one effect           |
+learning/S049/evidence/red/feature.source.snapshot:32: trailing whitespace.
++      | the same key but another lost response  | unknown, one effect and explicit unresolved client   |
+learning/S049/evidence/red/feature.source.snapshot:33: trailing whitespace.
++      | a retry later than the original budget  | failure even if one effect and a correct reply       |
+learning/S049/evidence/red/feature.source.snapshot:34: trailing whitespace.
++      | duplicates and another lost response   | failure dominates the unresolved client              |
+learning/S049/evidence/red/feature.source.snapshot:35: trailing whitespace.
++
+learning/S049/evidence/red/feature.source.snapshot:36: trailing whitespace.
++  Scenario: Equality at the deadline is allowed
+learning/S049/evidence/red/feature.source.snapshot:37: trailing whitespace.
++    Given a safe same-key retry arrives exactly at the original deadline
+learning/S049/evidence/red/feature.source.snapshot:38: trailing whitespace.
++    Then the synthetic outcome is success
+learning/S049/evidence/red/feature.source.snapshot:39: trailing whitespace.
++    And no retry restarts or extends that deadline
+learning/S049/evidence/red/feature.source.snapshot:40: trailing whitespace.
++
+learning/S049/evidence/red/feature.source.snapshot:41: trailing whitespace.
++  Scenario: Strict inputs and state transitions
+learning/S049/evidence/red/feature.source.snapshot:42: trailing whitespace.
++    Given only fixed synthetic keys and payloads can be chosen
+learning/S049/evidence/red/feature.source.snapshot:43: trailing whitespace.
++    Then unknown properties, invalid enums, non-integer or out-of-range numbers fail
+learning/S049/evidence/red/feature.source.snapshot:44: trailing whitespace.
++    And missing, extra, or malformed command arguments fail
+learning/S049/evidence/red/feature.source.snapshot:45: trailing whitespace.
++    And retry before commit, repeated commit, repeated retry, premature assessment,
+learning/S049/evidence/red/feature.source.snapshot:46: trailing whitespace.
++      invalid predictions, and premature new attempts do not change any state
+learning/S049/evidence/red/feature.source.snapshot:47: trailing whitespace.
++    And snapshots cannot mutate the private ledger or retained history
+learning/S049/evidence/red/feature.source.snapshot:48: trailing whitespace.
++
+learning/S049/evidence/red/feature.source.snapshot:49: trailing whitespace.
++  Scenario: Retain and bound complete attempts
+learning/S049/evidence/red/feature.source.snapshot:50: trailing whitespace.
++    Given an operator checks a prediction after observing a retry
+learning/S049/evidence/red/feature.source.snapshot:51: trailing whitespace.
++    Then the result, configuration, client result, effect ledger and trace are retained
+learning/S049/evidence/red/feature.source.snapshot:52: trailing whitespace.
++    When a new attempt starts
+learning/S049/evidence/red/feature.source.snapshot:53: trailing whitespace.
++    Then previous attempts remain unchanged
+learning/S049/evidence/red/feature.source.snapshot:54: trailing whitespace.
++    And after six complete attempts another attempt is blocked without eviction
+learning/S049/evidence/red/feature.source.snapshot:55: trailing whitespace.
++    When the operator explicitly resets
+learning/S049/evidence/red/feature.source.snapshot:56: trailing whitespace.
++    Then exact default configuration, empty history and the starting phase return
+learning/S049/evidence/red/feature.source.snapshot:57: trailing whitespace.
++
+learning/S049/evidence/red/feature.source.snapshot:58: trailing whitespace.
++  Scenario: Real browser, keyboard, errors and CSP
+learning/S049/evidence/red/feature.source.snapshot:59: trailing whitespace.
++    Given the standalone HTML is opened through the published isolated file helper
+learning/S049/evidence/red/feature.source.snapshot:60: trailing whitespace.
++    Then the exact synthetic banner, source, objective and limits are visible
+learning/S049/evidence/red/feature.source.snapshot:61: trailing whitespace.
++    And keyboard controls can commit, retry, predict, start again and reset
+learning/S049/evidence/red/feature.source.snapshot:62: trailing whitespace.
++    And disabled controls and invalid numeric input cannot mutate state
+learning/S049/evidence/red/feature.source.snapshot:63: trailing whitespace.
++    And unsafe retries visibly fail and lost replies visibly remain unknown
+learning/S049/evidence/red/feature.source.snapshot:64: trailing whitespace.
++    And text-only rendering and CSP block inline script and network connections
+learning/S049/evidence/red/feature.source.snapshot:65: trailing whitespace.
++    And normal verification never rewrites retained proof
+learning/S049/evidence/red/feature.source.snapshot:66: trailing whitespace.
++    And browser evidence is written only with CAPTURE_BROWSER_EVIDENCE=1
+learning/S049/evidence/red/focused.stdout.tap.txt:12: trailing whitespace.
++    
+learning/S049/evidence/red/focused.stdout.tap.txt:15: trailing whitespace.
++    
+learning/S049/evidence/red/model-tests.source.snapshot:1: trailing whitespace.
++'use strict';
+learning/S049/evidence/red/model-tests.source.snapshot:2: trailing whitespace.
++const test = require('node:test');
+learning/S049/evidence/red/model-tests.source.snapshot:3: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S049/evidence/red/model-tests.source.snapshot:4: trailing whitespace.
++const path = require('node:path');
+learning/S049/evidence/red/model-tests.source.snapshot:5: trailing whitespace.
++const { DEFAULT_CONFIG, BOUNDS, createLesson } = require(path.join(__dirname, '..', 'model.js'));
+learning/S049/evidence/red/model-tests.source.snapshot:6: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:7: trailing whitespace.
++function observed(overrides = {}) {
+learning/S049/evidence/red/model-tests.source.snapshot:8: trailing whitespace.
++  const lesson = createLesson();
+learning/S049/evidence/red/model-tests.source.snapshot:9: trailing whitespace.
++  lesson.commitAndLoseResponse({ ...DEFAULT_CONFIG, ...overrides });
+learning/S049/evidence/red/model-tests.source.snapshot:10: trailing whitespace.
++  lesson.retry();
+learning/S049/evidence/red/model-tests.source.snapshot:11: trailing whitespace.
++  return lesson;
+learning/S049/evidence/red/model-tests.source.snapshot:12: trailing whitespace.
++}
+learning/S049/evidence/red/model-tests.source.snapshot:13: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:14: trailing whitespace.
++function unchangedOnError(lesson, command, argument) {
+learning/S049/evidence/red/model-tests.source.snapshot:15: trailing whitespace.
++  const before = lesson.snapshot();
+learning/S049/evidence/red/model-tests.source.snapshot:16: trailing whitespace.
++  if (arguments.length === 3) assert.throws(() => lesson[command](argument));
+learning/S049/evidence/red/model-tests.source.snapshot:17: trailing whitespace.
++  else assert.throws(() => lesson[command]());
+learning/S049/evidence/red/model-tests.source.snapshot:18: trailing whitespace.
++  assert.deepEqual(lesson.snapshot(), before);
+learning/S049/evidence/red/model-tests.source.snapshot:19: trailing whitespace.
++}
+learning/S049/evidence/red/model-tests.source.snapshot:20: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:21: trailing whitespace.
++test('a committed POST remains one effect after its response is lost', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:22: trailing whitespace.
++  const lesson = createLesson();
+learning/S049/evidence/red/model-tests.source.snapshot:23: trailing whitespace.
++  const state = lesson.commitAndLoseResponse({ ...DEFAULT_CONFIG });
+learning/S049/evidence/red/model-tests.source.snapshot:24: trailing whitespace.
++  assert.equal(state.phase, 'ambiguous');
+learning/S049/evidence/red/model-tests.source.snapshot:25: trailing whitespace.
++  assert.equal(state.postCount, 1);
+learning/S049/evidence/red/model-tests.source.snapshot:26: trailing whitespace.
++  assert.deepEqual(state.effects, [{
+learning/S049/evidence/red/model-tests.source.snapshot:27: trailing whitespace.
++    effectId: 'synth-effect-1', key: 'synth-key-A', operation: 'synth-order', units: 10,
+learning/S049/evidence/red/model-tests.source.snapshot:28: trailing whitespace.
++  }]);
+learning/S049/evidence/red/model-tests.source.snapshot:29: trailing whitespace.
++  assert.deepEqual(state.client, { status: 'unresolved', effectId: null, units: null });
+learning/S049/evidence/red/model-tests.source.snapshot:30: trailing whitespace.
++  assert.equal(state.result, null);
+learning/S049/evidence/red/model-tests.source.snapshot:31: trailing whitespace.
++  assert.match(state.trace[1].event, /lost after commit/i);
+learning/S049/evidence/red/model-tests.source.snapshot:32: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:33: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:34: trailing whitespace.
++test('same key and payload replay the original result, not a second effect', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:35: trailing whitespace.
++  const state = observed().snapshot();
+learning/S049/evidence/red/model-tests.source.snapshot:36: trailing whitespace.
++  assert.equal(state.phase, 'observed');
+learning/S049/evidence/red/model-tests.source.snapshot:37: trailing whitespace.
++  assert.equal(state.postCount, 2);
+learning/S049/evidence/red/model-tests.source.snapshot:38: trailing whitespace.
++  assert.equal(state.effects.length, 1);
+learning/S049/evidence/red/model-tests.source.snapshot:39: trailing whitespace.
++  assert.equal(state.result.outcome, 'success');
+learning/S049/evidence/red/model-tests.source.snapshot:40: trailing whitespace.
++  assert.equal(state.result.correctClientResult, true);
+learning/S049/evidence/red/model-tests.source.snapshot:41: trailing whitespace.
++  assert.deepEqual(state.client, { status: 'confirmed', effectId: 'synth-effect-1', units: 10 });
+learning/S049/evidence/red/model-tests.source.snapshot:42: trailing whitespace.
++  assert.match(state.trace[3].event, /replay/i);
+learning/S049/evidence/red/model-tests.source.snapshot:43: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:44: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:45: trailing whitespace.
++test('no deduplication duplicates the business effect despite using the same key', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:46: trailing whitespace.
++  const state = observed({ deduplication: 'none' }).snapshot();
+learning/S049/evidence/red/model-tests.source.snapshot:47: trailing whitespace.
++  assert.equal(state.effects.length, 2);
+learning/S049/evidence/red/model-tests.source.snapshot:48: trailing whitespace.
++  assert.equal(state.effects[1].effectId, 'synth-effect-2');
+learning/S049/evidence/red/model-tests.source.snapshot:49: trailing whitespace.
++  assert.equal(state.result.outcome, 'failure');
+learning/S049/evidence/red/model-tests.source.snapshot:50: trailing whitespace.
++  assert.ok(state.result.reasons.some((reason) => /duplicate/i.test(reason)));
+learning/S049/evidence/red/model-tests.source.snapshot:51: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:52: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:53: trailing whitespace.
++test('a new key represents a new operation to even the atomic ledger', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:54: trailing whitespace.
++  const state = observed({ retryKey: 'new' }).snapshot();
+learning/S049/evidence/red/model-tests.source.snapshot:55: trailing whitespace.
++  assert.equal(state.effects.length, 2);
+learning/S049/evidence/red/model-tests.source.snapshot:56: trailing whitespace.
++  assert.equal(state.effects[1].key, 'synth-key-B');
+learning/S049/evidence/red/model-tests.source.snapshot:57: trailing whitespace.
++  assert.equal(state.result.outcome, 'failure');
+learning/S049/evidence/red/model-tests.source.snapshot:58: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:59: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:60: trailing whitespace.
++test('a changed payload with the same key is rejected without another commit', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:61: trailing whitespace.
++  const state = observed({ retryPayload: 'changed' }).snapshot();
+learning/S049/evidence/red/model-tests.source.snapshot:62: trailing whitespace.
++  assert.equal(state.effects.length, 1);
+learning/S049/evidence/red/model-tests.source.snapshot:63: trailing whitespace.
++  assert.equal(state.client.status, 'rejected-conflict');
+learning/S049/evidence/red/model-tests.source.snapshot:64: trailing whitespace.
++  assert.equal(state.result.correctClientResult, false);
+learning/S049/evidence/red/model-tests.source.snapshot:65: trailing whitespace.
++  assert.equal(state.result.outcome, 'failure');
+learning/S049/evidence/red/model-tests.source.snapshot:66: trailing whitespace.
++  assert.match(state.trace[3].event, /409.*conflict/i);
+learning/S049/evidence/red/model-tests.source.snapshot:67: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:68: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:69: trailing whitespace.
++test('a missing key is rejected by atomic enforcement, not treated as safe retry', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:70: trailing whitespace.
++  const state = observed({ retryKey: 'missing' }).snapshot();
+learning/S049/evidence/red/model-tests.source.snapshot:71: trailing whitespace.
++  assert.equal(state.effects.length, 1);
+learning/S049/evidence/red/model-tests.source.snapshot:72: trailing whitespace.
++  assert.equal(state.client.status, 'rejected-missing-key');
+learning/S049/evidence/red/model-tests.source.snapshot:73: trailing whitespace.
++  assert.equal(state.result.outcome, 'failure');
+learning/S049/evidence/red/model-tests.source.snapshot:74: trailing whitespace.
++  assert.match(state.trace[3].event, /400.*missing/i);
+learning/S049/evidence/red/model-tests.source.snapshot:75: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:76: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:77: trailing whitespace.
++test('another lost response preserves explicit uncertainty even with one effect', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:78: trailing whitespace.
++  const state = observed({ retryResponse: 'lost' }).snapshot();
+learning/S049/evidence/red/model-tests.source.snapshot:79: trailing whitespace.
++  assert.equal(state.effects.length, 1);
+learning/S049/evidence/red/model-tests.source.snapshot:80: trailing whitespace.
++  assert.equal(state.client.status, 'unresolved');
+learning/S049/evidence/red/model-tests.source.snapshot:81: trailing whitespace.
++  assert.equal(state.result.correctClientResult, null);
+learning/S049/evidence/red/model-tests.source.snapshot:82: trailing whitespace.
++  assert.equal(state.result.outcome, 'unknown');
+learning/S049/evidence/red/model-tests.source.snapshot:83: trailing whitespace.
++  assert.match(state.result.reasons.join(' '), /unresolved/i);
+learning/S049/evidence/red/model-tests.source.snapshot:84: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:85: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:86: trailing whitespace.
++test('known duplicate effects dominate an unresolved client', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:87: trailing whitespace.
++  const state = observed({ retryKey: 'new', retryResponse: 'lost' }).snapshot();
+learning/S049/evidence/red/model-tests.source.snapshot:88: trailing whitespace.
++  assert.equal(state.client.status, 'unresolved');
+learning/S049/evidence/red/model-tests.source.snapshot:89: trailing whitespace.
++  assert.equal(state.result.outcome, 'failure');
+learning/S049/evidence/red/model-tests.source.snapshot:90: trailing whitespace.
++  assert.equal(state.result.effectCount, 2);
+learning/S049/evidence/red/model-tests.source.snapshot:91: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:92: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:93: trailing whitespace.
++test('a known budget breach fails even with one correct replay or a lost response', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:94: trailing whitespace.
++  for (const retryResponse of ['received', 'lost']) {
+learning/S049/evidence/red/model-tests.source.snapshot:95: trailing whitespace.
++    const state = observed({ retryAfterMs: 101, deadlineMs: 100, retryResponse }).snapshot();
+learning/S049/evidence/red/model-tests.source.snapshot:96: trailing whitespace.
++    assert.equal(state.effects.length, 1);
+learning/S049/evidence/red/model-tests.source.snapshot:97: trailing whitespace.
++    assert.equal(state.result.withinBudget, false);
+learning/S049/evidence/red/model-tests.source.snapshot:98: trailing whitespace.
++    assert.equal(state.result.outcome, 'failure');
+learning/S049/evidence/red/model-tests.source.snapshot:99: trailing whitespace.
++    assert.ok(state.result.reasons.some((reason) => /deadline/i.test(reason)));
+learning/S049/evidence/red/model-tests.source.snapshot:100: trailing whitespace.
++  }
+learning/S049/evidence/red/model-tests.source.snapshot:101: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:102: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:103: trailing whitespace.
++test('the original inclusive deadline is never restarted by retry', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:104: trailing whitespace.
++  for (const [retryAfterMs, deadlineMs] of [[0, 1], [1, 1], [1000, 1000]]) {
+learning/S049/evidence/red/model-tests.source.snapshot:105: trailing whitespace.
++    const state = observed({ retryAfterMs, deadlineMs }).snapshot();
+learning/S049/evidence/red/model-tests.source.snapshot:106: trailing whitespace.
++    assert.equal(state.result.outcome, 'success');
+learning/S049/evidence/red/model-tests.source.snapshot:107: trailing whitespace.
++    assert.equal(state.result.elapsedMs, retryAfterMs);
+learning/S049/evidence/red/model-tests.source.snapshot:108: trailing whitespace.
++    assert.equal(state.result.deadlineMs, deadlineMs);
+learning/S049/evidence/red/model-tests.source.snapshot:109: trailing whitespace.
++    assert.equal(state.result.withinBudget, true);
+learning/S049/evidence/red/model-tests.source.snapshot:110: trailing whitespace.
++  }
+learning/S049/evidence/red/model-tests.source.snapshot:111: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:112: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:113: trailing whitespace.
++test('all fixed retry combinations obey independent effect and client assertions', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:114: trailing whitespace.
++  for (const deduplication of ['atomic', 'none']) {
+learning/S049/evidence/red/model-tests.source.snapshot:115: trailing whitespace.
++    for (const retryKey of ['same', 'new', 'missing']) {
+learning/S049/evidence/red/model-tests.source.snapshot:116: trailing whitespace.
++      for (const retryPayload of ['same', 'changed']) {
+learning/S049/evidence/red/model-tests.source.snapshot:117: trailing whitespace.
++        for (const retryResponse of ['received', 'lost']) {
+learning/S049/evidence/red/model-tests.source.snapshot:118: trailing whitespace.
++          for (const retryAfterMs of [30, 101]) {
+learning/S049/evidence/red/model-tests.source.snapshot:119: trailing whitespace.
++            const state = observed({
+learning/S049/evidence/red/model-tests.source.snapshot:120: trailing whitespace.
++              deduplication, retryKey, retryPayload, retryResponse, retryAfterMs,
+learning/S049/evidence/red/model-tests.source.snapshot:121: trailing whitespace.
++            }).snapshot();
+learning/S049/evidence/red/model-tests.source.snapshot:122: trailing whitespace.
++            const duplicate = deduplication === 'none' || retryKey === 'new';
+learning/S049/evidence/red/model-tests.source.snapshot:123: trailing whitespace.
++            const rejected = deduplication === 'atomic'
+learning/S049/evidence/red/model-tests.source.snapshot:124: trailing whitespace.
++              && (retryKey === 'missing' || (retryKey === 'same' && retryPayload === 'changed'));
+learning/S049/evidence/red/model-tests.source.snapshot:125: trailing whitespace.
++            const expected = duplicate || retryAfterMs > 100
+learning/S049/evidence/red/model-tests.source.snapshot:126: trailing whitespace.
++              || (rejected && retryResponse === 'received')
+learning/S049/evidence/red/model-tests.source.snapshot:127: trailing whitespace.
++              ? 'failure' : retryResponse === 'lost' ? 'unknown' : 'success';
+learning/S049/evidence/red/model-tests.source.snapshot:128: trailing whitespace.
++            assert.equal(state.effects.length, duplicate ? 2 : 1);
+learning/S049/evidence/red/model-tests.source.snapshot:129: trailing whitespace.
++            assert.equal(state.result.outcome, expected);
+learning/S049/evidence/red/model-tests.source.snapshot:130: trailing whitespace.
++            assert.equal(state.result.postAttempts, 2);
+learning/S049/evidence/red/model-tests.source.snapshot:131: trailing whitespace.
++            assert.ok(state.trace.length <= BOUNDS.maxTrace);
+learning/S049/evidence/red/model-tests.source.snapshot:132: trailing whitespace.
++            assert.ok(state.effects.length <= BOUNDS.maxEffects);
+learning/S049/evidence/red/model-tests.source.snapshot:133: trailing whitespace.
++          }
+learning/S049/evidence/red/model-tests.source.snapshot:134: trailing whitespace.
++        }
+learning/S049/evidence/red/model-tests.source.snapshot:135: trailing whitespace.
++      }
+learning/S049/evidence/red/model-tests.source.snapshot:136: trailing whitespace.
++    }
+learning/S049/evidence/red/model-tests.source.snapshot:137: trailing whitespace.
++  }
+learning/S049/evidence/red/model-tests.source.snapshot:138: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:139: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:140: trailing whitespace.
++test('strict configuration rejects shape, type, enum and numeric violations atomically', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:141: trailing whitespace.
++  const invalid = [
+learning/S049/evidence/red/model-tests.source.snapshot:142: trailing whitespace.
++    null, undefined, [], new Date(), 'atomic', {}, { ...DEFAULT_CONFIG, extra: true },
+learning/S049/evidence/red/model-tests.source.snapshot:143: trailing whitespace.
++    { ...DEFAULT_CONFIG, deduplication: 'Atomic' },
+learning/S049/evidence/red/model-tests.source.snapshot:144: trailing whitespace.
++    { ...DEFAULT_CONFIG, retryKey: 'real-key' },
+learning/S049/evidence/red/model-tests.source.snapshot:145: trailing whitespace.
++    { ...DEFAULT_CONFIG, retryPayload: '<script>' },
+learning/S049/evidence/red/model-tests.source.snapshot:146: trailing whitespace.
++    { ...DEFAULT_CONFIG, retryResponse: 'maybe' },
+learning/S049/evidence/red/model-tests.source.snapshot:147: trailing whitespace.
++  ];
+learning/S049/evidence/red/model-tests.source.snapshot:148: trailing whitespace.
++  for (const field of ['retryAfterMs', 'deadlineMs']) {
+learning/S049/evidence/red/model-tests.source.snapshot:149: trailing whitespace.
++    for (const value of ['30', NaN, Infinity, -1, 0.5, 1001, null, true]) {
+learning/S049/evidence/red/model-tests.source.snapshot:150: trailing whitespace.
++      invalid.push({ ...DEFAULT_CONFIG, [field]: value });
+learning/S049/evidence/red/model-tests.source.snapshot:151: trailing whitespace.
++    }
+learning/S049/evidence/red/model-tests.source.snapshot:152: trailing whitespace.
++  }
+learning/S049/evidence/red/model-tests.source.snapshot:153: trailing whitespace.
++  invalid.push({ ...DEFAULT_CONFIG, deadlineMs: 0 });
+learning/S049/evidence/red/model-tests.source.snapshot:154: trailing whitespace.
++  const accessor = { ...DEFAULT_CONFIG };
+learning/S049/evidence/red/model-tests.source.snapshot:155: trailing whitespace.
++  Object.defineProperty(accessor, 'retryKey', { enumerable: true, get() { throw new Error('getter used'); } });
+learning/S049/evidence/red/model-tests.source.snapshot:156: trailing whitespace.
++  invalid.push(accessor);
+learning/S049/evidence/red/model-tests.source.snapshot:157: trailing whitespace.
++  const symbolField = { ...DEFAULT_CONFIG, [Symbol('extra')]: true };
+learning/S049/evidence/red/model-tests.source.snapshot:158: trailing whitespace.
++  invalid.push(symbolField);
+learning/S049/evidence/red/model-tests.source.snapshot:159: trailing whitespace.
++  const lesson = createLesson();
+learning/S049/evidence/red/model-tests.source.snapshot:160: trailing whitespace.
++  for (const config of invalid) unchangedOnError(lesson, 'commitAndLoseResponse', config);
+learning/S049/evidence/red/model-tests.source.snapshot:161: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:162: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:163: trailing whitespace.
++test('private configuration is detached from caller inputs and snapshots are deeply immutable', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:164: trailing whitespace.
++  const lesson = createLesson();
+learning/S049/evidence/red/model-tests.source.snapshot:165: trailing whitespace.
++  const config = { ...DEFAULT_CONFIG };
+learning/S049/evidence/red/model-tests.source.snapshot:166: trailing whitespace.
++  const state = lesson.commitAndLoseResponse(config);
+learning/S049/evidence/red/model-tests.source.snapshot:167: trailing whitespace.
++  config.retryKey = 'new';
+learning/S049/evidence/red/model-tests.source.snapshot:168: trailing whitespace.
++  assert.equal(lesson.snapshot().config.retryKey, 'same');
+learning/S049/evidence/red/model-tests.source.snapshot:169: trailing whitespace.
++  assert.ok(Object.isFrozen(state));
+learning/S049/evidence/red/model-tests.source.snapshot:170: trailing whitespace.
++  assert.ok(Object.isFrozen(state.effects[0]));
+learning/S049/evidence/red/model-tests.source.snapshot:171: trailing whitespace.
++  assert.throws(() => { state.effects[0].units = 999; }, TypeError);
+learning/S049/evidence/red/model-tests.source.snapshot:172: trailing whitespace.
++  assert.throws(() => { state.config.retryKey = 'new'; }, TypeError);
+learning/S049/evidence/red/model-tests.source.snapshot:173: trailing whitespace.
++  lesson.retry();
+learning/S049/evidence/red/model-tests.source.snapshot:174: trailing whitespace.
++  assert.equal(lesson.snapshot().effects.length, 1);
+learning/S049/evidence/red/model-tests.source.snapshot:175: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:176: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:177: trailing whitespace.
++test('out-of-order and repeated actions cannot change the current attempt', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:178: trailing whitespace.
++  const lesson = createLesson();
+learning/S049/evidence/red/model-tests.source.snapshot:179: trailing whitespace.
++  unchangedOnError(lesson, 'retry');
+learning/S049/evidence/red/model-tests.source.snapshot:180: trailing whitespace.
++  unchangedOnError(lesson, 'checkPrediction', 'success');
+learning/S049/evidence/red/model-tests.source.snapshot:181: trailing whitespace.
++  unchangedOnError(lesson, 'newAttempt');
+learning/S049/evidence/red/model-tests.source.snapshot:182: trailing whitespace.
++  lesson.commitAndLoseResponse({ ...DEFAULT_CONFIG });
+learning/S049/evidence/red/model-tests.source.snapshot:183: trailing whitespace.
++  unchangedOnError(lesson, 'commitAndLoseResponse', { ...DEFAULT_CONFIG });
+learning/S049/evidence/red/model-tests.source.snapshot:184: trailing whitespace.
++  unchangedOnError(lesson, 'checkPrediction', 'unknown');
+learning/S049/evidence/red/model-tests.source.snapshot:185: trailing whitespace.
++  unchangedOnError(lesson, 'newAttempt');
+learning/S049/evidence/red/model-tests.source.snapshot:186: trailing whitespace.
++  lesson.retry();
+learning/S049/evidence/red/model-tests.source.snapshot:187: trailing whitespace.
++  unchangedOnError(lesson, 'retry');
+learning/S049/evidence/red/model-tests.source.snapshot:188: trailing whitespace.
++  unchangedOnError(lesson, 'commitAndLoseResponse', { ...DEFAULT_CONFIG });
+learning/S049/evidence/red/model-tests.source.snapshot:189: trailing whitespace.
++  unchangedOnError(lesson, 'newAttempt');
+learning/S049/evidence/red/model-tests.source.snapshot:190: trailing whitespace.
++  for (const prediction of ['', null, undefined, 'Success', '<script>', 1]) {
+learning/S049/evidence/red/model-tests.source.snapshot:191: trailing whitespace.
++    unchangedOnError(lesson, 'checkPrediction', prediction);
+learning/S049/evidence/red/model-tests.source.snapshot:192: trailing whitespace.
++  }
+learning/S049/evidence/red/model-tests.source.snapshot:193: trailing whitespace.
++  lesson.checkPrediction('success');
+learning/S049/evidence/red/model-tests.source.snapshot:194: trailing whitespace.
++  unchangedOnError(lesson, 'checkPrediction', 'success');
+learning/S049/evidence/red/model-tests.source.snapshot:195: trailing whitespace.
++  unchangedOnError(lesson, 'retry');
+learning/S049/evidence/red/model-tests.source.snapshot:196: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:197: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:198: trailing whitespace.
++test('commands reject extra arguments instead of silently ignoring them', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:199: trailing whitespace.
++  const lesson = createLesson();
+learning/S049/evidence/red/model-tests.source.snapshot:200: trailing whitespace.
++  assert.throws(() => lesson.commitAndLoseResponse({ ...DEFAULT_CONFIG }, 'extra'));
+learning/S049/evidence/red/model-tests.source.snapshot:201: trailing whitespace.
++  lesson.commitAndLoseResponse({ ...DEFAULT_CONFIG });
+learning/S049/evidence/red/model-tests.source.snapshot:202: trailing whitespace.
++  assert.throws(() => lesson.retry({ retryKey: 'new' }));
+learning/S049/evidence/red/model-tests.source.snapshot:203: trailing whitespace.
++  lesson.retry();
+learning/S049/evidence/red/model-tests.source.snapshot:204: trailing whitespace.
++  assert.throws(() => lesson.checkPrediction('success', 'extra'));
+learning/S049/evidence/red/model-tests.source.snapshot:205: trailing whitespace.
++  lesson.checkPrediction('success');
+learning/S049/evidence/red/model-tests.source.snapshot:206: trailing whitespace.
++  assert.throws(() => lesson.newAttempt('extra'));
+learning/S049/evidence/red/model-tests.source.snapshot:207: trailing whitespace.
++  assert.throws(() => lesson.reset('extra'));
+learning/S049/evidence/red/model-tests.source.snapshot:208: trailing whitespace.
++  assert.throws(() => lesson.snapshot('extra'));
+learning/S049/evidence/red/model-tests.source.snapshot:209: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:210: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:211: trailing whitespace.
++test('prediction scoring is separate from success, failure and unknown user impact', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:212: trailing whitespace.
++  for (const config of [{}, { retryKey: 'new' }, { retryResponse: 'lost' }]) {
+learning/S049/evidence/red/model-tests.source.snapshot:213: trailing whitespace.
++    const lesson = observed(config);
+learning/S049/evidence/red/model-tests.source.snapshot:214: trailing whitespace.
++    const before = lesson.snapshot();
+learning/S049/evidence/red/model-tests.source.snapshot:215: trailing whitespace.
++    const selected = before.result.outcome === 'success' ? 'failure' : 'success';
+learning/S049/evidence/red/model-tests.source.snapshot:216: trailing whitespace.
++    const after = lesson.checkPrediction(selected);
+learning/S049/evidence/red/model-tests.source.snapshot:217: trailing whitespace.
++    assert.equal(after.phase, 'complete');
+learning/S049/evidence/red/model-tests.source.snapshot:218: trailing whitespace.
++    assert.deepEqual(after.result, before.result);
+learning/S049/evidence/red/model-tests.source.snapshot:219: trailing whitespace.
++    assert.deepEqual(after.effects, before.effects);
+learning/S049/evidence/red/model-tests.source.snapshot:220: trailing whitespace.
++    assert.deepEqual(after.prediction, { selected, correct: false });
+learning/S049/evidence/red/model-tests.source.snapshot:221: trailing whitespace.
++    assert.equal(after.history.length, 1);
+learning/S049/evidence/red/model-tests.source.snapshot:222: trailing whitespace.
++    assert.deepEqual(after.history[0].result, before.result);
+learning/S049/evidence/red/model-tests.source.snapshot:223: trailing whitespace.
++  }
+learning/S049/evidence/red/model-tests.source.snapshot:224: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:225: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:226: trailing whitespace.
++test('new attempts retain complete immutable history and restore default controls', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:227: trailing whitespace.
++  const lesson = observed({ retryKey: 'new' });
+learning/S049/evidence/red/model-tests.source.snapshot:228: trailing whitespace.
++  lesson.checkPrediction('failure');
+learning/S049/evidence/red/model-tests.source.snapshot:229: trailing whitespace.
++  const first = lesson.snapshot().history[0];
+learning/S049/evidence/red/model-tests.source.snapshot:230: trailing whitespace.
++  lesson.newAttempt();
+learning/S049/evidence/red/model-tests.source.snapshot:231: trailing whitespace.
++  assert.equal(lesson.snapshot().phase, 'configure');
+learning/S049/evidence/red/model-tests.source.snapshot:232: trailing whitespace.
++  assert.deepEqual(lesson.snapshot().config, DEFAULT_CONFIG);
+learning/S049/evidence/red/model-tests.source.snapshot:233: trailing whitespace.
++  assert.equal(lesson.snapshot().effects.length, 0);
+learning/S049/evidence/red/model-tests.source.snapshot:234: trailing whitespace.
++  lesson.commitAndLoseResponse({ ...DEFAULT_CONFIG });
+learning/S049/evidence/red/model-tests.source.snapshot:235: trailing whitespace.
++  lesson.retry();
+learning/S049/evidence/red/model-tests.source.snapshot:236: trailing whitespace.
++  lesson.checkPrediction('success');
+learning/S049/evidence/red/model-tests.source.snapshot:237: trailing whitespace.
++  assert.equal(lesson.snapshot().history.length, 2);
+learning/S049/evidence/red/model-tests.source.snapshot:238: trailing whitespace.
++  assert.deepEqual(lesson.snapshot().history[0], first);
+learning/S049/evidence/red/model-tests.source.snapshot:239: trailing whitespace.
++  assert.equal(lesson.snapshot().history[1].runId, 2);
+learning/S049/evidence/red/model-tests.source.snapshot:240: trailing whitespace.
++  assert.ok(Object.isFrozen(lesson.snapshot().history[0].trace));
+learning/S049/evidence/red/model-tests.source.snapshot:241: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:242: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:243: trailing whitespace.
++test('six attempts are retained without eviction and a seventh is blocked', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:244: trailing whitespace.
++  const lesson = createLesson();
+learning/S049/evidence/red/model-tests.source.snapshot:245: trailing whitespace.
++  for (let index = 0; index < BOUNDS.maxRuns; index += 1) {
+learning/S049/evidence/red/model-tests.source.snapshot:246: trailing whitespace.
++    if (index > 0) lesson.newAttempt();
+learning/S049/evidence/red/model-tests.source.snapshot:247: trailing whitespace.
++    lesson.commitAndLoseResponse({ ...DEFAULT_CONFIG });
+learning/S049/evidence/red/model-tests.source.snapshot:248: trailing whitespace.
++    lesson.retry();
+learning/S049/evidence/red/model-tests.source.snapshot:249: trailing whitespace.
++    lesson.checkPrediction('success');
+learning/S049/evidence/red/model-tests.source.snapshot:250: trailing whitespace.
++  }
+learning/S049/evidence/red/model-tests.source.snapshot:251: trailing whitespace.
++  assert.deepEqual(lesson.snapshot().history.map((row) => row.runId), [1, 2, 3, 4, 5, 6]);
+learning/S049/evidence/red/model-tests.source.snapshot:252: trailing whitespace.
++  unchangedOnError(lesson, 'newAttempt');
+learning/S049/evidence/red/model-tests.source.snapshot:253: trailing whitespace.
++  assert.equal(lesson.snapshot().history.length, 6);
+learning/S049/evidence/red/model-tests.source.snapshot:254: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:255: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:256: trailing whitespace.
++test('explicit reset from every phase returns the exact baseline without history', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:257: trailing whitespace.
++  const baseline = createLesson().snapshot();
+learning/S049/evidence/red/model-tests.source.snapshot:258: trailing whitespace.
++  for (const phase of ['configure', 'ambiguous', 'observed', 'complete']) {
+learning/S049/evidence/red/model-tests.source.snapshot:259: trailing whitespace.
++    const lesson = createLesson();
+learning/S049/evidence/red/model-tests.source.snapshot:260: trailing whitespace.
++    if (phase !== 'configure') lesson.commitAndLoseResponse({ ...DEFAULT_CONFIG, retryKey: 'new' });
+learning/S049/evidence/red/model-tests.source.snapshot:261: trailing whitespace.
++    if (['observed', 'complete'].includes(phase)) lesson.retry();
+learning/S049/evidence/red/model-tests.source.snapshot:262: trailing whitespace.
++    if (phase === 'complete') lesson.checkPrediction('failure');
+learning/S049/evidence/red/model-tests.source.snapshot:263: trailing whitespace.
++    assert.deepEqual(lesson.reset(), baseline);
+learning/S049/evidence/red/model-tests.source.snapshot:264: trailing whitespace.
++    assert.deepEqual(lesson.snapshot(), baseline);
+learning/S049/evidence/red/model-tests.source.snapshot:265: trailing whitespace.
++  }
+learning/S049/evidence/red/model-tests.source.snapshot:266: trailing whitespace.
++});
+learning/S049/evidence/red/model-tests.source.snapshot:267: trailing whitespace.
++
+learning/S049/evidence/red/model-tests.source.snapshot:268: trailing whitespace.
++test('repeat executions produce identical traces, effects and results', () => {
+learning/S049/evidence/red/model-tests.source.snapshot:269: trailing whitespace.
++  const config = { deduplication: 'none', retryPayload: 'changed', retryResponse: 'lost' };
+learning/S049/evidence/red/model-tests.source.snapshot:270: trailing whitespace.
++  const first = observed(config);
+learning/S049/evidence/red/model-tests.source.snapshot:271: trailing whitespace.
++  const second = observed(config);
+learning/S049/evidence/red/model-tests.source.snapshot:272: trailing whitespace.
++  assert.deepEqual(first.snapshot(), second.snapshot());
+learning/S049/evidence/red/model-tests.source.snapshot:273: trailing whitespace.
++  first.checkPrediction('failure');
+learning/S049/evidence/red/model-tests.source.snapshot:274: trailing whitespace.
++  second.checkPrediction('failure');
+learning/S049/evidence/red/model-tests.source.snapshot:275: trailing whitespace.
++  assert.deepEqual(first.snapshot(), second.snapshot());
+learning/S049/evidence/red/model-tests.source.snapshot:276: trailing whitespace.
++});
+learning/S049/evidence/red/model.source.snapshot:1: trailing whitespace.
++(function (root, factory) {
+learning/S049/evidence/red/model.source.snapshot:2: trailing whitespace.
++  'use strict';
+learning/S049/evidence/red/model.source.snapshot:3: trailing whitespace.
++  if (typeof module === 'object' && module.exports) module.exports = factory();
+learning/S049/evidence/red/model.source.snapshot:4: trailing whitespace.
++  else root.S049Lesson = factory();
+learning/S049/evidence/red/model.source.snapshot:5: trailing whitespace.
++}(typeof globalThis === 'object' ? globalThis : this, function () {
+learning/S049/evidence/red/model.source.snapshot:6: trailing whitespace.
++  'use strict';
+learning/S049/evidence/red/model.source.snapshot:7: trailing whitespace.
++  const DEFAULT_CONFIG = Object.freeze({
+learning/S049/evidence/red/model.source.snapshot:8: trailing whitespace.
++    deduplication: 'atomic',
+learning/S049/evidence/red/model.source.snapshot:9: trailing whitespace.
++    retryKey: 'same',
+learning/S049/evidence/red/model.source.snapshot:10: trailing whitespace.
++    retryPayload: 'same',
+learning/S049/evidence/red/model.source.snapshot:11: trailing whitespace.
++    retryResponse: 'received',
+learning/S049/evidence/red/model.source.snapshot:12: trailing whitespace.
++    retryAfterMs: 30,
+learning/S049/evidence/red/model.source.snapshot:13: trailing whitespace.
++    deadlineMs: 100,
+learning/S049/evidence/red/model.source.snapshot:14: trailing whitespace.
++  });
+learning/S049/evidence/red/model.source.snapshot:15: trailing whitespace.
++  const BOUNDS = Object.freeze({ maxRuns: 6, maxTimeMs: 1000, maxEffects: 2, maxTrace: 6 });
+learning/S049/evidence/red/model.source.snapshot:16: trailing whitespace.
++  function createLesson() {
+learning/S049/evidence/red/model.source.snapshot:17: trailing whitespace.
++    const state = {
+learning/S049/evidence/red/model.source.snapshot:18: trailing whitespace.
++      schemaVersion: 1, phase: 'configure', config: { ...DEFAULT_CONFIG },
+learning/S049/evidence/red/model.source.snapshot:19: trailing whitespace.
++      effects: [], trace: [], client: { status: 'not-sent', effectId: null, units: null },
+learning/S049/evidence/red/model.source.snapshot:20: trailing whitespace.
++      elapsedMs: 0, postCount: 0, result: null, prediction: null, history: [],
+learning/S049/evidence/red/model.source.snapshot:21: trailing whitespace.
++    };
+learning/S049/evidence/red/model.source.snapshot:22: trailing whitespace.
++    const snapshot = () => JSON.parse(JSON.stringify(state));
+learning/S049/evidence/red/model.source.snapshot:23: trailing whitespace.
++    return Object.freeze({
+learning/S049/evidence/red/model.source.snapshot:24: trailing whitespace.
++      snapshot,
+learning/S049/evidence/red/model.source.snapshot:25: trailing whitespace.
++      commitAndLoseResponse: snapshot,
+learning/S049/evidence/red/model.source.snapshot:26: trailing whitespace.
++      retry: snapshot,
+learning/S049/evidence/red/model.source.snapshot:27: trailing whitespace.
++      checkPrediction: snapshot,
+learning/S049/evidence/red/model.source.snapshot:28: trailing whitespace.
++      newAttempt: snapshot,
+learning/S049/evidence/red/model.source.snapshot:29: trailing whitespace.
++      reset: snapshot,
+learning/S049/evidence/red/model.source.snapshot:30: trailing whitespace.
++    });
+learning/S049/evidence/red/model.source.snapshot:31: trailing whitespace.
++  }
+learning/S049/evidence/red/model.source.snapshot:32: trailing whitespace.
++  return Object.freeze({ DEFAULT_CONFIG, BOUNDS, createLesson });
+learning/S049/evidence/red/model.source.snapshot:33: trailing whitespace.
++}));
+learning/S049/evidence/red/stdout.tap.txt:12: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:15: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:38: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:41: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:65: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:67: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:91: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:93: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:117: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:119: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:143: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:145: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:169: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:171: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:196: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:199: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:223: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:225: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:268: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:270: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:315: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:317: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:401: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:403: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:428: trailing whitespace.
++    
+learning/S049/evidence/red/stdout.tap.txt:438: trailing whitespace.
++    
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:1: trailing whitespace.
++'use strict';
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:2: trailing whitespace.
++const test = require('node:test');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:3: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:4: trailing whitespace.
++const fs = require('node:fs');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:5: trailing whitespace.
++const path = require('node:path');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:6: trailing whitespace.
++const crypto = require('node:crypto');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:7: trailing whitespace.
++const repository = path.resolve(__dirname, '..', '..', '..');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:8: trailing whitespace.
++const lessonRoot = path.resolve(__dirname, '..');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:9: trailing whitespace.
++const helperPath = path.join(repository, 'testing', 'browser', 'isolated.cjs');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:10: trailing whitespace.
++const helperSha256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:11: trailing whitespace.
++const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:12: trailing whitespace.
++assert.equal(hash(fs.readFileSync(helperPath)), helperSha256, 'Only the published helper is qualified for this check');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:13: trailing whitespace.
++const { openIsolatedLesson } = require(helperPath);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:14: trailing whitespace.
++const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:15: trailing whitespace.
++
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:16: trailing whitespace.
++test('actual isolated browser: POST ambiguity, keyboard, errors, history, reset and CSP', { timeout: 120000 }, async (t) => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:17: trailing whitespace.
++  const startedAtUtc = new Date().toISOString();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:18: trailing whitespace.
++  const checks = [];
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:19: trailing whitespace.
++  const observations = {};
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:20: trailing whitespace.
++  const pageErrors = [];
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:21: trailing whitespace.
++  const consoleErrors = [];
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:22: trailing whitespace.
++  const externalRoutes = [];
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:23: trailing whitespace.
++  let session;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:24: trailing whitespace.
++  let browserVersion;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:25: trailing whitespace.
++  let failureDOM;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:26: trailing whitespace.
++  let failureImage;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:27: trailing whitespace.
++  let finalDOM;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:28: trailing whitespace.
++  let closed = false;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:29: trailing whitespace.
++  async function check(name, work) {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:30: trailing whitespace.
++    await t.test(name, async () => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:31: trailing whitespace.
++      try {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:32: trailing whitespace.
++        await work();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:33: trailing whitespace.
++        checks.push({ name, passed: true });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:34: trailing whitespace.
++      } catch (error) {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:35: trailing whitespace.
++        checks.push({ name, passed: false, error: error.message });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:36: trailing whitespace.
++        throw error;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:37: trailing whitespace.
++      }
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:38: trailing whitespace.
++    });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:39: trailing whitespace.
++    assert.equal(checks.at(-1)?.passed, true, `Browser check failed: ${name}`);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:40: trailing whitespace.
++  }
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:41: trailing whitespace.
++  try {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:42: trailing whitespace.
++    session = await openIsolatedLesson(path.join('learning', 'S049', 'index.html'));
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:43: trailing whitespace.
++    browserVersion = session.browserVersion;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:44: trailing whitespace.
++    const page = session.page;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:45: trailing whitespace.
++    page.on('pageerror', (error) => pageErrors.push(error.message));
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:46: trailing whitespace.
++    page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:47: trailing whitespace.
++    await page.route('**/*', (route) => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:48: trailing whitespace.
++      const url = route.request().url();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:49: trailing whitespace.
++      if (/^https?:/i.test(url)) {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:50: trailing whitespace.
++        externalRoutes.push(url);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:51: trailing whitespace.
++        return route.abort('blockedbyclient');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:52: trailing whitespace.
++      }
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:53: trailing whitespace.
++      return route.continue();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:54: trailing whitespace.
++    });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:55: trailing whitespace.
++    const text = (id) => page.locator(`#${id}`).textContent();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:56: trailing whitespace.
++    const focus = () => page.evaluate(() => document.activeElement.id);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:57: trailing whitespace.
++    const snapshot = () => page.evaluate(() => ({
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:58: trailing whitespace.
++      effects: document.getElementById('effect-count').textContent,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:59: trailing whitespace.
++      units: document.getElementById('total-units').textContent,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:60: trailing whitespace.
++      posts: document.getElementById('post-count').textContent,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:61: trailing whitespace.
++      client: document.getElementById('client-result').textContent,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:62: trailing whitespace.
++      clock: document.getElementById('clock').textContent,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:63: trailing whitespace.
++      outcome: document.getElementById('outcome').textContent,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:64: trailing whitespace.
++      reasons: document.getElementById('reasons').textContent,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:65: trailing whitespace.
++      trace: [...document.querySelectorAll('#trace > li')].map((row) => row.textContent),
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:66: trailing whitespace.
++      history: [...document.querySelectorAll('#history > li > p')].map((row) => row.textContent),
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:67: trailing whitespace.
++      historyCount: document.getElementById('history-count').textContent,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:68: trailing whitespace.
++    }));
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:69: trailing whitespace.
++    async function choosePrediction(value) {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:70: trailing whitespace.
++      await page.locator('#prediction').selectOption(value);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:71: trailing whitespace.
++      await page.locator('#check-prediction').click();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:72: trailing whitespace.
++    }
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:73: trailing whitespace.
++    async function newAttempt() {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:74: trailing whitespace.
++      await page.locator('#new-attempt').click();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:75: trailing whitespace.
++      assert.equal(await focus(), 'deduplication');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:76: trailing whitespace.
++      assert.equal(await page.locator('#retry-key').inputValue(), 'same');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:77: trailing whitespace.
++    }
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:78: trailing whitespace.
++    async function conduct() {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:79: trailing whitespace.
++      await page.locator('#commit-post').click();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:80: trailing whitespace.
++      await page.locator('#retry-post').click();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:81: trailing whitespace.
++    }
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:82: trailing whitespace.
++    await check('portable source and exact banner load with intact native controls', async () => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:83: trailing whitespace.
++      assert.equal(await page.title(), 'S049 — Ambiguous POST completion');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:84: trailing whitespace.
++      assert.equal(await page.locator('.banner').textContent(), 'Training rehearsal - synthetic data - not a live Azure result');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:85: trailing whitespace.
++      assert.match(await page.locator('header').textContent(), /D-S049.*A-S049.*SC-S049/s);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:86: trailing whitespace.
++      assert.equal(await page.locator('#retry-post').isDisabled(), true);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:87: trailing whitespace.
++      assert.equal(await page.locator('#new-attempt').isDisabled(), true);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:88: trailing whitespace.
++      assert.equal(await page.evaluate(() => typeof document.getElementById('controls').reset), 'function');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:89: trailing whitespace.
++      assert.match(await page.locator('#limits-title').locator('..').textContent(), /not.*established/s);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:90: trailing whitespace.
++      observations.initial = await snapshot();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:91: trailing whitespace.
++    });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:92: trailing whitespace.
++    await check('keyboard-only same-key replay preserves one effect and the correct client result', async () => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:93: trailing whitespace.
++      await page.locator('#deduplication').focus();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:94: trailing whitespace.
++      for (const id of ['retry-key', 'retry-payload', 'retry-response', 'retry-after', 'deadline', 'commit-post']) {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:95: trailing whitespace.
++        await page.keyboard.press('Tab');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:96: trailing whitespace.
++        assert.equal(await focus(), id);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:97: trailing whitespace.
++      }
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:98: trailing whitespace.
++      await page.keyboard.press('Enter');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:99: trailing whitespace.
++      assert.equal(await focus(), 'retry-post');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:100: trailing whitespace.
++      assert.equal(await text('effect-count'), '1');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:101: trailing whitespace.
++      assert.equal(await text('client-result'), 'unresolved');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:102: trailing whitespace.
++      assert.equal(await text('outcome'), 'Not assessed');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:103: trailing whitespace.
++      assert.equal(await page.locator('#retry-key').isDisabled(), true);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:104: trailing whitespace.
++      observations.ambiguous = await snapshot();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:105: trailing whitespace.
++      await page.keyboard.press('Enter');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:106: trailing whitespace.
++      assert.equal(await focus(), 'prediction');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:107: trailing whitespace.
++      assert.equal(await text('outcome'), 'SUCCESS');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:108: trailing whitespace.
++      assert.equal(await text('effect-count'), '1');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:109: trailing whitespace.
++      assert.match(await text('client-result'), /synth-effect-1, 10 units/);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:110: trailing whitespace.
++      await page.keyboard.press('ArrowDown');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:111: trailing whitespace.
++      assert.equal(await page.locator('#prediction').inputValue(), 'success');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:112: trailing whitespace.
++      await page.keyboard.press('Tab');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:113: trailing whitespace.
++      assert.equal(await focus(), 'check-prediction');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:114: trailing whitespace.
++      await page.keyboard.press('Enter');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:115: trailing whitespace.
++      assert.equal(await focus(), 'new-attempt');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:116: trailing whitespace.
++      assert.match(await text('prediction-feedback'), /Correct prediction.*SUCCESS/);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:117: trailing whitespace.
++      assert.equal(await page.locator('#history > li').count(), 1);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:118: trailing whitespace.
++      observations.safe = await snapshot();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:119: trailing whitespace.
++      await page.keyboard.press('Enter');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:120: trailing whitespace.
++      assert.equal(await focus(), 'deduplication');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:121: trailing whitespace.
++      assert.equal(await page.locator('#history > li').count(), 1);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:122: trailing whitespace.
++    });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:123: trailing whitespace.
++    await check('invalid numeric, enum and phase actions show focused errors without state mutation', async () => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:124: trailing whitespace.
++      const before = await snapshot();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:125: trailing whitespace.
++      for (const invalid of ['', '-1', '0.5', '1001', '1e2']) {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:126: trailing whitespace.
++        await page.locator('#retry-after').fill(invalid);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:127: trailing whitespace.
++        await page.locator('#commit-post').click();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:128: trailing whitespace.
++        assert.equal(await page.locator('#error').isVisible(), true);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:129: trailing whitespace.
++        assert.equal(await focus(), 'error');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:130: trailing whitespace.
++        assert.match(await text('error'), /retryAfterMs/);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:131: trailing whitespace.
++        assert.deepEqual(await snapshot(), before);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:132: trailing whitespace.
++      }
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:133: trailing whitespace.
++      await page.locator('#retry-after').fill('30');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:134: trailing whitespace.
++      await page.locator('#deadline').fill('0');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:135: trailing whitespace.
++      await page.locator('#commit-post').click();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:136: trailing whitespace.
++      assert.match(await text('error'), /deadlineMs/);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:137: trailing whitespace.
++      assert.deepEqual(await snapshot(), before);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:138: trailing whitespace.
++      await page.locator('#deadline').fill('100');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:139: trailing whitespace.
++      await page.evaluate(() => { document.getElementById('retry-key').value = 'unregistered-real-key'; });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:140: trailing whitespace.
++      await page.locator('#commit-post').click();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:141: trailing whitespace.
++      assert.match(await text('error'), /retryKey/);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:142: trailing whitespace.
++      assert.deepEqual(await snapshot(), before);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:143: trailing whitespace.
++      await page.locator('#retry-key').selectOption('same');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:144: trailing whitespace.
++      await page.evaluate(() => document.getElementById('retry-post').dispatchEvent(new MouseEvent('click', { bubbles: true })));
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:145: trailing whitespace.
++      assert.match(await text('error'), /requires ambiguous/);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:146: trailing whitespace.
++      assert.deepEqual(await snapshot(), before);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:147: trailing whitespace.
++      observations.guarded = { visibleError: await text('error'), unchanged: true };
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:148: trailing whitespace.
++    });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:149: trailing whitespace.
++    await check('unsafe duplicate retry fails, cannot recommit, and prediction cannot turn it green', async () => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:150: trailing whitespace.
++      await page.locator('#deduplication').selectOption('none');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:151: trailing whitespace.
++      await page.locator('#commit-post').click();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:152: trailing whitespace.
++      assert.equal(await page.locator('#error').isHidden(), true);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:153: trailing whitespace.
++      const committed = await snapshot();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:154: trailing whitespace.
++      await page.evaluate(() => document.getElementById('controls').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:155: trailing whitespace.
++      assert.match(await text('error'), /requires configure/);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:156: trailing whitespace.
++      assert.deepEqual(await snapshot(), committed);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:157: trailing whitespace.
++      await page.locator('#retry-post').click();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:158: trailing whitespace.
++      assert.equal(await text('effect-count'), '2');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:159: trailing whitespace.
++      assert.equal(await text('total-units'), '20');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:160: trailing whitespace.
++      assert.equal(await text('outcome'), 'FAILURE');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:161: trailing whitespace.
++      const beforePrediction = await snapshot();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:162: trailing whitespace.
++      await page.locator('#check-prediction').click();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:163: trailing whitespace.
++      assert.match(await text('error'), /Choose success/);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:164: trailing whitespace.
++      assert.deepEqual(await snapshot(), beforePrediction);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:165: trailing whitespace.
++      await choosePrediction('success');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:166: trailing whitespace.
++      assert.match(await text('prediction-feedback'), /did not match.*FAILURE/);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:167: trailing whitespace.
++      assert.equal(await page.locator('#history > li').count(), 2);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:168: trailing whitespace.
++      assert.deepEqual((await snapshot()).history.slice(0, 1), observations.safe.history);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:169: trailing whitespace.
++      observations.duplicate = await snapshot();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:170: trailing whitespace.
++      if (capture) {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:171: trailing whitespace.
++        failureDOM = await page.content();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:172: trailing whitespace.
++        failureImage = await page.screenshot({ fullPage: true });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:173: trailing whitespace.
++      }
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:174: trailing whitespace.
++    });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:175: trailing whitespace.
++    await check('changed payload and missing key reject explicitly while preserving one effect', async () => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:176: trailing whitespace.
++      await newAttempt();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:177: trailing whitespace.
++      await page.locator('#retry-payload').selectOption('changed');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:178: trailing whitespace.
++      await conduct();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:179: trailing whitespace.
++      assert.equal(await text('effect-count'), '1');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:180: trailing whitespace.
++      assert.equal(await text('outcome'), 'FAILURE');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:181: trailing whitespace.
++      assert.equal(await text('client-result'), 'rejected-conflict');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:182: trailing whitespace.
++      assert.match((await snapshot()).trace.join(' '), /409.*conflict/);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:183: trailing whitespace.
++      await choosePrediction('failure');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:184: trailing whitespace.
++      observations.conflict = await snapshot();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:185: trailing whitespace.
++      await newAttempt();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:186: trailing whitespace.
++      await page.locator('#retry-key').selectOption('missing');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:187: trailing whitespace.
++      await conduct();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:188: trailing whitespace.
++      assert.equal(await text('effect-count'), '1');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:189: trailing whitespace.
++      assert.equal(await text('client-result'), 'rejected-missing-key');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:190: trailing whitespace.
++      assert.equal(await text('outcome'), 'FAILURE');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:191: trailing whitespace.
++      await choosePrediction('failure');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:192: trailing whitespace.
++      observations.missingKey = await snapshot();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:193: trailing whitespace.
++    });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:194: trailing whitespace.
++    await check('another lost response is visibly unknown, not successful completion', async () => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:195: trailing whitespace.
++      await newAttempt();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:196: trailing whitespace.
++      await page.locator('#retry-response').selectOption('lost');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:197: trailing whitespace.
++      await conduct();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:198: trailing whitespace.
++      assert.equal(await text('effect-count'), '1');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:199: trailing whitespace.
++      assert.equal(await text('client-result'), 'unresolved');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:200: trailing whitespace.
++      assert.equal(await text('outcome'), 'UNKNOWN');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:201: trailing whitespace.
++      assert.match(await text('reasons'), /explicitly unresolved/);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:202: trailing whitespace.
++      await choosePrediction('unknown');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:203: trailing whitespace.
++      observations.unknown = await snapshot();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:204: trailing whitespace.
++    });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:205: trailing whitespace.
++    await check('new key and original-deadline breach dominate ambiguity; six results are not evicted', async () => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:206: trailing whitespace.
++      await newAttempt();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:207: trailing whitespace.
++      await page.locator('#retry-key').selectOption('new');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:208: trailing whitespace.
++      await page.locator('#retry-response').selectOption('lost');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:209: trailing whitespace.
++      await page.locator('#retry-after').fill('101');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:210: trailing whitespace.
++      await conduct();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:211: trailing whitespace.
++      assert.equal(await text('effect-count'), '2');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:212: trailing whitespace.
++      assert.equal(await text('client-result'), 'unresolved');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:213: trailing whitespace.
++      assert.equal(await text('outcome'), 'FAILURE');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:214: trailing whitespace.
++      assert.equal(await text('clock'), '101 / 100 synthetic ms');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:215: trailing whitespace.
++      assert.match(await text('reasons'), /Duplicate.*deadline/s);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:216: trailing whitespace.
++      await choosePrediction('failure');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:217: trailing whitespace.
++      assert.equal(await page.locator('#history > li').count(), 6);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:218: trailing whitespace.
++      assert.equal(await page.locator('#new-attempt').isDisabled(), true);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:219: trailing whitespace.
++      assert.equal(await page.locator('#history-limit').isVisible(), true);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:220: trailing whitespace.
++      assert.equal(await focus(), 'reset-lesson');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:221: trailing whitespace.
++      const full = await snapshot();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:222: trailing whitespace.
++      await page.evaluate(() => document.getElementById('new-attempt').dispatchEvent(new MouseEvent('click', { bubbles: true })));
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:223: trailing whitespace.
++      assert.match(await text('error'), /Six results retained/);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:224: trailing whitespace.
++      assert.deepEqual(await snapshot(), full);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:225: trailing whitespace.
++      observations.fullHistory = full;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:226: trailing whitespace.
++    });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:227: trailing whitespace.
++    await check('keyboard reset restores exact defaults; the inclusive deadline also succeeds in the DOM', async () => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:228: trailing whitespace.
++      await page.locator('#reset-lesson').focus();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:229: trailing whitespace.
++      await page.keyboard.press('Enter');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:230: trailing whitespace.
++      assert.equal(await focus(), 'deduplication');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:231: trailing whitespace.
++      assert.equal(await page.locator('#error').isHidden(), true);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:232: trailing whitespace.
++      assert.equal(await page.locator('#history > li').count(), 0);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:233: trailing whitespace.
++      assert.equal(await text('effect-count'), '0');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:234: trailing whitespace.
++      assert.equal(await page.locator('#deduplication').inputValue(), 'atomic');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:235: trailing whitespace.
++      assert.equal(await page.locator('#retry-key').inputValue(), 'same');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:236: trailing whitespace.
++      assert.equal(await page.locator('#retry-payload').inputValue(), 'same');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:237: trailing whitespace.
++      assert.equal(await page.locator('#retry-response').inputValue(), 'received');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:238: trailing whitespace.
++      assert.equal(await page.locator('#retry-after').inputValue(), '30');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:239: trailing whitespace.
++      assert.equal(await page.locator('#deadline').inputValue(), '100');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:240: trailing whitespace.
++      await page.locator('#retry-after').fill('100');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:241: trailing whitespace.
++      await conduct();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:242: trailing whitespace.
++      assert.equal(await text('clock'), '100 / 100 synthetic ms');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:243: trailing whitespace.
++      assert.equal(await text('outcome'), 'SUCCESS');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:244: trailing whitespace.
++      observations.inclusiveDeadline = await snapshot();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:245: trailing whitespace.
++    });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:246: trailing whitespace.
++    await check('actual CSP blocks inline code and connection; no network route or JS error occurs', async () => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:247: trailing whitespace.
++      await page.evaluate(async () => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:248: trailing whitespace.
++        window.__s049Violations = [];
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:249: trailing whitespace.
++        document.addEventListener('securitypolicyviolation', (event) => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:250: trailing whitespace.
++          window.__s049Violations.push({ directive: event.effectiveDirective, blockedURI: event.blockedURI });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:251: trailing whitespace.
++        });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:252: trailing whitespace.
++        const probe = document.createElement('script');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:253: trailing whitespace.
++        probe.id = 's049-csp-probe';
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:254: trailing whitespace.
++        probe.textContent = 'window.__s049InlineExecuted = true;';
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:255: trailing whitespace.
++        document.body.append(probe);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:256: trailing whitespace.
++        try {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:257: trailing whitespace.
++          await fetch('https://s049.invalid/csp-probe');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:258: trailing whitespace.
++          window.__s049Connection = 'unexpectedly allowed';
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:259: trailing whitespace.
++        } catch { window.__s049Connection = 'blocked'; }
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:260: trailing whitespace.
++        probe.remove();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:261: trailing whitespace.
++      });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:262: trailing whitespace.
++      await page.waitForFunction(() => window.__s049Violations.some((event) => event.directive.startsWith('script-src'))
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:263: trailing whitespace.
++        && window.__s049Violations.some((event) => event.directive === 'connect-src'));
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:264: trailing whitespace.
++      observations.csp = await page.evaluate(() => ({
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:265: trailing whitespace.
++        inlineExecuted: window.__s049InlineExecuted === true,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:266: trailing whitespace.
++        connection: window.__s049Connection, violations: window.__s049Violations,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:267: trailing whitespace.
++      }));
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:268: trailing whitespace.
++      assert.equal(observations.csp.inlineExecuted, false);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:269: trailing whitespace.
++      assert.equal(observations.csp.connection, 'blocked');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:270: trailing whitespace.
++      assert.equal(externalRoutes.length, 0, 'CSP, not the extra test route guard, must block the connection');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:271: trailing whitespace.
++      assert.deepEqual(pageErrors, []);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:272: trailing whitespace.
++      assert.ok(consoleErrors.every((message) => /Content Security Policy|content security policy|violates.*directive/.test(message)));
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:273: trailing whitespace.
++    });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:274: trailing whitespace.
++    await check('final keyboard reset clears ledger, trace, prediction and history, including at a narrow viewport', async () => {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:275: trailing whitespace.
++      await page.locator('#reset-lesson').focus();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:276: trailing whitespace.
++      await page.keyboard.press('Enter');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:277: trailing whitespace.
++      assert.equal(await focus(), 'deduplication');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:278: trailing whitespace.
++      assert.deepEqual(await snapshot(), observations.initial);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:279: trailing whitespace.
++      assert.equal(await page.locator('#prediction').inputValue(), '');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:280: trailing whitespace.
++      assert.equal(await text('prediction-feedback'), '');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:281: trailing whitespace.
++      assert.equal(await page.locator('#history-limit').isHidden(), true);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:282: trailing whitespace.
++      assert.equal(await page.locator('#retry-post').isDisabled(), true);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:283: trailing whitespace.
++      await page.setViewportSize({ width: 390, height: 844 });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:284: trailing whitespace.
++      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:285: trailing whitespace.
++      observations.finalReset = await snapshot();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:286: trailing whitespace.
++      if (capture) finalDOM = await page.content();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:287: trailing whitespace.
++    });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:288: trailing whitespace.
++  } finally {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:289: trailing whitespace.
++    if (session) {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:290: trailing whitespace.
++      await session.close();
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:291: trailing whitespace.
++      closed = true;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:292: trailing whitespace.
++    }
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:293: trailing whitespace.
++  }
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:294: trailing whitespace.
++  assert.equal(closed, true);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:295: trailing whitespace.
++  assert.ok(checks.every((entry) => entry.passed));
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:296: trailing whitespace.
++  if (capture) {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:297: trailing whitespace.
++    const evidence = path.join(lessonRoot, 'evidence');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:298: trailing whitespace.
++    let number = 1;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:299: trailing whitespace.
++    while (fs.existsSync(path.join(evidence, `browser-${String(number).padStart(3, '0')}.json`))) number += 1;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:300: trailing whitespace.
++    const prefix = `browser-${String(number).padStart(3, '0')}`;
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:301: trailing whitespace.
++    const sourceFiles = ['model.js', 'lesson.js', 'index.html', 'styles.css', 'manifest.json',
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:302: trailing whitespace.
++      'README.md', 'ambiguous-post.feature', path.join('tests', 'model.test.cjs'),
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:303: trailing whitespace.
++      path.join('tests', 'surface.test.cjs'), path.join('tests', 'integrity.test.cjs'),
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:304: trailing whitespace.
++      path.join('tests', 'browser.test.cjs')];
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:305: trailing whitespace.
++    const assets = [
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:306: trailing whitespace.
++      [`${prefix}-failure.dom.txt`, Buffer.from(failureDOM)],
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:307: trailing whitespace.
++      [`${prefix}-failure.png`, failureImage],
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:308: trailing whitespace.
++      [`${prefix}-reset.dom.txt`, Buffer.from(finalDOM)],
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:309: trailing whitespace.
++    ];
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:310: trailing whitespace.
++    for (const [name, bytes] of assets) fs.writeFileSync(path.join(evidence, name), bytes, { flag: 'wx' });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:311: trailing whitespace.
++    const record = {
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:312: trailing whitespace.
++      cardId: 'A-S049', workerId: 'worker-A-S049', mode: 'synthetic',
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:313: trailing whitespace.
++      startedAtUtc, completedAtUtc: new Date().toISOString(), captureOptIn: 'CAPTURE_BROWSER_EVIDENCE=1',
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:314: trailing whitespace.
++      node: process.version, playwright: require(require.resolve('playwright/package.json',
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:315: trailing whitespace.
++        { paths: [path.dirname(helperPath)] })).version,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:316: trailing whitespace.
++      browserVersion, helper: path.relative(repository, helperPath), helperSha256,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:317: trailing whitespace.
++      helperPublication: '53c0c0d', lifecycle: 'openIsolatedLesson; awaited close in finally',
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:318: trailing whitespace.
++      abandonedPrototypeUsed: false, unattendedLifecycleCertified: false, closed,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:319: trailing whitespace.
++      checks, observations, pageErrors, consoleErrors, externalRoutes,
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:320: trailing whitespace.
++      sourceBindings: sourceFiles.map((name) => ({ path: name, sha256: hash(fs.readFileSync(path.join(lessonRoot, name))) })),
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:321: trailing whitespace.
++      assets: assets.map(([name, bytes]) => ({ path: name, sha256: hash(bytes) })),
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:322: trailing whitespace.
++      actualHttpOrAzureResult: 'unknown; portable synthetic model only',
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:323: trailing whitespace.
++    };
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:324: trailing whitespace.
++    fs.writeFileSync(path.join(evidence, `${prefix}.json`), JSON.stringify(record, null, 2) + '\n', { flag: 'wx' });
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:325: trailing whitespace.
++    t.diagnostic(`Deliberate evidence capture: learning\\S049\\evidence\\${prefix}.json`);
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:326: trailing whitespace.
++  } else t.diagnostic('Read-only browser verification; retained evidence was not written.');
+learning/S049/evidence/verification/browser-capture-001-browser-tests.source.snapshot:327: trailing whitespace.
++});
+learning/S049/evidence/verification/browser-capture-001.stdout.tap.txt:12: trailing whitespace.
++        
+learning/S049/evidence/verification/browser-capture-001.stdout.tap.txt:23: trailing whitespace.
++        
+learning/S049/evidence/verification/browser-capture-001.stdout.tap.txt:28: trailing whitespace.
++        
+learning/S049/evidence/verification/browser-capture-001.stdout.tap.txt:37: trailing whitespace.
++            
+learning/S049/evidence/verification/browser-capture-001.stdout.tap.txt:57: trailing whitespace.
++    
+learning/S049/evidence/verification/browser-capture-001.stdout.tap.txt:59: trailing whitespace.
++    

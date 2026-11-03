@@ -1,0 +1,340 @@
+{
+  "cardId": "A-S049",
+  "workerId": "worker-A-S049",
+  "mode": "synthetic",
+  "startedAtUtc": "2026-11-03T18:42:23.492Z",
+  "completedAtUtc": "2026-11-03T18:42:28.497Z",
+  "captureOptIn": "CAPTURE_BROWSER_EVIDENCE=1",
+  "node": "v22.23.4",
+  "playwright": "1.56.1",
+  "browserVersion": "156.0.4314.50",
+  "helper": "testing\\browser\\isolated.cjs",
+  "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "helperPublication": "53c0c0d",
+  "lifecycle": "openIsolatedLesson; awaited close in finally",
+  "abandonedPrototypeUsed": false,
+  "unattendedLifecycleCertified": false,
+  "closed": true,
+  "checks": [
+    {
+      "name": "portable source and exact banner load with intact native controls",
+      "passed": true
+    },
+    {
+      "name": "keyboard-only same-key replay preserves one effect and the correct client result",
+      "passed": true
+    },
+    {
+      "name": "invalid numeric, enum and phase actions show focused errors without state mutation",
+      "passed": true
+    },
+    {
+      "name": "unsafe duplicate retry fails, cannot recommit, and prediction cannot turn it green",
+      "passed": true
+    },
+    {
+      "name": "changed payload and missing key reject explicitly while preserving one effect",
+      "passed": true
+    },
+    {
+      "name": "another lost response is visibly unknown, not successful completion",
+      "passed": true
+    },
+    {
+      "name": "new key and original-deadline breach dominate ambiguity; six results are not evicted",
+      "passed": true
+    },
+    {
+      "name": "keyboard reset restores exact defaults; the inclusive deadline also succeeds in the DOM",
+      "passed": true
+    },
+    {
+      "name": "actual CSP blocks inline code and connection; no network route or JS error occurs",
+      "passed": true
+    },
+    {
+      "name": "final keyboard reset clears ledger, trace, prediction and history, including at a narrow viewport",
+      "passed": true
+    }
+  ],
+  "observations": {
+    "initial": {
+      "effects": "0",
+      "units": "0",
+      "posts": "0",
+      "client": "not-sent",
+      "clock": "0 / 100 synthetic ms",
+      "outcome": "Not assessed",
+      "reasons": "",
+      "trace": [],
+      "history": [],
+      "historyCount": "0 / 6 results retained"
+    },
+    "ambiguous": {
+      "effects": "1",
+      "units": "10",
+      "posts": "1",
+      "client": "unresolved",
+      "clock": "0 / 100 synthetic ms",
+      "outcome": "Not assessed",
+      "reasons": "",
+      "trace": [
+        "0 ms — POST synth-order (10 units), synth-key-A: committed synth-effect-1.",
+        "0 ms — Response lost after commit. The effect remains; the client is unresolved, not rolled back."
+      ],
+      "history": [],
+      "historyCount": "0 / 6 results retained"
+    },
+    "safe": {
+      "effects": "1",
+      "units": "10",
+      "posts": "2",
+      "client": "confirmed: synth-effect-1, 10 units",
+      "clock": "30 / 100 synthetic ms",
+      "outcome": "SUCCESS",
+      "reasons": "One business effect and the correct original client result within the original deadline.",
+      "trace": [
+        "0 ms — POST synth-order (10 units), synth-key-A: committed synth-effect-1.",
+        "0 ms — Response lost after commit. The effect remains; the client is unresolved, not rolled back.",
+        "30 ms — Retry POST: key synth-key-A, synth-order (10 units).",
+        "30 ms — Atomic key-and-payload ledger replay: remembered result synth-effect-1; no new effect.",
+        "30 ms — Client received confirmed: synth-effect-1, 10 units."
+      ],
+      "history": [
+        "Attempt 1: SUCCESS; 1 business effect(s); client confirmed; 30/100 synthetic ms. Prediction matched."
+      ],
+      "historyCount": "1 / 6 results retained"
+    },
+    "guarded": {
+      "visibleError": "Action requires ambiguous; current phase is configure.",
+      "unchanged": true
+    },
+    "duplicate": {
+      "effects": "2",
+      "units": "20",
+      "posts": "2",
+      "client": "confirmed: synth-effect-2, 10 units",
+      "clock": "30 / 100 synthetic ms",
+      "outcome": "FAILURE",
+      "reasons": "Duplicate business effects: one order was committed twice.The client did not receive the correct original order result.",
+      "trace": [
+        "0 ms — POST synth-order (10 units), synth-key-A: committed synth-effect-1.",
+        "0 ms — Response lost after commit. The effect remains; the client is unresolved, not rolled back.",
+        "30 ms — Retry POST: key synth-key-A, synth-order (10 units).",
+        "30 ms — Retry committed synth-effect-2: a second business effect for the same intended order.",
+        "30 ms — Client received confirmed: synth-effect-2, 10 units."
+      ],
+      "history": [
+        "Attempt 1: SUCCESS; 1 business effect(s); client confirmed; 30/100 synthetic ms. Prediction matched.",
+        "Attempt 2: FAILURE; 2 business effect(s); client confirmed; 30/100 synthetic ms. Prediction did not match."
+      ],
+      "historyCount": "2 / 6 results retained"
+    },
+    "conflict": {
+      "effects": "1",
+      "units": "10",
+      "posts": "2",
+      "client": "rejected-conflict",
+      "clock": "30 / 100 synthetic ms",
+      "outcome": "FAILURE",
+      "reasons": "The client did not receive the correct original order result.",
+      "trace": [
+        "0 ms — POST synth-order (10 units), synth-key-A: committed synth-effect-1.",
+        "0 ms — Response lost after commit. The effect remains; the client is unresolved, not rolled back.",
+        "30 ms — Retry POST: key synth-key-A, synth-order (20 units).",
+        "30 ms — Synthetic 409 payload conflict; the same key cannot name a different request. No new effect.",
+        "30 ms — Client received rejected-conflict."
+      ],
+      "history": [
+        "Attempt 1: SUCCESS; 1 business effect(s); client confirmed; 30/100 synthetic ms. Prediction matched.",
+        "Attempt 2: FAILURE; 2 business effect(s); client confirmed; 30/100 synthetic ms. Prediction did not match.",
+        "Attempt 3: FAILURE; 1 business effect(s); client rejected-conflict; 30/100 synthetic ms. Prediction matched."
+      ],
+      "historyCount": "3 / 6 results retained"
+    },
+    "missingKey": {
+      "effects": "1",
+      "units": "10",
+      "posts": "2",
+      "client": "rejected-missing-key",
+      "clock": "30 / 100 synthetic ms",
+      "outcome": "FAILURE",
+      "reasons": "The client did not receive the correct original order result.",
+      "trace": [
+        "0 ms — POST synth-order (10 units), synth-key-A: committed synth-effect-1.",
+        "0 ms — Response lost after commit. The effect remains; the client is unresolved, not rolled back.",
+        "30 ms — Retry POST: key (missing), synth-order (10 units).",
+        "30 ms — Synthetic 400 missing-key rejection; no new effect.",
+        "30 ms — Client received rejected-missing-key."
+      ],
+      "history": [
+        "Attempt 1: SUCCESS; 1 business effect(s); client confirmed; 30/100 synthetic ms. Prediction matched.",
+        "Attempt 2: FAILURE; 2 business effect(s); client confirmed; 30/100 synthetic ms. Prediction did not match.",
+        "Attempt 3: FAILURE; 1 business effect(s); client rejected-conflict; 30/100 synthetic ms. Prediction matched.",
+        "Attempt 4: FAILURE; 1 business effect(s); client rejected-missing-key; 30/100 synthetic ms. Prediction matched."
+      ],
+      "historyCount": "4 / 6 results retained"
+    },
+    "unknown": {
+      "effects": "1",
+      "units": "10",
+      "posts": "2",
+      "client": "unresolved",
+      "clock": "30 / 100 synthetic ms",
+      "outcome": "UNKNOWN",
+      "reasons": "One effect is observed, but the client is explicitly unresolved after another lost response.",
+      "trace": [
+        "0 ms — POST synth-order (10 units), synth-key-A: committed synth-effect-1.",
+        "0 ms — Response lost after commit. The effect remains; the client is unresolved, not rolled back.",
+        "30 ms — Retry POST: key synth-key-A, synth-order (10 units).",
+        "30 ms — Atomic key-and-payload ledger replay: remembered result synth-effect-1; no new effect.",
+        "30 ms — Retry response also lost. The client remains explicitly unresolved."
+      ],
+      "history": [
+        "Attempt 1: SUCCESS; 1 business effect(s); client confirmed; 30/100 synthetic ms. Prediction matched.",
+        "Attempt 2: FAILURE; 2 business effect(s); client confirmed; 30/100 synthetic ms. Prediction did not match.",
+        "Attempt 3: FAILURE; 1 business effect(s); client rejected-conflict; 30/100 synthetic ms. Prediction matched.",
+        "Attempt 4: FAILURE; 1 business effect(s); client rejected-missing-key; 30/100 synthetic ms. Prediction matched.",
+        "Attempt 5: UNKNOWN; 1 business effect(s); client unresolved; 30/100 synthetic ms. Prediction matched."
+      ],
+      "historyCount": "5 / 6 results retained"
+    },
+    "fullHistory": {
+      "effects": "2",
+      "units": "20",
+      "posts": "2",
+      "client": "unresolved",
+      "clock": "101 / 100 synthetic ms",
+      "outcome": "FAILURE",
+      "reasons": "Duplicate business effects: one order was committed twice.The original deadline was exceeded; retry does not restart it.",
+      "trace": [
+        "0 ms — POST synth-order (10 units), synth-key-A: committed synth-effect-1.",
+        "0 ms — Response lost after commit. The effect remains; the client is unresolved, not rolled back.",
+        "101 ms — Retry POST: key synth-key-B, synth-order (10 units).",
+        "101 ms — Retry committed synth-effect-2: a second business effect for the same intended order.",
+        "101 ms — Retry response also lost. The client remains explicitly unresolved."
+      ],
+      "history": [
+        "Attempt 1: SUCCESS; 1 business effect(s); client confirmed; 30/100 synthetic ms. Prediction matched.",
+        "Attempt 2: FAILURE; 2 business effect(s); client confirmed; 30/100 synthetic ms. Prediction did not match.",
+        "Attempt 3: FAILURE; 1 business effect(s); client rejected-conflict; 30/100 synthetic ms. Prediction matched.",
+        "Attempt 4: FAILURE; 1 business effect(s); client rejected-missing-key; 30/100 synthetic ms. Prediction matched.",
+        "Attempt 5: UNKNOWN; 1 business effect(s); client unresolved; 30/100 synthetic ms. Prediction matched.",
+        "Attempt 6: FAILURE; 2 business effect(s); client unresolved; 101/100 synthetic ms. Prediction matched."
+      ],
+      "historyCount": "6 / 6 results retained"
+    },
+    "inclusiveDeadline": {
+      "effects": "1",
+      "units": "10",
+      "posts": "2",
+      "client": "confirmed: synth-effect-1, 10 units",
+      "clock": "100 / 100 synthetic ms",
+      "outcome": "SUCCESS",
+      "reasons": "One business effect and the correct original client result within the original deadline.",
+      "trace": [
+        "0 ms — POST synth-order (10 units), synth-key-A: committed synth-effect-1.",
+        "0 ms — Response lost after commit. The effect remains; the client is unresolved, not rolled back.",
+        "100 ms — Retry POST: key synth-key-A, synth-order (10 units).",
+        "100 ms — Atomic key-and-payload ledger replay: remembered result synth-effect-1; no new effect.",
+        "100 ms — Client received confirmed: synth-effect-1, 10 units."
+      ],
+      "history": [],
+      "historyCount": "0 / 6 results retained"
+    },
+    "csp": {
+      "inlineExecuted": false,
+      "connection": "blocked",
+      "violations": [
+        {
+          "directive": "script-src-elem",
+          "blockedURI": "inline"
+        },
+        {
+          "directive": "connect-src",
+          "blockedURI": "https://s049.invalid/csp-probe"
+        }
+      ]
+    },
+    "finalReset": {
+      "effects": "0",
+      "units": "0",
+      "posts": "0",
+      "client": "not-sent",
+      "clock": "0 / 100 synthetic ms",
+      "outcome": "Not assessed",
+      "reasons": "",
+      "trace": [],
+      "history": [],
+      "historyCount": "0 / 6 results retained"
+    }
+  },
+  "pageErrors": [],
+  "consoleErrors": [
+    "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-Vbp6agcoxHxQAlmJoWW20Bs9GOYvPKR3aclDs8DhQs0='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked.",
+    "Connecting to 'https://s049.invalid/csp-probe' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked.",
+    "Fetch API cannot load https://s049.invalid/csp-probe. Refused to connect because it violates the document's Content Security Policy."
+  ],
+  "externalRoutes": [],
+  "sourceBindings": [
+    {
+      "path": "model.js",
+      "sha256": "c81e3deff02956fc5f346abdae211a01dc2355f7ff2c66bcbfb36722c3577a41"
+    },
+    {
+      "path": "lesson.js",
+      "sha256": "5b2cfeaeac937a753ae4c723a4d3013600977c3bd0186f07569462fcf6a614d6"
+    },
+    {
+      "path": "index.html",
+      "sha256": "dad9d0a8e52e0a5d224969e937918dfde8dbcb908a509a1f94c02b13dcc1b967"
+    },
+    {
+      "path": "styles.css",
+      "sha256": "9441de06d3cf6ab84262340e1d289c113f53c2eee2f0c09640771a0bd9e82bfa"
+    },
+    {
+      "path": "manifest.json",
+      "sha256": "9958ba4b976eaf84604c6526b3d62002bf5b8d7c2bf31492a5ad5e7eb5243770"
+    },
+    {
+      "path": "README.md",
+      "sha256": "4ead3b58f02774b59d64812a03334f908de77e7aac529d3c76bdab0bf185fd3e"
+    },
+    {
+      "path": "ambiguous-post.feature",
+      "sha256": "b00e3f946986bc5c33c158862567f55b6ed476fd27d3c673fc9912bc3a5cbdaa"
+    },
+    {
+      "path": "tests\\model.test.cjs",
+      "sha256": "5dfaa54d1d125e9b814534b4eca6b335967775697185d476310258d4dd030e7b"
+    },
+    {
+      "path": "tests\\surface.test.cjs",
+      "sha256": "412b16d56b14eccb7728c7f5153f2964bf39ca690590eca5bab5b1f75b117ac9"
+    },
+    {
+      "path": "tests\\integrity.test.cjs",
+      "sha256": "195d8d1ea84dbd7343f4b3b409c1777cf28b10275588befd7d3a8ce75b23a837"
+    },
+    {
+      "path": "tests\\browser.test.cjs",
+      "sha256": "d67d15e41a8133ccc61054be55e704dbd6fde450ece51dcecfde2841356cf86d"
+    }
+  ],
+  "assets": [
+    {
+      "path": "browser-001-failure.dom.txt",
+      "sha256": "851e3a96ea5682597e786b47c14dae0488d0be0701e828a6afefdd26ad8ed7fe"
+    },
+    {
+      "path": "browser-001-failure.png",
+      "sha256": "22b44fb9b41b8ef1790e69813c513974d345df5e4b943bce8e5301b25654f236"
+    },
+    {
+      "path": "browser-001-reset.dom.txt",
+      "sha256": "dc89c5691dced66b45d70b7ea97dcfedf3cd58ece4964cda9ca3eca2c11a3725"
+    }
+  ],
+  "actualHttpOrAzureResult": "unknown; portable synthetic model only"
+}

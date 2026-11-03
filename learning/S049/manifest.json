@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S049",
+  "sourceId": "S049",
+  "parentId": "D-S049",
+  "kano": "S",
+  "kanoUnit": "A-S049",
+  "packet": "SC-S049",
+  "owner": "worker-A-S049",
+  "entryGate": "SOURCE",
+  "title": "Ambiguous POST completion",
+  "entryPoint": "learning/S049/index.html",
+  "feature": "learning/S049/ambiguous-post.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Lose a committed POST response, retry with controlled key, payload, ledger and response assumptions, then distinguish exactly one correct business effect from duplicate effects or an explicitly unresolved client.",
+  "preconditions": [
+    "A modern browser supporting local HTML, CSS and JavaScript.",
+    "One fixed synthetic 10-unit order with synth-key-A; the first response is always lost after commit.",
+    "The atomic option assumes a single shared atomic key, payload and remembered-result ledger.",
+    "No account, credentials, subscription, server, framework, network request or actual transaction."
+  ],
+  "actions": [
+    "Choose atomic or absent deduplication, retry key, retry payload, retry reply delivery and bounded original timing.",
+    "Commit one POST and lose its response; observe one effect and an unresolved client.",
+    "Retry once and inspect the synthetic effect ledger, client result, trace and original deadline.",
+    "Check a prediction separately from user impact and retain the complete attempt.",
+    "Start another attempt without dropping history, or explicitly reset all in-memory state."
+  ],
+  "input": "learning/S049/model.js DEFAULT_CONFIG and fixed synthetic operation",
+  "assertions": [
+    "The same key and payload replay the original result without another effect under the atomic-ledger assumption.",
+    "No deduplication or a changed key duplicates the business effect.",
+    "The same key with changed payload or a missing key is rejected without another commit.",
+    "Success requires exactly one effect and the correct client result within the inclusive original deadline.",
+    "Without a known failure, another lost response yields an explicit unresolved unknown result.",
+    "Known duplicate effects and budget breaches dominate uncertainty.",
+    "Invalid input and out-of-order commands do not change private state or retained history.",
+    "Keyboard controls, visible errors, exact reset and restrictive CSP work in an actual isolated browser."
+  ],
+  "bounds": {
+    "retainedAttempts": 6,
+    "postAttemptsPerRun": 2,
+    "maximumEffectsPerRun": 2,
+    "maximumTraceEvents": 6,
+    "retryAfterMs": [0, 1000],
+    "originalDeadlineMs": [1, 1000]
+  },
+  "history": {
+    "storage": "page memory only",
+    "eviction": "none; a seventh attempt is blocked",
+    "clear": "explicit reset or page reload"
+  },
+  "iac": {
+    "status": "N/A",
+    "record": "learning/S049/evidence/iac-decision.json",
+    "reason": "Resource-free lesson; decision recorded after genuine loadable-stub assertion RED and before implementation."
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "purpose": "existing test tooling only; not production Node.js 24 certification",
+    "playwright": "existing offline 1.56.1",
+    "browser": "existing signed Microsoft Edge 156",
+    "helper": "testing/browser/isolated.cjs",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "helperPublication": "53c0c0d",
+    "browserLifecycle": "openIsolatedLesson; awaited close in finally; known unattended lifecycle limitation remains unqualified",
+    "dependencyChanges": false
+  },
+  "limits": [
+    "All keys, payloads, effects, traces, HTTP-like responses and elapsed times are synthetic.",
+    "No real HTTP POST, server cutover, transaction atomicity, distributed retry safety, live Azure outcome or reliability guarantee is established.",
+    "No identity or authentication behavior is needed or simulated.",
+    "No cloud, IaC, scaffold, registration, credentials, deployment, expenditure, downloads, frameworks, packages or shared source changes.",
+    "Normal verification does not write proof; browser evidence capture requires CAPTURE_BROWSER_EVIDENCE=1.",
+    "B-S049 and original D-S049 native acceptance remain separate and unfulfilled.",
+    "One frozen S unit only; tests and evidence earn no extra credit. Parent alone accepts."
+  ]
+}
