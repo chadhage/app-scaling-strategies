@@ -1,0 +1,32 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S024 = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULTS = Object.freeze({
+    scope: 'staging', setting: 'target', identity: 'denied', network: 'blocked', background: 'suppressed'
+  });
+  const LIMITS = Object.freeze({ validations: 6, history: 3, runId: 1000 });
+  const create = () => ({ version: 1, runId: 1, attempts: [], history: [], evictedRuns: 0 });
+  function validate(state) {
+    return {
+      ...state,
+      attempts: [...state.attempts, {
+        step: state.attempts.length + 1,
+        verdict: 'unknown',
+        checks: [],
+        candidateBackgroundStarts: 0,
+        duplicateBackgroundStarts: 0
+      }]
+    };
+  }
+  const summarize = (state) => ({
+    verdict: 'unknown', successful: 0, failed: 0, unknown: state.attempts.length,
+    blocked: 0, checksPassed: 0, candidateBackgroundStarts: 0, duplicateBackgroundStarts: 0
+  });
+  const compare = () => [];
+  const reset = () => create();
+  return Object.freeze({ DEFAULTS, LIMITS, create, validate, summarize, compare, reset });
+}));

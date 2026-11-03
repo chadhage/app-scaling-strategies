@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'; manifest-src 'none'">
+  <title>S024 — Production-configuration validation</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S024 — Production-configuration validation</h1>
+    <p>Validate effective target settings, including the candidate's retained identity and network, without running a second background worker. This bounded fixture has one active production worker and a working staging dependency.</p>
+    <p><strong>A-S024 · S · SC-S024 · D-S024 · SOURCE.</strong> Resource-free browser lesson only; no Azure, management, authentication, deployment or background-job calls. Native B-S024, original parent acceptance, production Node.js 24 and reliability claims remain unverified.</p>
+
+    <section aria-labelledby="instructions-title">
+      <h2 id="instructions-title">Conduct the rehearsal</h2>
+      <ol>
+        <li>Validate the defaults: staging works, but effective-production readiness is <strong>unknown</strong>.</li>
+        <li>Select effective production settings. Retain the staging-only setting, denied grant or blocked route to observe independent failures.</li>
+        <li>Archive/reset. Select effective production settings, target dependency, granted access and reachable network, keeping candidate work suppressed. All four checks should pass.</li>
+        <li>Try enabling candidate work: validation must be blocked before any candidate work starts. Try an unobserved target check: the result must be unknown.</li>
+      </ol>
+      <p>Repairs never erase earlier failures or unknowns. The current run's verdict is cumulative; archive/reset starts a fresh unknown run and retains the complete prior trace. All data is in page memory; reloading clears it.</p>
+    </section>
+
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Operator controls</h2>
+      <form id="settings-form" novalidate>
+        <label for="validation-scope">Validation scope</label>
+        <select id="validation-scope" name="scope">
+          <option value="staging">Staging settings only</option>
+          <option value="effective">Effective production settings</option>
+        </select>
+        <label for="dependency-setting">Candidate dependency setting under target configuration</label>
+        <select id="dependency-setting" name="setting">
+          <option value="target">Use target dependency setting</option>
+          <option value="sticky-staging">Retain slot-only staging setting</option>
+          <option value="unobserved">Target setting unobserved</option>
+        </select>
+        <label for="identity-access">Candidate identity's access to target dependency</label>
+        <select id="identity-access" name="identity">
+          <option value="denied">Denied — target grant missing</option>
+          <option value="granted">Granted to candidate-mi</option>
+          <option value="unobserved">Target grant unobserved</option>
+        </select>
+        <label for="network-access">Candidate network's reachability to target dependency</label>
+        <select id="network-access" name="network">
+          <option value="blocked">Blocked from candidate-subnet</option>
+          <option value="reachable">Reachable from candidate-subnet</option>
+          <option value="unobserved">Target route unobserved</option>
+        </select>
+        <label for="background-mode">Candidate background work during validation</label>
+        <select id="background-mode" name="background">
+          <option value="suppressed">Suppressed — production worker only</option>
+          <option value="enabled">Request enabled — unsafe, guard must block</option>
+        </select>
+        <div class="actions">
+          <button id="validate-settings" type="submit">Validate with selected settings</button>
+          <button id="archive-run" type="button">Archive/reset run</button>
+        </div>
+      </form>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <noscript><p>JavaScript is required for this local exercise. No result has been observed.</p></noscript>
+    </section>
+
+    <section aria-labelledby="comparison-title">
+      <h2 id="comparison-title">Staging versus effective target configuration</h2>
+      <p>This table previews the declared fixture, not an observed cloud configuration. Changing controls does not run checks. Target grants and routes do not affect the already-working staging dependency. Identity and network are <strong>not assumed to swap</strong>.</p>
+      <div class="table-scroll">
+        <table>
+          <caption>Configuration differences (synthetic prediction)</caption>
+          <thead><tr><th scope="col">Concern</th><th scope="col">Staging</th><th scope="col">Current production</th><th scope="col">Candidate with target settings</th><th scope="col">Rule</th></tr></thead>
+          <tbody id="comparison-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Measured synthetic result</h2>
+      <div id="result-status" role="status" aria-live="polite" aria-atomic="true">
+        <p id="verdict"></p>
+        <p id="counters"></p>
+        <p id="worker-counts"></p>
+      </div>
+      <p>Success needs all four effective-target checks. Any measured failure dominates recovery; staging-only or missing evidence stays unknown. A blocked request is a safety failure, <strong>not an executed duplicate</strong> or an observed user interruption.</p>
+      <ol id="trace" aria-label="Retained validation snapshots"></ol>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Archived runs</h2>
+      <p id="history-counts"></p>
+      <div id="history"></div>
+    </section>
+
+    <details>
+      <summary>Inspect exact synthetic run evidence</summary>
+      <pre id="run-evidence"></pre>
+    </details>
+    <p id="limits">Bounds: 6 validations/run, 3 archived runs with counted eviction, run IDs 1–1000. No clocks, randomness, credentials, real jobs, persistence or network. Empty reset does not consume history. No five-nines, native-support or source-parent completion claim.</p>
+    <p>Source: README S024, backlog D-S024 and portable A-card contract. IaC: N/A. See this bundle's README and manifest for provenance, assertions, verification and genuine native remainder.</p>
+  </main>
+</body>
+</html>
