@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S084",
+  "sourceId": "S084",
+  "parentId": "D-S084",
+  "kano": "S",
+  "kanoUnit": "A-S084",
+  "packet": "SC-S084",
+  "owner": "worker-A-S084",
+  "mode": "synthetic",
+  "title": "Duplicate command delivery",
+  "objective": "Retry commands; recognize duplicate resources or unintended second swaps.",
+  "entry": "index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "preconditions": [
+    "JavaScript enabled in a modern browser; open the file directly.",
+    "Fixed original provision/routing/cleanup records and same-key retry records; no operational interface."
+  ],
+  "actions": [
+    "Choose remembered results or the blind replay counterexample, and complete or unavailable cleanup evidence.",
+    "Inspect three originals, retry the same three keys, verify observations, predict and retain.",
+    "Inspect retained evidence; new attempt retains history; reset clears all in-memory data."
+  ],
+  "syntheticInput": "fixtures.js: three logical operations, six fixed deliveries, four deterministic combinations",
+  "expectedAssertions": [
+    "Remembered results and complete receipts: PASS with one candidate, one swap, one intended removal and no retry effects.",
+    "Blind replay: FAIL with one duplicate resource, one extra swap and routing to a removed resource.",
+    "Unavailable cleanup retry receipt: UNKNOWN unless another known fault already requires FAIL; always retain the unknown.",
+    "Every operation remains inspectable by fixed operation key, delivery ID, payload, actor stamp and receipt."
+  ],
+  "bounds": { "logicalOperations": 3, "deliveriesPerAttempt": 6, "maxRetainedAttempts": 4 },
+  "persistence": "In-memory only; reload or explicit full reset clears it.",
+  "iac": "N/A — resource-free synthetic file lesson",
+  "nativeSiblingComplete": false,
+  "sourceParentComplete": false,
+  "limitations": [
+    "No actual shell, file, resource, provisioning, routing, cleanup or swap operation.",
+    "No Azure/native command retry, resource idempotency, swaps or audit-identity certification.",
+    "Offline Playwright 1.56.1, signed Edge 156 and Node 22 are test tooling, not production Node 24 validation.",
+    "No user-journey migration success rate, source-parent completion or five-nines evidence."
+  ]
+}

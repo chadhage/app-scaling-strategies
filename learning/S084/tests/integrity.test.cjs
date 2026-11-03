@@ -1,0 +1,203 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const zlib = require('node:zlib');
+const vm = require('node:vm');
+const { repo, read, sha, lf, git, acceptance, inventory, exactRaw } = require('./provenance.cjs');
+const json = (file) => JSON.parse(read(file));
+
+test('exact source acceptance matches raw CRLF snapshots, declared Git baseline and current authoritative slices', () => {
+  const source = json('evidence\\source-contract.json');
+  assert.equal(source.cardId, 'A-S084');
+  assert.equal(source.kano, 'S');
+  assert.equal(source.kanoUnit, 'A-S084');
+  assert.equal(source.packet, 'SC-S084');
+  assert.equal(source.sourceReadBeforeBehaviorDesign, true);
+  assert.equal(source.acceptanceEqualsBaseline, true);
+  assert.equal(source.admittedContract.authorization, 'local-synthetic-only');
+  assert.equal(source.admittedContract.deliver, json('manifest.json').objective);
+  const working = [], baseline = [], current = [];
+  for (const item of source.sources) {
+    const raw = zlib.gunzipSync(read(item.workingSnapshot));
+    const committed = zlib.gunzipSync(read(item.gitSnapshot));
+    assert.equal(raw.length, item.workingBytes);
+    assert.equal(sha(raw), item.workingSha256);
+    assert.equal(sha(lf(raw)), item.workingCanonicalSha256);
+    assert.equal(raw.includes(Buffer.from('\r\n')), item.workingContainsCRLF);
+    assert.equal(sha(committed), item.gitSha256);
+    assert.equal(lf(raw).equals(committed), item.fullCanonicalEqualsBaseline);
+    assert.deepEqual(git(['show', `${source.baseline}:${item.path.replace(/\\/g, '/')}`]), committed);
+    working.push(raw.toString()); baseline.push(committed.toString());
+    current.push(fs.readFileSync(path.join(repo, item.path), 'utf8'));
+  }
+  assert.deepEqual(acceptance(...working), source.acceptance);
+  assert.deepEqual(acceptance(...baseline), source.acceptance);
+  assert.deepEqual(acceptance(...current), source.acceptance);
+  assert.equal(source.nativeAcceptanceNotCompleted, true);
+});
+
+test('qualified RED retains a loadable stub and 15 actual assertion failures, not missing code or tools', () => {
+  const red = json('evidence\\red\\assertion-run.json');
+  assert.equal(red.qualifiedAssertionRed, true);
+  assert.equal(red.exitCode, 1);
+  assert.equal(red.tests, 17);
+  assert.equal(red.pass, 2);
+  assert.equal(red.fail, 15);
+  assert.equal(red.assertionFailures, red.fail);
+  assert.equal(red.spawnError, null);
+  assert.equal(red.missingCodeOrTools, false);
+  for (const item of red.snapshots) {
+    assert.ok(item.snapshot.endsWith('.snapshot'));
+    const raw = read(`evidence\\red\\${item.snapshot}`);
+    assert.equal(raw.length, item.bytes);
+    assert.equal(sha(raw), item.sha256);
+    if (item.source !== 'model.js') assert.equal(sha(lf(read(item.source))), sha(lf(raw)));
+  }
+  const output = zlib.gunzipSync(read('evidence\\red\\assertion-run.stdout.raw.gz'));
+  const stderr = zlib.gunzipSync(read('evidence\\red\\assertion-run.stderr.raw.gz'));
+  assert.equal(sha(output), red.rawStdoutSha256);
+  assert.equal(sha(stderr), red.rawStderrSha256);
+  assert.match(output.toString(), /actual: 'idle'/);
+  assert.match(output.toString(), /expected: 'delivered'/);
+  assert.doesNotMatch(output.toString() + stderr.toString(), /MODULE_NOT_FOUND|Cannot find module|ENOENT|SyntaxError|ReferenceError|ERR_TEST_FAILURE/);
+  const moduleObject = { exports: {} };
+  new vm.Script(read('evidence\\red\\assertion-model.js.snapshot').toString()).runInNewContext({ module: moduleObject });
+  const stub = moduleObject.exports.createLesson();
+  assert.equal(stub.snapshot().phase, 'idle');
+  assert.equal(stub.deliver({ retryPolicy: 'remembered', evidence: 'complete' }).phase, 'idle');
+});
+
+test('earlier mixed RED prelude remains raw and explicitly unqualified rather than being rewritten', () => {
+  const prelude = json('evidence\\red\\run.json');
+  assert.equal(prelude.qualifiedAssertionRed, undefined);
+  assert.equal(prelude.tests, 17);
+  assert.equal(prelude.fail, 15);
+  assert.ok(prelude.assertionFailures < prelude.fail);
+  assert.equal(prelude.missingCodeOrTools, false);
+  for (const item of prelude.snapshots) {
+    const raw = read(`evidence\\red\\${item.snapshot}`);
+    assert.equal(sha(raw), item.sha256);
+    assert.equal(raw.length, item.bytes);
+  }
+  const stdout = zlib.gunzipSync(read('evidence\\red\\run.stdout.raw.gz'));
+  assert.equal(sha(stdout), prelude.rawStdoutSha256);
+  assert.match(stdout.toString(), /TypeError/);
+  assert.match(read('README.md').toString(), /earlier unqualified prelude/);
+});
+
+test('IaC N/A is recorded after qualified assertion RED and before implementation GREEN', () => {
+  const source = json('evidence\\source-contract.json');
+  const red = json('evidence\\red\\assertion-run.json');
+  const iac = json('evidence\\iac-decision.json');
+  const green = json('evidence\\verification\\model-green.json');
+  assert.equal(iac.status, 'N/A');
+  assert.equal(iac.beforeImplementation, true);
+  assert.equal(iac.nativeCommandRetryIdempotencySwapCertification, false);
+  assert.equal(iac.cloudIaCScaffoldIdentityCredentialsDeploySpendApproved, false);
+  assert.ok(Date.parse(source.recordedAtUtc) <= Date.parse(red.startedAtUtc));
+  assert.ok(Date.parse(red.completedAtUtc) <= Date.parse(iac.decidedAtUtc));
+  assert.ok(Date.parse(iac.decidedAtUtc) <= Date.parse(green.startedAtUtc));
+  assert.equal(green.exitCode, 0);
+  assert.equal(green.tests, 17);
+  assert.equal(green.fail, 0);
+  assert.equal(sha(zlib.gunzipSync(read('evidence\\verification\\model-green.stdout.raw.gz'))), green.rawStdoutSha256);
+});
+
+test('real keyboard-focus regression preserves raw failure and pre-fix sources without weakening its assertion', () => {
+  const regression = json('evidence\\verification\\browser-focus-red.json');
+  assert.equal(regression.exitCode, 1);
+  assert.equal(regression.tests, 1);
+  assert.equal(regression.assertionFailures, 1);
+  assert.equal(regression.missingCodeOrTools, false);
+  const output = zlib.gunzipSync(read('evidence\\verification\\browser-focus-red.stdout.raw.gz'));
+  assert.equal(sha(output), regression.rawStdoutSha256);
+  assert.match(output.toString(), /focusedControlInsideViewport: false/);
+  for (const item of regression.snapshots) {
+    const raw = read(item.snapshot);
+    assert.equal(raw.length, item.bytes);
+    assert.equal(sha(raw), item.sha256);
+    if (item.source === 'tests\\browser.test.cjs') {
+      const unchangedGeometryGuard = 'focusedControlInsideViewport: rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight';
+      assert.ok(raw.toString().includes(unchangedGeometryGuard));
+      assert.ok(read(item.source).toString().includes(unchangedGeometryGuard));
+      assert.match(raw.toString(), /bodyOverflow: false, visibleKeyboardFocus: true, focusedControlInsideViewport: true/);
+      assert.match(read(item.source).toString(), /bodyOverflow: false, visibleKeyboardFocus: true, focusedControlInsideViewport: true/);
+    }
+    else {
+      assert.notEqual(sha(lf(raw)), sha(lf(read(item.source))));
+      assert.doesNotMatch(raw.toString(), /scroll-margin-block/);
+    }
+  }
+  assert.match(read('styles.css').toString(), /scroll-margin-block: 1rem/);
+});
+
+test('actual browser proof qualifies current canonical sources, offline signed pairing and awaited cleanup', () => {
+  const proof = json('evidence\\browser-final.json');
+  const tooling = json('evidence\\tooling.json');
+  assert.equal(proof.outcome, 'PASS');
+  assert.equal(proof.captureExplicitlyEnabled, true);
+  assert.equal(proof.runtime, 'v22.23.4');
+  assert.equal(proof.playwrightVersion, '1.56.1');
+  assert.equal(proof.browserVersion, tooling.browserVersion);
+  assert.equal(tooling.signatureStatus, 'Valid');
+  assert.match(tooling.signer, /Microsoft Corporation/);
+  assert.match(tooling.browserVersion, /^156\./);
+  for (const field of ['packagesInstalled', 'browserDownloaded', 'foregroundLease', 'unsafeFlags', 'abandonedLifecyclePrototypeUsed']) {
+    assert.equal(tooling[field], false, field);
+  }
+  assert.equal(proof.helper.sha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+  assert.equal(tooling.helperSha256, proof.helper.sha256);
+  assert.equal(sha(fs.readFileSync(path.join(repo, proof.helper.path))), proof.helper.sha256);
+  assert.deepEqual(proof.pageErrors, []);
+  assert.deepEqual(proof.consoleErrors.filter((entry) => entry.stage === 'exercise'), []);
+  assert.deepEqual(proof.exerciseNetworkRequests, []);
+  assert.deepEqual(proof.probeRequests, []);
+  assert.deepEqual(proof.probeResponses, []);
+  assert.equal(proof.csp.inlineRan, false);
+  assert.equal(proof.csp.connection, 'TypeError');
+  assert.ok(proof.csp.violations.some((entry) => entry.directive === 'connect-src'));
+  assert.ok(proof.csp.violations.some((entry) => entry.directive.startsWith('script-src')));
+  assert.equal(proof.cleanup.closeAwaited, true);
+  assert.equal(proof.cleanup.closed, true);
+  assert.deepEqual(proof.narrowViewport, {
+    bodyOverflow: false, visibleKeyboardFocus: true, focusedControlInsideViewport: true, scrollableTableRegions: true,
+  });
+  assert.deepEqual(proof.retainedAttemptsAtCapacity.map((entry) => entry.result.outcome), ['FAIL', 'PASS', 'UNKNOWN', 'FAIL']);
+  for (const phrase of ['out-of-order', 'invalid injected enum', 'repeated originals', 'blank prediction',
+    'blind duplicate resource', 'remembered same-key', 'missing cleanup retry receipt', 'fifth attempt',
+    'explicit reset', 'mid-attempt reset', 'reload clears']) {
+    assert.ok(proof.observations.some((entry) => entry.name.includes(phrase)), phrase);
+  }
+  for (const [file, hash] of Object.entries(proof.testedSourceHashes)) assert.equal(sha(lf(read(file))), hash, file);
+  assert.equal(proof.screenshots.length, 2);
+  for (const file of proof.screenshots) assert.deepEqual(read(file).subarray(0, 8), Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  assert.equal(sha(zlib.gunzipSync(read('evidence\\raw\\tooling.stdout.raw.gz'))), tooling.rawStdoutSha256);
+});
+
+test('owned inventory qualifies canonical Git clean-filter text and exact raw proof bytes without staging or writes', () => {
+  const regression = json('evidence\\verification\\git-path-red.json');
+  assert.equal(regression.exitCode, 1);
+  const regressionOutput = zlib.gunzipSync(read('evidence\\verification\\git-path-red.stdout.raw.gz'));
+  assert.equal(sha(regressionOutput), regression.rawStdoutSha256);
+  assert.match(regressionOutput.toString(), /Git clean-filter integrity:/);
+  assert.equal(sha(read('evidence\\raw\\git-path-integrity.test.cjs.snapshot')), regression.snapshotSha256);
+  const index = json('evidence\\content-index-final.json');
+  const found = inventory().filter((file) => file !== 'evidence\\content-index-final.json'
+    && !file.startsWith('evidence\\verification\\'));
+  assert.deepEqual(index.files.map((entry) => entry.path).sort(), found);
+  for (const item of index.files) {
+    const raw = read(item.path);
+    const canonical = exactRaw(item.path) ? raw : lf(raw);
+    assert.equal(item.mode, exactRaw(item.path) ? 'raw' : 'canonical-lf');
+    assert.equal(sha(canonical), item.sha256, item.path);
+    // Git attribute keys are internal index names, not Windows filesystem paths.
+    const pathForGit = path.join('learning', 'S084', item.path).replace(/\\/g, '/');
+    const cleanedObject = git(['hash-object', '--stdin', '--path', pathForGit], raw).toString().trim();
+    const expected = crypto.createHash('sha1').update(`blob ${canonical.length}\0`).update(canonical).digest('hex');
+    assert.equal(cleanedObject, expected, `Git clean-filter integrity: ${item.path}`);
+  }
+});

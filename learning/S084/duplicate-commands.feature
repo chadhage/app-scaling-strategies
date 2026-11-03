@@ -1,0 +1,64 @@
+Feature: Recognize duplicate command effects in a fixed synthetic retry trace
+  This is A-S084, one frozen S unit in SC-S084, not a native operation.
+  Training rehearsal - synthetic data - not a live Azure result
+
+  Background:
+    Given three fixed logical operations provision, swap routing, and cleanup
+    And each has one original delivery and one retry with the same operation key
+    And all commands, resources, swaps, identities and receipts are synthetic data
+    And no command, resource, shell, network or filesystem operation is executed
+
+  Scenario: Remembered operation results suppress all three repeated effects
+    Given the remembered-result retry policy and complete receipts
+    When I inspect the three original deliveries
+    And retry the same three command keys
+    And verify the six audit entries
+    Then one candidate resource remains and exactly one swap was observed
+    And cleanup has one intended removal and no retry error
+    And all three retries return remembered results without additional effects
+    And the synthetic result is PASS, not proof of native idempotency
+
+  Scenario: Blind retries create a duplicate and accidentally swap back
+    Given the blind-replay counterexample and complete receipts
+    When I inspect originals, retry the same keys, and verify
+    Then two candidate resource records remain
+    And two swaps were observed and routing points at the removed old resource
+    And the cleanup retry reports an already-absent target error
+    And the result is FAIL with the original and retry audits retained
+
+  Scenario: An unavailable cleanup receipt is not success
+    Given remembered results and an unavailable cleanup retry receipt
+    When I inspect originals, retry, and verify
+    Then five delivery outcomes are known and one is UNKNOWN
+    And the last observed resource count and swap count are not final-state proof
+    And the result is UNKNOWN, not PASS
+
+  Scenario: A known failure outranks an unknown receipt without hiding it
+    Given blind replay and an unavailable cleanup retry receipt
+    When I inspect originals, retry, and verify
+    Then the duplicate resource and second swap remain known failures
+    And the unknown cleanup outcome is still counted
+    And the result is FAIL
+
+  Scenario: Learning correctness is distinct from observed operational safety
+    Given a verified counterexample
+    When I predict PASS and check the prediction
+    Then the prediction is incorrect and the measured result remains FAIL
+    And the exact settings, six audits, observations and result enter history
+    And a new attempt restores safe defaults without deleting the failed attempt
+
+  Scenario: Bound and guard the exercise
+    Given only two exact enum inputs, ordered actions, and a four-attempt limit
+    Then malformed inputs, unknown predictions and out-of-order actions are rejected
+    And rejection cannot change observations or retained history
+    And a fifth attempt cannot evict an earlier failure or unknown
+    And returned snapshots cannot mutate the model or fixed fixtures
+
+  Scenario: Keyboard, reset and browser isolation
+    Given the standalone file lesson with its exact synthetic banner and restrictive CSP
+    Then Tab, arrows, Enter and Space operate the lesson
+    And invalid input and state errors are visible and receive focus
+    And reset clears settings, trace, prediction, errors, history and expanded details
+    And neither form shadows its native reset method
+    And inline script and connection probes are blocked
+    And normal verification never rewrites historical evidence

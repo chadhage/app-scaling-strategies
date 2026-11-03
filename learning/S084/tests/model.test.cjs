@@ -1,0 +1,267 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createLesson, DEFAULTS, MAX_ATTEMPTS } = require('../model.js');
+const settings = (retryPolicy = 'remembered', evidence = 'complete') => ({ retryPolicy, evidence });
+function verified(retryPolicy = 'remembered', evidence = 'complete') {
+  const lesson = createLesson();
+  lesson.deliver(settings(retryPolicy, evidence));
+  lesson.retry();
+  lesson.verify();
+  return lesson;
+}
+function unchanged(lesson, action, code) {
+  const before = lesson.snapshot();
+  assert.throws(action, (error) => error.code === code);
+  assert.deepEqual(lesson.snapshot(), before);
+}
+
+test('loadable initial state has no observed success or implicit attempt', () => {
+  const lesson = createLesson();
+  const state = lesson.snapshot();
+  assert.deepEqual(DEFAULTS, settings());
+  assert.equal(MAX_ATTEMPTS, 4);
+  assert.equal(state.phase, 'idle');
+  assert.equal(state.observation, null);
+  assert.equal(state.result, null);
+  assert.equal(state.prediction, null);
+  assert.equal(state.learning, null);
+  assert.deepEqual(state.history, []);
+  assert.deepEqual(state.trace, []);
+  assert.ok(Object.isFrozen(DEFAULTS));
+});
+
+test('original synthetic commands give three auditable operations, one resource and one swap', () => {
+  const state = createLesson().deliver(settings());
+  assert.equal(state.phase, 'delivered');
+  assert.equal(state.observation.audit.length, 3);
+  assert.deepEqual(state.observation.resources, ['candidate-v2']);
+  assert.equal(state.observation.route, 'candidate-v2');
+  assert.equal(state.observation.swaps, 1);
+  assert.equal(state.observation.knownEffects, 3);
+  assert.equal(state.result, null);
+});
+
+test('remembered retries keep one resource, one swap and one removal without repeated effects', () => {
+  const lesson = verified();
+  const state = lesson.snapshot();
+  assert.equal(state.phase, 'verified');
+  assert.equal(state.result.outcome, 'PASS');
+  assert.deepEqual(state.observation.resources, ['candidate-v2']);
+  assert.equal(state.observation.swaps, 1);
+  assert.equal(state.observation.removals, 1);
+  assert.equal(state.observation.duplicateResources, 0);
+  assert.equal(state.observation.extraSwaps, 0);
+  assert.equal(state.observation.cleanupErrors, 0);
+  assert.equal(state.observation.knownEffects, 3);
+  assert.equal(state.observation.replayed, 3);
+  assert.equal(state.result.known, 6);
+  assert.equal(state.result.unknown, 0);
+});
+
+test('blind replay exposes duplicate resource, unintended second swap and contradictory state', () => {
+  const state = verified('blind').snapshot();
+  assert.ok(state.result, 'Verification must produce an explicit result.');
+  assert.equal(state.result.outcome, 'FAIL');
+  assert.deepEqual(state.observation.resources, ['candidate-v2', 'candidate-v2-copy']);
+  assert.equal(state.observation.route, 'retained-v1');
+  assert.equal(state.observation.routeTargetPresent, false);
+  assert.equal(state.observation.swaps, 2);
+  assert.equal(state.observation.extraSwaps, 1);
+  assert.equal(state.observation.duplicateResources, 1);
+  assert.equal(state.observation.cleanupErrors, 1);
+  assert.equal(state.observation.knownEffects, 5);
+  assert.equal(state.observation.removals, 1);
+  assert.equal(state.result.gates.resources, 'FAIL');
+  assert.equal(state.result.gates.swaps, 'FAIL');
+  assert.equal(state.result.gates.state, 'FAIL');
+  assert.equal(state.result.gates.cleanup, 'FAIL');
+});
+
+test('missing cleanup retry receipt yields UNKNOWN and never claims complete final evidence', () => {
+  const state = verified('remembered', 'cleanup-unobserved').snapshot();
+  assert.ok(state.result, 'Verification must classify missing evidence.');
+  assert.equal(state.result.outcome, 'UNKNOWN');
+  assert.equal(state.result.known, 5);
+  assert.equal(state.result.unknown, 1);
+  assert.equal(state.result.gates.cleanup, 'UNKNOWN');
+  assert.equal(state.result.gates.audit, 'UNKNOWN');
+  assert.equal(state.observation.finalEvidenceComplete, false);
+  assert.equal(state.observation.cleanupErrors, null);
+  assert.equal(state.observation.audit[5].status, 'UNKNOWN');
+  assert.equal(state.observation.audit[5].effects, null);
+});
+
+test('known duplicate and second swap remain FAIL alongside an unknown cleanup outcome', () => {
+  const state = verified('blind', 'cleanup-unobserved').snapshot();
+  assert.ok(state.result, 'Verification must retain known failures.');
+  assert.equal(state.result.outcome, 'FAIL');
+  assert.equal(state.result.unknown, 1);
+  assert.equal(state.result.gates.resources, 'FAIL');
+  assert.equal(state.result.gates.swaps, 'FAIL');
+  assert.equal(state.result.gates.cleanup, 'UNKNOWN');
+  assert.equal(state.observation.cleanupErrors, null);
+  assert.equal(state.observation.audit[5].status, 'UNKNOWN');
+});
+
+test('each retry has the original key, fixed actor, distinct delivery and unambiguous receipt', () => {
+  const observation = verified().snapshot().observation;
+  assert.ok(observation, 'Deliveries must have inspectable observations.');
+  const { audit } = observation;
+  assert.equal(audit.length, 6);
+  assert.equal(new Set(audit.map((entry) => entry.deliveryId)).size, 6);
+  for (let i = 0; i < 3; i++) {
+    assert.equal(audit[i].operationKey, audit[i + 3].operationKey);
+    assert.equal(audit[i].payload, audit[i + 3].payload);
+    assert.equal(audit[i].operation, audit[i + 3].operation);
+    assert.equal(audit[i].actor, 'synthetic-worker-084');
+    assert.equal(audit[i + 3].actor, 'synthetic-worker-084');
+    assert.equal(audit[i].status, 'APPLIED');
+    assert.equal(audit[i + 3].status, 'REPLAYED');
+    assert.equal(audit[i + 3].effects, 0);
+  }
+});
+
+test('correct prediction is retained separately from the measured synthetic result', () => {
+  const lesson = verified('blind');
+  const state = lesson.check('FAIL');
+  assert.equal(state.phase, 'checked');
+  assert.equal(state.learning.correct, true);
+  assert.equal(state.result.outcome, 'FAIL');
+  assert.equal(state.history.length, 1);
+  assert.deepEqual(state.history[0].settings, settings('blind'));
+  assert.deepEqual(state.history[0].observation, state.observation);
+  assert.deepEqual(state.history[0].result, state.result);
+  assert.equal(state.history[0].prediction, 'FAIL');
+  assert.ok(state.history[0].trace.length >= 4);
+});
+
+test('an incorrect PASS prediction cannot rewrite a measured failure or erase unknowns', () => {
+  const state = verified('blind', 'cleanup-unobserved').check('PASS');
+  assert.ok(state.result, 'A prediction must not replace observed results.');
+  assert.equal(state.result.outcome, 'FAIL');
+  assert.equal(state.result.unknown, 1);
+  assert.equal(state.learning.correct, false);
+  assert.equal(state.history[0].result.outcome, 'FAIL');
+  assert.equal(state.history[0].prediction, 'PASS');
+});
+
+test('input guards reject non-records, missing/extra/symbol fields and unknown enum strings atomically', () => {
+  const lesson = createLesson();
+  for (const input of [
+    null, undefined, [], 'remembered', 4, {},
+    { retryPolicy: 'remembered' },
+    { ...settings(), arbitraryCommand: 'not allowed' },
+    { ...settings(), [Symbol('extra')]: true },
+    settings('REMEMBERED'), settings(' remembered'), settings('blind', 'missing'),
+    Object.create(settings()),
+  ]) unchanged(lesson, () => lesson.deliver(input), 'INVALID_INPUT');
+  const accessor = { evidence: 'complete', get retryPolicy() { throw new Error('must not execute an accessor'); } };
+  unchanged(lesson, () => lesson.deliver(accessor), 'INVALID_INPUT');
+});
+
+test('state guards reject every out-of-order or repeated action without mutation', () => {
+  const lesson = createLesson();
+  for (const action of [() => lesson.retry(), () => lesson.verify(), () => lesson.check('PASS'), () => lesson.newAttempt()]) {
+    unchanged(lesson, action, 'INVALID_STATE');
+  }
+  lesson.deliver(settings());
+  for (const action of [() => lesson.deliver(settings()), () => lesson.verify(), () => lesson.check('PASS')]) {
+    unchanged(lesson, action, 'INVALID_STATE');
+  }
+  lesson.retry();
+  unchanged(lesson, () => lesson.retry(), 'INVALID_STATE');
+  lesson.verify();
+  unchanged(lesson, () => lesson.verify(), 'INVALID_STATE');
+  lesson.check('PASS');
+  unchanged(lesson, () => lesson.check('PASS'), 'INVALID_STATE');
+});
+
+test('prediction guards reject coercion, whitespace and unsupported verdicts before retaining', () => {
+  const lesson = verified();
+  for (const input of ['', 'pass', ' PASS', 'SUCCESS', null, undefined, 1, {}, ['PASS']]) {
+    unchanged(lesson, () => lesson.check(input), 'INVALID_INPUT');
+  }
+  assert.equal(lesson.check('PASS').history.length, 1);
+});
+
+test('new attempt restores defaults and preserves exact failed and unknown histories', () => {
+  const lesson = verified('blind');
+  lesson.check('FAIL');
+  const first = lesson.snapshot().history[0];
+  const idle = lesson.newAttempt();
+  assert.equal(idle.phase, 'idle');
+  assert.deepEqual(idle.settings, settings());
+  assert.equal(idle.observation, null);
+  assert.equal(idle.result, null);
+  assert.equal(idle.prediction, null);
+  assert.equal(idle.learning, null);
+  assert.deepEqual(idle.trace, []);
+  lesson.deliver(settings('remembered', 'cleanup-unobserved'));
+  lesson.retry(); lesson.verify(); lesson.check('UNKNOWN');
+  assert.deepEqual(lesson.snapshot().history[0], first);
+  assert.deepEqual(lesson.snapshot().history.map((entry) => entry.result.outcome), ['FAIL', 'UNKNOWN']);
+});
+
+test('four retained attempts impose a hard non-evicting limit until explicit full reset', () => {
+  const lesson = createLesson();
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    if (i) lesson.newAttempt();
+    lesson.deliver(settings(i % 2 ? 'remembered' : 'blind'));
+    lesson.retry(); lesson.verify(); lesson.check(i % 2 ? 'PASS' : 'FAIL');
+  }
+  assert.equal(lesson.snapshot().history.length, 4);
+  unchanged(lesson, () => lesson.newAttempt(), 'ATTEMPT_LIMIT');
+  unchanged(lesson, () => lesson.deliver(settings()), 'INVALID_STATE');
+  assert.equal(lesson.reset().history.length, 0);
+  assert.equal(lesson.deliver(settings()).phase, 'delivered');
+});
+
+test('defensive snapshots, retained details and caller input cannot mutate observed facts', () => {
+  const lesson = createLesson();
+  const input = settings('blind');
+  const delivered = lesson.deliver(input);
+  assert.ok(delivered.observation, 'Original deliveries must return observations.');
+  input.retryPolicy = 'remembered';
+  delivered.observation.resources.push('injected');
+  delivered.settings.retryPolicy = 'remembered';
+  lesson.retry(); lesson.verify(); lesson.check('FAIL');
+  const saved = lesson.snapshot();
+  saved.history[0].result.outcome = 'PASS';
+  saved.history[0].observation.audit[0].operationKey = 'injected';
+  saved.trace.length = 0;
+  assert.equal(lesson.snapshot().settings.retryPolicy, 'blind');
+  assert.equal(lesson.snapshot().history[0].result.outcome, 'FAIL');
+  assert.notEqual(lesson.snapshot().history[0].observation.audit[0].operationKey, 'injected');
+  assert.deepEqual(lesson.snapshot().observation.resources, ['candidate-v2', 'candidate-v2-copy']);
+});
+
+test('reset from any phase clears all in-memory data without carrying effects into another model', () => {
+  const lesson = verified('blind', 'cleanup-unobserved');
+  lesson.check('FAIL');
+  assert.deepEqual(lesson.reset(), createLesson().snapshot());
+  lesson.deliver(settings());
+  assert.deepEqual(createLesson().snapshot().history, []);
+  assert.equal(createLesson().snapshot().observation, null);
+});
+
+test('all four fixed combinations have deterministic audit denominators and honest verdict precedence', () => {
+  for (const [retryPolicy, evidence, outcome, unknown] of [
+    ['remembered', 'complete', 'PASS', 0],
+    ['blind', 'complete', 'FAIL', 0],
+    ['remembered', 'cleanup-unobserved', 'UNKNOWN', 1],
+    ['blind', 'cleanup-unobserved', 'FAIL', 1],
+  ]) {
+    const state = verified(retryPolicy, evidence).snapshot();
+    assert.ok(state.result, 'Every fixed fixture must have a verified result.');
+    assert.equal(state.result.outcome, outcome);
+    assert.equal(state.result.deliveries, 6);
+    assert.equal(state.result.known + state.result.unknown, 6);
+    assert.equal(state.result.unknown, unknown);
+    assert.deepEqual(state, verified(retryPolicy, evidence).snapshot());
+    const statuses = state.observation.audit.map((entry) => entry.status);
+    assert.equal(statuses.filter((entry) => entry === 'UNKNOWN').length, unknown);
+    assert.equal(state.result.gates.audit, unknown ? 'UNKNOWN' : 'PASS');
+  }
+});

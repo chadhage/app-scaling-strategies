@@ -1,0 +1,21 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.S084Model = factory();
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULTS = Object.freeze({ retryPolicy: 'remembered', evidence: 'complete' });
+  const MAX_ATTEMPTS = 4;
+  function createLesson() {
+    const initial = {
+      phase: 'idle', settings: { ...DEFAULTS }, observation: null, result: null,
+      prediction: null, learning: null, trace: [], history: [], maxAttempts: MAX_ATTEMPTS,
+    };
+    const snapshot = () => JSON.parse(JSON.stringify(initial));
+    return {
+      snapshot, deliver: snapshot, retry: snapshot, verify: snapshot,
+      check: snapshot, newAttempt: snapshot, reset: snapshot,
+    };
+  }
+  return { createLesson, DEFAULTS, MAX_ATTEMPTS };
+}));

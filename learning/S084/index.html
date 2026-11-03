@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S084 — Duplicate command delivery rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#lesson">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S084 — Retry the same commands, not their effects</h1>
+    <p>Inspect fixed provisioning, routing and cleanup deliveries. Recognize a duplicate resource or an unintended second swap; a command receipt is not a safety verdict.</p>
+  </header>
+  <main id="lesson" tabindex="-1">
+    <section aria-labelledby="preconditions">
+      <h2 id="preconditions">One fixed, bounded trace</h2>
+      <p><strong>Preconditions:</strong> retained-v1 is the old synthetic resource. Three originals record candidate-v2, swap routing to it, then remove retained-v1. Three retries reuse those exact operation keys and payloads. Resource names, command labels, actor stamps and swaps are only fixture data.</p>
+      <p><strong>Actions:</strong> inspect originals → retry the same keys → verify → predict and retain. Compare remembered results with blind replay. An unavailable cleanup receipt must remain unknown.</p>
+      <p>There is no shell, file, resource or management operation behind these controls. Blind replay is a deliberately broken <em>synthetic counterexample</em>, not an Azure command behavior.</p>
+    </section>
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Conduct the rehearsal</h2>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <form id="settings-form" novalidate>
+        <fieldset id="settings">
+          <legend>Fixed trace conditions (locked after originals)</legend>
+          <label for="retry-policy">Retry policy</label>
+          <select id="retry-policy" name="retryPolicy">
+            <option value="remembered">Remember results by operation key</option>
+            <option value="blind">Blind replay — broken counterexample</option>
+          </select>
+          <label for="evidence">Cleanup retry evidence</label>
+          <select id="evidence" name="evidence">
+            <option value="complete">Complete receipts</option>
+            <option value="cleanup-unobserved">Cleanup retry receipt unavailable</option>
+          </select>
+        </fieldset>
+        <div class="actions">
+          <button id="deliver" type="submit">1. Inspect three originals</button>
+          <button id="retry-commands" type="button" disabled>2. Retry same three keys</button>
+          <button id="verify-run" type="button" disabled>3. Verify observations</button>
+        </div>
+      </form>
+      <p id="phase" role="status">Phase: idle</p>
+      <output id="outcome" aria-live="polite">Result: not verified</output>
+      <p id="gates">Resources: not verified · swaps: not verified · state: not verified · cleanup: not verified · audit: not verified</p>
+      <p id="delivery-totals">Delivery outcomes: not verified</p>
+      <p id="evidence-note">No retry evidence inspected.</p>
+    </section>
+    <section aria-labelledby="observations-title">
+      <h2 id="observations-title">Measured synthetic observations</h2>
+      <p id="inventory">Last observed resources: not inspected</p>
+      <p id="routing">Last observed route: not inspected</p>
+      <p id="metrics">Observed swaps: not inspected · intended removals: not inspected</p>
+      <p id="retry-metrics">Duplicate resources: not inspected · retry effects: not inspected</p>
+      <div class="table-region" role="region" aria-label="Synthetic command audit" tabindex="0">
+        <table>
+          <caption>Fixed delivery audit — actor stamps are not authenticated identities</caption>
+          <thead><tr><th scope="col">Delivery</th><th scope="col">Operation / key</th><th scope="col">Kind</th><th scope="col">Actor / payload</th><th scope="col">Receipt</th><th scope="col">Observed effects</th><th scope="col">Detail</th></tr></thead>
+          <tbody id="audit-rows"></tbody>
+        </table>
+      </div>
+      <h3>Trace (originals are never replaced by retries)</h3>
+      <pre id="trace">No attempt started.</pre>
+    </section>
+    <section aria-labelledby="prediction-title">
+      <h2 id="prediction-title">Check your prediction, not a native guarantee</h2>
+      <form id="prediction-form" novalidate>
+        <fieldset id="prediction-settings" disabled>
+          <legend>Predict the measured synthetic result</legend>
+          <label for="prediction">Expected result</label>
+          <select id="prediction" name="prediction">
+            <option value="">Choose PASS, FAIL or UNKNOWN</option>
+            <option value="PASS">PASS — all fixed retry checks observed safe</option>
+            <option value="FAIL">FAIL — a known unsafe effect exists</option>
+            <option value="UNKNOWN">UNKNOWN — no known fault, incomplete evidence</option>
+          </select>
+          <button id="check-prediction" type="submit">4. Check prediction and retain</button>
+        </fieldset>
+      </form>
+      <p id="prediction-result" role="status">Prediction not checked.</p>
+      <div class="actions">
+        <button id="new-attempt" type="button" disabled>New attempt (retain history)</button>
+        <button id="reset-all" type="button">Reset all local data</button>
+      </div>
+      <p id="capacity-note">Four attempts maximum; no automatic eviction.</p>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained attempts</h2>
+      <p id="history-count">Retained completed attempts: 0 / 4</p>
+      <p id="totals">Attempt results: 0 PASS · 0 FAIL · 0 UNKNOWN</p>
+      <div class="table-region" role="region" aria-label="Retained attempt history" tabindex="0">
+        <table>
+          <caption>Failures and unknowns stay until explicit full reset</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Policy / receipts</th><th scope="col">Measured result</th><th scope="col">Unknown deliveries</th><th scope="col">Prediction</th><th scope="col">Evidence</th></tr></thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+      <details id="history-detail"><summary id="history-summary">Exact retained synthetic evidence</summary><pre id="history-proof"></pre></details>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Limits and expected assertions</h2>
+      <p>Remembered results plus complete receipts: PASS, one candidate, one swap, one removal, six known delivery outcomes. Blind replay: FAIL, one duplicate resource, an unintended second swap to a missing target, and a cleanup retry error. Missing cleanup evidence: UNKNOWN unless a known failure already exists; unknown deliveries are never discarded.</p>
+      <p>Resource and route gates describe the last observed checkpoint. With an unavailable cleanup receipt, final state is unverified even if that checkpoint looked safe. These six command deliveries are not user journeys, a migration success rate or evidence of five-nines reliability.</p>
+      <p>A-S084 is one portable S unit in SC-S084. B-S084 and D-S084 remain incomplete. No actual command retry, resource idempotency, swap, audit identity, Azure behavior, production Node.js 24 runtime or source-parent completion is certified. IaC is N/A; no cloud, deployment, identity, credentials or expenditure is involved.</p>
+      <p>Tab, arrows, Enter and Space operate the controls. New attempt restores defaults and retains history. Reset clears all local settings, trace, errors and history; reload also clears memory. Nothing is persisted or exported by the lesson.</p>
+      <p><a href="README.md">Lesson instructions and evidence limits</a> · <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft Open Source Disclaimer</a></p>
+    </section>
+    <noscript>JavaScript is required for this synthetic exercise. No result has been verified.</noscript>
+  </main>
+</body>
+</html>
