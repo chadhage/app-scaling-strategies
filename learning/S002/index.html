@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <title>A-S002 — Prepared native slot swap rehearsal</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="lesson.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+  <header>
+    <p class="eyebrow">A-S002 · Kano S · kanoUnit A-S002 · D-S002 / S002 · SC-S002</p>
+    <h1>Prepared native slot swap</h1>
+    <p class="lead">Warm the candidate for its destination. Keep the distinction between a retained <strong>slot</strong> and a retained <strong>worker</strong>.</p>
+    <p><strong>Objective:</strong> choose a supported native swap configuration with production as target, and explain why former production work is not protected from recycling.</p>
+  </header>
+  <main>
+    <noscript><p class="warning">JavaScript is required for this local exercise. Without it no trace or verification is available.</p></noscript>
+    <section aria-labelledby="preconditions-heading">
+      <h2 id="preconditions-heading">Before you start</h2>
+      <p>This is a file-browser, SOURCE-only fixture: staging holds synthetic v2; production serves synthetic v1. Two staging instances, shared compatible state, and overlap headroom are assumed. No runtime framework is chosen, approved, installed, or hosted.</p>
+      <p>Native preparation applies applicable <em>target slot-specific settings</em> to the source and restarts it. Warm-up must be meaningful for dependencies and representative journeys. After routing changes, former production workers are restarted/recycled even if their slot is retained.</p>
+      <p>The fixture models three non-secret, slot-specific aliases: <code>APP_ENV=production</code>, <code>CATALOG_ALIAS=catalog-production</code>, <code>SESSION_CONTRACT=shared-v1</code>. It does not imply every setting swaps: identity, networking, authentication, and other effective settings require separate validation.</p>
+      <p><strong>IaC: N/A.</strong> No resources, credentials, deployment, or management calls. C001 runtime/auth/hosting decisions and separate scaffold/deploy approvals are absent. A-S002 does not implement B-S002 or complete D-S002.</p>
+    </section>
+
+    <div class="workspace">
+      <section aria-labelledby="choose-heading" class="panel">
+        <h2 id="choose-heading">1. Choose conditions</h2>
+        <p>Start with the safe selection. Then try a wrong target, incompatible settings, unready instance, or unsupported auto-swap. Run again to compare.</p>
+        <form id="exercise">
+          <label for="profile">Native host / operation fixture</label>
+          <select id="profile" name="profile" aria-describedby="profile-help">
+            <option value="windows-code-manual">Windows code — manual swap</option>
+            <option value="linux-code-manual">Linux code — manual swap</option>
+            <option value="linux-code-auto">Linux code — auto-swap (unsupported)</option>
+            <option value="container-auto">Web App for Containers — auto-swap (unsupported)</option>
+          </select>
+          <p id="profile-help" class="hint">These are synthetic support cases, not a framework or deployment decision. Auto-swap is not supported on Linux code apps or Web App for Containers.</p>
+
+          <label for="target">Swap target</label>
+          <select id="target" name="target">
+            <option value="production">Production — correct target</option>
+            <option value="staging">Staging — wrong target</option>
+          </select>
+
+          <label for="configuration">Staging configuration for warm-up</label>
+          <select id="configuration" name="configuration">
+            <option value="target-effective">Effective production slot-specific settings + compatible state</option>
+            <option value="source-only">Staging-only settings — wrong effective configuration</option>
+            <option value="incompatible">Target dependency/session contract — incompatible</option>
+          </select>
+
+          <label for="readiness">Meaningful readiness on the source instances</label>
+          <select id="readiness" name="readiness">
+            <option value="ready">Both ready — dependencies + journeys, HTTP 200</option>
+            <option value="unready">Second instance unready — HTTP 503</option>
+            <option value="misleading-500">Both return HTTP 500 — response is not readiness</option>
+          </select>
+
+          <label for="statusPolicy">Accepted swap warm-up statuses</label>
+          <select id="statusPolicy" name="statusPolicy" aria-describedby="warmup-help">
+            <option value="strict-200">Explicit HTTP 200 only</option>
+            <option value="any-response">Any HTTP response — unsafe default for this exercise</option>
+          </select>
+          <p id="warmup-help" class="hint">Modeled <code>WEBSITE_SWAP_WARMUP_PING_PATH=/readyz</code> and <code>WEBSITE_SWAP_WARMUP_PING_STATUSES=200</code>. The native any-response default is not forbidden by Azure; this lesson rejects it as insufficient evidence.</p>
+
+          <label for="formerWork">Former-worker active-work fixture</label>
+          <select id="formerWork" name="formerWork">
+            <option value="opaque">Opaque outcome — keep request / connection / job unknown</option>
+            <option value="interrupted">Observed synthetic interruption — all three interrupted</option>
+          </select>
+          <div class="actions">
+            <button type="submit" id="run">Run synthetic swap</button>
+            <button type="button" id="reset" class="secondary">Reset local exercise</button>
+          </div>
+        </form>
+        <p id="status" role="status" aria-live="polite" aria-atomic="true">Ready. Choose conditions, then run the synthetic swap.</p>
+      </section>
+
+      <section aria-labelledby="trace-heading" class="panel">
+        <h2 id="trace-heading">2. Inspect the deterministic trace</h2>
+        <p id="run-outcome" class="outcome" data-state="not-run">NOT RUN — no native operation is available.</p>
+        <p>Ticks are fixed logical sequence labels, <strong>not</strong> measured time. The trace always starts from the same v1/v2 fixture; repeated clicks do not accumulate a deployment.</p>
+        <dl id="settings-result">
+          <dt>Effective staging warm-up configuration</dt>
+          <dd id="effective-settings">Not evaluated.</dd>
+          <dt>Routing admissions in the fixture</dt>
+          <dd id="routing-result">Production v1. No candidate exposed.</dd>
+        </dl>
+        <ol id="trace" aria-label="Synthetic swap trace">
+          <li>Run the exercise to generate a synthetic trace.</li>
+        </ol>
+      </section>
+    </div>
+
+    <section aria-labelledby="verify-heading" class="panel">
+      <h2 id="verify-heading">3. Check expected outcomes — educational verifier</h2>
+      <p>Read the trace, acknowledge each expected assertion, then check. The independent verifier checks the structured trace; a blocked unsafe choice can pass this <strong>negative teaching check</strong> without being a successful swap.</p>
+      <fieldset id="acknowledgments" disabled>
+        <legend>Expected assertions to compare with the trace</legend>
+        <label class="check"><input type="checkbox" id="ack-target"> Production is the target and staging uses effective target settings; wrong target/configuration or unsupported auto-swap must block.</label>
+        <label class="check"><input type="checkbox" id="ack-gates"> Both source instances must pass meaningful readiness and explicit HTTP 200 before routing changes; blocked selections keep v1 admissions.</label>
+        <label class="check"><input type="checkbox" id="ack-recycle"> After a modeled swap, the old slot is retained but its former production workers recycle; a retained slot is not custom draining.</label>
+        <label class="check"><input type="checkbox" id="ack-impact"> Active request, connection, and job outcomes stay unknown or interrupted; neither is uninterrupted user migration.</label>
+        <label class="check"><input type="checkbox" id="ack-scope"> This is synthetic learning evidence only, not native B-S002 proof, complete D-S002 acceptance, or a reliability certificate.</label>
+      </fieldset>
+      <button type="button" id="verify" disabled>Check expected outcomes</button>
+      <p id="verifier-result" class="outcome" data-verdict="not-checked">NOT CHECKED — run and inspect a trace first.</p>
+      <ul id="verification-checks" aria-label="Independent verifier checks"></ul>
+    </section>
+
+    <div class="workspace">
+      <section aria-labelledby="impact-heading" class="panel">
+        <h2 id="impact-heading">User impact — separate from verifier success</h2>
+        <p id="impact-result" class="outcome" data-impact="not-run">NOT RUN — uninterrupted migration is not assessed.</p>
+        <p id="worker-result">A retained slot never establishes that its workers or in-flight work survive.</p>
+        <p>Fixed synthetic identifiers: <code>req-01</code> in-flight request, <code>conn-01</code> long-lived connection, <code>job-01</code> background job. Selecting opaque deliberately supplies no completion evidence. Selecting interruption models failure, not recovery.</p>
+      </section>
+      <section aria-labelledby="cleanup-heading" class="panel">
+        <h2 id="cleanup-heading">Cleanup — local only</h2>
+        <p id="cleanup-result">Zero cloud resources created. No persistent local state, credentials, timer, service worker, or network activity is used.</p>
+        <p>Reset clears selections, trace, acknowledgments, verifier, and impact in this page only. Closing the page also discards its in-memory state. There is no live action to undo or claim to reconcile.</p>
+      </section>
+    </div>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits you must carry forward</h2>
+      <ul>
+        <li>In-flight requests can be interrupted by former-worker recycling. Long-lived connections and background jobs need separate protection; native swap does not promise custom drain semantics.</li>
+        <li>Retaining the old slot, retrying, reconnecting, or rolling back cannot erase interruptions. Retries and reconnects remain inside the original journey budget.</li>
+        <li>Actual maximum request/job durations, native lifecycle timing, session/authentication continuity, correctness, and durable or exactly-once effects are unmeasured.</li>
+        <li>Slots share App Service plan compute. A swap adds no capacity and provides no independent fault domain. Overlap/dependency headroom here is an assumption.</li>
+        <li>HTTP status alone is not readiness; representative state, dependency, configuration, and journey checks are still required.</li>
+        <li>No live migration, native guarantee, uptime target, five-nines claim, or reliability certification follows from this lesson. Unverified stays unverified.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>
+    <h2>Microsoft Open Source Disclaimer</h2>
+    <p>Provided “AS IS” for education, without warranties or guarantees. Validate security, reliability, compatibility, and cost before production use. Microsoft/Azure references do not imply endorsement, sponsorship, certification, or support. Microsoft and Azure are trademarks of the Microsoft group of companies. This disclaimer is not a license and does not change applicable terms or SLAs.</p>
+    <p><a href="../../README.md#microsoft-open-source-disclaimer" target="_blank" rel="noopener noreferrer">Full repository Microsoft disclaimer</a> · <a href="https://learn.microsoft.com/azure/app-service/deploy-staging-slots#swap-operation-steps" target="_blank" rel="noopener noreferrer">Microsoft Learn: native swap steps and worker recycling (external reference)</a></p>
+    <p>No reference is fetched automatically. This standalone lesson uses only local scripts and styles.</p>
+  </footer>
+</body>
+</html>
