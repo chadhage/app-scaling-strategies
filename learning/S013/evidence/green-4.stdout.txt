@@ -1,0 +1,316 @@
+TAP version 13
+# Subtest: declared fixture starts with two ready workers and no claimed outcomes
+ok 1 - declared fixture starts with two ready workers and no claimed outcomes
+  ---
+  duration_ms: 6.0139
+  type: 'test'
+  ...
+# Subtest: enqueue creates twelve deadline-bearing work items without mutating its input
+ok 2 - enqueue creates twelve deadline-bearing work items without mutating its input
+  ---
+  duration_ms: 0.7269
+  type: 'test'
+  ...
+# Subtest: commands are deterministic and preserve earlier states
+ok 3 - commands are deterministic and preserve earlier states
+  ---
+  duration_ms: 6.6504
+  type: 'test'
+  ...
+# Subtest: queue pressure requests capacity but does not make the requested worker ready
+ok 4 - queue pressure requests capacity but does not make the requested worker ready
+  ---
+  duration_ms: 0.6003
+  type: 'test'
+  ...
+# Subtest: a later readiness observation precedes use of added capacity
+ok 5 - a later readiness observation precedes use of added capacity
+  ---
+  duration_ms: 0.5937
+  type: 'test'
+  ...
+# Subtest: queue-depth conducts the complete bounded workload-driven scale-out
+ok 6 - queue-depth conducts the complete bounded workload-driven scale-out
+  ---
+  duration_ms: 0.4642
+  type: 'test'
+  ...
+# Subtest: concurrency conducts the complete bounded workload-driven scale-out
+ok 7 - concurrency conducts the complete bounded workload-driven scale-out
+  ---
+  duration_ms: 0.4911
+  type: 'test'
+  ...
+# Subtest: queue-depth: batch 7, concurrency 120 yields BELOW_THRESHOLD
+ok 8 - queue-depth: batch 7, concurrency 120 yields BELOW_THRESHOLD
+  ---
+  duration_ms: 0.2438
+  type: 'test'
+  ...
+# Subtest: queue-depth: batch 8, concurrency 0 yields SCALE_OUT_REQUESTED
+ok 9 - queue-depth: batch 8, concurrency 0 yields SCALE_OUT_REQUESTED
+  ---
+  duration_ms: 0.4728
+  type: 'test'
+  ...
+# Subtest: concurrency: batch 40, concurrency 11 yields BELOW_THRESHOLD
+ok 10 - concurrency: batch 40, concurrency 11 yields BELOW_THRESHOLD
+  ---
+  duration_ms: 1.716
+  type: 'test'
+  ...
+# Subtest: concurrency: batch 2, concurrency 12 yields SCALE_OUT_REQUESTED
+ok 11 - concurrency: batch 2, concurrency 12 yields SCALE_OUT_REQUESTED
+  ---
+  duration_ms: 0.95
+  type: 'test'
+  ...
+# Subtest: concurrency uses ready workers, not requested workers, as its denominator
+ok 12 - concurrency uses ready workers, not requested workers, as its denominator
+  ---
+  duration_ms: 0.6924
+  type: 'test'
+  ...
+# Subtest: an empty queue is observed as zero, not as completed work or a passed exercise
+ok 13 - an empty queue is observed as zero, not as completed work or a passed exercise
+  ---
+  duration_ms: 0.6197
+  type: 'test'
+  ...
+# Subtest: finishing work without a scale transition is not evidence of this strategy
+ok 14 - finishing work without a scale transition is not evidence of this strategy
+  ---
+  duration_ms: 0.3809
+  type: 'test'
+  ...
+# Subtest: completion exactly at the immutable deadline is on time
+ok 15 - completion exactly at the immutable deadline is on time
+  ---
+  duration_ms: 0.5734
+  type: 'test'
+  ...
+# Subtest: later completion misses the original deadline despite successful scale-out
+ok 16 - later completion misses the original deadline despite successful scale-out
+  ---
+  duration_ms: 0.4782
+  type: 'test'
+  ...
+# Subtest: pending work past its deadline is already overdue and cannot pass
+ok 17 - pending work past its deadline is already overdue and cannot pass
+  ---
+  duration_ms: 0.5402
+  type: 'test'
+  ...
+# Subtest: new input cannot rewrite earlier deadlines or cancel a warming request
+ok 18 - new input cannot rewrite earlier deadlines or cancel a warming request
+  ---
+  duration_ms: 1.027
+  type: 'test'
+  ...
+# Subtest: capacity observation failure preserves intent but does not add a ready worker
+ok 19 - capacity observation failure preserves intent but does not add a ready worker
+  ---
+  duration_ms: 4.1162
+  type: 'test'
+  ...
+# Subtest: healthy recovery never deletes failed provisioning evidence
+ok 20 - healthy recovery never deletes failed provisioning evidence
+  ---
+  duration_ms: 1.0879
+  type: 'test'
+  ...
+# Subtest: missing selected metrics are null, break rule evaluation, and do not invent scaling
+ok 21 - missing selected metrics are null, break rule evaluation, and do not invent scaling
+  ---
+  duration_ms: 0.4261
+  type: 'test'
+  ...
+# Subtest: missing capacity pauses warm-up and service without claiming historical capacity is current
+ok 22 - missing capacity pauses warm-up and service without claiming historical capacity is current
+  ---
+  duration_ms: 0.5557
+  type: 'test'
+  ...
+# Subtest: restored observations retain the earlier unknown window and forbid a clean pass
+ok 23 - restored observations retain the earlier unknown window and forbid a clean pass
+  ---
+  duration_ms: 0.611
+  type: 'test'
+  ...
+# Subtest: missing completion evidence remains unknown instead of successful work
+ok 24 - missing completion evidence remains unknown instead of successful work
+  ---
+  duration_ms: 0.4019
+  type: 'test'
+  ...
+# Subtest: worker errors are separately attributed and persist after recovery
+ok 25 - worker errors are separately attributed and persist after recovery
+  ---
+  duration_ms: 1.1044
+  type: 'test'
+  ...
+# Subtest: cpu-percent rejects enqueue and tick without fabricating execution
+ok 26 - cpu-percent rejects enqueue and tick without fabricating execution
+  ---
+  duration_ms: 0.6472
+  type: 'test'
+  ...
+# Subtest: native-unqualified rejects enqueue and tick without fabricating execution
+ok 27 - native-unqualified rejects enqueue and tick without fabricating execution
+  ---
+  duration_ms: 0.2776
+  type: 'test'
+  ...
+# Subtest: invalid input: blank batch is rejected with a retained event
+ok 28 - invalid input: blank batch is rejected with a retained event
+  ---
+  duration_ms: 0.3472
+  type: 'test'
+  ...
+# Subtest: invalid input: fractional batch is rejected with a retained event
+ok 29 - invalid input: fractional batch is rejected with a retained event
+  ---
+  duration_ms: 0.4551
+  type: 'test'
+  ...
+# Subtest: invalid input: negative pressure is rejected with a retained event
+ok 30 - invalid input: negative pressure is rejected with a retained event
+  ---
+  duration_ms: 0.2389
+  type: 'test'
+  ...
+# Subtest: invalid input: non-finite pressure is rejected with a retained event
+ok 31 - invalid input: non-finite pressure is rejected with a retained event
+  ---
+  duration_ms: 0.2437
+  type: 'test'
+  ...
+# Subtest: invalid input: exponent string is rejected with a retained event
+ok 32 - invalid input: exponent string is rejected with a retained event
+  ---
+  duration_ms: 0.1685
+  type: 'test'
+  ...
+# Subtest: invalid input: oversized batch is rejected with a retained event
+ok 33 - invalid input: oversized batch is rejected with a retained event
+  ---
+  duration_ms: 0.166
+  type: 'test'
+  ...
+# Subtest: invalid input: oversized pressure is rejected with a retained event
+ok 34 - invalid input: oversized pressure is rejected with a retained event
+  ---
+  duration_ms: 0.1471
+  type: 'test'
+  ...
+# Subtest: invalid input: short deadline is rejected with a retained event
+ok 35 - invalid input: short deadline is rejected with a retained event
+  ---
+  duration_ms: 0.2896
+  type: 'test'
+  ...
+# Subtest: invalid input: long deadline is rejected with a retained event
+ok 36 - invalid input: long deadline is rejected with a retained event
+  ---
+  duration_ms: 0.1687
+  type: 'test'
+  ...
+# Subtest: invalid input: unknown metric is rejected with a retained event
+ok 37 - invalid input: unknown metric is rejected with a retained event
+  ---
+  duration_ms: 0.1396
+  type: 'test'
+  ...
+# Subtest: invalid input: unknown condition is rejected with a retained event
+ok 38 - invalid input: unknown condition is rejected with a retained event
+  ---
+  duration_ms: 0.1276
+  type: 'test'
+  ...
+# Subtest: malformed command null fails closed
+ok 39 - malformed command null fails closed
+  ---
+  duration_ms: 0.1851
+  type: 'test'
+  ...
+# Subtest: malformed command [] fails closed
+ok 40 - malformed command [] fails closed
+  ---
+  duration_ms: 0.0796
+  type: 'test'
+  ...
+# Subtest: malformed command {} fails closed
+ok 41 - malformed command {} fails closed
+  ---
+  duration_ms: 0.0683
+  type: 'test'
+  ...
+# Subtest: malformed command {"type":"invent-ready"} fails closed
+ok 42 - malformed command {"type":"invent-ready"} fails closed
+  ---
+  duration_ms: 0.0956
+  type: 'test'
+  ...
+# Subtest: malformed command {"type":"tick","arbitrary":true} fails closed
+ok 43 - malformed command {"type":"tick","arbitrary":true} fails closed
+  ---
+  duration_ms: 0.0982
+  type: 'test'
+  ...
+# Subtest: malformed command {"type":"configure","batchSize":12,"activeRequests":12,"deadlineSeconds":20,"metric":"queue-depth","fault":"none","secret":"ignored?"} fails closed
+ok 44 - malformed command {"type":"configure","batchSize":12,"activeRequests":12,"deadlineSeconds":20,"metric":"queue-depth","fault":"none","secret":"ignored?"} fails closed
+  ---
+  duration_ms: 0.1267
+  type: 'test'
+  ...
+# Subtest: malformed command {"type":"configure","batchSize":12} fails closed
+ok 45 - malformed command {"type":"configure","batchSize":12} fails closed
+  ---
+  duration_ms: 0.1231
+  type: 'test'
+  ...
+# Subtest: strict whole-number strings are accepted without silently changing their meaning
+ok 46 - strict whole-number strings are accepted without silently changing their meaning
+  ---
+  duration_ms: 0.5128
+  type: 'test'
+  ...
+# Subtest: four-worker ceiling refuses further expansion while retaining work outcomes
+ok 47 - four-worker ceiling refuses further expansion while retaining work outcomes
+  ---
+  duration_ms: 1.325
+  type: 'test'
+  ...
+# Subtest: queue admission bound refuses additional work without discarding history
+ok 48 - queue admission bound refuses additional work without discarding history
+  ---
+  duration_ms: 0.7728
+  type: 'test'
+  ...
+# Subtest: total work-history bound is independent of the current backlog bound
+ok 49 - total work-history bound is independent of the current backlog bound
+  ---
+  duration_ms: 44.2732
+  type: 'test'
+  ...
+# Subtest: event limit is bounded and fails closed without dropping an earlier event
+ok 50 - event limit is bounded and fails closed without dropping an earlier event
+  ---
+  duration_ms: 43.5929
+  type: 'test'
+  ...
+# Subtest: invalid input preserves prior failures, work, time, and capacity
+ok 51 - invalid input preserves prior failures, work, time, and capacity
+  ---
+  duration_ms: 0.7468
+  type: 'test'
+  ...
+1..51
+# tests 51
+# suites 0
+# pass 51
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 451.3565

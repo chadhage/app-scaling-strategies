@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S013 — Concurrency/queue-driven scale-out</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#controls">Skip to operator controls</a>
+  <header>
+    <p class="banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S013 — Concurrency/queue-driven scale-out</h1>
+    <p>A-S013 · D-S013 · SC-S013 · one frozen satisfier (S), kanoUnit A-S013</p>
+    <p><strong>Objective:</strong> use supported workload metrics to increase capacity before excessive request accumulation.
+      A rule trigger and requested capacity are not proof of ready workers or work finishing by its original deadline.</p>
+  </header>
+  <main>
+    <noscript><p class="error">JavaScript is required for this local rehearsal. No result can be established while it is disabled.</p></noscript>
+    <section aria-labelledby="fixture-title">
+      <h2 id="fixture-title">Declared synthetic fixture and thresholds</h2>
+      <ul>
+        <li>Start: two ready workers. Each ready worker completes up to two FIFO items per five-second window.</li>
+        <li>Select <strong>queue depth ≥ 8 items</strong> OR <strong>concurrency ≥ 6 requests per ready worker</strong>.
+          Only the selected metric controls the rule. Concurrency is an independent, fixed pressure observation, not a counted work item.</li>
+        <li>A threshold breach requests one worker. One further window is needed for an observed ready transition;
+          maximum four workers, no automatic scale-in or retries. Requested workers cannot serve work.</li>
+        <li>Each advance adds five synthetic seconds, observes readiness, samples pre-service pressure, evaluates the selected rule,
+          then records bounded completions at that boundary. These discrete teaching steps are not a physical performance forecast.</li>
+        <li>Each batch keeps its submission time and <strong>original absolute deadline = submission + chosen budget</strong>.
+          Completion at the deadline is ON_TIME; completion later is LATE. Unfinished work past its deadline is overdue.</li>
+        <li>Missing metrics/capacity/completions are UNKNOWN, never zero or success. Missing capacity pauses modeled service and warm-up;
+          last-confirmed counts are historical. Provisioning and worker errors stay in the trace after recovery.</li>
+        <li>CPU percent is unsupported in this workload-rule fixture, not universally unsupported by Azure.
+          Native metric/adapter/host eligibility is unverified. Unsupported or unqualified selections execute nothing.</li>
+      </ul>
+      <p><strong>Preconditions and limits:</strong> a modern browser with JavaScript; open this file directly.
+        No server, packages, framework, telemetry, real queue, load generator, management calls, credentials, subscription,
+        identity, cloud resources, deployment, or spend. Thresholds and service rates are explicit teaching constants, not Azure defaults.
+        Node.js 22 is test tooling only; production Node.js 24 and native B-S013/D-S013 acceptance remain unvalidated.</p>
+    </section>
+    <section aria-labelledby="exercise-title">
+      <h2 id="exercise-title">Conduct the workload-driven transition</h2>
+      <ol>
+        <li>Keep the defaults: queue metric, batch 12, concurrency 12, deadline 20 seconds. Enqueue one batch.</li>
+        <li>Advance one window. Queue 12 triggers requested 3 / ready 2; four items finish at 5s and eight remain.</li>
+        <li>Advance a second window. The third worker is observed ready; six more items finish at 10s.</li>
+        <li>Advance a third window. All 12 finish by 15s, within their original 20s deadline.
+          Inspect actual added-worker completions and the separate rule/capacity/work/verifier outputs.</li>
+        <li>Archive/reset, choose concurrency, apply and repeat. 12 requests ÷ 2 ready workers = 6, so the inclusive threshold triggers.</li>
+        <li>Archive/reset, set batch 40 / deadline 5, apply, enqueue and step twice.
+          Scale-out still occurs, but late and overdue items make the verifier FAIL. Recover and inspect the retained misses.</li>
+      </ol>
+      <p>Every action is explicit; nothing advances on a wall clock. Apply controls before enqueuing or stepping.
+        Applying input changes future observations only; it cannot rewrite old deadlines or cancel a warming request.</p>
+    </section>
+    <section id="controls" aria-labelledby="controls-title">
+      <h2 id="controls-title">Operator controls</h2>
+      <form id="conduct-controls" novalidate>
+        <fieldset id="input-fields">
+          <legend>Next synthetic batch and observation</legend>
+          <div class="grid">
+            <label for="batch-size">Batch size (1–40 work items)
+              <input id="batch-size" name="batchSize" type="number" min="1" max="40" step="1" value="12" required>
+            </label>
+            <label for="active-requests">Concurrent requests (0–120)
+              <input id="active-requests" name="activeRequests" type="number" min="0" max="120" step="1" value="12" required>
+            </label>
+            <label for="deadline-seconds">Original completion budget (5–60 seconds)
+              <input id="deadline-seconds" name="deadlineSeconds" type="number" min="5" max="60" step="1" value="20" required>
+            </label>
+            <div class="field">
+              <label for="workload-metric">Workload metric / support fixture</label>
+              <select id="workload-metric" name="metric">
+                <option value="queue-depth">Queue depth ≥ 8 — supported teaching metric</option>
+                <option value="concurrency">Concurrency per ready worker ≥ 6 — supported teaching metric</option>
+                <option value="cpu-percent">CPU percent — unsupported by this workload fixture</option>
+                <option value="native-unqualified">Native metric / adapter / host — unqualified</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="observation-condition">Deterministic observation condition</label>
+              <select id="observation-condition" name="fault">
+                <option value="none">Healthy observations</option>
+                <option value="metric-missing">Selected workload metric missing</option>
+                <option value="capacity-missing">Effective capacity missing — pause service and warm-up</option>
+                <option value="provision-failure">Provisioning fails during warm-up</option>
+                <option value="completion-missing">First serviced item/window has unknown completion</option>
+                <option value="worker-failure">First serviced item/window has a worker error</option>
+              </select>
+            </div>
+          </div>
+          <button id="apply-inputs" type="submit">Apply next inputs</button>
+        </fieldset>
+      </form>
+      <div class="actions">
+        <button id="enqueue-batch" type="button">Enqueue synthetic batch</button>
+        <button id="advance-window" type="button">Advance window (5 synthetic seconds)</button>
+        <button id="restart-rehearsal" type="button">Archive and reset rehearsal</button>
+      </div>
+      <p id="command-result" role="status" aria-live="polite"></p>
+      <p id="input-error" class="error" role="alert" hidden></p>
+      <p>Use Tab, Enter and Space. Bounds: 80 commands/run, 120 queued items, 240 retained items/run,
+        eight archived runs/page. Limits refuse more work without silently deleting prior evidence.
+        Copy the selectable JSON before reload/close: history is page-memory only.</p>
+    </section>
+    <section aria-labelledby="outcome-title">
+      <h2 id="outcome-title">Observed outcomes — separate the claims</h2>
+      <p class="verdict">Exercise verifier: <strong id="verdict">NOT_RUN</strong></p>
+      <p id="verdict-detail"></p>
+      <dl class="metrics">
+        <div><dt>Synthetic clock</dt><dd id="clock-value">0 seconds</dd></div>
+        <div><dt>Requested workers</dt><dd id="requested-value">2</dd></div>
+        <div><dt>Effective ready workers</dt><dd id="ready-value">2</dd></div>
+        <div><dt>Last selected metric / threshold</dt><dd id="metric-value">NOT_OBSERVED</dd></div>
+        <div><dt>Last rule decision</dt><dd id="rule-decision">NOT_RUN</dd></div>
+        <div><dt>Work/deadline result</dt><dd id="work-verdict">NOT_RUN</dd></div>
+      </dl>
+      <p id="capacity-detail"></p>
+      <p id="work-counts"></p>
+      <p id="history-counts"></p>
+      <p><strong>Rule and capacity observations are not completion evidence.</strong> PASS requires observed scale-out,
+        completion on an added worker, no outstanding work, no failed transition/worker/deadline, and no unknown observation.
+        Known failures outrank uncertainty; neither can be overwritten by later healthy work.</p>
+    </section>
+    <section aria-labelledby="trace-title">
+      <h2 id="trace-title">Retained synthetic trace</h2>
+      <div class="table-wrap" role="region" aria-label="Workload observations" tabindex="0">
+        <table>
+          <caption>Pre-service workload, rule, ready capacity, and boundary completions</caption>
+          <thead><tr><th scope="col">Window / time</th><th scope="col">Queue / concurrency per ready</th><th scope="col">Metric / threshold</th><th scope="col">Requested / ready</th><th scope="col">Completed / failed / unknown / queue after</th><th scope="col">Decision</th></tr></thead>
+          <tbody id="window-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap" role="region" aria-label="Capacity transition history" tabindex="0">
+        <table>
+          <caption>Requested intent versus observed readiness</caption>
+          <thead><tr><th scope="col">Transition / metric</th><th scope="col">From → target</th><th scope="col">Requested / ready / failed at</th><th scope="col">Status</th></tr></thead>
+          <tbody id="transition-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap" role="region" aria-label="Individual work outcomes" tabindex="0">
+        <table>
+          <caption>FIFO work outcomes with immutable deadlines</caption>
+          <thead><tr><th scope="col">Item / batch</th><th scope="col">Submitted / original deadline</th><th scope="col">Completed / observed at</th><th scope="col">Observed worker</th><th scope="col">Outcome / reason</th></tr></thead>
+          <tbody id="work-rows"></tbody>
+        </table>
+      </div>
+      <h3 id="archive-title">Retained prior runs (0)</h3>
+      <ol id="archive-list"></ol>
+      <details>
+        <summary>Selectable JSON: output shapes, current run and archived failures</summary>
+        <p>schemaVersion 1: state.input, capacity, batches, jobs, windows, transitions, events, lastResult;
+          summary.verification, rule, capacity, work, history. Null means missing/unobserved, not zero.
+          Each archive retains its state, summary and any UI error. nativeProof, parentComplete,
+          and productionNode24Validated are always false.</p>
+        <pre id="run-evidence" tabindex="0" aria-label="Selectable synthetic run evidence"></pre>
+      </details>
+    </section>
+    <section aria-labelledby="remaining-title">
+      <h2 id="remaining-title">Honest remaining To Do — no extra credits</h2>
+      <ul>
+        <li>Parent-owned empirical acceptance of the single A-S013 unit remains pending.</li>
+        <li>B-S013 remains To Do, gated by CORE, DATA, AKS, C076, qualified native workload metrics and separate execution approval.</li>
+        <li>D-S013 has no original prerequisite, but retains all original native backlog/concurrency/capacity/deadline acceptance and shared gates.</li>
+        <li>No live result, production Node.js 24 validation, source-parent completion, five-nines claim,
+          cross-host eligibility, identity or deployment approval is implied. No follow-on card is admitted.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>
+    <p>Microsoft Open Source Disclaimer: educational material is provided “AS IS”, without warranties or guarantees except
+      where required by applicable law or binding terms. Validate security, reliability, compatibility and cost before production.
+      Microsoft and Azure references imply no endorsement, certification or support; project goals are not Microsoft SLAs.
+      Microsoft and Azure are trademarks of the Microsoft group of companies. This grants no license or redistribution rights
+      and changes no applicable license, product term, support agreement or published SLA.</p>
+  </footer>
+</body>
+</html>

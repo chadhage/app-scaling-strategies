@@ -1,0 +1,41 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.QueueScaleRehearsal = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULTS = Object.freeze({
+    batchSize: 12, activeRequests: 12, deadlineSeconds: 20,
+    metric: 'queue-depth', fault: 'none'
+  });
+  const RULE = Object.freeze({
+    windowSeconds: 5, queueThreshold: 8, concurrencyThreshold: 6,
+    itemsPerWorker: 2, warmupWindows: 1, maxWorkers: 4
+  });
+  const LIMITS = Object.freeze({ events: 80, queued: 120, jobs: 240, archives: 8 });
+
+  function initial() {
+    return {
+      schemaVersion: 1, mode: 'synthetic-only', clockSeconds: 0,
+      input: { ...DEFAULTS }, capacity: { requested: 2, lastConfirmedReady: 2, pending: null },
+      batches: [], jobs: [], windows: [], transitions: [], events: [],
+      lastResult: { verdict: 'NOT_RUN', message: 'No synthetic work has been observed.' }
+    };
+  }
+
+  function reduce(state) {
+    return JSON.parse(JSON.stringify(state));
+  }
+
+  function summarize(state) {
+    return {
+      verification: { verdict: 'NOT_RUN', message: 'Loadable no-op stub: behavior not implemented.' },
+      rule: { metric: state.input.metric, support: 'SUPPORTED_FIXTURE', lastDecision: 'NOT_RUN', unknownWindows: 0 },
+      capacity: { requested: 2, effectiveReady: 2, lastConfirmedReady: 2, warming: false, readyTransitions: 0, failedTransitions: 0 },
+      work: { submitted: 0, queued: 0, completed: 0, onTime: 0, late: 0, failed: 0, unknown: 0, pendingOverdue: 0, addedWorkerCompletions: 0, verdict: 'NOT_RUN' },
+      history: { events: 0, windows: 0, batches: 0, invalid: 0 }
+    };
+  }
+  return { DEFAULTS, RULE, LIMITS, initial, reduce, summarize };
+}));
