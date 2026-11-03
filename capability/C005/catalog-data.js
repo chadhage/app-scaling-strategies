@@ -18,11 +18,11 @@
   "cardId": "C005",
   "scope": "local-source-derived-snapshot",
   "source": {
-    "commit": "1583da90c1013ba95fdf268d6901f8a14bdf900a",
-    "commitTimeUtc": "2026-11-03T14:23:19.000Z",
+    "commit": "3565746a0882916a91d492a8d2514f881a52812d",
+    "commitTimeUtc": "2026-11-03T16:33:12.000Z",
     "readme": {
       "path": "README.md",
-      "sha256": "0c2c86dd31795f04e003a4a63fc962ecddc8c03b28ca38bea8fecc5f3db49068"
+      "sha256": "852a82420f3b17a41c6aa56ae32fc1ba37829181654bcd6fa32fd00e88310519"
     },
     "backlog": {
       "path": ".docs\\wiki\\backlog.md",
@@ -30,17 +30,17 @@
     }
   },
   "acceptanceSnapshot": {
-    "commit": "1583da90c1013ba95fdf268d6901f8a14bdf900a",
-    "commitTimeUtc": "2026-11-03T14:23:19.000Z",
+    "commit": "3565746a0882916a91d492a8d2514f881a52812d",
+    "commitTimeUtc": "2026-11-03T16:33:12.000Z",
     "ledgerPath": ".docs\\wiki\\flow-state.json",
-    "ledgerSha256": "faa036783c6c9d3c49b7eb9da3e20da818c7044b3ce388738ffdd8fb209e5eb9",
-    "ledgerUpdatedAtUtc": "2026-11-03T14:19:43.9325356Z",
+    "ledgerSha256": "347039249ac59cb2879e28744c03b1c395bcd25eeafb195c492b00ec0c465d95",
+    "ledgerUpdatedAtUtc": "2026-11-03T16:33:04.9855089Z",
     "live": false
   },
   "capabilityMatrix": {
     "cardId": "C003",
     "schemaVersion": "1.0.0",
-    "sourceCommit": "1583da90c1013ba95fdf268d6901f8a14bdf900a",
+    "sourceCommit": "3565746a0882916a91d492a8d2514f881a52812d",
     "dataPath": "capability\\C003\\matrix-data.js",
     "contractPath": "capability\\C003\\matrix-contract.js",
     "href": "../C003/index.html"
@@ -70,7 +70,7 @@
       "reference": {
         "document": "readme",
         "path": "README.md",
-        "line": 421,
+        "line": 434,
         "anchor": "lifecycle-and-safety-gates"
       }
     },
@@ -79,7 +79,7 @@
       "reference": {
         "document": "readme",
         "path": "README.md",
-        "line": 456,
+        "line": 469,
         "anchor": "acceptance-and-evidence"
       }
     },
@@ -107,7 +107,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 185,
+          "line": 198,
           "anchor": "a-deployment-and-traffic-migration-strategies"
         },
         {
@@ -168,7 +168,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 186,
+          "line": 199,
           "anchor": "a-deployment-and-traffic-migration-strategies"
         },
         {
@@ -229,7 +229,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 187,
+          "line": 200,
           "anchor": "a-deployment-and-traffic-migration-strategies"
         },
         {
@@ -290,7 +290,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 188,
+          "line": 201,
           "anchor": "a-deployment-and-traffic-migration-strategies"
         },
         {
@@ -351,7 +351,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 189,
+          "line": 202,
           "anchor": "a-deployment-and-traffic-migration-strategies"
         },
         {
@@ -412,7 +412,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 190,
+          "line": 203,
           "anchor": "a-deployment-and-traffic-migration-strategies"
         },
         {
@@ -473,7 +473,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 191,
+          "line": 204,
           "anchor": "a-deployment-and-traffic-migration-strategies"
         },
         {
@@ -534,7 +534,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 192,
+          "line": 205,
           "anchor": "a-deployment-and-traffic-migration-strategies"
         },
         {
@@ -595,7 +595,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 193,
+          "line": 206,
           "anchor": "a-deployment-and-traffic-migration-strategies"
         },
         {
@@ -607,12 +607,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S009",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S009/index.html",
+        "evidence": {
+          "commit": "a7c007fbc770079aa88867d626ae6aad0bf3a05f",
+          "tag": "kanban/A-S009/a7c007fbc770",
+          "acceptedAtUtc": "2026-11-03T14:26:20.4390516Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -652,7 +656,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 194,
+          "line": 207,
           "anchor": "a-deployment-and-traffic-migration-strategies"
         },
         {
@@ -664,12 +668,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S010",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S010/index.html",
+        "evidence": {
+          "commit": "3a057ebfee3b2b3d91f4172a532cbfcafce5122e",
+          "tag": "kanban/A-S010/3a057ebfee3b",
+          "acceptedAtUtc": "2026-11-03T14:57:22.6327796Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -709,7 +717,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 200,
+          "line": 213,
           "anchor": "b-actual-capacity-scaling-strategies"
         },
         {
@@ -721,12 +729,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S011",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S011/index.html",
+        "evidence": {
+          "commit": "481b224b53bd34a93c55195f7032d367939c3b7b",
+          "tag": "kanban/A-S011/481b224b53bd",
+          "acceptedAtUtc": "2026-11-03T15:04:54.5978401Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -766,7 +778,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 201,
+          "line": 214,
           "anchor": "b-actual-capacity-scaling-strategies"
         },
         {
@@ -778,12 +790,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S012",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S012/index.html",
+        "evidence": {
+          "commit": "6ef619870e38a9503a7eb1c8f45ae085055e2287",
+          "tag": "kanban/A-S012/6ef619870e38",
+          "acceptedAtUtc": "2026-11-03T15:41:55.7531752Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -823,7 +839,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 202,
+          "line": 215,
           "anchor": "b-actual-capacity-scaling-strategies"
         },
         {
@@ -835,12 +851,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S013",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S013/index.html",
+        "evidence": {
+          "commit": "427b23a75a5eb71aa655b052272914a2b46383d3",
+          "tag": "kanban/A-S013/427b23a75a5e",
+          "acceptedAtUtc": "2026-11-03T16:06:56.5417429Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -880,7 +900,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 203,
+          "line": 216,
           "anchor": "b-actual-capacity-scaling-strategies"
         },
         {
@@ -892,12 +912,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S014",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S014/index.html",
+        "evidence": {
+          "commit": "4ac07120cc1bca4120a83f2bf6d744bc4b8175e0",
+          "tag": "kanban/A-S014/4ac07120cc1b",
+          "acceptedAtUtc": "2026-11-03T16:18:41.1143871Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -937,7 +961,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 204,
+          "line": 217,
           "anchor": "b-actual-capacity-scaling-strategies"
         },
         {
@@ -949,12 +973,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S015",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S015/index.html",
+        "evidence": {
+          "commit": "cdcd7e22eb134b703985412c29fc105148b470e4",
+          "tag": "kanban/A-S015/cdcd7e22eb13",
+          "acceptedAtUtc": "2026-11-03T16:17:50.1238109Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -994,7 +1022,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 205,
+          "line": 218,
           "anchor": "b-actual-capacity-scaling-strategies"
         },
         {
@@ -1006,12 +1034,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S016",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S016/index.html",
+        "evidence": {
+          "commit": "6d08f8f099916a5c8cdccdccaed857fd51617fcf",
+          "tag": "kanban/A-S016/6d08f8f09991",
+          "acceptedAtUtc": "2026-11-03T16:23:14.0745512Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -1051,7 +1083,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 206,
+          "line": 219,
           "anchor": "b-actual-capacity-scaling-strategies"
         },
         {
@@ -1063,12 +1095,16 @@
       ],
       "risk": "unclassified",
       "learning": {
-        "status": "unavailable",
-        "available": false,
+        "status": "accepted-snapshot",
+        "available": true,
         "cardId": "A-S017",
-        "href": null,
-        "evidence": null,
-        "reason": "No accepted Done review with matching publication is present in the pinned committed ledger. A lesson file or a published-but-unaccepted card is not availability evidence; this is not a live check."
+        "href": "../../learning/S017/index.html",
+        "evidence": {
+          "commit": "88e1b8d5ffad10dc27f23f73f6b8c8cf507214d3",
+          "tag": "kanban/A-S017/88e1b8d5ffad",
+          "acceptedAtUtc": "2026-11-03T16:30:30.8039849Z"
+        },
+        "reason": "Accepted portable lesson in the pinned committed snapshot only. Training rehearsal — synthetic data — not a live Azure result, native qualification or completed source parent."
       },
       "native": {
         "status": "unverified",
@@ -1108,7 +1144,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 207,
+          "line": 220,
           "anchor": "b-actual-capacity-scaling-strategies"
         },
         {
@@ -1165,7 +1201,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 208,
+          "line": 221,
           "anchor": "b-actual-capacity-scaling-strategies"
         },
         {
@@ -1222,7 +1258,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 209,
+          "line": 222,
           "anchor": "b-actual-capacity-scaling-strategies"
         },
         {
@@ -1279,7 +1315,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 215,
+          "line": 228,
           "anchor": "c-readiness-and-warm-up"
         },
         {
@@ -1340,7 +1376,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 216,
+          "line": 229,
           "anchor": "c-readiness-and-warm-up"
         },
         {
@@ -1397,7 +1433,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 217,
+          "line": 230,
           "anchor": "c-readiness-and-warm-up"
         },
         {
@@ -1454,7 +1490,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 218,
+          "line": 231,
           "anchor": "c-readiness-and-warm-up"
         },
         {
@@ -1511,7 +1547,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 219,
+          "line": 232,
           "anchor": "c-readiness-and-warm-up"
         },
         {
@@ -1568,7 +1604,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 220,
+          "line": 233,
           "anchor": "c-readiness-and-warm-up"
         },
         {
@@ -1625,7 +1661,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 221,
+          "line": 234,
           "anchor": "c-readiness-and-warm-up"
         },
         {
@@ -1682,7 +1718,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 222,
+          "line": 235,
           "anchor": "c-readiness-and-warm-up"
         },
         {
@@ -1739,7 +1775,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 223,
+          "line": 236,
           "anchor": "c-readiness-and-warm-up"
         },
         {
@@ -1796,7 +1832,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 224,
+          "line": 237,
           "anchor": "c-readiness-and-warm-up"
         },
         {
@@ -1853,7 +1889,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 230,
+          "line": 243,
           "anchor": "d-sessions-authentication-and-user-state"
         },
         {
@@ -1914,7 +1950,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 231,
+          "line": 244,
           "anchor": "d-sessions-authentication-and-user-state"
         },
         {
@@ -1971,7 +2007,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 232,
+          "line": 245,
           "anchor": "d-sessions-authentication-and-user-state"
         },
         {
@@ -2028,7 +2064,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 233,
+          "line": 246,
           "anchor": "d-sessions-authentication-and-user-state"
         },
         {
@@ -2085,7 +2121,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 234,
+          "line": 247,
           "anchor": "d-sessions-authentication-and-user-state"
         },
         {
@@ -2142,7 +2178,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 235,
+          "line": 248,
           "anchor": "d-sessions-authentication-and-user-state"
         },
         {
@@ -2199,7 +2235,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 236,
+          "line": 249,
           "anchor": "d-sessions-authentication-and-user-state"
         },
         {
@@ -2256,7 +2292,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 237,
+          "line": 250,
           "anchor": "d-sessions-authentication-and-user-state"
         },
         {
@@ -2313,7 +2349,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 238,
+          "line": 251,
           "anchor": "d-sessions-authentication-and-user-state"
         },
         {
@@ -2370,7 +2406,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 239,
+          "line": 252,
           "anchor": "d-sessions-authentication-and-user-state"
         },
         {
@@ -2427,7 +2463,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 245,
+          "line": 258,
           "anchor": "e-in-flight-requests-and-long-lived-work"
         },
         {
@@ -2488,7 +2524,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 246,
+          "line": 259,
           "anchor": "e-in-flight-requests-and-long-lived-work"
         },
         {
@@ -2545,7 +2581,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 247,
+          "line": 260,
           "anchor": "e-in-flight-requests-and-long-lived-work"
         },
         {
@@ -2602,7 +2638,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 248,
+          "line": 261,
           "anchor": "e-in-flight-requests-and-long-lived-work"
         },
         {
@@ -2659,7 +2695,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 249,
+          "line": 262,
           "anchor": "e-in-flight-requests-and-long-lived-work"
         },
         {
@@ -2716,7 +2752,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 250,
+          "line": 263,
           "anchor": "e-in-flight-requests-and-long-lived-work"
         },
         {
@@ -2773,7 +2809,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 251,
+          "line": 264,
           "anchor": "e-in-flight-requests-and-long-lived-work"
         },
         {
@@ -2830,7 +2866,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 252,
+          "line": 265,
           "anchor": "e-in-flight-requests-and-long-lived-work"
         },
         {
@@ -2887,7 +2923,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 253,
+          "line": 266,
           "anchor": "e-in-flight-requests-and-long-lived-work"
         },
         {
@@ -2944,7 +2980,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 254,
+          "line": 267,
           "anchor": "e-in-flight-requests-and-long-lived-work"
         },
         {
@@ -3001,7 +3037,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 260,
+          "line": 273,
           "anchor": "f-n-tier-and-version-compatibility"
         },
         {
@@ -3058,7 +3094,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 261,
+          "line": 274,
           "anchor": "f-n-tier-and-version-compatibility"
         },
         {
@@ -3115,7 +3151,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 262,
+          "line": 275,
           "anchor": "f-n-tier-and-version-compatibility"
         },
         {
@@ -3172,7 +3208,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 263,
+          "line": 276,
           "anchor": "f-n-tier-and-version-compatibility"
         },
         {
@@ -3229,7 +3265,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 264,
+          "line": 277,
           "anchor": "f-n-tier-and-version-compatibility"
         },
         {
@@ -3286,7 +3322,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 265,
+          "line": 278,
           "anchor": "f-n-tier-and-version-compatibility"
         },
         {
@@ -3343,7 +3379,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 266,
+          "line": 279,
           "anchor": "f-n-tier-and-version-compatibility"
         },
         {
@@ -3400,7 +3436,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 267,
+          "line": 280,
           "anchor": "f-n-tier-and-version-compatibility"
         },
         {
@@ -3457,7 +3493,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 268,
+          "line": 281,
           "anchor": "f-n-tier-and-version-compatibility"
         },
         {
@@ -3514,7 +3550,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 269,
+          "line": 282,
           "anchor": "f-n-tier-and-version-compatibility"
         },
         {
@@ -3571,7 +3607,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 275,
+          "line": 288,
           "anchor": "g-database-and-persistent-data-scaling"
         },
         {
@@ -3628,7 +3664,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 276,
+          "line": 289,
           "anchor": "g-database-and-persistent-data-scaling"
         },
         {
@@ -3685,7 +3721,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 277,
+          "line": 290,
           "anchor": "g-database-and-persistent-data-scaling"
         },
         {
@@ -3742,7 +3778,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 278,
+          "line": 291,
           "anchor": "g-database-and-persistent-data-scaling"
         },
         {
@@ -3799,7 +3835,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 279,
+          "line": 292,
           "anchor": "g-database-and-persistent-data-scaling"
         },
         {
@@ -3856,7 +3892,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 280,
+          "line": 293,
           "anchor": "g-database-and-persistent-data-scaling"
         },
         {
@@ -3913,7 +3949,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 281,
+          "line": 294,
           "anchor": "g-database-and-persistent-data-scaling"
         },
         {
@@ -3970,7 +4006,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 282,
+          "line": 295,
           "anchor": "g-database-and-persistent-data-scaling"
         },
         {
@@ -4027,7 +4063,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 283,
+          "line": 296,
           "anchor": "g-database-and-persistent-data-scaling"
         },
         {
@@ -4084,7 +4120,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 284,
+          "line": 297,
           "anchor": "g-database-and-persistent-data-scaling"
         },
         {
@@ -4141,7 +4177,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 290,
+          "line": 303,
           "anchor": "h-caches-queues-and-background-workers"
         },
         {
@@ -4198,7 +4234,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 291,
+          "line": 304,
           "anchor": "h-caches-queues-and-background-workers"
         },
         {
@@ -4255,7 +4291,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 292,
+          "line": 305,
           "anchor": "h-caches-queues-and-background-workers"
         },
         {
@@ -4312,7 +4348,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 293,
+          "line": 306,
           "anchor": "h-caches-queues-and-background-workers"
         },
         {
@@ -4369,7 +4405,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 294,
+          "line": 307,
           "anchor": "h-caches-queues-and-background-workers"
         },
         {
@@ -4426,7 +4462,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 295,
+          "line": 308,
           "anchor": "h-caches-queues-and-background-workers"
         },
         {
@@ -4483,7 +4519,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 296,
+          "line": 309,
           "anchor": "h-caches-queues-and-background-workers"
         },
         {
@@ -4540,7 +4576,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 297,
+          "line": 310,
           "anchor": "h-caches-queues-and-background-workers"
         },
         {
@@ -4597,7 +4633,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 298,
+          "line": 311,
           "anchor": "h-caches-queues-and-background-workers"
         },
         {
@@ -4654,7 +4690,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 299,
+          "line": 312,
           "anchor": "h-caches-queues-and-background-workers"
         },
         {
@@ -4711,7 +4747,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 305,
+          "line": 318,
           "anchor": "i-state-machine-and-orchestration-correctness"
         },
         {
@@ -4768,7 +4804,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 306,
+          "line": 319,
           "anchor": "i-state-machine-and-orchestration-correctness"
         },
         {
@@ -4825,7 +4861,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 307,
+          "line": 320,
           "anchor": "i-state-machine-and-orchestration-correctness"
         },
         {
@@ -4882,7 +4918,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 308,
+          "line": 321,
           "anchor": "i-state-machine-and-orchestration-correctness"
         },
         {
@@ -4939,7 +4975,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 309,
+          "line": 322,
           "anchor": "i-state-machine-and-orchestration-correctness"
         },
         {
@@ -4996,7 +5032,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 310,
+          "line": 323,
           "anchor": "i-state-machine-and-orchestration-correctness"
         },
         {
@@ -5053,7 +5089,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 311,
+          "line": 324,
           "anchor": "i-state-machine-and-orchestration-correctness"
         },
         {
@@ -5110,7 +5146,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 312,
+          "line": 325,
           "anchor": "i-state-machine-and-orchestration-correctness"
         },
         {
@@ -5167,7 +5203,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 313,
+          "line": 326,
           "anchor": "i-state-machine-and-orchestration-correctness"
         },
         {
@@ -5224,7 +5260,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 314,
+          "line": 327,
           "anchor": "i-state-machine-and-orchestration-correctness"
         },
         {
@@ -5281,7 +5317,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 320,
+          "line": 333,
           "anchor": "j-failure-containment-and-rollback"
         },
         {
@@ -5338,7 +5374,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 321,
+          "line": 334,
           "anchor": "j-failure-containment-and-rollback"
         },
         {
@@ -5395,7 +5431,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 322,
+          "line": 335,
           "anchor": "j-failure-containment-and-rollback"
         },
         {
@@ -5452,7 +5488,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 323,
+          "line": 336,
           "anchor": "j-failure-containment-and-rollback"
         },
         {
@@ -5509,7 +5545,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 324,
+          "line": 337,
           "anchor": "j-failure-containment-and-rollback"
         },
         {
@@ -5566,7 +5602,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 325,
+          "line": 338,
           "anchor": "j-failure-containment-and-rollback"
         },
         {
@@ -5623,7 +5659,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 326,
+          "line": 339,
           "anchor": "j-failure-containment-and-rollback"
         },
         {
@@ -5680,7 +5716,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 327,
+          "line": 340,
           "anchor": "j-failure-containment-and-rollback"
         },
         {
@@ -5737,7 +5773,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 328,
+          "line": 341,
           "anchor": "j-failure-containment-and-rollback"
         },
         {
@@ -5794,7 +5830,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 329,
+          "line": 342,
           "anchor": "j-failure-containment-and-rollback"
         },
         {
@@ -5851,7 +5887,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 335,
+          "line": 348,
           "anchor": "k-networking-configuration-and-edge-routing"
         },
         {
@@ -5908,7 +5944,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 336,
+          "line": 349,
           "anchor": "k-networking-configuration-and-edge-routing"
         },
         {
@@ -5965,7 +6001,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 337,
+          "line": 350,
           "anchor": "k-networking-configuration-and-edge-routing"
         },
         {
@@ -6022,7 +6058,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 338,
+          "line": 351,
           "anchor": "k-networking-configuration-and-edge-routing"
         },
         {
@@ -6079,7 +6115,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 339,
+          "line": 352,
           "anchor": "k-networking-configuration-and-edge-routing"
         },
         {
@@ -6136,7 +6172,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 340,
+          "line": 353,
           "anchor": "k-networking-configuration-and-edge-routing"
         },
         {
@@ -6193,7 +6229,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 341,
+          "line": 354,
           "anchor": "k-networking-configuration-and-edge-routing"
         },
         {
@@ -6250,7 +6286,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 342,
+          "line": 355,
           "anchor": "k-networking-configuration-and-edge-routing"
         },
         {
@@ -6307,7 +6343,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 343,
+          "line": 356,
           "anchor": "k-networking-configuration-and-edge-routing"
         },
         {
@@ -6364,7 +6400,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 344,
+          "line": 357,
           "anchor": "k-networking-configuration-and-edge-routing"
         },
         {
@@ -6421,7 +6457,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 350,
+          "line": 363,
           "anchor": "l-availability-zones-regions-and-failure-domains"
         },
         {
@@ -6478,7 +6514,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 351,
+          "line": 364,
           "anchor": "l-availability-zones-regions-and-failure-domains"
         },
         {
@@ -6535,7 +6571,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 352,
+          "line": 365,
           "anchor": "l-availability-zones-regions-and-failure-domains"
         },
         {
@@ -6592,7 +6628,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 353,
+          "line": 366,
           "anchor": "l-availability-zones-regions-and-failure-domains"
         },
         {
@@ -6649,7 +6685,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 354,
+          "line": 367,
           "anchor": "l-availability-zones-regions-and-failure-domains"
         },
         {
@@ -6706,7 +6742,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 355,
+          "line": 368,
           "anchor": "l-availability-zones-regions-and-failure-domains"
         },
         {
@@ -6763,7 +6799,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 356,
+          "line": 369,
           "anchor": "l-availability-zones-regions-and-failure-domains"
         },
         {
@@ -6820,7 +6856,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 357,
+          "line": 370,
           "anchor": "l-availability-zones-regions-and-failure-domains"
         },
         {
@@ -6877,7 +6913,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 358,
+          "line": 371,
           "anchor": "l-availability-zones-regions-and-failure-domains"
         },
         {
@@ -6934,7 +6970,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 359,
+          "line": 372,
           "anchor": "l-availability-zones-regions-and-failure-domains"
         },
         {
@@ -6991,7 +7027,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 367,
+          "line": 380,
           "anchor": "m-hosting-model-specific-scenarios"
         },
         {
@@ -7048,7 +7084,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 368,
+          "line": 381,
           "anchor": "m-hosting-model-specific-scenarios"
         },
         {
@@ -7105,7 +7141,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 369,
+          "line": 382,
           "anchor": "m-hosting-model-specific-scenarios"
         },
         {
@@ -7162,7 +7198,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 370,
+          "line": 383,
           "anchor": "m-hosting-model-specific-scenarios"
         },
         {
@@ -7219,7 +7255,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 371,
+          "line": 384,
           "anchor": "m-hosting-model-specific-scenarios"
         },
         {
@@ -7276,7 +7312,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 372,
+          "line": 385,
           "anchor": "m-hosting-model-specific-scenarios"
         },
         {
@@ -7333,7 +7369,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 373,
+          "line": 386,
           "anchor": "m-hosting-model-specific-scenarios"
         },
         {
@@ -7390,7 +7426,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 374,
+          "line": 387,
           "anchor": "m-hosting-model-specific-scenarios"
         },
         {
@@ -7447,7 +7483,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 375,
+          "line": 388,
           "anchor": "m-hosting-model-specific-scenarios"
         },
         {
@@ -7504,7 +7540,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 376,
+          "line": 389,
           "anchor": "m-hosting-model-specific-scenarios"
         },
         {
@@ -7561,7 +7597,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 393,
+          "line": 406,
           "anchor": "n-complete-end-user-journeys"
         },
         {
@@ -7618,7 +7654,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 394,
+          "line": 407,
           "anchor": "n-complete-end-user-journeys"
         },
         {
@@ -7675,7 +7711,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 395,
+          "line": 408,
           "anchor": "n-complete-end-user-journeys"
         },
         {
@@ -7732,7 +7768,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 396,
+          "line": 409,
           "anchor": "n-complete-end-user-journeys"
         },
         {
@@ -7789,7 +7825,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 397,
+          "line": 410,
           "anchor": "n-complete-end-user-journeys"
         },
         {
@@ -7846,7 +7882,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 398,
+          "line": 411,
           "anchor": "n-complete-end-user-journeys"
         },
         {
@@ -7903,7 +7939,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 399,
+          "line": 412,
           "anchor": "n-complete-end-user-journeys"
         },
         {
@@ -7960,7 +7996,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 400,
+          "line": 413,
           "anchor": "n-complete-end-user-journeys"
         },
         {
@@ -8017,7 +8053,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 401,
+          "line": 414,
           "anchor": "n-complete-end-user-journeys"
         },
         {
@@ -8074,7 +8110,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 402,
+          "line": 415,
           "anchor": "n-complete-end-user-journeys"
         },
         {
@@ -8131,7 +8167,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 410,
+          "line": 423,
           "anchor": "o-demonstration-and-acceptance-testing"
         },
         {
@@ -8188,7 +8224,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 411,
+          "line": 424,
           "anchor": "o-demonstration-and-acceptance-testing"
         },
         {
@@ -8245,7 +8281,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 412,
+          "line": 425,
           "anchor": "o-demonstration-and-acceptance-testing"
         },
         {
@@ -8302,7 +8338,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 413,
+          "line": 426,
           "anchor": "o-demonstration-and-acceptance-testing"
         },
         {
@@ -8359,7 +8395,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 414,
+          "line": 427,
           "anchor": "o-demonstration-and-acceptance-testing"
         },
         {
@@ -8416,7 +8452,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 415,
+          "line": 428,
           "anchor": "o-demonstration-and-acceptance-testing"
         },
         {
@@ -8473,7 +8509,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 416,
+          "line": 429,
           "anchor": "o-demonstration-and-acceptance-testing"
         },
         {
@@ -8530,7 +8566,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 417,
+          "line": 430,
           "anchor": "o-demonstration-and-acceptance-testing"
         },
         {
@@ -8587,7 +8623,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 418,
+          "line": 431,
           "anchor": "o-demonstration-and-acceptance-testing"
         },
         {
@@ -8644,7 +8680,7 @@
         {
           "document": "readme",
           "path": "README.md",
-          "line": 419,
+          "line": 432,
           "anchor": "o-demonstration-and-acceptance-testing"
         },
         {

@@ -5,14 +5,22 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const { readFileSync } = require('node:fs');
 const path = require('node:path');
-const { createHash } = require('node:crypto');
+const { createHash, randomUUID } = require('node:crypto');
 const { createRequire } = require('node:module');
+const { execFileSync } = require('node:child_process');
 const catalog = require('../../C005/catalog-data.js');
 const catalogContract = require('../../C005/catalog-contract.js');
 const matrix = require('../../C003/matrix-data.js');
 const filterApi = require('../catalog-filters.js');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-3565746a0882/generation.json');
 const helperPath = path.resolve(__dirname, '..', '..', '..', 'testing', 'browser', 'isolated.cjs');
 const helperSourceSha256 = createHash('sha256').update(readFileSync(helperPath)).digest('hex');
+const PUBLISHED_HELPER_COMMIT = '53c0c0d82cc1db6780a87ac2b1085734af6d5c60';
+const PUBLISHED_HELPER_SHA256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+assert.equal(helperSourceSha256, PUBLISHED_HELPER_SHA256, 'Verify the published helper before import.');
+assert.equal(readFileSync(helperPath, 'utf8').replaceAll('\r\n', '\n'),
+  execFileSync('git', ['--no-pager', 'show', `${PUBLISHED_HELPER_COMMIT}:testing/browser/isolated.cjs`],
+    { encoding: 'utf8' }).replaceAll('\r\n', '\n'));
 const { openIsolatedLesson } = require(helperPath);
 const helperRequire = createRequire(helperPath);
 const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
@@ -23,8 +31,11 @@ async function existingBytes(filename) {
 }
 
 test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', { timeout: 180000 }, async t => {
-  const reportPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
-  const previousProof = await existingBytes(reportPath);
+  const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
+  const previousProof = await existingBytes(historicalPath);
+  const reportPath = path.join(__dirname, '..', 'evidence',
+    `browser-op-catalog-snapshot-refresh-3565746a0882-${randomUUID()}.json`);
+  assert.equal(Object.hasOwn(require.cache, path.join(path.dirname(helperPath), 'lifecycle.cjs')), false);
   const session = await openIsolatedLesson('capability\\C007\\index.html');
   const { page, browserVersion } = session;
   const checks = [];
@@ -82,8 +93,10 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
       for (const value of [catalog.source.commit, catalog.acceptanceSnapshot.commitTimeUtc,
         catalog.acceptanceSnapshot.ledgerUpdatedAtUtc]) assert.ok(summary.includes(value));
       assert.match(summary, /Historical snapshot, not live availability/);
-      assert.equal(await page.locator('.lesson-link').count(), 11);
-      assert.equal(await page.locator('#S009 .lesson-link, #S010 .lesson-link, #W002 .lesson-link').count(), 0);
+      assert.equal(await page.locator('.lesson-link').count(), generation.acceptedPortableLessons);
+      assert.deepEqual(await page.locator('.lesson-link').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))),
+        catalog.entries.filter(entry => entry.learning.available).map(entry => entry.learning.href));
+      assert.equal(await page.locator('#S018 .lesson-link, #S019 .lesson-link, #W002 .lesson-link').count(), 0);
       assert.ok((await page.locator('.native-status').allTextContents()).every(text => /runnable: false; qualified: false/.test(text)));
       assert.ok((await page.locator('.parent-status').allTextContents()).every(text => /incomplete; completed: false/.test(text)));
       assert.deepEqual(JSON.parse(await page.locator('#permission-values').innerText()), matrix.permissions);
@@ -163,15 +176,16 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
       }
       await reset('Space');
     });
-    await check('keyboard readiness choices distinguish eleven accepted, 141 unavailable and zero native/parent results', async () => {
-      for (const [readiness, count] of [['portable-available', 11], ['portable-unavailable', 141],
+    await check('keyboard readiness choices distinguish twenty accepted, 132 unavailable and zero native/parent results', async () => {
+      for (const [readiness, count] of [['portable-available', generation.acceptedPortableLessons],
+        ['portable-unavailable', catalog.entries.length - generation.acceptedPortableLessons],
         ['native-unavailable', 152], ['native-runnable', 0], ['native-qualified', 0], ['parent-complete', 0]]) {
         await choose('readiness-filter', readiness);
         assert.equal(await entries.count(), count);
         assert.equal(await page.locator('#catalog-error').isVisible(), false);
         if (readiness === 'portable-unavailable') {
           assert.equal(await page.locator('.lesson-link').count(), 0);
-          assert.match(await page.locator('#S009 .learning-status').innerText(), /No accepted Done review/);
+          assert.match(await page.locator('#S018 .learning-status').innerText(), /No accepted Done review/);
         }
       }
       await reset();
@@ -181,8 +195,12 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
       await choose('risk-filter', 'unclassified');
       await choose('readiness-filter', 'portable-available');
       const firstOrder = await actualIds();
-      assert.equal(firstOrder.length, 10);
-      assert.deepEqual(await page.locator('.incompatible-entry').evaluateAll(nodes => nodes.map(node => node.dataset.entryId)), ['S002']);
+      const expected = filterApi.filterCatalog(catalog, matrix,
+        { host: 'aks', risk: 'unclassified', readiness: 'portable-available' });
+      assert.deepEqual(firstOrder, expected.items.map(item => item.entry.id));
+      assert.deepEqual(await page.locator('.incompatible-entry').evaluateAll(nodes => nodes.map(node => node.dataset.entryId)),
+        ['S002', 'S012', 'S014', 'S017']);
+      assert.equal(firstOrder.length + expected.incompatible.length, generation.acceptedPortableLessons);
       await reset();
       await choose('readiness-filter', 'portable-available');
       await choose('risk-filter', 'unclassified');
@@ -320,15 +338,18 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
     assert.match(browserVersion, /^156\./);
     assert.match(process.version, /^v22\./);
     report = {
-      schemaVersion: 1, cardId: 'C007', workerId: 'worker-C007', status: 'passed',
+      schemaVersion: 1, cardId: 'C007', operation: 'OP-CATALOG-SNAPSHOT-REFRESH', status: 'passed',
       observedAtUtc: new Date().toISOString(), mode: 'actual-isolated-headless',
       engine: 'Microsoft Edge (Chromium)', browserVersion,
       playwrightVersion: helperRequire('playwright/package.json').version, nodeVersion: process.version,
       helper: 'testing\\browser\\isolated.cjs', helperApi: 'openIsolatedLesson', helperSourceSha256,
+      helperPublishedCommit: PUBLISHED_HELPER_COMMIT,
       lesson: 'capability\\C007\\index.html', actualDomAndKeyboard: true, mockedBrowser: false,
       unsafeLaunchFlagsUsed: false, integratedForegroundUsed: false, packageInstalls: 0,
       sourcePin: catalog.source.commit, sourceScenarios: 150, guidedWorkflows: 2,
-      historicalPortableLessons: 11, risk: 'UNCLASSIFIED', nativeRunnable: 0,
+      generationSha256: generation.data.sha256, historicalPortableLessons: generation.acceptedPortableLessons,
+      acceptedPracticeDestinations: catalog.entries.filter(entry => entry.learning.available).map(entry => entry.learning.href),
+      unknownSupport: 152, risk: 'UNCLASSIFIED', nativeRunnable: 0,
       nativeQualified: 0, completedSourceParents: 0, excludedAvailabilityReasons: true, permissions: matrix.permissions,
       checks, cspObservation, pageErrors, remoteRequests,
       productionNode24Validated: false, nativeAzureObserved: false,
@@ -338,10 +359,10 @@ test('C007 actual isolated headless DOM, keyboard, filters and CSP acceptance', 
     await session.close();
   }
   report.browserCleanup = 'completed by awaited close() in finally';
+  assert.equal(createHash('sha256').update(readFileSync(helperPath)).digest('hex'), PUBLISHED_HELPER_SHA256);
+  assert.deepEqual(await existingBytes(historicalPath), previousProof, 'historical browser proof stays byte-for-byte unchanged');
   if (capture) {
-    await fs.writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
-  } else {
-    assert.deepEqual(await existingBytes(reportPath), previousProof, 'normal verification must preserve historical proof bytes');
+    await fs.writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
   }
   console.log(`C007: Edge ${browserVersion}; Playwright ${report.playwrightVersion}; ${checks.length} actual acceptance groups; close awaited; proof ${capture ? 'deliberately captured' : 'preserved'}.`);
 });

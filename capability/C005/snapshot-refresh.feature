@@ -1,0 +1,30 @@
+Feature: Refresh one historical catalog generation without changing authority
+  OP-CATALOG-SNAPSHOT-REFRESH / zero Kano credit / H001 and H002 incomplete
+
+  Scenario: All accepted portable lessons in the fixed committed snapshot are discoverable
+    Given the annotated source tag kanban/flow-admin/3565746a0882
+    And its immutable commit is 3565746a0882916a91d492a8d2514f881a52812d
+    And that committed ledger has 33 accepted units and 20 accepted portable lessons
+    When the existing C005 generator extracts that source and acceptance snapshot
+    Then all 150 scenarios and both workflows retain their stable identities and source links
+    And exactly 20 original accepted portable lesson destinations are exposed
+    And C006 search, C007 filters, C008 preparation and the unified learner flow retain them
+    But no later worktree or HEAD acceptance is discovered
+
+  Scenario: Historical generation integrity is explicit rather than relabeled acceptance
+    Given the previous eleven-lesson generated snapshot and all existing proof are preserved byte for byte
+    When consumer integrity expectations bind to the new fixed generation
+    Then unchanged interfaces still match their original accepted publication bytes and hashes
+    And the changed generated artifact matches its explicit source pin, hashes and reproducible extraction
+    And old browser observations are not presented as observations of the new generation
+    And exact-current-checkout source checks may truthfully report later drift
+
+  Scenario: Current browser coverage remains local, bounded and honest
+    Given only the published isolated browser helper at 53c0c0d is used
+    When real signed Edge 156 checks raw catalog, search, filters, preparation and unified flow
+    Then all 20 accepted practice destinations match the validated generation
+    And unknown host support stays unknown
+    And native runnable, native qualified and completed source parents remain zero
+    And keyboard, reset, failure clearing, CSP and awaited cleanup are checked
+    And new uniquely named browser captures require exactly CAPTURE_BROWSER_EVIDENCE=1
+    But no authority, approval, ledger, Kano credit, missing filter or production runtime claim changes

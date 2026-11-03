@@ -1,0 +1,39 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const catalog = require('../catalog-data.js');
+const matrix = require('../../C003/matrix-data.js');
+const contract = require('../catalog-contract.js');
+const { searchCatalog } = require('../../C006/search.js');
+const { filterCatalog } = require('../../C007/catalog-filters.js');
+const { prepare } = require('../../C008/preparation.js');
+const { compose } = require('../../local-harness/composition.js');
+
+const FIXED_SOURCE = '3565746a0882916a91d492a8d2514f881a52812d';
+
+test('the fixed historical generation exposes all 20 accepted portable lessons, not the old eleven', async () => {
+  assert.deepEqual(contract.validateCatalog(catalog, matrix), { valid: true, errors: [] });
+  const accepted = catalog.entries.filter(entry => entry.learning.available);
+  assert.equal(accepted.length, 20, 'new-snapshot coverage must include every accepted portable lesson');
+  assert.equal(catalog.source.commit, FIXED_SOURCE);
+  assert.equal(catalog.acceptanceSnapshot.commit, FIXED_SOURCE);
+  assert.equal(catalog.acceptanceSnapshot.live, false);
+  assert.deepEqual(searchCatalog(catalog, matrix, '').filter(entry => entry.learning.available), accepted);
+  const filtered = filterCatalog(catalog, matrix, { readiness: 'portable-available' });
+  assert.equal(filtered.valid, true);
+  assert.deepEqual(filtered.items.map(item => item.entry), accepted);
+  const unified = await compose(catalog, matrix, { filters: { readiness: 'portable-available' } });
+  assert.equal(unified.valid, true);
+  assert.deepEqual(unified.items.map(item => item.entry), accepted);
+  for (const entry of accepted) {
+    const view = await prepare(catalog, matrix, entry.id);
+    assert.equal(view.state, 'ready', entry.id);
+    assert.equal(view.learningMode, 'synthetic-learning', entry.id);
+    assert.strictEqual(view.entry, entry);
+    assert.equal(entry.learning.href, `../../learning/${entry.id}/index.html`);
+  }
+  assert.equal(catalog.entries.length, 152);
+  assert.equal(catalog.entries.filter(entry => entry.native.runnable || entry.native.qualified
+    || entry.parent.completed || entry.support.status !== 'unknown' || entry.risk !== 'unclassified').length, 0);
+});

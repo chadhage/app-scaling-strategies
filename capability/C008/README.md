@@ -16,7 +16,7 @@ needed. [Microsoft disclaimer](../../README.md#microsoft-open-source-disclaimer)
 
 ## Three different preparation modes
 
-- **Accepted synthetic practice:** eleven original lesson links from C005's
+- **Accepted synthetic practice:** twenty original lesson links from C005's
   historical snapshot. Read each lesson's own preconditions, synthetic inputs,
   controls, assertions and limitations. **Training rehearsal — synthetic data —
   not a live Azure result.**
@@ -43,12 +43,18 @@ matrix checks to C003. It verifies the unchanged C001 artifact through C001's
 existing cryptographic integrity guard. Ready views hold references to the
 shared catalog, selected entry, matrix and approval artifact, not copied metadata
 or approval tables. There is no extraction, filesystem/ledger discovery, JSON
-import, new catalog or shared-file edit.
+import or new catalog. Zero-credit `OP-CATALOG-SNAPSHOT-REFRESH` changes only
+C005's generated snapshot and necessary test/proof bindings, not preparation,
+catalog schemas/APIs or the authorities.
 
-- Catalog: `capability\C005\catalog-data.js`, unchanged, immutable.
-- Source/availability pin: `1583da90c1013ba95fdf268d6901f8a14bdf900a`.
+- Catalog: `capability\C005\catalog-data.js`, one immutable generated module.
+- Source/availability pin: `3565746a0882916a91d492a8d2514f881a52812d`,
+  annotated source tag `kanban/flow-admin/3565746a0882`.
   The shared commit time and ledger-update time are displayed. This is
   **historical snapshot availability, not live state**.
+  Accepted IDs are S001–S017, S021, S031 and S041. S018/S019 and later work
+  are not discovered. C005's `generation.json` under
+  `evidence\op-catalog-snapshot-refresh-3565746a0882` binds source, hashes and IDs.
 - Capability authority: unchanged C003 matrix and constraints. All 17
   configurations, exact reasons and exact constraints can be inspected; none is
   assigned to an entry. Documented-supported is not implemented or qualified.
@@ -82,18 +88,19 @@ source-row attribution and accepted-lesson ancestry without updating metadata.
 `evidence\source-integrity.txt` also records equality with the accepted C005
 publication and unchanged C001/C003 authorities.
 
-**Whole-checkout parity is a separate, disclosed limitation.** C005's strict
-`catalog-source.cjs --check` now rejects the later root README discoverability
+**Whole-checkout parity is a separate check.** During C008's original
+implementation, C005's strict `catalog-source.cjs --check` rejected root README discoverability
 additions in commit `79f404093c62bb19851b55c83967083940ca2371`.
 `evidence\source-current-checkout-drift.txt` records the actual failure; it is
 not reported green. The diff adds navigation/documentation, not scenario rows.
-The historical pinned module remains reproducible and is deliberately unchanged.
-C008 does not edit the root README, weaken C005's checker, refresh its pin or
-claim that the snapshot represents the current checkout.
+That failure remains historical evidence for the old pin, not a result of this
+refresh. The fixed new generation remains reproducible, while later README or
+backlog changes may truthfully make exact-current-checkout parity fail again.
+This operation does not edit those documents or weaken the CLI.
 
 Ordinary browser verification **does not write or delete observations**. To
-deliberately capture or refresh
-`evidence\browser-observations.published-helper.json`:
+deliberately append a fresh uniquely named
+`evidence\browser-op-catalog-snapshot-refresh-3565746a0882-*.json`:
 
 ```powershell
 $env:CAPTURE_BROWSER_EVIDENCE='1'
@@ -104,10 +111,12 @@ try {
 }
 ```
 
-Only the exact string `1` enables capture, and only after success and awaited
-browser cleanup. A failed capture preserves prior observations. Both normal
-capture-unset reruns and captures preserve the earlier
-`evidence\browser-observations.json` byte-for-byte. Independent reruns and
+Only the exact string `1` enables exclusive-create capture, and only after
+success and awaited browser cleanup. A failed capture preserves prior
+observations. Both normal capture-unset reruns and captures preserve the earlier
+`evidence\browser-observations.json` and
+`evidence\browser-observations.published-helper.json` byte-for-byte. Neither
+older record is presented as proof of the new generation. Independent reruns and
 maintenance earn no additional value credit.
 
 ### Final browser provenance gate
@@ -129,7 +138,7 @@ is **not qualified, active or shipped**.
 The original committed `browser-observations.json` already records the
 published `86c80...` helper after a later intentional capture. It and its
 associated earlier logs are unchanged; they are not falsely relabeled as
-prototype observations. The new final actual all-152 DOM/keyboard/empty/error/
+prototype observations. The original final actual all-152 DOM/keyboard/empty/error/
 reset/CSP pass actively enforces the published provenance gate and is recorded
 separately in `browser-observations.published-helper.json` and
 `provenance-browser-green.txt`, with published provenance and awaited cleanup.

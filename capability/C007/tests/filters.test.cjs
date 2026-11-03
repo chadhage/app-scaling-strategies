@@ -9,6 +9,7 @@ const matrixContract = require('../../C003/matrix-contract.js');
 const filters = require('../catalog-filters.js');
 const ids = result => result.items.map(item => item.entry.id);
 const originalIds = catalog.entries.map(entry => entry.id);
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-3565746a0882/generation.json');
 
 test('C007 loads as a reusable module before any assertion about behavior', () => {
   assert.equal(typeof filters.filterCatalog, 'function');
@@ -72,19 +73,21 @@ test('risk remains UNCLASSIFIED for every priority; assessed risks have honest e
   assert.ok(catalog.entries.every(entry => entry.risk === 'unclassified'));
 });
 
-test('readiness separates eleven historical portable lessons, 141 unavailable, and zero native/parent claims', () => {
+test('readiness separates twenty historical portable lessons, 132 unavailable, and zero native/parent claims', () => {
   const accepted = filters.filterCatalog(catalog, matrix, { readiness: 'portable-available' });
   assert.deepEqual(ids(accepted), catalog.entries.filter(entry => entry.learning.available).map(entry => entry.id));
-  assert.equal(accepted.items.length, 11);
-  assert.equal(filters.filterCatalog(catalog, matrix, { readiness: 'portable-unavailable' }).items.length, 141);
+  assert.deepEqual(ids(accepted), generation.acceptedPortableIds);
+  assert.equal(accepted.items.length, generation.acceptedPortableLessons);
+  assert.equal(filters.filterCatalog(catalog, matrix, { readiness: 'portable-unavailable' }).items.length,
+    catalog.entries.length - generation.acceptedPortableLessons);
   assert.equal(filters.filterCatalog(catalog, matrix, { readiness: 'native-unavailable' }).items.length, 152);
   for (const readiness of ['native-runnable', 'native-qualified', 'parent-complete']) {
     const result = filters.filterCatalog(catalog, matrix, { readiness });
     assert.equal(result.valid, true);
     assert.deepEqual(ids(result), []);
   }
-  assert.ok(!ids(accepted).includes('S009'));
-  assert.ok(!ids(accepted).includes('S010'));
+  assert.ok(!ids(accepted).includes('S018'));
+  assert.ok(!ids(accepted).includes('S019'));
 });
 
 test('all filters intersect, independent of object order, with exclusions after risk and readiness', () => {
@@ -94,8 +97,9 @@ test('all filters intersect, independent of object order, with exclusions after 
     readiness: selection.readiness, risk: selection.risk, host: selection.host
   });
   assert.deepEqual(ids(result), ids(reversed));
-  assert.equal(result.items.length, 10);
-  assert.deepEqual(result.incompatible.map(item => item.entry.id), ['S002']);
+  const excludedIds = ['S002', 'S012', 'S014', 'S017'];
+  assert.equal(result.items.length, generation.acceptedPortableLessons - excludedIds.length);
+  assert.deepEqual(result.incompatible.map(item => item.entry.id), excludedIds);
   assert.ok(result.items.every(item => item.entry.learning.available && item.entry.risk === 'unclassified'));
   const noMatch = filters.filterCatalog(catalog, matrix, { ...selection, risk: 'low' });
   assert.equal(noMatch.items.length, 0);

@@ -44,19 +44,21 @@ remain distinct from a successful zero-result search. Text nodes render query,
 title, objective and shared metadata literally. There is no arbitrary import UI.
 Structural validation is not source authentication or execution approval.
 
-## One unchanged catalog and honest availability
+## One generated catalog, unchanged contract and honest availability
 
-C005 **1.0.0**, published at
+C005 **1.0.0**, originally published at
 `219a2c0c20e095a1b8d5a8e66f19d8a3299b4329`, remains the only source-derived
 catalog. C006 imports its `catalog-data.js`, `catalog-contract.js` and readonly
 declaration, with no extraction, copied catalog or worktree-ledger discovery.
-The UI uses its original pinned source links and acceptance snapshot:
+The zero-credit `OP-CATALOG-SNAPSHOT-REFRESH` changes only that generated data
+and necessary proof bindings, not the contract or search API. The UI now uses:
 
-- Commit: `1583da90c1013ba95fdf268d6901f8a14bdf900a`.
-- Commit time: `2026-11-03T14:23:19.000Z`.
-- Ledger update: `2026-11-03T14:19:43.9325356Z`.
-- Eleven accepted portable lesson links **in that historical snapshot**, not
-  live availability. Later accepted files, including S009/S010, do not change it.
+- Commit: `3565746a0882916a91d492a8d2514f881a52812d`.
+- Annotated source tag: `kanban/flow-admin/3565746a0882`.
+- Commit time: `2026-11-03T16:33:12.000Z`.
+- Ledger update: `2026-11-03T16:33:04.9855089Z`.
+- Twenty accepted portable lesson links **in that historical snapshot**, not
+  live availability: S001–S017, S021, S031 and S041. Later files do not change it.
 - Native runnable/qualified: **false for every entry**. Target support remains
   unknown with original reasons and the unchanged C003 capability authority.
 - Every source parent remains planned/incomplete. Risk is **unclassified**, with
@@ -65,8 +67,13 @@ The UI uses its original pinned source links and acceptance snapshot:
 Portable lessons are **Training rehearsal — synthetic data — not a live Azure
 result**. Search neither enables native execution nor completes H002 or any
 source-demo parent. C001 approvals and the original parent gates are unchanged.
+Integrity tests still compare all original publication bytes, using C005's
+byte-preserved archive for the old generated artifact, then authenticate the new
+artifact with its fixed-generation hash and reproducible extraction. The binding
+is `capability\C005\evidence\op-catalog-snapshot-refresh-3565746a0882\generation.json`;
+it is not a new unit-acceptance record.
 
-## Bounded To Do refinement
+## Original bounded handoff (historical, not current card-state authority)
 
 | Original card / class / unit | Remaining behavior and actual gate |
 | --- | --- |
@@ -97,6 +104,10 @@ finally { Remove-Item Env:\CAPTURE_BROWSER_EVIDENCE }
 ```
 
 Any other value, including `true`, `0` or an unset variable, does not capture.
+Successful refresh captures append uniquely named
+`evidence\browser-op-catalog-snapshot-refresh-3565746a0882-*.json` files with
+exclusive creation, never replacing earlier observations. Existing proof remains
+byte-for-byte historical and does not attest to this generation.
 The actual browser tests use only the existing
 `testing\browser\isolated.cjs` / `openIsolatedLesson(relativeRepoPath)` and
 **await `close()` in `finally`**. Existing offline Playwright **1.56.1** and
@@ -111,7 +122,7 @@ Saved RED source ends in `.txt` and is not auto-discovered by `node --test`.
 Keyboard, focus, labels, live/error states and 320px reflow are checked; a full
 WCAG/assistive-technology certification is not claimed.
 
-Recorded results: **67 focused tests**, **44 unchanged C005 regression tests**,
+Original implementation results (old snapshot): **67 focused tests**, **44 unchanged C005 regression tests**,
 five syntax checks, source integrity, and **16 actual browser acceptance groups**
 (17 Node tests including the parent). A separate ordinary rerun passed and
 proved every pre-existing owned file/evidence byte unchanged. The first browser

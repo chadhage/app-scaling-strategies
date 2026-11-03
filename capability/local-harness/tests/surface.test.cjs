@@ -11,6 +11,7 @@ const root = path.resolve(__dirname, '..');
 const repo = path.resolve(root, '..', '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const sha256 = value => createHash('sha256').update(value).digest('hex');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-3565746a0882/generation.json');
 
 test('the plain local surface loads only unchanged accepted providers and the small composition', () => {
   const html = read('index.html');
@@ -82,12 +83,13 @@ test('composition delegates accepted behavior and contains no catalog extraction
   assert.match(read('index.html'), /Production Node\.js 24 remains unvalidated/);
 });
 
-test('all 13 consumed shared interfaces retain accepted publication bytes and original worktree fingerprints', () => {
+test('twelve unchanged interfaces and the archived thirteenth retain accepted baselines; current data binds to the new generation', () => {
   const baseline = JSON.parse(read('evidence\\provider-integrity.json'));
   assert.equal(baseline.files.length, 13);
   const checkedCommits = new Set();
   for (const file of baseline.files) {
-    const bytes = fs.readFileSync(path.join(repo, file.path));
+    const bytes = fs.readFileSync(path.join(repo,
+      file.path === generation.data.path ? generation.previous.path : file.path));
     assert.equal(sha256(bytes), file.sha256, file.path);
     const accepted = execFileSync('git', ['--no-pager', 'show',
       `${file.publication.commit}:${file.path.replaceAll('\\', '/')}`], { cwd: repo, maxBuffer: 2 * 1024 * 1024 });
@@ -98,6 +100,11 @@ test('all 13 consumed shared interfaces retain accepted publication bytes and or
       checkedCommits.add(file.publication.commit);
     }
   }
+  assert.equal(generation.sourceCommit, '3565746a0882916a91d492a8d2514f881a52812d');
+  assert.equal(sha256(fs.readFileSync(path.join(repo, generation.data.path))), generation.data.sha256);
+  assert.equal(require('../../C005/catalog-data.js').source.commit, generation.sourceCommit);
+  assert.equal(require('../../C005/catalog-source.cjs').PINNED_COMMIT, generation.sourceCommit);
+  assert.deepEqual(require('../../C005/catalog-data.js'), require('../../C005/catalog-source.cjs').buildCatalog());
 });
 
 test('BDD, a loadable stub, genuine assertion RED and IaC N/A remain preserved outside test discovery', () => {

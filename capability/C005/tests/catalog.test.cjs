@@ -11,7 +11,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 const source = require('../catalog-source.cjs');
 const clone = () => structuredClone(catalog);
-const expectedAccepted = ['S001', 'S002', 'S003', 'S004', 'S005', 'S006', 'S007', 'S008', 'S021', 'S031', 'S041'];
+const generation = require('../evidence/op-catalog-snapshot-refresh-3565746a0882/generation.json');
+const expectedAccepted = generation.acceptedPortableIds;
 
 test('C005 exposes exactly the 150 stable source scenarios and two workflows', () => {
   assert.equal(catalog.entries.length, 152, 'an empty loadable stub is not a source catalog');
@@ -29,8 +30,8 @@ test('one generated catalog is byte-reproducible from pinned canonical source an
   assert.equal(catalog.source.commit, source.PINNED_COMMIT);
   assert.equal(catalog.acceptanceSnapshot.commit, source.PINNED_COMMIT);
   assert.equal(catalog.acceptanceSnapshot.live, false);
-  assert.equal(catalog.acceptanceSnapshot.commitTimeUtc, '2026-11-03T14:23:19.000Z');
-  assert.equal(catalog.acceptanceSnapshot.ledgerUpdatedAtUtc, '2026-11-03T14:19:43.9325356Z');
+  assert.equal(catalog.acceptanceSnapshot.commitTimeUtc, generation.acceptanceSnapshot.commitTimeUtc);
+  assert.equal(catalog.acceptanceSnapshot.ledgerUpdatedAtUtc, generation.acceptanceSnapshot.ledgerUpdatedAtUtc);
 });
 
 test('all canonical row titles, objectives, acceptance and dependencies retain source identity and line links', () => {
@@ -70,7 +71,8 @@ test('all canonical row titles, objectives, acceptance and dependencies retain s
   assert.equal(catalog.entries[151].title, 'Shared-orchestrator getProfile: v1 GA to v2 private preview to v2 GA');
 });
 
-test('exactly eleven accepted Done snapshot lessons are linked; pending and absent cards are unavailable', () => {
+test('all twenty accepted Done snapshot lessons are linked; pending and absent cards are unavailable', () => {
+  assert.equal(expectedAccepted.length, 20);
   assert.deepEqual(catalog.entries.filter(entry => entry.learning.available).map(entry => entry.id), expectedAccepted);
   for (const entry of catalog.entries) {
     if (!expectedAccepted.includes(entry.id)) {
@@ -90,8 +92,8 @@ test('exactly eleven accepted Done snapshot lessons are linked; pending and abse
     assert.match(entry.support.reason, /no concrete target configuration.*C003/i);
     assert.equal(entry.risk, 'unclassified');
   }
-  assert.equal(catalog.entries.find(entry => entry.id === 'S009').learning.available, false);
-  assert.equal(catalog.entries.find(entry => entry.id === 'S010').learning.available, false);
+  assert.equal(catalog.entries.find(entry => entry.id === 'S018').learning.available, false);
+  assert.equal(catalog.entries.find(entry => entry.id === 'S019').learning.available, false);
 });
 
 test('accepted lesson targets exist at their actual implementation commits and the snapshot ancestry', () => {
@@ -150,8 +152,8 @@ for (const [name, mutate] of [
   ['unexplained unknown', value => { value.entries[40].support.reason = ''; }],
   ['inferred support', value => { value.entries[0].support.status = 'supported'; }],
   ['inferred risk', value => { value.entries[0].risk = 'low'; }],
-  ['available without evidence', value => { value.entries[8].learning.available = true; }],
-  ['unavailable with learning link', value => { value.entries[8].learning.href = '../../learning/S009/index.html'; }],
+  ['available without evidence', value => { value.entries[17].learning.available = true; }],
+  ['unavailable with learning link', value => { value.entries[17].learning.href = '../../learning/S018/index.html'; }],
   ['wrong learning destination', value => { value.entries[0].learning.href = '../../learning/S002/index.html'; }],
   ['workflow lesson', value => { value.entries[150].learning = structuredClone(value.entries[0].learning); }],
   ['malformed acceptance timestamp', value => { value.entries[0].learning.evidence.acceptedAtUtc = '2026-02-31T10:00:00Z'; }],

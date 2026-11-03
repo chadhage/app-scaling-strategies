@@ -9,6 +9,7 @@ const catalog = require('../../C005/catalog-data.js');
 const matrix = require('../../C003/matrix-data.js');
 const approved = require('../../C001/approved-contract.js');
 const { prepare } = require('../preparation.js');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-3565746a0882/generation.json');
 
 test('all 150 scenarios and both workflows have preparation from the shared objects', async () => {
   const views = await Promise.all(catalog.entries.map(entry => prepare(catalog, matrix, entry.id)));
@@ -42,13 +43,13 @@ test('synthetic learning and unavailable practice never become native or parent 
 });
 
 test('learning availability is exactly the accepted historical snapshot, not current files', async () => {
-  const views = await Promise.all(['S001', 'S008', 'S009', 'S010', 'W001', 'W002']
+  const views = await Promise.all(['S001', 'S008', 'S009', 'S010', 'S018', 'S019', 'W001', 'W002']
     .map(id => prepare(catalog, matrix, id)));
   assert.deepEqual(views.map(view => view.learningMode), [
-    'synthetic-learning', 'synthetic-learning', 'unavailable-learning',
+    'synthetic-learning', 'synthetic-learning', 'synthetic-learning', 'synthetic-learning', 'unavailable-learning',
     'unavailable-learning', 'unsupported-learning', 'unsupported-learning'
   ]);
-  assert.equal(catalog.entries.filter(entry => entry.learning.available).length, 11);
+  assert.deepEqual(catalog.entries.filter(entry => entry.learning.available).map(entry => entry.id), generation.acceptedPortableIds);
   for (const view of views) {
     assert.strictEqual(view.entry.learning, catalog.entries.find(entry => entry.id === view.entry.id).learning);
     if (!view.entry.learning.available) {
@@ -109,7 +110,7 @@ const invalidCatalogCases = [
   ['native qualification promotion', value => { value.entries[0].native.qualified = true; return value; }],
   ['source-parent completion', value => { value.entries[0].parent.completed = true; return value; }],
   ['invented risk classification', value => { value.entries[0].risk = 'low'; return value; }],
-  ['invented learning link', value => { value.entries[8].learning.href = '../../learning/S009/index.html'; return value; }],
+  ['invented learning link', value => { value.entries[17].learning.href = '../../learning/S018/index.html'; return value; }],
   ['rewritten dependency expression', value => { value.entries[0].prerequisites.additional = 'HOST AND P001'; return value; }]
 ];
 for (const [name, change] of invalidCatalogCases) {

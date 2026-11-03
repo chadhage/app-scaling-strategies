@@ -9,6 +9,7 @@ const { createHash } = require('node:crypto');
 const root = path.resolve(__dirname, '..', '..', '..');
 const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 const sharedPublication = '219a2c0c20e095a1b8d5a8e66f19d8a3299b4329';
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-3565746a0882/generation.json');
 
 test('the standalone surface has labeled keyboard controls and separate live, error and empty states', () => {
   const html = read('index.html');
@@ -44,17 +45,24 @@ test('CSP and dependency order keep file browsing local and fail closed', () => 
   for (const file of scripts) assert.ok(fs.statSync(path.resolve(__dirname, '..', file)).isFile());
 });
 
-test('the accepted C005 v1.0.0 catalog, validator, readonly declaration and C003 authority are unchanged', () => {
+test('original accepted bytes remain intact; only catalog data binds to the reproducible fixed generation', () => {
   const files = ['capability/C005/catalog-data.js', 'capability/C005/catalog-contract.js',
     'capability/C005/catalog-contract.d.ts', 'capability/C003/matrix-data.js',
     'capability/C003/matrix-contract.js', 'capability/C003/matrix-contract.d.ts'];
   for (const file of files) {
     const pinned = execFileSync('git', ['--no-pager', 'show', `${sharedPublication}:${file}`],
       { cwd: root, encoding: 'utf8' });
-    const current = fs.readFileSync(path.join(root, ...file.split('/')), 'utf8');
+    const current = fs.readFileSync(file === 'capability/C005/catalog-data.js'
+      ? path.join(root, generation.previous.path) : path.join(root, ...file.split('/')), 'utf8');
     assert.equal(current.replace(/\r\n/g, '\n'), pinned.replace(/\r\n/g, '\n'), file);
   }
   execFileSync('git', ['merge-base', '--is-ancestor', sharedPublication, 'HEAD'], { cwd: root });
+  const generated = fs.readFileSync(path.join(root, generation.data.path));
+  assert.equal(generation.sourceCommit, '3565746a0882916a91d492a8d2514f881a52812d');
+  assert.equal(createHash('sha256').update(generated).digest('hex'), generation.data.sha256);
+  assert.equal(require('../../C005/catalog-data.js').source.commit, generation.sourceCommit);
+  assert.equal(require('../../C005/catalog-source.cjs').PINNED_COMMIT, generation.sourceCommit);
+  assert.deepEqual(require('../../C005/catalog-data.js'), require('../../C005/catalog-source.cjs').buildCatalog());
   assert.match(read('search.js'), /factory\(require\('\.\.\/C005\/catalog-contract\.js'\)\)/);
   assert.match(read('search.js'), /contract\.validateCatalog\(catalog, matrix\)/);
   assert.match(read('search-page.js'), /contract\.sourceHref\(catalog, reference\)/);

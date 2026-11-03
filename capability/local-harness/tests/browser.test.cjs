@@ -5,20 +5,23 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const { readFileSync } = require('node:fs');
 const path = require('node:path');
-const { createHash } = require('node:crypto');
+const { createHash, randomUUID } = require('node:crypto');
 const { createRequire } = require('node:module');
 const { execFileSync } = require('node:child_process');
 const catalog = require('../../C005/catalog-data.js');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-3565746a0882/generation.json');
 const repo = path.resolve(__dirname, '..', '..', '..');
 const helperPath = path.join(repo, 'testing', 'browser', 'isolated.cjs');
 const helperRequire = createRequire(helperPath);
 const PUBLISHED_HELPER_COMMIT = '53c0c0d82cc1db6780a87ac2b1085734af6d5c60';
 const PUBLISHED_HELPER_SHA256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
 const sha256 = value => createHash('sha256').update(value).digest('hex');
-const reportPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
+const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
+const reportPath = path.join(__dirname, '..', 'evidence',
+  `browser-op-catalog-snapshot-refresh-3565746a0882-${randomUUID()}.json`);
 
 async function previousReport() {
-  return fs.readFile(reportPath).catch(error => {
+  return fs.readFile(historicalPath).catch(error => {
     if (error.code === 'ENOENT') return null;
     throw error;
   });
@@ -50,6 +53,8 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
   assert.match(signature.subject, /Microsoft Corporation/);
   const playwrightVersion = helperRequire('playwright/package.json').version;
   assert.equal(playwrightVersion, '1.56.1');
+  assert.match(signature.version, /^156\./);
+  assert.match(process.version, /^v22\./);
   const session = await openIsolatedLesson('capability\\local-harness\\index.html');
   const { page, browserVersion } = session;
   const children = new Set();
@@ -62,6 +67,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
   let report;
   let lessonObservation;
   let cspObservation;
+  const practiceLinks = [];
   async function check(name, run) {
     await t.test(name, async () => {
       await run();
@@ -134,6 +140,29 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       assert.match(pin, /Historical snapshot, not live availability/);
       assert.equal(await page.locator('#catalog-error').isVisible(), false);
       assert.equal(await page.locator('#preparation').isVisible(), false);
+    });
+    await check('all twenty accepted lessons pass through real readiness controls, keyboard preparation and original practice links', async () => {
+      await choose('readiness-filter', 'portable-available');
+      assert.deepEqual(await actualIds(), generation.acceptedPortableIds);
+      assert.equal(await page.locator('#matching-entries > article').count(), 20);
+      for (const id of generation.acceptedPortableIds) {
+        await open(id);
+        const entry = catalog.entries.find(candidate => candidate.id === id);
+        assert.equal(await page.locator('#preparation-body').getAttribute('data-learning-mode'), 'synthetic-learning');
+        const href = await page.locator('.lesson-link').getAttribute('href');
+        assert.equal(href, entry.learning.href);
+        assert.match(await page.locator('#preparation-body .native-status').textContent(), /runnable: false; qualified: false/);
+        assert.equal(await page.locator('#preparation-body .parent-status').textContent(),
+          `Source parent ${entry.parentId}: ${entry.parent.status}; completed: ${entry.parent.completed}. ${entry.parent.reason}`);
+        practiceLinks.push({ id, href });
+        await page.locator('#back-results').focus();
+        await page.keyboard.press('Enter');
+        assert.equal(await page.locator('#preparation').isVisible(), false);
+        assert.equal(await page.evaluate(() => document.activeElement.id), `prepare-${id}`);
+      }
+      assert.deepEqual(practiceLinks, catalog.entries.filter(entry => entry.learning.available)
+        .map(entry => ({ id: entry.id, href: entry.learning.href })));
+      await reset();
     });
     await check('keyboard skip, query plus three AND filters, exact preparation and focus form one continuous journey', async () => {
       await page.reload({ waitUntil: 'load' });
@@ -255,7 +284,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       await reset();
     });
     await check('unavailable lessons and workflow CONTAINER/BASE distinctions retain exact preparation and all unapproved limits', async () => {
-      await open('S009');
+      await open('S018');
       assert.equal(await page.locator('.lesson-link').count(), 0);
       assert.equal(await page.locator('#preparation-body').getAttribute('data-learning-mode'), 'unavailable-learning');
       await reset();
@@ -382,9 +411,9 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       assert.deepEqual(remoteRequests, []);
       assert.deepEqual(pageErrors, []);
     });
-    assert.equal(checks.length, 11);
+    assert.equal(checks.length, 12);
     report = {
-      operation: 'OP-CATALOG-COMPOSE', status: 'passed', observedAtUtc: new Date().toISOString(),
+      operation: 'OP-CATALOG-SNAPSHOT-REFRESH', status: 'passed', observedAtUtc: new Date().toISOString(),
       mode: 'actual-isolated-headless', mockedBrowser: false, browserVersion, signature, playwrightVersion,
       nodeVersion: process.version, productionNode24Validated: false,
       helper: 'testing\\browser\\isolated.cjs', helperApi: 'openIsolatedLesson',
@@ -393,6 +422,8 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       foregroundLeaseUsed: false, unsafeLaunchFlagsUsed: false,
       entry: 'capability\\local-harness\\index.html',
       sourcePin: catalog.source.commit, historicalAvailabilityNotLive: true, originalDomEntryCount: 152,
+      generationSha256: generation.data.sha256, acceptedPracticeDestinations: practiceLinks,
+      historicalPortableLessons: practiceLinks.length, unknownSupport: 152, nativeRunnable: 0,
       combinedSelection: { query: '  BLUE-GREEN  ', host: 'aks', risk: 'unclassified', readiness: 'portable-available', entryId: 'S001' },
       exactPreparationSectionsSha256: Object.fromEntries(['dependencyRules', 'operatingLimits', 'sharedDefinitionOfDone', 'acceptanceAndEvidence']
         .map(key => [key, sha256(catalog.common[key].text)])),
@@ -417,8 +448,9 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
   report.browserCleanup = 'All child pages and helper close() awaited in finally.';
   assert.equal(sha256(readFileSync(helperPath)), PUBLISHED_HELPER_SHA256);
   assert.equal(Object.hasOwn(require.cache, lifecyclePath), false);
+  assert.deepEqual(await previousReport(), previous, 'historical browser proof stays byte-for-byte unchanged');
   if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') {
-    await fs.writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+    await fs.writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
     console.log('Explicit CAPTURE_BROWSER_EVIDENCE=1: successful browser observation captured after awaited cleanup.');
   } else {
     assert.deepEqual(await previousReport(), previous, 'Ordinary browser tests preserve committed observations byte-for-byte.');

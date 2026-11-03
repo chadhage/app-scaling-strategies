@@ -5,18 +5,29 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const { readFileSync } = require('node:fs');
 const path = require('node:path');
-const { createHash } = require('node:crypto');
+const { createHash, randomUUID } = require('node:crypto');
 const { createRequire } = require('node:module');
+const { execFileSync } = require('node:child_process');
 const catalog = require('../catalog-data.js');
 const contract = require('../catalog-contract.js');
+const generation = require('../evidence/op-catalog-snapshot-refresh-3565746a0882/generation.json');
 const helperPath = path.resolve(__dirname, '..', '..', '..', 'testing', 'browser', 'isolated.cjs');
 const helperSourceSha256 = createHash('sha256').update(readFileSync(helperPath)).digest('hex');
+const PUBLISHED_HELPER_COMMIT = '53c0c0d82cc1db6780a87ac2b1085734af6d5c60';
+const PUBLISHED_HELPER_SHA256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+assert.equal(helperSourceSha256, PUBLISHED_HELPER_SHA256, 'Verify the published helper before import.');
+assert.equal(readFileSync(helperPath, 'utf8').replaceAll('\r\n', '\n'),
+  execFileSync('git', ['--no-pager', 'show', `${PUBLISHED_HELPER_COMMIT}:testing/browser/isolated.cjs`],
+    { encoding: 'utf8' }).replaceAll('\r\n', '\n'));
 const { openIsolatedLesson } = require(helperPath);
 const helperRequire = createRequire(helperPath);
 
 test('C005 actual isolated headless DOM, keyboard, source, count and CSP acceptance', { timeout: 150000 }, async t => {
-  const reportPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
-  await fs.rm(reportPath, { force: true });
+  const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
+  const historicalProof = await fs.readFile(historicalPath);
+  const reportPath = path.join(__dirname, '..', 'evidence',
+    `browser-op-catalog-snapshot-refresh-3565746a0882-${randomUUID()}.json`);
+  assert.equal(Object.hasOwn(require.cache, path.join(path.dirname(helperPath), 'lifecycle.cjs')), false);
   const session = await openIsolatedLesson('capability\\C005\\index.html');
   const { page, browserVersion } = session;
   const checks = [];
@@ -41,6 +52,9 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
   let report;
   let cspObservation;
   try {
+    assert.match(browserVersion, /^156\./);
+    assert.equal(helperRequire('playwright/package.json').version, '1.56.1');
+    assert.match(process.version, /^v22\./);
     await check('actual DOM contains exactly S001–S150 and W001/W002 in sixteen source sections', async () => {
       assert.equal(await entries.count(), 152);
       assert.equal(await page.locator('[data-kind="scenario"]').count(), 150);
@@ -50,11 +64,11 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
       assert.deepEqual(await page.locator('.objective').allTextContents(), catalog.entries.map(entry => entry.objective));
       assert.equal(await page.locator('#categories a').count(), 16);
       assert.equal(await page.locator('.source-group').count(), 16);
-      assert.match(await page.locator('#catalog-count').innerText(), /150 source scenarios · 2 guided workflows · 11 accepted portable lessons in snapshot · 0 native runnable · 0 completed source parents/);
+      assert.match(await page.locator('#catalog-count').innerText(), /150 source scenarios · 2 guided workflows · 20 accepted portable lessons in snapshot · 0 native runnable · 0 completed source parents/);
       assert.equal(await page.locator('#catalog-error').isVisible(), false);
       assert.equal(await page.locator('#catalog-empty').isVisible(), false);
     });
-    await check('historical commit/time and all eleven accepted learning destinations are explicit, not live', async () => {
+    await check('historical commit/time and all twenty accepted learning destinations are explicit, not live', async () => {
       const summary = await page.locator('#snapshot-summary').innerText();
       assert.ok(summary.includes(catalog.acceptanceSnapshot.commit));
       assert.ok(summary.includes(catalog.acceptanceSnapshot.commitTimeUtc));
@@ -62,11 +76,11 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
       assert.match(summary, /historical snapshot, not live availability/);
       assert.equal(await page.locator('#snapshot-source a').getAttribute('href'),
         `https://github.com/chadhage/app-scaling-strategies/blob/${catalog.source.commit}/.docs/wiki/flow-state.json`);
-      assert.equal(await page.locator('.lesson-link').count(), 11);
+      assert.equal(await page.locator('.lesson-link').count(), generation.acceptedPortableLessons);
       assert.deepEqual(await page.locator('.lesson-link').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))),
         catalog.entries.filter(entry => entry.learning.available).map(entry => entry.learning.href));
-      assert.equal(await page.locator('#S009 .lesson-link, #S010 .lesson-link, #W001 .lesson-link, #W002 .lesson-link').count(), 0);
-      assert.match(await page.locator('#S009 .learning-status').innerText(), /No accepted Done review.*published-but-unaccepted/s);
+      assert.equal(await page.locator('#S018 .lesson-link, #S019 .lesson-link, #W001 .lesson-link, #W002 .lesson-link').count(), 0);
+      assert.match(await page.locator('#S018 .learning-status').innerText(), /No accepted Done review.*published-but-unaccepted/s);
       assert.match(await page.locator('#W002 .learning-status').innerText(), /No portable A-card lesson is defined/);
     });
     await check('all 302 actual source anchors point at the matching pinned canonical row', async () => {
@@ -202,16 +216,19 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
     });
     assert.equal(checks.length, 11);
     report = {
-      schemaVersion: 1, cardId: 'C005', workerId: 'worker-C005', status: 'passed',
+      schemaVersion: 1, cardId: 'C005', operation: 'OP-CATALOG-SNAPSHOT-REFRESH', status: 'passed',
       observedAtUtc: new Date().toISOString(), mode: 'actual-isolated-headless',
       engine: 'Microsoft Edge (Chromium)', browserVersion,
       playwrightVersion: helperRequire('playwright/package.json').version,
       helper: 'testing\\browser\\isolated.cjs', helperApi: 'openIsolatedLesson',
-      helperSourceSha256, helperProvenanceNote: 'Exact imported shared-helper worktree hash. File-only API used; no loopback server or integrated foreground lease.',
+      helperSourceSha256, helperPublishedCommit: PUBLISHED_HELPER_COMMIT,
+      helperProvenanceNote: 'Exact published helper bytes/source verified before import; no abandoned lifecycle dependency.',
       lesson: 'capability\\C005\\index.html', actualDomAndKeyboard: true, mockedBrowser: false,
       unsafeLaunchFlagsUsed: false, integratedForegroundUsed: false,
       sourcePin: catalog.source.commit, sourceScenarios: 150, guidedWorkflows: 2,
-      snapshotLessons: 11, nativeRunnable: 0, completedSourceParents: 0,
+      generationSha256: generation.data.sha256, snapshotLessons: generation.acceptedPortableLessons,
+      acceptedPracticeDestinations: catalog.entries.filter(entry => entry.learning.available).map(entry => entry.learning.href),
+      unknownSupport: 152, nativeRunnable: 0, nativeQualified: 0, completedSourceParents: 0,
       checks, cspObservation, pageErrors, remoteRequests,
       nativeAzureObserved: false, productionNode24Validated: false,
       accessibilityLimit: 'Recorded keyboard, labels, live/error states, source links, mobile reflow and CSP checks; not a full WCAG/assistive-technology certification.'
@@ -220,6 +237,10 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
     await session.close();
   }
   report.browserCleanup = 'completed by awaited close() in finally';
-  await fs.writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+  assert.equal(createHash('sha256').update(readFileSync(helperPath)).digest('hex'), PUBLISHED_HELPER_SHA256);
+  assert.deepEqual(await fs.readFile(historicalPath), historicalProof, 'historical browser proof stays byte-for-byte unchanged');
+  if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') {
+    await fs.writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+  }
   console.log(`C005 actual browser: Microsoft Edge ${browserVersion}; Playwright ${report.playwrightVersion}; 11 acceptance groups; close awaited.`);
 });

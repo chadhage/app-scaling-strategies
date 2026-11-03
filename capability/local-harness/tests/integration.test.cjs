@@ -11,6 +11,7 @@ const vm = require('node:vm');
 const searchApi = require('../../C006/search.js');
 const filterApi = require('../../C007/catalog-filters.js');
 const preparationApi = require('../../C008/preparation.js');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-3565746a0882/generation.json');
 const ids = items => items.map(item => item.entry.id);
 
 function assertClosed(result) {
@@ -50,7 +51,8 @@ test('empty / whitespace queries retain all 152 original references and the hist
     assert.equal(result.provenance.source, catalog.source);
     assert.equal(result.provenance.acceptanceSnapshot, catalog.acceptanceSnapshot);
     assert.equal(result.permissions, matrix.permissions);
-    assert.equal(result.items.filter(item => item.entry.learning.available).length, 11);
+    assert.deepEqual(result.items.filter(item => item.entry.learning.available).map(item => item.entry.id),
+      generation.acceptedPortableIds);
     assert.equal(result.provenance.acceptanceSnapshot.live, false);
     for (const item of result.items) {
       assert.equal(item.entry.native.runnable, false);
@@ -130,7 +132,7 @@ test('workflows and later lessons retain unsupported / unavailable modes, CONTAI
   assert.equal(result.preparation.entry.prerequisites.inheritsBase, false);
   assert.match(result.preparation.entry.prerequisites.additional, /^CONTAINER,/);
   assert.match(result.preparation.catalog.common.dependencyRules.text, /P002 OR P003/);
-  const later = await compose(catalog, matrix, { entryId: 'S009' });
+  const later = await compose(catalog, matrix, { entryId: 'S018' });
   assert.equal(later.preparation.learningMode, 'unavailable-learning');
   assert.equal(later.preparation.entry.learning.href, null);
 });

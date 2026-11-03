@@ -6,9 +6,12 @@ No install, server, framework, cloud access or production runtime is needed.
 
 The page consumes the **same 152 immutable C005 v1 entries**: S001–S150,
 W001/W002. It neither extracts source documents nor copies catalog data.
-C003's matrix/validator and C005's catalog/validator are imported unchanged.
-`tests\integrity.test.cjs` checks their accepted commits, Windows checkout line
-endings and the original worktree SHA-256 fingerprints. Source authenticity is
+C003's matrix/validator and C005's validator/API are imported unchanged.
+Only C005's generated snapshot is refreshed by zero-credit
+`OP-CATALOG-SNAPSHOT-REFRESH`. `tests\integrity.test.cjs` retains all original
+accepted-commit/hash checks, reading the byte-preserved old artifact for its
+original data baseline, and separately checks the new fixed-generation hash.
+Source authenticity is
 checked by invoking C005's existing read-only `catalog-source.cjs` exports
 `buildCatalog()` and `verifyLearningTargets()`, not by a second extractor.
 
@@ -63,17 +66,18 @@ example rows or imply that unclassified means safe.
 | Selection, with all hosts/risks | Entries | Meaning |
 | --- | ---: | --- |
 | All | 152 | Proposed source scenarios/workflows. |
-| Portable lesson accepted | 11 | Historical accepted snapshot only. |
-| Portable lesson unavailable | 141 | Original explicit unavailable reasons retained. |
+| Portable lesson accepted | 20 | Historical accepted snapshot only. |
+| Portable lesson unavailable | 132 | Original explicit unavailable reasons retained. |
 | Native unavailable / unverified | 152 | Not runnable; no target-specific native proof. |
 | Native runnable | 0 | No execution is enabled. |
 | Native qualified | 0 | Documentation/portable learning is not qualification. |
 | Source parent complete | 0 | Portable A-card acceptance does not complete D-S/W parents. |
 
 Historical acceptance/source pin:
-**`1583da90c1013ba95fdf268d6901f8a14bdf900a`**.
-Accepted portable IDs are S001–S008, S021, S031 and S041. S009/S010 and later
-work remain conservatively unavailable in this unchanged snapshot.
+**`3565746a0882916a91d492a8d2514f881a52812d`**, annotated source tag
+`kanban/flow-admin/3565746a0882`.
+Accepted portable IDs are S001–S017, S021, S031 and S041. S018/S019 and later
+work remain conservatively unavailable in this fixed snapshot.
 The commit/time/ledger update and pinned source links are displayed, not live
 worktree state. Original lesson destinations are preserved.
 
@@ -86,8 +90,8 @@ const { filterCatalog } = require('.\\capability\\C007\\catalog-filters.js');
 const result = filterCatalog(catalog, matrix, {
   host: 'aks', risk: 'unclassified', readiness: 'portable-available'
 });
-// result.items: ten original C005 entry objects wrapped with unknown host reasons.
-// result.incompatible: S002 with its explicit P001 host-under-test conflict.
+// result.items: sixteen original C005 objects wrapped with unknown host reasons.
+// result.incompatible: S002/S012/S014/S017, retaining explicit source conflicts.
 // result.matrixRows / result.permissions: unchanged validated C003 objects.
 ```
 
@@ -106,6 +110,14 @@ rendered with text nodes, not HTML. No search or preparation workflow is added.
 
 ## Verification and preserved evidence
 
+The one-shot refresh has separate `snapshot-refresh.feature` and evidence under
+`capability\C005\evidence\op-catalog-snapshot-refresh-3565746a0882`.
+All pre-existing proof remains byte-for-byte historical. Current browser
+captures require exactly `CAPTURE_BROWSER_EVIDENCE=1` and append uniquely named
+`evidence\browser-op-catalog-snapshot-refresh-3565746a0882-*.json` files only after
+successful checks and awaited cleanup. No earlier browser result is relabeled.
+The published `53c0c0d` helper hash/source is enforced before import.
+
 ```powershell
 node --test --test-reporter=spec .\capability\C007\tests\filters.test.cjs .\capability\C007\tests\surface.test.cjs .\capability\C007\tests\integrity.test.cjs
 node --test --test-reporter=spec .\capability\C007\tests\browser.test.cjs
@@ -118,12 +130,15 @@ The first integrity-test failure is preserved: its git-blob byte comparison
 initially overlooked Windows CRLF checkout conversion. The corrected test
 checks normalized blob equality **and unchanged exact worktree fingerprints**;
 no provider file was rewritten.
-An independent documentation publication subsequently changed the live README.
+During the original implementation, an independent documentation publication
+changed the live README.
 The attempted full C005 `--check` failure is also retained: that command requires
 live-document parity with its pin. This historical consumer instead uses C005's
 unchanged pinned-source builder and verifies exact catalog reproduction without
-requiring the evolving README to equal an old commit. No source/catalog refresh
-or root edit is smuggled into C007.
+requiring the evolving README to equal an old commit. A later, separately recorded
+operational refresh changes the pin, not this checker or a root document.
+Current-checkout drift may still truthfully fail the
+strict CLI; immutable historical reproduction is a different check.
 A subsequent actual-browser refinement RED (`0 !== 1`) caught omitted readiness
 reasons on excluded cards. A shared card-rendering path now preserves those
 reasons and any historical lesson link in both lists. The failed ordinary
