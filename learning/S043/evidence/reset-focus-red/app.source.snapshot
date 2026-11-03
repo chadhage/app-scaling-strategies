@@ -1,0 +1,153 @@
+(function () {
+  'use strict';
+
+  const model = globalThis.MultipartLesson;
+  const session = model.createSession();
+  const element = (id) => document.getElementById(id);
+  const form = element('upload-controls');
+  let state = session.view();
+  let busy = false;
+  const phases = {
+    pause: ['uploading'], transfer: ['paused'], resume: ['transferred'],
+    verify: ['resumed'], 'probe-stale': ['transferred', 'resumed'],
+  };
+
+  function text(id, value) {
+    element(id).textContent = String(value);
+  }
+
+  function list(id, values) {
+    const parent = element(id);
+    parent.replaceChildren();
+    for (const value of values) {
+      const item = document.createElement('li');
+      item.textContent = value;
+      parent.append(item);
+    }
+  }
+
+  function controls() {
+    element('configuration').disabled = busy || state.phase !== 'idle';
+    element('start-upload').disabled = busy || state.phase !== 'idle'
+      || state.runCount >= model.LIMITS.runs || state.commandCount >= model.LIMITS.commands;
+    for (const button of form.querySelectorAll('[data-action]')) {
+      const action = button.dataset.action;
+      button.disabled = busy || !phases[action].includes(state.phase)
+        || state.commandCount >= model.LIMITS.commands
+        || (action === 'probe-stale' && state.current.staleRejections >= model.LIMITS.staleProbes);
+    }
+    element('reset-lesson').disabled = busy;
+    element('check-prediction').disabled = busy || !state.current?.result;
+  }
+
+  function render(message) {
+    const current = state.current;
+    const result = current?.result;
+    text('phase', state.phase);
+    text('owner', current ? `${current.uploadId} / ${current.owner} epoch ${current.epoch}` : 'Not started');
+    text('accepted-parts', current ? current.acceptedPartIds === null
+      ? 'Unknown: listing unavailable' : current.acceptedPartIds.join(', ') || 'None' : 'Not started');
+    text('preserved', current?.preservedParts ?? 'Not verified');
+    const uploads = current?.transmittedPartIds.length || 0;
+    text('uploaded', `${uploads} / ${uploads * model.ARTIFACT.partBytes}`);
+    text('duplicates', current?.duplicateUploads || 0);
+    text('final-bytes', `${model.ARTIFACT.bytes} / ${result?.finalBytes ?? 'Not observed'}`);
+    text('expected-hash', model.ARTIFACT.sha256);
+    text('actual-hash', result?.actualSha256 ?? 'Not observed');
+    text('timing', current ? `${current.elapsedMs} / ${current.config.budgetMs}` : 'Not started');
+    text('outcome', result ? result.outcome : 'unknown - no completed attempt');
+    element('outcome').dataset.outcome = result?.outcome || 'unknown';
+    list('reasons', result
+      ? [...result.failures, ...result.unknowns] : ['Final continuity is not yet verified.']);
+    list('trace', current ? current.trace.map((event) => `${event.atMs} ms: ${event.event}`) : ['No upload started.']);
+    text('limits-used', `Runs ${state.runCount}/12; actions ${state.commandCount}/96.`);
+    text('status', message || (result
+      ? `Verification recorded ${result.outcome}. Reset to choose another condition; history is retained.`
+      : `Phase ${state.phase}. ${current ? 'Continue the same upload in order.' : 'Start an upload to begin.'}`));
+
+    const history = element('history');
+    while (history.children.length < state.history.length) {
+      const run = state.history[history.children.length];
+      const item = document.createElement('li');
+      const details = document.createElement('details');
+      const summary = document.createElement('summary');
+      const proof = document.createElement('pre');
+      summary.textContent = `Run ${run.runId}: ${run.outcome} - ${run.uploadedParts} uploads, ${run.duplicateUploads} duplicates`;
+      proof.textContent = JSON.stringify(run, null, 2);
+      details.append(summary, proof);
+      item.append(details);
+      history.append(item);
+    }
+    controls();
+  }
+
+  function showError(message) {
+    text('error', message);
+    element('error').hidden = false;
+    element('error').focus();
+  }
+
+  function clearError() {
+    element('error').hidden = true;
+    text('error', '');
+  }
+
+  function integer(id, label) {
+    const value = element(id).value;
+    if (!/^(0|[1-9]\d*)$/.test(value)) throw new Error(`${label} must be a whole-number duration, without blanks or exponent notation.`);
+    return Number(value);
+  }
+
+  function configuration() {
+    return {
+      storage: element('storage').value, resumePolicy: element('resume-policy').value,
+      listing: element('listing').value, payload: element('payload').value,
+      continuationMs: integer('continuation-ms', 'Continuation'),
+      budgetMs: integer('budget-ms', 'Original budget'),
+    };
+  }
+
+  async function perform(action, input) {
+    if (busy) return;
+    busy = true;
+    controls();
+    try {
+      const result = await session.dispatch(action, input);
+      state = result.view;
+      if (!result.ok) {
+        render();
+        showError(result.error);
+        return;
+      }
+      clearError();
+      text('prediction-result', 'No prediction checked.');
+      if (action === 'reset') form.reset();
+      render(result.message);
+      if (action === 'reset') element('storage').focus();
+    } catch {
+      showError('Unexpected lesson error. This is not a verified success; reset to recover.');
+    } finally {
+      busy = false;
+      controls();
+    }
+  }
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    try { void perform('start', configuration()); } catch (error) { showError(error.message); }
+  });
+  for (const button of form.querySelectorAll('[data-action]')) {
+    button.addEventListener('click', () => { void perform(button.dataset.action); });
+  }
+  element('reset-lesson').addEventListener('click', () => { void perform('reset'); });
+  element('check-prediction').addEventListener('click', () => {
+    const result = state.current?.result;
+    if (!result) return showError('Verify an upload before checking a prediction.');
+    const prediction = element('prediction').value;
+    if (!['success', 'failure', 'unknown'].includes(prediction)) return showError('Unsupported prediction.');
+    clearError();
+    text('prediction-result',
+      `Prediction ${prediction === result.outcome ? 'correct' : 'incorrect'}; synthetic user outcome remains ${result.outcome}.`);
+  });
+  render();
+}());

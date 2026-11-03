@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S043",
+  "sourceId": "S043",
+  "parentId": "D-S043",
+  "kano": "S",
+  "kanoUnit": "A-S043",
+  "packet": "SC-S043",
+  "owner": "worker-A-S043",
+  "entryGate": "SOURCE",
+  "title": "Resume a multipart upload after ownership transfer",
+  "entryPoint": "learning/S043/index.html",
+  "feature": "learning/S043/multipart.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Preserve accepted parts, reconcile on the new owner, upload only missing parts and verify final bytes, SHA-256 and the original completion budget.",
+  "preconditions": [
+    "A standard browser with local HTML, CSS, JavaScript and Web Crypto.",
+    "One in-memory four-part ASCII fixture and two synthetic ownership epochs.",
+    "Shared durable storage and long-work continuation are assumptions, not native prerequisites certified by this lesson.",
+    "No account, server, network, credential or application framework."
+  ],
+  "actions": [
+    "Choose storage, resume policy, listing availability, part integrity and integer time budgets.",
+    "Start, pause, transfer ownership, optionally probe a stale writer, resume and verify.",
+    "Inspect byte/hash, preservation, duplication and original-clock measurements.",
+    "Check a prediction separately from synthetic user impact.",
+    "Reset to defaults without erasing any started-run result or replenishing limits."
+  ],
+  "syntheticInput": {
+    "fixture": "learning/S043/upload.js",
+    "parts": 4,
+    "partBytes": 12,
+    "expectedBytes": 48,
+    "expectedSha256": "43a0f160cf05a5f0be77de503bc019c24f94a325b0ed84e4b7e60d788fd189e0",
+    "originalAcceptedParts": [1, 2],
+    "originalAcceptedAtMs": 200,
+    "transferAtMs": 300,
+    "defaultContinuationMs": 400,
+    "defaultBudgetMs": 1000
+  },
+  "assertions": [
+    "Shared accepted parts survive ownership transfer and are not uploaded twice.",
+    "Final part count, byte length and Web Crypto SHA-256 match the fixed original.",
+    "Completion at or below the original budget succeeds; retries do not reset it.",
+    "Part loss, duplication, corruption and known deadline breaches are failures.",
+    "Missing listing or hash evidence is unknown and cannot override a known failure.",
+    "Stale ownership epochs have no accepted-part or upload effects.",
+    "Invalid input/state actions do not mutate the run; reset retains all outcomes."
+  ],
+  "bounds": {
+    "runsPerPageLifetime": 12,
+    "actionsPerPageLifetime": 96,
+    "staleProbesPerRun": 4,
+    "traceEntriesPerRun": 20,
+    "continuationMs": [0, 10000],
+    "originalBudgetMs": [100, 10000]
+  },
+  "iac": {
+    "status": "N/A",
+    "decision": "learning/S043/evidence/iac-na.json",
+    "stage": "After genuine behavioral RED; before implementation",
+    "reason": "Resource-free local lesson; cloud/IaC/scaffold/identity/deployment/spend remain unapproved."
+  },
+  "verification": {
+    "command": "node learning\\S043\\verify.cjs",
+    "ordinaryVerificationWritesProof": false,
+    "browserCaptureOptIn": "CAPTURE_BROWSER_EVIDENCE=1",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublishedRevision": "53c0c0d",
+    "tooling": "Existing Node 22.23.4, offline Playwright 1.56.1, installed signed Edge 156 only",
+    "productionNode24Validated": false
+  },
+  "limits": [
+    "No actual HTTP multipart, persisted object storage, network latency or native Azure proof.",
+    "Synthetic epoch fencing is not authentication or a distributed concurrency guarantee.",
+    "B-S043 still requires approved CORE, DATA, HOST, OBJECT and C024 native gates.",
+    "D-S039, D-S042 and original D-S043 acceptance remain unfulfilled native work.",
+    "No production runtime, deployment or five-nines reliability certification."
+  ]
+}

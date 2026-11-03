@@ -1,0 +1,361 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
+
+const root = path.join(__dirname, '..');
+const repo = path.resolve(root, '..', '..');
+const helper = path.join(repo, 'testing', 'browser', 'isolated.cjs');
+const helperHash = crypto.createHash('sha256').update(fs.readFileSync(helper)).digest('hex');
+assert.equal(helperHash, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+const { openIsolatedLesson } = require(helper);
+const playwrightVersion = require(path.join(repo, 'testing', 'browser', 'node_modules', 'playwright', 'package.json')).version;
+assert.equal(playwrightVersion, '1.56.1');
+
+async function main() {
+  const proof = {
+    cardId: 'A-S043', packet: 'SC-S043', mode: 'actual isolated browser; synthetic workload',
+    startedAtUtc: new Date().toISOString(), nodeVersion: process.version,
+    playwrightVersion, helperSha256: helperHash, helperPublishedRevision: '53c0c0d',
+    entry: 'learning\\S043\\index.html', checks: [], observations: {},
+    oracleQualification: 'The first preserved browser attempt used Playwright isDisabled() on a fieldset; the installed 1.56.1 reports false even when native fieldset.disabled is true and descendant selects are disabled. The qualified checks below inspect both native fieldset state and an actual descendant control.',
+    verdict: 'FAIL', cleanup: { awaitedCloseInFinally: false },
+  };
+  let session;
+  let failure;
+  try {
+    session = await openIsolatedLesson(proof.entry);
+    proof.browserVersion = session.browserVersion;
+    assert.match(session.browserVersion, /^156\./);
+    const page = session.page;
+    const pageErrors = [];
+    const consoleErrors = [];
+    const httpRequests = [];
+    let cspProbeTransportHits = 0;
+    page.on('pageerror', (error) => pageErrors.push(String(error)));
+    page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+    page.on('request', (request) => { if (/^https?:/.test(request.url())) httpRequests.push(request.url()); });
+    await page.route('http://127.0.0.1:65530/**', async (route) => {
+      cspProbeTransportHits++;
+      await route.abort('blockedbyclient');
+    });
+    await page.reload({ waitUntil: 'load' });
+
+    const text = async (id) => (await page.locator(`#${id}`).innerText()).trim();
+    const phase = async (value) => page.waitForFunction(
+      (expected) => document.getElementById('phase').textContent === expected, value);
+    const action = (name) => page.locator(`[data-action="${name}"]`);
+    const buttonKey = async (locator, key = 'Enter') => { await locator.focus(); await page.keyboard.press(key); };
+    const check = async (name, body) => {
+      await body();
+      proof.checks.push({ name, result: 'PASS' });
+    };
+    const reset = async () => {
+      await buttonKey(page.locator('#reset-lesson'));
+      await phase('idle');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'storage');
+      assert.equal(await page.locator('#storage').inputValue(), 'shared');
+      assert.equal(await page.locator('#resume-policy').inputValue(), 'reconcile');
+      assert.equal(await page.locator('#listing').inputValue(), 'available');
+      assert.equal(await page.locator('#payload').inputValue(), 'intact');
+      assert.equal(await page.locator('#continuation-ms').inputValue(), '400');
+      assert.equal(await page.locator('#budget-ms').inputValue(), '1000');
+      assert.equal(await text('actual-hash'), 'Not observed');
+    };
+    const conduct = async () => {
+      await page.locator('#start-upload').click();
+      await phase('uploading');
+      await action('pause').click();
+      await phase('paused');
+      await action('transfer').click();
+      await phase('transferred');
+      await action('resume').click();
+      await page.waitForFunction(() => ['resumed', 'finished'].includes(document.getElementById('phase').textContent));
+      if (await text('phase') === 'resumed') {
+        await action('verify').click();
+        await phase('finished');
+      }
+    };
+
+    await check('actual DOM initial banner, controls, native reset and labelled keyboard order', async () => {
+      assert.equal(await page.title(), 'S043 - Resume a multipart upload');
+      assert.equal(await page.locator('.training').innerText(),
+        'Training rehearsal - synthetic data - not a live Azure result');
+      assert.equal(await page.locator('#configuration').evaluate((fieldset) => fieldset.disabled), false);
+      assert.equal(await page.locator('#storage').isDisabled(), false);
+      assert.equal(await action('verify').isDisabled(), true);
+      assert.equal(await page.evaluate(() => typeof document.getElementById('upload-controls').reset), 'function');
+      await page.locator('#storage').focus();
+      await page.keyboard.press('Tab');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'resume-policy');
+      await page.keyboard.press('Shift+Tab');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'storage');
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('#storage').inputValue(), 'instance-local');
+      await page.keyboard.press('ArrowUp');
+      assert.equal(await page.locator('#storage').inputValue(), 'shared');
+    });
+
+    await check('Enter and Space conduct a safe transfer, stale fencing, hash and prediction', async () => {
+      await buttonKey(page.locator('#start-upload'));
+      await phase('uploading');
+      assert.equal(await text('accepted-parts'), '1, 2');
+      assert.equal(await page.locator('#configuration').evaluate((fieldset) => fieldset.disabled), true);
+      assert.equal(await page.locator('#storage').isDisabled(), true);
+      await buttonKey(action('pause'), 'Space');
+      await phase('paused');
+      await buttonKey(action('transfer'));
+      await phase('transferred');
+      const before = await text('uploaded');
+      await buttonKey(action('probe-stale'), 'Space');
+      await page.waitForFunction(() => document.getElementById('status').textContent.includes('Stale writer rejected'));
+      assert.equal(await text('uploaded'), before);
+      assert.match(await text('trace'), /Rejected stale v1 epoch 1/);
+      await buttonKey(action('resume'));
+      await phase('resumed');
+      await buttonKey(action('verify'), 'Space');
+      await phase('finished');
+      assert.equal(await text('outcome'), 'success');
+      assert.equal(await text('preserved'), '2');
+      assert.equal(await text('uploaded'), '4 / 48');
+      assert.equal(await text('duplicates'), '0');
+      assert.equal(await text('final-bytes'), '48 / 48');
+      assert.equal(await text('actual-hash'), await text('expected-hash'));
+      assert.equal(await text('timing'), '700 / 1000');
+      await buttonKey(page.locator('#check-prediction'), 'Space');
+      assert.match(await text('prediction-result'), /Prediction correct;.*remains success/);
+      await page.locator('#prediction').selectOption('failure');
+      await buttonKey(page.locator('#check-prediction'));
+      assert.match(await text('prediction-result'), /Prediction incorrect;.*remains success/);
+      await buttonKey(page.locator('#history summary').first());
+      assert.equal(await page.locator('#history details').first().getAttribute('open'), '');
+      proof.observations.safe = {
+        outcome: await text('outcome'), uploaded: await text('uploaded'),
+        finalBytes: await text('final-bytes'), sha256: await text('actual-hash'),
+        originalTiming: await text('timing'), trace: await text('trace'),
+      };
+      await reset();
+      assert.equal(await page.locator('#history > li').count(), 1);
+    });
+
+    await check('invalid numeric and forged option errors focus the alert without starting a run', async () => {
+      const before = await text('limits-used');
+      for (const [id, values] of [
+        ['continuation-ms', ['', '1.5', '-1', '1e3', '10001']],
+        ['budget-ms', ['', '99', '10001']],
+      ]) {
+        for (const value of values) {
+          await page.locator(`#${id}`).fill(value);
+          await buttonKey(page.locator('#start-upload'));
+          assert.equal(await page.locator('#error').isVisible(), true);
+          assert.equal(await page.evaluate(() => document.activeElement.id), 'error');
+          assert.equal(await text('phase'), 'idle');
+          assert.equal(await text('limits-used'), before);
+          assert.equal(await page.locator('#history > li').count(), 1);
+          await reset();
+        }
+      }
+      await page.evaluate(() => {
+        const select = document.getElementById('storage');
+        select.append(new Option('Forged option', 'forged'));
+        select.value = 'forged';
+      });
+      await page.locator('#start-upload').click();
+      assert.match(await text('error'), /Unsupported storage/);
+      assert.equal(await text('limits-used'), before);
+      await page.evaluate(() => document.querySelector('#storage option[value="forged"]').remove());
+      await reset();
+      assert.equal(await page.locator('#error').isVisible(), false);
+    });
+
+    await check('duplicate restart fails despite a correct final hash and survives reset', async () => {
+      await page.locator('#resume-policy').selectOption('restart');
+      await conduct();
+      assert.equal(await text('outcome'), 'failure');
+      assert.equal(await text('duplicates'), '2');
+      assert.equal(await text('uploaded'), '6 / 72');
+      assert.equal(await text('actual-hash'), await text('expected-hash'));
+      await page.locator('#prediction').selectOption('failure');
+      await page.locator('#check-prediction').click();
+      assert.match(await text('prediction-result'), /Prediction correct;.*remains failure/);
+      const recorded = await page.locator('#history > li').nth(1).textContent();
+      proof.observations.duplicateFailure = {
+        outcome: await text('outcome'), uploaded: await text('uploaded'),
+        duplicates: await text('duplicates'), reasons: await text('reasons'),
+      };
+      await reset();
+      assert.equal(await page.locator('#history > li').nth(1).textContent(), recorded);
+    });
+
+    await check('same-length corruption is detected by actual browser SHA-256', async () => {
+      await page.locator('#payload').selectOption('corrupt');
+      await conduct();
+      assert.equal(await text('outcome'), 'failure');
+      assert.equal(await text('final-bytes'), '48 / 48');
+      assert.notEqual(await text('actual-hash'), await text('expected-hash'));
+      assert.match(await text('reasons'), /SHA-256 does not match/);
+      proof.observations.corruption = {
+        outcome: await text('outcome'), finalBytes: await text('final-bytes'),
+        actualSha256: await text('actual-hash'), reasons: await text('reasons'),
+      };
+      await reset();
+    });
+
+    await check('instance-local accepted-part loss cannot be hidden by reuploading correct bytes', async () => {
+      await page.locator('#storage').selectOption('instance-local');
+      await conduct();
+      assert.equal(await text('outcome'), 'failure');
+      assert.equal(await text('preserved'), '0');
+      assert.equal(await text('duplicates'), '2');
+      assert.equal(await text('actual-hash'), await text('expected-hash'));
+      assert.match(await text('reasons'), /2 previously accepted parts were lost/);
+      await reset();
+    });
+
+    await check('original deadline fails at 1001 ms but permits equality at 1000 ms', async () => {
+      await page.locator('#continuation-ms').fill('701');
+      await conduct();
+      assert.equal(await text('outcome'), 'failure');
+      assert.equal(await text('timing'), '1001 / 1000');
+      assert.match(await text('reasons'), /Original elapsed 1001 ms exceeds budget 1000 ms/);
+      await reset();
+      await page.locator('#continuation-ms').fill('700');
+      await conduct();
+      assert.equal(await text('outcome'), 'success');
+      assert.equal(await text('timing'), '1000 / 1000');
+      await reset();
+    });
+
+    await check('missing listing is unknown, with no candidate uploads or invented hash', async () => {
+      await page.locator('#listing').selectOption('unavailable');
+      await conduct();
+      assert.equal(await text('outcome'), 'unknown');
+      assert.equal(await text('uploaded'), '2 / 24');
+      assert.equal(await text('accepted-parts'), 'Unknown: listing unavailable');
+      assert.equal(await text('actual-hash'), 'Not observed');
+      assert.equal(await text('final-bytes'), '48 / Not observed');
+      proof.observations.unknown = {
+        outcome: await text('outcome'), uploaded: await text('uploaded'),
+        acceptedParts: await text('accepted-parts'), reasons: await text('reasons'),
+      };
+      await reset();
+    });
+
+    await check('known loss remains failure alongside unavailable evidence', async () => {
+      await page.locator('#storage').selectOption('instance-local');
+      await page.locator('#listing').selectOption('unavailable');
+      await conduct();
+      assert.equal(await text('outcome'), 'failure');
+      assert.equal(await text('uploaded'), '2 / 24');
+      assert.equal(await text('actual-hash'), 'Not observed');
+      assert.match(await text('reasons'), /accepted parts were lost/);
+      assert.match(await text('reasons'), /listing was not verified/);
+      await reset();
+    });
+
+    await check('reset of an active run retains its unknown attempt and restores focus/defaults', async () => {
+      const count = await page.locator('#history > li').count();
+      await page.locator('#start-upload').click();
+      await phase('uploading');
+      await reset();
+      assert.equal(await page.locator('#history > li').count(), count + 1);
+      assert.match(await page.locator('#history summary').last().innerText(), /unknown/);
+      assert.match(await page.locator('#history pre').last().textContent(), /Reset before final verification/);
+      assert.equal(await text('limits-used'), 'Runs 9/12; actions 49/96.');
+    });
+
+    await check('captured configuration cannot be edited mid-upload', async () => {
+      await page.locator('#start-upload').click();
+      await phase('uploading');
+      await page.evaluate(() => { document.getElementById('budget-ms').value = '100'; });
+      for (const name of ['pause', 'transfer', 'resume', 'verify']) {
+        await action(name).click();
+        if (name === 'verify') await phase('finished');
+      }
+      assert.equal(await text('outcome'), 'success');
+      assert.equal(await text('timing'), '700 / 1000');
+      await reset();
+    });
+
+    proof.observations.appHttpRequestsBeforeCspProbe = [...httpRequests];
+    assert.equal(httpRequests.length, 0);
+    assert.equal(consoleErrors.length, 0);
+    await check('enforced CSP blocks inline execution, event handlers and connections', async () => {
+      const observation = await page.evaluate(async () => {
+        const violations = [];
+        document.addEventListener('securitypolicyviolation', (event) => violations.push(event.effectiveDirective));
+        const script = document.createElement('script');
+        script.textContent = 'window.__s043InlineExecuted = true;';
+        document.body.append(script);
+        const button = document.createElement('button');
+        button.setAttribute('onclick', 'window.__s043HandlerExecuted = true;');
+        document.body.append(button);
+        button.click();
+        let fetchRejected = false;
+        try { await fetch('http://127.0.0.1:65530/s043-csp-probe'); } catch { fetchRejected = true; }
+        await new Promise((resolve) => setTimeout(resolve, 75));
+        script.remove();
+        button.remove();
+        return {
+          inlineExecuted: window.__s043InlineExecuted === true,
+          handlerExecuted: window.__s043HandlerExecuted === true,
+          fetchRejected, violations,
+        };
+      });
+      assert.equal(observation.inlineExecuted, false);
+      assert.equal(observation.handlerExecuted, false);
+      assert.equal(observation.fetchRejected, true);
+      for (const directive of ['script-src-elem', 'script-src-attr', 'connect-src']) {
+        assert.ok(observation.violations.includes(directive), directive);
+      }
+      assert.equal(cspProbeTransportHits, 0);
+      proof.observations.csp = { ...observation, fallbackTransportGuardHits: cspProbeTransportHits };
+    });
+
+    await check('final reset preserves real DOM history with no page errors or browser storage', async () => {
+      await reset();
+      assert.equal(await page.locator('#history > li').count(), 10);
+      assert.equal(await text('outcome'), 'unknown - no completed attempt');
+      assert.equal(await text('prediction-result'), 'No prediction checked.');
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(consoleErrors.filter((message) => !/content security policy|violates.*directive/i.test(message)), []);
+      assert.equal(await page.evaluate(() => localStorage.length + sessionStorage.length), 0);
+      proof.observations.final = {
+        phase: await text('phase'), historyCount: await page.locator('#history > li').count(),
+        limits: await text('limits-used'), focus: await page.evaluate(() => document.activeElement.id),
+        pageErrors, expectedCspConsoleErrors: consoleErrors,
+      };
+    });
+    proof.verdict = 'PASS';
+  } catch (error) {
+    failure = error;
+    proof.failure = String(error.stack || error);
+  } finally {
+    if (session) {
+      try {
+        await session.close();
+        proof.cleanup.awaitedCloseInFinally = true;
+        proof.cleanup.result = 'Closed owned isolated browser/context and helper scratch.';
+      } catch (error) {
+        failure = failure || error;
+        proof.verdict = 'FAIL';
+        proof.cleanup.error = String(error.stack || error);
+      }
+    }
+  }
+  proof.finishedAtUtc = new Date().toISOString();
+  if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') {
+    const directory = path.join(root, 'evidence');
+    let index = 1;
+    while (fs.existsSync(path.join(directory, `browser-${String(index).padStart(3, '0')}.json`))) index++;
+    const target = path.join(directory, `browser-${String(index).padStart(3, '0')}.json`);
+    fs.writeFileSync(target, `${JSON.stringify(proof, null, 2)}\n`, { flag: 'wx' });
+    proof.capture = path.relative(root, target);
+  }
+  process.stdout.write(`${JSON.stringify(proof, null, 2)}\n`);
+  if (failure) process.exitCode = 1;
+}
+
+main().catch((error) => { console.error(error); process.exitCode = 1; });

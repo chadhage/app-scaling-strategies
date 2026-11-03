@@ -1,0 +1,15 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createSession } = require('../upload.js');
+
+test('shared accepted parts survive ownership transfer and resume successfully', async () => {
+  const session = createSession();
+  for (const action of ['start', 'pause', 'transfer', 'resume', 'verify']) {
+    const response = await session.dispatch(action);
+    assert.equal(response.ok, true, `${action} must be a supported action`);
+  }
+  assert.equal(session.view().current.result.outcome, 'success',
+    'reconciled shared parts, correct final content and original budget must succeed');
+});
