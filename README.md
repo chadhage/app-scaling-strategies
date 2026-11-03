@@ -2,6 +2,8 @@
 
 Introduction...
 
+Implementation work is tracked in the [web demonstration harness backlog](.docs/wiki/backlog.md).
+
 ## TOC
 
 - [Problem Statement](#problem-statement)
