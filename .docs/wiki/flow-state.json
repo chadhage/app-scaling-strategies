@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 258,
+  "revision": 265,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-03T17:10:57.5002563Z",
+  "updatedAtUtc": "2026-11-03T17:17:02.7625107Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -38,13 +38,13 @@
     "packet": "s_p >= 6 * (l_p + rlp + 1), with all six named distinct companions Done"
   },
   "kanoDone": {
-    "S": 37,
+    "L": 0,
     "D": 2,
-    "L": 0
+    "S": 38
   },
   "reservations": {
-    "D": 0,
-    "L": 0
+    "L": 0,
+    "D": 0
   },
   "gateAliases": {
     "JAVA": "C097, C098, HOSTJAVA.",
@@ -8626,11 +8626,125 @@
         "D-S023"
       ],
       "state": "In Progress",
-      "readiness": true,
+      "readiness": false,
       "owner": "worker-A-S023",
-      "blocker": null,
-      "result": null,
-      "publication": null,
+      "blocker": "Published; controller empirical review and acceptance pending.",
+      "result": {
+        "cardId": "A-S023",
+        "workerId": "worker-A-S023",
+        "outcome": "published",
+        "commit": "b2e9ed091a6eb26b473221de9bf8095e7e52bf1b",
+        "tag": "kanban/A-S023/b2e9ed091a6e",
+        "remoteMain": "b2e9ed091a6eb26b473221de9bf8095e7e52bf1b",
+        "remotePeeledTag": "b2e9ed091a6eb26b473221de9bf8095e7e52bf1b",
+        "remoteVerified": true,
+        "reportedAtUtc": "2026-11-03T17:15:42.2614948Z",
+        "kano": "S",
+        "kanoUnit": "A-S023",
+        "packet": "SC-S023",
+        "parents": [
+          "D-S023"
+        ],
+        "scope": [
+          "learning\\S023"
+        ],
+        "entry": "learning\\S023\\index.html",
+        "manifest": "learning\\S023\\manifest.json",
+        "evidence": "learning\\S023\\evidence.json",
+        "focusedTestsPassed": true,
+        "focusedTests": {
+          "tests": 15,
+          "passed": 15,
+          "failed": 0,
+          "deterministicBehaviorTests": 9,
+          "surfaceAndIntegrityTests": 5,
+          "actualBrowserTests": 1,
+          "command": "node --test --test-concurrency=1 .\\learning\\S023\\tests\\lesson.test.cjs .\\learning\\S023\\tests\\surface.test.cjs .\\learning\\S023\\tests\\browser.test.cjs",
+          "rawRecord": "learning\\S023\\evidence\\focused-lf-green.json"
+        },
+        "behavioralRed": {
+          "genuineAssertion": true,
+          "expected": "failure",
+          "actual": "unknown",
+          "passingPrecedingAssertion": "healthy endpoint HTTP 200",
+          "noImportToolOrSyntaxFailure": true,
+          "record": "learning\\S023\\evidence\\behavioral-red.json",
+          "preservedSnapshots": "learning\\S023\\evidence\\red\\*.txt"
+        },
+        "iac": "N/A, explicit post-RED resource-free record",
+        "syntax": "Six focused node --check commands passed; syntax-lf-green.json",
+        "browserObserved": true,
+        "browser": {
+          "observations": 15,
+          "record": "learning\\S023\\evidence\\browser-lf-acceptance.json",
+          "rawDom": "learning\\S023\\evidence\\browser-lf-acceptance.dom.html.txt",
+          "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+          "api": "openIsolatedLesson with awaited finally close",
+          "playwright": "1.56.1",
+          "edge": "156.0.4314.50, valid Microsoft signature",
+          "node": "22.23.4 tooling",
+          "checks": [
+            "actual DOM",
+            "Tab/Enter run",
+            "invalid input/error focus",
+            "failed transaction behind HTTP 200",
+            "healthy success",
+            "unobserved receipt",
+            "latency failure",
+            "isolation guard",
+            "retained history and cap",
+            "keyboard/idempotent reset",
+            "CSP inline/connect/form denial"
+          ],
+          "externalRequests": 0,
+          "closeResolved": true
+        },
+        "readOnlyVerification": {
+          "passed": true,
+          "ownedFilesAndProofHashesUnchanged": 43,
+          "captureFlagAbsent": true
+        },
+        "publicationIntegrity": {
+          "ownedFiles": 43,
+          "allCommitBytesMatchWorkingFiles": true,
+          "finalGreenHashesMatchPublishedCommit": true,
+          "rawProofHashesMatchPublishedCommit": true,
+          "annotatedTag": true,
+          "copilotCoauthor": true,
+          "atomicPush": true
+        },
+        "recovery": "First publication stopped before commit at raw-log whitespace check. All originals retained; scoped binary evidence attributes and LF-only owned source normalization; final byte-aligned GREEN and raw integrity reverified.",
+        "verifierResult": "PASS for bounded local synthetic S023 exercise",
+        "userImpactResult": "Shallow HTTP 200 is unknown, rejected business transaction and exceeded budget fail, full healthy isolated journey can succeed, unobserved evidence remains unknown. Actual user transitions/interruptions were not measured.",
+        "cleanupResult": "All owned browser sessions closed in awaited finally; no external resources/effects; no shared foreground leases or unrelated cleanup.",
+        "reviewReady": true,
+        "parentAcceptancePending": true,
+        "reviewer": "Parent only; worker did not call Accept",
+        "acceptedAtUtc": null,
+        "refinement": "One bounded original S unit. No other admitted To Do for D-S023 found; no extra test/plumbing/refinement unit.",
+        "nativeRemainder": {
+          "id": "B-S023",
+          "readiness": false,
+          "gates": [
+            "CORE",
+            "DATA",
+            "HOST"
+          ],
+          "blocker": "Qualified native safe target, isolated login/read/transaction fixtures and separate execution approval remain required; source parent not completed."
+        },
+        "mode": "synthetic",
+        "nativeProof": false,
+        "sourceParentComplete": false,
+        "productionNode24Certified": false,
+        "limits": [
+          "No cloud/IaC/scaffold/identity/deploy/spend/packages/framework",
+          "Published helper lifecycle deadline limitation retained; abandoned prototype unused"
+        ]
+      },
+      "publication": {
+        "tag": "kanban/A-S023/b2e9ed091a6e",
+        "commit": "b2e9ed091a6eb26b473221de9bf8095e7e52bf1b"
+      },
       "admittedAtUtc": "2026-11-03T16:56:02.6659219Z",
       "authorization": "local-implementation-only",
       "claimedAtUtc": "2026-11-03T16:57:00.1525003Z"
@@ -8833,15 +8947,126 @@
       "parents": [
         "D-S026"
       ],
-      "state": "In Progress",
-      "readiness": true,
+      "state": "Done",
+      "readiness": false,
       "owner": "worker-A-S026",
       "blocker": null,
-      "result": null,
-      "publication": null,
+      "result": {
+        "cardId": "A-S026",
+        "workerId": "worker-A-S026",
+        "outcome": "published",
+        "commit": "697ed1ba435d3c42107c3066a59cdd1865ddd4da",
+        "tag": "kanban/A-S026/697ed1ba435d",
+        "packet": "SC-S026",
+        "kano": "S",
+        "kanoUnit": "A-S026",
+        "mode": "synthetic-only",
+        "scope": [
+          "learning\\S026"
+        ],
+        "reportedAtUtc": "2026-11-03T17:13:42.669Z",
+        "readyForParentReview": true,
+        "acceptance": "Parent alone independently Accepts once; no worker Done credit.",
+        "entry": "learning\\S026\\index.html",
+        "evidence": "learning\\S026\\evidence.json",
+        "checks": {
+          "behavioralRedFailures": 20,
+          "initialRedPasses": 2,
+          "originalModelChecksGreen": 22,
+          "finiteConfigurations": 504,
+          "syntaxChecks": 9,
+          "integrityChecks": 8,
+          "browserLeafChecks": 13,
+          "browserParentGroups": 1,
+          "focusedReportedTestsPassed": 53,
+          "focusedTestsPassed": true,
+          "browserObserved": true,
+          "normalVerificationReadOnly": true,
+          "finalRawRun": "learning\\S026\\evidence\\green-003.json",
+          "finalVerificationCommand": "node .\\learning\\S026\\tests\\verify.cjs",
+          "postPublicationIntegrityCommand": [
+            "C:\\Program Files\\nodejs\\node.exe",
+            "--test",
+            "--test-reporter=tap",
+            "learning\\S026\\tests\\integrity.test.cjs"
+          ],
+          "postPublicationIntegrityExitCode": 0,
+          "postPublicationIntegrityStdoutSha256": "ffb5d4454803469b3e839bbac3c13b7cf6e8ed5809586d6a417613982faa54c2",
+          "publishedOwnedFiles": 42,
+          "publishedBytesMatchReviewedWorkingTree": true
+        },
+        "publication": {
+          "cardId": "A-S026",
+          "workerId": "worker-A-S026",
+          "commit": "697ed1ba435d3c42107c3066a59cdd1865ddd4da",
+          "tag": "kanban/A-S026/697ed1ba435d",
+          "remoteMain": "697ed1ba435d3c42107c3066a59cdd1865ddd4da",
+          "remotePeeledTag": "697ed1ba435d3c42107c3066a59cdd1865ddd4da",
+          "remoteVerified": true,
+          "publishedAtUtc": "2026-11-03T17:12:23.2570674Z",
+          "paths": [
+            "learning\\S026"
+          ],
+          "message": "[A-S026][S][BDD,TDD,browser,evidence] Rehearse guarded immutable image pull and startup while GA serves",
+          "remoteMainRechecked": "697ed1ba435d3c42107c3066a59cdd1865ddd4da",
+          "remotePeeledTagRechecked": "697ed1ba435d3c42107c3066a59cdd1865ddd4da",
+          "annotatedTagVerified": true
+        },
+        "cleanup": {
+          "awaitedFinallyCloseResolved": true,
+          "sessionMemoryResetVerified": true,
+          "foregroundLeaseUsed": false,
+          "knownHelperLifecycleLimitationRetained": true
+        },
+        "userImpact": "UNMEASURED for real users. Synthetic GA continues during slow/failed pull and initialization; no unready candidate admissions.",
+        "remainingLocalToDo": [],
+        "nativeRemainder": {
+          "cardId": "B-S026",
+          "readiness": false,
+          "blocker": "CORE, DATA and IMAGEHOST gates, approved target/access and image/startup fixtures, and separate native execution authority remain outstanding."
+        },
+        "sourceParentComplete": false,
+        "nativeAzureValidated": false,
+        "productionNode24Validated": false,
+        "cloudCalls": 0,
+        "deployment": false,
+        "iac": "N/A; resource-free lesson",
+        "publicationRecovery": "Initial pre-commit CRLF/raw-proof rejection retained in publication-preflight-001; scoped byte-preserving attributes corrected it, then the same 53 checks passed. No proof was rewritten.",
+        "reviewer": null,
+        "acceptedAtUtc": null
+      },
+      "publication": {
+        "commit": "697ed1ba435d3c42107c3066a59cdd1865ddd4da",
+        "tag": "kanban/A-S026/697ed1ba435d"
+      },
       "admittedAtUtc": "2026-11-03T16:58:55.8524628Z",
       "authorization": "local-synthetic-only",
-      "claimedAtUtc": "2026-11-03T16:59:32.4719755Z"
+      "claimedAtUtc": "2026-11-03T16:59:32.4719755Z",
+      "review": {
+        "cardId": "A-S026",
+        "accepted": true,
+        "reviewer": "parent-controller",
+        "reviewedAtUtc": "2026-11-03T17:16:12.3826378Z",
+        "commit": "697ed1ba435d3c42107c3066a59cdd1865ddd4da",
+        "tag": "kanban/A-S026/697ed1ba435d",
+        "focusedTestsPassed": true,
+        "focusedTestCases": 39,
+        "browserObserved": true,
+        "browserObservedBy": "6de0b167-13bb-405e-bc93-498de050d835",
+        "actualBrowserLeafChecks": 13,
+        "browserEvidence": "learning\\S026\\evidence.json",
+        "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+        "remoteVerified": true,
+        "ownedScopeVerified": true,
+        "bddReviewed": true,
+        "genuineRedGreenReviewed": true,
+        "executionMode": "synthetic-image-pull-startup",
+        "nativeAzureProof": false,
+        "sourceParentComplete": false,
+        "iac": "N/A",
+        "reviewNotes": "39 focused leaf cases independently passed; reported53 includes14 Node browser results with one parent. Reviewed20 genuine assertion RED plus2 baseline passes,22 model checks and504 finite configurations, sequential pull/startup evidence gates, old GA overlap assumptions explicit, missing/failed candidate admission zero, prediction separate from outcome, bound8 history/input/state errors and13 actual signed-Edge groups with published helper/cleanup. No actual image/container/GA capacity/user journey/native/production24/source-parent proof."
+      },
+      "acceptedAtUtc": "2026-11-03T17:16:12.5155195Z"
     },
     {
       "technicalEntryGate": "SOURCE",
@@ -8884,6 +9109,27 @@
       "admittedAtUtc": "2026-11-03T17:10:02.3248285Z",
       "authorization": "local-synthetic-only",
       "claimedAtUtc": "2026-11-03T17:10:31.1023145Z"
+    },
+    {
+      "technicalEntryGate": "SOURCE",
+      "kano": "S",
+      "priority": "P1",
+      "kanoUnit": "A-S029",
+      "deliver": "Replay flapping probes; require a stable fresh window rather than a single green sample.",
+      "packet": "SC-S029",
+      "id": "A-S029",
+      "parents": [
+        "D-S029"
+      ],
+      "state": "In Progress",
+      "readiness": true,
+      "owner": "worker-A-S029",
+      "blocker": null,
+      "result": null,
+      "publication": null,
+      "admittedAtUtc": "2026-11-03T17:16:12.7690492Z",
+      "authorization": "local-synthetic-only",
+      "claimedAtUtc": "2026-11-03T17:16:37.552857Z"
     }
   ],
   "workers": [
@@ -9209,7 +9455,8 @@
       "cardId": "A-S023",
       "dispatchedAtUtc": "2026-11-03T16:56:03.1035775Z",
       "id": "worker-A-S023",
-      "status": "running"
+      "status": "result_received",
+      "reportedAtUtc": "2026-11-03T17:15:42.4023202Z"
     },
     {
       "agentId": "1b138445-eac5-4a17-974c-c5086f99409d",
@@ -9229,9 +9476,10 @@
     {
       "dispatchedAtUtc": "2026-11-03T16:58:56.0099094Z",
       "cardId": "A-S026",
-      "status": "running",
+      "status": "accepted",
       "id": "worker-A-S026",
-      "agentId": "6de0b167-13bb-405e-bc93-498de050d835"
+      "agentId": "6de0b167-13bb-405e-bc93-498de050d835",
+      "reportedAtUtc": "2026-11-03T17:13:47.27612Z"
     },
     {
       "cardId": "A-S027",
@@ -9246,17 +9494,24 @@
       "dispatchedAtUtc": "2026-11-03T17:10:02.4034575Z",
       "status": "running",
       "agentId": "df616d4b-f05b-485b-8652-2a20da01c4bc"
+    },
+    {
+      "cardId": "A-S029",
+      "dispatchedAtUtc": "2026-11-03T17:16:12.8646625Z",
+      "agentId": "b75e3d33-cc70-47a9-afde-64a4a61badf7",
+      "status": "running",
+      "id": "worker-A-S029"
     }
   ],
   "completedParents": [],
   "admittedReadyIds": [],
   "plannedNextIds": [
-    "A-S028",
+    "A-S029",
     "C027",
     "A-S023",
     "A-S025",
-    "A-S026",
-    "A-S027"
+    "A-S027",
+    "A-S028"
   ],
   "blockedReasons": [],
   "stopNewDispatch": false,
