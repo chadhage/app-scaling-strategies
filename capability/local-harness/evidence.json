@@ -1,0 +1,81 @@
+{
+  "operation": "OP-CATALOG-COMPOSE",
+  "kind": "necessary-zero-credit-integration",
+  "ownedNamespace": "capability\\local-harness",
+  "providers": [
+    "C005",
+    "C006",
+    "C007",
+    "C008"
+  ],
+  "authorities": [
+    "C001",
+    "C003"
+  ],
+  "stages": [
+    {
+      "stage": "BDD",
+      "source": "catalog-compose.feature"
+    },
+    {
+      "stage": "loadable stub and genuine integration assertion RED",
+      "proof": "evidence\\red.json",
+      "originalBddBytes": "evidence\\red-bdd.feature.txt",
+      "stub": "evidence\\red-composition.stub.js.txt",
+      "assertions": "evidence\\red-integration.cjs.txt",
+      "actualFailure": "The combined blue-green / AKS / unclassified / portable-available assertion expected original S001 but the loaded stub returned an empty list."
+    },
+    {
+      "stage": "IaC N/A before implementation",
+      "proof": "evidence\\iac-na.json"
+    },
+    {
+      "stage": "minimal composition and lifecycle refinement",
+      "source": [
+        "composition.js",
+        "catalog-page.js",
+        "index.html",
+        "catalog.css"
+      ],
+      "providerIntegrity": "evidence\\provider-integrity.json",
+      "noSourceExtractionOrCatalogCopy": true,
+      "noProviderOrToolingEdits": true
+    },
+    {
+      "stage": "focused GREEN",
+      "initialProof": "evidence\\focused-first-run.json",
+      "expandedProof": "evidence\\focused-green.json",
+      "finalFocusedRegressionSyntaxAndReadonlyVerification": "evidence\\verification.json"
+    },
+    {
+      "stage": "actual E2E, accepted lesson controls, negative cases and CSP",
+      "rawFirstAttempt": "evidence\\browser-first-run.json",
+      "observations": "evidence\\browser-observations.json",
+      "ordinaryRerun": "evidence\\browser-readonly.json",
+      "helperPublishedCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+      "helperSourceSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+      "captureRequiresExactly": "CAPTURE_BROWSER_EVIDENCE=1",
+      "allChildPagesAndHelperCloseAwaitedInFinally": true
+    }
+  ],
+  "publicationRefinement": {
+    "actualAbortedPreflight": "evidence\\publication-attempt-01.json",
+    "originalHashManifest": "evidence\\hashes-before-publication-normalization.json",
+    "originalVerification": "evidence\\verification-before-publication-normalization.json",
+    "originalOrdinaryBrowserRerun": "evidence\\browser-readonly-before-publication-normalization.json",
+    "ownedByteNormalization": "evidence\\publication-normalization.json",
+    "finalRegressionRun": "evidence\\regression-after-publication-normalization.json",
+    "rawRedSourcesPreservedByteForByte": true,
+    "providerOrSharedToolingChanged": false,
+    "actualStagedByteFailure": "evidence\\publication-attempt-02.json",
+    "correction": "Exact-path git add --renormalize under the publisher mutex refreshed cached raw snapshot index entries; original raw source bytes stayed unchanged."
+  },
+  "rawEvidencePolicy": "Actual attempts are retained, never rewritten into success. Ordinary tests are read-only to proof. Source RED snapshots end in .txt.",
+  "hashManifest": "evidence\\hashes.json",
+  "kanoCredit": 0,
+  "newUnit": false,
+  "selfAcceptance": false,
+  "parentCompletion": false,
+  "nativeAzureObserved": false,
+  "productionNode24Validated": false
+}

@@ -1,0 +1,18 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory(
+      require('../C006/search.js'), require('../C007/catalog-filters.js'),
+      require('../C008/preparation.js')
+    );
+  } else Object.defineProperty(root, 'CatalogComposition', {
+    value: factory(root.C006Search, root.C007Filters, root.C008Preparation)
+  });
+}(globalThis, function () {
+  'use strict';
+  async function compose() {
+    return Object.freeze({ valid: true, items: Object.freeze([]), incompatible: Object.freeze([]), preparation: null });
+  }
+  return Object.freeze({ compose });
+}));
+

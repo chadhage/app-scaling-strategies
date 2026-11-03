@@ -1,0 +1,25 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const catalog = require('../../C005/catalog-data.js');
+const matrix = require('../../C003/matrix-data.js');
+const { compose } = require('../composition.js');
+
+test('one actual query AND host/risk/readiness selection opens the exact shared preparation', async () => {
+  const result = await compose(catalog, matrix, {
+    query: '  BLUE-GREEN  ',
+    filters: { host: 'aks', risk: 'unclassified', readiness: 'portable-available' },
+    entryId: 'S001'
+  });
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.items.map(item => item.entry.id), ['S001']);
+  assert.equal(result.items[0].entry, catalog.entries[0]);
+  assert.equal(result.items[0].hostAssessment.status, 'unknown');
+  assert.equal(result.preparation.state, 'ready');
+  assert.equal(result.preparation.entry, catalog.entries[0]);
+  assert.equal(result.preparation.catalog, catalog);
+  assert.equal(result.preparation.matrix, matrix);
+  assert.equal(result.preparation.entry.learning.href, '../../learning/S001/index.html');
+});
+
