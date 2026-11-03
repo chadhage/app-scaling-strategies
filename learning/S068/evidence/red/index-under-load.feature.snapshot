@@ -1,0 +1,76 @@
+Feature: S068 index creation under a bounded synthetic workload
+  The exact source requires supported online operations or rejection when locks
+  violate user budgets. This is a portable A-card exercise, not database proof.
+  Every screen says "Training rehearsal - synthetic data - not a live Azure result".
+  Four synthetic requests, one index build and at most six attempts are permitted.
+
+  Scenario: Compare a blocking build with a permitted hypothetical online build
+    Given the synthetic capability card permits online operation
+    And the declared latency budget is 5 synthetic milliseconds
+    When I assess a blocking build with observe-only comparison
+    And run the four fixed requests
+    Then lock waits are 12, 8, 4 and 0 synthetic milliseconds
+    And latencies are 14, 10, 6 and 2 synthetic milliseconds
+    And 3 of 4 requests fail the budget and the actual result is FAIL / INTERRUPTED
+    When I predict FAIL and check the outcome
+    Then my prediction matches without removing the failed user impact
+    When I start a new attempt and choose online operation
+    And assess and run under the same budget with complete receipts
+    Then lock waits are 1, 0, 0 and 1 synthetic milliseconds
+    And latencies are 3, 2, 2 and 3 synthetic milliseconds
+    And the result is PASS / BUDGET_MET with nonzero boundary locks
+    And the earlier failed attempt remains in history
+
+  Scenario: Enforce the budget before a deliberately blocking operation
+    Given a blocking build would produce a peak of 14 synthetic milliseconds
+    When I assess with the enforce-budget guard and a budget of 5
+    Then the build is REJECTED / NOT_EXERCISED before requests are run
+    And zero observations are never presented as uninterrupted success
+    When I instead declare a budget of 15 and assess and run
+    Then the blocking build passes the declared synthetic budget
+    And the 12-millisecond lock is still visible
+
+  Scenario Outline: An online label is not a native capability guarantee
+    Given the synthetic online capability is <capability>
+    When I assess online operation
+    Then the result is <verdict> and no load can run
+    And no fallback to blocking operation is silently selected
+    Examples:
+      | capability  | verdict  |
+      | unsupported | REJECTED |
+      | unknown     | UNKNOWN  |
+
+  Scenario: Missing receipts cannot certify a passing run
+    Given online operation is permitted by the synthetic card
+    When one of the four returned-request receipts is missing
+    Then only three requests are observed and one is unknown
+    And the result is UNKNOWN / UNVERIFIED, not PASS
+    But a blocking comparison with three observed over-budget requests is FAIL
+    And the missing fourth outcome is still counted as unknown
+
+  Scenario: Prediction is separate from the actual outcome
+    Given a blocking comparison failed
+    When I predict PASS
+    Then the learning check mismatches
+    And the actual FAIL / INTERRUPTED result is retained unchanged
+
+  Scenario: Strict inputs and lifecycle prevent reinterpreted evidence
+    Given configuration accepts only five exact finite-choice string fields
+    Then blank, extra, inherited, accessor and non-string values are rejected
+    And untrusted states and actions in the wrong phase cannot mutate history
+    When I assess a configuration
+    Then its controls are locked until the checked attempt is finished
+    And tampering with a disabled control produces an accessible error
+    And running or checking twice cannot duplicate observations or history
+
+  Scenario: Keyboard, bounded history, reset and browser restrictions
+    Given all actions are labelled and keyboard-operable
+    Then focus advances from assessment to load to prediction to the next attempt
+    And an error is announced and focuses its invalid control
+    And a new attempt retains up to six immutable checked attempts
+    And a seventh assessment is blocked
+    When I reset the rehearsal
+    Then inputs, errors, receipts, results and history are cleared deliberately
+    And native form.reset is not shadowed
+    And CSP blocks inline code, evaluation, connections, styles and form submission
+    And normal verification never rewrites retained proof

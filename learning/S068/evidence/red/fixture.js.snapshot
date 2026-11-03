@@ -1,0 +1,30 @@
+(function (root, factory) {
+  'use strict';
+  const fixture = factory();
+  if (typeof module === 'object' && module.exports) module.exports = fixture;
+  else root.IndexBuildFixture = fixture;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  return Object.freeze({
+    id: 'S068-four-requests-v1',
+    banner: 'Training rehearsal - synthetic data - not a live Azure result',
+    defaults: Object.freeze({
+      operation: 'blocking', capability: 'permitted', budgetMs: '5',
+      guard: 'observe', coverage: 'complete',
+    }),
+    choices: Object.freeze({
+      operation: Object.freeze(['online', 'blocking']),
+      capability: Object.freeze(['permitted', 'unsupported', 'unknown']),
+      budgetMs: Object.freeze(['5', '15']),
+      guard: Object.freeze(['enforce', 'observe']),
+      coverage: Object.freeze(['complete', 'missing']),
+    }),
+    requestIds: Object.freeze(['request-1', 'request-2', 'request-3', 'request-4']),
+    baseServiceMs: 2,
+    onlineLockWaitsMs: Object.freeze([1, 0, 0, 1]),
+    blockingLockWaitsMs: Object.freeze([12, 8, 4, 0]),
+    missingReceiptIndex: 3,
+    historyLimit: 6,
+    limits: 'Invented capability card and lock schedule, not a platform, SQL dialect, database measurement or online-lock guarantee.',
+  });
+}));

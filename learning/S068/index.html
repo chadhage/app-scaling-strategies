@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; media-src 'none'; manifest-src 'none'">
+  <title>S068 — Index creation under load</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="fixture.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="lesson.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S068 — Index creation under load</h1>
+    <p class="identity">A-S068 · D-S068 · SC-S068 · frozen S</p>
+    <p><strong>Objective:</strong> build one synthetic index under four fixed requests.
+      Compare a permitted hypothetical online schedule with blocking locks; reject
+      changes whose predicted locking violates the declared budget.</p>
+    <p><strong>Preconditions:</strong> one invented capability card, a fixed lock
+      schedule and 2 synthetic ms of service per request. No database or Azure
+      service is used. “Permitted” is a fixture choice, not a native guarantee.
+      Online does not mean lock-free.</p>
+
+    <section aria-labelledby="operate-heading">
+      <h2 id="operate-heading">1. Assess, then observe</h2>
+      <p>First run the default blocking comparison. Predict its outcome. Start a
+        new attempt, choose online, and compare the retained measurements.</p>
+      <form id="build-form" novalidate>
+        <fieldset id="configuration">
+          <legend>Finite synthetic configuration (locks after assessment)</legend>
+          <label for="operation">Index operation</label>
+          <select id="operation" name="operation">
+            <option value="blocking" selected>Blocking build</option>
+            <option value="online">Online build (if the synthetic card permits)</option>
+          </select>
+          <label for="capability">Synthetic online capability card</label>
+          <select id="capability" name="capability">
+            <option value="permitted" selected>Permitted — hypothetical online schedule</option>
+            <option value="unsupported">Unsupported — reject online</option>
+            <option value="unknown">Unknown — no online success claim</option>
+          </select>
+          <label for="budget-ms">Maximum latency per request (synthetic ms)</label>
+          <select id="budget-ms" name="budgetMs">
+            <option value="5" selected>5 synthetic ms</option>
+            <option value="15">15 synthetic ms</option>
+          </select>
+          <label for="guard-policy">Pre-build budget guard</label>
+          <select id="guard-policy" name="guard">
+            <option value="observe" selected>Observe only — deliberate synthetic comparison</option>
+            <option value="enforce">Enforce budget — reject predicted violation</option>
+          </select>
+          <label for="coverage">Returned-request evidence</label>
+          <select id="coverage" name="coverage">
+            <option value="complete" selected>Complete — four receipts</option>
+            <option value="missing">Missing request-4 receipt</option>
+          </select>
+        </fieldset>
+        <div class="actions">
+          <button id="assess-build" type="submit">Assess index build</button>
+          <button id="run-load" type="button" disabled>Run four requests</button>
+        </div>
+      </form>
+      <p id="error" role="alert" hidden></p>
+      <p id="status" role="status" aria-live="polite">Configure the first attempt.</p>
+    </section>
+
+    <section aria-labelledby="measure-heading">
+      <h2 id="measure-heading">2. Inspect synthetic evidence</h2>
+      <p id="plan">No build assessed. No measurements.</p>
+      <p id="result" class="result" aria-live="polite">No result yet.</p>
+      <p id="reason">A zero-request plan is never a successful load observation.</p>
+      <dl class="metrics">
+        <dt>Requests attempted</dt><dd id="attempted">0</dd>
+        <dt>Receipts observed</dt><dd id="observed">0</dd>
+        <dt>Over-budget failures</dt><dd id="failed">0</dd>
+        <dt>Unknown outcomes</dt><dd id="unknown">0</dd>
+        <dt>Maximum observed latency (synthetic ms)</dt><dd id="max-latency">Not observed</dd>
+        <dt>Maximum observed lock wait (synthetic ms)</dt><dd id="max-lock">Not observed</dd>
+      </dl>
+      <table>
+        <caption>Four fixed synthetic request receipts — not database measurements</caption>
+        <thead><tr><th scope="col">Request</th><th scope="col">Lock wait (synthetic ms)</th>
+          <th scope="col">Latency (synthetic ms)</th><th scope="col">Budget result</th></tr></thead>
+        <tbody id="receipts"></tbody>
+      </table>
+      <ol id="trace" aria-label="Synthetic trace"></ol>
+    </section>
+
+    <section aria-labelledby="check-heading">
+      <h2 id="check-heading">3. Check your prediction</h2>
+      <label for="prediction">Expected actual result</label>
+      <select id="prediction" disabled>
+        <option value="" selected>Choose a prediction</option>
+        <option value="PASS">PASS — all four receipts within budget</option>
+        <option value="FAIL">FAIL — observed over-budget users</option>
+        <option value="UNKNOWN">UNKNOWN — insufficient capability or receipts</option>
+        <option value="REJECTED">REJECTED — no build/load performed</option>
+      </select>
+      <div class="actions">
+        <button id="check-outcome" type="button" disabled>Check prediction</button>
+        <button id="new-attempt" type="button" disabled>New attempt (retain history)</button>
+        <button id="reset-rehearsal" type="button">Reset rehearsal (clear history)</button>
+      </div>
+      <p id="feedback" aria-live="polite">Prediction does not change the actual outcome.</p>
+      <h3>Retained history — at most six checked attempts</h3>
+      <ol id="history"></ol>
+    </section>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits and controls</h2>
+      <p>All values are deterministic invented data, not elapsed-time measurements.
+        No native product, SKU, SQL syntax, availability or lock behavior is certified.
+        B-S068 and D-S068 remain incomplete. This exercise cannot prove five-nines
+        reliability or production Node.js 24 support.</p>
+      <p>Tab reaches labelled controls; arrows select; Enter/Space activate buttons.
+        New attempt restores defaults and retains history. Reset explicitly clears
+        every input, error, measurement and history entry. Reload also clears this
+        in-memory-only rehearsal. No storage, network calls or cloud cleanup.</p>
+      <p><a href="README.md">Worked exercise, exact source acceptance and verification</a></p>
+    </section>
+  </main>
+</body>
+</html>
