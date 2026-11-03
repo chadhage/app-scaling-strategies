@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'">
+  <title>A-S085 — Two sessions, one destination</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to lesson</a>
+  <header>
+    <p class="training">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Two sessions, one destination</h1>
+    <p>A-S085 · S085 / D-S085 · frozen S · SC-S085</p>
+  </header>
+  <main id="main" tabindex="-1">
+    <section aria-labelledby="objective">
+      <h2 id="objective">Only the valid lock and epoch owner may act</h2>
+      <p>Submit two fixed competing promotions to <code>training-destination</code>. Inspect explicit acceptance, rejection or missing evidence, and verify that <code>training-other</code> never changes.</p>
+      <p><strong>All promotions and commands are fixed teaching data, never real deployment operations.</strong> No server, account, credentials or network connection is needed.</p>
+      <ol>
+        <li>Choose who owns the first lock and one fixed contender condition.</li>
+        <li>Start, submit the first promotion, then submit the competing session.</li>
+        <li>Inspect the trace and predict the <strong>contender command outcome</strong>, not whether a safe rejection is desirable.</li>
+        <li>Check and retain. A new attempt keeps history; explicit reset or reload clears everything.</li>
+      </ol>
+      <p>Preconditions: JavaScript enabled; both sessions start with destination epoch 7 and blue-v1. Alpha proposes green-v2; bravo proposes amber-v3. The first valid promotion advances the destination to epoch 8. Ownership locking and the conditional destination epoch are separate gates.</p>
+    </section>
+    <form id="lesson-controls" novalidate>
+      <fieldset>
+        <legend>Fixed synthetic inputs</legend>
+        <label for="first-session">First lock owner
+          <select id="first-session" name="first">
+            <option value="alpha">Alpha → green-v2</option>
+            <option value="bravo">Bravo → amber-v3</option>
+          </select>
+        </label>
+        <label for="contender-condition">Competing session condition
+          <select id="contender-condition" name="condition">
+            <option value="busy-lock">Busy lock — contender has epoch 8 but is not owner</option>
+            <option value="stale-epoch">Transferred lock — contender still presents epoch 7</option>
+            <option value="serialized">Serialized — new owner presents current epoch 8</option>
+            <option value="missing-owner">Missing owner evidence — no verified permission</option>
+          </select>
+        </label>
+        <div class="actions">
+          <button id="start" type="submit">Start attempt</button>
+          <button id="submit-first" type="button" disabled>Submit first promotion</button>
+          <button id="submit-contender" type="button" disabled>Submit contender</button>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Predict, check and retain</legend>
+        <label for="prediction">Expected contender command outcome
+          <select id="prediction" name="prediction" disabled>
+            <option value="">Choose an outcome</option>
+            <option value="SUCCESS">SUCCESS — valid owner and current epoch acted</option>
+            <option value="FAILURE">FAILURE — command rejected for a known conflict</option>
+            <option value="UNKNOWN">UNKNOWN — missing ownership evidence, no action</option>
+          </select>
+        </label>
+        <button id="check-prediction" type="button" disabled>Check prediction and retain</button>
+        <p id="prediction-feedback">Prediction correctness is separate from the command outcome.</p>
+      </fieldset>
+      <div class="actions">
+        <button id="new-attempt" type="button" disabled>New attempt — keep history</button>
+        <button id="reset-lesson" type="button">Reset all local data</button>
+      </div>
+    </form>
+    <p id="error" role="alert" tabindex="-1" hidden></p>
+    <p id="status" role="status" aria-live="polite"></p>
+    <section aria-labelledby="evidence-heading">
+      <h2 id="evidence-heading">Observed synthetic evidence</h2>
+      <div class="table-wrap">
+        <table>
+          <caption>Fixed destination and independent lease</caption>
+          <thead><tr><th scope="col">Lease</th><th scope="col">Owner</th><th scope="col">Epoch</th><th scope="col">Version</th><th scope="col">Promotion effects</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">training-destination</th><td id="destination-owner">Not started</td><td id="destination-epoch">Not started</td><td id="destination-version">Not started</td><td id="destination-effects">Not started</td></tr>
+            <tr><th scope="row">training-other</th><td id="other-owner">Not started</td><td id="other-epoch">Not started</td><td id="other-version">Not started</td><td id="other-effects">Not started</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The destination table shows the fixed model's state; a missing-owner trace deliberately withholds that observation from the contender. The contender cannot use this table to bypass its permission gate.</p>
+      <p id="current-metrics"></p>
+      <p id="outcome" role="status" aria-live="polite" data-outcome="NOT_EVALUATED"></p>
+      <p>Known conflict → FAILURE with safe rejection, not a completed contender migration. Missing evidence → UNKNOWN, never success or verified rejection proof. No invalid-owner action is provided.</p>
+      <h3>Current trace</h3>
+      <ol id="trace"></ol>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained attempts</h2>
+      <p id="totals"></p>
+      <p>All checked attempts, including failed commands, unknowns and wrong predictions, remain counted. Six attempts are kept without eviction. History is memory-only, not durable controller state.</p>
+      <ol id="history"></ol>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Scope and limits</h2>
+      <p>Eight fixed combinations, two submissions and at most five trace events per attempt. Lock acquisition/transfer and destination epochs are ordered synthetic records, not an actual concurrent-controller or distributed lock implementation. No real promotion, lease service, controller, user journey, native Azure result, production Node.js 24 validation, five-nines claim or source-parent completion is certified. B-S085 and D-S085 remain incomplete.</p>
+      <p>No cloud, IaC, scaffold, identity registration, credentials, deployment, expenditure, package/framework changes, downloads or unsafe flags. Use Tab, Enter and Space; focus and errors remain visible. Explicit reset is the only in-page operation that deletes retained history.</p>
+    </section>
+    <noscript>This lesson needs JavaScript to run the bounded synthetic exercise. No promotion has been performed.</noscript>
+  </main>
+</body>
+</html>

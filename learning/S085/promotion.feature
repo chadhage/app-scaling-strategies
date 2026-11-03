@@ -1,0 +1,66 @@
+Feature: A-S085 competing synthetic promotions
+  S085 coordinates changes to one destination.
+  D-S085 accepts serialized or explicitly rejected conflicts without affecting unrelated leases.
+  One frozen S unit belongs to worker-A-S085 in SC-S085; native B-S085 remains separate.
+  Training rehearsal - synthetic data - not a live Azure result
+
+  Background:
+    Given two fixed sessions alpha and bravo share training-destination at epoch 7
+    And training-other has observer ownership, epoch 40 and purple-v4
+    And all promotions and commands are fixed teaching data, never deployment operations
+    And six complete attempts may be retained without eviction
+
+  Scenario: The first valid owner acts
+    When the operator starts an attempt and submits the first promotion
+    Then only the current owner with expected epoch 7 changes the destination
+    And the epoch becomes 8 with exactly one promotion effect
+
+  Scenario: A competing owner is explicitly rejected
+    Given the first promotion holds the destination lock at epoch 8
+    When the competing session submits with current epoch 8 but is not the owner
+    Then the command outcome is FAILURE with an explicit lock-conflict rejection
+    And the destination version and epoch do not change
+    And the safety verifier passes without claiming a completed contender migration
+
+  Scenario: A lock alone cannot authorize an old epoch
+    Given the lock is transferred to the competing session after the first promotion
+    When that session submits its captured epoch 7 against current epoch 8
+    Then the command outcome is FAILURE with an explicit stale-epoch rejection
+    And no second promotion effect occurs
+
+  Scenario: Serialization and a fresh conditional epoch permit the next owner
+    Given the lock is transferred to the competing session after the first promotion
+    When that owner submits current epoch 8
+    Then the command outcome is SUCCESS with exactly one additional effect
+    And the destination epoch becomes 9
+
+  Scenario: Missing ownership evidence is not success
+    Given the competing session has no observable lock-owner evidence
+    When it submits current epoch 8
+    Then the command outcome is UNKNOWN and no second effect occurs
+    And the missing evidence remains counted instead of becoming successful rejection proof
+
+  Scenario: Independent leases and measurable denominators
+    When either session goes first under any fixed condition
+    Then training-other is byte-for-byte unchanged after each submission
+    And applied, rejected and unknown counts sum to two submitted commands
+    And invalid-owner effects and unrelated changes are zero
+
+  Scenario: Strict inputs and state ordering
+    When an extra, inherited, accessor, malformed or non-allowlisted input is submitted
+    Or a promotion, prediction or new attempt is requested out of order or repeated
+    Then an explicit guard rejects the action atomically
+    And returned snapshots cannot mutate internal state or retained history
+
+  Scenario: Keyboard, retained history and reset
+    When the operator uses Tab, Enter and Space to submit and check a prediction
+    Then a wrong prediction remains recorded separately from the command outcome
+    And a new attempt restores defaults without removing history
+    And a seventh retained attempt is blocked without eviction
+    And explicit reset or reload clears all local inputs, errors, traces and counters
+
+  Scenario: Browser isolation and honest scope
+    Given local scripts and styles are permitted by a restrictive CSP
+    Then inline execution and connection attempts are actually blocked
+    And no normal verification rewrites published evidence
+    And no actual concurrent-controller lock, epoch or promotion certification is claimed

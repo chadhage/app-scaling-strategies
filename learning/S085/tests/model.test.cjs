@@ -1,0 +1,212 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createLesson } = require('..\\model.js');
+const conditions = ['busy-lock', 'stale-epoch', 'serialized', 'missing-owner'];
+const initialOther = {
+  id: 'training-other', owner: 'observer', epoch: 40, version: 'purple-v4', effects: 0,
+};
+const options = (condition = 'busy-lock', first = 'alpha') => ({ first, condition });
+function decide(lesson, condition = 'busy-lock', first = 'alpha') {
+  lesson.start(options(condition, first));
+  lesson.submitFirst();
+  return lesson.submitContender();
+}
+
+test('loadable lesson exposes all actions and an empty idle snapshot', () => {
+  const lesson = createLesson();
+  for (const action of ['snapshot', 'start', 'submitFirst', 'submitContender',
+    'checkPrediction', 'newAttempt', 'reset']) assert.equal(typeof lesson[action], 'function');
+  assert.equal(lesson.snapshot().phase, 'idle');
+  assert.deepEqual(lesson.snapshot().history, []);
+});
+
+test('the first valid owner conditionally promotes epoch 7 to 8 once', () => {
+  const lesson = createLesson();
+  assert.equal(lesson.start(options()).phase, 'first-ready');
+  const state = lesson.submitFirst();
+  assert.equal(state.phase, 'contender-ready');
+  assert.deepEqual(state.active?.destination, {
+    id: 'training-destination', owner: 'alpha', epoch: 8, version: 'green-v2', effects: 1,
+  });
+  assert.deepEqual(state.active?.other, initialOther);
+  assert.equal(state.active?.trace.filter((entry) => entry.kind === 'submission')[0]?.outcome, 'SUCCESS');
+});
+
+test('current epoch without lock ownership fails explicitly without a second effect', () => {
+  const state = decide(createLesson());
+  assert.equal(state.active?.outcome, 'FAILURE');
+  assert.equal(state.active?.contender?.reason, 'LOCK_CONFLICT');
+  assert.equal(state.active?.contender?.expectedEpoch, 8);
+  assert.equal(state.active?.destination.effects, 1);
+  assert.equal(state.active?.destination.epoch, 8);
+  assert.equal(state.active?.safety, 'PASS');
+  assert.deepEqual(state.active?.metrics, {
+    submitted: 2, applied: 1, rejected: 1, unknown: 0, invalidOwnerEffects: 0, unrelatedChanges: 0,
+  });
+});
+
+test('transferred lock does not authorize stale expected epoch 7', () => {
+  const state = decide(createLesson(), 'stale-epoch');
+  assert.equal(state.active?.outcome, 'FAILURE');
+  assert.equal(state.active?.destination.owner, 'bravo');
+  assert.equal(state.active?.contender?.reason, 'STALE_EPOCH');
+  assert.equal(state.active?.contender?.expectedEpoch, 7);
+  assert.equal(state.active?.destination.version, 'green-v2');
+  assert.equal(state.active?.destination.epoch, 8);
+  assert.equal(state.active?.destination.effects, 1);
+});
+
+test('serialized fresh owner applies exactly one second promotion', () => {
+  const state = decide(createLesson(), 'serialized');
+  assert.equal(state.active?.outcome, 'SUCCESS');
+  assert.equal(state.active?.contender?.reason, 'VALID_OWNER_AND_EPOCH');
+  assert.equal(state.active?.destination.owner, 'bravo');
+  assert.equal(state.active?.destination.version, 'amber-v3');
+  assert.equal(state.active?.destination.epoch, 9);
+  assert.equal(state.active?.destination.effects, 2);
+  assert.equal(state.active?.metrics.rejected, 0);
+});
+
+test('missing owner evidence stays UNKNOWN and blocks the second effect', () => {
+  const state = decide(createLesson(), 'missing-owner');
+  assert.equal(state.active?.outcome, 'UNKNOWN');
+  assert.equal(state.active?.safety, 'UNVERIFIED');
+  assert.equal(state.active?.contender?.observedOwner, null);
+  assert.equal(state.active?.contender?.reason, 'MISSING_OWNER_EVIDENCE');
+  assert.equal(state.active?.destination.effects, 1);
+  assert.equal(state.active?.metrics.unknown, 1);
+  assert.equal(state.active?.metrics.rejected, 0);
+});
+
+test('all eight fixed combinations preserve independent leases and exact denominators', () => {
+  for (const first of ['alpha', 'bravo']) {
+    for (const condition of conditions) {
+      const lesson = createLesson();
+      const state = decide(lesson, condition, first);
+      assert.equal(state.phase, 'decided');
+      assert.deepEqual(state.active?.other, initialOther);
+      assert.ok(state.active?.trace.every((entry) => entry.unrelatedUnchanged));
+      const metrics = state.active?.metrics;
+      assert.ok(metrics, `${first}/${condition}: metrics`);
+      assert.equal(metrics.submitted, 2);
+      assert.equal(metrics.applied + metrics.rejected + metrics.unknown, metrics.submitted);
+      assert.equal(metrics.invalidOwnerEffects, 0);
+      assert.equal(metrics.unrelatedChanges, 0);
+      assert.ok(state.active.trace.length <= 5);
+      assert.equal(state.active.firstSession, first);
+      assert.equal(state.active.secondSession, first === 'alpha' ? 'bravo' : 'alpha');
+    }
+  }
+});
+
+test('malformed, extra, inherited and accessor input are rejected atomically', () => {
+  const lesson = createLesson();
+  const before = lesson.snapshot();
+  let getterRead = false;
+  const accessor = { condition: 'busy-lock' };
+  Object.defineProperty(accessor, 'first', { enumerable: true, get() { getterRead = true; return 'alpha'; } });
+  const bad = [
+    null, undefined, [], 'alpha', {}, { first: 'alpha' },
+    { ...options(), extra: true }, { ...options(), first: 'ALPHA' },
+    { ...options(), condition: '<script>bad</script>' },
+    Object.create(options()), Object.assign(Object.create(null), options()), accessor,
+    { ...options(), [Symbol('extra')]: true },
+  ];
+  for (const value of bad) {
+    assert.throws(() => lesson.start(value), { name: 'GuardError' });
+    assert.deepEqual(lesson.snapshot(), before);
+  }
+  assert.equal(getterRead, false);
+});
+
+test('out-of-order, repeated and unexpected-argument actions cannot change state', () => {
+  const lesson = createLesson();
+  for (const action of ['submitFirst', 'submitContender', 'newAttempt']) {
+    assert.throws(() => lesson[action](), { name: 'GuardError' });
+  }
+  assert.throws(() => lesson.checkPrediction('SUCCESS'), { name: 'GuardError' });
+  lesson.start(options());
+  let before = lesson.snapshot();
+  assert.throws(() => lesson.submitFirst('unexpected'), { name: 'GuardError' });
+  assert.deepEqual(lesson.snapshot(), before);
+  assert.throws(() => lesson.start(options()), { name: 'GuardError' });
+  assert.throws(() => lesson.submitContender(), { name: 'GuardError' });
+  lesson.submitFirst();
+  assert.throws(() => lesson.submitFirst(), { name: 'GuardError' });
+  lesson.submitContender();
+  before = lesson.snapshot();
+  for (const prediction of ['', 'success', undefined, {}, ' SUCCESS ']) {
+    assert.throws(() => lesson.checkPrediction(prediction), { name: 'GuardError' });
+    assert.deepEqual(lesson.snapshot(), before);
+  }
+  assert.throws(() => lesson.submitContender(), { name: 'GuardError' });
+  lesson.checkPrediction('FAILURE');
+  assert.throws(() => lesson.checkPrediction('FAILURE'), { name: 'GuardError' });
+});
+
+test('returned active snapshots and retained traces are isolated copies', () => {
+  const lesson = createLesson();
+  const state = decide(lesson);
+  assert.equal(state.phase, 'decided');
+  state.active.destination.epoch = 999;
+  state.active.trace.length = 0;
+  assert.equal(lesson.snapshot().active.destination.epoch, 8);
+  lesson.checkPrediction('FAILURE');
+  const checked = lesson.snapshot();
+  checked.history[0].destination.version = 'tampered';
+  checked.history.length = 0;
+  assert.equal(lesson.snapshot().history.length, 1);
+  assert.equal(lesson.snapshot().history[0].destination.version, 'green-v2');
+});
+
+test('wrong predictions and all outcomes remain in retained command denominators', () => {
+  const lesson = createLesson();
+  decide(lesson, 'serialized');
+  let state = lesson.checkPrediction('FAILURE');
+  assert.equal(state.history[0]?.predictionCorrect, false);
+  assert.equal(state.history[0]?.outcome, 'SUCCESS');
+  lesson.newAttempt();
+  decide(lesson, 'busy-lock');
+  lesson.checkPrediction('FAILURE');
+  lesson.newAttempt();
+  decide(lesson, 'missing-owner');
+  state = lesson.checkPrediction('UNKNOWN');
+  assert.deepEqual(state.totals, {
+    attempts: 3, submitted: 6, applied: 4, rejected: 1, unknown: 1, correct: 2,
+  });
+  assert.deepEqual(state.history.map((entry) => entry.outcome), ['SUCCESS', 'FAILURE', 'UNKNOWN']);
+});
+
+test('six attempts are retained without eviction and a seventh is refused', () => {
+  const lesson = createLesson();
+  for (let attempt = 0; attempt < 6; attempt++) {
+    if (attempt) lesson.newAttempt();
+    decide(lesson);
+    lesson.checkPrediction('FAILURE');
+  }
+  const before = lesson.snapshot();
+  assert.equal(before.history.length, 6);
+  assert.deepEqual(before.history.map((entry) => entry.number), [1, 2, 3, 4, 5, 6]);
+  assert.throws(() => lesson.newAttempt(), { name: 'GuardError' });
+  assert.throws(() => lesson.start(options()), { name: 'GuardError' });
+  assert.deepEqual(lesson.snapshot(), before);
+});
+
+test('new attempt preserves history while reset clears active state and all totals', () => {
+  const lesson = createLesson();
+  decide(lesson);
+  lesson.checkPrediction('FAILURE');
+  let state = lesson.newAttempt();
+  assert.equal(state.phase, 'idle');
+  assert.equal(state.active, null);
+  assert.equal(state.history.length, 1);
+  state = lesson.reset();
+  assert.deepEqual(state, createLesson().snapshot());
+  lesson.start(options('serialized', 'bravo'));
+  state = lesson.reset();
+  assert.equal(state.phase, 'idle');
+  assert.equal(state.active, null);
+  assert.deepEqual(state.history, []);
+});
