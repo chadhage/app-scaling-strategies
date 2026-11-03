@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; form-action 'none'; object-src 'none'; base-uri 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S070 · Restored replica promotion rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to operator controls</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S070 · Promote restored capacity</h1>
+    <p>A-S070 · D-S070 · SC-S070 · one frozen S unit</p>
+    <p>Verify synchronization through the required committed data <strong>and</strong> valid ownership before activating a restored writer.</p>
+  </header>
+  <main>
+    <section aria-labelledby="contract-title">
+      <h2 id="contract-title">Declared synthetic contract</h2>
+      <p>The reference journal contains six fixed committed effects, SYN-701 through SYN-706, at boundary <strong>6</strong>.
+        Candidate <strong>restored-s070</strong> needs its own epoch-<strong>8</strong> grant and a fence on previous writer <strong>original-s070</strong> (epoch 7).</p>
+      <p>A highest receipt of 6 is insufficient if an earlier effect is missing. A stale boundary of 4 cannot hide effects 5 and 6.
+        No receipt or grant evidence means UNKNOWN, not success. A known invalid check still means FAIL.</p>
+      <p><strong>Preconditions:</strong> open this local HTML in a modern browser with JavaScript enabled.
+        All receipts, grants and fences below are supplied synthetic fixtures, not inspected database state.</p>
+    </section>
+
+    <section id="controls" aria-labelledby="controls-title" tabindex="-1">
+      <h2 id="controls-title">Operator controls</h2>
+      <p>Choose conditions, stage the replica, verify both gates, then request promotion. Inputs lock while an attempt is active.</p>
+      <form id="settings-form" novalidate>
+        <fieldset id="settings">
+          <legend>Fixed synthetic inputs</legend>
+          <label for="boundary">Declared committed boundary</label>
+          <select id="boundary" name="boundary" aria-describedby="boundary-help">
+            <option value="current">Current declaration: 6</option>
+            <option value="stale">Stale declaration: 4</option>
+            <option value="missing">No declaration</option>
+          </select>
+          <p class="hint" id="boundary-help">Only a declaration matching authoritative boundary 6 can pass.</p>
+          <label for="restoration">Restoration receipts</label>
+          <select id="restoration" name="restoration">
+            <option value="complete">Complete: receipts 1–6</option>
+            <option value="behind">Behind: receipts 1–4</option>
+            <option value="gap">Interior gap: 1, 2, 3, 5, 6</option>
+            <option value="unverified">Evidence unavailable</option>
+          </select>
+          <label for="ownership">Writer eligibility evidence</label>
+          <select id="ownership" name="ownership">
+            <option value="exclusive">Candidate epoch 8; previous writer fenced</option>
+            <option value="old-active">Previous writer still active</option>
+            <option value="stale-grant">Stale candidate grant: epoch 7</option>
+            <option value="wrong-target">Epoch 8 grant names another candidate</option>
+            <option value="unverified">Grant/fence evidence unavailable</option>
+          </select>
+        </fieldset>
+        <button id="stage-replica" type="submit">1. Stage restored replica</button>
+      </form>
+      <div class="actions">
+        <button id="verify-replica" type="button" disabled>2. Verify synchronization and ownership</button>
+        <button id="promote-replica" type="button" disabled>3. Promote restored capacity</button>
+      </div>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <noscript><p>This exercise needs local JavaScript. No promotion or management operation is available.</p></noscript>
+    </section>
+
+    <section aria-labelledby="results-title" aria-live="polite">
+      <h2 id="results-title">Measured synthetic result</h2>
+      <p id="phase">Phase: idle</p>
+      <p id="promotion-outcome" class="outcome">Promotion outcome: not requested</p>
+      <p id="sync-outcome">Synchronization: not checked</p>
+      <p id="ownership-outcome">Ownership: not checked</p>
+      <ul class="metrics">
+        <li id="declared-boundary">Declared boundary: not staged · required: 6</li>
+        <li id="receipt-metrics">Restored receipts: not staged · expected: 6</li>
+        <li id="missing-metrics">Missing committed receipts: not checked</li>
+        <li id="ownership-metrics">Candidate grant: not checked</li>
+        <li id="promotion-metrics">Restored writer activated: no · preserved effects: not checked</li>
+      </ul>
+      <p id="impact">User-impact model: no promotion requested.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Exact committed-effect comparison</caption>
+          <thead><tr><th scope="col">Sequence</th><th scope="col">Required key</th><th scope="col">Value</th><th scope="col">Restored receipt</th></tr></thead>
+          <tbody id="receipt-rows"></tbody>
+        </table>
+      </div>
+      <h3>Synthetic trace</h3>
+      <ol id="trace"><li>No attempt staged.</li></ol>
+    </section>
+
+    <section aria-labelledby="prediction-title">
+      <h2 id="prediction-title">Check the learning assertion</h2>
+      <form id="prediction-form" novalidate>
+        <label for="prediction">Expected promotion outcome</label>
+        <select id="prediction" name="prediction" disabled>
+          <option value="">Choose an outcome</option>
+          <option value="PASS">PASS: completed synthetic promotion</option>
+          <option value="FAIL">FAIL: rejected promotion</option>
+          <option value="UNKNOWN">UNKNOWN: held for missing evidence</option>
+        </select>
+        <button id="check-prediction" type="submit" disabled>Check prediction and retain attempt</button>
+      </form>
+      <p id="prediction-result">Learning prediction not checked.</p>
+      <p>A correct prediction of FAIL can pass this learning check. It never turns a rejected promotion into a successful migration.</p>
+      <div class="actions">
+        <button id="new-attempt" type="button" disabled>New attempt · retain history</button>
+        <button id="reset-rehearsal" type="button">Reset all local data</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained local history</h2>
+      <p id="history-count">Retained completed attempts: 0 / 6</p>
+      <p id="totals">Decided attempts: success 0 · failure 0 · unknown 0</p>
+      <p>Decisions count when promotion is requested; staging alone is not success. A checked attempt retains its inputs, measurements and trace.
+        Six attempts maximum; reset or reload clears memory. Nothing is stored or sent.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Completed rehearsal attempts</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Conditions</th><th scope="col">Promotion</th><th scope="col">Restored writer</th><th scope="col">Learning check</th></tr></thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+      <details id="retained-detail"><summary>Inspect retained synthetic proof</summary><pre id="retained-proof"></pre></details>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Assertions and limits</h2>
+      <ul>
+        <li>PASS requires declaration 6, every exact receipt through 6, a candidate-bound epoch-8 grant and the previous writer fenced.</li>
+        <li>Behind, interior-gap, undeclared/stale boundary and invalid ownership cases must reject. Missing evidence is held as UNKNOWN unless a known check fails.</li>
+        <li>This is a bounded, deterministic model: no actual database restore, replication, promotion, ownership certification, concurrency, clock or user-journey measurement.</li>
+        <li>Native B-S070 and original D-S070 acceptance remain incomplete. Original data remaining available is not completed promotion or proof of uninterrupted service.</li>
+        <li>IaC is N/A. No cloud, scaffold, identity, credentials, deployment, expenditure, production Node.js 24 or five-nines claim.</li>
+      </ul>
+      <p>Source: README S070 and backlog D-S070. One A-card, one frozen S unit; tests and evidence earn no extra credit.</p>
+    </section>
+  </main>
+</body>
+</html>

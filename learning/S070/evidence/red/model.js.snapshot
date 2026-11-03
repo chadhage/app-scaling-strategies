@@ -1,0 +1,19 @@
+'use strict';
+
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S070Model = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  function createLesson() {
+    const snapshot = () => ({
+      phase: 'idle', current: null, history: [], maxAttempts: 6,
+      counts: { success: 0, failure: 0, unknown: 0 },
+    });
+    return Object.freeze({
+      snapshot, begin: snapshot, verify: snapshot, promote: snapshot,
+      predict: snapshot, next: snapshot, reset: snapshot,
+    });
+  }
+  return Object.freeze({ createLesson });
+}));

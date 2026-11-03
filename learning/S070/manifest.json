@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S070",
+  "sourceId": "S070",
+  "parentId": "D-S070",
+  "siblingId": "B-S070",
+  "kano": "S",
+  "kanoUnit": "A-S070",
+  "packet": "SC-S070",
+  "owner": "worker-A-S070",
+  "entryGate": "SOURCE",
+  "title": "Replica restoration and promotion",
+  "entryPoint": "learning/S070/index.html",
+  "feature": "learning/S070/restored-promotion.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Promote a restored replica; reject missing committed boundaries or invalid ownership.",
+  "sourceAcceptance": "Promotion requires the declared committed-data boundary and valid ownership; incomplete restoration cannot appear successful.",
+  "preconditions": [
+    "A modern browser opens local HTML, CSS and JavaScript; no server or account.",
+    "Six fixed synthetic committed effects define authoritative boundary 6.",
+    "Candidate restored-s070 requires its own epoch-8 grant and the previous epoch-7 writer fenced.",
+    "Receipts, boundary authority, grants and fences are supplied fixtures, not database observations."
+  ],
+  "actions": [
+    "Choose a boundary declaration, restoration receipts and ownership evidence.",
+    "Stage the restored candidate, then verify synchronization and writer eligibility.",
+    "Request promotion and inspect separate PASS, FAIL or UNKNOWN results and exact missing effects.",
+    "Check a prediction without rewriting the actual promotion outcome.",
+    "Start a new attempt retaining proof, or explicitly reset all local memory."
+  ],
+  "input": "learning/S070/fixtures.js",
+  "assertions": [
+    "Only declaration 6, every exact receipt through 6 and exclusive candidate-bound epoch-8 ownership permit promotion.",
+    "An interior missing receipt fails even when maximum receipt is 6.",
+    "Missing or stale boundary declarations and unfenced, stale or wrong-target ownership fail.",
+    "Unavailable receipts or ownership evidence produce UNKNOWN unless a known check fails.",
+    "Rejected or held promotion activates no restored writer and cannot count as completed migration.",
+    "Strict inputs, ordered transitions, immutable detached snapshots and six-attempt retained history are guarded.",
+    "Keyboard, error, reset and enforced CSP behavior are exercised in the actual DOM."
+  ],
+  "bounds": {
+    "committedEffects": 6,
+    "requiredBoundary": 6,
+    "writerEpoch": 8,
+    "completedAttempts": 6,
+    "configurations": 60,
+    "boundary": ["current", "stale", "missing"],
+    "restoration": ["complete", "behind", "gap", "unverified"],
+    "ownership": ["exclusive", "old-active", "stale-grant", "wrong-target", "unverified"],
+    "arbitraryEndpointsOrData": false,
+    "clockOrRandomness": false
+  },
+  "iac": {
+    "status": "N/A",
+    "decisionStage": "After genuine behavioral RED and before implementation",
+    "decision": "learning/S070/evidence/iac-decision.json",
+    "redReference": "learning/S070/evidence/red/run.json",
+    "reason": "Resource-free local synthetic lesson; no cloud/IaC/scaffold/identity/credentials/deploy/spend."
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "purpose": "Existing Node22 test tooling only; not production Node24 certification.",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "dependencyChanges": false
+  },
+  "limits": [
+    "Deterministic synthetic data only; no actual database restore, replication, promotion, fencing or ownership certification.",
+    "No native Azure, real user-journey, latency, concurrency, durability or uninterrupted-service proof.",
+    "No cloud, IaC, scaffold, identity, credentials, deployment, expenditure or production Node24 validation.",
+    "The reference journal retaining data does not establish a completed promotion.",
+    "History lives only in browser memory; reset or reload clears it.",
+    "B-S070 and source parent D-S070 native acceptance remain incomplete.",
+    "The abandoned browser lifecycle prototype is unqualified; no unattended-runner certification.",
+    "One frozen S unit; tests, evidence, tooling and refinement earn no additional units."
+  ]
+}

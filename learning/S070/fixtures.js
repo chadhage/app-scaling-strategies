@@ -1,0 +1,43 @@
+'use strict';
+
+(function (root, factory) {
+  const fixtures = factory();
+  if (typeof module === 'object' && module.exports) module.exports = fixtures;
+  else root.S070Fixtures = fixtures;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  const freeze = (value) => {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  };
+  const committed = Array.from({ length: 6 }, (_, index) => ({
+    sequence: index + 1, key: `SYN-70${index + 1}`, value: (index + 1) * 10,
+  }));
+  return freeze({
+    sourceId: 'S070',
+    requiredBoundary: 6,
+    candidate: 'restored-s070',
+    previousWriter: 'original-s070',
+    requiredEpoch: 8,
+    previousEpoch: 7,
+    maxAttempts: 6,
+    committed,
+    boundaries: { current: 6, stale: 4, missing: null },
+    restorations: {
+      complete: committed,
+      behind: committed.slice(0, 4),
+      gap: committed.filter((entry) => entry.sequence !== 4),
+      unverified: null,
+    },
+    ownership: {
+      exclusive: { candidate: 'restored-s070', grantEpoch: 8, previousFenced: true },
+      'old-active': { candidate: 'restored-s070', grantEpoch: 8, previousFenced: false },
+      'stale-grant': { candidate: 'restored-s070', grantEpoch: 7, previousFenced: true },
+      'wrong-target': { candidate: 'other-s070', grantEpoch: 8, previousFenced: true },
+      unverified: null,
+    },
+    defaults: { boundary: 'current', restoration: 'complete', ownership: 'exclusive' },
+  });
+}));
