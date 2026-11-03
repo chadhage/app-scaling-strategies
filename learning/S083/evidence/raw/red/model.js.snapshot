@@ -1,0 +1,52 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.RestartRehearsal = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+
+  function createLesson() {
+    let state = { phase: 'idle', config: null, trace: [], result: null, history: [] };
+    const copy = () => JSON.parse(JSON.stringify(state));
+    return {
+      getState: copy,
+      stage(config) {
+        state.config = config;
+        state.phase = 'crashed';
+        state.trace = [{ seq: 1, kind: 'DESTRUCTIVE_DATA', effectId: 'retire-v1@7', detail: 'DATA ONLY: retirement effect before crash' }];
+        return copy();
+      },
+      restart() {
+        state.phase = 'resumed';
+        state.trace.push({ seq: 2, kind: 'DESTRUCTIVE_DATA', effectId: 'retire-v1@7', detail: 'DATA ONLY: naive replay' });
+        state.result = {
+          outcome: 'SUCCESS',
+          checkpoint: 'COMPLETE',
+          consoleAvailable: true,
+          metrics: {
+            destructiveExecutions: 2, duplicateDestructiveActions: 1,
+            userAttempted: 3, userSucceeded: 3, userFailed: 0, userUnknown: 0
+          },
+          userOutcomes: ['journey-A', 'journey-B', 'journey-C'].map((id) => ({ id, outcome: 'SUCCESS' }))
+        };
+        return copy();
+      },
+      check(prediction) {
+        state.phase = 'checked';
+        state.history.push({ config: state.config, trace: state.trace, result: state.result, prediction, correct: prediction === state.result.outcome });
+        return copy();
+      },
+      newAttempt() {
+        state = { phase: 'idle', config: null, trace: [], result: null, history: state.history };
+        return copy();
+      },
+      reset() {
+        state = { phase: 'idle', config: null, trace: [], result: null, history: [] };
+        return copy();
+      }
+    };
+  }
+
+  return { createLesson };
+}));

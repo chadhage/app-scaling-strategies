@@ -1,0 +1,1297 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S083",
+  "workerId": "worker-A-S083",
+  "startedAtUtc": "2026-11-03T20:59:13.696Z",
+  "node": "v22.23.4",
+  "playwright": "1.56.1",
+  "helper": {
+    "file": "testing/browser/isolated.cjs",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "sourceCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+    "api": "openIsolatedLesson"
+  },
+  "entry": "learning\\S083\\index.html",
+  "checks": [
+    {
+      "name": "load exact banner, guarded idle controls and no success-shaped empty sample",
+      "passed": true,
+      "observed": {
+        "phase": "Phase: idle. No attempt has run.",
+        "outcome": "NOT_RUN",
+        "checkpoint": "Recovered checkpoint: not observed",
+        "receipt": "Durable effect receipt: not inspected",
+        "console": "Console: AVAILABLE (synthetic throughout every trace)",
+        "metrics": {
+          "destructive-count": "—",
+          "duplicate-count": "—",
+          "attempted-count": "—",
+          "success-count": "—",
+          "failure-count": "—",
+          "unknown-count": "—"
+        },
+        "trace": [],
+        "users": [],
+        "prediction": "Prediction not checked.",
+        "historyCount": "0 / 6 retained. No evidence is silently evicted.",
+        "history": [],
+        "error": {
+          "visible": false,
+          "text": ""
+        },
+        "focus": ""
+      }
+    },
+    {
+      "name": "keyboard-only safe reconciliation through staging, restart and checked history",
+      "passed": true,
+      "observed": {
+        "phase": "Phase: checked. Inputs are locked until a new attempt or reset.",
+        "outcome": "SUCCESS",
+        "checkpoint": "Recovered checkpoint: COMPLETE",
+        "receipt": "Durable effect receipt: PRESENT",
+        "console": "Console: AVAILABLE (synthetic throughout every trace)",
+        "metrics": {
+          "destructive-count": "1",
+          "duplicate-count": "0",
+          "attempted-count": "3",
+          "success-count": "3",
+          "failure-count": "0",
+          "unknown-count": "0"
+        },
+        "trace": [
+          [
+            "1",
+            "CHECKPOINT",
+            "—",
+            "Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7)."
+          ],
+          [
+            "2",
+            "DESTRUCTIVE_DATA",
+            "retire-v1@7",
+            "DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched."
+          ],
+          [
+            "3",
+            "USER_OUTCOMES",
+            "—",
+            "Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress."
+          ],
+          [
+            "4",
+            "CRASH",
+            "—",
+            "Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available."
+          ],
+          [
+            "5",
+            "RESTART",
+            "—",
+            "DATA ONLY: resume policy reconcile; durable effect receipt present."
+          ],
+          [
+            "6",
+            "RECONCILED",
+            "—",
+            "The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint."
+          ],
+          [
+            "7",
+            "USER_OUTCOMES",
+            "—",
+            "journey-A SUCCESS; journey-B SUCCESS; journey-C SUCCESS"
+          ],
+          [
+            "8",
+            "CHECKPOINT",
+            "—",
+            "Recovered checkpoint: COMPLETE. This alone is not the success criterion."
+          ],
+          [
+            "9",
+            "VERDICT",
+            "—",
+            "SUCCESS: 0 duplicate destructive actions; 0 failed and 0 unknown of 3 user journeys."
+          ]
+        ],
+        "users": [
+          [
+            "journey-A",
+            "SUCCESS"
+          ],
+          [
+            "journey-B",
+            "SUCCESS"
+          ],
+          [
+            "journey-C",
+            "SUCCESS"
+          ]
+        ],
+        "prediction": "Prediction correct; measured trace result remains SUCCESS.",
+        "historyCount": "1 / 6 retained. No evidence is silently evicted.",
+        "history": [
+          {
+            "summary": "Attempt 1: SUCCESS — Reconcile durable receipt — Complete receipts",
+            "fullEvidence": "Attempt 1: SUCCESS — Reconcile durable receipt — Complete receiptsPrediction SUCCESS: correct. Measured result remains SUCCESS.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 1; duplicates 0; users 3 successful, 0 failed, 0 unknown / 3 attempted.journey-A: SUCCESS; journey-B: SUCCESS; journey-C: SUCCESSOne destructive execution, no duplicate, complete recovered progress, and all three user outcomes are accounted for.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt present.6RECONCILED—The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint.7USER_OUTCOMES—journey-A SUCCESS; journey-B SUCCESS; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—SUCCESS: 0 duplicate destructive actions; 0 failed and 0 unknown of 3 user journeys."
+          }
+        ],
+        "error": {
+          "visible": false,
+          "text": ""
+        },
+        "focus": "new-attempt"
+      }
+    },
+    {
+      "name": "keyboard unsafe replay retains the earlier success and exposes a duplicate with incorrect prediction",
+      "passed": true,
+      "observed": {
+        "phase": "Phase: checked. Inputs are locked until a new attempt or reset.",
+        "outcome": "FAILURE",
+        "checkpoint": "Recovered checkpoint: COMPLETE",
+        "receipt": "Durable effect receipt: PRESENT",
+        "console": "Console: AVAILABLE (synthetic throughout every trace)",
+        "metrics": {
+          "destructive-count": "2",
+          "duplicate-count": "1",
+          "attempted-count": "3",
+          "success-count": "3",
+          "failure-count": "0",
+          "unknown-count": "0"
+        },
+        "trace": [
+          [
+            "1",
+            "CHECKPOINT",
+            "—",
+            "Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7)."
+          ],
+          [
+            "2",
+            "DESTRUCTIVE_DATA",
+            "retire-v1@7",
+            "DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched."
+          ],
+          [
+            "3",
+            "USER_OUTCOMES",
+            "—",
+            "Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress."
+          ],
+          [
+            "4",
+            "CRASH",
+            "—",
+            "Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available."
+          ],
+          [
+            "5",
+            "RESTART",
+            "—",
+            "DATA ONLY: resume policy unsafe-replay; durable effect receipt present."
+          ],
+          [
+            "6",
+            "DESTRUCTIVE_DATA",
+            "retire-v1@7",
+            "DATA ONLY: unsafe checkpoint replay applies retire-v1@7 a second time. This is a duplicate destructive action."
+          ],
+          [
+            "7",
+            "USER_OUTCOMES",
+            "—",
+            "journey-A SUCCESS; journey-B SUCCESS; journey-C SUCCESS"
+          ],
+          [
+            "8",
+            "CHECKPOINT",
+            "—",
+            "Recovered checkpoint: COMPLETE. This alone is not the success criterion."
+          ],
+          [
+            "9",
+            "VERDICT",
+            "—",
+            "FAILURE: 1 duplicate destructive actions; 0 failed and 0 unknown of 3 user journeys."
+          ]
+        ],
+        "users": [
+          [
+            "journey-A",
+            "SUCCESS"
+          ],
+          [
+            "journey-B",
+            "SUCCESS"
+          ],
+          [
+            "journey-C",
+            "SUCCESS"
+          ]
+        ],
+        "prediction": "Prediction incorrect; measured trace result remains FAILURE.",
+        "historyCount": "2 / 6 retained. No evidence is silently evicted.",
+        "history": [
+          {
+            "summary": "Attempt 1: SUCCESS — Reconcile durable receipt — Complete receipts",
+            "fullEvidence": "Attempt 1: SUCCESS — Reconcile durable receipt — Complete receiptsPrediction SUCCESS: correct. Measured result remains SUCCESS.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 1; duplicates 0; users 3 successful, 0 failed, 0 unknown / 3 attempted.journey-A: SUCCESS; journey-B: SUCCESS; journey-C: SUCCESSOne destructive execution, no duplicate, complete recovered progress, and all three user outcomes are accounted for.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt present.6RECONCILED—The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint.7USER_OUTCOMES—journey-A SUCCESS; journey-B SUCCESS; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—SUCCESS: 0 duplicate destructive actions; 0 failed and 0 unknown of 3 user journeys."
+          },
+          {
+            "summary": "Attempt 2: FAILURE — Unsafe checkpoint replay — Complete receipts",
+            "fullEvidence": "Attempt 2: FAILURE — Unsafe checkpoint replay — Complete receiptsPrediction SUCCESS: incorrect. Measured result remains FAILURE.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 2; duplicates 1; users 3 successful, 0 failed, 0 unknown / 3 attempted.journey-A: SUCCESS; journey-B: SUCCESS; journey-C: SUCCESSThe same retirement identity appears twice. Successful users and an available console cannot excuse duplicate destructive work.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy unsafe-replay; durable effect receipt present.6DESTRUCTIVE_DATAretire-v1@7DATA ONLY: unsafe checkpoint replay applies retire-v1@7 a second time. This is a duplicate destructive action.7USER_OUTCOMES—journey-A SUCCESS; journey-B SUCCESS; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—FAILURE: 1 duplicate destructive actions; 0 failed and 0 unknown of 3 user journeys."
+          }
+        ],
+        "error": {
+          "visible": false,
+          "text": ""
+        },
+        "focus": "new-attempt"
+      }
+    },
+    {
+      "name": "keyboard explicit reset clears history, metrics, forms and focus without form.reset shadowing",
+      "passed": true,
+      "observed": {
+        "phase": "Phase: idle. No attempt has run.",
+        "outcome": "NOT_RUN",
+        "checkpoint": "Recovered checkpoint: not observed",
+        "receipt": "Durable effect receipt: not inspected",
+        "console": "Console: AVAILABLE (synthetic throughout every trace)",
+        "metrics": {
+          "destructive-count": "—",
+          "duplicate-count": "—",
+          "attempted-count": "—",
+          "success-count": "—",
+          "failure-count": "—",
+          "unknown-count": "—"
+        },
+        "trace": [],
+        "users": [],
+        "prediction": "Prediction not checked.",
+        "historyCount": "0 / 6 retained. No evidence is silently evicted.",
+        "history": [],
+        "error": {
+          "visible": false,
+          "text": ""
+        },
+        "focus": "policy"
+      }
+    },
+    {
+      "name": "tampered enum gives a visible input error with unchanged trace and then resets",
+      "passed": true,
+      "observed": {
+        "phase": "Phase: idle. No attempt has run.",
+        "outcome": "NOT_RUN",
+        "checkpoint": "Recovered checkpoint: not observed",
+        "receipt": "Durable effect receipt: not inspected",
+        "console": "Console: AVAILABLE (synthetic throughout every trace)",
+        "metrics": {
+          "destructive-count": "—",
+          "duplicate-count": "—",
+          "attempted-count": "—",
+          "success-count": "—",
+          "failure-count": "—",
+          "unknown-count": "—"
+        },
+        "trace": [],
+        "users": [],
+        "prediction": "Prediction not checked.",
+        "historyCount": "0 / 6 retained. No evidence is silently evicted.",
+        "history": [],
+        "error": {
+          "visible": true,
+          "text": "INPUT: Choose an exact resume policy and evidence fixture; unsupported values are rejected."
+        },
+        "focus": "stage-crash"
+      }
+    },
+    {
+      "name": "bypassing a disabled restart cannot bypass the model phase guard",
+      "passed": true,
+      "observed": {
+        "phase": "Phase: idle. No attempt has run.",
+        "outcome": "NOT_RUN",
+        "checkpoint": "Recovered checkpoint: not observed",
+        "receipt": "Durable effect receipt: not inspected",
+        "console": "Console: AVAILABLE (synthetic throughout every trace)",
+        "metrics": {
+          "destructive-count": "—",
+          "duplicate-count": "—",
+          "attempted-count": "—",
+          "success-count": "—",
+          "failure-count": "—",
+          "unknown-count": "—"
+        },
+        "trace": [],
+        "users": [],
+        "prediction": "Prediction not checked.",
+        "historyCount": "0 / 6 retained. No evidence is silently evicted.",
+        "history": [],
+        "error": {
+          "visible": true,
+          "text": "STATE: This action requires crashed; the current phase is idle."
+        },
+        "focus": "restart-trace"
+      }
+    },
+    {
+      "name": "empty prediction errors visibly and cannot retain or alter a measured result",
+      "passed": true,
+      "observed": {
+        "phase": "Phase: resumed. Inputs are locked until a new attempt or reset.",
+        "outcome": "SUCCESS",
+        "checkpoint": "Recovered checkpoint: COMPLETE",
+        "receipt": "Durable effect receipt: PRESENT",
+        "console": "Console: AVAILABLE (synthetic throughout every trace)",
+        "metrics": {
+          "destructive-count": "1",
+          "duplicate-count": "0",
+          "attempted-count": "3",
+          "success-count": "3",
+          "failure-count": "0",
+          "unknown-count": "0"
+        },
+        "trace": [
+          [
+            "1",
+            "CHECKPOINT",
+            "—",
+            "Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7)."
+          ],
+          [
+            "2",
+            "DESTRUCTIVE_DATA",
+            "retire-v1@7",
+            "DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched."
+          ],
+          [
+            "3",
+            "USER_OUTCOMES",
+            "—",
+            "Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress."
+          ],
+          [
+            "4",
+            "CRASH",
+            "—",
+            "Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available."
+          ],
+          [
+            "5",
+            "RESTART",
+            "—",
+            "DATA ONLY: resume policy reconcile; durable effect receipt present."
+          ],
+          [
+            "6",
+            "RECONCILED",
+            "—",
+            "The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint."
+          ],
+          [
+            "7",
+            "USER_OUTCOMES",
+            "—",
+            "journey-A SUCCESS; journey-B SUCCESS; journey-C SUCCESS"
+          ],
+          [
+            "8",
+            "CHECKPOINT",
+            "—",
+            "Recovered checkpoint: COMPLETE. This alone is not the success criterion."
+          ],
+          [
+            "9",
+            "VERDICT",
+            "—",
+            "SUCCESS: 0 duplicate destructive actions; 0 failed and 0 unknown of 3 user journeys."
+          ]
+        ],
+        "users": [
+          [
+            "journey-A",
+            "SUCCESS"
+          ],
+          [
+            "journey-B",
+            "SUCCESS"
+          ],
+          [
+            "journey-C",
+            "SUCCESS"
+          ]
+        ],
+        "prediction": "Prediction not checked.",
+        "historyCount": "0 / 6 retained. No evidence is silently evicted.",
+        "history": [],
+        "error": {
+          "visible": true,
+          "text": "INPUT: Choose exactly SUCCESS, FAILURE, or UNKNOWN before checking."
+        },
+        "focus": "check-prediction"
+      }
+    },
+    {
+      "name": "recorded user failure remains counted after a guarded restart",
+      "passed": true,
+      "observed": {
+        "phase": "Phase: checked. Inputs are locked until a new attempt or reset.",
+        "outcome": "FAILURE",
+        "checkpoint": "Recovered checkpoint: COMPLETE",
+        "receipt": "Durable effect receipt: PRESENT",
+        "console": "Console: AVAILABLE (synthetic throughout every trace)",
+        "metrics": {
+          "destructive-count": "1",
+          "duplicate-count": "0",
+          "attempted-count": "3",
+          "success-count": "2",
+          "failure-count": "1",
+          "unknown-count": "0"
+        },
+        "trace": [
+          [
+            "1",
+            "CHECKPOINT",
+            "—",
+            "Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7)."
+          ],
+          [
+            "2",
+            "DESTRUCTIVE_DATA",
+            "retire-v1@7",
+            "DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched."
+          ],
+          [
+            "3",
+            "USER_OUTCOMES",
+            "—",
+            "Three journeys already attempted: journey-A SUCCESS; journey-B FAILURE; journey-C in progress."
+          ],
+          [
+            "4",
+            "CRASH",
+            "—",
+            "Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available."
+          ],
+          [
+            "5",
+            "RESTART",
+            "—",
+            "DATA ONLY: resume policy reconcile; durable effect receipt present."
+          ],
+          [
+            "6",
+            "RECONCILED",
+            "—",
+            "The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint."
+          ],
+          [
+            "7",
+            "USER_OUTCOMES",
+            "—",
+            "journey-A SUCCESS; journey-B FAILURE; journey-C SUCCESS"
+          ],
+          [
+            "8",
+            "CHECKPOINT",
+            "—",
+            "Recovered checkpoint: COMPLETE. This alone is not the success criterion."
+          ],
+          [
+            "9",
+            "VERDICT",
+            "—",
+            "FAILURE: 0 duplicate destructive actions; 1 failed and 0 unknown of 3 user journeys."
+          ]
+        ],
+        "users": [
+          [
+            "journey-A",
+            "SUCCESS"
+          ],
+          [
+            "journey-B",
+            "FAILURE"
+          ],
+          [
+            "journey-C",
+            "SUCCESS"
+          ]
+        ],
+        "prediction": "Prediction correct; measured trace result remains FAILURE.",
+        "historyCount": "1 / 6 retained. No evidence is silently evicted.",
+        "history": [
+          {
+            "summary": "Attempt 1: FAILURE — Reconcile durable receipt — Recorded journey-B failure",
+            "fullEvidence": "Attempt 1: FAILURE — Reconcile durable receipt — Recorded journey-B failurePrediction FAILURE: correct. Measured result remains FAILURE.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 1; duplicates 0; users 2 successful, 1 failed, 0 unknown / 3 attempted.journey-A: SUCCESS; journey-B: FAILURE; journey-C: SUCCESSThe pre-crash interruption for journey-B remains a failure after restart.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B FAILURE; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt present.6RECONCILED—The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint.7USER_OUTCOMES—journey-A SUCCESS; journey-B FAILURE; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—FAILURE: 0 duplicate destructive actions; 1 failed and 0 unknown of 3 user journeys."
+          }
+        ],
+        "error": {
+          "visible": false,
+          "text": ""
+        },
+        "focus": "new-attempt"
+      }
+    },
+    {
+      "name": "missing effect receipt holds progress as UNKNOWN without replay",
+      "passed": true,
+      "observed": {
+        "phase": "Phase: checked. Inputs are locked until a new attempt or reset.",
+        "outcome": "UNKNOWN",
+        "checkpoint": "Recovered checkpoint: RECONCILE_REQUIRED",
+        "receipt": "Durable effect receipt: MISSING",
+        "console": "Console: AVAILABLE (synthetic throughout every trace)",
+        "metrics": {
+          "destructive-count": "1",
+          "duplicate-count": "0",
+          "attempted-count": "3",
+          "success-count": "2",
+          "failure-count": "0",
+          "unknown-count": "1"
+        },
+        "trace": [
+          [
+            "1",
+            "CHECKPOINT",
+            "—",
+            "Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7)."
+          ],
+          [
+            "2",
+            "DESTRUCTIVE_DATA",
+            "retire-v1@7",
+            "DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched."
+          ],
+          [
+            "3",
+            "USER_OUTCOMES",
+            "—",
+            "Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress."
+          ],
+          [
+            "4",
+            "CRASH",
+            "—",
+            "Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available."
+          ],
+          [
+            "5",
+            "RESTART",
+            "—",
+            "DATA ONLY: resume policy reconcile; durable effect receipt missing."
+          ],
+          [
+            "6",
+            "HOLD",
+            "—",
+            "Missing durable effect receipt: do not replay, do not guess completion, retain unresolved progress."
+          ],
+          [
+            "7",
+            "USER_OUTCOMES",
+            "—",
+            "journey-A SUCCESS; journey-B SUCCESS; journey-C UNKNOWN"
+          ],
+          [
+            "8",
+            "CHECKPOINT",
+            "—",
+            "Recovered checkpoint: RECONCILE_REQUIRED. This alone is not the success criterion."
+          ],
+          [
+            "9",
+            "VERDICT",
+            "—",
+            "UNKNOWN: 0 duplicate destructive actions; 0 failed and 1 unknown of 3 user journeys."
+          ]
+        ],
+        "users": [
+          [
+            "journey-A",
+            "SUCCESS"
+          ],
+          [
+            "journey-B",
+            "SUCCESS"
+          ],
+          [
+            "journey-C",
+            "UNKNOWN"
+          ]
+        ],
+        "prediction": "Prediction correct; measured trace result remains UNKNOWN.",
+        "historyCount": "2 / 6 retained. No evidence is silently evicted.",
+        "history": [
+          {
+            "summary": "Attempt 1: FAILURE — Reconcile durable receipt — Recorded journey-B failure",
+            "fullEvidence": "Attempt 1: FAILURE — Reconcile durable receipt — Recorded journey-B failurePrediction FAILURE: correct. Measured result remains FAILURE.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 1; duplicates 0; users 2 successful, 1 failed, 0 unknown / 3 attempted.journey-A: SUCCESS; journey-B: FAILURE; journey-C: SUCCESSThe pre-crash interruption for journey-B remains a failure after restart.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B FAILURE; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt present.6RECONCILED—The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint.7USER_OUTCOMES—journey-A SUCCESS; journey-B FAILURE; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—FAILURE: 0 duplicate destructive actions; 1 failed and 0 unknown of 3 user journeys."
+          },
+          {
+            "summary": "Attempt 2: UNKNOWN — Reconcile durable receipt — Missing effect receipt",
+            "fullEvidence": "Attempt 2: UNKNOWN — Reconcile durable receipt — Missing effect receiptPrediction UNKNOWN: correct. Measured result remains UNKNOWN.Checkpoint RECONCILE_REQUIRED; console AVAILABLE; effect receipt MISSING. Executions 1; duplicates 0; users 2 successful, 0 failed, 1 unknown / 3 attempted.journey-A: SUCCESS; journey-B: SUCCESS; journey-C: UNKNOWNThe observer trace shows one effect, but the simulated controller lacks its durable receipt. Reconciliation is required, not blind replay.journey-C remains unresolved while recovery is held.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt missing.6HOLD—Missing durable effect receipt: do not replay, do not guess completion, retain unresolved progress.7USER_OUTCOMES—journey-A SUCCESS; journey-B SUCCESS; journey-C UNKNOWN8CHECKPOINT—Recovered checkpoint: RECONCILE_REQUIRED. This alone is not the success criterion.9VERDICT—UNKNOWN: 0 duplicate destructive actions; 0 failed and 1 unknown of 3 user journeys."
+          }
+        ],
+        "error": {
+          "visible": false,
+          "text": ""
+        },
+        "focus": "new-attempt"
+      }
+    },
+    {
+      "name": "missing user outcome is UNKNOWN even with a complete checkpoint",
+      "passed": true,
+      "observed": {
+        "phase": "Phase: checked. Inputs are locked until a new attempt or reset.",
+        "outcome": "UNKNOWN",
+        "checkpoint": "Recovered checkpoint: COMPLETE",
+        "receipt": "Durable effect receipt: PRESENT",
+        "console": "Console: AVAILABLE (synthetic throughout every trace)",
+        "metrics": {
+          "destructive-count": "1",
+          "duplicate-count": "0",
+          "attempted-count": "3",
+          "success-count": "2",
+          "failure-count": "0",
+          "unknown-count": "1"
+        },
+        "trace": [
+          [
+            "1",
+            "CHECKPOINT",
+            "—",
+            "Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7)."
+          ],
+          [
+            "2",
+            "DESTRUCTIVE_DATA",
+            "retire-v1@7",
+            "DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched."
+          ],
+          [
+            "3",
+            "USER_OUTCOMES",
+            "—",
+            "Three journeys already attempted: journey-A SUCCESS; journey-B UNKNOWN; journey-C in progress."
+          ],
+          [
+            "4",
+            "CRASH",
+            "—",
+            "Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available."
+          ],
+          [
+            "5",
+            "RESTART",
+            "—",
+            "DATA ONLY: resume policy reconcile; durable effect receipt present."
+          ],
+          [
+            "6",
+            "RECONCILED",
+            "—",
+            "The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint."
+          ],
+          [
+            "7",
+            "USER_OUTCOMES",
+            "—",
+            "journey-A SUCCESS; journey-B UNKNOWN; journey-C SUCCESS"
+          ],
+          [
+            "8",
+            "CHECKPOINT",
+            "—",
+            "Recovered checkpoint: COMPLETE. This alone is not the success criterion."
+          ],
+          [
+            "9",
+            "VERDICT",
+            "—",
+            "UNKNOWN: 0 duplicate destructive actions; 0 failed and 1 unknown of 3 user journeys."
+          ]
+        ],
+        "users": [
+          [
+            "journey-A",
+            "SUCCESS"
+          ],
+          [
+            "journey-B",
+            "UNKNOWN"
+          ],
+          [
+            "journey-C",
+            "SUCCESS"
+          ]
+        ],
+        "prediction": "Prediction correct; measured trace result remains UNKNOWN.",
+        "historyCount": "3 / 6 retained. No evidence is silently evicted.",
+        "history": [
+          {
+            "summary": "Attempt 1: FAILURE — Reconcile durable receipt — Recorded journey-B failure",
+            "fullEvidence": "Attempt 1: FAILURE — Reconcile durable receipt — Recorded journey-B failurePrediction FAILURE: correct. Measured result remains FAILURE.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 1; duplicates 0; users 2 successful, 1 failed, 0 unknown / 3 attempted.journey-A: SUCCESS; journey-B: FAILURE; journey-C: SUCCESSThe pre-crash interruption for journey-B remains a failure after restart.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B FAILURE; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt present.6RECONCILED—The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint.7USER_OUTCOMES—journey-A SUCCESS; journey-B FAILURE; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—FAILURE: 0 duplicate destructive actions; 1 failed and 0 unknown of 3 user journeys."
+          },
+          {
+            "summary": "Attempt 2: UNKNOWN — Reconcile durable receipt — Missing effect receipt",
+            "fullEvidence": "Attempt 2: UNKNOWN — Reconcile durable receipt — Missing effect receiptPrediction UNKNOWN: correct. Measured result remains UNKNOWN.Checkpoint RECONCILE_REQUIRED; console AVAILABLE; effect receipt MISSING. Executions 1; duplicates 0; users 2 successful, 0 failed, 1 unknown / 3 attempted.journey-A: SUCCESS; journey-B: SUCCESS; journey-C: UNKNOWNThe observer trace shows one effect, but the simulated controller lacks its durable receipt. Reconciliation is required, not blind replay.journey-C remains unresolved while recovery is held.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt missing.6HOLD—Missing durable effect receipt: do not replay, do not guess completion, retain unresolved progress.7USER_OUTCOMES—journey-A SUCCESS; journey-B SUCCESS; journey-C UNKNOWN8CHECKPOINT—Recovered checkpoint: RECONCILE_REQUIRED. This alone is not the success criterion.9VERDICT—UNKNOWN: 0 duplicate destructive actions; 0 failed and 1 unknown of 3 user journeys."
+          },
+          {
+            "summary": "Attempt 3: UNKNOWN — Reconcile durable receipt — Missing journey-B outcome",
+            "fullEvidence": "Attempt 3: UNKNOWN — Reconcile durable receipt — Missing journey-B outcomePrediction UNKNOWN: correct. Measured result remains UNKNOWN.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 1; duplicates 0; users 2 successful, 0 failed, 1 unknown / 3 attempted.journey-A: SUCCESS; journey-B: UNKNOWN; journey-C: SUCCESSjourney-B has no durable outcome. It remains UNKNOWN in the denominator of three attempted journeys.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B UNKNOWN; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt present.6RECONCILED—The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint.7USER_OUTCOMES—journey-A SUCCESS; journey-B UNKNOWN; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—UNKNOWN: 0 duplicate destructive actions; 0 failed and 1 unknown of 3 user journeys."
+          }
+        ],
+        "error": {
+          "visible": false,
+          "text": ""
+        },
+        "focus": "new-attempt"
+      }
+    },
+    {
+      "name": "duplicate work remains FAILURE when a user outcome is also unknown",
+      "passed": true,
+      "observed": {
+        "phase": "Phase: checked. Inputs are locked until a new attempt or reset.",
+        "outcome": "FAILURE",
+        "checkpoint": "Recovered checkpoint: COMPLETE",
+        "receipt": "Durable effect receipt: PRESENT",
+        "console": "Console: AVAILABLE (synthetic throughout every trace)",
+        "metrics": {
+          "destructive-count": "2",
+          "duplicate-count": "1",
+          "attempted-count": "3",
+          "success-count": "2",
+          "failure-count": "0",
+          "unknown-count": "1"
+        },
+        "trace": [
+          [
+            "1",
+            "CHECKPOINT",
+            "—",
+            "Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7)."
+          ],
+          [
+            "2",
+            "DESTRUCTIVE_DATA",
+            "retire-v1@7",
+            "DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched."
+          ],
+          [
+            "3",
+            "USER_OUTCOMES",
+            "—",
+            "Three journeys already attempted: journey-A SUCCESS; journey-B UNKNOWN; journey-C in progress."
+          ],
+          [
+            "4",
+            "CRASH",
+            "—",
+            "Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available."
+          ],
+          [
+            "5",
+            "RESTART",
+            "—",
+            "DATA ONLY: resume policy unsafe-replay; durable effect receipt present."
+          ],
+          [
+            "6",
+            "DESTRUCTIVE_DATA",
+            "retire-v1@7",
+            "DATA ONLY: unsafe checkpoint replay applies retire-v1@7 a second time. This is a duplicate destructive action."
+          ],
+          [
+            "7",
+            "USER_OUTCOMES",
+            "—",
+            "journey-A SUCCESS; journey-B UNKNOWN; journey-C SUCCESS"
+          ],
+          [
+            "8",
+            "CHECKPOINT",
+            "—",
+            "Recovered checkpoint: COMPLETE. This alone is not the success criterion."
+          ],
+          [
+            "9",
+            "VERDICT",
+            "—",
+            "FAILURE: 1 duplicate destructive actions; 0 failed and 1 unknown of 3 user journeys."
+          ]
+        ],
+        "users": [
+          [
+            "journey-A",
+            "SUCCESS"
+          ],
+          [
+            "journey-B",
+            "UNKNOWN"
+          ],
+          [
+            "journey-C",
+            "SUCCESS"
+          ]
+        ],
+        "prediction": "Prediction correct; measured trace result remains FAILURE.",
+        "historyCount": "4 / 6 retained. No evidence is silently evicted.",
+        "history": [
+          {
+            "summary": "Attempt 1: FAILURE — Reconcile durable receipt — Recorded journey-B failure",
+            "fullEvidence": "Attempt 1: FAILURE — Reconcile durable receipt — Recorded journey-B failurePrediction FAILURE: correct. Measured result remains FAILURE.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 1; duplicates 0; users 2 successful, 1 failed, 0 unknown / 3 attempted.journey-A: SUCCESS; journey-B: FAILURE; journey-C: SUCCESSThe pre-crash interruption for journey-B remains a failure after restart.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B FAILURE; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt present.6RECONCILED—The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint.7USER_OUTCOMES—journey-A SUCCESS; journey-B FAILURE; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—FAILURE: 0 duplicate destructive actions; 1 failed and 0 unknown of 3 user journeys."
+          },
+          {
+            "summary": "Attempt 2: UNKNOWN — Reconcile durable receipt — Missing effect receipt",
+            "fullEvidence": "Attempt 2: UNKNOWN — Reconcile durable receipt — Missing effect receiptPrediction UNKNOWN: correct. Measured result remains UNKNOWN.Checkpoint RECONCILE_REQUIRED; console AVAILABLE; effect receipt MISSING. Executions 1; duplicates 0; users 2 successful, 0 failed, 1 unknown / 3 attempted.journey-A: SUCCESS; journey-B: SUCCESS; journey-C: UNKNOWNThe observer trace shows one effect, but the simulated controller lacks its durable receipt. Reconciliation is required, not blind replay.journey-C remains unresolved while recovery is held.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt missing.6HOLD—Missing durable effect receipt: do not replay, do not guess completion, retain unresolved progress.7USER_OUTCOMES—journey-A SUCCESS; journey-B SUCCESS; journey-C UNKNOWN8CHECKPOINT—Recovered checkpoint: RECONCILE_REQUIRED. This alone is not the success criterion.9VERDICT—UNKNOWN: 0 duplicate destructive actions; 0 failed and 1 unknown of 3 user journeys."
+          },
+          {
+            "summary": "Attempt 3: UNKNOWN — Reconcile durable receipt — Missing journey-B outcome",
+            "fullEvidence": "Attempt 3: UNKNOWN — Reconcile durable receipt — Missing journey-B outcomePrediction UNKNOWN: correct. Measured result remains UNKNOWN.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 1; duplicates 0; users 2 successful, 0 failed, 1 unknown / 3 attempted.journey-A: SUCCESS; journey-B: UNKNOWN; journey-C: SUCCESSjourney-B has no durable outcome. It remains UNKNOWN in the denominator of three attempted journeys.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B UNKNOWN; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt present.6RECONCILED—The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint.7USER_OUTCOMES—journey-A SUCCESS; journey-B UNKNOWN; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—UNKNOWN: 0 duplicate destructive actions; 0 failed and 1 unknown of 3 user journeys."
+          },
+          {
+            "summary": "Attempt 4: FAILURE — Unsafe checkpoint replay — Missing journey-B outcome",
+            "fullEvidence": "Attempt 4: FAILURE — Unsafe checkpoint replay — Missing journey-B outcomePrediction FAILURE: correct. Measured result remains FAILURE.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 2; duplicates 1; users 2 successful, 0 failed, 1 unknown / 3 attempted.journey-A: SUCCESS; journey-B: UNKNOWN; journey-C: SUCCESSThe same retirement identity appears twice. Successful users and an available console cannot excuse duplicate destructive work.journey-B has no durable outcome. It remains UNKNOWN in the denominator of three attempted journeys.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B UNKNOWN; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy unsafe-replay; durable effect receipt present.6DESTRUCTIVE_DATAretire-v1@7DATA ONLY: unsafe checkpoint replay applies retire-v1@7 a second time. This is a duplicate destructive action.7USER_OUTCOMES—journey-A SUCCESS; journey-B UNKNOWN; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—FAILURE: 1 duplicate destructive actions; 0 failed and 1 unknown of 3 user journeys."
+          }
+        ],
+        "error": {
+          "visible": false,
+          "text": ""
+        },
+        "focus": "new-attempt"
+      }
+    },
+    {
+      "name": "all eight bounded combinations produce the measured result in the real DOM",
+      "passed": true,
+      "observed": [
+        {
+          "policy": "reconcile",
+          "receipt": "complete",
+          "expected": "SUCCESS",
+          "actual": "SUCCESS",
+          "metrics": {
+            "destructive-count": "1",
+            "duplicate-count": "0",
+            "attempted-count": "3",
+            "success-count": "3",
+            "failure-count": "0",
+            "unknown-count": "0"
+          }
+        },
+        {
+          "policy": "reconcile",
+          "receipt": "missing-effect-receipt",
+          "expected": "UNKNOWN",
+          "actual": "UNKNOWN",
+          "metrics": {
+            "destructive-count": "1",
+            "duplicate-count": "0",
+            "attempted-count": "3",
+            "success-count": "2",
+            "failure-count": "0",
+            "unknown-count": "1"
+          }
+        },
+        {
+          "policy": "reconcile",
+          "receipt": "missing-user-outcome",
+          "expected": "UNKNOWN",
+          "actual": "UNKNOWN",
+          "metrics": {
+            "destructive-count": "1",
+            "duplicate-count": "0",
+            "attempted-count": "3",
+            "success-count": "2",
+            "failure-count": "0",
+            "unknown-count": "1"
+          }
+        },
+        {
+          "policy": "reconcile",
+          "receipt": "recorded-user-failure",
+          "expected": "FAILURE",
+          "actual": "FAILURE",
+          "metrics": {
+            "destructive-count": "1",
+            "duplicate-count": "0",
+            "attempted-count": "3",
+            "success-count": "2",
+            "failure-count": "1",
+            "unknown-count": "0"
+          }
+        },
+        {
+          "policy": "unsafe-replay",
+          "receipt": "complete",
+          "expected": "FAILURE",
+          "actual": "FAILURE",
+          "metrics": {
+            "destructive-count": "2",
+            "duplicate-count": "1",
+            "attempted-count": "3",
+            "success-count": "3",
+            "failure-count": "0",
+            "unknown-count": "0"
+          }
+        },
+        {
+          "policy": "unsafe-replay",
+          "receipt": "missing-effect-receipt",
+          "expected": "FAILURE",
+          "actual": "FAILURE",
+          "metrics": {
+            "destructive-count": "2",
+            "duplicate-count": "1",
+            "attempted-count": "3",
+            "success-count": "3",
+            "failure-count": "0",
+            "unknown-count": "0"
+          }
+        },
+        {
+          "policy": "unsafe-replay",
+          "receipt": "missing-user-outcome",
+          "expected": "FAILURE",
+          "actual": "FAILURE",
+          "metrics": {
+            "destructive-count": "2",
+            "duplicate-count": "1",
+            "attempted-count": "3",
+            "success-count": "2",
+            "failure-count": "0",
+            "unknown-count": "1"
+          }
+        },
+        {
+          "policy": "unsafe-replay",
+          "receipt": "recorded-user-failure",
+          "expected": "FAILURE",
+          "actual": "FAILURE",
+          "metrics": {
+            "destructive-count": "2",
+            "duplicate-count": "1",
+            "attempted-count": "3",
+            "success-count": "2",
+            "failure-count": "1",
+            "unknown-count": "0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "six full histories have no eviction and the limit rejects a forged new-attempt click",
+      "passed": true,
+      "observed": {
+        "phase": "Phase: checked. Inputs are locked until a new attempt or reset.",
+        "outcome": "FAILURE",
+        "checkpoint": "Recovered checkpoint: COMPLETE",
+        "receipt": "Durable effect receipt: PRESENT",
+        "console": "Console: AVAILABLE (synthetic throughout every trace)",
+        "metrics": {
+          "destructive-count": "2",
+          "duplicate-count": "1",
+          "attempted-count": "3",
+          "success-count": "3",
+          "failure-count": "0",
+          "unknown-count": "0"
+        },
+        "trace": [
+          [
+            "1",
+            "CHECKPOINT",
+            "—",
+            "Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7)."
+          ],
+          [
+            "2",
+            "DESTRUCTIVE_DATA",
+            "retire-v1@7",
+            "DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched."
+          ],
+          [
+            "3",
+            "USER_OUTCOMES",
+            "—",
+            "Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress."
+          ],
+          [
+            "4",
+            "CRASH",
+            "—",
+            "Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available."
+          ],
+          [
+            "5",
+            "RESTART",
+            "—",
+            "DATA ONLY: resume policy unsafe-replay; durable effect receipt present."
+          ],
+          [
+            "6",
+            "DESTRUCTIVE_DATA",
+            "retire-v1@7",
+            "DATA ONLY: unsafe checkpoint replay applies retire-v1@7 a second time. This is a duplicate destructive action."
+          ],
+          [
+            "7",
+            "USER_OUTCOMES",
+            "—",
+            "journey-A SUCCESS; journey-B SUCCESS; journey-C SUCCESS"
+          ],
+          [
+            "8",
+            "CHECKPOINT",
+            "—",
+            "Recovered checkpoint: COMPLETE. This alone is not the success criterion."
+          ],
+          [
+            "9",
+            "VERDICT",
+            "—",
+            "FAILURE: 1 duplicate destructive actions; 0 failed and 0 unknown of 3 user journeys."
+          ]
+        ],
+        "users": [
+          [
+            "journey-A",
+            "SUCCESS"
+          ],
+          [
+            "journey-B",
+            "SUCCESS"
+          ],
+          [
+            "journey-C",
+            "SUCCESS"
+          ]
+        ],
+        "prediction": "Prediction correct; measured trace result remains FAILURE.",
+        "historyCount": "6 / 6 retained. No evidence is silently evicted. Limit reached; explicitly reset to start over.",
+        "history": [
+          {
+            "summary": "Attempt 1: SUCCESS — Reconcile durable receipt — Complete receipts",
+            "fullEvidence": "Attempt 1: SUCCESS — Reconcile durable receipt — Complete receiptsPrediction SUCCESS: correct. Measured result remains SUCCESS.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 1; duplicates 0; users 3 successful, 0 failed, 0 unknown / 3 attempted.journey-A: SUCCESS; journey-B: SUCCESS; journey-C: SUCCESSOne destructive execution, no duplicate, complete recovered progress, and all three user outcomes are accounted for.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt present.6RECONCILED—The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint.7USER_OUTCOMES—journey-A SUCCESS; journey-B SUCCESS; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—SUCCESS: 0 duplicate destructive actions; 0 failed and 0 unknown of 3 user journeys."
+          },
+          {
+            "summary": "Attempt 2: FAILURE — Unsafe checkpoint replay — Complete receipts",
+            "fullEvidence": "Attempt 2: FAILURE — Unsafe checkpoint replay — Complete receiptsPrediction FAILURE: correct. Measured result remains FAILURE.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 2; duplicates 1; users 3 successful, 0 failed, 0 unknown / 3 attempted.journey-A: SUCCESS; journey-B: SUCCESS; journey-C: SUCCESSThe same retirement identity appears twice. Successful users and an available console cannot excuse duplicate destructive work.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy unsafe-replay; durable effect receipt present.6DESTRUCTIVE_DATAretire-v1@7DATA ONLY: unsafe checkpoint replay applies retire-v1@7 a second time. This is a duplicate destructive action.7USER_OUTCOMES—journey-A SUCCESS; journey-B SUCCESS; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—FAILURE: 1 duplicate destructive actions; 0 failed and 0 unknown of 3 user journeys."
+          },
+          {
+            "summary": "Attempt 3: SUCCESS — Reconcile durable receipt — Complete receipts",
+            "fullEvidence": "Attempt 3: SUCCESS — Reconcile durable receipt — Complete receiptsPrediction SUCCESS: correct. Measured result remains SUCCESS.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 1; duplicates 0; users 3 successful, 0 failed, 0 unknown / 3 attempted.journey-A: SUCCESS; journey-B: SUCCESS; journey-C: SUCCESSOne destructive execution, no duplicate, complete recovered progress, and all three user outcomes are accounted for.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt present.6RECONCILED—The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint.7USER_OUTCOMES—journey-A SUCCESS; journey-B SUCCESS; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—SUCCESS: 0 duplicate destructive actions; 0 failed and 0 unknown of 3 user journeys."
+          },
+          {
+            "summary": "Attempt 4: FAILURE — Unsafe checkpoint replay — Complete receipts",
+            "fullEvidence": "Attempt 4: FAILURE — Unsafe checkpoint replay — Complete receiptsPrediction FAILURE: correct. Measured result remains FAILURE.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 2; duplicates 1; users 3 successful, 0 failed, 0 unknown / 3 attempted.journey-A: SUCCESS; journey-B: SUCCESS; journey-C: SUCCESSThe same retirement identity appears twice. Successful users and an available console cannot excuse duplicate destructive work.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy unsafe-replay; durable effect receipt present.6DESTRUCTIVE_DATAretire-v1@7DATA ONLY: unsafe checkpoint replay applies retire-v1@7 a second time. This is a duplicate destructive action.7USER_OUTCOMES—journey-A SUCCESS; journey-B SUCCESS; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—FAILURE: 1 duplicate destructive actions; 0 failed and 0 unknown of 3 user journeys."
+          },
+          {
+            "summary": "Attempt 5: SUCCESS — Reconcile durable receipt — Complete receipts",
+            "fullEvidence": "Attempt 5: SUCCESS — Reconcile durable receipt — Complete receiptsPrediction SUCCESS: correct. Measured result remains SUCCESS.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 1; duplicates 0; users 3 successful, 0 failed, 0 unknown / 3 attempted.journey-A: SUCCESS; journey-B: SUCCESS; journey-C: SUCCESSOne destructive execution, no duplicate, complete recovered progress, and all three user outcomes are accounted for.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy reconcile; durable effect receipt present.6RECONCILED—The durable receipt for retire-v1@7 proves the step already completed. Skip replay and advance its checkpoint.7USER_OUTCOMES—journey-A SUCCESS; journey-B SUCCESS; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—SUCCESS: 0 duplicate destructive actions; 0 failed and 0 unknown of 3 user journeys."
+          },
+          {
+            "summary": "Attempt 6: FAILURE — Unsafe checkpoint replay — Complete receipts",
+            "fullEvidence": "Attempt 6: FAILURE — Unsafe checkpoint replay — Complete receiptsPrediction FAILURE: correct. Measured result remains FAILURE.Checkpoint COMPLETE; console AVAILABLE; effect receipt PRESENT. Executions 2; duplicates 1; users 3 successful, 0 failed, 0 unknown / 3 attempted.journey-A: SUCCESS; journey-B: SUCCESS; journey-C: SUCCESSThe same retirement identity appears twice. Successful users and an available console cannot excuse duplicate destructive work.Retained trace — DATA ONLY effectsStepKindEffect identityObservation1CHECKPOINT—Synthetic durable checkpoint still names retire-v1 as the next step (epoch 7).2DESTRUCTIVE_DATAretire-v1@7DATA ONLY: retire-v1@7 was applied once before the crash. No resource is touched.3USER_OUTCOMES—Three journeys already attempted: journey-A SUCCESS; journey-B SUCCESS; journey-C in progress.4CRASH—Synthetic controller trace pauses after the effect, before checkpoint advancement. The browser console remains available.5RESTART—DATA ONLY: resume policy unsafe-replay; durable effect receipt present.6DESTRUCTIVE_DATAretire-v1@7DATA ONLY: unsafe checkpoint replay applies retire-v1@7 a second time. This is a duplicate destructive action.7USER_OUTCOMES—journey-A SUCCESS; journey-B SUCCESS; journey-C SUCCESS8CHECKPOINT—Recovered checkpoint: COMPLETE. This alone is not the success criterion.9VERDICT—FAILURE: 1 duplicate destructive actions; 0 failed and 0 unknown of 3 user journeys."
+          }
+        ],
+        "error": {
+          "visible": true,
+          "text": "LIMIT: Six full attempts are retained. Explicitly reset to start over."
+        },
+        "focus": "new-attempt"
+      }
+    },
+    {
+      "name": "explicit reset restores the DOM from idle, crashed, resumed and checked phases",
+      "passed": true,
+      "observed": [
+        {
+          "resetFrom": "idle",
+          "after": {
+            "phase": "Phase: idle. No attempt has run.",
+            "outcome": "NOT_RUN",
+            "checkpoint": "Recovered checkpoint: not observed",
+            "receipt": "Durable effect receipt: not inspected",
+            "console": "Console: AVAILABLE (synthetic throughout every trace)",
+            "metrics": {
+              "destructive-count": "—",
+              "duplicate-count": "—",
+              "attempted-count": "—",
+              "success-count": "—",
+              "failure-count": "—",
+              "unknown-count": "—"
+            },
+            "trace": [],
+            "users": [],
+            "prediction": "Prediction not checked.",
+            "historyCount": "0 / 6 retained. No evidence is silently evicted.",
+            "history": [],
+            "error": {
+              "visible": false,
+              "text": ""
+            },
+            "focus": "policy"
+          }
+        },
+        {
+          "resetFrom": "crashed",
+          "after": {
+            "phase": "Phase: idle. No attempt has run.",
+            "outcome": "NOT_RUN",
+            "checkpoint": "Recovered checkpoint: not observed",
+            "receipt": "Durable effect receipt: not inspected",
+            "console": "Console: AVAILABLE (synthetic throughout every trace)",
+            "metrics": {
+              "destructive-count": "—",
+              "duplicate-count": "—",
+              "attempted-count": "—",
+              "success-count": "—",
+              "failure-count": "—",
+              "unknown-count": "—"
+            },
+            "trace": [],
+            "users": [],
+            "prediction": "Prediction not checked.",
+            "historyCount": "0 / 6 retained. No evidence is silently evicted.",
+            "history": [],
+            "error": {
+              "visible": false,
+              "text": ""
+            },
+            "focus": "policy"
+          }
+        },
+        {
+          "resetFrom": "resumed",
+          "after": {
+            "phase": "Phase: idle. No attempt has run.",
+            "outcome": "NOT_RUN",
+            "checkpoint": "Recovered checkpoint: not observed",
+            "receipt": "Durable effect receipt: not inspected",
+            "console": "Console: AVAILABLE (synthetic throughout every trace)",
+            "metrics": {
+              "destructive-count": "—",
+              "duplicate-count": "—",
+              "attempted-count": "—",
+              "success-count": "—",
+              "failure-count": "—",
+              "unknown-count": "—"
+            },
+            "trace": [],
+            "users": [],
+            "prediction": "Prediction not checked.",
+            "historyCount": "0 / 6 retained. No evidence is silently evicted.",
+            "history": [],
+            "error": {
+              "visible": false,
+              "text": ""
+            },
+            "focus": "policy"
+          }
+        },
+        {
+          "resetFrom": "checked",
+          "after": {
+            "phase": "Phase: idle. No attempt has run.",
+            "outcome": "NOT_RUN",
+            "checkpoint": "Recovered checkpoint: not observed",
+            "receipt": "Durable effect receipt: not inspected",
+            "console": "Console: AVAILABLE (synthetic throughout every trace)",
+            "metrics": {
+              "destructive-count": "—",
+              "duplicate-count": "—",
+              "attempted-count": "—",
+              "success-count": "—",
+              "failure-count": "—",
+              "unknown-count": "—"
+            },
+            "trace": [],
+            "users": [],
+            "prediction": "Prediction not checked.",
+            "historyCount": "0 / 6 retained. No evidence is silently evicted.",
+            "history": [],
+            "error": {
+              "visible": false,
+              "text": ""
+            },
+            "focus": "policy"
+          }
+        }
+      ]
+    },
+    {
+      "name": "reload is an explicit memory boundary; narrow layout and visible keyboard focus remain usable",
+      "passed": true,
+      "observed": {
+        "state": {
+          "phase": "Phase: idle. No attempt has run.",
+          "outcome": "NOT_RUN",
+          "checkpoint": "Recovered checkpoint: not observed",
+          "receipt": "Durable effect receipt: not inspected",
+          "console": "Console: AVAILABLE (synthetic throughout every trace)",
+          "metrics": {
+            "destructive-count": "—",
+            "duplicate-count": "—",
+            "attempted-count": "—",
+            "success-count": "—",
+            "failure-count": "—",
+            "unknown-count": "—"
+          },
+          "trace": [],
+          "users": [],
+          "prediction": "Prediction not checked.",
+          "historyCount": "0 / 6 retained. No evidence is silently evicted.",
+          "history": [],
+          "error": {
+            "visible": false,
+            "text": ""
+          },
+          "focus": ""
+        },
+        "layout": {
+          "width": 375,
+          "scrollWidth": 375,
+          "focused": "evidence",
+          "outlineStyle": "solid",
+          "outlineWidth": "3px"
+        }
+      }
+    },
+    {
+      "name": "actual inline-script and connection probes are blocked by enforced CSP",
+      "passed": true,
+      "observed": {
+        "violations": [
+          {
+            "directive": "script-src-elem",
+            "blockedURI": "inline"
+          },
+          {
+            "directive": "connect-src",
+            "blockedURI": "https://s083-training.invalid/csp-probe"
+          }
+        ],
+        "inlineRan": false,
+        "connectionBlocked": true,
+        "done": true
+      }
+    }
+  ],
+  "closeAwaitedInFinally": true,
+  "limits": "One observed local browser run, not unattended lifecycle qualification. No actual controller restart, durable resumption, side-effect certification, native Azure, production Node24 or source-parent completion.",
+  "browserVersion": "156.0.4314.50",
+  "ownedFilesUnchanged": true,
+  "externalRequests": [],
+  "pageErrors": [],
+  "expectedCspConsoleErrors": [
+    "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-bfFx/yG1WdIMlsMf8Frxi0pdYjNtMCDhSUFOTVouOhg='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked.",
+    "Connecting to 'https://s083-training.invalid/csp-probe' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked.",
+    "Fetch API cannot load https://s083-training.invalid/csp-probe. Refused to connect because it violates the document's Content Security Policy."
+  ],
+  "finishedAtUtc": "2026-11-03T20:59:25.784Z"
+}

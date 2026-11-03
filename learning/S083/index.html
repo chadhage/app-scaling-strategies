@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S083 - Controller restart rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to exercise</a>
+  <header>
+    <p id="training-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S083: Controller restart</h1>
+    <p>Resume a fixed teaching trace. Identify repeated destructive work when a stale checkpoint is replayed without consulting a durable effect receipt.</p>
+  </header>
+  <main>
+    <section aria-labelledby="contract-title">
+      <h2 id="contract-title">The crash boundary</h2>
+      <p>The trace records one <strong>DATA ONLY retirement</strong>, <code>retire-v1@7</code>, then a crash before its checkpoint advances. Three synthetic user journeys have already started. The browser console remains available; no actual process is stopped or restarted.</p>
+      <p><strong>Preconditions:</strong> JavaScript enabled; one fixed synthetic run and epoch 7; retirement is assumed eligible before this trace begins. Read the receipt fixture and choose a resume policy. No real durable storage, gate verification, user traffic, or resource operation is exercised.</p>
+      <details>
+        <summary>Source acceptance and limits</summary>
+        <p>S083 requires resuming from durable state without repeating a destructive transition. D-S083 requires durable progress without duplicate destructive actions or lost user outcomes while the console remains available; its prerequisite is D-S081.</p>
+        <p>A-S083 / SC-S083 rehearses those concepts using data only. It does not complete B-S083, D-S083, D-S081, or certify controller restart, durable resumption, side effects, native Azure behavior, production Node.js 24, or reliability statistics.</p>
+      </details>
+    </section>
+
+    <section id="exercise" aria-labelledby="exercise-title">
+      <h2 id="exercise-title">1. Configure and stage the trace</h2>
+      <form id="setup-form" novalidate>
+        <fieldset id="configuration">
+          <legend>Fixed synthetic inputs (locked after staging)</legend>
+          <label for="policy">Resume policy</label>
+          <select id="policy" name="policy">
+            <option value="reconcile">Reconcile durable receipt (guarded)</option>
+            <option value="unsafe-replay">Unsafe: replay stale checkpoint</option>
+          </select>
+          <label for="evidence">Durable evidence fixture</label>
+          <select id="evidence" name="evidence">
+            <option value="complete">Complete effect and user receipts</option>
+            <option value="missing-effect-receipt">Missing effect receipt</option>
+            <option value="missing-user-outcome">Missing journey-B outcome</option>
+            <option value="recorded-user-failure">Recorded journey-B failure</option>
+          </select>
+          <button id="stage-crash" type="submit">Stage crash in trace</button>
+        </fieldset>
+      </form>
+      <p id="phase" role="status" aria-live="polite">Phase: idle. No attempt has run.</p>
+      <p id="console-state">Console: AVAILABLE (synthetic throughout every trace)</p>
+      <p id="error" class="error" role="alert" hidden></p>
+
+      <h2>2. Restart and inspect</h2>
+      <button id="restart-trace" type="button" disabled>Restart controller trace (data only)</button>
+      <p id="result" role="status" aria-live="polite">NOT RUN - no successful sample is claimed.</p>
+      <p id="checkpoint">Recovered checkpoint: not observed</p>
+      <p id="effect-receipt">Durable effect receipt: not inspected</p>
+      <ul id="reasons"></ul>
+      <dl class="metrics" aria-label="Synthetic trace measurements">
+        <dt>Destructive data executions</dt><dd id="destructive-count">—</dd>
+        <dt>Duplicate destructive actions</dt><dd id="duplicate-count">—</dd>
+        <dt>Attempted user journeys</dt><dd id="attempted-count">—</dd>
+        <dt>Successful user journeys</dt><dd id="success-count">—</dd>
+        <dt>Failed user journeys</dt><dd id="failure-count">—</dd>
+        <dt>Unknown user journeys</dt><dd id="unknown-count">—</dd>
+      </dl>
+      <p>Known failures dominate UNKNOWN. Missing evidence is never success. Three started journeys stay in the denominator; checkpoint completion and console availability alone cannot pass the exercise.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Current deterministic teaching trace — every effect is data only</caption>
+          <thead><tr><th scope="col">Step</th><th scope="col">Kind</th><th scope="col">Effect identity</th><th scope="col">Observation</th></tr></thead>
+          <tbody id="trace-body"></tbody>
+        </table>
+      </div>
+      <table>
+        <caption>Recovered user outcomes (fixed synthetic journeys)</caption>
+        <thead><tr><th scope="col">Journey</th><th scope="col">Outcome</th></tr></thead>
+        <tbody id="user-body"></tbody>
+      </table>
+
+      <h2>3. Check and retain your interpretation</h2>
+      <form id="prediction-form" novalidate>
+        <label for="prediction">Your predicted trace result (separate from observed result)</label>
+        <select id="prediction" name="prediction" disabled>
+          <option value="">Choose an outcome</option>
+          <option value="SUCCESS">SUCCESS</option>
+          <option value="FAILURE">FAILURE</option>
+          <option value="UNKNOWN">UNKNOWN</option>
+        </select>
+        <button id="check-prediction" type="submit" disabled>Check prediction and retain attempt</button>
+      </form>
+      <p id="prediction-result" role="status" aria-live="polite">Prediction not checked.</p>
+      <div class="actions">
+        <button id="new-attempt" type="button" disabled>New attempt (keep history)</button>
+        <button id="clear-all" type="button">Reset all (clear history)</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained attempts</h2>
+      <p id="history-count">0 / 6 retained. No evidence is silently evicted.</p>
+      <ol id="history"></ol>
+      <p>Memory only: New attempt retains full checked traces. Explicit Reset all or page reload clears configuration, trace, prediction, measurements, errors, and history. Nothing is sent or saved to a service.</p>
+    </section>
+    <noscript><p>This synthetic exercise requires JavaScript. No result has been produced.</p></noscript>
+  </main>
+  <footer><p>A-S083 · frozen S · SC-S083 · standalone synthetic lesson, not source-parent or native completion.</p></footer>
+</body>
+</html>
