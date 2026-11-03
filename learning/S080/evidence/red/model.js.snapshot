@@ -1,0 +1,24 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.PartitionLesson = factory();
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  function createLesson() {
+    const snapshot = () => ({
+      phase: 'idle', settings: null, transfer: {
+        newOwnerAcquired: false, newConsumer: null, newEpoch: null,
+        requiredCheckpoint: 3, checkpoint: null, resumeOffset: null, oldProbe: null,
+      },
+      batch: { deliveries: [], events: [], deliveryCount: null, repeatedDeliveries: null,
+        totalEffects: null, duplicateEffects: null, suppressed: null, missingEvents: [] },
+      result: { outcome: 'not verified', ownership: 'not verified', checkpoint: 'not verified',
+        effects: 'not verified', success: 0, failure: 0, unknown: 0 },
+      prediction: null, learning: null, trace: [], history: [],
+      totals: { success: 0, failure: 0, unknown: 0 }, maxAttempts: 6,
+    });
+    return { snapshot, reassign: snapshot, consume: snapshot, verify: snapshot,
+      check: snapshot, next: snapshot, reset: snapshot };
+  }
+  return { createLesson };
+}));

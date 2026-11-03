@@ -1,0 +1,271 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fixture = require('..\\fixtures.js');
+const { createLesson } = require('..\\model.js');
+const defaults = { checkpoint: 'transfer', oldProbe: 'fenced', delivery: 'complete', effects: 'idempotent' };
+const settings = (overrides = {}) => ({ ...defaults, ...overrides });
+function run(overrides) {
+  const lesson = createLesson();
+  lesson.reassign(settings(overrides));
+  lesson.consume();
+  return { lesson, state: lesson.verify() };
+}
+function rejected(lesson, action, code, field) {
+  const before = lesson.snapshot();
+  assert.throws(action, (error) => error.code === code && (!field || error.field === field));
+  assert.deepEqual(lesson.snapshot(), before, 'Rejected action must not mutate evidence.');
+}
+
+test('loadable lesson starts idle with six declared fixed events and no completed attempt', () => {
+  const state = createLesson().snapshot();
+  assert.equal(state.phase, 'idle');
+  assert.equal(state.result.outcome, 'not verified');
+  assert.deepEqual(state.history, []);
+  assert.deepEqual(state.totals, { success: 0, failure: 0, unknown: 0 });
+  assert.equal(fixture.events.length, 6);
+  assert.equal(fixture.requiredCheckpoint, 3);
+  assert.equal(fixture.combinations, 96);
+});
+
+test('reassignment observes new ownership independently from checkpoint transfer', () => {
+  const lesson = createLesson();
+  const state = lesson.reassign(settings());
+  assert.equal(state.phase, 'reassigned');
+  assert.equal(state.transfer.newOwnerAcquired, true);
+  assert.equal(state.transfer.newConsumer, 'consumer-b');
+  assert.equal(state.transfer.newEpoch, 8);
+  assert.equal(state.transfer.checkpoint, 3);
+  assert.equal(state.transfer.resumeOffset, 3);
+  assert.equal(state.transfer.oldProbe, 'rejected');
+  assert.deepEqual(state.settings, defaults);
+});
+
+test('correct transfer resumes after E03 and preserves one effect for every event', () => {
+  const { state } = run();
+  assert.equal(state.phase, 'verified');
+  assert.equal(state.result.outcome, 'PASS');
+  assert.equal(state.result.ownership, 'PASS');
+  assert.equal(state.result.checkpoint, 'PASS');
+  assert.deepEqual(state.batch.deliveries.map((entry) => entry.event), ['E04', 'E05', 'E06']);
+  assert.equal(state.batch.totalEffects, 6);
+  assert.equal(state.batch.duplicateEffects, 0);
+  assert.deepEqual([state.result.success, state.result.failure, state.result.unknown], [6, 0, 0]);
+  assert.ok(state.batch.events.every((entry) => entry.effectCount === 1));
+});
+
+test('missing checkpoint fails despite successful ownership and all six correct effects', () => {
+  const { state } = run({ checkpoint: 'missing' });
+  assert.equal(state.result.outcome, 'FAIL');
+  assert.equal(state.transfer.newOwnerAcquired, true);
+  assert.equal(state.result.ownership, 'PASS');
+  assert.equal(state.result.checkpoint, 'FAIL');
+  assert.equal(state.transfer.checkpoint, null);
+  assert.equal(state.transfer.resumeOffset, 0);
+  assert.equal(state.batch.totalEffects, 6);
+  assert.equal(state.batch.suppressed, 3);
+  assert.equal(state.result.success, 6);
+  assert.deepEqual(state.batch.missingEvents, []);
+});
+
+test('an ahead checkpoint detects E04 and E05 missing effects', () => {
+  const { state } = run({ checkpoint: 'ahead' });
+  assert.equal(state.result.outcome, 'FAIL');
+  assert.equal(state.result.checkpoint, 'FAIL');
+  assert.equal(state.transfer.checkpoint, 5);
+  assert.deepEqual(state.batch.missingEvents, ['E04', 'E05']);
+  assert.equal(state.batch.totalEffects, 4);
+  assert.deepEqual([state.result.success, state.result.failure, state.result.unknown], [4, 2, 0]);
+});
+
+test('idempotent repeated delivery is tolerated without a duplicate business effect', () => {
+  const { state } = run({ delivery: 'repeat' });
+  assert.equal(state.result.outcome, 'PASS');
+  assert.equal(state.batch.deliveryCount, 4);
+  assert.equal(state.batch.repeatedDeliveries, 1);
+  assert.equal(state.batch.suppressed, 1);
+  assert.equal(state.batch.duplicateEffects, 0);
+  assert.equal(state.batch.totalEffects, 6);
+});
+
+test('unchecked repeated E04 produces a retained duplicate business effect failure', () => {
+  const { state } = run({ delivery: 'repeat', effects: 'unchecked' });
+  assert.equal(state.result.outcome, 'FAIL');
+  assert.equal(state.result.effects, 'FAIL');
+  assert.equal(state.batch.repeatedDeliveries, 1);
+  assert.equal(state.batch.duplicateEffects, 1);
+  assert.equal(state.batch.totalEffects, 7);
+  assert.equal(state.batch.events.find((entry) => entry.id === 'E04').effectCount, 2);
+  assert.deepEqual([state.result.success, state.result.failure, state.result.unknown], [5, 1, 0]);
+});
+
+test('concurrent old epoch acceptance fails ownership even when effect counts are correct', () => {
+  const { state } = run({ oldProbe: 'accepted' });
+  assert.equal(state.result.outcome, 'FAIL');
+  assert.equal(state.result.ownership, 'FAIL');
+  assert.equal(state.transfer.newOwnerAcquired, true);
+  assert.equal(state.batch.deliveries[0].consumer, 'consumer-a');
+  assert.equal(state.batch.deliveries[0].epoch, 7);
+  assert.equal(state.batch.totalEffects, 6);
+  assert.equal(state.batch.duplicateEffects, 0);
+  assert.equal(state.batch.suppressed, 1);
+});
+
+test('unavailable checkpoint evidence is UNKNOWN, never inferred from successful ownership', () => {
+  const { state } = run({ checkpoint: 'unavailable' });
+  assert.equal(state.result.outcome, 'UNKNOWN');
+  assert.equal(state.result.checkpoint, 'UNKNOWN');
+  assert.equal(state.transfer.newOwnerAcquired, true);
+  assert.equal(state.batch.totalEffects, null);
+  assert.deepEqual([state.result.success, state.result.failure, state.result.unknown], [0, 0, 6]);
+});
+
+test('unavailable delivery evidence preserves all six unknown effect outcomes', () => {
+  const { state } = run({ delivery: 'unavailable' });
+  assert.equal(state.result.outcome, 'UNKNOWN');
+  assert.equal(state.result.checkpoint, 'PASS');
+  assert.equal(state.result.effects, 'UNKNOWN');
+  assert.equal(state.batch.deliveryCount, null);
+  assert.deepEqual(state.batch.missingEvents, []);
+  assert.deepEqual([state.result.success, state.result.failure, state.result.unknown], [0, 0, 6]);
+});
+
+test('unavailable concurrent old probe is not equivalent to fencing success', () => {
+  const { state } = run({ oldProbe: 'unavailable' });
+  assert.equal(state.result.outcome, 'UNKNOWN');
+  assert.equal(state.result.ownership, 'UNKNOWN');
+  assert.equal(state.batch.totalEffects, 6);
+  assert.equal(state.result.success, 6);
+});
+
+test('known missing-checkpoint or overlapping-ownership failures dominate missing delivery evidence', () => {
+  for (const overrides of [{ checkpoint: 'missing' }, { oldProbe: 'accepted' }]) {
+    const { state } = run({ ...overrides, delivery: 'unavailable' });
+    assert.equal(state.result.outcome, 'FAIL');
+    assert.equal(state.result.effects, 'UNKNOWN');
+    assert.equal(state.result.unknown, 6);
+  }
+});
+
+test('omitted E05 remains a failed effect in the fixed denominator', () => {
+  const { state } = run({ delivery: 'drop' });
+  assert.equal(state.result.outcome, 'FAIL');
+  assert.deepEqual(state.batch.missingEvents, ['E05']);
+  assert.equal(state.batch.totalEffects, 5);
+  assert.deepEqual([state.result.success, state.result.failure, state.result.unknown], [5, 1, 0]);
+});
+
+test('prediction checking retains the full failed evidence independently from a wrong prediction', () => {
+  const { lesson, state } = run({ checkpoint: 'missing' });
+  const checked = lesson.check('PASS');
+  assert.equal(checked.phase, 'checked');
+  assert.equal(checked.learning, 'incorrect');
+  assert.equal(checked.result.outcome, 'FAIL');
+  assert.equal(checked.history.length, 1);
+  const entry = checked.history[0];
+  assert.equal(entry.number, 1);
+  assert.deepEqual(entry.settings, state.settings);
+  assert.deepEqual(entry.transfer, state.transfer);
+  assert.deepEqual(entry.batch, state.batch);
+  assert.deepEqual(entry.result, state.result);
+  assert.equal(entry.prediction, 'PASS');
+  assert.equal(entry.learning, 'incorrect');
+  assert.ok(entry.trace.length >= 4);
+  assert.deepEqual(checked.totals, { success: 0, failure: 1, unknown: 0 });
+  const next = lesson.next();
+  assert.equal(next.phase, 'idle');
+  assert.deepEqual(next.history, checked.history);
+  assert.deepEqual(next.totals, checked.totals);
+});
+
+test('strict exact enum records and predictions reject malformed input without state mutation', () => {
+  const invalid = [null, [], 'transfer', {}, { ...defaults, extra: true },
+    { ...defaults, checkpoint: '3' }, { ...defaults, oldProbe: true },
+    { ...defaults, delivery: 'DROP' }, { ...defaults, effects: '' },
+    Object.assign(Object.create({ extra: true }), defaults)];
+  for (const input of invalid) {
+    const lesson = createLesson();
+    rejected(lesson, () => lesson.reassign(input), 'INPUT');
+  }
+  const { lesson } = run();
+  for (const input of ['', 'pass', null, 0, {}, 'UNKNOWN ']) {
+    rejected(lesson, () => lesson.check(input), 'INPUT', 'prediction');
+  }
+});
+
+test('ordered phases, repeated actions, and defensive snapshots protect retained state', () => {
+  const lesson = createLesson();
+  for (const action of [() => lesson.consume(), () => lesson.verify(), () => lesson.check('PASS'), () => lesson.next()]) {
+    rejected(lesson, action, 'PHASE');
+  }
+  const first = lesson.reassign(settings());
+  first.settings.checkpoint = 'ahead';
+  first.transfer.newEpoch = 0;
+  assert.equal(lesson.snapshot().transfer.newEpoch, 8);
+  rejected(lesson, () => lesson.reassign(settings()), 'PHASE');
+  lesson.consume();
+  rejected(lesson, () => lesson.consume(), 'PHASE');
+  lesson.verify();
+  rejected(lesson, () => lesson.verify(), 'PHASE');
+  lesson.check('PASS');
+  rejected(lesson, () => lesson.check('PASS'), 'PHASE');
+  const mutated = lesson.snapshot();
+  mutated.history[0].result.outcome = 'FAIL';
+  mutated.history.length = 0;
+  assert.equal(lesson.snapshot().history[0].result.outcome, 'PASS');
+});
+
+test('six attempts preserve success failure unknown and require explicit reset rather than eviction', () => {
+  const lesson = createLesson();
+  const choices = [{}, { checkpoint: 'missing' }, { checkpoint: 'unavailable' }];
+  for (let index = 0; index < 6; index += 1) {
+    lesson.reassign(settings(choices[index % 3]));
+    lesson.consume();
+    const verified = lesson.verify();
+    const checked = lesson.check(verified.result.outcome);
+    assert.equal(checked.history.length, index + 1);
+    if (index < 5) lesson.next();
+  }
+  assert.deepEqual(lesson.snapshot().totals, { success: 2, failure: 2, unknown: 2 });
+  rejected(lesson, () => lesson.next(), 'HISTORY_LIMIT');
+  const reset = lesson.reset();
+  assert.equal(reset.phase, 'idle');
+  assert.deepEqual(reset.history, []);
+  assert.deepEqual(reset.trace, []);
+  assert.equal(reset.prediction, null);
+  assert.deepEqual(reset.totals, { success: 0, failure: 0, unknown: 0 });
+});
+
+test('all 96 fixed combinations are bounded deterministic and obey failure-before-unknown classification', () => {
+  let count = 0;
+  for (const checkpoint of fixture.options.checkpoint) {
+    for (const oldProbe of fixture.options.oldProbe) {
+      for (const delivery of fixture.options.delivery) {
+        for (const effects of fixture.options.effects) {
+          const input = { checkpoint, oldProbe, delivery, effects };
+          const { state } = run(input);
+          assert.equal(state.phase, 'verified');
+          assert.deepEqual(run(input).state, state);
+          assert.equal(state.transfer.newOwnerAcquired, true);
+          assert.ok(state.batch.deliveries.length <= fixture.maxDeliveries);
+          assert.equal(state.result.success + state.result.failure + state.result.unknown, 6);
+          const gates = [state.result.ownership, state.result.checkpoint, state.result.effects];
+          const expected = gates.includes('FAIL') ? 'FAIL' : gates.includes('UNKNOWN') ? 'UNKNOWN' : 'PASS';
+          assert.equal(state.result.outcome, expected);
+          assert.equal(state.result.ownership, oldProbe === 'accepted' ? 'FAIL' : oldProbe === 'unavailable' ? 'UNKNOWN' : 'PASS');
+          assert.equal(state.result.checkpoint, ['missing', 'ahead'].includes(checkpoint) ? 'FAIL' : checkpoint === 'unavailable' ? 'UNKNOWN' : 'PASS');
+          if (state.result.outcome === 'PASS') {
+            assert.equal(checkpoint, 'transfer');
+            assert.equal(oldProbe, 'fenced');
+            assert.equal(state.result.success, 6);
+            assert.equal(state.batch.duplicateEffects, 0);
+            assert.deepEqual(state.batch.missingEvents, []);
+          }
+          count += 1;
+        }
+      }
+    }
+  }
+  assert.equal(count, fixture.combinations);
+});

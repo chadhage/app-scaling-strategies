@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S080 — Partition checkpoint reassignment rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="fixtures.js"></script>
+  <script defer src="model.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#lesson">Skip to lesson controls</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S080 — Reassign a partition, not just its owner</h1>
+    <p>A-S080 · D-S080 · one frozen S unit · packet SC-S080</p>
+  </header>
+  <main id="lesson" tabindex="-1">
+    <section aria-labelledby="objective">
+      <h2 id="objective">Objective and fixed contract</h2>
+      <p>Reassign P0; detect missing checkpoint transfer even after consumer-b acquires ownership.</p>
+      <p><strong>Preconditions:</strong> JavaScript enabled. Six synthetic events E01–E06; effects E01–E03 already exist.
+        Consumer-a epoch 7 hands off to consumer-b epoch 8. Required checkpoint: 3. Expected resume: E04.</p>
+      <ol>
+        <li>Choose inputs, then <strong>Reassign partition → Consume fixed batch → Verify result</strong>.</li>
+        <li>Try a missing checkpoint with the effect-key ledger on. All six effects can be correct while checkpoint transfer fails.</li>
+        <li>Compare repeated deliveries with duplicate business effects. Predict the result, retain it, then start a new attempt.</li>
+      </ol>
+      <p>Missing checkpoint deliberately replays from offset 0; checkpoint 5 skips E04–E05.
+        These are declared fixture choices, not universal broker behavior. An accepted old-epoch probe also attempts E04.</p>
+      <p>Keyboard: Tab to controls, arrows to choose, Enter/Space to act. New attempts retain failures and unknowns.
+        Reset clears all local memory; reload also clears it.</p>
+      <noscript><p class="warning">JavaScript is required for this synthetic exercise. No run has been verified.</p></noscript>
+    </section>
+
+    <section aria-labelledby="control-heading">
+      <h2 id="control-heading">1. Choose and conduct</h2>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <form id="settings-form" novalidate>
+        <fieldset id="settings">
+          <legend>Fixed synthetic conditions</legend>
+          <label for="checkpoint">Checkpoint transfer</label>
+          <select id="checkpoint" name="checkpoint">
+            <option value="transfer">Transfer required checkpoint 3</option>
+            <option value="missing">Missing checkpoint; replay from 0</option>
+            <option value="ahead">Wrong checkpoint 5; skip E04–E05</option>
+            <option value="unavailable">Checkpoint evidence unavailable</option>
+          </select>
+          <label for="old-probe">Concurrent old-epoch probe</label>
+          <select id="old-probe" name="oldProbe">
+            <option value="fenced">Reject consumer-a epoch 7</option>
+            <option value="accepted">Accept old epoch too (unsafe)</option>
+            <option value="unavailable">Probe observation unavailable</option>
+          </select>
+          <label for="delivery">New consumer delivery observation</label>
+          <select id="delivery" name="delivery">
+            <option value="complete">Deliver resumed batch completely</option>
+            <option value="repeat">Repeat E04 if present in resumed batch</option>
+            <option value="drop">Omit E05 from resumed batch</option>
+            <option value="unavailable">Delivery/effect evidence unavailable</option>
+          </select>
+          <label for="effects">Business-effect guard</label>
+          <select id="effects" name="effects">
+            <option value="idempotent">Effect-key ledger on</option>
+            <option value="unchecked">Ledger off; apply every delivery (unsafe)</option>
+          </select>
+        </fieldset>
+        <div class="actions">
+          <button id="reassign" type="submit">Reassign partition</button>
+          <button id="consume" type="button" disabled>Consume fixed batch</button>
+          <button id="verify-run" type="button" disabled>Verify result</button>
+        </div>
+      </form>
+      <p id="phase" role="status">Phase: idle</p>
+      <div class="actions">
+        <button id="new-attempt" type="button" disabled>New attempt (retain history)</button>
+        <button id="reset-lesson" type="button">Reset all local data</button>
+      </div>
+      <p id="history-limit">Up to six retained attempts; no automatic eviction.</p>
+    </section>
+
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">2. Inspect independent gates</h2>
+      <p id="acquisition">New ownership: not acquired</p>
+      <p id="checkpoint-observation">Required checkpoint: 3 · transferred: not observed · resume: not observed</p>
+      <p id="probe-observation">Old epoch probe: not observed</p>
+      <p id="outcome" role="status">Result: not verified</p>
+      <p id="gates">Ownership: not verified · checkpoint: not verified · effects: not verified</p>
+      <p id="impact">Synthetic impact: not verified</p>
+      <p id="reasons">No verification has run.</p>
+      <p id="delivery-metrics">Deliveries: not observed · repeated deliveries: not checked</p>
+      <p id="effect-metrics">Final effects: not observed · duplicate effects: not checked · suppressed: not checked</p>
+      <p id="missing-events">Missing events: not checked</p>
+      <p id="event-totals">Final effect outcomes: six declared · not verified</p>
+      <p>Counts include the three pre-handoff effects. Repeated deliveries include replays of already processed events.
+        Effect counts are not user-journey success rates. UNKNOWN never counts as success.</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Synthetic delivery trace, scrollable">
+        <table>
+          <caption>Observed deliveries during this reassignment</caption>
+          <thead><tr><th>Sequence</th><th>Event</th><th>Consumer / epoch</th><th>Repeated delivery</th><th>Effect</th></tr></thead>
+          <tbody id="delivery-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Final effect coverage, scrollable">
+        <table>
+          <caption>Fixed six-event denominator</caption>
+          <thead><tr><th>Event / key</th><th>Effects before</th><th>Deliveries now</th><th>Final effects</th><th>Effect outcome</th></tr></thead>
+          <tbody id="event-rows"></tbody>
+        </table>
+      </div>
+      <h3>Synthetic trace</h3>
+      <ol id="trace"><li>No attempt started.</li></ol>
+    </section>
+
+    <section aria-labelledby="prediction-heading">
+      <h2 id="prediction-heading">3. Check and retain</h2>
+      <form id="prediction-form" novalidate>
+        <label for="prediction">Your predicted verifier result</label>
+        <select id="prediction" name="prediction" disabled>
+          <option value="">Choose PASS, FAIL, or UNKNOWN</option>
+          <option value="PASS">PASS</option>
+          <option value="FAIL">FAIL</option>
+          <option value="UNKNOWN">UNKNOWN</option>
+        </select>
+        <button id="check-prediction" type="submit" disabled>Check prediction and retain</button>
+      </form>
+      <p id="prediction-result" role="status">Learning prediction not checked.</p>
+      <p id="history-count">Retained completed attempts: 0 / 6</p>
+      <p id="totals">Decided attempts: success 0 · failure 0 · unknown 0</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Retained attempts, scrollable">
+        <table>
+          <caption>Prior failures and unknowns remain counted</caption>
+          <thead><tr><th>Attempt</th><th>Checkpoint</th><th>Old probe</th><th>Verifier</th><th>Effect success / failure / unknown</th><th>Prediction</th></tr></thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+      <details id="history-detail"><summary>Retained raw synthetic attempts</summary><pre id="history-proof"></pre></details>
+    </section>
+
+    <section aria-labelledby="limits">
+      <h2 id="limits">Limits and cleanup</h2>
+      <p id="cleanup">Cleanup: local memory only; no external resources created.</p>
+      <p>96 fixed input combinations, one partition, six events, at most eight observed deliveries and six retained attempts.
+        No clock, randomness, network, storage, broker, ownership or checkpoint service is used.</p>
+      <p>IaC N/A. No actual broker partition/checkpoint/ownership certification, native Azure proof, production Node.js 24 validation,
+        source-parent completion or reliability guarantee. B-S080 and D-S080 remain incomplete. Parent alone accepts A-S080 once.</p>
+      <p><a href="README.md">Source acceptance, worked cases, verification and evidence</a></p>
+    </section>
+  </main>
+  <footer><p>Local synthetic learning only. No management calls, accounts, credentials, deployment or spending.</p></footer>
+</body>
+</html>

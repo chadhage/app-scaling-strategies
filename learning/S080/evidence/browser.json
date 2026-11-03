@@ -1,0 +1,2639 @@
+{
+  "cardId": "A-S080",
+  "workerId": "worker-A-S080",
+  "mode": "synthetic",
+  "outcome": "PASS",
+  "entry": "learning\\S080\\index.html",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "startedAtUtc": "2026-11-03T20:40:21.977Z",
+  "captureExplicitlyEnabled": true,
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "publication": "53c0c0d"
+  },
+  "testedSourceHashes": {
+    "index.html": "219dce3441447678c6858a4abee04ffc9479970cb709a0a9d8a700292d7cf29e",
+    "styles.css": "c597e8bb181cab2002fc6d5978ff5e5f30dec031f47e2702d01687604fce0479",
+    "fixtures.js": "e56967379ed0c2f410ed039fa9efedb155d940deb0fe48afc68e2c6444e84870",
+    "model.js": "4d78479dddca2f3e4621f47eceb59274f14ab00bfa47e5bd413106a63cf77149",
+    "app.js": "d300b7a96cb0baab8f7214eea2f771880e3becf1c8e1a10cbd70536749649b0d",
+    "manifest.json": "38cf9d65845c9da7532b0aa37d3959a29572d5c43b8e6a1d5d6234ccb60f4908",
+    "README.md": "25c55e62d1c795262aa67a243782d93f6c7c3da22488ef901c0e04b9fae8d22f",
+    "partition-reassignment.feature": "e70acb861613ef072584b93fad689a448a8703fe005ff8267e7004c9c964c92b",
+    "tests\\model.test.cjs": "303e5f312e18680e18df9ecfc80aa83bd7dee5e9b5f12352f61f5a660c5851e7",
+    "tests\\surface.test.cjs": "28a307b6e21ca43f832dfa394d90e90de7cf9140bf093b1a4ae618f799d0fca2",
+    "tests\\integrity.test.cjs": "19eda41f15335348442e28dfd7d53b39180cb4fe46e3f6a4904775783a8e231f",
+    "tests\\browser.test.cjs": "fc3570ac69450db738adf306c9a626d9fc6f76ad4abf3b40089735e63fb7258f",
+    "tests\\provenance.cjs": "f49025bab797c77aaece148ca20328abd25bddadf27ca4ac490ac31173477a4d",
+    "tests\\capture.cjs": "1d0de8a7bb857e312d4ce184335ce29d6abdd8803f589fa3411e50277535cad7"
+  },
+  "observations": [
+    {
+      "name": "empty prediction rejected without outcome mutation",
+      "phase": "Phase: verified",
+      "outcome": "Result: FAIL",
+      "gates": "Ownership: PASS · checkpoint: FAIL · effects: PASS",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: MISSING · resume after: 0",
+      "probe": "Old epoch probe: rejected",
+      "deliveries": "Deliveries: 6 · repeated deliveries: 3",
+      "effects": "Final effects: 6 · duplicate effects: 0 · suppressed: 3",
+      "missing": "Missing events: none",
+      "eventTotals": "Final effect outcomes: success 6 · failure 0 · unknown 0 / 6",
+      "totals": "Decided attempts: success 0 · failure 0 · unknown 0",
+      "learning": "Learning prediction not checked.",
+      "alert": "Choose PASS, FAIL, or UNKNOWN before retaining the attempt.",
+      "deliveryRows": [
+        [
+          "1",
+          "E01",
+          "consumer-b / 8",
+          "yes",
+          "suppressed"
+        ],
+        [
+          "2",
+          "E02",
+          "consumer-b / 8",
+          "yes",
+          "suppressed"
+        ],
+        [
+          "3",
+          "E03",
+          "consumer-b / 8",
+          "yes",
+          "suppressed"
+        ],
+        [
+          "4",
+          "E04",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ],
+        [
+          "5",
+          "E05",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ],
+        [
+          "6",
+          "E06",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ]
+      ],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "1",
+          "1",
+          "success"
+        ]
+      ],
+      "history": [],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation missing; resume after offset 0. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: rejected.\nObserved 6 deliveries, 3 repeated deliveries, 3 suppressed effects; 6 final effects include three pre-handoff effects.\nVerification FAIL: ownership PASS, checkpoint FAIL, effects PASS. Known failures dominate unknown evidence.",
+      "activeElement": "prediction"
+    },
+    {
+      "name": "missing checkpoint FAIL despite successful ownership and six effects; wrong prediction retained",
+      "phase": "Phase: checked",
+      "outcome": "Result: FAIL",
+      "gates": "Ownership: PASS · checkpoint: FAIL · effects: PASS",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: MISSING · resume after: 0",
+      "probe": "Old epoch probe: rejected",
+      "deliveries": "Deliveries: 6 · repeated deliveries: 3",
+      "effects": "Final effects: 6 · duplicate effects: 0 · suppressed: 3",
+      "missing": "Missing events: none",
+      "eventTotals": "Final effect outcomes: success 6 · failure 0 · unknown 0 / 6",
+      "totals": "Decided attempts: success 0 · failure 1 · unknown 0",
+      "learning": "Learning prediction incorrect: predicted PASS; measured FAIL.",
+      "alert": "",
+      "deliveryRows": [
+        [
+          "1",
+          "E01",
+          "consumer-b / 8",
+          "yes",
+          "suppressed"
+        ],
+        [
+          "2",
+          "E02",
+          "consumer-b / 8",
+          "yes",
+          "suppressed"
+        ],
+        [
+          "3",
+          "E03",
+          "consumer-b / 8",
+          "yes",
+          "suppressed"
+        ],
+        [
+          "4",
+          "E04",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ],
+        [
+          "5",
+          "E05",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ],
+        [
+          "6",
+          "E06",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ]
+      ],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "1",
+          "1",
+          "success"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "missing",
+          "rejected",
+          "FAIL",
+          "6 / 0 / 0",
+          "PASS (incorrect)"
+        ]
+      ],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation missing; resume after offset 0. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: rejected.\nObserved 6 deliveries, 3 repeated deliveries, 3 suppressed effects; 6 final effects include three pre-handoff effects.\nVerification FAIL: ownership PASS, checkpoint FAIL, effects PASS. Known failures dominate unknown evidence.\nPrediction PASS: incorrect. Measured result remains FAIL.",
+      "activeElement": ""
+    },
+    {
+      "name": "transferred checkpoint repeat delivery PASS with idempotent ledger",
+      "phase": "Phase: checked",
+      "outcome": "Result: PASS",
+      "gates": "Ownership: PASS · checkpoint: PASS · effects: PASS",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: 3 · resume after: 3",
+      "probe": "Old epoch probe: rejected",
+      "deliveries": "Deliveries: 4 · repeated deliveries: 1",
+      "effects": "Final effects: 6 · duplicate effects: 0 · suppressed: 1",
+      "missing": "Missing events: none",
+      "eventTotals": "Final effect outcomes: success 6 · failure 0 · unknown 0 / 6",
+      "totals": "Decided attempts: success 1 · failure 1 · unknown 0",
+      "learning": "Learning prediction correct: predicted PASS; measured PASS.",
+      "alert": "",
+      "deliveryRows": [
+        [
+          "1",
+          "E04",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ],
+        [
+          "2",
+          "E04",
+          "consumer-b / 8",
+          "yes",
+          "suppressed"
+        ],
+        [
+          "3",
+          "E05",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ],
+        [
+          "4",
+          "E06",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ]
+      ],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "2",
+          "1",
+          "success"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "1",
+          "1",
+          "success"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "missing",
+          "rejected",
+          "FAIL",
+          "6 / 0 / 0",
+          "PASS (incorrect)"
+        ],
+        [
+          "2",
+          "transfer",
+          "rejected",
+          "PASS",
+          "6 / 0 / 0",
+          "PASS (correct)"
+        ]
+      ],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation transfer; resume after offset 3. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: rejected.\nObserved 4 deliveries, 1 repeated deliveries, 1 suppressed effects; 6 final effects include three pre-handoff effects.\nVerification PASS: ownership PASS, checkpoint PASS, effects PASS. Known failures dominate unknown evidence.\nPrediction PASS: correct. Measured result remains PASS.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "duplicate business effect FAIL; repeated delivery is not suppressed",
+      "phase": "Phase: checked",
+      "outcome": "Result: FAIL",
+      "gates": "Ownership: PASS · checkpoint: PASS · effects: FAIL",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: 3 · resume after: 3",
+      "probe": "Old epoch probe: rejected",
+      "deliveries": "Deliveries: 4 · repeated deliveries: 1",
+      "effects": "Final effects: 7 · duplicate effects: 1 · suppressed: 0",
+      "missing": "Missing events: none",
+      "eventTotals": "Final effect outcomes: success 5 · failure 1 · unknown 0 / 6",
+      "totals": "Decided attempts: success 1 · failure 2 · unknown 0",
+      "learning": "Learning prediction correct: predicted FAIL; measured FAIL.",
+      "alert": "",
+      "deliveryRows": [
+        [
+          "1",
+          "E04",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ],
+        [
+          "2",
+          "E04",
+          "consumer-b / 8",
+          "yes",
+          "applied"
+        ],
+        [
+          "3",
+          "E05",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ],
+        [
+          "4",
+          "E06",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ]
+      ],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "2",
+          "2",
+          "failure"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "1",
+          "1",
+          "success"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "missing",
+          "rejected",
+          "FAIL",
+          "6 / 0 / 0",
+          "PASS (incorrect)"
+        ],
+        [
+          "2",
+          "transfer",
+          "rejected",
+          "PASS",
+          "6 / 0 / 0",
+          "PASS (correct)"
+        ],
+        [
+          "3",
+          "transfer",
+          "rejected",
+          "FAIL",
+          "5 / 1 / 0",
+          "FAIL (correct)"
+        ]
+      ],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation transfer; resume after offset 3. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: rejected.\nObserved 4 deliveries, 1 repeated deliveries, 0 suppressed effects; 7 final effects include three pre-handoff effects.\nVerification FAIL: ownership PASS, checkpoint PASS, effects FAIL. Known failures dominate unknown evidence.\nPrediction FAIL: correct. Measured result remains FAIL.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "concurrent old epoch accepted FAIL even with complete effects",
+      "phase": "Phase: checked",
+      "outcome": "Result: FAIL",
+      "gates": "Ownership: FAIL · checkpoint: PASS · effects: PASS",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: 3 · resume after: 3",
+      "probe": "Old epoch probe: accepted",
+      "deliveries": "Deliveries: 4 · repeated deliveries: 1",
+      "effects": "Final effects: 6 · duplicate effects: 0 · suppressed: 1",
+      "missing": "Missing events: none",
+      "eventTotals": "Final effect outcomes: success 6 · failure 0 · unknown 0 / 6",
+      "totals": "Decided attempts: success 1 · failure 3 · unknown 0",
+      "learning": "Learning prediction correct: predicted FAIL; measured FAIL.",
+      "alert": "",
+      "deliveryRows": [
+        [
+          "1",
+          "E04",
+          "consumer-a / 7",
+          "no",
+          "applied"
+        ],
+        [
+          "2",
+          "E04",
+          "consumer-b / 8",
+          "yes",
+          "suppressed"
+        ],
+        [
+          "3",
+          "E05",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ],
+        [
+          "4",
+          "E06",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ]
+      ],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "2",
+          "1",
+          "success"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "1",
+          "1",
+          "success"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "missing",
+          "rejected",
+          "FAIL",
+          "6 / 0 / 0",
+          "PASS (incorrect)"
+        ],
+        [
+          "2",
+          "transfer",
+          "rejected",
+          "PASS",
+          "6 / 0 / 0",
+          "PASS (correct)"
+        ],
+        [
+          "3",
+          "transfer",
+          "rejected",
+          "FAIL",
+          "5 / 1 / 0",
+          "FAIL (correct)"
+        ],
+        [
+          "4",
+          "transfer",
+          "accepted",
+          "FAIL",
+          "6 / 0 / 0",
+          "FAIL (correct)"
+        ]
+      ],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation transfer; resume after offset 3. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: accepted.\nObserved 4 deliveries, 1 repeated deliveries, 1 suppressed effects; 6 final effects include three pre-handoff effects.\nVerification FAIL: ownership FAIL, checkpoint PASS, effects PASS. Known failures dominate unknown evidence.\nPrediction FAIL: correct. Measured result remains FAIL.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "ahead checkpoint FAIL with missing E04 and E05",
+      "phase": "Phase: checked",
+      "outcome": "Result: FAIL",
+      "gates": "Ownership: PASS · checkpoint: FAIL · effects: FAIL",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: 5 · resume after: 5",
+      "probe": "Old epoch probe: rejected",
+      "deliveries": "Deliveries: 1 · repeated deliveries: 0",
+      "effects": "Final effects: 4 · duplicate effects: 0 · suppressed: 0",
+      "missing": "Missing events: E04, E05",
+      "eventTotals": "Final effect outcomes: success 4 · failure 2 · unknown 0 / 6",
+      "totals": "Decided attempts: success 1 · failure 4 · unknown 0",
+      "learning": "Learning prediction correct: predicted FAIL; measured FAIL.",
+      "alert": "",
+      "deliveryRows": [
+        [
+          "1",
+          "E06",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ]
+      ],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "0",
+          "0",
+          "failure"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "0",
+          "0",
+          "failure"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "1",
+          "1",
+          "success"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "missing",
+          "rejected",
+          "FAIL",
+          "6 / 0 / 0",
+          "PASS (incorrect)"
+        ],
+        [
+          "2",
+          "transfer",
+          "rejected",
+          "PASS",
+          "6 / 0 / 0",
+          "PASS (correct)"
+        ],
+        [
+          "3",
+          "transfer",
+          "rejected",
+          "FAIL",
+          "5 / 1 / 0",
+          "FAIL (correct)"
+        ],
+        [
+          "4",
+          "transfer",
+          "accepted",
+          "FAIL",
+          "6 / 0 / 0",
+          "FAIL (correct)"
+        ],
+        [
+          "5",
+          "ahead",
+          "rejected",
+          "FAIL",
+          "4 / 2 / 0",
+          "FAIL (correct)"
+        ]
+      ],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation ahead; resume after offset 5. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: rejected.\nObserved 1 deliveries, 0 repeated deliveries, 0 suppressed effects; 4 final effects include three pre-handoff effects.\nVerification FAIL: ownership PASS, checkpoint FAIL, effects FAIL. Known failures dominate unknown evidence.\nPrediction FAIL: correct. Measured result remains FAIL.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "checkpoint UNKNOWN; six attempts retain failures and unknowns",
+      "phase": "Phase: checked",
+      "outcome": "Result: UNKNOWN",
+      "gates": "Ownership: PASS · checkpoint: UNKNOWN · effects: UNKNOWN",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: unavailable · resume after: unavailable",
+      "probe": "Old epoch probe: rejected",
+      "deliveries": "Deliveries: unavailable · repeated deliveries: unavailable",
+      "effects": "Final effects: unavailable · duplicate effects: unavailable · suppressed: unavailable",
+      "missing": "Missing events: unavailable",
+      "eventTotals": "Final effect outcomes: success 0 · failure 0 · unknown 6 / 6",
+      "totals": "Decided attempts: success 1 · failure 4 · unknown 1",
+      "learning": "Learning prediction correct: predicted UNKNOWN; measured UNKNOWN.",
+      "alert": "",
+      "deliveryRows": [],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "missing",
+          "rejected",
+          "FAIL",
+          "6 / 0 / 0",
+          "PASS (incorrect)"
+        ],
+        [
+          "2",
+          "transfer",
+          "rejected",
+          "PASS",
+          "6 / 0 / 0",
+          "PASS (correct)"
+        ],
+        [
+          "3",
+          "transfer",
+          "rejected",
+          "FAIL",
+          "5 / 1 / 0",
+          "FAIL (correct)"
+        ],
+        [
+          "4",
+          "transfer",
+          "accepted",
+          "FAIL",
+          "6 / 0 / 0",
+          "FAIL (correct)"
+        ],
+        [
+          "5",
+          "ahead",
+          "rejected",
+          "FAIL",
+          "4 / 2 / 0",
+          "FAIL (correct)"
+        ],
+        [
+          "6",
+          "unavailable",
+          "rejected",
+          "UNKNOWN",
+          "0 / 0 / 6",
+          "UNKNOWN (correct)"
+        ]
+      ],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation unavailable; resume after unobserved offset. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: rejected.\nDelivery/effect observation unavailable: all six final effect outcomes remain unknown; no smaller denominator is substituted.\nVerification UNKNOWN: ownership PASS, checkpoint UNKNOWN, effects UNKNOWN. Known failures dominate unknown evidence.\nPrediction UNKNOWN: correct. Measured result remains UNKNOWN.",
+      "activeElement": "reset-lesson"
+    },
+    {
+      "name": "seventh attempt rejected without history eviction",
+      "phase": "Phase: checked",
+      "outcome": "Result: UNKNOWN",
+      "gates": "Ownership: PASS · checkpoint: UNKNOWN · effects: UNKNOWN",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: unavailable · resume after: unavailable",
+      "probe": "Old epoch probe: rejected",
+      "deliveries": "Deliveries: unavailable · repeated deliveries: unavailable",
+      "effects": "Final effects: unavailable · duplicate effects: unavailable · suppressed: unavailable",
+      "missing": "Missing events: unavailable",
+      "eventTotals": "Final effect outcomes: success 0 · failure 0 · unknown 6 / 6",
+      "totals": "Decided attempts: success 1 · failure 4 · unknown 1",
+      "learning": "Learning prediction correct: predicted UNKNOWN; measured UNKNOWN.",
+      "alert": "Six attempts are retained. Reset all local data to begin again.",
+      "deliveryRows": [],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "missing",
+          "rejected",
+          "FAIL",
+          "6 / 0 / 0",
+          "PASS (incorrect)"
+        ],
+        [
+          "2",
+          "transfer",
+          "rejected",
+          "PASS",
+          "6 / 0 / 0",
+          "PASS (correct)"
+        ],
+        [
+          "3",
+          "transfer",
+          "rejected",
+          "FAIL",
+          "5 / 1 / 0",
+          "FAIL (correct)"
+        ],
+        [
+          "4",
+          "transfer",
+          "accepted",
+          "FAIL",
+          "6 / 0 / 0",
+          "FAIL (correct)"
+        ],
+        [
+          "5",
+          "ahead",
+          "rejected",
+          "FAIL",
+          "4 / 2 / 0",
+          "FAIL (correct)"
+        ],
+        [
+          "6",
+          "unavailable",
+          "rejected",
+          "UNKNOWN",
+          "0 / 0 / 6",
+          "UNKNOWN (correct)"
+        ]
+      ],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation unavailable; resume after unobserved offset. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: rejected.\nDelivery/effect observation unavailable: all six final effect outcomes remain unknown; no smaller denominator is substituted.\nVerification UNKNOWN: ownership PASS, checkpoint UNKNOWN, effects UNKNOWN. Known failures dominate unknown evidence.\nPrediction UNKNOWN: correct. Measured result remains UNKNOWN.",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "explicit reset clears inputs errors traces predictions history totals and details",
+      "phase": "Phase: idle",
+      "outcome": "Result: not verified",
+      "gates": "Ownership: not verified · checkpoint: not verified · effects: not verified",
+      "acquisition": "New ownership: not acquired",
+      "checkpoint": "Required checkpoint: 3 · transferred: not observed · resume: not observed",
+      "probe": "Old epoch probe: not observed",
+      "deliveries": "Deliveries: not observed · repeated deliveries: not checked",
+      "effects": "Final effects: not observed · duplicate effects: not checked · suppressed: not checked",
+      "missing": "Missing events: not checked",
+      "eventTotals": "Final effect outcomes: six declared · not verified",
+      "totals": "Decided attempts: success 0 · failure 0 · unknown 0",
+      "learning": "Learning prediction not checked.",
+      "alert": "",
+      "deliveryRows": [],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ]
+      ],
+      "history": [],
+      "trace": "No attempt started.",
+      "activeElement": "reassign"
+    },
+    {
+      "name": "dropped E05 FAIL",
+      "phase": "Phase: checked",
+      "outcome": "Result: FAIL",
+      "gates": "Ownership: PASS · checkpoint: PASS · effects: FAIL",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: 3 · resume after: 3",
+      "probe": "Old epoch probe: rejected",
+      "deliveries": "Deliveries: 2 · repeated deliveries: 0",
+      "effects": "Final effects: 5 · duplicate effects: 0 · suppressed: 0",
+      "missing": "Missing events: E05",
+      "eventTotals": "Final effect outcomes: success 5 · failure 1 · unknown 0 / 6",
+      "totals": "Decided attempts: success 0 · failure 1 · unknown 0",
+      "learning": "Learning prediction correct: predicted FAIL; measured FAIL.",
+      "alert": "",
+      "deliveryRows": [
+        [
+          "1",
+          "E04",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ],
+        [
+          "2",
+          "E06",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ]
+      ],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "0",
+          "0",
+          "failure"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "1",
+          "1",
+          "success"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "transfer",
+          "rejected",
+          "FAIL",
+          "5 / 1 / 0",
+          "FAIL (correct)"
+        ]
+      ],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation transfer; resume after offset 3. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: rejected.\nObserved 2 deliveries, 0 repeated deliveries, 0 suppressed effects; 5 final effects include three pre-handoff effects.\nVerification FAIL: ownership PASS, checkpoint PASS, effects FAIL. Known failures dominate unknown evidence.\nPrediction FAIL: correct. Measured result remains FAIL.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "delivery UNKNOWN",
+      "phase": "Phase: checked",
+      "outcome": "Result: UNKNOWN",
+      "gates": "Ownership: PASS · checkpoint: PASS · effects: UNKNOWN",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: 3 · resume after: 3",
+      "probe": "Old epoch probe: rejected",
+      "deliveries": "Deliveries: unavailable · repeated deliveries: unavailable",
+      "effects": "Final effects: unavailable · duplicate effects: unavailable · suppressed: unavailable",
+      "missing": "Missing events: unavailable",
+      "eventTotals": "Final effect outcomes: success 0 · failure 0 · unknown 6 / 6",
+      "totals": "Decided attempts: success 0 · failure 1 · unknown 1",
+      "learning": "Learning prediction correct: predicted UNKNOWN; measured UNKNOWN.",
+      "alert": "",
+      "deliveryRows": [],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "transfer",
+          "rejected",
+          "FAIL",
+          "5 / 1 / 0",
+          "FAIL (correct)"
+        ],
+        [
+          "2",
+          "transfer",
+          "rejected",
+          "UNKNOWN",
+          "0 / 0 / 6",
+          "UNKNOWN (correct)"
+        ]
+      ],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation transfer; resume after offset 3. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: rejected.\nDelivery/effect observation unavailable: all six final effect outcomes remain unknown; no smaller denominator is substituted.\nVerification UNKNOWN: ownership PASS, checkpoint PASS, effects UNKNOWN. Known failures dominate unknown evidence.\nPrediction UNKNOWN: correct. Measured result remains UNKNOWN.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "old probe UNKNOWN with known effect counts",
+      "phase": "Phase: checked",
+      "outcome": "Result: UNKNOWN",
+      "gates": "Ownership: UNKNOWN · checkpoint: PASS · effects: PASS",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: 3 · resume after: 3",
+      "probe": "Old epoch probe: unknown",
+      "deliveries": "Deliveries: 3 · repeated deliveries: 0",
+      "effects": "Final effects: 6 · duplicate effects: 0 · suppressed: 0",
+      "missing": "Missing events: none",
+      "eventTotals": "Final effect outcomes: success 6 · failure 0 · unknown 0 / 6",
+      "totals": "Decided attempts: success 0 · failure 1 · unknown 2",
+      "learning": "Learning prediction correct: predicted UNKNOWN; measured UNKNOWN.",
+      "alert": "",
+      "deliveryRows": [
+        [
+          "1",
+          "E04",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ],
+        [
+          "2",
+          "E05",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ],
+        [
+          "3",
+          "E06",
+          "consumer-b / 8",
+          "no",
+          "applied"
+        ]
+      ],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "0",
+          "1",
+          "success"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "1",
+          "1",
+          "success"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "1",
+          "1",
+          "success"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "transfer",
+          "rejected",
+          "FAIL",
+          "5 / 1 / 0",
+          "FAIL (correct)"
+        ],
+        [
+          "2",
+          "transfer",
+          "rejected",
+          "UNKNOWN",
+          "0 / 0 / 6",
+          "UNKNOWN (correct)"
+        ],
+        [
+          "3",
+          "transfer",
+          "unknown",
+          "UNKNOWN",
+          "6 / 0 / 0",
+          "UNKNOWN (correct)"
+        ]
+      ],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation transfer; resume after offset 3. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: unknown.\nObserved 3 deliveries, 0 repeated deliveries, 0 suppressed effects; 6 final effects include three pre-handoff effects.\nVerification UNKNOWN: ownership UNKNOWN, checkpoint PASS, effects PASS. Known failures dominate unknown evidence.\nPrediction UNKNOWN: correct. Measured result remains UNKNOWN.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "known missing checkpoint FAIL dominates unavailable deliveries",
+      "phase": "Phase: checked",
+      "outcome": "Result: FAIL",
+      "gates": "Ownership: PASS · checkpoint: FAIL · effects: UNKNOWN",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: MISSING · resume after: 0",
+      "probe": "Old epoch probe: rejected",
+      "deliveries": "Deliveries: unavailable · repeated deliveries: unavailable",
+      "effects": "Final effects: unavailable · duplicate effects: unavailable · suppressed: unavailable",
+      "missing": "Missing events: unavailable",
+      "eventTotals": "Final effect outcomes: success 0 · failure 0 · unknown 6 / 6",
+      "totals": "Decided attempts: success 0 · failure 2 · unknown 2",
+      "learning": "Learning prediction correct: predicted FAIL; measured FAIL.",
+      "alert": "",
+      "deliveryRows": [],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "transfer",
+          "rejected",
+          "FAIL",
+          "5 / 1 / 0",
+          "FAIL (correct)"
+        ],
+        [
+          "2",
+          "transfer",
+          "rejected",
+          "UNKNOWN",
+          "0 / 0 / 6",
+          "UNKNOWN (correct)"
+        ],
+        [
+          "3",
+          "transfer",
+          "unknown",
+          "UNKNOWN",
+          "6 / 0 / 0",
+          "UNKNOWN (correct)"
+        ],
+        [
+          "4",
+          "missing",
+          "rejected",
+          "FAIL",
+          "0 / 0 / 6",
+          "FAIL (correct)"
+        ]
+      ],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation missing; resume after offset 0. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: rejected.\nDelivery/effect observation unavailable: all six final effect outcomes remain unknown; no smaller denominator is substituted.\nVerification FAIL: ownership PASS, checkpoint FAIL, effects UNKNOWN. Known failures dominate unknown evidence.\nPrediction FAIL: correct. Measured result remains FAIL.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "known old epoch FAIL dominates unavailable deliveries",
+      "phase": "Phase: checked",
+      "outcome": "Result: FAIL",
+      "gates": "Ownership: FAIL · checkpoint: PASS · effects: UNKNOWN",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: 3 · resume after: 3",
+      "probe": "Old epoch probe: accepted",
+      "deliveries": "Deliveries: unavailable · repeated deliveries: unavailable",
+      "effects": "Final effects: unavailable · duplicate effects: unavailable · suppressed: unavailable",
+      "missing": "Missing events: unavailable",
+      "eventTotals": "Final effect outcomes: success 0 · failure 0 · unknown 6 / 6",
+      "totals": "Decided attempts: success 0 · failure 3 · unknown 2",
+      "learning": "Learning prediction correct: predicted FAIL; measured FAIL.",
+      "alert": "",
+      "deliveryRows": [],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "unavailable",
+          "unavailable",
+          "unknown"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "transfer",
+          "rejected",
+          "FAIL",
+          "5 / 1 / 0",
+          "FAIL (correct)"
+        ],
+        [
+          "2",
+          "transfer",
+          "rejected",
+          "UNKNOWN",
+          "0 / 0 / 6",
+          "UNKNOWN (correct)"
+        ],
+        [
+          "3",
+          "transfer",
+          "unknown",
+          "UNKNOWN",
+          "6 / 0 / 0",
+          "UNKNOWN (correct)"
+        ],
+        [
+          "4",
+          "missing",
+          "rejected",
+          "FAIL",
+          "0 / 0 / 6",
+          "FAIL (correct)"
+        ],
+        [
+          "5",
+          "transfer",
+          "accepted",
+          "FAIL",
+          "0 / 0 / 6",
+          "FAIL (correct)"
+        ]
+      ],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation transfer; resume after offset 3. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: accepted.\nDelivery/effect observation unavailable: all six final effect outcomes remain unknown; no smaller denominator is substituted.\nVerification FAIL: ownership FAIL, checkpoint PASS, effects UNKNOWN. Known failures dominate unknown evidence.\nPrediction FAIL: correct. Measured result remains FAIL.",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "invalid injected enum rejected without starting",
+      "phase": "Phase: idle",
+      "outcome": "Result: not verified",
+      "gates": "Ownership: not verified · checkpoint: not verified · effects: not verified",
+      "acquisition": "New ownership: not acquired",
+      "checkpoint": "Required checkpoint: 3 · transferred: not observed · resume: not observed",
+      "probe": "Old epoch probe: not observed",
+      "deliveries": "Deliveries: not observed · repeated deliveries: not checked",
+      "effects": "Final effects: not observed · duplicate effects: not checked · suppressed: not checked",
+      "missing": "Missing events: not checked",
+      "eventTotals": "Final effect outcomes: six declared · not verified",
+      "totals": "Decided attempts: success 0 · failure 0 · unknown 0",
+      "learning": "Learning prediction not checked.",
+      "alert": "Choose a declared checkpoint option.",
+      "deliveryRows": [],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ]
+      ],
+      "history": [],
+      "trace": "No attempt started.",
+      "activeElement": "checkpoint"
+    },
+    {
+      "name": "out-of-order consume rejected without mutation",
+      "phase": "Phase: idle",
+      "outcome": "Result: not verified",
+      "gates": "Ownership: not verified · checkpoint: not verified · effects: not verified",
+      "acquisition": "New ownership: not acquired",
+      "checkpoint": "Required checkpoint: 3 · transferred: not observed · resume: not observed",
+      "probe": "Old epoch probe: not observed",
+      "deliveries": "Deliveries: not observed · repeated deliveries: not checked",
+      "effects": "Final effects: not observed · duplicate effects: not checked · suppressed: not checked",
+      "missing": "Missing events: not checked",
+      "eventTotals": "Final effect outcomes: six declared · not verified",
+      "totals": "Decided attempts: success 0 · failure 0 · unknown 0",
+      "learning": "Learning prediction not checked.",
+      "alert": "Action requires phase reassigned; current phase is idle.",
+      "deliveryRows": [],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ]
+      ],
+      "history": [],
+      "trace": "No attempt started.",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "repeated reassignment rejected without altering checkpoint",
+      "phase": "Phase: reassigned",
+      "outcome": "Result: not verified",
+      "gates": "Ownership: not verified · checkpoint: not verified · effects: not verified",
+      "acquisition": "New ownership: acquired by consumer-b · epoch 8",
+      "checkpoint": "Required checkpoint: 3 · transferred: 3 · resume after: 3",
+      "probe": "Old epoch probe: rejected",
+      "deliveries": "Deliveries: not observed · repeated deliveries: not checked",
+      "effects": "Final effects: not observed · duplicate effects: not checked · suppressed: not checked",
+      "missing": "Missing events: not checked",
+      "eventTotals": "Final effect outcomes: six declared · not verified",
+      "totals": "Decided attempts: success 0 · failure 0 · unknown 0",
+      "learning": "Learning prediction not checked.",
+      "alert": "Action requires phase idle; current phase is reassigned.",
+      "deliveryRows": [],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ]
+      ],
+      "history": [],
+      "trace": "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.\nRequired checkpoint 3; observation transfer; resume after offset 3. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.\nConcurrent consumer-a epoch 7 probe of E04: rejected.",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "reload clears all memory; native reset remains callable",
+      "phase": "Phase: idle",
+      "outcome": "Result: not verified",
+      "gates": "Ownership: not verified · checkpoint: not verified · effects: not verified",
+      "acquisition": "New ownership: not acquired",
+      "checkpoint": "Required checkpoint: 3 · transferred: not observed · resume: not observed",
+      "probe": "Old epoch probe: not observed",
+      "deliveries": "Deliveries: not observed · repeated deliveries: not checked",
+      "effects": "Final effects: not observed · duplicate effects: not checked · suppressed: not checked",
+      "missing": "Missing events: not checked",
+      "eventTotals": "Final effect outcomes: six declared · not verified",
+      "totals": "Decided attempts: success 0 · failure 0 · unknown 0",
+      "learning": "Learning prediction not checked.",
+      "alert": "",
+      "deliveryRows": [],
+      "events": [
+        [
+          "E01 / P0:E01",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E02 / P0:E02",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E03 / P0:E03",
+          "1",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E04 / P0:E04",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E05 / P0:E05",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ],
+        [
+          "E06 / P0:E06",
+          "0",
+          "not observed",
+          "not observed",
+          "not verified"
+        ]
+      ],
+      "history": [],
+      "trace": "No attempt started.",
+      "activeElement": ""
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp-probes",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-7ezIP/WaXktTGELr6b2G1wCmzlfxkRNkA4EethmYQ8w='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Connecting to 'https://example.invalid/s080-csp-probe' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Fetch API cannot load https://example.invalid/s080-csp-probe. Refused to connect because it violates the document's Content Security Policy."
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "probeRequests": [],
+  "probeResponses": [],
+  "screenshots": [
+    "evidence\\browser-missing.png",
+    "evidence\\browser-unknown.png"
+  ],
+  "cleanup": {
+    "closeAwaited": true,
+    "closed": true
+  },
+  "browserVersion": "156.0.4314.50",
+  "retainedAttemptsAtCapacity": [
+    {
+      "number": 1,
+      "settings": {
+        "checkpoint": "missing",
+        "oldProbe": "fenced",
+        "delivery": "complete",
+        "effects": "idempotent"
+      },
+      "transfer": {
+        "newOwnerAcquired": true,
+        "newConsumer": "consumer-b",
+        "newEpoch": 8,
+        "requiredCheckpoint": 3,
+        "checkpoint": null,
+        "resumeOffset": 0,
+        "oldProbe": "rejected"
+      },
+      "batch": {
+        "deliveries": [
+          {
+            "sequence": 1,
+            "event": "E01",
+            "effectKey": "P0:E01",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": true,
+            "effect": "suppressed",
+            "effectCountAfter": 1
+          },
+          {
+            "sequence": 2,
+            "event": "E02",
+            "effectKey": "P0:E02",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": true,
+            "effect": "suppressed",
+            "effectCountAfter": 1
+          },
+          {
+            "sequence": 3,
+            "event": "E03",
+            "effectKey": "P0:E03",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": true,
+            "effect": "suppressed",
+            "effectCountAfter": 1
+          },
+          {
+            "sequence": 4,
+            "event": "E04",
+            "effectKey": "P0:E04",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": false,
+            "effect": "applied",
+            "effectCountAfter": 1
+          },
+          {
+            "sequence": 5,
+            "event": "E05",
+            "effectKey": "P0:E05",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": false,
+            "effect": "applied",
+            "effectCountAfter": 1
+          },
+          {
+            "sequence": 6,
+            "event": "E06",
+            "effectKey": "P0:E06",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": false,
+            "effect": "applied",
+            "effectCountAfter": 1
+          }
+        ],
+        "events": [
+          {
+            "id": "E01",
+            "offset": 1,
+            "effectKey": "P0:E01",
+            "beforeEffectCount": 1,
+            "deliveryCount": 1,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E02",
+            "offset": 2,
+            "effectKey": "P0:E02",
+            "beforeEffectCount": 1,
+            "deliveryCount": 1,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E03",
+            "offset": 3,
+            "effectKey": "P0:E03",
+            "beforeEffectCount": 1,
+            "deliveryCount": 1,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E04",
+            "offset": 4,
+            "effectKey": "P0:E04",
+            "beforeEffectCount": 0,
+            "deliveryCount": 1,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E05",
+            "offset": 5,
+            "effectKey": "P0:E05",
+            "beforeEffectCount": 0,
+            "deliveryCount": 1,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E06",
+            "offset": 6,
+            "effectKey": "P0:E06",
+            "beforeEffectCount": 0,
+            "deliveryCount": 1,
+            "effectCount": 1,
+            "outcome": "success"
+          }
+        ],
+        "deliveryCount": 6,
+        "repeatedDeliveries": 3,
+        "totalEffects": 6,
+        "duplicateEffects": 0,
+        "suppressed": 3,
+        "missingEvents": []
+      },
+      "result": {
+        "outcome": "FAIL",
+        "ownership": "PASS",
+        "checkpoint": "FAIL",
+        "effects": "PASS",
+        "success": 6,
+        "failure": 0,
+        "unknown": 0,
+        "reasons": [
+          "Required checkpoint was not transferred, despite successful new ownership."
+        ],
+        "impact": "Synthetic contract failure"
+      },
+      "prediction": "PASS",
+      "learning": "incorrect",
+      "trace": [
+        "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.",
+        "Required checkpoint 3; observation missing; resume after offset 0. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.",
+        "Concurrent consumer-a epoch 7 probe of E04: rejected.",
+        "Observed 6 deliveries, 3 repeated deliveries, 3 suppressed effects; 6 final effects include three pre-handoff effects.",
+        "Verification FAIL: ownership PASS, checkpoint FAIL, effects PASS. Known failures dominate unknown evidence.",
+        "Prediction PASS: incorrect. Measured result remains FAIL."
+      ]
+    },
+    {
+      "number": 2,
+      "settings": {
+        "checkpoint": "transfer",
+        "oldProbe": "fenced",
+        "delivery": "repeat",
+        "effects": "idempotent"
+      },
+      "transfer": {
+        "newOwnerAcquired": true,
+        "newConsumer": "consumer-b",
+        "newEpoch": 8,
+        "requiredCheckpoint": 3,
+        "checkpoint": 3,
+        "resumeOffset": 3,
+        "oldProbe": "rejected"
+      },
+      "batch": {
+        "deliveries": [
+          {
+            "sequence": 1,
+            "event": "E04",
+            "effectKey": "P0:E04",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": false,
+            "effect": "applied",
+            "effectCountAfter": 1
+          },
+          {
+            "sequence": 2,
+            "event": "E04",
+            "effectKey": "P0:E04",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": true,
+            "effect": "suppressed",
+            "effectCountAfter": 1
+          },
+          {
+            "sequence": 3,
+            "event": "E05",
+            "effectKey": "P0:E05",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": false,
+            "effect": "applied",
+            "effectCountAfter": 1
+          },
+          {
+            "sequence": 4,
+            "event": "E06",
+            "effectKey": "P0:E06",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": false,
+            "effect": "applied",
+            "effectCountAfter": 1
+          }
+        ],
+        "events": [
+          {
+            "id": "E01",
+            "offset": 1,
+            "effectKey": "P0:E01",
+            "beforeEffectCount": 1,
+            "deliveryCount": 0,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E02",
+            "offset": 2,
+            "effectKey": "P0:E02",
+            "beforeEffectCount": 1,
+            "deliveryCount": 0,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E03",
+            "offset": 3,
+            "effectKey": "P0:E03",
+            "beforeEffectCount": 1,
+            "deliveryCount": 0,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E04",
+            "offset": 4,
+            "effectKey": "P0:E04",
+            "beforeEffectCount": 0,
+            "deliveryCount": 2,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E05",
+            "offset": 5,
+            "effectKey": "P0:E05",
+            "beforeEffectCount": 0,
+            "deliveryCount": 1,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E06",
+            "offset": 6,
+            "effectKey": "P0:E06",
+            "beforeEffectCount": 0,
+            "deliveryCount": 1,
+            "effectCount": 1,
+            "outcome": "success"
+          }
+        ],
+        "deliveryCount": 4,
+        "repeatedDeliveries": 1,
+        "totalEffects": 6,
+        "duplicateEffects": 0,
+        "suppressed": 1,
+        "missingEvents": []
+      },
+      "result": {
+        "outcome": "PASS",
+        "ownership": "PASS",
+        "checkpoint": "PASS",
+        "effects": "PASS",
+        "success": 6,
+        "failure": 0,
+        "unknown": 0,
+        "reasons": [
+          "Checkpoint 3 transferred, the old epoch was rejected, and every event has one final effect."
+        ],
+        "impact": "Synthetic contract met"
+      },
+      "prediction": "PASS",
+      "learning": "correct",
+      "trace": [
+        "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.",
+        "Required checkpoint 3; observation transfer; resume after offset 3. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.",
+        "Concurrent consumer-a epoch 7 probe of E04: rejected.",
+        "Observed 4 deliveries, 1 repeated deliveries, 1 suppressed effects; 6 final effects include three pre-handoff effects.",
+        "Verification PASS: ownership PASS, checkpoint PASS, effects PASS. Known failures dominate unknown evidence.",
+        "Prediction PASS: correct. Measured result remains PASS."
+      ]
+    },
+    {
+      "number": 3,
+      "settings": {
+        "checkpoint": "transfer",
+        "oldProbe": "fenced",
+        "delivery": "repeat",
+        "effects": "unchecked"
+      },
+      "transfer": {
+        "newOwnerAcquired": true,
+        "newConsumer": "consumer-b",
+        "newEpoch": 8,
+        "requiredCheckpoint": 3,
+        "checkpoint": 3,
+        "resumeOffset": 3,
+        "oldProbe": "rejected"
+      },
+      "batch": {
+        "deliveries": [
+          {
+            "sequence": 1,
+            "event": "E04",
+            "effectKey": "P0:E04",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": false,
+            "effect": "applied",
+            "effectCountAfter": 1
+          },
+          {
+            "sequence": 2,
+            "event": "E04",
+            "effectKey": "P0:E04",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": true,
+            "effect": "applied",
+            "effectCountAfter": 2
+          },
+          {
+            "sequence": 3,
+            "event": "E05",
+            "effectKey": "P0:E05",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": false,
+            "effect": "applied",
+            "effectCountAfter": 1
+          },
+          {
+            "sequence": 4,
+            "event": "E06",
+            "effectKey": "P0:E06",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": false,
+            "effect": "applied",
+            "effectCountAfter": 1
+          }
+        ],
+        "events": [
+          {
+            "id": "E01",
+            "offset": 1,
+            "effectKey": "P0:E01",
+            "beforeEffectCount": 1,
+            "deliveryCount": 0,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E02",
+            "offset": 2,
+            "effectKey": "P0:E02",
+            "beforeEffectCount": 1,
+            "deliveryCount": 0,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E03",
+            "offset": 3,
+            "effectKey": "P0:E03",
+            "beforeEffectCount": 1,
+            "deliveryCount": 0,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E04",
+            "offset": 4,
+            "effectKey": "P0:E04",
+            "beforeEffectCount": 0,
+            "deliveryCount": 2,
+            "effectCount": 2,
+            "outcome": "failure"
+          },
+          {
+            "id": "E05",
+            "offset": 5,
+            "effectKey": "P0:E05",
+            "beforeEffectCount": 0,
+            "deliveryCount": 1,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E06",
+            "offset": 6,
+            "effectKey": "P0:E06",
+            "beforeEffectCount": 0,
+            "deliveryCount": 1,
+            "effectCount": 1,
+            "outcome": "success"
+          }
+        ],
+        "deliveryCount": 4,
+        "repeatedDeliveries": 1,
+        "totalEffects": 7,
+        "duplicateEffects": 1,
+        "suppressed": 0,
+        "missingEvents": []
+      },
+      "result": {
+        "outcome": "FAIL",
+        "ownership": "PASS",
+        "checkpoint": "PASS",
+        "effects": "FAIL",
+        "success": 5,
+        "failure": 1,
+        "unknown": 0,
+        "reasons": [
+          "At least one declared event has a missing or duplicate business effect."
+        ],
+        "impact": "Synthetic contract failure"
+      },
+      "prediction": "FAIL",
+      "learning": "correct",
+      "trace": [
+        "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.",
+        "Required checkpoint 3; observation transfer; resume after offset 3. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.",
+        "Concurrent consumer-a epoch 7 probe of E04: rejected.",
+        "Observed 4 deliveries, 1 repeated deliveries, 0 suppressed effects; 7 final effects include three pre-handoff effects.",
+        "Verification FAIL: ownership PASS, checkpoint PASS, effects FAIL. Known failures dominate unknown evidence.",
+        "Prediction FAIL: correct. Measured result remains FAIL."
+      ]
+    },
+    {
+      "number": 4,
+      "settings": {
+        "checkpoint": "transfer",
+        "oldProbe": "accepted",
+        "delivery": "complete",
+        "effects": "idempotent"
+      },
+      "transfer": {
+        "newOwnerAcquired": true,
+        "newConsumer": "consumer-b",
+        "newEpoch": 8,
+        "requiredCheckpoint": 3,
+        "checkpoint": 3,
+        "resumeOffset": 3,
+        "oldProbe": "accepted"
+      },
+      "batch": {
+        "deliveries": [
+          {
+            "sequence": 1,
+            "event": "E04",
+            "effectKey": "P0:E04",
+            "consumer": "consumer-a",
+            "epoch": 7,
+            "repeatedDelivery": false,
+            "effect": "applied",
+            "effectCountAfter": 1
+          },
+          {
+            "sequence": 2,
+            "event": "E04",
+            "effectKey": "P0:E04",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": true,
+            "effect": "suppressed",
+            "effectCountAfter": 1
+          },
+          {
+            "sequence": 3,
+            "event": "E05",
+            "effectKey": "P0:E05",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": false,
+            "effect": "applied",
+            "effectCountAfter": 1
+          },
+          {
+            "sequence": 4,
+            "event": "E06",
+            "effectKey": "P0:E06",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": false,
+            "effect": "applied",
+            "effectCountAfter": 1
+          }
+        ],
+        "events": [
+          {
+            "id": "E01",
+            "offset": 1,
+            "effectKey": "P0:E01",
+            "beforeEffectCount": 1,
+            "deliveryCount": 0,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E02",
+            "offset": 2,
+            "effectKey": "P0:E02",
+            "beforeEffectCount": 1,
+            "deliveryCount": 0,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E03",
+            "offset": 3,
+            "effectKey": "P0:E03",
+            "beforeEffectCount": 1,
+            "deliveryCount": 0,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E04",
+            "offset": 4,
+            "effectKey": "P0:E04",
+            "beforeEffectCount": 0,
+            "deliveryCount": 2,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E05",
+            "offset": 5,
+            "effectKey": "P0:E05",
+            "beforeEffectCount": 0,
+            "deliveryCount": 1,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E06",
+            "offset": 6,
+            "effectKey": "P0:E06",
+            "beforeEffectCount": 0,
+            "deliveryCount": 1,
+            "effectCount": 1,
+            "outcome": "success"
+          }
+        ],
+        "deliveryCount": 4,
+        "repeatedDeliveries": 1,
+        "totalEffects": 6,
+        "duplicateEffects": 0,
+        "suppressed": 1,
+        "missingEvents": []
+      },
+      "result": {
+        "outcome": "FAIL",
+        "ownership": "FAIL",
+        "checkpoint": "PASS",
+        "effects": "PASS",
+        "success": 6,
+        "failure": 0,
+        "unknown": 0,
+        "reasons": [
+          "Old epoch work was accepted concurrently."
+        ],
+        "impact": "Synthetic contract failure"
+      },
+      "prediction": "FAIL",
+      "learning": "correct",
+      "trace": [
+        "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.",
+        "Required checkpoint 3; observation transfer; resume after offset 3. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.",
+        "Concurrent consumer-a epoch 7 probe of E04: accepted.",
+        "Observed 4 deliveries, 1 repeated deliveries, 1 suppressed effects; 6 final effects include three pre-handoff effects.",
+        "Verification FAIL: ownership FAIL, checkpoint PASS, effects PASS. Known failures dominate unknown evidence.",
+        "Prediction FAIL: correct. Measured result remains FAIL."
+      ]
+    },
+    {
+      "number": 5,
+      "settings": {
+        "checkpoint": "ahead",
+        "oldProbe": "fenced",
+        "delivery": "complete",
+        "effects": "idempotent"
+      },
+      "transfer": {
+        "newOwnerAcquired": true,
+        "newConsumer": "consumer-b",
+        "newEpoch": 8,
+        "requiredCheckpoint": 3,
+        "checkpoint": 5,
+        "resumeOffset": 5,
+        "oldProbe": "rejected"
+      },
+      "batch": {
+        "deliveries": [
+          {
+            "sequence": 1,
+            "event": "E06",
+            "effectKey": "P0:E06",
+            "consumer": "consumer-b",
+            "epoch": 8,
+            "repeatedDelivery": false,
+            "effect": "applied",
+            "effectCountAfter": 1
+          }
+        ],
+        "events": [
+          {
+            "id": "E01",
+            "offset": 1,
+            "effectKey": "P0:E01",
+            "beforeEffectCount": 1,
+            "deliveryCount": 0,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E02",
+            "offset": 2,
+            "effectKey": "P0:E02",
+            "beforeEffectCount": 1,
+            "deliveryCount": 0,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E03",
+            "offset": 3,
+            "effectKey": "P0:E03",
+            "beforeEffectCount": 1,
+            "deliveryCount": 0,
+            "effectCount": 1,
+            "outcome": "success"
+          },
+          {
+            "id": "E04",
+            "offset": 4,
+            "effectKey": "P0:E04",
+            "beforeEffectCount": 0,
+            "deliveryCount": 0,
+            "effectCount": 0,
+            "outcome": "failure"
+          },
+          {
+            "id": "E05",
+            "offset": 5,
+            "effectKey": "P0:E05",
+            "beforeEffectCount": 0,
+            "deliveryCount": 0,
+            "effectCount": 0,
+            "outcome": "failure"
+          },
+          {
+            "id": "E06",
+            "offset": 6,
+            "effectKey": "P0:E06",
+            "beforeEffectCount": 0,
+            "deliveryCount": 1,
+            "effectCount": 1,
+            "outcome": "success"
+          }
+        ],
+        "deliveryCount": 1,
+        "repeatedDeliveries": 0,
+        "totalEffects": 4,
+        "duplicateEffects": 0,
+        "suppressed": 0,
+        "missingEvents": [
+          "E04",
+          "E05"
+        ]
+      },
+      "result": {
+        "outcome": "FAIL",
+        "ownership": "PASS",
+        "checkpoint": "FAIL",
+        "effects": "FAIL",
+        "success": 4,
+        "failure": 2,
+        "unknown": 0,
+        "reasons": [
+          "Checkpoint 5 is ahead of required committed checkpoint 3.",
+          "At least one declared event has a missing or duplicate business effect."
+        ],
+        "impact": "Synthetic contract failure"
+      },
+      "prediction": "FAIL",
+      "learning": "correct",
+      "trace": [
+        "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.",
+        "Required checkpoint 3; observation ahead; resume after offset 5. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.",
+        "Concurrent consumer-a epoch 7 probe of E04: rejected.",
+        "Observed 1 deliveries, 0 repeated deliveries, 0 suppressed effects; 4 final effects include three pre-handoff effects.",
+        "Verification FAIL: ownership PASS, checkpoint FAIL, effects FAIL. Known failures dominate unknown evidence.",
+        "Prediction FAIL: correct. Measured result remains FAIL."
+      ]
+    },
+    {
+      "number": 6,
+      "settings": {
+        "checkpoint": "unavailable",
+        "oldProbe": "fenced",
+        "delivery": "complete",
+        "effects": "idempotent"
+      },
+      "transfer": {
+        "newOwnerAcquired": true,
+        "newConsumer": "consumer-b",
+        "newEpoch": 8,
+        "requiredCheckpoint": 3,
+        "checkpoint": null,
+        "resumeOffset": null,
+        "oldProbe": "rejected"
+      },
+      "batch": {
+        "deliveries": [],
+        "events": [
+          {
+            "id": "E01",
+            "offset": 1,
+            "effectKey": "P0:E01",
+            "beforeEffectCount": 1,
+            "deliveryCount": null,
+            "effectCount": null,
+            "outcome": "unknown"
+          },
+          {
+            "id": "E02",
+            "offset": 2,
+            "effectKey": "P0:E02",
+            "beforeEffectCount": 1,
+            "deliveryCount": null,
+            "effectCount": null,
+            "outcome": "unknown"
+          },
+          {
+            "id": "E03",
+            "offset": 3,
+            "effectKey": "P0:E03",
+            "beforeEffectCount": 1,
+            "deliveryCount": null,
+            "effectCount": null,
+            "outcome": "unknown"
+          },
+          {
+            "id": "E04",
+            "offset": 4,
+            "effectKey": "P0:E04",
+            "beforeEffectCount": 0,
+            "deliveryCount": null,
+            "effectCount": null,
+            "outcome": "unknown"
+          },
+          {
+            "id": "E05",
+            "offset": 5,
+            "effectKey": "P0:E05",
+            "beforeEffectCount": 0,
+            "deliveryCount": null,
+            "effectCount": null,
+            "outcome": "unknown"
+          },
+          {
+            "id": "E06",
+            "offset": 6,
+            "effectKey": "P0:E06",
+            "beforeEffectCount": 0,
+            "deliveryCount": null,
+            "effectCount": null,
+            "outcome": "unknown"
+          }
+        ],
+        "deliveryCount": null,
+        "repeatedDeliveries": null,
+        "totalEffects": null,
+        "duplicateEffects": null,
+        "suppressed": null,
+        "missingEvents": []
+      },
+      "result": {
+        "outcome": "UNKNOWN",
+        "ownership": "PASS",
+        "checkpoint": "UNKNOWN",
+        "effects": "UNKNOWN",
+        "success": 0,
+        "failure": 0,
+        "unknown": 6,
+        "reasons": [
+          "Checkpoint transfer was not observed.",
+          "Final effect outcomes are unavailable for six declared events."
+        ],
+        "impact": "Unverified synthetic transition"
+      },
+      "prediction": "UNKNOWN",
+      "learning": "correct",
+      "trace": [
+        "P0 acquisition succeeded: consumer-b, epoch 8. Ownership alone does not prove checkpoint transfer.",
+        "Required checkpoint 3; observation unavailable; resume after unobserved offset. Missing-checkpoint replay from 0 is an explicit unsafe fixture fallback.",
+        "Concurrent consumer-a epoch 7 probe of E04: rejected.",
+        "Delivery/effect observation unavailable: all six final effect outcomes remain unknown; no smaller denominator is substituted.",
+        "Verification UNKNOWN: ownership PASS, checkpoint UNKNOWN, effects UNKNOWN. Known failures dominate unknown evidence.",
+        "Prediction UNKNOWN: correct. Measured result remains UNKNOWN."
+      ]
+    }
+  ],
+  "narrowViewport": {
+    "width": 320,
+    "bodyOverflow": false,
+    "visibleKeyboardFocus": true,
+    "focusedControlInsideViewport": true,
+    "scrollableTableRegions": true
+  },
+  "csp": {
+    "inlineRan": false,
+    "connection": "TypeError",
+    "violations": [
+      {
+        "directive": "script-src-elem",
+        "blockedURI": "inline"
+      },
+      {
+        "directive": "connect-src",
+        "blockedURI": "https://example.invalid/s080-csp-probe"
+      }
+    ]
+  },
+  "completedAtUtc": "2026-11-03T20:40:37.151Z"
+}

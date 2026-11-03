@@ -1,0 +1,80 @@
+Feature: Reassign a synthetic partition without confusing ownership with checkpoint safety
+  The lesson is A-S080, one frozen S unit in SC-S080.
+  Training rehearsal - synthetic data - not a live Azure result
+  Six fixed events E01-E06 belong to P0. Effects E01-E03 already exist.
+  Consumer-a epoch 7 hands ownership to consumer-b epoch 8.
+  The required checkpoint is 3. No real broker or checkpoint is contacted.
+
+  Scenario: Transfer the required checkpoint and reject the concurrent old consumer
+    Given checkpoint 3 is transferred and the old epoch probe is fenced
+    When I reassign P0, consume the fixed batch, and verify
+    Then consumer-b owns the partition and resumes at E04
+    And all six events have exactly one effect and the synthetic result is PASS
+
+  Scenario: Successful new ownership does not prove checkpoint transfer
+    Given ownership succeeds but no checkpoint is transferred
+    And the declared unsafe fallback replays from offset 0 with the effect-key ledger on
+    When I consume and verify
+    Then all six events have one effect and three replayed deliveries are suppressed
+    But the missing checkpoint independently makes the result FAIL
+
+  Scenario: A checkpoint ahead of committed progress skips events
+    Given checkpoint 5 is transferred instead of required checkpoint 3
+    When I consume and verify
+    Then E04 and E05 have missing effects and the result is FAIL
+
+  Scenario Outline: Delivery duplicates are not necessarily duplicate business effects
+    Given checkpoint 3 is transferred and the old consumer is fenced
+    And E04 is delivered twice with effect guard <guard>
+    When I consume and verify
+    Then there is one repeated delivery and <duplicates> duplicate business effects
+    And the result is <result>
+    Examples:
+      | guard      | duplicates | result |
+      | idempotent | 0          | PASS   |
+      | unchecked  | 1          | FAIL   |
+
+  Scenario: Concurrent accepted old-epoch work fails even with intact effect counts
+    Given the old epoch probe is accepted as consumer-b acquires ownership
+    And the effect-key ledger suppresses a repeated E04 effect
+    When I consume and verify
+    Then the ownership gate is FAIL and all six effects can still exist exactly once
+    And successful new-owner acquisition cannot hide overlapping ownership
+
+  Scenario Outline: Unavailable evidence cannot become success
+    Given <evidence> is unavailable and there is no known fault
+    When I verify
+    Then the synthetic result is UNKNOWN, not PASS
+    Examples:
+      | evidence               |
+      | checkpoint observation |
+      | delivery observation   |
+      | old epoch probe        |
+
+  Scenario: Known faults are not hidden by unavailable evidence
+    Given the checkpoint is missing or the old epoch probe was accepted
+    And delivery observations are unavailable
+    When I verify
+    Then the result is FAIL and six unknown effect outcomes remain visible
+
+  Scenario: A dropped event is a failure, not a smaller successful sample
+    Given E05 is omitted after a correct transfer
+    When I verify
+    Then E05 remains in the six-event denominator with a failed effect outcome
+
+  Scenario: Strict ordered bounded attempts retain failures and unknowns
+    Given only exact declared enum records are allowed
+    Then malformed, repeated, and out-of-order actions cannot mutate lesson state
+    When I check a prediction it is independent of the measured result
+    And the exact input, ownership, checkpoint, deliveries, effects, verdict, and trace are retained
+    And a new attempt preserves all previous failures and unknowns
+    And six retained attempts stop further work without evicting any history
+
+  Scenario: Keyboard, errors, reset, and browser isolation are observable
+    Given the standalone page uses external local scripts and styles under a restrictive CSP
+    When I operate controls with Tab, arrows, Enter, and Space
+    Then valid focus progression and invalid-field announcements work
+    And reset clears settings, trace, prediction, errors, history, totals, and expanded details
+    And both forms retain a callable native reset method
+    And an actual browser blocks inline script and external connection probes
+    And normal verification never rewrites committed proof
