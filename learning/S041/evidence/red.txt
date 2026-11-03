@@ -1,0 +1,279 @@
+A-S041 genuine behavioral TDD red
+StartedAtUtc: 2026-11-03T13:23:16.8444937Z
+Runtime: v22.23.4
+Command: node --test --test-reporter=tap .\learning\S041\tests\cutover.test.cjs
+LoadableStubSHA256: C3AEC41742DB74D8797D71A24493102A229727536E008FC165D64E5AF8949426
+TestSHA256: C7F0318D646B3DCC36D82DACF1EFC599CE9BA9B541E71F5AA56F54A0CD17A458
+TAP version 13
+# Subtest: safe cutover completes the old request on v1 and separately admits a new request to v2
+not ok 1 - safe cutover completes the old request on v1 and separately admits a new request to v2
+  ---
+  duration_ms: 6.4901
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S041\\tests\\cutover.test.cjs:8:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+
+      [
+    +   'unknown',
+    +   'unknown'
+    -   'v1',
+    -   'v2'
+      ]
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 'v1'
+    1: 'v2'
+  actual:
+    0: 'unknown'
+    1: 'unknown'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S041\tests\cutover.test.cjs:10:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: a legitimate old completion alone neither fails continuity nor proves a moved user
+not ok 2 - a legitimate old completion alone neither fails continuity nor proves a moved user
+  ---
+  duration_ms: 1.2734
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S041\\tests\\cutover.test.cjs:21:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'completed'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'completed'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S041\tests\cutover.test.cjs:25:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: premature retirement interrupts old work despite a contradictory later success record
+not ok 3 - premature retirement interrupts old work despite a contradictory later success record
+  ---
+  duration_ms: 0.3508
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S041\\tests\\cutover.test.cjs:32:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'interrupted'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'interrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S041\tests\cutover.test.cjs:34:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a reported retry clock cannot reset the original request budget
+not ok 4 - a reported retry clock cannot reset the original request budget
+  ---
+  duration_ms: 1.4491
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S041\\tests\\cutover.test.cjs:43:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'interrupted'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'interrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S041\tests\cutover.test.cjs:46:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: the original journey deadline is independent of request and retry clocks
+not ok 5 - the original journey deadline is independent of request and retry clocks
+  ---
+  duration_ms: 0.606
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S041\\tests\\cutover.test.cjs:55:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'interrupted'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'interrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S041\tests\cutover.test.cjs:57:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: correct timing does not excuse a wrong response or lost state
+not ok 6 - correct timing does not excuse a wrong response or lost state
+  ---
+  duration_ms: 0.3248
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S041\\tests\\cutover.test.cjs:63:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    wrong-response
+    + actual - expected
+
+    + 'unknown'
+    - 'interrupted'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'interrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S041\tests\cutover.test.cjs:66:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a forged v2 owner for a pre-cutover request is invalid evidence, not migration proof
+not ok 7 - a forged v2 owner for a pre-cutover request is invalid evidence, not migration proof
+  ---
+  duration_ms: 0.2697
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S041\\tests\\cutover.test.cjs:72:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'invalid'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'invalid'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S041\tests\cutover.test.cjs:75:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: missing completion stays unknown and cannot authorize v1 retirement
+not ok 8 - missing completion stays unknown and cannot authorize v1 retirement
+  ---
+  duration_ms: 2.6751
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S041\\tests\\cutover.test.cjs:81:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unimplemented'
+    - 'missing-completion'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'missing-completion'
+  actual: 'unimplemented'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S041\tests\cutover.test.cjs:84:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a passing negative prediction does not change interrupted user impact
+not ok 9 - a passing negative prediction does not change interrupted user impact
+  ---
+  duration_ms: 1.0181
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S041\\tests\\cutover.test.cjs:89:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    false !== true
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S041\tests\cutover.test.cjs:91:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: the fixture loads deterministically and rehearsal leaves original input untouched
+ok 10 - the fixture loads deterministically and rehearsal leaves original input untouched
+  ---
+  duration_ms: 0.9222
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 1
+# fail 9
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 226.1231
+ExitCode: 1

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>S041 · Short request at cutover · Synthetic rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="cutover.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#s041-controls">Skip to rehearsal controls</a>
+  <header>
+    <p class="training">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p class="eyebrow">A-S041 · Source S041 · Parent D-S041 · Packet SC-S041</p>
+    <h1>Who owns the request at cutover?</h1>
+    <p class="lead">Change the destination of <strong>new admissions</strong>, not the owner of a request already in flight.</p>
+    <div class="principle">
+      <p><strong>Old admission → v1 completion:</strong> legitimate old work, even after cutover.</p>
+      <p><strong>New admission → v2:</strong> a different request, not proof a user moved.</p>
+    </div>
+  </header>
+  <main>
+    <section aria-labelledby="s041-controls-title">
+      <h2 id="s041-controls-title">1. Choose a synthetic plan</h2>
+      <p>Preconditions: one synthetic user and journey, two timed short requests, expected cart revision <strong>7</strong> and total <strong>4200 cents</strong>. All clocks are offsets in synthetic milliseconds; nothing runs in real time.</p>
+      <div id="s041-controls" class="controls">
+        <div class="wide">
+          <label for="s041-scenario">Scenario preset</label>
+          <select id="s041-scenario">
+            <option value="safe">Safe cutover</option>
+            <option value="premature-retirement">Premature retirement</option>
+            <option value="retry-clock-reset">Retry clock reset</option>
+            <option value="state-loss">State lost on old completion</option>
+            <option value="wrong-response">Wrong response</option>
+            <option value="missing-completion">Missing old completion</option>
+            <option value="forged-owner">Invalid evidence: forged owner</option>
+            <option value="future-evidence">Invalid evidence: future timestamp</option>
+          </select>
+        </div>
+        <div>
+          <label for="s041-cutover">New-admission cutover at (ms)</label>
+          <input id="s041-cutover" type="number" min="0" max="10000" step="1" value="40">
+        </div>
+        <div>
+          <label for="s041-retire">Retire v1 at (ms)</label>
+          <input id="s041-retire" type="number" min="0" max="10000" step="1" value="110">
+        </div>
+        <div>
+          <label for="s041-journey-budget">ORIGINAL journey budget (ms)</label>
+          <input id="s041-journey-budget" type="number" min="1" max="2000" step="1" value="180">
+        </div>
+        <div>
+          <label for="s041-request-budget">ORIGINAL budget per request (ms)</label>
+          <input id="s041-request-budget" type="number" min="1" max="2000" step="1" value="120">
+        </div>
+        <div>
+          <label for="s041-old-work">Work of r-before (ms)</label>
+          <input id="s041-old-work" type="number" min="1" max="2000" step="1" value="90">
+        </div>
+      </div>
+      <p class="hint">r-before admits at 10 ms; r-after admits at 60 ms and takes 80 ms. Admission at the cutover instant goes to v2. Completion at the deadline or retirement instant counts before retirement.</p>
+      <div class="buttons">
+        <button id="s041-apply" type="button">Apply timing and budgets</button>
+        <button id="s041-reset" class="secondary" type="button">Reset rehearsal</button>
+      </div>
+      <p id="s041-notice" class="hint" role="status">Controls regenerate synthetic evidence, not measurements. Reset restores the exact safe fixture.</p>
+    </section>
+
+    <section aria-labelledby="s041-result-title">
+      <h2 id="s041-result-title">2. Inspect request continuity, not “migration success”</h2>
+      <div id="s041-summary" class="summary" role="status" aria-live="polite" aria-atomic="true">
+        <p id="s041-outcome">Synthetic continuity: UNKNOWN — waiting for local script.</p>
+        <p id="s041-counts">No actual requests are sent.</p>
+        <p id="s041-retirement">Retirement gate: HOLD.</p>
+      </div>
+      <p id="s041-original-journey"></p>
+      <p id="s041-migration" class="boundary"><strong>Actual user migration: unknown. Proven moved users: 0.</strong> Neither an old completion nor a new admission establishes that a user moved.</p>
+      <ul id="s041-issues" class="issues" aria-label="Input and evidence explanations"></ul>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Synthetic request results, scrollable">
+        <table>
+          <caption>Identity-bound synthetic requests — ORIGINAL clocks never restart</caption>
+          <thead>
+            <tr>
+              <th scope="col">Request / owner</th>
+              <th scope="col">ORIGINAL admission / budgets</th>
+              <th scope="col">Response or interruption</th>
+              <th scope="col">Response / state checks</th>
+              <th scope="col">User-impact category / reason</th>
+            </tr>
+          </thead>
+          <tbody id="s041-requests"></tbody>
+        </table>
+      </div>
+      <details open>
+        <summary>Inspect the ordered synthetic trace</summary>
+        <p class="hint">Every entry keeps its synthetic provenance when copied. A retrospective retirement gate is not a live host-drain measurement.</p>
+        <ol id="s041-trace" class="trace"></ol>
+      </details>
+      <div class="prediction">
+        <label for="s041-prediction">Predict the synthetic continuity result</label>
+        <select id="s041-prediction">
+          <option value="CONTINUITY">CONTINUITY — all declared requests correct within original budgets</option>
+          <option value="INTERRUPTED">INTERRUPTED — at least one interrupted request</option>
+          <option value="UNKNOWN">UNKNOWN — incomplete or invalid evidence</option>
+        </select>
+        <button id="s041-check" type="button">Check prediction</button>
+        <p id="s041-prediction-result" role="status">Not checked. The exercise check is separate from user impact.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="s041-evidence-title">
+      <h2 id="s041-evidence-title">3. Challenge the evidence</h2>
+      <details id="s041-json-details">
+        <summary>Inspect or edit synthetic evidence JSON</summary>
+        <p id="s041-json-help">Try removing a completion, replacing a pre-cutover owner with v2, or changing the response body. Missing or invalid proof must stay unknown. Applying numeric controls replaces these edits. Maximum 24,000 characters, 8 requests and clocks up to 10,000 ms.</p>
+        <label for="s041-json">Synthetic evidence JSON</label>
+        <textarea id="s041-json" rows="16" maxlength="24000" spellcheck="false" aria-describedby="s041-json-help"></textarea>
+        <button id="s041-evaluate" type="button">Evaluate edited JSON</button>
+      </details>
+    </section>
+
+    <section aria-labelledby="s041-limits-title">
+      <h2 id="s041-limits-title">Expected assertions and limits</h2>
+      <ul>
+        <li>A correct response and unchanged cart state must meet <strong>both ORIGINAL budgets</strong>. A fresh retry clock cannot erase spent time.</li>
+        <li>Premature retirement, a wrong response, lost state or exceeded budget is <strong>interrupted</strong>. Missing or invalid proof is <strong>unknown</strong>, not success. A known violation remains interrupted even if another check is unknown.</li>
+        <li>The conservative retirement gate requires evidenced, correct, on-budget completion of every declared v1 request. It is not a claim about a real server's drain support.</li>
+        <li>A passing prediction for an unsafe case does not repair an interrupted journey. No migration-success percentage is calculated.</li>
+        <li><strong>Actual HTTP response, latency, routing, state continuity and user migration: unknown.</strong> All traffic, users, clocks and evidence here are synthetic.</li>
+        <li>Cleanup: only in-memory inputs; no resources, storage, requests or credentials. Reset clears the current rehearsal.</li>
+        <li>IaC: N/A. No deployment, management call, cloud spend or production-runtime approval. Existing Node 22 is test tooling only.</li>
+        <li>This is A-S041 only. B-S041 and D-S041 native acceptance are not fulfilled.</li>
+      </ul>
+      <p><a href="cutover.feature">BDD feature</a> · <a href="manifest.json">Lesson manifest</a> · <a href="evidence.json">Recorded engineering evidence</a></p>
+    </section>
+    <noscript><p class="boundary">JavaScript is required for this local exercise. No live result is available.</p></noscript>
+  </main>
+  <footer>Training rehearsal - synthetic data - not a live Azure result</footer>
+</body>
+</html>

@@ -1,0 +1,40 @@
+(function (root, factory) {
+  "use strict";
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.S041Rehearsal = factory();
+})(globalThis, function () {
+  "use strict";
+
+  // Loadable pre-implementation stub: the first behavioral test run must fail.
+  function rehearse(input) {
+    const requests = (input && Array.isArray(input.requests) ? input.requests : []).map(function (request) {
+      return {
+        id: request.id,
+        originalAdmittedAtMs: request.originalAdmittedAtMs,
+        originalRequestBudgetMs: request.originalRequestBudgetMs,
+        owner: "unknown",
+        outcome: "unknown",
+        reason: "unimplemented",
+        evidenceQuality: "unknown"
+      };
+    });
+    return {
+      executionMode: "synthetic",
+      validInput: true,
+      outcome: "UNKNOWN",
+      issues: [],
+      requests,
+      counts: { attemptedRequests: requests.length, completed: 0, interrupted: 0, unknown: requests.length,
+        oldCompletions: 0, newAdmissions: 0 },
+      userMigration: { classification: "unknown", provenMovedUsers: 0 },
+      retirement: { gate: "HOLD", allowed: false },
+      trace: []
+    };
+  }
+
+  function checkPrediction(result, prediction) {
+    return { passed: prediction === result.outcome, expected: prediction, actual: result.outcome };
+  }
+
+  return Object.freeze({ rehearse, checkPrediction });
+});

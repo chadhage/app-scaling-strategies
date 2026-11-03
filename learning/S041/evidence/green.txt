@@ -1,0 +1,489 @@
+A-S041 final focused behavioral and surface green
+StartedAtUtc: 2026-11-03T13:34:35.2517739Z
+Runtime: v22.23.4
+Command: node --test --test-reporter=tap .\learning\S041\tests\cutover.test.cjs .\learning\S041\tests\surface.test.cjs
+TAP version 13
+# Subtest: safe cutover completes the old request on v1 and separately admits a new request to v2
+ok 1 - safe cutover completes the old request on v1 and separately admits a new request to v2
+  ---
+  duration_ms: 6.644
+  type: 'test'
+  ...
+# Subtest: a legitimate old completion alone neither fails continuity nor proves a moved user
+ok 2 - a legitimate old completion alone neither fails continuity nor proves a moved user
+  ---
+  duration_ms: 0.4491
+  type: 'test'
+  ...
+# Subtest: premature retirement interrupts old work despite a contradictory later success record
+ok 3 - premature retirement interrupts old work despite a contradictory later success record
+  ---
+  duration_ms: 0.3283
+  type: 'test'
+  ...
+# Subtest: a reported retry clock cannot reset the original request budget
+ok 4 - a reported retry clock cannot reset the original request budget
+  ---
+  duration_ms: 0.3777
+  type: 'test'
+  ...
+# Subtest: the original journey deadline is independent of request and retry clocks
+ok 5 - the original journey deadline is independent of request and retry clocks
+  ---
+  duration_ms: 0.5355
+  type: 'test'
+  ...
+# Subtest: correct timing does not excuse a wrong response or lost state
+ok 6 - correct timing does not excuse a wrong response or lost state
+  ---
+  duration_ms: 0.3993
+  type: 'test'
+  ...
+# Subtest: a forged v2 owner for a pre-cutover request is invalid evidence, not migration proof
+ok 7 - a forged v2 owner for a pre-cutover request is invalid evidence, not migration proof
+  ---
+  duration_ms: 0.1723
+  type: 'test'
+  ...
+# Subtest: missing completion stays unknown and cannot authorize v1 retirement
+ok 8 - missing completion stays unknown and cannot authorize v1 retirement
+  ---
+  duration_ms: 0.2515
+  type: 'test'
+  ...
+# Subtest: a passing negative prediction does not change interrupted user impact
+ok 9 - a passing negative prediction does not change interrupted user impact
+  ---
+  duration_ms: 0.3805
+  type: 'test'
+  ...
+# Subtest: the fixture loads deterministically and rehearsal leaves original input untouched
+ok 10 - the fixture loads deterministically and rehearsal leaves original input untouched
+  ---
+  duration_ms: 0.4576
+  type: 'test'
+  ...
+# Subtest: admission at exactly cutover goes to v2, not the draining owner
+ok 11 - admission at exactly cutover goes to v2, not the draining owner
+  ---
+  duration_ms: 0.2977
+  type: 'test'
+  ...
+# Subtest: completion at exactly retirement is ordered first and is not interrupted
+ok 12 - completion at exactly retirement is ordered first and is not interrupted
+  ---
+  duration_ms: 0.1767
+  type: 'test'
+  ...
+# Subtest: a request deadline is inclusive and the very next millisecond fails
+ok 13 - a request deadline is inclusive and the very next millisecond fails
+  ---
+  duration_ms: 0.1522
+  type: 'test'
+  ...
+# Subtest: a journey deadline is inclusive and cannot be replaced by a later request's clock
+ok 14 - a journey deadline is inclusive and cannot be replaced by a later request's clock
+  ---
+  duration_ms: 0.1371
+  type: 'test'
+  ...
+# Subtest: retirement one millisecond before completion interrupts, without counting the later response
+ok 15 - retirement one millisecond before completion interrupts, without counting the later response
+  ---
+  duration_ms: 0.1173
+  type: 'test'
+  ...
+# Subtest: an explicit identity-bound interruption remains interrupted
+ok 16 - an explicit identity-bound interruption remains interrupted
+  ---
+  duration_ms: 0.1492
+  type: 'test'
+  ...
+# Subtest: an interruption known before premature retirement is not attributed to the later retirement
+ok 17 - an interruption known before premature retirement is not attributed to the later retirement
+  ---
+  duration_ms: 0.1287
+  type: 'test'
+  ...
+# Subtest: wrong status has an explicit non-success category
+ok 18 - wrong status has an explicit non-success category
+  ---
+  duration_ms: 0.1494
+  type: 'test'
+  ...
+# Subtest: wrong cart total has an explicit non-success category
+ok 19 - wrong cart total has an explicit non-success category
+  ---
+  duration_ms: 0.1271
+  type: 'test'
+  ...
+# Subtest: missing response has an explicit non-success category
+ok 20 - missing response has an explicit non-success category
+  ---
+  duration_ms: 0.1276
+  type: 'test'
+  ...
+# Subtest: missing state has an explicit non-success category
+ok 21 - missing state has an explicit non-success category
+  ---
+  duration_ms: 0.1041
+  type: 'test'
+  ...
+# Subtest: explicit unknown has an explicit non-success category
+ok 22 - explicit unknown has an explicit non-success category
+  ---
+  duration_ms: 0.1179
+  type: 'test'
+  ...
+# Subtest: invalid evidence: another request is unknown, never a successful old completion
+ok 23 - invalid evidence: another request is unknown, never a successful old completion
+  ---
+  duration_ms: 0.1936
+  type: 'test'
+  ...
+# Subtest: invalid evidence: another user is unknown, never a successful old completion
+ok 24 - invalid evidence: another user is unknown, never a successful old completion
+  ---
+  duration_ms: 0.1142
+  type: 'test'
+  ...
+# Subtest: invalid evidence: another journey is unknown, never a successful old completion
+ok 25 - invalid evidence: another journey is unknown, never a successful old completion
+  ---
+  duration_ms: 0.2587
+  type: 'test'
+  ...
+# Subtest: invalid evidence: reset admission is unknown, never a successful old completion
+ok 26 - invalid evidence: reset admission is unknown, never a successful old completion
+  ---
+  duration_ms: 0.1378
+  type: 'test'
+  ...
+# Subtest: invalid evidence: pre-admission completion is unknown, never a successful old completion
+ok 27 - invalid evidence: pre-admission completion is unknown, never a successful old completion
+  ---
+  duration_ms: 0.1355
+  type: 'test'
+  ...
+# Subtest: invalid evidence: future completion is unknown, never a successful old completion
+ok 28 - invalid evidence: future completion is unknown, never a successful old completion
+  ---
+  duration_ms: 0.1053
+  type: 'test'
+  ...
+# Subtest: invalid evidence: different work schedule is unknown, never a successful old completion
+ok 29 - invalid evidence: different work schedule is unknown, never a successful old completion
+  ---
+  duration_ms: 0.0814
+  type: 'test'
+  ...
+# Subtest: invalid evidence: string completion time is unknown, never a successful old completion
+ok 30 - invalid evidence: string completion time is unknown, never a successful old completion
+  ---
+  duration_ms: 0.0796
+  type: 'test'
+  ...
+# Subtest: invalid evidence: non-finite completion is unknown, never a successful old completion
+ok 31 - invalid evidence: non-finite completion is unknown, never a successful old completion
+  ---
+  duration_ms: 0.0796
+  type: 'test'
+  ...
+# Subtest: invalid evidence: invalid response shape is unknown, never a successful old completion
+ok 32 - invalid evidence: invalid response shape is unknown, never a successful old completion
+  ---
+  duration_ms: 0.0917
+  type: 'test'
+  ...
+# Subtest: invalid evidence: invalid state shape is unknown, never a successful old completion
+ok 33 - invalid evidence: invalid state shape is unknown, never a successful old completion
+  ---
+  duration_ms: 0.0867
+  type: 'test'
+  ...
+# Subtest: invalid evidence: negative retry clock is unknown, never a successful old completion
+ok 34 - invalid evidence: negative retry clock is unknown, never a successful old completion
+  ---
+  duration_ms: 0.0887
+  type: 'test'
+  ...
+# Subtest: invalid evidence: unrecognized evidence kind is unknown, never a successful old completion
+ok 35 - invalid evidence: unrecognized evidence kind is unknown, never a successful old completion
+  ---
+  duration_ms: 0.1521
+  type: 'test'
+  ...
+# Subtest: invalid configuration clock null fails closed
+ok 36 - invalid configuration clock null fails closed
+  ---
+  duration_ms: 0.2105
+  type: 'test'
+  ...
+# Subtest: invalid configuration clock true fails closed
+ok 37 - invalid configuration clock true fails closed
+  ---
+  duration_ms: 0.0615
+  type: 'test'
+  ...
+# Subtest: invalid configuration clock 40 fails closed
+ok 38 - invalid configuration clock 40 fails closed
+  ---
+  duration_ms: 0.0467
+  type: 'test'
+  ...
+# Subtest: invalid configuration clock -1 fails closed
+ok 39 - invalid configuration clock -1 fails closed
+  ---
+  duration_ms: 0.043
+  type: 'test'
+  ...
+# Subtest: invalid configuration clock 0.5 fails closed
+ok 40 - invalid configuration clock 0.5 fails closed
+  ---
+  duration_ms: 0.2416
+  type: 'test'
+  ...
+# Subtest: invalid configuration clock NaN fails closed
+ok 41 - invalid configuration clock NaN fails closed
+  ---
+  duration_ms: 0.0562
+  type: 'test'
+  ...
+# Subtest: invalid configuration clock Infinity fails closed
+ok 42 - invalid configuration clock Infinity fails closed
+  ---
+  duration_ms: 0.0574
+  type: 'test'
+  ...
+# Subtest: invalid configuration clock 10001 fails closed
+ok 43 - invalid configuration clock 10001 fails closed
+  ---
+  duration_ms: 0.0465
+  type: 'test'
+  ...
+# Subtest: invalid input: no request array cannot authorize retirement or manufacture success
+ok 44 - invalid input: no request array cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.1139
+  type: 'test'
+  ...
+# Subtest: invalid input: empty request array cannot authorize retirement or manufacture success
+ok 45 - invalid input: empty request array cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0634
+  type: 'test'
+  ...
+# Subtest: invalid input: sparse request array cannot authorize retirement or manufacture success
+ok 46 - invalid input: sparse request array cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0673
+  type: 'test'
+  ...
+# Subtest: invalid input: too many requests cannot authorize retirement or manufacture success
+ok 47 - invalid input: too many requests cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0668
+  type: 'test'
+  ...
+# Subtest: invalid input: duplicate request IDs cannot authorize retirement or manufacture success
+ok 48 - invalid input: duplicate request IDs cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0935
+  type: 'test'
+  ...
+# Subtest: invalid input: null request cannot authorize retirement or manufacture success
+ok 49 - invalid input: null request cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0604
+  type: 'test'
+  ...
+# Subtest: invalid input: missing request ID cannot authorize retirement or manufacture success
+ok 50 - invalid input: missing request ID cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0622
+  type: 'test'
+  ...
+# Subtest: invalid input: request on another journey cannot authorize retirement or manufacture success
+ok 51 - invalid input: request on another journey cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0605
+  type: 'test'
+  ...
+# Subtest: invalid input: admission before journey cannot authorize retirement or manufacture success
+ok 52 - invalid input: admission before journey cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0587
+  type: 'test'
+  ...
+# Subtest: invalid input: admission after observation cannot authorize retirement or manufacture success
+ok 53 - invalid input: admission after observation cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0639
+  type: 'test'
+  ...
+# Subtest: invalid input: zero original request budget cannot authorize retirement or manufacture success
+ok 54 - invalid input: zero original request budget cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0599
+  type: 'test'
+  ...
+# Subtest: invalid input: string original journey budget cannot authorize retirement or manufacture success
+ok 55 - invalid input: string original journey budget cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0569
+  type: 'test'
+  ...
+# Subtest: invalid input: oversized original journey budget cannot authorize retirement or manufacture success
+ok 56 - invalid input: oversized original journey budget cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0574
+  type: 'test'
+  ...
+# Subtest: invalid input: zero work duration cannot authorize retirement or manufacture success
+ok 57 - invalid input: zero work duration cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0564
+  type: 'test'
+  ...
+# Subtest: invalid input: missing original state contract cannot authorize retirement or manufacture success
+ok 58 - invalid input: missing original state contract cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0606
+  type: 'test'
+  ...
+# Subtest: invalid input: missing correct response contract cannot authorize retirement or manufacture success
+ok 59 - invalid input: missing correct response contract cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0678
+  type: 'test'
+  ...
+# Subtest: invalid input: retirement before cutover cannot authorize retirement or manufacture success
+ok 60 - invalid input: retirement before cutover cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0651
+  type: 'test'
+  ...
+# Subtest: invalid input: observation before retirement cannot authorize retirement or manufacture success
+ok 61 - invalid input: observation before retirement cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0674
+  type: 'test'
+  ...
+# Subtest: invalid input: non-synthetic mode cannot authorize retirement or manufacture success
+ok 62 - invalid input: non-synthetic mode cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0585
+  type: 'test'
+  ...
+# Subtest: invalid input: unsupported schema cannot authorize retirement or manufacture success
+ok 63 - invalid input: unsupported schema cannot authorize retirement or manufacture success
+  ---
+  duration_ms: 0.0559
+  type: 'test'
+  ...
+# Subtest: non-object inputs do not throw or retain a previous successful result
+ok 64 - non-object inputs do not throw or retain a previous successful result
+  ---
+  duration_ms: 0.1135
+  type: 'test'
+  ...
+# Subtest: unknown and interrupted requests both stay in the attempted-request denominator
+ok 65 - unknown and interrupted requests both stay in the attempted-request denominator
+  ---
+  duration_ms: 0.0971
+  type: 'test'
+  ...
+# Subtest: v2 uncertainty does not invent a v1 interruption or prove a moved user
+ok 66 - v2 uncertainty does not invent a v1 interruption or prove a moved user
+  ---
+  duration_ms: 0.0978
+  type: 'test'
+  ...
+# Subtest: every declared preset produces its specified synthetic impact, not a live verdict
+ok 67 - every declared preset produces its specified synthetic impact, not a live verdict
+  ---
+  duration_ms: 0.2003
+  type: 'test'
+  ...
+# Subtest: every copied trace entry keeps synthetic provenance, stable ordering and contiguous sequence
+ok 68 - every copied trace entry keeps synthetic provenance, stable ordering and contiguous sequence
+  ---
+  duration_ms: 0.6321
+  type: 'test'
+  ...
+# Subtest: deep-frozen source state, identity and original budgets are never mutated
+ok 69 - deep-frozen source state, identity and original budgets are never mutated
+  ---
+  duration_ms: 0.3698
+  type: 'test'
+  ...
+# Subtest: all permitted end-of-horizon controls produce bounded observation rather than an accidental future clock
+ok 70 - all permitted end-of-horizon controls produce bounded observation rather than an accidental future clock
+  ---
+  duration_ms: 0.1111
+  type: 'test'
+  ...
+# Subtest: an invalid prediction cannot pass or mutate the impact
+ok 71 - an invalid prediction cannot pass or mutate the impact
+  ---
+  duration_ms: 0.105
+  type: 'test'
+  ...
+# Subtest: missing state cannot erase a known ORIGINAL request budget breach
+ok 72 - missing state cannot erase a known ORIGINAL request budget breach
+  ---
+  duration_ms: 0.0963
+  type: 'test'
+  ...
+# Subtest: an incorrect response is interrupted even when state evidence is missing
+ok 73 - an incorrect response is interrupted even when state evidence is missing
+  ---
+  duration_ms: 0.0899
+  type: 'test'
+  ...
+# Subtest: known changed state is interrupted even when response content is missing
+ok 74 - known changed state is interrupted even when response content is missing
+  ---
+  duration_ms: 0.0808
+  type: 'test'
+  ...
+# Subtest: the exact synthetic/not-live label is prominent and the source/parent identity is declared
+ok 75 - the exact synthetic/not-live label is prominent and the source/parent identity is declared
+  ---
+  duration_ms: 2.4368
+  type: 'test'
+  ...
+# Subtest: the portable page declares restrictive CSP and references only local script and style files
+ok 76 - the portable page declares restrictive CSP and references only local script and style files
+  ---
+  duration_ms: 3.2471
+  type: 'test'
+  ...
+# Subtest: Reset and all other action buttons cannot submit/reset or shadow a native form method
+ok 77 - Reset and all other action buttons cannot submit/reset or shadow a native form method
+  ---
+  duration_ms: 0.4608
+  type: 'test'
+  ...
+# Subtest: all input/select/textarea controls have associated labels and results have live status
+ok 78 - all input/select/textarea controls have associated labels and results have live status
+  ---
+  duration_ms: 2.7493
+  type: 'test'
+  ...
+# Subtest: model and UI have no network, storage or real-clock APIs and render untrusted text as text
+ok 79 - model and UI have no network, storage or real-clock APIs and render untrusted text as text
+  ---
+  duration_ms: 0.6886
+  type: 'test'
+  ...
+1..79
+# tests 79
+# suites 0
+# pass 79
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 198.2125
+ExitCode: 0

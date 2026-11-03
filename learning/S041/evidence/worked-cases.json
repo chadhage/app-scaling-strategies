@@ -1,0 +1,637 @@
+{
+  "cardId": "A-S041",
+  "executionMode": "synthetic",
+  "producer": "Existing Node built-in tooling; model output only, not browser or HTTP proof",
+  "runtime": "v22.23.4",
+  "cases": [
+    {
+      "scenario": "safe",
+      "outcome": "CONTINUITY",
+      "retirement": {
+        "atMs": 110,
+        "gate": "ALLOW",
+        "allowed": true,
+        "reason": "Every declared v1 request has correct, state-preserving completion within its ORIGINAL budgets by retirement."
+      },
+      "originalJourney": {
+        "id": "journey-1",
+        "userId": "user-1",
+        "originalStartedAtMs": 0,
+        "originalBudgetMs": 180,
+        "deadlineMs": 180,
+        "expectedState": {
+          "cartRevision": 7,
+          "totalCents": 4200
+        }
+      },
+      "counts": {
+        "attemptedRequests": 2,
+        "completed": 2,
+        "interrupted": 0,
+        "unknown": 0,
+        "oldCompletions": 1,
+        "oldCompletionsAfterCutover": 1,
+        "newAdmissions": 1
+      },
+      "userMigration": {
+        "classification": "unknown",
+        "provenMovedUsers": 0,
+        "explanation": "A v1 completion is legitimate old work. A v2 admission is request-level exposure, not proof a user moved."
+      },
+      "requests": [
+        {
+          "id": "r-before",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v1",
+          "originalAdmittedAtMs": 10,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 130,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 100,
+          "completedAtMs": 100,
+          "interruptedAtMs": null,
+          "elapsedMs": 90,
+          "responseStatus": "correct",
+          "stateStatus": "preserved",
+          "evidenceQuality": "valid",
+          "outcome": "completed",
+          "reason": "correct-within-original-budgets",
+          "detail": "",
+          "responseBody": "receipt:r-before:cart-r7:4200"
+        },
+        {
+          "id": "r-after",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v2",
+          "originalAdmittedAtMs": 60,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 180,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 140,
+          "completedAtMs": 140,
+          "interruptedAtMs": null,
+          "elapsedMs": 80,
+          "responseStatus": "correct",
+          "stateStatus": "preserved",
+          "evidenceQuality": "valid",
+          "outcome": "completed",
+          "reason": "correct-within-original-budgets",
+          "detail": "",
+          "responseBody": "receipt:r-after:cart-r7:4200"
+        }
+      ]
+    },
+    {
+      "scenario": "premature-retirement",
+      "outcome": "INTERRUPTED",
+      "retirement": {
+        "atMs": 70,
+        "gate": "BLOCK",
+        "allowed": false,
+        "reason": "At least one declared v1 request is interrupted; continuity is not established."
+      },
+      "originalJourney": {
+        "id": "journey-1",
+        "userId": "user-1",
+        "originalStartedAtMs": 0,
+        "originalBudgetMs": 180,
+        "deadlineMs": 180,
+        "expectedState": {
+          "cartRevision": 7,
+          "totalCents": 4200
+        }
+      },
+      "counts": {
+        "attemptedRequests": 2,
+        "completed": 1,
+        "interrupted": 1,
+        "unknown": 0,
+        "oldCompletions": 0,
+        "oldCompletionsAfterCutover": 0,
+        "newAdmissions": 1
+      },
+      "userMigration": {
+        "classification": "unknown",
+        "provenMovedUsers": 0,
+        "explanation": "A v1 completion is legitimate old work. A v2 admission is request-level exposure, not proof a user moved."
+      },
+      "requests": [
+        {
+          "id": "r-before",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v1",
+          "originalAdmittedAtMs": 10,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 130,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 100,
+          "completedAtMs": null,
+          "interruptedAtMs": 70,
+          "elapsedMs": 60,
+          "responseStatus": "unknown",
+          "stateStatus": "unknown",
+          "evidenceQuality": "invalid",
+          "outcome": "interrupted",
+          "reason": "premature-retirement",
+          "detail": "v1 stops while this synthetic request is active; a claimed later response is not a completion."
+        },
+        {
+          "id": "r-after",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v2",
+          "originalAdmittedAtMs": 60,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 180,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 140,
+          "completedAtMs": 140,
+          "interruptedAtMs": null,
+          "elapsedMs": 80,
+          "responseStatus": "correct",
+          "stateStatus": "preserved",
+          "evidenceQuality": "valid",
+          "outcome": "completed",
+          "reason": "correct-within-original-budgets",
+          "detail": "",
+          "responseBody": "receipt:r-after:cart-r7:4200"
+        }
+      ]
+    },
+    {
+      "scenario": "retry-clock-reset",
+      "outcome": "INTERRUPTED",
+      "retirement": {
+        "atMs": 180,
+        "gate": "BLOCK",
+        "allowed": false,
+        "reason": "At least one declared v1 request is interrupted; continuity is not established."
+      },
+      "originalJourney": {
+        "id": "journey-1",
+        "userId": "user-1",
+        "originalStartedAtMs": 0,
+        "originalBudgetMs": 180,
+        "deadlineMs": 180,
+        "expectedState": {
+          "cartRevision": 7,
+          "totalCents": 4200
+        }
+      },
+      "counts": {
+        "attemptedRequests": 2,
+        "completed": 1,
+        "interrupted": 1,
+        "unknown": 0,
+        "oldCompletions": 0,
+        "oldCompletionsAfterCutover": 0,
+        "newAdmissions": 1
+      },
+      "userMigration": {
+        "classification": "unknown",
+        "provenMovedUsers": 0,
+        "explanation": "A v1 completion is legitimate old work. A v2 admission is request-level exposure, not proof a user moved."
+      },
+      "requests": [
+        {
+          "id": "r-before",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v1",
+          "originalAdmittedAtMs": 10,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 130,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 165,
+          "completedAtMs": 165,
+          "interruptedAtMs": null,
+          "elapsedMs": 155,
+          "responseStatus": "correct",
+          "stateStatus": "preserved",
+          "evidenceQuality": "valid",
+          "outcome": "interrupted",
+          "reason": "original-request-budget",
+          "detail": "",
+          "responseBody": "receipt:r-before:cart-r7:4200",
+          "reportedRetryLatencyMs": 25
+        },
+        {
+          "id": "r-after",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v2",
+          "originalAdmittedAtMs": 60,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 180,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 140,
+          "completedAtMs": 140,
+          "interruptedAtMs": null,
+          "elapsedMs": 80,
+          "responseStatus": "correct",
+          "stateStatus": "preserved",
+          "evidenceQuality": "valid",
+          "outcome": "completed",
+          "reason": "correct-within-original-budgets",
+          "detail": "",
+          "responseBody": "receipt:r-after:cart-r7:4200"
+        }
+      ]
+    },
+    {
+      "scenario": "state-loss",
+      "outcome": "INTERRUPTED",
+      "retirement": {
+        "atMs": 110,
+        "gate": "BLOCK",
+        "allowed": false,
+        "reason": "At least one declared v1 request is interrupted; continuity is not established."
+      },
+      "originalJourney": {
+        "id": "journey-1",
+        "userId": "user-1",
+        "originalStartedAtMs": 0,
+        "originalBudgetMs": 180,
+        "deadlineMs": 180,
+        "expectedState": {
+          "cartRevision": 7,
+          "totalCents": 4200
+        }
+      },
+      "counts": {
+        "attemptedRequests": 2,
+        "completed": 1,
+        "interrupted": 1,
+        "unknown": 0,
+        "oldCompletions": 0,
+        "oldCompletionsAfterCutover": 0,
+        "newAdmissions": 1
+      },
+      "userMigration": {
+        "classification": "unknown",
+        "provenMovedUsers": 0,
+        "explanation": "A v1 completion is legitimate old work. A v2 admission is request-level exposure, not proof a user moved."
+      },
+      "requests": [
+        {
+          "id": "r-before",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v1",
+          "originalAdmittedAtMs": 10,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 130,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 100,
+          "completedAtMs": 100,
+          "interruptedAtMs": null,
+          "elapsedMs": 90,
+          "responseStatus": "correct",
+          "stateStatus": "changed",
+          "evidenceQuality": "valid",
+          "outcome": "interrupted",
+          "reason": "state-not-preserved",
+          "detail": "",
+          "responseBody": "receipt:r-before:cart-r7:4200"
+        },
+        {
+          "id": "r-after",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v2",
+          "originalAdmittedAtMs": 60,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 180,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 140,
+          "completedAtMs": 140,
+          "interruptedAtMs": null,
+          "elapsedMs": 80,
+          "responseStatus": "correct",
+          "stateStatus": "preserved",
+          "evidenceQuality": "valid",
+          "outcome": "completed",
+          "reason": "correct-within-original-budgets",
+          "detail": "",
+          "responseBody": "receipt:r-after:cart-r7:4200"
+        }
+      ]
+    },
+    {
+      "scenario": "wrong-response",
+      "outcome": "INTERRUPTED",
+      "retirement": {
+        "atMs": 110,
+        "gate": "BLOCK",
+        "allowed": false,
+        "reason": "At least one declared v1 request is interrupted; continuity is not established."
+      },
+      "originalJourney": {
+        "id": "journey-1",
+        "userId": "user-1",
+        "originalStartedAtMs": 0,
+        "originalBudgetMs": 180,
+        "deadlineMs": 180,
+        "expectedState": {
+          "cartRevision": 7,
+          "totalCents": 4200
+        }
+      },
+      "counts": {
+        "attemptedRequests": 2,
+        "completed": 1,
+        "interrupted": 1,
+        "unknown": 0,
+        "oldCompletions": 0,
+        "oldCompletionsAfterCutover": 0,
+        "newAdmissions": 1
+      },
+      "userMigration": {
+        "classification": "unknown",
+        "provenMovedUsers": 0,
+        "explanation": "A v1 completion is legitimate old work. A v2 admission is request-level exposure, not proof a user moved."
+      },
+      "requests": [
+        {
+          "id": "r-before",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v1",
+          "originalAdmittedAtMs": 10,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 130,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 100,
+          "completedAtMs": 100,
+          "interruptedAtMs": null,
+          "elapsedMs": 90,
+          "responseStatus": "incorrect",
+          "stateStatus": "preserved",
+          "evidenceQuality": "valid",
+          "outcome": "interrupted",
+          "reason": "incorrect-response",
+          "detail": "",
+          "responseBody": "receipt:wrong-cart"
+        },
+        {
+          "id": "r-after",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v2",
+          "originalAdmittedAtMs": 60,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 180,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 140,
+          "completedAtMs": 140,
+          "interruptedAtMs": null,
+          "elapsedMs": 80,
+          "responseStatus": "correct",
+          "stateStatus": "preserved",
+          "evidenceQuality": "valid",
+          "outcome": "completed",
+          "reason": "correct-within-original-budgets",
+          "detail": "",
+          "responseBody": "receipt:r-after:cart-r7:4200"
+        }
+      ]
+    },
+    {
+      "scenario": "missing-completion",
+      "outcome": "UNKNOWN",
+      "retirement": {
+        "atMs": 110,
+        "gate": "HOLD",
+        "allowed": false,
+        "reason": "At least one declared v1 completion is unknown; hold retirement rather than assume it drained."
+      },
+      "originalJourney": {
+        "id": "journey-1",
+        "userId": "user-1",
+        "originalStartedAtMs": 0,
+        "originalBudgetMs": 180,
+        "deadlineMs": 180,
+        "expectedState": {
+          "cartRevision": 7,
+          "totalCents": 4200
+        }
+      },
+      "counts": {
+        "attemptedRequests": 2,
+        "completed": 1,
+        "interrupted": 0,
+        "unknown": 1,
+        "oldCompletions": 0,
+        "oldCompletionsAfterCutover": 0,
+        "newAdmissions": 1
+      },
+      "userMigration": {
+        "classification": "unknown",
+        "provenMovedUsers": 0,
+        "explanation": "A v1 completion is legitimate old work. A v2 admission is request-level exposure, not proof a user moved."
+      },
+      "requests": [
+        {
+          "id": "r-before",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v1",
+          "originalAdmittedAtMs": 10,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 130,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 100,
+          "completedAtMs": null,
+          "interruptedAtMs": null,
+          "elapsedMs": null,
+          "responseStatus": "unknown",
+          "stateStatus": "unknown",
+          "evidenceQuality": "missing",
+          "outcome": "unknown",
+          "reason": "missing-completion",
+          "detail": ""
+        },
+        {
+          "id": "r-after",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v2",
+          "originalAdmittedAtMs": 60,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 180,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 140,
+          "completedAtMs": 140,
+          "interruptedAtMs": null,
+          "elapsedMs": 80,
+          "responseStatus": "correct",
+          "stateStatus": "preserved",
+          "evidenceQuality": "valid",
+          "outcome": "completed",
+          "reason": "correct-within-original-budgets",
+          "detail": "",
+          "responseBody": "receipt:r-after:cart-r7:4200"
+        }
+      ]
+    },
+    {
+      "scenario": "forged-owner",
+      "outcome": "UNKNOWN",
+      "retirement": {
+        "atMs": 110,
+        "gate": "HOLD",
+        "allowed": false,
+        "reason": "At least one declared v1 completion is unknown; hold retirement rather than assume it drained."
+      },
+      "originalJourney": {
+        "id": "journey-1",
+        "userId": "user-1",
+        "originalStartedAtMs": 0,
+        "originalBudgetMs": 180,
+        "deadlineMs": 180,
+        "expectedState": {
+          "cartRevision": 7,
+          "totalCents": 4200
+        }
+      },
+      "counts": {
+        "attemptedRequests": 2,
+        "completed": 1,
+        "interrupted": 0,
+        "unknown": 1,
+        "oldCompletions": 0,
+        "oldCompletionsAfterCutover": 0,
+        "newAdmissions": 1
+      },
+      "userMigration": {
+        "classification": "unknown",
+        "provenMovedUsers": 0,
+        "explanation": "A v1 completion is legitimate old work. A v2 admission is request-level exposure, not proof a user moved."
+      },
+      "requests": [
+        {
+          "id": "r-before",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v1",
+          "originalAdmittedAtMs": 10,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 130,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 100,
+          "completedAtMs": null,
+          "interruptedAtMs": null,
+          "elapsedMs": null,
+          "responseStatus": "unknown",
+          "stateStatus": "unknown",
+          "evidenceQuality": "invalid",
+          "outcome": "unknown",
+          "reason": "invalid-evidence",
+          "detail": "Identity, owner or ORIGINAL admission does not match the admitted request."
+        },
+        {
+          "id": "r-after",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v2",
+          "originalAdmittedAtMs": 60,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 180,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 140,
+          "completedAtMs": 140,
+          "interruptedAtMs": null,
+          "elapsedMs": 80,
+          "responseStatus": "correct",
+          "stateStatus": "preserved",
+          "evidenceQuality": "valid",
+          "outcome": "completed",
+          "reason": "correct-within-original-budgets",
+          "detail": "",
+          "responseBody": "receipt:r-after:cart-r7:4200"
+        }
+      ]
+    },
+    {
+      "scenario": "future-evidence",
+      "outcome": "UNKNOWN",
+      "retirement": {
+        "atMs": 110,
+        "gate": "HOLD",
+        "allowed": false,
+        "reason": "At least one declared v1 completion is unknown; hold retirement rather than assume it drained."
+      },
+      "originalJourney": {
+        "id": "journey-1",
+        "userId": "user-1",
+        "originalStartedAtMs": 0,
+        "originalBudgetMs": 180,
+        "deadlineMs": 180,
+        "expectedState": {
+          "cartRevision": 7,
+          "totalCents": 4200
+        }
+      },
+      "counts": {
+        "attemptedRequests": 2,
+        "completed": 1,
+        "interrupted": 0,
+        "unknown": 1,
+        "oldCompletions": 0,
+        "oldCompletionsAfterCutover": 0,
+        "newAdmissions": 1
+      },
+      "userMigration": {
+        "classification": "unknown",
+        "provenMovedUsers": 0,
+        "explanation": "A v1 completion is legitimate old work. A v2 admission is request-level exposure, not proof a user moved."
+      },
+      "requests": [
+        {
+          "id": "r-before",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v1",
+          "originalAdmittedAtMs": 10,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 130,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 100,
+          "completedAtMs": null,
+          "interruptedAtMs": null,
+          "elapsedMs": null,
+          "responseStatus": "unknown",
+          "stateStatus": "unknown",
+          "evidenceQuality": "invalid",
+          "outcome": "unknown",
+          "reason": "invalid-evidence",
+          "detail": "Evidence time is invalid, before admission or after observation."
+        },
+        {
+          "id": "r-after",
+          "userId": "user-1",
+          "journeyId": "journey-1",
+          "owner": "v2",
+          "originalAdmittedAtMs": 60,
+          "originalRequestBudgetMs": 120,
+          "requestDeadlineMs": 180,
+          "journeyDeadlineMs": 180,
+          "scheduledAtMs": 140,
+          "completedAtMs": 140,
+          "interruptedAtMs": null,
+          "elapsedMs": 80,
+          "responseStatus": "correct",
+          "stateStatus": "preserved",
+          "evidenceQuality": "valid",
+          "outcome": "completed",
+          "reason": "correct-within-original-budgets",
+          "detail": "",
+          "responseBody": "receipt:r-after:cart-r7:4200"
+        }
+      ]
+    }
+  ]
+}
