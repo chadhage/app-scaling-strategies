@@ -95,6 +95,15 @@ BDD and assertion snapshots end in `.snapshot`, so test discovery cannot run
 historical RED code. The IaC N/A decision follows RED. Green, syntax, real DOM
 observations and integrity records are linked by `evidence.json`.
 
+The bundle disables Git text conversion so exact byte hashes and original RED
+snapshots survive checkout. Its scoped whitespace policy recognizes CRLF while
+retaining blank-at-EOL/EOF and space-before-tab checks. A post-publication blob check caught 18 CRLF-to-LF
+changes in the initial commit. `committed-before-recovery.json` and the
+`*.pre-publication.*` records preserve that actual failed integrity check and
+earlier worktree-only proof. The same A-S044 unit corrects byte preservation
+through a normal scoped follow-up commit, not an amended or force-pushed history.
+Final publication is qualified only after committed blobs match the sealed hashes.
+
 The three `browser.failed-attempt-*.raw.json` records are retained, not counted
 as behavioral RED or successful browser proof: a Windows PowerShell 5 signature
 module failure (the explicitly selected installed PowerShell 7 succeeds), an

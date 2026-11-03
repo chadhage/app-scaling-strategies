@@ -59,6 +59,7 @@ test('CSP and executable assets stay local, text-only and resource-free', () => 
 });
 
 test('verbatim RED output matches raw byte hashes and immutable non-discoverable snapshots', () => {
+  assert.match(read('.gitattributes'), /-text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol/);
   const stub = JSON.parse(read('evidence\\stub.raw.json'));
   const red = JSON.parse(read('evidence\\red.raw.json'));
   assert.equal(stub.exitCode, 0);
