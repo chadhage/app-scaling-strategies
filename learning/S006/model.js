@@ -12,7 +12,10 @@
     { id: 'direct-api', label: 'Direct candidate API', path: '/candidate-7f3b/api/getProfile', callback: false },
     { id: 'indirect-navigation', label: 'Indirect navigation link', path: '/profile?target=preview', callback: false },
     { id: 'indirect-callback', label: 'Indirect login/callback return', path: '/auth/callback?returnTo=/candidate-7f3b/profile', callback: true },
-    { id: 'indirect-gateway', label: 'Indirect API/gateway selection', path: '/api/profile?version=v2', callback: false }
+    { id: 'indirect-gateway', label: 'Indirect API/gateway selection', path: '/api/profile?version=v2', callback: false },
+    { id: 'stable-preview', label: 'Stable endpoint, explicit preview selection', path: '/api/getProfile?audience=preview', callback: false },
+    { id: 'direct-revision', label: 'Direct candidate revision', path: '/revisions/profile-v2-r002/api/getProfile', callback: false },
+    { id: 'label-preview', label: 'Candidate preview label', path: '/labels/preview/api/getProfile', callback: false }
   ].map(Object.freeze));
   const identities = Object.freeze([
     { id: 'approved', label: 'Approved preview identity', subject: 'synthetic-preview-001', evidence: 'approved' },

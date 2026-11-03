@@ -2,12 +2,13 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { runProbe } = require('../model.js');
+const { routes, runProbe } = require('../model.js');
 const { verifyProbe, describeImpact } = require('../verifier.js');
 
 const candidateRoutes = [
   'join-preview', 'direct-ui', 'direct-api', 'indirect-navigation',
-  'indirect-callback', 'indirect-gateway'
+  'indirect-callback', 'indirect-gateway', 'stable-preview',
+  'direct-revision', 'label-preview'
 ];
 const ga = {
   sessionId: 'ga-session-001',
@@ -26,6 +27,21 @@ const assertVerified = (probe) => {
   assert.ok(verdict.assertions.length >= 9, 'checks must cover more than admission alone');
   assert.ok(verdict.assertions.every((item) => item.passed));
 };
+
+test('stable, direct revision, and label preview entries are explicit inert fixtures', () => {
+  const expected = {
+    'stable-preview': '/api/getProfile?audience=preview',
+    'direct-revision': '/revisions/profile-v2-r002/api/getProfile',
+    'label-preview': '/labels/preview/api/getProfile'
+  };
+  assert.equal(routes.length, 10);
+  for (const [id, routePath] of Object.entries(expected)) {
+    const route = routes.find((entry) => entry.id === id);
+    assert.ok(route, `${id} must be available to learners, not silently rejected as unknown`);
+    assert.equal(route.path, routePath);
+    assert.equal(route.callback, false);
+  }
+});
 
 test('approved join preserves modeled login/callback and separate GA attribution', () => {
   const probe = runProbe(input());

@@ -49,6 +49,24 @@ Feature: Preview admission requires identity evidence, not knowledge of a URL
       | indirect-navigation |
       | indirect-callback   |
       | indirect-gateway    |
+      | stable-preview      |
+      | direct-revision     |
+      | label-preview       |
+
+  Scenario Outline: Every stable, revision, and label preview entry enforces the same boundary
+    Given policy "enforced" with 0 percent automatic candidate routing
+    When identity "<identity>" requests "<route>"
+    Then the synthetic decision is "<decision>" with status "<status>"
+    And only the explicitly approved identity reaches v2
+    And the independent GA client remains unchanged on v1
+    Examples:
+      | identity | route           | decision  | status |
+      | approved | stable-preview  | allowed   | 200    |
+      | visitor  | stable-preview  | forbidden | 403    |
+      | approved | direct-revision | allowed   | 200    |
+      | visitor  | direct-revision | forbidden | 403    |
+      | approved | label-preview   | allowed   | 200    |
+      | visitor  | label-preview   | forbidden | 403    |
 
   Scenario Outline: Missing or unrecognized identity evidence fails closed
     Given identity "<identity>" has no recognized approval evidence
@@ -112,6 +130,32 @@ Feature: Preview admission requires identity evidence, not knowledge of a URL
     When its GA attribution, preview subject, route decision, or required trace is changed
     Then the verifier fails rather than trusting a producer success label
     And user-impact reporting remains separate from the verifier verdict
+
+  Scenario: Invalid control data is rejected without crashing the lesson
+    Given a route control contains no recognized route value
+    When its change event updates the controls and the learner submits the probe
+    Then the selected path explains that the route is unknown
+    And callback controls are disabled rather than dereferencing a missing route
+    And the decision is "configuration-rejected" with synthetic status 400
+    And no candidate handler serves v2
+    And the trace, live status, and history retain the rejected attempt
+    And the verifier passes for the expected fail-closed result
+    And unknown policy or required callback values also fail closed
+
+  Scenario: Reset restores a populated rehearsal and permits another probe
+    Given the form contains the Reset button and non-default selections
+    And approved, denied, unknown, and unsafe outcomes have populated the results
+    And the route comparison contains all 40 route and identity probes
+    When the learner activates Reset using Enter or Space
+    Then no script error occurs
+    And default selections and callback availability are restored
+    And the result summary is hidden
+    And the trace, assertions, comparison, client snapshots, and history are empty
+    And the unsafe-policy warning is hidden
+    And cleanup and live status explicitly confirm local reset
+    When the learner runs another probe
+    Then it is Probe 1 with the default approved join outcome
+    And no external cleanup or persistent state is involved
 
   Scenario: The lesson is an offline keyboard-operable rehearsal with explicit limits
     Given the self-contained file-browser lesson is open

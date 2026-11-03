@@ -1,0 +1,34 @@
+Command: PowerShell single-quoted script piped to node -
+Script:
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const names = ['learning/S006/lesson.json', 'learning/S006/evidence.json', 'learning/S006/evidence/browser-observations.json', 'learning/S006/evidence/regression-iac.json'];
+let references = 0;
+function inspect(value) {
+  if (typeof value === 'string' && value.startsWith('learning/S006/')) {
+    assert.ok(fs.existsSync(value.split('/').join(path.sep)), `missing artifact ${value}`);
+    references++;
+  } else if (value && typeof value === 'object') {
+    for (const nested of Object.values(value)) inspect(nested);
+  }
+}
+for (const name of names) {
+  const text = fs.readFileSync(name.split('/').join(path.sep), 'utf8');
+  assert.doesNotMatch(text, /[A-Za-z]:[\\/](?:Users|repos)[\\/]/, 'machine-local paths must be redacted');
+  inspect(JSON.parse(text));
+}
+const evidence = JSON.parse(fs.readFileSync('learning\\S006\\evidence.json', 'utf8'));
+assert.equal(evidence.continuation.red.tests, 115);
+assert.equal(evidence.continuation.red.failed, 28);
+assert.equal(evidence.green.tests, 115);
+assert.equal(evidence.green.passed, 115);
+assert.equal(evidence.green.failed, 0);
+assert.equal(evidence.browser.browserObserved, true);
+assert.equal(evidence.iac.status, 'N/A');
+assert.equal(evidence.nativeProof, false);
+assert.equal(evidence.sourceParentComplete, false);
+console.log(`PASS: ${names.length} JSON documents parsed; ${references} relative artifact references exist; red/green/browser/IaC/scope assertions passed.`);
+Exit code: 0
+Result:
+PASS: 4 JSON documents parsed; 22 relative artifact references exist; red/green/browser/IaC/scope assertions passed.

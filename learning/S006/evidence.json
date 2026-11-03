@@ -8,11 +8,14 @@
   "packet": "LP-PROFILE",
   "workerId": "worker-A-S006",
   "executionMode": "synthetic",
-  "configuration": "Offline file-browser lesson; seven route fixtures, four identity fixtures, two policies, and four callback conditions.",
+  "configuration": "Offline file-browser lesson; ten inert route fixtures, four identity fixtures, two policies, and four callback conditions.",
   "host": "Local file browser; no Azure host",
   "outputNormalization": "Captured runner output uses repo-relative paths; trailing whitespace on diagnostic blank lines is stripped for Git diff-check. Commands, assertions, decisions, counts, and exit codes are unchanged.",
   "nativeProof": false,
   "sourceParentComplete": false,
+  "implementationBaseCommit": "fbefccdba2fc35cbe973200d7b8ccc031bbc594f",
+  "reviewer": "Pending parent/controller review",
+  "acceptedAtUtc": null,
   "stageOrder": ["BDD", "TDD RED", "IaC N/A", "implementation", "TDD GREEN", "browser"],
   "bdd": {
     "status": "written-before-tests",
@@ -41,22 +44,25 @@
     "managementCalls": 0
   },
   "implementation": {
-    "status": "implemented-and-unit-tested; browser interaction unverified",
+    "status": "implemented; focused tests and actual browser checks passed; controller acceptance pending",
     "entry": "learning/S006/index.html",
     "assets": ["learning/S006/model.js", "learning/S006/verifier.js", "learning/S006/app.js", "learning/S006/style.css"],
     "behavior": [
       "Separate GA and preview clients with fixed GA subject/session/attribution on v1.",
       "Explicit approval required at every modeled candidate path; missing or unknown evidence fails closed.",
+      "Stable preview selection, direct revision, and preview label entries explicitly apply the same authorization boundary.",
       "Ordinary navigation remains v1; login/callback binding and local return targets are checked on relevant routes.",
       "Deliberately broken obscure-URL-only policy exposes unauthorized access even with 0% automatic candidate routing; the independent verifier fails.",
-      "Separate verifier verdict, user-impact result, and cleanup; denied and unknown outcomes are retained in a bounded history and route matrix."
+      "Separate verifier verdict, user-impact result, and cleanup; denied and unknown outcomes are retained in a bounded history and route matrix.",
+      "Reset bypasses named-form-control method shadowing, clears all in-tab outputs, restores defaults, and supports a fresh Probe 1.",
+      "An invalid route control updates safely and produces an explicit fail-closed configuration rejection."
     ],
     "offlineSourceChecks": {
       "passed": true,
       "csp": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'",
       "localAssetsOnly": true,
       "noNetworkOrStorageApisInScripts": true,
-      "runtimeNetworkObservation": "unavailable because browser handles could not be reused"
+      "runtimeNetworkObservation": "Owned page reload requested file URLs only. Invalid-control and reset interaction suites observed zero requests and zero page errors."
     }
   },
   "iterations": [
@@ -77,7 +83,37 @@
       "cause": "First correction matched the history map closure instead; both closures were then corrected with explicit context."
     }
   ],
-  "green": {
+  "continuation": {
+    "handoff": "ready=true and stoppedLessonWrites=true inspected; worker-A-S006 atomically claimed the reactivated card through state.ps1.",
+    "scope": "Incremental fixes and evidence only; earlier implementation, red, iteration, green, and publication history preserved.",
+    "stageOrder": ["BDD regression", "Node built-in TDD regression RED", "IaC N/A", "implementation/refactor", "Node built-in TDD GREEN", "reloaded real browser"],
+    "bdd": {
+      "artifact": "learning/S006/preview-access.feature",
+      "updatedBeforeRegressionTests": true,
+      "updatedAtUtc": "2026-11-03T09:23:10.6076483Z",
+      "controlTestsWrittenAtUtc": "2026-11-03T09:23:58.5886581Z",
+      "newAssertions": "Explicit stable/revision/label gates, fail-closed invalid controls, and populated/idempotent keyboard Reset followed by a fresh Probe 1."
+    },
+    "red": {
+      "command": "node --test --test-reporter=spec learning\\S006\\tests\\preview-access.test.cjs learning\\S006\\tests\\lesson-assets.test.cjs learning\\S006\\tests\\app-controls.test.cjs",
+      "runtime": "v22.23.4",
+      "exitCode": 1,
+      "tests": 115,
+      "passed": 87,
+      "failed": 28,
+      "artifact": "learning/S006/evidence/regression-red.txt",
+      "cause": "Unmodified implementation genuinely failed the named-reset-control regression, invalid-route change, missing stable/revision/label routes, and expanded matrix assertions.",
+      "preservation": "No working code was removed to obtain red. The original 77-test red artifact remains unchanged."
+    },
+    "iac": {
+      "status": "N/A",
+      "artifact": "learning/S006/evidence/regression-iac.json",
+      "recordedAfter": "regression RED, before implementation",
+      "reason": "Offline SOURCE fix; no Azure resources or IaC generation authorized."
+    },
+    "testHarnessLimit": "Node app-control tests execute the real app.js with a small DOM-surface fixture that models named form controls. They are not a browser substitute; actual browser assertions are recorded separately."
+  },
+  "earlierGreen": {
     "status": "passed",
     "command": "node --test --test-reporter=spec learning\\S006\\tests\\preview-access.test.cjs learning\\S006\\tests\\lesson-assets.test.cjs",
     "runtime": "v22.23.4",
@@ -89,9 +125,20 @@
     "capturedAtUtc": "2026-11-03T09:08:41.0191132Z",
     "coverage": "Model and independent oracle, all candidate paths, ordinary navigation, unknown identities/configuration, callback rejection, unsafe-policy exposure, corrupted evidence, fresh client state, local assets, CSP, and UMD execution. Not real browser or native identity proof."
   },
+  "green": {
+    "status": "passed",
+    "command": "node --test --test-reporter=spec learning\\S006\\tests\\preview-access.test.cjs learning\\S006\\tests\\lesson-assets.test.cjs learning\\S006\\tests\\app-controls.test.cjs",
+    "runtime": "v22.23.4",
+    "exitCode": 0,
+    "tests": 115,
+    "passed": 115,
+    "failed": 0,
+    "artifact": "learning/S006/evidence/regression-green.txt",
+    "coverage": "Existing 84 tests preserved, three explicit candidate entry paths across identity/policy cases, actual app-control reset and invalid-data regressions, dynamic 40-probe matrix, and bounded honest history."
+  },
   "browser": {
-    "status": "blocked",
-    "browserObserved": false,
+    "status": "passed",
+    "browserObserved": true,
     "entry": "learning/S006/index.html",
     "toolDiscovery": "Searched deferred VS Code openBrowserPage, readPage, and runPlaywrightCode before opening.",
     "forceNew": true,
@@ -115,23 +162,28 @@
         "observedDomOutcomes": []
       }
     ],
-    "blocker": "The integrated-browser tools cannot resolve their own newly returned page IDs. Safe, forbidden, unknown, callback, comparison, reset, and keyboard DOM interactions could not be observed. An initial load snapshot is not behavioral browser evidence.",
-    "pendingChecks": [
-      "Approved join: allowed, synthetic 200, v2, 11 passing assertions, login/callback trace, unchanged GA attribution.",
-      "Visitor on direct API and indirect gateway: forbidden, synthetic 403, no v2; history retains denials.",
-      "Missing/unrecognized evidence: unknown, synthetic 401, no v2; matrix retains unknown outcomes.",
-      "Ordinary navigation: v1 even for approved identity; no candidate admission.",
-      "Obscurity-only visitor: v2 exposure, verifier FAIL, unauthorized user impact.",
-      "Approved mismatched callback: callback-rejected, synthetic 400, no v2.",
-      "Actual keyboard route/identity choice and Enter/Space activation update live DOM status.",
-      "Compare 28 probes and explicitly Reset to clear only in-tab state."
-    ],
-    "acceptance": "Incomplete; no Kano credit requested. Restore page-handle reuse and perform the pending checks before controller empirical acceptance."
+    "earlierBlocker": "The original attempt could not reuse its browser page handles. The failed attempts above remain historical evidence, not passing checks.",
+    "blocker": null,
+    "successfulContinuation": {
+      "artifact": "learning/S006/evidence/browser-observations.json",
+      "pageId": "295d2bfa-7467-467d-82ab-7f0eb9af9eb4",
+      "forceNew": true,
+      "reloaded": true,
+      "results": "Approved join, 40-cell route matrix, stable/revision/label visitor denial, unknown identities, callback rejection, ordinary v1, unsafe-policy FAIL, invalid controls, bounded history, keyboard operation, and repeatable Reset passed DOM assertions."
+    },
+    "pendingChecks": [],
+    "acceptance": "Portable synthetic behavior empirically checked; parent/controller review, remote publication verification, and acceptance remain separate. No worker-granted Done or Kano credit."
   },
   "verifierResult": {
-    "automated": "84 focused tests pass",
-    "browser": "blocked; not passed",
+    "automated": "115 focused tests pass",
+    "browser": "passed; actual reloaded owned-page DOM and keyboard assertions",
     "acceptance": "pending controller review; not Done"
+  },
+  "evidenceValidation": {
+    "command": "PowerShell single-quoted script piped to node -; the complete script and actual output are retained in the artifact.",
+    "artifact": "learning/S006/evidence/evidence-validation.txt",
+    "exitCode": 0,
+    "result": "Four JSON documents parse; relative artifact references exist; regression red/green, observed browser, IaC N/A, and non-native scope assertions pass."
   },
   "publicationPreflight": {
     "initialAttempt": "Publisher stopped before commit at scoped git diff --cached --check: the captured Node failure diagnostics contained trailing whitespace on blank lines.",
@@ -144,6 +196,7 @@
       "Known unauthorized visitors are blocked; unknown identities remain unknown and blocked.",
       "The broken policy intentionally causes unauthorized exposure and a failing verifier."
     ],
+    "observedInBrowser": "Approved preview admission and GA continuity, forbidden and unknown outcomes, callback rejection, unsafe-policy exposure, invalid-data rejection, and local reset were observed separately from verifier verdicts.",
     "realUserImpact": "Not exercised or established."
   },
   "cleanup": {
@@ -152,18 +205,18 @@
     "servicesStarted": 0,
     "credentialsUsed": false,
     "persistentApplicationStateCreated": false,
-    "tabState": "Application state is in-memory only. Actual Reset behavior remains browser-unverified.",
-    "browserTabCleanup": "Two owned tabs were opened but their handles became unresolvable. Closure cannot be verified; no global close/navigation was attempted because it could affect another worker.",
+    "tabState": "Application state is in-memory only. Actual Space/Enter Reset cleared all 14 output regions, restored defaults, and permitted a new Probe 1; repeated reset passed.",
+    "browserTabCleanup": "The continuation owned page is reset and retained for review. Historical unresolved tabs were not globally closed or navigated.",
     "artifacts": "Only lesson-local source, tests, manifest, and evidence are retained.",
     "gitScope": "Only learning/S006 is authorized for publisher staging; other workers' dirty files are untouched."
   },
   "limits": [
     "Client-side fixtures and the oracle are not an identity provider, trusted authorization boundary, or tamper-proof evidence.",
-    "Only seven enumerated route IDs are modeled; real routes, tokens, revocation, SSO/callback protocols, and hosting are unverified.",
-    "Actual browser behavioral evidence is blocked; source checks, VM execution, and an initial load snapshot are not substitutes.",
+    "Only ten inert route IDs are modeled; real routes, tokens, revocation, SSO/callback protocols, and hosting are unverified. Revision/label strings are not Azure endpoint formats.",
+    "Browser evidence proves the recorded fixture interactions only; it is not native server authorization or complete accessibility certification.",
     "No native B-S006 proof, source D-S006 completion, live Azure result, user-migration proof, or reliability claim.",
     "C001 runtime/auth/hosting and separate scaffold/deploy approvals remain ungranted; no cloud resources are needed or provisioned.",
-    "History retains at most 12 single probes in memory; explicit Reset clears it. These UI behaviors await empirical browser checks.",
+    "History retains at most 12 single probes in memory; explicit Reset clears it. Both behaviors were empirically checked in the owned browser page.",
     "Publication identifiers belong in the later worker result and controller ledger, not inside this artifact."
   ]
 }

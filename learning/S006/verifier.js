@@ -7,7 +7,8 @@
 
   const candidateRoutes = [
     'join-preview', 'direct-ui', 'direct-api', 'indirect-navigation',
-    'indirect-callback', 'indirect-gateway'
+    'indirect-callback', 'indirect-gateway', 'stable-preview',
+    'direct-revision', 'label-preview'
   ];
   const callbacks = ['bound', 'missing', 'mismatch', 'external-return'];
   const ga = {

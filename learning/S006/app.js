@@ -32,9 +32,10 @@
   }
   function updateControls() {
     const route = model.routes.find((item) => item.id === element('route').value);
-    element('path').textContent = route.path;
-    element('callback').disabled = !route.callback;
-    element('callback-help').textContent = route.callback
+    const usesCallback = Boolean(route && route.callback);
+    element('path').textContent = route ? route.path : 'Unknown route — submitting will reject the configuration.';
+    element('callback').disabled = !usesCallback;
+    element('callback-help').textContent = usesCallback
       ? 'This path models login/callback. Missing, mismatched, or unapproved return evidence must block preview.'
       : 'Callback control is not used by this path. Candidate handlers still need their own identity gate.';
     element('policy-warning').hidden = element('policy').value !== 'obscurity-only';
@@ -101,6 +102,7 @@
   }
   function compareRoutes() {
     const input = readInput();
+    const probeTotal = model.routes.length * model.identities.length;
     let failures = 0;
     const rows = model.routes.map((route) => {
       const row = node('tr');
@@ -123,13 +125,13 @@
       return row;
     });
     element('comparison-body').replaceChildren(...rows);
-    element('comparison-caption').textContent = `28 synthetic probes · policy ${input.policy} · callback ${input.callback} · ${failures} verifier failures. Decision · version · synthetic status · verifier.`;
-    element('live-status').textContent = `Compared 28 synthetic probes: ${failures} verifier failures. Denied and unknown outcomes retained. Single-probe trace and history unchanged.`;
+    element('comparison-caption').textContent = `${probeTotal} synthetic probes · policy ${input.policy} · callback ${input.callback} · ${failures} verifier failures. Decision · version · synthetic status · verifier.`;
+    element('live-status').textContent = `Compared ${probeTotal} synthetic probes: ${failures} verifier failures. Denied and unknown outcomes retained. Single-probe trace and history unchanged.`;
   }
   function reset() {
     history = [];
     probeCount = 0;
-    element('exercise').reset();
+    HTMLFormElement.prototype.reset.call(element('exercise'));
     updateControls();
     element('outcome').hidden = true;
     for (const id of [

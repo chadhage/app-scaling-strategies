@@ -1,0 +1,144 @@
+{
+  "cardId": "A-S006",
+  "workerId": "worker-A-S006",
+  "mode": "synthetic",
+  "nativeProof": false,
+  "entry": "learning/S006/index.html",
+  "toolDiscovery": "Searched deferred openBrowserPage, runPlaywrightCode, clickElement, and typeInPage before use.",
+  "pageOwnership": "Only this worker's forceNew pages were used; no other worker's page was inspected or modified.",
+  "preflight": {
+    "pageId": "8a5d6a8d-1bc4-424f-b598-37bbc0522d14",
+    "forceNew": true,
+    "codeEditsAllowed": false,
+    "observations": [
+      "Approved join served synthetic v2/200 with PASS; visitor direct API was forbidden/403 with no version.",
+      "The original 28-cell matrix passed; the deliberately broken policy showed unauthorized preview exposure and FAIL.",
+      "Missing identity produced unknown/401 with no version.",
+      "Keyboard Space on Reset raised TypeError: element(...).reset is not a function; results remained populated."
+    ],
+    "toolLimitation": "An ordinary clickElement call on #run-probe timed out waiting for stability. Enter worked; later forced pointer clicks and native keyboard actions were used explicitly.",
+    "result": "Reset defect and missing explicit stable/revision/label routes identified without editing code or Git."
+  },
+  "continuation": {
+    "pageId": "295d2bfa-7467-467d-82ab-7f0eb9af9eb4",
+    "forceNew": true,
+    "reloadedBeforeChecks": true,
+    "tools": ["openBrowserPage", "runPlaywrightCode", "typeInPage"],
+    "checks": [
+      {
+        "action": "Attach pageerror/request listeners and reload the owned file page.",
+        "result": {
+          "reloaded": true,
+          "title": "S006 — Who may enter the preview?",
+          "banner": "Training rehearsal - synthetic data - not a live Azure result",
+          "routeOptions": 10,
+          "liveStatus": "Ready. No probe has run.",
+          "pageErrors": 0,
+          "nonFileRequests": 0
+        },
+        "csp": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'"
+      },
+      {
+        "action": "Use typeInPage with selector #run-probe and key Enter, then assert visible DOM output.",
+        "result": {
+          "approved": true,
+          "status": "200",
+          "version": "v2",
+          "passingAssertions": 11,
+          "gaUnchanged": true,
+          "loginAndBoundCallbackInTrace": true
+        }
+      },
+      {
+        "action": "Focus #identity; press ArrowDown, Tab, End; activate #run-probe with Space.",
+        "result": {
+          "keys": "ArrowDown, Tab, End, Space",
+          "identity": "visitor",
+          "route": "label-preview",
+          "decision": "forbidden",
+          "status": "403",
+          "version": "none",
+          "verdict": "PASS — expected probe outcome"
+        }
+      },
+      {
+        "action": "Forced pointer click on #compare-routes; inspect every rendered row and identity cell without replacing the single-probe trace.",
+        "result": {
+          "rows": 10,
+          "cells": 40,
+          "approvedCandidateEntries": 9,
+          "deniedVisitorEntries": 9,
+          "missingBlockedEntries": 9,
+          "unrecognizedBlockedEntries": 9,
+          "failures": 0,
+          "explicitEntries": true,
+          "singleTraceRetained": true
+        },
+        "explicitEntriesAssertion": "Visitor cells for stable-preview, direct-revision, and label-preview each contain forbidden · none · 403."
+      },
+      {
+        "action": "Select fixtures and submit seven real UI probes with Enter; assert decision, status, version, verdict, user impact, and unchanged GA.",
+        "cases": [
+          {"identity": "missing", "route": "direct-revision", "policy": "enforced", "decision": "unknown", "status": "401", "version": "none"},
+          {"identity": "unrecognized", "route": "label-preview", "policy": "enforced", "decision": "unknown", "status": "401", "version": "none"},
+          {"identity": "approved", "route": "join-preview", "policy": "enforced", "callback": "mismatch", "decision": "callback-rejected", "status": "400", "version": "none"},
+          {"identity": "approved", "route": "ordinary", "policy": "enforced", "decision": "ga", "status": "200", "version": "v1"},
+          {"identity": "visitor", "route": "stable-preview", "policy": "obscurity-only", "decision": "allowed", "status": "200", "version": "v2", "verdict": "FAIL", "impact": "unauthorized preview exposure"},
+          {"identity": "visitor", "route": "direct-revision", "policy": "obscurity-only", "decision": "allowed", "status": "200", "version": "v2", "verdict": "FAIL", "impact": "unauthorized preview exposure"},
+          {"identity": "visitor", "route": "label-preview", "policy": "obscurity-only", "decision": "allowed", "status": "200", "version": "v2", "verdict": "FAIL", "impact": "unauthorized preview exposure"}
+        ],
+        "result": {
+          "cases": 7,
+          "unknown401": 2,
+          "callback400": 1,
+          "ordinaryV1": 1,
+          "unsafeStableRevisionLabelExposureWithFail": 3,
+          "negativeHistoryRetained": true,
+          "gaUnchanged": true
+        }
+      },
+      {
+        "action": "Reset with Enter between cases; set each select to an unlisted value through page.locator(...).evaluate and dispatch change, then submit with Enter.",
+        "result": {
+          "invalidControls": ["route", "policy", "callback"],
+          "decision": "configuration-rejected",
+          "status": "400",
+          "version": "none",
+          "expectedDenialVerifier": "PASS",
+          "invalidRouteHelpAndCallbackDisabled": true,
+          "pageErrors": 0,
+          "requestsDuringInteractions": 0
+        },
+        "assertions": "Each rejected attempt remained in history; route change displayed Unknown route without throwing."
+      },
+      {
+        "action": "Populate 13 unsafe revision probes and the comparison; press Reset with Space; assert 14 empty regions/defaults; run a fresh Probe 1; reset with Enter and Space again.",
+        "result": {
+          "boundedHistoryBefore": 12,
+          "matrixCellsBefore": 40,
+          "spaceResetPassed": true,
+          "clearedRegions": 14,
+          "defaultsRestored": true,
+          "freshProbe1": true,
+          "enterAndRepeatedResetPassed": true,
+          "pageErrors": 0,
+          "requestsDuringInteractions": 0
+        },
+        "assertions": [
+          "Defaults are approved, join-preview, enforced, bound; callback is enabled.",
+          "Outcome and unsafe-policy warning are hidden; trace, assertions, comparison, history, summaries, and client snapshots are empty.",
+          "Cleanup confirms Reset complete; the named reset button still exists, so the prototype-reset fix is exercised.",
+          "The next probe starts at Probe 1 and is allowed; repeated Enter/Space resets are idempotent."
+        ]
+      }
+    ],
+    "finalState": "Reset complete; all in-tab results and history cleared. Owned page retained for review."
+  },
+  "limitations": [
+    "These are actual browser observations of an instructional model, not server-side authorization or live HTTP status evidence.",
+    "The browser code uses Playwright locators, keyboard actions, and DOM assertions. It does not navigate any inert candidate URL or contact Azure.",
+    "The matrix proves only its ten enumerated routes and four fixture identities; unlisted paths and real identity/token/callback behavior remain unverified.",
+    "No screenshot is substituted for behavioral assertions; no full WCAG or assistive-technology certification is claimed.",
+    "Local account paths are omitted; artifact references are repository-relative."
+  ]
+}

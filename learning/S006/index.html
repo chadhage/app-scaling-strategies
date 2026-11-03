@@ -22,7 +22,7 @@
   <main>
     <section aria-labelledby="objective">
       <h2 id="objective">Objective &amp; preconditions</h2>
-      <p>Compare an approved identity, a non-approved visitor, and unknown identity evidence across ordinary navigation and direct/indirect preview paths. Inspect the trace and check the independent oracle, not just a success label.</p>
+      <p>Compare an approved identity, a non-approved visitor, and unknown identity evidence across ordinary navigation, stable preview selection, direct revision/label entries, and indirect preview paths. Inspect the trace and check the independent oracle, not just a success label.</p>
       <ul>
         <li>Two independent <strong>synthetic</strong> client sessions: GA <code>ga-session-001</code> and probe <code>preview-session-001</code>. The companion GA client keeps its subject, attribution, and v1 route.</li>
         <li>Approval and callback binding are predefined teaching fixtures, <strong>not real authentication</strong>. Status codes are model outputs, not HTTP responses.</li>
@@ -35,7 +35,7 @@
       <h2 id="worked-example">Worked exercise: prove the boundary, then break it</h2>
       <ol>
         <li>Run the default approved identity with <strong>Join authorized preview</strong>. Expect v2, synthetic 200, and login → bound callback → per-request approval. GA attribution must not change.</li>
-        <li>Select the non-approved visitor and <strong>Direct candidate API</strong>. Expect forbidden / 403, even if the visitor knows <code>/candidate-7f3b/api/getProfile</code>. Try an indirect route too.</li>
+        <li>Select the non-approved visitor and <strong>Direct candidate API</strong>. Expect forbidden / 403, even if the visitor knows <code>/candidate-7f3b/api/getProfile</code>. Repeat for <strong>Stable endpoint, explicit preview selection</strong>, <strong>Direct candidate revision</strong>, and <strong>Candidate preview label</strong>, then an indirect route. Every candidate entry needs the same approval check.</li>
         <li>Try missing identity evidence. Expect unknown / 401 and no candidate service. <strong>Compare all routes</strong> retains these outcomes beside approved and denied probes.</li>
         <li>Select the deliberately broken obscure-URL-only policy. The same visitor reaches v2: the verifier must <strong>FAIL</strong> and user impact must show unauthorized exposure, despite 0% automatic routing.</li>
         <li>Return to the enforced policy; use an approved identity with a mismatched callback. Expect callback rejection, not a successful preview visit. Reset explicitly when finished.</li>
@@ -128,7 +128,7 @@
 
     <section aria-labelledby="comparison-heading">
       <h2 id="comparison-heading">Compare authorized / unauthorized / unknown routes</h2>
-      <p id="comparison-note">Run “Compare all routes” for 28 probes using the selected policy and callback evidence. The selected single probe's trace is retained above.</p>
+      <p id="comparison-note">Run “Compare all routes” for every listed route and all four identity fixtures using the selected policy and callback evidence. The selected single probe's trace is retained above.</p>
       <div class="table-wrap" role="region" aria-label="Route comparison" tabindex="0">
         <table>
           <caption id="comparison-caption">Not run. Cells will show decision · version · synthetic status · verifier.</caption>
@@ -155,7 +155,7 @@
       <h2 id="limits-heading">Limits &amp; next real gates</h2>
       <ul>
         <li>This is a browser-editable instructional model, not an actual identity system. Client-side checks, a hidden URL, and 0% routing are not production access controls. A real trusted boundary must validate identity and preview approval for every candidate path.</li>
-        <li>Only the seven enumerated paths and fixture identities are modeled. Real APIs, callback protocols, token signatures/expiry, membership revocation, session isolation, host routing, and unlisted bypass paths are unverified.</li>
+        <li>Only the ten enumerated paths and fixture identities are modeled. The stable selection, revision, and label strings are inert teaching fixtures, not Azure endpoint formats or live host claims. Real APIs, callback protocols, token signatures/expiry, membership revocation, session isolation, host routing, and unlisted bypass paths are unverified.</li>
         <li>Login/callback continuity and unchanged GA attribution are synthetic assertions, not live SSO, real-user migration, or a native authorization proof. No reliability or availability claim is made.</li>
         <li><strong>IaC N/A:</strong> SOURCE read-only lesson requires no Azure resources. C001 runtime/auth/hosting and separate scaffold/deploy approvals are not granted.</li>
         <li>A-S006 alone does not complete B-S006 or D-S006. Native proof still needs CORE, DATA, and CONTAINER gates and the source acceptance criteria. One stable Kano unit remains A-S006; packet LP-PROFILE is not closed by this lesson.</li>

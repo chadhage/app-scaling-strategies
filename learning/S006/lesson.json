@@ -12,23 +12,23 @@
   "nativeProof": false,
   "sourceParentComplete": false,
   "verification": {
-    "focusedTests": "84 passed",
-    "browser": "blocked: newly returned page IDs cannot be resolved by interaction tools",
-    "acceptance": "incomplete; no Kano credit requested"
+    "focusedTests": "115 passed",
+    "browser": "passed: reloaded owned-page DOM, keyboard, invalid-data, route-matrix, and Reset assertions",
+    "acceptance": "pending parent/controller review; no worker-granted Done or Kano credit"
   },
-  "objective": "Distinguish approved, forbidden, and unknown preview admission across ordinary and direct/indirect paths without changing GA attribution or login/callback semantics.",
+  "objective": "Distinguish approved, forbidden, and unknown preview admission across ordinary, stable preview selection, direct revision/label, and indirect paths without changing GA attribution or login/callback semantics.",
   "preconditions": ["Local file browser with JavaScript", "Synthetic fixtures only", "No network or cloud resources"],
-  "actions": ["Run an individual identity/route probe", "Compare 28 route/identity combinations", "Inject an obscure-URL-only policy fault", "Reject missing/mismatched callback evidence", "Reset in-tab results"],
+  "actions": ["Run an individual identity/route probe", "Compare 40 route/identity combinations", "Probe stable, direct revision, and label preview entries", "Inject an obscure-URL-only policy fault", "Reject invalid configuration and missing/mismatched callback evidence", "Reset in-tab results and run again"],
   "bdd": "learning/S006/preview-access.feature",
   "evidence": "learning/S006/evidence.json",
-  "focusedTestCommand": "node --test --test-reporter=spec learning\\S006\\tests\\preview-access.test.cjs learning\\S006\\tests\\lesson-assets.test.cjs",
+  "focusedTestCommand": "node --test --test-reporter=spec learning\\S006\\tests\\preview-access.test.cjs learning\\S006\\tests\\lesson-assets.test.cjs learning\\S006\\tests\\app-controls.test.cjs",
   "iac": {
     "status": "N/A",
     "reason": "SOURCE read-only lesson needs no Azure resources. C001 runtime/auth/hosting and separate scaffold/deploy approvals are not granted."
   },
   "limits": [
     "Fixture identities and browser-editable gates are not production authentication.",
-    "Only enumerated routes are modeled; real token, callback, server routing, and bypass coverage remain unverified.",
+    "Only ten inert route fixtures are modeled; real token, callback, server routing, and bypass coverage remain unverified. Revision/label strings are not Azure endpoint formats.",
     "No native B-S006 proof, source-parent completion, real-user continuity, or reliability claim.",
     "Probe history is bounded to 12 in-memory entries and explicitly cleared by Reset."
   ]
