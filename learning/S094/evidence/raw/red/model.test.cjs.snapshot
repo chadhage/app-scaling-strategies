@@ -1,0 +1,21 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('../model.js');
+
+test('forced reauthentication stops admission and keeps affected attempts counted', () => {
+  let state = model.createState();
+  state = model.transition(state, {
+    type: 'start', fixtureId: 'forced-reauthentication', pilot: 2,
+  });
+  state = model.transition(state, { type: 'observe' });
+  state = model.transition(state, { type: 'expand' });
+  assert.equal(state.result.outcome, 'FAILURE');
+  assert.equal(state.result.attempted, 2);
+  assert.equal(state.result.interruptions, 1);
+  assert.equal(state.result.forcedReauthentication, 1);
+  assert.equal(state.result.admission, 'STOPPED');
+  assert.equal(state.gate.decision, 'BLOCKED');
+  assert.equal(state.gate.validationRequired, true);
+});

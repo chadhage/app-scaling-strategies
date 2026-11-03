@@ -1,0 +1,24 @@
+'use strict';
+
+(function publish(root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.AuthRehearsal = api;
+})(typeof globalThis === 'object' ? globalThis : this, function makeStub() {
+  function createState() {
+    return {
+      phase: 'DRAFT',
+      config: null,
+      result: { outcome: 'UNKNOWN', attempted: 0, successes: 0, interruptions: 0, unknown: 0 },
+      gate: null,
+      verification: null,
+      history: [],
+    };
+  }
+
+  function transition(state) {
+    return state;
+  }
+
+  return { createState, transition };
+});

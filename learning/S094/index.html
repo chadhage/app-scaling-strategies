@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S094 — Synthetic authentication regression</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to exercise</a>
+  <header>
+    <p id="training-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Stop expansion when authentication regresses</h1>
+    <p>A-S094 · D-S094 · SC-S094 · Kano S · One resource-free portable lesson</p>
+    <p>Break candidate authentication; detect forced reauthentication or rejected valid sessions.</p>
+  </header>
+  <main id="exercise" tabindex="-1">
+    <section aria-labelledby="instructions-heading">
+      <h2 id="instructions-heading">Operator rehearsal</h2>
+      <p>Eight fixed synthetic journey labels include valid-session and sign-in outcome checks.
+        They are fixture data, not real users, sessions, credentials, tokens, or cookies.
+        No authentication, reauthentication, registration, routing, or identity operation occurs.</p>
+      <ol>
+        <li>Choose a fixed outcome fixture and a two- or four-journey pilot.</li>
+        <li>Start, observe the fixture, then attempt the expansion gate.</li>
+        <li>Predict SUCCESS, FAILURE, or UNKNOWN and check your interpretation.</li>
+        <li>Keep up to six checked attempts; reset deliberately to erase local data.</li>
+      </ol>
+      <form id="controls">
+        <div class="fields">
+          <label for="fixture">Fixed candidate outcome fixture
+            <select id="fixture" name="fixture">
+              <option value="compatible-settings">Compatible accepted outcomes</option>
+              <option value="forced-reauthentication">Forced reauthentication</option>
+              <option value="rejected-valid-session">Rejected valid session</option>
+              <option value="rejected-sign-in">Rejected synthetic sign-in check</option>
+              <option value="missing-observation">Missing authentication observation</option>
+              <option value="failure-and-unknown">Forced reauthentication plus unknown</option>
+            </select>
+          </label>
+          <label for="pilot">Attempted synthetic candidate journeys
+            <select id="pilot" name="pilot">
+              <option value="2">2 of 8 (25% pilot)</option>
+              <option value="4">4 of 8 (50% pilot)</option>
+            </select>
+          </label>
+          <label for="prediction">Predicted synthetic journey result
+            <select id="prediction" name="prediction" disabled>
+              <option value="">Choose a prediction</option>
+              <option value="SUCCESS">SUCCESS</option>
+              <option value="FAILURE">FAILURE</option>
+              <option value="UNKNOWN">UNKNOWN</option>
+            </select>
+          </label>
+        </div>
+        <div class="buttons">
+          <button id="start" type="submit" disabled>Start synthetic exposure</button>
+          <button id="observe" type="button" disabled>Observe fixed outcomes</button>
+          <button id="expand" type="button" disabled>Attempt expansion gate</button>
+          <button id="check" type="button" disabled>Check prediction</button>
+          <button id="new-attempt" type="button" disabled>New attempt — keep history</button>
+          <button id="reset-all" type="button" disabled>Reset all local data</button>
+        </div>
+        <p id="guard-error" role="alert" tabindex="-1" hidden></p>
+      </form>
+      <p id="status" role="status" aria-live="polite">Loading the synthetic lesson…</p>
+      <noscript>This rehearsal requires local JavaScript. No result is available without it.</noscript>
+    </section>
+
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Measured synthetic result</h2>
+      <p id="phase"></p>
+      <p id="outcome" class="result">UNKNOWN — not observed</p>
+      <p id="admission">No synthetic exposure has started.</p>
+      <p id="gate">Expansion gate has not been checked.</p>
+      <p><strong>Validation is always required.</strong> An eligible check does not execute a larger
+        cohort or certify actual authentication or session continuity.</p>
+      <dl class="metrics">
+        <div><dt>Attempted transitions</dt><dd id="attempted">—</dd></div>
+        <div><dt>Uninterrupted synthetic successes</dt><dd id="successes">—</dd></div>
+        <div><dt>Authentication interruptions</dt><dd id="interruptions">—</dd></div>
+        <div><dt>Unknown attempts</dt><dd id="unknown">—</dd></div>
+        <div><dt>Forced reauthentication</dt><dd id="reauthentication">—</dd></div>
+        <div><dt>Rejected valid sessions</dt><dd id="rejected-sessions">—</dd></div>
+        <div><dt>Rejected sign-in checks</dt><dd id="rejected-sign-ins">—</dd></div>
+        <div><dt>Old-only controls (excluded)</dt><dd id="old-only">—</dd></div>
+      </dl>
+      <p id="denominator">No attempted-transition evidence yet.</p>
+      <div class="table-scroll">
+        <table id="trace">
+          <caption>Attempted candidate journeys only — fixed synthetic trace</caption>
+          <thead><tr><th scope="col">Fixture label</th><th scope="col">Journey kind</th><th scope="col">Expected</th><th scope="col">Observed</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p id="verification">Learner interpretation has not been checked.</p>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained local history</h2>
+      <p id="history-count">0 of 6 checked attempts retained.</p>
+      <p>History retains failures and unknowns, even when the learner answers correctly.
+        It lives only in this page's memory. Reset or reload clears it; nothing is stored or sent.</p>
+      <div class="table-scroll">
+        <table id="history">
+          <caption>Checked synthetic attempts, including incorrect predictions</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Fixture</th><th scope="col">Attempts</th><th scope="col">Success / interruption / unknown</th><th scope="col">Journey result</th><th scope="col">Learner check</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="source-heading">
+      <h2 id="source-heading">Worked example and exact source acceptance</h2>
+      <p>Forced reauthentication in the two-journey fixture yields one uninterrupted success,
+        one authentication interruption, and zero unknowns: <strong>1 / 2</strong>, not 7 / 8.
+        The six old-only controls do not demonstrate migration. Candidate admission stops
+        immediately on observation and the expansion gate is blocked.</p>
+      <p>S094 in README: “Detect login/session failures before expanding the affected cohort.”</p>
+      <p>D-S094 acceptance: “Authentication failures stop expansion without bypassing validation;
+        affected users remain counted.”</p>
+      <p>This static synthetic A card does not complete B-S094, D-S094, native Azure proof,
+        production Node.js 24 support, actual authentication/session continuity, or five-nines certification.
+        IaC is N/A. There are no cloud resources, management calls, identity operations, or spending.</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,71 @@
+Feature: Stop synthetic exposure when candidate authentication regresses
+  A-S094 / D-S094 / SC-S094 / frozen Kano S
+  Training rehearsal - synthetic data - not a live Azure result
+
+  Background:
+    Given eight fixed synthetic journey labels, not identities or credentials
+    And a pilot of exactly two or four attempted candidate journeys
+    And untouched old-only controls never enter the transition denominator
+    And validation is always required and no authentication operations exist
+
+  Scenario Outline: Authentication interruptions stop expansion
+    Given the fixed "<fixture>" outcome fixture
+    When I start the synthetic pilot and observe its outcomes
+    Then the synthetic journey result is FAILURE
+    And "<failure>" is counted as an interruption
+    And candidate admission is stopped before any larger cohort is exposed
+    When I attempt the expansion gate
+    Then expansion is blocked without bypassing validation
+    And every affected attempted journey remains in the denominator
+
+    Examples:
+      | fixture                  | failure                 |
+      | forced-reauthentication  | forced reauthentication |
+      | rejected-valid-session   | rejected valid session  |
+      | rejected-sign-in         | rejected sign-in check  |
+
+  Scenario: Compatible observations permit only a synthetic next-stage check
+    Given the fixed "compatible-settings" outcome fixture
+    When I start a two-journey pilot, observe it, and attempt expansion
+    Then the synthetic result is SUCCESS and the gate is ELIGIBLE
+    And exactly two attempts and two uninterrupted successes are measured
+    And the six old-only controls are reported separately
+    And the next stage is not executed and no live session continuity is certified
+
+  Scenario: Missing observation is not authentication success
+    Given the fixed "missing-observation" outcome fixture
+    When I observe and gate a two-journey pilot
+    Then the synthetic result is UNKNOWN and expansion is blocked
+    And one unresolved attempt remains in the two-attempt denominator
+
+  Scenario: A known interruption does not erase uncertainty
+    Given the fixed "failure-and-unknown" outcome fixture
+    When I observe and gate a two-journey pilot
+    Then the synthetic result is FAILURE
+    And one interruption and one unknown remain counted with zero successes
+
+  Scenario: Learner verification never rewrites user impact
+    Given a gated forced-reauthentication pilot
+    When I correctly predict FAILURE
+    Then learner verification passes while the journey result remains FAILURE
+    And a new attempt retains the checked failure in local history
+
+  Scenario: Invalid input and out-of-order actions fail closed
+    When an unsupported fixture, pilot, prediction, extra field, or forged state is supplied
+    Or I attempt expansion before observing, repeat observation, or skip a required action
+    Then a clear guard error is reported without changing the state or history
+
+  Scenario: History is bounded and reset is deliberate
+    Given six checked synthetic attempts
+    When I try to start a seventh attempt
+    Then the history limit rejects it and requires an explicit reset
+    When I reset from any valid phase
+    Then all local state and history are cleared and default controls return
+
+  Scenario: The standalone page is operable and constrained
+    Given the exact training banner and no network, identity, or storage operations
+    When I use keyboard controls through a negative exercise, verification, and reset
+    Then results, affected rows, errors, and retained history are visible in the actual DOM
+    And reset is not shadowed by a form control
+    And the page CSP blocks inline script, external connections, and form submission
+    And browser evidence uses the qualified isolated helper and awaited final cleanup

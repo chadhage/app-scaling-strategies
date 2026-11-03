@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S094",
+  "workerId": "worker-A-S094",
+  "sourceId": "S094",
+  "parentId": "D-S094",
+  "siblingId": "B-S094",
+  "kano": "S",
+  "kanoUnit": "A-S094",
+  "packet": "SC-S094",
+  "entryGate": "SOURCE",
+  "title": "Stop synthetic exposure when authentication regresses",
+  "entry": "index.html",
+  "mode": "synthetic",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Break candidate authentication; detect forced reauthentication or rejected valid sessions.",
+  "sourceAcceptance": "Detect login/session failures before expanding the affected cohort.",
+  "backlogAcceptance": "Authentication failures stop expansion without bypassing validation; affected users remain counted.",
+  "preconditions": [
+    "JavaScript enabled and local file access to this standalone bundle",
+    "Eight fixed synthetic journey labels; no identities, credentials, tokens or cookies",
+    "Exactly two or four attempted candidate journeys and separate old-only controls"
+  ],
+  "actions": [
+    "Choose one of six fixed outcome fixtures",
+    "Start synthetic exposure",
+    "Observe fixed outcomes",
+    "Attempt expansion gate without executing another stage",
+    "Predict SUCCESS, FAILURE or UNKNOWN and check",
+    "New attempt — keep history",
+    "Reset all local data"
+  ],
+  "syntheticInput": "Six immutable enum-only outcome fixtures, two allowlisted pilot sizes, eight fixed journey labels, six checked attempts maximum",
+  "expectedAssertions": [
+    "Forced reauthentication, rejected valid sessions and rejected sign-in checks stop admission and block expansion",
+    "Validation is always required; no bypass or real authentication operations exist",
+    "Interruptions and unknowns remain counted; old-only controls cannot inflate successes",
+    "Missing evidence is UNKNOWN; a known failure plus unknown remains FAILURE with the unknown retained",
+    "Compatible evidence permits only an unexecuted synthetic next-stage gate check",
+    "Learner PASS does not change a FAILURE or UNKNOWN journey result",
+    "Input, state, phase and history bounds fail closed without mutation",
+    "Keyboard operation, explicit reset, retained history and strict CSP work in the actual browser"
+  ],
+  "limits": [
+    "One measured pilot and one unexecuted expansion-gate check per attempt",
+    "All authentication and session outcomes are fixed synthetic fixtures",
+    "No actual credentials, tokens, cookies, registration, identity or session operations",
+    "No cloud, IaC, scaffold, deployment, spend, packages or frameworks",
+    "No native Azure, actual authentication, reauthentication or session-continuity certification",
+    "No production Node.js 24 validation, source-parent completion or five-nines claim",
+    "History is bounded page memory only; explicit reset or reload clears it"
+  ],
+  "managementCalls": false,
+  "credentials": false,
+  "nativeAcceptanceCompleted": false,
+  "parentAcceptance": "pending independent parent review"
+}
