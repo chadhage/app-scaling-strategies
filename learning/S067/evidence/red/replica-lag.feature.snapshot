@@ -1,0 +1,73 @@
+Feature: Route a consistency-sensitive read during synthetic replica lag
+  # A-S067 / D-S067 / SC-S067 / one frozen S unit.
+  # Training rehearsal - synthetic data - not a live Azure result
+  Background:
+    Given one fixed primary and one fixed reader for SYN-RECORD-067
+    And the primary has synthetic committed version 12 at tick 12
+    And each fixture tick has one version and is not wall-clock database time
+
+  Scenario: Introducing lag does not make stale reader results correct
+    Given I declare a freshness budget of zero ticks
+    When I introduce five ticks of reader lag
+    And I route the read directly to reader-1
+    Then the trace shows reader watermark 7 and observed lag 5
+    And the selected reader is reader-1 and the returned version is 7
+    And the required minimum version is 12
+    And the read result is FAIL with synthetic impact INTERRUPTED
+
+  Scenario: A freshness gate routes around lag without pretending to repair it
+    Given I declare zero ticks of acceptable staleness
+    And I introduce five ticks of reader lag
+    When I choose watermark-gated routing and observe the read
+    Then the selected reader is primary with returned version 12
+    And the read result is PASS with synthetic impact CONTRACT_MET
+    And reader-1 remains five ticks behind at version 7
+
+  Scenario: The declared boundary is inclusive
+    Given I introduce two ticks of lag
+    When I allow two ticks of staleness and read from reader-1
+    Then version 10 meets the minimum version 10 and the result is PASS
+    But declaring zero ticks with that same direct route produces FAIL
+
+  Scenario: An unknown reader watermark cannot certify a reader result
+    Given reader lag is unknown
+    When I route directly to reader-1
+    Then the read result is UNKNOWN with synthetic impact UNVERIFIED
+    When I start another attempt and choose watermark-gated routing
+    Then the known-current primary can satisfy the declared freshness budget
+    And the reader watermark is still unknown
+
+  Scenario: A planned route is not proof of a returned value
+    Given watermark-gated routing selected primary
+    When the returned-read observation is missing
+    Then the route is shown but the returned version is unknown
+    And the result is UNKNOWN, never PASS
+
+  Scenario: A correct failure prediction does not erase the failing read
+    Given an observed stale read has result FAIL and impact INTERRUPTED
+    When I check the prediction FAIL
+    Then the learning verifier matches
+    And retained history still records FAIL and INTERRUPTED
+
+  Scenario: Invalid inputs or transitions do not change the rehearsal
+    Given only the exact declared finite fixture inputs are allowed
+    Then blank, forged, extra, malformed and accessor inputs are rejected
+    And reads before lag introduction or repeated reads are rejected
+    And frozen configuration cannot be changed during an attempt
+    And untrusted states cannot be passed to model transitions
+
+  Scenario: Bounded retained history and explicit reset
+    Given I have checked an attempt
+    When I start a new attempt
+    Then previous observations and predictions remain immutable in history
+    And current proof, errors and inputs return to defaults
+    And no more than six checked attempts can be retained
+    When I explicitly reset the rehearsal
+    Then all in-memory history and results are cleared and focus returns to Introduce lag
+
+  Scenario: Standalone keyboard operation and enforced isolation
+    Given I open index.html without a server or account
+    Then the exact synthetic training banner is visible
+    And controls have labels, error feedback, keyboard operation and visible focus
+    And scripts, forms, frames and connections outside the lesson are blocked by CSP
+    And normal verification never rewrites retained proof

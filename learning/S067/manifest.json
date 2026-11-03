@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S067",
+  "sourceId": "S067",
+  "parentId": "D-S067",
+  "nativeSibling": "B-S067",
+  "kano": "S",
+  "kanoUnit": "A-S067",
+  "packet": "SC-S067",
+  "owner": "worker-A-S067",
+  "entryGate": "SOURCE",
+  "title": "Replica lag during migration: declare freshness before choosing the reader",
+  "entryPoint": "learning/S067/index.html",
+  "feature": "learning/S067/replica-lag.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Introduce reader lag; choose a route meeting the declared freshness requirement.",
+  "sourceAcceptance": "Route consistency-sensitive reads appropriately rather than silently returning unacceptable stale data.",
+  "parentAcceptance": "Actual lag and selected reader are shown; stale results outside the contract cannot pass as uninterrupted correctness.",
+  "preconditions": [
+    "Open standalone HTML in a modern browser; no server, account, database or credentials.",
+    "One primary and one reader remain fixed; no replica expansion occurs.",
+    "Primary committed version 12 at tick 12 is an explicit known-current fixture assumption.",
+    "Exactly one version per synthetic tick; ticks are not elapsed database time.",
+    "Reader watermark is supplied as 12, 10, 7 or unknown, not observed from a real database."
+  ],
+  "actions": [
+    "Declare maximum staleness, injected reader lag, routing policy and returned-read coverage.",
+    "Introduce lag and lock the attempt's configuration.",
+    "Read once and compare selected reader, returned version, observed lag and required minimum.",
+    "Check PASS, FAIL or UNKNOWN as a separate learning prediction.",
+    "Compare retained attempts or explicitly reset all in-memory state."
+  ],
+  "input": "learning/S067/fixture.js",
+  "trace": "Current immutable synthetic observations plus at most six checked attempt histories.",
+  "assertions": [
+    "Direct strict reads from a five-tick-lagging reader fail; no silent stale success.",
+    "Two ticks exactly meets a two-tick budget but fails a zero-tick budget.",
+    "Gated routing chooses only a sufficient known reader watermark, otherwise primary.",
+    "Fallback never advances or repairs the lagging reader.",
+    "Unknown watermarks and missing returned-read observations cannot certify success.",
+    "Prediction correctness is independent of the actual read result and user impact.",
+    "Strict finite inputs, trusted immutable states and lifecycle guards prevent invalid progress.",
+    "Keyboard, error, retained-history, reset and CSP behavior are checked in an actual browser."
+  ],
+  "bounds": {
+    "configurations": 32,
+    "readsPerAttempt": 1,
+    "retainedAttempts": 6,
+    "primaries": 1,
+    "readers": 1,
+    "lag": ["none", "two", "five", "unknown"],
+    "freshness": ["current", "two-ticks"],
+    "routing": ["reader-only", "gated"],
+    "coverage": ["complete", "missing"],
+    "arbitraryEndpointsRecordsOrDurations": false
+  },
+  "iac": {
+    "status": "N/A",
+    "decision": "learning/S067/evidence/iac-decision.json",
+    "reason": "Resource-free local synthetic lesson; no cloud/IaC/scaffold/identity/deploy/spend."
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "dependencyChanges": false
+  },
+  "limits": [
+    "No actual database reader lag, elapsed-time freshness, read-your-writes or transactional consistency proof.",
+    "Native B-S067 and original D-S067 acceptance remain incomplete.",
+    "No production Node24, native Azure, source-parent or unattended lifecycle certification.",
+    "The abandoned browser lifecycle prototype is unqualified; only the pinned published helper is used.",
+    "Synthetic data only; no real authentication, registration, credentials or management calls.",
+    "History is in-memory only and clears on explicit reset or reload.",
+    "One frozen S unit; tests, plumbing and refinement earn no additional units."
+  ]
+}

@@ -1,0 +1,24 @@
+(function (root, factory) {
+  'use strict';
+  const model = factory();
+  if (typeof module === 'object' && module.exports) module.exports = model;
+  else root.S067Model = model;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  function initial() {
+    return { phase: 'configuring', attempt: 1, config: null, lagObservation: null,
+      result: null, prediction: null, trace: [], history: [] };
+  }
+  function introduceLag(state, config) {
+    return { ...state, phase: 'lagged', config };
+  }
+  function read(state) {
+    return { ...state, phase: 'observed', result: {
+      gate: 'UNKNOWN', impact: 'UNVERIFIED', selectedReader: null,
+      requiredVersion: null, receivedVersion: null, observedLagTicks: null,
+    } };
+  }
+  function check(state) { return { ...state, phase: 'checked' }; }
+  function next() { return initial(); }
+  return Object.freeze({ initial, introduceLag, read, check, next, reset: initial });
+}));

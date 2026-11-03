@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; child-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; manifest-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S067 · Replica lag and freshness routing</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixture.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p>A-S067 · D-S067 · SC-S067 · one frozen S unit</p>
+    <h1>Replica lag: choose a read that is fresh enough</h1>
+    <p>Introduce reader lag; choose a route meeting the declared freshness requirement.</p>
+  </header>
+  <main>
+    <section aria-labelledby="contract-title">
+      <h2 id="contract-title">The contract before the route</h2>
+      <p>During a migration, reader capacity can exist while its data is too old.
+        A selected route is not proof of a fresh returned value.</p>
+      <p>One fixed synthetic primary and reader hold <code>SYN-RECORD-067</code>.
+        The primary is at committed version 12, tick 12. One version is committed
+        at each synthetic tick. These ticks are not elapsed milliseconds or a measured database lag.</p>
+      <ol>
+        <li>Declare acceptable staleness and introduce the supplied reader lag.</li>
+        <li>Read once, inspect the selected reader and the returned version against the minimum.</li>
+        <li>Check your prediction. Try a gated route in a new attempt and compare retained history.</li>
+      </ol>
+      <p>Defaults deliberately fail: reader version 7 does not meet minimum 12.
+        A freshness gate can select primary without repairing or advancing reader-1.
+        A two-tick budget accepts version 10 exactly. Unknown or absent evidence cannot pass.</p>
+    </section>
+
+    <section id="exercise" aria-labelledby="exercise-title">
+      <h2 id="exercise-title">Operate the synthetic migration read</h2>
+      <p id="phase" role="status">Phase: configuring</p>
+      <p id="attempt-count">Attempt: 1 / 6</p>
+      <form id="lag-controls" novalidate>
+        <fieldset id="assumptions">
+          <legend>Finite fixture inputs (locked after introducing lag)</legend>
+          <div class="inputs">
+            <label for="lag">Introduced reader lag
+              <select id="lag" name="lag" required aria-describedby="tick-note">
+                <option value="none">0 ticks · version 12</option>
+                <option value="two">2 ticks · version 10</option>
+                <option value="five" selected>5 ticks · version 7</option>
+                <option value="unknown">Unknown watermark / lag</option>
+              </select>
+            </label>
+            <label for="freshness">Declared maximum staleness
+              <select id="freshness" name="freshness" required aria-describedby="tick-note">
+                <option value="current" selected>0 ticks · current only</option>
+                <option value="two-ticks">2 ticks · minimum version 10</option>
+              </select>
+            </label>
+            <label for="routing">Route policy
+              <select id="routing" name="routing" required>
+                <option value="reader-only" selected>Reader-1 without freshness gate</option>
+                <option value="gated">Reader watermark or primary fallback</option>
+              </select>
+            </label>
+            <label for="coverage">Returned-read observation
+              <select id="coverage" name="coverage" required>
+                <option value="complete" selected>Observe returned version</option>
+                <option value="missing">Missing returned-read evidence</option>
+              </select>
+            </label>
+          </div>
+          <p id="tick-note">Synthetic ticks only; budgets are inclusive. No real replication or clock is running.</p>
+        </fieldset>
+        <div class="actions">
+          <button id="introduce-lag" type="submit">1. Introduce lag</button>
+          <button id="read-once" type="button" disabled>2. Read once</button>
+        </div>
+      </form>
+
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <section id="current-proof" aria-labelledby="proof-title" aria-live="polite">
+        <h3 id="proof-title">Current observation</h3>
+        <p id="topology">Topology: 1 primary · 1 reader · no capacity changes</p>
+        <p id="lag-observation">Reader watermark and lag: not introduced.</p>
+        <p id="freshness-declaration">Declared freshness: not frozen.</p>
+        <p id="gate">Read freshness: not evaluated</p>
+        <p id="impact">Synthetic impact: not evaluated</p>
+        <p id="metrics">No returned read evaluated.</p>
+        <div id="result-detail" hidden>
+          <p id="route-reason"></p>
+          <table>
+            <caption>One synthetic read · selected reader is distinct from observed freshness</caption>
+            <thead>
+              <tr><th scope="col">Selected reader</th><th scope="col">Minimum version</th><th scope="col">Returned version</th><th scope="col">Returned lag (ticks)</th><th scope="col">Budget (ticks)</th><th scope="col">Result</th></tr>
+            </thead>
+            <tbody id="read-results"></tbody>
+          </table>
+        </div>
+        <h3>Synthetic trace</h3>
+        <ol id="trace"><li>No attempt started.</li></ol>
+      </section>
+
+      <form id="prediction-controls" novalidate>
+        <label for="prediction">Predict the observed freshness result
+          <select id="prediction" name="prediction" required disabled>
+            <option value="" selected>Choose a result</option>
+            <option value="PASS">PASS · returned data meets budget</option>
+            <option value="FAIL">FAIL · stale outside budget</option>
+            <option value="UNKNOWN">UNKNOWN · evidence insufficient</option>
+          </select>
+        </label>
+        <button id="check-prediction" type="submit" disabled>3. Check prediction</button>
+        <p id="prediction-result" role="status">Prediction not checked.</p>
+        <p>A matching prediction passes the learning check, not the read contract.
+          A correctly predicted failure is still an interrupted synthetic read.</p>
+      </form>
+      <div class="actions">
+        <button id="new-attempt" type="button" disabled>New attempt (retain history)</button>
+        <button id="reset-rehearsal" type="button">Reset rehearsal (clear history)</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained outcomes</h2>
+      <p id="history-count">Retained attempts: 0 / 6</p>
+      <p>At most six checked attempts remain in memory. New attempt retains them;
+        reset or reload clears them. There is no storage, account or telemetry.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>History preserves actual results even when a prediction is wrong</caption>
+          <thead>
+            <tr><th scope="col">Attempt</th><th scope="col">Reader lag</th><th scope="col">Budget</th><th scope="col">Policy</th><th scope="col">Selected</th><th scope="col">Returned / minimum</th><th scope="col">Result / impact</th><th scope="col">Prediction / learning check</th></tr>
+          </thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Evidence boundary and source</h2>
+      <p><strong>All lag, watermarks, versions, routes and results here are synthetic.</strong>
+        There are no database connections, management calls, authentication or credentials.
+        The primary is assumed current; this model does not certify replication,
+        read-your-writes, elapsed-time freshness or a production database.</p>
+      <p>S067 in the source README requires routing consistency-sensitive reads appropriately
+        rather than silently returning unacceptable stale data. D-S067 additionally requires
+        <em>actual</em> lag and reader observations. This rehearsal does not satisfy those native gates.</p>
+      <p>This is controlled lag during migration, not S061 replica expansion.
+        B-S067 and D-S067 remain incomplete. No native/source-parent, production Node.js 24,
+        unattended lifecycle or availability certification is implied.</p>
+      <p><a href="README.md">Worked exercise and verification</a> ·
+        <a href="manifest.json">Portable contract</a> · <a href="evidence.json">Evidence and limits</a></p>
+    </section>
+  </main>
+  <footer><p>Local synthetic training only · keyboard: Tab, arrows, Enter or Space · reset is explicit.</p></footer>
+</body>
+</html>

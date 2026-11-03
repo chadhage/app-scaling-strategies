@@ -1,0 +1,657 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S067",
+  "workerId": "worker-A-S067",
+  "mode": "synthetic",
+  "entry": "learning\\S067\\index.html",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "startedAtUtc": "2026-11-03T19:53:21.587Z",
+  "captureExplicitlyEnabled": true,
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "publication": "53c0c0d",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055"
+  },
+  "outcome": "PASS",
+  "observations": [
+    {
+      "name": "initial-keyboard-and-focus",
+      "phase": "Phase: configuring",
+      "lag": "Reader watermark and lag: not introduced.",
+      "freshness": "Declared freshness: not frozen.",
+      "gate": "Read freshness: not evaluated",
+      "impact": "Synthetic impact: not evaluated",
+      "metrics": "No returned read evaluated.",
+      "selectedRead": [],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "error": "",
+      "focus": "introduce-lag"
+    },
+    {
+      "name": "guard-read-before-lag",
+      "phase": "Phase: configuring",
+      "lag": "Reader watermark and lag: not introduced.",
+      "freshness": "Declared freshness: not frozen.",
+      "gate": "Read freshness: not evaluated",
+      "impact": "Synthetic impact: not evaluated",
+      "metrics": "No returned read evaluated.",
+      "selectedRead": [],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "error": "Action requires phase lagged; current phase is configuring.",
+      "focus": "input-error"
+    },
+    {
+      "name": "guard-invalid-fixture-no-html-sink",
+      "phase": "Phase: configuring",
+      "lag": "Reader watermark and lag: not introduced.",
+      "freshness": "Declared freshness: not frozen.",
+      "gate": "Read freshness: not evaluated",
+      "impact": "Synthetic impact: not evaluated",
+      "metrics": "No returned read evaluated.",
+      "selectedRead": [],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "error": "Choose a listed lag option.",
+      "focus": "lag"
+    },
+    {
+      "name": "guard-frozen-config",
+      "phase": "Phase: lagged",
+      "lag": "Reader-1 watermark: 7 · tick 7 · observed lag: 5 synthetic ticks.",
+      "freshness": "Declared freshness: at most 0 ticks · minimum version 12.",
+      "gate": "Read freshness: not evaluated",
+      "impact": "Synthetic impact: not evaluated",
+      "metrics": "No returned read evaluated.",
+      "selectedRead": [],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "Declare maximum staleness 0 synthetic ticks for SYN-RECORD-067.\nPrimary remains version 12 at tick 12; topology stays one primary and one reader.\nIntroduce reader watermark 7 at tick 7; observed lag 5 synthetic ticks.",
+      "error": "Frozen inputs changed. Start a new attempt or reset.",
+      "focus": "input-error"
+    },
+    {
+      "name": "stale-failure-and-invalid-prediction",
+      "phase": "Phase: observed",
+      "lag": "Reader-1 watermark: 7 · tick 7 · observed lag: 5 synthetic ticks.",
+      "freshness": "Declared freshness: at most 0 ticks · minimum version 12.",
+      "gate": "Read freshness: FAIL",
+      "impact": "Synthetic impact: INTERRUPTED",
+      "metrics": "One read: 0 correct · 1 failed · 0 unknown.",
+      "selectedRead": [
+        [
+          "reader-1",
+          "12",
+          "7",
+          "5",
+          "0",
+          "FAIL"
+        ]
+      ],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "Declare maximum staleness 0 synthetic ticks for SYN-RECORD-067.\nPrimary remains version 12 at tick 12; topology stays one primary and one reader.\nIntroduce reader watermark 7 at tick 7; observed lag 5 synthetic ticks.\nSelect reader-1. Operator chose reader-1 without a freshness gate.\nReceive version 7; returned-data lag 5 ticks; minimum required version 12.\nFreshness FAIL; synthetic impact INTERRUPTED. Reader fixture does not advance.",
+      "error": "Choose PASS, FAIL or UNKNOWN before checking.",
+      "focus": "prediction"
+    },
+    {
+      "name": "correct-failure-prediction-still-interrupted",
+      "phase": "Phase: checked",
+      "lag": "Reader-1 watermark: 7 · tick 7 · observed lag: 5 synthetic ticks.",
+      "freshness": "Declared freshness: at most 0 ticks · minimum version 12.",
+      "gate": "Read freshness: FAIL",
+      "impact": "Synthetic impact: INTERRUPTED",
+      "metrics": "One read: 0 correct · 1 failed · 0 unknown.",
+      "selectedRead": [
+        [
+          "reader-1",
+          "12",
+          "7",
+          "5",
+          "0",
+          "FAIL"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "5",
+          "0",
+          "reader-only",
+          "reader-1",
+          "7 / 12",
+          "FAIL / INTERRUPTED",
+          "FAIL / MATCH"
+        ]
+      ],
+      "prediction": "Learning check: MATCH · predicted FAIL; actual FAIL / INTERRUPTED.",
+      "trace": "Declare maximum staleness 0 synthetic ticks for SYN-RECORD-067.\nPrimary remains version 12 at tick 12; topology stays one primary and one reader.\nIntroduce reader watermark 7 at tick 7; observed lag 5 synthetic ticks.\nSelect reader-1. Operator chose reader-1 without a freshness gate.\nReceive version 7; returned-data lag 5 ticks; minimum required version 12.\nFreshness FAIL; synthetic impact INTERRUPTED. Reader fixture does not advance.\nPrediction matches; actual FAIL / INTERRUPTED remains recorded.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "gated-primary-pass-no-reader-catchup-wrong-prediction",
+      "phase": "Phase: checked",
+      "lag": "Reader-1 watermark: 7 · tick 7 · observed lag: 5 synthetic ticks.",
+      "freshness": "Declared freshness: at most 0 ticks · minimum version 12.",
+      "gate": "Read freshness: PASS",
+      "impact": "Synthetic impact: CONTRACT_MET",
+      "metrics": "One read: 1 correct · 0 failed · 0 unknown.",
+      "selectedRead": [
+        [
+          "primary",
+          "12",
+          "12",
+          "0",
+          "0",
+          "PASS"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "5",
+          "0",
+          "reader-only",
+          "reader-1",
+          "7 / 12",
+          "FAIL / INTERRUPTED",
+          "FAIL / MATCH"
+        ],
+        [
+          "2",
+          "5",
+          "0",
+          "gated",
+          "primary",
+          "12 / 12",
+          "PASS / CONTRACT_MET",
+          "FAIL / MISMATCH"
+        ]
+      ],
+      "prediction": "Learning check: MISMATCH · predicted FAIL; actual PASS / CONTRACT_MET.",
+      "trace": "Declare maximum staleness 0 synthetic ticks for SYN-RECORD-067.\nPrimary remains version 12 at tick 12; topology stays one primary and one reader.\nIntroduce reader watermark 7 at tick 7; observed lag 5 synthetic ticks.\nSelect primary. Reader watermark below the declared minimum; fall back to primary.\nReceive version 12; returned-data lag 0 ticks; minimum required version 12.\nFreshness PASS; synthetic impact CONTRACT_MET. Reader fixture does not advance.\nPrediction does not match; actual PASS / CONTRACT_MET remains recorded.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "inclusive-two-tick-boundary",
+      "phase": "Phase: checked",
+      "lag": "Reader-1 watermark: 10 · tick 10 · observed lag: 2 synthetic ticks.",
+      "freshness": "Declared freshness: at most 2 ticks · minimum version 10.",
+      "gate": "Read freshness: PASS",
+      "impact": "Synthetic impact: CONTRACT_MET",
+      "metrics": "One read: 1 correct · 0 failed · 0 unknown.",
+      "selectedRead": [
+        [
+          "reader-1",
+          "10",
+          "10",
+          "2",
+          "2",
+          "PASS"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "5",
+          "0",
+          "reader-only",
+          "reader-1",
+          "7 / 12",
+          "FAIL / INTERRUPTED",
+          "FAIL / MATCH"
+        ],
+        [
+          "2",
+          "5",
+          "0",
+          "gated",
+          "primary",
+          "12 / 12",
+          "PASS / CONTRACT_MET",
+          "FAIL / MISMATCH"
+        ],
+        [
+          "3",
+          "2",
+          "2",
+          "reader-only",
+          "reader-1",
+          "10 / 10",
+          "PASS / CONTRACT_MET",
+          "PASS / MATCH"
+        ]
+      ],
+      "prediction": "Learning check: MATCH · predicted PASS; actual PASS / CONTRACT_MET.",
+      "trace": "Declare maximum staleness 2 synthetic ticks for SYN-RECORD-067.\nPrimary remains version 12 at tick 12; topology stays one primary and one reader.\nIntroduce reader watermark 10 at tick 10; observed lag 2 synthetic ticks.\nSelect reader-1. Operator chose reader-1 without a freshness gate.\nReceive version 10; returned-data lag 2 ticks; minimum required version 10.\nFreshness PASS; synthetic impact CONTRACT_MET. Reader fixture does not advance.\nPrediction matches; actual PASS / CONTRACT_MET remains recorded.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "same-reader-strict-budget-failure",
+      "phase": "Phase: checked",
+      "lag": "Reader-1 watermark: 10 · tick 10 · observed lag: 2 synthetic ticks.",
+      "freshness": "Declared freshness: at most 0 ticks · minimum version 12.",
+      "gate": "Read freshness: FAIL",
+      "impact": "Synthetic impact: INTERRUPTED",
+      "metrics": "One read: 0 correct · 1 failed · 0 unknown.",
+      "selectedRead": [
+        [
+          "reader-1",
+          "12",
+          "10",
+          "2",
+          "0",
+          "FAIL"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "5",
+          "0",
+          "reader-only",
+          "reader-1",
+          "7 / 12",
+          "FAIL / INTERRUPTED",
+          "FAIL / MATCH"
+        ],
+        [
+          "2",
+          "5",
+          "0",
+          "gated",
+          "primary",
+          "12 / 12",
+          "PASS / CONTRACT_MET",
+          "FAIL / MISMATCH"
+        ],
+        [
+          "3",
+          "2",
+          "2",
+          "reader-only",
+          "reader-1",
+          "10 / 10",
+          "PASS / CONTRACT_MET",
+          "PASS / MATCH"
+        ],
+        [
+          "4",
+          "2",
+          "0",
+          "reader-only",
+          "reader-1",
+          "10 / 12",
+          "FAIL / INTERRUPTED",
+          "FAIL / MATCH"
+        ]
+      ],
+      "prediction": "Learning check: MATCH · predicted FAIL; actual FAIL / INTERRUPTED.",
+      "trace": "Declare maximum staleness 0 synthetic ticks for SYN-RECORD-067.\nPrimary remains version 12 at tick 12; topology stays one primary and one reader.\nIntroduce reader watermark 10 at tick 10; observed lag 2 synthetic ticks.\nSelect reader-1. Operator chose reader-1 without a freshness gate.\nReceive version 10; returned-data lag 2 ticks; minimum required version 12.\nFreshness FAIL; synthetic impact INTERRUPTED. Reader fixture does not advance.\nPrediction matches; actual FAIL / INTERRUPTED remains recorded.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "unknown-reader-lag-no-certification",
+      "phase": "Phase: checked",
+      "lag": "Reader-1 watermark: unknown · tick unknown · observed lag: unknown synthetic ticks.",
+      "freshness": "Declared freshness: at most 0 ticks · minimum version 12.",
+      "gate": "Read freshness: UNKNOWN",
+      "impact": "Synthetic impact: UNVERIFIED",
+      "metrics": "One read: 0 correct · 0 failed · 1 unknown.",
+      "selectedRead": [
+        [
+          "reader-1",
+          "12",
+          "unknown",
+          "unknown",
+          "0",
+          "UNKNOWN"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "5",
+          "0",
+          "reader-only",
+          "reader-1",
+          "7 / 12",
+          "FAIL / INTERRUPTED",
+          "FAIL / MATCH"
+        ],
+        [
+          "2",
+          "5",
+          "0",
+          "gated",
+          "primary",
+          "12 / 12",
+          "PASS / CONTRACT_MET",
+          "FAIL / MISMATCH"
+        ],
+        [
+          "3",
+          "2",
+          "2",
+          "reader-only",
+          "reader-1",
+          "10 / 10",
+          "PASS / CONTRACT_MET",
+          "PASS / MATCH"
+        ],
+        [
+          "4",
+          "2",
+          "0",
+          "reader-only",
+          "reader-1",
+          "10 / 12",
+          "FAIL / INTERRUPTED",
+          "FAIL / MATCH"
+        ],
+        [
+          "5",
+          "unknown",
+          "0",
+          "reader-only",
+          "reader-1",
+          "unknown / 12",
+          "UNKNOWN / UNVERIFIED",
+          "UNKNOWN / MATCH"
+        ]
+      ],
+      "prediction": "Learning check: MATCH · predicted UNKNOWN; actual UNKNOWN / UNVERIFIED.",
+      "trace": "Declare maximum staleness 0 synthetic ticks for SYN-RECORD-067.\nPrimary remains version 12 at tick 12; topology stays one primary and one reader.\nIntroduce reader fixture with unknown watermark and unknown lag. No synchronization is inferred.\nSelect reader-1. Operator chose reader-1 without a freshness gate.\nREADER_WATERMARK_UNKNOWN: no returned version can be certified; minimum required version 12.\nFreshness UNKNOWN; synthetic impact UNVERIFIED. Reader fixture does not advance.\nPrediction matches; actual UNKNOWN / UNVERIFIED remains recorded.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "six-history-limit-and-unknown-reader-primary-fallback",
+      "phase": "Phase: checked",
+      "lag": "Reader-1 watermark: unknown · tick unknown · observed lag: unknown synthetic ticks.",
+      "freshness": "Declared freshness: at most 0 ticks · minimum version 12.",
+      "gate": "Read freshness: PASS",
+      "impact": "Synthetic impact: CONTRACT_MET",
+      "metrics": "One read: 1 correct · 0 failed · 0 unknown.",
+      "selectedRead": [
+        [
+          "primary",
+          "12",
+          "12",
+          "0",
+          "0",
+          "PASS"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "5",
+          "0",
+          "reader-only",
+          "reader-1",
+          "7 / 12",
+          "FAIL / INTERRUPTED",
+          "FAIL / MATCH"
+        ],
+        [
+          "2",
+          "5",
+          "0",
+          "gated",
+          "primary",
+          "12 / 12",
+          "PASS / CONTRACT_MET",
+          "FAIL / MISMATCH"
+        ],
+        [
+          "3",
+          "2",
+          "2",
+          "reader-only",
+          "reader-1",
+          "10 / 10",
+          "PASS / CONTRACT_MET",
+          "PASS / MATCH"
+        ],
+        [
+          "4",
+          "2",
+          "0",
+          "reader-only",
+          "reader-1",
+          "10 / 12",
+          "FAIL / INTERRUPTED",
+          "FAIL / MATCH"
+        ],
+        [
+          "5",
+          "unknown",
+          "0",
+          "reader-only",
+          "reader-1",
+          "unknown / 12",
+          "UNKNOWN / UNVERIFIED",
+          "UNKNOWN / MATCH"
+        ],
+        [
+          "6",
+          "unknown",
+          "0",
+          "gated",
+          "primary",
+          "12 / 12",
+          "PASS / CONTRACT_MET",
+          "PASS / MATCH"
+        ]
+      ],
+      "prediction": "Learning check: MATCH · predicted PASS; actual PASS / CONTRACT_MET.",
+      "trace": "Declare maximum staleness 0 synthetic ticks for SYN-RECORD-067.\nPrimary remains version 12 at tick 12; topology stays one primary and one reader.\nIntroduce reader fixture with unknown watermark and unknown lag. No synchronization is inferred.\nSelect primary. Reader watermark unknown; fall back to the known-current primary.\nReceive version 12; returned-data lag 0 ticks; minimum required version 12.\nFreshness PASS; synthetic impact CONTRACT_MET. Reader fixture does not advance.\nPrediction matches; actual PASS / CONTRACT_MET remains recorded.",
+      "error": "Six retained attempts reached; explicitly reset to clear history.",
+      "focus": "input-error"
+    },
+    {
+      "name": "reset-clears-six-attempts-and-error",
+      "phase": "Phase: configuring",
+      "lag": "Reader watermark and lag: not introduced.",
+      "freshness": "Declared freshness: not frozen.",
+      "gate": "Read freshness: not evaluated",
+      "impact": "Synthetic impact: not evaluated",
+      "metrics": "No returned read evaluated.",
+      "selectedRead": [],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "error": "",
+      "focus": "introduce-lag"
+    },
+    {
+      "name": "missing-returned-read-even-selected-primary-unknown",
+      "phase": "Phase: observed",
+      "lag": "Reader-1 watermark: 7 · tick 7 · observed lag: 5 synthetic ticks.",
+      "freshness": "Declared freshness: at most 0 ticks · minimum version 12.",
+      "gate": "Read freshness: UNKNOWN",
+      "impact": "Synthetic impact: UNVERIFIED",
+      "metrics": "One read: 0 correct · 0 failed · 1 unknown.",
+      "selectedRead": [
+        [
+          "primary",
+          "12",
+          "unknown",
+          "unknown",
+          "0",
+          "UNKNOWN"
+        ]
+      ],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "Declare maximum staleness 0 synthetic ticks for SYN-RECORD-067.\nPrimary remains version 12 at tick 12; topology stays one primary and one reader.\nIntroduce reader watermark 7 at tick 7; observed lag 5 synthetic ticks.\nSelect primary. Reader watermark below the declared minimum; fall back to primary.\nREAD_OBSERVATION_MISSING: no returned version can be certified; minimum required version 12.\nFreshness UNKNOWN; synthetic impact UNVERIFIED. Reader fixture does not advance.",
+      "error": "",
+      "focus": "prediction"
+    },
+    {
+      "name": "known-current-reader-selected-with-gate",
+      "phase": "Phase: checked",
+      "lag": "Reader-1 watermark: 12 · tick 12 · observed lag: 0 synthetic ticks.",
+      "freshness": "Declared freshness: at most 0 ticks · minimum version 12.",
+      "gate": "Read freshness: PASS",
+      "impact": "Synthetic impact: CONTRACT_MET",
+      "metrics": "One read: 1 correct · 0 failed · 0 unknown.",
+      "selectedRead": [
+        [
+          "reader-1",
+          "12",
+          "12",
+          "0",
+          "0",
+          "PASS"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "0",
+          "0",
+          "gated",
+          "reader-1",
+          "12 / 12",
+          "PASS / CONTRACT_MET",
+          "PASS / MATCH"
+        ]
+      ],
+      "prediction": "Learning check: MATCH · predicted PASS; actual PASS / CONTRACT_MET.",
+      "trace": "Declare maximum staleness 0 synthetic ticks for SYN-RECORD-067.\nPrimary remains version 12 at tick 12; topology stays one primary and one reader.\nIntroduce reader watermark 12 at tick 12; observed lag 0 synthetic ticks.\nSelect reader-1. Observed reader watermark meets the declared minimum.\nReceive version 12; returned-data lag 0 ticks; minimum required version 12.\nFreshness PASS; synthetic impact CONTRACT_MET. Reader fixture does not advance.\nPrediction matches; actual PASS / CONTRACT_MET remains recorded.",
+      "error": "",
+      "focus": "new-attempt"
+    },
+    {
+      "name": "final-keyboard-reset",
+      "phase": "Phase: configuring",
+      "lag": "Reader watermark and lag: not introduced.",
+      "freshness": "Declared freshness: not frozen.",
+      "gate": "Read freshness: not evaluated",
+      "impact": "Synthetic impact: not evaluated",
+      "metrics": "No returned read evaluated.",
+      "selectedRead": [],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "error": "",
+      "focus": "introduce-lag"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp-probes",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-VLmWCItaVCHmI9PjBYaeJ9YCN1BPf/aE4jnW+87ku9g='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Loading the script 'https://s067.invalid/script' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Applying inline style violates the following Content Security Policy directive 'style-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-ejiE9OnAFff74Dn7oq2G3hxQfAnn/ZhxieW+ZoBogbo='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Setting the document's base URI to 'https://s067.invalid/base/' violates the following Content Security Policy directive: \"base-uri 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Connecting to 'https://s067.invalid/connect' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Fetch API cannot load https://s067.invalid/connect. Refused to connect because it violates the document's Content Security Policy."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Framing 'https://s067.invalid/' violates the following Content Security Policy directive: \"frame-src 'none'\". The request has been blocked.\n"
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Sending form data to 'https://s067.invalid/form' violates the following Content Security Policy directive: \"form-action 'none'\". The request has been blocked.\n"
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "probeRequests": [
+    {
+      "url": "https://s067.invalid/script",
+      "method": "GET"
+    }
+  ],
+  "probeResponses": [],
+  "cspViolations": [
+    {
+      "effectiveDirective": "script-src",
+      "blockedURI": "eval",
+      "disposition": "enforce"
+    },
+    {
+      "effectiveDirective": "script-src-elem",
+      "blockedURI": "inline",
+      "disposition": "enforce"
+    },
+    {
+      "effectiveDirective": "script-src-elem",
+      "blockedURI": "https://s067.invalid/script",
+      "disposition": "enforce"
+    },
+    {
+      "effectiveDirective": "style-src-elem",
+      "blockedURI": "inline",
+      "disposition": "enforce"
+    },
+    {
+      "effectiveDirective": "base-uri",
+      "blockedURI": "https://s067.invalid/base/",
+      "disposition": "enforce"
+    },
+    {
+      "effectiveDirective": "connect-src",
+      "blockedURI": "https://s067.invalid/connect",
+      "disposition": "enforce"
+    },
+    {
+      "effectiveDirective": "frame-src",
+      "blockedURI": "https://s067.invalid",
+      "disposition": "enforce"
+    },
+    {
+      "effectiveDirective": "form-action",
+      "blockedURI": "https://s067.invalid/form",
+      "disposition": "enforce"
+    }
+  ],
+  "cleanup": {
+    "awaitedFinallyClose": true
+  },
+  "sourceHashes": {
+    "index.html": "a5776421c4ea47f140bb024aee67e691f87a3cb74c98dcf6ce3a87a82e42e34f",
+    "styles.css": "c3c7b9ceb660f76c108a47c64c90ed8f16a87f839e0336260ff37aa98f78d946",
+    "fixture.js": "26e6ac331f576103f2d10ad8b4e59f8bf1d514ac62a6f8d107b132baa3b7142c",
+    "model.js": "c49f066477e7110067ab5b5a23de7fae543f260578cd1ecfcef357732ec51d58",
+    "app.js": "0f190ac56bb716010e62c50d607abb1101aa21b92f858ebcef8e9172a3a6bcd8",
+    "tests\\browser.test.cjs": "bfd8a414a5e7abfe2231e293002c8f4e3e8fbd40b4b92ce079f9195730c275ee",
+    "tests\\csp-probe.js": "9ddcce3a2880b53e9ec0e1680dba7b6fa679e4484d56181714834920af73aea0"
+  },
+  "browserVersion": "156.0.4314.50",
+  "cspProbes": {
+    "inlineExecuted": false,
+    "dynamicEvaluation": "blocked",
+    "connection": "blocked",
+    "bodyColor": "rgb(237, 243, 250)"
+  },
+  "completedAtUtc": "2026-11-03T19:53:26.893Z"
+}
