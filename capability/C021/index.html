@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; media-src 'none'; manifest-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C021 · Explicit profile contract adapter</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="../C020/contract.js"></script>
+  <script defer src="../C020/inspector.js"></script>
+  <script defer src="compatibility.js"></script>
+  <script defer src="page.js"></script>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">C021 · H005 · one frozen S unit · synthetic local rehearsal</p>
+    <h1>A breaking contract needs an explicit adapter.</h1>
+    <p class="boundary"><strong>Bundled synthetic catalog replay — not a live implementation or HTTP observation.</strong>
+      No native, production, identity, authorization, store, or deployment qualification.</p>
+    <p>C020's actual <code>v1 / 1.0.0</code> and <code>v2 / 2.0.0</code> implementations both keep
+      <code>getProfile/1</code>. Their deployment stamps are immutable local fixture labels, not API versions or cloud evidence.
+      Only this C021 fixture deliberately introduces <code>getProfile/2</code>.</p>
+    <details>
+      <summary>Exact semantic mapping and provenance</summary>
+      <p>The new contract renames <code>profile</code> to <code>person</code>:
+        <code>id → key</code>, <code>displayName → name</code>, <code>email → contact.emailAddress</code>,
+        <code>preferences.locale → settings.language</code>, <code>preferences.theme → settings.colorScheme</code>,
+        <code>preferences.topics → settings.interests</code>. Values, ordering, and empty arrays are preserved exactly.</p>
+      <p>The directional adapter accepts only this known synthetic contract, catalog, and source stamp.
+        Its output identifies the adaptation; it is not an original C020 response.
+        Stamps and source hashes are reproducibility provenance, not authenticated attestation.</p>
+    </details>
+    <form id="rehearsal-form" novalidate>
+      <label for="profile-id">Explicit synthetic profile ID</label>
+      <input id="profile-id" name="profileId" value="synthetic-001" maxlength="64" autocomplete="off" spellcheck="false">
+      <p class="hint">Known: synthetic-001, synthetic-002. Empty or unknown identifiers fail without a default.</p>
+      <label for="implementation">C020 source implementation label (both API getProfile/1)</label>
+      <select id="implementation" name="implementation">
+        <option value="v1">v1 · implementation 1.0.0 · API getProfile/1</option>
+        <option value="v2">v2 · implementation 2.0.0 · API getProfile/1</option>
+      </select>
+      <div class="buttons">
+        <button id="run-rehearsal" type="submit" disabled>Compare raw and adapted transitions</button>
+        <button id="reset-rehearsal" type="button">Reset rehearsal</button>
+      </div>
+    </form>
+    <p id="status" role="status" aria-live="polite">Not run — no safe transition asserted.</p>
+    <section aria-labelledby="outcome-heading">
+      <h2 id="outcome-heading">Actual old/new consumer outcomes</h2>
+      <p>Raw to old must be <strong>BREAKING</strong>. Adapted to unchanged old must be <strong>SAFE</strong>.
+        New consumers explicitly require the new contract; adapting does not make every consumer compatible.</p>
+      <table>
+        <thead><tr><th scope="col">Transition</th><th scope="col">Outcome</th><th scope="col">Reason</th></tr></thead>
+        <tbody id="outcomes"></tbody>
+      </table>
+      <pre id="semantics">No compared business fields.</pre>
+    </section>
+    <div class="responses">
+      <section aria-labelledby="baseline-heading"><h2 id="baseline-heading">C020 getProfile/1 catalog replay</h2><pre id="baseline">No baseline replay.</pre></section>
+      <section aria-labelledby="raw-heading"><h2 id="raw-heading">RAW getProfile/2 — BREAKING to old</h2><pre id="raw">No raw response.</pre></section>
+      <section aria-labelledby="adapted-heading"><h2 id="adapted-heading">ADAPTED getProfile/1 — SAFE to old</h2><pre id="adapted">No adapted response.</pre></section>
+    </div>
+    <section aria-labelledby="candidate-heading">
+      <h2 id="candidate-heading">Try an explicit adapter candidate</h2>
+      <p>Run a rehearsal first to copy its raw response. Edit the new contract, a business field, or provenance to
+        observe rejection. Candidate validation is local data validation, never a new service observation.</p>
+      <form id="candidate-form" novalidate>
+        <label for="candidate">Candidate synthetic getProfile/2 JSON</label>
+        <textarea id="candidate" name="candidate" rows="12" maxlength="16384" spellcheck="false" disabled></textarea>
+        <button id="check-candidate" type="submit" disabled>Validate and explicitly adapt candidate</button>
+      </form>
+      <p id="candidate-status" role="status" aria-live="polite">No candidate checked.</p>
+      <pre id="candidate-result">No candidate adaptation.</pre>
+    </section>
+    <footer>
+      Local file and pure scripts only; no new server, dependency, framework, or cloud resource.
+      Automated evidence uses Node 22 tooling with pinned offline Playwright 1.56.1 and installed signed Edge 156,
+      not Node 24 production certification. IaC: N/A. No Entra, session, durable store, Azure execution, scaffold,
+      deployment, or spend. This one card does not complete H005 or any native/source-parent story.
+    </footer>
+    <noscript><p>This portable local rehearsal requires JavaScript. No cloud account is needed.</p></noscript>
+  </main>
+</body>
+</html>
