@@ -1,0 +1,97 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'">
+  <title>S064 — Introduce a synchronized shard</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer=""></script>
+  <script src="lesson.js" defer=""></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to rehearsal controls</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p>A-S064 · D-S064 · SC-S064 · Kano S</p>
+    <h1>Copy, synchronize, then assign a new shard</h1>
+    <p>Assign a new shard before/after synchronization; reject ambiguous writer ownership.</p>
+  </header>
+  <main>
+    <section aria-labelledby="contract-title">
+      <h2 id="contract-title">What must be true before routing changes?</h2>
+      <p>Source S064: Copy and synchronize data before changing routing, with unambiguous write ownership.</p>
+      <p>Parent acceptance: Committed data is copied/synchronized before handoff; fencing prevents missing or duplicate writes.</p>
+      <p><strong>Fixture preconditions:</strong> One invented tenant, <code>training-tenant-1</code>, starts on <code>shard-a</code> at writer epoch 1. Its copied snapshot is followed by 1–3 further committed effects. Each run is an independent, deterministic comparison, not a continuation of a real database.</p>
+      <p>Only complete committed-data observation plus one confirmed candidate writer permits a modeled transfer. An ambiguous proposal is rejected, not activated. Missing observations remain UNKNOWN; a known failure takes precedence.</p>
+    </section>
+    <section id="controls" aria-labelledby="controls-title">
+      <h2 id="controls-title">Operator controls</h2>
+      <form id="rehearsal-form" novalidate="">
+        <div class="controls">
+          <label for="initial-committed">Committed effects in copied snapshot (1–6)
+            <input id="initial-committed" name="initialCommitted" type="number" min="1" max="6" step="1" value="3" required="" aria-describedby="input-help" style="">
+          </label>
+          <label for="writes-during-copy">Additional source commits during copy (1–3)
+            <input id="writes-during-copy" name="writesDuringCopy" type="number" min="1" max="3" step="1" value="2" required="" aria-describedby="input-help" style="">
+          </label>
+          <label for="assignment">When to assign the new shard
+            <select id="assignment" name="assignment">
+              <option value="after-sync">After synchronization observation</option>
+              <option value="before-sync">Before synchronization (unsafe comparison)</option>
+            </select>
+          </label>
+          <label for="synchronization">Synchronization observation at the gate
+            <select id="synchronization" name="synchronization">
+              <option value="complete">Complete through required committed boundary</option>
+              <option value="snapshot-only">Snapshot only — newer commits missing</option>
+              <option value="unobserved">Not observed — cannot prove data coverage</option>
+            </select>
+          </label>
+          <label for="ownership">Candidate ownership / fence observation
+            <select id="ownership" name="ownership">
+              <option value="exclusive">Exclusive — source fenced before new writer</option>
+              <option value="ambiguous">Ambiguous — both shards proposed as writers</option>
+              <option value="unobserved">Not observed — cannot prove exclusive ownership</option>
+            </select>
+          </label>
+        </div>
+        <p id="input-help">Whole numbers only. All effect IDs are invented. Up to 8 comparisons are retained in memory; reset explicitly to start again.</p>
+        <div class="actions">
+          <button type="submit" id="run-button">Run rehearsal</button>
+          <button type="button" id="reset-button">Reset rehearsal</button>
+        </div>
+        <p id="input-error" role="alert" tabindex="-1" hidden=""></p>
+      </form>
+    </section>
+    <section aria-labelledby="result-title">
+      <h2 id="result-title" tabindex="-1">Result</h2>
+      <p id="verdict" role="status" aria-live="polite" data-verdict="failure">FAILURE — assignment blocked; source retained.</p>
+      <p id="handoff">Route: shard-a. Active writer: shard-a epoch 1.</p>
+      <dl id="metrics"><dt>Required committed effects</dt><dd id="metric-requiredCommitted">5</dd><dt>Copied snapshot effects</dt><dd id="metric-copiedCommitted">3</dd><dt>Missing committed effects at gate</dt><dd id="metric-missingCommitted">0</dd><dt>Candidate writer owners (proposal)</dt><dd id="metric-candidateWriters">2</dd><dt>New destination write effects</dt><dd id="metric-newWriteEffects">0</dd><dt>Accepted stale-writer probes</dt><dd id="metric-staleWriterAccepted">Unknown / not probed</dd><dt>Duplicate effects in executed probe</dt><dd id="metric-duplicateEffects">Unknown / not probed</dd></dl>
+      <h3>Assignment gates</h3>
+      <ul id="gates"><li>PASS — synchronization-order: Synchronization observation precedes the assignment gate.</li><li>PASS — committed-data: All 5 required committed effects observed on shard-b before handoff.</li><li>FAIL — writer-ownership: Two proposed writer owners are ambiguous; this proposal must not activate.</li></ul>
+      <p id="effect-inventory">Required: effect-1, effect-2, effect-3, effect-4, effect-5. Copied: effect-1, effect-2, effect-3. Candidate at assignment: effect-1, effect-2, effect-3, effect-4, effect-5. Candidate writer proposal: shard-a, shard-b.</p>
+      <p id="user-impact">Synthetic assignment blocked; source route retained, no destination write attempted. No live-user observation. Memory-only comparison. Reset or reload clears the rehearsal; no database, shard or cloud resource was created.</p>
+      <h3>Synthetic trace</h3>
+      <ol id="trace"><li>source: training-tenant-1 routes to shard-a, writer epoch 1; committed effect-1, effect-2, effect-3.</li><li>copy: New shard-b receives snapshot effect-1, effect-2, effect-3; routing stays on shard-a.</li><li>source-commit: Source commits effect-4, effect-5 while copying. Required handoff boundary is effect-5.</li><li>synchronize: Observed candidate effects: effect-1, effect-2, effect-3, effect-4, effect-5; missing 0 of 5 required.</li><li>assign: FAILURE: assignment blocked; route and sole active writer stay on shard-a epoch 1.</li><li>new-write: Not run on shard-b: assignment was not authorized; zero new destination effects.</li><li>stale-writer-probe: Not run: do not infer zero duplicates or a proven fence from an unexecuted probe.</li></ol>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained comparisons <span id="attempt-count">4 / 8</span></h2>
+      <p>Earlier comparisons are never silently dropped or changed. UNKNOWN is not a pass. “Not probed” is not zero missing or duplicate writes.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Independent in-memory attempts, cleared only by reset or reload</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Conditions</th><th scope="col">Result</th><th scope="col">Missing committed</th><th scope="col">Candidate writers</th><th scope="col">Route</th><th scope="col">New write effects</th></tr></thead>
+          <tbody id="history"><tr><td>1</td><td>after-sync; complete; exclusive</td><td>SUCCESS</td><td>0</td><td>1</td><td>shard-b</td><td>1</td></tr><tr><td>2</td><td>before-sync; complete; exclusive</td><td>FAILURE</td><td>2</td><td>1</td><td>shard-a</td><td>0</td></tr><tr><td>3</td><td>after-sync; snapshot-only; exclusive</td><td>FAILURE</td><td>2</td><td>1</td><td>shard-a</td><td>0</td></tr><tr><td>4</td><td>after-sync; complete; ambiguous</td><td>FAILURE</td><td>0</td><td>2</td><td>shard-a</td><td>0</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Limits, not certification</h2>
+      <p>This portable model does not prove actual database copying, synchronization, shard creation, routing or writer fencing. “Exclusive” is a synthetic fixture assumption, not measured database fencing. It does not certify native Azure, production Node.js 24, uninterrupted users, five-nines reliability, B-S064, D-S064 or the prerequisite D-S054.</p>
+      <p>Only local HTML, CSS and JavaScript run. There is no authentication, registration, credential, account, persistent storage, server, management call or external request. IaC: N/A. Reset/reload clears memory; no cloud cleanup is needed.</p>
+    </section>
+    <noscript>This exercise requires local JavaScript. No result can be inferred while it is disabled.</noscript>
+  </main>
+
+
+</body></html>

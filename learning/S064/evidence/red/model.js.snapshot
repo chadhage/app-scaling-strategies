@@ -1,0 +1,29 @@
+(function expose(root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.ShardLesson = api;
+}(typeof globalThis === 'object' ? globalThis : this, function stub() {
+  'use strict';
+  const MAX_ATTEMPTS = 8;
+  const DEFAULTS = Object.freeze({
+    initialCommitted: 3,
+    writesDuringCopy: 2,
+    assignment: 'after-sync',
+    synchronization: 'complete',
+    ownership: 'exclusive',
+  });
+  function createState() {
+    return { schemaVersion: 1, history: [] };
+  }
+  function normalizeConfig(config) {
+    return { ...config };
+  }
+  function evaluate(config, attempt = 1) {
+    return { attempt, config: normalizeConfig(config), verdict: 'unknown', route: 'shard-a' };
+  }
+  function run(state, config) {
+    return { schemaVersion: 1, history: [...state.history, evaluate(config, state.history.length + 1)] };
+  }
+  return Object.freeze({ MAX_ATTEMPTS, DEFAULTS, createState, normalizeConfig, evaluate, run });
+}));

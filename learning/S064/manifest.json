@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S064",
+  "sourceId": "S064",
+  "parentId": "D-S064",
+  "owner": "worker-A-S064",
+  "kano": "S",
+  "kanoUnit": "A-S064",
+  "packet": "SC-S064",
+  "entryGate": "SOURCE",
+  "title": "Introduce a synchronized shard with exclusive writer ownership",
+  "entryPoint": "learning/S064/index.html",
+  "feature": "learning/S064/shard-handoff.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Assign a new shard before/after synchronization; reject ambiguous writer ownership.",
+  "exactSourceBehavior": "Copy and synchronize data before changing routing, with unambiguous write ownership.",
+  "exactParentAcceptance": "Committed data is copied/synchronized before handoff; fencing prevents missing or duplicate writes.",
+  "preconditions": [
+    "Standalone modern browser with local JavaScript. No server, account, authentication, credentials, subscription or cloud resource.",
+    "One fixed synthetic tenant starts on shard-a at epoch 1; shard-b receives 1 to 6 copied committed effects.",
+    "1 to 3 additional effects commit on the source while the snapshot is copied.",
+    "Exclusive ownership is an explicit synthetic fixture assumption, not independent evidence of actual writer fencing."
+  ],
+  "actions": [
+    "Choose copied effects, further source commits, and assignment before or after synchronization.",
+    "Choose complete, snapshot-only or unobserved synchronization and exclusive, ambiguous or unobserved ownership.",
+    "Inspect gate observations, required/copied/candidate effect IDs, route, writer epoch, and synthetic trace.",
+    "Compare SUCCESS, FAILURE and UNKNOWN metrics across up to 8 independent retained attempts.",
+    "Use keyboard submission, focused errors and explicit reset."
+  ],
+  "syntheticInputAndTrace": "Bounded generated effect-1 through effect-9; fixed training-tenant-1 and shard-a/shard-b. One synthetic new write and a stale-source retry of the SAME operation ID only after the assignment gate allows transfer. Accepted ledger entries determine effect and duplicate counts.",
+  "expectedAssertions": [
+    "Copied and synchronized required committed effects plus exclusive modeled ownership permit assignment.",
+    "Early assignment and snapshot-only data coverage are blocked with missing committed effects reported.",
+    "Two proposed writer owners are rejected even when data is synchronized.",
+    "Missing observations are UNKNOWN, known failure dominates, and blocked probes are not falsely reported as successful zero-duplicate tests.",
+    "No invalid input, forged state or attempt 9 changes retained history.",
+    "Actual DOM, keyboard, error, failure, reset and restrictive CSP checks use only the published isolated browser helper."
+  ],
+  "bounds": {
+    "initialCommitted": [1, 6],
+    "writesDuringCopy": [1, 3],
+    "configurationCombinations": 324,
+    "maxAttempts": 8,
+    "history": "Memory only; independent comparisons, cleared by reset or reload."
+  },
+  "iac": {
+    "status": "N/A",
+    "reference": "evidence/iac-stage.json",
+    "sequence": "After genuine loadable-stub assertion RED and before implementation.",
+    "reason": "No cloud, IaC, scaffold, identity registration, deployment or spending is authorized."
+  },
+  "browserTooling": {
+    "node": "22.23.4 test tooling only",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156.0.4314.50",
+    "helper": "testing/browser/isolated.cjs",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "helperPublication": "53c0c0d",
+    "lifecycle": "openIsolatedLesson and awaited finally close; abandoned lifecycle prototype is unqualified."
+  },
+  "limits": [
+    "No actual database copying, synchronization, shard creation, live routing, writer fencing or native Azure proof.",
+    "No production Node.js 24, completed B-S064/D-S064/D-S054, uninterrupted-user or five-nines certification.",
+    "Only learning/S064 is owned. No root/shared edits, packages, framework, downloads, unsafe flags or foreground leases.",
+    "One frozen S unit. Tests, proof, plumbing and refinement earn no additional units.",
+    "Normal tests are read-only to historical proof; CAPTURE_BROWSER_EVIDENCE=1 is deliberate capture only."
+  ]
+}

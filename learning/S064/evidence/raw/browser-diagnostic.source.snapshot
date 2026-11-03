@@ -1,0 +1,267 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { createHash } = require('node:crypto');
+const folder = path.resolve(__dirname, '..');
+const repo = path.resolve(folder, '..', '..');
+const helperPath = path.join(repo, 'testing', 'browser', 'isolated.cjs');
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const helperSha256 = hash(fs.readFileSync(helperPath));
+assert.equal(helperSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+const { openIsolatedLesson } = require(helperPath);
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+const evidenceId = process.env.BROWSER_EVIDENCE_ID || 'browser';
+assert.match(evidenceId, /^browser(?:-\d{3})?$/);
+const output = path.join(folder, 'evidence', 'raw', evidenceId);
+const canonicalHash = (file) => hash(Buffer.from(fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n')));
+function save(name, bytes) {
+  const file = path.join(output, name);
+  fs.writeFileSync(file, bytes, { flag: 'wx' });
+  return { file: path.relative(folder, file), bytes: bytes.length, sha256: hash(bytes) };
+}
+
+test('actual isolated browser: shard handoff, DOM, keyboard, errors, history, reset and enforced CSP', { timeout: 120000 }, async () => {
+  if (capture) {
+    assert.equal(fs.existsSync(output), false, 'Deliberate capture must use a new evidence ID; retained proof is immutable');
+    fs.mkdirSync(output, { recursive: true });
+  }
+  const observations = {
+    cardId: 'A-S064', kanoUnit: 'A-S064', packet: 'SC-S064', owner: 'worker-A-S064',
+    node: process.version, playwrightVersion: require(path.join(repo, 'testing', 'browser', 'node_modules', 'playwright', 'package.json')).version,
+    helperSha256, helperPublication: '53c0c0d', captureAuthorized: capture, startedAtUtc: new Date().toISOString(),
+    checks: [], artifacts: [], requests: [], externalRequests: [], pageErrors: [], consoleErrors: [],
+    canonicalSourceSha256: Object.fromEntries(['index.html', 'lesson.css', 'model.js', 'lesson.js', 'manifest.json', 'shard-handoff.feature'].map((name) => [name, canonicalHash(path.join(folder, name))])),
+    browserTestCanonicalSha256: canonicalHash(__filename),
+    qualification: 'Synthetic local file model only; no actual database sync/shard/fencing, production Node 24, native Azure or source-parent completion.',
+  };
+  let session;
+  let failure;
+  async function check(name, action) {
+    await action();
+    observations.checks.push(name);
+    console.log(`Browser check passed: ${name}`);
+  }
+  try {
+    session = await openIsolatedLesson('learning\\S064\\index.html');
+    const { page } = session;
+    observations.browserVersion = session.browserVersion;
+    assert.match(session.browserVersion, /^156\./);
+    page.on('pageerror', (error) => observations.pageErrors.push(error.message));
+    page.on('console', (message) => { if (message.type() === 'error') observations.consoleErrors.push(message.text()); });
+    page.on('request', (request) => {
+      observations.requests.push(request.url());
+      if (!request.url().startsWith('file:') && !request.url().startsWith('data:text/plain,synthetic-csp-probe')) observations.externalRequests.push(request.url());
+    });
+    await page.reload({ waitUntil: 'load', timeout: 15000 });
+    const text = (selector) => page.locator(selector).textContent();
+    const count = () => page.locator('#history tr').count();
+    const run = () => page.locator('#run-button').click();
+    const snapshot = async (label) => {
+      if (capture) {
+        observations.artifacts.push(save(`${label}.dom.html.snapshot`, Buffer.from(await page.content())));
+        observations.artifacts.push(save(`${label}.png`, await page.screenshot({ fullPage: true })));
+      }
+    };
+    await check('standalone banner, initial state and local assets', async () => {
+      assert.equal(await page.title(), 'S064 — Introduce a synchronized shard');
+      assert.equal(await page.locator('.banner').textContent(), 'Training rehearsal - synthetic data - not a live Azure result');
+      assert.equal(await count(), 0);
+      assert.match(await text('#verdict'), /Not run/);
+      assert.equal(await page.locator('#input-error').isHidden(), true);
+      const loaded = await page.evaluate(() => performance.getEntriesByType('resource').map((entry) => entry.name));
+      assert.ok(loaded.some((url) => url.endsWith('/model.js')));
+      assert.ok(loaded.some((url) => url.endsWith('/lesson.js')));
+      assert.ok(loaded.every((url) => url.startsWith('file:')));
+    });
+    await check('Tab order and Enter submit a fully synchronized exclusively owned handoff', async () => {
+      await page.locator('#initial-committed').focus();
+      for (const id of ['writes-during-copy', 'assignment', 'synchronization', 'ownership', 'run-button']) {
+        await page.keyboard.press('Tab');
+        assert.equal(await page.locator(`#${id}`).evaluate((node) => node === document.activeElement), true, id);
+      }
+      await page.keyboard.press('Enter');
+      assert.match(await text('#verdict'), /^SUCCESS/);
+      assert.match(await text('#handoff'), /shard-b epoch 2/);
+      for (const [key, expected] of [['requiredCommitted', '5'], ['missingCommitted', '0'], ['candidateWriters', '1'], ['newWriteEffects', '1'], ['staleWriterAccepted', '0'], ['duplicateEffects', '0']]) {
+        assert.equal(await text(`#metric-${key}`), expected);
+      }
+      assert.equal(await page.locator('#result-title').evaluate((node) => node === document.activeElement), true);
+      assert.equal(await count(), 1);
+      await snapshot('success');
+    });
+    const firstHistory = await page.locator('#history tr').first().textContent();
+    await check('early assignment fails before synchronization without claiming unexecuted probes', async () => {
+      await page.selectOption('#assignment', 'before-sync');
+      await run();
+      assert.match(await text('#verdict'), /^FAILURE/);
+      assert.match(await text('#handoff'), /shard-a epoch 1/);
+      assert.equal(await text('#metric-missingCommitted'), '2');
+      assert.equal(await text('#metric-newWriteEffects'), '0');
+      assert.equal(await text('#metric-duplicateEffects'), 'Unknown / not probed');
+      assert.match(await text('#gates'), /FAIL — synchronization-order/);
+      assert.equal(await page.locator('#history tr').first().textContent(), firstHistory);
+      assert.equal(await count(), 2);
+      await snapshot('early-failure');
+    });
+    await check('snapshot-only candidate exposes committed delta and blocks routing', async () => {
+      await page.selectOption('#assignment', 'after-sync');
+      await page.selectOption('#synchronization', 'snapshot-only');
+      await run();
+      assert.match(await text('#verdict'), /^FAILURE/);
+      assert.equal(await text('#metric-missingCommitted'), '2');
+      assert.match(await text('#gates'), /effect-4, effect-5/);
+      assert.match(await text('#handoff'), /shard-a epoch 1/);
+      assert.equal(await count(), 3);
+    });
+    await check('two proposed writer owners are rejected despite complete committed data', async () => {
+      await page.selectOption('#synchronization', 'complete');
+      await page.selectOption('#ownership', 'ambiguous');
+      await run();
+      assert.match(await text('#verdict'), /^FAILURE/);
+      assert.equal(await text('#metric-missingCommitted'), '0');
+      assert.equal(await text('#metric-candidateWriters'), '2');
+      assert.equal(await text('#metric-newWriteEffects'), '0');
+      assert.match(await text('#gates'), /Two proposed writer owners/);
+      assert.match(await text('#handoff'), /Active writer: shard-a epoch 1/);
+      assert.equal(await count(), 4);
+      await snapshot('ambiguous-writer-failure');
+    });
+    await check('missing data and ownership observations remain UNKNOWN rather than zero or success', async () => {
+      await page.selectOption('#synchronization', 'unobserved');
+      await page.selectOption('#ownership', 'exclusive');
+      await run();
+      assert.match(await text('#verdict'), /^UNKNOWN/);
+      assert.equal(await text('#metric-missingCommitted'), 'Unknown / not probed');
+      assert.equal(await text('#metric-duplicateEffects'), 'Unknown / not probed');
+      await page.selectOption('#synchronization', 'complete');
+      await page.selectOption('#ownership', 'unobserved');
+      await run();
+      assert.match(await text('#verdict'), /^UNKNOWN/);
+      assert.equal(await text('#metric-missingCommitted'), '0');
+      assert.equal(await text('#metric-candidateWriters'), 'Unknown / not probed');
+      assert.match(await text('#handoff'), /shard-a epoch 1/);
+      assert.equal(await count(), 6);
+      await snapshot('unknown');
+    });
+    await check('known writer failure dominates an unobserved synchronization result', async () => {
+      await page.selectOption('#synchronization', 'unobserved');
+      await page.selectOption('#ownership', 'ambiguous');
+      await run();
+      assert.match(await text('#verdict'), /^FAILURE/);
+      assert.equal(await text('#metric-missingCommitted'), 'Unknown / not probed');
+      assert.equal(await text('#metric-candidateWriters'), '2');
+      assert.equal(await count(), 7);
+    });
+    await check('blank, fractional, out-of-bounds and unsupported controls focus errors without changing history', async () => {
+      const before = await text('#history');
+      const result = await text('#verdict');
+      for (const invalid of ['', '0', '7', '1.5', '2e0']) {
+        await page.fill('#initial-committed', invalid);
+        await run();
+        assert.equal(await page.locator('#input-error').isVisible(), true);
+        assert.equal(await page.locator('#initial-committed').getAttribute('aria-invalid'), 'true');
+        assert.equal(await page.locator('#initial-committed').evaluate((node) => node === document.activeElement), true);
+        assert.equal(await text('#history'), before);
+        assert.equal(await text('#verdict'), result);
+      }
+      await page.fill('#initial-committed', '3');
+      for (const invalid of ['4', '1.5']) {
+        await page.fill('#writes-during-copy', invalid);
+        await run();
+        assert.equal(await page.locator('#writes-during-copy').evaluate((node) => node === document.activeElement), true);
+        assert.equal(await text('#history'), before);
+      }
+      await page.fill('#writes-during-copy', '2');
+      await page.locator('#ownership').evaluate((node) => { node.value = 'unsupported'; });
+      await run();
+      assert.match(await text('#input-error'), /Unsupported control value/);
+      assert.equal(await page.locator('#ownership').evaluate((node) => node === document.activeElement), true);
+      assert.equal(await text('#history'), before);
+      assert.equal(await count(), 7);
+    });
+    await check('all eight attempts are retained and attempt nine has a focused nonmutating limit error', async () => {
+      await page.selectOption('#synchronization', 'complete');
+      await page.selectOption('#ownership', 'exclusive');
+      await run();
+      assert.equal(await count(), 8);
+      const before = await text('#history');
+      const result = await text('#verdict');
+      await run();
+      assert.match(await text('#input-error'), /8-attempt limit/);
+      assert.equal(await page.locator('#input-error').evaluate((node) => node === document.activeElement), true);
+      assert.equal(await text('#history'), before);
+      assert.equal(await text('#verdict'), result);
+      assert.equal(await page.locator('#history tr').first().textContent(), firstHistory);
+    });
+    await check('keyboard reset restores defaults, clears history/result/errors and focuses the first input', async () => {
+      await page.locator('#reset-button').focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await count(), 0);
+      assert.equal(await text('#attempt-count'), '0 / 8');
+      assert.match(await text('#verdict'), /Not run/);
+      assert.equal(await page.inputValue('#initial-committed'), '3');
+      assert.equal(await page.inputValue('#writes-during-copy'), '2');
+      assert.equal(await page.inputValue('#assignment'), 'after-sync');
+      assert.equal(await page.inputValue('#synchronization'), 'complete');
+      assert.equal(await page.inputValue('#ownership'), 'exclusive');
+      assert.equal(await page.locator('#input-error').isHidden(), true);
+      assert.equal(await page.locator('[aria-invalid]').count(), 0);
+      assert.equal(await page.locator('#initial-committed').evaluate((node) => node === document.activeElement), true);
+      await snapshot('reset');
+      await page.fill('#writes-during-copy', '1');
+      await page.locator('#writes-during-copy').press('Enter');
+      assert.match(await text('#verdict'), /^SUCCESS/);
+      assert.equal(await text('#metric-requiredCommitted'), '4');
+      assert.equal(await count(), 1);
+    });
+    await check('real CSP blocks inline script, eval and a synthetic data connection without a remote request', async () => {
+      await page.evaluate(async () => {
+        globalThis.__s064Csp = { inlineRan: false, evalRan: false, evalBlocked: false, connectionBlocked: false, violations: [] };
+        document.addEventListener('securitypolicyviolation', (event) => {
+          globalThis.__s064Csp.violations.push({ directive: event.effectiveDirective, blockedURI: event.blockedURI });
+        });
+        const script = document.createElement('script');
+        script.textContent = 'globalThis.__s064Csp.inlineRan = true;';
+        document.body.append(script);
+        script.remove();
+        try { globalThis.eval('globalThis.__s064Csp.evalRan = true;'); } catch { globalThis.__s064Csp.evalBlocked = true; }
+        try { await fetch('data:text/plain,synthetic-csp-probe'); } catch { globalThis.__s064Csp.connectionBlocked = true; }
+      });
+      await page.waitForFunction(() => globalThis.__s064Csp.violations.some((entry) => entry.directive === 'connect-src')
+        && globalThis.__s064Csp.violations.filter((entry) => entry.directive.startsWith('script-src')).length >= 2);
+      observations.csp = await page.evaluate(() => globalThis.__s064Csp);
+      assert.equal(observations.csp.inlineRan, false);
+      assert.equal(observations.csp.evalRan, false);
+      assert.equal(observations.csp.evalBlocked, true);
+      assert.equal(observations.csp.connectionBlocked, true);
+      assert.ok(observations.csp.violations.some((entry) => entry.blockedURI === 'inline'));
+      assert.ok(observations.csp.violations.some((entry) => entry.blockedURI === 'eval'));
+    });
+    await check('narrow viewport preserves readable controls and there are no external requests or application errors', async () => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+      assert.equal(await page.locator('#run-button').isVisible(), true);
+      assert.deepEqual(observations.externalRequests, []);
+      assert.deepEqual(observations.pageErrors, []);
+      assert.ok(observations.consoleErrors.every((message) => /Content Security Policy|violates.*directive|Refused to|Connecting to .*violates|Executing inline script|Evaluating a string/i.test(message)));
+      await snapshot('narrow');
+    });
+  } catch (error) {
+    failure = error;
+    observations.failure = { name: error.name, message: error.message };
+    throw error;
+  } finally {
+    try {
+      if (session) await session.close();
+      observations.cleanup = 'Awaited close() in finally; owned browser/context cleanup completed. Known helper lifecycle limitation remains unqualified.';
+    } finally {
+      observations.finishedAtUtc = new Date().toISOString();
+      observations.completed = !failure && observations.checks.length === 12;
+      if (capture) save('observations.json', Buffer.from(`${JSON.stringify(observations, null, 2)}\n`));
+    }
+  }
+  assert.equal(observations.checks.length, 12);
+});
