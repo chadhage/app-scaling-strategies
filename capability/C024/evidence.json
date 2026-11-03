@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C024",
+  "workerId": "worker-C024",
+  "kano": "S",
+  "kanoUnit": "C024",
+  "parents": ["H005"],
+  "acceptance": "Deliver a multipart upload fixture; verify accepted part IDs and final content hash.",
+  "entry": "capability\\C024\\index.html",
+  "technicalEntryGate": "C020 accepted Done",
+  "sourceAuthority": "manifest.json pins C020 accepted commit/tag/file hashes. Actual unchanged C020 contract is imported in Node/browser; actual unchanged getProfileV1/getProfileV2 APIs are integration-tested.",
+  "mode": "bounded synthetic in-memory multipart/chunk fixture",
+  "fixture": {
+    "revision": "C024-r1",
+    "byteCount": 256,
+    "partByteCount": 64,
+    "partIds": ["part-001", "part-002", "part-003", "part-004"],
+    "actualFinalSha256": "3ef33734daae0e353f132ff5f3241d8f86ba81f851c0b9685149f079c16eb45b",
+    "hashMeaning": "Actual real Web Crypto SHA-256 over accepted assembled bytes; independent Node SHA-256 and exact 256-byte comparisons agree. The plan's pinned hash alone is not proof.",
+    "resumeMeaning": "Observe the same retained JavaScript memory object only. Reload/reset loses it; no serialization or durable recovery."
+  },
+  "observedTestRuntime": "v22.23.4",
+  "productionDesign": "Node.js 24 / Express / App Service Linux remains the approved design, not an observed production runtime",
+  "productionRuntimeValidated": false,
+  "nativeQualified": false,
+  "parentAcceptance": "pending independent parent review; no self-Accept",
+  "sequence": [
+    {
+      "stage": "BDD",
+      "path": "capability\\C024\\C024.feature",
+      "order": "Written before the loadable stub and initial assertion RED."
+    },
+    {
+      "stage": "loadable-stub",
+      "record": "evidence\\stub-load.json",
+      "retained": "evidence\\red\\upload.stub.cjs",
+      "exitCode": 0,
+      "verification": "The original production module loaded with the complete real export surface; the retained stub matches its original captured SHA-256."
+    },
+    {
+      "stage": "TDD-RED",
+      "record": "evidence\\tdd-red.json",
+      "retained": "evidence\\red\\upload.behavior.snapshot.cjs",
+      "tests": 5,
+      "passed": 0,
+      "failed": 5,
+      "exitCode": 1,
+      "failure": "Five AssertionError failures after successful module load: version metadata, explicit accepted IDs/duplicate suppression, missing-part rejection, pause/resume state and actual final content hash.",
+      "automaticDiscovery": false,
+      "reproduction": "Explicit test-only tests\\retained-stub.cjs preserves the unchanged stub's original C020 import base with public createRequire; saved sources are not auto-discovered."
+    },
+    {
+      "stage": "IaC",
+      "record": "evidence\\iac-na.json",
+      "status": "N/A",
+      "recordedAfterRedBeforeImplementation": true,
+      "reason": "No server, framework, network upload, durable storage, cloud, IaC, scaffold, identity, deployment or spending is implemented or authorized."
+    },
+    {
+      "stage": "implementation",
+      "paths": ["upload.js", "manifest.json", "index.html", "page.js", "styles.css", "README.md"],
+      "behavior": "Immutable versioned 256-byte fixture; explicit IDs and canonical completion order; all arrival permutations; exact-byte/duplicate/conflicting/missing-part guards; same-object resume observations; real asynchronous hash, honest failure and stale-reset protection."
+    },
+    {
+      "stage": "initial-focused-GREEN",
+      "record": "evidence\\tdd-green.json",
+      "exitCode": 0,
+      "tests": 95,
+      "passed": 95,
+      "failed": 0
+    },
+    {
+      "stage": "RED-reproduction",
+      "record": "evidence\\red-reproduction-qualified.json",
+      "exitCode": 1,
+      "tests": 5,
+      "passed": 0,
+      "failed": 5,
+      "method": "Saved exact initial assertions against the byte-identical retained stub, using only the historical test override and original C020 import base.",
+      "earlierUnqualifiedAttempt": "evidence\\red-reproduction.json used a module-relative override from the wrong directory and stopped at MODULE_NOT_FOUND; it is retained as a tooling error, not behavioral RED authority. README now resolves the loader to an absolute path."
+    },
+    {
+      "stage": "browser-harness-corrections",
+      "records": ["evidence\\browser-first.json", "evidence\\browser-second.json", "evidence\\browser-third.json"],
+      "qualification": "First attempt stopped before launch: inherited module paths prevented Windows PowerShell 5 signature-module loading. Existing pwsh 7 verified the same signed Edge without bypass. Second attempt exposed a Playwright fieldset isDisabled-query mismatch; assertions now inspect native fieldset.disabled plus actual disabled buttons. No product/helper guard was weakened. Third run passed all 17 ordinary checks.",
+      "notBehavioralRedAuthority": true
+    },
+    {
+      "stage": "actual-browser",
+      "record": "evidence\\browser-acceptance.json",
+      "execution": "evidence\\browser-actual.json",
+      "helper": "testing\\browser\\isolated.cjs openIsolatedLesson",
+      "helperPublishedCommit": "53c0c0d",
+      "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+      "tooling": "Existing offline Playwright 1.56.1; Authenticode Valid installed Edge 156.0.4314.50; Node 22.23.4",
+      "capture": "Explicit CAPTURE_BROWSER_EVIDENCE=1, exclusive record/screenshot creation; no historical overwrite or default deletion.",
+      "exitCode": 0,
+      "capturedChecksPassed": 16,
+      "checks": "Actual file DOM, Tab/Enter, visible focus, explicit accepted IDs, unique arrival order, identical duplicate, conflicting/non-fixture/unknown probes, missing parts, all completion-order rejection branches, malformed/wrong hash, actual digest rejection, real final hash plus independent actual-byte check, mobile overflow, reset, pending-completion reset, honest reload loss and enforced inline/connect CSP.",
+      "screenshot": "evidence\\browser-complete.png",
+      "cleanup": "Await openIsolatedLesson close in finally; browserClosed true; no server or foreground lease."
+    },
+    {
+      "stage": "final-focused-GREEN",
+      "record": "evidence\\tdd-final-green.json",
+      "exitCode": 0,
+      "tests": 100,
+      "passed": 100,
+      "failed": 0,
+      "coverage": "Actual C020 API/hash lineage, immutable version/plan, exact synthetic bytes, every arrival permutation, part identity/length/byte guards, mutation isolation, duplicate/conflict handling, exact completion order, missing parts, paused/busy/terminal guards, actual hashing/failure/retry, retained RED/raw logs, captured browser qualification and complete owned source/evidence SHA-256 inventory."
+    },
+    {
+      "stage": "final-syntax",
+      "record": "evidence\\syntax-final.json",
+      "exitCode": 0,
+      "checkedScripts": 13,
+      "includesRetainedRedSources": true
+    },
+    {
+      "stage": "ordinary-test-discovery",
+      "record": "evidence\\discovery-green.json",
+      "exitCode": 0,
+      "tests": 100,
+      "passed": 100,
+      "failed": 0,
+      "method": "Unfiltered node --test with working directory capability\\C024. Historical failing snapshot/stub files were not auto-discovered."
+    },
+    {
+      "stage": "final-actual-browser-and-proof-preservation",
+      "record": "evidence\\browser-final.json",
+      "exitCode": 0,
+      "checksPassed": 17,
+      "order": "Actual browser rerun after final focused green, syntax and exact owned-file integrity verification.",
+      "result": "All 16 actual DOM/keyboard/error/reset/hash/completion-failure/CSP checks passed again plus before/after exact proof hash preservation. Default mode made no evidence or screenshot writes; the explicitly invoked outer recorder preserved this independent rerun separately.",
+      "cleanup": "browserClosed true; no listener or foreground lease"
+    }
+  ],
+  "verificationPolicy": {
+    "normalVerification": "Read-only to all committed proof; ordinary browser mode hashes proof before/after and makes no screenshots or evidence writes.",
+    "refresh": "CAPTURE_BROWSER_EVIDENCE=1, with a distinct C024_BROWSER_EVIDENCE_LABEL after initial capture; no default deletion or overwrite.",
+    "integrity": "tests\\integrity.cjs verifies exact owned file set, lengths and SHA-256; only its own evidence\\integrity.json is omitted.",
+    "rawOutput": "Explicit tests\\record.cjs stores actual exit codes, UTC times, runtime, commands, source hashes and exact raw stdout/stderr gzip bytes."
+  },
+  "remainingOriginalGates": [
+    "H005 is not complete: other n-tier auth/session/database/cache/queue/worker fixtures remain their original cards.",
+    "B-S043 remains To Do behind CORE, DATA, HOST, OBJECT and a qualified/authorized native target. C024 is local fixture evidence only.",
+    "No Azure Blob/DB/durable storage, network multipart/native proof, arbitrary real-user upload, Node24 production qualification, scaffold, cloud, IaC, identity, deployment or spend has been authorized or earned.",
+    "One original frozen-S C024 unit only; no extra child, parent completion or repeated-verification credit."
+  ]
+}

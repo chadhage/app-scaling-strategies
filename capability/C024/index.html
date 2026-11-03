@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>C024 · Synthetic multipart upload fixture</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="../C020/contract.js" defer></script>
+  <script src="upload.js" defer></script>
+  <script src="page.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to conducting controls</a>
+  <main id="main">
+    <header>
+      <p class="eyebrow">C024 · H005 · One frozen S unit</p>
+      <h1>Synthetic multipart upload fixture</h1>
+      <p><strong>256 synthetic bytes · Four 64-byte parts · Same memory only</strong></p>
+      <p>No server, network multipart, Azure Blob, database or durable storage. No real files or arbitrary user data.
+        Pause/resume retains this one JavaScript object; reload or reset loses it. This is not native upload proof.</p>
+    </header>
+    <section aria-labelledby="plan-heading">
+      <h2 id="plan-heading">1. Inspect the immutable plan</h2>
+      <p>Parts may arrive in any order. Completion must name each accepted part exactly once in manifest order.
+        Identical duplicates add no bytes; conflicting bytes are rejected.</p>
+      <dl>
+        <dt>Fixture ID and version</dt><dd id="fixture-version">Loading required C020 contract…</dd>
+        <dt>Unchanged source metadata</dt><dd id="source-version">Not loaded</dd>
+        <dt>Pinned expected SHA-256 (not an observation)</dt><dd><code id="pinned-hash">Not loaded</code></dd>
+      </dl>
+      <label for="fixture-id">Explicit synthetic fixture ID</label>
+      <select id="fixture-id" disabled>
+        <option value="C024-synthetic-001-r1">C024-synthetic-001-r1 (256 synthetic bytes)</option>
+      </select>
+      <div class="actions">
+        <button id="start" type="button" disabled>Start synthetic upload</button>
+        <button id="reset" type="button" disabled>Reset fixture</button>
+      </div>
+    </section>
+    <section aria-labelledby="conduct-heading">
+      <h2 id="conduct-heading">2. Accept and resume parts</h2>
+      <fieldset id="conduct" disabled>
+        <legend>Bounded synthetic part controls</legend>
+        <label for="part-id">Explicit synthetic part ID</label>
+        <select id="part-id" aria-describedby="part-help">
+          <option value="part-001">part-001 · offset 0 · 64 bytes</option>
+          <option value="part-002">part-002 · offset 64 · 64 bytes</option>
+          <option value="part-003">part-003 · offset 128 · 64 bytes</option>
+          <option value="part-004">part-004 · offset 192 · 64 bytes</option>
+          <option value="part-999">part-999 · intentional unknown-ID probe</option>
+        </select>
+        <p id="part-help">Choose a part and accept it. Accept the same part again to observe duplicate suppression.
+          The conflict probe changes one synthetic byte; it never replaces accepted content.</p>
+        <div class="actions">
+          <button id="accept" type="button">Accept selected synthetic part</button>
+          <button id="conflict" type="button">Probe conflicting bytes</button>
+          <button id="pause" type="button">Pause fixture</button>
+          <button id="resume" type="button" disabled>Resume same-memory fixture</button>
+        </div>
+      </fieldset>
+      <dl>
+        <dt>Memory state</dt><dd id="memory-state">Not started</dd>
+        <dt>Actual accepted bytes</dt><dd id="accepted-bytes">0 / 256</dd>
+        <dt>Missing part IDs</dt><dd id="missing-ids">No upload started</dd>
+        <dt>Unique arrival order</dt><dd id="arrival-order">None</dd>
+      </dl>
+      <h3>Explicit accepted part IDs (manifest order)</h3>
+      <ol id="accepted-ids" aria-label="Accepted part IDs"><li>None</li></ol>
+      <h3>Resume observation</h3>
+      <pre id="resume-observation">No same-memory resume observed.</pre>
+    </section>
+    <section aria-labelledby="complete-heading">
+      <h2 id="complete-heading">3. Compute and verify real SHA-256</h2>
+      <fieldset id="completion-controls" disabled>
+        <legend>Final content verification</legend>
+        <label for="completion-order">Explicit completion part IDs, comma separated</label>
+        <input id="completion-order" type="text" maxlength="80" spellcheck="false" autocomplete="off">
+        <label for="expected-hash">Expected SHA-256 (64 lowercase hexadecimal characters)</label>
+        <input id="expected-hash" type="text" maxlength="64" spellcheck="false" autocomplete="off">
+        <button id="complete" type="button">Complete and verify SHA-256</button>
+      </fieldset>
+      <p id="status" role="status" aria-live="polite" aria-atomic="true">Not run — no successful upload observation.</p>
+      <p id="error" role="alert" hidden></p>
+      <dl>
+        <dt>Actual final content SHA-256</dt><dd><code id="final-hash">Not computed</code></dd>
+        <dt>Verified content bytes</dt><dd id="completed-bytes">0</dd>
+        <dt>First and last 16 actual bytes, hexadecimal</dt><dd><code id="byte-preview">No completed content</code></dd>
+      </dl>
+      <h3>Completion receipt</h3>
+      <pre id="receipt">No completed receipt.</pre>
+    </section>
+    <section aria-labelledby="observations-heading">
+      <h2 id="observations-heading">Inspect local observations</h2>
+      <pre id="observation">No accepted-part observation.</pre>
+      <ol id="history" aria-label="Recent same-memory observations"></ol>
+      <p>At most 30 recent observations are displayed. Reset clears them. There is no storage API, reload recovery,
+        network request, background worker, authenticated identity, production qualification or native guarantee.</p>
+    </section>
+    <footer><a href="README.md">Contract, checks and remaining parent gates</a></footer>
+  </main>
+</body>
+</html>
