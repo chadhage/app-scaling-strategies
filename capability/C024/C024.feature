@@ -57,3 +57,10 @@ Feature: C024 bounded synthetic multipart upload fixture
     Then committed evidence bytes are unchanged
     And the qualified openIsolatedLesson session is awaited closed in finally
     And refresh requires CAPTURE_BROWSER_EVIDENCE=1
+
+  Scenario: Preserve exact evidence bytes through scoped Git publication
+    Given the retained RED and captured source hashes refer to actual file bytes
+    When the scoped publisher applies Git clean filters
+    Then every owned source and evidence byte is unchanged
+    And the final published commit tree matches the complete owned file set exactly
+    And an earlier normalization failure is retained, not counted as another unit

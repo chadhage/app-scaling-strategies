@@ -62,7 +62,8 @@ test('actual loadable stub and five original assertion failures precede IaC N/A 
 });
 
 test('captured actual browser proof is qualified, local-only, passing and cleanup-complete', () => {
-  const proof = load('browser-acceptance');
+  const summary = JSON.parse(fs.readFileSync(path.join(root, 'evidence.json'), 'utf8'));
+  const proof = load(summary.browserAuthorityRecord || 'browser-acceptance');
   assert.equal(proof.outcome, 'passed');
   assert.equal(proof.explicitCapture, true);
   assert.equal(proof.playwrightVersion, '1.56.1');
@@ -86,6 +87,25 @@ test('captured actual browser proof is qualified, local-only, passing and cleanu
   assert.deepEqual(actualHash.orderedPartIds, ['part-001', 'part-002', 'part-003', 'part-004']);
   const png = fs.readFileSync(path.join(root, proof.screenshot));
   assert.deepEqual([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+});
+
+test('real publication normalization RED and its original raw sources are preserved', () => {
+  const record = load('committed-bytes-red');
+  assert.equal(record.exitCode, 1);
+  const text = raw(record, 'stdout');
+  assert.match(text, /# tests 1/);
+  assert.match(text, /# fail 1/);
+  assert.equal((text.match(/name: 'AssertionError'/g) || []).length, 1);
+  assert.doesNotMatch(text + raw(record, 'stderr'), /SyntaxError|MODULE_NOT_FOUND/);
+  for (const [source, snapshot] of [
+    ['.gitattributes', 'gitattributes.publication-red.snapshot'],
+    ['tests\\git-proof.cjs', 'git-proof.initial.snapshot.cjs'],
+    ['tests\\git-bytes.test.cjs', 'git-bytes.behavior.snapshot.cjs']
+  ]) {
+    const expected = record.sourceHashes.find((entry) => entry.path === `capability\\C024\\${source}`);
+    assert.ok(expected);
+    assert.equal(sha256(fs.readFileSync(path.join(root, 'evidence', 'red', snapshot))), expected.sha256);
+  }
 });
 
 test('every explicit execution record retains raw byte-exact stdout/stderr and actual runtime/exit code', () => {

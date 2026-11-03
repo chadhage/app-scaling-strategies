@@ -17,10 +17,11 @@ This is **one frozen-S C024 unit under H005**: an in-memory local multipart/chun
 From the repository root, using the existing **Node 22** test tooling:
 
 ```powershell
-node --test capability\C024\tests\upload.test.cjs capability\C024\tests\guards.test.cjs capability\C024\tests\surface.test.cjs capability\C024\tests\integrity.test.cjs
+node --test capability\C024\tests\upload.test.cjs capability\C024\tests\guards.test.cjs capability\C024\tests\surface.test.cjs capability\C024\tests\integrity.test.cjs capability\C024\tests\git-bytes.test.cjs
 node capability\C024\tests\syntax.cjs
 node capability\C024\tests\browser.cjs
 node capability\C024\tests\integrity.cjs
+node capability\C024\tests\git-proof.cjs
 ```
 
 The browser check uses **only** published `testing\browser\isolated.cjs` SHA-256 `86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055` (`53c0c0d`), `openIsolatedLesson`, existing offline Playwright **1.56.1**, and the installed signed Edge **156**. It always awaits `close()` in `finally`. There is no foreground lease, download, unsafe browser flag, lifecycle prototype, helper edit or alternate launcher.
@@ -40,6 +41,18 @@ finally { Remove-Item Env:\C024_TEST_SUBJECT }
 Expect five `AssertionError` failures, not load/syntax errors. The test-only loader evaluates the byte-identical retained stub with Node's public `createRequire` at its original module-relative import base; neither the stub, C020, nor production is rewritten. Only the historical test honors that variable. Retained RED sources use non-discovered `.snapshot.cjs` / `.stub.cjs` names, outside `tests`; ordinary `node --test` does not run them.
 
 The exact owned-file inventory includes sources, retained RED, every execution record and screenshot, omitting only its own `evidence\integrity.json` to avoid a self-hash. `tests\integrity.cjs` is read-only by default; `--capture` explicitly refreshes that inventory after intentional proof additions. It never deletes historical records.
+
+### Publication byte-integrity correction
+
+The initial publication `47d0cfb9999834928f843a3afa5a073835e76da0` exposed Git EOL normalization: committed LF bytes differed from the captured working CRLF source hashes. It is **superseded**, not accepted proof. `evidence\committed-bytes-red.json` retains the actual assertion failure and exact old attribute/test sources. This correction earns no extra unit.
+
+Regular owned text is now canonical LF and `.gitattributes` disables implicit conversion. Original raw RED source snapshots remain byte-preserved binary evidence, just like gzip logs/PNG; all JavaScript snapshots still undergo syntax checks. No publisher whitespace guard is changed or bypassed. The added test checks actual Git clean-filter output for every owned file. After publication, verify the exact final commit (from the parent-reviewed result) with:
+
+```powershell
+node capability\C024\tests\git-proof.cjs <40-character-final-commit>
+```
+
+That read-only check compares the entire scoped commit tree, including the inventory itself, with actual working bytes. An ordinary rerun cannot silently repair or rewrite evidence.
 
 ## Remaining original gates (no extra credit)
 
