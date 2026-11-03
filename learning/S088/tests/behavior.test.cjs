@@ -1,0 +1,163 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { MAX_ATTEMPTS, BASELINE, createState, attempt, totals } = require('..\\model.js');
+
+const denied = { decision: 'denied', response: 'explicit' };
+const invalidFallback = { decision: 'denied', response: 'success-shaped' };
+const allowed = { decision: 'allowed', response: 'explicit' };
+const unknown = { decision: 'unknown', response: 'explicit' };
+const clone = (value) => JSON.parse(JSON.stringify(value));
+
+function first(input) {
+  const state = attempt(createState(), input);
+  assert.equal(state.history.length, 1, 'a real modeled attempt must be recorded');
+  return { state, entry: state.history[0] };
+}
+
+test('the model is loadable and begins with an immutable empty ledger', () => {
+  const state = createState();
+  assert.deepEqual(state, { schema: 1, history: [] });
+  assert.deepEqual(totals(state), { attempted: 0, success: 0, failure: 0, unknown: 0 });
+  assert.ok(Object.isFrozen(state) && Object.isFrozen(state.history));
+  assert.deepEqual(BASELINE, {
+    routing: { old: 100, candidate: 0 },
+    state: { revision: 7, requiredValue: 'saved-draft-088' },
+  });
+  assert.equal(MAX_ATTEMPTS, 6);
+});
+
+test('denial is a visible failed operation and an unchanged-state safe abort', () => {
+  const { entry, state } = first(denied);
+  assert.equal(entry.operation.outcome, 'failure');
+  assert.equal(entry.response.status, 403);
+  assert.equal(entry.response.body.ok, false);
+  assert.equal(entry.response.body.error.code, 'PermissionDenied');
+  assert.equal(entry.response.body.error.scope, 'rehearsal-088/promote-candidate');
+  assert.deepEqual(entry.before, BASELINE);
+  assert.deepEqual(entry.observed, BASELINE);
+  assert.deepEqual(entry.lastKnown, BASELINE);
+  assert.equal(entry.verifier.verdict, 'pass');
+  assert.equal(entry.verifier.transition, 'safe-abort-before-exposure');
+  assert.deepEqual(totals(state), { attempted: 1, success: 0, failure: 1, unknown: 0 });
+});
+
+test('a 200 ok-true error is invalid and never converts denial into success', () => {
+  const { entry, state } = first(invalidFallback);
+  assert.equal(entry.response.status, 200);
+  assert.equal(entry.response.body.ok, true);
+  assert.equal(entry.response.body.status, 'succeeded');
+  assert.equal(entry.response.body.error.code, 'PermissionDenied');
+  assert.equal(entry.operation.outcome, 'failure');
+  assert.equal(entry.verifier.verdict, 'fail');
+  assert.equal(entry.verifier.transition, 'invalid-success-shaped-error');
+  assert.deepEqual(entry.observed, BASELINE);
+  assert.deepEqual(totals(state), { attempted: 1, success: 0, failure: 1, unknown: 0 });
+});
+
+test('allowed fixture requires observed candidate routing and preserved required state', () => {
+  const { entry, state } = first(allowed);
+  assert.equal(entry.operation.outcome, 'success');
+  assert.equal(entry.response.status, 200);
+  assert.equal(entry.response.body.ok, true);
+  assert.equal(Object.hasOwn(entry.response.body, 'error'), false);
+  assert.deepEqual(entry.observed.routing, { old: 0, candidate: 100 });
+  assert.deepEqual(entry.observed.state, BASELINE.state);
+  assert.equal(entry.verifier.verdict, 'pass');
+  assert.equal(entry.verifier.transition, 'completed-synthetic-transition');
+  assert.deepEqual(totals(state), { attempted: 1, success: 1, failure: 0, unknown: 0 });
+});
+
+test('missing permission and observation evidence remains unknown with last-known-only state', () => {
+  const { entry, state } = first(unknown);
+  assert.equal(entry.operation.outcome, 'unknown');
+  assert.equal(entry.response, null);
+  assert.equal(entry.observed, null);
+  assert.deepEqual(entry.lastKnown, BASELINE);
+  assert.equal(entry.verifier.verdict, 'unknown');
+  assert.equal(entry.verifier.transition, 'unverified');
+  assert.deepEqual(totals(state), { attempted: 1, success: 0, failure: 0, unknown: 1 });
+});
+
+test('independent fixed-snapshot attempts retain failures and unknowns in the denominator', () => {
+  const start = createState();
+  const one = attempt(start, invalidFallback);
+  assert.equal(one.history.length, 1);
+  const two = attempt(one, allowed);
+  const three = attempt(two, unknown);
+  const four = attempt(three, denied);
+  assert.equal(start.history.length, 0);
+  assert.equal(one.history.length, 1);
+  assert.equal(four.history.length, 4);
+  assert.deepEqual(four.history.map((entry) => entry.sequence), [1, 2, 3, 4]);
+  assert.deepEqual(four.history.map((entry) => entry.before), Array(4).fill(BASELINE));
+  assert.deepEqual(four.history[0], one.history[0]);
+  assert.deepEqual(totals(four), { attempted: 4, success: 1, failure: 2, unknown: 1 });
+});
+
+test('history and nested observations cannot be mutated', () => {
+  const { entry, state } = first(denied);
+  assert.throws(() => state.history.push(entry), TypeError);
+  assert.throws(() => { entry.observed.routing.candidate = 100; }, TypeError);
+  assert.throws(() => { entry.response.body.ok = true; }, TypeError);
+  assert.throws(() => { entry.input.decision = 'allowed'; }, TypeError);
+  assert.equal(entry.operation.outcome, 'failure');
+});
+
+test('the six-attempt bound rejects more work and preserves the complete ledger', () => {
+  let state = createState();
+  for (let i = 0; i < MAX_ATTEMPTS; i += 1) state = attempt(state, denied);
+  assert.equal(state.history.length, MAX_ATTEMPTS);
+  const previous = JSON.stringify(state);
+  assert.throws(() => attempt(state, allowed), /six|6|limit/i);
+  assert.equal(JSON.stringify(state), previous);
+});
+
+test('invalid inputs are rejected strictly without appending results', () => {
+  const invalid = [
+    null, undefined, [], {}, 'denied',
+    { decision: 'DENIED', response: 'explicit' },
+    { decision: 'denied ', response: 'explicit' },
+    { decision: 'denied', response: 'auto-retry' },
+    { decision: 'denied', response: 'explicit', scope: '*' },
+    { decision: 'allowed', response: 'success-shaped' },
+    { decision: 'unknown', response: 'success-shaped' },
+    Object.assign(Object.create({ extra: true }), denied),
+    { ...denied, [Symbol('hidden')]: true },
+    Object.defineProperty({ response: 'explicit' }, 'decision', { get() { throw new Error('getter executed'); } }),
+  ];
+  for (const input of invalid) {
+    const state = createState();
+    assert.throws(() => attempt(state, input), /input|decision|response|field|record|data/i);
+    assert.equal(state.history.length, 0);
+  }
+});
+
+test('invalid state shapes and altered replay history cannot approve work', () => {
+  const valid = attempt(createState(), denied);
+  assert.equal(valid.history.length, 1);
+  const altered = clone(valid);
+  altered.history[0].response.body.ok = true;
+  const badSequence = clone(valid);
+  badSequence.history[0].sequence = 2;
+  const hidden = clone(valid);
+  hidden.history.extra = true;
+  const forged = clone(valid);
+  forged.history[0].observed.routing.candidate = 100;
+  for (const state of [null, [], {}, { schema: 2, history: [] }, { schema: 1, history: [], extra: true }, altered, badSequence, hidden, forged]) {
+    assert.throws(() => attempt(state, denied), /state|history|record|field|data/i);
+    assert.throws(() => totals(state), /state|history|record|field|data/i);
+  }
+});
+
+test('valid serialized state replays deterministically and reset creates a clean independent ledger', () => {
+  const left = attempt(attempt(createState(), denied), unknown);
+  assert.equal(left.history.length, 2);
+  const right = attempt(clone(left), allowed);
+  assert.deepEqual(right, attempt(left, allowed));
+  assert.deepEqual(right, attempt(attempt(attempt(createState(), denied), unknown), allowed));
+  const reset = createState();
+  assert.equal(reset.history.length, 0);
+  assert.equal(left.history.length, 2);
+});

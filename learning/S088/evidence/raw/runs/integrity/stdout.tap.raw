@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: all indexed source and raw evidence hashes match their declared encoding
+ok 1 - all indexed source and raw evidence hashes match their declared encoding
+  ---
+  duration_ms: 54.6994
+  type: 'test'
+  ...
+# Subtest: the index covers the entire owned bundle except explicit self-reference exclusions
+ok 2 - the index covers the entire owned bundle except explicit self-reference exclusions
+  ---
+  duration_ms: 7.5892
+  type: 'test'
+  ...
+# Subtest: read-only Git clean filters produce the same canonical source and byte-preserved raw objects
+not ok 3 - read-only Git clean filters produce the same canonical source and byte-preserved raw objects
+  ---
+  duration_ms: 184.6967
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S088\\tests\\integrity.test.cjs:51:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    evidence/raw/red/behavior.test.cjs.snapshot
+    + actual - expected
+    
+    + 'aaad5e26f34b640a58952bf16155afa5a6f4a3e0'
+    - '0d401dbc1783708df21d3f467257987e9756bde8'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '0d401dbc1783708df21d3f467257987e9756bde8'
+  actual: 'aaad5e26f34b640a58952bf16155afa5a6f4a3e0'
+  operator: 'strictEqual'
+  stack: |-
+    C:\Users\chhage\repos\app-scaling-strategies\learning\S088\tests\integrity.test.cjs:57:51
+    Array.forEach (<anonymous>)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S088\tests\integrity.test.cjs:57:15)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: an explicitly selected published Git revision retains every canonical/raw evidence byte
+ok 4 - an explicitly selected published Git revision retains every canonical/raw evidence byte # SKIP
+  ---
+  duration_ms: 0.1663
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 2
+# fail 1
+# cancelled 0
+# skipped 1
+# todo 0
+# duration_ms 492.3484

@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S088",
+  "workerId": "worker-A-S088",
+  "parentId": "D-S088",
+  "packet": "SC-S088",
+  "mode": "synthetic",
+  "kano": "S",
+  "kanoUnit": "A-S088",
+  "sourceHead": "2cd41af767ac95e55f2e10e461819129ca356a51",
+  "objective": "Deny an operation; identify an invalid success-shaped error response.",
+  "sourceAcceptance": "The operation fails visibly; production routing and state remain honest; no broad success fallback is returned.",
+  "stages": [
+    {
+      "stage": "BDD",
+      "reference": "permission-failure.feature",
+      "result": "Six worked scenarios specify explicit denial, invalid success-shaped error, positive observation, unknown evidence, strict guards, and keyboard/reset/CSP."
+    },
+    {
+      "stage": "TDD RED",
+      "reference": "evidence/red.json",
+      "result": "Actual loadable-stub assertion failure: 11 tests, 1 pass, 10 ERR_ASSERTION failures; not a missing module/tool/syntax error. Raw stdout/stderr and non-auto-discovered snapshots are preserved."
+    },
+    {
+      "stage": "IaC",
+      "reference": "evidence/iac-decision.json",
+      "result": "N/A after RED: resource-free fixed synthetic browser teaching data only."
+    },
+    {
+      "stage": "Focused GREEN",
+      "reference": "evidence/focused-green.json",
+      "result": "22 focused tests passed: 11 model, 6 surface, 5 provenance."
+    },
+    {
+      "stage": "Syntax",
+      "reference": "evidence/syntax-002.json",
+      "result": "Eight owned JavaScript/CommonJS files passed node --check."
+    },
+    {
+      "stage": "Actual browser",
+      "reference": "evidence/browser-acceptance.json",
+      "result": "One actual browser test group passed nine observed check groups, including keyboard denial, invalid fallback, observed positive, unknown denominator, injected invalid input, six-attempt guard, reset/reuse, and enforced CSP."
+    }
+  ],
+  "integrity": {
+    "index": "evidence/content-index.json",
+    "runReference": "evidence/integrity-002.json",
+    "method": "Read-only canonical Git clean-filter object hashes plus exact SHA-256 source/raw coverage; a selected published revision can additionally verify actual immutable Git blob bytes.",
+    "reporting": "Consult the separate integrity run for its actual result. This summary does not pre-assert a later run.",
+    "rawPolicy": "Only evidence/raw/** is -text -diff. Original CRLF and stdout/stderr bytes are preserved; other owned text is qualified as canonical Git LF.",
+    "retainedVerifierFailure": {
+      "reference": "evidence/integrity.json",
+      "raw": "evidence/raw/runs/integrity/stdout.tap.raw",
+      "cause": "The verifier passed Windows filesystem paths to Git --stdin-paths; Git normalized raw CRLF because that form bypassed attribute matching. No source or raw evidence was modified.",
+      "correction": "Use canonical Git logical paths for attribute matching, while filesystem access continues to use native Windows paths. The index includes the failed transcript and metadata; only its own next verification transcript is excluded."
+    }
+  },
+  "observedTeachingResults": {
+    "explicitDenial": "Operation failure, synthetic 403 PermissionDenied; observed routing/state unchanged; verifier pass means safe abort, not migration.",
+    "successShapedDenial": "Synthetic 200 / ok true / succeeded plus PermissionDenied remains operation failure and verifier fail.",
+    "allowed": "Synthetic success requires matching observed candidate 100% and preserved revision 7 / saved-draft-088.",
+    "unavailableEvidence": "Unknown operation and verifier; baseline is last known only, not a fresh observation.",
+    "boundedLedger": "Actual DOM bound check retained 6 attempts: 1 success, 4 failures, 1 unknown; forged seventh submit was rejected.",
+    "reset": "Actual keyboard reset cleared history/errors/counters and restored baseline, default controls, focus, and reusability."
+  },
+  "tooling": {
+    "reference": "evidence/tooling.json",
+    "node": "v22.23.4",
+    "playwright": "1.56.1",
+    "signedEdge": "156.0.4314.50",
+    "helperCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "api": "openIsolatedLesson",
+    "cleanup": "Awaited session.close() in finally completed. No server/listener/foreground lease was used.",
+    "knownLimit": "Published helper has a documented unattended lifecycle limitation; its abandoned recovery prototype is not used or qualified."
+  },
+  "evidencePolicy": {
+    "ordinaryVerification": "Read-only. Actual browser checks compare complete owned-file inventories before/after.",
+    "capture": "CAPTURE_BROWSER_EVIDENCE=1 was set only for deliberate author capture.",
+    "provenance": "Raw source, RED stub/test/BDD, browser source snapshots, actual streams, hashes and commands are retained. Intentional repeated capture uses a new raw-run label.",
+    "qualification": "Synthetic lesson only; no real permissions, resource/identity/authentication operations, credentials, IaC, cloud, deployment, expenditure, package/framework changes, production Node24, native Azure proof, source-parent completion or reliability certification."
+  },
+  "acceptance": {
+    "reviewer": "Parent controller only",
+    "acceptedAtUtc": null,
+    "sourceParentComplete": false,
+    "nativeSiblingComplete": false,
+    "completionCredit": "At most one original frozen A-S088 S unit, only after parent acceptance. No extra test, plumbing, evidence or refinement credit."
+  }
+}

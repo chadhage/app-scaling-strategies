@@ -1,0 +1,23 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S088 = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const MAX_ATTEMPTS = 6;
+  const BASELINE = Object.freeze({
+    routing: Object.freeze({ old: 100, candidate: 0 }),
+    state: Object.freeze({ revision: 7, requiredValue: 'saved-draft-088' }),
+  });
+  function createState() {
+    return Object.freeze({ schema: 1, history: Object.freeze([]) });
+  }
+  function attempt(state) {
+    return state;
+  }
+  function totals(state) {
+    return { attempted: state.history.length, success: 0, failure: 0, unknown: 0 };
+  }
+  return Object.freeze({ MAX_ATTEMPTS, BASELINE, createState, attempt, totals });
+}));

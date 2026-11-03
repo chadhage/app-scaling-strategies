@@ -1,0 +1,49 @@
+Feature: Honest reporting of a denied synthetic leased operation
+  The A-S088 rehearsal uses fixed teaching data, not platform permissions.
+  Every attempt starts from old-v1 at 100%, candidate-v2 at 0%,
+  and required state revision 7 with saved-draft-088.
+  History is retained until explicit reset; at most six attempts are recorded.
+
+  Scenario: An explicit denial is a safe abort, not a completed migration
+    Given the fictional rehearsal-088 promotion permission is denied
+    When the operator rehearses with an explicit error response
+    Then the operation outcome is failure with a synthetic 403 PermissionDenied
+    And the verifier passes the visible failure and unchanged routing and state
+    And no completed migration is claimed
+
+  Scenario: A success-shaped error cannot hide the denial
+    Given the same permission is denied
+    When the operator selects the invalid success-shaped error fixture
+    Then the trace contains synthetic status 200 and ok true alongside PermissionDenied
+    And the operation remains failure
+    And the verifier fails the invalid success-shaped response
+    And routing and required state remain unchanged
+
+  Scenario: An allowed operation needs a matching observation
+    Given the fictional permission is allowed
+    When the operator rehearses with the explicit response fixture
+    Then the operation outcome is synthetic success
+    And the observed candidate routing is 100% with required state preserved
+    And the verifier passes only this synthetic transition
+
+  Scenario: Missing evidence is unknown rather than successful
+    Given the permission decision and effective-state observation are unavailable
+    When the operator rehearses with the explicit response fixture
+    Then both operation outcome and verifier are unknown
+    And the unchanged baseline is labeled last known, not newly observed
+    And unknown attempts remain in the denominator
+
+  Scenario: Invalid inputs or state cannot append a false result
+    Given an invalid decision, response policy, extra field, or altered history
+    When a rehearsal is requested
+    Then the request is rejected without changing recorded history
+    And the success-shaped fixture is valid only for a denied decision
+    And attempts beyond six are rejected without discarding earlier failures
+
+  Scenario: The operator can inspect, reset, and use the keyboard safely
+    Given prior successful, failed, and unknown attempts
+    When the operator resets using the keyboard
+    Then history and counters are cleared and the baseline is restored
+    And focus returns to the decision selector
+    And inline scripts, connections, and form navigation are blocked by CSP
+    And the banner is exactly "Training rehearsal - synthetic data - not a live Azure result"
