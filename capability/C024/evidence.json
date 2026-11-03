@@ -31,6 +31,12 @@
     "accepted": false,
     "reason": "Post-publication inspection found scoped Git EOL normalization changing captured working bytes. The exact-byte correction is part of this same original C024 unit, not an extra credit; the authoritative commit/tag is the final remotely verified state Report."
   },
+  "supersededAdditionalPublication": {
+    "commit": "485a4887c54fba5cd555d2962565674fd1677360",
+    "tag": "kanban/C024/485a4887c54f",
+    "accepted": false,
+    "reason": "Actual committed-tree verification caught two previously tracked RED artifacts still cached as normalized text blobs despite correct new binary attributes. Only their unchanged raw bytes were explicitly rewritten to refresh file state for the normal scoped publisher to re-add. This is the same original C024 unit; no publisher/index bypass, force push or extra credit."
+  },
   "sequence": [
     {
       "stage": "BDD",
@@ -199,6 +205,29 @@
       "checksPassed": 17,
       "result": "All actual UI checks plus exact before/after proof hash preservation; ordinary mode does not write screenshots/evidence; explicit outer recorder preserves the separate rerun.",
       "cleanup": "browserClosed true; no server or foreground lease"
+    },
+    {
+      "stage": "actual-published-tree-regression-RED",
+      "record": "evidence\\tree-byte-regression-red.json",
+      "exitCode": 1,
+      "failure": "Actual AssertionError comparing all 90 then-owned files to commit 485a4887c54fba5cd555d2962565674fd1677360: only the two original retained upload.stub.cjs/upload.behavior.snapshot.cjs blobs differed, because their index entries still held earlier normalized LF bytes.",
+      "correction": "Byte-identical explicit rewrite of only those two owned raw artifacts made the normal publisher observe/re-add them with the already-qualified binary attributes. Their original SHA-256 values remain unchanged; no source reconstruction, provenance rewrite or new credit.",
+      "finalGate": "Mandatory exact final committed-tree verification is recorded by the worker state Report after atomic publication; prospective filter equality alone is not sufficient."
+    },
+    {
+      "stage": "post-tree-cache-focused-GREEN",
+      "record": "evidence\\post-tree-cache-green.json",
+      "exitCode": 0,
+      "tests": 102,
+      "passed": 102,
+      "failed": 0
+    },
+    {
+      "stage": "post-tree-cache-read-only-browser",
+      "record": "evidence\\browser-post-tree-cache.json",
+      "exitCode": 0,
+      "checksPassed": 17,
+      "result": "Actual qualified-helper UI branches pass again and all pre-existing proof bytes are unchanged; awaited close in finally."
     }
   ],
   "verificationPolicy": {
