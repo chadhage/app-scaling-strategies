@@ -1,0 +1,135 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('../model.js');
+const config = (changes = {}) => ({ ...model.DEFAULTS, ...changes });
+function conduct(session, changes = {}) {
+  session.dispatch('burst', config(changes));
+  session.dispatch('expand');
+  session.dispatch('drain');
+  return session.dispatch('verify');
+}
+
+test('the CommonJS model and default session are loadable', () => {
+  assert.equal(typeof model.createSession, 'function');
+  assert.equal(typeof model.runScenario, 'function');
+  assert.equal(model.createSession().snapshot().phase, 'idle');
+});
+
+test('burst creates an observable six-job backlog before expansion', () => {
+  const state = model.createSession().dispatch('burst', config());
+  assert.equal(state.phase, 'burst');
+  assert.equal(state.jobs.length, 6);
+  assert.equal(state.consumers, 1);
+  assert.equal(state.result, null);
+});
+
+test('one added worker meets keyed FIFO and the inclusive tick-5 deadline', () => {
+  const state = conduct(model.createSession());
+  assert.equal(state.phase, 'verified');
+  assert.equal(state.observationTick, 5);
+  assert.deepEqual(state.result, {
+    outcome: 'PASS', success: 6, failure: 0, unknown: 0,
+    completed: 6, overdue: 0, orderingViolations: 0,
+    total: 6, observedBacklog: 0, throughput: 1.2,
+  });
+});
+
+test('faster complete throughput still fails actual ordering', () => {
+  const run = model.runScenario(config({ addedWorkers: 2, scheduling: 'parallel', deadline: 4 }));
+  assert.equal(run.observationTick, 4);
+  assert.equal(run.result.outcome, 'FAIL');
+  assert.equal(run.result.completed, 6);
+  assert.equal(run.result.overdue, 0);
+  assert.equal(run.result.orderingViolations, 2);
+  assert.deepEqual(run.jobs.filter((job) => job.ordered === false).map((job) => job.id), ['A2', 'B2']);
+  assert.equal(run.result.throughput, 1.5);
+});
+
+test('eventual complete drain does not erase overdue failures', () => {
+  const run = model.runScenario(config({ deadline: 4 }));
+  assert.equal(run.result.outcome, 'FAIL');
+  assert.equal(run.result.completed, 6);
+  assert.equal(run.result.overdue, 2);
+  assert.equal(run.result.failure, 2);
+  assert.deepEqual(run.jobs.filter((job) => job.onTime === false).map((job) => job.id), ['A3', 'B3']);
+});
+
+test('expansion is key-limited and burst size affects completion time', () => {
+  assert.equal(model.runScenario(config({ addedWorkers: 0 })).observationTick, 10);
+  assert.equal(model.runScenario(config({ addedWorkers: 2 })).observationTick, 5);
+  assert.equal(model.runScenario(config({ burstSize: 12 })).observationTick, 8);
+  assert.equal(model.runScenario(config({ addedWorkers: 0, deadline: 10 })).result.outcome, 'PASS');
+  assert.equal(model.runScenario(config({ scheduling: 'parallel' })).result.outcome, 'PASS');
+});
+
+test('missing completion evidence remains unknown and known failures dominate', () => {
+  const unknown = model.runScenario(config({ evidence: 'gap' }));
+  assert.equal(unknown.result.outcome, 'UNKNOWN');
+  assert.equal(unknown.result.success, 5);
+  assert.equal(unknown.result.unknown, 1);
+  assert.equal(unknown.result.completed, 5);
+  const failure = model.runScenario(config({ evidence: 'gap', deadline: 4 }));
+  assert.equal(failure.result.outcome, 'FAIL');
+  assert.equal(failure.result.failure, 1);
+  assert.equal(failure.result.unknown, 1);
+  assert.equal(failure.jobs.at(-1).completionTick, null);
+});
+
+test('malformed input is rejected without changing idle state', () => {
+  for (const invalid of [
+    null, [], {}, config({ burstSize: '6' }), config({ burstSize: 0 }),
+    config({ burstSize: 7 }), config({ addedWorkers: 1.5 }), config({ addedWorkers: 3 }),
+    config({ deadline: NaN }), config({ deadline: Infinity }), config({ deadline: 6 }),
+    config({ evidence: 'fabricated' }), config({ scheduling: 'random' }),
+    { ...config(), endpoint: 'synthetic-only' }, Object.create(config()),
+  ]) {
+    const session = model.createSession();
+    const before = session.snapshot();
+    assert.throws(() => session.dispatch('burst', invalid), /Invalid/);
+    assert.deepEqual(session.snapshot(), before);
+  }
+});
+
+test('unknown, repeated and out-of-order transitions cannot mutate state', () => {
+  const session = model.createSession();
+  for (const action of ['expand', 'drain', 'verify', 'check', 'next', 'bogus', null]) {
+    assert.throws(() => session.dispatch(action), /Invalid/);
+    assert.equal(session.snapshot().phase, 'idle');
+  }
+  session.dispatch('burst', config());
+  const before = session.snapshot();
+  assert.throws(() => session.dispatch('burst', config()), /Invalid/);
+  assert.throws(() => session.dispatch('expand', {}), /Invalid/);
+  assert.deepEqual(session.snapshot(), before);
+});
+
+test('history retains failed and unknown outcomes independently of predictions', () => {
+  const session = model.createSession();
+  conduct(session, { deadline: 4 });
+  const failed = session.dispatch('check', 'PASS');
+  assert.equal(failed.phase, 'recorded');
+  assert.equal(failed.history[0].result.outcome, 'FAIL');
+  assert.equal(failed.history[0].predictionCorrect, false);
+  session.dispatch('next');
+  conduct(session, { evidence: 'gap' });
+  const retained = session.dispatch('check', 'UNKNOWN');
+  assert.equal(retained.history.length, 2);
+  assert.equal(retained.history[1].result.outcome, 'UNKNOWN');
+  assert.equal(retained.history[0].config.deadline, 4);
+  assert.ok(retained.history[0].trace.length > 0);
+});
+
+test('six attempts are bounded without eviction and reset clears everything', () => {
+  const session = model.createSession();
+  for (let index = 0; index < model.MAX_HISTORY; index += 1) {
+    conduct(session);
+    session.dispatch('check', 'PASS');
+    if (index < model.MAX_HISTORY - 1) session.dispatch('next');
+  }
+  assert.equal(session.snapshot().history.length, 6);
+  assert.throws(() => session.dispatch('next'), /Invalid/);
+  assert.throws(() => session.dispatch('check', 'PASS'), /Invalid/);
+  assert.deepEqual(session.dispatch('reset'), model.createSession().snapshot());
+});

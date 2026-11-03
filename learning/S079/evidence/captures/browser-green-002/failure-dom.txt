@@ -1,0 +1,114 @@
+Skip to exercise
+
+Training rehearsal - synthetic data - not a live Azure result
+
+S079 — Backlog surge
+
+Add processing capacity without sacrificing per-key ordering or completion deadlines. Throughput alone is not success.
+
+A-S079 · frozen S · D-S079 · packet SC-S079 · resource-free synthetic mode
+
+Declared contract
+
+Preconditions: JavaScript enabled; two independent order keys A and B; one initial worker. All jobs arrive at synthetic tick 0. First job per key takes 3 ticks; later jobs take 1. No random values or wall-clock timing.
+
+Ordering: each key must commit sequence 1, 2, 3… in that order. There is no global A/B ordering requirement. Same-tick completions commit in ascending worker-number order.
+
+Deadline: every job must complete at or before the declared tick, measured from burst arrival, not from its worker start. Eventual completion after that tick is a failure.
+
+Bounds: 6 or 12 jobs, 1–3 total workers, at most 16 synthetic ticks and 6 retained attempts. No jobs are silently evicted from history.
+
+Conduct the rehearsal
+
+Choose inputs, then Burst backlog → Add capacity → Drain burst → Verify contracts. Predict the measured outcome and retain it before starting another attempt.
+
+Burst size
+6 jobs
+12 jobs
+Added workers (one worker already exists)
+0 — keep baseline
+1 — two total
+2 — three total
+Dispatch discipline
+Keyed FIFO — one active job per key
+Unchecked parallel — permit same-key overlap
+Completion deadline from arrival
+Tick 4
+Tick 5
+Tick 10
+Tick 16
+Completion observations
+Complete evidence
+Gap — final B-key completion unavailable
+1. Burst backlog
+2. Add capacity
+3. Drain burst
+4. Verify contracts
+
+Phase: verified. Workers: 3. Observation tick: 4. Retained: 2/6.
+
+Measured synthetic result
+
+FAIL — 4 successful / 2 failed / 0 unknown of 6 synthetic jobs. 0 overdue; 2 ordering failures.
+
+Interrupted synthetic jobs remain failures, even after eventual drain.
+
+6/6 observed completions by tick 4; 0 jobs without observed completion. Throughput 1.50 jobs/tick is diagnostic only.
+
+Observed jobs — ticks are synthetic, not elapsed seconds
+Job / sequence	Start	Complete	Deadline	FIFO met	On time	Outcome
+A1	0	3	4	Yes	Yes	PASS
+B1	0	3	4	Yes	Yes	PASS
+A2	0	1	4	No	Yes	FAIL
+B2	1	2	4	No	Yes	FAIL
+A3	2	3	4	Yes	Yes	PASS
+B3	3	4	4	Yes	Yes	PASS
+Inspect the synthetic trace
+Tick 0: burst 6 jobs; one baseline worker.
+Tick 0: capacity now 3 workers.
+Tick 0: worker 0 starts A1.
+Tick 0: worker 1 starts B1.
+Tick 0: worker 2 starts A2.
+Tick 1: worker 2 commits A2.
+Tick 1: worker 2 starts B2.
+Tick 2: worker 2 commits B2.
+Tick 2: worker 2 starts A3.
+Tick 3: worker 0 commits A1.
+Tick 3: worker 1 commits B1.
+Tick 3: worker 2 commits A3.
+Tick 3: worker 0 starts B3.
+Tick 4: worker 0 commits B3.
+Prediction and retained history
+Your predicted measured outcome
+Choose an outcome
+PASS
+FAIL
+UNKNOWN
+5. Check prediction and retain
+
+No prediction checked.
+
+Retained attempts: 2. PASS: 1; FAIL: 1; UNKNOWN: 0. Jobs: 10 successful / 2 failed / 0 unknown.
+
+Attempt 1 — PASS — prediction correct
+Attempt 2 — FAIL — prediction incorrect
+New attempt — keep history
+Reset all local data
+
+New attempt restores input defaults but retains earlier failures and unknowns. Reset deliberately clears everything, including history. Reload also clears this in-memory lesson; nothing is sent or saved elsewhere.
+
+Try these comparisons
+Defaults: 6 jobs, one added worker, keyed FIFO, deadline 5. All 6 pass at tick 5.
+Change only deadline to 4. All 6 eventually complete, but 2 are overdue: FAIL.
+Use two added workers, unchecked parallel and deadline 4. All 6 finish by tick 4; A2 and B2 commit too early: FAIL despite faster throughput.
+Restore defaults, then select the observation gap. Five pass and one is UNKNOWN. With deadline 4, a known failure dominates but the unknown remains counted.
+Compare zero added workers (tick 10), one (tick 5) and two with keyed FIFO (still tick 5). Extra workers cannot remove the two-key concurrency limit.
+Source and evidence limits
+
+README S079: “Backlog surge: Add processing capacity while maintaining ordering and completion-deadline requirements.” D-S079 requires real work to drain within its declared deadline and ordering contract; overdue jobs are failures. Its original dependency is D-S075.
+
+This portable A-card models that decision only. It does not certify a broker backlog, autoscale, real consumer expansion, native ordering, deadlines, production Node.js 24, source-parent completion or five-nines reliability. B-S079 and D-S079 remain incomplete. No management calls, credentials, cloud resources, identity, IaC, deployment or spending.
+
+Keyboard: Tab / Shift+Tab between controls, arrows in selects, Enter / Space on buttons. Errors focus the rejected input. Reset returns focus to Burst backlog.
+
+Lesson instructions and verification provenance

@@ -1,0 +1,22 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.BacklogSurge = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULTS = Object.freeze({
+    burstSize: 6, addedWorkers: 1, scheduling: 'keyed', deadline: 5, evidence: 'complete',
+  });
+  function createSession() {
+    const state = {
+      phase: 'idle', config: null, jobs: [], trace: [], result: null,
+      observationTick: 0, consumers: 1, history: [],
+    };
+    return { snapshot: () => structuredClone(state), dispatch: () => structuredClone(state) };
+  }
+  function runScenario() {
+    return { jobs: [], trace: [], observationTick: 0, consumers: 1, result: { outcome: 'UNKNOWN' } };
+  }
+  return Object.freeze({ DEFAULTS, MAX_HISTORY: 6, createSession, runScenario });
+}));

@@ -1,0 +1,121 @@
+{
+  "cardId": "A-S079",
+  "parentId": "D-S079",
+  "workerId": "worker-A-S079",
+  "kano": "S",
+  "kanoUnit": "A-S079",
+  "packet": "SC-S079",
+  "authorization": "local-synthetic-only",
+  "capturedAtUtc": "2026-11-03T20:31:58.555Z",
+  "readBeforeBehaviorDesign": true,
+  "sources": [
+    {
+      "path": "README.md",
+      "gitPath": "README.md",
+      "commit": "3fed848b042f21acc5a52998eba1957272d9c9fb",
+      "working": {
+        "snapshot": "evidence\\raw\\source\\readme.working.raw.gz",
+        "sha256": "826c1e3b1f1f8866f05d45f3d6b9eca5c06e901a2b67737774ad18aa1607e4d1",
+        "bytes": 46303,
+        "crlf": 584
+      },
+      "canonical": {
+        "snapshot": "evidence\\raw\\source\\readme.git.raw.gz",
+        "sha256": "852a82420f3b17a41c6aa56ae32fc1ba37829181654bcd6fa32fd00e88310519",
+        "bytes": 45719
+      },
+      "slices": [
+        {
+          "id": "scenario",
+          "text": "| S079 | **Backlog surge:** Add processing capacity while maintaining ordering and completion-deadline requirements. |",
+          "sha256": "5d8b0a60a74b001168a85d0f123dfdad6fd3c42cac334e7c716c2ed6ccbc6752"
+        },
+        {
+          "id": "outcomePolicy",
+          "text": "### Outcome classification\n\n| Outcome | Reporting treatment |\n| --- | --- |\n| Uninterrupted successful transition | Actual intended migration is evidenced and the complete journey passes all acceptance criteria. |\n| Safe abort before exposure | Existing production remains usable, but no completed user migration is claimed; report deployment aborts separately. |\n| Interrupted transition | Count the affected attempted journey as a failure, including failures preceding rollback. |\n| Unverified or unsupported result | Report missing evidence or platform limits explicitly; do not count the result as successful. |\n\nUsers remaining entirely on the old deployment do not establish successful migration merely because their requests succeeded. Conversely, failed or uncertain started transitions must not be removed from the denominator.",
+          "sha256": "b62a355171ac573abd8ef2b1fe616e5989327446b1a63a85a1667c9b7260184b"
+        }
+      ]
+    },
+    {
+      "path": ".docs\\wiki\\backlog.md",
+      "gitPath": ".docs/wiki/backlog.md",
+      "commit": "3fed848b042f21acc5a52998eba1957272d9c9fb",
+      "working": {
+        "snapshot": "evidence\\raw\\source\\backlog.working.raw.gz",
+        "sha256": "40b4d8e2ab4774f47de029f97dd8ff4e267d9412292c3c47f72726b002831418",
+        "bytes": 64336,
+        "crlf": 483
+      },
+      "canonical": {
+        "snapshot": "evidence\\raw\\source\\backlog.git.raw.gz",
+        "sha256": "9a414030b4ef63b5d90a0f6d89e1cbc30b0300bf194ad87b9e7e3d2912b59a65",
+        "bytes": 63853
+      },
+      "slices": [
+        {
+          "id": "parent",
+          "text": "| D-S079 | P1 | Add bounded backlog bursts, consumer expansion, and deadline/ordering views. | Capacity drains real work within the declared deadline and ordering contract; overdue jobs are failures. | D-S075 |",
+          "sha256": "bd78c8d38a213c50c56570d6c781bb1c6ac541b1ac2ae9d7c2e0c3d25ecfbcc4"
+        },
+        {
+          "id": "dependency",
+          "text": "| D-S075 | P1 | Add **Scale consumers out** with real queue/partition ownership and deduplication metrics. | New capacity processes work without missing events, incorrect ownership, or duplicate business effects. | none |",
+          "sha256": "5fd295793e7fa063883ad4d84f06b3d86341a09a8a565a929a46b4f4433de4c2"
+        }
+      ]
+    },
+    {
+      "path": ".docs\\wiki\\kanban.md",
+      "gitPath": ".docs/wiki/kanban.md",
+      "commit": "3fed848b042f21acc5a52998eba1957272d9c9fb",
+      "working": {
+        "snapshot": "evidence\\raw\\source\\kanban.working.raw.gz",
+        "sha256": "48dc2691e8476304e0643e74e7ba712d75480bf4194bdfcf2472dda2e5a03de5",
+        "bytes": 87523,
+        "crlf": 738
+      },
+      "canonical": {
+        "snapshot": "evidence\\raw\\source\\kanban.git.raw.gz",
+        "sha256": "0579279c67e7923aa535343f87497e5465352e6db94cbc8960f4faed9fb5cdf5",
+        "bytes": 86785
+      },
+      "slices": [
+        {
+          "id": "card",
+          "text": "| A-S079 | D-S079 | S | Burst the backlog; evaluate ordering and completion deadlines rather than throughput alone. | SOURCE |",
+          "sha256": "14795116c1a4071103331494a305381c457c12ea305583c6346ab483c5b5a299"
+        },
+        {
+          "id": "nativeSibling",
+          "text": "| B-S079 | D-S079 | S | Conduct one bounded backlog burst; verify native progress, ordering, and deadline failures. | CORE, DATA, AKS, C076 |",
+          "sha256": "ed4b1fb2885378a78d2bd922f07d275658c39c8b5bcae857aa6077714ba1588b"
+        },
+        {
+          "id": "atomicContract",
+          "text": "Every listed row is one card, one accountable owner/pair, one independently reviewable changeset, and one observable acceptance result. Normal publication is a scoped, labeled commit with an annotated tag on `main`; temporary recovery branches and reviewer-assisted PRs are used only when safe integration requires them.\n\nImplementation order is BDD specification, genuine behavioral TDD red, the IaC step (or an explicit N/A for a resource-free lesson), implementation/refactoring, green tests and actual browser checks, scoped tagged publication, and parent-owned empirical acceptance. A worker cannot award its own Done credit. Subdivision preserves the original `kanoUnit`; partial work does not manufacture extra value.\n\n- **Size target:** A cards take 1-2 focused hours; C, B, and X cards target 2-4 focused hours after entry gates are satisfied. These are slicing limits, not delivery estimates.\n- **Refine before admission:** If a card needs a new research decision, multiple independent behaviors, or more than four focused hours, split it before pulling. Revalidate coverage and Kano classes; artificial splits do not manufacture extra value.\n- **Inputs:** Parent source, versioned contract, named fixture/configuration, technical gate, quota reservation, and any approved lease are available.\n- **Ownership:** One card owns its module/fixture namespace. A and B siblings do not share files, PRs, or mutable test leases.\n- **Done:** Scoped behavior is usable, its stated check passes, relevant tests are automated, review/merge is complete, documentation and evidence are attached, and the behavior is available through its declared preview or harness surface.\n- **Evidence:** Record card/parent IDs, mode, configuration/host, commit, test/run reference, verifier result, user-impact result, cleanup result, owner, reviewer, packet, and accepted time.\n- **No false completion:** A replay is not native evidence. Unsupported/unverified positive behavior cannot pass as a native success. A negative experiment may pass its verifier while clearly reporting interrupted users.\n- **No bonus credits:** Multiple parents, commits, test cases, repeated runs, and duplicated fixtures do not increase a card's Kano count.",
+          "sha256": "36e6fb6ce615429a4fd054a642220c8ae4b2b5e05243bc27d242213ba116692d"
+        },
+        {
+          "id": "portableContract",
+          "text": "### Portable A-card lesson contract\n\nAn A card delivers a standalone, browser-openable lesson bundle with a small interactive exercise: choose an action or condition, inspect a synthetic trace, and check the expected outcome. Use standard HTML/browser behavior so an approved application framework or Azure subscription is not needed to begin.\n\nEach bundle declares source ID, objective, preconditions, actions, synthetic input/trace, expected assertions, and limits. It prominently says **Training rehearsal - synthetic data - not a live Azure result**, makes no management calls, contains no credentials, and supports keyboard operation.\n\nEach lesson must add a worked, testable exercise rather than copying the backlog sentence. Keep it portable for later mounting by C041. The native implementation and evidence remain a separate B card, and the source demo is not complete until both required slices and its original acceptance gates pass.",
+          "sha256": "ceb129c46b97325355cfb7be40382452de2d1a353b21ebd6e20894494b65517d"
+        },
+        {
+          "id": "packetRule",
+          "text": "Packet membership is fixed before admission. This register overrides default membership for its named cards; every other A/B card belongs to SC-Snnn, and every other capability card belongs to its first listed source parent. A card has one packet, not duplicate packet credits.",
+          "sha256": "b29e67d7cdd280d923ac16f7d25c5b99501773b337d40c0101e7f3e532b767e3"
+        },
+        {
+          "id": "parentCompletion",
+          "text": "- A source parent is complete only when its required children, original prerequisite parents, target-configuration evidence, and all original acceptance clauses pass. The original backlog remains authoritative.",
+          "sha256": "25a604bece97cc8d0bb196c840aa401edbbe141a588bd5a9083ea61233137c68"
+        }
+      ]
+    }
+  ],
+  "sourceAcceptance": "Capacity drains real work within the declared deadline and ordering contract; overdue jobs are failures.",
+  "sourceDependency": "D-S075",
+  "nativeSibling": "B-S079",
+  "limits": "A portable synthetic exercise only. Native sibling, original prerequisite and all source acceptance remain incomplete."
+}

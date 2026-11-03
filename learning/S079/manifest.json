@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S079",
+  "sourceId": "S079",
+  "parentId": "D-S079",
+  "sourceDependency": "D-S075",
+  "nativeSibling": "B-S079",
+  "kano": "S",
+  "kanoUnit": "A-S079",
+  "packet": "SC-S079",
+  "owner": "worker-A-S079",
+  "mode": "synthetic",
+  "entry": "index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Burst the backlog; evaluate ordering and completion deadlines rather than throughput alone.",
+  "preconditions": ["JavaScript enabled", "Two fixed order keys", "One baseline worker", "No external service"],
+  "actions": ["burst", "expand", "drain", "verify", "check", "next", "reset"],
+  "syntheticInput": {
+    "burstSize": [6, 12],
+    "addedWorkers": [0, 1, 2],
+    "scheduling": ["keyed", "parallel"],
+    "deadline": [4, 5, 10, 16],
+    "evidence": ["complete", "gap"],
+    "maxObservationTicks": 16,
+    "maxHistory": 6
+  },
+  "expectedAssertions": [
+    "Each observed completion meets its inclusive deadline measured from burst arrival.",
+    "Each key commits its sequences in ascending order; A/B global order is not required.",
+    "Known overdue or ordering failures dominate UNKNOWN, and missing evidence never passes.",
+    "Throughput, prediction accuracy and measured outcome are separate."
+  ],
+  "limits": [
+    "No native Azure, real broker backlog, consumer autoscale, ordering or deadline certification.",
+    "No production Node.js 24 validation, completed source parents or five-nines proof.",
+    "B-S079, D-S079 and its original prerequisite remain incomplete.",
+    "IaC N/A; no cloud, scaffold, identity, credentials, deployment, spending, downloads, packages or framework."
+  ],
+  "acceptance": "Parent-owned empirical review pending; one frozen S unit only."
+}

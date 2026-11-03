@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'none'; connect-src 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S079 — Backlog surge rehearsal</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="page.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S079 — Backlog surge</h1>
+    <p>Add processing capacity without sacrificing per-key ordering or completion deadlines. Throughput alone is not success.</p>
+    <p>A-S079 · frozen S · D-S079 · packet SC-S079 · resource-free synthetic mode</p>
+  </header>
+  <main>
+    <section aria-labelledby="contract-title">
+      <h2 id="contract-title">Declared contract</h2>
+      <p><strong>Preconditions:</strong> JavaScript enabled; two independent order keys A and B; one initial worker. All jobs arrive at synthetic tick 0. First job per key takes 3 ticks; later jobs take 1. No random values or wall-clock timing.</p>
+      <p><strong>Ordering:</strong> each key must commit sequence 1, 2, 3… in that order. There is no global A/B ordering requirement. Same-tick completions commit in ascending worker-number order.</p>
+      <p><strong>Deadline:</strong> every job must complete at or before the declared tick, measured from burst arrival, not from its worker start. Eventual completion after that tick is a failure.</p>
+      <p><strong>Bounds:</strong> 6 or 12 jobs, 1–3 total workers, at most 16 synthetic ticks and 6 retained attempts. No jobs are silently evicted from history.</p>
+    </section>
+    <section id="exercise" tabindex="-1" aria-labelledby="exercise-title">
+      <h2 id="exercise-title">Conduct the rehearsal</h2>
+      <p>Choose inputs, then Burst backlog → Add capacity → Drain burst → Verify contracts. Predict the measured outcome and retain it before starting another attempt.</p>
+      <form id="settings" novalidate>
+        <div class="controls">
+          <label for="burst-size">Burst size
+            <select id="burst-size" name="burstSize"><option value="6">6 jobs</option><option value="12">12 jobs</option></select>
+          </label>
+          <label for="added-workers">Added workers (one worker already exists)
+            <select id="added-workers" name="addedWorkers"><option value="0">0 — keep baseline</option><option value="1" selected>1 — two total</option><option value="2">2 — three total</option></select>
+          </label>
+          <label for="scheduling">Dispatch discipline
+            <select id="scheduling" name="scheduling"><option value="keyed">Keyed FIFO — one active job per key</option><option value="parallel">Unchecked parallel — permit same-key overlap</option></select>
+          </label>
+          <label for="deadline">Completion deadline from arrival
+            <select id="deadline" name="deadline"><option value="4">Tick 4</option><option value="5" selected>Tick 5</option><option value="10">Tick 10</option><option value="16">Tick 16</option></select>
+          </label>
+          <label for="evidence">Completion observations
+            <select id="evidence" name="evidence"><option value="complete">Complete evidence</option><option value="gap">Gap — final B-key completion unavailable</option></select>
+          </label>
+        </div>
+        <button id="burst" type="submit">1. Burst backlog</button>
+      </form>
+      <div class="actions">
+        <button id="expand" type="button" disabled>2. Add capacity</button>
+        <button id="drain" type="button" disabled>3. Drain burst</button>
+        <button id="verify" type="button" disabled>4. Verify contracts</button>
+      </div>
+      <p id="phase" role="status" aria-live="polite"></p>
+      <p id="error" role="alert" tabindex="-1" hidden></p>
+      <noscript><p>This exercise requires JavaScript. No result can be verified without it.</p></noscript>
+    </section>
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Measured synthetic result</h2>
+      <p id="result" role="status" aria-live="polite">Not verified. Complete the four ordered steps.</p>
+      <p id="impact">No completed synthetic journey has been claimed.</p>
+      <p id="diagnostic">Throughput is diagnostic only; missing completion evidence is never success.</p>
+      <div class="table-wrap" role="region" aria-label="Per-job completion and ordering observations" tabindex="0">
+        <table>
+          <caption>Observed jobs — ticks are synthetic, not elapsed seconds</caption>
+          <thead><tr><th scope="col">Job / sequence</th><th scope="col">Start</th><th scope="col">Complete</th><th scope="col">Deadline</th><th scope="col">FIFO met</th><th scope="col">On time</th><th scope="col">Outcome</th></tr></thead>
+          <tbody id="jobs"></tbody>
+        </table>
+      </div>
+      <details id="trace-details">
+        <summary>Inspect the synthetic trace</summary>
+        <ol id="trace"></ol>
+      </details>
+    </section>
+    <section aria-labelledby="learning-title">
+      <h2 id="learning-title">Prediction and retained history</h2>
+      <form id="prediction-form" novalidate>
+        <label for="prediction">Your predicted measured outcome
+          <select id="prediction" name="prediction" disabled><option value="">Choose an outcome</option><option value="PASS">PASS</option><option value="FAIL">FAIL</option><option value="UNKNOWN">UNKNOWN</option></select>
+        </label>
+        <button id="check" type="submit" disabled>5. Check prediction and retain</button>
+      </form>
+      <p id="learning" role="status" aria-live="polite">No prediction checked.</p>
+      <p id="totals">No retained attempts.</p>
+      <div id="history"></div>
+      <div class="actions">
+        <button id="next" type="button" disabled>New attempt — keep history</button>
+        <button id="clear-data" type="button">Reset all local data</button>
+      </div>
+      <p>New attempt restores input defaults but retains earlier failures and unknowns. Reset deliberately clears everything, including history. Reload also clears this in-memory lesson; nothing is sent or saved elsewhere.</p>
+    </section>
+    <section aria-labelledby="worked-title">
+      <h2 id="worked-title">Try these comparisons</h2>
+      <ol>
+        <li>Defaults: 6 jobs, one added worker, keyed FIFO, deadline 5. All 6 pass at tick 5.</li>
+        <li>Change only deadline to 4. All 6 eventually complete, but 2 are overdue: FAIL.</li>
+        <li>Use two added workers, unchecked parallel and deadline 4. All 6 finish by tick 4; A2 and B2 commit too early: FAIL despite faster throughput.</li>
+        <li>Restore defaults, then select the observation gap. Five pass and one is UNKNOWN. With deadline 4, a known failure dominates but the unknown remains counted.</li>
+        <li>Compare zero added workers (tick 10), one (tick 5) and two with keyed FIFO (still tick 5). Extra workers cannot remove the two-key concurrency limit.</li>
+      </ol>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Source and evidence limits</h2>
+      <p>README S079: “Backlog surge: Add processing capacity while maintaining ordering and completion-deadline requirements.” D-S079 requires real work to drain within its declared deadline and ordering contract; overdue jobs are failures. Its original dependency is D-S075.</p>
+      <p>This portable A-card models that decision only. It does not certify a broker backlog, autoscale, real consumer expansion, native ordering, deadlines, production Node.js 24, source-parent completion or five-nines reliability. B-S079 and D-S079 remain incomplete. No management calls, credentials, cloud resources, identity, IaC, deployment or spending.</p>
+      <p>Keyboard: Tab / Shift+Tab between controls, arrows in selects, Enter / Space on buttons. Errors focus the rejected input. Reset returns focus to Burst backlog.</p>
+      <p><a href="README.md">Lesson instructions and verification provenance</a></p>
+    </section>
+  </main>
+</body>
+</html>

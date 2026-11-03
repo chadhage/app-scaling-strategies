@@ -1,0 +1,71 @@
+Feature: A-S079 bounded backlog surge rehearsal
+  # Frozen S; D-S079; packet SC-S079; worker-A-S079. Synthetic only.
+  Background:
+    Given the exact S079 README, D-S079 acceptance, A-card, portable contract and packet rule have been read
+    And the page says "Training rehearsal - synthetic data - not a live Azure result"
+    And all jobs arrive at synthetic tick 0, with per-key FIFO completion and an inclusive completion deadline
+    And there are two keys, one initial worker, at most two added workers and no external service
+
+  Scenario: Expansion drains a bounded burst within both contracts
+    Given a six-job burst, one added worker, keyed scheduling, deadline 5 and complete evidence
+    When I burst, add capacity, drain and verify in that order
+    Then all six observed jobs meet their ordering and completion contracts at tick 5
+    And the result is PASS, not native broker or autoscale evidence
+
+  Scenario: Capacity alone does not define success
+    Given a six-job burst, two added workers, unchecked parallel scheduling and deadline 4
+    When I run the rehearsal
+    Then all six jobs complete by tick 4
+    But A2 and B2 complete before their predecessors
+    And the result is FAIL despite higher observed throughput
+
+  Scenario: Overdue jobs remain failures after eventual drain
+    Given a six-job burst with one added worker, keyed scheduling and deadline 4
+    When I run the rehearsal
+    Then two jobs complete late at tick 5
+    And the result is FAIL even though the backlog eventually drains
+
+  Scenario: A deadline is inclusive and capacity is key-limited
+    Given keyed scheduling, a six-job burst and deadline 5
+    Then one or two added workers both drain at tick 5
+    And zero added workers drain at tick 10 and fail the deadline
+    And increasing the burst to twelve with one added worker drains at tick 8
+
+  Scenario: Missing completion evidence is never success
+    Given the final B-key completion observation is deliberately unavailable
+    When all other observations meet the contract
+    Then that job and the result are UNKNOWN
+    When another observed job is overdue
+    Then the result is FAIL while the unknown job remains in the denominator
+
+  Scenario: A learner prediction never overwrites a measured outcome
+    Given a verified failed rehearsal
+    When I predict PASS and check the prediction
+    Then the learning check is incorrect but the measured result remains FAIL
+    And inputs, per-job observations, trace, prediction and result are retained
+    When I start a new attempt
+    Then earlier failures and unknowns stay in history and cumulative totals
+    And six retained attempts is a hard limit with no silent eviction
+
+  Scenario: Invalid inputs and invalid transitions are rejected atomically
+    Given exact integer and enum controls only
+    Then malformed, extra, missing, inherited, fractional and out-of-bound inputs are rejected
+    And unknown, repeated, premature and payload-bearing invalid actions do not change state
+    And callers cannot mutate retained inputs or snapshots
+
+  Scenario: Keyboard operation, error recovery and reset are usable
+    Given I use Tab, arrow keys, Enter and Space without a mouse
+    Then each valid action focuses the next available action
+    And invalid input focuses its field with an announced error
+    And a skip link, visible focus, live result and labelled tables are available
+    When I reset all local data
+    Then controls, predictions, results, errors, traces, expanded details, history and totals clear
+    And focus returns to Burst backlog without shadowing the form reset method
+
+  Scenario: The standalone lesson is local and evidence is deliberate
+    Given default-deny CSP with same-directory external scripts and styles
+    Then inline scripts, fetch, form submission, frames, objects and base changes are blocked
+    And no credentials, network calls, packages, framework, cloud or IaC are needed
+    And normal verification does not modify lesson or proof files
+    And browser capture occurs only with CAPTURE_BROWSER_EVIDENCE=1
+    And the published isolated browser helper is closed in an awaited finally
