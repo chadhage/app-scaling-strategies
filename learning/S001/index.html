@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>A-S001 · Warm v2, then hand off</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="engine.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p class="eyebrow">A-S001 · Kano S · stable unit A-S001 · parent D-S001 · source S001 · packet LP-LEARN</p>
+    <h1>Warm v2, then hand off</h1>
+    <p class="intro">Practice readiness-gated admission without abandoning work already running on v1.</p>
+    <p>This portable lesson is <strong>not B-S001 native proof</strong> and does not complete D-S001.</p>
+  </header>
+  <main>
+    <section aria-labelledby="objective">
+      <h2 id="objective">Objective and preconditions</h2>
+      <p>Prepare v2 beside v1, verify representative journeys, then move only eligible new admissions. A healthy endpoint or a desired routing change alone cannot establish a successful migration.</p>
+      <ul>
+        <li>Independent, controlled v1/v2 routing is assumed; this is not a native slot swap.</li>
+        <li>Two ready candidate instances, compatible configuration and dependencies, and two overlap capacity units are required.</li>
+        <li>An isolated signed-in fixture carries cart quantity <strong>3</strong>; each journey must produce <strong>exactly one</strong> business effect.</li>
+        <li>Each complete journey has an inclusive <strong>500 ms</strong> budget. Readiness evidence must be for <strong>v2@1</strong> and no older than <strong>1000 ms</strong>.</li>
+        <li><strong>old-001</strong> starts on v1, still running with its effect pending. New admissions are not a transfer of that old work.</li>
+        <li>Retirement needs observed old-work completion and a separate <strong>1000 ms simulated rollback retention window</strong> after handoff.</li>
+      </ul>
+    </section>
+
+    <section id="exercise" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">Work the handoff</h2>
+      <p><strong>Safe path:</strong> warm-up → hand off → finish old work → advance retention → retire v1.</p>
+      <p><strong>Unsafe challenge:</strong> reset, then hand off before warm-up. Expect <strong>FAIL</strong>, even though the guard keeps users on v1. A failure or unknown needs a reset before a new scored exercise.</p>
+      <fieldset>
+        <legend>Synthetic conditions</legend>
+        <label for="condition">Candidate and handoff fixture</label>
+        <select id="condition" aria-describedby="condition-help">
+          <option value="healthy">Healthy warm-up and handoff</option>
+          <option value="dependency-failure">Dependency is not ready</option>
+          <option value="incompatible-state">Warm-up loses cart state</option>
+          <option value="duplicate-effects">Warm-up duplicates a business effect</option>
+          <option value="slow-warmup">Warm-up takes 501 ms</option>
+          <option value="missing-readiness">Dependency observation is missing</option>
+          <option value="stale-readiness">Readiness evidence is stale</option>
+          <option value="missing-admission">Handoff destination stamp is missing</option>
+          <option value="regressed-handoff">Warm-up passes, handoff takes 501 ms</option>
+        </select>
+        <p id="condition-help">Changing conditions resets only this page's local exercise. All inputs, effects, and durations are invented, deterministic snapshots; no time is actually awaited.</p>
+      </fieldset>
+      <div class="actions" role="group" aria-label="Rehearsal actions">
+        <button type="button" id="warm" data-action="warm">1. Rehearse v2 warm-up</button>
+        <button type="button" id="handoff" data-action="handoff">2. Hand off new admissions</button>
+        <button type="button" id="drain" data-action="drain">3. Finish old work on v1</button>
+        <button type="button" id="elapse" data-action="elapse">4. Advance rollback retention</button>
+        <button type="button" id="retire" data-action="retire">5. Retire v1</button>
+        <button type="button" id="reset" class="secondary">Reset local exercise</button>
+      </div>
+      <noscript><p class="warning">JavaScript is required for the local rehearsal. No result has been run or verified.</p></noscript>
+      <h3>Expected result for this condition</h3>
+      <p id="expected">No exercise has run. Warm-up must precede handoff.</p>
+      <details>
+        <summary>Inspect the deterministic synthetic input</summary>
+        <pre id="fixture-input"></pre>
+      </details>
+    </section>
+
+    <section aria-labelledby="results-heading">
+      <h2 id="results-heading">Observed rehearsal result</h2>
+      <p id="result-announcement" role="status" aria-live="polite" aria-atomic="true">NOT RUN. No migrated user evidence.</p>
+      <div class="results">
+        <article>
+          <h3>Exercise verdict</h3>
+          <p id="verdict" class="verdict" data-verdict="NOT_RUN">NOT RUN</p>
+          <p id="reason">No exercise has run.</p>
+        </article>
+        <article>
+          <h3>User impact</h3>
+          <p id="impact-kind">Not migrated</p>
+          <p id="user-impact">No transition attempted.</p>
+          <p id="sample-count">Attempted: 0 · proven successful: 0 · interrupted: 0</p>
+        </article>
+        <article>
+          <h3>Cleanup and retention</h3>
+          <p id="cleanup-kind">Retained</p>
+          <p id="cleanup">No external resources were created.</p>
+        </article>
+      </div>
+      <dl class="lifecycle" aria-label="Observed routing and lifecycle">
+        <div><dt>v1 lifecycle</dt><dd id="v1-state">ACTIVE</dd></div>
+        <div><dt>v2 lifecycle</dt><dd id="v2-state">WARMING</dd></div>
+        <div><dt>Future admission target</dt><dd id="admission-target">v1</dd></div>
+        <div><dt>Observed rollback retention</dt><dd id="retention">0 / 1000 ms</dd></div>
+      </dl>
+      <div class="journeys">
+        <div><h3>Old work: not a new migration</h3><pre id="old-work"></pre></div>
+        <div><h3>New transition journey</h3><pre id="new-work">No transition attempted.</pre></div>
+      </div>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable assertion table">
+        <table>
+          <caption>Expected versus observed assertions (synthetic)</caption>
+          <thead><tr><th scope="col">Stage</th><th scope="col">Gate</th><th scope="col">Expected</th><th scope="col">Observed</th><th scope="col">Result</th></tr></thead>
+          <tbody id="assertions"><tr><td colspan="5">No observations yet. Empty evidence is not a success.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Inspectable synthetic trace</h2>
+      <p>Steps are logical observation order, not a live clock. Warm-up probes are isolated test traffic. New transition attempts, including failed or unknown ones, are never removed during rollback or cleanup.</p>
+      <ol id="trace"></ol>
+    </section>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Boundaries, evidence limits, and IaC</h2>
+      <ul>
+        <li>PASS means only that this tiny invented fixture matched its assertions. It is not a live Azure result, reliability certification, uptime measurement, or five-nines proof.</li>
+        <li>FAIL can describe a safely blocked operator choice or an interrupted exposed journey. User impact is reported separately so a safe abort never looks like a completed migration.</li>
+        <li>UNKNOWN covers missing or stale evidence. A missing destination stamp is not replaced by intended routing; an empty sample never becomes 100% success.</li>
+        <li>Latency 500 ms passes; 501 ms fails. Evidence age 1000 ms passes; 1001 ms is unknown. A missing effect observation is unknown; zero or two effects fail.</li>
+        <li>This model assumes controlled admission and compatible retained v1. Native slot recycling, real authentication, capacity, durable state, data ownership, provider behavior, and rollback feasibility need separate B-S001 evidence.</li>
+        <li><strong>IaC: N/A.</strong> SOURCE read-only synthetic lessons need no Azure resource. C001 runtime/auth/hosting and separate scaffold/deploy approval remain absent.</li>
+        <li>No credentials, cookies, persistence, framework, telemetry, network calls, management operations, or external assets. Reload or reset clears local memory; no cloud cleanup is performed.</li>
+      </ul>
+      <p>Local evidence: <a href="warm-handoff.feature">BDD cases</a>, <a href="engine.test.cjs">Node tests</a>, <a href="evidence.json">execution evidence</a>, and <a href="lesson.json">lesson manifest</a>.</p>
+      <p>Source: <a href="../../README.md#scenario-1-warm-overlapping-blue-green-handoff">foundational warm handoff and S001</a>; <a href="../../.docs/wiki/backlog.md">D-S001 acceptance contract</a>.</p>
+    </section>
+  </main>
+  <footer>
+    <h2>Microsoft disclaimer</h2>
+    <p>Provided AS IS for education, without warranties or guarantees. References to Microsoft and Azure identify products only; they imply no Microsoft endorsement, sponsorship, support, or certification. Microsoft and Azure are trademarks of the Microsoft group of companies. This lesson grants no license or change to applicable terms.</p>
+    <p>Read the <a href="../../README.md#microsoft-open-source-disclaimer">repository's Microsoft Open Source Disclaimer</a> and <a href="https://learn.microsoft.com/azure/app-service/deploy-staging-slots" target="_blank" rel="noopener noreferrer">Microsoft's deployment-slot documentation</a> for real platform behavior. A retained slot does not prevent former-worker recycling in a native swap.</p>
+  </footer>
+</body>
+</html>

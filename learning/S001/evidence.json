@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S001",
+  "kano": "S",
+  "kanoUnit": "A-S001",
+  "parentId": "D-S001",
+  "sourceId": "S001",
+  "packet": "LP-LEARN",
+  "workerId": "worker-A-S001",
+  "executionMode": "synthetic",
+  "completionStatus": "incomplete",
+  "blocker": "VS Code browser page handles repeatedly disappear after forceNew open: runPlaywrightCode/readPage/clickElement return Page not found. Partial safe, unsafe and keyboard DOM observations exist, but no clean completed browser acceptance run could be retained. Restore a stable isolated browser bridge and rerun before readmission; no Kano credit.",
+  "capturedAtUtc": "2026-11-03T09:10:37.6501299Z",
+  "entryPoint": "learning\\S001\\index.html",
+  "runtime": "Node v22.23.4; browser local-file page",
+  "reviewer": null,
+  "controllerAcceptance": "pending; no accepted Done or parent completion claimed",
+  "publicationIdentifiers": "Recorded separately in the worker result, never this artifact",
+  "sourceReferences": [
+    "README.md#scenario-1-warm-overlapping-blue-green-handoff",
+    "README.md#a-deployment-and-traffic-migration-strategies",
+    ".docs\\wiki\\backlog.md:D-S001",
+    ".docs\\wiki\\kanban.md:portable A contract and A-S001"
+  ],
+  "stageOrder": [
+    "BDD feature written first",
+    "TDD tests plus unchanged-state behavior stub",
+    "Genuine behavior red captured",
+    "IaC stage explicitly N/A",
+    "Dependency-free engine and portable UI implemented",
+    "Focused green and syntax checks passed",
+    "Browser evidence attempted; partial observations retained; bridge blocker prevents completed acceptance"
+  ],
+  "bdd": {
+    "path": "learning\\S001\\warm-handoff.feature",
+    "cases": [
+      "Healthy warm-up, observed v2 admission, old v1 work, gated retirement",
+      "Unready destination fails safely before exposure and requires reset",
+      "Known dependency/state/effects/latency regressions block handoff",
+      "Missing readiness stays UNKNOWN",
+      "Missing actual destination stays UNKNOWN with attempted journey retained",
+      "Exposed 501 ms journey stays interrupted after rollback",
+      "Drain and retention are separate retirement gates",
+      "Inclusive latency/freshness/capacity boundaries; empty evidence and invalid actions"
+    ],
+    "execution": "Mapped to Node built-in behavior tests; no Gherkin runner or package installed"
+  },
+  "tdd": {
+    "red": {
+      "command": "node --test --test-reporter=tap learning\\S001\\engine.test.cjs",
+      "exitCode": 1,
+      "total": 20,
+      "passed": 3,
+      "failed": 17,
+      "rawOutputPath": "learning\\S001\\evidence.json",
+      "actualFailure": "warm-up must implement the readiness transition: 'WARMING' !== 'READY'",
+      "missingBehavior": "Stub exported valid APIs but act returned unchanged state and evaluators returned UNKNOWN. Failures were assertions, not tooling/import failures.",
+      "excerpt": "TAP version 13\n# Subtest: initial state distinguishes existing v1 work from unready new admissions\nok 1 - initial state distinguishes existing v1 work from unready new admissions\n  ---\n  duration_ms: 1.8956\n  type: 'test'\n  ...\n# Subtest: warm-up proves readiness but is not itself a migrated user\nnot ok 2 - warm-up proves readiness but is not itself a migrated user\n  ---\n  duration_ms: 1.7927\n  type: 'test'\n  location: 'learning\\\\S001\\\\engine.test.cjs:30:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    warm-up must implement the readiness transition\n    \n    'WARMING' !== 'READY'\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 'READY'\n  actual: 'WARMING'\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:32:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)",
+      "output": "TAP version 13\r\n# Subtest: initial state distinguishes existing v1 work from unready new admissions\r\nok 1 - initial state distinguishes existing v1 work from unready new admissions\r\n  ---\r\n  duration_ms: 1.8956\r\n  type: 'test'\r\n  ...\r\n# Subtest: warm-up proves readiness but is not itself a migrated user\r\nnot ok 2 - warm-up proves readiness but is not itself a migrated user\r\n  ---\r\n  duration_ms: 1.7927\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:30:1'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    warm-up must implement the readiness transition\r\n    \r\n    'WARMING' !== 'READY'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'READY'\r\n  actual: 'WARMING'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:32:10)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\r\n  ...\r\n# Subtest: handoff observes v2 state, effects, and latency while old work stays on v1\r\nnot ok 3 - handoff observes v2 state, effects, and latency while old work stays on v1\r\n  ---\r\n  duration_ms: 0.4827\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:42:1'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    eligible handoff must be evaluated\r\n    \r\n    'NOT_RUN' !== 'PASS'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'PASS'\r\n  actual: 'NOT_RUN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:44:10)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: choosing unready v2 fails the exercise but safely aborts before exposure\r\nnot ok 4 - choosing unready v2 fails the exercise but safely aborts before exposure\r\n  ---\r\n  duration_ms: 0.2814\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:62:1'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    unready destination must fail, not silently succeed\r\n    \r\n    'NOT_RUN' !== 'FAIL'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'FAIL'\r\n  actual: 'NOT_RUN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:64:10)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: dependency-failure is a known gate failure and never exposes v2\r\nnot ok 5 - dependency-failure is a known gate failure and never exposes v2\r\n  ---\r\n  duration_ms: 0.2645\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:75:3'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    Expected values to be strictly equal:\r\n    \r\n    'NOT_RUN' !== 'FAIL'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'FAIL'\r\n  actual: 'NOT_RUN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:77:12)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: incompatible-state is a known gate failure and never exposes v2\r\nnot ok 6 - incompatible-state is a known gate failure and never exposes v2\r\n  ---\r\n  duration_ms: 0.3012\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:75:3'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    Expected values to be strictly equal:\r\n    \r\n    'NOT_RUN' !== 'FAIL'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'FAIL'\r\n  actual: 'NOT_RUN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:77:12)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: duplicate-effects is a known gate failure and never exposes v2\r\nnot ok 7 - duplicate-effects is a known gate failure and never exposes v2\r\n  ---\r\n  duration_ms: 0.2836\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:75:3'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    Expected values to be strictly equal:\r\n    \r\n    'NOT_RUN' !== 'FAIL'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'FAIL'\r\n  actual: 'NOT_RUN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:77:12)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: slow-warmup is a known gate failure and never exposes v2\r\nnot ok 8 - slow-warmup is a known gate failure and never exposes v2\r\n  ---\r\n  duration_ms: 0.176\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:75:3'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    Expected values to be strictly equal:\r\n    \r\n    'NOT_RUN' !== 'FAIL'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'FAIL'\r\n  actual: 'NOT_RUN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:77:12)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: missing readiness evidence stays unknown, with no manufactured migration\r\nnot ok 9 - missing readiness evidence stays unknown, with no manufactured migration\r\n  ---\r\n  duration_ms: 0.5897\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:86:1'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    Expected values to be strictly equal:\r\n    + actual - expected\r\n    \r\n    + 'NOT_RUN'\r\n    - 'UNKNOWN'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'UNKNOWN'\r\n  actual: 'NOT_RUN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:88:10)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: a missing observed version is unknown even when desired routing was v2\r\nnot ok 10 - a missing observed version is unknown even when desired routing was v2\r\n  ---\r\n  duration_ms: 0.7827\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:97:1'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    Expected values to be strictly equal:\r\n    \r\n    'NOT_RUN' !== 'READY'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'READY'\r\n  actual: 'NOT_RUN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:98:10)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: an exposed latency failure remains interrupted after rollback and cleanup actions\r\nnot ok 11 - an exposed latency failure remains interrupted after rollback and cleanup actions\r\n  ---\r\n  duration_ms: 0.5145\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:111:1'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    Expected values to be strictly equal:\r\n    \r\n    'NOT_RUN' !== 'READY'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'READY'\r\n  actual: 'NOT_RUN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:112:10)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: retirement needs both observed drain and the rollback retention window\r\nnot ok 12 - retirement needs both observed drain and the rollback retention window\r\n  ---\r\n  duration_ms: 0.3123\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:127:1'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    unsafe retirement must fail after no gates\r\n    \r\n    'NOT_RUN' !== 'FAIL'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'FAIL'\r\n  actual: 'NOT_RUN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:132:12)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: safe drain and retention permit retirement without duplicating old effects\r\nnot ok 13 - safe drain and retention permit retirement without duplicating old effects\r\n  ---\r\n  duration_ms: 0.4163\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:140:1'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    Expected values to be strictly equal:\r\n    + actual - expected\r\n    \r\n    + 'running'\r\n    - 'complete'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'complete'\r\n  actual: 'running'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:144:10)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: latency and overlap capacity boundaries are inclusive, and missing is not zero\r\nnot ok 14 - latency and overlap capacity boundaries are inclusive, and missing is not zero\r\n  ---\r\n  duration_ms: 0.3599\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:160:1'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    Expected values to be strictly equal:\r\n    \r\n    'UNKNOWN' !== 'PASS'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'PASS'\r\n  actual: 'UNKNOWN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:162:10)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: freshness boundaries and candidate identity cannot be bypassed\r\nnot ok 15 - freshness boundaries and candidate identity cannot be bypassed\r\n  ---\r\n  duration_ms: 0.2163\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:169:1'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    Expected values to be strictly equal:\r\n    \r\n    'UNKNOWN' !== 'PASS'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'PASS'\r\n  actual: 'UNKNOWN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:171:10)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: state, authentication, destination, and exactly-once effects are required observations\r\nnot ok 16 - state, authentication, destination, and exactly-once effects are required observations\r\n  ---\r\n  duration_ms: 0.2469\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:177:1'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    Expected values to be strictly equal:\r\n    \r\n    'UNKNOWN' !== 'PASS'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'PASS'\r\n  actual: 'UNKNOWN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:179:10)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: missing or empty transition evidence and missing readiness never mean success\r\nok 17 - missing or empty transition evidence and missing readiness never mean success\r\n  ---\r\n  duration_ms: 0.1246\r\n  type: 'test'\r\n  ...\r\n# Subtest: unknown conditions and actions do not fall back to healthy success\r\nnot ok 18 - unknown conditions and actions do not fall back to healthy success\r\n  ---\r\n  duration_ms: 0.2744\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:196:1'\r\n  failureType: 'testCodeFailure'\r\n  error: 'Missing expected exception (RangeError).'\r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:197:10)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n# Subtest: replays are deterministic, immutable, and fixture copies are isolated\r\nok 19 - replays are deterministic, immutable, and fixture copies are isolated\r\n  ---\r\n  duration_ms: 0.7851\r\n  type: 'test'\r\n  ...\r\n# Subtest: the same dependency-free engine works as a browser global\r\nnot ok 20 - the same dependency-free engine works as a browser global\r\n  ---\r\n  duration_ms: 1.823\r\n  type: 'test'\r\n  location: 'learning\\\\S001\\\\engine.test.cjs:215:1'\r\n  failureType: 'testCodeFailure'\r\n  error: |-\r\n    Expected values to be strictly equal:\r\n    \r\n    'NOT_RUN' !== 'PASS'\r\n    \r\n  code: 'ERR_ASSERTION'\r\n  name: 'AssertionError'\r\n  expected: 'PASS'\r\n  actual: 'NOT_RUN'\r\n  operator: 'strictEqual'\r\n  stack: |-\r\n    TestContext.<anonymous> (learning\\S001\\engine.test.cjs:221:10)\r\n    Test.runInAsyncScope (node:async_hooks:214:14)\r\n    Test.run (node:internal/test_runner/test:1047:25)\r\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\r\n    Test.postRun (node:internal/test_runner/test:1173:19)\r\n    Test.run (node:internal/test_runner/test:1101:12)\r\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\r\n  ...\r\n1..20\r\n# tests 20\r\n# suites 0\r\n# pass 3\r\n# fail 17\r\n# cancelled 0\r\n# skipped 0\r\n# todo 0\r\n# duration_ms 139.9841\r\n",
+      "rawOutputJsonPointer": "/tdd/red/output"
+    },
+    "green": {
+      "command": "node --test --test-reporter=tap learning\\S001\\engine.test.cjs",
+      "exitCode": 0,
+      "total": 21,
+      "passed": 21,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "rawOutputPath": "learning\\S001\\evidence.json",
+      "note": "The final suite adds one static portable-bundle/CSP/lineage regression test to the original 20 behavior tests.",
+      "output": "TAP version 13\r\n# Subtest: initial state distinguishes existing v1 work from unready new admissions\r\nok 1 - initial state distinguishes existing v1 work from unready new admissions\r\n  ---\r\n  duration_ms: 3.5839\r\n  type: 'test'\r\n  ...\r\n# Subtest: warm-up proves readiness but is not itself a migrated user\r\nok 2 - warm-up proves readiness but is not itself a migrated user\r\n  ---\r\n  duration_ms: 1.5463\r\n  type: 'test'\r\n  ...\r\n# Subtest: handoff observes v2 state, effects, and latency while old work stays on v1\r\nok 3 - handoff observes v2 state, effects, and latency while old work stays on v1\r\n  ---\r\n  duration_ms: 1.7024\r\n  type: 'test'\r\n  ...\r\n# Subtest: choosing unready v2 fails the exercise but safely aborts before exposure\r\nok 4 - choosing unready v2 fails the exercise but safely aborts before exposure\r\n  ---\r\n  duration_ms: 0.5444\r\n  type: 'test'\r\n  ...\r\n# Subtest: dependency-failure is a known gate failure and never exposes v2\r\nok 5 - dependency-failure is a known gate failure and never exposes v2\r\n  ---\r\n  duration_ms: 0.5058\r\n  type: 'test'\r\n  ...\r\n# Subtest: incompatible-state is a known gate failure and never exposes v2\r\nok 6 - incompatible-state is a known gate failure and never exposes v2\r\n  ---\r\n  duration_ms: 0.2915\r\n  type: 'test'\r\n  ...\r\n# Subtest: duplicate-effects is a known gate failure and never exposes v2\r\nok 7 - duplicate-effects is a known gate failure and never exposes v2\r\n  ---\r\n  duration_ms: 0.3285\r\n  type: 'test'\r\n  ...\r\n# Subtest: slow-warmup is a known gate failure and never exposes v2\r\nok 8 - slow-warmup is a known gate failure and never exposes v2\r\n  ---\r\n  duration_ms: 0.8813\r\n  type: 'test'\r\n  ...\r\n# Subtest: missing readiness evidence stays unknown, with no manufactured migration\r\nok 9 - missing readiness evidence stays unknown, with no manufactured migration\r\n  ---\r\n  duration_ms: 0.9405\r\n  type: 'test'\r\n  ...\r\n# Subtest: a missing observed version is unknown even when desired routing was v2\r\nok 10 - a missing observed version is unknown even when desired routing was v2\r\n  ---\r\n  duration_ms: 1.2458\r\n  type: 'test'\r\n  ...\r\n# Subtest: an exposed latency failure remains interrupted after rollback and cleanup actions\r\nok 11 - an exposed latency failure remains interrupted after rollback and cleanup actions\r\n  ---\r\n  duration_ms: 1.9892\r\n  type: 'test'\r\n  ...\r\n# Subtest: retirement needs both observed drain and the rollback retention window\r\nok 12 - retirement needs both observed drain and the rollback retention window\r\n  ---\r\n  duration_ms: 1.1592\r\n  type: 'test'\r\n  ...\r\n# Subtest: safe drain and retention permit retirement without duplicating old effects\r\nok 13 - safe drain and retention permit retirement without duplicating old effects\r\n  ---\r\n  duration_ms: 1.0355\r\n  type: 'test'\r\n  ...\r\n# Subtest: latency and overlap capacity boundaries are inclusive, and missing is not zero\r\nok 14 - latency and overlap capacity boundaries are inclusive, and missing is not zero\r\n  ---\r\n  duration_ms: 0.1878\r\n  type: 'test'\r\n  ...\r\n# Subtest: freshness boundaries and candidate identity cannot be bypassed\r\nok 15 - freshness boundaries and candidate identity cannot be bypassed\r\n  ---\r\n  duration_ms: 0.2017\r\n  type: 'test'\r\n  ...\r\n# Subtest: state, authentication, destination, and exactly-once effects are required observations\r\nok 16 - state, authentication, destination, and exactly-once effects are required observations\r\n  ---\r\n  duration_ms: 0.2653\r\n  type: 'test'\r\n  ...\r\n# Subtest: missing or empty transition evidence and missing readiness never mean success\r\nok 17 - missing or empty transition evidence and missing readiness never mean success\r\n  ---\r\n  duration_ms: 0.1941\r\n  type: 'test'\r\n  ...\r\n# Subtest: unknown conditions and actions do not fall back to healthy success\r\nok 18 - unknown conditions and actions do not fall back to healthy success\r\n  ---\r\n  duration_ms: 0.7684\r\n  type: 'test'\r\n  ...\r\n# Subtest: replays are deterministic, immutable, and fixture copies are isolated\r\nok 19 - replays are deterministic, immutable, and fixture copies are isolated\r\n  ---\r\n  duration_ms: 1.0019\r\n  type: 'test'\r\n  ...\r\n# Subtest: the same dependency-free engine works as a browser global\r\nok 20 - the same dependency-free engine works as a browser global\r\n  ---\r\n  duration_ms: 5.0012\r\n  type: 'test'\r\n  ...\r\n# Subtest: portable bundle declares lineage and restricts execution to local scripts and styles\r\nok 21 - portable bundle declares lineage and restricts execution to local scripts and styles\r\n  ---\r\n  duration_ms: 5.8462\r\n  type: 'test'\r\n  ...\r\n1..21\r\n# tests 21\r\n# suites 0\r\n# pass 21\r\n# fail 0\r\n# cancelled 0\r\n# skipped 0\r\n# todo 0\r\n# duration_ms 288.4448\r\n",
+      "rawOutputJsonPointer": "/tdd/green/output"
+    },
+    "syntaxChecks": [
+      {
+        "command": "node --check learning\\S001\\engine.js",
+        "exitCode": 0
+      },
+      {
+        "command": "node --check learning\\S001\\app.js",
+        "exitCode": 0
+      }
+    ],
+    "coverage": [
+      "Safe readiness and actual version-stamped synthetic admission",
+      "Old/new work, authentication, cart, exactly-once effects and latency",
+      "Safe abort versus interruption versus unknown; no erased failed attempts",
+      "Blocked retirement and idempotent drain",
+      "Boundary validators, no healthy fallback, deterministic immutable replay",
+      "CommonJS/browser-global compatibility and static CSP contract"
+    ]
+  },
+  "iac": {
+    "status": "N/A",
+    "reason": "SOURCE read-only synthetic lessons need no Azure resource. C001 runtime/auth/hosting and separate scaffold/deploy approval remain absent.",
+    "resourcesCreated": 0,
+    "credentialsUsed": false,
+    "networkOrManagementCalls": false
+  },
+  "browser": {
+    "status": "incomplete-bridge-blocker",
+    "toolDiscovery": "Searched deferred tools for VS Code openBrowserPage/readPage/runPlaywrightCode, then specific pageId clickElement/typeInPage tools",
+    "entryPoint": "learning\\S001\\index.html",
+    "canonicalFileUriUsed": true,
+    "forceNew": true,
+    "globalNavigationUsed": false,
+    "completePassingAcceptanceRun": false,
+    "attempts": [
+      {
+        "pageId": "13ee198a-7713-4f17-8469-5d5979bbd711",
+        "open": "Title and exact training banner observed",
+        "result": "runPlaywrightCode and readPage: Page not found"
+      },
+      {
+        "pageId": "fe3c1b98-6b46-4c1a-ac68-e70928a5ea01",
+        "open": "Title correct; initial DOM verdict NOT RUN, condition healthy",
+        "observedAssertions": [
+          "Enter on warm-up yielded READY, admissions v1, no transition attempted",
+          "Tab focused handoff; Enter yielded PASS, v1 DRAINING, v2 ACTIVE, admissions v2",
+          "Old journey still v1/running/effectCount 0",
+          "New journey observed v2/authenticated/cart 3/effectCount 1/latency 180"
+        ],
+        "scriptResult": "Stopped at an overly exact outline-width assertion requiring 3px; retirement/row-count assertions after that point did not execute",
+        "followUpDom": {
+          "verdict": "PASS",
+          "focusId": "handoff",
+          "focusVisible": true,
+          "outlineStyle": "solid",
+          "computedOutlineWidth": "2.66667px",
+          "stylesheets": 1,
+          "performanceResourceEntries": 0
+        },
+        "recovery": "A check accepting a visible solid outline >=2px was prepared, but the page handle disappeared before it could run; no final passing browser suite claimed"
+      },
+      {
+        "pageId": "c44621a7-7599-41d3-90b5-e1629574020d",
+        "open": "Title and training banner observed",
+        "result": "runPlaywrightCode and clickElement: Page not found"
+      },
+      {
+        "pageId": "66003c35-24e5-4671-bea5-657adc741645",
+        "open": "Title and training banner observed",
+        "action": "clickElement on #handoff before warm-up",
+        "observedDom": {
+          "verdict": "FAIL",
+          "userImpact": "SAFE-ABORT",
+          "impactText": "Safe abort before exposure: 0 transition attempts, 0 interrupted users in this fixture. v1 still admits users; no completed migration is claimed.",
+          "candidate": "ABORTED",
+          "traceAdmissionTarget": "v1",
+          "traceEvent": "action-rejected",
+          "cleanup": "retained"
+        },
+        "result": "Subsequent page-scoped acceptance snippet: Page not found"
+      },
+      {
+        "pageId": "1f6f4460-32c3-4dd9-ae83-dc26f6b77671",
+        "open": "Timed out waiting for browser page to become available; tool said page can be reused",
+        "result": "Reusing that exact pageId with runPlaywrightCode: Page not found"
+      }
+    ],
+    "observedRequiredCases": [
+      "Safe handoff DOM assertions before focus-width assertion",
+      "Unsafe unready handoff DOM snapshot",
+      "Keyboard Enter/Tab/Enter and follow-up focus-visible DOM observation"
+    ],
+    "notClaimed": [
+      "A clean completed passing browser acceptance script",
+      "Browser-observed drain/retirement",
+      "Browser-observed unknown or regression fixtures",
+      "Performance resource list as proof of network isolation: it was empty"
+    ],
+    "recoveryBoundary": "Five own forceNew page attempts and page-scoped Playwright/read/click alternatives; no shared/global tab navigation and no fabricated evidence"
+  },
+  "limitations": [
+    "Synthetic teaching model only: not B-S001 native proof and not completed D-S001",
+    "Actual cloud routing, capacity, authentication, data ownership, side effects, timing, provider and recycling behavior are not tested",
+    "Controlled routing and compatible retained v1 are assumed",
+    "No five-nines claim, reliability certification, Microsoft endorsement, or native success",
+    "Browser bridge blocker must be resolved and remaining browser acceptance rerun before controller acceptance"
+  ],
+  "cleanup": {
+    "externalResourcesCreated": 0,
+    "externalResourcesDeleted": 0,
+    "serversStarted": 0,
+    "packagesInstalled": 0,
+    "credentialsUsed": false,
+    "sharedFilesEdited": false,
+    "lessonReset": "Resets only this page memory; synthetic v1 retention is not a live resource",
+    "browserPages": "Only unique owned pageIds used. Lost handles prevented closing those views; no shared tab was closed.",
+    "intermediates": "Exact normalized red/green outputs retained inside evidence.json as escaped JSON strings. Separate text captures removed because genuine TAP indentation on blank lines fails git diff --check; no evidence bytes were trimmed."
+  },
+  "normalization": "All artifact paths and test stacks are repo-relative. Canonical browser URL was used for opening but the local user path is omitted from this evidence. No secrets included.",
+  "publicationAttempts": [
+    {
+      "status": "rejected-before-commit",
+      "command": "publish.ps1 scoped to learning\\S001",
+      "reason": "git diff --cached --check rejected trailing spaces on blank lines in the genuine TAP red text capture",
+      "resolution": "Preserve exact normalized output as escaped JSON strings in evidence.json; remove separate text captures. No commit/push occurred in this attempt."
+    }
+  ]
+}
