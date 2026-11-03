@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S019",
+  "workerId": "worker-A-S019",
+  "kano": "S",
+  "kanoUnit": "A-S019",
+  "packet": "SC-S019",
+  "source": "S019",
+  "parent": "D-S019",
+  "originalPrerequisites": ["D-S005", "D-S064"],
+  "title": "Cell-based expansion",
+  "objective": "Add an isolated application cell and migrate a selected tenant through controlled state and routing handoff, rejecting routes before synchronized exclusive ownership.",
+  "entryGate": "SOURCE",
+  "authorization": "local-synthetic-only",
+  "mode": "synthetic-only",
+  "entryPoint": "learning\\S019\\index.html",
+  "feature": "learning\\S019\\cell-expansion.feature",
+  "tests": [
+    "learning\\S019\\model.test.cjs",
+    "learning\\S019\\browser.test.cjs",
+    "learning\\S019\\integrity.test.cjs"
+  ],
+  "testCommand": "node learning\\S019\\verify.cjs all",
+  "browserCommand": "node learning\\S019\\verify.cjs browser",
+  "captureCommand": "$env:CAPTURE_BROWSER_EVIDENCE='1'; node learning\\S019\\verify.cjs all",
+  "evidence": "learning\\S019\\evidence.json",
+  "infrastructure": "N/A: resource-free offline lesson; no IaC or resource operations.",
+  "fixtureVersion": "S019-cell-handoff-v1",
+  "preconditions": ["A owns alpha and beta at epoch 1", "Two ready A workers provide 100 synthetic rps", "B is absent", "No migrated sample exists"],
+  "actions": ["Choose tenant", "Create isolated B", "Synchronize selected writes", "Commit a late source write", "Transfer exclusive ownership with fencing", "Route selected tenant", "Exercise stale writer", "Run both journeys", "Change B observation", "Archive/reset"],
+  "syntheticInputTrace": {
+    "initialAcknowledgedWrites": {"alpha": [1, 2], "beta": [1]},
+    "safe": ["create", "sync", "sourceWrite", "sync", "transfer", "route", "fence", "journey"],
+    "unsafeGap": ["create", "sync", "transfer", "journey"],
+    "targetConditions": ["healthy", "unready", "wrong-state", "unknown"]
+  },
+  "expectedAssertions": [
+    "Created B has isolated storage and two distinct synthetic workers; allocation alone proves no migration",
+    "A source write invalidates an older copy and blocks transfer and routing",
+    "Only synchronized healthy B can exclusively own the selected tenant at epoch 2",
+    "Old epoch-1 writes are rejected without missing or duplicated acknowledged writes",
+    "The unaffected tenant remains usable and owned by A",
+    "HTTP 200 with wrong business state is failure; missing observations are unknown",
+    "Failures and unknowns remain cumulative after recovery and in bounded archived history"
+  ],
+  "limits": ["2 cells", "2 tenants", "48 actions/run", "8 two-tenant journey batches/run", "14 acknowledged writes/tenant", "4 page-memory archived runs with counted eviction", "Run IDs 1–9999", "No reload persistence", "No native, production runtime, parent or reliability proof"],
+  "dependencies": [],
+  "testTooling": {
+    "node": "22.23.4",
+    "playwright": "1.56.1, already installed offline testing\\browser tooling",
+    "browser": "installed Microsoft-signed Edge 156",
+    "helper": "testing\\browser\\isolated.cjs / openIsolatedLesson",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "helperPublishedCommit": "53c0c0d"
+  },
+  "productionNode24Validated": false,
+  "nativeProof": false,
+  "parentComplete": false,
+  "acceptance": "Parent-owned empirical acceptance pending; worker cannot award Done credit."
+}

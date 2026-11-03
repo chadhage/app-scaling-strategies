@@ -1,0 +1,2171 @@
+{
+  "cardId": "A-S019",
+  "workerId": "worker-A-S019",
+  "kano": "S",
+  "kanoUnit": "A-S019",
+  "packet": "SC-S019",
+  "mode": "actual-real-headless-browser-testing-of-synthetic-lesson",
+  "startedAtUtc": "2026-11-03T16:44:15.788Z",
+  "node": "v22.23.4",
+  "playwright": "1.56.1",
+  "signedBrowser": {
+    "sha256": "f87d927bed3597f19c70af67bc786dd22e4eca3b5c7cc050336a016bb42f7fda",
+    "status": "Valid",
+    "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "path": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "productVersion": "156.0.4314.50"
+  },
+  "helper": "testing\\browser\\isolated.cjs",
+  "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "helperPublishedCommit": "53c0c0d",
+  "sourceHashes": {
+    "index.html": "4842d641cef49393a93fcc78a394e67d7c4ee91273011c8f15e8ee6e25b5248c",
+    "lesson.css": "8f2c3ecdf79b13e708a515c46db9b3564baeedd4d07b56c5a5ebdd328dc4ddac",
+    "model.js": "d60091d78bb9862bf09939a902ef6c47e61d65b198156ed6b526da9ca3a16a98",
+    "app.js": "b40436e8d18801a592601b5e6995f91c4f8d0e44884c075cb3b95848ff280b06",
+    "manifest.json": "ca393068e669f9dbfec255e7aaf01ce95b905a55448a39287b4f02e1b869a042",
+    "browser.test.cjs": "efe727a0a96a0bd4871f06e25c8eb49614193c1472812bac1287e2e60b1390f3"
+  },
+  "cases": [
+    {
+      "name": "exact banner, real labels, callable native form reset and zero-sample unknown",
+      "status": "passed",
+      "observed": {
+        "cardId": "A-S019",
+        "mode": "synthetic-only",
+        "state": {
+          "version": 1,
+          "run": 1,
+          "tenant": "alpha",
+          "targetCreated": false,
+          "observation": "healthy",
+          "owners": {
+            "alpha": {
+              "cell": "A",
+              "epoch": 1
+            },
+            "beta": {
+              "cell": "A",
+              "epoch": 1
+            }
+          },
+          "routes": {
+            "alpha": "A",
+            "beta": "A"
+          },
+          "expected": {
+            "alpha": [
+              1,
+              2
+            ],
+            "beta": [
+              1
+            ]
+          },
+          "cells": {
+            "A": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": [
+                1
+              ]
+            },
+            "B": {
+              "alpha": [],
+              "beta": []
+            }
+          },
+          "trace": [],
+          "journeys": []
+        },
+        "summary": {
+          "verdict": "unknown",
+          "reason": "Not demonstrated: complete synchronization, exclusive handoff, routing, old-writer check and both journeys.",
+          "successful": 0,
+          "failed": 0,
+          "unknown": 0,
+          "attempts": 0,
+          "blocked": 0,
+          "fenceChecks": 0,
+          "completedBatches": 0,
+          "synchronized": false,
+          "phase": "source-only",
+          "capacity": {
+            "allocatedRps": 100,
+            "readyRps": 100,
+            "workers": [
+              "A-1",
+              "A-2"
+            ]
+          }
+        },
+        "archivedRuns": 0,
+        "evictedRuns": 0,
+        "nativeProof": false,
+        "productionNode24Validated": false,
+        "parentComplete": false
+      },
+      "dom": {
+        "verdict": "unknown",
+        "phase": "source-only",
+        "counters": "0 attempts: 0 success / 0 failure / 0 unknown. 0 blocked controls; 0 old-writer rejections; 0 healthy migrated batches. Actions 0/48; journey batches 0/8.",
+        "capacity": "Allocated synthetic capacity 100 rps; ready capacity 100 rps. Distinct workers: A-1, A-2. B observation: healthy.",
+        "alertVisible": false,
+        "traceRows": 0,
+        "journeyRows": 0,
+        "archivedRuns": 0
+      }
+    },
+    {
+      "name": "keyboard controls block stale routing and move only beta without missing writes",
+      "status": "passed",
+      "keyboardOnlyActionSequence": true,
+      "observed": {
+        "cardId": "A-S019",
+        "mode": "synthetic-only",
+        "state": {
+          "version": 1,
+          "run": 1,
+          "tenant": "beta",
+          "targetCreated": true,
+          "observation": "healthy",
+          "owners": {
+            "alpha": {
+              "cell": "A",
+              "epoch": 1
+            },
+            "beta": {
+              "cell": "B",
+              "epoch": 2
+            }
+          },
+          "routes": {
+            "alpha": "A",
+            "beta": "B"
+          },
+          "expected": {
+            "alpha": [
+              1,
+              2,
+              3
+            ],
+            "beta": [
+              1,
+              2,
+              3
+            ]
+          },
+          "cells": {
+            "A": {
+              "alpha": [
+                1,
+                2,
+                3
+              ],
+              "beta": [
+                1,
+                2
+              ]
+            },
+            "B": {
+              "alpha": [],
+              "beta": [
+                1,
+                2,
+                3
+              ]
+            }
+          },
+          "trace": [
+            {
+              "step": 1,
+              "action": "route",
+              "status": "blocked",
+              "detail": "Route blocked: synchronized healthy capacity and exclusive B epoch-2 ownership are required."
+            },
+            {
+              "step": 2,
+              "action": "create",
+              "status": "applied",
+              "detail": "Created isolated cell B: workers B-1/B-2, empty data store, 100 synthetic rps."
+            },
+            {
+              "step": 3,
+              "action": "sync",
+              "status": "applied",
+              "detail": "Synchronized beta through acknowledged write 1; routing is unchanged."
+            },
+            {
+              "step": 4,
+              "action": "sourceWrite",
+              "status": "applied",
+              "detail": "A acknowledged beta write 2; any older B snapshot is now stale."
+            },
+            {
+              "step": 5,
+              "action": "transfer",
+              "status": "blocked",
+              "detail": "Ownership blocked: synchronize every acknowledged write into healthy cell B first."
+            },
+            {
+              "step": 6,
+              "action": "route",
+              "status": "blocked",
+              "detail": "Route blocked: synchronized healthy capacity and exclusive B epoch-2 ownership are required."
+            },
+            {
+              "step": 7,
+              "action": "sync",
+              "status": "applied",
+              "detail": "Synchronized beta through acknowledged write 2; routing is unchanged."
+            },
+            {
+              "step": 8,
+              "action": "transfer",
+              "status": "applied",
+              "detail": "Atomically fenced A epoch 1 and assigned exclusive beta ownership to B epoch 2; route still names A."
+            },
+            {
+              "step": 9,
+              "action": "route",
+              "status": "applied",
+              "detail": "Routed only beta to its exclusive owner B; alpha remains in A."
+            },
+            {
+              "step": 10,
+              "action": "fence",
+              "status": "applied",
+              "detail": "Old source writer epoch 1 rejected (HTTP 409); no acknowledged write was added."
+            },
+            {
+              "step": 11,
+              "action": "journey",
+              "status": "applied",
+              "detail": "Batch 1: read/append journeys for beta and unaffected alpha; all observations retained."
+            }
+          ],
+          "journeys": [
+            {
+              "batch": 1,
+              "tenant": "beta",
+              "route": "B",
+              "owner": "B",
+              "epoch": 2,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 3,
+              "observedRevision": 3,
+              "acknowledgedWrite": 3
+            },
+            {
+              "batch": 1,
+              "tenant": "alpha",
+              "route": "A",
+              "owner": "A",
+              "epoch": 1,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 3,
+              "observedRevision": 3,
+              "acknowledgedWrite": 3
+            }
+          ]
+        },
+        "summary": {
+          "verdict": "success",
+          "reason": "Selected tenant moved with every write, an old-writer rejection, and usable unaffected service.",
+          "successful": 2,
+          "failed": 0,
+          "unknown": 0,
+          "attempts": 2,
+          "blocked": 3,
+          "fenceChecks": 1,
+          "completedBatches": 1,
+          "synchronized": true,
+          "phase": "routed",
+          "capacity": {
+            "allocatedRps": 200,
+            "readyRps": 200,
+            "workers": [
+              "A-1",
+              "A-2",
+              "B-1",
+              "B-2"
+            ]
+          }
+        },
+        "archivedRuns": 0,
+        "evictedRuns": 0,
+        "nativeProof": false,
+        "productionNode24Validated": false,
+        "parentComplete": false
+      },
+      "dom": {
+        "verdict": "success",
+        "phase": "routed",
+        "counters": "2 attempts: 2 success / 0 failure / 0 unknown. 3 blocked controls; 1 old-writer rejections; 1 healthy migrated batches. Actions 11/48; journey batches 1/8.",
+        "capacity": "Allocated synthetic capacity 200 rps; ready capacity 200 rps. Distinct workers: A-1, A-2, B-1, B-2. B observation: healthy.",
+        "alertVisible": false,
+        "traceRows": 11,
+        "journeyRows": 2,
+        "archivedRuns": 0
+      }
+    },
+    {
+      "name": "HTTP 200 with wrong business state is failure and recovery cannot erase it",
+      "status": "passed",
+      "failureBeforeRecovery": {
+        "cardId": "A-S019",
+        "mode": "synthetic-only",
+        "state": {
+          "version": 1,
+          "run": 1,
+          "tenant": "alpha",
+          "targetCreated": true,
+          "observation": "wrong-state",
+          "owners": {
+            "alpha": {
+              "cell": "B",
+              "epoch": 2
+            },
+            "beta": {
+              "cell": "A",
+              "epoch": 1
+            }
+          },
+          "routes": {
+            "alpha": "B",
+            "beta": "A"
+          },
+          "expected": {
+            "alpha": [
+              1,
+              2
+            ],
+            "beta": [
+              1,
+              2
+            ]
+          },
+          "cells": {
+            "A": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": [
+                1,
+                2
+              ]
+            },
+            "B": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": []
+            }
+          },
+          "trace": [
+            {
+              "step": 1,
+              "action": "create",
+              "status": "applied",
+              "detail": "Created isolated cell B: workers B-1/B-2, empty data store, 100 synthetic rps."
+            },
+            {
+              "step": 2,
+              "action": "sync",
+              "status": "applied",
+              "detail": "Synchronized alpha through acknowledged write 2; routing is unchanged."
+            },
+            {
+              "step": 3,
+              "action": "transfer",
+              "status": "applied",
+              "detail": "Atomically fenced A epoch 1 and assigned exclusive alpha ownership to B epoch 2; route still names A."
+            },
+            {
+              "step": 4,
+              "action": "route",
+              "status": "applied",
+              "detail": "Routed only alpha to its exclusive owner B; beta remains in A."
+            },
+            {
+              "step": 5,
+              "action": "fence",
+              "status": "applied",
+              "detail": "Old source writer epoch 1 rejected (HTTP 409); no acknowledged write was added."
+            },
+            {
+              "step": 6,
+              "action": "observe",
+              "status": "applied",
+              "detail": "Cell B observation changed to wrong-state; earlier journey evidence is retained."
+            },
+            {
+              "step": 7,
+              "action": "journey",
+              "status": "applied",
+              "detail": "Batch 1: read/append journeys for alpha and unaffected beta; all observations retained."
+            }
+          ],
+          "journeys": [
+            {
+              "batch": 1,
+              "tenant": "alpha",
+              "route": "B",
+              "owner": "B",
+              "epoch": 2,
+              "classification": "failure",
+              "httpStatus": 200,
+              "expectedRevision": 2,
+              "observedRevision": 1,
+              "acknowledgedWrite": null
+            },
+            {
+              "batch": 1,
+              "tenant": "beta",
+              "route": "A",
+              "owner": "A",
+              "epoch": 1,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 2,
+              "observedRevision": 2,
+              "acknowledgedWrite": 2
+            }
+          ]
+        },
+        "summary": {
+          "verdict": "failure",
+          "reason": "A measured user failure remains cumulative, even after recovery.",
+          "successful": 1,
+          "failed": 1,
+          "unknown": 0,
+          "attempts": 2,
+          "blocked": 0,
+          "fenceChecks": 1,
+          "completedBatches": 0,
+          "synchronized": true,
+          "phase": "routed",
+          "capacity": {
+            "allocatedRps": 200,
+            "readyRps": 100,
+            "workers": [
+              "A-1",
+              "A-2",
+              "B-1",
+              "B-2"
+            ]
+          }
+        },
+        "archivedRuns": 0,
+        "evictedRuns": 0,
+        "nativeProof": false,
+        "productionNode24Validated": false,
+        "parentComplete": false
+      },
+      "observed": {
+        "cardId": "A-S019",
+        "mode": "synthetic-only",
+        "state": {
+          "version": 1,
+          "run": 1,
+          "tenant": "alpha",
+          "targetCreated": true,
+          "observation": "healthy",
+          "owners": {
+            "alpha": {
+              "cell": "B",
+              "epoch": 2
+            },
+            "beta": {
+              "cell": "A",
+              "epoch": 1
+            }
+          },
+          "routes": {
+            "alpha": "B",
+            "beta": "A"
+          },
+          "expected": {
+            "alpha": [
+              1,
+              2,
+              3
+            ],
+            "beta": [
+              1,
+              2,
+              3
+            ]
+          },
+          "cells": {
+            "A": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": [
+                1,
+                2,
+                3
+              ]
+            },
+            "B": {
+              "alpha": [
+                1,
+                2,
+                3
+              ],
+              "beta": []
+            }
+          },
+          "trace": [
+            {
+              "step": 1,
+              "action": "create",
+              "status": "applied",
+              "detail": "Created isolated cell B: workers B-1/B-2, empty data store, 100 synthetic rps."
+            },
+            {
+              "step": 2,
+              "action": "sync",
+              "status": "applied",
+              "detail": "Synchronized alpha through acknowledged write 2; routing is unchanged."
+            },
+            {
+              "step": 3,
+              "action": "transfer",
+              "status": "applied",
+              "detail": "Atomically fenced A epoch 1 and assigned exclusive alpha ownership to B epoch 2; route still names A."
+            },
+            {
+              "step": 4,
+              "action": "route",
+              "status": "applied",
+              "detail": "Routed only alpha to its exclusive owner B; beta remains in A."
+            },
+            {
+              "step": 5,
+              "action": "fence",
+              "status": "applied",
+              "detail": "Old source writer epoch 1 rejected (HTTP 409); no acknowledged write was added."
+            },
+            {
+              "step": 6,
+              "action": "observe",
+              "status": "applied",
+              "detail": "Cell B observation changed to wrong-state; earlier journey evidence is retained."
+            },
+            {
+              "step": 7,
+              "action": "journey",
+              "status": "applied",
+              "detail": "Batch 1: read/append journeys for alpha and unaffected beta; all observations retained."
+            },
+            {
+              "step": 8,
+              "action": "observe",
+              "status": "applied",
+              "detail": "Cell B observation changed to healthy; earlier journey evidence is retained."
+            },
+            {
+              "step": 9,
+              "action": "journey",
+              "status": "applied",
+              "detail": "Batch 2: read/append journeys for alpha and unaffected beta; all observations retained."
+            }
+          ],
+          "journeys": [
+            {
+              "batch": 1,
+              "tenant": "alpha",
+              "route": "B",
+              "owner": "B",
+              "epoch": 2,
+              "classification": "failure",
+              "httpStatus": 200,
+              "expectedRevision": 2,
+              "observedRevision": 1,
+              "acknowledgedWrite": null
+            },
+            {
+              "batch": 1,
+              "tenant": "beta",
+              "route": "A",
+              "owner": "A",
+              "epoch": 1,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 2,
+              "observedRevision": 2,
+              "acknowledgedWrite": 2
+            },
+            {
+              "batch": 2,
+              "tenant": "alpha",
+              "route": "B",
+              "owner": "B",
+              "epoch": 2,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 3,
+              "observedRevision": 3,
+              "acknowledgedWrite": 3
+            },
+            {
+              "batch": 2,
+              "tenant": "beta",
+              "route": "A",
+              "owner": "A",
+              "epoch": 1,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 3,
+              "observedRevision": 3,
+              "acknowledgedWrite": 3
+            }
+          ]
+        },
+        "summary": {
+          "verdict": "failure",
+          "reason": "A measured user failure remains cumulative, even after recovery.",
+          "successful": 3,
+          "failed": 1,
+          "unknown": 0,
+          "attempts": 4,
+          "blocked": 0,
+          "fenceChecks": 1,
+          "completedBatches": 1,
+          "synchronized": true,
+          "phase": "routed",
+          "capacity": {
+            "allocatedRps": 200,
+            "readyRps": 200,
+            "workers": [
+              "A-1",
+              "A-2",
+              "B-1",
+              "B-2"
+            ]
+          }
+        },
+        "archivedRuns": 0,
+        "evictedRuns": 0,
+        "nativeProof": false,
+        "productionNode24Validated": false,
+        "parentComplete": false
+      },
+      "dom": {
+        "verdict": "failure",
+        "phase": "routed",
+        "counters": "4 attempts: 3 success / 1 failure / 0 unknown. 0 blocked controls; 1 old-writer rejections; 1 healthy migrated batches. Actions 9/48; journey batches 2/8.",
+        "capacity": "Allocated synthetic capacity 200 rps; ready capacity 200 rps. Distinct workers: A-1, A-2, B-1, B-2. B observation: healthy.",
+        "alertVisible": false,
+        "traceRows": 9,
+        "journeyRows": 4,
+        "archivedRuns": 0
+      }
+    },
+    {
+      "name": "missing observation is unknown, with retained uncertainty after recovery",
+      "status": "passed",
+      "unknownBeforeRecovery": {
+        "cardId": "A-S019",
+        "mode": "synthetic-only",
+        "state": {
+          "version": 1,
+          "run": 1,
+          "tenant": "alpha",
+          "targetCreated": true,
+          "observation": "unknown",
+          "owners": {
+            "alpha": {
+              "cell": "B",
+              "epoch": 2
+            },
+            "beta": {
+              "cell": "A",
+              "epoch": 1
+            }
+          },
+          "routes": {
+            "alpha": "B",
+            "beta": "A"
+          },
+          "expected": {
+            "alpha": [
+              1,
+              2
+            ],
+            "beta": [
+              1,
+              2
+            ]
+          },
+          "cells": {
+            "A": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": [
+                1,
+                2
+              ]
+            },
+            "B": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": []
+            }
+          },
+          "trace": [
+            {
+              "step": 1,
+              "action": "create",
+              "status": "applied",
+              "detail": "Created isolated cell B: workers B-1/B-2, empty data store, 100 synthetic rps."
+            },
+            {
+              "step": 2,
+              "action": "sync",
+              "status": "applied",
+              "detail": "Synchronized alpha through acknowledged write 2; routing is unchanged."
+            },
+            {
+              "step": 3,
+              "action": "transfer",
+              "status": "applied",
+              "detail": "Atomically fenced A epoch 1 and assigned exclusive alpha ownership to B epoch 2; route still names A."
+            },
+            {
+              "step": 4,
+              "action": "route",
+              "status": "applied",
+              "detail": "Routed only alpha to its exclusive owner B; beta remains in A."
+            },
+            {
+              "step": 5,
+              "action": "fence",
+              "status": "applied",
+              "detail": "Old source writer epoch 1 rejected (HTTP 409); no acknowledged write was added."
+            },
+            {
+              "step": 6,
+              "action": "observe",
+              "status": "applied",
+              "detail": "Cell B observation changed to unknown; earlier journey evidence is retained."
+            },
+            {
+              "step": 7,
+              "action": "journey",
+              "status": "applied",
+              "detail": "Batch 1: read/append journeys for alpha and unaffected beta; all observations retained."
+            }
+          ],
+          "journeys": [
+            {
+              "batch": 1,
+              "tenant": "alpha",
+              "route": "B",
+              "owner": "B",
+              "epoch": 2,
+              "classification": "unknown",
+              "httpStatus": null,
+              "expectedRevision": 2,
+              "observedRevision": null,
+              "acknowledgedWrite": null
+            },
+            {
+              "batch": 1,
+              "tenant": "beta",
+              "route": "A",
+              "owner": "A",
+              "epoch": 1,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 2,
+              "observedRevision": 2,
+              "acknowledgedWrite": 2
+            }
+          ]
+        },
+        "summary": {
+          "verdict": "unknown",
+          "reason": "Missing observations remain unknown, even after recovery.",
+          "successful": 1,
+          "failed": 0,
+          "unknown": 1,
+          "attempts": 2,
+          "blocked": 0,
+          "fenceChecks": 1,
+          "completedBatches": 0,
+          "synchronized": true,
+          "phase": "routed",
+          "capacity": {
+            "allocatedRps": 200,
+            "readyRps": null,
+            "workers": [
+              "A-1",
+              "A-2",
+              "B-1",
+              "B-2"
+            ]
+          }
+        },
+        "archivedRuns": 0,
+        "evictedRuns": 0,
+        "nativeProof": false,
+        "productionNode24Validated": false,
+        "parentComplete": false
+      },
+      "observed": {
+        "cardId": "A-S019",
+        "mode": "synthetic-only",
+        "state": {
+          "version": 1,
+          "run": 1,
+          "tenant": "alpha",
+          "targetCreated": true,
+          "observation": "healthy",
+          "owners": {
+            "alpha": {
+              "cell": "B",
+              "epoch": 2
+            },
+            "beta": {
+              "cell": "A",
+              "epoch": 1
+            }
+          },
+          "routes": {
+            "alpha": "B",
+            "beta": "A"
+          },
+          "expected": {
+            "alpha": [
+              1,
+              2,
+              3
+            ],
+            "beta": [
+              1,
+              2,
+              3
+            ]
+          },
+          "cells": {
+            "A": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": [
+                1,
+                2,
+                3
+              ]
+            },
+            "B": {
+              "alpha": [
+                1,
+                2,
+                3
+              ],
+              "beta": []
+            }
+          },
+          "trace": [
+            {
+              "step": 1,
+              "action": "create",
+              "status": "applied",
+              "detail": "Created isolated cell B: workers B-1/B-2, empty data store, 100 synthetic rps."
+            },
+            {
+              "step": 2,
+              "action": "sync",
+              "status": "applied",
+              "detail": "Synchronized alpha through acknowledged write 2; routing is unchanged."
+            },
+            {
+              "step": 3,
+              "action": "transfer",
+              "status": "applied",
+              "detail": "Atomically fenced A epoch 1 and assigned exclusive alpha ownership to B epoch 2; route still names A."
+            },
+            {
+              "step": 4,
+              "action": "route",
+              "status": "applied",
+              "detail": "Routed only alpha to its exclusive owner B; beta remains in A."
+            },
+            {
+              "step": 5,
+              "action": "fence",
+              "status": "applied",
+              "detail": "Old source writer epoch 1 rejected (HTTP 409); no acknowledged write was added."
+            },
+            {
+              "step": 6,
+              "action": "observe",
+              "status": "applied",
+              "detail": "Cell B observation changed to unknown; earlier journey evidence is retained."
+            },
+            {
+              "step": 7,
+              "action": "journey",
+              "status": "applied",
+              "detail": "Batch 1: read/append journeys for alpha and unaffected beta; all observations retained."
+            },
+            {
+              "step": 8,
+              "action": "observe",
+              "status": "applied",
+              "detail": "Cell B observation changed to healthy; earlier journey evidence is retained."
+            },
+            {
+              "step": 9,
+              "action": "journey",
+              "status": "applied",
+              "detail": "Batch 2: read/append journeys for alpha and unaffected beta; all observations retained."
+            }
+          ],
+          "journeys": [
+            {
+              "batch": 1,
+              "tenant": "alpha",
+              "route": "B",
+              "owner": "B",
+              "epoch": 2,
+              "classification": "unknown",
+              "httpStatus": null,
+              "expectedRevision": 2,
+              "observedRevision": null,
+              "acknowledgedWrite": null
+            },
+            {
+              "batch": 1,
+              "tenant": "beta",
+              "route": "A",
+              "owner": "A",
+              "epoch": 1,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 2,
+              "observedRevision": 2,
+              "acknowledgedWrite": 2
+            },
+            {
+              "batch": 2,
+              "tenant": "alpha",
+              "route": "B",
+              "owner": "B",
+              "epoch": 2,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 3,
+              "observedRevision": 3,
+              "acknowledgedWrite": 3
+            },
+            {
+              "batch": 2,
+              "tenant": "beta",
+              "route": "A",
+              "owner": "A",
+              "epoch": 1,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 3,
+              "observedRevision": 3,
+              "acknowledgedWrite": 3
+            }
+          ]
+        },
+        "summary": {
+          "verdict": "unknown",
+          "reason": "Missing observations remain unknown, even after recovery.",
+          "successful": 3,
+          "failed": 0,
+          "unknown": 1,
+          "attempts": 4,
+          "blocked": 0,
+          "fenceChecks": 1,
+          "completedBatches": 1,
+          "synchronized": true,
+          "phase": "routed",
+          "capacity": {
+            "allocatedRps": 200,
+            "readyRps": 200,
+            "workers": [
+              "A-1",
+              "A-2",
+              "B-1",
+              "B-2"
+            ]
+          }
+        },
+        "archivedRuns": 0,
+        "evictedRuns": 0,
+        "nativeProof": false,
+        "productionNode24Validated": false,
+        "parentComplete": false
+      },
+      "dom": {
+        "verdict": "unknown",
+        "phase": "routed",
+        "counters": "4 attempts: 3 success / 0 failure / 1 unknown. 0 blocked controls; 1 old-writer rejections; 1 healthy migrated batches. Actions 9/48; journey batches 2/8.",
+        "capacity": "Allocated synthetic capacity 200 rps; ready capacity 200 rps. Distinct workers: A-1, A-2, B-1, B-2. B observation: healthy.",
+        "alertVisible": false,
+        "traceRows": 9,
+        "journeyRows": 4,
+        "archivedRuns": 0
+      }
+    },
+    {
+      "name": "ownership-to-route gap returns 409 and preserves unaffected tenant service",
+      "status": "passed",
+      "observed": {
+        "cardId": "A-S019",
+        "mode": "synthetic-only",
+        "state": {
+          "version": 1,
+          "run": 1,
+          "tenant": "alpha",
+          "targetCreated": true,
+          "observation": "healthy",
+          "owners": {
+            "alpha": {
+              "cell": "B",
+              "epoch": 2
+            },
+            "beta": {
+              "cell": "A",
+              "epoch": 1
+            }
+          },
+          "routes": {
+            "alpha": "B",
+            "beta": "A"
+          },
+          "expected": {
+            "alpha": [
+              1,
+              2,
+              3
+            ],
+            "beta": [
+              1,
+              2,
+              3
+            ]
+          },
+          "cells": {
+            "A": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": [
+                1,
+                2,
+                3
+              ]
+            },
+            "B": {
+              "alpha": [
+                1,
+                2,
+                3
+              ],
+              "beta": []
+            }
+          },
+          "trace": [
+            {
+              "step": 1,
+              "action": "create",
+              "status": "applied",
+              "detail": "Created isolated cell B: workers B-1/B-2, empty data store, 100 synthetic rps."
+            },
+            {
+              "step": 2,
+              "action": "sync",
+              "status": "applied",
+              "detail": "Synchronized alpha through acknowledged write 2; routing is unchanged."
+            },
+            {
+              "step": 3,
+              "action": "transfer",
+              "status": "applied",
+              "detail": "Atomically fenced A epoch 1 and assigned exclusive alpha ownership to B epoch 2; route still names A."
+            },
+            {
+              "step": 4,
+              "action": "journey",
+              "status": "applied",
+              "detail": "Batch 1: read/append journeys for alpha and unaffected beta; all observations retained."
+            },
+            {
+              "step": 5,
+              "action": "route",
+              "status": "applied",
+              "detail": "Routed only alpha to its exclusive owner B; beta remains in A."
+            },
+            {
+              "step": 6,
+              "action": "fence",
+              "status": "applied",
+              "detail": "Old source writer epoch 1 rejected (HTTP 409); no acknowledged write was added."
+            },
+            {
+              "step": 7,
+              "action": "journey",
+              "status": "applied",
+              "detail": "Batch 2: read/append journeys for alpha and unaffected beta; all observations retained."
+            }
+          ],
+          "journeys": [
+            {
+              "batch": 1,
+              "tenant": "alpha",
+              "route": "A",
+              "owner": "B",
+              "epoch": 1,
+              "classification": "failure",
+              "httpStatus": 409,
+              "expectedRevision": 2,
+              "observedRevision": 2,
+              "acknowledgedWrite": null
+            },
+            {
+              "batch": 1,
+              "tenant": "beta",
+              "route": "A",
+              "owner": "A",
+              "epoch": 1,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 2,
+              "observedRevision": 2,
+              "acknowledgedWrite": 2
+            },
+            {
+              "batch": 2,
+              "tenant": "alpha",
+              "route": "B",
+              "owner": "B",
+              "epoch": 2,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 3,
+              "observedRevision": 3,
+              "acknowledgedWrite": 3
+            },
+            {
+              "batch": 2,
+              "tenant": "beta",
+              "route": "A",
+              "owner": "A",
+              "epoch": 1,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 3,
+              "observedRevision": 3,
+              "acknowledgedWrite": 3
+            }
+          ]
+        },
+        "summary": {
+          "verdict": "failure",
+          "reason": "A measured user failure remains cumulative, even after recovery.",
+          "successful": 3,
+          "failed": 1,
+          "unknown": 0,
+          "attempts": 4,
+          "blocked": 0,
+          "fenceChecks": 1,
+          "completedBatches": 1,
+          "synchronized": true,
+          "phase": "routed",
+          "capacity": {
+            "allocatedRps": 200,
+            "readyRps": 200,
+            "workers": [
+              "A-1",
+              "A-2",
+              "B-1",
+              "B-2"
+            ]
+          }
+        },
+        "archivedRuns": 0,
+        "evictedRuns": 0,
+        "nativeProof": false,
+        "productionNode24Validated": false,
+        "parentComplete": false
+      },
+      "dom": {
+        "verdict": "failure",
+        "phase": "routed",
+        "counters": "4 attempts: 3 success / 1 failure / 0 unknown. 0 blocked controls; 1 old-writer rejections; 1 healthy migrated batches. Actions 7/48; journey batches 2/8.",
+        "capacity": "Allocated synthetic capacity 200 rps; ready capacity 200 rps. Distinct workers: A-1, A-2, B-1, B-2. B observation: healthy.",
+        "alertVisible": false,
+        "traceRows": 7,
+        "journeyRows": 4,
+        "archivedRuns": 0
+      }
+    },
+    {
+      "name": "unready B blocks unsafe moves while A remains usable, then permits a healthy handoff",
+      "status": "passed",
+      "observed": {
+        "cardId": "A-S019",
+        "mode": "synthetic-only",
+        "state": {
+          "version": 1,
+          "run": 1,
+          "tenant": "alpha",
+          "targetCreated": true,
+          "observation": "unready",
+          "owners": {
+            "alpha": {
+              "cell": "B",
+              "epoch": 2
+            },
+            "beta": {
+              "cell": "A",
+              "epoch": 1
+            }
+          },
+          "routes": {
+            "alpha": "B",
+            "beta": "A"
+          },
+          "expected": {
+            "alpha": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "beta": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "cells": {
+            "A": {
+              "alpha": [
+                1,
+                2,
+                3
+              ],
+              "beta": [
+                1,
+                2,
+                3,
+                4
+              ]
+            },
+            "B": {
+              "alpha": [
+                1,
+                2,
+                3,
+                4
+              ],
+              "beta": []
+            }
+          },
+          "trace": [
+            {
+              "step": 1,
+              "action": "create",
+              "status": "applied",
+              "detail": "Created isolated cell B: workers B-1/B-2, empty data store, 100 synthetic rps."
+            },
+            {
+              "step": 2,
+              "action": "observe",
+              "status": "applied",
+              "detail": "Cell B observation changed to unready; earlier journey evidence is retained."
+            },
+            {
+              "step": 3,
+              "action": "sync",
+              "status": "blocked",
+              "detail": "Synchronization requires created, healthy cell B with known observations."
+            },
+            {
+              "step": 4,
+              "action": "transfer",
+              "status": "blocked",
+              "detail": "Ownership blocked: synchronize every acknowledged write into healthy cell B first."
+            },
+            {
+              "step": 5,
+              "action": "route",
+              "status": "blocked",
+              "detail": "Route blocked: synchronized healthy capacity and exclusive B epoch-2 ownership are required."
+            },
+            {
+              "step": 6,
+              "action": "journey",
+              "status": "applied",
+              "detail": "Batch 1: read/append journeys for alpha and unaffected beta; all observations retained."
+            },
+            {
+              "step": 7,
+              "action": "observe",
+              "status": "applied",
+              "detail": "Cell B observation changed to healthy; earlier journey evidence is retained."
+            },
+            {
+              "step": 8,
+              "action": "sync",
+              "status": "applied",
+              "detail": "Synchronized alpha through acknowledged write 3; routing is unchanged."
+            },
+            {
+              "step": 9,
+              "action": "transfer",
+              "status": "applied",
+              "detail": "Atomically fenced A epoch 1 and assigned exclusive alpha ownership to B epoch 2; route still names A."
+            },
+            {
+              "step": 10,
+              "action": "route",
+              "status": "applied",
+              "detail": "Routed only alpha to its exclusive owner B; beta remains in A."
+            },
+            {
+              "step": 11,
+              "action": "fence",
+              "status": "applied",
+              "detail": "Old source writer epoch 1 rejected (HTTP 409); no acknowledged write was added."
+            },
+            {
+              "step": 12,
+              "action": "journey",
+              "status": "applied",
+              "detail": "Batch 2: read/append journeys for alpha and unaffected beta; all observations retained."
+            },
+            {
+              "step": 13,
+              "action": "observe",
+              "status": "applied",
+              "detail": "Cell B observation changed to unready; earlier journey evidence is retained."
+            },
+            {
+              "step": 14,
+              "action": "journey",
+              "status": "applied",
+              "detail": "Batch 3: read/append journeys for alpha and unaffected beta; all observations retained."
+            }
+          ],
+          "journeys": [
+            {
+              "batch": 1,
+              "tenant": "alpha",
+              "route": "A",
+              "owner": "A",
+              "epoch": 1,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 3,
+              "observedRevision": 3,
+              "acknowledgedWrite": 3
+            },
+            {
+              "batch": 1,
+              "tenant": "beta",
+              "route": "A",
+              "owner": "A",
+              "epoch": 1,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 2,
+              "observedRevision": 2,
+              "acknowledgedWrite": 2
+            },
+            {
+              "batch": 2,
+              "tenant": "alpha",
+              "route": "B",
+              "owner": "B",
+              "epoch": 2,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 4,
+              "observedRevision": 4,
+              "acknowledgedWrite": 4
+            },
+            {
+              "batch": 2,
+              "tenant": "beta",
+              "route": "A",
+              "owner": "A",
+              "epoch": 1,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 3,
+              "observedRevision": 3,
+              "acknowledgedWrite": 3
+            },
+            {
+              "batch": 3,
+              "tenant": "alpha",
+              "route": "B",
+              "owner": "B",
+              "epoch": 2,
+              "classification": "failure",
+              "httpStatus": 503,
+              "expectedRevision": 4,
+              "observedRevision": null,
+              "acknowledgedWrite": null
+            },
+            {
+              "batch": 3,
+              "tenant": "beta",
+              "route": "A",
+              "owner": "A",
+              "epoch": 1,
+              "classification": "success",
+              "httpStatus": 200,
+              "expectedRevision": 4,
+              "observedRevision": 4,
+              "acknowledgedWrite": 4
+            }
+          ]
+        },
+        "summary": {
+          "verdict": "failure",
+          "reason": "A measured user failure remains cumulative, even after recovery.",
+          "successful": 5,
+          "failed": 1,
+          "unknown": 0,
+          "attempts": 6,
+          "blocked": 3,
+          "fenceChecks": 1,
+          "completedBatches": 1,
+          "synchronized": true,
+          "phase": "routed",
+          "capacity": {
+            "allocatedRps": 200,
+            "readyRps": 100,
+            "workers": [
+              "A-1",
+              "A-2",
+              "B-1",
+              "B-2"
+            ]
+          }
+        },
+        "archivedRuns": 0,
+        "evictedRuns": 0,
+        "nativeProof": false,
+        "productionNode24Validated": false,
+        "parentComplete": false
+      },
+      "dom": {
+        "verdict": "failure",
+        "phase": "routed",
+        "counters": "6 attempts: 5 success / 1 failure / 0 unknown. 3 blocked controls; 1 old-writer rejections; 1 healthy migrated batches. Actions 14/48; journey batches 3/8.",
+        "capacity": "Allocated synthetic capacity 200 rps; ready capacity 100 rps. Distinct workers: A-1, A-2, B-1, B-2. B observation: unready.",
+        "alertVisible": false,
+        "traceRows": 14,
+        "journeyRows": 6,
+        "archivedRuns": 0
+      }
+    },
+    {
+      "name": "malformed DOM selection creates a focused error with unchanged state, then keyboard reset recovers",
+      "status": "passed",
+      "observed": {
+        "cardId": "A-S019",
+        "mode": "synthetic-only",
+        "state": {
+          "version": 1,
+          "run": 2,
+          "tenant": "alpha",
+          "targetCreated": false,
+          "observation": "healthy",
+          "owners": {
+            "alpha": {
+              "cell": "A",
+              "epoch": 1
+            },
+            "beta": {
+              "cell": "A",
+              "epoch": 1
+            }
+          },
+          "routes": {
+            "alpha": "A",
+            "beta": "A"
+          },
+          "expected": {
+            "alpha": [
+              1,
+              2
+            ],
+            "beta": [
+              1
+            ]
+          },
+          "cells": {
+            "A": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": [
+                1
+              ]
+            },
+            "B": {
+              "alpha": [],
+              "beta": []
+            }
+          },
+          "trace": [],
+          "journeys": []
+        },
+        "summary": {
+          "verdict": "unknown",
+          "reason": "Not demonstrated: complete synchronization, exclusive handoff, routing, old-writer check and both journeys.",
+          "successful": 0,
+          "failed": 0,
+          "unknown": 0,
+          "attempts": 0,
+          "blocked": 0,
+          "fenceChecks": 0,
+          "completedBatches": 0,
+          "synchronized": false,
+          "phase": "source-only",
+          "capacity": {
+            "allocatedRps": 100,
+            "readyRps": 100,
+            "workers": [
+              "A-1",
+              "A-2"
+            ]
+          }
+        },
+        "archivedRuns": 1,
+        "evictedRuns": 0,
+        "nativeProof": false,
+        "productionNode24Validated": false,
+        "parentComplete": false
+      },
+      "dom": {
+        "verdict": "unknown",
+        "phase": "source-only",
+        "counters": "0 attempts: 0 success / 0 failure / 0 unknown. 0 blocked controls; 0 old-writer rejections; 0 healthy migrated batches. Actions 0/48; journey batches 0/8.",
+        "capacity": "Allocated synthetic capacity 100 rps; ready capacity 100 rps. Distinct workers: A-1, A-2. B observation: healthy.",
+        "alertVisible": false,
+        "traceRows": 0,
+        "journeyRows": 0,
+        "archivedRuns": 1
+      }
+    },
+    {
+      "name": "journey and action bounds stop without truncating data or silently resetting proof",
+      "status": "passed",
+      "observed": {
+        "cardId": "A-S019",
+        "mode": "synthetic-only",
+        "state": {
+          "version": 1,
+          "run": 2,
+          "tenant": "alpha",
+          "targetCreated": false,
+          "observation": "healthy",
+          "owners": {
+            "alpha": {
+              "cell": "A",
+              "epoch": 1
+            },
+            "beta": {
+              "cell": "A",
+              "epoch": 1
+            }
+          },
+          "routes": {
+            "alpha": "A",
+            "beta": "A"
+          },
+          "expected": {
+            "alpha": [
+              1,
+              2
+            ],
+            "beta": [
+              1
+            ]
+          },
+          "cells": {
+            "A": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": [
+                1
+              ]
+            },
+            "B": {
+              "alpha": [],
+              "beta": []
+            }
+          },
+          "trace": [],
+          "journeys": []
+        },
+        "summary": {
+          "verdict": "unknown",
+          "reason": "Not demonstrated: complete synchronization, exclusive handoff, routing, old-writer check and both journeys.",
+          "successful": 0,
+          "failed": 0,
+          "unknown": 0,
+          "attempts": 0,
+          "blocked": 0,
+          "fenceChecks": 0,
+          "completedBatches": 0,
+          "synchronized": false,
+          "phase": "source-only",
+          "capacity": {
+            "allocatedRps": 100,
+            "readyRps": 100,
+            "workers": [
+              "A-1",
+              "A-2"
+            ]
+          }
+        },
+        "archivedRuns": 1,
+        "evictedRuns": 0,
+        "nativeProof": false,
+        "productionNode24Validated": false,
+        "parentComplete": false
+      },
+      "dom": {
+        "verdict": "unknown",
+        "phase": "source-only",
+        "counters": "0 attempts: 0 success / 0 failure / 0 unknown. 0 blocked controls; 0 old-writer rejections; 0 healthy migrated batches. Actions 0/48; journey batches 0/8.",
+        "capacity": "Allocated synthetic capacity 100 rps; ready capacity 100 rps. Distinct workers: A-1, A-2. B observation: healthy.",
+        "alertVisible": false,
+        "traceRows": 0,
+        "journeyRows": 0,
+        "archivedRuns": 1
+      }
+    },
+    {
+      "name": "reset retains failure and unknown runs, bounds history and declares eviction",
+      "status": "passed",
+      "retainedNegativeRuns": [
+        {
+          "state": {
+            "version": 1,
+            "run": 2,
+            "tenant": "alpha",
+            "targetCreated": true,
+            "observation": "unknown",
+            "owners": {
+              "alpha": {
+                "cell": "B",
+                "epoch": 2
+              },
+              "beta": {
+                "cell": "A",
+                "epoch": 1
+              }
+            },
+            "routes": {
+              "alpha": "B",
+              "beta": "A"
+            },
+            "expected": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": [
+                1,
+                2
+              ]
+            },
+            "cells": {
+              "A": {
+                "alpha": [
+                  1,
+                  2
+                ],
+                "beta": [
+                  1,
+                  2
+                ]
+              },
+              "B": {
+                "alpha": [
+                  1,
+                  2
+                ],
+                "beta": []
+              }
+            },
+            "trace": [
+              {
+                "step": 1,
+                "action": "create",
+                "status": "applied",
+                "detail": "Created isolated cell B: workers B-1/B-2, empty data store, 100 synthetic rps."
+              },
+              {
+                "step": 2,
+                "action": "sync",
+                "status": "applied",
+                "detail": "Synchronized alpha through acknowledged write 2; routing is unchanged."
+              },
+              {
+                "step": 3,
+                "action": "transfer",
+                "status": "applied",
+                "detail": "Atomically fenced A epoch 1 and assigned exclusive alpha ownership to B epoch 2; route still names A."
+              },
+              {
+                "step": 4,
+                "action": "route",
+                "status": "applied",
+                "detail": "Routed only alpha to its exclusive owner B; beta remains in A."
+              },
+              {
+                "step": 5,
+                "action": "fence",
+                "status": "applied",
+                "detail": "Old source writer epoch 1 rejected (HTTP 409); no acknowledged write was added."
+              },
+              {
+                "step": 6,
+                "action": "observe",
+                "status": "applied",
+                "detail": "Cell B observation changed to unknown; earlier journey evidence is retained."
+              },
+              {
+                "step": 7,
+                "action": "journey",
+                "status": "applied",
+                "detail": "Batch 1: read/append journeys for alpha and unaffected beta; all observations retained."
+              }
+            ],
+            "journeys": [
+              {
+                "batch": 1,
+                "tenant": "alpha",
+                "route": "B",
+                "owner": "B",
+                "epoch": 2,
+                "classification": "unknown",
+                "httpStatus": null,
+                "expectedRevision": 2,
+                "observedRevision": null,
+                "acknowledgedWrite": null
+              },
+              {
+                "batch": 1,
+                "tenant": "beta",
+                "route": "A",
+                "owner": "A",
+                "epoch": 1,
+                "classification": "success",
+                "httpStatus": 200,
+                "expectedRevision": 2,
+                "observedRevision": 2,
+                "acknowledgedWrite": 2
+              }
+            ]
+          },
+          "summary": {
+            "verdict": "unknown",
+            "reason": "Missing observations remain unknown, even after recovery.",
+            "successful": 1,
+            "failed": 0,
+            "unknown": 1,
+            "attempts": 2,
+            "blocked": 0,
+            "fenceChecks": 1,
+            "completedBatches": 0,
+            "synchronized": true,
+            "phase": "routed",
+            "capacity": {
+              "allocatedRps": 200,
+              "readyRps": null,
+              "workers": [
+                "A-1",
+                "A-2",
+                "B-1",
+                "B-2"
+              ]
+            }
+          }
+        },
+        {
+          "state": {
+            "version": 1,
+            "run": 1,
+            "tenant": "alpha",
+            "targetCreated": true,
+            "observation": "wrong-state",
+            "owners": {
+              "alpha": {
+                "cell": "B",
+                "epoch": 2
+              },
+              "beta": {
+                "cell": "A",
+                "epoch": 1
+              }
+            },
+            "routes": {
+              "alpha": "B",
+              "beta": "A"
+            },
+            "expected": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": [
+                1,
+                2
+              ]
+            },
+            "cells": {
+              "A": {
+                "alpha": [
+                  1,
+                  2
+                ],
+                "beta": [
+                  1,
+                  2
+                ]
+              },
+              "B": {
+                "alpha": [
+                  1,
+                  2
+                ],
+                "beta": []
+              }
+            },
+            "trace": [
+              {
+                "step": 1,
+                "action": "create",
+                "status": "applied",
+                "detail": "Created isolated cell B: workers B-1/B-2, empty data store, 100 synthetic rps."
+              },
+              {
+                "step": 2,
+                "action": "sync",
+                "status": "applied",
+                "detail": "Synchronized alpha through acknowledged write 2; routing is unchanged."
+              },
+              {
+                "step": 3,
+                "action": "transfer",
+                "status": "applied",
+                "detail": "Atomically fenced A epoch 1 and assigned exclusive alpha ownership to B epoch 2; route still names A."
+              },
+              {
+                "step": 4,
+                "action": "route",
+                "status": "applied",
+                "detail": "Routed only alpha to its exclusive owner B; beta remains in A."
+              },
+              {
+                "step": 5,
+                "action": "fence",
+                "status": "applied",
+                "detail": "Old source writer epoch 1 rejected (HTTP 409); no acknowledged write was added."
+              },
+              {
+                "step": 6,
+                "action": "observe",
+                "status": "applied",
+                "detail": "Cell B observation changed to wrong-state; earlier journey evidence is retained."
+              },
+              {
+                "step": 7,
+                "action": "journey",
+                "status": "applied",
+                "detail": "Batch 1: read/append journeys for alpha and unaffected beta; all observations retained."
+              }
+            ],
+            "journeys": [
+              {
+                "batch": 1,
+                "tenant": "alpha",
+                "route": "B",
+                "owner": "B",
+                "epoch": 2,
+                "classification": "failure",
+                "httpStatus": 200,
+                "expectedRevision": 2,
+                "observedRevision": 1,
+                "acknowledgedWrite": null
+              },
+              {
+                "batch": 1,
+                "tenant": "beta",
+                "route": "A",
+                "owner": "A",
+                "epoch": 1,
+                "classification": "success",
+                "httpStatus": 200,
+                "expectedRevision": 2,
+                "observedRevision": 2,
+                "acknowledgedWrite": 2
+              }
+            ]
+          },
+          "summary": {
+            "verdict": "failure",
+            "reason": "A measured user failure remains cumulative, even after recovery.",
+            "successful": 1,
+            "failed": 1,
+            "unknown": 0,
+            "attempts": 2,
+            "blocked": 0,
+            "fenceChecks": 1,
+            "completedBatches": 0,
+            "synchronized": true,
+            "phase": "routed",
+            "capacity": {
+              "allocatedRps": 200,
+              "readyRps": 100,
+              "workers": [
+                "A-1",
+                "A-2",
+                "B-1",
+                "B-2"
+              ]
+            }
+          }
+        }
+      ],
+      "observed": {
+        "cardId": "A-S019",
+        "mode": "synthetic-only",
+        "state": {
+          "version": 1,
+          "run": 7,
+          "tenant": "alpha",
+          "targetCreated": false,
+          "observation": "healthy",
+          "owners": {
+            "alpha": {
+              "cell": "A",
+              "epoch": 1
+            },
+            "beta": {
+              "cell": "A",
+              "epoch": 1
+            }
+          },
+          "routes": {
+            "alpha": "A",
+            "beta": "A"
+          },
+          "expected": {
+            "alpha": [
+              1,
+              2
+            ],
+            "beta": [
+              1
+            ]
+          },
+          "cells": {
+            "A": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": [
+                1
+              ]
+            },
+            "B": {
+              "alpha": [],
+              "beta": []
+            }
+          },
+          "trace": [],
+          "journeys": []
+        },
+        "summary": {
+          "verdict": "unknown",
+          "reason": "Not demonstrated: complete synchronization, exclusive handoff, routing, old-writer check and both journeys.",
+          "successful": 0,
+          "failed": 0,
+          "unknown": 0,
+          "attempts": 0,
+          "blocked": 0,
+          "fenceChecks": 0,
+          "completedBatches": 0,
+          "synchronized": false,
+          "phase": "source-only",
+          "capacity": {
+            "allocatedRps": 100,
+            "readyRps": 100,
+            "workers": [
+              "A-1",
+              "A-2"
+            ]
+          }
+        },
+        "archivedRuns": 4,
+        "evictedRuns": 2,
+        "nativeProof": false,
+        "productionNode24Validated": false,
+        "parentComplete": false
+      },
+      "dom": {
+        "verdict": "unknown",
+        "phase": "source-only",
+        "counters": "0 attempts: 0 success / 0 failure / 0 unknown. 0 blocked controls; 0 old-writer rejections; 0 healthy migrated batches. Actions 0/48; journey batches 0/8.",
+        "capacity": "Allocated synthetic capacity 100 rps; ready capacity 100 rps. Distinct workers: A-1, A-2. B observation: healthy.",
+        "alertVisible": false,
+        "traceRows": 0,
+        "journeyRows": 0,
+        "archivedRuns": 4
+      }
+    },
+    {
+      "name": "actual CSP blocks inline execution and external fetch; narrow layout remains usable",
+      "status": "passed",
+      "csp": {
+        "inlineExecuted": false,
+        "fetchBlocked": true,
+        "violations": [
+          {
+            "directive": "script-src-elem",
+            "blockedURI": "inline"
+          },
+          {
+            "directive": "connect-src",
+            "blockedURI": "https://example.invalid/s019-csp-check"
+          }
+        ]
+      },
+      "observed": {
+        "cardId": "A-S019",
+        "mode": "synthetic-only",
+        "state": {
+          "version": 1,
+          "run": 1,
+          "tenant": "alpha",
+          "targetCreated": false,
+          "observation": "healthy",
+          "owners": {
+            "alpha": {
+              "cell": "A",
+              "epoch": 1
+            },
+            "beta": {
+              "cell": "A",
+              "epoch": 1
+            }
+          },
+          "routes": {
+            "alpha": "A",
+            "beta": "A"
+          },
+          "expected": {
+            "alpha": [
+              1,
+              2
+            ],
+            "beta": [
+              1
+            ]
+          },
+          "cells": {
+            "A": {
+              "alpha": [
+                1,
+                2
+              ],
+              "beta": [
+                1
+              ]
+            },
+            "B": {
+              "alpha": [],
+              "beta": []
+            }
+          },
+          "trace": [],
+          "journeys": []
+        },
+        "summary": {
+          "verdict": "unknown",
+          "reason": "Not demonstrated: complete synchronization, exclusive handoff, routing, old-writer check and both journeys.",
+          "successful": 0,
+          "failed": 0,
+          "unknown": 0,
+          "attempts": 0,
+          "blocked": 0,
+          "fenceChecks": 0,
+          "completedBatches": 0,
+          "synchronized": false,
+          "phase": "source-only",
+          "capacity": {
+            "allocatedRps": 100,
+            "readyRps": 100,
+            "workers": [
+              "A-1",
+              "A-2"
+            ]
+          }
+        },
+        "archivedRuns": 0,
+        "evictedRuns": 0,
+        "nativeProof": false,
+        "productionNode24Validated": false,
+        "parentComplete": false
+      },
+      "dom": {
+        "verdict": "unknown",
+        "phase": "source-only",
+        "counters": "0 attempts: 0 success / 0 failure / 0 unknown. 0 blocked controls; 0 old-writer rejections; 0 healthy migrated batches. Actions 0/48; journey batches 0/8.",
+        "capacity": "Allocated synthetic capacity 100 rps; ready capacity 100 rps. Distinct workers: A-1, A-2. B observation: healthy.",
+        "alertVisible": false,
+        "traceRows": 0,
+        "journeyRows": 0,
+        "archivedRuns": 0
+      }
+    }
+  ],
+  "pageErrors": [],
+  "externalCompleted": [],
+  "closeAwaited": true,
+  "nativeProof": false,
+  "productionNode24Validated": false,
+  "parentComplete": false,
+  "status": "passed",
+  "browserVersion": "156.0.4314.50",
+  "finishedAtUtc": "2026-11-03T16:45:22.223Z"
+}

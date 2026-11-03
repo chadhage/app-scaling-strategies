@@ -1,0 +1,21 @@
+'use strict';
+
+(function expose(root) {
+  const createRun = ({ tenant = 'alpha', run = 1 } = {}) => ({
+    version: 1, run, tenant, targetCreated: false, observation: 'healthy',
+    owners: { alpha: { cell: 'A', epoch: 1 }, beta: { cell: 'A', epoch: 1 } },
+    routes: { alpha: 'A', beta: 'A' },
+    expected: { alpha: [1, 2], beta: [1] },
+    cells: { A: { alpha: [1, 2], beta: [1] }, B: { alpha: [], beta: [] } },
+    trace: [], journeys: []
+  });
+  const act = (state) => state;
+  const inspect = () => ({
+    verdict: 'unknown', successful: 0, failed: 0, unknown: 0, attempts: 0,
+    blocked: 0, fenceChecks: 0, completedBatches: 0,
+    capacity: { allocatedRps: 100, readyRps: 100, workers: ['A-1', 'A-2'] }
+  });
+  const api = { createRun, act, inspect };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.S019Lesson = api;
+}(typeof globalThis === 'undefined' ? this : globalThis));

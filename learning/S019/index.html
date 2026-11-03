@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S019 — Cell-based expansion</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="training" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S019: Cell-based expansion</h1>
+    <p><strong>Objective:</strong> Add an isolated application cell and migrate a selected tenant through controlled state and routing handoff. Distinguish added capacity, a copied snapshot, exclusive write ownership, and a route.</p>
+    <p><strong>Preconditions and limits:</strong> Cell A owns alpha (writes 1, 2) and beta (write 1) at epoch 1. Its two ready synthetic workers provide 100 requests/second. Creating B adds two distinct workers and an isolated empty store: another 100 synthetic requests/second, not a deployment slot. Two tenants, two cells, 48 actions, 8 two-tenant journey batches, 14 acknowledged writes per tenant, and four archived runs in page memory only. Reload clears everything.</p>
+    <noscript>This exercise requires local JavaScript. No result can be established while it is disabled.</noscript>
+
+    <section aria-labelledby="procedure-title">
+      <h2 id="procedure-title">Conduct the handoff</h2>
+      <ol>
+        <li>Choose a tenant before the first action. Try routing early: the guard preserves source service.</li>
+        <li>Create B and synchronize the selected tenant. Commit a source write to make that snapshot stale; attempt ownership transfer and see it blocked. Synchronize again.</li>
+        <li>Transfer exclusive ownership (A epoch 1 is fenced; B gets epoch 2), then route the selected tenant. These are separate controls: a journey in the gap fails visibly with HTTP 409.</li>
+        <li>Exercise the old writer and run both tenant journeys. Inspect ordered writes and the unaffected tenant remaining in A.</li>
+        <li>After routing, select an unready, wrong-state, or unknown B observation and run journeys again. HTTP 200 with wrong business state is a failure, not success. Restore healthy observations: earlier failures and unknowns remain cumulative.</li>
+        <li>Archive and reset to compare a clean run. Each synthetic success requires both tenant journeys and an actual old-writer rejection.</li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Operator controls</h2>
+      <form id="operator-form">
+        <label for="selected-tenant">Tenant to migrate (locked after the first action)</label>
+        <select id="selected-tenant" name="tenant">
+          <option value="alpha">alpha</option>
+          <option value="beta">beta</option>
+        </select>
+        <label for="target-observation">Cell B observation</label>
+        <select id="target-observation" name="observation">
+          <option value="healthy">Healthy and correct</option>
+          <option value="unready">Unready: HTTP 503</option>
+          <option value="wrong-state">Wrong business state: HTTP 200</option>
+          <option value="unknown">Missing observation: unknown</option>
+        </select>
+        <div class="actions">
+          <button type="button" id="create-cell" data-action="create">1. Create isolated cell B</button>
+          <button type="button" id="synchronize" data-action="sync">2. Synchronize selected tenant</button>
+          <button type="button" id="source-write" data-action="sourceWrite">Commit source write (stale-copy challenge)</button>
+          <button type="button" id="transfer-owner" data-action="transfer">3. Fence A and transfer exclusive ownership</button>
+          <button type="button" id="route-tenant" data-action="route">4. Route selected tenant to B</button>
+          <button type="button" id="exercise-fence" data-action="fence">5. Exercise old epoch-1 writer</button>
+          <button type="button" id="run-journeys" data-action="journey">6. Run both tenant journeys</button>
+          <button type="button" id="archive-run">Archive and reset</button>
+        </div>
+      </form>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <p id="action-status" role="status" aria-live="polite">Ready for a synthetic action.</p>
+    </section>
+
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Measured synthetic result</h2>
+      <p>Run <span id="run-number">1</span>; selected tenant <strong id="active-tenant">alpha</strong>; phase <strong id="phase">source-only</strong>.</p>
+      <p class="result" aria-live="polite"><strong id="verdict">unknown</strong>: <span id="verdict-reason">No migrated journey yet.</span></p>
+      <p id="counters">No observations yet.</p>
+      <p id="capacity">Only source capacity exists.</p>
+      <p id="synchronization">A snapshot is not ownership.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Tenant routing, exclusive ownership, and acknowledged write journals</caption>
+          <thead><tr><th>Tenant</th><th>Route</th><th>Exclusive owner / token</th><th>Expected writes</th><th>A store</th><th>B store</th></tr></thead>
+          <tbody id="tenant-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>Retained read-and-append journey outcomes (success / failure / unknown)</caption>
+          <thead><tr><th>Batch</th><th>Tenant</th><th>Route / owner</th><th>Outcome</th><th>HTTP</th><th>Expected / observed revision</th><th>Acknowledged write</th></tr></thead>
+          <tbody id="journey-rows"></tbody>
+        </table>
+      </div>
+      <h3>Retained action trace</h3>
+      <ol id="trace"></ol>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Archived runs</h2>
+      <p>Newest first, at most four. Each retained run keeps its complete action and journey history; evicted runs are explicitly counted. No reload persistence or live evidence is implied.</p>
+      <p id="history-status">No archived runs.</p>
+      <div id="history"></div>
+    </section>
+
+    <details>
+      <summary>Inspect the current synthetic record</summary>
+      <pre id="run-evidence"></pre>
+    </details>
+    <footer>
+      <p>A-S019 / D-S019 / SC-S019; one frozen S learning unit. B-S019 remains To Do, gated by CORE, DATA, HOST, FENCE. Original parent prerequisites D-S005 and D-S064 remain unfulfilled. No native Azure support, real cloud capacity, production Node.js 24 validation, parent completion or five-nines reliability is established.</p>
+      <p>Microsoft Open Source Disclaimer: this training material is provided as-is, without warranties. Synthetic outcomes are not service guarantees. No infrastructure, identity, deployment, expenditure, package download, or management operation is performed.</p>
+    </footer>
+  </main>
+</body>
+</html>
