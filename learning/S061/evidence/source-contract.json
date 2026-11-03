@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S061",
+  "parentId": "D-S061",
+  "nativeSibling": "B-S061",
+  "kano": "S",
+  "kanoUnit": "A-S061",
+  "packet": "SC-S061",
+  "owner": "worker-A-S061",
+  "ownedScope": "learning\\S061\\**",
+  "entryGate": "SOURCE",
+  "sourceCapturedAtUtc": "2026-11-03T19:21:14.064Z",
+  "sourceReadBeforeBehaviorDesign": true,
+  "baselineCommit": "4d35453d43fae8f443ba49a6d98badbfb9782642",
+  "sourceFiles": [
+    {
+      "path": "README.md",
+      "snapshot": "source-readme.snapshot",
+      "gitSnapshot": "source-readme.git.snapshot",
+      "gitBlob": "e68de5ead62c504e924dda210297ccf3ff2541b7",
+      "rawBytes": 46303,
+      "rawSha256": "826c1e3b1f1f8866f05d45f3d6b9eca5c06e901a2b67737774ad18aa1607e4d1",
+      "rawHasCRLF": true,
+      "rawLfSha256": "852a82420f3b17a41c6aa56ae32fc1ba37829181654bcd6fa32fd00e88310519",
+      "canonicalGitBytes": 45719,
+      "canonicalGitSha256": "852a82420f3b17a41c6aa56ae32fc1ba37829181654bcd6fa32fd00e88310519",
+      "wholeFileCanonicalEquality": true,
+      "exactAcceptanceSlicesMatch": true,
+      "qualification": "Raw source bytes and canonical committed Git blob separately preserved; exact S061 rows and atomic/portable/packet acceptance slices match. Whole-file equality is explicitly recorded, not assumed during concurrent board updates."
+    },
+    {
+      "path": ".docs\\wiki\\backlog.md",
+      "snapshot": "source-backlog.snapshot",
+      "gitSnapshot": "source-backlog.git.snapshot",
+      "gitBlob": "a4ff5fd8601cdc4381ccd4d3f9d76428b19c13ca",
+      "rawBytes": 64336,
+      "rawSha256": "40b4d8e2ab4774f47de029f97dd8ff4e267d9412292c3c47f72726b002831418",
+      "rawHasCRLF": true,
+      "rawLfSha256": "9a414030b4ef63b5d90a0f6d89e1cbc30b0300bf194ad87b9e7e3d2912b59a65",
+      "canonicalGitBytes": 63853,
+      "canonicalGitSha256": "9a414030b4ef63b5d90a0f6d89e1cbc30b0300bf194ad87b9e7e3d2912b59a65",
+      "wholeFileCanonicalEquality": true,
+      "exactAcceptanceSlicesMatch": true,
+      "qualification": "Raw source bytes and canonical committed Git blob separately preserved; exact S061 rows and atomic/portable/packet acceptance slices match. Whole-file equality is explicitly recorded, not assumed during concurrent board updates."
+    },
+    {
+      "path": ".docs\\wiki\\kanban.md",
+      "snapshot": "source-portable-contract.snapshot",
+      "gitSnapshot": "source-portable-contract.git.snapshot",
+      "gitBlob": "c02252a831c501266f8411e285d7b25e8f503833",
+      "rawBytes": 85547,
+      "rawSha256": "c7d059b5307b4e0b72a343b617d6bac5410f1463853d4a1c5372da65316b7250",
+      "rawHasCRLF": true,
+      "rawLfSha256": "49d28af4424d670c47da2a3ca6fea6b052386815dca02c5b73ade95d9a06eec2",
+      "canonicalGitBytes": 84747,
+      "canonicalGitSha256": "ef93b6faafb34ec2c80dbad716d7a2f38e627461b3f43ae9fa4a78473292e4c1",
+      "wholeFileCanonicalEquality": false,
+      "exactAcceptanceSlicesMatch": true,
+      "qualification": "Raw source bytes and canonical committed Git blob separately preserved; exact S061 rows and atomic/portable/packet acceptance slices match. Whole-file equality is explicitly recorded, not assumed during concurrent board updates."
+    }
+  ],
+  "source": {
+    "row": "| S061 | **Read-replica expansion:** Offload eligible reads while preserving required read-your-writes and freshness guarantees. |"
+  },
+  "backlog": {
+    "row": "| D-S061 | P1 | Add **Expand read replicas** and read-your-writes/freshness controls. | Eligible reads use actual replicas; consistency-sensitive reads meet the contract; write scalability is not inferred from extra read replicas. | none |"
+  },
+  "card": {
+    "row": "| A-S061 | D-S061 | S | Add a reader; preserve read-your-writes rather than assuming every replica is current. | SOURCE |",
+    "nativeSibling": "| B-S061 | D-S061 | S | Conduct one native reader expansion; verify actual read routing and freshness contract. | CORE, DATA, HOST, REPLICA |",
+    "atomicAndPortableContract": "## Atomic card contract\r\n\r\nEvery listed row is one card, one accountable owner/pair, one independently reviewable changeset, and one observable acceptance result. Normal publication is a scoped, labeled commit with an annotated tag on `main`; temporary recovery branches and reviewer-assisted PRs are used only when safe integration requires them.\r\n\r\nImplementation order is BDD specification, genuine behavioral TDD red, the IaC step (or an explicit N/A for a resource-free lesson), implementation/refactoring, green tests and actual browser checks, scoped tagged publication, and parent-owned empirical acceptance. A worker cannot award its own Done credit. Subdivision preserves the original `kanoUnit`; partial work does not manufacture extra value.\r\n\r\n- **Size target:** A cards take 1-2 focused hours; C, B, and X cards target 2-4 focused hours after entry gates are satisfied. These are slicing limits, not delivery estimates.\r\n- **Refine before admission:** If a card needs a new research decision, multiple independent behaviors, or more than four focused hours, split it before pulling. Revalidate coverage and Kano classes; artificial splits do not manufacture extra value.\r\n- **Inputs:** Parent source, versioned contract, named fixture/configuration, technical gate, quota reservation, and any approved lease are available.\r\n- **Ownership:** One card owns its module/fixture namespace. A and B siblings do not share files, PRs, or mutable test leases.\r\n- **Done:** Scoped behavior is usable, its stated check passes, relevant tests are automated, review/merge is complete, documentation and evidence are attached, and the behavior is available through its declared preview or harness surface.\r\n- **Evidence:** Record card/parent IDs, mode, configuration/host, commit, test/run reference, verifier result, user-impact result, cleanup result, owner, reviewer, packet, and accepted time.\r\n- **No false completion:** A replay is not native evidence. Unsupported/unverified positive behavior cannot pass as a native success. A negative experiment may pass its verifier while clearly reporting interrupted users.\r\n- **No bonus credits:** Multiple parents, commits, test cases, repeated runs, and duplicated fixtures do not increase a card's Kano count.\r\n\r\n### Portable A-card lesson contract\r\n\r\nAn A card delivers a standalone, browser-openable lesson bundle with a small interactive exercise: choose an action or condition, inspect a synthetic trace, and check the expected outcome. Use standard HTML/browser behavior so an approved application framework or Azure subscription is not needed to begin.\r\n\r\nEach bundle declares source ID, objective, preconditions, actions, synthetic input/trace, expected assertions, and limits. It prominently says **Training rehearsal - synthetic data - not a live Azure result**, makes no management calls, contains no credentials, and supports keyboard operation.\r\n\r\nEach lesson must add a worked, testable exercise rather than copying the backlog sentence. Keep it portable for later mounting by C041. The native implementation and evidence remain a separate B card, and the source demo is not complete until both required slices and its original acceptance gates pass.\r\n\r\n",
+    "packetRule": "Packet membership is fixed before admission. This register overrides default membership for its named cards; every other A/B card belongs to SC-Snnn, and every other capability card belongs to its first listed source parent. A card has one packet, not duplicate packet credits."
+  },
+  "captureNote": "Initial full-kanban preflight encountered concurrent accepted-count/link edits; no behavior test ran then. Relevant source acceptance is qualified separately from mutable board status, and both raw and committed source bytes are retained.",
+  "refinement": "One four-read synthetic expansion exercise, one frozen S unit. No additional unit, parent or native work is admitted. No shared To Do files are owned. B-S061 remains gated on CORE, DATA, HOST, REPLICA and real routing/consistency evidence; do not pull it as an assumed ready continuation.",
+  "sourceAcceptanceBoundary": "Local synthetic offload, read-your-writes and version freshness only. D-S061 requires actual replica reads and real contract evidence and remains incomplete; added read capacity never certifies write scalability."
+}

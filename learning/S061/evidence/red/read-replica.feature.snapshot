@@ -1,0 +1,62 @@
+Feature: Add a synthetic reader without losing read-your-writes
+  The S061 source requires offloading eligible reads while preserving required
+  read-your-writes and freshness guarantees. This is one portable A-S061 unit,
+  not native replication, a write-throughput measurement or D-S061 completion.
+
+  Background:
+    Given the banner "Training rehearsal - synthetic data - not a live Azure result"
+    And one synthetic primary, one current reader and one bounded acknowledged write
+    And four planned reads: browse and read-your-writes on each of two readers
+    And freshness is a declared minimum version, not wall-clock replication latency
+
+  Scenario: Blindly using a newly added lagging reader breaks read-your-writes
+    Given the added reader is one version behind and browse permits one-version staleness
+    When I acknowledge synthetic version 11, add that reader and run unchecked routing
+    Then there are 3 correct, 1 failed and 0 unknown reads
+    And the failed own-write read returns version 10 but requires version 11
+    And reader count increases from 1 to 2 while writer count stays 1
+    And predicting FAIL passes the learning verifier without concealing the interruption
+
+  Scenario: Preserve the session write while offloading eligible browse reads
+    Given the added reader is one version behind
+    When I use primary-for-session routing with one-version browse freshness
+    Then the two browse reads use replicas and both session reads use the primary
+    And all four reads meet their declared contracts
+
+  Scenario: Freshness applies to browse reads too
+    Given browse freshness requires the current version and the added reader is behind
+    When I use primary-for-session routing
+    Then the added browse read fails even though both session reads pass
+    When I start a new attempt with verified-watermark-or-primary routing
+    Then all four reads pass and at least one eligible read is offloaded
+
+  Scenario: Unknown evidence is never inferred current
+    Given the added reader's version is unknown
+    When I use unchecked routing with complete observations
+    Then 2 reads are correct and 2 are unknown, with no claimed success
+    When I start a new attempt with verified-watermark-or-primary routing
+    Then those two reads fall back to the known-current synthetic primary
+
+  Scenario: Missing observations cannot pass and known failures dominate
+    Given partial coverage observes only the first three of four planned reads
+    When I use unchecked routing with a behind reader and one-version browse freshness
+    Then 3 reads are correct and 1 is unknown and the gate is UNKNOWN
+    When browse freshness instead requires current data
+    Then 2 reads are correct, 1 fails and 1 remains unknown and the gate is FAIL
+    And absent coverage always records 4 unknowns without inventing returned values
+
+  Scenario: Bounds and state errors preserve the evidence
+    Given only exact primitive enum inputs and idle -> written -> expanded -> complete are allowed
+    Then missing, extra, inherited, accessor, symbol and coercible inputs are rejected
+    And invalid or repeated actions do not mutate private state
+    And six completed attempts retain configuration, routing, results, predictions and trace
+    And a seventh attempt is refused without silently evicting history
+
+  Scenario: Keyboard, reset and browser safety are real checks
+    When I use native keyboard controls through write, expansion, reads and prediction
+    Then locked assumptions, focus movement and accessible errors reflect the current phase
+    And a new attempt retains history while clearing current proof
+    And explicit reset clears history, restores defaults and focuses the write control
+    And the reset button does not shadow the native form.reset method
+    And enforced CSP rejects inline script and network connections
+    And ordinary tests do not rewrite proof; deliberate capture requires CAPTURE_BROWSER_EVIDENCE=1

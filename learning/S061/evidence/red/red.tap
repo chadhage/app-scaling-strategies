@@ -1,0 +1,426 @@
+TAP version 13
+# Subtest: loadable API and deterministic synthetic fixture exist before implementation
+ok 1 - loadable API and deterministic synthetic fixture exist before implementation
+  ---
+  duration_ms: 1.6096
+  type: 'test'
+  ...
+# Subtest: acknowledged write locks assumptions and establishes the session version without adding writers
+not ok 2 - acknowledged write locks assumptions and establishes the session version without adding writers
+  ---
+  duration_ms: 1.8604
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:36:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'idle' !== 'written'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'written'
+  actual: 'idle'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:40:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: explicit reader expansion adds a lagging reader without silently synchronizing it
+not ok 3 - explicit reader expansion adds a lagging reader without silently synchronizing it
+  ---
+  duration_ms: 0.325
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:51:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'idle' !== 'expanded'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'expanded'
+  actual: 'idle'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:56:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: unchecked offload violates read-your-writes even when browse allows one-version staleness
+not ok 4 - unchecked offload violates read-your-writes even when browse allows one-version staleness
+  ---
+  duration_ms: 0.2789
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:62:1'
+  failureType: 'testCodeFailure'
+  error: 'four planned reads must produce an explicit result'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual: ~
+  operator: 'notStrictEqual'
+  stack: |-
+    result (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:16:10)
+    counts (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:20:18)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:64:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: primary-for-session preserves writes while offloading both eligible bounded-staleness reads
+not ok 5 - primary-for-session preserves writes while offloading both eligible bounded-staleness reads
+  ---
+  duration_ms: 0.1536
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:76:1'
+  failureType: 'testCodeFailure'
+  error: 'four planned reads must produce an explicit result'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual: ~
+  operator: 'notStrictEqual'
+  stack: |-
+    result (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:16:10)
+    counts (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:20:18)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:78:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: current-only browse freshness is not waived by session-primary routing
+not ok 6 - current-only browse freshness is not waived by session-primary routing
+  ---
+  duration_ms: 0.2014
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:86:1'
+  failureType: 'testCodeFailure'
+  error: 'four planned reads must produce an explicit result'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual: ~
+  operator: 'notStrictEqual'
+  stack: |-
+    result (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:16:10)
+    counts (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:20:18)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:88:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: verified-watermark routing falls back to primary without fabricating catch-up
+not ok 7 - verified-watermark routing falls back to primary without fabricating catch-up
+  ---
+  duration_ms: 0.1468
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:93:1'
+  failureType: 'testCodeFailure'
+  error: 'four planned reads must produce an explicit result'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual: ~
+  operator: 'notStrictEqual'
+  stack: |-
+    result (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:16:10)
+    counts (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:20:18)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:95:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a current added reader needs no primary fallback and still proves only read offload
+not ok 8 - a current added reader needs no primary fallback and still proves only read offload
+  ---
+  duration_ms: 0.1261
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:104:1'
+  failureType: 'testCodeFailure'
+  error: 'four planned reads must produce an explicit result'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual: ~
+  operator: 'notStrictEqual'
+  stack: |-
+    result (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:16:10)
+    counts (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:20:18)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:106:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: unknown reader version is UNKNOWN rather than silently successful or definitely stale
+not ok 9 - unknown reader version is UNKNOWN rather than silently successful or definitely stale
+  ---
+  duration_ms: 0.3544
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:113:1'
+  failureType: 'testCodeFailure'
+  error: 'four planned reads must produce an explicit result'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual: ~
+  operator: 'notStrictEqual'
+  stack: |-
+    result (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:16:10)
+    counts (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:20:18)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:115:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: verified routing does not trust an unknown watermark
+not ok 10 - verified routing does not trust an unknown watermark
+  ---
+  duration_ms: 0.5565
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:122:1'
+  failureType: 'testCodeFailure'
+  error: 'four planned reads must produce an explicit result'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual: ~
+  operator: 'notStrictEqual'
+  stack: |-
+    result (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:16:10)
+    counts (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:20:18)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:124:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: partial and absent coverage retain unknowns and known failures dominate uncertainty
+not ok 11 - partial and absent coverage retain unknowns and known failures dominate uncertainty
+  ---
+  duration_ms: 0.3344
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:129:1'
+  failureType: 'testCodeFailure'
+  error: 'four planned reads must produce an explicit result'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual: ~
+  operator: 'notStrictEqual'
+  stack: |-
+    result (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:16:10)
+    counts (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:20:18)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:131:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: all 54 declared configurations match an independent version/coverage oracle
+not ok 12 - all 54 declared configurations match an independent version/coverage oracle
+  ---
+  duration_ms: 0.2574
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:145:1'
+  failureType: 'testCodeFailure'
+  error: 'four planned reads must produce an explicit result'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual: ~
+  operator: 'notStrictEqual'
+  stack: |-
+    result (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:16:10)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:151:22)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: exact own data-property enum inputs reject malformed values without side effects or getter execution
+not ok 13 - exact own data-property enum inputs reject malformed values without side effects or getter execution
+  ---
+  duration_ms: 0.4399
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:187:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:206:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: phase, duplicate-action and argument guards leave state and history intact
+not ok 14 - phase, duplicate-action and argument guards leave state and history intact
+  ---
+  duration_ms: 0.1855
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:212:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    rejects (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:216:12)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:219:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: prediction verifier remains separate from the failed synthetic read impact
+not ok 15 - prediction verifier remains separate from the failed synthetic read impact
+  ---
+  duration_ms: 0.1786
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:238:1'
+  failureType: 'testCodeFailure'
+  error: 'Expected "actual" to be strictly unequal to: null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual: ~
+  operator: 'notStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:241:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: new attempts clear current proof, retain detached failure history and do not evict at the six-attempt cap
+not ok 16 - new attempts clear current proof, retain detached failure history and do not evict at the six-attempt cap
+  ---
+  duration_ms: 0.2053
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:252:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    0 !== 1
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:255:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: private snapshots and nested retained history cannot be mutated
+not ok 17 - private snapshots and nested retained history cannot be mutated
+  ---
+  duration_ms: 0.1752
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:278:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    false !== true
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:281:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: explicit reset clears completed and prepared state and history to exact initial defaults
+not ok 18 - explicit reset clears completed and prepared state and history to exact initial defaults
+  ---
+  duration_ms: 0.2081
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S061\\tests\\model.test.cjs:294:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'idle' !== 'written'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'written'
+  actual: 'idle'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S061\tests\model.test.cjs:299:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 1
+# fail 17
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 138.0619

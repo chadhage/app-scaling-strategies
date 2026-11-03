@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S061 · Read-replica expansion rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner" id="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Read-replica expansion</h1>
+    <p>A-S061 · D-S061 · frozen S · SC-S061. Add a reader without assuming it already has your write.</p>
+    <p>One primary acknowledges synthetic record <strong>SYN-RECORD-061, version 11</strong>.
+      Reader-1 is explicitly supplied as caught up in this fixed fixture; acknowledgement alone
+      does not establish that fact. You choose the newly added reader's version and routing policy.</p>
+    <p>Four reads compare returned versions with their declared minimum: browse and read-your-writes
+      on each reader. Session reads always require version 11. Browse may permit version 10 or require 11.
+      These version floors are not measured replication latency.</p>
+    <p><strong>Adding readers does not add writers.</strong> Writer count remains one. No real database,
+      authentication, synchronization, Azure calls or write-throughput measurement.
+      <a href="README.md">Instructions, exact acceptance and evidence limits</a>.</p>
+    <noscript>This interactive synthetic lesson needs JavaScript. No result can be established while it is disabled.</noscript>
+
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Conduct one bounded attempt</h2>
+      <p id="bounds">54 fixed configurations · four reads per attempt · six retained attempts maximum.
+        No clocks, retries, arbitrary inputs or endpoints. Reset or reload clears in-memory evidence.</p>
+      <form id="lesson-controls" novalidate>
+        <fieldset id="assumptions">
+          <legend>Assumptions (lock on write)</legend>
+          <div class="grid">
+            <label for="addedReader">Added reader's supplied version
+              <select id="addedReader" name="addedReader">
+                <option value="behind" selected>Behind · version 10</option>
+                <option value="current">Current · version 11</option>
+                <option value="unknown">Unknown · no version evidence</option>
+              </select>
+            </label>
+            <label for="routing">Read routing policy
+              <select id="routing" name="routing">
+                <option value="unchecked" selected>Unchecked replicas · unsafe comparator</option>
+                <option value="primary-for-session">Primary for session reads</option>
+                <option value="verified-or-primary">Verified watermark or primary</option>
+              </select>
+            </label>
+            <label for="freshness">Browse freshness floor
+              <select id="freshness" name="freshness">
+                <option value="one-version" selected>Allow one version behind · minimum 10</option>
+                <option value="current-only">Current only · minimum 11</option>
+              </select>
+            </label>
+            <label for="coverage">Read observation coverage
+              <select id="coverage" name="coverage">
+                <option value="complete" selected>Complete · four observations</option>
+                <option value="partial">Partial · first three observations</option>
+                <option value="none">Absent · no read observations</option>
+              </select>
+            </label>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button type="submit" id="write">1. Acknowledge fixture write</button>
+          <button type="button" id="add-reader" disabled>2. Add reader-2</button>
+          <button type="button" id="run-reads" disabled>3. Observe four reads</button>
+        </div>
+      </form>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+    </section>
+
+    <section aria-labelledby="state-title">
+      <h2 id="state-title">Inspect routing and correctness</h2>
+      <div role="status" aria-live="polite" aria-atomic="true">
+        <p id="phase">Phase: idle</p>
+        <p id="gate">Read contract gate: not evaluated</p>
+        <p id="impact">Synthetic read impact: not evaluated</p>
+      </div>
+      <p id="topology">Readers: 1 · writers: 1 · acknowledged synthetic writes: 0</p>
+      <p id="versions">No fixture write acknowledged.</p>
+      <p id="metrics">No reads observed.</p>
+      <div id="result-detail" hidden>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Four synthetic read observations">
+          <table>
+            <caption>Selected route is not an observed result. Unknowns never imply success.</caption>
+            <thead>
+              <tr><th scope="col">Read / candidate</th><th scope="col">Required minimum</th>
+                <th scope="col">Selected route / reason</th><th scope="col">Observed target / version</th>
+                <th scope="col">Outcome / reason</th></tr>
+            </thead>
+            <tbody id="reads"></tbody>
+          </table>
+        </div>
+      </div>
+      <h3>Synthetic trace</h3>
+      <pre id="trace">No attempt started.</pre>
+    </section>
+
+    <section aria-labelledby="prediction-title">
+      <h2 id="prediction-title">Check the learning prediction</h2>
+      <p>A correct prediction can pass while synthetic reads still fail. It never changes their outcomes.</p>
+      <form id="prediction-controls" novalidate>
+        <fieldset id="prediction-fields" disabled>
+          <legend>Predict the measured read contract gate</legend>
+          <label for="prediction">Gate prediction
+            <select id="prediction" name="prediction">
+              <option value="" selected>Choose a gate</option>
+              <option value="PASS">PASS · all four reads meet the contract</option>
+              <option value="FAIL">FAIL · at least one known violation</option>
+              <option value="UNKNOWN">UNKNOWN · incomplete proof, no known violation</option>
+            </select>
+          </label>
+          <button type="submit" id="check-prediction">Check prediction</button>
+        </fieldset>
+      </form>
+      <p id="prediction-result" role="status" aria-live="polite">Prediction not checked.</p>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained attempts</h2>
+      <p>New attempt clears current proof and restores input defaults, but keeps previous failures,
+        unknowns, routing, trace and prediction. Reset explicitly erases all history.</p>
+      <p id="history-count">Retained attempts: 0 / 6</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Retained synthetic attempt history">
+        <table>
+          <caption>In-memory evidence only; not a native replication or five-nines report</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Configuration</th>
+            <th scope="col">Gate / impact</th><th scope="col">Correct / failed / unknown</th>
+            <th scope="col">Learning verifier</th><th scope="col">Retained proof</th></tr></thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <button type="button" id="new-attempt" disabled>New attempt (retain history)</button>
+        <button type="button" id="reset-rehearsal">Reset rehearsal and history</button>
+      </div>
+    </section>
+    <footer>
+      <p id="cleanup">Cleanup: local in-memory state only; no resources were created.</p>
+      <p>Portable synthetic model only. Native B-S061 and source-parent D-S061 acceptance remain incomplete.
+        No production Node.js 24, real DB replication/read-consistency, native Azure or reliability certification.</p>
+    </footer>
+  </main>
+</body>
+</html>

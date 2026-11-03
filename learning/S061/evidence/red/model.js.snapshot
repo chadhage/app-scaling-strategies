@@ -1,0 +1,21 @@
+(function (root, factory) {
+  'use strict';
+  const model = factory(typeof module === 'object' && module.exports
+    ? require('./fixtures.js') : root.S061Fixtures);
+  if (typeof module === 'object' && module.exports) module.exports = model;
+  else root.S061Model = model;
+}(typeof globalThis === 'object' ? globalThis : this, function (F) {
+  'use strict';
+  function createRehearsal() {
+    const snapshot = () => ({
+      phase: 'idle', config: null, primary: { version: 10, writers: 1, acknowledgedWrites: 0 },
+      sessionRequiredVersion: null, readers: [{ id: 'reader-1', version: 10 }],
+      reads: [], result: null, prediction: null, history: [], trace: [],
+    });
+    return Object.freeze({
+      snapshot, write: snapshot, addReader: snapshot, read: snapshot,
+      predict: snapshot, newAttempt: snapshot, reset: snapshot,
+    });
+  }
+  return Object.freeze({ createRehearsal, fixtures: F });
+}));

@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S061",
+  "sourceId": "S061",
+  "parentId": "D-S061",
+  "kano": "S",
+  "kanoUnit": "A-S061",
+  "packet": "SC-S061",
+  "owner": "worker-A-S061",
+  "entryGate": "SOURCE",
+  "title": "Read-replica expansion: offload reads without losing your write",
+  "entryPoint": "learning/S061/index.html",
+  "feature": "learning/S061/read-replica.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Add a reader; preserve read-your-writes rather than assuming every replica is current.",
+  "sourceAcceptance": "Offload eligible reads while preserving required read-your-writes and freshness guarantees. Actual replicas and write-scalability evidence are not inferred.",
+  "preconditions": [
+    "A modern browser supporting local HTML, CSS and JavaScript; no account or server.",
+    "One synthetic primary acknowledges fixed record SYN-RECORD-061 version 11.",
+    "Reader-1 separately has supplied version 11 in the fixture; this is not implied by write acknowledgement.",
+    "The added reader has supplied version 10, 11 or unknown; no replication process is modeled.",
+    "Browse freshness is a minimum version, not wall-clock replication latency."
+  ],
+  "actions": [
+    "Choose the added reader version, routing, browse freshness and observation coverage.",
+    "Acknowledge the fixture write, then explicitly add reader-2.",
+    "Observe four fixed browse/session reads and compare required and received versions.",
+    "Check the learning prediction separately from gate, synthetic impact and cleanup.",
+    "Start another attempt with retained history or explicitly reset all in-memory state."
+  ],
+  "input": "learning/S061/fixtures.js",
+  "assertions": [
+    "Blind offload to a lagging reader fails read-your-writes even with bounded-staleness browse.",
+    "Primary-for-session offloads eligible browse but must still satisfy browse freshness.",
+    "Verified-watermark-or-primary routing never trusts an unknown or insufficient version.",
+    "Current replicas can serve all four synthetic reads without adding writers.",
+    "Missing observations stay unknown; known failures dominate uncertainty.",
+    "Exact inputs, lifecycle, immutable snapshots and six-attempt retained history are guarded."
+  ],
+  "bounds": {
+    "completedAttempts": 6,
+    "readsPerAttempt": 4,
+    "configurations": 54,
+    "writers": 1,
+    "readersBefore": 1,
+    "readersAfter": 2,
+    "addedReader": ["behind", "current", "unknown"],
+    "routing": ["unchecked", "primary-for-session", "verified-or-primary"],
+    "freshness": ["one-version", "current-only"],
+    "coverage": ["complete", "partial", "none"],
+    "arbitraryEndpointsOrRecords": false
+  },
+  "iac": {
+    "status": "N/A",
+    "decisionStage": "After genuine behavioral RED and before behavior implementation",
+    "decision": "learning/S061/evidence/iac-decision.json",
+    "redReference": "learning/S061/evidence/red/run.json",
+    "reason": "Resource-free local synthetic lesson; no cloud/IaC/scaffold/identity/deploy/spend."
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "purpose": "Existing Node22 tooling only; not production Node24 certification.",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "dependencyChanges": false
+  },
+  "limits": [
+    "Every write, version, watermark, read, route and outcome is a deterministic synthetic fixture.",
+    "No actual database, replication process, lag measurement, transactional guarantee or read-consistency proof.",
+    "Reader count is not measured throughput, and writer count remains one.",
+    "No real authentication, credentials, cloud calls, native Azure or production24 certification.",
+    "History retains at most six attempts in memory; explicit reset or reload clears it.",
+    "The abandoned browser lifecycle prototype is unqualified; no unattended-runner certification.",
+    "B-S061 and original D-S061 actual-replica acceptance remain separate and unfulfilled.",
+    "One frozen S unit; tests, evidence and refinement earn no additional units."
+  ]
+}

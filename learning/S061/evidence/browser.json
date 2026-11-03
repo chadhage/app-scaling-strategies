@@ -1,0 +1,973 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S061",
+  "workerId": "worker-A-S061",
+  "mode": "synthetic",
+  "entry": "learning\\S061\\index.html",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "startedAtUtc": "2026-11-03T19:28:00.626Z",
+  "captureExplicitlyEnabled": true,
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "publication": "53c0c0d"
+  },
+  "outcome": "PASS",
+  "observations": [
+    {
+      "name": "state guard rejects reads before an acknowledged write and expansion",
+      "phase": "Phase: idle",
+      "gate": "Read contract gate: not evaluated",
+      "impact": "Synthetic read impact: not evaluated",
+      "topology": "Readers: 1 · writers: 1 · acknowledged synthetic writes: 0",
+      "versions": "No fixture write acknowledged.",
+      "metrics": "No reads observed.",
+      "reads": [],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "Action requires expanded; current phase is idle.",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "input guard exposes an accessible error and preserves idle state",
+      "phase": "Phase: idle",
+      "gate": "Read contract gate: not evaluated",
+      "impact": "Synthetic read impact: not evaluated",
+      "topology": "Readers: 1 · writers: 1 · acknowledged synthetic writes: 0",
+      "versions": "No fixture write acknowledged.",
+      "metrics": "No reads observed.",
+      "reads": [],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "Added reader: choose an exact declared value.",
+      "activeElement": "addedReader"
+    },
+    {
+      "name": "locked write phase rejects repeated submit without creating evidence",
+      "phase": "Phase: written",
+      "gate": "Read contract gate: not evaluated",
+      "impact": "Synthetic read impact: not evaluated",
+      "topology": "Readers: 1 · writers: 1 · acknowledged synthetic writes: 1",
+      "versions": "Primary v11; session minimum v11; reader-1 v11. Supplied fixture versions, not measured replication.",
+      "metrics": "No reads observed.",
+      "reads": [],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\nFixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\nWriter count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.",
+      "alert": "Action requires idle; current phase is written.",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "explicit expansion and duplicate-add guard retain two readers and one writer",
+      "phase": "Phase: expanded",
+      "gate": "Read contract gate: not evaluated",
+      "impact": "Synthetic read impact: not evaluated",
+      "topology": "Readers: 2 · writers: 1 · acknowledged synthetic writes: 1",
+      "versions": "Primary v11; session minimum v11; reader-1 v11; reader-2 v10. Supplied fixture versions, not measured replication.",
+      "metrics": "No reads observed.",
+      "reads": [],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\nFixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\nWriter count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.\nAdded reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.",
+      "alert": "Action requires written; current phase is expanded.",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "unchecked added reader fails read-your-writes even with bounded-staleness browse",
+      "phase": "Phase: complete",
+      "gate": "Read contract gate: FAIL",
+      "impact": "Synthetic read impact: INTERRUPTED",
+      "topology": "Readers: 2 · writers: 1 · acknowledged synthetic writes: 1",
+      "versions": "Primary v11; session minimum v11; reader-1 v11; reader-2 v10. Supplied fixture versions, not measured replication.",
+      "metrics": "Attempted 4 · observed 4 · correct 3 · failed 1 · unknown 0 · replica reads 4 · primary reads 0 · eligible offloaded 2",
+      "reads": [
+        [
+          "browse-existing / reader-1",
+          "v10",
+          "reader-1 / UNCHECKED_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-existing / reader-1",
+          "v11",
+          "reader-1 / UNCHECKED_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "browse-added / reader-2",
+          "v10",
+          "reader-2 / UNCHECKED_REPLICA",
+          "reader-2 / v10",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-added / reader-2",
+          "v11",
+          "reader-2 / UNCHECKED_REPLICA",
+          "reader-2 / v10",
+          "FAIL / STALE_READ"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "behind / unchecked / one-version / complete",
+          "FAIL / INTERRUPTED",
+          "3 / 1 / 0",
+          "PASS",
+          "Inspect attempt 1{\n  \"attempt\": 1,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 3,\n    \"failed\": 1,\n    \"unknown\": 0,\n    \"replicaReads\": 4,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"FAIL\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"Synthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction FAIL: verifier PASS; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · selected FAIL · measured FAIL. Synthetic impact is unchanged.",
+      "trace": "Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\nFixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\nWriter count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.\nAdded reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\nbrowse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\nown-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nbrowse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\nown-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 10; FAIL STALE_READ.\nSynthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\nLearning prediction FAIL: verifier PASS; measured synthetic impact remains INTERRUPTED.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "session-primary preserves the acknowledged write and offloads eligible browse reads",
+      "phase": "Phase: complete",
+      "gate": "Read contract gate: PASS",
+      "impact": "Synthetic read impact: CONTRACT_MET",
+      "topology": "Readers: 2 · writers: 1 · acknowledged synthetic writes: 1",
+      "versions": "Primary v11; session minimum v11; reader-1 v11; reader-2 v10. Supplied fixture versions, not measured replication.",
+      "metrics": "Attempted 4 · observed 4 · correct 4 · failed 0 · unknown 0 · replica reads 2 · primary reads 2 · eligible offloaded 2",
+      "reads": [
+        [
+          "browse-existing / reader-1",
+          "v10",
+          "reader-1 / ELIGIBLE_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-existing / reader-1",
+          "v11",
+          "primary / SESSION_PRIMARY",
+          "primary / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "browse-added / reader-2",
+          "v10",
+          "reader-2 / ELIGIBLE_REPLICA",
+          "reader-2 / v10",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-added / reader-2",
+          "v11",
+          "primary / SESSION_PRIMARY",
+          "primary / v11",
+          "PASS / CONTRACT_MET"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "behind / unchecked / one-version / complete",
+          "FAIL / INTERRUPTED",
+          "3 / 1 / 0",
+          "PASS",
+          "Inspect attempt 1{\n  \"attempt\": 1,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 3,\n    \"failed\": 1,\n    \"unknown\": 0,\n    \"replicaReads\": 4,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"FAIL\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"Synthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction FAIL: verifier PASS; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ],
+        [
+          "2",
+          "behind / primary-for-session / one-version / complete",
+          "PASS / CONTRACT_MET",
+          "4 / 0 / 0",
+          "PASS",
+          "Inspect attempt 2{\n  \"attempt\": 2,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"primary-for-session\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"PASS\",\n    \"impact\": \"CONTRACT_MET\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 4,\n    \"failed\": 0,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"PASS\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=primary-for-session, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (ELIGIBLE_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.\"\n  ]\n}"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · selected PASS · measured PASS. Synthetic impact is unchanged.",
+      "trace": "Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\nFixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\nWriter count remains 1; routing=primary-for-session, browse freshness=one-version, coverage=complete.\nAdded reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\nbrowse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\nown-write-existing: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\nbrowse-added: selected reader-2 (ELIGIBLE_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\nown-write-added: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\nSynthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\nLearning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "strict browse freshness still fails; wrong learning prediction cannot change measured failure",
+      "phase": "Phase: complete",
+      "gate": "Read contract gate: FAIL",
+      "impact": "Synthetic read impact: INTERRUPTED",
+      "topology": "Readers: 2 · writers: 1 · acknowledged synthetic writes: 1",
+      "versions": "Primary v11; session minimum v11; reader-1 v11; reader-2 v10. Supplied fixture versions, not measured replication.",
+      "metrics": "Attempted 4 · observed 4 · correct 3 · failed 1 · unknown 0 · replica reads 2 · primary reads 2 · eligible offloaded 2",
+      "reads": [
+        [
+          "browse-existing / reader-1",
+          "v11",
+          "reader-1 / ELIGIBLE_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-existing / reader-1",
+          "v11",
+          "primary / SESSION_PRIMARY",
+          "primary / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "browse-added / reader-2",
+          "v11",
+          "reader-2 / ELIGIBLE_REPLICA",
+          "reader-2 / v10",
+          "FAIL / STALE_READ"
+        ],
+        [
+          "own-write-added / reader-2",
+          "v11",
+          "primary / SESSION_PRIMARY",
+          "primary / v11",
+          "PASS / CONTRACT_MET"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "behind / unchecked / one-version / complete",
+          "FAIL / INTERRUPTED",
+          "3 / 1 / 0",
+          "PASS",
+          "Inspect attempt 1{\n  \"attempt\": 1,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 3,\n    \"failed\": 1,\n    \"unknown\": 0,\n    \"replicaReads\": 4,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"FAIL\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"Synthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction FAIL: verifier PASS; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ],
+        [
+          "2",
+          "behind / primary-for-session / one-version / complete",
+          "PASS / CONTRACT_MET",
+          "4 / 0 / 0",
+          "PASS",
+          "Inspect attempt 2{\n  \"attempt\": 2,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"primary-for-session\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"PASS\",\n    \"impact\": \"CONTRACT_MET\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 4,\n    \"failed\": 0,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"PASS\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=primary-for-session, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (ELIGIBLE_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.\"\n  ]\n}"
+        ],
+        [
+          "3",
+          "behind / primary-for-session / current-only / complete",
+          "FAIL / INTERRUPTED",
+          "3 / 1 / 0",
+          "FAIL",
+          "Inspect attempt 3{\n  \"attempt\": 3,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"primary-for-session\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 3,\n    \"failed\": 1,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"FAIL\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=primary-for-session, browse freshness=current-only, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (ELIGIBLE_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"own-write-added: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier FAIL; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ]
+      ],
+      "prediction": "Prediction verifier: FAIL · selected PASS · measured FAIL. Synthetic impact is unchanged.",
+      "trace": "Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\nFixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\nWriter count remains 1; routing=primary-for-session, browse freshness=current-only, coverage=complete.\nAdded reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\nbrowse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nown-write-existing: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\nbrowse-added: selected reader-2 (ELIGIBLE_REPLICA); requires >=11, received 10; FAIL STALE_READ.\nown-write-added: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\nSynthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\nLearning prediction PASS: verifier FAIL; measured synthetic impact remains INTERRUPTED.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "verified watermark fallback satisfies strict freshness without synchronizing the replica",
+      "phase": "Phase: complete",
+      "gate": "Read contract gate: PASS",
+      "impact": "Synthetic read impact: CONTRACT_MET",
+      "topology": "Readers: 2 · writers: 1 · acknowledged synthetic writes: 1",
+      "versions": "Primary v11; session minimum v11; reader-1 v11; reader-2 v10. Supplied fixture versions, not measured replication.",
+      "metrics": "Attempted 4 · observed 4 · correct 4 · failed 0 · unknown 0 · replica reads 2 · primary reads 2 · eligible offloaded 1",
+      "reads": [
+        [
+          "browse-existing / reader-1",
+          "v11",
+          "reader-1 / ELIGIBLE_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-existing / reader-1",
+          "v11",
+          "reader-1 / ELIGIBLE_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "browse-added / reader-2",
+          "v11",
+          "primary / BEHIND_WATERMARK_FALLBACK",
+          "primary / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-added / reader-2",
+          "v11",
+          "primary / BEHIND_WATERMARK_FALLBACK",
+          "primary / v11",
+          "PASS / CONTRACT_MET"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "behind / unchecked / one-version / complete",
+          "FAIL / INTERRUPTED",
+          "3 / 1 / 0",
+          "PASS",
+          "Inspect attempt 1{\n  \"attempt\": 1,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 3,\n    \"failed\": 1,\n    \"unknown\": 0,\n    \"replicaReads\": 4,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"FAIL\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"Synthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction FAIL: verifier PASS; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ],
+        [
+          "2",
+          "behind / primary-for-session / one-version / complete",
+          "PASS / CONTRACT_MET",
+          "4 / 0 / 0",
+          "PASS",
+          "Inspect attempt 2{\n  \"attempt\": 2,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"primary-for-session\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"PASS\",\n    \"impact\": \"CONTRACT_MET\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 4,\n    \"failed\": 0,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"PASS\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=primary-for-session, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (ELIGIBLE_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.\"\n  ]\n}"
+        ],
+        [
+          "3",
+          "behind / primary-for-session / current-only / complete",
+          "FAIL / INTERRUPTED",
+          "3 / 1 / 0",
+          "FAIL",
+          "Inspect attempt 3{\n  \"attempt\": 3,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"primary-for-session\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 3,\n    \"failed\": 1,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"FAIL\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=primary-for-session, browse freshness=current-only, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (ELIGIBLE_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"own-write-added: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier FAIL; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ],
+        [
+          "4",
+          "behind / verified-or-primary / current-only / complete",
+          "PASS / CONTRACT_MET",
+          "4 / 0 / 0",
+          "PASS",
+          "Inspect attempt 4{\n  \"attempt\": 4,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"verified-or-primary\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"BEHIND_WATERMARK_FALLBACK\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"BEHIND_WATERMARK_FALLBACK\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"PASS\",\n    \"impact\": \"CONTRACT_MET\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 4,\n    \"failed\": 0,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 1\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"PASS\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=verified-or-primary, browse freshness=current-only, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected primary (BEHIND_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-added: selected primary (BEHIND_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.\"\n  ]\n}"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · selected PASS · measured PASS. Synthetic impact is unchanged.",
+      "trace": "Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\nFixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\nWriter count remains 1; routing=verified-or-primary, browse freshness=current-only, coverage=complete.\nAdded reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\nbrowse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nown-write-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nbrowse-added: selected primary (BEHIND_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\nown-write-added: selected primary (BEHIND_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\nSynthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\nLearning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "unknown added-reader version produces two unknown reads rather than assumed correctness",
+      "phase": "Phase: complete",
+      "gate": "Read contract gate: UNKNOWN",
+      "impact": "Synthetic read impact: UNVERIFIED",
+      "topology": "Readers: 2 · writers: 1 · acknowledged synthetic writes: 1",
+      "versions": "Primary v11; session minimum v11; reader-1 v11; reader-2 version unknown. Supplied fixture versions, not measured replication.",
+      "metrics": "Attempted 4 · observed 4 · correct 2 · failed 0 · unknown 2 · replica reads 4 · primary reads 0 · eligible offloaded 2",
+      "reads": [
+        [
+          "browse-existing / reader-1",
+          "v10",
+          "reader-1 / UNCHECKED_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-existing / reader-1",
+          "v11",
+          "reader-1 / UNCHECKED_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "browse-added / reader-2",
+          "v10",
+          "reader-2 / UNCHECKED_REPLICA",
+          "reader-2 / version unknown",
+          "UNKNOWN / VERSION_UNKNOWN"
+        ],
+        [
+          "own-write-added / reader-2",
+          "v11",
+          "reader-2 / UNCHECKED_REPLICA",
+          "reader-2 / version unknown",
+          "UNKNOWN / VERSION_UNKNOWN"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "behind / unchecked / one-version / complete",
+          "FAIL / INTERRUPTED",
+          "3 / 1 / 0",
+          "PASS",
+          "Inspect attempt 1{\n  \"attempt\": 1,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 3,\n    \"failed\": 1,\n    \"unknown\": 0,\n    \"replicaReads\": 4,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"FAIL\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"Synthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction FAIL: verifier PASS; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ],
+        [
+          "2",
+          "behind / primary-for-session / one-version / complete",
+          "PASS / CONTRACT_MET",
+          "4 / 0 / 0",
+          "PASS",
+          "Inspect attempt 2{\n  \"attempt\": 2,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"primary-for-session\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"PASS\",\n    \"impact\": \"CONTRACT_MET\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 4,\n    \"failed\": 0,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"PASS\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=primary-for-session, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (ELIGIBLE_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.\"\n  ]\n}"
+        ],
+        [
+          "3",
+          "behind / primary-for-session / current-only / complete",
+          "FAIL / INTERRUPTED",
+          "3 / 1 / 0",
+          "FAIL",
+          "Inspect attempt 3{\n  \"attempt\": 3,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"primary-for-session\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 3,\n    \"failed\": 1,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"FAIL\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=primary-for-session, browse freshness=current-only, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (ELIGIBLE_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"own-write-added: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier FAIL; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ],
+        [
+          "4",
+          "behind / verified-or-primary / current-only / complete",
+          "PASS / CONTRACT_MET",
+          "4 / 0 / 0",
+          "PASS",
+          "Inspect attempt 4{\n  \"attempt\": 4,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"verified-or-primary\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"BEHIND_WATERMARK_FALLBACK\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"BEHIND_WATERMARK_FALLBACK\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"PASS\",\n    \"impact\": \"CONTRACT_MET\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 4,\n    \"failed\": 0,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 1\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"PASS\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=verified-or-primary, browse freshness=current-only, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected primary (BEHIND_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-added: selected primary (BEHIND_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.\"\n  ]\n}"
+        ],
+        [
+          "5",
+          "unknown / unchecked / one-version / complete",
+          "UNKNOWN / UNVERIFIED",
+          "2 / 0 / 2",
+          "PASS",
+          "Inspect attempt 5{\n  \"attempt\": 5,\n  \"config\": {\n    \"addedReader\": \"unknown\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": null\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"VERSION_UNKNOWN\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"VERSION_UNKNOWN\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"UNKNOWN\",\n    \"impact\": \"UNVERIFIED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 2,\n    \"failed\": 0,\n    \"unknown\": 2,\n    \"replicaReads\": 4,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"UNKNOWN\",\n    \"actual\": \"UNKNOWN\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version unknown; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received unknown; UNKNOWN VERSION_UNKNOWN.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN VERSION_UNKNOWN.\",\n    \"Synthetic gate UNKNOWN; 2 correct, 0 failed, 2 unknown. No write-capacity claim.\",\n    \"Learning prediction UNKNOWN: verifier PASS; measured synthetic impact remains UNVERIFIED.\"\n  ]\n}"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · selected UNKNOWN · measured UNKNOWN. Synthetic impact is unchanged.",
+      "trace": "Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\nFixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\nWriter count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.\nAdded reader-2 at synthetic version unknown; readers 1 -> 2, writers remain 1. No synchronization was performed.\nbrowse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\nown-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nbrowse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received unknown; UNKNOWN VERSION_UNKNOWN.\nown-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN VERSION_UNKNOWN.\nSynthetic gate UNKNOWN; 2 correct, 0 failed, 2 unknown. No write-capacity claim.\nLearning prediction UNKNOWN: verifier PASS; measured synthetic impact remains UNVERIFIED.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "unknown watermark uses primary fallback rather than pretending the reader caught up",
+      "phase": "Phase: complete",
+      "gate": "Read contract gate: PASS",
+      "impact": "Synthetic read impact: CONTRACT_MET",
+      "topology": "Readers: 2 · writers: 1 · acknowledged synthetic writes: 1",
+      "versions": "Primary v11; session minimum v11; reader-1 v11; reader-2 version unknown. Supplied fixture versions, not measured replication.",
+      "metrics": "Attempted 4 · observed 4 · correct 4 · failed 0 · unknown 0 · replica reads 2 · primary reads 2 · eligible offloaded 1",
+      "reads": [
+        [
+          "browse-existing / reader-1",
+          "v10",
+          "reader-1 / ELIGIBLE_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-existing / reader-1",
+          "v11",
+          "reader-1 / ELIGIBLE_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "browse-added / reader-2",
+          "v10",
+          "primary / UNKNOWN_WATERMARK_FALLBACK",
+          "primary / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-added / reader-2",
+          "v11",
+          "primary / UNKNOWN_WATERMARK_FALLBACK",
+          "primary / v11",
+          "PASS / CONTRACT_MET"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "behind / unchecked / one-version / complete",
+          "FAIL / INTERRUPTED",
+          "3 / 1 / 0",
+          "PASS",
+          "Inspect attempt 1{\n  \"attempt\": 1,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 3,\n    \"failed\": 1,\n    \"unknown\": 0,\n    \"replicaReads\": 4,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"FAIL\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"Synthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction FAIL: verifier PASS; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ],
+        [
+          "2",
+          "behind / primary-for-session / one-version / complete",
+          "PASS / CONTRACT_MET",
+          "4 / 0 / 0",
+          "PASS",
+          "Inspect attempt 2{\n  \"attempt\": 2,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"primary-for-session\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"PASS\",\n    \"impact\": \"CONTRACT_MET\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 4,\n    \"failed\": 0,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"PASS\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=primary-for-session, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (ELIGIBLE_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.\"\n  ]\n}"
+        ],
+        [
+          "3",
+          "behind / primary-for-session / current-only / complete",
+          "FAIL / INTERRUPTED",
+          "3 / 1 / 0",
+          "FAIL",
+          "Inspect attempt 3{\n  \"attempt\": 3,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"primary-for-session\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 3,\n    \"failed\": 1,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"FAIL\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=primary-for-session, browse freshness=current-only, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (ELIGIBLE_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"own-write-added: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier FAIL; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ],
+        [
+          "4",
+          "behind / verified-or-primary / current-only / complete",
+          "PASS / CONTRACT_MET",
+          "4 / 0 / 0",
+          "PASS",
+          "Inspect attempt 4{\n  \"attempt\": 4,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"verified-or-primary\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"BEHIND_WATERMARK_FALLBACK\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"BEHIND_WATERMARK_FALLBACK\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"PASS\",\n    \"impact\": \"CONTRACT_MET\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 4,\n    \"failed\": 0,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 1\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"PASS\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=verified-or-primary, browse freshness=current-only, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected primary (BEHIND_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-added: selected primary (BEHIND_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.\"\n  ]\n}"
+        ],
+        [
+          "5",
+          "unknown / unchecked / one-version / complete",
+          "UNKNOWN / UNVERIFIED",
+          "2 / 0 / 2",
+          "PASS",
+          "Inspect attempt 5{\n  \"attempt\": 5,\n  \"config\": {\n    \"addedReader\": \"unknown\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": null\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"VERSION_UNKNOWN\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"VERSION_UNKNOWN\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"UNKNOWN\",\n    \"impact\": \"UNVERIFIED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 2,\n    \"failed\": 0,\n    \"unknown\": 2,\n    \"replicaReads\": 4,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"UNKNOWN\",\n    \"actual\": \"UNKNOWN\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version unknown; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received unknown; UNKNOWN VERSION_UNKNOWN.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN VERSION_UNKNOWN.\",\n    \"Synthetic gate UNKNOWN; 2 correct, 0 failed, 2 unknown. No write-capacity claim.\",\n    \"Learning prediction UNKNOWN: verifier PASS; measured synthetic impact remains UNVERIFIED.\"\n  ]\n}"
+        ],
+        [
+          "6",
+          "unknown / verified-or-primary / one-version / complete",
+          "PASS / CONTRACT_MET",
+          "4 / 0 / 0",
+          "PASS",
+          "Inspect attempt 6{\n  \"attempt\": 6,\n  \"config\": {\n    \"addedReader\": \"unknown\",\n    \"routing\": \"verified-or-primary\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": null\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"UNKNOWN_WATERMARK_FALLBACK\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"UNKNOWN_WATERMARK_FALLBACK\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"PASS\",\n    \"impact\": \"CONTRACT_MET\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 4,\n    \"failed\": 0,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 1\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"PASS\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=verified-or-primary, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version unknown; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected primary (UNKNOWN_WATERMARK_FALLBACK); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-added: selected primary (UNKNOWN_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.\"\n  ]\n}"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · selected PASS · measured PASS. Synthetic impact is unchanged.",
+      "trace": "Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\nFixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\nWriter count remains 1; routing=verified-or-primary, browse freshness=one-version, coverage=complete.\nAdded reader-2 at synthetic version unknown; readers 1 -> 2, writers remain 1. No synchronization was performed.\nbrowse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\nown-write-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nbrowse-added: selected primary (UNKNOWN_WATERMARK_FALLBACK); requires >=10, received 11; PASS CONTRACT_MET.\nown-write-added: selected primary (UNKNOWN_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\nSynthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\nLearning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.",
+      "alert": "",
+      "activeElement": "reset-rehearsal"
+    },
+    {
+      "name": "six-attempt history cap refuses a seventh attempt without eviction",
+      "phase": "Phase: complete",
+      "gate": "Read contract gate: PASS",
+      "impact": "Synthetic read impact: CONTRACT_MET",
+      "topology": "Readers: 2 · writers: 1 · acknowledged synthetic writes: 1",
+      "versions": "Primary v11; session minimum v11; reader-1 v11; reader-2 version unknown. Supplied fixture versions, not measured replication.",
+      "metrics": "Attempted 4 · observed 4 · correct 4 · failed 0 · unknown 0 · replica reads 2 · primary reads 2 · eligible offloaded 1",
+      "reads": [
+        [
+          "browse-existing / reader-1",
+          "v10",
+          "reader-1 / ELIGIBLE_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-existing / reader-1",
+          "v11",
+          "reader-1 / ELIGIBLE_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "browse-added / reader-2",
+          "v10",
+          "primary / UNKNOWN_WATERMARK_FALLBACK",
+          "primary / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-added / reader-2",
+          "v11",
+          "primary / UNKNOWN_WATERMARK_FALLBACK",
+          "primary / v11",
+          "PASS / CONTRACT_MET"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "behind / unchecked / one-version / complete",
+          "FAIL / INTERRUPTED",
+          "3 / 1 / 0",
+          "PASS",
+          "Inspect attempt 1{\n  \"attempt\": 1,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 3,\n    \"failed\": 1,\n    \"unknown\": 0,\n    \"replicaReads\": 4,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"FAIL\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"Synthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction FAIL: verifier PASS; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ],
+        [
+          "2",
+          "behind / primary-for-session / one-version / complete",
+          "PASS / CONTRACT_MET",
+          "4 / 0 / 0",
+          "PASS",
+          "Inspect attempt 2{\n  \"attempt\": 2,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"primary-for-session\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"PASS\",\n    \"impact\": \"CONTRACT_MET\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 4,\n    \"failed\": 0,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"PASS\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=primary-for-session, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (ELIGIBLE_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.\"\n  ]\n}"
+        ],
+        [
+          "3",
+          "behind / primary-for-session / current-only / complete",
+          "FAIL / INTERRUPTED",
+          "3 / 1 / 0",
+          "FAIL",
+          "Inspect attempt 3{\n  \"attempt\": 3,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"primary-for-session\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"SESSION_PRIMARY\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 3,\n    \"failed\": 1,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"FAIL\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=primary-for-session, browse freshness=current-only, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (ELIGIBLE_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"own-write-added: selected primary (SESSION_PRIMARY); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate FAIL; 3 correct, 1 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier FAIL; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ],
+        [
+          "4",
+          "behind / verified-or-primary / current-only / complete",
+          "PASS / CONTRACT_MET",
+          "4 / 0 / 0",
+          "PASS",
+          "Inspect attempt 4{\n  \"attempt\": 4,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"verified-or-primary\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"BEHIND_WATERMARK_FALLBACK\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"BEHIND_WATERMARK_FALLBACK\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"PASS\",\n    \"impact\": \"CONTRACT_MET\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 4,\n    \"failed\": 0,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 1\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"PASS\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=verified-or-primary, browse freshness=current-only, coverage=complete.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected primary (BEHIND_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-added: selected primary (BEHIND_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.\"\n  ]\n}"
+        ],
+        [
+          "5",
+          "unknown / unchecked / one-version / complete",
+          "UNKNOWN / UNVERIFIED",
+          "2 / 0 / 2",
+          "PASS",
+          "Inspect attempt 5{\n  \"attempt\": 5,\n  \"config\": {\n    \"addedReader\": \"unknown\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": null\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"VERSION_UNKNOWN\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"VERSION_UNKNOWN\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"UNKNOWN\",\n    \"impact\": \"UNVERIFIED\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 2,\n    \"failed\": 0,\n    \"unknown\": 2,\n    \"replicaReads\": 4,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"UNKNOWN\",\n    \"actual\": \"UNKNOWN\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version unknown; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received unknown; UNKNOWN VERSION_UNKNOWN.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN VERSION_UNKNOWN.\",\n    \"Synthetic gate UNKNOWN; 2 correct, 0 failed, 2 unknown. No write-capacity claim.\",\n    \"Learning prediction UNKNOWN: verifier PASS; measured synthetic impact remains UNVERIFIED.\"\n  ]\n}"
+        ],
+        [
+          "6",
+          "unknown / verified-or-primary / one-version / complete",
+          "PASS / CONTRACT_MET",
+          "4 / 0 / 0",
+          "PASS",
+          "Inspect attempt 6{\n  \"attempt\": 6,\n  \"config\": {\n    \"addedReader\": \"unknown\",\n    \"routing\": \"verified-or-primary\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": null\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"ELIGIBLE_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"UNKNOWN_WATERMARK_FALLBACK\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"primary\",\n      \"selectionReason\": \"UNKNOWN_WATERMARK_FALLBACK\",\n      \"observed\": true,\n      \"observedTarget\": \"primary\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"PASS\",\n    \"impact\": \"CONTRACT_MET\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 4,\n    \"failed\": 0,\n    \"unknown\": 0,\n    \"replicaReads\": 2,\n    \"primaryReads\": 2,\n    \"offloadedEligible\": 1\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"PASS\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=verified-or-primary, browse freshness=one-version, coverage=complete.\",\n    \"Added reader-2 at synthetic version unknown; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected primary (UNKNOWN_WATERMARK_FALLBACK); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-added: selected primary (UNKNOWN_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.\"\n  ]\n}"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · selected PASS · measured PASS. Synthetic impact is unchanged.",
+      "trace": "Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\nFixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\nWriter count remains 1; routing=verified-or-primary, browse freshness=one-version, coverage=complete.\nAdded reader-2 at synthetic version unknown; readers 1 -> 2, writers remain 1. No synchronization was performed.\nbrowse-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\nown-write-existing: selected reader-1 (ELIGIBLE_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nbrowse-added: selected primary (UNKNOWN_WATERMARK_FALLBACK); requires >=10, received 11; PASS CONTRACT_MET.\nown-write-added: selected primary (UNKNOWN_WATERMARK_FALLBACK); requires >=11, received 11; PASS CONTRACT_MET.\nSynthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\nLearning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.",
+      "alert": "History full: six attempts retained; reset explicitly to clear them.",
+      "activeElement": "input-error"
+    },
+    {
+      "name": "keyboard reset from full history clears results, errors and exact defaults",
+      "phase": "Phase: idle",
+      "gate": "Read contract gate: not evaluated",
+      "impact": "Synthetic read impact: not evaluated",
+      "topology": "Readers: 1 · writers: 1 · acknowledged synthetic writes: 0",
+      "versions": "No fixture write acknowledged.",
+      "metrics": "No reads observed.",
+      "reads": [],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "write"
+    },
+    {
+      "name": "partial observations stay unknown and empty prediction has an accessible input error",
+      "phase": "Phase: complete",
+      "gate": "Read contract gate: UNKNOWN",
+      "impact": "Synthetic read impact: UNVERIFIED",
+      "topology": "Readers: 2 · writers: 1 · acknowledged synthetic writes: 1",
+      "versions": "Primary v11; session minimum v11; reader-1 v11; reader-2 v10. Supplied fixture versions, not measured replication.",
+      "metrics": "Attempted 4 · observed 3 · correct 3 · failed 0 · unknown 1 · replica reads 3 · primary reads 0 · eligible offloaded 2",
+      "reads": [
+        [
+          "browse-existing / reader-1",
+          "v10",
+          "reader-1 / UNCHECKED_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-existing / reader-1",
+          "v11",
+          "reader-1 / UNCHECKED_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "browse-added / reader-2",
+          "v10",
+          "reader-2 / UNCHECKED_REPLICA",
+          "reader-2 / v10",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-added / reader-2",
+          "v11",
+          "reader-2 / UNCHECKED_REPLICA",
+          "No observation / version unknown",
+          "UNKNOWN / NO_OBSERVATION"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "behind / unchecked / one-version / partial",
+          "UNKNOWN / UNVERIFIED",
+          "3 / 0 / 1",
+          "Not checked",
+          "Inspect attempt 1{\n  \"attempt\": 1,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"partial\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"UNKNOWN\",\n    \"impact\": \"UNVERIFIED\",\n    \"attempted\": 4,\n    \"observed\": 3,\n    \"correct\": 3,\n    \"failed\": 0,\n    \"unknown\": 1,\n    \"replicaReads\": 3,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": null,\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=partial.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"Synthetic gate UNKNOWN; 3 correct, 0 failed, 1 unknown. No write-capacity claim.\"\n  ]\n}"
+        ]
+      ],
+      "prediction": "Prediction not checked.",
+      "trace": "Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\nFixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\nWriter count remains 1; routing=unchecked, browse freshness=one-version, coverage=partial.\nAdded reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\nbrowse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\nown-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nbrowse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\nown-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\nSynthetic gate UNKNOWN; 3 correct, 0 failed, 1 unknown. No write-capacity claim.",
+      "alert": "Prediction: choose PASS, FAIL or UNKNOWN.",
+      "activeElement": "prediction"
+    },
+    {
+      "name": "known stale read dominates incomplete coverage without dropping the remaining unknown",
+      "phase": "Phase: complete",
+      "gate": "Read contract gate: FAIL",
+      "impact": "Synthetic read impact: INTERRUPTED",
+      "topology": "Readers: 2 · writers: 1 · acknowledged synthetic writes: 1",
+      "versions": "Primary v11; session minimum v11; reader-1 v11; reader-2 v10. Supplied fixture versions, not measured replication.",
+      "metrics": "Attempted 4 · observed 3 · correct 2 · failed 1 · unknown 1 · replica reads 3 · primary reads 0 · eligible offloaded 2",
+      "reads": [
+        [
+          "browse-existing / reader-1",
+          "v11",
+          "reader-1 / UNCHECKED_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-existing / reader-1",
+          "v11",
+          "reader-1 / UNCHECKED_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "browse-added / reader-2",
+          "v11",
+          "reader-2 / UNCHECKED_REPLICA",
+          "reader-2 / v10",
+          "FAIL / STALE_READ"
+        ],
+        [
+          "own-write-added / reader-2",
+          "v11",
+          "reader-2 / UNCHECKED_REPLICA",
+          "No observation / version unknown",
+          "UNKNOWN / NO_OBSERVATION"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "behind / unchecked / one-version / partial",
+          "UNKNOWN / UNVERIFIED",
+          "3 / 0 / 1",
+          "PASS",
+          "Inspect attempt 1{\n  \"attempt\": 1,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"partial\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"UNKNOWN\",\n    \"impact\": \"UNVERIFIED\",\n    \"attempted\": 4,\n    \"observed\": 3,\n    \"correct\": 3,\n    \"failed\": 0,\n    \"unknown\": 1,\n    \"replicaReads\": 3,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"UNKNOWN\",\n    \"actual\": \"UNKNOWN\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=partial.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"Synthetic gate UNKNOWN; 3 correct, 0 failed, 1 unknown. No write-capacity claim.\",\n    \"Learning prediction UNKNOWN: verifier PASS; measured synthetic impact remains UNVERIFIED.\"\n  ]\n}"
+        ],
+        [
+          "2",
+          "behind / unchecked / current-only / partial",
+          "FAIL / INTERRUPTED",
+          "2 / 1 / 1",
+          "PASS",
+          "Inspect attempt 2{\n  \"attempt\": 2,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"partial\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 3,\n    \"correct\": 2,\n    \"failed\": 1,\n    \"unknown\": 1,\n    \"replicaReads\": 3,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"FAIL\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=current-only, coverage=partial.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"Synthetic gate FAIL; 2 correct, 1 failed, 1 unknown. No write-capacity claim.\",\n    \"Learning prediction FAIL: verifier PASS; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · selected FAIL · measured FAIL. Synthetic impact is unchanged.",
+      "trace": "Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\nFixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\nWriter count remains 1; routing=unchecked, browse freshness=current-only, coverage=partial.\nAdded reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\nbrowse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nown-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nbrowse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 10; FAIL STALE_READ.\nown-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\nSynthetic gate FAIL; 2 correct, 1 failed, 1 unknown. No write-capacity claim.\nLearning prediction FAIL: verifier PASS; measured synthetic impact remains INTERRUPTED.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "absent observations never invent returned versions or successful routing",
+      "phase": "Phase: complete",
+      "gate": "Read contract gate: UNKNOWN",
+      "impact": "Synthetic read impact: UNVERIFIED",
+      "topology": "Readers: 2 · writers: 1 · acknowledged synthetic writes: 1",
+      "versions": "Primary v11; session minimum v11; reader-1 v11; reader-2 version unknown. Supplied fixture versions, not measured replication.",
+      "metrics": "Attempted 4 · observed 0 · correct 0 · failed 0 · unknown 4 · replica reads 0 · primary reads 0 · eligible offloaded 0",
+      "reads": [
+        [
+          "browse-existing / reader-1",
+          "v11",
+          "reader-1 / UNCHECKED_REPLICA",
+          "No observation / version unknown",
+          "UNKNOWN / NO_OBSERVATION"
+        ],
+        [
+          "own-write-existing / reader-1",
+          "v11",
+          "reader-1 / UNCHECKED_REPLICA",
+          "No observation / version unknown",
+          "UNKNOWN / NO_OBSERVATION"
+        ],
+        [
+          "browse-added / reader-2",
+          "v11",
+          "reader-2 / UNCHECKED_REPLICA",
+          "No observation / version unknown",
+          "UNKNOWN / NO_OBSERVATION"
+        ],
+        [
+          "own-write-added / reader-2",
+          "v11",
+          "reader-2 / UNCHECKED_REPLICA",
+          "No observation / version unknown",
+          "UNKNOWN / NO_OBSERVATION"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "behind / unchecked / one-version / partial",
+          "UNKNOWN / UNVERIFIED",
+          "3 / 0 / 1",
+          "PASS",
+          "Inspect attempt 1{\n  \"attempt\": 1,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"partial\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"UNKNOWN\",\n    \"impact\": \"UNVERIFIED\",\n    \"attempted\": 4,\n    \"observed\": 3,\n    \"correct\": 3,\n    \"failed\": 0,\n    \"unknown\": 1,\n    \"replicaReads\": 3,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"UNKNOWN\",\n    \"actual\": \"UNKNOWN\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=partial.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"Synthetic gate UNKNOWN; 3 correct, 0 failed, 1 unknown. No write-capacity claim.\",\n    \"Learning prediction UNKNOWN: verifier PASS; measured synthetic impact remains UNVERIFIED.\"\n  ]\n}"
+        ],
+        [
+          "2",
+          "behind / unchecked / current-only / partial",
+          "FAIL / INTERRUPTED",
+          "2 / 1 / 1",
+          "PASS",
+          "Inspect attempt 2{\n  \"attempt\": 2,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"partial\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 3,\n    \"correct\": 2,\n    \"failed\": 1,\n    \"unknown\": 1,\n    \"replicaReads\": 3,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"FAIL\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=current-only, coverage=partial.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"Synthetic gate FAIL; 2 correct, 1 failed, 1 unknown. No write-capacity claim.\",\n    \"Learning prediction FAIL: verifier PASS; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ],
+        [
+          "3",
+          "unknown / unchecked / current-only / none",
+          "UNKNOWN / UNVERIFIED",
+          "0 / 0 / 4",
+          "PASS",
+          "Inspect attempt 3{\n  \"attempt\": 3,\n  \"config\": {\n    \"addedReader\": \"unknown\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"none\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": null\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"UNKNOWN\",\n    \"impact\": \"UNVERIFIED\",\n    \"attempted\": 4,\n    \"observed\": 0,\n    \"correct\": 0,\n    \"failed\": 0,\n    \"unknown\": 4,\n    \"replicaReads\": 0,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 0\n  },\n  \"prediction\": {\n    \"selected\": \"UNKNOWN\",\n    \"actual\": \"UNKNOWN\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=current-only, coverage=none.\",\n    \"Added reader-2 at synthetic version unknown; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"Synthetic gate UNKNOWN; 0 correct, 0 failed, 4 unknown. No write-capacity claim.\",\n    \"Learning prediction UNKNOWN: verifier PASS; measured synthetic impact remains UNVERIFIED.\"\n  ]\n}"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · selected UNKNOWN · measured UNKNOWN. Synthetic impact is unchanged.",
+      "trace": "Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\nFixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\nWriter count remains 1; routing=unchecked, browse freshness=current-only, coverage=none.\nAdded reader-2 at synthetic version unknown; readers 1 -> 2, writers remain 1. No synchronization was performed.\nbrowse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\nown-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\nbrowse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\nown-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\nSynthetic gate UNKNOWN; 0 correct, 0 failed, 4 unknown. No write-capacity claim.\nLearning prediction UNKNOWN: verifier PASS; measured synthetic impact remains UNVERIFIED.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "current supplied replica offloads reads but writers remain one",
+      "phase": "Phase: complete",
+      "gate": "Read contract gate: PASS",
+      "impact": "Synthetic read impact: CONTRACT_MET",
+      "topology": "Readers: 2 · writers: 1 · acknowledged synthetic writes: 1",
+      "versions": "Primary v11; session minimum v11; reader-1 v11; reader-2 v11. Supplied fixture versions, not measured replication.",
+      "metrics": "Attempted 4 · observed 4 · correct 4 · failed 0 · unknown 0 · replica reads 4 · primary reads 0 · eligible offloaded 2",
+      "reads": [
+        [
+          "browse-existing / reader-1",
+          "v11",
+          "reader-1 / UNCHECKED_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-existing / reader-1",
+          "v11",
+          "reader-1 / UNCHECKED_REPLICA",
+          "reader-1 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "browse-added / reader-2",
+          "v11",
+          "reader-2 / UNCHECKED_REPLICA",
+          "reader-2 / v11",
+          "PASS / CONTRACT_MET"
+        ],
+        [
+          "own-write-added / reader-2",
+          "v11",
+          "reader-2 / UNCHECKED_REPLICA",
+          "reader-2 / v11",
+          "PASS / CONTRACT_MET"
+        ]
+      ],
+      "history": [
+        [
+          "1",
+          "behind / unchecked / one-version / partial",
+          "UNKNOWN / UNVERIFIED",
+          "3 / 0 / 1",
+          "PASS",
+          "Inspect attempt 1{\n  \"attempt\": 1,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"one-version\",\n    \"coverage\": \"partial\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 10,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"UNKNOWN\",\n    \"impact\": \"UNVERIFIED\",\n    \"attempted\": 4,\n    \"observed\": 3,\n    \"correct\": 3,\n    \"failed\": 0,\n    \"unknown\": 1,\n    \"replicaReads\": 3,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"UNKNOWN\",\n    \"actual\": \"UNKNOWN\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=one-version, coverage=partial.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=10, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=10, received 10; PASS CONTRACT_MET.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"Synthetic gate UNKNOWN; 3 correct, 0 failed, 1 unknown. No write-capacity claim.\",\n    \"Learning prediction UNKNOWN: verifier PASS; measured synthetic impact remains UNVERIFIED.\"\n  ]\n}"
+        ],
+        [
+          "2",
+          "behind / unchecked / current-only / partial",
+          "FAIL / INTERRUPTED",
+          "2 / 1 / 1",
+          "PASS",
+          "Inspect attempt 2{\n  \"attempt\": 2,\n  \"config\": {\n    \"addedReader\": \"behind\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"partial\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 10\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 10,\n      \"status\": \"FAIL\",\n      \"reason\": \"STALE_READ\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 10,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"FAIL\",\n    \"impact\": \"INTERRUPTED\",\n    \"attempted\": 4,\n    \"observed\": 3,\n    \"correct\": 2,\n    \"failed\": 1,\n    \"unknown\": 1,\n    \"replicaReads\": 3,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"FAIL\",\n    \"actual\": \"FAIL\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=current-only, coverage=partial.\",\n    \"Added reader-2 at synthetic version 10; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 10; FAIL STALE_READ.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"Synthetic gate FAIL; 2 correct, 1 failed, 1 unknown. No write-capacity claim.\",\n    \"Learning prediction FAIL: verifier PASS; measured synthetic impact remains INTERRUPTED.\"\n  ]\n}"
+        ],
+        [
+          "3",
+          "unknown / unchecked / current-only / none",
+          "UNKNOWN / UNVERIFIED",
+          "0 / 0 / 4",
+          "PASS",
+          "Inspect attempt 3{\n  \"attempt\": 3,\n  \"config\": {\n    \"addedReader\": \"unknown\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"none\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": null\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": null,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": false,\n      \"observedTarget\": null,\n      \"recordId\": null,\n      \"receivedVersion\": null,\n      \"status\": \"UNKNOWN\",\n      \"reason\": \"NO_OBSERVATION\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"UNKNOWN\",\n    \"impact\": \"UNVERIFIED\",\n    \"attempted\": 4,\n    \"observed\": 0,\n    \"correct\": 0,\n    \"failed\": 0,\n    \"unknown\": 4,\n    \"replicaReads\": 0,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 0\n  },\n  \"prediction\": {\n    \"selected\": \"UNKNOWN\",\n    \"actual\": \"UNKNOWN\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=current-only, coverage=none.\",\n    \"Added reader-2 at synthetic version unknown; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received unknown; UNKNOWN NO_OBSERVATION.\",\n    \"Synthetic gate UNKNOWN; 0 correct, 0 failed, 4 unknown. No write-capacity claim.\",\n    \"Learning prediction UNKNOWN: verifier PASS; measured synthetic impact remains UNVERIFIED.\"\n  ]\n}"
+        ],
+        [
+          "4",
+          "current / unchecked / current-only / complete",
+          "PASS / CONTRACT_MET",
+          "4 / 0 / 0",
+          "PASS",
+          "Inspect attempt 4{\n  \"attempt\": 4,\n  \"config\": {\n    \"addedReader\": \"current\",\n    \"routing\": \"unchecked\",\n    \"freshness\": \"current-only\",\n    \"coverage\": \"complete\"\n  },\n  \"primary\": {\n    \"version\": 11,\n    \"writers\": 1,\n    \"acknowledgedWrites\": 1\n  },\n  \"readers\": [\n    {\n      \"id\": \"reader-1\",\n      \"version\": 11\n    },\n    {\n      \"id\": \"reader-2\",\n      \"version\": 11\n    }\n  ],\n  \"reads\": [\n    {\n      \"id\": \"browse-existing\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-existing\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-1\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-1\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-1\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"browse-added\",\n      \"kind\": \"browse\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    },\n    {\n      \"id\": \"own-write-added\",\n      \"kind\": \"own-write\",\n      \"candidate\": \"reader-2\",\n      \"candidateVersion\": 11,\n      \"requiredVersion\": 11,\n      \"selectedTarget\": \"reader-2\",\n      \"selectionReason\": \"UNCHECKED_REPLICA\",\n      \"observed\": true,\n      \"observedTarget\": \"reader-2\",\n      \"recordId\": \"SYN-RECORD-061\",\n      \"receivedVersion\": 11,\n      \"status\": \"PASS\",\n      \"reason\": \"CONTRACT_MET\"\n    }\n  ],\n  \"result\": {\n    \"gate\": \"PASS\",\n    \"impact\": \"CONTRACT_MET\",\n    \"attempted\": 4,\n    \"observed\": 4,\n    \"correct\": 4,\n    \"failed\": 0,\n    \"unknown\": 0,\n    \"replicaReads\": 4,\n    \"primaryReads\": 0,\n    \"offloadedEligible\": 2\n  },\n  \"prediction\": {\n    \"selected\": \"PASS\",\n    \"actual\": \"PASS\",\n    \"verifier\": \"PASS\"\n  },\n  \"trace\": [\n    \"Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\",\n    \"Fixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\",\n    \"Writer count remains 1; routing=unchecked, browse freshness=current-only, coverage=complete.\",\n    \"Added reader-2 at synthetic version 11; readers 1 -> 2, writers remain 1. No synchronization was performed.\",\n    \"browse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"browse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"own-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\",\n    \"Synthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\",\n    \"Learning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.\"\n  ]\n}"
+        ]
+      ],
+      "prediction": "Prediction verifier: PASS · selected PASS · measured PASS. Synthetic impact is unchanged.",
+      "trace": "Synthetic primary acknowledged SYN-RECORD-061 version 11; session requires at least that version.\nFixture assumption: reader-1 separately observed version 11. Write acknowledgement alone does not establish replica catch-up.\nWriter count remains 1; routing=unchecked, browse freshness=current-only, coverage=complete.\nAdded reader-2 at synthetic version 11; readers 1 -> 2, writers remain 1. No synchronization was performed.\nbrowse-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nown-write-existing: selected reader-1 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nbrowse-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nown-write-added: selected reader-2 (UNCHECKED_REPLICA); requires >=11, received 11; PASS CONTRACT_MET.\nSynthetic gate PASS; 4 correct, 0 failed, 0 unknown. No write-capacity claim.\nLearning prediction PASS: verifier PASS; measured synthetic impact remains CONTRACT_MET.",
+      "alert": "",
+      "activeElement": "new-attempt"
+    },
+    {
+      "name": "keyboard reset abandons written locked assumptions",
+      "phase": "Phase: idle",
+      "gate": "Read contract gate: not evaluated",
+      "impact": "Synthetic read impact: not evaluated",
+      "topology": "Readers: 1 · writers: 1 · acknowledged synthetic writes: 0",
+      "versions": "No fixture write acknowledged.",
+      "metrics": "No reads observed.",
+      "reads": [],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "write"
+    },
+    {
+      "name": "keyboard reset abandons expanded state without stale output",
+      "phase": "Phase: idle",
+      "gate": "Read contract gate: not evaluated",
+      "impact": "Synthetic read impact: not evaluated",
+      "topology": "Readers: 1 · writers: 1 · acknowledged synthetic writes: 0",
+      "versions": "No fixture write acknowledged.",
+      "metrics": "No reads observed.",
+      "reads": [],
+      "history": [],
+      "prediction": "Prediction not checked.",
+      "trace": "No attempt started.",
+      "alert": "",
+      "activeElement": "write"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp-probes",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-aM3uOTeCGcXfVPeLl8CybGoOkRUiSplzRzQwZNC0K4c='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Connecting to 'https://synthetic.invalid/S061-csp-probe' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Fetch API cannot load https://synthetic.invalid/S061-csp-probe. Refused to connect because it violates the document's Content Security Policy."
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "probeRequests": [],
+  "probeResponses": [],
+  "cleanup": {
+    "sessionCloseAwaited": true,
+    "serversStarted": 0,
+    "foregroundLeaseUsed": false
+  },
+  "testedSourceHashes": {
+    "index.html": "85942bed439e4d59553f51d7acf852d851992fb0dfd030216c394f9e90f25a23",
+    "styles.css": "86e83cab03c96aacac96b4a2830fc4b47965f541951729afcf19067a0919de70",
+    "fixtures.js": "c70187550be53f07a8c8b039257142c325b575d8bd40458468aefe77bb3f6750",
+    "model.js": "c96c701e352ab7e79443c31e5ea7ad14d4dc7768dfbd5f21a60cb9aaca1dd161",
+    "app.js": "7c4075e022b3d37b28bb853492077d38bee69947d672ded787b9ba4c7bd79ba8",
+    "tests\\browser.test.cjs": "f927ab1c62e61f232281eda9b0e34791730075e864980a870e7663abb0de7219"
+  },
+  "browserVersion": "156.0.4314.50",
+  "keyboardFocusOutline": {
+    "style": "solid",
+    "width": "3px"
+  },
+  "smallViewport": {
+    "width": 320,
+    "pageWidth": 320,
+    "noPageHorizontalOverflow": true
+  },
+  "csp": {
+    "fetchRejected": true,
+    "inlineExecuted": false,
+    "violations": [
+      {
+        "effectiveDirective": "script-src-elem",
+        "blockedURI": "inline",
+        "disposition": "enforce"
+      },
+      {
+        "effectiveDirective": "connect-src",
+        "blockedURI": "https://synthetic.invalid/S061-csp-probe",
+        "disposition": "enforce"
+      }
+    ]
+  },
+  "completedAtUtc": "2026-11-03T19:28:09.504Z"
+}
