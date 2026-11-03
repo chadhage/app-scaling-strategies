@@ -1,0 +1,39 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const catalog = require('../../C005/catalog-data.js');
+const matrix = require('../../C003/matrix-data.js');
+const approved = require('../../C001/approved-contract.js');
+const { prepare } = require('../preparation.js');
+
+test('all 150 scenarios and both workflows have preparation from the shared objects', async () => {
+  const views = await Promise.all(catalog.entries.map(entry => prepare(catalog, matrix, entry.id)));
+  assert.equal(views.filter(view => view.state === 'ready').length, 152,
+    'every source entry must have preparation, not a missing module or placeholder');
+  for (let index = 0; index < views.length; index++) {
+    assert.strictEqual(views[index].entry, catalog.entries[index]);
+    assert.strictEqual(views[index].catalog, catalog);
+    assert.strictEqual(views[index].matrix, matrix);
+    assert.strictEqual(views[index].approved, approved);
+  }
+});
+
+test('a valid catalog with no selection is empty, not a preparation success', async () => {
+  const view = await prepare(catalog, matrix, '');
+  assert.equal(view.state, 'empty');
+  assert.equal(view.entry, null);
+});
+
+test('synthetic learning and unavailable practice never become native or parent completion', async () => {
+  for (const id of ['S001', 'S009', 'W001', 'W002']) {
+    const view = await prepare(catalog, matrix, id);
+    assert.equal(view.state, 'ready');
+    assert.equal(view.entry.native.runnable, false);
+    assert.equal(view.entry.native.qualified, false);
+    assert.equal(view.entry.parent.completed, false);
+    assert.equal(view.entry.risk, 'unclassified');
+    assert.equal(view.approved.approval.operatingEnvelope.maximumLiveAzureRuns, 0);
+    assert.equal(view.approved.approval.operatingEnvelope.authorizedCloudSpend, 0);
+  }
+});

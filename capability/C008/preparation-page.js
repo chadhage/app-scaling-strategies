@@ -1,0 +1,300 @@
+(function (root) {
+  'use strict';
+
+  const revisions = new WeakMap();
+  function element(doc, tag, text, className) {
+    const node = doc.createElement(tag);
+    if (text !== undefined) node.textContent = text;
+    if (className) node.className = className;
+    return node;
+  }
+  function paragraph(parent, text, className) {
+    const node = element(parent.ownerDocument, 'p', text, className);
+    parent.append(node);
+    return node;
+  }
+  function link(parent, text, href, className) {
+    const node = element(parent.ownerDocument, 'a', text, className);
+    node.setAttribute('href', href);
+    node.rel = 'noopener noreferrer';
+    parent.append(node);
+    return node;
+  }
+  function fields(parent, pairs, className) {
+    const doc = parent.ownerDocument;
+    const list = element(doc, 'dl', undefined, className);
+    for (const [name, value] of pairs) {
+      list.append(element(doc, 'dt', name), element(doc, 'dd', String(value)));
+    }
+    parent.append(list);
+    return list;
+  }
+  function section(parent, id, heading) {
+    const doc = parent.ownerDocument;
+    const node = element(doc, 'section');
+    node.id = id;
+    node.setAttribute('aria-labelledby', `${id}-heading`);
+    const title = element(doc, 'h3', heading);
+    title.id = `${id}-heading`;
+    node.append(title);
+    parent.append(node);
+    return node;
+  }
+  function sourceExcerpt(parent, catalog, key, heading) {
+    const doc = parent.ownerDocument;
+    const source = catalog.common[key];
+    const details = element(doc, 'details', undefined, 'source-excerpt');
+    details.dataset.section = key;
+    details.append(element(doc, 'summary', heading), element(doc, 'pre', source.text));
+    link(details, `${source.reference.path} · line ${source.reference.line} · ${source.reference.anchor}`,
+      root.C005Contract.sourceHref(catalog, source.reference), 'common-source-link');
+    parent.append(details);
+  }
+  function renderSnapshot(doc, catalog) {
+    const target = doc.getElementById('snapshot-content');
+    const snapshot = catalog.acceptanceSnapshot;
+    paragraph(target, `C005 contract ${catalog.schemaVersion}. Historical committed snapshot, not live availability. `
+      + `Commit ${snapshot.commit}; commit time ${snapshot.commitTimeUtc}; ledger updated ${snapshot.ledgerUpdatedAtUtc}.`);
+    link(target, 'Pinned committed acceptance ledger',
+      `https://github.com/chadhage/app-scaling-strategies/blob/${snapshot.commit}/${snapshot.ledgerPath.replaceAll('\\', '/')}`);
+    paragraph(target, 'Only accepted snapshot lessons get exercise links. Existing files, later publications and pending reviews do not update this snapshot. '
+      + 'Structural validation is not authentication of arbitrary metadata or a new approval; this page has no import or approval interface.');
+    doc.getElementById('snapshot').hidden = false;
+  }
+  function renderLearning(parent, view) {
+    const { entry } = view;
+    const target = section(parent, 'learning-preparation', 'Resource-free synthetic learning preparation');
+    target.dataset.learningMode = view.learningMode;
+    const title = view.learningMode === 'synthetic-learning' ? 'Accepted portable practice in the historical snapshot.'
+      : view.learningMode === 'unsupported-learning' ? 'Portable mode unsupported here: this workflow has no A-card lesson.'
+        : 'Portable practice unavailable: not implemented or accepted in this snapshot.';
+    paragraph(target, title, 'learning-status');
+    paragraph(target, entry.learning.reason, 'learning-reason');
+    if (entry.learning.available) {
+      const steps = element(parent.ownerDocument, 'ol');
+      for (const text of [
+        'Use a browser with JavaScript. No Azure account, subscription, CLI, management credentials, server or cloud setup is required for the local synthetic lesson.',
+        'Read the original lesson’s stated preconditions, synthetic inputs, controls and expected assertions before practicing.',
+        'Use only its local exercise and reset controls. Compare the synthetic trace with its stated limits; do not treat it as a native result.'
+      ]) steps.append(element(parent.ownerDocument, 'li', text));
+      target.append(steps);
+      link(target, `Open accepted synthetic lesson ${entry.learning.cardId}`, entry.learning.href, 'lesson-link');
+      fields(target, [
+        ['Accepted implementation commit', entry.learning.evidence.commit],
+        ['Published lesson tag', entry.learning.evidence.tag],
+        ['Accepted at (historical snapshot)', entry.learning.evidence.acceptedAtUtc]
+      ]);
+    } else {
+      paragraph(target, 'You can still read this entry’s source, preparation and limitations here, but no portable exercise link or fallback implementation is offered. '
+        + 'A present file is not accepted learning availability; this does not assert that every native host is unsupported.');
+    }
+    paragraph(target, 'Training rehearsal — synthetic data — not a live Azure result. Local reading and practice need no cloud resources. '
+      + 'They do not supply native execution evidence, target qualification or source-parent completion.');
+  }
+  function renderNative(parent, view) {
+    const { catalog, entry, matrix, approved, approvalValidation } = view;
+    const approval = approved.approval;
+    const target = section(parent, 'native-preparation', 'Separately gated native prerequisites — not run instructions');
+    paragraph(target, `Native runnable: ${entry.native.runnable}; qualified: ${entry.native.qualified}. ${entry.native.reason}`, 'native-status');
+    paragraph(target, `Support: ${entry.support.status}. ${entry.support.reason}`, 'support-status');
+    const additional = paragraph(target, 'Additional source prerequisites: ');
+    additional.append(element(parent.ownerDocument, 'code', entry.prerequisites.additional, 'additional-prerequisites'));
+    paragraph(target, entry.prerequisites.inheritsBase
+      ? 'This scenario also inherits BASE. “none” means no additional prerequisites, never no BASE.'
+      : 'This workflow has its own listed prerequisites; do not automatically add the D-S BASE rule to it. Its component D-S scenarios still retain BASE.',
+    'base-prerequisites');
+    sourceExcerpt(target, catalog, 'dependencyRules', 'Canonical prerequisite notation: BASE, AND and OR');
+    paragraph(target, 'These are source requirements, not proof of installed adapters, reviewed identity or native readiness. '
+      + 'OR groups are alternatives, not all-host requirements. Reusable prerequisites need acceptance evidence on the actual approved target configuration.');
+
+    const targetLabels = { os: 'OS', sku: 'SKU', subscription: 'subscription', resourceGroup: 'resource group', region: 'region' };
+    fields(target, [
+      ['First planned native host — not selected for this entry', approval.firstNativeHost],
+      ['Native configuration boundary', approval.firstNativeConfiguration],
+      ...Object.entries(matrix.design.target).map(([key, value]) => [
+        `Native ${targetLabels[key]}`, value === null ? 'Unapproved — no value supplied; not a default.' : value
+      ])
+    ], 'native-target');
+    paragraph(target, 'No concrete target/service/host/format configuration is assigned to this entry. '
+      + 'The control-API Linux design does not select native OS. No reviewed tenant/app identity, scoped resource permissions, roles or lease are supplied for a native run.');
+    const approvalLabels = {
+      liveAzureExecutionApproved: 'Live Azure execution',
+      iacGenerationApproved: 'IaC generation',
+      scaffoldApproved: 'Application scaffolding',
+      deploymentApproved: 'Deployment',
+      identityRegistrationApproved: 'Identity registration',
+      expenditureApproved: 'Cloud expenditure'
+    };
+    const missing = element(parent.ownerDocument, 'ul', undefined, 'missing-approvals');
+    for (const key of root.C003Contract.FLAG_KEYS.filter(key => typeof matrix.permissions[key] === 'boolean')) {
+      const item = element(parent.ownerDocument, 'li', `${approvalLabels[key]} (${key}: ${approval[key]}) — separate operator approval is missing.`);
+      item.dataset.approvalKey = key;
+      missing.append(item);
+    }
+    target.append(missing);
+    paragraph(target, `Missing concrete native choices (C001 guard): ${approvalValidation.unresolvedNativeChoices.join(', ')}.`);
+    fields(target, [
+      ['Approved scope', approval.operatingEnvelope.mode],
+      ['Maximum live Azure runs', approval.operatingEnvelope.maximumLiveAzureRuns],
+      ['Authorized cloud spend', approval.operatingEnvelope.authorizedCloudSpend],
+      ['Native target qualified', approval.operatingEnvelope.nativeTargetQualified]
+    ], 'operating-envelope');
+    paragraph(target, 'These read-only zeros forbid execution and spending. They are not a free-resource approval, price quote, currency selection or native run budget.');
+
+    const design = element(parent.ownerDocument, 'details');
+    design.append(element(parent.ownerDocument, 'summary', 'C001 approved design — not provisioned native prerequisites'));
+    fields(design, [
+      ['Approval status', approval.status], ['Decision owner', approval.decisionOwner],
+      ['Runtime design — production not validated', approval.runtime], ['Framework design', approval.framework],
+      ['Control-service hosting design', approval.hosting], ['Identity design — not registration', approval.authentication],
+      ['Authorization design — not enforcement by this page', approval.authorization],
+      ['Control-storage design', approval.controlStorage.join('; ')],
+      ['Future IaC preference — generation forbidden', approval.preferredIacFormat],
+      ['Test tooling only', approval.testTooling]
+    ]);
+    link(design, 'Unchanged C001 approval artifact', '../C001/approved-contract.js');
+    target.append(design);
+  }
+  function renderMatrix(parent, matrix) {
+    const target = section(parent, 'support-reference', 'C003 documented support and constraints — unchanged reference');
+    paragraph(target, 'No configuration below is assigned to this source entry. Documented-supported is not implemented, runnable or qualified. '
+      + 'Unsupported combinations remain unsupported; unknowns remain unknown. Opening this reference is not target discovery or execution approval.');
+    link(target, 'Open the C003 matrix authority', '../C003/index.html');
+    paragraph(target, `Documentation review: ${matrix.provenance.reviewedAtUtc}. ${matrix.provenance.reviewNote}`);
+    const doc = parent.ownerDocument;
+    const details = element(doc, 'details');
+    details.id = 'matrix-details';
+    details.append(element(doc, 'summary', `Read all ${matrix.rows.length} documented configurations and their constraints`));
+    for (const row of matrix.rows) {
+      const item = element(doc, 'section', undefined, 'matrix-configuration');
+      item.dataset.configurationId = row.id;
+      item.append(element(doc, 'h4', row.title));
+      paragraph(item, `Status: ${row.status}; documented support: ${row.documentedSupport}; adapter: ${row.adapter}; qualified: ${row.qualified}.`, 'matrix-status');
+      paragraph(item, `Host: ${row.host}; format: ${row.format}; runtime: ${row.runtime}; OS: ${row.os}; mechanism: ${row.mechanism}.`);
+      paragraph(item, row.reason, 'matrix-reason');
+      const constraints = element(doc, 'ul');
+      for (const constraint of row.constraints) {
+        const point = element(doc, 'li');
+        point.append(element(doc, 'span', constraint.text, 'constraint-text'));
+        constraints.append(point);
+      }
+      item.append(constraints);
+      for (const sourceId of [...new Set([...row.sourceIds, ...row.constraints.flatMap(value => value.sourceIds)])]) {
+        const source = matrix.sources.find(value => value.id === sourceId);
+        const citation = paragraph(item, '');
+        link(citation, source.title, source.url, 'matrix-source-link');
+      }
+      details.append(item);
+    }
+    target.append(details);
+  }
+  function renderLimits(parent, view) {
+    const { entry, catalog } = view;
+    const target = section(parent, 'limits-evidence', 'Limits, missing evidence and cleanup');
+    paragraph(target, `Risk: ${entry.risk}. ${catalog.common.riskReason}`, 'risk-status');
+    paragraph(target, 'Pricing is unknown: no reviewed quote, SKU/region price, currency or cost estimate is supplied. Priority is ordering guidance, not risk or permission.');
+    paragraph(target, 'A reviewed native operating envelope is missing; do not use missing values as defaults. '
+      + 'Required limits include fixture versions, maximum load/capacity, journey latency budget, readiness window, request/job duration, '
+      + 'drain budget, rollback retention, dependency limits and fault model. These must be agreed and evidenced for the actual configuration.');
+    paragraph(target, 'Native verification: unverified. Actual user impact: not measured. Cleanup: not applicable to this resource-free read-only view. '
+      + 'No cloud deletion, lease release, cancellation reconciliation or native cleanup success has been observed.', 'evidence-status');
+    paragraph(target, 'Reset clears the local selection only; it is not H010 cleanup or evidence export. '
+      + 'Native proof needs real target-host integration, authenticated ownership/budget guards, actual client/routing/state/effect measurements, '
+      + 'retained failure/unknown outcomes and independently reported cleanup. Empty samples, health probes, configured routing and existing modules are insufficient.');
+    paragraph(target, `Source parent ${entry.parentId}: ${entry.parent.status}; completed: ${entry.parent.completed}. ${entry.parent.reason}`, 'parent-status');
+    paragraph(target, 'This preparation view does not complete H002, a D-S parent or a guided workflow. Local verification, user impact and cleanup are separate from native acceptance.');
+    sourceExcerpt(target, catalog, 'sharedDefinitionOfDone', 'Original shared definition of done — not satisfied by this view');
+    sourceExcerpt(target, catalog, 'operatingLimits', 'Original lifecycle and safety gates');
+    sourceExcerpt(target, catalog, 'acceptanceAndEvidence', 'Original completion and evidence requirements');
+  }
+  function clearClaims(doc) {
+    doc.getElementById('preparation').hidden = true;
+    doc.getElementById('entry-heading').textContent = '';
+    doc.getElementById('preparation-body').replaceChildren();
+    doc.getElementById('snapshot').hidden = true;
+    doc.getElementById('snapshot-content').replaceChildren();
+    doc.getElementById('entry-select').replaceChildren(element(doc, 'option', 'Catalog validation pending'));
+    doc.getElementById('entry-select').disabled = true;
+    doc.getElementById('open-preparation').disabled = true;
+  }
+  async function renderPreparation(catalog, matrix, entryId, doc = root.document, focusTarget = '') {
+    const revision = (revisions.get(doc) || 0) + 1;
+    revisions.set(doc, revision);
+    clearClaims(doc);
+    const status = doc.getElementById('preparation-status');
+    const error = doc.getElementById('preparation-error');
+    const empty = doc.getElementById('preparation-empty');
+    const selector = doc.getElementById('entry-select');
+    status.textContent = 'Validating shared source and local approval artifacts…';
+    error.hidden = true;
+    empty.hidden = false;
+    doc.getElementById('reset-preparation').onclick = () => {
+      void renderPreparation(root.C005Catalog, root.C003Matrix, '', doc, 'select');
+    };
+    let view;
+    try {
+      view = await root.C008Preparation.prepare(catalog, matrix, entryId);
+    } catch {
+      view = { state: 'error', errors: ['Preparation validation is unavailable.'] };
+    }
+    // A slow validation must not restore a previous selection after a reset.
+    if (revisions.get(doc) !== revision) return false;
+    if (view.state === 'error') {
+      error.textContent = `Preparation unavailable: ${view.errors.join('; ')}`;
+      error.hidden = false;
+      status.textContent = 'Preparation coverage unavailable — unverified. No source, support, availability or approval claims are displayed.';
+      empty.textContent = 'No preparation is open. Missing or invalid data is not an empty source catalog or successful native result. Reset can retry the unchanged shared artifacts.';
+      return false;
+    }
+    selector.replaceChildren(element(doc, 'option', 'Choose a source entry'));
+    selector.firstElementChild.value = '';
+    for (const entry of catalog.entries) {
+      const option = element(doc, 'option', `${entry.id} — ${entry.title}`);
+      option.value = entry.id;
+      selector.append(option);
+    }
+    selector.disabled = false;
+    selector.value = entryId;
+    doc.getElementById('open-preparation').disabled = false;
+    doc.getElementById('open-preparation').onclick = () => {
+      void renderPreparation(catalog, matrix, selector.value, doc, 'heading');
+    };
+    renderSnapshot(doc, catalog);
+    const coverage = `${catalog.entries.filter(value => value.kind === 'scenario').length} scenarios · `
+      + `${catalog.entries.filter(value => value.kind === 'workflow').length} workflows · `
+      + `${catalog.entries.filter(value => value.learning.available).length} accepted synthetic lessons in historical snapshot`;
+    if (view.state === 'empty') {
+      status.textContent = `${coverage}. No preparation selected; no native result.`;
+      empty.textContent = 'Choose a source entry and open its preparation. All 152 have a reading view; portable practice may be unavailable. No native run has occurred.';
+      if (focusTarget) selector.focus();
+      return true;
+    }
+    const parent = doc.getElementById('preparation-body');
+    const { entry } = view;
+    const heading = doc.getElementById('entry-heading');
+    heading.textContent = `${entry.id} — ${entry.title}`;
+    paragraph(parent, `${entry.kind} · ${entry.category.title} · source parent ${entry.parentId} · source priority ${entry.priority} (not risk).`, 'entry-lineage');
+    paragraph(parent, entry.objective, 'entry-objective');
+    if (entry.kind === 'workflow') paragraph(parent, catalog.common.workflowScope);
+    const trace = section(parent, 'source-traceability', 'Source purpose, original acceptance and traceability');
+    paragraph(trace, entry.implementation, 'source-implementation');
+    paragraph(trace, entry.acceptance, 'source-acceptance');
+    for (const reference of entry.sourceReferences) {
+      const citation = paragraph(trace, '');
+      link(citation, `${entry.id}: ${reference.path} · line ${reference.line} · ${reference.anchor}`,
+        root.C005Contract.sourceHref(catalog, reference), 'source-row-link');
+    }
+    renderLearning(parent, view);
+    renderNative(parent, view);
+    renderLimits(parent, view);
+    renderMatrix(parent, view.matrix);
+    doc.getElementById('preparation').hidden = false;
+    empty.hidden = true;
+    status.textContent = `${entry.id} preparation opened. ${coverage}. Native: not runnable, unqualified; source parent incomplete.`;
+    if (focusTarget === 'heading') heading.focus();
+    return true;
+  }
+
+  Object.defineProperty(root, 'C008Page', { value: Object.freeze({ renderPreparation }) });
+  if (root.document) void renderPreparation(root.C005Catalog, root.C003Matrix, '', root.document);
+}(globalThis));
