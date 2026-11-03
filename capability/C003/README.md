@@ -84,6 +84,9 @@ node --test --test-reporter=spec .\capability\C003\tests\browser.test.cjs
 The browser test uses the explicitly announced ready shared helper
 `testing\browser\isolated.cjs`: real isolated **headless Edge**, not a mocked DOM
 or integrated foreground page. It always awaits `close()` in `finally`.
+Ordinary verification does not overwrite the committed observation record.
+Set `$env:CAPTURE_BROWSER_EVIDENCE='1'` only for an intentional evidence refresh,
+then remove that variable after the run. No extra completion credit is earned.
 See `evidence.json` for genuine behavioral RED, IaC N/A before implementation,
 GREEN, syntax, real keyboard/filter/invalid/unsupported checks, exact browser
 versions, and the initial failed browser assertion and correction.

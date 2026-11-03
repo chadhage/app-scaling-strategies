@@ -17,7 +17,9 @@ const helperRequire = createRequire(helperPath);
 
 test('real isolated browser: C003 local matrix acceptance', { timeout: 90000 }, async t => {
   const reportPath = path.join(__dirname, '..', 'evidence', 'browser-acceptance.json');
-  await fs.rm(reportPath, { force: true });
+  if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') {
+    await fs.rm(reportPath, { force: true });
+  }
   const session = await openIsolatedLesson('capability\\C003\\index.html');
   const { page, browserVersion } = session;
   const checks = [];
@@ -189,6 +191,8 @@ test('real isolated browser: C003 local matrix acceptance', { timeout: 90000 }, 
     await session.close();
   }
   report.browserCleanup = 'completed via awaited close() in finally';
-  await fs.writeFile(reportPath, JSON.stringify(report, null, 2) + '\n');
+  if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') {
+    await fs.writeFile(reportPath, JSON.stringify(report, null, 2) + '\n');
+  }
   console.log('C003 actual browser: Microsoft Edge ' + browserVersion + '; isolated-headless; Playwright ' + report.playwrightVersion);
 });
