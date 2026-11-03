@@ -1,0 +1,48 @@
+(function (root) {
+  "use strict";
+
+  const DEFAULT_CONFIG = {
+    policy: "cache-optional",
+    conditions: {
+      database: "connected",
+      cache: "connected",
+      messaging: "connected",
+      service: "connected"
+    }
+  };
+  const MAX_RUNS = 8;
+  const copy = (value) => JSON.parse(JSON.stringify(value));
+
+  function evaluate() {
+    return {
+      mode: "synthetic",
+      readiness: "UNKNOWN",
+      permittedDecision: "HOLD",
+      verifier: "UNKNOWN",
+      counts: { success: 0, failure: 0, unknown: 0 },
+      requiredPassed: 0,
+      requiredTotal: 0,
+      optionalDegraded: false,
+      checks: [],
+      trace: [],
+      protectedCapacity: 4,
+      userImpact: "UNMEASURED"
+    };
+  }
+
+  function createSession() {
+    return { schemaVersion: 1, revision: 0, config: copy(DEFAULT_CONFIG), history: [] };
+  }
+
+  function configure(state) {
+    return state;
+  }
+
+  function check(state) {
+    return state;
+  }
+
+  const api = Object.freeze({ DEFAULT_CONFIG, MAX_RUNS, evaluate, createSession, configure, check });
+  if (typeof module === "object" && module.exports) module.exports = api;
+  else Object.defineProperty(root, "S022Readiness", { value: api });
+}(typeof globalThis === "object" ? globalThis : this));

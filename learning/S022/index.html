@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S022 — Dependency-aware readiness rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="readiness.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="eyebrow">A-S022 · Kano S · SC-S022</p>
+    <p class="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Is a dependency failure<br>a reason to hold?</h1>
+    <p class="lead">Validate required connectivity before admitting users. Keep optional outages visible without blindly ejecting healthy capacity.</p>
+  </header>
+  <main>
+    <section class="card" aria-labelledby="objective">
+      <h2 id="objective">Objective and preconditions</h2>
+      <p>Source <strong>S022</strong> · Parent <strong>D-S022</strong> · Gate <strong>SOURCE</strong> · Candidate <strong>candidate-v2</strong>.</p>
+      <p>Database, queue/messaging and service are always required. Choose whether this workload also requires cache. In the optional-cache workload, a declared database fallback makes a cache outage non-gating <em>only while required connectivity succeeds</em>.</p>
+      <p>This finite model assumes that fallback is suitable for the workload; connectivity alone does not prove its functional correctness, latency or capacity. Do not apply this policy to a real application without measuring those properties.</p>
+      <ul>
+        <li>Fixed synthetic clock: 120000 ms. Connected/disconnected/unknown observations: age 5000 ms.</li>
+        <li>Freshness limit: 30000 ms, inclusive. Stale connected evidence: age 30001 ms. Missing evidence has no timestamp.</li>
+        <li>Four dependency checks per run; up to 8 retained runs and 64 configuration changes. Everything stays in memory until reset or reload.</li>
+        <li>Protected existing synthetic capacity: 4 of 4. No real service, traffic, subscription, credentials or network calls.</li>
+      </ul>
+    </section>
+
+    <section id="exercise" class="card" aria-labelledby="exercise-heading" tabindex="-1">
+      <div class="section-top">
+        <h2 id="exercise-heading">Conduct the exercise</h2>
+        <button id="reset-exercise" type="button" class="secondary">Reset exercise</button>
+      </div>
+      <ol>
+        <li>Disconnect <strong>cache</strong> with the optional-cache workload. Predict ADMIT and inspect the failed check and fallback assumption.</li>
+        <li>Switch to cache-required with the same outage. Predict HOLD. Required checks, not a shallow healthy reply, set the gate.</li>
+        <li>Make <strong>database</strong> missing, unknown or stale. Compare UNKNOWN readiness with a known FAILURE.</li>
+      </ol>
+      <form id="lesson-controls">
+        <fieldset>
+          <legend>1 · Declare the workload, not an ad-hoc bypass</legend>
+          <label for="policy">Dependency policy</label>
+          <select id="policy" aria-describedby="policy-help">
+            <option value="cache-optional">Cache optional — declared database fallback</option>
+            <option value="cache-required">Cache required — no cache bypass</option>
+          </select>
+          <p id="policy-help" class="hint">Only cache can change roles. Database, queue/messaging and service cannot be made optional.</p>
+        </fieldset>
+        <fieldset>
+          <legend>2 · Choose synthetic connectivity observations</legend>
+          <div class="control-grid">
+            <div>
+              <label for="database-condition">Database condition — always required</label>
+              <select id="database-condition">
+                <option value="connected">Connected — fresh</option>
+                <option value="disconnected">Disconnected — fresh</option>
+                <option value="unknown">Unknown outcome — fresh</option>
+                <option value="missing">Missing observation</option>
+                <option value="stale">Stale connected observation</option>
+              </select>
+            </div>
+            <div>
+              <label for="cache-condition">Cache condition — role follows policy</label>
+              <select id="cache-condition">
+                <option value="connected">Connected — fresh</option>
+                <option value="disconnected">Disconnected — fresh</option>
+                <option value="unknown">Unknown outcome — fresh</option>
+                <option value="missing">Missing observation</option>
+                <option value="stale">Stale connected observation</option>
+              </select>
+            </div>
+            <div>
+              <label for="messaging-condition">Queue / messaging condition — always required</label>
+              <select id="messaging-condition">
+                <option value="connected">Connected — fresh</option>
+                <option value="disconnected">Disconnected — fresh</option>
+                <option value="unknown">Unknown outcome — fresh</option>
+                <option value="missing">Missing observation</option>
+                <option value="stale">Stale connected observation</option>
+              </select>
+            </div>
+            <div>
+              <label for="service-condition">Service condition — always required</label>
+              <select id="service-condition">
+                <option value="connected">Connected — fresh</option>
+                <option value="disconnected">Disconnected — fresh</option>
+                <option value="unknown">Unknown outcome — fresh</option>
+                <option value="missing">Missing observation</option>
+                <option value="stale">Stale connected observation</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>3 · Choose the appropriate decision</legend>
+          <label for="prediction">Your predicted readiness decision</label>
+          <select id="prediction">
+            <option value="ADMIT">ADMIT — required connectivity is known successful</option>
+            <option value="HOLD">HOLD — required connectivity failed or is unknown</option>
+          </select>
+          <p class="hint">Your answer is checked against the gate; it cannot bypass it. ADMIT is model permission, never a performed transition.</p>
+          <button id="check-readiness" type="submit">Check readiness decision</button>
+        </fieldset>
+      </form>
+      <p id="input-error" class="error" role="alert" tabindex="-1" hidden></p>
+      <p id="reset-status" role="status" aria-live="polite"></p>
+      <noscript><p class="training-banner">JavaScript is required. No readiness check has run.</p></noscript>
+    </section>
+
+    <section class="card" aria-labelledby="result-heading">
+      <h2 id="result-heading">Inspect the current result</h2>
+      <div id="current-result" role="status" aria-live="polite" aria-atomic="true" tabindex="-1">
+        <p id="readiness-result">UNKNOWN — not checked</p>
+        <p id="decision-result">No admission decision has been checked.</p>
+        <p id="verifier-result">Verifier UNKNOWN — no answer checked.</p>
+        <p id="counts-result">No measured dependency checks yet.</p>
+        <p id="degradation-result"></p>
+      </div>
+      <p id="draft-note" class="hint"></p>
+      <div class="table-wrap">
+        <table>
+          <caption>Current synthetic dependency fixture — not a live connectivity probe</caption>
+          <thead><tr><th scope="col">Dependency</th><th scope="col">Role</th><th scope="col">Condition</th><th scope="col">Age ms</th><th scope="col">Check outcome</th></tr></thead>
+          <tbody id="dependency-rows"></tbody>
+        </table>
+      </div>
+      <h3>Synthetic trace</h3>
+      <ol id="current-trace"><li>No checked trace.</li></ol>
+      <p id="impact-result"><strong>User impact: UNMEASURED.</strong> Zero user journeys attempted. A PASS answer is not transition success; a blocked negative exercise is not uninterrupted migration.</p>
+      <p><strong>Protected existing synthetic capacity: 4 / 4 (fixture).</strong> No traffic moved and no actual production availability measured. Cleanup: local memory only; reset clears it.</p>
+    </section>
+
+    <section class="card" aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained run history</h2>
+      <p id="history-count">0 / 8 checked runs</p>
+      <p id="history-limit" class="hint">History retains exact configurations, failures, unknowns, counts and traces. At 8 runs another check is rejected; nothing is silently evicted. Reset explicitly clears all history.</p>
+      <ol id="history"></ol>
+    </section>
+
+    <section class="card" aria-labelledby="limits">
+      <h2 id="limits">Evidence limits</h2>
+      <p>Connectivity permission is not proof of business journeys, every instance, fallback performance, an actual handoff or five-nines reliability. S021 is a separate accepted per-instance lesson, not modified by this exercise. Native B-S022 remains separately gated; neither D-S022 nor source S022 is complete.</p>
+      <p>No Azure, management, storage, identity, IaC, deployment or spending operations. No framework or package installation. Source contracts: README.md S022 and .docs\wiki\backlog.md D-S022; the repository's Microsoft Open Source Disclaimer applies.</p>
+    </section>
+  </main>
+  <footer>Local synthetic learning only · no native Azure or production Node.js 24 certification</footer>
+</body>
+</html>

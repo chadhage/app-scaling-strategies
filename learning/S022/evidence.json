@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S022",
+  "workerId": "worker-A-S022",
+  "sourceId": "S022",
+  "parents": ["D-S022"],
+  "kano": "S",
+  "kanoUnit": "A-S022",
+  "packet": "SC-S022",
+  "technicalEntryGate": "SOURCE",
+  "executionMode": "synthetic",
+  "trainingBanner": "Training rehearsal - synthetic data - not a live Azure result",
+  "configuration": {
+    "entryPoint": "learning\\S022\\index.html",
+    "candidate": "candidate-v2",
+    "syntheticNowMs": 120000,
+    "maximumEvidenceAgeMs": 30000,
+    "dependencies": ["database", "cache", "messaging", "service"],
+    "alwaysRequired": ["database", "messaging", "service"],
+    "policies": ["cache-optional", "cache-required"],
+    "optionalCachePrecondition": "Declared suitable database fallback; connectivity does not certify fallback functional correctness, latency or capacity.",
+    "maximumRetainedRuns": 8,
+    "maximumConfigurationEdits": 64,
+    "persistence": "In-memory only; reset/reload clears history.",
+    "host": "Direct local file; standard HTML, classic JavaScript and CSS; no application framework.",
+    "runtime": "Node22.23.4 test tooling only; not production Node24 validation."
+  },
+  "sequence": [
+    "dependency-readiness.feature",
+    "evidence\\red-001.json",
+    "evidence\\iac-na.json",
+    "Owned implementation and refactoring",
+    "evidence\\green-001.json",
+    "evidence\\syntax-001.json",
+    "evidence\\integrity-001.json (three pre-browser surface/provenance checks)",
+    "evidence\\tooling-001.json (failed legacy Windows PowerShell module load; not behavioral RED)",
+    "evidence\\green-002.json (final source hashes after documenting tooling recovery)",
+    "evidence\\syntax-002.json",
+    "evidence\\integrity-002.json (three final pre-browser checks)",
+    "evidence\\tooling-002.json (working current PowerShell 7 signature probe)",
+    "evidence\\browser-001.json",
+    "evidence\\integrity-003.json (six full integrity checks)"
+  ],
+  "tdd": {
+    "initialRed": "27 tests, 0 passed, 27 genuine assertion failures against an importable stub; not missing tools or modules.",
+    "snapshots": "Exact RED model, test and BDD bytes retained with .snapshot.txt extensions; not auto-discovered.",
+    "green": "42 focused model tests; 15 additional model tests have no claimed initial RED.",
+    "rawProvenance": "Every capture has timestamps, command argv, exit code, runtime, prior Git head and exact source SHA256. Base64 plus an untrimmed UTF-8 view retain lossless runner stdout/stderr.",
+    "normalVerification": "Read-only to proof; CAPTURE_BROWSER_EVIDENCE=1 is required for deliberate append-only capture."
+  },
+  "browser": {
+    "observations": "evidence\\browser-observations-001.json",
+    "scope": "15 actual DOM/keyboard/error/forged-state/reset/history/failure/unknown/CSP leaf checks plus one TAP parent.",
+    "helper": "testing\\browser\\isolated.cjs",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "helperPublishedCommit": "53c0c0d",
+    "api": "openIsolatedLesson",
+    "cleanup": "Await close() in finally; record whether it resolved. No foreground/shared-browser lease.",
+    "tooling": "Existing offline Playwright1.56.1 and installed Microsoft-signed Edge156.0.4314.50, Node22.23.4.",
+    "qualificationLimit": "Only this pair; the documented helper lifecycle limitation remains. The abandoned lifecycle prototype is unqualified."
+  },
+  "toolingRecovery": "The preserved tooling-001 failure is a legacy Windows PowerShell security-module loading problem, not an assertion RED. The same read-only installed-browser signature check succeeds with the existing PowerShell 7 host in tooling-002; no installation, TLS change or unsafe flags.",
+  "userImpact": {
+    "measured": "Four deterministic synthetic dependency checks per run; successful, failed and unknown outcomes remain separate.",
+    "protectedExistingSyntheticCapacity": "4 / 4 by fixture, not an actual production observation.",
+    "actualUserJourneys": "UNMEASURED; zero attempted; no live transition and no zero-denominator success claim.",
+    "verifier": "PASS means prediction equals permitted decision. FAIL cannot bypass HOLD."
+  },
+  "cleanup": "Resource-free local model; reset clears memory. Isolated browser close is awaited in finally.",
+  "review": {
+    "status": "Parent-owned independent empirical review and acceptance pending.",
+    "doneCreditClaimed": false,
+    "acceptedAtUtc": null
+  },
+  "publication": "Authorized publish.ps1 records the eventual implementation commit, annotated kanban/A-S022/<12sha> marker, atomic push and remote ref verification outside this non-self-referential artifact.",
+  "refinement": {
+    "remainingLocalToDo": [],
+    "nativeRemainder": "B-S022 is not ready here; CORE, DATA, HOST and approved target/configuration, fixtures, access and native execution authorization remain required.",
+    "additionalTestPlumbingOrRefinementUnits": 0
+  },
+  "nativeProof": false,
+  "productionNode24Validated": false,
+  "parentComplete": false,
+  "additionalKanoCredits": 0
+}
