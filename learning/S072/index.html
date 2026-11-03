@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S072 — Cold-cache refill comparison</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to operator controls</a>
+  <main>
+    <p class="banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S072 — Cold-cache refill comparison</h1>
+    <p>Compare unbounded and coalesced refill; identify a database-overloading stampede.</p>
+    <p class="source">A-S072 · D-S072 · SC-S072 · Kano S · Standalone, synthetic only</p>
+
+    <section aria-labelledby="prepare">
+      <h2 id="prepare">Prepare and predict</h2>
+      <p>All requests arrive at virtual time 0 after a cold-cache cutover. Keys are assigned round-robin.
+        The synthetic database accepts only its declared concurrent capacity. Excess refills fail immediately;
+        there are no retries, real timers, network calls, database connections, or live cache operations.</p>
+      <ul>
+        <li><strong>Unbounded:</strong> every request starts a refill, even for the same key.</li>
+        <li><strong>Coalesced:</strong> requests for a key share one refill; different keys still start together.</li>
+        <li><strong>Bounded + coalesced:</strong> distinct-key refills queue FIFO with at most the chosen limit active.
+          The limit must fit database capacity. Queue time counts against the original journey budget.</li>
+      </ul>
+      <p>Start with defaults: unbounded should yield 2 successes and 6 overload failures. Switch only strategy
+        to coalesced: 1 refill should serve all 8 journeys in 40 ms. The earlier 6 failures must remain counted.</p>
+    </section>
+
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Operator controls</h2>
+      <form id="controls" novalidate>
+        <div class="fields">
+          <label for="strategy">Refill strategy
+            <select id="strategy" name="strategy">
+              <option value="unbounded">Unbounded refill per request</option>
+              <option value="coalesced">Coalesced refill per key</option>
+              <option value="bounded">Bounded + coalesced FIFO refill</option>
+            </select>
+          </label>
+          <label for="requests">Simultaneous requests (1–24)
+            <input id="requests" name="requests" type="number" min="1" max="24" step="1" value="8" required>
+          </label>
+          <label for="keys">Distinct cold keys (1–6, no more than requests)
+            <input id="keys" name="keys" type="number" min="1" max="6" step="1" value="1" required>
+          </label>
+          <label for="dbCapacity">Database concurrent refill capacity (1–8)
+            <input id="dbCapacity" name="dbCapacity" type="number" min="1" max="8" step="1" value="2" required>
+          </label>
+          <label for="refillMs">One refill duration, ms (1–200)
+            <input id="refillMs" name="refillMs" type="number" min="1" max="200" step="1" value="40" required>
+          </label>
+          <label for="budgetMs">Original journey budget, ms (1–1000)
+            <input id="budgetMs" name="budgetMs" type="number" min="1" max="1000" step="1" value="100" required>
+          </label>
+          <label for="refillLimit">Bounded-mode concurrent refill limit (1–8)
+            <input id="refillLimit" name="refillLimit" type="number" min="1" max="8" step="1" value="2" required>
+          </label>
+          <label for="observation">Latency evidence
+            <select id="observation" name="observation">
+              <option value="complete">Complete synthetic observations</option>
+              <option value="missing-one">Withhold one otherwise-successful journey observation</option>
+            </select>
+          </label>
+        </div>
+        <p>Use whole decimal integers. Capacity/limit are concurrent refills, not a rate. Each run starts cold;
+          changing controls alone does not alter recorded results.</p>
+        <div class="actions">
+          <button id="run" type="submit">Run cold-cache burst</button>
+          <button id="restart" type="button">Reset lesson</button>
+        </div>
+      </form>
+      <p id="error" role="alert" tabindex="-1" hidden></p>
+      <p id="status" role="status" aria-live="polite">No burst run. Choose a strategy and run the synthetic burst.</p>
+      <p id="limit-note">At most 12 runs are retained in this page's memory. Reload or explicit Reset clears this session.</p>
+    </section>
+
+    <section id="latest" aria-labelledby="latest-heading" hidden>
+      <h2 id="latest-heading">Latest synthetic result</h2>
+      <dl class="metrics">
+        <div><dt>Attempted journeys</dt><dd id="attempted">0</dd></div>
+        <div><dt>Success</dt><dd id="success">0</dd></div>
+        <div><dt>Failure</dt><dd id="failure">0</dd></div>
+        <div><dt>Unknown</dt><dd id="unknown">0</dd></div>
+        <div><dt>Database refill attempts</dt><dd id="db-attempted">0</dd></div>
+        <div><dt>Peak accepted database refills</dt><dd id="db-peak">0</dd></div>
+        <div><dt>Database overload rejections</dt><dd id="db-rejected">0</dd></div>
+        <div><dt>Maximum observed latency</dt><dd id="latency">Not observed</dd></div>
+      </dl>
+      <p id="interpretation"></p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Synthetic database refill trace, scrollable">
+        <table>
+          <caption>Database refill trace — virtual milliseconds, not real measurements</caption>
+          <thead><tr><th scope="col">Refill</th><th scope="col">Key</th><th scope="col">Start ms</th><th scope="col">End ms</th><th scope="col">Database result</th></tr></thead>
+          <tbody id="refills"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Synthetic journey trace, scrollable">
+        <table>
+          <caption>Every attempted journey — failure and unknown stay in the denominator</caption>
+          <thead><tr><th scope="col">Journey</th><th scope="col">Key</th><th scope="col">Refill</th><th scope="col">Refill start ms</th><th scope="col">Observed latency ms</th><th scope="col">Outcome</th><th scope="col">Reason</th></tr></thead>
+          <tbody id="journeys"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained session history</h2>
+      <p id="totals">Session: 0 attempted; 0 success; 0 failure; 0 unknown.</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Retained synthetic history, scrollable">
+        <table>
+          <caption>Independent cold-cache runs — later success does not erase earlier interruptions</caption>
+          <thead><tr><th scope="col">Run</th><th scope="col">Strategy / evidence</th><th scope="col">Requests / keys</th><th scope="col">Capacity / limit</th><th scope="col">Refill / budget ms</th><th scope="col">DB attempts / rejected / peak</th><th scope="col">Max observed ms</th><th scope="col">Success</th><th scope="col">Failure</th><th scope="col">Unknown</th><th scope="col">Result</th></tr></thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="limits">
+      <h2 id="limits">Try the failure and uncertainty limits</h2>
+      <p>For multi-key pressure choose 8 requests and 4 keys. Coalescing alone attempts 4 refills against
+        capacity 2: 4 journeys fail. Then choose bounded + coalesced, limit 1, and budget 80 ms:
+        0 overloads but 4 latency failures, with completion times 40, 80, 120, and 160 ms.
+        A limit of 2 meets that 80 ms budget in this model.</p>
+      <p>Withhold one otherwise-successful observation to produce an unknown, never a success.
+        Known overload and deadline failures are not hidden by missing evidence. A reported maximum is
+        only the maximum observed latency, not a claim that every journey completed.</p>
+      <p>Limits: one isolated burst, fixed-duration refills, fixed capacity, FIFO order, identical synthetic
+        values per key, no background load, partial completion, retry, TTL, multi-process lock, or real concurrent
+        cache/database behavior. This is not a native B-S072 experiment, completed D-S072 parent,
+        production Node.js 24 validation, or a statistical/five-nines availability result.</p>
+    </section>
+  </main>
+</body>
+</html>

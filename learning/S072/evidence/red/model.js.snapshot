@@ -1,0 +1,28 @@
+(function (root) {
+  'use strict';
+
+  const DEFAULTS = Object.freeze({
+    strategy: 'unbounded',
+    requests: 8,
+    keys: 1,
+    dbCapacity: 2,
+    refillMs: 40,
+    budgetMs: 100,
+    refillLimit: 2,
+    observation: 'complete',
+  });
+
+  function simulate() {
+    return {
+      data: { attempted: 0, accepted: 0, rejected: 0, peakActive: 0 },
+      counts: { attempted: 0, success: 0, failure: 0, unknown: 0 },
+      verdict: 'unknown',
+      stampede: false,
+      journeys: [],
+    };
+  }
+
+  const api = Object.freeze({ DEFAULTS, simulate });
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S072 = api;
+}(typeof globalThis === 'object' ? globalThis : this));

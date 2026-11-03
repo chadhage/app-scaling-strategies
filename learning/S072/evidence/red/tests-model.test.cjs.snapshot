@@ -1,0 +1,153 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('..\\model.js');
+const config = (changes = {}) => ({ ...model.DEFAULTS, ...changes });
+
+test('unbounded same-key burst counts the database-overloading stampede', () => {
+  const run = model.simulate(config());
+  assert.equal(run.data.attempted, 8);
+  assert.deepEqual(run.data, { attempted: 8, accepted: 2, rejected: 6, peakActive: 2 });
+  assert.deepEqual(run.counts, { attempted: 8, success: 2, failure: 6, unknown: 0 });
+  assert.equal(run.stampede, true);
+  assert.equal(run.verdict, 'failure');
+  assert.equal(run.maxObservedLatencyMs, 40);
+  assert.equal(run.journeys.filter((journey) => journey.reason === 'database-overload').length, 6);
+});
+
+test('coalescing uses one refill for eight same-key journeys', () => {
+  const run = model.simulate(config({ strategy: 'coalesced' }));
+  assert.deepEqual(run.data, { attempted: 1, accepted: 1, rejected: 0, peakActive: 1 });
+  assert.deepEqual(run.counts, { attempted: 8, success: 8, failure: 0, unknown: 0 });
+  assert.equal(run.verdict, 'success');
+  assert.equal(run.stampede, false);
+  assert.equal(run.refills.length, 1);
+  assert.ok(run.journeys.every((journey) => journey.refillId === 1 && journey.latencyMs === 40));
+  assert.ok(run.journeys.every((journey) => journey.value === 'synthetic-profile-1-v1'));
+});
+
+test('different cold keys can overload a merely coalesced refill', () => {
+  const run = model.simulate(config({ strategy: 'coalesced', keys: 4 }));
+  assert.deepEqual(run.data, { attempted: 4, accepted: 2, rejected: 2, peakActive: 2 });
+  assert.deepEqual(run.counts, { attempted: 8, success: 4, failure: 4, unknown: 0 });
+  assert.equal(run.stampede, true);
+  assert.deepEqual(run.journeys.filter((journey) => journey.outcome === 'failure').map((journey) => journey.key), [3, 4, 3, 4]);
+});
+
+test('bounded coalescing prevents overload but queue time uses the original budget', () => {
+  const run = model.simulate(config({ strategy: 'bounded', keys: 4, refillLimit: 1, budgetMs: 80 }));
+  assert.deepEqual(run.data, { attempted: 4, accepted: 4, rejected: 0, peakActive: 1 });
+  assert.deepEqual(run.refills.map((refill) => refill.startMs), [0, 40, 80, 120]);
+  assert.deepEqual(run.counts, { attempted: 8, success: 4, failure: 4, unknown: 0 });
+  assert.equal(run.maxObservedLatencyMs, 160);
+  assert.equal(run.stampede, false);
+  assert.equal(run.verdict, 'failure');
+  assert.ok(run.journeys.filter((journey) => journey.outcome === 'failure').every((journey) => journey.reason === 'latency-budget'));
+});
+
+test('bounded coalescing meets an inclusive deadline with adequate capacity', () => {
+  const run = model.simulate(config({ strategy: 'bounded', keys: 4, refillLimit: 2, budgetMs: 80 }));
+  assert.deepEqual(run.refills.map((refill) => refill.startMs), [0, 0, 40, 40]);
+  assert.deepEqual(run.counts, { attempted: 8, success: 8, failure: 0, unknown: 0 });
+  assert.equal(run.maxObservedLatencyMs, 80);
+  assert.equal(run.verdict, 'success');
+});
+
+test('an oversized bound is not silently treated as a safe limit', () => {
+  assert.throws(() => model.simulate(config({ strategy: 'bounded', refillLimit: 3 })), /refillLimit.*dbCapacity/);
+});
+
+test('missing latency yields unknown without reducing attempted journeys', () => {
+  const run = model.simulate(config({ strategy: 'coalesced', observation: 'missing-one' }));
+  assert.deepEqual(run.counts, { attempted: 8, success: 7, failure: 0, unknown: 1 });
+  assert.equal(run.verdict, 'unknown');
+  assert.equal(run.journeys[7].outcome, 'unknown');
+  assert.equal(run.journeys[7].latencyMs, null);
+  assert.equal(run.journeys[7].reason, 'missing-latency');
+});
+
+test('missing evidence never erases known stampede or budget failures', () => {
+  const stampede = model.simulate(config({ observation: 'missing-one' }));
+  assert.deepEqual(stampede.counts, { attempted: 8, success: 1, failure: 6, unknown: 1 });
+  assert.equal(stampede.verdict, 'failure');
+  const deadlines = model.simulate(config({ strategy: 'coalesced', refillMs: 101, observation: 'missing-one' }));
+  assert.deepEqual(deadlines.counts, { attempted: 8, success: 0, failure: 8, unknown: 0 });
+  assert.equal(deadlines.verdict, 'failure');
+});
+
+test('all supported extremes remain bounded and deterministic', () => {
+  for (const strategy of ['unbounded', 'coalesced', 'bounded']) {
+    for (const requests of [1, 24]) {
+      const input = config({ strategy, requests, keys: Math.min(requests, 6), dbCapacity: 8, refillLimit: 8, refillMs: 200, budgetMs: 1 });
+      const first = model.simulate(input);
+      assert.deepEqual(first, model.simulate(input));
+      assert.equal(first.counts.attempted, requests);
+      assert.equal(first.counts.success + first.counts.failure + first.counts.unknown, requests);
+      assert.ok(first.refills.length <= 24 && first.journeys.length <= 24);
+      assert.ok(first.data.peakActive <= 8);
+    }
+  }
+});
+
+test('configuration is strict about shape, types, enum values, and bounds', () => {
+  const invalid = [null, [], {}, 'input', { ...config(), extra: true }];
+  for (const field of ['requests', 'keys', 'dbCapacity', 'refillMs', 'budgetMs', 'refillLimit']) {
+    for (const value of [0, -1, 1.5, '2', NaN, Infinity, true, null]) invalid.push(config({ [field]: value }));
+  }
+  invalid.push(config({ requests: 25 }), config({ keys: 7 }), config({ dbCapacity: 9 }),
+    config({ refillMs: 201 }), config({ budgetMs: 1001 }), config({ refillLimit: 9 }),
+    config({ requests: 2, keys: 3 }), config({ strategy: 'magic' }), config({ observation: 'silent' }));
+  for (const input of invalid) assert.throws(() => model.simulate(input), /Invalid/);
+});
+
+test('known results and returned configuration are immutable and input-independent', () => {
+  const input = config();
+  const run = model.simulate(input);
+  input.requests = 1;
+  assert.equal(run.config.requests, 8);
+  assert.throws(() => { run.counts.failure = 0; }, TypeError);
+  assert.throws(() => { run.journeys[2].outcome = 'success'; }, TypeError);
+  assert.throws(() => { run.config.strategy = 'coalesced'; }, TypeError);
+});
+
+test('session retains failed and unknown runs when a later run succeeds', () => {
+  let state = model.createSession();
+  state = model.runBurst(state, config());
+  state = model.runBurst(state, config({ strategy: 'coalesced', observation: 'missing-one' }));
+  state = model.runBurst(state, config({ strategy: 'coalesced' }));
+  assert.deepEqual(state.history.map((run) => run.id), [1, 2, 3]);
+  assert.deepEqual(state.history.map((run) => run.result.verdict), ['failure', 'unknown', 'success']);
+  assert.deepEqual(state.totals, { attempted: 24, success: 17, failure: 6, unknown: 1 });
+});
+
+test('fabricated, stale, and mutated sessions are rejected', () => {
+  const original = model.createSession();
+  const next = model.runBurst(original, config());
+  assert.throws(() => model.runBurst(original, config()), /Invalid.*session/);
+  assert.throws(() => model.runBurst(JSON.parse(JSON.stringify(next)), config()), /Invalid.*session/);
+  assert.throws(() => { next.history.pop(); }, TypeError);
+  assert.throws(() => model.resetSession({ history: [] }), /Invalid.*session/);
+});
+
+test('invalid input preserves a session and reset invalidates the old session', () => {
+  let state = model.createSession();
+  state = model.runBurst(state, config());
+  assert.throws(() => model.runBurst(state, config({ requests: 0 })), /Invalid/);
+  assert.equal(state.history.length, 1);
+  const reset = model.resetSession(state);
+  assert.deepEqual(reset.history, []);
+  assert.deepEqual(reset.totals, { attempted: 0, success: 0, failure: 0, unknown: 0 });
+  assert.throws(() => model.runBurst(state, config()), /Invalid.*session/);
+  assert.equal(model.runBurst(reset, config()).history[0].id, 1);
+});
+
+test('history cap rejects further work rather than silently discarding failures', () => {
+  let state = model.createSession();
+  for (let i = 0; i < 12; i += 1) state = model.runBurst(state, config());
+  assert.equal(state.history.length, model.MAX_RUNS);
+  assert.equal(state.totals.failure, 72);
+  assert.throws(() => model.runBurst(state, config({ strategy: 'coalesced' })), /12.*Reset/);
+  assert.equal(state.history[0].result.counts.failure, 6);
+  assert.equal(state.history.length, 12);
+});
