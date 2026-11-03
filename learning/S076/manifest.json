@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S076",
+  "sourceId": "S076",
+  "parentId": "D-S076",
+  "siblingId": "B-S076",
+  "kano": "S",
+  "kanoUnit": "A-S076",
+  "packet": "SC-S076",
+  "owner": "worker-A-S076",
+  "entryGate": "SOURCE",
+  "executionMode": "synthetic",
+  "title": "Consumer scale-in",
+  "objective": "Remove a consumer holding work; select valid finish, renew, or release behavior.",
+  "sourceBehavior": "Finish, renew, or safely relinquish claimed work before shutdown.",
+  "sourceAcceptance": "Claimed jobs finish or safely relinquish ownership/checkpoints; retirement does not lose work.",
+  "entryPoint": "learning\\S076\\index.html",
+  "feature": "learning\\S076\\consumer-scale-in.feature",
+  "evidence": "learning\\S076\\evidence.json",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "originalPrerequisites": [],
+  "sourceParentBaseGates": ["H011", "P005", "HOST"],
+  "dependencies": [],
+  "nativeGates": ["CORE", "DATA", "AKS", "C078"],
+  "preconditions": [
+    "Open local HTML in a modern browser with JavaScript; no server or account.",
+    "Two fixed synthetic consumers, one four-unit job initially owned by consumer-A, one intended effect.",
+    "Consumer-B is ready but can claim only an acknowledged checkpoint after observed A release.",
+    "Claims, acknowledgements and observations are teaching fixtures, not broker or hosting guarantees."
+  ],
+  "actions": [
+    "Choose finish, renew or release, bounded lease/grace/original job budgets and observation condition.",
+    "Start, close A admission, step logical ticks, and use only the selected disposition mechanism.",
+    "Observe completion or checkpoint/release before requesting A retirement; B can resume the same released job.",
+    "Verify separate result, original job impact, actual consumer count and resource-free cleanup.",
+    "Conduct an explicitly consented abrupt-stop negative experiment; reset retaining complete history."
+  ],
+  "assertions": [
+    "Finish requires current authority, observed one-effect completion and actual removal within grace.",
+    "Renewals before exclusive lease expiry extend neither original job deadline nor shutdown grace.",
+    "Only an acknowledged current checkpoint and observed release permit B ownership at epoch two.",
+    "Removal after safe release is not complete success until the same original job finishes within budget.",
+    "Known expiry, budget or abrupt-stop failures remain FAIL even with separate unknown observations.",
+    "Missing ownership, completion or removal evidence remains UNKNOWN; no fabricated receipts or counts.",
+    "Exact input/state guards, immutable snapshots, bounded retained history and keyboard/reset/error/CSP behavior are tested."
+  ],
+  "bounds": {
+    "consumers": 2,
+    "jobs": 1,
+    "jobUnits": 4,
+    "ticks": 12,
+    "leaseTicks": [1, 6],
+    "graceTicks": [1, 8],
+    "workBudget": [1, 12],
+    "renewals": 4,
+    "eventsPerAttempt": 40,
+    "archives": 4,
+    "clockOrRandomness": false,
+    "arbitraryEndpointsOrData": false
+  },
+  "tests": [
+    "learning\\S076\\model.test.cjs",
+    "learning\\S076\\guards.test.cjs",
+    "learning\\S076\\integrity.test.cjs",
+    "learning\\S076\\browser.test.cjs"
+  ],
+  "infrastructure": "N/A — resource-free synthetic local lesson; recorded after qualified RED and before implementation.",
+  "iacDecision": "learning\\S076\\evidence\\iac-na.json",
+  "testRuntime": {
+    "node": "22.23.4",
+    "purpose": "Existing Node22 test tooling only; not production Node24 validation.",
+    "playwright": "1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156",
+    "helper": "testing\\browser\\isolated.cjs",
+    "helperPublication": "53c0c0d",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055"
+  },
+  "nativeProof": false,
+  "parentComplete": false,
+  "productionNode24Validated": false,
+  "browserLifecycleRecoveryQualified": false,
+  "limits": [
+    "No actual broker consumer, lease, checkpoint, finish, renew, release or host-shutdown certification.",
+    "No native Azure result, source-parent completion, production Node24 or statistical reliability proof.",
+    "No cloud/IaC/scaffold/identity/credentials/deploy/spend/packages/framework/shared edits.",
+    "Failures describe the fixed synthetic contract, not permanent message loss in an actual broker.",
+    "Archives are memory-only; explicit reload clears them after the operator inspects or copies JSON.",
+    "The abandoned lifecycle prototype is unqualified and not used.",
+    "One frozen S unit only; tests, plumbing, repeated checks and refinement earn no additional credit."
+  ]
+}

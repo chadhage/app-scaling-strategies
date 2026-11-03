@@ -1,0 +1,442 @@
+'use strict';
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { createHash } = require('node:crypto');
+const directory = __dirname;
+const repo = path.resolve(directory, '..', '..');
+const evidence = path.join(directory, 'evidence');
+const helper = path.join(repo, 'testing', 'browser', 'isolated.cjs');
+const pinnedHash = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+const hash = (file) => createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+assert.equal(hash(helper), pinnedHash, 'Only the exact published helper is authorized.');
+const { openIsolatedLesson } = require(helper);
+const tooling = require(path.join(repo, 'testing', 'browser', 'node_modules', 'playwright', 'package.json'));
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+const label = process.env.S076_BROWSER_EVIDENCE_LABEL || 'browser-manual';
+assert.match(label, /^[a-z0-9-]+$/);
+const reportFile = path.join(evidence, `${label}-observation.json`);
+const tree = (root = directory, prefix = '') => Object.fromEntries(fs.readdirSync(root).sort().flatMap((name) => {
+  const file = path.join(root, name);
+  const relative = path.join(prefix, name);
+  return fs.statSync(file).isDirectory() ? Object.entries(tree(file, relative)) : [[relative, hash(file)]];
+}));
+
+test('S076 actual isolated browser: DOM, keyboard, errors, failures, reset, history and enforced CSP', { timeout: 180000 }, async (t) => {
+  assert.equal(process.version, 'v22.23.4');
+  assert.equal(tooling.version, '1.56.1');
+  const provenance = JSON.parse(fs.readFileSync(path.join(evidence, 'browser-provenance.json'), 'utf8'));
+  assert.equal(provenance.status, 'Valid');
+  assert.match(provenance.signer, /Microsoft Corporation/);
+  assert.match(provenance.productVersion, /^156\./);
+  assert.equal(hash(provenance.path), provenance.sha256);
+  if (capture) assert.equal(fs.existsSync(reportFile), false, 'Use a fresh label; historical browser proof is append-only.');
+  const before = tree();
+  const report = {
+    cardId: 'A-S076', workerId: 'worker-A-S076', kano: 'S', kanoUnit: 'A-S076', packet: 'SC-S076',
+    mode: 'actual-isolated-browser-testing-of-synthetic-lesson',
+    startedAtUtc: new Date().toISOString(), runtime: process.version, playwright: tooling.version,
+    helper: 'testing\\browser\\isolated.cjs', helperCommit: provenance.helperCommit, helperSha256: hash(helper),
+    browserProvenance: provenance, entryPoint: 'learning\\S076\\index.html',
+    sourceHashes: Object.fromEntries(['index.html', 'styles.css', 'model.js', 'lesson.js', 'browser.test.cjs']
+      .map((name) => [name, hash(path.join(directory, name))])),
+    captureExplicitlyEnabled: capture, cases: [], applicationErrors: [], externalCompleted: [],
+    escapedCspRequests: [], cspViolations: [], closeAwaited: false, ownedTreeUnchanged: false,
+    nativeProof: false, parentComplete: false, productionNode24Validated: false,
+    lifecycleRecoveryQualified: false, status: 'running'
+  };
+  let session;
+  try {
+    session = await openIsolatedLesson('learning\\S076\\index.html');
+    const { page } = session;
+    report.browserVersion = session.browserVersion;
+    assert.match(session.browserVersion, /^156\./);
+    page.on('pageerror', (error) => report.applicationErrors.push(error.message));
+    page.on('requestfinished', (request) => {
+      if (!request.url().startsWith('file:')) report.externalCompleted.push(request.url());
+    });
+    await page.route('https://s076.invalid/**', async (route) => {
+      report.escapedCspRequests.push(route.request().url());
+      await route.abort('blockedbyclient');
+    });
+    const read = async () => JSON.parse(await page.locator('#run-evidence').textContent());
+    const press = async (id, key = 'Enter') => {
+      await page.locator(`#${id}`).focus();
+      await page.keyboard.press(key);
+    };
+    const tick = async (count = 1) => {
+      for (let n = 0; n < count; n++) await press('tick');
+    };
+    const begin = async () => { await press('start'); await press('begin-scale-in', 'Space'); };
+    const complete = async () => { await begin(); await tick(4); await press('retire'); await press('verify'); };
+    const release = async () => {
+      await page.locator('#mode').selectOption('release');
+      await begin();
+      await tick();
+      await press('checkpoint', 'Space');
+      await press('release');
+    };
+    const conduct = async (name, check) => {
+      await t.test(name, async () => {
+        await page.reload({ waitUntil: 'load' });
+        await page.locator('#run-evidence').waitFor({ state: 'attached' });
+        try {
+          await check();
+          report.cases.push({ name, status: 'passed', observation: await read() });
+        } catch (error) {
+          report.cases.push({ name, status: 'failed', error: error.message,
+            observation: await read().catch(() => null) });
+          throw error;
+        }
+      });
+    };
+
+    await conduct('exact banner, real DOM, native reset method, tab order and visible keyboard focus', async () => {
+      assert.match(await page.title(), /S076.*Consumer scale-in/);
+      assert.equal(await page.getByRole('note').textContent(), 'Training rehearsal - synthetic data - not a live Azure result');
+      assert.equal((await read()).result.verifier, 'NOT_RUN');
+      assert.equal((await read()).metrics.attempted, 0);
+      for (const text of ['Retirement behavior', 'Synthetic observation condition', 'Lease duration (1–6 ticks)',
+        'Shutdown grace (1–8 ticks)', 'Original job budget (1–12 ticks)']) {
+        assert.equal(await page.getByLabel(text, { exact: true }).count(), 1);
+      }
+      assert.equal(await page.locator('#input-error').isVisible(), false);
+      assert.equal(await page.locator('#configuration').evaluate((form) => typeof form.reset), 'function');
+      await page.locator('#mode').focus();
+      await page.keyboard.press('Tab');
+      assert.equal(await page.locator('#condition').evaluate((element) => element === document.activeElement), true);
+      await page.keyboard.press('Tab');
+      assert.equal(await page.locator('#lease-ticks').evaluate((element) => element === document.activeElement), true);
+      await page.keyboard.press('Shift+Tab');
+      assert.equal(await page.locator('#condition').evaluate((element) => element === document.activeElement), true);
+      const focus = await page.locator('#condition').evaluate((element) => ({
+        width: getComputedStyle(element).outlineWidth, style: getComputedStyle(element).outlineStyle
+      }));
+      assert.equal(focus.width, '3px');
+      assert.equal(focus.style, 'solid');
+    });
+
+    await conduct('keyboard finish rejects early retirement and then observes one job, one effect and one consumer', async () => {
+      await begin();
+      assert.equal(await page.locator('#lease-ticks').isDisabled(), true);
+      await press('retire');
+      assert.equal((await read()).lastAction.verdict, 'BLOCKED');
+      assert.equal((await read()).actualConsumers, 2);
+      await tick(4);
+      await press('retire', 'Space');
+      await press('verify');
+      const state = await read();
+      assert.equal(state.result.verifier, 'PASS');
+      assert.equal(state.result.workOutcome, 'SUCCESS');
+      assert.equal(state.result.cleanup, 'NO_RESOURCES');
+      assert.equal(state.actualConsumers, 1);
+      assert.equal(state.metrics.attempted, 1);
+      assert.equal(state.job.effects, 1);
+      assert.equal(state.job.completedAt, 4);
+      assert.equal(await page.locator('#work-rows tr').count(), 1);
+      assert.equal(await page.locator('#trace-rows tr').count(), state.events.length);
+      assert.equal(await page.locator('#verify').evaluate((element) => element === document.activeElement), true);
+    });
+
+    await conduct('keyboard renew extends current authority only, not deadlines or permission to stop held work', async () => {
+      await page.locator('#mode').focus();
+      await page.keyboard.press('Home');
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('#mode').inputValue(), 'renew');
+      await page.locator('#lease-ticks').fill('2');
+      await begin();
+      await tick();
+      await press('renew', 'Space');
+      await press('retire');
+      assert.equal((await read()).lastAction.verdict, 'BLOCKED');
+      await tick();
+      await press('renew');
+      await tick();
+      await press('renew');
+      await tick();
+      await press('retire');
+      await press('verify');
+      const state = await read();
+      assert.equal(state.result.verifier, 'PASS');
+      assert.equal(state.renewals, 3);
+      assert.equal(state.job.deadline, 8);
+      assert.equal(state.drainDeadline, 6);
+      assert.equal(state.job.effects, 1);
+    });
+
+    await conduct('keyboard release permits safe removal but success waits for B to finish the original job', async () => {
+      await release();
+      let state = await read();
+      assert.equal(state.job.checkpoint, 1);
+      assert.equal(state.job.released, true);
+      assert.equal(state.job.owner, null);
+      await press('retire');
+      await press('verify');
+      state = await read();
+      assert.equal(state.actualConsumers, 1);
+      assert.equal(state.result.verifier, 'UNKNOWN');
+      assert.equal(state.metrics.pending, 1);
+      await press('claim', 'Space');
+      await tick(3);
+      await press('verify');
+      state = await read();
+      assert.equal(state.result.verifier, 'PASS');
+      assert.equal(state.job.owner, null);
+      assert.equal(state.job.completedBy, 'consumer-B');
+      assert.equal(state.job.epoch, 2);
+      assert.equal(state.job.deadline, 8);
+      assert.equal(state.job.effects, 1);
+    });
+
+    await conduct('missing checkpoint acknowledgement blocks release, B ownership and premature shutdown', async () => {
+      await page.locator('#condition').selectOption('checkpoint-missing');
+      await release();
+      assert.equal((await read()).job.checkpointAcknowledged, false);
+      await press('claim');
+      await press('retire');
+      const state = await read();
+      assert.equal(state.result.verifier, 'UNKNOWN');
+      assert.equal(state.job.owner, 'consumer-A');
+      assert.equal(state.actualConsumers, 2);
+      assert.match(await page.locator('#action-feedback').textContent(), /BLOCKED/);
+    });
+
+    await conduct('unobserved release cannot manufacture a new owner or safe retirement', async () => {
+      await page.locator('#condition').selectOption('ownership-unknown');
+      await release();
+      await press('claim');
+      await press('retire');
+      await press('verify');
+      const state = await read();
+      assert.equal(state.result.verifier, 'UNKNOWN');
+      assert.equal(state.metrics.unknown, 1);
+      assert.equal(state.job.owner, 'UNVERIFIED');
+      assert.equal(state.job.epoch, 1);
+      assert.equal(state.actualConsumers, 2);
+    });
+
+    await conduct('missing completion observation leaves unknown work and unknown effects, not success', async () => {
+      await page.locator('#condition').selectOption('completion-unknown');
+      await complete();
+      const state = await read();
+      assert.equal(state.result.verifier, 'UNKNOWN');
+      assert.equal(state.metrics.unknown, 1);
+      assert.equal(state.job.effects, null);
+      assert.equal(state.actualConsumers, 2);
+      assert.match(await page.locator('#work-rows').textContent(), /UNKNOWN/);
+    });
+
+    await conduct('missing retirement observation does not fabricate actual reduced capacity', async () => {
+      await page.locator('#condition').selectOption('retirement-unknown');
+      await complete();
+      const state = await read();
+      assert.equal(state.result.verifier, 'UNKNOWN');
+      assert.equal(state.metrics.succeeded, 1);
+      assert.equal(state.actualConsumers, null);
+      assert.equal(await page.locator('#consumer-count').textContent(), 'UNKNOWN');
+    });
+
+    await conduct('denied renewal then exclusive-boundary expiry is a retained known failure', async () => {
+      await page.locator('#mode').selectOption('renew');
+      await page.locator('#condition').selectOption('renew-denied');
+      await page.locator('#lease-ticks').fill('2');
+      await begin();
+      await tick();
+      await press('renew');
+      assert.equal((await read()).lastAction.verdict, 'BLOCKED');
+      assert.equal((await read()).job.leaseUntil, 2);
+      await tick();
+      await press('verify');
+      const state = await read();
+      assert.equal(state.result.verifier, 'FAIL');
+      assert.equal(state.metrics.failed, 1);
+      assert.equal(state.job.effects, 0);
+      assert.ok(state.violations.includes('lease-expired'));
+    });
+
+    await conduct('shutdown grace failure stays separate from a successful job and holds A', async () => {
+      await page.locator('#grace-ticks').fill('3');
+      await complete();
+      const state = await read();
+      assert.equal(state.result.verifier, 'FAIL');
+      assert.equal(state.result.workOutcome, 'SUCCESS');
+      assert.equal(state.job.effects, 1);
+      assert.equal(state.actualConsumers, 2);
+      assert.ok(state.violations.includes('shutdown-grace-exceeded'));
+    });
+
+    await conduct('successor continuation cannot reset the original job deadline', async () => {
+      await page.locator('#work-budget').fill('3');
+      await release();
+      await press('retire');
+      await press('claim');
+      await tick(3);
+      await press('verify');
+      const state = await read();
+      assert.equal(state.result.verifier, 'FAIL');
+      assert.equal(state.actualConsumers, 1);
+      assert.equal(state.job.deadline, 3);
+      assert.equal(state.metrics.failed, 1);
+      assert.equal(state.job.effects, 0);
+    });
+
+    await conduct('fault consent, failure retention, reset defaults, cleared consent and reset focus', async () => {
+      await page.locator('#mode').selectOption('renew');
+      await begin();
+      await press('force-stop');
+      assert.equal((await read()).lastAction.verdict, 'BLOCKED');
+      await press('fault-consent', 'Space');
+      await press('force-stop', 'Space');
+      assert.equal((await read()).result.verifier, 'FAIL');
+      assert.equal(await page.locator('#fault-consent').isChecked(), false);
+      await tick(2);
+      await press('verify');
+      await press('reset-working', 'Space');
+      const state = await read();
+      assert.equal(state.phase, 'IDLE');
+      assert.equal(state.attempt, 2);
+      assert.equal(state.history[0].result.verifier, 'FAIL');
+      assert.equal(state.history[0].metrics.failed, 1);
+      assert.equal(state.history[0].metrics.attempted, 1);
+      assert.equal(await page.locator('#history-rows tr').count(), 1);
+      assert.equal(await page.locator('#mode').inputValue(), 'finish');
+      assert.equal(await page.locator('#lease-ticks').inputValue(), '5');
+      assert.equal(await page.locator('#grace-ticks').inputValue(), '6');
+      assert.equal(await page.locator('#work-budget').inputValue(), '8');
+      assert.equal(await page.locator('#fault-consent').isChecked(), false);
+      assert.equal(await page.locator('#mode').evaluate((element) => element === document.activeElement), true);
+    });
+
+    await conduct('native form reset is callable and archives UNKNOWN without shadowing', async () => {
+      await page.locator('#condition').selectOption('completion-unknown');
+      await begin();
+      await tick(4);
+      assert.equal((await read()).metrics.unknown, 1);
+      await page.locator('#configuration').evaluate((form) => form.reset());
+      const state = await read();
+      assert.equal(state.phase, 'IDLE');
+      assert.equal(state.history[0].result.verifier, 'UNKNOWN');
+      assert.equal(state.history[0].metrics.unknown, 1);
+      assert.equal(await page.locator('#condition').inputValue(), 'complete');
+    });
+
+    await conduct('actual numeric and enum input errors are visible and cannot start work', async () => {
+      for (const value of ['', '0', '1.5', '7', '1e2']) {
+        await page.locator('#lease-ticks').fill(value);
+        await press('start');
+        const state = await read();
+        assert.equal(await page.locator('#input-error').isVisible(), true);
+        assert.equal(state.metrics.attempted, 0);
+        assert.equal(state.interface.verificationCurrent, false);
+        assert.notEqual(state.result.verifier, 'PASS');
+      }
+      await page.locator('#lease-ticks').fill('5');
+      await page.locator('#mode').evaluate((select) => {
+        const option = document.createElement('option');
+        option.value = 'unsupported';
+        option.textContent = 'Unsupported synthetic mode';
+        select.append(option);
+        select.value = option.value;
+      });
+      await press('start');
+      assert.match(await page.locator('#input-error').textContent(), /mode/i);
+      assert.equal((await read()).metrics.attempted, 0);
+    });
+
+    await conduct('rejected input suppresses a prior PASS without rewriting the retained job observations', async () => {
+      await complete();
+      assert.equal((await read()).result.verifier, 'PASS');
+      await page.locator('#config-fields').evaluate((fieldset) => { fieldset.disabled = false; });
+      await page.locator('#start').evaluate((button) => { button.disabled = false; });
+      await page.locator('#lease-ticks').fill('1.5');
+      await press('start');
+      let state = await read();
+      assert.equal(await page.locator('#input-error').isVisible(), true);
+      assert.equal(state.result.verifier, 'UNKNOWN');
+      assert.equal(state.interface.verificationCurrent, false);
+      assert.equal(state.job.effects, 1);
+      assert.equal(state.actualConsumers, 1);
+      await press('verify');
+      state = await read();
+      assert.equal(state.result.verifier, 'PASS');
+      assert.equal(state.interface.verificationCurrent, true);
+      assert.equal(state.job.effects, 1);
+    });
+
+    await conduct('a full archive visibly refuses reset without dropping four earlier failures', async () => {
+      for (let n = 0; n < 4; n++) {
+        await begin();
+        await press('fault-consent', 'Space');
+        await press('force-stop');
+        await press('reset-working');
+      }
+      await begin();
+      await press('reset-working');
+      const state = await read();
+      assert.equal(state.attempt, 5);
+      assert.equal(state.phase, 'DRAINING');
+      assert.equal(state.history.length, 4);
+      assert.equal(state.history[0].attempt, 1);
+      assert.ok(state.history.every((attempt) => attempt.result.verifier === 'FAIL'));
+      assert.equal(state.lastAction.verdict, 'BLOCKED');
+      assert.equal(await page.locator('#history-rows tr').count(), 4);
+      assert.match(await page.locator('#action-feedback').textContent(), /archives are full/i);
+    });
+
+    await conduct('actual enforced CSP denies inline script, connection, frame, form, worker and base changes', async () => {
+      const originalURL = page.url();
+      await page.evaluate(async () => {
+        window.__s076InlineExecuted = false;
+        window.__s076Violations = [];
+        document.addEventListener('securitypolicyviolation', (event) => {
+          window.__s076Violations.push({ directive: event.effectiveDirective, blockedURI: event.blockedURI });
+        });
+        const script = document.createElement('script');
+        script.textContent = 'window.__s076InlineExecuted = true;';
+        document.head.append(script);
+        await fetch('https://s076.invalid/connection').catch(() => {});
+        const frame = document.createElement('iframe');
+        frame.src = 'https://s076.invalid/frame';
+        document.body.append(frame);
+        const form = document.createElement('form');
+        form.action = 'https://s076.invalid/form';
+        document.body.append(form);
+        form.submit();
+        const base = document.createElement('base');
+        base.href = 'https://s076.invalid/base/';
+        document.head.append(base);
+        try {
+          const worker = new Worker('model.js');
+          worker.onerror = (event) => event.preventDefault();
+          worker.terminate();
+        } catch {}
+      });
+      await page.waitForFunction(() => [
+        'script-src-elem', 'connect-src', 'frame-src', 'form-action', 'worker-src', 'base-uri'
+      ].every((directive) => window.__s076Violations.some((item) => item.directive === directive)));
+      report.cspViolations = await page.evaluate(() => window.__s076Violations);
+      assert.equal(await page.evaluate(() => window.__s076InlineExecuted), false);
+      assert.equal(page.url(), originalURL);
+      assert.equal(await page.evaluate(() => document.baseURI), originalURL);
+      assert.deepEqual(report.escapedCspRequests, []);
+      assert.equal((await read()).metrics.attempted, 0);
+    });
+    assert.deepEqual(report.applicationErrors, []);
+    assert.deepEqual(report.externalCompleted, []);
+    assert.deepEqual(report.escapedCspRequests, []);
+  } finally {
+    if (session) {
+      await session.close();
+      report.closeAwaited = true;
+    }
+    assert.deepEqual(tree(), before, 'Ordinary verification must not rewrite owned sources or historical proof.');
+    report.ownedTreeUnchanged = true;
+    report.finishedAtUtc = new Date().toISOString();
+    report.status = report.closeAwaited && report.cases.length === 17
+      && report.cases.every((entry) => entry.status === 'passed')
+      && report.applicationErrors.length === 0 && report.externalCompleted.length === 0 ? 'passed' : 'failed';
+    if (capture) fs.writeFileSync(reportFile, JSON.stringify(report, null, 2) + '\n', { flag: 'wx' });
+  }
+});

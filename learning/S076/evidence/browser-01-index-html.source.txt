@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; child-src 'none'; worker-src 'none'; media-src 'none'; manifest-src 'none'">
+  <title>S076 — Consumer scale-in</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="lesson.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to operator controls</a>
+  <header>
+    <p class="banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S076 — Consumer scale-in</h1>
+    <p>A-S076 · D-S076 · frozen S · one unit A-S076 · packet SC-S076</p>
+    <p>Remove a consumer holding work; select valid finish, renew, or release behavior.
+      The source requires finishing, renewing, or safely relinquishing claimed work <strong>before shutdown</strong>.</p>
+  </header>
+  <main>
+    <noscript>This lesson needs local JavaScript. No connection or account is required.</noscript>
+    <section aria-labelledby="prepare-title">
+      <h2 id="prepare-title">The declared synthetic contract</h2>
+      <p>Two consumers, one four-unit job, and an exclusive claim owned by consumer-A at tick 0.
+        Consumer-B can resume only after an acknowledged current checkpoint and observed release.
+        One valid owner processes one unit per operator-controlled tick; the job has one intended effect.</p>
+      <p>A lease is valid only while <code>tick &lt; leaseUntil</code>. Expiry is checked before work at the new tick.
+        Closing admission starts shutdown grace, not a new job deadline. A renewal changes only lease expiry.
+        No automatic timer, broker, background consumer, network operation or platform action runs.</p>
+      <ol>
+        <li><strong>Finish:</strong> use defaults. Start, close admission, advance four ticks, retire A, verify.</li>
+        <li><strong>Renew:</strong> select Renew and lease 2. Start, close, tick then renew at ticks 1, 2 and 3.
+          Tick to 4, retire, verify. Try retiring while A still holds unfinished work: it is blocked.</li>
+        <li><strong>Release:</strong> select Release with lease 5. Start, close, tick once, save checkpoint,
+          release, retire A, claim on B, advance three ticks, verify.
+          Removal alone is not job completion; B keeps the original deadline.</li>
+        <li><strong>Negative and unknown:</strong> miss renewal, use work budget 3 or grace 3, or confirm the abrupt-stop fault.
+          Select missing observations to see UNKNOWN instead of fabricated receipts, authority or completion.</li>
+      </ol>
+    </section>
+
+    <section id="controls" aria-labelledby="controls-title">
+      <h2 id="controls-title">Operator controls</h2>
+      <form id="configuration" novalidate>
+        <fieldset id="config-fields">
+          <legend>Configure before starting one attempt</legend>
+          <div class="grid">
+            <label for="mode">Retirement behavior
+              <select id="mode">
+                <option value="finish">Finish the held job</option>
+                <option value="renew">Renew while finishing</option>
+                <option value="release">Checkpoint and release to B</option>
+              </select>
+            </label>
+            <label for="condition">Synthetic observation condition
+              <select id="condition">
+                <option value="complete">Complete observations</option>
+                <option value="checkpoint-missing">Checkpoint acknowledgement missing</option>
+                <option value="ownership-unknown">Release ownership unobserved</option>
+                <option value="completion-unknown">Job completion unobserved</option>
+                <option value="renew-denied">Renewal denied</option>
+                <option value="retirement-unknown">Consumer removal unobserved</option>
+              </select>
+            </label>
+            <label for="lease-ticks">Lease duration (1–6 ticks)
+              <input id="lease-ticks" type="number" min="1" max="6" step="1" value="5" required>
+            </label>
+            <label for="grace-ticks">Shutdown grace (1–8 ticks)
+              <input id="grace-ticks" type="number" min="1" max="8" step="1" value="6" required>
+            </label>
+            <label for="work-budget">Original job budget (1–12 ticks)
+              <input id="work-budget" type="number" min="1" max="12" step="1" value="8" required>
+            </label>
+          </div>
+        </fieldset>
+        <div class="buttons">
+          <button id="start" type="submit">Start claimed-work attempt</button>
+          <button id="reset-working" type="reset">Reset working attempt · retain history</button>
+        </div>
+      </form>
+      <p id="input-error" class="error" role="alert" hidden></p>
+      <div class="buttons" aria-label="Conduct claimed-work retirement">
+        <button id="begin-scale-in" type="button">Close admission to A</button>
+        <button id="tick" type="button">Advance one tick</button>
+        <button id="renew" type="button">Renew A claim</button>
+        <button id="checkpoint" type="button">Save current checkpoint</button>
+        <button id="release" type="button">Release A ownership</button>
+        <button id="claim" type="button">Claim released job on B</button>
+        <button id="retire" type="button">Retire consumer-A safely</button>
+        <button id="verify" type="button">Verify current result</button>
+      </div>
+      <fieldset class="fault">
+        <legend>Explicit synthetic negative experiment</legend>
+        <label for="fault-consent"><input id="fault-consent" type="checkbox">
+          I consent to the abrupt-stop fault while A holds unresolved work.</label>
+        <button id="force-stop" type="button">Fault: abruptly stop A now</button>
+      </fieldset>
+      <p id="action-feedback" role="status" aria-live="polite">Ready for one synthetic attempt.</p>
+    </section>
+
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Measured synthetic result</h2>
+      <div class="grid results">
+        <p>Verifier: <strong id="verifier">NOT_RUN</strong></p>
+        <p>Original job outcome: <strong id="work-outcome">NOT_STARTED</strong></p>
+        <p>Consumer retirement: <strong id="retirement-status">NOT_REQUESTED</strong></p>
+        <p>Cleanup: <strong id="cleanup-status">NO_RESOURCES</strong></p>
+      </div>
+      <p id="result-reason">No attempt started.</p>
+      <p>Attempt <strong id="attempt-number">1</strong> · logical tick <strong id="clock">0</strong>
+        · admission to A <strong id="admission">OPEN</strong>
+        · observed consumers <strong id="consumer-count">2</strong>
+        · shutdown deadline <strong id="shutdown-deadline">not started</strong></p>
+      <p id="metrics">Attempted 0 · successful 0 · failed 0 · unknown 0 · pending 0 · effects 0</p>
+      <p>PASS requires both the original job's observed one-effect completion and observed removal.
+        Safely releasing a job permits removal but does not by itself prove eventual completion.
+        FAIL is a failure of this declared synthetic attempt, not certification of permanent broker message loss.
+        UNKNOWN and failed attempts stay in the one-job denominator. No migration percentage is inferred.</p>
+      <div class="table-wrap" tabindex="0" aria-label="Current job observations">
+        <table>
+          <caption>Original claimed job, never replaced by a fresh denominator</caption>
+          <thead><tr><th>Job</th><th>Owner / epoch</th><th>Progress</th><th>Checkpoint</th><th>Lease expiry</th><th>Original deadline</th><th>Outcome</th><th>Effects</th></tr></thead>
+          <tbody id="work-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="trace-title">
+      <h2 id="trace-title">Retained action trace</h2>
+      <div class="table-wrap" tabindex="0" aria-label="Current attempt action trace">
+        <table>
+          <caption>Every bounded applied, blocked and unknown action</caption>
+          <thead><tr><th>#</th><th>Tick</th><th>Action</th><th>Verdict</th><th>Observation</th></tr></thead>
+          <tbody id="trace-rows"></tbody>
+        </table>
+      </div>
+      <h3>Archived attempts</h3>
+      <p>At most four complete archives plus the current attempt, 40 actions per attempt and 12 logical ticks.
+        Reset restores defaults and clears fault consent without deleting failures.
+        When archives are full, reset is blocked. History is memory-only: inspect or copy the JSON before explicitly reloading to clear it.</p>
+      <div class="table-wrap" tabindex="0" aria-label="Archived attempt results">
+        <table>
+          <caption>Prior negative and unknown results remain visible</caption>
+          <thead><tr><th>Attempt</th><th>Behavior</th><th>Verifier</th><th>Job outcome</th><th>Failed / unknown / pending</th></tr></thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+      <details>
+        <summary>Inspect / copy complete local evidence JSON</summary>
+        <pre id="run-evidence" tabindex="0"></pre>
+      </details>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Limits and genuine remaining work</h2>
+      <p>This fixed fixture assumes supported synthetic claims, acknowledgements and a ready successor.
+        It does not certify an actual broker consumer, lease, checkpoint, finish, renew, release,
+        host termination grace, native Azure behavior, production Node.js 24 or five-nines reliability.</p>
+      <p>B-S076 still requires CORE, DATA, AKS, C078, a qualified target and separately authorized execution.
+        D-S076 is incomplete; portable success does not complete the source parent.
+        No cloud, IaC, scaffold, identity, credentials, deployment, expenditure, package or framework is used.</p>
+      <p><a href="README.md">Source acceptance, verification commands and evidence provenance</a>.
+        Native labels, visible focus, Enter, Space, Tab and Shift+Tab operate the controls.</p>
+    </section>
+  </main>
+</body>
+</html>

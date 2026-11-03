@@ -1,0 +1,27 @@
+'use strict';
+
+(function expose(root) {
+  const DEFAULTS = Object.freeze({
+    mode: 'finish', leaseTicks: 5, graceTicks: 6, workBudget: 8, condition: 'complete'
+  });
+  const LIMITS = Object.freeze({ units: 4, ticks: 12, events: 40, archives: 4, renewals: 4 });
+
+  function createSession() {
+    return {
+      attempt: 1, phase: 'IDLE', config: null, clock: 0, admission: 'OPEN',
+      drainDeadline: null, actualConsumers: 2, retirement: 'NOT_REQUESTED',
+      job: null, renewals: 0, violations: [], events: [], history: [],
+      lastAction: null,
+      metrics: { attempted: 0, succeeded: 0, failed: 0, unknown: 0, pending: 0, effects: 0 },
+      result: { verifier: 'NOT_RUN', workOutcome: 'NOT_STARTED', cleanup: 'NO_RESOURCES', reason: 'No attempt started.' }
+    };
+  }
+
+  function step(state) {
+    return state;
+  }
+
+  const api = Object.freeze({ DEFAULTS, LIMITS, createSession, step });
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.S076 = api;
+}(globalThis));
