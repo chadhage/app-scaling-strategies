@@ -1,0 +1,222 @@
+'use strict';
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const { execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const repo = path.resolve(__dirname, '..', '..');
+const local = (file) => path.join(__dirname, file);
+const read = (file) => fs.readFileSync(local(file), 'utf8');
+const json = (file) => JSON.parse(read(file));
+const hash = (file) => createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+const pinnedHash = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+
+test('manifest preserves exact canonical title, one frozen unit, packet, and original native lineage', () => {
+  const manifest = json('manifest.json');
+  assert.equal(manifest.cardId, 'A-S015');
+  assert.equal(manifest.kano, 'S');
+  assert.equal(manifest.kanoUnit, 'A-S015');
+  assert.equal(manifest.packet, 'SC-S015');
+  assert.equal(manifest.parent, 'D-S015');
+  assert.equal(manifest.source, 'S015');
+  assert.equal(manifest.title, 'Horizontal scale-in');
+  assert.deepEqual(manifest.originalPrerequisites, ['D-S041', 'D-S076']);
+  assert.deepEqual(manifest.dependencies, []);
+  assert.match(manifest.infrastructure, /^N\/A/);
+  for (const key of ['nativeProof', 'parentComplete', 'productionNode24Validated']) assert.equal(manifest[key], false);
+  for (const file of [manifest.entryPoint, manifest.feature, manifest.evidence, ...manifest.tests]) {
+    assert.ok(file.startsWith('learning\\S015\\'));
+    assert.ok(fs.existsSync(path.join(repo, file)));
+  }
+});
+
+test('source provenance captures exact S015, D-S015, A/B rows, and the portable contract actually read', () => {
+  const red = json('evidence\\red-provenance.json');
+  assert.match(red.sourceHead, /^[a-f0-9]{40}$/);
+  assert.equal(red.sourceFiles.length, 3);
+  assert.ok(red.sourceFiles.every((entry) => /^[a-f0-9]{64}$/.test(entry.sha256)));
+  assert.match(red.sourceRows.scenario, /\*\*Horizontal scale-in:\*\* Use host-supported admission, drain, or continuation mechanisms/);
+  assert.match(red.sourceRows.parent, /Already-admitted work completes or resumes correctly within budgets/);
+  assert.match(red.sourceRows.parent, /D-S041, D-S076/);
+  assert.match(red.sourceRows.card, /Retire capacity with active requests\/jobs; distinguish safe continuation from lost work/);
+  assert.match(red.sourceRows.native, /CORE, DATA, AKS, C075, C078/);
+  const contract = json('evidence\\source-contract.json');
+  assert.equal(contract.readBeforeBehaviorDesign, true);
+  assert.equal(contract.card.packet, 'SC-S015');
+  assert.equal(contract.card.kanoUnit, 'A-S015');
+  assert.match(contract.atomicContract, /genuine behavioral TDD red/);
+  assert.match(contract.portableContract, /Training rehearsal - synthetic data - not a live Azure result/);
+  assert.match(contract.portableContract, /source ID, objective, preconditions, actions, synthetic input\/trace, expected assertions, and limits/);
+});
+
+test('qualified RED raw output and non-discovered source snapshots are byte-preserved', () => {
+  const proof = json('evidence\\red-provenance.json');
+  assert.equal(proof.exitCode, 1);
+  assert.equal(proof.assertionFailures, 46);
+  assert.deepEqual(proof.summary, { tests: 47, pass: 1, fail: 46, skipped: 0 });
+  assert.equal(hash(path.join(repo, proof.log.path)), proof.log.sha256);
+  for (const snapshot of proof.snapshots) {
+    assert.equal(hash(path.join(repo, snapshot.path)), snapshot.sha256);
+    assert.ok(snapshot.path.endsWith('.source.txt'));
+    assert.doesNotMatch(snapshot.path, /\.test\.(?:cjs|js|mjs)$/);
+  }
+  const log = read('evidence\\red.tap.txt');
+  assert.equal([...log.matchAll(/code: 'ERR_ASSERTION'/g)].length, 46);
+  assert.doesNotMatch(log, /MODULE_NOT_FOUND|Cannot find module|ERR_TEST_FAILURE|name: 'TypeError'/);
+  assert.equal(read('scale-in.test.cjs'), read('evidence\\red-tests.source.txt'));
+  assert.equal(read('horizontal-scale-in.feature'), read('evidence\\red-bdd.source.txt'));
+});
+
+test('the exact archived RED model loads and lacks the behavior asserted by the saved tests', () => {
+  const moduleObject = { exports: {} };
+  vm.runInNewContext(read('evidence\\red-model.source.txt'), {
+    module: moduleObject, structuredClone, globalThis: {}
+  }, { filename: 'red-model.source.txt' });
+  assert.equal(typeof moduleObject.exports.createRehearsal, 'function');
+  assert.equal(typeof moduleObject.exports.transition, 'function');
+  const state = moduleObject.exports.createRehearsal();
+  const unchanged = moduleObject.exports.transition(state, 'start', moduleObject.exports.DEFAULTS);
+  assert.equal(unchanged.phase, 'IDLE');
+  assert.equal(unchanged.work.length, 0);
+  assert.equal(unchanged.events.length, 0);
+  assert.notEqual(hash(local('scale-in.js')), hash(local('evidence\\red-model.source.txt')));
+});
+
+test('IaC N/A is explicitly ordered after genuine RED and before implementation', () => {
+  const red = json('evidence\\red-provenance.json');
+  const iac = json('evidence\\iac-na.json');
+  const contract = json('evidence\\source-contract.json');
+  assert.equal(iac.status, 'N/A');
+  assert.equal(iac.afterQualifiedRed, true);
+  assert.equal(iac.beforeImplementation, true);
+  assert.ok(Date.parse(iac.recordedAtUtc) >= Date.parse(red.finishedAtUtc));
+  assert.ok(Date.parse(contract.implementationRecordedAtUtc) > Date.parse(iac.recordedAtUtc));
+  assert.equal(iac.redLogSha256, red.log.sha256);
+  assert.equal(iac.loadableStubSha256, hash(local('evidence\\red-model.source.txt')));
+});
+
+test('only the exact approved published browser helper and existing offline pairing are referenced', () => {
+  const helper = path.join(repo, 'testing', 'browser', 'isolated.cjs');
+  assert.equal(hash(helper), pinnedHash);
+  const published = execFileSync('git', ['show', '53c0c0d82cc1db6780a87ac2b1085734af6d5c60:testing/browser/isolated.cjs'], { cwd: repo });
+  assert.equal(createHash('sha256').update(published).digest('hex'), pinnedHash);
+  const provenance = json('evidence\\browser-provenance.json');
+  assert.equal(provenance.status, 'Valid');
+  assert.match(provenance.signer, /Microsoft Corporation/);
+  assert.match(provenance.productVersion, /^156\./);
+  assert.equal(provenance.helperSha256, pinnedHash);
+  const browser = read('browser.test.cjs');
+  assert.match(browser, /openIsolatedLesson\('learning\\\\S015\\\\index\.html'\)/);
+  assert.match(browser, /finally\s*\{[\s\S]*await session\.close\(\)/);
+  assert.match(browser, /process\.env\.CAPTURE_BROWSER_EVIDENCE === '1'/);
+  assert.match(browser, /if \(capture\)/);
+  assert.match(browser, /ordinary verification must not rewrite historical proof/);
+  assert.doesNotMatch(browser, /chromium\.launch|executablePath|--no-sandbox|ignoreHTTPSErrors|bypassCSP:\s*true|prototype\.cjs/);
+});
+
+test('runtime is local-only, bounded, and protected by a restrictive non-inline CSP', () => {
+  const html = read('index.html');
+  const policy = html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)[1];
+  for (const directive of [
+    "default-src 'none'", "script-src 'self'", "style-src 'self'", "connect-src 'none'",
+    "img-src 'none'", "font-src 'none'", "media-src 'none'", "object-src 'none'",
+    "base-uri 'none'", "form-action 'none'", "frame-src 'none'", "child-src 'none'",
+    "worker-src 'none'", "manifest-src 'none'"
+  ]) assert.ok(policy.includes(directive), directive);
+  assert.doesNotMatch(policy, /unsafe-inline|unsafe-eval|https?:|\*/);
+  assert.doesNotMatch(html, /\son[a-z]+\s*=|<style\b|\sstyle\s*=/i);
+  const scripts = [...html.matchAll(/<script defer src="([^"]+)"><\/script>/g)].map((match) => match[1]);
+  assert.deepEqual(scripts, ['scale-in.js', 'lesson.js']);
+  for (const script of scripts) {
+    assert.doesNotMatch(read(script), /\bfetch\s*\(|\bWebSocket\b|\bXMLHttpRequest\b|sendBeacon|localStorage|sessionStorage|document\.cookie|innerHTML|eval\s*\(|setTimeout|setInterval|\bDate\b|Math\.random/);
+  }
+  assert.doesNotMatch(read('lesson.css'), /@import|url\s*\(/i);
+});
+
+test('semantic controls are labelled, IDs are unique, errors announce, and form.reset is not shadowed', () => {
+  const html = read('index.html');
+  const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(new Set(ids).size, ids.length);
+  const controls = [...html.matchAll(/<(?:input|select|button)\b[^>]*>/g)].map((match) => match[0]);
+  assert.ok(controls.length >= 16);
+  assert.ok(controls.every((control) => !/\b(?:name|id)="reset"/i.test(control)));
+  for (const match of html.matchAll(/<(?:input|select)\b[^>]*\bid="([^"]+)"/g)) {
+    assert.ok(html.includes(`for="${match[1]}"`), match[1]);
+  }
+  assert.match(html, /role="alert"/);
+  assert.match(html, /role="status" aria-live="polite"/);
+  assert.match(html, /<caption>Originally admitted synthetic work/);
+  assert.match(html, /<noscript>/);
+  assert.match(read('lesson.js'), /form\.reset\(\)/);
+  assert.match(read('lesson.css'), /:focus-visible/);
+  assert.equal(html.split('Training rehearsal - synthetic data - not a live Azure result').length - 1, 1);
+});
+
+test('actual headless observations bind the runtime, retain failures and unknowns, and report enforced CSP', () => {
+  const browser = json('evidence\\browser-observations.json');
+  assert.equal(browser.status, 'passed');
+  assert.equal(browser.cases.length, 16);
+  assert.ok(browser.cases.every((entry) => entry.status === 'passed'));
+  assert.equal(browser.closeAwaited, true);
+  assert.equal(browser.runtime, 'v22.23.4');
+  assert.equal(browser.playwright, '1.56.1');
+  assert.match(browser.browserVersion, /^156\./);
+  assert.equal(browser.helperSha256, pinnedHash);
+  assert.equal(browser.lifecycleRecoveryQualified, false);
+  assert.equal(browser.nativeProof, false);
+  assert.equal(browser.parentComplete, false);
+  assert.equal(browser.productionNode24Validated, false);
+  assert.deepEqual(browser.applicationErrors, []);
+  assert.deepEqual(browser.externalCompleted, []);
+  assert.deepEqual(browser.escapedCspRequests, []);
+  assert.ok(browser.cspViolations.some((entry) => /^script-src/.test(entry.directive)));
+  assert.ok(browser.cspViolations.some((entry) => entry.directive === 'connect-src'));
+  assert.ok(browser.cspViolations.some((entry) => entry.directive === 'form-action'));
+  assert.ok(browser.cases.some((entry) => entry.observation.result.workOutcome === 'INTERRUPTED'));
+  assert.ok(browser.cases.some((entry) => entry.observation.metrics.unknown > 0));
+  assert.ok(browser.cases.some((entry) => entry.observation.archives.some((record) => record.metrics.failed > 0)));
+  for (const [file, digest] of Object.entries(browser.sourceHashes)) assert.equal(hash(local(file)), digest, file);
+});
+
+test('owned Git attributes preserve raw bytes without disabling runtime whitespace validation', () => {
+  const attributes = read('.gitattributes');
+  assert.match(attributes, /^\* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol$/m);
+  assert.match(attributes, /^evidence\/\*\.tap\.txt -whitespace$/m);
+  assert.doesNotMatch(attributes, /^\* -whitespace$/m);
+});
+
+test('refinement retains genuine native gates, original prerequisites, and parent-owned single-unit acceptance', () => {
+  const remaining = json('remaining-work.json');
+  assert.equal(remaining.kanoUnit, 'A-S015');
+  assert.ok(remaining.items.every((item) => item.extraKanoCredit === false));
+  const native = remaining.items.find((item) => item.id === 'B-S015-native');
+  assert.equal(native.readiness, false);
+  for (const gate of ['CORE', 'DATA', 'AKS', 'C075', 'C078']) assert.ok(native.gate.includes(gate));
+  const parent = remaining.items.find((item) => item.id === 'D-S015-roll-up');
+  assert.ok(parent.gate.includes('D-S041'));
+  assert.ok(parent.gate.includes('D-S076'));
+  assert.match(remaining.incompleteReturnPolicy, /To Do, readiness false/);
+  const notes = read('README.md');
+  assert.match(notes, /Refined remaining To Do/);
+  assert.match(notes, /D-S015 roll-up.*remains incomplete/);
+  assert.match(notes, /blocked overall\s+lifecycle recovery/);
+  assert.match(notes, /production Node\.js 24[\s\S]*remain unclaimed/);
+  const evidence = json('evidence.json');
+  assert.equal(evidence.nativeProof, false);
+  assert.equal(evidence.parentComplete, false);
+  assert.equal(evidence.browserHelper.lifecycleRecoveryQualified, false);
+});
+
+test('content manifest binds source and historical proof with exact byte hashes and owned paths', () => {
+  const binding = json('evidence\\content-hashes.json');
+  assert.equal(binding.cardId, 'A-S015');
+  assert.equal(binding.algorithm, 'SHA256 exact bytes');
+  assert.ok(binding.files.length >= 20);
+  for (const entry of binding.files) {
+    assert.ok(entry.path.startsWith('learning\\S015\\'));
+    assert.equal(hash(path.join(repo, entry.path)), entry.sha256, entry.path);
+  }
+});

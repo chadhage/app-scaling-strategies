@@ -1,0 +1,29 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.ScaleInLesson = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const DEFAULTS = Object.freeze({
+    mechanism: 'drain', condition: 'healthy', requestTicks: 2,
+    jobTicks: 4, drainBudget: 5, workBudget: 6
+  });
+  function createRehearsal() {
+    return {
+      schemaVersion: 1, run: 1, phase: 'IDLE', config: null, tick: 0,
+      admission: 'OPEN', closedAt: null, retiring: 'ACTIVE', retiredAt: null,
+      actualCapacity: 2, work: [], probes: [], events: [], archives: [],
+      drainExceeded: false, invalid: false,
+      lastAction: { action: 'none', verdict: 'NOT_RUN', reason: 'Start a synthetic rehearsal.' },
+      metrics: {
+        attempted: 0, succeeded: 0, failed: 0, unknown: 0, pending: 0,
+        observedSuccessRate: null, newToRetiring: 0, rejectedToRetiring: 0
+      },
+      assertions: [],
+      result: { verifier: 'NOT_RUN', workOutcome: 'NOT_RUN', nativeOutcome: 'UNVERIFIED', cleanup: 'N/A' }
+    };
+  }
+  function transition(state) { return state; }
+  return { DEFAULTS, createRehearsal, transition };
+}));

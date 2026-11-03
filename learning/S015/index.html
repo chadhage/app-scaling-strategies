@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; child-src 'none'; worker-src 'none'; manifest-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S015 — Horizontal scale-in</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script defer src="scale-in.js"></script>
+  <script defer src="lesson.js"></script>
+</head>
+<body>
+  <header>
+    <p class="training" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S015 — Horizontal scale-in</h1>
+    <p>A-S015 · D-S015 · frozen S · SC-S015. Preserve admitted work before removing capacity.</p>
+  </header>
+  <main>
+    <noscript>This exercise requires local JavaScript. No result has been measured while scripts are unavailable.</noscript>
+    <section aria-labelledby="objective">
+      <h2 id="objective">Objective, preconditions, and limits</h2>
+      <p>Use host-supported admission, drain, or continuation mechanisms to preserve work before capacity terminates.
+        Here, <strong>retiring-A</strong> owns one admitted request and one job at tick 0.
+        <strong>retained-B</strong> is ready and has room for this entire bounded fixture; no real host is contacted.</p>
+      <p>Default request: 2 ticks. Job: 4 ticks. Original work budget: 6 ticks from admission.
+        Drain budget: 5 ticks from the closure action. Equality at a deadline is allowed.
+        A checkpoint changes job ownership, not its original deadline. A request never relocates.</p>
+      <ol>
+        <li>Start the fixture, close new admission, and probe fresh admission.</li>
+        <li>Drain: advance 4 ticks. Continuation: checkpoint the job, then advance 2 ticks.</li>
+        <li>Request safe retirement; inspect actual capacity, not just the request.</li>
+        <li>Probe after retirement. For continuation, advance 2 more ticks to finish the job. Verify.</li>
+        <li>Reset to archive the attempt. Try missing evidence, stale routing, short budgets, or the explicit unsafe fault.</li>
+      </ol>
+      <p>The verifier, admitted-work outcome, and synthetic cleanup are separate. Passing a negative-test assertion
+        does not turn lost work into continuity. Probes measure routing only; neither probes nor these two work items
+        prove user migration, Azure support, or production reliability.</p>
+    </section>
+
+    <section aria-labelledby="fixture-heading">
+      <h2 id="fixture-heading">1. Choose a bounded synthetic fixture</h2>
+      <form id="fixture-form" novalidate>
+        <fieldset id="fixture-fields">
+          <legend>Assumptions locked after start; reset before changing them</legend>
+          <label for="mechanism">Declared fixture mechanism</label>
+          <select id="mechanism" name="mechanism">
+            <option value="drain">Supported fixture: finish work on retiring-A</option>
+            <option value="checkpoint">Supported fixture: durable job continuation on retained-B</option>
+            <option value="opaque">Opaque / unqualified host — support unknown</option>
+          </select>
+          <label for="condition">Deterministic observation condition</label>
+          <select id="condition" name="condition">
+            <option value="healthy">Healthy observations</option>
+            <option value="checkpoint-missing">Missing checkpoint proof (continuation only)</option>
+            <option value="stale-routing">Stale fresh routing to retiring-A</option>
+            <option value="missing-completion">Missing original request completion</option>
+            <option value="retirement-unobserved">Retirement requested but not observed</option>
+          </select>
+          <div class="numbers">
+            <div>
+              <label for="request-ticks">Request duration (1–8 ticks)</label>
+              <input id="request-ticks" name="requestTicks" type="number" min="1" max="8" step="1" value="2" required>
+            </div>
+            <div>
+              <label for="job-ticks">Job duration (1–8 ticks)</label>
+              <input id="job-ticks" name="jobTicks" type="number" min="1" max="8" step="1" value="4" required>
+            </div>
+            <div>
+              <label for="drain-budget">Drain budget (1–10 ticks)</label>
+              <input id="drain-budget" name="drainBudget" type="number" min="1" max="10" step="1" value="5" required>
+            </div>
+            <div>
+              <label for="work-budget">Original work budget (1–12 ticks)</label>
+              <input id="work-budget" name="workBudget" type="number" min="1" max="12" step="1" value="6" required>
+            </div>
+          </div>
+        </fieldset>
+        <button id="start-rehearsal" type="submit">Start synthetic work</button>
+      </form>
+      <p id="input-error" role="alert" hidden></p>
+    </section>
+
+    <section aria-labelledby="conduct-heading">
+      <h2 id="conduct-heading">2. Conduct scale-in</h2>
+      <div class="actions">
+        <button id="close-admission" type="button" data-action="close-admission">Close new admission</button>
+        <button id="probe-admission" type="button" data-action="probe">Probe fresh admission</button>
+        <button id="checkpoint-job" type="button" data-action="checkpoint">Checkpoint and continue job</button>
+        <button id="advance-clock" type="button" data-action="advance">Advance 1 logical tick</button>
+        <button id="retire-capacity" type="button" data-action="retire">Retire capacity safely</button>
+        <button id="verify-result" type="button" data-action="verify">Verify recorded outcome</button>
+      </div>
+      <fieldset class="fault">
+        <legend>Explicit negative experiment — no real termination</legend>
+        <label for="fault-consent"><input id="fault-consent" type="checkbox">
+          I understand this synthetic fault may lose admitted work.</label>
+        <button id="force-retirement" type="button" data-action="force-retire">Fault: terminate retiring-A now</button>
+      </fieldset>
+      <button id="restart-rehearsal" type="button" data-action="reset">Reset working rehearsal; retain attempt</button>
+      <p id="action-status" role="status" aria-live="polite" aria-atomic="true"></p>
+    </section>
+
+    <section aria-labelledby="results-heading">
+      <h2 id="results-heading">3. Inspect measured synthetic results</h2>
+      <dl class="summary">
+        <div><dt>Logical tick</dt><dd id="clock">0</dd></div>
+        <div><dt>Actual synthetic instances</dt><dd id="capacity">2</dd></div>
+        <div><dt>New admission to retiring-A</dt><dd id="admission">OPEN</dd></div>
+        <div><dt>Retiring-A observation</dt><dd id="retirement">ACTIVE</dd></div>
+        <div><dt>Verifier</dt><dd id="verdict">NOT_RUN</dd></div>
+        <div><dt>Original work outcome</dt><dd id="work-outcome">NOT_RUN</dd></div>
+        <div><dt>Synthetic cleanup</dt><dd id="cleanup">N/A</dd></div>
+        <div><dt>Native Azure / user migration</dt><dd>UNVERIFIED / UNKNOWN</dd></div>
+      </dl>
+      <p id="work-metrics"></p>
+      <p id="routing-metrics"></p>
+      <p>Observed success fraction uses the original two-work denominator, including failed and unknown outcomes.
+        It is not a transition-success percentage or a host SLA. While work is pending, the fraction is not reported.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Originally admitted synthetic work</caption>
+          <thead><tr><th scope="col">Work</th><th scope="col">Owner</th><th scope="col">Original deadline</th><th scope="col">Lifecycle</th><th scope="col">Outcome</th><th scope="col">Completed at</th><th scope="col">Effects</th><th scope="col">Checkpoint</th></tr></thead>
+          <tbody id="work-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>Explicit synthetic acceptance assertions</caption>
+          <thead><tr><th scope="col">Assertion</th><th scope="col">Verdict</th><th scope="col">Meaning</th></tr></thead>
+          <tbody id="assertion-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>Fresh admission routing probes — not completed user journeys</caption>
+          <thead><tr><th scope="col">Probe</th><th scope="col">Tick</th><th scope="col">Target</th><th scope="col">Accepted</th><th scope="col">Retirement observation</th><th scope="col">Violation</th></tr></thead>
+          <tbody id="probe-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">4. Retained action and attempt history</h2>
+      <p>Bounded to 12 logical ticks, 8 probes, and 48 actions per attempt; 4 archived attempts plus the current one.
+        Full archives refuse reset rather than evict evidence. Inspect the JSON before explicitly reloading.
+        Reload clears this in-memory session; nothing is stored or sent.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Immutable action observations for the current attempt</caption>
+          <thead><tr><th scope="col">Sequence</th><th scope="col">Tick</th><th scope="col">Action</th><th scope="col">Verdict</th><th scope="col">Reason</th></tr></thead>
+          <tbody id="event-rows"></tbody>
+        </table>
+      </div>
+      <p id="archive-summary"></p>
+      <div class="table-wrap">
+        <table>
+          <caption>Previous attempts retained by reset</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Verifier</th><th scope="col">Work outcome</th><th scope="col">Successful / failed / unknown</th></tr></thead>
+          <tbody id="archive-rows"></tbody>
+        </table>
+      </div>
+      <details>
+        <summary>Inspect complete synthetic JSON evidence, including previous attempts</summary>
+        <pre id="run-evidence" tabindex="0" aria-label="Complete synthetic JSON evidence"></pre>
+      </details>
+    </section>
+    <section aria-labelledby="scope-heading">
+      <h2 id="scope-heading">Evidence boundary and unfinished native work</h2>
+      <p>These teaching clocks, two instances, checkpoint transfer, and one-effect ledger are explicit fixture assumptions,
+        not Azure limits. No network, accounts, credentials, timers, storage, management API, or resource operations occur.
+        IaC is N/A for this resource-free lesson.</p>
+      <p>B-S015 still needs CORE, DATA, AKS, C075, C078, a qualified target and envelope, and separate native authorization.
+        D-S015 remains incomplete, including its original D-S041 and D-S076 prerequisites. A prior portable lesson is not
+        proof of its native parent. Production Node.js 24 and native/source-parent reliability are unvalidated.</p>
+      <p><a href="README.md">Lesson instructions and evidence</a> · <a href="../../README.md#b-actual-capacity-scaling-strategies">Canonical S015 source</a></p>
+      <p>Microsoft open-source disclaimer: this demonstration is provided “AS IS”, without warranty.
+        See the repository's complete <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft disclaimer</a>.
+        No Microsoft SLA or guarantee is asserted.</p>
+    </section>
+  </main>
+</body>
+</html>
