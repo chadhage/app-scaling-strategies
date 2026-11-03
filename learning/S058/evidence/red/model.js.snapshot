@@ -1,0 +1,26 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.WorkflowReplay = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const MAX_ATTEMPTS = 6;
+  const fixtures = [
+    { id: 'WF-101', version: '1.0', recorded: ['ReadOrder', 'ReserveStock'] },
+    { id: 'WF-102', version: '1.0', recorded: ['ReadOrder'] },
+    { id: 'WF-201', version: '2.0', recorded: ['ReadOrder', 'RiskCheck', 'ReserveStock'] },
+  ];
+  function createState() { return { attempts: [] }; }
+  function conduct(state, input) {
+    return {
+      state,
+      result: {
+        attempt: 0, input, verdict: 'UNKNOWN', impact: 'undetermined', rows: [],
+        metrics: { started: 0, matched: 0, mismatches: 0, blocked: 0, unknown: 0, replayedEvents: 0, externalEffects: 0 },
+      },
+    };
+  }
+  function reset(state) { return state; }
+  return { MAX_ATTEMPTS, fixtures, createState, conduct, reset };
+}));

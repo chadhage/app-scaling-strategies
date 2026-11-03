@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S058",
+  "parentId": "D-S058",
+  "sourceId": "S058",
+  "kano": "S",
+  "kanoUnit": "A-S058",
+  "packet": "SC-S058",
+  "owner": "worker-A-S058",
+  "mode": "synthetic",
+  "configuration": "Three fixed histories, two workflow definitions, 18 control combinations, maximum six in-memory attempts.",
+  "host": "Standalone file URL; Node 22.23.4 test tooling, existing offline Playwright 1.56.1 and signed Microsoft Edge 156.",
+  "exactSourceAcceptance": "Pin or explicitly version long-lived workflows so new code does not invalidate existing execution history.",
+  "exactParentAcceptance": "Existing histories continue under the correct version strategy; unexpected replay/history behavior is detected.",
+  "sourceProvenance": "evidence/source-contract.json",
+  "sequence": [
+    { "stage": "BDD", "receipt": "evidence/bdd.json", "detail": "Eight scenarios preceded the loadable stub; bdd-002 clarifies the short-prefix next-command guard." },
+    { "stage": "Loadable stub", "receipt": "evidence/stub-load.json", "detail": "Complete API loaded and returned a renderable result; no missing code or tools." },
+    { "stage": "Genuine behavioral RED", "receipt": "evidence/red.json", "detail": "17 ERR_ASSERTION failures and one API-load pass; raw non-discovered snapshots retained in evidence/red." },
+    { "stage": "IaC N/A", "receipt": "evidence/iac-stage.json", "detail": "Resource-free lesson, explicitly recorded after RED and before implementation." },
+    { "stage": "Implementation GREEN", "receipt": "evidence/green-model.json", "detail": "All 18 unchanged model assertions pass." },
+    { "stage": "Focused source and provenance GREEN", "receipt": "evidence/green-core-002.json", "detail": "24 model/source/surface/provenance checks pass, including historical RED re-execution." },
+    { "stage": "Offline tooling", "receipt": "evidence/tooling.json", "detail": "Helper SHA, Node, helper-local Playwright, Edge version and Microsoft signature verified." },
+    { "stage": "Actual browser", "receipt": "evidence/browser-001.json", "detail": "10 DOM/keyboard/error/history/failure/reset/reload/CSP subchecks and awaited finally cleanup; browser-001.observations.json retains source hashes and artifact hashes." },
+    { "stage": "Syntax", "receipt": "evidence/syntax.json", "detail": "All owned JavaScript scripts and manifest/evidence JSON." },
+    { "stage": "Read-only verification", "receipt": "evidence/verification-001.json", "detail": "Focused tests, actual browser, syntax, tooling and integrity; proof tree unchanged during verification." }
+  ],
+  "diagnosticFailures": [
+    {
+      "label": "green-core",
+      "reason": "Nested historical RED child inherited NODE_TEST_CONTEXT, causing recursive node --test discovery to skip its files and return zero. This was an evidence-runner diagnostic, not behavioral RED.",
+      "correction": "Remove only the inherited child test-context marker before spawning the independent historical replay; green-core-002 passes.",
+      "rawReceipt": "evidence/green-core.json"
+    }
+  ],
+  "verifierResult": "PASSED for the bounded synthetic comparison; known bad choices visibly produce FAILED and missing evidence UNKNOWN.",
+  "userImpactResult": "Synthetic only: modeled continuation, interruption/blocked work, and uncertainty are separate. No live user journey is claimed.",
+  "cleanupResult": "No cloud resources or external effects created. Published helper close is awaited in finally; helper scratch and browser/context are released.",
+  "integrity": "evidence/content-hashes.json selects an append-only versioned index; raw CRLF proof and canonical LF Git-source integrity are checked separately.",
+  "publication": {
+    "method": "Authorized .git\\kanban-orchestrator\\publish.ps1, only learning\\S058; annotated tag and atomic main/tag push with remote verification.",
+    "tagPattern": "kanban/A-S058/<12sha>",
+    "commit": "Resolved by the annotated publication marker and parent runtime result; no self-referential in-commit hash.",
+    "reviewer": null,
+    "acceptedAt": null,
+    "acceptanceOwner": "Parent only; worker reports without Accept."
+  },
+  "limits": [
+    "No actual durable engine replay/storage, real worker/activity execution, native Azure result or completed workflow.",
+    "No production Node.js 24, source-parent D-S058/P004/B-S058 certification, or five-nines reliability proof.",
+    "No authentication, identity registration, credentials, cloud/IaC/scaffold/deploy/spend, downloads, packages, framework, unsafe flags, foreground leases or unowned edits.",
+    "One frozen S unit only; no extra test, plumbing, evidence or refinement credits."
+  ]
+}

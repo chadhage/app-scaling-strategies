@@ -1,0 +1,101 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>S058 — Match workflow versions to recorded history</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer=""></script>
+  <script src="lesson.js" defer=""></script>
+</head>
+<body>
+  <main>
+    <p id="training-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S058: Match workflow versions to recorded history</h1>
+    <p>Two histories started under <strong>1.0</strong>; one started under <strong>2.0</strong>.
+      New code inserts <code>RiskCheck</code> before <code>ReserveStock</code>. A deployment is not permission to rewrite their history.</p>
+    <section aria-labelledby="fixture-heading">
+      <h2 id="fixture-heading">Fixed synthetic fixture</h2>
+      <p>Definition 1.0: <code>ReadOrder → ReserveStock → ShipOrder</code><br>
+        Definition 2.0: <code>ReadOrder → RiskCheck → ReserveStock → ShipOrder</code></p>
+      <ul>
+        <li>WF-101, version 1.0: recorded <code>ReadOrder → ReserveStock</code>.</li>
+        <li>WF-102, version 1.0: recorded <code>ReadOrder</code>. A matching short prefix alone does not establish a safe next command.</li>
+        <li>WF-201, version 2.0: recorded <code>ReadOrder → RiskCheck → ReserveStock</code>.</li>
+      </ul>
+      <p>Replay here means <strong>comparing synthetic command prefixes</strong>, not executing activities. Version-specific branches are explicitly authored fixtures, not automatic compatibility.</p>
+    </section>
+    <form id="replay-form" aria-describedby="control-help">
+      <h2>Choose a version-match strategy</h2>
+      <p id="control-help">Each comparison starts from the fixed fixture. Keep earlier results to compare choices; at most six attempts, memory only.</p>
+      <label for="strategy">Version-match strategy</label>
+      <select id="strategy" name="strategy">
+        <option value="pin-exact">Exact pin — use the worker matching the recorded version</option>
+        <option value="explicit-branch">Explicit version branch — v2 worker preserves v1 and v2 definitions</option>
+        <option value="latest">Unversioned latest — apply the changed v2 definition to everyone</option>
+      </select>
+      <label for="workers">Available workers</label>
+      <select id="workers" name="workers">
+        <option value="overlap">Overlap — retain version 1.0 and 2.0 workers</option>
+        <option value="new-only">New only — version 1.0 worker removed</option>
+      </select>
+      <label for="historyEvidence">Recorded-history condition</label>
+      <select id="historyEvidence" name="historyEvidence">
+        <option value="complete">Complete observations</option>
+        <option value="missing">Missing observation for WF-201</option>
+        <option value="incompatible">Incompatible WF-102 history — unexpected ChargeCard</option>
+      </select>
+      <div class="actions">
+        <button id="conduct" type="submit">Compare replay</button>
+        <button id="restart" type="button">Reset rehearsal</button>
+      </div>
+    </form>
+    <p id="error" role="alert" tabindex="-1" hidden=""></p>
+    <section aria-labelledby="result-heading" aria-live="polite">
+      <h2 id="result-heading">Observed synthetic result</h2>
+      <p id="verdict" data-verdict="UNKNOWN">Synthetic verifier: UNKNOWN</p>
+      <p id="impact">Synthetic user impact: undetermined</p>
+      <dl id="metrics"><dt>Started histories</dt><dd id="metric-started">3</dd><dt>Modeled continuations</dt><dd id="metric-matched">2</dd><dt>Recorded-command mismatches</dt><dd id="metric-mismatches">0</dd><dt>Blocked continuations</dt><dd id="metric-blocked">0</dd><dt>Unknown observations</dt><dd id="metric-unknown">1</dd><dt>Matching recorded commands</dt><dd id="metric-replayedEvents">3</dd><dt>Actual external effects</dt><dd id="metric-externalEffects">0</dd></dl>
+      <div class="table-wrap">
+        <table>
+          <caption>Per-instance recorded history, selected definition, and continuation gate</caption>
+          <thead><tr><th scope="col">Instance / recorded version</th><th scope="col">Selected worker / definition</th><th scope="col">Recorded / expected sequence</th><th scope="col">Result / next command</th></tr></thead>
+          <tbody id="histories"><tr data-outcome="matched"><td>WF-101 / recorded version 1.0</td><td>worker 2.0 / definition 1.0</td><td>Recorded: ReadOrder → ReserveStock
+Expected: ReadOrder → ReserveStock → ShipOrder</td><td>matched; next: ShipOrder
+Recorded prefix matches version 1.0; next modeled command is ShipOrder. No activity was executed.</td></tr><tr data-outcome="matched"><td>WF-102 / recorded version 1.0</td><td>worker 2.0 / definition 1.0</td><td>Recorded: ReadOrder
+Expected: ReadOrder → ReserveStock → ShipOrder</td><td>matched; next: ReserveStock
+Recorded prefix matches version 1.0; next modeled command is ReserveStock. No activity was executed.</td></tr><tr data-outcome="unknown"><td>WF-201 / recorded version 2.0</td><td>worker 2.0 / definition 2.0</td><td>Recorded: unobserved
+Expected: ReadOrder → RiskCheck → ReserveStock → ShipOrder</td><td>unknown; next: not permitted
+No observed history; do not infer a successful replay.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained comparisons</h2>
+      <p id="capacity">5/6 comparisons retained</p>
+      <ol id="attempts"><li>Attempt 1: pin-exact / overlap / complete — PASSED; matched 3/3, mismatches 0, blocked 0, unknown 0.</li><li>Attempt 2: latest / overlap / complete — FAILED; matched 1/3, mismatches 1, blocked 1, unknown 0.</li><li>Attempt 3: pin-exact / new-only / complete — FAILED; matched 1/3, mismatches 0, blocked 2, unknown 0.</li><li>Attempt 4: explicit-branch / new-only / complete — PASSED; matched 3/3, mismatches 0, blocked 0, unknown 0.</li><li>Attempt 5: explicit-branch / new-only / missing — UNKNOWN; matched 2/3, mismatches 0, blocked 0, unknown 1.</li></ol>
+    </section>
+    <section aria-labelledby="try-heading">
+      <h2 id="try-heading">Try the failure, then recover deliberately</h2>
+      <ol>
+        <li>Compare the defaults: exact pinning with retained workers matches all three histories.</li>
+        <li>Choose unversioned latest: WF-101 diverges; WF-102 is blocked before a different next command; neither is a successful migration.</li>
+        <li>Choose exact pin and new-only workers: old pinned work is blocked, not safely retired.</li>
+        <li>Choose explicit version branch with new-only workers: preserved v1 logic can continue old histories in this model.</li>
+        <li>Compare missing evidence (UNKNOWN) or an incompatible history (FAILED). A version label cannot repair a changed command.</li>
+      </ol>
+      <p><strong>Keyboard:</strong> Tab through the three selects and two buttons; use selection keys and Enter.
+        Invalid input focuses an error and preserves the previous result. Reset restores defaults, clears only local memory, and focuses Version-match strategy. Reload also clears memory.</p>
+    </section>
+    <footer>
+      <p><strong>Limits:</strong> No durable engine, actual replay, worker, activity, persisted history, storage, authentication, or Azure management call runs here.
+        PASSED means only that this fixed synthetic comparison permits a modeled next command. It does not prove a completed workflow, native compatibility, production Node.js 24 behavior, source-parent acceptance, or five-nines continuity.</p>
+      <p>A-S058 · one S unit · packet SC-S058 · parent D-S058. B-S058 and prerequisite P004 require separate native evidence. IaC: N/A; no resources created.</p>
+      <p><a href="../../README.md#f-n-tier-and-version-compatibility">Exact S058 source</a> ·
+        <a href="README.md">Exercise and verification</a> ·
+        <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft Open Source Disclaimer</a></p>
+    </footer>
+    <noscript>This exercise requires local JavaScript; no server or account is needed.</noscript>
+  </main>
+
+
+</body></html>
