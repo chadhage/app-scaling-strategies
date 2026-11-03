@@ -43,6 +43,7 @@ Introduction...
   - [Statistical evidence](#statistical-evidence)
   - [Demonstration record](#demonstration-record)
 - [Recommended demonstration sequence](#recommended-demonstration-sequence)
+- [Microsoft Open Source Disclaimer](#microsoft-open-source-disclaimer)
 - [Sources](#sources)
 
 ## Problem Statement
@@ -539,6 +540,16 @@ x user state x protocol x tier compatibility x load x failure
 Not every combination is supported. Prioritize critical interacting conditions, document exclusions, and do not infer untested combinations from unrelated successful cases.
 
 The central strategy is overlap before handoff, compatibility during coexistence, and verified retirement afterward. Slots are one mechanism within that strategy, not by themselves a solution to zero-interruption n-tier scaling.
+
+## Microsoft Open Source Disclaimer
+
+The examples and guidance in this repository are provided "AS IS" for educational and demonstration purposes, without warranties or guarantees, express or implied, except as otherwise required by applicable law or binding terms. Validate their security, reliability, compatibility, and cost implications before production use.
+
+References to Microsoft, Azure, and other Microsoft products or services are for identification and illustration only. They do not imply endorsement, sponsorship, certification, or support by Microsoft. The 99.999% transition-success target is a project goal, not a Microsoft service-level agreement or guarantee.
+
+Microsoft and Azure are trademarks of the Microsoft group of companies. Other trademarks are the property of their respective owners.
+
+This disclaimer is not an open-source license and does not grant rights to use, modify, or redistribute otherwise unlicensed material. It does not replace or change any applicable license, Microsoft product terms, support agreement, or published service-level agreement.
 
 ## Sources
 
