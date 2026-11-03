@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S104 - Internal warm-up versus external paths</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="training">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S104: Internal success can hide external failure</h1>
+    <p>A-S104 / D-S104 / SC-S104 - one frozen S lesson. Compare internal warm-up with the external host, redirect, callback, authentication and routing path.</p>
+    <p><strong>DATA ONLY:</strong> All host names, redirects, state tokens, authentication and destinations are fixed teaching labels. No requests, real callbacks, registration, sign-in or configuration changes occur.</p>
+
+    <section aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">Record a bounded synthetic comparison</h2>
+      <p>Precondition: the internal warm-up fixture always reports HTTP 200 in 32 synthetic ms. That alone proves none of the external path. A complete external journey must pass every check within 250 synthetic ms.</p>
+      <form id="comparison-form">
+        <label for="fixture">Teaching condition</label>
+        <select id="fixture" name="fixture" required>
+          <option value="approved">Approved external path</option>
+          <option value="host-mismatch">External host-header mismatch</option>
+          <option value="redirect-loop">External redirect loop</option>
+          <option value="callback-state-lost">External callback loses state</option>
+          <option value="authentication-fails">External authentication fails</option>
+          <option value="routing-mismatch">External destination differs</option>
+          <option value="external-unobserved">External path unobserved</option>
+          <option value="callback-unobserved">Callback observation missing</option>
+        </select>
+        <label for="operator-action">Operator action</label>
+        <select id="operator-action" name="operator-action" required>
+          <option value="warm-up">Record internal warm-up only</option>
+          <option value="compare">Compare with the external teaching trace</option>
+        </select>
+        <div class="buttons">
+          <button id="record-comparison" type="submit">Record comparison</button>
+          <button id="reset-lesson" type="button">Reset current exercise</button>
+        </div>
+      </form>
+      <p id="input-error" role="alert" aria-live="assertive" tabindex="-1" hidden></p>
+      <p>Keyboard: Tab between controls, arrow keys to choose, Enter to record. Reset restores defaults and focus, but retains all session history. Maximum 12 records; invalid selections never consume a record.</p>
+    </section>
+
+    <section id="comparison-result" data-status="idle" aria-labelledby="assessment" aria-live="polite">
+      <h2 id="assessment">No current comparison</h2>
+      <p id="eligibility"></p>
+      <p id="explanation"></p>
+      <p id="internal-result"></p>
+      <p id="external-duration"></p>
+      <div class="table-scroll">
+        <table>
+          <caption>Fixed external teaching trace - durations are synthetic, not a stopwatch or network measurement</caption>
+          <thead><tr><th scope="col">Check</th><th scope="col">Result</th><th scope="col">Observed teaching data</th><th scope="col">Synthetic duration</th></tr></thead>
+          <tbody id="external-trace"></tbody>
+        </table>
+      </div>
+      <p>Step durations describe individual fixture observations. The journey duration is the complete synthetic journey, not the sum of table rows. Missing measurements stay unknown, never zero.</p>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained page-session history</h2>
+      <p id="counts" aria-live="polite"></p>
+      <p id="history-note"></p>
+      <ol id="history"></ol>
+    </section>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">What this lesson does not establish</h2>
+      <p>Expected assertion: detect external failures despite internal health success; approved redirects do not loop or lose state. A missing external or callback observation is unknown, not eligible.</p>
+      <p>No live Azure, external-host, callback, authentication, routing or source-parent certification. B-S104 is a separate native slice; D-S104 retains its P006 prerequisite and original acceptance gates. IaC: N/A.</p>
+      <p>Portable standard HTML and JavaScript only. Node 22 is test tooling, not production Node 24 qualification. Existing offline Playwright 1.56.1 and signed Edge 156 bound the recorded browser observations; the lifecycle prototype remains unqualified.</p>
+    </section>
+  </main>
+</body>
+</html>

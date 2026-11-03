@@ -1,0 +1,276 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const root = path.resolve(__dirname, '..');
+const repo = path.resolve(root, '..', '..');
+const helperPath = path.join(repo, 'testing', 'browser', 'isolated.cjs');
+const { openIsolatedLesson } = require(helperPath);
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+const canonical = bytes => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+const expectedHelperSha = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+
+function files(directory, prefix = '') {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
+    assert.equal(entry.isSymbolicLink(), false);
+    const relative = path.join(prefix, entry.name);
+    return entry.isDirectory() ? files(path.join(directory, entry.name), relative) : [relative];
+  });
+}
+
+function readOnlySnapshot() {
+  return files(root).sort().map(file => ({ path: file, sha256: sha(fs.readFileSync(path.join(root, file))) }));
+}
+
+function inputHashes() {
+  return ['.gitattributes', 'host-path.feature', 'manifest.json', 'README.md', 'model.js', 'app.js', 'index.html',
+    'styles.css', 'tests\\model.test.cjs', 'tests\\bundle.test.cjs', 'tests\\browser.test.cjs', 'scripts\\evidence.cjs'].map(file => ({
+    path: file, canonicalSha256: sha(canonical(fs.readFileSync(path.join(root, file))))
+  }));
+}
+
+test('S104 actual isolated DOM, keyboard, failures, unknowns, errors, reset, bound and CSP', async t => {
+  assert.equal(sha(fs.readFileSync(helperPath)), expectedHelperSha, 'published raw helper bytes only');
+  assert.match(process.version, /^v22\./);
+  const startedAtUtc = new Date().toISOString();
+  const runId = startedAtUtc.replace(/[:.]/g, '-');
+  const unchanged = capture ? null : readOnlySnapshot();
+  const record = {
+    schemaVersion: 1, cardId: 'A-S104', parentId: 'D-S104', packet: 'SC-S104', kanoUnit: 'A-S104',
+    mode: 'synthetic', startedAtUtc, passed: false, deliberateCapture: capture,
+    command: 'node --test learning\\S104\\tests\\browser.test.cjs',
+    helperRawSha256: expectedHelperSha, helperCommit: '53c0c0d82cc1db6780a87ac2b1085734af6d5c60',
+    node: process.version, inputHashes: inputHashes(), checkpoints: [], pageErrors: [], externalRequests: [],
+    close: { awaited: false, pageClosed: false },
+    limits: 'Real local DOM/browser observations only. Fixed teaching hosts/callbacks/authentication/routing are DATA ONLY, not network, native Azure or source-parent certification. Lifecycle prototype remains unqualified.'
+  };
+
+  function saveRaw(label, bytes) {
+    if (!capture) return null;
+    const relative = path.join('raw', `browser-${runId}-${label}.snapshot`);
+    fs.writeFileSync(path.join(root, 'evidence', relative), bytes);
+    return { path: relative, sha256: sha(bytes), bytes: bytes.length };
+  }
+
+  let session;
+  try {
+    session = await openIsolatedLesson('learning\\S104\\index.html');
+    const page = session.page;
+    record.browserVersion = session.browserVersion;
+    assert.match(session.browserVersion, /^156\./);
+    page.on('pageerror', error => record.pageErrors.push(error.message));
+    page.on('request', request => {
+      if (new URL(request.url()).protocol !== 'file:') record.externalRequests.push(request.url());
+    });
+    const consoleErrors = [];
+    page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+    await page.waitForFunction(() => document.getElementById('counts').textContent.includes('Attempts 0'));
+    assert.equal(await page.title(), 'S104 - Internal warm-up versus external paths');
+    assert.ok((await page.textContent('.training')).includes('Training rehearsal - synthetic data - not a live Azure result'));
+    assert.equal(await page.evaluate(() => typeof document.getElementById('comparison-form').reset), 'function');
+    record.initialResourceEntries = await page.evaluate(() => performance.getEntriesByType('resource').map(entry => entry.name));
+    assert.ok(record.initialResourceEntries.every(url => new URL(url).protocol === 'file:'));
+
+    async function observe(label) {
+      const value = await page.evaluate(() => ({
+        status: document.getElementById('comparison-result').dataset.status,
+        assessment: document.getElementById('assessment').textContent,
+        eligibility: document.getElementById('eligibility').textContent,
+        explanation: document.getElementById('explanation').textContent,
+        internal: document.getElementById('internal-result').textContent,
+        externalDuration: document.getElementById('external-duration').textContent,
+        counts: document.getElementById('counts').textContent,
+        history: [...document.querySelectorAll('#history li')].map(item => item.textContent),
+        trace: [...document.querySelectorAll('#external-trace tr')].map(row => ({
+          name: row.dataset.check, status: row.dataset.status, text: row.textContent
+        })),
+        error: document.getElementById('input-error').textContent,
+        errorHidden: document.getElementById('input-error').hidden,
+        focus: document.activeElement.id,
+        fixture: document.getElementById('fixture').value,
+        action: document.getElementById('operator-action').value
+      }));
+      const dom = saveRaw(`${label}.dom.html`, Buffer.from(await page.content()));
+      record.checkpoints.push({ label, ...value, dom });
+      return value;
+    }
+
+    async function compare(scenarioId, expectedStatus, failedCheck) {
+      await page.selectOption('#fixture', scenarioId);
+      await page.selectOption('#operator-action', 'compare');
+      await page.click('#record-comparison');
+      const value = await observe(scenarioId);
+      assert.equal(value.status, expectedStatus);
+      assert.match(value.internal, /success.*HTTP 200.*32 synthetic ms/);
+      if (failedCheck) assert.equal(value.trace.find(item => item.name === failedCheck).status, 'failure');
+      assert.match(value.eligibility, expectedStatus === 'success' ? /synthetic fixture only/ : /Not eligible/);
+      return value;
+    }
+
+    await page.focus('#fixture');
+    await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'operator-action');
+    await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'record-comparison');
+    await page.keyboard.press('Enter');
+    const internal = await observe('internal-only');
+    assert.equal(internal.status, 'unknown');
+    assert.ok(internal.trace.every(item => item.status === 'unknown' && item.text.includes('Unknown - not measured')));
+    assert.match(internal.explanation, /Internal success is not external-path proof/);
+
+    await page.focus('#fixture');
+    for (let index = 0; index < 3; index += 1) await page.keyboard.press('ArrowDown');
+    assert.equal(await page.inputValue('#fixture'), 'callback-state-lost');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('ArrowDown');
+    assert.equal(await page.inputValue('#operator-action'), 'compare');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Enter');
+    const callback = await observe('keyboard-callback-failure');
+    assert.equal(callback.status, 'failure');
+    assert.equal(callback.trace.find(item => item.name === 'callback').status, 'failure');
+    assert.match(callback.trace.find(item => item.name === 'callback').text, /lesson-state-A.*lesson-state-B/);
+    assert.equal(callback.trace.find(item => item.name === 'journey').status, 'success');
+    assert.match(callback.eligibility, /Not eligible/);
+    let misleading;
+    try { assert.equal(callback.status, 'success'); } catch (error) { misleading = error; }
+    assert.equal(misleading.code, 'ERR_ASSERTION');
+    record.rejectedMisleadingSuccess = {
+      code: misleading.code, actual: misleading.actual, expected: misleading.expected,
+      meaning: 'An actual DOM callback failure rejects a false success assertion; this is an expected negative observation, not the initial model RED.'
+    };
+
+    const approved = await compare('approved', 'success');
+    assert.ok(approved.trace.every(item => item.status === 'success'));
+    assert.match(approved.trace.find(item => item.name === 'redirect').text, /1 approved hop; no loop/);
+    assert.match(approved.trace.find(item => item.name === 'callback').text, /Expected lesson-state-A; observed lesson-state-A/);
+    assert.match(approved.externalDuration, /180 synthetic ms; budget 250 ms/);
+    assert.ok(approved.history.some(item => item.includes('external failure')));
+
+    await compare('host-mismatch', 'failure', 'host');
+    await compare('redirect-loop', 'failure', 'redirect');
+    await compare('authentication-fails', 'failure', 'authentication');
+    await compare('routing-mismatch', 'failure', 'routing');
+    const absent = await compare('external-unobserved', 'unknown');
+    assert.ok(absent.trace.every(item => item.status === 'unknown' && item.text.includes('Unknown - not measured')));
+    assert.match(absent.externalDuration, /unknown \(not measured\)/);
+    const partial = await compare('callback-unobserved', 'unknown');
+    assert.equal(partial.trace.filter(item => item.status === 'success').length, 5);
+    assert.match(partial.trace.find(item => item.name === 'callback').text, /not observed.*Unknown - not measured/);
+    assert.equal(partial.history.length, 9);
+
+    await page.evaluate(() => {
+      const option = document.createElement('option');
+      option.value = 'unsupported-teaching-label';
+      option.textContent = 'Unsupported teaching label';
+      document.getElementById('fixture').append(option);
+    });
+    await page.selectOption('#fixture', 'unsupported-teaching-label');
+    await page.click('#record-comparison');
+    const inputError = await observe('input-error');
+    assert.equal(inputError.focus, 'input-error');
+    assert.equal(inputError.errorHidden, false);
+    assert.match(inputError.error, /Invalid input.*No record added; prior history retained/);
+    assert.equal(inputError.history.length, 9);
+    assert.equal(inputError.status, partial.status);
+
+    await page.focus('#reset-lesson');
+    await page.keyboard.press('Enter');
+    const reset = await observe('keyboard-reset');
+    assert.equal(reset.focus, 'fixture');
+    assert.equal(reset.fixture, 'approved');
+    assert.equal(reset.action, 'warm-up');
+    assert.equal(reset.status, 'idle');
+    assert.equal(reset.errorHidden, true);
+    assert.equal(reset.history.length, 9);
+    assert.match(reset.counts, /failure 5; unknown 3; remaining 3/);
+    assert.equal(await page.evaluate(() => typeof document.getElementById('comparison-form').reset), 'function');
+
+    for (let index = 0; index < 3; index += 1) {
+      await page.selectOption('#fixture', 'approved');
+      await page.selectOption('#operator-action', 'compare');
+      await page.click('#record-comparison');
+    }
+    await page.click('#record-comparison');
+    const bounded = await observe('session-limit');
+    assert.equal(bounded.focus, 'input-error');
+    assert.equal(bounded.history.length, 12);
+    assert.match(bounded.counts, /Attempts 12; success 4; failure 5; unknown 3; remaining 0/);
+    assert.match(bounded.error, /Session limit: 12 recorded comparisons/);
+    await page.focus('#reset-lesson');
+    await page.keyboard.press('Enter');
+    await page.focus('#record-comparison');
+    await page.keyboard.press('Enter');
+    const stillBounded = await observe('reset-keeps-limit');
+    assert.equal(stillBounded.status, 'idle');
+    assert.equal(stillBounded.history.length, 12);
+    assert.match(stillBounded.error, /Session limit/);
+    assert.match(stillBounded.counts, /remaining 0/);
+
+    const csp = await page.evaluate(() => {
+      globalThis.__s104InlineExecuted = false;
+      globalThis.__s104EvalExecuted = false;
+      globalThis.__s104CspEvents = [];
+      document.addEventListener('securitypolicyviolation', event => {
+        globalThis.__s104CspEvents.push({
+          directive: event.effectiveDirective, blockedURI: event.blockedURI, disposition: event.disposition
+        });
+      });
+      const script = document.createElement('script');
+      script.textContent = 'globalThis.__s104InlineExecuted = true;';
+      document.head.append(script);
+      let evalDenied = false;
+      let evalError = null;
+      try { globalThis.eval('globalThis.__s104EvalExecuted = true;'); } catch (error) {
+        evalDenied = true;
+        evalError = { name: error.name, message: error.message };
+      }
+      return { inlineExecuted: globalThis.__s104InlineExecuted, evalExecuted: globalThis.__s104EvalExecuted, evalDenied, evalError };
+    });
+    await page.waitForFunction(() => globalThis.__s104CspEvents.length >= 2);
+    csp.violations = await page.evaluate(() => globalThis.__s104CspEvents);
+    assert.equal(csp.inlineExecuted, false);
+    assert.equal(csp.evalExecuted, false);
+    assert.equal(csp.evalDenied, true);
+    assert.equal(csp.evalError.name, 'EvalError');
+    assert.ok(csp.violations.some(event => event.blockedURI === 'inline' && event.disposition === 'enforce'));
+    assert.ok(csp.violations.some(event => event.blockedURI === 'eval' && event.disposition === 'enforce'));
+    record.csp = csp;
+    record.consoleErrors = consoleErrors;
+    await observe('csp');
+    assert.equal(record.externalRequests.length, 0, 'no external-host or callback calls');
+    assert.equal(record.pageErrors.length, 0, 'no application errors');
+    assert.ok(consoleErrors.every(message => /Content Security Policy|violates.*policy|Refused/i.test(message)));
+    if (!capture) assert.deepEqual(readOnlySnapshot(), unchanged, 'normal verification is tracked-evidence read-only');
+    record.passed = true;
+  } catch (error) {
+    record.failure = { name: error.name, message: error.message, code: error.code || null, stack: error.stack };
+    throw error;
+  } finally {
+    try {
+      if (session) {
+        await session.close();
+        record.close = { awaited: true, pageClosed: session.page.isClosed() };
+        assert.equal(record.close.pageClosed, true);
+      }
+    } finally {
+      record.finishedAtUtc = new Date().toISOString();
+      if (capture) {
+        record.assertions = saveRaw('assertions.cjs', fs.readFileSync(__filename));
+        record.rawObservations = saveRaw('observations.json', Buffer.from(`${JSON.stringify(record, null, 2)}\n`));
+        if (record.passed && record.close.awaited && record.close.pageClosed) {
+          fs.writeFileSync(path.join(root, 'evidence', 'browser-acceptance.json'), `${JSON.stringify(record, null, 2)}\n`);
+        }
+      }
+      t.diagnostic(JSON.stringify({
+        cardId: record.cardId, browserVersion: record.browserVersion, passed: record.passed,
+        checkpoints: record.checkpoints.length, externalRequests: record.externalRequests.length, close: record.close,
+        trackedEvidenceReadOnly: !capture, deliberateCapture: capture
+      }));
+    }
+  }
+});

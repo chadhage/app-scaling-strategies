@@ -1,0 +1,23 @@
+{
+  "cardId": "A-S104",
+  "extraKanoCredits": 0,
+  "attempts": [
+    {
+      "stage": "tooling-preflight",
+      "outcome": "failed",
+      "executable": "powershell.exe",
+      "stdout": "raw\\tooling-2026-11-03T22-39-16-069Z.stdout.snapshot",
+      "stderr": "raw\\tooling-2026-11-03T22-39-16-072Z.stderr.snapshot",
+      "observation": "The Windows PowerShell module autoload failed for signature/hash commands. This was a tooling failure, not behavioral RED or a signed-browser pass.",
+      "boundedRecovery": "Use the already-installed modern pwsh.exe with the same read-only signature/hash checks; no packages, security flags, downloads or shared changes."
+    },
+    {
+      "stage": "browser-attempt-1",
+      "outcome": "failed",
+      "observations": "raw\\browser-2026-11-03T22-46-37-897Z-observations.json.snapshot",
+      "observation": "Thirteen DOM/keyboard/error/reset/bound checkpoints were recorded, with zero external requests and an awaited close of the owned page. Waiting for two CSP events timed out. No CSP pass or full browser pass is inferred.",
+      "boundedRecovery": "Observe evaluation CSP from a local page-owned external test script rather than using DevTools evaluation as the oracle. The lesson behavior and policy remain unchanged.",
+      "limit": "The old attempt did not finish recording a CSP result. Its raw failed output, exact assertions and observations are retained, not overwritten or reclassified."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+'use strict';
+
+function createState() {
+  return { schemaVersion: 1, current: null, history: [] };
+}
+
+function run(state, input) {
+  const record = {
+    sequence: state.history.length + 1,
+    scenarioId: input.scenarioId,
+    actionId: input.actionId,
+    internal: { status: 'success', statusCode: 200, durationMs: 32 },
+    assessment: { status: 'success', eligible: true }
+  };
+  return { schemaVersion: 1, current: record.sequence, history: [...state.history, record] };
+}
+
+module.exports = { createState, run };

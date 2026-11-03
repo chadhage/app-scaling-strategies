@@ -1,0 +1,38 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const lesson = require('../model.js');
+
+const compare = scenarioId => lesson.run(lesson.createState(), { scenarioId, actionId: 'compare' }).history[0];
+
+test('internal warm-up success leaves external proof unknown and ineligible', () => {
+  const record = lesson.run(lesson.createState(), { scenarioId: 'approved', actionId: 'warm-up' }).history[0];
+  assert.equal(record.internal.status, 'success');
+  assert.equal(record.assessment.status, 'unknown');
+  assert.equal(record.assessment.eligible, false);
+});
+
+test('an external redirect loop fails despite successful internal warm-up', () => {
+  const record = compare('redirect-loop');
+  assert.equal(record.internal.status, 'success');
+  assert.equal(record.assessment.status, 'failure');
+  assert.equal(record.assessment.eligible, false);
+});
+
+test('an external callback losing state fails despite successful internal warm-up', () => {
+  const record = compare('callback-state-lost');
+  assert.equal(record.internal.status, 'success');
+  assert.equal(record.assessment.status, 'failure');
+  assert.equal(record.assessment.eligible, false);
+});
+
+test('an unobserved external path remains unknown, not internal-success proof', () => {
+  assert.equal(compare('external-unobserved').assessment.status, 'unknown');
+  assert.equal(compare('external-unobserved').assessment.eligible, false);
+});
+
+test('the approved synthetic path has a positive result', () => {
+  assert.equal(compare('approved').assessment.status, 'success');
+  assert.equal(compare('approved').assessment.eligible, true);
+});
