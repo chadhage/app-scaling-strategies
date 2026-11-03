@@ -9,6 +9,7 @@ const fixture = require('../synthetic-fixture.js');
 const snapshot = require('../../C001/approved-contract.js');
 
 const evidenceRoot = path.join('capability', 'C002', 'evidence');
+const captureEvidence = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
 
 test('C002 actual isolated headless browser: contract, keyboard, invalid inputs, reset, and offline behavior', async (t) => {
   const observations = {
@@ -29,7 +30,7 @@ test('C002 actual isolated headless browser: contract, keyboard, invalid inputs,
     pageErrors: [],
     passed: false
   };
-  await fs.mkdir(evidenceRoot, { recursive: true });
+  if (captureEvidence) await fs.mkdir(evidenceRoot, { recursive: true });
   let session;
   try {
     session = await openIsolatedLesson(path.join('capability', 'C002', 'index.html'));
@@ -115,7 +116,7 @@ test('C002 actual isolated headless browser: contract, keyboard, invalid inputs,
       assert.deepEqual(decision.appliedLimits, fixture.limits);
       assert.equal(await validate.evaluate((element) => element === document.activeElement), true);
       observations.validStatus = await page.locator('#result').textContent();
-      await page.screenshot({ path: path.join(evidenceRoot, 'browser-valid.png'), fullPage: true });
+      if (captureEvidence) await page.screenshot({ path: path.join(evidenceRoot, 'browser-valid.png'), fullPage: true });
       observations.checks.push({ name: 'keyboard-valid-local-only', passed: true, keys: ['Enter', 'Tab', 'Tab', 'Enter'], executed: false });
     });
 
@@ -141,7 +142,7 @@ test('C002 actual isolated headless browser: contract, keyboard, invalid inputs,
       }
       assert.equal(await envelope.getAttribute('aria-invalid'), 'true');
       assert.equal(await page.locator('#field-errors').isVisible(), true);
-      await page.screenshot({ path: path.join(evidenceRoot, 'browser-invalid.png'), fullPage: true });
+      if (captureEvidence) await page.screenshot({ path: path.join(evidenceRoot, 'browser-invalid.png'), fullPage: true });
       observations.visibleRangeErrors = decision.errors.filter((error) => error.code === 'OUT_OF_RANGE');
       observations.checks.push({ name: 'precise-five-metric-errors', passed: true, errorRows: rows.length, staleSuccessCleared: true });
     });
@@ -251,7 +252,9 @@ test('C002 actual isolated headless browser: contract, keyboard, invalid inputs,
       }
     } finally {
       observations.completedAtUtc = new Date().toISOString();
-      await fs.writeFile(path.join(evidenceRoot, 'browser-observations.json'), `${JSON.stringify(observations, null, 2)}\n`, 'utf8');
+      if (captureEvidence) {
+        await fs.writeFile(path.join(evidenceRoot, 'browser-observations.json'), `${JSON.stringify(observations, null, 2)}\n`, 'utf8');
+      }
     }
   }
 });

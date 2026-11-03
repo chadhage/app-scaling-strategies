@@ -54,6 +54,8 @@ node --check capability\C002\run-envelope-page.js
 
 BDD is in `C002.feature`; actual loadable-stub RED, focused GREEN/syntax, and real keyboard/invalid/reset browser evidence are in `evidence.json` and `evidence\`.
 
+Run real browser verification with `node --test capability\C002\tests\browser.acceptance.cjs`. Ordinary verification leaves committed observations and screenshots unchanged. Set `$env:CAPTURE_BROWSER_EVIDENCE='1'` only when deliberately refreshing those outputs, then remove that environment variable after the run. Capture does not authorize execution or earn another completion credit.
+
 - `liveAzureRuns=0`, `cloudSpend=0`. All live Azure, IaC, scaffold, deployment, identity-registration, and expenditure approval flags remain **false** under C001.
 - This is local comparison, not server-enforced authentication, authorization, roles, leases, budgets, or load generation. Future execution must independently enforce current authoritative consent and all server-side boundaries.
 - Node.js **22.23.4** is test tooling only. Node.js **24 LTS / Express / App Service Linux** remains the design, not runtime/native qualification.
