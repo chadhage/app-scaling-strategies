@@ -1,0 +1,16 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createLesson } = require('../model.js');
+
+test('compatible mixed readers preserve existing state before transition', () => {
+  assert.equal(typeof createLesson, 'function');
+  const result = createLesson().transition({
+    reader: 'dual', writer: 'schema1', payload: 'intact',
+  });
+  assert.equal(result.verdict, 'success');
+  assert.equal(result.successful, 3);
+  assert.equal(result.failed, 0);
+  assert.equal(result.unknown, 0);
+});

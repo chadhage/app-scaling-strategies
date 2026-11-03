@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S037",
+  "workerId": "worker-A-S037",
+  "sourceId": "S037",
+  "title": "Session serialization change",
+  "parentId": "D-S037",
+  "packet": "SC-S037",
+  "kano": "S",
+  "kanoUnit": "A-S037",
+  "entryGate": "SOURCE",
+  "mode": "synthetic",
+  "entry": "index.html",
+  "trainingLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Read existing sessions with new code, detect incompatible serializers and silent resets, and gate mixed-version transition and rollback on complete state preservation.",
+  "preconditions": [
+    "One synthetic cart and checkout step in an assumed shared in-memory fixture, satisfying the local S031 prerequisite without claiming a deployed shared store.",
+    "The old v1 reader understands schema 1 only.",
+    "A browser with JavaScript; no server, accounts, credentials or subscription."
+  ],
+  "actions": [
+    "Choose candidate reader, write format and existing-payload evidence.",
+    "Check all three read probes and attempt a synthetic transition only if every state field matches.",
+    "Roll back after a compatible transition using retained candidate bytes.",
+    "Reset to compatible defaults and an untested run while retaining all previous observations."
+  ],
+  "syntheticInput": {
+    "sessionId": "synthetic-session-037",
+    "cart": [{ "sku": "DEMO-PEN", "quantity": 2 }],
+    "checkoutStep": 2
+  },
+  "expectedAssertions": [
+    "Dual reader plus schema 1 writes preserves 3/3 probes and allows rollback.",
+    "A schema-2-only reader or schema 2 writes blocks the transition.",
+    "The silent-reset reader exposes cart/step loss as failure, not success.",
+    "Unavailable evidence is unknown; malformed JSON is an explicit failure.",
+    "Invalid input, wrong-state commands and capacity overruns never mutate results or history."
+  ],
+  "limits": {
+    "recordedActionsPerPage": 12,
+    "runsPerPage": 12,
+    "payloadCharacters": 2048,
+    "concurrency": "One synchronous operator; no concurrent writers or timing model.",
+    "retention": "In-memory page lifetime only; reset retains history and does not replenish the action budget."
+  },
+  "parentComplete": false,
+  "nativeProof": false,
+  "productionNode24Validated": false,
+  "iac": "N/A",
+  "cloudCalls": false,
+  "credentials": false,
+  "evidence": "evidence.json",
+  "sourceReferences": [
+    "../../README.md#d-sessions-authentication-and-user-state",
+    "../../.docs/wiki/backlog.md#d-sessions-authentication-and-state",
+    "../../.docs/wiki/kanban.md#portable-a-card-lesson-contract"
+  ]
+}

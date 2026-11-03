@@ -1,0 +1,16 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.SessionSerialization = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  function createLesson() {
+    return {
+      transition() {
+        return { verdict: 'unknown', successful: 0, failed: 0, unknown: 3 };
+      },
+    };
+  }
+  return { createLesson };
+}));

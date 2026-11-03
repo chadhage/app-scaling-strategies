@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'">
+  <title>S037 — Session serialization change</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S037 — Session serialization change</h1>
+    <p>Read existing sessions while old and new code coexist. A new reader alone is insufficient:
+      old code must still read candidate writes for coexistence and rollback.</p>
+    <p><strong>Preconditions:</strong> one synthetic cart in an assumed shared in-memory fixture;
+      v1 reads schema 1 only. No account, server or credentials are needed.</p>
+    <ol>
+      <li>Keep the compatible defaults; check and attempt transition, then roll back.</li>
+      <li>Try a schema-2-only reader, schema 2 writes, or the faulty silent-reset reader.</li>
+      <li>Compare preserved, failed and unknown read probes. Reset starts an untested run, not a repair.</li>
+    </ol>
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Operator controls</h2>
+      <form id="controls" novalidate>
+        <fieldset id="conditions">
+          <legend>Candidate configuration (locked while v2 is active)</legend>
+          <label for="reader">Candidate v2 reader</label>
+          <select id="reader" name="reader">
+            <option value="dual">Reads schemas 1 and 2 — compatible</option>
+            <option value="schema2-only">Reads schema 2 only — incompatible with old sessions</option>
+            <option value="reset-on-error">Schema 2 reader silently resets unsupported sessions — faulty</option>
+          </select>
+          <label for="writer">Candidate write format</label>
+          <select id="writer" name="writer">
+            <option value="schema1">Schema 1 — old-reader compatible</option>
+            <option value="schema2">Schema 2 — old reader cannot read</option>
+          </select>
+          <label for="payload">Existing schema 1 payload evidence</label>
+          <select id="payload" name="payload">
+            <option value="intact">Intact declared cart</option>
+            <option value="malformed">Malformed JSON — known read failure</option>
+            <option value="unavailable">Unavailable payload — unknown, not success</option>
+          </select>
+        </fieldset>
+        <div class="actions">
+          <button type="submit" id="transition">Check &amp; attempt transition</button>
+          <button type="button" id="rollback" disabled>Roll back to v1</button>
+          <button type="button" id="restart">Reset current run; retain history</button>
+        </div>
+      </form>
+      <p id="error" role="alert" tabindex="-1" hidden></p>
+      <p id="state" role="status" aria-live="polite"></p>
+      <p id="limits">At most 12 recorded actions and 12 runs per page lifetime. Reset does not replenish
+        the action budget or remove history. Reload clears this in-memory lesson; nothing is persisted.</p>
+      <p>Use Tab / Shift+Tab between controls, arrow keys in selections, and Enter or Space on buttons.
+        Reset restores defaults and focuses the reader.</p>
+    </section>
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Current result</h2>
+      <p id="verdict" role="status" aria-live="polite">Unknown — no read probes recorded.</p>
+      <p id="counts"></p>
+      <p id="impact"></p>
+      <div class="table-wrap">
+        <table id="probes">
+          <caption>Observed read probes, not live user journeys</caption>
+          <thead><tr><th scope="col">Read probe</th><th scope="col">Result</th><th scope="col">Reason / observed state</th></tr></thead>
+          <tbody id="probe-rows"></tbody>
+        </table>
+      </div>
+      <h3>Declared state</h3>
+      <pre id="expected"></pre>
+      <details>
+        <summary>Inspect original and candidate payload bytes</summary>
+        <p>Schema 1 uses cart / checkoutStep; schema 2 uses items / flow.step.
+          Read probes never rewrite the original fixture. A blocked candidate output is only a proposed write.</p>
+        <h4>Original retained fixture</h4>
+        <pre id="fixture"></pre>
+        <h4>Sampled existing payload</h4>
+        <pre id="existing"></pre>
+        <h4>Candidate output</h4>
+        <pre id="candidate"></pre>
+      </details>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained history</h2>
+      <p id="totals"></p>
+      <ol id="history"></ol>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">What this rehearsal does not prove</h2>
+      <p>This deterministic, read-only fixture illustrates schema compatibility, silent data loss and a
+        pre-exposure gate. It does not implement a session store, serializer library migration,
+        authentication, routing, concurrent writers, real rollback, Azure, durability or a reliability SLA.
+        No identities, tokens, keys, management APIs or storage are used.</p>
+      <p>A failed or unknown probe blocks the synthetic transition. Detecting a fault is not an uninterrupted
+        migration; no real user transition was measured. B-S037 native proof and whole D-S037 acceptance remain separate.</p>
+      <p><a href="../../README.md#d-sessions-authentication-and-user-state">Exact source: README S037</a> ·
+        <a href="../../.docs/wiki/backlog.md#d-sessions-authentication-and-state">D-S037 backlog</a> ·
+        <a href="README.md">Lesson instructions and verification</a></p>
+      <p>Provided “AS IS” for education, without warranties or guarantees. References to Microsoft and Azure
+        do not imply endorsement, certification or support. The project’s 99.999% target is not a Microsoft SLA.
+        <a href="../../README.md#microsoft-open-source-disclaimer">Full Microsoft Open Source Disclaimer</a>.</p>
+    </section>
+    <noscript>This interactive rehearsal requires JavaScript. No result has been measured.</noscript>
+  </main>
+</body>
+</html>

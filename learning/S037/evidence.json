@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S037",
+  "workerId": "worker-A-S037",
+  "owner": "worker-A-S037",
+  "kano": "S",
+  "kanoUnit": "A-S037",
+  "parent": "D-S037",
+  "packet": "SC-S037",
+  "entryGate": "SOURCE",
+  "lesson": "index.html",
+  "manifest": "manifest.json",
+  "trainingLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "mode": "synthetic",
+  "host": "browser-openable local file; no listener or deployed host",
+  "verificationStatus": "local-synthetic-verified-controller-review-pending",
+  "reviewer": "parent-owned independent empirical review pending",
+  "acceptedAtUtc": null,
+  "commitReference": "The authorized publisher and state Report record the implementation commit and annotated kanban/A-S037/<12sha> marker; this file does not self-award acceptance.",
+  "sourceReadBeforeDesign": {
+    "readme": "../../README.md, S037: Session serialization change: Read existing session payloads during mixed-version operation.",
+    "backlog": "../../.docs/wiki/backlog.md, D-S037: old/new session-payload serializers and controlled transition/rollback; existing payloads remain readable or an explicit gate blocks transition; data is not silently discarded.",
+    "originalPrerequisite": "D-S031: represented only by an explicitly assumed shared synthetic fixture; native completion is not inferred.",
+    "atomicAndPortableContract": "../../.docs/wiki/kanban.md, Atomic card contract and Portable A-card lesson contract",
+    "exactCard": "A-S037: Read old session payloads with new code; identify incompatible serializers and silent resets.",
+    "packetRule": "SC-S037 is the default S037 A/B packet; no optional-delighter override applies."
+  },
+  "configuration": {
+    "expected": {
+      "sessionId": "synthetic-session-037",
+      "cart": [{ "sku": "DEMO-PEN", "quantity": 2 }],
+      "checkoutStep": 2
+    },
+    "readers": ["dual", "schema2-only", "reset-on-error"],
+    "writers": ["schema1", "schema2"],
+    "existingPayload": ["intact", "malformed", "unavailable"],
+    "transitionGate": "All 3 probes must preserve every declared field: candidate reads existing bytes, candidate reads its proposed write, old reader reads the proposed write.",
+    "rollbackGate": "Old reader rereads the retained candidate bytes from the successful transition; incompatible writes were blocked before exposure.",
+    "limits": { "actions": 12, "runs": 12, "payloadCharacters": 2048 },
+    "retention": "In-memory, page lifetime only; reset retains all outcomes and does not replenish the action budget."
+  },
+  "sequence": [
+    {
+      "stage": "BDD first",
+      "artifact": "serialization.feature",
+      "executionClaim": "Executable Node and actual browser checks map to this behavior specification; no Cucumber installation or runner is claimed."
+    },
+    {
+      "stage": "Loadable stub and genuine assertion RED",
+      "artifact": "evidence/red.json",
+      "readableLog": "evidence/red.txt",
+      "exitCode": 1,
+      "actualFailure": "The stub loaded and typeof createLesson was function; result.verdict was unknown instead of required success. ERR_ASSERTION, not missing code, packages or tooling.",
+      "stubSnapshot": "evidence/red/model.stub.snapshot",
+      "testSnapshot": "evidence/red/contract.source.snapshot",
+      "replay": "evidence/red/replay.cjs",
+      "replayCapture": "evidence/red-replay.json",
+      "replayExitCode": 1,
+      "stubSHA256": "8f4c915accd02578916b55ad609e26029816b6fa048f3a9e659cca15ee9556bf",
+      "originalTestSHA256": "489efbcd25ec781aa435074ed616ed808c08ea8bf96c39d078455a4b215e1ee0",
+      "nonAutoDiscovered": "Original source bytes use .snapshot, and the explicit replay is not named *.test.cjs or under a test directory.",
+      "provenanceNote": "The original capture's recursive input collector omitted nested test hashes. An attempted metadata comparison exposed the omission, not a byte mismatch. Before implementation, the unchanged original test and snapshot were directly hash-compared, and the corrected replay capture recorded the original test hash. Original red.json and all raw output bytes remain unmodified."
+    },
+    {
+      "stage": "IaC applicability after RED, before implementation",
+      "artifact": "evidence/iac-na.json",
+      "status": "N/A"
+    },
+    {
+      "stage": "Implement and refactor",
+      "model": "model.js",
+      "renderer": "app.js",
+      "page": "index.html",
+      "style": "styles.css",
+      "behavior": "Actual deterministic JSON encoding, strict envelope decoding, complete-state comparison and pre-exposure mixed-reader gate. Silent-reset faults produce lost state rather than a false pass. Every outcome and sampled payload is retained."
+    },
+    {
+      "stage": "Focused GREEN",
+      "command": "node --test learning\\S037\\tests\\model.test.cjs learning\\S037\\tests\\page.test.cjs",
+      "artifact": "evidence/green.json",
+      "readableLog": "evidence/green.txt",
+      "exitCode": 0,
+      "testsPassed": 56,
+      "testsFailed": 0,
+      "skipped": 0,
+      "scope": "49 model checks, including all 18 declared configurations, and 7 static/export/provenance checks. VM export is not a browser or DOM result."
+    },
+    {
+      "stage": "Syntax",
+      "command": "node learning\\S037\\tests\\syntax.cjs",
+      "artifact": "evidence/syntax.json",
+      "readableLog": "evidence/syntax.txt",
+      "exitCode": 0,
+      "filesChecked": 8
+    },
+    {
+      "stage": "Actual isolated browser",
+      "command": "node learning\\S037\\tests\\browser.cjs",
+      "protocol": "tests/browser.cjs",
+      "artifact": "evidence/browser-observation.json",
+      "rawCapture": "evidence/browser.json",
+      "readableLog": "evidence/browser.txt",
+      "exitCode": 0,
+      "checksPassed": 15,
+      "scope": "Real DOM, native Tab/Shift+Tab/arrows/Enter, successful transition and rollback, failed readers and new writes, silent resets, unknown and malformed payloads, focused non-destructive errors, reset/history/cap guards, narrow viewport and enforced CSP.",
+      "normalPageErrors": 0,
+      "normalConsoleErrors": 0,
+      "normalCspViolations": 0,
+      "normalHttpRequests": 0,
+      "fileRequests": 4,
+      "intentionalCspViolations": 2,
+      "intentionalCspConsoleMessages": 3,
+      "inlineExecutionBlocked": true,
+      "syntheticConnectionBlocked": true,
+      "forcedClicks": false,
+      "skippedAssertions": false,
+      "foregroundLease": false,
+      "cleanup": "Awaited session.close() in finally; helper completed cleanup.",
+      "protocolCorrection": "An initial read-only browser attempt stopped at a Playwright fieldset isDisabled assertion (actual false, expected true). The final protocol checks the native fieldset.disabled property and actual disabled descendant selects. The subsequent ordinary rerun and deliberate captured run passed all 15 checks. This protocol-only failure is not presented as the behavioral RED or as a lesson defect."
+    }
+  ],
+  "tooling": {
+    "node": "v22.23.4",
+    "nodeRole": "Existing test tooling only; not production Node 24 validation.",
+    "playwright": "1.56.1, existing offline package",
+    "browser": "Installed Microsoft Edge 156.0.4314.50",
+    "signatureCheck": {
+      "command": "Get-AuthenticodeSignature -LiteralPath 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'",
+      "status": "Valid",
+      "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+    },
+    "helper": "testing\\browser\\isolated.cjs",
+    "helperPublishedCommit": "53c0c0d",
+    "helperSHA256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "api": "openIsolatedLesson",
+    "helperLifecycleLimit": "The documented unattended cleanup deadline limitation remains; no abandoned recovery prototype or fully qualified unattended CI claim is used.",
+    "downloads": false,
+    "packagesInstalled": false,
+    "frameworkAdded": false,
+    "unsafeFlags": false
+  },
+  "proofPolicy": {
+    "ordinaryVerification": "Read-only to existing proof.",
+    "observedReadOnlyRerun": "After capture, all 56 focused tests and all 15 actual browser checks passed again; SHA-256 comparison confirmed all 15 existing evidence files unchanged.",
+    "browserCapture": "CAPTURE_BROWSER_EVIDENCE=1 is required to write a new observation; existing observations cannot be overwritten.",
+    "rawCapture": "Named deliberate captures also require CAPTURE_TEST_EVIDENCE=1. JSON preserves exact stdout/stderr bytes, lengths, SHA-256 and base64.",
+    "humanLogs": "Only readable .txt log line endings and trailing whitespace are normalized; raw captured streams are not changed.",
+    "integrity": "evidence/integrity.json covers every owned file except itself. Ordinary tests/integrity.cjs is read-only.",
+    "checkout": "Owned .gitattributes preserves exact captured source and evidence bytes without disabling normal whitespace checks."
+  },
+  "todoInspection": {
+    "ledgerRevision": 310,
+    "admittedToDoCount": 0,
+    "pruning": "No admitted To Do exists to prune. No duplicate test, plumbing or refinement unit was created.",
+    "nativeRemainder": "B-S037 remains the one genuine separate native-proof sibling in inventory, gated by CORE, DATA, HOST and approved target execution.",
+    "refinement": "Retain the exact old-payload readability, old-reader compatibility with candidate writes, explicit rejection and retained data-loss checks for future native transition/rollback evidence. Do not mark the native remainder ready from this synthetic result.",
+    "sharedBoardEdits": "Only the mandated Claim and eventual Report state actions; no manual board, catalog or framework edits."
+  },
+  "approvalBoundary": {
+    "localSyntheticOnly": true,
+    "cloudManagementCalls": false,
+    "iacGeneration": false,
+    "identityRegistration": false,
+    "realCredentials": false,
+    "deployment": false,
+    "spend": false,
+    "productionNode24Validated": false,
+    "nativeProof": false,
+    "parentComplete": false,
+    "workerAcceptanceOrCredit": false
+  },
+  "limits": [
+    "One assumed shared in-memory session, two deterministic schema envelopes and one synchronous operator; no durable store or concurrent writers.",
+    "Read probes are synthetic compatibility evidence, not live user transitions, authentication or real deployment rollback.",
+    "The gate can detect lost state and unknown evidence; this is not an uninterrupted migration or five-nines reliability result.",
+    "Reset preserves history only within the page lifetime; reload clears the lesson.",
+    "Native B-S037, source D-S037 and production-stack qualification remain incomplete.",
+    "Parent empirical review and one parent-owned Accept remain pending."
+  ]
+}
