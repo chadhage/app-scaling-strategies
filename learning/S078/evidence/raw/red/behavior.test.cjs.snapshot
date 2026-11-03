@@ -1,0 +1,168 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const lesson = require('..\\model.js');
+const configuration = (protection = 'fenced', receipt = 'observed') => ({ protection, receipt });
+const handoff = (config = configuration()) => lesson.advanceLease(lesson.start(lesson.createState(), config));
+const run = (config = configuration()) => lesson.execute(handoff(config));
+
+test('declares the exact synthetic label and six-attempt bound', () => {
+  assert.equal(lesson.BANNER, 'Training rehearsal - synthetic data - not a live Azure result');
+  assert.equal(lesson.LIMIT, 6);
+  assert.equal(lesson.createState().verdict, 'NOT_EVALUATED');
+});
+
+test('starts two distinct schedulers for one occurrence and detects duplicate scheduling', () => {
+  const state = lesson.start(lesson.createState(), configuration());
+  assert.equal(state.schedulers.length, 2);
+  assert.equal(state.phase, 'started');
+  assert.equal(state.tick, 4);
+  assert.deepEqual(state.schedulers.map((entry) => entry.version), ['v1', 'v2']);
+  assert.deepEqual([...new Set(state.schedulers.map((entry) => entry.occurrence))], ['JOB-078@6']);
+  assert.equal(state.lease.owner, 'v1');
+  assert.equal(state.lease.epoch, 7);
+  assert.equal(state.validExecutor, 'v1');
+  assert.equal(state.metrics.scheduledCandidates, 2);
+  assert.equal(state.metrics.duplicateSchedules, 1);
+  assert.equal(state.effects.length, 0);
+  assert.equal(state.verdict, 'NOT_EVALUATED');
+});
+
+test('explicit expiry and handoff leave a stale precheck while v2 holds the current lease', () => {
+  const state = handoff();
+  assert.equal(state.phase, 'handoff');
+  assert.equal(state.tick, 6);
+  assert.deepEqual(state.previousLease, { owner: 'v1', epoch: 7, validFrom: 0, expiresAt: 5 });
+  assert.deepEqual(state.lease, { owner: 'v2', epoch: 8, validFrom: 6, expiresAt: 10 });
+  assert.equal(state.validExecutor, 'v2');
+  assert.equal(state.fence, 8);
+  assert.equal(state.schedulers[0].token, 7);
+  assert.equal(state.schedulers[0].checkedAt, 4);
+  assert.equal(state.schedulers[1].token, 8);
+  assert.equal(state.effects.length, 0);
+});
+
+for (const expected of [
+  { protection: 'fenced', receipt: 'observed', verdict: 'PASS', known: 1, duplicates: 0, invalid: 0, unresolved: 0 },
+  { protection: 'lease-only', receipt: 'observed', verdict: 'FAIL', known: 2, duplicates: 1, invalid: 1, unresolved: 0 },
+  { protection: 'fenced', receipt: 'missing', verdict: 'UNKNOWN', known: 0, duplicates: 0, invalid: 0, unresolved: 1 },
+  { protection: 'lease-only', receipt: 'missing', verdict: 'FAIL', known: 1, duplicates: 0, invalid: 1, unresolved: 1 },
+]) {
+  test(`${expected.protection} / ${expected.receipt}: ${expected.verdict} follows measured effects and ownership`, () => {
+    const state = run(configuration(expected.protection, expected.receipt));
+    assert.equal(state.verdict, expected.verdict);
+    assert.equal(state.phase, 'evaluated');
+    assert.equal(state.validExecutor, 'v2');
+    assert.deepEqual(state.metrics, {
+      scheduledCandidates: 2, duplicateSchedules: 1, knownEffects: expected.known,
+      duplicateEffects: expected.duplicates, invalidExecutorEffects: expected.invalid,
+      unresolvedEffects: expected.unresolved,
+    });
+    assert.equal(state.schedulers[0].status, expected.protection === 'fenced' ? 'rejected-stale' : 'effect-observed');
+    assert.equal(state.schedulers[1].status, expected.receipt === 'missing' ? 'receipt-missing' : 'effect-observed');
+    assert.equal(state.effects.filter((effect) => effect.receipt === 'observed').length, expected.known);
+    assert.equal(state.effects.filter((effect) => effect.receipt === 'missing').length, expected.unresolved);
+    for (const effect of state.effects) {
+      assert.equal(effect.occurrence, 'JOB-078@6');
+      assert.equal(effect.effectUnits, effect.receipt === 'missing' ? null : 1);
+      assert.equal(effect.validOwner, effect.executor === 'v2');
+    }
+    assert.equal(state.history.length, 1);
+    assert.deepEqual(state.history[0].effects, state.effects);
+    assert.deepEqual(state.history[0].schedulers, state.schedulers);
+    assert.deepEqual(state.history[0].metrics, state.metrics);
+    assert.equal(state.history[0].verdict, expected.verdict);
+  });
+}
+
+test('rejects invalid/extra inputs, non-plain objects, symbols and accessors without mutation', () => {
+  const state = lesson.createState();
+  const invalid = [
+    null, [], 'fenced', {}, { protection: 'fenced' },
+    { protection: 'fenced', receipt: 'observed', endpoint: 'synthetic-only' },
+    configuration('FENCED'), configuration('none'), configuration('fenced', 'success'),
+    configuration('fenced', true), Object.assign(Object.create(null), configuration()),
+    Object.assign(Object.create({ extra: true }), configuration()),
+    { ...configuration(), [Symbol('extra')]: true },
+    { get protection() { throw new Error('Accessor must not be evaluated'); }, receipt: 'observed' },
+  ];
+  for (const input of invalid) {
+    assert.throws(() => lesson.start(state, input), { code: 'ERR_S078_INPUT' });
+    assert.equal(state.phase, 'ready');
+    assert.equal(state.history.length, 0);
+  }
+});
+
+test('rejects forged states, wrong order and repeated execution', () => {
+  const ready = lesson.createState();
+  assert.throws(() => lesson.advanceLease(ready), { code: 'ERR_S078_STATE' });
+  assert.throws(() => lesson.execute(ready), { code: 'ERR_S078_STATE' });
+  assert.throws(() => lesson.nextAttempt(ready), { code: 'ERR_S078_STATE' });
+  assert.throws(() => lesson.interpret(ready, { owner: 'v2', outcome: 'PASS' }), { code: 'ERR_S078_STATE' });
+  for (const forged of [null, {}, { ...ready }, JSON.parse(JSON.stringify(ready))]) {
+    assert.throws(() => lesson.start(forged, configuration()), { code: 'ERR_S078_STATE' });
+  }
+  const started = lesson.start(ready, configuration());
+  assert.throws(() => lesson.start(started, configuration()), { code: 'ERR_S078_STATE' });
+  assert.throws(() => lesson.execute(started), { code: 'ERR_S078_STATE' });
+  const advanced = lesson.advanceLease(started);
+  assert.throws(() => lesson.advanceLease(advanced), { code: 'ERR_S078_STATE' });
+  const finished = lesson.execute(advanced);
+  assert.throws(() => lesson.execute(finished), { code: 'ERR_S078_STATE' });
+});
+
+test('all state and retained ledgers are deeply immutable and execution is deterministic', () => {
+  const state = run();
+  assert.equal(state.phase, 'evaluated');
+  assert.throws(() => { state.lease.epoch = 9; }, TypeError);
+  assert.throws(() => { state.schedulers[0].token = 8; }, TypeError);
+  assert.throws(() => { state.effects.push({}); }, TypeError);
+  assert.throws(() => { state.history[0].metrics.knownEffects = 2; }, TypeError);
+  assert.deepEqual(state, run());
+});
+
+test('interpretation checks owner and outcome but cannot relabel a failed run or its history', () => {
+  const failed = run(configuration('lease-only'));
+  const incorrect = lesson.interpret(failed, { owner: 'v1', outcome: 'PASS' });
+  assert.notEqual(incorrect.interpretation, null);
+  assert.equal(incorrect.interpretation.correct, false);
+  const correct = lesson.interpret(incorrect, { owner: 'v2', outcome: 'FAIL' });
+  assert.equal(correct.interpretation.correct, true);
+  assert.equal(correct.verdict, 'FAIL');
+  assert.strictEqual(correct.history, failed.history);
+  assert.strictEqual(correct.effects, failed.effects);
+  assert.throws(() => lesson.interpret(failed, { owner: 'v2', outcome: 'FAIL', repair: true }), { code: 'ERR_S078_INPUT' });
+  assert.throws(() => lesson.interpret(failed, { owner: 'v3', outcome: 'FAIL' }), { code: 'ERR_S078_INPUT' });
+});
+
+test('new attempts retain full immutable histories and the seventh attempt is rejected', () => {
+  let state = lesson.createState();
+  for (let attempt = 1; attempt <= 6; attempt += 1) {
+    state = lesson.execute(lesson.advanceLease(lesson.start(state, configuration())));
+    assert.equal(state.history.length, attempt);
+    assert.equal(state.attempt, attempt);
+    assert.equal(state.history[attempt - 1].lease.epoch, 8);
+    assert.equal(state.history[attempt - 1].effects[0].executor, 'v2');
+    if (attempt < 6) {
+      const history = state.history;
+      state = lesson.nextAttempt(state);
+      assert.equal(state.phase, 'ready');
+      assert.strictEqual(state.history, history);
+      assert.equal(state.effects.length, 0);
+      assert.equal(state.verdict, 'NOT_EVALUATED');
+    }
+  }
+  assert.throws(() => lesson.nextAttempt(state), { code: 'ERR_S078_STATE' });
+});
+
+test('explicit reset clears configuration, answer, trace, counters and history from every phase', () => {
+  const ready = lesson.createState();
+  const started = lesson.start(ready, configuration('lease-only', 'missing'));
+  const advanced = lesson.advanceLease(started);
+  const finished = lesson.execute(advanced);
+  const answered = lesson.interpret(finished, { owner: 'v1', outcome: 'PASS' });
+  for (const state of [ready, started, advanced, finished, answered]) {
+    assert.deepEqual(lesson.resetState(state), lesson.createState());
+  }
+});

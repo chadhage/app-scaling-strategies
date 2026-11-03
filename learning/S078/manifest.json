@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S078",
+  "sourceId": "S078",
+  "parentId": "D-S078",
+  "nativeSibling": "B-S078",
+  "kano": "S",
+  "kanoUnit": "A-S078",
+  "packet": "SC-S078",
+  "owner": "worker-A-S078",
+  "entryGate": "SOURCE",
+  "title": "Two schedulers, one valid executor",
+  "entryPoint": "learning/S078/index.html",
+  "feature": "learning/S078/scheduler-fencing.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Start two schedulers; use lease/fencing evidence to identify the valid executor.",
+  "sourceAcceptance": "Use suitable ownership leases and fencing to prevent duplicate scheduled work.",
+  "parentAcceptance": "Only the valid owner performs each scheduled effect; duplicate scheduling is detected.",
+  "preconditions": [
+    "Standalone modern browser, no server, scheduler service, resource, credentials or subscription.",
+    "Exactly two synthetic schedulers v1 and v2 propose the same JOB-078@6 occurrence.",
+    "v1 checked epoch 7 at tick 4, expires at 5; v2 acquires epoch 8 at 6, expires at 10.",
+    "The expected occurrence requires one effect by the current owner; all clocks and receipts are teaching fixtures."
+  ],
+  "actions": [
+    "Choose enforced fencing or deliberately unsafe cached-lease-only execution and the v2 receipt condition.",
+    "Start both schedulers and detect their duplicate scheduling proposal.",
+    "Expire the old lease and grant v2 epoch 8; inspect current and expired lease evidence.",
+    "Attempt both callbacks and inspect known, rejected and unresolved effects.",
+    "Identify the valid executor and PASS, FAIL or UNKNOWN without relabeling observed work.",
+    "Retain up to six complete ledgers or explicitly reset all in-memory state and history."
+  ],
+  "input": "learning/S078/model.js",
+  "trace": "One occurrence, two schedulers, one explicit handoff, two execution attempts, full retained lease/proposal/effect histories.",
+  "assertions": [
+    "Two proposals for one occurrence detect one duplicate scheduling proposal.",
+    "Only v2 is authorized after the epoch-7 lease expires and v2 acquires epoch 8.",
+    "Enforced current-owner fencing rejects stale v1 and permits one observed v2 effect: PASS.",
+    "Cached lease checks without effect-boundary fencing expose an invalid v1 effect and duplicate work: FAIL.",
+    "A missing v2 receipt stays unresolved: UNKNOWN unless a known ownership violation already establishes FAIL.",
+    "Interpretation cannot rewrite verdicts or retained evidence.",
+    "Exact enum inputs, branded immutable states, phase ordering and six-attempt limits are enforced.",
+    "Actual DOM, keyboard, errors, failure, uncertainty, all-phase reset and enforced CSP are checked."
+  ],
+  "bounds": {
+    "configurations": 4,
+    "schedulers": 2,
+    "occurrences": 1,
+    "maximumExecutionAttempts": 2,
+    "maximumKnownEffects": 2,
+    "maximumUnresolvedEffects": 1,
+    "retainedAttempts": 6,
+    "arbitraryEndpointsPayloadsTimersOrLoad": false
+  },
+  "iac": {
+    "status": "N/A",
+    "decision": "learning/S078/evidence/iac-decision.json",
+    "resourcesCreated": 0
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156.0.4314.50",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperPublication": "53c0c0d",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "dependencyChanges": false
+  },
+  "limits": [
+    "No actual scheduler, distributed lease authority, monotonic token issuance, fencing or effect execution is certified.",
+    "No real atomic effect boundary, durability, clock-skew safety, crash recovery or production reliability proof.",
+    "B-S078 and D-S078 remain incomplete; this is not native Azure or source-parent completion.",
+    "Not S075 consumer expansion, S076 retirement, S077 redelivery or S084 command idempotency.",
+    "No production Node.js 24 or five-nines validation; Node 22 is test tooling only.",
+    "Published isolated browser helper only; known lifecycle limitation remains and abandoned prototype is unqualified.",
+    "File-origin worker rejection is not independent worker-src CSP qualification.",
+    "Synthetic data only; no cloud, IaC, scaffold, identity, credentials, deployment, downloads, installs or spending.",
+    "One frozen S unit. Tests, browser proof, plumbing and refinement earn no additional credit."
+  ]
+}

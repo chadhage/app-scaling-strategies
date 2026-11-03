@@ -1,0 +1,29 @@
+{
+  "cardId": "A-S078",
+  "stage": "authorized publisher stopped before commit at scoped whitespace gate",
+  "reproducedAtUtc": "2026-11-03T20:46:23.548Z",
+  "command": "git --no-pager diff --cached --check -- learning\\S078",
+  "exitCode": 2,
+  "spawnError": null,
+  "outputs": {
+    "stdout": {
+      "path": "evidence\\raw\\publication-gate\\stdout.raw.gz",
+      "rawBytes": 388603,
+      "rawSha256": "8a3aff90ae55548aa335ffc0293348808c558d4c060158d298e900f5841ba336",
+      "gzipSha256": "b467d781012c22f2b947548d7ee668813f152dcf94220d418d6933d4edaa69c5"
+    },
+    "stderr": {
+      "path": "evidence\\raw\\publication-gate\\stderr.raw.gz",
+      "rawBytes": 0,
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipSha256": "9e72928e7a01615b4cf090daa617b4ca9d68531748f887f323f695eb4ca3ef63"
+    }
+  },
+  "reason": "Git whitespace checking interpreted byte-preserved raw CRLF snapshots as trailing whitespace. This is not a behavioral test failure and no publication was created.",
+  "correction": "Add a nested owned evidence/raw/.gitattributes setting -diff only; retain -text and every raw byte. Preserve this failed gate and the first seal before making a new write-once seal.",
+  "historicalSeal": {
+    "path": "evidence\\raw\\history\\content-index.prepublication.json",
+    "bytes": 10460,
+    "sha256": "80c5ecadf10fd97e5b82021aabd4e28ac26979e3435c76fe0239cea94ecc8649"
+  }
+}

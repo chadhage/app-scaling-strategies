@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S078 — Two schedulers, one valid executor</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p id="synthetic-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Two schedulers, one valid executor</h1>
+    <p>A-S078 · D-S078 · SC-S078 · One frozen S learning unit</p>
+    <p><strong>Objective:</strong> Start two schedulers; use lease/fencing evidence to identify the valid executor.</p>
+    <section aria-labelledby="preconditions">
+      <h2 id="preconditions">One bounded synthetic occurrence</h2>
+      <p>v1 and v2 both propose <code>JOB-078@6</code>. v1 pauses after checking epoch 7 at tick 4.
+        Its lease expires at 5; at tick 6, v2 acquires epoch 8 until 10. Only v2 may perform the due effect.</p>
+      <p>Choose protection, start both schedulers, hand off the lease, then inspect both execution attempts.
+        A duplicate proposal is not itself a duplicate business effect. One intended effect is required.</p>
+      <p>No server, account, endpoint or credentials. All ticks, leases, receipts and effects are in-memory teaching data:
+        not actual scheduler, lease, fencing or execution certification. No clock waits or management calls.</p>
+    </section>
+
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Conduct the rehearsal</h2>
+      <form id="configuration" novalidate>
+        <fieldset id="configuration-fields">
+          <legend>Choose before starting</legend>
+          <label for="protection">Effect-boundary protection</label>
+          <select id="protection">
+            <option value="fenced" selected>Current lease + enforced fencing</option>
+            <option value="lease-only">Cached lease check only (unsafe comparison)</option>
+          </select>
+          <label for="receipt">v2 effect receipt</label>
+          <select id="receipt">
+            <option value="observed" selected>Observed receipt</option>
+            <option value="missing">Missing receipt — effect remains unresolved</option>
+          </select>
+        </fieldset>
+        <button id="start-schedulers" type="submit">1. Start both schedulers</button>
+      </form>
+      <div class="actions">
+        <button id="handoff-lease" type="button" disabled>2. Expire v1 lease; grant v2 epoch 8</button>
+        <button id="execute-occurrence" type="button" disabled>3. Attempt the due effect from both</button>
+      </div>
+      <p id="input-error" role="alert" hidden></p>
+      <div class="actions">
+        <button id="new-attempt" type="button" disabled>New attempt — retain history</button>
+        <button id="reset-rehearsal" type="button">Reset all state and history</button>
+      </div>
+      <p>Keyboard: Tab through controls; Enter submits choices; Space activates buttons.
+        Reset clears all local history and returns focus to Start. Nothing is persisted across reloads.</p>
+    </section>
+
+    <section aria-labelledby="evidence-heading">
+      <h2 id="evidence-heading">Inspect authority and measured effects</h2>
+      <div id="status" role="status" aria-live="polite" aria-atomic="true">
+        <p id="phase">Phase: ready</p>
+        <p id="attempt-count">Attempt: 1 / 6</p>
+        <p id="lease-summary">Current lease: none</p>
+        <p id="fence-summary">Effect-boundary fence: not started</p>
+        <p id="verdict" data-verdict="NOT_EVALUATED">Synthetic result: NOT_EVALUATED</p>
+        <p id="impact">No occurrence has been evaluated.</p>
+        <p id="metrics">No scheduling or effects observed.</p>
+        <p id="uncertainty">No effect conclusion yet.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>Lease evidence (expiry is exclusive)</caption>
+          <thead><tr><th scope="col">Owner</th><th scope="col">Epoch</th><th scope="col">From tick</th><th scope="col">Expires at</th><th scope="col">At current tick</th></tr></thead>
+          <tbody id="lease-ledger"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>Scheduler proposals — same occurrence, separate callbacks</caption>
+          <thead><tr><th scope="col">Scheduler</th><th scope="col">Occurrence</th><th scope="col">Token</th><th scope="col">Checked at</th><th scope="col">Checked expiry</th><th scope="col">Observation</th></tr></thead>
+          <tbody id="scheduler-ledger"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>Observed and unresolved effect receipts</caption>
+          <thead><tr><th scope="col">Executor</th><th scope="col">Epoch</th><th scope="col">Receipt</th><th scope="col">Effect units</th><th scope="col">Executor authority</th></tr></thead>
+          <tbody id="effect-ledger"></tbody>
+        </table>
+      </div>
+      <h3>Synthetic trace</h3>
+      <pre id="trace">No attempt started.</pre>
+    </section>
+
+    <section aria-labelledby="answer-heading">
+      <h2 id="answer-heading">Identify the valid executor and outcome</h2>
+      <p>Authority comes from the current lease and epoch, not from which callback ran.
+        A missing receipt changes effect certainty, not the known lease owner.
+        PASS requires one observed valid effect; known ownership violations are FAIL; unresolved-only evidence is UNKNOWN.</p>
+      <form id="interpretation" novalidate>
+        <fieldset id="interpretation-fields" disabled>
+          <legend>Check after both execution attempts</legend>
+          <label for="executor-choice">Valid executor at tick 6</label>
+          <select id="executor-choice">
+            <option value="" selected>Choose executor</option>
+            <option value="v1">v1</option><option value="v2">v2</option><option value="unknown">Unknown</option>
+          </select>
+          <label for="outcome-choice">Evidence outcome</label>
+          <select id="outcome-choice">
+            <option value="" selected>Choose outcome</option>
+            <option value="PASS">PASS</option><option value="FAIL">FAIL</option><option value="UNKNOWN">UNKNOWN</option>
+          </select>
+          <button id="check-answer" type="submit">Check interpretation — do not change evidence</button>
+        </fieldset>
+      </form>
+      <p id="answer-feedback" role="status">Interpretation not checked.</p>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained completed attempts</h2>
+      <p id="history-count">Retained attempts: 0 / 6</p>
+      <div class="table-wrap">
+        <table>
+          <caption>All completed attempts, including failures and uncertainty</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Protection</th><th scope="col">Receipt</th><th scope="col">Result</th><th scope="col">Known</th><th scope="col">Duplicate</th><th scope="col">Invalid</th><th scope="col">Unresolved</th></tr></thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+      <div id="history-ledgers"></div>
+    </section>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits and evidence boundary</h2>
+      <p>Four configurations, two schedulers, one occurrence, at most two execution attempts, six retained histories.
+        No real lease service, atomic effect store, scheduler timing, crash recovery or distributed-system guarantee is tested.</p>
+      <p>B-S078 and D-S078 remain incomplete. No native Azure result, source-parent completion, production Node.js 24
+        validation or five-nines claim. No cloud, IaC, scaffold, identity, credentials, deployment or spending.</p>
+      <p><a href="README.md">Source mapping, operating envelope and verification instructions</a></p>
+    </section>
+  </main>
+</body>
+</html>

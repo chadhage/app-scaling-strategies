@@ -1,0 +1,58 @@
+Feature: Identify the valid executor when v1 and v2 both schedule one occurrence
+  The label is "Training rehearsal - synthetic data - not a live Azure result".
+  A-S078 is one frozen S unit in SC-S078, derived from S078 and D-S078.
+  Preconditions: no server, real scheduler, resource, account or credential.
+  Bounds: two schedulers, one JOB-078@6 occurrence, four configurations,
+  two execution attempts and six retained in-memory histories.
+
+  Scenario: A lease handoff does not cancel the old scheduler's paused callback
+    Given v1 checked its epoch-7 lease at synthetic tick 4 before expiry at 5
+    When the operator starts both schedulers
+    Then both propose JOB-078@6 and one duplicate scheduling proposal is detected
+    When the operator advances to tick 6 and v2 acquires epoch 8 until tick 10
+    Then v2 is the valid executor and v1 still holds stale epoch 7
+
+  Scenario: Enforced fencing rejects the stale scheduler at the effect boundary
+    Given the current lease and effect boundary both enforce epoch 8 for v2
+    When both schedulers attempt the same due occurrence
+    Then v1 is rejected and only v2 has one observed effect
+    And the synthetic outcome is PASS with zero invalid effects
+    And duplicate scheduling remains visible rather than becoming a duplicate effect
+
+  Scenario: A cached lease check without effect-boundary fencing is insufficient
+    Given the old callback relies on its tick-4 lease check
+    When both schedulers execute without fencing after the handoff
+    Then v1 and v2 each have an observed effect
+    And one duplicate effect and one invalid-executor effect make the outcome FAIL
+
+  Scenario: Missing effect receipts are not invented as successful work
+    Given fencing rejects v1 and v2's effect receipt is unavailable
+    When both execution attempts finish
+    Then zero effects are confirmed and one effect remains unresolved
+    And the synthetic outcome is UNKNOWN, not PASS or proof of no effect
+
+  Scenario: A known ownership violation is not hidden by another unknown outcome
+    Given fencing is absent and v2's effect receipt is unavailable
+    When both schedulers execute
+    Then v1's invalid observed effect makes the outcome FAIL
+    And v2's unresolved effect remains counted separately
+
+  Scenario: Learner interpretation cannot repair failed or uncertain evidence
+    Given a completed run with its lease, scheduler and effect ledgers
+    When the learner identifies an executor and PASS, FAIL or UNKNOWN
+    Then feedback checks the answer against the observed lease and outcome
+    And neither the outcome nor the retained ledgers can change
+
+  Scenario: Inputs, transitions and retained history are bounded
+    Given only the exact protection and receipt enum fields are accepted
+    Then extra keys, invalid enums, accessors and forged states are rejected
+    And execution before handoff or a second execution is rejected
+    And completed attempt histories retain their full ledgers up to six attempts
+    And a full reset from every phase clears all in-memory state and history
+
+  Scenario: Actual browser operation is keyboard accessible and resource free
+    Given a standalone file lesson with the exact synthetic banner
+    Then keyboard controls, visible errors, focus, failure, uncertainty and reset work
+    And no control shadows the native form reset method
+    And an enforced CSP blocks inline code and connection probes
+    And normal verification never rewrites historical evidence

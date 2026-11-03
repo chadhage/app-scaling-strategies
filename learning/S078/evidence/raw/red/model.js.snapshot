@@ -1,0 +1,30 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.SchedulerLesson = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
+  const LIMIT = 6;
+  const createState = () => Object.freeze({
+    phase: 'ready', attempt: 1, config: null, tick: null, lease: null,
+    previousLease: null, fence: null, validExecutor: null,
+    schedulers: Object.freeze([]), effects: Object.freeze([]),
+    metrics: Object.freeze({
+      scheduledCandidates: 0, duplicateSchedules: 0, knownEffects: 0,
+      duplicateEffects: 0, invalidExecutorEffects: 0, unresolvedEffects: 0,
+    }),
+    verdict: 'NOT_EVALUATED', trace: Object.freeze(['No attempt started.']),
+    history: Object.freeze([]), interpretation: null,
+  });
+  return Object.freeze({
+    BANNER, LIMIT, createState,
+    start: (state) => state,
+    advanceLease: (state) => state,
+    execute: (state) => state,
+    interpret: (state) => state,
+    nextAttempt: (state) => state,
+    resetState: () => createState(),
+  });
+}));
