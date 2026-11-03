@@ -1,0 +1,21 @@
+'use strict';
+
+const path = require('node:path');
+const fs = require('node:fs');
+
+process.env.PLAYWRIGHT_BROWSERS_PATH = path.join(
+  __dirname, '..', '..', '.git', 'kanban-orchestrator', 'browser-binaries',
+);
+const runtime = path.join(__dirname, '..', '..', '.git', 'kanban-orchestrator', 'browser-runtime');
+fs.mkdirSync(runtime, { recursive: true });
+process.env.TEMP = runtime;
+process.env.TMP = runtime;
+process.env.TMPDIR = runtime;
+
+require('playwright');
+
+async function openIsolatedLesson(relativeRepoPath) {
+  throw new Error('openIsolatedLesson is not implemented');
+}
+
+module.exports = { openIsolatedLesson };

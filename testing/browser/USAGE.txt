@@ -1,0 +1,77 @@
+PRIVATE LOCAL BROWSER TEST TOOLING
+
+Selection is explicit, not a fallback:
+- Playwright 1.56.1 is pinned exactly in this private, UNLICENSED test package.
+  Its stable public npm tarballs were already cached; their SHA-512 digests match
+  cached public registry metadata for github.com/microsoft/playwright (Apache-2.0,
+  Node >=18). No extension code was copied. Registry signatures were present but
+  were not independently verified offline.
+- The browser is the installed Microsoft Edge Chromium channel, msedge.
+  This machine's Microsoft-signed Edge 156.0.4314.50 passed the actual UI tests.
+  Compatibility evidence is limited to this tested pair; it does not certify
+  arbitrary Edge versions. Missing Edge is an error, never a download or fallback.
+- Exact 1.61.1 could not be installed because public registry TLS handshakes
+  failed. The explicitly approved offline alternative uses 1.56.1 instead.
+  No TLS checks, Chromium sandbox, or browser security settings were disabled.
+
+Run from the repository root in PowerShell:
+  Push-Location .\testing\browser
+  npm test
+  Pop-Location
+
+Offline reinstall, from testing\browser, if the seeded repository npm cache exists:
+  npm ci --offline --ignore-scripts --registry=https://registry.npmjs.org --cache=..\..\.git\kanban-orchestrator\npm-cache --omit=optional --no-fund --no-audit
+The npm cache and browser executable are machine prerequisites, not committed
+dependencies. No global installation or browser download is performed. The local
+Playwright CLI supports --only-shell, but no install command was run because this
+approved offline alternative uses installed Edge, not a downloaded headless shell.
+
+CommonJS API:
+  const { openIsolatedLesson } = require('.\\testing\\browser\\isolated.cjs');
+  async function checkLesson(relativeRepoPath) {
+    const session = await openIsolatedLesson(relativeRepoPath);
+    try {
+      console.log(session.browserVersion, await session.page.title());
+    } finally {
+      await session.close();
+    }
+  }
+  checkLesson('testing\\browser\\fixtures\\counter.html').catch(console.error);
+
+Runnable fixture example, from the repository root:
+  node -e "require('.\\testing\\browser').openIsolatedLesson('testing\\browser\\fixtures\\counter.html').then(async s => {try {console.log(s.browserVersion, await s.page.title())} finally {await s.close()}}).catch(e => {console.error(e);process.exitCode=1})"
+
+Each call launches its own fresh HEADLESS Edge browser, context, and page. Multiple
+calls can run concurrently; there is no integrated-browser connection, focus
+request, shared profile, or shared context. Always await close() in finally.
+Repeated or concurrent close() calls reuse the same cleanup promise. Context
+cleanup errors still trigger browser shutdown. Load/setup failures clean up
+before rejecting; simultaneous load and cleanup errors retain both causes.
+Each spawned Edge process also gets a unique owned TEMP/TMP/TMPDIR directory.
+The helper removes that directory, including Edge's debug log, after browser
+shutdown, even when navigation or context cleanup fails.
+
+Only repository-relative existing files below learning\, capability\, or
+testing\browser\fixtures\ are accepted. URLs, absolute paths, alternate data
+streams, out-of-root traversal, directories, missing files, and junction escapes
+are rejected with ERR_LESSON_PATH before launch. This validates the entry file;
+it is not a network sandbox for arbitrary lesson scripts.
+
+Require this helper before importing Playwright. It sets PLAYWRIGHT_BROWSERS_PATH
+to repository\.git\kanban-orchestrator\browser-binaries before loading Playwright.
+The installed msedge channel does not consume that download cache. It also sets
+TEMP, TMP, and TMPDIR for the calling Node process to the repository-private
+.git\kanban-orchestrator\browser-runtime so owned disposable profiles/artifacts
+stay local; Playwright removes them when the owned browser closes. Parent shell
+variables, existing user profiles, and global browser caches remain unchanged.
+
+Evidence is in evidence\: tooling preflight, actual stub behavioral red, real
+headless green, cached package/browser provenance, and cleanup. The earlier TLS
+failure logs are tooling limits, not behavioral red. Red preceded implementation;
+one additional no-fallback regression was added after the initial green.
+A second focused behavioral red demonstrated missing per-session scratch
+ownership after a post-run check found cv_debug.log; the final green verifies
+distinct scratch directories and cleanup on success and error paths.
+
+Tested runtime: Node 22.23.4 / npm 10.9.9. This does NOT validate Node 24 production
+support, native Azure behavior, IaC, deployments, cloud spending, or Kano credit.

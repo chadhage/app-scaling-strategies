@@ -1,0 +1,92 @@
+{
+  "status": "green-with-explicit-offline-tooling",
+  "scope": "Local test tooling only; no Kano credit or native Azure evidence.",
+  "runtime": {
+    "node": "22.23.4",
+    "npm": "10.9.9",
+    "productionNode24Validated": false
+  },
+  "dependency": {
+    "package": "playwright",
+    "version": "1.56.1",
+    "registry": "https://registry.npmjs.org",
+    "installed": true,
+    "source": "Existing trusted public npm cache; matching SHA-512 registry metadata; copied into repository-local cache without changing the source cache",
+    "registrySignaturesIndependentlyVerifiedOffline": false,
+    "selectionRationale": "Explicitly approved stable cached first-party alternative to unavailable 1.61.1; not a silent fallback"
+  },
+  "priorToolingFailure": {
+    "requestedVersion": "1.61.1",
+    "npmCode": "ERR_SSL_SSL/TLS_ALERT_HANDSHAKE_FAILURE",
+    "message": "The public registry TLS handshake failed before any package or browser installation. This was not counted as behavioral red. No failed downloads were repeated for the offline alternative.",
+    "secureAlternativesAttempted": [
+      "npm install --ignore-scripts with an explicit public registry and repository-local npm cache",
+      "Node system CA store and TLS 1.2 with certificate verification retained",
+      "Windows curl and PowerShell HTTPS clients",
+      "web_fetch against the exact public package version",
+      "Other published registry A records with the same verified TLS hostname",
+      "Read-only existing npm cache inspection: exact 1.61.1 tarballs were unavailable"
+    ],
+    "systemProxyAvailable": false,
+    "tlsVerificationDisabled": false
+  },
+  "browser": {
+    "channel": "msedge",
+    "version": "156.0.4314.50",
+    "source": "Already installed Microsoft Edge; valid Microsoft Corporation Authenticode signature",
+    "headless": true,
+    "chromiumSandbox": true,
+    "downloadsPerformed": false,
+    "silentFallback": false,
+    "compatibilityLimit": "Only this Playwright 1.56.1 / Edge 156.0.4314.50 pair was verified by actual browser interactions"
+  },
+  "workflow": {
+    "bddFeatureWrittenFirst": true,
+    "loadableStubAndTestsWritten": true,
+    "realBrowserToolingPreflightBeforeBehavioralRed": true,
+    "behavioralRedRun": true,
+    "red": {
+      "exitCode": 1,
+      "tests": 7,
+      "passed": 1,
+      "failed": 6,
+      "cause": "openIsolatedLesson is not implemented",
+      "output": "red.txt",
+      "stubSnapshot": "red-stub.cjs.txt"
+    },
+    "behavioralGreenRun": true,
+    "green": {
+      "exitCode": 0,
+      "tests": 8,
+      "passed": 8,
+      "failed": 0,
+      "output": "green.txt",
+      "additionalRegression": "No silent fallback if the explicitly selected Edge channel is unavailable"
+    },
+    "realChromiumRun": true,
+    "concurrentVisibleBrowserSessions": 2,
+    "realKeyboardAndButtonInteraction": true,
+    "independentInputAndCounterState": true,
+    "navigationAndCleanupFaultInjection": "Only error boundaries are injected; owned resources are real browsers",
+    "browserCacheRequired": ".git\\kanban-orchestrator\\browser-binaries",
+    "globalBrowserCachesModified": false,
+    "browserCacheUse": "Reserved project cache path is set before loading Playwright; installed msedge does not consume downloaded-browser caches",
+    "privateDisposableRuntime": ".git\\kanban-orchestrator\\browser-runtime",
+    "perSessionScratchDirectories": true,
+    "cleanupRefinementRed": {
+      "exitCode": 1,
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "cause": "Each browser must own a repository-local scratch directory",
+      "output": "cleanup-red.txt",
+      "snapshot": "cleanup-red-source.cjs.txt",
+      "initialPostRunFinding": "Edge left cv_debug.log in the shared private runtime root; preserved in cleanup-red.json",
+      "fix": "Unique per-session subprocess TEMP/TMP/TMPDIR; owned directory removal in cleanup finally"
+    },
+    "cleanupEvidence": "cleanup.json",
+    "publicationRecord": ".git\\kanban-orchestrator\\browser-publish.json"
+  },
+  "iacStage": "N/A",
+  "azureOperations": "None; unapproved."
+}
