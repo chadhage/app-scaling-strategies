@@ -1,0 +1,60 @@
+{
+  "cardId": "A-S025",
+  "workerId": "worker-A-S025",
+  "packet": "SC-S025",
+  "kano": "S",
+  "kanoUnit": "A-S025",
+  "recordedAtUtc": "2026-11-03T17:03:02.434Z",
+  "readBeforeBehaviorDesign": true,
+  "note": "Source reading preceded BDD authorship; this digest record is taken before behavioral RED, not an independently timestamped earlier read.",
+  "sources": [
+    {
+      "path": "README.md",
+      "sha256": "826c1e3b1f1f8866f05d45f3d6b9eca5c06e901a2b67737774ad18aa1607e4d1"
+    },
+    {
+      "path": ".docs\\wiki\\backlog.md",
+      "sha256": "40b4d8e2ab4774f47de029f97dd8ff4e267d9412292c3c47f72726b002831418"
+    },
+    {
+      "path": ".docs\\wiki\\kanban.md",
+      "sha256": "aa7cbedda232b09bfe7890f2e7969715be314ec72f9ca0bf9b1617ecb1e26a3e"
+    },
+    {
+      "path": ".git\\kanban-orchestrator\\inventory.json",
+      "sha256": "5d3e2d9e8cbdc8ff1688765495f1e0909a23f864240b86ed30a68d72d225f063"
+    }
+  ],
+  "exactRead": {
+    "source": "| S025 | **Runtime and cache warm-up:** Prime JVM/JIT, application initialization, connection pools, and critical caches before exposure. |",
+    "backlog": "| D-S025 | P1 | Add cold/warm runtime comparison and JVM/bean/cache/pool initialization controls. | Client latency and actual initialization evidence show warm-up effectiveness; unsupported or unmeasured routes are disclosed. | P007 |",
+    "atomicAndPortableContract": "## Atomic card contract\n\nEvery listed row is one card, one accountable owner/pair, one independently reviewable changeset, and one observable acceptance result. Normal publication is a scoped, labeled commit with an annotated tag on `main`; temporary recovery branches and reviewer-assisted PRs are used only when safe integration requires them.\n\nImplementation order is BDD specification, genuine behavioral TDD red, the IaC step (or an explicit N/A for a resource-free lesson), implementation/refactoring, green tests and actual browser checks, scoped tagged publication, and parent-owned empirical acceptance. A worker cannot award its own Done credit. Subdivision preserves the original `kanoUnit`; partial work does not manufacture extra value.\n\n- **Size target:** A cards take 1-2 focused hours; C, B, and X cards target 2-4 focused hours after entry gates are satisfied. These are slicing limits, not delivery estimates.\n- **Refine before admission:** If a card needs a new research decision, multiple independent behaviors, or more than four focused hours, split it before pulling. Revalidate coverage and Kano classes; artificial splits do not manufacture extra value.\n- **Inputs:** Parent source, versioned contract, named fixture/configuration, technical gate, quota reservation, and any approved lease are available.\n- **Ownership:** One card owns its module/fixture namespace. A and B siblings do not share files, PRs, or mutable test leases.\n- **Done:** Scoped behavior is usable, its stated check passes, relevant tests are automated, review/merge is complete, documentation and evidence are attached, and the behavior is available through its declared preview or harness surface.\n- **Evidence:** Record card/parent IDs, mode, configuration/host, commit, test/run reference, verifier result, user-impact result, cleanup result, owner, reviewer, packet, and accepted time.\n- **No false completion:** A replay is not native evidence. Unsupported/unverified positive behavior cannot pass as a native success. A negative experiment may pass its verifier while clearly reporting interrupted users.\n- **No bonus credits:** Multiple parents, commits, test cases, repeated runs, and duplicated fixtures do not increase a card's Kano count.\n\n### Portable A-card lesson contract\n\nAn A card delivers a standalone, browser-openable lesson bundle with a small interactive exercise: choose an action or condition, inspect a synthetic trace, and check the expected outcome. Use standard HTML/browser behavior so an approved application framework or Azure subscription is not needed to begin.\n\nEach bundle declares source ID, objective, preconditions, actions, synthetic input/trace, expected assertions, and limits. It prominently says **Training rehearsal - synthetic data - not a live Azure result**, makes no management calls, contains no credentials, and supports keyboard operation.\n\nEach lesson must add a worked, testable exercise rather than copying the backlog sentence. Keep it portable for later mounting by C041. The native implementation and evidence remain a separate B card, and the source demo is not complete until both required slices and its original acceptance gates pass.",
+    "packetCards": [
+      {
+        "technicalEntryGate": "SOURCE",
+        "kano": "S",
+        "priority": "P1",
+        "kanoUnit": "A-S025",
+        "deliver": "Compare cold/warm JVM traces; separate initialization success from acceptable client latency.",
+        "packet": "SC-S025",
+        "id": "A-S025",
+        "parents": [
+          "D-S025"
+        ]
+      },
+      {
+        "technicalEntryGate": "CORE, DATA, JAVA",
+        "kano": "S",
+        "priority": "P1",
+        "kanoUnit": "B-S025",
+        "deliver": "Conduct one Java warm-up comparison; attach actual runtime and journey-latency observations.",
+        "packet": "SC-S025",
+        "id": "B-S025",
+        "parents": [
+          "D-S025"
+        ]
+      }
+    ]
+  },
+  "refinement": "One bounded runtime/cache comparison, not separate JVM, bean, pool, cache or testing units. SOURCE is available for A-S025. B-S025 remains separate and unready without CORE, DATA, JAVA, a qualified target and separately approved execution. D-S025 retains P007."
+}

@@ -1,0 +1,25 @@
+"use strict";
+
+const S025Warmup = (() => {
+  const defaults = () => ({
+    jvm: "skipped", beans: "skipped", pool: "skipped", cache: "skipped",
+    route: "measured-read", budgetMs: 200, prediction: "HOLD"
+  });
+  const initialState = () => ({
+    revision: 0, nextRunId: 1, config: defaults(), current: null, history: []
+  });
+  return {
+    defaults,
+    initialState,
+    assess: () => ({
+      initialization: "UNKNOWN", initializedCount: 0, failures: 0, unknowns: 4,
+      latency: "UNKNOWN", outcome: "UNKNOWN", decision: "HOLD", verifier: "UNKNOWN",
+      coldMs: null, warmMs: null, savedMs: null, rows: [], trace: []
+    }),
+    configure: (state) => state,
+    compare: (state) => state
+  };
+})();
+
+if (typeof module !== "undefined" && module.exports) module.exports = S025Warmup;
+else globalThis.S025Warmup = S025Warmup;

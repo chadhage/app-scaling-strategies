@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S025",
+  "sourceId": "S025",
+  "parents": ["D-S025"],
+  "workerId": "worker-A-S025",
+  "owner": "worker-A-S025",
+  "kano": "S",
+  "kanoUnit": "A-S025",
+  "packet": "SC-S025",
+  "technicalEntryGate": "SOURCE",
+  "authorization": "local-synthetic-only",
+  "mode": "synthetic-only",
+  "objective": "Compare cold/warm JVM traces; separate initialization success from acceptable client latency.",
+  "configuration": {
+    "entryPoint": "learning\\S025\\index.html",
+    "host": "Local file in an isolated signed Microsoft Edge 156 context",
+    "fixture": "s025-runtime-read-v1",
+    "coldReferenceMs": 1040,
+    "allPrimedCandidateMs": 100,
+    "clientBaseMs": 40,
+    "budgetMs": {"min": 50, "max": 2000, "default": 200},
+    "maxHistory": 8,
+    "maxConfigurationChanges": 64,
+    "persistence": "In-memory until explicit reset or reload"
+  },
+  "expectedAssertions": [
+    "Skipped pre-exposure initialization is a failure even if its cold request fits a large budget.",
+    "All four primed phases can succeed initialization while failing the independent client latency budget.",
+    "Missing or unsupported route observations remain unknown, not positive or zero-latency evidence.",
+    "The learner verifier does not change model permission or move real traffic.",
+    "Invalid input/state cannot silently become successful; earlier checked runs remain retained."
+  ],
+  "records": {
+    "source": "evidence\\source-contract.json",
+    "bdd": "runtime-warmup.feature",
+    "red": "evidence\\red-001.json",
+    "iac": "evidence\\iac-na.json",
+    "green": "evidence\\green-001.json",
+    "syntax": "evidence\\syntax-001.json",
+    "surface": "evidence\\integrity-001.json",
+    "tooling": "evidence\\tooling-001.json",
+    "browser": "evidence\\browser-001.json",
+    "browserObservations": "evidence\\browser-observations-001.json",
+    "finalIntegrity": "evidence\\integrity-002.json"
+  },
+  "tdd": {
+    "initialTests": 24,
+    "initialBehavioralAssertionFailures": 23,
+    "initialStubShapePasses": 1,
+    "finalModelTests": 27,
+    "laterTestsWithoutInitialRedClaim": 3,
+    "redSnapshots": "Non-auto-discovered .snapshot.txt files under evidence"
+  },
+  "tooling": {
+    "node": "22.23.4",
+    "playwright": "1.56.1",
+    "browser": "Installed Microsoft-signed Edge 156",
+    "helper": "testing\\browser\\isolated.cjs",
+    "helperPublishedCommit": "53c0c0d",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "lifecycle": "openIsolatedLesson with awaited finally close; existing unattended lifecycle limitation remains",
+    "prototypeQualified": false
+  },
+  "userImpact": {
+    "result": "UNMEASURED",
+    "realUsersSampled": 0,
+    "realTrafficMoved": 0,
+    "note": "The learning verifier and synthetic exposure permission are not native transition outcomes."
+  },
+  "verifierResult": "Exact machine-observed outcomes are in the referenced raw records; parent acceptance is not implied.",
+  "cleanup": {
+    "resultReference": "evidence\\browser-observations-001.json",
+    "assertion": "awaitedFinallyCloseResolved",
+    "cloudResourcesCreated": 0
+  },
+  "publication": {
+    "commitResolver": "Annotated kanban/A-S025/<12sha> tag pointing to the scoped implementation commit",
+    "remoteVerification": "Authorized publisher record and worker Report; no self-referential commit hash"
+  },
+  "review": {
+    "reviewer": "parent-controller-only",
+    "acceptedAtUtc": null,
+    "doneCreditClaimed": false
+  },
+  "refinement": {
+    "localRemainder": "No known local implementation gap; independent parent review remains required.",
+    "nativeRemainder": "B-S025 is separate and unready pending CORE, DATA, JAVA, qualified target/fixture and separately approved execution. D-S025 retains P007."
+  },
+  "nativeProof": false,
+  "productionNode24Validated": false,
+  "parentComplete": false,
+  "additionalKanoCredits": 0
+}

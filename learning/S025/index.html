@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S025 — Runtime and cache warm-up</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="warmup.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#exercise">Skip to warm-up controls</a>
+  <header>
+    <p class="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S025 — Runtime and cache warm-up</h1>
+    <p>Prime JVM/JIT, application beans, connection pools and critical caches before exposure.
+      Initialization success alone does not establish acceptable client latency.</p>
+    <p>A-S025 · D-S025 · SC-S025 · one frozen Kano S unit · SOURCE gate</p>
+  </header>
+  <main>
+    <section aria-labelledby="instructions-title">
+      <h2 id="instructions-title">Compare one synthetic client read</h2>
+      <p>Precondition: a fixed, isolated candidate fixture; no real Java process or users.
+        The cold reference is 40 ms base + 320 JVM/JIT + 180 beans + 200 pool + 300 cache = <strong>1040 ms</strong>.
+        Priming all four phases gives 40 + 20 + 10 + 20 + 10 = <strong>100 ms</strong>.
+        These are deterministic teaching constants, not stopwatch measurements or percentiles.</p>
+      <ol>
+        <li>Compare skipped defaults: initialization and the 200 ms latency budget fail; HOLD.</li>
+        <li>Set all four phases to Primed, predict EXPOSE and compare: both gates succeed.</li>
+        <li>Keep phases primed but set an 80 ms budget: initialization succeeds, latency fails; HOLD.</li>
+        <li>Try failed/unmeasured phases or an unmeasured/unsupported route. Missing timing is UNKNOWN, not zero.</li>
+      </ol>
+      <p>Only measured-read has a client sample. No production route, actual JVM/JIT state,
+        bean lifecycle, pool capacity, cache correctness, user continuity or live Azure outcome is verified.</p>
+    </section>
+
+    <section id="exercise" tabindex="-1" aria-labelledby="controls-title">
+      <h2 id="controls-title">Operator controls</h2>
+      <form id="warmup-form" novalidate>
+        <fieldset>
+          <legend>Candidate initialization observations — synthetic</legend>
+          <div class="controls">
+            <label for="jvm-condition">JVM/JIT
+              <select id="jvm-condition" name="jvm">
+                <option value="skipped">Skipped — cold</option><option value="primed">Primed</option>
+                <option value="failed">Failed</option><option value="unmeasured">Unmeasured</option>
+              </select>
+            </label>
+            <label for="beans-condition">Application beans
+              <select id="beans-condition" name="beans">
+                <option value="skipped">Skipped — cold</option><option value="primed">Primed</option>
+                <option value="failed">Failed</option><option value="unmeasured">Unmeasured</option>
+              </select>
+            </label>
+            <label for="pool-condition">Connection pool
+              <select id="pool-condition" name="pool">
+                <option value="skipped">Skipped — cold</option><option value="primed">Primed</option>
+                <option value="failed">Failed</option><option value="unmeasured">Unmeasured</option>
+              </select>
+            </label>
+            <label for="cache-condition">Critical cache
+              <select id="cache-condition" name="cache">
+                <option value="skipped">Skipped — cold</option><option value="primed">Primed</option>
+                <option value="failed">Failed</option><option value="unmeasured">Unmeasured</option>
+              </select>
+            </label>
+          </div>
+        </fieldset>
+        <div class="controls">
+          <label for="route">Client route
+            <select id="route" name="route">
+              <option value="measured-read">Measured synthetic read</option>
+              <option value="unmeasured-export">Unmeasured export</option>
+              <option value="unsupported-stream">Unsupported stream</option>
+            </select>
+          </label>
+          <label for="budget-ms">Client latency budget (50–2000 ms, integer)
+            <input id="budget-ms" name="budgetMs" type="number" min="50" max="2000" step="1" value="200" required aria-describedby="input-help">
+          </label>
+          <label for="prediction">Predict the candidate permission
+            <select id="prediction" name="prediction">
+              <option value="HOLD">HOLD</option><option value="EXPOSE">EXPOSE — model only</option>
+            </select>
+          </label>
+        </div>
+        <p id="input-help">Tab, arrow keys and Enter operate these native controls. Edits invalidate the current result.
+          Eight runs and 64 configuration changes fit; reset explicitly clears them.</p>
+        <div class="actions">
+          <button id="compare-traces" type="submit">Compare traces</button>
+          <button id="reset-exercise" type="button">Reset lesson</button>
+        </div>
+        <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      </form>
+    </section>
+
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Current comparison — synthetic</h2>
+      <div id="results" role="status" aria-live="polite" aria-atomic="true">
+        <p id="initialization-result">UNKNOWN — not compared</p>
+        <p id="latency-result">UNKNOWN — not compared</p>
+        <p id="outcome-result">UNKNOWN — not compared; HOLD; no traffic moved</p>
+        <p id="verifier-result">Verifier UNKNOWN — no answer checked</p>
+        <p id="timing-result">Cold / candidate / saved: UNMEASURED</p>
+      </div>
+      <p id="impact-result">Real user impact UNMEASURED. Zero real users sampled or moved.
+        A correct answer is not a successful native transition.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Selected phase costs — synthetic fixture only</caption>
+          <thead><tr><th scope="col">Phase</th><th scope="col">Condition</th><th scope="col">Initialization</th><th scope="col">Cold ms</th><th scope="col">Candidate ms</th></tr></thead>
+          <tbody id="phase-rows"></tbody>
+        </table>
+      </div>
+      <pre id="current-trace" aria-label="Synthetic trace">No comparison yet.</pre>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained comparisons — in memory only</h2>
+      <p id="history-count">0 / 8 retained runs</p>
+      <p id="edit-count">0 / 64 configuration changes</p>
+      <ol id="history"></ol>
+      <p>No run is evicted. Reset or reload clears this session; earlier failures remain visible until then.</p>
+    </section>
+  </main>
+  <footer>
+    <p>Standalone local lesson. No management calls, storage, credentials, installation or deployment.
+      Native B-S025, Java host qualification, P007 and source-parent acceptance remain separate.</p>
+    <noscript>JavaScript is required for this synthetic exercise. No comparison is checked while scripts are unavailable.</noscript>
+  </footer>
+</body>
+</html>

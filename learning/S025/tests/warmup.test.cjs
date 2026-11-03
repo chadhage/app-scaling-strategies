@@ -1,0 +1,281 @@
+"use strict";
+
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const model = require("..\\warmup.js");
+const primed = () => ({
+  ...model.defaults(), jvm: "primed", beans: "primed", pool: "primed", cache: "primed",
+  prediction: "EXPOSE"
+});
+const copy = (value) => JSON.parse(JSON.stringify(value));
+const run = (config) => model.compare(model.configure(model.initialState(), config));
+
+test("the loadable model starts with bounded unchecked skipped defaults", () => {
+  assert.deepEqual(model.defaults(), {
+    jvm: "skipped", beans: "skipped", pool: "skipped", cache: "skipped",
+    route: "measured-read", budgetMs: 200, prediction: "HOLD"
+  });
+  assert.deepEqual(model.initialState(), {
+    revision: 0, nextRunId: 1, config: model.defaults(), current: null, history: []
+  });
+});
+
+test("cold first request is 1040 ms and missing pre-exposure priming holds", () => {
+  const result = model.assess(model.defaults());
+  assert.equal(result.initialization, "FAILURE");
+  assert.equal(result.initializedCount, 0);
+  assert.equal(result.failures, 4);
+  assert.equal(result.coldMs, 1040);
+  assert.equal(result.warmMs, 1040);
+  assert.equal(result.savedMs, 0);
+  assert.equal(result.latency, "FAILURE");
+  assert.equal(result.outcome, "FAILURE");
+  assert.equal(result.decision, "HOLD");
+  assert.equal(result.verifier, "PASS");
+});
+
+test("explicit priming gives a 100 ms candidate, not an actual JVM measurement", () => {
+  const result = model.assess(primed());
+  assert.equal(result.initialization, "SUCCESS");
+  assert.equal(result.initializedCount, 4);
+  assert.equal(result.latency, "SUCCESS");
+  assert.equal(result.coldMs, 1040);
+  assert.equal(result.warmMs, 100);
+  assert.equal(result.savedMs, 940);
+  assert.equal(result.decision, "EXPOSE");
+  assert.equal(result.verifier, "PASS");
+  assert.match(result.trace.join("\n"), /synthetic/i);
+  assert.match(result.trace.join("\n"), /zero traffic moved/i);
+});
+
+test("successful initialization still fails the independent 80 ms client budget", () => {
+  const result = model.assess({ ...primed(), budgetMs: 80 });
+  assert.equal(result.initialization, "SUCCESS");
+  assert.equal(result.latency, "FAILURE");
+  assert.equal(result.warmMs, 100);
+  assert.equal(result.outcome, "FAILURE");
+  assert.equal(result.decision, "HOLD");
+  assert.equal(result.verifier, "FAIL");
+});
+
+test("latency boundary is inclusive and cannot waive initialization", () => {
+  assert.equal(model.assess({ ...primed(), budgetMs: 100 }).latency, "SUCCESS");
+  assert.equal(model.assess({ ...primed(), budgetMs: 99 }).latency, "FAILURE");
+  const cold = model.assess({ ...model.defaults(), budgetMs: 2000 });
+  assert.equal(cold.latency, "SUCCESS");
+  assert.equal(cold.initialization, "FAILURE");
+  assert.equal(cold.decision, "HOLD");
+});
+
+for (const [phase, warmMs] of [["jvm", 400], ["beans", 270], ["pool", 280], ["cache", 390]]) {
+  test(`skipped ${phase} retains its cold cost and blocks exposure`, () => {
+    const result = model.assess({ ...primed(), [phase]: "skipped", prediction: "HOLD" });
+    assert.equal(result.warmMs, warmMs);
+    assert.equal(result.initializedCount, 3);
+    assert.equal(result.failures, 1);
+    assert.equal(result.initialization, "FAILURE");
+    assert.equal(result.decision, "HOLD");
+    assert.equal(result.verifier, "PASS");
+    assert.equal(result.rows.find((row) => row.key === phase).initialization, "FAILURE");
+  });
+}
+
+test("failed bean initialization is FAILURE, with no fabricated client timing", () => {
+  const result = model.assess({ ...primed(), beans: "failed", prediction: "HOLD" });
+  assert.equal(result.initialization, "FAILURE");
+  assert.equal(result.failures, 1);
+  assert.equal(result.coldMs, 1040);
+  assert.equal(result.warmMs, null);
+  assert.equal(result.savedMs, null);
+  assert.equal(result.latency, "UNKNOWN");
+  assert.equal(result.outcome, "FAILURE");
+});
+
+test("unmeasured pool is UNKNOWN rather than a zero-duration success", () => {
+  const result = model.assess({ ...primed(), pool: "unmeasured", prediction: "HOLD" });
+  assert.equal(result.initialization, "UNKNOWN");
+  assert.equal(result.initializedCount, 3);
+  assert.equal(result.unknowns, 1);
+  assert.equal(result.warmMs, null);
+  assert.equal(result.outcome, "UNKNOWN");
+  assert.equal(result.decision, "HOLD");
+  assert.equal(result.verifier, "PASS");
+});
+
+test("a known failed phase remains FAILURE alongside missing observations", () => {
+  const result = model.assess({ ...primed(), beans: "failed", pool: "unmeasured" });
+  assert.equal(result.initialization, "FAILURE");
+  assert.equal(result.failures, 1);
+  assert.equal(result.unknowns, 1);
+  assert.equal(result.outcome, "FAILURE");
+});
+
+for (const route of ["unmeasured-export", "unsupported-stream"]) {
+  test(`${route} is explicitly disclosed and cannot borrow measured-read latency`, () => {
+    const result = model.assess({ ...primed(), route, prediction: "HOLD" });
+    assert.equal(result.initialization, "SUCCESS");
+    assert.equal(result.latency, "UNKNOWN");
+    assert.equal(result.outcome, "UNKNOWN");
+    assert.equal(result.coldMs, null);
+    assert.equal(result.warmMs, null);
+    assert.equal(result.savedMs, null);
+    assert.equal(result.decision, "HOLD");
+    assert.match(result.trace.join("\n"), new RegExp(route));
+  });
+}
+
+test("the learner's answer never changes the independently derived permission", () => {
+  const wrongCold = model.assess({ ...model.defaults(), prediction: "EXPOSE" });
+  assert.equal(wrongCold.verifier, "FAIL");
+  assert.equal(wrongCold.decision, "HOLD");
+  const wrongWarm = model.assess({ ...primed(), prediction: "HOLD" });
+  assert.equal(wrongWarm.verifier, "FAIL");
+  assert.equal(wrongWarm.decision, "EXPOSE");
+});
+
+test("budgets are finite integers 50..2000 without coercion", () => {
+  for (const budgetMs of [49, 2001, NaN, Infinity, 80.5, "200", null, true]) {
+    assert.throws(() => model.assess({ ...primed(), budgetMs }), /Invalid configuration/);
+  }
+});
+
+test("exact configuration schema rejects extras, missing keys and unknown choices", () => {
+  const missing = primed();
+  delete missing.beans;
+  for (const config of [null, [], missing, { ...primed(), extra: true },
+    { ...primed(), jvm: "healthy" }, { ...primed(), route: "other" },
+    { ...primed(), prediction: "PASS" }, Object.assign(Object.create({}), primed())]) {
+    assert.throws(() => model.assess(config), /Invalid configuration/);
+  }
+  const symbol = primed();
+  symbol[Symbol("hidden")] = 1;
+  assert.throws(() => model.assess(symbol), /Invalid configuration/);
+  const accessor = primed();
+  let getterCalls = 0;
+  Object.defineProperty(accessor, "beans", { get() { getterCalls++; return "primed"; }, enumerable: true });
+  assert.throws(() => model.assess(accessor), /Invalid configuration/);
+  assert.equal(getterCalls, 0);
+});
+
+test("configure and compare are pure and detach config, current and history", () => {
+  const original = model.initialState();
+  const before = copy(original);
+  const config = primed();
+  const configured = model.configure(original, config);
+  assert.equal(configured.revision, 1);
+  config.jvm = "failed";
+  assert.equal(configured.config.jvm, "primed");
+  assert.deepEqual(original, before);
+  const compared = model.compare(configured);
+  assert.equal(compared.history.length, 1);
+  assert.equal(compared.current.id, 1);
+  assert.equal(compared.nextRunId, 2);
+  compared.current.config.jvm = "failed";
+  assert.equal(compared.history[0].config.jvm, "primed");
+  assert.equal(configured.current, null);
+});
+
+test("control changes invalidate current result but retain failed and unknown runs", () => {
+  let state = model.compare(model.initialState());
+  assert.equal(state.history.length, 1);
+  state = model.configure(state, primed());
+  assert.equal(state.current, null);
+  state = model.compare(state);
+  state = model.compare(model.configure(state, { ...primed(), pool: "unmeasured" }));
+  assert.deepEqual(state.history.map((entry) => entry.result.outcome), ["FAILURE", "SUCCESS", "UNKNOWN"]);
+  assert.equal(state.history[0].config.pool, "skipped");
+  assert.equal(state.history[1].result.warmMs, 100);
+});
+
+test("eight runs are retained and a ninth is rejected without eviction", () => {
+  let state = model.initialState();
+  for (let index = 0; index < 8; index++) state = model.compare(state);
+  assert.equal(state.history.length, 8);
+  const before = copy(state);
+  assert.throws(() => model.compare(state), /History is full/);
+  assert.deepEqual(state, before);
+});
+
+test("configuration changes are bounded at 64; unchanged configuration consumes no edit", () => {
+  let state = model.initialState();
+  for (let index = 0; index < 64; index++) {
+    state = model.configure(state, { ...state.config, budgetMs: index % 2 ? 200 : 201 });
+  }
+  assert.equal(state.revision, 64);
+  assert.deepEqual(model.configure(state, state.config), state);
+  assert.throws(() => model.configure(state, { ...state.config, budgetMs: 202 }), /Configuration change limit/);
+});
+
+test("malformed states and sparse histories cannot become a healthy fallback", () => {
+  const initial = model.initialState();
+  for (const state of [null, {}, { ...initial, extra: true }, { ...initial, revision: -1 },
+    { ...initial, revision: 65 }, { ...initial, nextRunId: 2 },
+    { ...initial, history: new Array(1) }, { ...initial, current: {} }]) {
+    assert.throws(() => model.compare(state), /Invalid state/);
+  }
+});
+
+test("history observations and current result are recomputed to reject inconsistent proof", () => {
+  const state = run(primed());
+  assert.equal(state.history.length, 1);
+  const forged = copy(state);
+  forged.history[0].result.warmMs = 0;
+  assert.throws(() => model.compare(forged), /Invalid state/);
+  const forgedId = copy(state);
+  forgedId.history[0].id = 7;
+  assert.throws(() => model.compare(forgedId), /Invalid state/);
+  const stale = copy(state);
+  stale.config.budgetMs = 80;
+  assert.throws(() => model.compare(stale), /Invalid state/);
+  const extra = copy(state);
+  extra.current.result.extra = true;
+  assert.throws(() => model.compare(extra), /Invalid state/);
+});
+
+test("new initial state resets history without mutating earlier snapshots", () => {
+  const old = run(primed());
+  assert.equal(old.history.length, 1);
+  const reset = model.initialState();
+  assert.equal(reset.history.length, 0);
+  assert.equal(reset.current, null);
+  assert.equal(reset.config.jvm, "skipped");
+  assert.equal(old.history.length, 1);
+});
+
+test("history arrays reject accessor entries, symbols and prototype overrides before reading", () => {
+  const state = run(primed());
+  let getterCalls = 0;
+  const accessor = copy(state);
+  Object.defineProperty(accessor.history, "0", { get() { getterCalls++; return state.history[0]; } });
+  assert.throws(() => model.compare(accessor), /Invalid state/);
+  assert.equal(getterCalls, 0);
+  const symbol = copy(state);
+  symbol.history[Symbol("observation")] = true;
+  assert.throws(() => model.compare(symbol), /Invalid state/);
+  const prototype = copy(state);
+  Object.setPrototypeOf(prototype.history, {});
+  assert.throws(() => model.compare(prototype), /Invalid state/);
+});
+
+test("state accessors and forged phase evidence are rejected rather than evaluated", () => {
+  const state = run(primed());
+  let getterCalls = 0;
+  Object.defineProperty(state, "current", { get() { getterCalls++; return null; } });
+  assert.throws(() => model.configure(state, primed()), /Invalid state/);
+  assert.equal(getterCalls, 0);
+  const phase = run(primed());
+  phase.history[0].result.rows[0].initialization = "FAILURE";
+  assert.throws(() => model.compare(phase), /Invalid state/);
+});
+
+test("assessment is deterministic and never retains or shares mutable caller values", () => {
+  const config = primed();
+  const before = copy(config);
+  const first = model.assess(config);
+  assert.deepEqual(model.assess(config), first);
+  assert.deepEqual(config, before);
+  first.rows[0].warmMs = 0;
+  assert.equal(model.assess(config).rows[0].warmMs, 20);
+  assert.equal(model.assess({ ...config, budgetMs: 50 }).latency, "FAILURE");
+  assert.equal(model.assess({ ...config, budgetMs: 2000 }).latency, "SUCCESS");
+});
