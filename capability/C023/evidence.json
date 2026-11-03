@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C023",
+  "workerId": "worker-C023",
+  "kano": "S",
+  "kanoUnit": "C023",
+  "parents": ["H005", "P005"],
+  "acceptance": "Deliver a checkpointed job/effect ledger fixture; verify resume and effect counts are inspectable.",
+  "mode": "synthetic-in-memory-fixture",
+  "entry": "capability\\C023\\index.html",
+  "sourceAuthority": "manifest.json pins unchanged C020 commit, annotated tag and source hashes; actual getProfile implementations are reused by integration tests.",
+  "losslessRawArchive": "evidence\\raw-archive-map.json maps two raw RED stdout paths to .txt.gz archives. Decompression verifies their exact original hashes/bytes; original execution records remain unchanged. The publisher's whitespace rejection was not bypassed.",
+  "verifierResult": "local fixture checks passed",
+  "userImpactResult": "controlled interrupted and unknown synthetic attempts remain original; modeled resumed attempts are separate outcomes, not uninterrupted/native transitions",
+  "cleanupResult": "isolated browser closed; no listener or resources provisioned",
+  "parentAcceptance": "pending independent controller review; no self-Accept",
+  "nativeQualified": false,
+  "productionRuntimeValidated": false,
+  "productionDesign": "Node.js 24 / Express / App Service Linux remains the approved design, not an observed production runtime",
+  "observedTestRuntime": "v22.23.4",
+  "atomicity": {
+    "assumption": "One modeled synthetic effect application and its deduplication ledger entry are an atomic local pair.",
+    "checkpoint": "Separate later event; a post-commit pre-checkpoint interruption leaves a known ledger entry for duplicate suppression.",
+    "cutImplementation": "Deterministic pure event-log prefix, not an actual process crash or storage transaction.",
+    "unknown": "Explicit needs-reconcile; no silent retry, inferred success, or inclusion in known committed count.",
+    "reconciliation": "Deliberate synthetic operator observations; not an external query, receipt or native exactly-once proof.",
+    "isolation": "One retained immutable job state; no global or cross-browser deduplication.",
+    "notImplemented": ["durable Storage", "Queue", "database", "external effects", "durable recovery", "native proof", "exactly-once cloud guarantee"]
+  },
+  "sequence": [
+    {
+      "stage": "BDD",
+      "path": "capability\\C023\\C023.feature",
+      "order": "original specification written before stub/RED; stale-candidate scenario added before actual regression RED"
+    },
+    {
+      "stage": "loadable-stub",
+      "record": "capability\\C023\\evidence\\stub-load.json",
+      "exitCode": 0,
+      "retainedStub": "capability\\C023\\evidence\\red\\ledger.stub.cjs",
+      "verification": "Retained stub was byte-identical to the then-production module, loadable and exported the real API surface."
+    },
+    {
+      "stage": "TDD-RED",
+      "record": "capability\\C023\\evidence\\tdd-red.json",
+      "retainedTests": "capability\\C023\\evidence\\red\\ledger.behavior.snapshot.cjs",
+      "exitCode": 1,
+      "tests": 4,
+      "passed": 0,
+      "failed": 4,
+      "failure": "Four genuine AssertionError failures after successful module load: version/lineage, committed count, resume applications/suppression, and unknown retry rejection.",
+      "automaticDiscovery": false
+    },
+    {
+      "stage": "IaC",
+      "record": "capability\\C023\\evidence\\iac-na.json",
+      "status": "N/A",
+      "recordedAfterRedBeforeImplementation": true,
+      "reason": "Pure resource-free synthetic file fixture. No backend, cloud call, Storage/Queue/DB, external effect, framework, scaffold, registration, deployment or spending."
+    },
+    {
+      "stage": "implementation",
+      "paths": ["ledger.js", "index.html", "page.js", "styles.css", "manifest.json", "README.md"],
+      "behavior": "Versioned deterministic work, immutable real C020 lineage, separate effect/ledger and checkpoint events, all four interruption boundaries, unknown reconciliation, inspectable duplicate suppression, strict replay validation and history-preserving conducting UI."
+    },
+    {
+      "stage": "refinement-RED",
+      "record": "capability\\C023\\evidence\\refinement-red.json",
+      "exitCode": 1,
+      "failure": "Actual browser AssertionError: editing candidate JSON left an earlier VALID snapshot inspection visible.",
+      "retainedOriginalSources": "sourceSnapshots contains the exact pre-fix page.js and asserting tests\\browser.cjs, each matching its captured SHA-256.",
+      "refactor": "Candidate input now invalidates the displayed result without deleting prior inspection history; initialization failures also retain disabled controls."
+    },
+    {
+      "stage": "TDD-GREEN",
+      "record": "capability\\C023\\evidence\\tdd-green.json",
+      "finalSourceVerification": "capability\\C023\\evidence\\green-qualified-helper.json",
+      "intermediateSourceVerification": "capability\\C023\\evidence\\tdd-final-green.json",
+      "exitCode": 0,
+      "tests": 103,
+      "passed": 103,
+      "failed": 0,
+      "coverage": "Actual C020 v1/v2 for both profiles; deterministic plans; all four cuts at all three indices; repeated suppression; unknown/still-unknown/committed/absent reconciliation; exact state replay; tampering, getters, custom prototypes, sparse arrays, invalid lifecycle/identity/version and bounded history; browser-global parity."
+    },
+    {
+      "stage": "syntax",
+      "record": "capability\\C023\\evidence\\syntax.json",
+      "finalVerification": "capability\\C023\\evidence\\syntax-qualified-helper.json",
+      "intermediateVerification": "capability\\C023\\evidence\\syntax-final.json",
+      "exitCode": 0,
+      "checkedScripts": 12,
+      "includesRetainedRedSources": true
+    },
+    {
+      "stage": "RED-reproduction",
+      "record": "capability\\C023\\evidence\\red-reproduction.json",
+      "exitCode": 1,
+      "tests": 4,
+      "passed": 0,
+      "failed": 4,
+      "method": "Explicit retained non-discovered snapshot against original stub through test-only C023_TEST_SUBJECT; no production edit."
+    },
+    {
+      "stage": "actual-browser",
+      "record": "capability\\C023\\evidence\\browser-acceptance-published-helper.json",
+      "execution": "capability\\C023\\evidence\\browser-published-helper.json",
+      "historicalPrototypeHelperRecord": "capability\\C023\\evidence\\browser-acceptance.json",
+      "historicalPrototypeHelperExecution": "capability\\C023\\evidence\\browser-actual.json",
+      "historicalQualification": "Earlier prototype-helper observations are retained, not final Done-ready browser authority. No lifecycle prototype/recovery implementation is shipped.",
+      "exitCode": 0,
+      "checksPassed": 23,
+      "engine": "Microsoft Edge (Chromium)",
+      "browserVersion": "156.0.4314.50",
+      "playwrightVersion": "1.56.1",
+      "helper": "testing\\browser\\isolated.cjs openIsolatedLesson",
+      "requiredPublishedHelperCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+      "requiredPublishedHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+      "capture": "explicit CAPTURE_BROWSER_EVIDENCE=1, exclusive file creation",
+      "checks": "Actual file DOM/Tab/Enter, visible focus, planned/committed/checkpoint counts, unreachable/invalid-state errors, stale-result invalidation, old read-only snapshot isolation, known-commit resume, both unknown reconciliation branches, archive/reset/history, all four cuts, mobile width and actual CSP inline/connect rejection.",
+      "screenshots": ["evidence\\browser-complete-published-helper.png", "evidence\\browser-unknown-published-helper.png"],
+      "historicalScreenshots": ["evidence\\browser-complete.png", "evidence\\browser-unknown.png"],
+      "cleanup": "awaited isolated close in finally; browserClosed=true; no server or foreground lease"
+    },
+    {
+      "stage": "ordinary-browser-proof-preservation",
+      "record": "capability\\C023\\evidence\\ordinary-browser-proof-preservation.json",
+      "finalVerification": "capability\\C023\\evidence\\proof-preservation-qualified-helper.json",
+      "intermediateVerification": "capability\\C023\\evidence\\ordinary-browser-proof-preservation-final.json",
+      "exitCode": 0,
+      "result": "Ordinary actual-browser rerun passed all 23 checks; complete before/after SHA-256 inventories were identical. No historical file was rewritten or deleted."
+    },
+    {
+      "stage": "artifact-integrity",
+      "record": "capability\\C023\\evidence\\integrity.json",
+      "finalVerification": "capability\\C023\\evidence\\integrity-qualified-helper.json",
+      "intermediateVerification": "capability\\C023\\evidence\\integrity-final.json",
+      "exitCode": 0,
+      "tests": 10,
+      "passed": 10,
+      "failed": 0,
+      "check": "Ten integrity tests verify raw output hashes, genuine retained REDs, unchanged C020 source, final code/source hashes, actual browser cleanup/screenshots, ordinary-proof preservation and nonqualification boundaries."
+    },
+    {
+      "stage": "ordinary-scoped-discovery",
+      "record": "capability\\C023\\evidence\\discovery-green.json",
+      "finalVerification": "capability\\C023\\evidence\\discovery-qualified-helper.json",
+      "intermediateVerification": "capability\\C023\\evidence\\discovery-final-green.json",
+      "exitCode": 0,
+      "tests": 113,
+      "passed": 113,
+      "failed": 0,
+      "check": "Run normal node --test discovery with capability\\C023 as cwd; intentionally failing RED snapshots are excluded by filename/location."
+    }
+  ],
+  "refinedToDo": [
+    {
+      "ids": ["C029", "C030"],
+      "originalLineagePreserved": true,
+      "additionalCredit": 0,
+      "usableScope": "Local immutable plan/journal distinguishes intended keys, delivery attempts, known applications, original interrupted outcomes and unresolved acknowledgments.",
+      "technicalGatesUnchanged": "C029: C020, C023, C033. C030: C023, C029.",
+      "readiness": "Only this local consuming contract is supplied, pending C023 independent acceptance; no journey oracle is implemented."
+    },
+    {
+      "ids": ["C048"],
+      "originalLineagePreserved": true,
+      "additionalCredit": 0,
+      "technicalGatesUnchanged": "C021, C023",
+      "readiness": "Source/work version and reconciliation evidence can be consumed locally; release admission policy and native gates are not implemented."
+    },
+    {
+      "ids": ["P005", "C083", "C088", "C089"],
+      "originalLineagePreserved": true,
+      "additionalCredit": 0,
+      "readiness": false,
+      "blocker": "Native data ownership/clients, durable association, messaging delivery and writer fencing require SAFE, C083/native adapters and separate operator approvals; this model grants no cloud authority or native qualification."
+    },
+    {
+      "ids": ["H005"],
+      "originalLineagePreserved": true,
+      "additionalCredit": 0,
+      "readiness": "Checkpoint fixture only; auth/session, database, cache, queue and deployed worker remain in their original scopes."
+    }
+  ]
+}

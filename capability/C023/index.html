@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>C023 — checkpoint and effect ledger fixture</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="../C020/contract.js" defer></script>
+  <script src="ledger.js" defer></script>
+  <script src="page.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to conducting controls</a>
+  <main>
+    <h1>C023: checkpoint and effect ledger</h1>
+    <p class="scope"><strong>Training fixture — synthetic data — not a live Azure result.</strong>
+      H005 / P005 · one local S unit · fixture C023-r1.</p>
+    <p>Interrupt one versioned job, inspect its original attempt, and resume from its last checkpoint.
+      The bundled profile and source stamps come unchanged from <a href="../C020/index.html">C020 getProfile</a>;
+      this page does not make a new HTTP observation.</p>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">What this model assumes</h2>
+      <p><strong>Atomic local pair:</strong> one synthetic effect application and its deduplication ledger entry
+        are modeled together. A checkpoint is a <strong>separate later event</strong>.
+        The controlled cuts are deterministic event-log cuts, not an actual process crash.</p>
+      <p>An unknown acknowledgment is <strong>unknown, not success</strong>. Retry is blocked until an explicit
+        <em>synthetic</em> reconciliation observation resolves it. Those choices are not external receipts.
+        There is no durable Storage, Queue, DB, external effect implementation, native proof,
+        or exactly-once cloud guarantee.</p>
+      <p><strong>Memory only:</strong> export before closing or reloading. Browser reload is not durable recovery.
+        Archive/reset retains evidence in this open page, but creates a new isolated job, not a resume.
+        Separate pages/files have no shared deduplication boundary.</p>
+      <p>Node.js 22 test tooling only; production Node.js 24 is unvalidated. No backend, framework, cloud calls,
+        IaC, scaffold, registration, deployment or spending.</p>
+    </section>
+
+    <noscript><p class="error">JavaScript is required for this local conducting fixture. No job has run.</p></noscript>
+    <p id="status" role="status" aria-live="polite" aria-atomic="true">NOT RUN — loading local fixture; no effect has occurred.</p>
+    <p id="error" class="error" role="alert" tabindex="-1" hidden></p>
+
+    <section id="controls" aria-labelledby="controls-title">
+      <h2 id="controls-title">1. Create an explicit work identity</h2>
+      <form id="job-form" novalidate>
+        <div class="grid">
+          <div>
+            <label for="job-id">Synthetic job ID</label>
+            <input id="job-id" name="jobId" value="job-001" maxlength="32" autocomplete="off" aria-describedby="job-help">
+            <p id="job-help" class="hint">job- plus 1–28 lowercase letters, digits or hyphens. A retained work identity cannot be recreated in this page.</p>
+          </div>
+          <div>
+            <label for="work-version">Work version</label>
+            <select id="work-version" name="workVersion">
+              <option value="profile-effects/1">profile-effects/1</option>
+            </select>
+          </div>
+          <div>
+            <label for="profile-id">C020 synthetic profile</label>
+            <select id="profile-id" name="profileId"></select>
+          </div>
+          <div>
+            <label for="implementation">C020 source implementation</label>
+            <select id="implementation" name="implementation">
+              <option value="v1">v1 — implementation 1.0.0</option>
+              <option value="v2">v2 — implementation 2.0.0</option>
+            </select>
+          </div>
+        </div>
+        <button id="create-job" type="submit" disabled>Create job</button>
+      </form>
+
+      <h2>2. Conduct a controlled attempt</h2>
+      <div class="grid">
+        <div>
+          <label for="interruption">Interruption boundary</label>
+          <select id="interruption" aria-describedby="resume-help">
+            <option value="after-commit">After commit, before acknowledgment/checkpoint</option>
+            <option value="before-commit">Before effect/ledger commit</option>
+            <option value="before-checkpoint">After known acknowledgment, before checkpoint</option>
+            <option value="after-checkpoint">After checkpoint</option>
+            <option value="unknown-ack">Unknown acknowledgment — requires reconciliation</option>
+            <option value="none">None — finish the remaining work</option>
+          </select>
+        </div>
+        <div>
+          <label for="effect-index">Effect to interrupt</label>
+          <select id="effect-index">
+            <option value="0">1 — profile audit</option>
+            <option value="1">2 — preference audit</option>
+            <option value="2">3 — completion receipt</option>
+          </select>
+        </div>
+      </div>
+      <p id="resume-help" class="hint">For an ordinary resume, select “None”. A target before the saved checkpoint,
+        or a second commit of a known effect, is rejected instead of silently ignored.</p>
+      <div class="actions">
+        <button id="run-job" type="button" disabled>Run planned job</button>
+        <button id="resume-job" type="button" disabled>Resume from checkpoint</button>
+        <button id="archive-reset" type="button" disabled>Archive and reset</button>
+      </div>
+
+      <h2>3. Reconcile only an unknown acknowledgment</h2>
+      <label for="reconciliation">Synthetic reconciliation observation</label>
+      <select id="reconciliation" aria-describedby="reconcile-help">
+        <option value="still-unknown">Still unknown — keep retries blocked</option>
+        <option value="observed-committed">Assume observed committed — synthetic ledger/effect pair</option>
+        <option value="observed-absent">Assume observed absent — no commit; allow modeled retry</option>
+      </select>
+      <p id="reconcile-help" class="hint">These are deliberate hypothetical observations, not live queries or proof of an external effect.
+        The original unknown attempt always remains unknown in history.</p>
+      <button id="reconcile-job" type="button" disabled>Record synthetic observation</button>
+    </section>
+
+    <section aria-labelledby="summary-title">
+      <h2 id="summary-title">Active job: planned versus known committed</h2>
+      <dl class="counts">
+        <div><dt>Planned effects</dt><dd id="planned-count">—</dd></div>
+        <div><dt>Known committed effects</dt><dd id="committed-count">—</dd></div>
+        <div><dt>Known modeled applications</dt><dd id="application-count">—</dd></div>
+        <div><dt>Checkpoint records</dt><dd id="checkpoint-count">—</dd></div>
+        <div><dt>Resume next effect index</dt><dd id="checkpoint-next">—</dd></div>
+        <div><dt>Delivery attempts</dt><dd id="delivery-count">—</dd></div>
+        <div><dt>Duplicate suppressions</dt><dd id="suppressed-count">—</dd></div>
+        <div><dt>Unknown effects (not committed)</dt><dd id="unknown-count">—</dd></div>
+      </dl>
+      <p id="result-note">No successful attempt is assumed.</p>
+      <h3>Work identity, version and unchanged source lineage</h3>
+      <pre id="identity">No active job.</pre>
+      <div class="table-wrap">
+        <table>
+          <caption>Deterministic effect plan and local commit/checkpoint observations</caption>
+          <thead><tr><th scope="col">Effect / key</th><th scope="col">Known state</th><th scope="col">Applications</th><th scope="col">Commit event</th><th scope="col">Checkpointed</th></tr></thead>
+          <tbody id="effects"><tr><td colspan="5">Create a job to inspect its plan.</td></tr></tbody>
+        </table>
+      </div>
+      <h3>Original attempts, including interruption and unknown outcomes</h3>
+      <ol id="attempts"><li>No attempts.</li></ol>
+      <h3>Checkpoint records</h3>
+      <pre id="checkpoints">[]</pre>
+      <details>
+        <summary>Ordered command and event journal (retained, never rewritten by resume)</summary>
+        <pre id="journal">[]</pre>
+      </details>
+    </section>
+
+    <section aria-labelledby="snapshot-title">
+      <h2 id="snapshot-title">Read-only saved-state inspection</h2>
+      <p>This validates the full local event replay and immutable C020 lineage. It is not a signature or durable-store
+        verification. Inspection <strong>never replaces the active job</strong>, so an older snapshot cannot silently
+        erase its known committed effects. Coherently rewritten or truncated entire histories are not authenticated.</p>
+      <button id="copy-snapshot" type="button" disabled>Copy active snapshot into inspector</button>
+      <label for="snapshot-input">Candidate job snapshot JSON</label>
+      <textarea id="snapshot-input" rows="8" spellcheck="false" maxlength="524288" aria-describedby="snapshot-status"></textarea>
+      <button id="inspect-snapshot" type="button" disabled>Inspect snapshot without replacing active job</button>
+      <p id="snapshot-status" role="status" aria-live="polite">Not inspected.</p>
+    </section>
+
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained session evidence</h2>
+      <p>Archived jobs: <strong id="archive-count">0</strong>.
+        Retained rejections: <strong id="rejection-count">0</strong>.
+        Known applications across retained job instances: <strong id="session-applications">0</strong>
+        (not global deduplication).</p>
+      <ol id="archives"><li>No archived jobs.</li></ol>
+      <ol id="rejections"><li>No rejected operations.</li></ol>
+      <label for="export-json">Copyable session evidence JSON (memory only)</label>
+      <textarea id="export-json" rows="12" readonly spellcheck="false"></textarea>
+    </section>
+
+    <footer>
+      <p><a href="README.md">Fixture guide, tests and evidence lineage</a> ·
+        <a href="../../README.md#disclaimer">Project disclaimer</a></p>
+      <p>AS IS educational demonstration; no Microsoft endorsement or support is implied.
+        Microsoft and Azure are trademarks of their respective owner. No target is a Microsoft SLA.
+        This fixture does not complete the native H005/P005 parent scope.</p>
+    </footer>
+  </main>
+</body>
+</html>

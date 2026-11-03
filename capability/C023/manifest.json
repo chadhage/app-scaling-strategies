@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C023",
+  "kano": "S",
+  "kanoUnit": "C023",
+  "parents": ["H005", "P005"],
+  "acceptance": "Deliver a checkpointed job/effect ledger fixture; verify resume and effect counts are inspectable.",
+  "namespace": "capability\\C023",
+  "entry": "index.html",
+  "fixtureRevision": "C023-r1",
+  "workVersion": "profile-effects/1",
+  "stateSchema": "C023/1",
+  "mode": "synthetic-in-memory-fixture",
+  "entryGate": {
+    "cardId": "C020",
+    "implementationCommit": "2dc471daab3ffa202d83aba2df443e280cad3656",
+    "annotatedTag": "kanban/C020/2dc471daab3f",
+    "unchangedSources": {
+      "capability\\C020\\contract.js": "a0e40a9570d4ecdd25913e1c9882fcf9d58ba469aaa13c6e54f7ec49066ed7db",
+      "capability\\C020\\profiles.cjs": "2a3c074214ef21aa278135aabd64f6767129153fba44f02716cdceaf4b571e5b"
+    },
+    "reuse": "The pure model and file browser load the real C020 immutable catalog/stamps directly. Node integration tests compare both actual getProfile implementations. There is no copied profile catalog, server, or new HTTP observation."
+  },
+  "atomicity": {
+    "modeledTogether": ["one synthetic effect application record", "its local deduplication ledger entry"],
+    "separateLaterEvent": "checkpoint",
+    "implementation": "pure deterministic event-log cuts and frozen in-memory snapshots",
+    "notImplemented": ["durable transaction", "Storage", "Queue", "database", "external effect", "cross-process recovery", "global deduplication"],
+    "unknownAcknowledgment": "explicit needs-reconcile; no automatic retry or assumed success",
+    "reconciliationEvidence": "synthetic operator choice, not an external receipt"
+  },
+  "bounds": {
+    "plannedEffects": 3,
+    "maximumCommands": 64,
+    "maximumSnapshotCharacters": 524288
+  },
+  "qualifications": {
+    "nativeProof": false,
+    "durableRecovery": false,
+    "productionNode24Validated": false,
+    "framework": null,
+    "backend": null,
+    "cloudCalls": 0,
+    "spend": 0,
+    "iac": "N/A"
+  }
+}
