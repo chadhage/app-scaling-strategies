@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S045 — WebSocket migration rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#lesson">Skip to rehearsal</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S045 — WebSocket migration</h1>
+    <p>A-S045 · D-S045 · satisfier S · packet SC-S045</p>
+    <p>Preserve acknowledged state and message sequencing. A new connection alone is not seamless migration.</p>
+  </header>
+  <main id="lesson">
+    <section aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">One sequenced handoff</h2>
+      <p>Start v1 with acknowledged sequences <strong>1, 2, 3</strong> and state <strong>30</strong>.
+        Cut over, then resume v2 sequences <strong>4, 5, 6</strong>, each adding 10. Success requires
+        visible order 1–6, state 60, no duplicate effects, and recovery within the original budget.</p>
+      <p>v1 frame: <code>{version:1, seq, delta}</code>.
+        v2 frame: <code>{version:2, sequence, increment}</code>.
+        No socket opens; every observation is deterministic synthetic input.</p>
+      <p>Try rewind with and without replay protection. Compare wire replays with duplicate visible effects.
+        Then drop sequence 5, lose prior state, or withhold observation proof. A passing prediction is
+        not a successful user experience.</p>
+    </section>
+
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Configure, then conduct</h2>
+      <form id="rehearsal-form" novalidate>
+        <fieldset id="configuration">
+          <legend>Assumptions lock at Start; clocks are synthetic</legend>
+          <div class="controls">
+            <label for="cursor">Resume cursor
+              <select id="cursor" name="cursor">
+                <option value="last-ack">Last acknowledged (3)</option>
+                <option value="rewind">Rewind to 0</option>
+                <option value="skip">Skip ahead to 4 (unsafe)</option>
+                <option value="absent">Cursor evidence absent</option>
+              </select>
+            </label>
+            <label for="replay-protection">Replay protection
+              <select id="replay-protection" name="replayProtection">
+                <option value="deduplicate">Suppress already applied sequences</option>
+                <option value="apply-all">Apply all frames (unsafe)</option>
+              </select>
+            </label>
+            <label for="delivery">Replay delivery
+              <select id="delivery" name="delivery">
+                <option value="ordered">Ordered, complete</option>
+                <option value="drop-5">Drop sequence 5</option>
+                <option value="repeat-4">Repeat sequence 4</option>
+                <option value="reorder">Sequence 6 before 5</option>
+              </select>
+            </label>
+            <label for="decoder">Frame decoder
+              <select id="decoder" name="decoder">
+                <option value="both">Read v1 and v2 formats</option>
+                <option value="v1-only">Read v1 only (incompatible)</option>
+              </select>
+            </label>
+            <label for="state-retention">Acknowledged state
+              <select id="state-retention" name="stateRetention">
+                <option value="retained">Retain state 30</option>
+                <option value="lost">Lose state 30 (unsafe)</option>
+              </select>
+            </label>
+            <label for="observation">Post-reconnect evidence
+              <select id="observation" name="observation">
+                <option value="complete">Complete observation</option>
+                <option value="missing">Observation absent</option>
+              </select>
+            </label>
+            <label for="gap-ms">Recovery gap (0–2000 ms)
+              <input id="gap-ms" name="gapMs" type="text" inputmode="numeric" pattern="[0-9]+" maxlength="5" value="80" aria-describedby="gap-help">
+            </label>
+            <label for="budget-ms">Original UX budget (1–2000 ms)
+              <input id="budget-ms" name="budgetMs" type="text" inputmode="numeric" pattern="[0-9]+" maxlength="5" value="100" aria-describedby="gap-help">
+            </label>
+          </div>
+          <p id="gap-help">Whole milliseconds only. Gap is disconnect to final replay observation, not a new retry clock.
+            Exactly on budget passes the time check, not automatically the continuity checks.</p>
+        </fieldset>
+        <div class="actions">
+          <button id="start-session" type="submit">Start v1 session</button>
+          <button id="cut-over" type="button" disabled>Cut over to v2</button>
+          <button id="reconnect" type="button" disabled>Reconnect and verify</button>
+          <button id="new-attempt" type="button" disabled>New attempt (retain history)</button>
+          <button id="reset-rehearsal" type="button">Reset rehearsal</button>
+        </div>
+      </form>
+      <p id="phase" role="status" aria-live="polite">Phase: idle.</p>
+      <p id="input-error" role="alert" hidden></p>
+    </section>
+
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Synthetic user impact</h2>
+      <p id="impact" role="status" aria-live="polite">Not evaluated — conduct all three actions.</p>
+      <div id="result-detail" hidden>
+        <dl id="metrics"></dl>
+        <table>
+          <caption>Independent continuity checks</caption>
+          <thead><tr><th scope="col">Check</th><th scope="col">Outcome</th><th scope="col">Observation</th></tr></thead>
+          <tbody id="checks"></tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <label for="prediction">Predict synthetic user impact
+          <select id="prediction" disabled>
+            <option value="">Choose a prediction</option>
+            <option value="uninterrupted">Uninterrupted</option>
+            <option value="interrupted">Interrupted</option>
+            <option value="unknown">Unknown</option>
+          </select>
+        </label>
+        <button id="check-prediction" type="button" disabled>Check prediction</button>
+      </div>
+      <p id="prediction-result" role="status" aria-live="polite">Prediction not checked.</p>
+    </section>
+
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Current attempt trace</h2>
+      <p>Offsets are synthetic milliseconds around disconnect at 0. Step order disambiguates equal offsets;
+        no wall-clock timers or network traffic are used.</p>
+      <ol id="trace"><li>No attempt started.</li></ol>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained completed attempts</h2>
+      <p id="history-count">0 / 8 retained. Explicit reset or page reload erases this in-memory history.</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Completed attempt history">
+        <table>
+          <caption>Results remain distinct from prediction correctness; no silent eviction</caption>
+          <thead><tr>
+            <th scope="col">Attempt</th><th scope="col">Cursor</th><th scope="col">Impact</th>
+            <th scope="col">Gap / original budget</th><th scope="col">Wire replays / duplicate effects</th>
+            <th scope="col">Final ACK / state</th><th scope="col">Prediction verifier</th>
+          </tr></thead>
+          <tbody id="history"><tr><td colspan="7">No completed attempts.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits and cleanup</h2>
+      <p>Missing proof is unknown, never success. A known budget breach or known acknowledged-state loss
+        still interrupts even when other checks are unknown. Out-of-order frames are rejected rather than
+        buffered; this is one deliberately small receiver model, not a universal WebSocket protocol.</p>
+      <p>No account, authentication, credentials, actual transport, Azure call, persistent storage, server,
+        cloud resources or IaC. Reset restores defaults and clears in-memory evidence only.
+        The eight-attempt limit blocks new work without deleting earlier results.</p>
+      <p>Actual reconnection latency, native Azure behavior, production Node.js 24 and source-parent
+        D-S045 acceptance remain unverified. B-S045 is separate. This lesson earns at most one S unit
+        after parent-owned empirical acceptance.</p>
+    </section>
+  </main>
+  <footer><p>Local lesson · source S045 · synthetic execution only · IaC N/A</p></footer>
+</body>
+</html>

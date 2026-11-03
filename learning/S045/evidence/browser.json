@@ -1,0 +1,1071 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S045",
+  "workerId": "worker-A-S045",
+  "mode": "synthetic",
+  "startedAtUtc": "2026-11-03T18:17:59.988Z",
+  "runtime": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "helper": {
+    "path": "testing\\browser\\isolated.cjs",
+    "sha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "publication": "53c0c0d"
+  },
+  "entry": "learning\\S045\\index.html",
+  "captureExplicitlyEnabled": true,
+  "browserVersion": "156.0.4314.50",
+  "outcome": "PASS",
+  "observations": [
+    {
+      "name": "guard rejects reconnect before start",
+      "phase": "Phase: idle. Configure the next attempt.",
+      "impact": "Not evaluated — conduct all three actions.",
+      "metrics": "",
+      "checks": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "trace": "No attempt started.",
+      "prediction": "Prediction not checked.",
+      "alert": "Reconnect requires disconnected; current phase is idle.",
+      "activeElement": ""
+    },
+    {
+      "name": "numeric and untrusted input rejected without stale success",
+      "phase": "Phase: idle. Configure the next attempt.",
+      "impact": "Not evaluated — conduct all three actions.",
+      "metrics": "",
+      "checks": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "trace": "No attempt started.",
+      "prediction": "Prediction not checked.",
+      "alert": "Original UX budget: enter a whole number from 1 to 2000, without spaces, signs or exponents.",
+      "activeElement": "budget-ms"
+    },
+    {
+      "name": "safe ordered resume and keyboard prediction",
+      "phase": "Phase: complete. Attempt 1; original budget 100 ms locked.",
+      "impact": "Synthetic user impact: UNINTERRUPTED — not a live WebSocket or Azure result.",
+      "metrics": "Requested resume cursor\n3\nFinal acknowledged sequence\n6\nFinal acknowledged state (expected 60)\n60\nWire replays / duplicate visible effects\n0 / 0\nRejected gaps / rejected schemas\n0 / 0\nMissing user-visible sequences\nnone\nVisible sequence order\n1, 2, 3, 4, 5, 6\nRecovery gap / original UX budget\n80 / 100 ms",
+      "checks": [
+        {
+          "id": "cursor",
+          "cells": [
+            "Resume cursor does not skip required work",
+            "PASS",
+            "Requested 3; prior ACK is 3."
+          ]
+        },
+        {
+          "id": "retention",
+          "cells": [
+            "Previously acknowledged state retained",
+            "PASS",
+            "Prior state 30 retained."
+          ]
+        },
+        {
+          "id": "versions",
+          "cells": [
+            "Both versioned frame formats are readable",
+            "PASS",
+            "0 schema rejections."
+          ]
+        },
+        {
+          "id": "complete",
+          "cells": [
+            "Every sequence 1-6 is visible and acknowledged",
+            "PASS",
+            "Missing visible sequences: none; final ACK 6."
+          ]
+        },
+        {
+          "id": "ordering",
+          "cells": [
+            "No sequence gap or out-of-order effect",
+            "PASS",
+            "0 gap rejections; visible order 1, 2, 3, 4, 5, 6."
+          ]
+        },
+        {
+          "id": "duplicates",
+          "cells": [
+            "No duplicate user-visible effects",
+            "PASS",
+            "0 wire replays; 0 duplicate effects."
+          ]
+        },
+        {
+          "id": "state",
+          "cells": [
+            "Final acknowledged state is 60",
+            "PASS",
+            "Observed state 60; expected 60."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Recovery meets the original UX budget",
+            "PASS",
+            "80 ms from disconnect to final replay observation; original budget 100 ms."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "3",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "6 / 60",
+          "PASS (uninterrupted)"
+        ]
+      ],
+      "trace": "[-3 ms; v1] v1 applied and acknowledged 1; state 10.\n[-2 ms; v1] v1 applied and acknowledged 2; state 20.\n[-1 ms; v1] v1 applied and acknowledged 3; state 30.\n[0 ms; cutover] Disconnected v1; retained last confirmed ACK 3 and state 30.\n[0 ms; cutover] v2 offers sequences 4-6 as {version:2, sequence, increment}; reconnection is not yet a success.\n[80 ms; reconnect] Requested resume cursor: 3.\n[80 ms; replay] Decoded v2, applied and acknowledged 4; state 40.\n[80 ms; replay] Decoded v2, applied and acknowledged 5; state 50.\n[80 ms; replay] Decoded v2, applied and acknowledged 6; state 60.\n[80 ms; verify] Synthetic user impact: uninterrupted. This is not a live WebSocket result.",
+      "prediction": "Prediction verifier: PASS. Expected uninterrupted; synthetic impact remains uninterrupted.",
+      "alert": "",
+      "activeElement": "check-prediction"
+    },
+    {
+      "name": "rewound acknowledgements suppressed, no duplicate effects",
+      "phase": "Phase: complete. Attempt 2; original budget 100 ms locked.",
+      "impact": "Synthetic user impact: UNINTERRUPTED — not a live WebSocket or Azure result.",
+      "metrics": "Requested resume cursor\n0\nFinal acknowledged sequence\n6\nFinal acknowledged state (expected 60)\n60\nWire replays / duplicate visible effects\n3 / 0\nRejected gaps / rejected schemas\n0 / 0\nMissing user-visible sequences\nnone\nVisible sequence order\n1, 2, 3, 4, 5, 6\nRecovery gap / original UX budget\n80 / 100 ms",
+      "checks": [
+        {
+          "id": "cursor",
+          "cells": [
+            "Resume cursor does not skip required work",
+            "PASS",
+            "Requested 0; prior ACK is 3."
+          ]
+        },
+        {
+          "id": "retention",
+          "cells": [
+            "Previously acknowledged state retained",
+            "PASS",
+            "Prior state 30 retained."
+          ]
+        },
+        {
+          "id": "versions",
+          "cells": [
+            "Both versioned frame formats are readable",
+            "PASS",
+            "0 schema rejections."
+          ]
+        },
+        {
+          "id": "complete",
+          "cells": [
+            "Every sequence 1-6 is visible and acknowledged",
+            "PASS",
+            "Missing visible sequences: none; final ACK 6."
+          ]
+        },
+        {
+          "id": "ordering",
+          "cells": [
+            "No sequence gap or out-of-order effect",
+            "PASS",
+            "0 gap rejections; visible order 1, 2, 3, 4, 5, 6."
+          ]
+        },
+        {
+          "id": "duplicates",
+          "cells": [
+            "No duplicate user-visible effects",
+            "PASS",
+            "3 wire replays; 0 duplicate effects."
+          ]
+        },
+        {
+          "id": "state",
+          "cells": [
+            "Final acknowledged state is 60",
+            "PASS",
+            "Observed state 60; expected 60."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Recovery meets the original UX budget",
+            "PASS",
+            "80 ms from disconnect to final replay observation; original budget 100 ms."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "3",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "6 / 60",
+          "PASS (uninterrupted)"
+        ],
+        [
+          "2",
+          "0",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "3 / 0",
+          "6 / 60",
+          "Not checked"
+        ]
+      ],
+      "trace": "[-3 ms; v1] v1 applied and acknowledged 1; state 10.\n[-2 ms; v1] v1 applied and acknowledged 2; state 20.\n[-1 ms; v1] v1 applied and acknowledged 3; state 30.\n[0 ms; cutover] Disconnected v1; retained last confirmed ACK 3 and state 30.\n[0 ms; cutover] v2 offers sequences 4-6 as {version:2, sequence, increment}; reconnection is not yet a success.\n[80 ms; reconnect] Requested resume cursor: 0.\n[80 ms; replay] Suppressed wire replay 1; no duplicate visible effect.\n[80 ms; replay] Suppressed wire replay 2; no duplicate visible effect.\n[80 ms; replay] Suppressed wire replay 3; no duplicate visible effect.\n[80 ms; replay] Decoded v2, applied and acknowledged 4; state 40.\n[80 ms; replay] Decoded v2, applied and acknowledged 5; state 50.\n[80 ms; replay] Decoded v2, applied and acknowledged 6; state 60.\n[80 ms; verify] Synthetic user impact: uninterrupted. This is not a live WebSocket result.",
+      "prediction": "Prediction not checked.",
+      "alert": "",
+      "activeElement": "prediction"
+    },
+    {
+      "name": "blind acknowledged replay interrupts despite passing prediction",
+      "phase": "Phase: complete. Attempt 3; original budget 100 ms locked.",
+      "impact": "Synthetic user impact: INTERRUPTED — not a live WebSocket or Azure result.",
+      "metrics": "Requested resume cursor\n0\nFinal acknowledged sequence\n6\nFinal acknowledged state (expected 60)\n90\nWire replays / duplicate visible effects\n3 / 3\nRejected gaps / rejected schemas\n0 / 0\nMissing user-visible sequences\nnone\nVisible sequence order\n1, 2, 3, 1, 2, 3, 4, 5, 6\nRecovery gap / original UX budget\n80 / 100 ms",
+      "checks": [
+        {
+          "id": "cursor",
+          "cells": [
+            "Resume cursor does not skip required work",
+            "PASS",
+            "Requested 0; prior ACK is 3."
+          ]
+        },
+        {
+          "id": "retention",
+          "cells": [
+            "Previously acknowledged state retained",
+            "PASS",
+            "Prior state 30 retained."
+          ]
+        },
+        {
+          "id": "versions",
+          "cells": [
+            "Both versioned frame formats are readable",
+            "PASS",
+            "0 schema rejections."
+          ]
+        },
+        {
+          "id": "complete",
+          "cells": [
+            "Every sequence 1-6 is visible and acknowledged",
+            "PASS",
+            "Missing visible sequences: none; final ACK 6."
+          ]
+        },
+        {
+          "id": "ordering",
+          "cells": [
+            "No sequence gap or out-of-order effect",
+            "FAIL",
+            "0 gap rejections; visible order 1, 2, 3, 1, 2, 3, 4, 5, 6."
+          ]
+        },
+        {
+          "id": "duplicates",
+          "cells": [
+            "No duplicate user-visible effects",
+            "FAIL",
+            "3 wire replays; 3 duplicate effects."
+          ]
+        },
+        {
+          "id": "state",
+          "cells": [
+            "Final acknowledged state is 60",
+            "FAIL",
+            "Observed state 90; expected 60."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Recovery meets the original UX budget",
+            "PASS",
+            "80 ms from disconnect to final replay observation; original budget 100 ms."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "3",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "6 / 60",
+          "PASS (uninterrupted)"
+        ],
+        [
+          "2",
+          "0",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "3 / 0",
+          "6 / 60",
+          "Not checked"
+        ],
+        [
+          "3",
+          "0",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "3 / 3",
+          "6 / 90",
+          "PASS (interrupted)"
+        ]
+      ],
+      "trace": "[-3 ms; v1] v1 applied and acknowledged 1; state 10.\n[-2 ms; v1] v1 applied and acknowledged 2; state 20.\n[-1 ms; v1] v1 applied and acknowledged 3; state 30.\n[0 ms; cutover] Disconnected v1; retained last confirmed ACK 3 and state 30.\n[0 ms; cutover] v2 offers sequences 4-6 as {version:2, sequence, increment}; reconnection is not yet a success.\n[80 ms; reconnect] Requested resume cursor: 0.\n[80 ms; replay] Applied duplicate effect 1; state is now 40.\n[80 ms; replay] Applied duplicate effect 2; state is now 50.\n[80 ms; replay] Applied duplicate effect 3; state is now 60.\n[80 ms; replay] Decoded v2, applied and acknowledged 4; state 70.\n[80 ms; replay] Decoded v2, applied and acknowledged 5; state 80.\n[80 ms; replay] Decoded v2, applied and acknowledged 6; state 90.\n[80 ms; verify] Synthetic user impact: interrupted. This is not a live WebSocket result.",
+      "prediction": "Prediction verifier: PASS. Expected interrupted; synthetic impact remains interrupted.",
+      "alert": "",
+      "activeElement": "check-prediction"
+    },
+    {
+      "name": "missing sequence blocks later acknowledgements",
+      "phase": "Phase: complete. Attempt 4; original budget 100 ms locked.",
+      "impact": "Synthetic user impact: INTERRUPTED — not a live WebSocket or Azure result.",
+      "metrics": "Requested resume cursor\n3\nFinal acknowledged sequence\n4\nFinal acknowledged state (expected 60)\n40\nWire replays / duplicate visible effects\n0 / 0\nRejected gaps / rejected schemas\n1 / 0\nMissing user-visible sequences\n5, 6\nVisible sequence order\n1, 2, 3, 4\nRecovery gap / original UX budget\n80 / 100 ms",
+      "checks": [
+        {
+          "id": "cursor",
+          "cells": [
+            "Resume cursor does not skip required work",
+            "PASS",
+            "Requested 3; prior ACK is 3."
+          ]
+        },
+        {
+          "id": "retention",
+          "cells": [
+            "Previously acknowledged state retained",
+            "PASS",
+            "Prior state 30 retained."
+          ]
+        },
+        {
+          "id": "versions",
+          "cells": [
+            "Both versioned frame formats are readable",
+            "PASS",
+            "0 schema rejections."
+          ]
+        },
+        {
+          "id": "complete",
+          "cells": [
+            "Every sequence 1-6 is visible and acknowledged",
+            "FAIL",
+            "Missing visible sequences: 5, 6; final ACK 4."
+          ]
+        },
+        {
+          "id": "ordering",
+          "cells": [
+            "No sequence gap or out-of-order effect",
+            "FAIL",
+            "1 gap rejections; visible order 1, 2, 3, 4."
+          ]
+        },
+        {
+          "id": "duplicates",
+          "cells": [
+            "No duplicate user-visible effects",
+            "PASS",
+            "0 wire replays; 0 duplicate effects."
+          ]
+        },
+        {
+          "id": "state",
+          "cells": [
+            "Final acknowledged state is 60",
+            "FAIL",
+            "Observed state 40; expected 60."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Recovery meets the original UX budget",
+            "PASS",
+            "80 ms from disconnect to final replay observation; original budget 100 ms."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "3",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "6 / 60",
+          "PASS (uninterrupted)"
+        ],
+        [
+          "2",
+          "0",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "3 / 0",
+          "6 / 60",
+          "Not checked"
+        ],
+        [
+          "3",
+          "0",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "3 / 3",
+          "6 / 90",
+          "PASS (interrupted)"
+        ],
+        [
+          "4",
+          "3",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "4 / 40",
+          "Not checked"
+        ]
+      ],
+      "trace": "[-3 ms; v1] v1 applied and acknowledged 1; state 10.\n[-2 ms; v1] v1 applied and acknowledged 2; state 20.\n[-1 ms; v1] v1 applied and acknowledged 3; state 30.\n[0 ms; cutover] Disconnected v1; retained last confirmed ACK 3 and state 30.\n[0 ms; cutover] v2 offers sequences 4-6 as {version:2, sequence, increment}; reconnection is not yet a success.\n[80 ms; reconnect] Requested resume cursor: 3.\n[80 ms; replay] Decoded v2, applied and acknowledged 4; state 40.\n[80 ms; replay] Rejected sequence 6; expected 5. ACK does not advance.\n[80 ms; verify] Synthetic user impact: interrupted. This is not a live WebSocket result.",
+      "prediction": "Prediction not checked.",
+      "alert": "",
+      "activeElement": "prediction"
+    },
+    {
+      "name": "missing cursor remains unknown",
+      "phase": "Phase: complete. Attempt 5; original budget 100 ms locked.",
+      "impact": "Synthetic user impact: UNKNOWN — not a live WebSocket or Azure result.",
+      "metrics": "Requested resume cursor\nunknown\nFinal acknowledged sequence\nunknown\nFinal acknowledged state (expected 60)\nunknown\nWire replays / duplicate visible effects\nunknown / unknown\nRejected gaps / rejected schemas\nunknown / unknown\nMissing user-visible sequences\nunknown\nVisible sequence order\nunknown\nRecovery gap / original UX budget\n80 / 100 ms",
+      "checks": [
+        {
+          "id": "cursor",
+          "cells": [
+            "Resume cursor does not skip required work",
+            "UNKNOWN",
+            "No confirmed cursor."
+          ]
+        },
+        {
+          "id": "retention",
+          "cells": [
+            "Previously acknowledged state retained",
+            "PASS",
+            "Prior state 30 retained."
+          ]
+        },
+        {
+          "id": "versions",
+          "cells": [
+            "Both versioned frame formats are readable",
+            "UNKNOWN",
+            "No frame observation proof."
+          ]
+        },
+        {
+          "id": "complete",
+          "cells": [
+            "Every sequence 1-6 is visible and acknowledged",
+            "UNKNOWN",
+            "Sequence completeness unknown."
+          ]
+        },
+        {
+          "id": "ordering",
+          "cells": [
+            "No sequence gap or out-of-order effect",
+            "UNKNOWN",
+            "Ordering unknown."
+          ]
+        },
+        {
+          "id": "duplicates",
+          "cells": [
+            "No duplicate user-visible effects",
+            "UNKNOWN",
+            "Duplicate-effect count unknown."
+          ]
+        },
+        {
+          "id": "state",
+          "cells": [
+            "Final acknowledged state is 60",
+            "UNKNOWN",
+            "Final state unknown."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Recovery meets the original UX budget",
+            "PASS",
+            "80 ms from disconnect to final replay observation; original budget 100 ms."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "3",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "6 / 60",
+          "PASS (uninterrupted)"
+        ],
+        [
+          "2",
+          "0",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "3 / 0",
+          "6 / 60",
+          "Not checked"
+        ],
+        [
+          "3",
+          "0",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "3 / 3",
+          "6 / 90",
+          "PASS (interrupted)"
+        ],
+        [
+          "4",
+          "3",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "4 / 40",
+          "Not checked"
+        ],
+        [
+          "5",
+          "unknown",
+          "UNKNOWN",
+          "80 / 100 ms",
+          "unknown / unknown",
+          "unknown / unknown",
+          "PASS (unknown)"
+        ]
+      ],
+      "trace": "[-3 ms; v1] v1 applied and acknowledged 1; state 10.\n[-2 ms; v1] v1 applied and acknowledged 2; state 20.\n[-1 ms; v1] v1 applied and acknowledged 3; state 30.\n[0 ms; cutover] Disconnected v1; retained last confirmed ACK 3 and state 30.\n[0 ms; cutover] v2 offers sequences 4-6 as {version:2, sequence, increment}; reconnection is not yet a success.\n[80 ms; reconnect] Requested resume cursor: unknown; no fallback cursor invented.\n[80 ms; replay] Post-reconnect sequence and state proof are absent; no completion is inferred.\n[80 ms; verify] Synthetic user impact: unknown. This is not a live WebSocket result.",
+      "prediction": "Prediction verifier: PASS. Expected unknown; synthetic impact remains unknown.",
+      "alert": "",
+      "activeElement": "check-prediction"
+    },
+    {
+      "name": "known budget failure dominates partial unknown proof",
+      "phase": "Phase: complete. Attempt 6; original budget 100 ms locked.",
+      "impact": "Synthetic user impact: INTERRUPTED — not a live WebSocket or Azure result.",
+      "metrics": "Requested resume cursor\n3\nFinal acknowledged sequence\nunknown\nFinal acknowledged state (expected 60)\nunknown\nWire replays / duplicate visible effects\nunknown / unknown\nRejected gaps / rejected schemas\nunknown / unknown\nMissing user-visible sequences\nunknown\nVisible sequence order\nunknown\nRecovery gap / original UX budget\n101 / 100 ms",
+      "checks": [
+        {
+          "id": "cursor",
+          "cells": [
+            "Resume cursor does not skip required work",
+            "PASS",
+            "Requested 3; prior ACK is 3."
+          ]
+        },
+        {
+          "id": "retention",
+          "cells": [
+            "Previously acknowledged state retained",
+            "PASS",
+            "Prior state 30 retained."
+          ]
+        },
+        {
+          "id": "versions",
+          "cells": [
+            "Both versioned frame formats are readable",
+            "UNKNOWN",
+            "No frame observation proof."
+          ]
+        },
+        {
+          "id": "complete",
+          "cells": [
+            "Every sequence 1-6 is visible and acknowledged",
+            "UNKNOWN",
+            "Sequence completeness unknown."
+          ]
+        },
+        {
+          "id": "ordering",
+          "cells": [
+            "No sequence gap or out-of-order effect",
+            "UNKNOWN",
+            "Ordering unknown."
+          ]
+        },
+        {
+          "id": "duplicates",
+          "cells": [
+            "No duplicate user-visible effects",
+            "UNKNOWN",
+            "Duplicate-effect count unknown."
+          ]
+        },
+        {
+          "id": "state",
+          "cells": [
+            "Final acknowledged state is 60",
+            "UNKNOWN",
+            "Final state unknown."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Recovery meets the original UX budget",
+            "FAIL",
+            "101 ms from disconnect to final replay observation; original budget 100 ms."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "3",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "6 / 60",
+          "PASS (uninterrupted)"
+        ],
+        [
+          "2",
+          "0",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "3 / 0",
+          "6 / 60",
+          "Not checked"
+        ],
+        [
+          "3",
+          "0",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "3 / 3",
+          "6 / 90",
+          "PASS (interrupted)"
+        ],
+        [
+          "4",
+          "3",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "4 / 40",
+          "Not checked"
+        ],
+        [
+          "5",
+          "unknown",
+          "UNKNOWN",
+          "80 / 100 ms",
+          "unknown / unknown",
+          "unknown / unknown",
+          "PASS (unknown)"
+        ],
+        [
+          "6",
+          "3",
+          "INTERRUPTED",
+          "101 / 100 ms",
+          "unknown / unknown",
+          "unknown / unknown",
+          "Not checked"
+        ]
+      ],
+      "trace": "[-3 ms; v1] v1 applied and acknowledged 1; state 10.\n[-2 ms; v1] v1 applied and acknowledged 2; state 20.\n[-1 ms; v1] v1 applied and acknowledged 3; state 30.\n[0 ms; cutover] Disconnected v1; retained last confirmed ACK 3 and state 30.\n[0 ms; cutover] v2 offers sequences 4-6 as {version:2, sequence, increment}; reconnection is not yet a success.\n[101 ms; reconnect] Requested resume cursor: 3.\n[101 ms; replay] Post-reconnect sequence and state proof are absent; no completion is inferred.\n[101 ms; verify] Synthetic user impact: interrupted. This is not a live WebSocket result.",
+      "prediction": "Prediction not checked.",
+      "alert": "",
+      "activeElement": "prediction"
+    },
+    {
+      "name": "acknowledged state loss is not repaired by merely resuming messages",
+      "phase": "Phase: complete. Attempt 7; original budget 100 ms locked.",
+      "impact": "Synthetic user impact: INTERRUPTED — not a live WebSocket or Azure result.",
+      "metrics": "Requested resume cursor\n3\nFinal acknowledged sequence\n6\nFinal acknowledged state (expected 60)\n30\nWire replays / duplicate visible effects\n0 / 0\nRejected gaps / rejected schemas\n0 / 0\nMissing user-visible sequences\nnone\nVisible sequence order\n1, 2, 3, 4, 5, 6\nRecovery gap / original UX budget\n80 / 100 ms",
+      "checks": [
+        {
+          "id": "cursor",
+          "cells": [
+            "Resume cursor does not skip required work",
+            "PASS",
+            "Requested 3; prior ACK is 3."
+          ]
+        },
+        {
+          "id": "retention",
+          "cells": [
+            "Previously acknowledged state retained",
+            "FAIL",
+            "Prior acknowledged state 30 was lost."
+          ]
+        },
+        {
+          "id": "versions",
+          "cells": [
+            "Both versioned frame formats are readable",
+            "PASS",
+            "0 schema rejections."
+          ]
+        },
+        {
+          "id": "complete",
+          "cells": [
+            "Every sequence 1-6 is visible and acknowledged",
+            "PASS",
+            "Missing visible sequences: none; final ACK 6."
+          ]
+        },
+        {
+          "id": "ordering",
+          "cells": [
+            "No sequence gap or out-of-order effect",
+            "PASS",
+            "0 gap rejections; visible order 1, 2, 3, 4, 5, 6."
+          ]
+        },
+        {
+          "id": "duplicates",
+          "cells": [
+            "No duplicate user-visible effects",
+            "PASS",
+            "0 wire replays; 0 duplicate effects."
+          ]
+        },
+        {
+          "id": "state",
+          "cells": [
+            "Final acknowledged state is 60",
+            "FAIL",
+            "Observed state 30; expected 60."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Recovery meets the original UX budget",
+            "PASS",
+            "80 ms from disconnect to final replay observation; original budget 100 ms."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "3",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "6 / 60",
+          "PASS (uninterrupted)"
+        ],
+        [
+          "2",
+          "0",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "3 / 0",
+          "6 / 60",
+          "Not checked"
+        ],
+        [
+          "3",
+          "0",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "3 / 3",
+          "6 / 90",
+          "PASS (interrupted)"
+        ],
+        [
+          "4",
+          "3",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "4 / 40",
+          "Not checked"
+        ],
+        [
+          "5",
+          "unknown",
+          "UNKNOWN",
+          "80 / 100 ms",
+          "unknown / unknown",
+          "unknown / unknown",
+          "PASS (unknown)"
+        ],
+        [
+          "6",
+          "3",
+          "INTERRUPTED",
+          "101 / 100 ms",
+          "unknown / unknown",
+          "unknown / unknown",
+          "Not checked"
+        ],
+        [
+          "7",
+          "3",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "6 / 30",
+          "Not checked"
+        ]
+      ],
+      "trace": "[-3 ms; v1] v1 applied and acknowledged 1; state 10.\n[-2 ms; v1] v1 applied and acknowledged 2; state 20.\n[-1 ms; v1] v1 applied and acknowledged 3; state 30.\n[0 ms; cutover] Disconnected v1; retained last confirmed ACK 3 and state 30.\n[0 ms; cutover] v2 offers sequences 4-6 as {version:2, sequence, increment}; reconnection is not yet a success.\n[80 ms; reconnect] Requested resume cursor: 3.\n[80 ms; replay] Decoded v2, applied and acknowledged 4; state 10.\n[80 ms; replay] Decoded v2, applied and acknowledged 5; state 20.\n[80 ms; replay] Decoded v2, applied and acknowledged 6; state 30.\n[80 ms; verify] Synthetic user impact: interrupted. This is not a live WebSocket result.",
+      "prediction": "Prediction not checked.",
+      "alert": "",
+      "activeElement": "prediction"
+    },
+    {
+      "name": "version mismatch and full retained history with no eviction",
+      "phase": "Phase: complete. Attempt 8; original budget 100 ms locked.",
+      "impact": "Synthetic user impact: INTERRUPTED — not a live WebSocket or Azure result.",
+      "metrics": "Requested resume cursor\n3\nFinal acknowledged sequence\n3\nFinal acknowledged state (expected 60)\n30\nWire replays / duplicate visible effects\n0 / 0\nRejected gaps / rejected schemas\n0 / 3\nMissing user-visible sequences\n4, 5, 6\nVisible sequence order\n1, 2, 3\nRecovery gap / original UX budget\n80 / 100 ms",
+      "checks": [
+        {
+          "id": "cursor",
+          "cells": [
+            "Resume cursor does not skip required work",
+            "PASS",
+            "Requested 3; prior ACK is 3."
+          ]
+        },
+        {
+          "id": "retention",
+          "cells": [
+            "Previously acknowledged state retained",
+            "PASS",
+            "Prior state 30 retained."
+          ]
+        },
+        {
+          "id": "versions",
+          "cells": [
+            "Both versioned frame formats are readable",
+            "FAIL",
+            "3 schema rejections."
+          ]
+        },
+        {
+          "id": "complete",
+          "cells": [
+            "Every sequence 1-6 is visible and acknowledged",
+            "FAIL",
+            "Missing visible sequences: 4, 5, 6; final ACK 3."
+          ]
+        },
+        {
+          "id": "ordering",
+          "cells": [
+            "No sequence gap or out-of-order effect",
+            "PASS",
+            "0 gap rejections; visible order 1, 2, 3."
+          ]
+        },
+        {
+          "id": "duplicates",
+          "cells": [
+            "No duplicate user-visible effects",
+            "PASS",
+            "0 wire replays; 0 duplicate effects."
+          ]
+        },
+        {
+          "id": "state",
+          "cells": [
+            "Final acknowledged state is 60",
+            "FAIL",
+            "Observed state 30; expected 60."
+          ]
+        },
+        {
+          "id": "budget",
+          "cells": [
+            "Recovery meets the original UX budget",
+            "PASS",
+            "80 ms from disconnect to final replay observation; original budget 100 ms."
+          ]
+        }
+      ],
+      "history": [
+        [
+          "1",
+          "3",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "6 / 60",
+          "PASS (uninterrupted)"
+        ],
+        [
+          "2",
+          "0",
+          "UNINTERRUPTED",
+          "80 / 100 ms",
+          "3 / 0",
+          "6 / 60",
+          "Not checked"
+        ],
+        [
+          "3",
+          "0",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "3 / 3",
+          "6 / 90",
+          "PASS (interrupted)"
+        ],
+        [
+          "4",
+          "3",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "4 / 40",
+          "Not checked"
+        ],
+        [
+          "5",
+          "unknown",
+          "UNKNOWN",
+          "80 / 100 ms",
+          "unknown / unknown",
+          "unknown / unknown",
+          "PASS (unknown)"
+        ],
+        [
+          "6",
+          "3",
+          "INTERRUPTED",
+          "101 / 100 ms",
+          "unknown / unknown",
+          "unknown / unknown",
+          "Not checked"
+        ],
+        [
+          "7",
+          "3",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "6 / 30",
+          "Not checked"
+        ],
+        [
+          "8",
+          "3",
+          "INTERRUPTED",
+          "80 / 100 ms",
+          "0 / 0",
+          "3 / 30",
+          "Not checked"
+        ]
+      ],
+      "trace": "[-3 ms; v1] v1 applied and acknowledged 1; state 10.\n[-2 ms; v1] v1 applied and acknowledged 2; state 20.\n[-1 ms; v1] v1 applied and acknowledged 3; state 30.\n[0 ms; cutover] Disconnected v1; retained last confirmed ACK 3 and state 30.\n[0 ms; cutover] v2 offers sequences 4-6 as {version:2, sequence, increment}; reconnection is not yet a success.\n[80 ms; reconnect] Requested resume cursor: 3.\n[80 ms; replay] Rejected v2 sequence 4: v1-only decoder.\n[80 ms; replay] Rejected v2 sequence 5: v1-only decoder.\n[80 ms; replay] Rejected v2 sequence 6: v1-only decoder.\n[80 ms; verify] Synthetic user impact: interrupted. This is not a live WebSocket result.",
+      "prediction": "Prediction not checked.",
+      "alert": "Eight attempts retained. Reset explicitly; no history is evicted.",
+      "activeElement": "prediction"
+    },
+    {
+      "name": "exact keyboard reset restores defaults, idle, focus and empty history",
+      "phase": "Phase: idle. Configure the next attempt.",
+      "impact": "Not evaluated — conduct all three actions.",
+      "metrics": "",
+      "checks": [],
+      "history": [
+        [
+          "No completed attempts."
+        ]
+      ],
+      "trace": "No attempt started.",
+      "prediction": "Prediction not checked.",
+      "alert": "",
+      "activeElement": "start-session"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "stage": "csp-probes",
+      "text": "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-SP1ZI4f6peEv5F3uIzw7ShGpf8rI5NKdW6P/ROHkjVI='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Connecting to 'https://s045.invalid/csp-probe' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+    },
+    {
+      "stage": "csp-probes",
+      "text": "Fetch API cannot load https://s045.invalid/csp-probe. Refused to connect because it violates the document's Content Security Policy."
+    }
+  ],
+  "exerciseNetworkRequests": [],
+  "cspProbeRequests": [],
+  "failedProbeRequests": [],
+  "cleanup": {
+    "sessionCloseAwaited": true,
+    "serversStarted": 0,
+    "cloudResourcesCreated": 0,
+    "foregroundLeaseUsed": false
+  },
+  "testedSourceHashes": {
+    "index.html": "7b0fdc3dcc1da5a129206aeabeff5dd472aea20e1481a916d8a264b008d5f5ef",
+    "styles.css": "daf04155824723e5d196f967f1e3476c6622c6ae43b846b27a1a06231155fb04",
+    "fixtures.js": "96a4115102cec22cef2700be67e348a56e3103acacdb1028c6cdf5b04d02f7a4",
+    "model.js": "f8934bd4d85aad87c32087bf5b8da1e75d6d4a3e29e6669c511287232388dc35",
+    "app.js": "172a4538cb119a005fb1ccd35640feb6c6f836301e40ea9c6f80809038aaaefc"
+  },
+  "smallViewport": {
+    "width": 375,
+    "height": 812,
+    "noPageHorizontalOverflow": true
+  },
+  "csp": {
+    "policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'",
+    "inlineExecuted": false,
+    "fetchRejected": true,
+    "fetchErrorName": "TypeError",
+    "violations": [
+      {
+        "effectiveDirective": "script-src-elem",
+        "blockedURI": "inline",
+        "disposition": "enforce"
+      },
+      {
+        "effectiveDirective": "connect-src",
+        "blockedURI": "https://s045.invalid/csp-probe",
+        "disposition": "enforce"
+      }
+    ]
+  },
+  "finishedAtUtc": "2026-11-03T18:18:49.008Z"
+}

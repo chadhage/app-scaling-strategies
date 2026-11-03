@@ -1,0 +1,53 @@
+(function (root, factory) {
+  'use strict';
+  const fixtures = factory();
+  if (typeof module === 'object' && module.exports) module.exports = fixtures;
+  else root.WebSocketFixtures = fixtures;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+
+  return freeze({
+    schemaVersion: 1,
+    defaults: {
+      cursor: 'last-ack',
+      replayProtection: 'deduplicate',
+      delivery: 'ordered',
+      decoder: 'both',
+      stateRetention: 'retained',
+      observation: 'complete',
+      gapMs: 80,
+      budgetMs: 100,
+    },
+    choices: {
+      cursor: ['last-ack', 'rewind', 'skip', 'absent'],
+      replayProtection: ['deduplicate', 'apply-all'],
+      delivery: ['ordered', 'drop-5', 'repeat-4', 'reorder'],
+      decoder: ['both', 'v1-only'],
+      stateRetention: ['retained', 'lost'],
+      observation: ['complete', 'missing'],
+    },
+    limits: { attempts: 8, minGapMs: 0, maxGapMs: 2000, minBudgetMs: 1, maxBudgetMs: 2000 },
+    v1: [
+      { version: 1, seq: 1, delta: 10 },
+      { version: 1, seq: 2, delta: 10 },
+      { version: 1, seq: 3, delta: 10 },
+    ],
+    v2: [
+      { version: 2, sequence: 4, increment: 10 },
+      { version: 2, sequence: 5, increment: 10 },
+      { version: 2, sequence: 6, increment: 10 },
+    ],
+    acknowledgedCursor: 3,
+    acknowledgedState: 30,
+    expectedSequences: [1, 2, 3, 4, 5, 6],
+    expectedState: 60,
+  });
+}));

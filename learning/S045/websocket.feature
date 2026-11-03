@@ -1,0 +1,80 @@
+Feature: A-S045 bounded WebSocket migration rehearsal
+  Source: README S045; D-S045; portable A-card contract; packet SC-S045
+  All clocks, frames, acknowledgements and state are synthetic.
+
+  Background:
+    Given v1 acknowledged sequences 1, 2 and 3, each adding 10 to state
+    And the acknowledged cursor is 3 and the acknowledged state is 30
+    And v2 offers sequences 4, 5 and 6 in a versioned frame format
+    And the original disconnect-to-recovery budget is fixed before starting
+    And the page says "Training rehearsal - synthetic data - not a live Azure result"
+
+  Scenario: Resume acknowledged state and sequencing within the original budget
+    When the operator starts v1, cuts over, then reconnects from cursor 3
+    And both frame versions are decoded and acknowledged state is retained
+    And replay protection suppresses duplicate effects
+    And the observed recovery gap is at most the original budget
+    Then visible sequences are exactly 1 through 6 in order
+    And the final acknowledgement is 6 and state is 60
+    And synthetic user impact is uninterrupted
+
+  Scenario: Rewinding is safe only when replay effects are suppressed
+    When the operator resumes from cursor 0 with replay protection
+    Then three already acknowledged wire replays are detected
+    And no duplicate user-visible effect is applied
+    And the final state is 60 and synthetic impact is uninterrupted
+    When a separate attempt disables replay protection for that rewind
+    Then three duplicate effects and final state 90 are reported
+    And synthetic impact is interrupted
+
+  Scenario Outline: Known continuity defects cannot pass as seamless reconnection
+    When a completed attempt has <defect>
+    Then synthetic impact is interrupted
+    And the failing check and measured sequence or state defect are visible
+    Examples:
+      | defect                                  |
+      | sequence 5 absent from replay           |
+      | sequence 6 arriving before sequence 5   |
+      | cursor 4 skipping required sequence 4   |
+      | duplicate sequence 4 applied twice      |
+      | lost acknowledged state                 |
+      | a v1-only decoder rejecting v2 frames   |
+      | a recovery gap over the original budget |
+
+  Scenario: Missing evidence is unknown, not successful continuity
+    When the resume cursor or post-reconnect observation is absent
+    Then sequence, final state and duplicate checks remain unknown
+    And an otherwise on-budget attempt has unknown synthetic impact
+    But a known budget breach or known acknowledged-state loss still interrupts
+
+  Scenario: Prediction correctness is distinct from user impact
+    Given a completed interrupted attempt
+    When the operator predicts interrupted and checks the prediction
+    Then the prediction verifier passes
+    But synthetic user impact remains interrupted
+
+  Scenario: State transitions and input bounds are guarded without discarding history
+    Then cutover before start and reconnect before cutover are rejected
+    And another start cannot discard an active or completed attempt
+    And unknown fields, missing fields, coercions and out-of-range values are rejected
+    And configuration cannot change after start
+    And returned snapshots cannot mutate the internal lesson state
+    And each completed attempt is retained until explicit reset
+    And at most eight attempts are allowed with no silent history eviction
+
+  Scenario: Keyboard, errors and reset work in the actual browser
+    When the operator uses the keyboard to start, cut over and reconnect
+    Then phase controls and focus advance in order
+    And invalid numeric input has an alert and no stale successful result
+    And a negative and an unknown attempt remain in the history
+    When the operator activates Reset rehearsal by keyboard
+    Then exact defaults, idle state and an empty history are restored
+    And the Start v1 session button has focus
+
+  Scenario: The portable lesson has no live transport or privileged execution
+    Then only local external scripts and styles are loaded
+    And CSP blocks inline scripts, connections, forms, frames, objects and workers
+    And actual browser probes confirm blocked inline script and connection attempts
+    And untrusted input is rendered only as text
+    And verification does not rewrite proof unless capture is explicitly enabled
+    And no account, credentials, authentication, server or cloud resource is used

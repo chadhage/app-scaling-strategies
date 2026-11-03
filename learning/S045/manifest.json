@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S045",
+  "sourceId": "S045",
+  "parentId": "D-S045",
+  "kano": "S",
+  "kanoUnit": "A-S045",
+  "packet": "SC-S045",
+  "owner": "worker-A-S045",
+  "entryGate": "SOURCE",
+  "title": "WebSocket migration: acknowledged state and sequenced resume",
+  "entryPoint": "learning/S045/index.html",
+  "feature": "learning/S045/websocket.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Reconnect a versioned synthetic WebSocket from an acknowledged cursor, detect missing or duplicate effects, and judge state and sequencing against the original recovery budget.",
+  "preconditions": [
+    "A browser supporting standard local HTML, CSS and JavaScript.",
+    "Fixed synthetic v1 sequences 1-3 acknowledged at cursor 3 and state 30.",
+    "Fixed synthetic v2 sequences 4-6 with a different envelope format.",
+    "No account, credentials, subscription, server, framework or live socket."
+  ],
+  "actions": [
+    "Set bounded cursor, replay, delivery, decoder, state, observation and timing assumptions.",
+    "Start v1; cut over to v2; reconnect and inspect individual synthetic checks.",
+    "Check a prediction separately from user impact.",
+    "Start another attempt while retaining at most eight completed results.",
+    "Reset explicitly to the exact default configuration and empty history."
+  ],
+  "input": "learning/S045/fixtures.js",
+  "assertions": [
+    "Acknowledged state and a complete ordered sequence survive safe resume.",
+    "Wire replays are detected separately from duplicate visible effects.",
+    "A skipped or missing sequence, out-of-order frame, state loss or decoder rejection interrupts.",
+    "The original disconnect-to-final-observation budget is inclusive and never restarted.",
+    "Missing cursor or observation stays unknown; a known failure still dominates partial uncertainty.",
+    "Invalid inputs and phase transitions cannot mutate configuration or silently discard history."
+  ],
+  "bounds": {
+    "attempts": 8,
+    "fixedMessages": 6,
+    "maximumReplayFrames": 7,
+    "gapMs": [0, 2000],
+    "originalBudgetMs": [1, 2000]
+  },
+  "iac": {
+    "status": "N/A",
+    "decisionStage": "Recorded after genuine loadable-stub behavioral RED and before implementation.",
+    "redReference": "learning/S045/evidence/red/run.json",
+    "redCompletedAtUtc": "2026-11-03T18:10:15.466Z",
+    "reason": "Resource-free local synthetic lesson. No cloud, IaC, scaffold, identity, deployment, expenditure or production-runtime work is authorized or needed."
+  },
+  "testRuntime": {
+    "version": "Node.js 22.23.4",
+    "purpose": "Existing built-in node:test tooling only",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing signed Microsoft Edge 156",
+    "productionNode24Approval": false,
+    "dependencyChanges": false
+  },
+  "limits": [
+    "All messages, acknowledgements, state, traces and elapsed times are synthetic.",
+    "No actual WebSocket or host handoff, latency, transport guarantee or Azure result.",
+    "No identity or authentication behavior is simulated because it is not needed for this lesson.",
+    "History is in-memory only, bounded to eight results, and erased only by explicit reset or page reload.",
+    "This is one frozen S unit. Tests, evidence and publication earn no additional units.",
+    "B-S045 and original D-S045 native acceptance remain separate and unfulfilled.",
+    "No shared files, packages, framework, cloud resources, real credentials or unsafe browser flags."
+  ]
+}

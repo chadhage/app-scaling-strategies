@@ -1,0 +1,38 @@
+(function (root, factory) {
+  'use strict';
+  const model = factory();
+  if (typeof module === 'object' && module.exports) module.exports = model;
+  else root.WebSocketLesson = model;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+
+  function createLesson() {
+    let state = {
+      phase: 'idle', attempt: 0, config: null, ackCursor: 0, ackState: 0,
+      trace: [], result: null, prediction: null, history: [],
+    };
+    const snapshot = () => state;
+    const reconnect = () => {
+      state.result = {
+        impact: 'unknown', requestedCursor: null, lastAcknowledged: null,
+        finalState: null, wireReplays: null, duplicateEffects: null,
+        rejectedGaps: null, schemaRejects: null, missingVisible: null,
+        visibleSequences: null, gapMs: null, budgetMs: null,
+        checks: ['cursor', 'retention', 'versions', 'complete', 'ordering', 'duplicates', 'state', 'budget']
+          .map((id) => ({ id, outcome: 'unknown' })),
+      };
+      state.history = [{ attempt: 0, result: state.result, prediction: null }];
+      return state;
+    };
+    const checkPrediction = () => {
+      state.prediction = { expected: 'unknown', actual: 'unknown', verdict: 'UNIMPLEMENTED' };
+      return state;
+    };
+    return {
+      snapshot, start: snapshot, cutover: snapshot, reconnect,
+      checkPrediction, nextAttempt: snapshot, reset: snapshot,
+    };
+  }
+
+  return { createLesson };
+}));

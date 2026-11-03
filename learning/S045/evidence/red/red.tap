@@ -1,0 +1,739 @@
+TAP version 13
+# Subtest: fixture explicitly contains two versioned synthetic formats and fixed bounds
+ok 1 - fixture explicitly contains two versioned synthetic formats and fixed bounds
+  ---
+  duration_ms: 9.0394
+  type: 'test'
+  ...
+# Subtest: start acknowledges v1 state and freezes configuration before handoff
+not ok 2 - start acknowledges v1 state and freezes configuration before handoff
+  ---
+  duration_ms: 6.5855
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:32:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'idle'
+    - 'connected-v1'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'connected-v1'
+  actual: 'idle'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:36:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: cutover disconnects without silently resetting acknowledged state
+not ok 3 - cutover disconnects without silently resetting acknowledged state
+  ---
+  duration_ms: 0.5784
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:45:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'idle'
+    - 'disconnected'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'disconnected'
+  actual: 'idle'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:49:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: safe resume keeps ordered acknowledged messages and state within original budget
+not ok 4 - safe resume keeps ordered acknowledged messages and state within original budget
+  ---
+  duration_ms: 0.6332
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:56:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'idle' !== 'complete'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'complete'
+  actual: 'idle'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:58:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: rewound acknowledged messages are detected but safely suppressed
+not ok 5 - rewound acknowledged messages are detected but safely suppressed
+  ---
+  duration_ms: 0.3711
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:72:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'uninterrupted'
+         ^
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'uninterrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:74:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a repeated v2 frame is distinguishable from a duplicate visible effect
+not ok 6 - a repeated v2 frame is distinguishable from a duplicate visible effect
+  ---
+  duration_ms: 0.6685
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:82:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'uninterrupted'
+         ^
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'uninterrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:84:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: blind replay of acknowledged messages is an interruption, never exactly-once proof
+not ok 7 - blind replay of acknowledged messages is an interruption, never exactly-once proof
+  ---
+  duration_ms: 2.9048
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:90:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'interrupted'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'interrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:92:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: blind duplicate v2 delivery reports the extra effect and incorrect state
+not ok 8 - blind duplicate v2 delivery reports the extra effect and incorrect state
+  ---
+  duration_ms: 0.4462
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:101:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'interrupted'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'interrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:103:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: missing sequence blocks later acknowledgements rather than silently skipping a gap
+not ok 9 - missing sequence blocks later acknowledgements rather than silently skipping a gap
+  ---
+  duration_ms: 0.7717
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:108:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'interrupted'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'interrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:110:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: out-of-order v2 delivery is rejected and remains an explicit continuity failure
+not ok 10 - out-of-order v2 delivery is rejected and remains an explicit continuity failure
+  ---
+  duration_ms: 1.4568
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:119:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'interrupted'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'interrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:121:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a cursor ahead of the acknowledgement cannot manufacture successful progress
+not ok 11 - a cursor ahead of the acknowledgement cannot manufacture successful progress
+  ---
+  duration_ms: 0.9846
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:127:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'interrupted'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'interrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:129:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: lost acknowledged state fails even if the replay sequence itself is complete
+not ok 12 - lost acknowledged state fails even if the replay sequence itself is complete
+  ---
+  duration_ms: 0.375
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:136:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'interrupted'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'interrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:138:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a v1-only decoder explicitly rejects the changed v2 frame schema
+not ok 13 - a v1-only decoder explicitly rejects the changed v2 frame schema
+  ---
+  duration_ms: 0.416
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:146:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'interrupted'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'interrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:148:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: the original recovery budget is inclusive and never restarted by reconnect
+not ok 14 - the original recovery budget is inclusive and never restarted by reconnect
+  ---
+  duration_ms: 2.0711
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:154:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'uninterrupted'
+         ^
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'uninterrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:155:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: absent proof is unknown, with no fabricated state or acknowledgements: {"cursor":"absent"}
+not ok 15 - absent proof is unknown, with no fabricated state or acknowledgements: {"cursor":"absent"}
+  ---
+  duration_ms: 0.6152
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:166:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'unknown' !== 'pass'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'pass'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:176:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: absent proof is unknown, with no fabricated state or acknowledgements: {"observation":"missing"}
+not ok 16 - absent proof is unknown, with no fabricated state or acknowledgements: {"observation":"missing"}
+  ---
+  duration_ms: 0.2682
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:166:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'unknown' !== 'pass'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'pass'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:176:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: missing evidence cannot hide a known original-budget breach
+not ok 17 - missing evidence cannot hide a known original-budget breach
+  ---
+  duration_ms: 0.3872
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:180:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'interrupted'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'interrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:182:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: missing evidence cannot hide known loss of acknowledged state
+not ok 18 - missing evidence cannot hide known loss of acknowledged state
+  ---
+  duration_ms: 0.2377
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:187:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'unknown'
+    - 'interrupted'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'interrupted'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:189:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: prediction verdict is separate from unchanged interrupted impact and retained history
+not ok 19 - prediction verdict is separate from unchanged interrupted impact and retained history
+  ---
+  duration_ms: 2.6985
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:194:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+
+      {
+    +   actual: 'unknown',
+    +   expected: 'unknown',
+    +   verdict: 'UNIMPLEMENTED'
+    -   actual: 'interrupted',
+    -   expected: 'interrupted',
+    -   verdict: 'PASS'
+      }
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    expected: 'interrupted'
+    actual: 'interrupted'
+    verdict: 'PASS'
+  actual:
+    expected: 'unknown'
+    actual: 'unknown'
+    verdict: 'UNIMPLEMENTED'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:197:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: unknown is a valid prediction but never interchangeable with uninterrupted
+not ok 20 - unknown is a valid prediction but never interchangeable with uninterrupted
+  ---
+  duration_ms: 0.4976
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:206:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'UNIMPLEMENTED'
+    - 'FAIL'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'FAIL'
+  actual: 'UNIMPLEMENTED'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:208:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: invalid configurations are rejected atomically without coercion or untrusted accessors
+not ok 21 - invalid configurations are rejected atomically without coercion or untrusted accessors
+  ---
+  duration_ms: 0.9858
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:217:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    code: 'ERR_CONFIG'
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:239:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: phase guards prevent discarded acknowledged work and repeated reconnect side effects
+not ok 22 - phase guards prevent discarded acknowledged work and repeated reconnect side effects
+  ---
+  duration_ms: 4.0136
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:245:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    code: 'ERR_PHASE'
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:248:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: snapshots are deeply frozen, deterministic and cannot mutate internal evidence
+not ok 23 - snapshots are deeply frozen, deterministic and cannot mutate internal evidence
+  ---
+  duration_ms: 16.5465
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:271:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+
+      assert.ok(Object.isFrozen(state.history[0].result.checks))
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:275:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: eight completed attempts are retained without eviction; reset restores exact idle state
+not ok 24 - eight completed attempts are retained without eviction; reset restores exact idle state
+  ---
+  duration_ms: 4.7783
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\learning\\S045\\tests\\model.test.cjs:282:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + {
+    +   budgetMs: null,
+    +   checks: [
+    +     {
+    +       id: 'cursor',
+    +       outcome: 'unknown'
+    +     },
+    +     {
+    +       id: 'retention',
+    +       outcome: 'unknown'
+    +     },
+    +     {
+    +       id: 'versions',
+    +       outcome: 'unknown'
+    +     },
+    +     {
+    +       id: 'complete',
+    +       outcome: 'unknown'
+    +     },
+    +     {
+    +       id: 'ordering',
+    +       outcome: 'unknown'
+    +     },
+    +     {
+    +       id: 'duplicates',
+    +       outcome: 'unknown'
+    +     },
+    +     {
+    +       id: 'state',
+    +       outcome: 'unknown'
+    +     },
+    +     {
+    +       id: 'budget',
+    +       outcome: 'unknown'
+    +     }
+    +   ],
+    +   duplicateEffects: null,
+    +   finalState: null,
+    +   gapMs: null,
+    +   impact: 'unknown',
+    +   lastAcknowledged: null,
+    +   missingVisible: null,
+    +   rejectedGaps: null,
+    +   requestedCursor: null,
+    +   schemaRejects: null,
+    +   visibleSequences: null,
+    +   wireReplays: null
+    + }
+    - null
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual:
+    impact: 'unknown'
+    requestedCursor: ~
+    lastAcknowledged: ~
+    finalState: ~
+    wireReplays: ~
+    duplicateEffects: ~
+    rejectedGaps: ~
+    schemaRejects: ~
+    missingVisible: ~
+    visibleSequences: ~
+    gapMs: ~
+    budgetMs: ~
+    checks:
+      0:
+        id: 'cursor'
+        outcome: 'unknown'
+      1:
+        id: 'retention'
+        outcome: 'unknown'
+      2:
+        id: 'versions'
+        outcome: 'unknown'
+      3:
+        id: 'complete'
+        outcome: 'unknown'
+      4:
+        id: 'ordering'
+        outcome: 'unknown'
+      5:
+        id: 'duplicates'
+        outcome: 'unknown'
+      6:
+        id: 'state'
+        outcome: 'unknown'
+      7:
+        id: 'budget'
+        outcome: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\learning\S045\tests\model.test.cjs:289:14)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..24
+# tests 24
+# suites 0
+# pass 1
+# fail 23
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 618.8644
