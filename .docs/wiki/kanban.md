@@ -15,7 +15,7 @@ Planned Kano mix: **28 dissatisfiers, 380 satisfiers, 6 delighters**. These inve
 
 The selected policy is **cumulative completion totals**, with each delighter's satisfiers completed in the **same named delivery packet**. No calendar sprint or simultaneous wall-clock completion is required.
 
-Accepted checkpoint, 2026-11-03: **11 satisfiers Done, 1 dissatisfier, 0 delighters**. The eleven portable lessons and C001 local contract guard passed 609 independently rerun automated checks plus recorded real-browser checks; their implementation commits and annotated tags are published on `main`. These are synthetic learning deliverables and a local approval-contract guard, not native Azure proof, production Node.js 24 validation, or completed source-demo parents. Operational tooling and its tests earn no additional Kano credit.
+Accepted checkpoint, 2026-11-03: **13 satisfiers Done, 2 dissatisfiers, 0 delighters**. The twelve portable lessons, C001 local contract guard, C002 explicit run-envelope validator, and C003 documented-only capability matrix passed independently rerun focused automated suites and recorded real-browser checks; per-card review records distinguish leaf checks, parent test groups, and repeated regressions. Their implementation commits and annotated tags are published on `main`. These are local learning and control-contract deliverables, not native Azure proof, production Node.js 24 validation, or completed source-demo parents. Operational tooling and its tests earn no additional Kano credit.
 
 The operator subsequently approved C001 design and local implementation: portable HTML/JS lessons, a proposed Node.js 24 LTS/Express control API on App Service Linux, single-tenant Microsoft Entra ID with invited guests, Azure Storage Tables/Queues/Blob for control state, App Service code slots as the first planned native target, and Bicep as the preferred future IaC format. Node.js 22.23.4 remains test tooling. **No IaC generation, identity registration, live Azure execution, deployment, or expenditure is approved.** Exact target/SKU/region and separate scaffold/deployment approvals remain required.
 
@@ -36,7 +36,7 @@ The operator subsequently approved C001 design and local implementation: portabl
 
 | To Do | In Progress | Done |
 | --- | --- | --- |
-| Ready admitted cards and blocked remainders are recorded in [live state](flow-state.json); only ready, unowned work is pullable. | Current claims, owners, dependencies, and empirical review are recorded in the live ledger; native work remains gated. | [C001](../../capability/C001/index.html), [A-S001](../../learning/S001/index.html), [A-S002](../../learning/S002/index.html), [A-S003](../../learning/S003/index.html), [A-S004](../../learning/S004/index.html), [A-S005](../../learning/S005/index.html), [A-S006](../../learning/S006/index.html), [A-S007](../../learning/S007/index.html), [A-S008](../../learning/S008/index.html), [A-S021](../../learning/S021/index.html), [A-S031](../../learning/S031/index.html), [A-S041](../../learning/S041/index.html). Evidence and publication references are in the live ledger. |
+| Ready admitted cards and blocked remainders are recorded in [live state](flow-state.json); only ready, unowned work is pullable. | Current claims, owners, dependencies, and empirical review are recorded in the live ledger; native work remains gated. | [C001](../../capability/C001/index.html), [C002](../../capability/C002/index.html), [C003](../../capability/C003/index.html), [A-S001](../../learning/S001/index.html), [A-S002](../../learning/S002/index.html), [A-S003](../../learning/S003/index.html), [A-S004](../../learning/S004/index.html), [A-S005](../../learning/S005/index.html), [A-S006](../../learning/S006/index.html), [A-S007](../../learning/S007/index.html), [A-S008](../../learning/S008/index.html), [A-S009](../../learning/S009/index.html), [A-S021](../../learning/S021/index.html), [A-S031](../../learning/S031/index.html), [A-S041](../../learning/S041/index.html). Evidence and publication references are in the live ledger. |
 
 Let N be the number of active contributors:
 
@@ -186,9 +186,9 @@ All cards in this section target one selected configuration and one observable b
 | C003 | H001, H002 | S | Publish the host/format capability matrix; show planned, qualified, unsupported, and unknown configurations accurately. | C001 |
 | C004 | H001, H003 | S | Show a run-consent plan with cost/duration/resource assumptions; missing pricing cannot appear as zero-cost approval. | C002, C003 |
 | C005 | H002 | S | Browse the 150 scenarios and two workflows; verify stable IDs and accurate availability labels. | C003 |
-| C006 | H002 | S | Search catalog titles/objectives; verify exact, partial, empty, and no-result queries. | C003 |
-| C007 | H002 | S | Filter catalog by host, risk, and readiness; verify incompatible entries explain why they cannot run. | C003 |
-| C008 | H002 | S | Open a learner's prerequisites and limits; verify every source entry has an understandable preparation view. | C003 |
+| C006 | H002 | S | Search the shared catalog's titles/objectives; verify exact, partial, empty, and no-result queries. | C003, C005 |
+| C007 | H002 | S | Filter the shared catalog by host, risk, and readiness; verify incompatible entries explain why they cannot run. | C003, C005 |
+| C008 | H002 | S | Open a learner's prerequisites and limits from the shared catalog; verify every source entry has an understandable preparation view. | C003, C005 |
 | C009 | H003, H012 | D | Enforce visitor/conductor/operator mutation permissions; valid identities succeed and forbidden commands fail server-side. | C001 |
 | C010 | H003, H012 | D | Enforce lease ownership on every resource target; another conductor's resources remain inaccessible. | C001, C009 |
 | C011 | H001, H003 | D | Reserve bounded lease capacity and spend; reject concurrent over-admission without consuming another lease's reservation. | C002, C010 |
