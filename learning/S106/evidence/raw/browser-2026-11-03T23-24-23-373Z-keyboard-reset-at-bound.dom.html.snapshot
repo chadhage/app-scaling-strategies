@@ -1,0 +1,115 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-6smd9voUY0VkyA6NT2acrI+jbKMEnJea/u0SMBWEj40='; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S106 - Public probes versus the private dependency path</title>
+  <script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
+    const theme =
+      param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+  </script>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer=""></script>
+  <script src="app.js" defer=""></script>
+</head>
+<body>
+  <main>
+    <p class="training">Training rehearsal - synthetic data - not a live Azure result</p>
+    <header>
+      <p class="eyebrow">S106 · A-S106 · SC-S106 · One frozen S unit</p>
+      <h1>A public HTTP 200 is not a private-path certificate</h1>
+      <p>Compare public and private probes; public success cannot certify a private dependency path.</p>
+    </header>
+
+    <section class="panel" aria-labelledby="boundaries-heading">
+      <h2 id="boundaries-heading">Fixed teaching observations only</h2>
+      <p>Every client, DNS answer, connection, authorization, dependency and duration below is fictional <strong>DATA ONLY</strong>.
+        These controls do not run probes, change networks or identity, resolve DNS, access resources or contact any service.</p>
+      <p>The required client is <code>application-private-segment</code>, DNS must report <code>private-address-label</code>,
+        and the journey must reach <code>orders-private-label</code> within <strong>150 synthetic ms</strong>.
+        Management access must remain unexposed.</p>
+      <p>Public endpoint and internal process health are distinct scopes. Missing or unrelated private observations remain unknown,
+        even when either health check is successful. A complete synthetic comparison is not native private connectivity proof.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="operator-heading">
+      <h2 id="operator-heading">1. Choose and record</h2>
+      <form id="probe-form">
+        <label for="condition">Teaching condition</label>
+        <select id="condition" name="condition">
+          <option value="private-ready" selected="">Complete private-path teaching trace</option>
+          <option value="dns-public-answer">Private client gets a public DNS answer</option>
+          <option value="connection-denied">Private connection denied</option>
+          <option value="authorization-denied">Dependency authorization denied</option>
+          <option value="wrong-client">Successful probe from an unrelated client</option>
+          <option value="wrong-dependency">HTTP 200 from the wrong dependency</option>
+          <option value="private-unobserved">No private-path observations</option>
+          <option value="dns-unobserved">Private DNS answer not observed</option>
+          <option value="management-exposed">Private path works but management is exposed</option>
+          <option value="dependency-slow">Private HTTP 200 exceeds the journey budget</option>
+        </select>
+        <label for="operator-action">Operator action</label>
+        <select id="operator-action" name="operatorAction">
+          <option value="public-only" selected="">Record public probe only</option>
+          <option value="public-internal">Record public and internal health only</option>
+          <option value="compare-private">Compare with the private teaching trace</option>
+        </select>
+        <div class="buttons">
+          <button id="record-probes" type="submit">Record teaching comparison</button>
+          <button id="reset-lesson" type="button" class="secondary">Reset current exercise</button>
+        </div>
+        <p class="hint">Keyboard: Tab between controls, arrow keys to choose, Enter to record or reset.
+          Reset restores defaults and focus, but retains history and the 12-record allowance. Reload starts a new in-memory session.</p>
+        <p id="input-error" class="error" role="alert" tabindex="-1" hidden=""></p>
+      </form>
+    </section>
+
+    <section id="assessment" class="panel" data-status="idle" aria-labelledby="results-heading" aria-live="polite">
+      <h2 id="results-heading">2. Keep the probe scopes separate</h2>
+      <dl>
+        <dt>Public endpoint probe</dt><dd id="public-result">Not recorded</dd>
+        <dt>Internal process health</dt><dd id="internal-result">Not recorded</dd>
+        <dt>Observed private-probe client label</dt><dd id="observed-client">Unknown - not measured</dd>
+        <dt>Required private-path duration</dt><dd id="private-duration">Unknown - not measured</dd>
+      </dl>
+      <h3 id="private-outcome">No comparison recorded</h3>
+      <p id="eligibility">Not eligible - no private teaching comparison</p>
+      <p id="explanation">Record an operator action. Public and internal successes cannot certify the application private path.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Private applicability, dependency and management-safety observations</caption>
+          <thead><tr><th scope="col">Required check</th><th scope="col">Result</th><th scope="col">Fixed observation and expectation</th></tr></thead>
+          <tbody id="private-checks"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="history-heading">
+      <h2 id="history-heading">3. Retained page-session history</h2>
+      <p id="counts" aria-live="polite">Attempts 12/12 | Private success 1 | Private failure 6 | Private unknown 5</p>
+      <p id="separate-probes">Public successes 12; internal successes 11. Neither is the private-path success numerator.</p>
+      <p>Private successes + failures + unknowns include every recorded comparison. Later success or reset does not erase an earlier failure.
+        An empty session is no evidence, not 100% success.</p>
+      <ol id="history" aria-label="All recorded teaching comparisons"><li data-status="unknown">#1 private-ready / public-only: private unknown; public success; internal unknown; not eligible.</li><li data-status="unknown">#2 private-ready / public-internal: private unknown; public success; internal success; not eligible.</li><li data-status="failure">#3 dns-public-answer / compare-private: private failure; public success; internal success; not eligible.</li><li data-status="success">#4 private-ready / compare-private: private success; public success; internal success; synthetic fixture eligible.</li><li data-status="failure">#5 connection-denied / compare-private: private failure; public success; internal success; not eligible.</li><li data-status="failure">#6 authorization-denied / compare-private: private failure; public success; internal success; not eligible.</li><li data-status="unknown">#7 wrong-client / compare-private: private unknown; public success; internal success; not eligible.</li><li data-status="failure">#8 wrong-dependency / compare-private: private failure; public success; internal success; not eligible.</li><li data-status="unknown">#9 private-unobserved / compare-private: private unknown; public success; internal success; not eligible.</li><li data-status="unknown">#10 dns-unobserved / compare-private: private unknown; public success; internal success; not eligible.</li><li data-status="failure">#11 management-exposed / compare-private: private failure; public success; internal success; not eligible.</li><li data-status="failure">#12 dependency-slow / compare-private: private failure; public success; internal success; not eligible.</li></ol>
+    </section>
+
+    <section class="panel" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">Try the misleading success</h2>
+      <ol>
+        <li>Choose the public-DNS-answer condition. Record public only: the private path is <strong>unknown</strong>.</li>
+        <li>Compare the private trace: public/internal health still succeeds, but private DNS <strong>fails</strong>.</li>
+        <li>Compare the complete trace: placement, DNS, connectivity, authorization, dependency and unexposed management all pass
+          in this fixed synthetic fixture.</li>
+        <li>Try the unrelated client: its HTTP 200 does not diagnose the actual private path. Reset and inspect the retained history.</li>
+      </ol>
+      <p class="hint">IaC N/A. No cloud, deployment, credentials, live identity, frameworks or packages.
+        B-S106 and D-S106 remain unqualified; this lesson does not validate production Node 24, native Azure or five-nines reliability.</p>
+    </section>
+    <noscript><p class="error">Enable local JavaScript to use the teaching exercise. No network or Azure account is required.</p></noscript>
+  </main>
+
+
+</body></html>

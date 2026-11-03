@@ -1,0 +1,17 @@
+'use strict';
+
+(function expose(root, factory) {
+  const lesson = factory();
+  if (typeof module === 'object' && module.exports) module.exports = lesson;
+  else root.S106Lesson = lesson;
+})(typeof globalThis === 'object' ? globalThis : this, function makeStub() {
+  return {
+    evaluate() {
+      return {
+        publicProbe: { status: 'success', httpStatus: 200, latencyMs: 24 },
+        privateProbe: { status: 'success', latencyMs: 24 },
+        eligible: true
+      };
+    }
+  };
+});

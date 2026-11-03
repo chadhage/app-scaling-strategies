@@ -1,0 +1,17 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const lesson = require('..\\model.js');
+
+test('S106 model is loadable before the behavioral assertion', () => {
+  assert.equal(typeof lesson.evaluate, 'function');
+});
+
+test('public success cannot certify an unobserved actual private path', () => {
+  const result = lesson.evaluate({ condition: 'dns-public-answer', action: 'public-only' });
+  assert.equal(result.publicProbe.status, 'success');
+  assert.equal(result.privateProbe.status, 'unknown');
+  assert.equal(result.privateProbe.latencyMs, null);
+  assert.equal(result.eligible, false);
+});
