@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S008",
+  "workerId": "worker-A-S008",
+  "kano": "S",
+  "kanoUnit": "A-S008",
+  "parentId": "D-S008",
+  "sourceId": "S008",
+  "packet": "LP-RINGS",
+  "entryGate": "SOURCE",
+  "mode": "synthetic-only",
+  "objective": "Promote one ring with matching frontend/API/worker versions, gating observation and shared-contract compatibility before expansion.",
+  "entryPoint": "learning/S008/index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "configuration": {
+    "host": "Direct local file in the VS Code integrated browser; no application server",
+    "runtime": "Node.js v22.23.4",
+    "framework": "None",
+    "dependenciesInstalled": false,
+    "rings": ["internal", "pilot", "limited", "remaining"],
+    "membersPerRing": 2,
+    "initialTiers": "Internal all-v2, with a healthy fixture observation; every other ring all-v1 and pending",
+    "requiredTargetTiers": {"frontend": "v2", "api": "v2", "worker": "v2"},
+    "sharedContracts": {
+      "dual": "Accepts v1 and v2 consumers during coexistence",
+      "v2-only": "Incompatible with every still-active v1 consumer; rejected before candidate observations"
+    },
+    "observationWindowFixtureSeconds": 120,
+    "minimumTargetSamples": 2,
+    "journeyBudgetFixtureMs": 800,
+    "clockLimit": "Window duration and latency are scripted fixture values, not real elapsed-time or production measurements."
+  },
+  "stages": {
+    "bdd": {
+      "order": 1,
+      "path": "learning/S008/release-rings.feature",
+      "writtenBeforeTestsAtUtc": "2026-11-03T09:00:06.2553574Z",
+      "coverage": [
+        "Compatible next-ring promotion with exact membership and per-tier actual paths",
+        "Ring skipping and invalid predecessor observation blocked",
+        "Requested mixed or unchanged tiers explicitly rejected",
+        "Shared-contract incompatibility detected before any candidate observation",
+        "Unknown evidence remains unknown and cannot unlock expansion",
+        "Completed v1 journeys distinguished from desired v2 migration",
+        "Actual API tier drift rejected",
+        "Interrupted journeys retained across a later successful retry",
+        "Promotion and bounded observation windows enforced",
+        "Sequential per-ring observations, keyboard controls, reset, and evidence limits"
+      ],
+      "execution": "Gherkin is the first-written specification, not a claimed Cucumber execution. Node built-in tests and real browser assertions exercise the scenarios."
+    },
+    "tddRed": {
+      "order": 2,
+      "command": "node --test --test-reporter=tap learning\\S008\\ring-model.test.cjs",
+      "outputPath": "learning/S008/evidence/red.txt",
+      "stubSnapshotPath": "learning/S008/evidence/red-model.txt",
+      "recordedAtUtc": "2026-11-03T09:01:28.5348438Z",
+      "exitCode": 1,
+      "tests": 15,
+      "passed": 1,
+      "failed": 14,
+      "failureKind": "Fourteen AssertionError behavior failures against a loadable minimal promotion stub; no missing module, tool, or import failure.",
+      "outputNormalization": "Removed repository prefixes in raw and TAP-escaped absolute locations and trimmed trailing whitespace on otherwise blank assertion-message lines. Assertion text, counts, timing, and exit status are retained.",
+      "examples": [
+        "Matching tiers and observed compatible journeys should promote: expected PASS, actual UNKNOWN",
+        "An unobserved predecessor blocks expansion: expected BLOCKED, actual UNKNOWN",
+        "Unknown fixture must exercise an observation: expected observation, actual not-implemented"
+      ]
+    },
+    "iac": {
+      "order": 3,
+      "status": "N/A",
+      "reason": "No Azure resource is needed for this SOURCE read-only lesson. C001 runtime/authentication/hosting and the separate scaffold/deploy approval gate remain unapproved.",
+      "resourcesCreated": 0,
+      "managementCalls": 0
+    },
+    "implementationAndGreen": {
+      "order": 4,
+      "command": "node --test --test-reporter=tap learning\\S008\\ring-model.test.cjs",
+      "outputPath": "learning/S008/evidence/green.txt",
+      "recordedAtUtc": "2026-11-03T09:04:06.9053806Z",
+      "exitCode": 0,
+      "tests": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "syntaxCommand": "node --check learning\\S008\\ring-model.js && node --check learning\\S008\\lesson.js",
+      "syntaxExitCode": 0,
+      "refactoring": [
+        "Pure promotion evaluator clones input state and records separate desired routing and actual fixture rows.",
+        "Preflight checks precede candidate observations; assertion results drive the verdict.",
+        "DOM rendering uses textContent and native labeled controls, with separate verification, impact, and cleanup.",
+        "Retries retain cumulative interrupted and unknown target outcomes; only explicit reset clears local counters."
+      ]
+    },
+    "browser": {
+      "order": 5,
+      "toolDiscovery": "Searched deferred tools for VS Code openBrowserPage/readPage/runPlaywrightCode before use.",
+      "openTool": "openBrowserPage",
+      "forceNew": true,
+      "pageId": "fdafa005-49d1-4984-aa03-1f4c6bb65810",
+      "openedPath": "learning/S008/index.html",
+      "scheme": "file",
+      "pathNormalization": "The actual open used the absolute local file URI; committed evidence records only the repository-relative path.",
+      "interactionTool": "runPlaywrightCode",
+      "isolation": "Every browser operation used this unique pageId. No global/shared browser navigation was used.",
+      "preflightAndCompatibleRun": {
+        "result": "Passed all assertions; actual clicks and selectOption actions changed rendered DOM.",
+        "observedCompatibleStatus": "PASS: pilot. 2 completed, 0 interrupted, 0 unknown synthetic target journeys. Next eligible ring: limited.",
+        "observedPilot": "pilot-01 and pilot-02; v2 / v2 / v2; promoted; healthy; 120 fixture seconds; 2 samples",
+        "observedOtherRings": "Limited and remaining retained v1 / v1 / v1.",
+        "allVisibleAssertions": "PASS",
+        "mixedRequestedTiers": "BLOCKED; tier-affinity failed; zero target observation rows",
+        "breakingSharedContract": "BLOCKED BEFORE expansion; shared-contract failed and named pilot, limited, remaining as incompatible active v1 consumers; pilot verified routing retained v1",
+        "skippedRing": "BLOCKED; ring-order failed; pilot still next",
+        "closedWindow": "BLOCKED; promotion-window failed"
+      },
+      "observationRunResult": {
+        "passed": true,
+        "observed": {
+          "unknown": "UNKNOWN",
+          "stale-route": "BLOCKED",
+          "tier-drift": "BLOCKED",
+          "too-short": "BLOCKED",
+          "interrupted": "BLOCKED"
+        },
+        "preservedUnknownsOnRetry": 2,
+        "preservedInterruptionsOnRetry": 1,
+        "orderedRings": 3,
+        "targetRowsPerAttempt": 2,
+        "otherRowsPerAttempt": 6,
+        "finalState": "reset"
+      },
+      "observedVersusDesired": [
+        "Unknown actual worker cells remained 'unknown'; latest impact showed two unknown journeys and verdict UNKNOWN.",
+        "Stale-route target cells were all v1 despite desired all-v2: user-completion assertion PASS, actual-affinity assertion FAIL, overall BLOCKED.",
+        "Tier-drift actual API cells were v1 with frontend/worker v2; actual-affinity failed.",
+        "Too-short fixture reported a failed observation-window despite completed journeys.",
+        "Interrupted fixture reported one interrupted user; a healthy retry passed its new assertions but cumulative impact still reported one interruption."
+      ],
+      "keyboardInitialAttempt": {
+        "result": "Browser assertion failed on an overly strict exact 3px computed focus width.",
+        "diagnosisTool": "runPlaywrightCode on the same pageId",
+        "actualFocus": {"activeId": "promote", "focusVisible": true, "outlineWidth": "2.66667px"},
+        "correction": "Changed only the browser check to require visible focus and a computed outline >= 2px, accommodating browser pixel rounding. No application behavior was changed or failure concealed."
+      },
+      "keyboardRerunResult": {
+        "passed": true,
+        "keyboard": "Home/ArrowDown, Tab, Enter, Shift+Tab/Home/Tab/Space, Tab x3/Enter",
+        "focus": {"id": "promote", "visible": true, "outline": "2.66667px"},
+        "unknown": "UNKNOWN / 2 unknown",
+        "retry": "PASS / 2 prior unknown retained",
+        "reset": "NOT RUN / attempts 0",
+        "labeledSelects": true,
+        "live": "polite",
+        "csp": "default-src none; connect-src none",
+        "mobileWidth": 375,
+        "mobileCheck": "No document-level horizontal overflow; tables remain in labeled scroll regions."
+      },
+      "finalReloadAudit": {
+        "passed": true,
+        "consoleErrors": [],
+        "runtimeErrors": [],
+        "remoteRequests": [],
+        "finalState": "NOT RUN; pilot next; attempts 0",
+        "pageLeftOpenForReview": true
+      },
+      "localAssetAudit": {
+        "passed": true,
+        "scripts": [
+          {"file": "ring-model.js", "protocol": "file:"},
+          {"file": "lesson.js", "protocol": "file:"}
+        ],
+        "styles": [{"file": "lesson.css", "protocol": "file:", "rules": 48}],
+        "modelLoaded": true,
+        "renderedRings": 4,
+        "fileResourceTimingEntries": 0,
+        "limit": "File resource timing is empty in this browser; loaded local assets were checked through DOM and CSSOM instead. The request monitor observed no HTTP(S) requests."
+      }
+    }
+  },
+  "verification": {
+    "verdict": "PASS for the bounded portable synthetic A-S008 exercise and its negative gates only",
+    "unknownRule": "Unknown never passes its own attempt. A later healthy retry is distinct new synthetic evidence and does not erase prior unknown outcomes.",
+    "nativeProof": false,
+    "parentComplete": false,
+    "reviewer": "Controller empirical review pending",
+    "acceptedAtUtc": null
+  },
+  "publicationPreparation": {
+    "initialAttempt": "Publisher whitespace gate stopped before any commit or push because genuine Node TAP assertion messages contained trailing spaces on blank lines.",
+    "recovery": "Normalized only the owned RED evidence whitespace and remaining escaped local path prefixes; retried through the same shared publisher helper. No index locks, branch changes, resets, or manual Git index mutations."
+  },
+  "userImpact": {
+    "healthyTargetFixture": {"completed": 2, "interrupted": 0, "unknown": 0},
+    "unknownTargetFixture": {"completed": 0, "interrupted": 0, "unknown": 2},
+    "interruptedTargetFixture": {"completed": 1, "interrupted": 1, "unknown": 0},
+    "preflightRejected": "NOT OBSERVED; not a claim of uninterrupted users",
+    "scope": "Fictional member journeys only; no real user impact was measured."
+  },
+  "cleanup": {
+    "result": "Verified local reset restored pending all-v1 pilot/limited/remaining and baseline internal v2; final reload confirmed NOT RUN and attempts 0.",
+    "resourcesCreated": 0,
+    "servicesStarted": 0,
+    "credentialsUsed": false,
+    "managementCalls": 0,
+    "persistentBrowserStorageUsed": false,
+    "backgroundProcessesStarted": 0,
+    "retainedEvidence": "RED stub snapshot and real normalized RED/GREEN output are intentional owned evidence, not scratch files.",
+    "browserPage": "Dedicated page remains open at baseline for controller review; no server or watcher is running."
+  },
+  "limitations": [
+    "A-S008 alone is not B-S008 native proof, D-S008 completion, or source S008 completion.",
+    "Parent prerequisites D-S003, D-S051, D-S052, and D-S056 are preserved; the A slice itself enters through SOURCE.",
+    "No native Azure routing, authorization, tenant isolation, capacity, drain, rollback, latency, or shared-dependency behavior was validated.",
+    "No 99.999% proof, uptime SLA, statistical reliability result, or production-success guarantee.",
+    "Only eight fictional members and deterministic bounded fixtures are exercised; the 120-second window is not a real observation period.",
+    "IaC and deployment are N/A for this SOURCE lesson, not approved for a live harness.",
+    "Browser focus pixel rounding required a less brittle assertion; native file Resource Timing entries were unavailable, so loaded local DOM/CSSOM assets and request events were checked instead.",
+    "Independent acceptance and publication references belong to the controller result after this evidence is committed; no self-referential eventual commit SHA is embedded."
+  ],
+  "disclaimerPath": "README.md#microsoft-open-source-disclaimer"
+}

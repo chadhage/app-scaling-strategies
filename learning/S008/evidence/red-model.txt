@@ -1,0 +1,42 @@
+'use strict';
+
+(function expose(root) {
+  const tiers = (version) => ({ frontend: version, api: version, worker: version });
+
+  function createRehearsal() {
+    return {
+      rings: ['internal', 'pilot', 'limited', 'remaining'].map((id, index) => ({
+        id,
+        members: [`${id}-01`, `${id}-02`],
+        tiers: tiers(index === 0 ? 'v2' : 'v1'),
+        status: index === 0 ? 'promoted' : 'pending',
+        observation: index === 0 ? { status: 'healthy', seconds: 120, samples: 2 } : null,
+        lastAttempt: null
+      })),
+      attempts: 0,
+      cumulativeImpact: { completed: 0, interrupted: 0, unknown: 0 }
+    };
+  }
+
+  function nextRing(state) {
+    return state.rings.find((ring) => ring.status !== 'promoted')?.id ?? null;
+  }
+
+  function attemptPromotion(state, choices) {
+    return {
+      state: structuredClone(state),
+      verdict: 'UNKNOWN',
+      phase: 'not-implemented',
+      desired: choices,
+      actual: [],
+      unaffected: [],
+      assertions: [],
+      reasons: ['Promotion behavior is not implemented.'],
+      trace: []
+    };
+  }
+
+  const api = { createRehearsal, nextRing, attemptPromotion };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.ReleaseRings = api;
+})(globalThis);
