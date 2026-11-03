@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S065",
+  "sourceId": "S065",
+  "parentId": "D-S065",
+  "kano": "S",
+  "kanoUnit": "A-S065",
+  "packet": "SC-S065",
+  "owner": "worker-A-S065",
+  "entryGate": "SOURCE",
+  "title": "Hot-shard rebalancing: move HOT without a route gap or two owners",
+  "entryPoint": "learning/S065/index.html",
+  "feature": "learning/S065/hot-partition.feature",
+  "executionMode": "synthetic",
+  "requiredVisibleLabel": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Move a hot partition; detect routing gaps and simultaneous active owners.",
+  "sourceAcceptance": "S065: Move tenants or partitions without missing writes or assigning two active owners. D-S065: Ownership changes preserve committed effects and routing; no two writers own the same moved partition, under actual live read/write load.",
+  "preconditions": [
+    "A modern browser with local HTML, external CSS and JavaScript; no server or account.",
+    "Synthetic HOT starts on shard-old, epoch 7, with acknowledged effect H0.",
+    "Synthetic COLD stays on shard-cold with acknowledged effect C0.",
+    "Before, cutover and after each attempt one write and one read on both partitions.",
+    "The cutover target snapshot either includes acknowledged H1 or deliberately omits it."
+  ],
+  "actions": [
+    "Choose hot routing, active-owner ordering, target copy and observation coverage.",
+    "Start to freeze exact inputs; observe the three fixed phases separately.",
+    "Inspect hot and cold routes, supplied owner epochs, acknowledged effects and operation outcomes.",
+    "Compare an optional learning prediction with the independent measured synthetic verdict.",
+    "Start another attempt with retained history, or explicitly reset all in-memory attempts."
+  ],
+  "input": "learning/S065/model.js",
+  "assertions": [
+    "Complete coordinated routing, exclusive ownership and a current target preserve all twelve operations.",
+    "A transient hot route gap remains failure after recovery.",
+    "A stale route reaches a fenced former owner and cannot pass.",
+    "Observed simultaneous hot owners fail even if all client operations succeed.",
+    "Missing acknowledged H1 fails despite correct routes and exclusive owners.",
+    "Missing observation coverage stays unknown; known failures dominate uncertainty.",
+    "COLD successes do not substitute for successful hot target exposure.",
+    "Exact input shapes, lifecycle, immutable snapshots and six-attempt history are guarded."
+  ],
+  "bounds": {
+    "completedAttempts": 6,
+    "phases": 3,
+    "operationsPerPhase": 4,
+    "operationsPerAttempt": 12,
+    "configurations": 36,
+    "routing": ["coordinated", "gap", "stale"],
+    "ownership": ["exclusive", "overlap"],
+    "data": ["current", "behind"],
+    "coverage": ["complete", "partial", "none"],
+    "arbitraryEndpointsOrRecords": false
+  },
+  "iac": {
+    "status": "N/A",
+    "decisionStage": "After genuine behavioral RED and before behavior implementation",
+    "decision": "learning/S065/evidence/iac-decision.json",
+    "redReference": "learning/S065/evidence/red/run.json",
+    "reason": "Resource-free local synthetic lesson; no cloud/IaC/scaffold/identity/deploy/spend."
+  },
+  "testRuntime": {
+    "node": "22.23.4",
+    "purpose": "Existing Node22 tooling only; not production Node24 certification.",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156",
+    "browserHelper": "testing/browser/isolated.cjs",
+    "browserHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "browserHelperPublication": "53c0c0d",
+    "dependencyChanges": false
+  },
+  "limits": [
+    "Fixed sequential synthetic fixtures, not a real partition, migration, routing or exclusive-ownership proof.",
+    "Supplied epochs and owner sets do not implement distributed fencing or concurrent execution.",
+    "The coordinated cutover is a model ordering, not a native atomicity guarantee.",
+    "No actual load, authentication, credentials, cloud operations, native Azure or production24 certification.",
+    "History retains at most six completed attempts in memory; explicit reset or reload clears it.",
+    "The abandoned browser lifecycle prototype is unqualified; no unattended-runner certification.",
+    "B-S065 and original D-S065 actual partition-rebalance acceptance remain separate and unfulfilled.",
+    "One frozen S unit; tests, evidence and refinement earn no additional units."
+  ]
+}

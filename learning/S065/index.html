@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S065 — Hot-partition rebalance rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to lesson</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S065 — Hot-partition rebalance rehearsal</h1>
+    <p>A-S065 · D-S065 · SC-S065 · frozen Kano S · one portable lesson</p>
+  </header>
+  <main id="main">
+    <section aria-labelledby="objective">
+      <h2 id="objective">Move HOT without losing its route, effects or single owner</h2>
+      <p>HOT begins on <strong>shard-old</strong> at synthetic owner epoch 7.
+        Relocate it to <strong>shard-new</strong> at epoch 8 while three fixed phases each attempt
+        one write and one read on HOT and on unrelated COLD. COLD stays on shard-cold.</p>
+      <p>H0 and C0 are fixture effects. Acknowledged H1, H2 and H3 must survive hot reads.
+        The target snapshot is copied at cutover. A coordinated route follows the replacement owner;
+        this is one synthetic ordering, <strong>not an atomic-cutover guarantee for a real system</strong>.</p>
+      <p>Success needs all twelve operation observations, preserved acknowledged effects, a correct
+        hot route, target exposure and exactly one hot owner in every phase. Known failure wins over
+        missing evidence. Configured intent and successful cold requests do not prove a hot move.</p>
+    </section>
+
+    <section aria-labelledby="configure-heading">
+      <h2 id="configure-heading">1. Choose a bounded relocation plan</h2>
+      <p id="bounds">Three phases, twelve operations, six retained attempts. Synthetic IDs only;
+        no accounts, endpoints, authentication, timers or random load.</p>
+      <form id="plan" novalidate aria-describedby="bounds">
+        <fieldset id="configuration">
+          <legend>Conditions frozen when the attempt starts</legend>
+          <label for="routing">Hot routing at cutover</label>
+          <select id="routing" name="routing">
+            <option value="coordinated">Coordinated — follow the new owner</option>
+            <option value="gap">Gap — no hot route during cutover, then recover</option>
+            <option value="stale">Stale — keep routing to the former owner</option>
+          </select>
+          <label for="ownership">Active hot owners during cutover</label>
+          <select id="ownership" name="ownership">
+            <option value="exclusive">Exclusive — fence old before new accepts</option>
+            <option value="overlap">Overlap — both active until the after phase</option>
+          </select>
+          <label for="data">Target copy at cutover</label>
+          <select id="data" name="data">
+            <option value="current">Current — includes acknowledged H1</option>
+            <option value="behind">Behind — missing acknowledged H1</option>
+          </select>
+          <label for="coverage">Observation coverage</label>
+          <select id="coverage" name="coverage">
+            <option value="complete">Complete — all three phases</option>
+            <option value="partial">Partial — cutover observations absent</option>
+            <option value="none">None — all operation observations absent</option>
+          </select>
+        </fieldset>
+        <label for="prediction">Your predicted synthetic verdict (optional learning check)</label>
+        <select id="prediction" name="prediction">
+          <option value="">Choose a prediction</option>
+          <option value="success">Success</option>
+          <option value="failure">Failure</option>
+          <option value="unknown">Unknown</option>
+        </select>
+        <div class="controls">
+          <button id="start" type="submit">Start attempt</button>
+          <button id="observe" type="button" disabled>Observe next phase</button>
+          <button id="new-attempt" type="button" disabled>New attempt (retain history)</button>
+          <button id="reset-all" type="button">Reset all attempts</button>
+        </div>
+      </form>
+      <p id="status" role="status" aria-live="polite"></p>
+      <p id="error" role="alert" tabindex="-1" hidden></p>
+    </section>
+
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">2. Inspect the synthetic trace</h2>
+      <p>Observe before → cutover → after. Missing observations show unknown, not inferred routes or owners.
+        The model fences the former owner in the after phase even for the overlap fault.</p>
+      <div class="scroll" role="region" aria-label="Phase observations" tabindex="0">
+        <table>
+          <caption>Observed route and owner boundaries</caption>
+          <thead><tr><th scope="col">Phase</th><th scope="col">HOT route</th><th scope="col">Active HOT owners</th><th scope="col">COLD route</th></tr></thead>
+          <tbody id="phase-trace"></tbody>
+        </table>
+      </div>
+      <div class="scroll" role="region" aria-label="Operation observations" tabindex="0">
+        <table>
+          <caption>Each attempted write and read; effects are synthetic identifiers</caption>
+          <thead><tr><th scope="col">Phase / operation</th><th scope="col">Partition / destination</th><th scope="col">Outcome</th><th scope="col">Required → received effects</th></tr></thead>
+          <tbody id="operation-trace"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="summary" class="result pending" aria-labelledby="verdict" aria-live="polite" tabindex="-1">
+      <h2 id="verdict">3. Verification: pending</h2>
+      <p id="impact">User impact: no completed observations.</p>
+      <p id="cleanup">Cleanup: no resources created. Explicit reset or reload clears in-memory evidence.</p>
+      <dl id="metrics" hidden>
+        <dt>Attempted operations</dt><dd id="attempted-count">0</dd>
+        <dt>Observed operations</dt><dd id="observed-count">0</dd>
+        <dt>Successful observed operations</dt><dd id="success-count">0</dd>
+        <dt>Failed observed operations</dt><dd id="failure-count">0</dd>
+        <dt>Unknown operation outcomes</dt><dd id="unknown-count">0</dd>
+        <dt>Observed hot routing-gap phases</dt><dd id="gap-count">0</dd>
+        <dt>Observed stale hot-route phases</dt><dd id="stale-count">0</dd>
+        <dt>Observed dual hot-owner phases</dt><dd id="owner-count">0</dd>
+        <dt>Missing acknowledged effects</dt><dd id="missing-effects">none</dd>
+        <dt>Successful hot operations on the target</dt><dd id="moved-count">0</dd>
+        <dt>Successful cold control operations</dt><dd id="cold-count">0</dd>
+      </dl>
+      <ul id="reasons"></ul>
+      <button id="check-prediction" type="button" disabled>Check my prediction</button>
+      <p id="prediction-result" role="status"></p>
+      <p>A matching answer is a learning check only; it never changes the verification result.</p>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained attempts</h2>
+      <p id="history-status">No completed attempts. History is memory-only, not durable evidence.</p>
+      <ol id="history"></ol>
+    </section>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits and source acceptance</h2>
+      <p><a href="../../README.md">README S065</a>: hot-shard rebalancing must move tenants or partitions
+        without missing writes or assigning two active owners.
+        <a href="../../.docs/wiki/backlog.md">D-S065</a> additionally requires actual live read/write load,
+        retained committed effects and routing, with no two writers owning the moved partition;
+        its prerequisite is D-S064.</p>
+      <p>This fixed sequential model has no real partitions, migrations, routing tables, fences, locks,
+        replication, concurrency or load measurement. Its supplied owner observations are not proof
+        of actual exclusive ownership. No cloud calls, credentials, native Azure, production Node 24,
+        source-parent acceptance or reliability certification are provided.
+        B-S065 and original D-S065 remain incomplete.</p>
+      <p>Microsoft Open Source Disclaimer: educational examples are provided AS IS, without guarantees.
+        Microsoft/Azure references do not imply endorsement, certification or support. Project goals
+        are not Microsoft SLAs. The disclaimer is not a license. Read the
+        <a href="../../README.md#microsoft-open-source-disclaimer">full repository disclaimer</a>
+        before any real-world use.</p>
+    </section>
+    <noscript>This exercise requires JavaScript. No run or successful result exists while scripts are disabled.</noscript>
+  </main>
+</body>
+</html>

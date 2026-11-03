@@ -1,0 +1,303 @@
+{
+  "cardId": "A-S065",
+  "workerId": "worker-A-S065",
+  "capturedAtUtc": "2026-11-03T19:43:40.512Z",
+  "mode": "synthetic",
+  "nativeQualified": false,
+  "captureOptIn": "CAPTURE_BROWSER_EVIDENCE=1",
+  "node": "v22.23.4",
+  "playwright": "1.56.1",
+  "browser": "156.0.4314.50",
+  "headless": true,
+  "chromiumSandbox": true,
+  "helper": "testing/browser/isolated.cjs",
+  "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "helperPublication": "53c0c0d",
+  "cleanup": {
+    "awaitedFinallyClose": true,
+    "noLessonResourcesCreated": true
+  },
+  "screenshot": "evidence/raw/browser.png",
+  "screenshotSha256": "7fd3cbd397b34519e72a1f23abd90802ae51751a20fc0854b291a40785f1d19d",
+  "dom": "evidence/raw/browser-dom.html",
+  "domSha256": "dcb4e5db1f701c7a57104ea4d8a571533a46067acafadbbc3339eed2a4570157",
+  "checks": [
+    {
+      "name": "keyboard-safe",
+      "verdict": "success",
+      "metrics": {
+        "attempted-count": "12",
+        "observed-count": "12",
+        "success-count": "12",
+        "failure-count": "0",
+        "unknown-count": "0",
+        "gap-count": "0",
+        "stale-count": "0",
+        "owner-count": "0",
+        "missing-effects": "none",
+        "moved-count": "4",
+        "cold-count": "6"
+      },
+      "status": "Attempt 1 complete — success. Start a new attempt to retain this evidence.",
+      "impact": "User impact: Uninterrupted in this synthetic trace",
+      "cleanup": "Cleanup: No resources created; attempt evidence remains in memory until reset or reload.",
+      "reasons": "Complete synthetic observations preserve hot effects, routing and one owner.",
+      "phases": "before\tshard-old\tshard-old (epoch 7)\tshard-cold\ncutover\tshard-new\tshard-new (epoch 8)\tshard-cold\nafter\tshard-new\tshard-new (epoch 8)\tshard-cold",
+      "operations": "before / H-W1\tHOT / shard-old\tsuccess: acknowledged\tAcknowledged H1\nbefore / H-R1\tHOT / shard-old\tsuccess: read-preserved\tH0, H1 → H0, H1\nbefore / C-W1\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C1\nbefore / C-R1\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1 → C0, C1\ncutover / H-W2\tHOT / shard-new\tsuccess: acknowledged\tAcknowledged H2\ncutover / H-R2\tHOT / shard-new\tsuccess: read-preserved\tH0, H1, H2 → H0, H1, H2\ncutover / C-W2\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C2\ncutover / C-R2\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1, C2 → C0, C1, C2\nafter / H-W3\tHOT / shard-new\tsuccess: acknowledged\tAcknowledged H3\nafter / H-R3\tHOT / shard-new\tsuccess: read-preserved\tH0, H1, H2, H3 → H0, H1, H2, H3\nafter / C-W3\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C3\nafter / C-R3\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1, C2, C3 → C0, C1, C2, C3",
+      "history": [
+        "Attempt 1 — success\n\ncoordinated routing; exclusive ownership; current copy; complete observations. 0 failed, 0 unknown operations. Complete synthetic observations preserve hot effects, routing and one owner.\n\nRetained synthetic trace for attempt 1"
+      ],
+      "focus": "summary"
+    },
+    {
+      "name": "routing-gap-failure-retained-after-recovery",
+      "verdict": "failure",
+      "metrics": {
+        "attempted-count": "12",
+        "observed-count": "12",
+        "success-count": "10",
+        "failure-count": "2",
+        "unknown-count": "0",
+        "gap-count": "1",
+        "stale-count": "0",
+        "owner-count": "0",
+        "missing-effects": "none",
+        "moved-count": "2",
+        "cold-count": "6"
+      },
+      "status": "Attempt 2 complete — failure. Start a new attempt to retain this evidence.",
+      "impact": "User impact: Interrupted or unsafe in this synthetic trace",
+      "cleanup": "Cleanup: No resources created; attempt evidence remains in memory until reset or reload.",
+      "reasons": "Observed hot routing gap.2 observed operations failed.",
+      "phases": "before\tshard-old\tshard-old (epoch 7)\tshard-cold\ncutover\tNO ROUTE\tshard-new (epoch 8)\tshard-cold\nafter\tshard-new\tshard-new (epoch 8)\tshard-cold",
+      "operations": "before / H-W1\tHOT / shard-old\tsuccess: acknowledged\tAcknowledged H1\nbefore / H-R1\tHOT / shard-old\tsuccess: read-preserved\tH0, H1 → H0, H1\nbefore / C-W1\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C1\nbefore / C-R1\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1 → C0, C1\ncutover / H-W2\tHOT / NO ROUTE\tfailure: routing-gap\tWrite not acknowledged\ncutover / H-R2\tHOT / NO ROUTE\tfailure: routing-gap\tH0, H1 → no response\ncutover / C-W2\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C2\ncutover / C-R2\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1, C2 → C0, C1, C2\nafter / H-W3\tHOT / shard-new\tsuccess: acknowledged\tAcknowledged H3\nafter / H-R3\tHOT / shard-new\tsuccess: read-preserved\tH0, H1, H3 → H0, H1, H3\nafter / C-W3\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C3\nafter / C-R3\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1, C2, C3 → C0, C1, C2, C3",
+      "history": [
+        "Attempt 1 — success\n\ncoordinated routing; exclusive ownership; current copy; complete observations. 0 failed, 0 unknown operations. Complete synthetic observations preserve hot effects, routing and one owner.\n\nRetained synthetic trace for attempt 1",
+        "Attempt 2 — failure\n\ngap routing; exclusive ownership; current copy; complete observations. 2 failed, 0 unknown operations. Observed hot routing gap. 2 observed operations failed.\n\nRetained synthetic trace for attempt 2"
+      ],
+      "focus": "summary"
+    },
+    {
+      "name": "simultaneous-active-owners-fail-with-twelve-successes",
+      "verdict": "failure",
+      "metrics": {
+        "attempted-count": "12",
+        "observed-count": "12",
+        "success-count": "12",
+        "failure-count": "0",
+        "unknown-count": "0",
+        "gap-count": "0",
+        "stale-count": "0",
+        "owner-count": "1",
+        "missing-effects": "none",
+        "moved-count": "4",
+        "cold-count": "6"
+      },
+      "status": "Attempt 3 complete — failure. Start a new attempt to retain this evidence.",
+      "impact": "User impact: Interrupted or unsafe in this synthetic trace",
+      "cleanup": "Cleanup: No resources created; attempt evidence remains in memory until reset or reload.",
+      "reasons": "Observed simultaneous active hot owners.",
+      "phases": "before\tshard-old\tshard-old (epoch 7)\tshard-cold\ncutover\tshard-new\tshard-old (epoch 7) + shard-new (epoch 8)\tshard-cold\nafter\tshard-new\tshard-new (epoch 8)\tshard-cold",
+      "operations": "before / H-W1\tHOT / shard-old\tsuccess: acknowledged\tAcknowledged H1\nbefore / H-R1\tHOT / shard-old\tsuccess: read-preserved\tH0, H1 → H0, H1\nbefore / C-W1\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C1\nbefore / C-R1\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1 → C0, C1\ncutover / H-W2\tHOT / shard-new\tsuccess: acknowledged\tAcknowledged H2\ncutover / H-R2\tHOT / shard-new\tsuccess: read-preserved\tH0, H1, H2 → H0, H1, H2\ncutover / C-W2\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C2\ncutover / C-R2\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1, C2 → C0, C1, C2\nafter / H-W3\tHOT / shard-new\tsuccess: acknowledged\tAcknowledged H3\nafter / H-R3\tHOT / shard-new\tsuccess: read-preserved\tH0, H1, H2, H3 → H0, H1, H2, H3\nafter / C-W3\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C3\nafter / C-R3\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1, C2, C3 → C0, C1, C2, C3",
+      "history": [
+        "Attempt 1 — success\n\ncoordinated routing; exclusive ownership; current copy; complete observations. 0 failed, 0 unknown operations. Complete synthetic observations preserve hot effects, routing and one owner.\n\nRetained synthetic trace for attempt 1",
+        "Attempt 2 — failure\n\ngap routing; exclusive ownership; current copy; complete observations. 2 failed, 0 unknown operations. Observed hot routing gap. 2 observed operations failed.\n\nRetained synthetic trace for attempt 2",
+        "Attempt 3 — failure\n\ncoordinated routing; overlap ownership; current copy; complete observations. 0 failed, 0 unknown operations. Observed simultaneous active hot owners.\n\nRetained synthetic trace for attempt 3"
+      ],
+      "focus": "summary"
+    },
+    {
+      "name": "missing-acknowledged-effect-failure",
+      "verdict": "failure",
+      "metrics": {
+        "attempted-count": "12",
+        "observed-count": "12",
+        "success-count": "10",
+        "failure-count": "2",
+        "unknown-count": "0",
+        "gap-count": "0",
+        "stale-count": "0",
+        "owner-count": "0",
+        "missing-effects": "H1",
+        "moved-count": "2",
+        "cold-count": "6"
+      },
+      "status": "Attempt 4 complete — failure. Start a new attempt to retain this evidence.",
+      "impact": "User impact: Interrupted or unsafe in this synthetic trace",
+      "cleanup": "Cleanup: No resources created; attempt evidence remains in memory until reset or reload.",
+      "reasons": "Missing acknowledged effects: H1.2 observed operations failed.",
+      "phases": "before\tshard-old\tshard-old (epoch 7)\tshard-cold\ncutover\tshard-new\tshard-new (epoch 8)\tshard-cold\nafter\tshard-new\tshard-new (epoch 8)\tshard-cold",
+      "operations": "before / H-W1\tHOT / shard-old\tsuccess: acknowledged\tAcknowledged H1\nbefore / H-R1\tHOT / shard-old\tsuccess: read-preserved\tH0, H1 → H0, H1\nbefore / C-W1\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C1\nbefore / C-R1\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1 → C0, C1\ncutover / H-W2\tHOT / shard-new\tsuccess: acknowledged\tAcknowledged H2\ncutover / H-R2\tHOT / shard-new\tfailure: missing-committed-effects\tH0, H1, H2 → H0, H2; MISSING H1\ncutover / C-W2\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C2\ncutover / C-R2\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1, C2 → C0, C1, C2\nafter / H-W3\tHOT / shard-new\tsuccess: acknowledged\tAcknowledged H3\nafter / H-R3\tHOT / shard-new\tfailure: missing-committed-effects\tH0, H1, H2, H3 → H0, H2, H3; MISSING H1\nafter / C-W3\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C3\nafter / C-R3\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1, C2, C3 → C0, C1, C2, C3",
+      "history": [
+        "Attempt 1 — success\n\ncoordinated routing; exclusive ownership; current copy; complete observations. 0 failed, 0 unknown operations. Complete synthetic observations preserve hot effects, routing and one owner.\n\nRetained synthetic trace for attempt 1",
+        "Attempt 2 — failure\n\ngap routing; exclusive ownership; current copy; complete observations. 2 failed, 0 unknown operations. Observed hot routing gap. 2 observed operations failed.\n\nRetained synthetic trace for attempt 2",
+        "Attempt 3 — failure\n\ncoordinated routing; overlap ownership; current copy; complete observations. 0 failed, 0 unknown operations. Observed simultaneous active hot owners.\n\nRetained synthetic trace for attempt 3",
+        "Attempt 4 — failure\n\ncoordinated routing; exclusive ownership; behind copy; complete observations. 2 failed, 0 unknown operations. Missing acknowledged effects: H1. 2 observed operations failed.\n\nRetained synthetic trace for attempt 4"
+      ],
+      "focus": "summary"
+    },
+    {
+      "name": "missing-cutover-unknown",
+      "verdict": "unknown",
+      "metrics": {
+        "attempted-count": "12",
+        "observed-count": "8",
+        "success-count": "8",
+        "failure-count": "0",
+        "unknown-count": "4",
+        "gap-count": "0",
+        "stale-count": "0",
+        "owner-count": "0",
+        "missing-effects": "none",
+        "moved-count": "2",
+        "cold-count": "4"
+      },
+      "status": "Attempt 5 complete — unknown. Start a new attempt to retain this evidence.",
+      "impact": "User impact: Unverified synthetic transition",
+      "cleanup": "Cleanup: No resources created; attempt evidence remains in memory until reset or reload.",
+      "reasons": "4 operations lack observations.",
+      "phases": "before\tshard-old\tshard-old (epoch 7)\tshard-cold\ncutover\tunknown\tunknown\tunknown\nafter\tshard-new\tshard-new (epoch 8)\tshard-cold",
+      "operations": "before / H-W1\tHOT / shard-old\tsuccess: acknowledged\tAcknowledged H1\nbefore / H-R1\tHOT / shard-old\tsuccess: read-preserved\tH0, H1 → H0, H1\nbefore / C-W1\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C1\nbefore / C-R1\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1 → C0, C1\ncutover\tunknown\t4 unknown outcomes\tNo observation; intent is not evidence\nafter / H-W3\tHOT / shard-new\tsuccess: acknowledged\tAcknowledged H3\nafter / H-R3\tHOT / shard-new\tsuccess: read-preserved\tH0, H1, H2, H3 → H0, H1, H2, H3\nafter / C-W3\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C3\nafter / C-R3\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1, C2, C3 → C0, C1, C2, C3",
+      "history": [
+        "Attempt 1 — success\n\ncoordinated routing; exclusive ownership; current copy; complete observations. 0 failed, 0 unknown operations. Complete synthetic observations preserve hot effects, routing and one owner.\n\nRetained synthetic trace for attempt 1",
+        "Attempt 2 — failure\n\ngap routing; exclusive ownership; current copy; complete observations. 2 failed, 0 unknown operations. Observed hot routing gap. 2 observed operations failed.\n\nRetained synthetic trace for attempt 2",
+        "Attempt 3 — failure\n\ncoordinated routing; overlap ownership; current copy; complete observations. 0 failed, 0 unknown operations. Observed simultaneous active hot owners.\n\nRetained synthetic trace for attempt 3",
+        "Attempt 4 — failure\n\ncoordinated routing; exclusive ownership; behind copy; complete observations. 2 failed, 0 unknown operations. Missing acknowledged effects: H1. 2 observed operations failed.\n\nRetained synthetic trace for attempt 4",
+        "Attempt 5 — unknown\n\ncoordinated routing; exclusive ownership; current copy; partial observations. 0 failed, 4 unknown operations. 4 operations lack observations.\n\nRetained synthetic trace for attempt 5"
+      ],
+      "focus": "summary"
+    },
+    {
+      "name": "all-observations-unknown-and-six-attempt-bound",
+      "verdict": "unknown",
+      "metrics": {
+        "attempted-count": "12",
+        "observed-count": "0",
+        "success-count": "0",
+        "failure-count": "0",
+        "unknown-count": "12",
+        "gap-count": "0",
+        "stale-count": "0",
+        "owner-count": "0",
+        "missing-effects": "none",
+        "moved-count": "0",
+        "cold-count": "0"
+      },
+      "status": "Attempt 6 complete — unknown. Six-attempt limit reached; explicit reset required.",
+      "impact": "User impact: Unverified synthetic transition",
+      "cleanup": "Cleanup: No resources created; attempt evidence remains in memory until reset or reload.",
+      "reasons": "12 operations lack observations.",
+      "phases": "before\tunknown\tunknown\tunknown\ncutover\tunknown\tunknown\tunknown\nafter\tunknown\tunknown\tunknown",
+      "operations": "before\tunknown\t4 unknown outcomes\tNo observation; intent is not evidence\ncutover\tunknown\t4 unknown outcomes\tNo observation; intent is not evidence\nafter\tunknown\t4 unknown outcomes\tNo observation; intent is not evidence",
+      "history": [
+        "Attempt 1 — success\n\ncoordinated routing; exclusive ownership; current copy; complete observations. 0 failed, 0 unknown operations. Complete synthetic observations preserve hot effects, routing and one owner.\n\nRetained synthetic trace for attempt 1",
+        "Attempt 2 — failure\n\ngap routing; exclusive ownership; current copy; complete observations. 2 failed, 0 unknown operations. Observed hot routing gap. 2 observed operations failed.\n\nRetained synthetic trace for attempt 2",
+        "Attempt 3 — failure\n\ncoordinated routing; overlap ownership; current copy; complete observations. 0 failed, 0 unknown operations. Observed simultaneous active hot owners.\n\nRetained synthetic trace for attempt 3",
+        "Attempt 4 — failure\n\ncoordinated routing; exclusive ownership; behind copy; complete observations. 2 failed, 0 unknown operations. Missing acknowledged effects: H1. 2 observed operations failed.\n\nRetained synthetic trace for attempt 4",
+        "Attempt 5 — unknown\n\ncoordinated routing; exclusive ownership; current copy; partial observations. 0 failed, 4 unknown operations. 4 operations lack observations.\n\nRetained synthetic trace for attempt 5",
+        "Attempt 6 — unknown\n\ncoordinated routing; exclusive ownership; current copy; none observations. 0 failed, 12 unknown operations. 12 operations lack observations.\n\nRetained synthetic trace for attempt 6"
+      ],
+      "focus": "summary"
+    },
+    {
+      "name": "reset-six-completed-attempts",
+      "cleared": true,
+      "focus": "routing",
+      "nativeFormReset": "function"
+    },
+    {
+      "name": "invalid-enum-error",
+      "message": "Action rejected: Invalid coverage; choose one of: complete, partial, none.",
+      "noAttemptCreated": true,
+      "focus": "error"
+    },
+    {
+      "name": "stale-route-to-fenced-owner",
+      "verdict": "failure",
+      "metrics": {
+        "attempted-count": "12",
+        "observed-count": "12",
+        "success-count": "8",
+        "failure-count": "4",
+        "unknown-count": "0",
+        "gap-count": "0",
+        "stale-count": "2",
+        "owner-count": "0",
+        "missing-effects": "none",
+        "moved-count": "0",
+        "cold-count": "6"
+      },
+      "status": "Attempt 1 complete — failure. Start a new attempt to retain this evidence.",
+      "impact": "User impact: Interrupted or unsafe in this synthetic trace",
+      "cleanup": "Cleanup: No resources created; attempt evidence remains in memory until reset or reload.",
+      "reasons": "Observed stale hot route after ownership transfer.4 observed operations failed.No successful hot target exposure.",
+      "phases": "before\tshard-old\tshard-old (epoch 7)\tshard-cold\ncutover\tshard-old\tshard-new (epoch 8)\tshard-cold\nafter\tshard-old\tshard-new (epoch 8)\tshard-cold",
+      "operations": "before / H-W1\tHOT / shard-old\tsuccess: acknowledged\tAcknowledged H1\nbefore / H-R1\tHOT / shard-old\tsuccess: read-preserved\tH0, H1 → H0, H1\nbefore / C-W1\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C1\nbefore / C-R1\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1 → C0, C1\ncutover / H-W2\tHOT / shard-old\tfailure: fenced-former-owner\tWrite not acknowledged\ncutover / H-R2\tHOT / shard-old\tfailure: fenced-former-owner\tH0, H1 → no response\ncutover / C-W2\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C2\ncutover / C-R2\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1, C2 → C0, C1, C2\nafter / H-W3\tHOT / shard-old\tfailure: fenced-former-owner\tWrite not acknowledged\nafter / H-R3\tHOT / shard-old\tfailure: fenced-former-owner\tH0, H1 → no response\nafter / C-W3\tCOLD / shard-cold\tsuccess: acknowledged\tAcknowledged C3\nafter / C-R3\tCOLD / shard-cold\tsuccess: read-preserved\tC0, C1, C2, C3 → C0, C1, C2, C3",
+      "history": [
+        "Attempt 1 — failure\n\nstale routing; exclusive ownership; current copy; complete observations. 4 failed, 0 unknown operations. Observed stale hot route after ownership transfer. 4 observed operations failed. No successful hot target exposure.\n\nRetained synthetic trace for attempt 1"
+      ],
+      "focus": "summary"
+    },
+    {
+      "name": "prediction-cannot-overwrite-run",
+      "verdict": "failure",
+      "historyCount": 1
+    },
+    {
+      "name": "reset-in-flight-and-retained-failure",
+      "cleared": true,
+      "verdict": "pending"
+    },
+    {
+      "name": "narrow-layout-and-keyboard-focus",
+      "viewport": "390x844",
+      "documentOverflow": false,
+      "outline": "solid"
+    },
+    {
+      "name": "actual-enforced-csp",
+      "inlineScriptBlocked": true,
+      "inlineHandlerBlocked": true,
+      "connectionBlocked": true,
+      "frameBlocked": true,
+      "escapedRequests": 0
+    }
+  ],
+  "csp": {
+    "inlineScriptRan": false,
+    "inlineHandlerRan": false,
+    "fetchRejected": true,
+    "violations": [
+      {
+        "directive": "script-src-elem",
+        "blockedURI": "inline",
+        "disposition": "enforce"
+      },
+      {
+        "directive": "script-src-attr",
+        "blockedURI": "inline",
+        "disposition": "enforce"
+      },
+      {
+        "directive": "connect-src",
+        "blockedURI": "https://s065.invalid/blocked",
+        "disposition": "enforce"
+      },
+      {
+        "directive": "frame-src",
+        "blockedURI": "https://s065.invalid",
+        "disposition": "enforce"
+      }
+    ],
+    "policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'"
+  },
+  "expectedCspConsoleErrors": [
+    "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-CX7XJLFZj8nMFWdfGpoCH6dcnmBwcalGSAUpy5s7r7g='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked.",
+    "Executing inline event handler violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-...'), or a nonce ('nonce-...') is required to enable inline execution. Note that hashes do not apply to event handlers, style attributes and javascript: navigations unless the 'unsafe-hashes' keyword is present. The action has been blocked.",
+    "Connecting to 'https://s065.invalid/blocked' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked.",
+    "Fetch API cannot load https://s065.invalid/blocked. Refused to connect because it violates the document's Content Security Policy.",
+    "Framing 'https://s065.invalid/' violates the following Content Security Policy directive: \"frame-src 'none'\". The request has been blocked.\n"
+  ],
+  "unexpectedPageErrors": [],
+  "limits": "Existing offline PW1.56.1 / signed Edge156 / Node22 tooling only; no native, production24 or unattended lifecycle certification."
+}

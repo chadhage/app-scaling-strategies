@@ -1,0 +1,24 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { simulate } = require('../model.js');
+
+const safe = Object.freeze({
+  routing: 'coordinated', ownership: 'exclusive', data: 'current', coverage: 'complete',
+});
+
+test('S065 synchronized exclusive relocation preserves committed effects and routing', () => {
+  const result = simulate(safe);
+  assert.equal(result.verdict, 'success', 'a fully observed safe hot-partition move must pass');
+  assert.equal(result.metrics.attemptedOperations, 12);
+  assert.equal(result.metrics.successfulOperations, 12);
+  assert.equal(result.metrics.dualOwnerPhases, 0);
+  assert.equal(result.metrics.routingGapPhases, 0);
+  assert.deepEqual(result.metrics.missingCommittedEffects, []);
+  assert.deepEqual(result.trace.map((phase) => phase.hotRoute), ['shard-old', 'shard-new', 'shard-new']);
+  assert.deepEqual(result.trace.map((phase) => phase.activeOwners.length), [1, 1, 1]);
+  assert.ok(result.trace.every((phase) => phase.coldRoute === 'shard-cold'));
+  assert.deepEqual(result.trace[2].operations.find((operation) => operation.id === 'H-R3').received,
+    ['H0', 'H1', 'H2', 'H3']);
+});

@@ -1,0 +1,1696 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S065 — Hot-partition rebalance rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer=""></script>
+  <script src="app.js" defer=""></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to lesson</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S065 — Hot-partition rebalance rehearsal</h1>
+    <p>A-S065 · D-S065 · SC-S065 · frozen Kano S · one portable lesson</p>
+  </header>
+  <main id="main">
+    <section aria-labelledby="objective">
+      <h2 id="objective">Move HOT without losing its route, effects or single owner</h2>
+      <p>HOT begins on <strong>shard-old</strong> at synthetic owner epoch 7.
+        Relocate it to <strong>shard-new</strong> at epoch 8 while three fixed phases each attempt
+        one write and one read on HOT and on unrelated COLD. COLD stays on shard-cold.</p>
+      <p>H0 and C0 are fixture effects. Acknowledged H1, H2 and H3 must survive hot reads.
+        The target snapshot is copied at cutover. A coordinated route follows the replacement owner;
+        this is one synthetic ordering, <strong>not an atomic-cutover guarantee for a real system</strong>.</p>
+      <p>Success needs all twelve operation observations, preserved acknowledged effects, a correct
+        hot route, target exposure and exactly one hot owner in every phase. Known failure wins over
+        missing evidence. Configured intent and successful cold requests do not prove a hot move.</p>
+    </section>
+
+    <section aria-labelledby="configure-heading">
+      <h2 id="configure-heading">1. Choose a bounded relocation plan</h2>
+      <p id="bounds">Three phases, twelve operations, six retained attempts. Synthetic IDs only;
+        no accounts, endpoints, authentication, timers or random load.</p>
+      <form id="plan" novalidate="" aria-describedby="bounds">
+        <fieldset id="configuration" disabled="">
+          <legend>Conditions frozen when the attempt starts</legend>
+          <label for="routing">Hot routing at cutover</label>
+          <select id="routing" name="routing">
+            <option value="coordinated">Coordinated — follow the new owner</option>
+            <option value="gap">Gap — no hot route during cutover, then recover</option>
+            <option value="stale">Stale — keep routing to the former owner</option>
+          </select>
+          <label for="ownership">Active hot owners during cutover</label>
+          <select id="ownership" name="ownership">
+            <option value="exclusive">Exclusive — fence old before new accepts</option>
+            <option value="overlap">Overlap — both active until the after phase</option>
+          </select>
+          <label for="data">Target copy at cutover</label>
+          <select id="data" name="data">
+            <option value="current">Current — includes acknowledged H1</option>
+            <option value="behind">Behind — missing acknowledged H1</option>
+          </select>
+          <label for="coverage">Observation coverage</label>
+          <select id="coverage" name="coverage">
+            <option value="complete">Complete — all three phases</option>
+            <option value="partial">Partial — cutover observations absent</option>
+            <option value="none">None — all operation observations absent</option>
+          </select>
+        </fieldset>
+        <label for="prediction">Your predicted synthetic verdict (optional learning check)</label>
+        <select id="prediction" name="prediction">
+          <option value="">Choose a prediction</option>
+          <option value="success">Success</option>
+          <option value="failure">Failure</option>
+          <option value="unknown">Unknown</option>
+        </select>
+        <div class="controls">
+          <button id="start" type="submit" disabled="">Start attempt</button>
+          <button id="observe" type="button" disabled="">Observe next phase</button>
+          <button id="new-attempt" type="button" disabled="">New attempt (retain history)</button>
+          <button id="reset-all" type="button">Reset all attempts</button>
+        </div>
+      </form>
+      <p id="status" role="status" aria-live="polite">Attempt 6 complete — unknown. Six-attempt limit reached; explicit reset required.</p>
+      <p id="error" role="alert" tabindex="-1" hidden=""></p>
+    </section>
+
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">2. Inspect the synthetic trace</h2>
+      <p>Observe before → cutover → after. Missing observations show unknown, not inferred routes or owners.
+        The model fences the former owner in the after phase even for the overlap fault.</p>
+      <div class="scroll" role="region" aria-label="Phase observations" tabindex="0">
+        <table>
+          <caption>Observed route and owner boundaries</caption>
+          <thead><tr><th scope="col">Phase</th><th scope="col">HOT route</th><th scope="col">Active HOT owners</th><th scope="col">COLD route</th></tr></thead>
+          <tbody id="phase-trace"><tr><td>before</td><td>unknown</td><td>unknown</td><td>unknown</td></tr><tr><td>cutover</td><td>unknown</td><td>unknown</td><td>unknown</td></tr><tr><td>after</td><td>unknown</td><td>unknown</td><td>unknown</td></tr></tbody>
+        </table>
+      </div>
+      <div class="scroll" role="region" aria-label="Operation observations" tabindex="0">
+        <table>
+          <caption>Each attempted write and read; effects are synthetic identifiers</caption>
+          <thead><tr><th scope="col">Phase / operation</th><th scope="col">Partition / destination</th><th scope="col">Outcome</th><th scope="col">Required → received effects</th></tr></thead>
+          <tbody id="operation-trace"><tr><td>before</td><td>unknown</td><td>4 unknown outcomes</td><td>No observation; intent is not evidence</td></tr><tr><td>cutover</td><td>unknown</td><td>4 unknown outcomes</td><td>No observation; intent is not evidence</td></tr><tr><td>after</td><td>unknown</td><td>4 unknown outcomes</td><td>No observation; intent is not evidence</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="summary" class="result unknown" aria-labelledby="verdict" aria-live="polite" tabindex="-1" data-verdict="unknown">
+      <h2 id="verdict">3. Verification: unknown</h2>
+      <p id="impact">User impact: Unverified synthetic transition</p>
+      <p id="cleanup">Cleanup: No resources created; attempt evidence remains in memory until reset or reload.</p>
+      <dl id="metrics">
+        <dt>Attempted operations</dt><dd id="attempted-count">12</dd>
+        <dt>Observed operations</dt><dd id="observed-count">0</dd>
+        <dt>Successful observed operations</dt><dd id="success-count">0</dd>
+        <dt>Failed observed operations</dt><dd id="failure-count">0</dd>
+        <dt>Unknown operation outcomes</dt><dd id="unknown-count">12</dd>
+        <dt>Observed hot routing-gap phases</dt><dd id="gap-count">0</dd>
+        <dt>Observed stale hot-route phases</dt><dd id="stale-count">0</dd>
+        <dt>Observed dual hot-owner phases</dt><dd id="owner-count">0</dd>
+        <dt>Missing acknowledged effects</dt><dd id="missing-effects">none</dd>
+        <dt>Successful hot operations on the target</dt><dd id="moved-count">0</dd>
+        <dt>Successful cold control operations</dt><dd id="cold-count">0</dd>
+      </dl>
+      <ul id="reasons"><li>12 operations lack observations.</li></ul>
+      <button id="check-prediction" type="button">Check my prediction</button>
+      <p id="prediction-result" role="status"></p>
+      <p>A matching answer is a learning check only; it never changes the verification result.</p>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained attempts</h2>
+      <p id="history-status">6 / 6 completed attempts retained in memory. Reset or reload clears them.</p>
+      <ol id="history"><li><strong>Attempt 1 — success</strong><p>coordinated routing; exclusive ownership; current copy; complete observations. 0 failed, 0 unknown operations. Complete synthetic observations preserve hot effects, routing and one owner.</p><details><summary>Retained synthetic trace for attempt 1</summary><pre>{
+  "id": 1,
+  "config": {
+    "routing": "coordinated",
+    "ownership": "exclusive",
+    "data": "current",
+    "coverage": "complete"
+  },
+  "trace": [
+    {
+      "phase": "before",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": "shard-old",
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-old",
+      "activeOwners": [
+        "shard-old"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-old",
+          "epoch": 7
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1"
+      ],
+      "operations": [
+        {
+          "id": "H-W1",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": "shard-old",
+          "required": [
+            "H0"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "H1"
+        },
+        {
+          "id": "H-R1",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": "shard-old",
+          "required": [
+            "H0",
+            "H1"
+          ],
+          "received": [
+            "H0",
+            "H1"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        },
+        {
+          "id": "C-W1",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C1"
+        },
+        {
+          "id": "C-R1",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1"
+          ],
+          "received": [
+            "C0",
+            "C1"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    },
+    {
+      "phase": "cutover",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": "shard-new",
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-new",
+      "activeOwners": [
+        "shard-new"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-new",
+          "epoch": 8
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1",
+        "H2"
+      ],
+      "operations": [
+        {
+          "id": "H-W2",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "H2"
+        },
+        {
+          "id": "H-R2",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1",
+            "H2"
+          ],
+          "received": [
+            "H0",
+            "H1",
+            "H2"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        },
+        {
+          "id": "C-W2",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C2"
+        },
+        {
+          "id": "C-R2",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2"
+          ],
+          "received": [
+            "C0",
+            "C1",
+            "C2"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    },
+    {
+      "phase": "after",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": "shard-new",
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-new",
+      "activeOwners": [
+        "shard-new"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-new",
+          "epoch": 8
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "operations": [
+        {
+          "id": "H-W3",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1",
+            "H2"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "H3"
+        },
+        {
+          "id": "H-R3",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1",
+            "H2",
+            "H3"
+          ],
+          "received": [
+            "H0",
+            "H1",
+            "H2",
+            "H3"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        },
+        {
+          "id": "C-W3",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C3"
+        },
+        {
+          "id": "C-R3",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "received": [
+            "C0",
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    }
+  ],
+  "result": {
+    "sourceId": "S065",
+    "mode": "synthetic",
+    "nativeQualified": false,
+    "verdict": "success",
+    "metrics": {
+      "attemptedOperations": 12,
+      "observedOperations": 12,
+      "successfulOperations": 12,
+      "failedOperations": 0,
+      "unknownOperations": 0,
+      "observedPhases": 3,
+      "routingGapPhases": 0,
+      "staleRoutePhases": 0,
+      "dualOwnerPhases": 0,
+      "missingCommittedEffects": [],
+      "movedHotOperations": 4,
+      "coldSuccessfulOperations": 6
+    },
+    "reasons": [
+      "Complete synthetic observations preserve hot effects, routing and one owner."
+    ],
+    "userImpact": "Uninterrupted in this synthetic trace",
+    "cleanup": "No resources created; attempt evidence remains in memory until reset or reload."
+  }
+}</pre></details></li><li><strong>Attempt 2 — failure</strong><p>gap routing; exclusive ownership; current copy; complete observations. 2 failed, 0 unknown operations. Observed hot routing gap. 2 observed operations failed.</p><details><summary>Retained synthetic trace for attempt 2</summary><pre>{
+  "id": 2,
+  "config": {
+    "routing": "gap",
+    "ownership": "exclusive",
+    "data": "current",
+    "coverage": "complete"
+  },
+  "trace": [
+    {
+      "phase": "before",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": "shard-old",
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-old",
+      "activeOwners": [
+        "shard-old"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-old",
+          "epoch": 7
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1"
+      ],
+      "operations": [
+        {
+          "id": "H-W1",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": "shard-old",
+          "required": [
+            "H0"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "H1"
+        },
+        {
+          "id": "H-R1",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": "shard-old",
+          "required": [
+            "H0",
+            "H1"
+          ],
+          "received": [
+            "H0",
+            "H1"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        },
+        {
+          "id": "C-W1",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C1"
+        },
+        {
+          "id": "C-R1",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1"
+          ],
+          "received": [
+            "C0",
+            "C1"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    },
+    {
+      "phase": "cutover",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": null,
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-new",
+      "activeOwners": [
+        "shard-new"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-new",
+          "epoch": 8
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1"
+      ],
+      "operations": [
+        {
+          "id": "H-W2",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": null,
+          "required": [
+            "H0",
+            "H1"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "failure",
+          "reason": "routing-gap"
+        },
+        {
+          "id": "H-R2",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": null,
+          "required": [
+            "H0",
+            "H1"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "failure",
+          "reason": "routing-gap"
+        },
+        {
+          "id": "C-W2",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C2"
+        },
+        {
+          "id": "C-R2",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2"
+          ],
+          "received": [
+            "C0",
+            "C1",
+            "C2"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    },
+    {
+      "phase": "after",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": "shard-new",
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-new",
+      "activeOwners": [
+        "shard-new"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-new",
+          "epoch": 8
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1",
+        "H3"
+      ],
+      "operations": [
+        {
+          "id": "H-W3",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "H3"
+        },
+        {
+          "id": "H-R3",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1",
+            "H3"
+          ],
+          "received": [
+            "H0",
+            "H1",
+            "H3"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        },
+        {
+          "id": "C-W3",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C3"
+        },
+        {
+          "id": "C-R3",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "received": [
+            "C0",
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    }
+  ],
+  "result": {
+    "sourceId": "S065",
+    "mode": "synthetic",
+    "nativeQualified": false,
+    "verdict": "failure",
+    "metrics": {
+      "attemptedOperations": 12,
+      "observedOperations": 12,
+      "successfulOperations": 10,
+      "failedOperations": 2,
+      "unknownOperations": 0,
+      "observedPhases": 3,
+      "routingGapPhases": 1,
+      "staleRoutePhases": 0,
+      "dualOwnerPhases": 0,
+      "missingCommittedEffects": [],
+      "movedHotOperations": 2,
+      "coldSuccessfulOperations": 6
+    },
+    "reasons": [
+      "Observed hot routing gap.",
+      "2 observed operations failed."
+    ],
+    "userImpact": "Interrupted or unsafe in this synthetic trace",
+    "cleanup": "No resources created; attempt evidence remains in memory until reset or reload."
+  }
+}</pre></details></li><li><strong>Attempt 3 — failure</strong><p>coordinated routing; overlap ownership; current copy; complete observations. 0 failed, 0 unknown operations. Observed simultaneous active hot owners.</p><details><summary>Retained synthetic trace for attempt 3</summary><pre>{
+  "id": 3,
+  "config": {
+    "routing": "coordinated",
+    "ownership": "overlap",
+    "data": "current",
+    "coverage": "complete"
+  },
+  "trace": [
+    {
+      "phase": "before",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": "shard-old",
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-old",
+      "activeOwners": [
+        "shard-old"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-old",
+          "epoch": 7
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1"
+      ],
+      "operations": [
+        {
+          "id": "H-W1",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": "shard-old",
+          "required": [
+            "H0"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "H1"
+        },
+        {
+          "id": "H-R1",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": "shard-old",
+          "required": [
+            "H0",
+            "H1"
+          ],
+          "received": [
+            "H0",
+            "H1"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        },
+        {
+          "id": "C-W1",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C1"
+        },
+        {
+          "id": "C-R1",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1"
+          ],
+          "received": [
+            "C0",
+            "C1"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    },
+    {
+      "phase": "cutover",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": "shard-new",
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-new",
+      "activeOwners": [
+        "shard-old",
+        "shard-new"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-old",
+          "epoch": 7
+        },
+        {
+          "owner": "shard-new",
+          "epoch": 8
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1",
+        "H2"
+      ],
+      "operations": [
+        {
+          "id": "H-W2",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "H2"
+        },
+        {
+          "id": "H-R2",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1",
+            "H2"
+          ],
+          "received": [
+            "H0",
+            "H1",
+            "H2"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        },
+        {
+          "id": "C-W2",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C2"
+        },
+        {
+          "id": "C-R2",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2"
+          ],
+          "received": [
+            "C0",
+            "C1",
+            "C2"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    },
+    {
+      "phase": "after",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": "shard-new",
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-new",
+      "activeOwners": [
+        "shard-new"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-new",
+          "epoch": 8
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "operations": [
+        {
+          "id": "H-W3",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1",
+            "H2"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "H3"
+        },
+        {
+          "id": "H-R3",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1",
+            "H2",
+            "H3"
+          ],
+          "received": [
+            "H0",
+            "H1",
+            "H2",
+            "H3"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        },
+        {
+          "id": "C-W3",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C3"
+        },
+        {
+          "id": "C-R3",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "received": [
+            "C0",
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    }
+  ],
+  "result": {
+    "sourceId": "S065",
+    "mode": "synthetic",
+    "nativeQualified": false,
+    "verdict": "failure",
+    "metrics": {
+      "attemptedOperations": 12,
+      "observedOperations": 12,
+      "successfulOperations": 12,
+      "failedOperations": 0,
+      "unknownOperations": 0,
+      "observedPhases": 3,
+      "routingGapPhases": 0,
+      "staleRoutePhases": 0,
+      "dualOwnerPhases": 1,
+      "missingCommittedEffects": [],
+      "movedHotOperations": 4,
+      "coldSuccessfulOperations": 6
+    },
+    "reasons": [
+      "Observed simultaneous active hot owners."
+    ],
+    "userImpact": "Interrupted or unsafe in this synthetic trace",
+    "cleanup": "No resources created; attempt evidence remains in memory until reset or reload."
+  }
+}</pre></details></li><li><strong>Attempt 4 — failure</strong><p>coordinated routing; exclusive ownership; behind copy; complete observations. 2 failed, 0 unknown operations. Missing acknowledged effects: H1. 2 observed operations failed.</p><details><summary>Retained synthetic trace for attempt 4</summary><pre>{
+  "id": 4,
+  "config": {
+    "routing": "coordinated",
+    "ownership": "exclusive",
+    "data": "behind",
+    "coverage": "complete"
+  },
+  "trace": [
+    {
+      "phase": "before",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": "shard-old",
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-old",
+      "activeOwners": [
+        "shard-old"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-old",
+          "epoch": 7
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1"
+      ],
+      "operations": [
+        {
+          "id": "H-W1",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": "shard-old",
+          "required": [
+            "H0"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "H1"
+        },
+        {
+          "id": "H-R1",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": "shard-old",
+          "required": [
+            "H0",
+            "H1"
+          ],
+          "received": [
+            "H0",
+            "H1"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        },
+        {
+          "id": "C-W1",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C1"
+        },
+        {
+          "id": "C-R1",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1"
+          ],
+          "received": [
+            "C0",
+            "C1"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    },
+    {
+      "phase": "cutover",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": "shard-new",
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-new",
+      "activeOwners": [
+        "shard-new"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-new",
+          "epoch": 8
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1",
+        "H2"
+      ],
+      "operations": [
+        {
+          "id": "H-W2",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "H2"
+        },
+        {
+          "id": "H-R2",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1",
+            "H2"
+          ],
+          "received": [
+            "H0",
+            "H2"
+          ],
+          "missing": [
+            "H1"
+          ],
+          "outcome": "failure",
+          "reason": "missing-committed-effects"
+        },
+        {
+          "id": "C-W2",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C2"
+        },
+        {
+          "id": "C-R2",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2"
+          ],
+          "received": [
+            "C0",
+            "C1",
+            "C2"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    },
+    {
+      "phase": "after",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": "shard-new",
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-new",
+      "activeOwners": [
+        "shard-new"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-new",
+          "epoch": 8
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "operations": [
+        {
+          "id": "H-W3",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1",
+            "H2"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "H3"
+        },
+        {
+          "id": "H-R3",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1",
+            "H2",
+            "H3"
+          ],
+          "received": [
+            "H0",
+            "H2",
+            "H3"
+          ],
+          "missing": [
+            "H1"
+          ],
+          "outcome": "failure",
+          "reason": "missing-committed-effects"
+        },
+        {
+          "id": "C-W3",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C3"
+        },
+        {
+          "id": "C-R3",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "received": [
+            "C0",
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    }
+  ],
+  "result": {
+    "sourceId": "S065",
+    "mode": "synthetic",
+    "nativeQualified": false,
+    "verdict": "failure",
+    "metrics": {
+      "attemptedOperations": 12,
+      "observedOperations": 12,
+      "successfulOperations": 10,
+      "failedOperations": 2,
+      "unknownOperations": 0,
+      "observedPhases": 3,
+      "routingGapPhases": 0,
+      "staleRoutePhases": 0,
+      "dualOwnerPhases": 0,
+      "missingCommittedEffects": [
+        "H1"
+      ],
+      "movedHotOperations": 2,
+      "coldSuccessfulOperations": 6
+    },
+    "reasons": [
+      "Missing acknowledged effects: H1.",
+      "2 observed operations failed."
+    ],
+    "userImpact": "Interrupted or unsafe in this synthetic trace",
+    "cleanup": "No resources created; attempt evidence remains in memory until reset or reload."
+  }
+}</pre></details></li><li><strong>Attempt 5 — unknown</strong><p>coordinated routing; exclusive ownership; current copy; partial observations. 0 failed, 4 unknown operations. 4 operations lack observations.</p><details><summary>Retained synthetic trace for attempt 5</summary><pre>{
+  "id": 5,
+  "config": {
+    "routing": "coordinated",
+    "ownership": "exclusive",
+    "data": "current",
+    "coverage": "partial"
+  },
+  "trace": [
+    {
+      "phase": "before",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": "shard-old",
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-old",
+      "activeOwners": [
+        "shard-old"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-old",
+          "epoch": 7
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1"
+      ],
+      "operations": [
+        {
+          "id": "H-W1",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": "shard-old",
+          "required": [
+            "H0"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "H1"
+        },
+        {
+          "id": "H-R1",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": "shard-old",
+          "required": [
+            "H0",
+            "H1"
+          ],
+          "received": [
+            "H0",
+            "H1"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        },
+        {
+          "id": "C-W1",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C1"
+        },
+        {
+          "id": "C-R1",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1"
+          ],
+          "received": [
+            "C0",
+            "C1"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    },
+    {
+      "phase": "cutover",
+      "observed": false,
+      "attemptedOperations": 4,
+      "hotRoute": null,
+      "coldRoute": null,
+      "expectedHotOwner": null,
+      "activeOwners": null,
+      "ownerEpochs": null,
+      "acknowledgedHotEffects": null,
+      "operations": []
+    },
+    {
+      "phase": "after",
+      "observed": true,
+      "attemptedOperations": 4,
+      "hotRoute": "shard-new",
+      "coldRoute": "shard-cold",
+      "expectedHotOwner": "shard-new",
+      "activeOwners": [
+        "shard-new"
+      ],
+      "ownerEpochs": [
+        {
+          "owner": "shard-new",
+          "epoch": 8
+        }
+      ],
+      "acknowledgedHotEffects": [
+        "H0",
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "operations": [
+        {
+          "id": "H-W3",
+          "partition": "HOT",
+          "kind": "write",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1",
+            "H2"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "H3"
+        },
+        {
+          "id": "H-R3",
+          "partition": "HOT",
+          "kind": "read",
+          "destination": "shard-new",
+          "required": [
+            "H0",
+            "H1",
+            "H2",
+            "H3"
+          ],
+          "received": [
+            "H0",
+            "H1",
+            "H2",
+            "H3"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        },
+        {
+          "id": "C-W3",
+          "partition": "COLD",
+          "kind": "write",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2"
+          ],
+          "received": null,
+          "missing": [],
+          "outcome": "success",
+          "reason": "acknowledged",
+          "effect": "C3"
+        },
+        {
+          "id": "C-R3",
+          "partition": "COLD",
+          "kind": "read",
+          "destination": "shard-cold",
+          "required": [
+            "C0",
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "received": [
+            "C0",
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "missing": [],
+          "outcome": "success",
+          "reason": "read-preserved"
+        }
+      ]
+    }
+  ],
+  "result": {
+    "sourceId": "S065",
+    "mode": "synthetic",
+    "nativeQualified": false,
+    "verdict": "unknown",
+    "metrics": {
+      "attemptedOperations": 12,
+      "observedOperations": 8,
+      "successfulOperations": 8,
+      "failedOperations": 0,
+      "unknownOperations": 4,
+      "observedPhases": 2,
+      "routingGapPhases": 0,
+      "staleRoutePhases": 0,
+      "dualOwnerPhases": 0,
+      "missingCommittedEffects": [],
+      "movedHotOperations": 2,
+      "coldSuccessfulOperations": 4
+    },
+    "reasons": [
+      "4 operations lack observations."
+    ],
+    "userImpact": "Unverified synthetic transition",
+    "cleanup": "No resources created; attempt evidence remains in memory until reset or reload."
+  }
+}</pre></details></li><li><strong>Attempt 6 — unknown</strong><p>coordinated routing; exclusive ownership; current copy; none observations. 0 failed, 12 unknown operations. 12 operations lack observations.</p><details><summary>Retained synthetic trace for attempt 6</summary><pre>{
+  "id": 6,
+  "config": {
+    "routing": "coordinated",
+    "ownership": "exclusive",
+    "data": "current",
+    "coverage": "none"
+  },
+  "trace": [
+    {
+      "phase": "before",
+      "observed": false,
+      "attemptedOperations": 4,
+      "hotRoute": null,
+      "coldRoute": null,
+      "expectedHotOwner": null,
+      "activeOwners": null,
+      "ownerEpochs": null,
+      "acknowledgedHotEffects": null,
+      "operations": []
+    },
+    {
+      "phase": "cutover",
+      "observed": false,
+      "attemptedOperations": 4,
+      "hotRoute": null,
+      "coldRoute": null,
+      "expectedHotOwner": null,
+      "activeOwners": null,
+      "ownerEpochs": null,
+      "acknowledgedHotEffects": null,
+      "operations": []
+    },
+    {
+      "phase": "after",
+      "observed": false,
+      "attemptedOperations": 4,
+      "hotRoute": null,
+      "coldRoute": null,
+      "expectedHotOwner": null,
+      "activeOwners": null,
+      "ownerEpochs": null,
+      "acknowledgedHotEffects": null,
+      "operations": []
+    }
+  ],
+  "result": {
+    "sourceId": "S065",
+    "mode": "synthetic",
+    "nativeQualified": false,
+    "verdict": "unknown",
+    "metrics": {
+      "attemptedOperations": 12,
+      "observedOperations": 0,
+      "successfulOperations": 0,
+      "failedOperations": 0,
+      "unknownOperations": 12,
+      "observedPhases": 0,
+      "routingGapPhases": 0,
+      "staleRoutePhases": 0,
+      "dualOwnerPhases": 0,
+      "missingCommittedEffects": [],
+      "movedHotOperations": 0,
+      "coldSuccessfulOperations": 0
+    },
+    "reasons": [
+      "12 operations lack observations."
+    ],
+    "userImpact": "Unverified synthetic transition",
+    "cleanup": "No resources created; attempt evidence remains in memory until reset or reload."
+  }
+}</pre></details></li></ol>
+    </section>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits and source acceptance</h2>
+      <p><a href="../../README.md">README S065</a>: hot-shard rebalancing must move tenants or partitions
+        without missing writes or assigning two active owners.
+        <a href="../../.docs/wiki/backlog.md">D-S065</a> additionally requires actual live read/write load,
+        retained committed effects and routing, with no two writers owning the moved partition;
+        its prerequisite is D-S064.</p>
+      <p>This fixed sequential model has no real partitions, migrations, routing tables, fences, locks,
+        replication, concurrency or load measurement. Its supplied owner observations are not proof
+        of actual exclusive ownership. No cloud calls, credentials, native Azure, production Node 24,
+        source-parent acceptance or reliability certification are provided.
+        B-S065 and original D-S065 remain incomplete.</p>
+      <p>Microsoft Open Source Disclaimer: educational examples are provided AS IS, without guarantees.
+        Microsoft/Azure references do not imply endorsement, certification or support. Project goals
+        are not Microsoft SLAs. The disclaimer is not a license. Read the
+        <a href="../../README.md#microsoft-open-source-disclaimer">full repository disclaimer</a>
+        before any real-world use.</p>
+    </section>
+    <noscript>This exercise requires JavaScript. No run or successful result exists while scripts are disabled.</noscript>
+  </main>
+
+
+</body></html>
