@@ -1,0 +1,47 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { buildPlan, createReviewSession } = require('../plan-model.js');
+const fixtures = require('../plan-fixtures.js');
+const { approval } = require('../../C001/approved-contract.js');
+
+test('resource-free local plan is reviewable without inventing a zero-cost Azure estimate', async () => {
+  const result = await buildPlan(fixtures.local, approval);
+  assert.equal(result.valid, true);
+  assert.equal(result.executed, false);
+  assert.equal(result.plan.canAcknowledge, true);
+  assert.equal(result.plan.cost.status, 'not-applicable');
+  assert.equal(result.plan.cost.totalMinorUnits, null);
+  assert.equal(result.plan.cost.currency, null);
+  assert.match(result.plan.cost.notice, /no cloud execution/i);
+  assert.equal(result.plan.duration.comparisonSeconds, 30);
+  assert.deepEqual(result.plan.duration.suppliedBounds, { min: 1, max: 300 });
+});
+
+test('missing native pricing produces a readable blocked plan with null cost and actual C001 reasons', async () => {
+  const result = await buildPlan(fixtures.native, approval);
+  assert.equal(result.valid, true);
+  assert.equal(result.plan.canAcknowledge, false);
+  assert.equal(result.plan.cost.totalMinorUnits, null);
+  const codes = result.plan.blockers.map(reason => reason.code);
+  assert.ok(codes.includes('PRICING_MISSING'));
+  assert.ok(codes.includes('LIVE_AZURE_NOT_APPROVED'));
+  assert.ok(codes.includes('ZERO_NATIVE_LIMIT'));
+  assert.equal(result.plan.configuration.qualified, false);
+});
+
+test('editing invalidates an actual local acknowledgement, rather than retaining stale consent', async () => {
+  const session = createReviewSession();
+  const review = await session.review(fixtures.local, approval);
+  assert.equal(review.valid, true);
+  const acknowledged = session.acknowledge(true);
+  assert.equal(acknowledged.accepted, true);
+  assert.equal(acknowledged.consent.scope, 'local-plan-review-only');
+  assert.equal(acknowledged.consent.cloudExecutionAuthorized, false);
+  session.invalidate();
+  const stale = session.acknowledge(true);
+  assert.equal(stale.accepted, false);
+  assert.equal(stale.consent, null);
+  assert.ok(stale.reasons.some(reason => reason.code === 'REVIEW_REQUIRED'));
+});

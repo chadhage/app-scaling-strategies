@@ -1,0 +1,47 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else Object.defineProperty(root, 'C004Provenance', { value: factory() });
+}(globalThis, function () {
+  'use strict';
+
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+
+  return freeze({
+    baselineCommit: 'a1411c1fd7b081e7772db0ac96eb61d697452c86',
+    C001: {
+      commit: 'cfff04364ade947aa398004b21548a15272021e7',
+      tag: 'kanban/C001/cfff04364ade',
+      approvalSourceCommit: '26747d4fbbd51235c612dbd9d8c92ab335aef78e',
+      snapshotSha256: 'd88600582af0d499bb0bd26a727e8f0840e724e133bda6284592bc2b4e346909'
+    },
+    C002: {
+      commit: '5feaab2929a615aa7f6968fd39355868dd321e4f',
+      tag: 'kanban/C002/5feaab2929a6',
+      contractDataSha256: 'c67dc0d6aec3661ea8527bc698f2de108ea28835a23cd395ac39aeb56dbbfe7b',
+      fixtureDataSha256: 'a1bb0ac2aa636e6848098c87bae88aeb8846699b85fae73dcbe0c4b73130fdca'
+    },
+    C003: {
+      commit: '1583da90c1013ba95fdf268d6901f8a14bdf900a',
+      tag: 'kanban/C003/1583da90c101',
+      matrixDataSha256: '61af25b6c8c990d1fe5eef64f99c486d66ac4830d2674660eeff76966011ec37'
+    },
+    sourceFiles: [
+      { path: 'capability\\C001\\approved-contract.js', sha256: 'fa2c71df9f2096b55e4278ad2f957b419b1f935cbe430ce3a1a81f7ca8c02b23', gitBlobSha256: '3e95c5e482ba696d6ab3c8b3183c80fbc11353069fa36695d293e829cdac7517' },
+      { path: 'capability\\C001\\contract-guard.js', sha256: '9eee2d219138d265c06ee93928970a2333a681173578e117c7bbf09508f0dd8c', gitBlobSha256: '5223e0e9f97bc3cfc9438fbe8f51051ba8bdae41660805cb4053191ea2d50358' },
+      { path: 'capability\\C002\\run-envelope-contract.js', sha256: 'd3f19ad2379541479931a357328069d4777359d20645aff52126a9b9b637d7d0', gitBlobSha256: '65b81af254dad41c6a89afdc4a7650095f1e379d010bf544197c3320347e23f7' },
+      { path: 'capability\\C002\\validator.js', sha256: '1958ab06ebaac5bf019f7d70fda0fa1c7df35ed6840882b128a23a433f0bdb1f', gitBlobSha256: 'a2d21a21529b8643c96d477f08aa349a733fc22fbbd67beff2b76fda0a372f44' },
+      { path: 'capability\\C002\\json-input.js', sha256: 'eac74b94240a32aa93b6b710c2e9eff6eb03f17d377db6ec5b6818147c4c8836', gitBlobSha256: 'd32d3f15477151b041314a272a4f2c6a263c42d237c69113a28896b71e017ae3' },
+      { path: 'capability\\C002\\synthetic-fixture.js', sha256: '91dfb3b6d37196c99aa635e4ae89c154e8834b34c776435481eb42847bb484fe', gitBlobSha256: '4cf9fc7492c1b4d50200449be0fff47757ad09e70bf4790a264604c3cf939147' },
+      { path: 'capability\\C003\\matrix-contract.js', sha256: '7fd8863acd4cfa800fbace13b1c2bdf6bbe85636872e71b9c01a3377592cccd1', gitBlobSha256: '8f6b0fbebfef03d4d993f1beae2b6d349db5ca46923bc563a53afecb70c9e407' },
+      { path: 'capability\\C003\\matrix-data.js', sha256: 'f549b86b1730e19500b53d79716b72422aaf266ba6ba39558a546fc521e33ab5', gitBlobSha256: '2bf1fc273e5add12f7bac27cc77a02b40cda67a4720793959c3eb68e6d2e2712' }
+    ],
+    note: 'Accepted local APIs imported unchanged. Data hashes are checked during review. Focused source-integrity tests pin both original Git blobs and observed Windows CRLF checkout bytes, allowing only those exact representations and verifying LF-normalized source equality. C001 alone verifies approval integrity. This browser cannot re-read current authoritative repository or server consent.'
+  });
+}));

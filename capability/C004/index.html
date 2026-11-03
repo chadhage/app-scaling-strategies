@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>C004 — local run-consent plan</title>
+  <link rel="stylesheet" href="plan.css">
+  <script defer src="../C001/approved-contract.js"></script>
+  <script defer src="../C001/contract-guard.js"></script>
+  <script defer src="../C002/run-envelope-contract.js"></script>
+  <script defer src="../C002/validator.js"></script>
+  <script defer src="../C002/json-input.js"></script>
+  <script defer src="../C002/synthetic-fixture.js"></script>
+  <script defer src="../C003/matrix-contract.js"></script>
+  <script defer src="../C003/matrix-data.js"></script>
+  <script defer src="plan-provenance.js"></script>
+  <script defer src="plan-fixtures.js"></script>
+  <script defer src="plan-model.js"></script>
+  <script defer src="plan-page.js"></script>
+</head>
+<body>
+  <a class="skip" href="#inputs-heading">Skip to plan inputs</a>
+  <main>
+    <header>
+      <p class="eyebrow">C004 · H001 / H003 · one Kano S · local data view</p>
+      <h1>Review a plan. Authorize no cloud execution.</h1>
+      <p>This portable page reviews assumptions and records an optional, in-memory acknowledgement of a resource-free local plan. It is not a run executor, production API, authentication boundary, budget reservation or server audit.</p>
+      <p class="boundary"><strong>Local-implementation-only. Live Azure runs: 0. Native, IaC, scaffold, deployment, identity-registration and expenditure approvals: all false.</strong> Authorized cloud spend 0 means forbidden, not a free Azure estimate.</p>
+      <p>Documented support is not native qualification or consent. No native target is qualified. Node.js 24 LTS / Express / App Service Linux is the design; production Node.js 24 remains unvalidated. Node.js 22.23.4 is test tooling only.</p>
+    </header>
+
+    <section aria-labelledby="inputs-heading">
+      <h2 id="inputs-heading" tabindex="-1">Explicit plan inputs</h2>
+      <p id="input-help">Supply both JSON records, or explicitly load a labelled example. No limits, estimates, previous inputs or consent are supplied by default. Editing either input invalidates the plan and its acknowledgement immediately. Nothing is stored or uploaded.</p>
+      <div class="actions">
+        <button id="load-local" type="button" disabled>Load resource-free local example</button>
+        <button id="load-native" type="button" disabled>Load blocked native example</button>
+      </div>
+      <label for="plan-json">Plan assumptions JSON</label>
+      <p id="plan-help">Schema version, mode, configurationId, durationBasis, resources and pricing are required. The envelopeRequest field belongs in the separate input below, not in this record.</p>
+      <textarea id="plan-json" rows="16" spellcheck="false" aria-describedby="input-help plan-help"></textarea>
+      <label for="envelope-json">C002 envelope and explicit comparison limits JSON</label>
+      <p id="envelope-help">Supply the unchanged C002 request with both envelope and limits. These synthetic units and bounds are not Azure capacity, universal thresholds or authorization.</p>
+      <textarea id="envelope-json" rows="15" spellcheck="false" aria-describedby="envelope-help"></textarea>
+      <div class="actions">
+        <button id="review" type="button" disabled>Review plan — no execution</button>
+        <button id="reset" type="button">Reset plan and consent</button>
+      </div>
+      <p id="status" role="status" aria-live="polite" aria-atomic="true">Review unavailable until the pinned dependencies and C001 approval are checked. No acknowledgement exists.</p>
+      <div id="input-errors" role="alert" tabindex="-1" hidden>
+        <h3>Plan review errors — no current consent</h3>
+        <ul id="error-list"></ul>
+      </div>
+    </section>
+
+    <section id="plan-view" aria-labelledby="plan-heading" hidden>
+      <h2 id="plan-heading">Current plan assumptions — no execution</h2>
+      <p id="plan-outcome"></p>
+      <dl>
+        <dt>Monetary estimate status</dt><dd id="cost-status"></dd>
+        <dt>Monetary amount</dt><dd id="cost-amount"></dd>
+        <dt>Cost basis and gaps</dt><dd id="cost-basis"></dd>
+        <dt>Declared price source</dt><dd id="price-source"></dd>
+        <dt>Duration assumption</dt><dd id="duration-value"></dd>
+        <dt>Duration basis and gaps</dt><dd id="duration-basis"></dd>
+        <dt>Affected cloud resources</dt><dd id="resources-value"></dd>
+        <dt>Resource assumptions</dt><dd id="resources-basis"></dd>
+        <dt>Comparison load</dt><dd id="load-value"></dd>
+        <dt>Comparison capacity</dt><dd id="capacity-value"></dd>
+        <dt>Explicit bounds origin</dt><dd id="comparison-label"></dd>
+        <dt>Configuration</dt><dd id="configuration-summary"></dd>
+      </dl>
+      <ul id="configuration-constraints"></ul>
+      <h3>Configuration documentation — not pricing or native evidence</h3>
+      <ul id="matrix-sources"></ul>
+      <h3>Blocking reasons</h3>
+      <p id="no-blockers" hidden>No blockers to local plan acknowledgement only. Cloud execution remains forbidden.</p>
+      <ul id="blockers"></ul>
+      <details>
+        <summary>Read-only plan, input fingerprint and dependency provenance</summary>
+        <pre id="result-json"></pre>
+      </details>
+    </section>
+
+    <section aria-labelledby="consent-heading">
+      <h2 id="consent-heading">Local plan acknowledgement only</h2>
+      <p id="consent-help">This checkbox cannot authorize a native run or spending. Native, unknown-price and missing-price plans cannot be acknowledged. Any input edit, example load, rereview or reset revokes the record; browser refresh also loses it.</p>
+      <label class="confirmation" for="acknowledgement">
+        <input id="acknowledgement" type="checkbox" disabled aria-describedby="consent-help">
+        I acknowledge this current resource-free local plan only. No cloud execution is authorized.
+      </label>
+      <button id="acknowledge" type="button" disabled>Acknowledge local plan only</button>
+      <p id="consent-state" role="status" aria-live="polite">No current acknowledgement.</p>
+      <pre id="consent-json">No consent record.</pre>
+    </section>
+
+    <details>
+      <summary>Bundled approval and accepted dependency pins — not current server consent</summary>
+      <p>The browser checks bundled data, not the current repository ledger or authoritative server approval. Future execution must independently enforce identity, ownership, leases, budgets and current consent. This card does not finish H001 or H003.</p>
+      <h2>Denied operation approvals</h2>
+      <pre id="permissions">All six operation approvals remain false; liveAzureRuns=0.</pre>
+      <h2>Dependency provenance</h2>
+      <pre id="provenance">Provenance unavailable until dependencies load.</pre>
+    </details>
+    <noscript><p class="boundary">Review denied: JavaScript is unavailable. No plan, acknowledgement or cloud operation is enabled.</p></noscript>
+  </main>
+</body>
+</html>

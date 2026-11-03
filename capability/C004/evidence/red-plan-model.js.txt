@@ -1,0 +1,23 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else Object.defineProperty(root, 'C004PlanModel', { value: factory() });
+}(globalThis, function () {
+  'use strict';
+
+  async function buildPlan() {
+    return { valid: false, executed: false, errors: [{ path: '$', code: 'NOT_IMPLEMENTED', message: 'Loadable C004 behavioral stub.' }], plan: null };
+  }
+
+  function createReviewSession() {
+    return {
+      review: buildPlan,
+      invalidate() {},
+      acknowledge() {
+        return { accepted: false, executed: false, reasons: [{ code: 'NOT_IMPLEMENTED', message: 'No review acknowledgement implemented.' }], consent: null };
+      }
+    };
+  }
+
+  return Object.freeze({ buildPlan, createReviewSession });
+}));
