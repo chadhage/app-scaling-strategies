@@ -1,0 +1,25 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S087Model = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  function createLesson() {
+    const state = (started = false) => ({
+      phase: 'idle',
+      current: started ? {
+        id: 0, config: {}, desiredPercent: 0, observation: null, outcome: 'NOT_STARTED',
+        retention: 'NOT_CHECKED', oldAvailable: true, trace: [], prediction: null,
+      } : null,
+      history: [],
+      totals: { attempted: 0, completed: 0, active: 0, success: 0, failure: 0, unknown: 0,
+        predictionsChecked: 0, predictionsCorrect: 0 },
+    });
+    return {
+      snapshot: () => state(), request: () => state(true), observe: () => state(true),
+      releaseOld: () => state(true), predict: () => state(true), newAttempt: () => state(), reset: () => state(),
+    };
+  }
+  return { createLesson };
+}));

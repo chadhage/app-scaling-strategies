@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'none'; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'">
+  <title>S087 — Partial routing is not convergence</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="fixtures.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to routing exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Partial routing is not convergence</h1>
+    <p>A-S087 · Source S087 · D-S087 · SC-S087 · one frozen S unit</p>
+  </header>
+  <main id="main" tabindex="-1">
+    <section aria-labelledby="objective">
+      <h2 id="objective">Keep a destination for remaining clients</h2>
+      <p>Request a new-v2 cohort, observe what eight synthetic clients actually use, then attempt old-v1 release.
+        Desired routing is not effective routing. Successful old-client journeys alone do not prove migration.</p>
+      <p>Preconditions: both synthetic endpoints are ready with capacity for all eight clients. No sessions, jobs,
+        ownership, retention windows, live propagation or real identities are modeled. A release decision here
+        is <strong>route-only synthetic evidence, not actual retirement certification</strong>.</p>
+    </section>
+    <section aria-labelledby="controls">
+      <h2 id="controls">1. Configure and request</h2>
+      <form id="settings-form" novalidate>
+        <fieldset id="settings">
+          <legend>Fixed conditions for this attempt</legend>
+          <label for="target">Desired new-v2 percentage</label>
+          <select id="target" name="target">
+            <option value="50">50% — clients 01–04 move, 05–08 remain old</option>
+            <option value="100" selected>100% — all eight clients move</option>
+          </select>
+          <label for="propagation">Observed routing fixture</label>
+          <select id="propagation" name="propagation">
+            <option value="delayed">Delayed — no clients move</option>
+            <option value="partial" selected>Partial — half the intended cohort moves</option>
+            <option value="converged">Converged — exact intended cohort moves</option>
+            <option value="missing">Missing — clients 01–04 unresolved, 05–08 observed old</option>
+          </select>
+          <label for="old">Old-capacity condition</label>
+          <select id="old" name="old">
+            <option value="retained" selected>Retained — required old clients still have a destination</option>
+            <option value="loss">Inject synthetic old-capacity loss — remaining old journeys fail</option>
+          </select>
+        </fieldset>
+        <button id="request-change" type="submit">Request routing change</button>
+      </form>
+      <p id="input-error" role="alert" tabindex="-1" hidden></p>
+      <div class="actions">
+        <button id="observe-routes" type="button" disabled>Observe synthetic cohorts</button>
+        <button id="release-old" type="button" disabled>Attempt old release</button>
+      </div>
+      <p>Actions are adjacent and one-shot: request → observe → release gate. Conditions are locked until completion.</p>
+    </section>
+    <section aria-labelledby="evidence-heading">
+      <h2 id="evidence-heading">2. Inspect evidence and user impact</h2>
+      <div id="status" role="status" aria-live="polite" aria-atomic="true">
+        <p id="phase">Phase: idle</p>
+        <p id="desired">Desired new-v2: not requested</p>
+        <p id="effective">Effective new-v2: not observed</p>
+        <p id="convergence">Convergence: NOT_DECIDED</p>
+        <p id="outcome">Result: NOT_DECIDED</p>
+        <p id="journeys">Journeys: success 0 · failure 0 · unknown 0</p>
+        <p id="migration">Intended migrations observed: 0 / 0</p>
+        <p id="retention">Old release: NOT_CHECKED</p>
+        <p id="old-status">Old capacity: not evaluated</p>
+      </div>
+      <p id="gate-reason">Observe routing before a release decision.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Per-client observed cohort and destination</caption>
+          <thead><tr><th scope="col">Synthetic client</th><th scope="col">Intended route</th><th scope="col">Observed route</th><th scope="col">Destination</th><th scope="col">Journey</th><th scope="col">Evidence</th></tr></thead>
+          <tbody id="client-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>Current deterministic trace</caption>
+          <thead><tr><th scope="col">Step</th><th scope="col">Action</th><th scope="col">Evidence</th></tr></thead>
+          <tbody id="trace-rows"></tbody>
+        </table>
+      </div>
+      <details id="current-detail"><summary>Complete current evidence</summary><pre id="current-proof">No attempt started.</pre></details>
+    </section>
+    <section aria-labelledby="prediction-heading">
+      <h2 id="prediction-heading">3. Check your expected outcome</h2>
+      <form id="prediction-form" novalidate>
+        <fieldset id="prediction-settings" disabled>
+          <legend>Learning check after the release gate</legend>
+          <label for="prediction">Expected synthetic result</label>
+          <select id="prediction" name="prediction">
+            <option value="" selected>Choose a result</option>
+            <option value="SUCCESS">SUCCESS — desired cohort evidenced and all eight journeys pass</option>
+            <option value="FAILURE">FAILURE — known convergence mismatch or interrupted journeys</option>
+            <option value="UNKNOWN">UNKNOWN — missing evidence without a known failure</option>
+          </select>
+          <button id="check-prediction" type="submit">Check prediction</button>
+        </fieldset>
+      </form>
+      <p id="prediction-result">Learning prediction not checked.</p>
+      <p>A correct failure prediction is learning success, not successful migration. Known failures dominate uncertainty;
+        both remain visible. Missing observations never become a fabricated percentage.</p>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">4. Retain attempts or reset</h2>
+      <p id="totals">Attempted: 0 · completed 0 · active 0 · success 0 · failure 0 · unknown 0</p>
+      <p id="history-count">Retained complete traces: 0 / 6</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Retained results — failures and unknowns are not removed</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Desired</th><th scope="col">Fixture</th><th scope="col">Result</th><th scope="col">Journeys S/F/U</th><th scope="col">Old release</th><th scope="col">Prediction</th></tr></thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+      <details id="history-detail"><summary>All retained complete evidence</summary><pre id="history-proof"></pre></details>
+      <div class="actions">
+        <button id="new-attempt" type="button" disabled>New attempt — retain history</button>
+        <button id="reset-lesson" type="button">Reset all local data</button>
+      </div>
+      <p>Six attempts maximum, no eviction. History is memory-only. Reset or reload clears everything.
+        Tab, Enter and Space work without a mouse. No cloud, network, storage or authentication is used.</p>
+    </section>
+    <footer>
+      <p>SUCCESS is a bounded synthetic result only. Native B-S087 and source parent D-S087 remain incomplete.
+        No actual routing propagation, client migration, retirement, production Node.js 24 or five-nines claim.</p>
+      <a href="README.md">Contract, worked examples and verification</a>
+    </footer>
+  </main>
+</body>
+</html>

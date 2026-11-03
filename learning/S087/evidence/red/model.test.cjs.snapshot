@@ -1,0 +1,268 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fixtures = require('..\\fixtures.js');
+const { createLesson } = require('..\\model.js');
+const config = (changes = {}) => ({ ...fixtures.defaults, ...changes });
+function complete(changes = {}, lesson = createLesson()) {
+  lesson.request(config(changes));
+  lesson.observe();
+  return { lesson, state: lesson.releaseOld() };
+}
+function unchanged(lesson, action, expression) {
+  const before = lesson.snapshot();
+  assert.throws(action, expression);
+  assert.deepEqual(lesson.snapshot(), before);
+}
+
+test('the model is loadable before implementation and has a complete callable surface', () => {
+  const lesson = createLesson();
+  for (const method of ['snapshot', 'request', 'observe', 'releaseOld', 'predict', 'newAttempt', 'reset']) {
+    assert.equal(typeof lesson[method], 'function');
+  }
+  assert.equal(lesson.snapshot().phase, 'idle');
+});
+
+test('request records desired routing without fabricating observed routes or success', () => {
+  const state = createLesson().request(config());
+  assert.equal(state.phase, 'requested');
+  assert.equal(state.current.desiredPercent, 100);
+  assert.equal(state.current.observation, null);
+  assert.equal(state.current.outcome, 'NOT_DECIDED');
+  assert.equal(state.current.retention, 'NOT_CHECKED');
+  assert.deepEqual(state.totals, {
+    attempted: 1, completed: 0, active: 1, success: 0, failure: 0, unknown: 0,
+    predictionsChecked: 0, predictionsCorrect: 0,
+  });
+  assert.equal(state.current.trace.length, 1);
+});
+
+test('partial 100 percent keeps four old clients valid but is not convergence', () => {
+  const { state } = complete();
+  assert.equal(state.current.outcome, 'FAILURE');
+  const report = state.current.observation;
+  assert.equal(report.effectivePercent, 50);
+  assert.equal(report.convergence, 'FAILURE');
+  assert.equal(report.knownMismatches, 4);
+  assert.equal(report.knownOld, 4);
+  assert.deepEqual(report.journeys, { success: 8, failure: 0, unknown: 0 });
+  assert.equal(report.migratedIntended, 4);
+  assert.equal(report.intended, 8);
+  assert.equal(state.current.retention, 'RETAIN_REQUIRED');
+  assert.equal(state.current.oldAvailable, true);
+  assert.ok(report.clients.every((client) => client.journey === 'SUCCESS' && client.destination));
+});
+
+test('synthetic premature old loss produces four real modeled failed destinations', () => {
+  const { state } = complete({ old: 'loss' });
+  assert.equal(state.current.outcome, 'FAILURE');
+  assert.deepEqual(state.current.observation.journeys, { success: 4, failure: 4, unknown: 0 });
+  assert.equal(state.current.retention, 'RETAIN_REQUIRED');
+  assert.equal(state.current.oldAvailable, false);
+  const failed = state.current.observation.clients.filter((client) => client.journey === 'FAILURE');
+  assert.equal(failed.length, 4);
+  assert.ok(failed.every((client) => client.route === 'old' && client.reason === 'Old destination unavailable'));
+  assert.equal(state.totals.failure, 1);
+});
+
+test('delayed routing with eight successful old journeys still fails the routing objective', () => {
+  const { state } = complete({ propagation: 'delayed' });
+  assert.equal(state.current.outcome, 'FAILURE');
+  assert.equal(state.current.observation.effectivePercent, 0);
+  assert.equal(state.current.observation.migratedIntended, 0);
+  assert.equal(state.current.observation.journeys.success, 8);
+  assert.equal(state.current.retention, 'RETAIN_REQUIRED');
+});
+
+test('observed complete 100 percent permits synthetic old release only after evidence', () => {
+  const lesson = createLesson();
+  lesson.request(config({ propagation: 'converged' }));
+  const observed = lesson.observe();
+  assert.equal(observed.phase, 'observed');
+  assert.equal(observed.current.oldAvailable, true);
+  assert.equal(observed.current.retention, 'NOT_CHECKED');
+  const state = lesson.releaseOld();
+  assert.equal(state.phase, 'complete');
+  assert.equal(state.current.outcome, 'SUCCESS');
+  assert.equal(state.current.observation.effectivePercent, 100);
+  assert.equal(state.current.observation.knownOld, 0);
+  assert.equal(state.current.observation.migratedIntended, 8);
+  assert.equal(state.current.retention, 'RELEASE_ALLOWED');
+  assert.equal(state.current.oldAvailable, false);
+});
+
+test('converged 50 percent still requires old capacity for the other four clients', () => {
+  const { state } = complete({ target: '50', propagation: 'converged' });
+  assert.equal(state.current.outcome, 'SUCCESS');
+  assert.equal(state.current.observation.convergence, 'SUCCESS');
+  assert.equal(state.current.observation.knownOld, 4);
+  assert.equal(state.current.observation.intended, 4);
+  assert.equal(state.current.observation.migratedIntended, 4);
+  assert.equal(state.current.retention, 'RETAIN_REQUIRED');
+  assert.equal(state.current.oldAvailable, true);
+});
+
+test('missing 50 percent cohort evidence remains UNKNOWN with four unresolved journeys', () => {
+  const { state } = complete({ target: '50', propagation: 'missing' });
+  assert.equal(state.current.outcome, 'UNKNOWN');
+  const report = state.current.observation;
+  assert.equal(report.convergence, 'UNKNOWN');
+  assert.equal(report.effectivePercent, null);
+  assert.equal(report.unknownRoutes, 4);
+  assert.equal(report.knownOld, 4);
+  assert.equal(report.knownMismatches, 0);
+  assert.deepEqual(report.journeys, { success: 4, failure: 0, unknown: 4 });
+  assert.equal(state.current.retention, 'RETAIN_REQUIRED');
+  assert.equal(state.totals.unknown, 1);
+});
+
+test('known failures dominate missing evidence while both counts remain visible', () => {
+  const { state } = complete({ target: '50', propagation: 'missing', old: 'loss' });
+  assert.equal(state.current.outcome, 'FAILURE');
+  assert.equal(state.current.observation.convergence, 'UNKNOWN');
+  assert.deepEqual(state.current.observation.journeys, { success: 0, failure: 4, unknown: 4 });
+  const hundred = complete({ propagation: 'missing' }).state;
+  assert.equal(hundred.current.outcome, 'FAILURE');
+  assert.equal(hundred.current.observation.convergence, 'FAILURE');
+  assert.equal(hundred.current.observation.knownMismatches, 4);
+  assert.equal(hundred.current.observation.unknownRoutes, 4);
+});
+
+test('strict exact plain input rejects invalid shape, accessors, inherited keys and enum coercion atomically', () => {
+  let getterRead = false;
+  const accessor = config();
+  Object.defineProperty(accessor, 'target', { get() { getterRead = true; return '100'; }, enumerable: true });
+  const hidden = config();
+  Object.defineProperty(hidden, 'extra', { value: 'extra', enumerable: false });
+  const symbolic = { ...config(), [Symbol('extra')]: true };
+  const invalid = [
+    null, undefined, [], '100', Object.create(config()), Object.assign(Object.create({ extra: true }), config()),
+    config({ extra: true }), { target: '100', propagation: 'partial' }, config({ target: 100 }),
+    config({ target: '100 ' }), config({ propagation: 'eventually' }), config({ old: 'maybe' }),
+    accessor, hidden, symbolic,
+  ];
+  for (const value of invalid) {
+    const lesson = createLesson();
+    unchanged(lesson, () => lesson.request(value), /input|record|field|target|propagation|old/i);
+  }
+  assert.equal(getterRead, false);
+});
+
+test('out-of-order, duplicate and argument-bearing transitions never mutate evidence', () => {
+  const lesson = createLesson();
+  unchanged(lesson, () => lesson.observe(), /phase/i);
+  unchanged(lesson, () => lesson.releaseOld(), /phase/i);
+  unchanged(lesson, () => lesson.predict('SUCCESS'), /phase/i);
+  unchanged(lesson, () => lesson.newAttempt(), /phase/i);
+  unchanged(lesson, () => lesson.request(config(), 'extra'), /argument/i);
+  lesson.request(config());
+  unchanged(lesson, () => lesson.request(config()), /phase/i);
+  unchanged(lesson, () => lesson.releaseOld(), /phase/i);
+  unchanged(lesson, () => lesson.observe('extra'), /argument/i);
+  lesson.observe();
+  unchanged(lesson, () => lesson.observe(), /phase/i);
+  unchanged(lesson, () => lesson.releaseOld('extra'), /argument/i);
+  lesson.releaseOld();
+  unchanged(lesson, () => lesson.releaseOld(), /phase/i);
+  unchanged(lesson, () => lesson.reset('extra'), /argument/i);
+});
+
+test('input and returned snapshots cannot mutate current or retained history', () => {
+  const input = config();
+  const lesson = createLesson();
+  const first = lesson.request(input);
+  assert.equal(first.phase, 'requested');
+  input.propagation = 'converged';
+  first.current.config.old = 'loss';
+  first.current.trace.length = 0;
+  lesson.observe();
+  const final = lesson.releaseOld();
+  assert.equal(final.current.outcome, 'FAILURE');
+  final.current.observation.clients[0].route = 'old';
+  final.history[0].outcome = 'SUCCESS';
+  final.history.length = 0;
+  const current = lesson.snapshot();
+  assert.equal(current.history.length, 1);
+  assert.equal(current.history[0].outcome, 'FAILURE');
+  assert.equal(current.current.observation.clients[0].route, 'next');
+  assert.equal(current.current.trace.length, 3);
+});
+
+test('prediction feedback cannot turn expected interruption into user success', () => {
+  const { lesson, state } = complete({ old: 'loss' });
+  assert.equal(state.current.outcome, 'FAILURE');
+  unchanged(lesson, () => lesson.predict(''), /prediction/i);
+  unchanged(lesson, () => lesson.predict('failure'), /prediction/i);
+  unchanged(lesson, () => lesson.predict('FAILURE', 'extra'), /argument/i);
+  const checked = lesson.predict('FAILURE');
+  assert.equal(checked.current.prediction.verdict, 'CORRECT');
+  assert.equal(checked.current.outcome, 'FAILURE');
+  assert.equal(checked.history[0].observation.journeys.failure, 4);
+  assert.equal(checked.totals.predictionsCorrect, 1);
+  unchanged(lesson, () => lesson.predict('FAILURE'), /already/i);
+  const wrong = complete({ propagation: 'converged' }).lesson.predict('FAILURE');
+  assert.equal(wrong.current.prediction.verdict, 'INCORRECT');
+  assert.equal(wrong.totals.success, 1);
+});
+
+test('six attempts retain every trace and outcome, with no silent eviction or seventh attempt', () => {
+  const lesson = createLesson();
+  for (let index = 0; index < 6; index++) {
+    if (index) lesson.newAttempt();
+    const state = complete({ propagation: ['partial', 'converged', 'missing'][index % 3],
+      target: index % 3 === 2 ? '50' : '100' }, lesson).state;
+    assert.equal(state.history.length, index + 1);
+    assert.equal(state.current.id, index + 1);
+  }
+  const final = lesson.snapshot();
+  assert.equal(final.totals.attempted, 6);
+  assert.equal(final.totals.completed, 6);
+  assert.deepEqual([final.totals.success, final.totals.failure, final.totals.unknown], [2, 2, 2]);
+  assert.ok(final.history.every((attempt) => attempt.trace.length === 3));
+  unchanged(lesson, () => lesson.newAttempt(), /limit/i);
+  unchanged(lesson, () => lesson.request(config()), /limit|phase/i);
+});
+
+test('all sixteen allowlisted inputs are deterministic and release never strands a known or unresolved client', () => {
+  const configurations = [];
+  for (const target of fixtures.options.target) for (const propagation of fixtures.options.propagation) {
+    for (const old of fixtures.options.old) configurations.push({ target, propagation, old });
+  }
+  assert.equal(configurations.length, 16);
+  for (const values of configurations) {
+    const state = complete(values).state;
+    assert.equal(state.phase, 'complete');
+    assert.deepEqual(state, complete(values).state);
+    const current = state.current;
+    const report = current.observation;
+    assert.equal(report.clients.length, 8);
+    assert.equal(new Set(report.clients.map((client) => client.id)).size, 8);
+    assert.equal(report.journeys.success + report.journeys.failure + report.journeys.unknown, 8);
+    if (current.retention === 'RELEASE_ALLOWED') {
+      assert.equal(report.convergence, 'SUCCESS');
+      assert.equal(report.knownOld, 0);
+      assert.equal(report.unknownRoutes, 0);
+      assert.equal(report.journeys.success, 8);
+    } else assert.equal(current.retention, 'RETAIN_REQUIRED');
+    if (report.journeys.failure || report.convergence === 'FAILURE') assert.equal(current.outcome, 'FAILURE');
+    else if (report.journeys.unknown || report.convergence === 'UNKNOWN') assert.equal(current.outcome, 'UNKNOWN');
+    else assert.equal(current.outcome, 'SUCCESS');
+  }
+});
+
+test('new attempt retains old evidence and reset clears inputs, trace, predictions, counters and history', () => {
+  const { lesson, state } = complete();
+  assert.equal(state.phase, 'complete');
+  lesson.predict('FAILURE');
+  const fresh = lesson.newAttempt();
+  assert.equal(fresh.phase, 'idle');
+  assert.equal(fresh.current, null);
+  assert.equal(fresh.history.length, 1);
+  assert.equal(fresh.totals.attempted, 1);
+  lesson.request(config({ target: '50' }));
+  assert.equal(lesson.snapshot().totals.attempted, 2);
+  assert.equal(lesson.snapshot().totals.active, 1);
+  assert.deepEqual(lesson.reset(), createLesson().snapshot());
+  assert.equal(lesson.reset().history.length, 0);
+});
