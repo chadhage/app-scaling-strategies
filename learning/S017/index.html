@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S017 — Vertical scaling through replacement</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#conduct">Skip to conducting controls</a>
+  <main>
+    <p class="banner" role="note">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S017 — Vertical scaling through replacement</h1>
+    <p>Compare a disruptive <strong>In-place resize</strong> with <strong>Replace with larger capacity</strong>:
+      prepare a separate larger deployment, observe readiness, then hand off admissions.</p>
+    <p>A-S017 · D-S017 · SC-S017 · One frozen S unit. Native B-S017 and source-parent acceptance remain separate.</p>
+    <section aria-labelledby="exercise">
+      <h2 id="exercise">Worked comparison</h2>
+      <ol>
+        <li>Keep demand 4 and healthy observations. Choose <strong>In-place resize</strong>, then observe three windows.
+          Expect 12 attempted, 8 successful, 4 interrupted, 6 synthetic credits, FAIL.</li>
+        <li>Archive/reset. Choose <strong>Replace with larger capacity</strong>. Observe two windows:
+          larger capacity is READY, but admissions still use the old deployment.</li>
+        <li>Hand off, then observe one more window. Expect 12 successful, zero interrupted,
+          9 synthetic credits and PASS. Compare the retained runs below.</li>
+        <li>Try demand 6, candidate failure, or missing observations. Recovery must not erase prior impact or uncertainty.</li>
+      </ol>
+      <p>Fixed teaching envelope: old capacity 4, target 8 journeys/window; 5 seconds/window;
+        one restart window versus two observed warm-up windows. Old/new cost 1/2 credits per full window,
+        including restart. Parallel overlap costs 3 credits, including after handoff because old capacity remains retained.
+        No clock, randomness, retries, drain, retirement, real billing or platform behavior is measured.</p>
+    </section>
+    <section id="conduct" aria-labelledby="controls-title">
+      <h2 id="controls-title">Conduct the rehearsal</h2>
+      <form id="rehearsal-controls" novalidate>
+        <fieldset>
+          <legend>1. Apply demand before starting</legend>
+          <label for="demand">Journeys per five-second window (whole number 1–8)</label>
+          <input id="demand" name="demand" type="text" inputmode="numeric" pattern="[1-8]" value="4" maxlength="24" aria-describedby="demand-help">
+          <span id="demand-help">Blank, fractions, exponent notation and unknown fields are refused, never coerced.</span>
+          <button id="apply-demand" type="submit">Apply demand</button>
+        </fieldset>
+        <fieldset>
+          <legend>2. Choose one strategy</legend>
+          <button id="start-in-place" type="button">In-place resize</button>
+          <button id="prepare-replacement" type="button">Replace with larger capacity</button>
+        </fieldset>
+        <fieldset>
+          <legend>3. Observe, then hand off only when ready</legend>
+          <label for="observation">Next window condition</label>
+          <select id="observation" name="observation">
+            <option value="healthy">Healthy observations</option>
+            <option value="target-failure">Target readiness/service fails</option>
+            <option value="missing">Missing client and readiness observations</option>
+          </select>
+          <button id="advance-window" type="button">Observe next 5s window</button>
+          <button id="handoff-replacement" type="button" disabled>Hand off to larger capacity</button>
+        </fieldset>
+      </form>
+      <button id="reset-rehearsal" type="button">Archive and reset</button>
+      <p id="command-notice" role="alert" aria-live="assertive"></p>
+      <p id="archive-notice">Page-memory history only. Copy the selectable JSON before reload or close.
+        At most 4 archives, 12 windows and 40 commands per run; no proof is silently discarded.</p>
+    </section>
+    <section aria-labelledby="result-title">
+      <h2 id="result-title">Observed synthetic result</h2>
+      <p>Verification: <output id="verification" aria-live="polite">NOT_RUN</output></p>
+      <dl>
+        <dt>Phase / route</dt><dd id="phase-route">IDLE / old</dd>
+        <dt>Requested / observed-ready larger capacity</dt><dd id="capacity">0 / 0</dd>
+        <dt>Last observed serving capacity</dt><dd id="serving-capacity">4</dd>
+        <dt>User-transition impact</dt><dd id="impact">not-run</dd>
+        <dt>Attempted / successful / interrupted / unknown</dt><dd id="journeys">0 / 0 / 0 / 0</dd>
+        <dt>Elapsed synthetic time / cumulative synthetic cost</dt><dd id="time-cost">0s / 0 credits</dd>
+        <dt>Cleanup</dt><dd>No cloud resources. Old parallel deployment remains modeled, not retired.</dd>
+      </dl>
+      <div class="scroll">
+        <table>
+          <caption>Window trace: service is counted before end-of-window readiness changes.</caption>
+          <thead><tr><th scope="col">Time</th><th scope="col">Observation</th><th scope="col">Route</th><th scope="col">Serving</th><th scope="col">Ready at end</th><th scope="col">Success / interrupted / unknown</th><th scope="col">Credits</th></tr></thead>
+          <tbody id="window-trace"></tbody>
+        </table>
+      </div>
+      <div class="scroll">
+        <table>
+          <caption>Retained comparison: compare equal demand and the same number of five-second windows, not unmatched horizons.</caption>
+          <thead><tr><th scope="col">Run</th><th scope="col">Strategy</th><th scope="col">Demand</th><th scope="col">Windows</th><th scope="col">Success / interrupted / unknown</th><th scope="col">Credits</th><th scope="col">Verification</th></tr></thead>
+          <tbody id="comparison-history"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="evidence-title">
+      <h2 id="evidence-title">Selectable run evidence</h2>
+      <pre id="run-evidence" tabindex="0" aria-label="Synthetic active run and retained archive JSON"></pre>
+    </section>
+    <footer>
+      <p>Missing observations are UNKNOWN, never zero or success. Requested capacity and READY do not establish migration;
+        PASS requires a known target journey after guarded handoff. Failures survive recovery and archive/reset.</p>
+      <p>AS IS educational demonstration, not Microsoft endorsement, support, an SLA or five-nines certification.
+        <a href="../../README.md#microsoft-open-source-disclaimer">Source disclaimer</a> ·
+        <a href="README.md">Lesson instructions and evidence limitations</a></p>
+    </footer>
+  </main>
+</body>
+</html>

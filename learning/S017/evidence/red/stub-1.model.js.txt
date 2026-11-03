@@ -1,0 +1,30 @@
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S017Model = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const constants = {
+    banner: 'Training rehearsal - synthetic data - not a live Azure result',
+    smallerCapacity: 4, largerCapacity: 8, windowSeconds: 5,
+    warmupWindows: 2, restartWindows: 1, maxWindows: 12, maxCommands: 40
+  };
+  function initial() {
+    return {
+      schemaVersion: 1, demand: 4, strategy: null, phase: 'IDLE', route: 'old',
+      observedReadyCapacity: 0, warmupProgress: 0, handedOffAt: null,
+      targetFailed: false, windows: [], events: [], lastRejection: null, locked: false
+    };
+  }
+  function reduce(state) { return state; }
+  function summarize() {
+    return {
+      verification: 'NOT_RUN', commandStatus: 'ACCEPTED', userImpact: 'not-run',
+      attempted: 0, successful: 0, interrupted: 0, unknown: 0,
+      targetSuccessful: 0, costCredits: 0, elapsedSeconds: 0,
+      effectiveServingCapacity: 4, requestedTargetCapacity: 0,
+      observedReadyCapacity: 0, oldRetained: false, windows: 0, commands: 0
+    };
+  }
+  return { constants, initial, reduce, summarize };
+}));

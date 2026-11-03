@@ -1,0 +1,103 @@
+Feature: S017 vertical scaling through replacement
+  Training rehearsal - synthetic data - not a live Azure result
+  A-S017 is one frozen S unit in SC-S017, mapped to D-S017 and README S017.
+  The local lesson cannot complete B-S017, its native prerequisites, or D-S017.
+
+  Background:
+    Given the smaller deployment serves 4 synthetic journeys per five-second window
+    And the larger deployment serves 8 journeys per window
+    And smaller and larger deployments cost 1 and 2 synthetic credits per window
+    And a resize has one unavailable window and replacement needs two observed warm-up windows
+    And the old parallel deployment is retained and charged even after handoff
+    And no Azure, management, identity, network, or resource operation is performed
+
+  Scenario: Compare the same demand and observation horizon
+    Given demand is 4 journeys per window
+    When I conduct in-place resize for 3 healthy observation windows
+    Then 12 journeys were attempted, 8 succeeded and 4 were interrupted
+    And the larger ready capacity is 8 and cost is 6 synthetic credits
+    And verification is FAIL and impact is interrupted
+    When I archive and reset and prepare a larger parallel replacement
+    And I observe 2 healthy warm-up windows before handing off
+    And I observe 1 further healthy window on the larger deployment
+    Then all 12 attempted journeys succeeded and cost is 9 synthetic credits
+    And verification is PASS with observed target journeys, not just requested capacity
+    And the earlier in-place failure remains in comparison history
+
+  Scenario: Readiness must precede handoff
+    When I prepare a parallel replacement
+    Then immediate handoff is rejected without advancing time, cost, or routing
+    When I observe one healthy window
+    Then handoff is still rejected
+    When I observe a second healthy window
+    Then the candidate is READY but users still route to the smaller deployment
+    And handoff alone is INCOMPLETE until a target journey is actually observed
+
+  Scenario: Replacement cannot hide an overloaded old deployment
+    Given demand is 6 journeys per window
+    When I prepare, warm, hand off and observe the larger deployment
+    Then 4 interrupted journeys from warm-up remain recorded
+    And later success does not turn verification into PASS
+
+  Scenario: A failed candidate safely aborts without claiming migration
+    When I prepare a parallel replacement
+    And I observe target failure before handoff
+    Then the smaller deployment still serves the known default demand
+    And handoff is refused and verification is FAIL
+    And impact is safe abort before exposure with zero interrupted journeys
+
+  Scenario: Missing observations are unknown, not zero or success
+    When I prepare a parallel replacement
+    And I advance with a missing observation
+    Then all 4 attempted journey outcomes and effective capacity are unknown
+    And no readiness progress or handoff is permitted
+    When I recover with healthy observations, hand off and observe target journeys
+    Then the unknown outcomes remain and verification stays UNKNOWN
+
+  Scenario: A failure after handoff cannot be hidden
+    When I prepare, warm, hand off and observe target failure
+    Then target journeys are interrupted and verification is FAIL
+    And reset archives those outcomes rather than erasing them
+
+  Scenario Outline: Strict input and lifecycle guards
+    Given the default idle fixture
+    When I submit <input>
+    Then the command is rejected and its refusal is retained
+    And time, cost, applied demand, and routing do not change
+
+    Examples:
+      | input                                        |
+      | blank, fractional, exponent or out-of-range demand |
+      | non-finite, boolean, array or object demand  |
+      | unknown action, observation, or extra field  |
+      | handoff before readiness or repeated start  |
+      | configuration during an active run          |
+
+  Scenario: Exported evidence is not an executable state import
+    Given the reducer accepts only its own deeply frozen snapshots
+    When a caller supplies a cloned, forged or mutated state
+    Then it is rejected before conducting or inferring any outcome
+    And the original trusted state remains unchanged
+
+  Scenario: Bounds never silently prune proof
+    Given a run can retain at most 40 commands and 12 observation windows
+    And the page can archive at most 4 runs
+    When a bound is reached
+    Then further conducting is refused without removing earlier evidence
+
+  Scenario: Accessible local conducting and unexpected errors
+    Given I opened the standalone page with its exact training banner
+    When I use Tab, Enter and Space for configuration, actions and reset
+    Then labeled controls work and native form.reset remains callable
+    And reset restores defaults, focuses demand and retains prior errors and results
+    When an unexpected application failure follows a successful run
+    Then ERROR replaces stale PASS and conducting is disabled until reset
+
+  Scenario: Strict browser policy and immutable historical proof
+    Given script, style, form, connection, frame and object restrictions are active
+    When inline script, inline handlers and external connections are probed
+    Then the browser blocks them and no external request completes
+    And the real browser uses only the pinned published isolated helper
+    And its close is awaited in finally
+    And normal verification never rewrites historical evidence
+    And only CAPTURE_BROWSER_EVIDENCE=1 deliberately appends capture records
