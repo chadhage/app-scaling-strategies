@@ -11,7 +11,7 @@ const repository = path.resolve(lesson, '..', '..');
 const evidence = path.join(lesson, 'evidence');
 const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
-function inventory(directory, filter = () => true) {
+function inventory(directory, filter = () => true, canonicalText = false) {
   if (!fs.existsSync(directory)) return {};
   const entries = {};
   function walk(current) {
@@ -19,7 +19,11 @@ function inventory(directory, filter = () => true) {
       const target = path.join(current, item.name);
       if (!filter(target, item)) continue;
       if (item.isDirectory()) walk(target);
-      else entries[path.relative(lesson, target)] = hash(fs.readFileSync(target));
+      else {
+        const bytes = fs.readFileSync(target);
+        entries[path.relative(lesson, target)] = hash(canonicalText
+          ? Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n')) : bytes);
+      }
     }
   }
   walk(directory);
@@ -79,8 +83,10 @@ try {
   if (capture && stage === 'red') recordSourcesAndRedSnapshots();
   for (const current of stages) {
     const startedAtUtc = new Date().toISOString();
-    const sourceHashes = inventory(lesson, (target) => target !== evidence
-      && !['evidence.json', 'result.json'].includes(path.basename(target)));
+    const sourceFilter = (target) => target !== evidence
+      && !['evidence.json', 'result.json'].includes(path.basename(target));
+    const rawWorkingTreeSourceHashes = inventory(lesson, sourceFilter);
+    const sourceHashes = inventory(lesson, sourceFilter, true);
     const args = ['--test', '--test-reporter=tap', path.join(__dirname,
       `${current === 'red' || current === 'green' ? 'model' : current}.test.cjs`)];
     const result = spawnSync(process.execPath, args, {
@@ -104,7 +110,8 @@ try {
         startedAtUtc, finishedAtUtc: new Date().toISOString(),
         workingTreeBaseCommit: base.status === 0 ? base.stdout.trim() : null,
         exitCode: result.status, signal: result.signal, error: result.error?.message || null,
-        passed, captureWasExplicit: true, sourceHashes,
+        passed, captureWasExplicit: true, sourceHashPolicy: 'utf8-lf-canonical-v1',
+        sourceHashes, rawWorkingTreeSourceHashes,
         stdout: stdoutFile, stdoutBytes: stdout.length, stdoutSha256: hash(stdout),
         stderr: stderrFile, stderrBytes: stderr.length, stderrSha256: hash(stderr)
       });

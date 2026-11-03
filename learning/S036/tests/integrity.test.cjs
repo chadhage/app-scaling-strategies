@@ -100,8 +100,12 @@ test('every retained raw run matches byte lengths and SHA256; latest qualified r
     assert.equal(latest.exitCode, 0, `${stage} must actually pass.`);
     assert.equal(latest.passed, true);
     assert.equal(latest.error, null);
+    assert.equal(latest.sourceHashPolicy, 'utf8-lf-canonical-v1');
+    assert.deepEqual(Object.keys(latest.rawWorkingTreeSourceHashes), Object.keys(latest.sourceHashes));
     for (const [file, expected] of Object.entries(latest.sourceHashes)) {
-      assert.equal(hash(fs.readFileSync(path.join(lesson, file))), expected, `${stage} current ${file}`);
+      const bytes = fs.readFileSync(path.join(lesson, file));
+      assert.equal(hash(Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'))), expected, `${stage} current ${file}`);
+      assert.match(latest.rawWorkingTreeSourceHashes[file], /^[a-f0-9]{64}$/);
     }
   }
   const browserLog = read(path.join('evidence', captures.filter((name) => name.startsWith('browser-')).at(-1).replace('.json', '.stdout.tap.txt')));
@@ -110,4 +114,17 @@ test('every retained raw run matches byte lengths and SHA256; latest qualified r
   assert.match(browserLog, /"playwrightVersion":"1.56.1"/);
   assert.match(browserLog, /"browserVersion":"156.0.4314.50"/);
   assert.match(browserLog, /"signatureStatus":"Valid"/);
+});
+
+test('historical publication discrepancy remains honest; LF-canonical hashes survive Git text normalization', () => {
+  const observation = json(path.join('evidence', 'publication-portability-001.json'));
+  assert.equal(observation.commit, '6c339d33f0663dae0869fcc821b7b877a6620cbe');
+  assert.equal(observation.rawMismatchCount, 13);
+  assert.equal(observation.canonicalMismatchCount, 0);
+  assert.equal(observation.captureWasExplicit, true);
+  assert.ok(observation.files.every((file) => file.canonicalWorkingSha256 === file.canonicalPublishedSha256));
+  const windowsBytes = Buffer.from('synthetic\r\nfixture\r\n');
+  const gitBytes = Buffer.from('synthetic\nfixture\n');
+  assert.notEqual(hash(windowsBytes), hash(gitBytes));
+  assert.equal(hash(Buffer.from(windowsBytes.toString('utf8').replace(/\r\n/g, '\n'))), hash(gitBytes));
 });

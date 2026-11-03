@@ -40,8 +40,9 @@
       "executionClaim": "Only actual recorded run exit codes and raw output establish pass/fail; metadata is append-only and tied to current owned source hashes."
     }
   ],
-  "rawProvenance": "Each run JSON records command, UTC interval, Node version, source hashes, working-tree base commit, exit/signal/error, stream filenames, byte lengths and SHA256.",
+  "rawProvenance": "Each run JSON records command, UTC interval, Node version, source hashes, working-tree base commit, exit/signal/error, stream filenames, byte lengths and SHA256. Latest captures separately retain rawWorkingTreeSourceHashes and UTF-8 LF-canonical sourceHashes under explicit policy utf8-lf-canonical-v1. Historical raw captures and RED snapshots remain unchanged.",
   "qualificationRecovery": "browser-001 failed before browser launch: Windows PowerShell could not load Microsoft.PowerShell.Security and returned an empty signature status. Existing pwsh.exe successfully reads the Valid Microsoft signature; the final test uses it with terminating errors and raw stdout/stderr. The failed capture remains and is neither behavioral RED nor a browser pass.",
+  "publicationPortabilityRecovery": "evidence\\publication-portability-001.json records 13 real raw-byte discrepancies after the initial scoped publication, caused only by Git text eol=lf normalization. All canonical bytes matched. Current captures explicitly distinguish raw working-tree provenance from LF-canonical text source integrity, so fresh checkouts can verify the published lesson without rewriting historical proof. This recovery remains inside the same A-S036 unit.",
   "normalVerification": "Read-only to proof: tests never write evidence; capture.cjs snapshots proof inventory/hashes before and after unless CAPTURE_BROWSER_EVIDENCE=1 was deliberately set.",
   "userImpact": "Valid-prior success, valid-prior interruption, invalid-request rejection and unknown observation are distinct. All metrics are synthetic; real user impact remains UNMEASURED.",
   "cleanup": "Browser test records awaited-finally page closure and browser disconnection; no cloud resources, identity, server, lease or packages created.",

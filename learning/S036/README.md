@@ -114,6 +114,14 @@ not load its signature module. The existing `pwsh.exe` host successfully checks
 the signature, with terminating errors and captured raw output. That failed
 preflight remains preserved; it is not behavioral RED or a browser pass.
 
+The initial publication exposed **13** raw-byte source-hash discrepancies:
+Git's declared `eol=lf` normalized the editor's CRLF. All LF-canonical bytes
+matched, as retained in `evidence\publication-portability-001.json`. Latest
+captures now declare `utf8-lf-canonical-v1`, retain both raw working-tree
+hashes and LF-canonical text hashes, and verify canonical hashes on any
+checkout. Raw output streams, old captures and RED snapshot bytes remain
+unchanged. This correction belongs to the same card, not another Kano unit.
+
 Only existing Node **22.23.4** test tooling, offline Playwright **1.56.1** and
 installed, verified Microsoft-signed Edge **156.0.4314.50** are used. Browser
 tests assert the published `testing\browser\isolated.cjs` SHA256
