@@ -1,0 +1,65 @@
+Feature: A-S112 fictional zone-workload isolation
+  Training rehearsal - synthetic data - not a live Azure result
+  Source S112: test supported compute/data redundancy and surviving-zone capacity.
+  D-S112 requires measured surviving workload/data capacity and outage-proxy labeling.
+  All zones, placement, failures, capacity, recovery and journeys are fixed teaching data.
+  No process, pod, VM, network, resource or actual Azure zone is isolated.
+
+  Background:
+    Given one of four immutable fictional three-zone fixture presets
+    And four fictional profile journeys with a twelve-teaching-tick budget
+    And the operator selects exactly one fictional zone
+
+  Scenario: Verified fictional redundancy meets the surviving workload
+    When the operator loads the redundant fixture and checks its recorded placement
+    And confirms data-only isolation of zone-a
+    And measures the remaining fictional compute and data capacity
+    Then four compute units and four observed data units survive
+    And all four synthetic journeys succeed within the fictional budget
+    And the verifier is pass without claiming native Azure availability
+
+  Scenario: Compute capacity shortage remains an interrupted result
+    When zone-a is isolated in the compute-shortfall fixture
+    Then two compute units survive against four attempted journeys
+    And two journeys succeed and two are interrupted
+    And the expected negative lesson check does not turn the fail verifier into pass
+
+  Scenario: Compute redundancy cannot substitute for a surviving data replica
+    When zone-a is isolated in the single-zone-data fixture
+    Then four compute units but zero data units survive
+    And all four attempted journeys are interrupted
+    And the original failed journeys remain after fictional record restoration
+
+  Scenario: Unobserved data is unknown, never configured capacity or zero
+    When zone-a is isolated in the missing-data-evidence fixture
+    Then surviving data capacity is unknown
+    And all four journey outcomes are unknown
+    And the verifier is unverified rather than pass
+
+  Scenario: Inputs and operator actions are strictly guarded
+    When a command has an unknown field, wrong type, unknown fixture or unknown zone
+    Or isolation lacks an exact boolean confirmation
+    Or an action is attempted outside its permitted phase
+    Then an actionable typed error appears
+    And no fixture state or retained history changes
+
+  Scenario: Restore and reset do not erase earlier failure
+    Given an interrupted measurement
+    When the operator restores the fictional zone records and checks recovery
+    Then the original result remains unchanged beside the new recovery measurement
+    When the operator resets
+    Then the report and ordered action history are retained
+    And no real cleanup or resource recovery is claimed
+    And six archived runs are a hard bound without silent history eviction
+
+  Scenario: Keyboard and browser errors are observable
+    When the operator conducts load, placement, confirmation, isolation and measurement by keyboard
+    Then the controls, separate verifier, journey impact and cleanup are readable in the DOM
+    And an unchecked confirmation produces a focused alert without changing the phase
+    And reset focuses the fixture selector and preserves the earlier report
+
+  Scenario: The standalone browser lesson enforces its CSP
+    Given only local external scripts and styles are permitted
+    When a test attempts inline script execution or a forbidden connection
+    Then actual browser CSP violations are observed
+    And no inline script runs and no external network request is made

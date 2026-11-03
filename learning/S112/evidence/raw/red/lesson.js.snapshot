@@ -1,0 +1,26 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S112Lesson = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+
+  function createState() {
+    return { phase: 'idle', active: null, history: [] };
+  }
+
+  function reduce(state, command) {
+    if (command.type === 'load') {
+      return {
+        phase: 'prepared',
+        active: { fixtureId: command.fixtureId, zoneId: command.zoneId, events: [] },
+        history: state.history,
+      };
+    }
+    if (command.type === 'reset') return createState();
+    return state;
+  }
+
+  return { createState, reduce };
+}));

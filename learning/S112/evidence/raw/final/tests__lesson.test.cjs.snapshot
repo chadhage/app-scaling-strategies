@@ -1,0 +1,248 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createState, reduce } = require('../lesson.js');
+const fixtures = require('../fixtures.js');
+
+function measured(fixtureId = 'redundant', zoneId = 'zone-a') {
+  let state = reduce(createState(), { type: 'load', fixtureId, zoneId });
+  state = reduce(state, { type: 'verify-placement' });
+  state = reduce(state, { type: 'isolate', confirmed: true });
+  return reduce(state, { type: 'measure' });
+}
+
+test('verified fictional zone loss measures both capacities and all four journeys', () => {
+  const state = measured();
+  assert.equal(state.phase, 'measured');
+  const result = state.active.measurement;
+  assert.equal(result.computeCapacity, 4);
+  assert.equal(result.dataCapacity, 4);
+  assert.deepEqual(result.counts, { attempted: 4, succeeded: 4, interrupted: 0, unknown: 0 });
+  assert.equal(result.verifier, 'pass');
+  assert.equal(result.userImpact, 'synthetic-uninterrupted');
+  assert.equal(result.expectationMatched, true);
+});
+
+test('compute shortage is a failed verifier even when the negative lesson check matches', () => {
+  const state = measured('compute-shortfall');
+  assert.equal(state.phase, 'measured');
+  const result = state.active.measurement;
+  assert.equal(result.computeCapacity, 2);
+  assert.equal(result.dataCapacity, 4);
+  assert.deepEqual(result.counts, { attempted: 4, succeeded: 2, interrupted: 2, unknown: 0 });
+  assert.equal(result.verifier, 'fail');
+  assert.equal(result.expectationMatched, true);
+});
+
+test('sufficient compute cannot hide loss of the sole fictional data replica', () => {
+  const state = measured('single-zone-data');
+  assert.equal(state.phase, 'measured');
+  const result = state.active.measurement;
+  assert.equal(result.computeCapacity, 4);
+  assert.equal(result.dataCapacity, 0);
+  assert.deepEqual(result.counts, { attempted: 4, succeeded: 0, interrupted: 4, unknown: 0 });
+  assert.equal(result.verifier, 'fail');
+});
+
+test('unobserved data capacity and outcomes stay unknown', () => {
+  const state = measured('missing-data-evidence');
+  assert.equal(state.phase, 'measured');
+  const result = state.active.measurement;
+  assert.equal(result.dataCapacity, null);
+  assert.deepEqual(result.counts, { attempted: 4, succeeded: 0, interrupted: 0, unknown: 4 });
+  assert.equal(result.verifier, 'unverified');
+});
+
+test('unknown or coercible fixture inputs are rejected without mutation', () => {
+  const state = createState();
+  assert.throws(() => reduce(state, { type: 'load', fixtureId: 42, zoneId: 'zone-a' }), {
+    code: 'ERR_INPUT',
+  });
+  assert.equal(state.phase, 'idle');
+  assert.equal(state.history.length, 0);
+});
+
+test('out-of-order isolation is a typed state error', () => {
+  assert.throws(() => reduce(createState(), { type: 'isolate', confirmed: true }), {
+    code: 'ERR_PHASE',
+  });
+});
+
+test('reset retains the original failed report and ordered operator history', () => {
+  const before = measured('single-zone-data');
+  const state = reduce(before, { type: 'reset' });
+  assert.equal(state.phase, 'idle');
+  assert.equal(state.history.length, 1);
+  assert.equal(state.history[0].measurement.verifier, 'fail');
+  assert.deepEqual(state.history[0].events.map((event) => event.action),
+    ['load', 'verify-placement', 'isolate', 'measure', 'reset']);
+  assert.equal(state.active, null);
+});
+
+test('recovery adds a new measurement without rewriting an interrupted original', () => {
+  const before = measured('single-zone-data');
+  let state = reduce(before, { type: 'restore' });
+  state = reduce(state, { type: 'check-recovery' });
+  assert.equal(state.phase, 'recovered');
+  assert.equal(state.active.measurement.verifier, 'fail');
+  assert.equal(state.active.recovery.verifier, 'pass');
+  assert.equal(state.active.recovery.counts.succeeded, 4);
+  assert.deepEqual(before.active.measurement, state.active.measurement);
+});
+
+for (const fixtureId of fixtures.fixtureIds) {
+  for (const zoneId of fixtures.zoneIds) {
+    test(`fixed ${fixtureId}/${zoneId}: isolated scope, capacity, attribution and expected result`, () => {
+      const state = measured(fixtureId, zoneId);
+      const result = state.active.measurement;
+      const expectedCompute = fixtureId === 'compute-shortfall' ? (zoneId === 'zone-a' ? 2 : 3) : 4;
+      const expectedData = fixtureId === 'missing-data-evidence' ? null
+        : fixtureId === 'single-zone-data' ? (zoneId === 'zone-a' ? 0 : 4) : 4;
+      const expectedSuccess = expectedData === null ? 0 : Math.min(expectedCompute, expectedData, 4);
+      const expectedUnknown = expectedData === null ? 4 : 0;
+      assert.equal(result.computeCapacity, expectedCompute);
+      assert.equal(result.dataCapacity, expectedData);
+      assert.deepEqual(result.counts, {
+        attempted: 4, succeeded: expectedSuccess, interrupted: 4 - expectedSuccess - expectedUnknown,
+        unknown: expectedUnknown,
+      });
+      assert.equal(result.counts.attempted, result.counts.succeeded + result.counts.interrupted + result.counts.unknown);
+      assert.equal(result.expectationMatched, true);
+      assert.equal(state.active.placement.status, 'verified-fictional-records');
+      assert.equal(state.active.placement.targetZoneId, zoneId);
+      assert.equal(state.active.records.filter((record) => !record.available).length, 1);
+      assert.equal(state.active.records.find((record) => !record.available).zoneId, zoneId);
+      assert.deepEqual(result.survivingZoneIds, fixtures.zoneIds.filter((zone) => zone !== zoneId));
+      result.journeys.forEach((journey) => {
+        assert.equal(journey.zoneId === zoneId, false);
+        assert.equal(journey.budgetTicks, 12);
+        if (journey.outcome === 'succeeded') {
+          assert.ok(journey.latencyTicks <= journey.budgetTicks);
+          assert.equal(journey.profileVersion, 'fixed-fictional-profile-v1');
+          assert.equal(journey.dataOutcome, 'complete');
+        } else if (journey.outcome === 'unknown') {
+          assert.equal(journey.latencyTicks, null);
+          assert.equal(journey.profileVersion, null);
+        } else {
+          assert.equal(journey.latencyTicks, 16);
+          assert.equal(journey.profileVersion, null);
+        }
+      });
+      assert.equal(result.source, 'fixed-fictional-fixture-calculation');
+    });
+  }
+}
+
+test('strict command guards reject all wrong primitive types, fields, IDs and accessors', () => {
+  const state = createState();
+  let accessed = false;
+  const accessor = { fixtureId: 'redundant', zoneId: 'zone-a' };
+  Object.defineProperty(accessor, 'type', { get() { accessed = true; return 'load'; }, enumerable: true });
+  const invalid = [
+    null, undefined, true, 1, 'load', [], new Date(), Object.create(null),
+    {}, { type: 'toString' }, { type: 'Load' }, { type: 'load' },
+    { type: 'load', fixtureId: 'redundant', zoneId: 'zone-a', extra: true },
+    { type: 'load', fixtureId: 'redundant', zoneId: 'ZONE-A' },
+    { type: 'load', fixtureId: 'redundant', zoneId: ['zone-a'] },
+    { type: 'load', fixtureId: 'redundant', zoneId: 'zone-a ' },
+    { type: 'load', fixtureId: 'unknown', zoneId: 'zone-a' },
+    { type: 'load', fixtureId: new String('redundant'), zoneId: 'zone-a' },
+    { type: 'load', fixtureId: 'redundant', zoneId: 'zone-a', [Symbol('extra')]: 1 },
+    Object.assign(Object.create({ ignored: true }), { type: 'reset' }), accessor,
+  ];
+  invalid.forEach((command) => assert.throws(() => reduce(state, command), { code: 'ERR_INPUT' }));
+  assert.equal(accessed, false);
+  assert.deepEqual(state.history, []);
+  assert.equal(state.phase, 'idle');
+});
+
+test('only unchanged branded states are accepted, and every nested state/fixture is immutable', () => {
+  const state = measured();
+  [null, undefined, {}, [], JSON.parse(JSON.stringify(state)), fixtures].forEach((invalid) => {
+    assert.throws(() => reduce(invalid, { type: 'reset' }), { code: 'ERR_STATE' });
+  });
+  assert.ok(Object.isFrozen(state));
+  assert.ok(Object.isFrozen(state.active.records[0]));
+  assert.ok(Object.isFrozen(state.active.measurement.journeys[0]));
+  assert.ok(Object.isFrozen(fixtures.fixtures.redundant.records[0]));
+  assert.throws(() => { state.active.records[0].available = true; }, TypeError);
+  assert.throws(() => state.history.push({}), TypeError);
+  assert.throws(() => { fixtures.fixtures.redundant.records[0].computeCapacity = 99; }, TypeError);
+});
+
+test('isolation requires a boolean true and placement; rejection keeps exact prior state', () => {
+  let state = reduce(createState(), { type: 'load', fixtureId: 'redundant', zoneId: 'zone-a' });
+  assert.throws(() => reduce(state, { type: 'isolate', confirmed: true }), { code: 'ERR_PHASE' });
+  state = reduce(state, { type: 'verify-placement' });
+  const bytes = JSON.stringify(state);
+  [0, 1, 'true', null, {}, undefined].forEach((confirmed) => {
+    assert.throws(() => reduce(state, { type: 'isolate', confirmed }), { code: 'ERR_INPUT' });
+  });
+  assert.throws(() => reduce(state, { type: 'isolate', confirmed: false }), { code: 'ERR_CONFIRMATION' });
+  assert.equal(JSON.stringify(state), bytes);
+});
+
+test('every phase rejects skipped, repeated or backward operator commands', () => {
+  const commands = [
+    { type: 'load', fixtureId: 'redundant', zoneId: 'zone-a' },
+    { type: 'verify-placement' }, { type: 'isolate', confirmed: true },
+    { type: 'measure' }, { type: 'restore' }, { type: 'check-recovery' },
+  ];
+  let state = createState();
+  commands.forEach((allowed, index) => {
+    commands.filter((_, other) => other !== index).forEach((command) => {
+      assert.throws(() => reduce(state, command), { code: 'ERR_PHASE' });
+    });
+    state = reduce(state, allowed);
+  });
+  commands.forEach((command) => assert.throws(() => reduce(state, command), { code: 'ERR_PHASE' }));
+  assert.equal(state.active.events.length, 6);
+});
+
+test('restoration is not a recovery measurement and unknown evidence remains unknown', () => {
+  const before = measured('missing-data-evidence');
+  const restored = reduce(before, { type: 'restore' });
+  assert.equal(restored.phase, 'restored');
+  assert.equal(restored.active.recovery, null);
+  assert.equal(restored.active.measurement.verifier, 'unverified');
+  assert.ok(restored.active.records.every((record) => record.available));
+  const checked = reduce(restored, { type: 'check-recovery' });
+  assert.equal(checked.active.recovery.dataCapacity, null);
+  assert.equal(checked.active.recovery.verifier, 'unverified');
+  assert.equal(checked.active.recovery.counts.unknown, 4);
+  assert.deepEqual(checked.active.measurement, before.active.measurement);
+});
+
+test('reset archives incomplete work without claiming attempted journeys or deleting history', () => {
+  let state = reduce(createState(), { type: 'load', fixtureId: 'redundant', zoneId: 'zone-b' });
+  state = reduce(state, { type: 'verify-placement' });
+  state = reduce(state, { type: 'isolate', confirmed: true });
+  state = reduce(state, { type: 'reset' });
+  assert.equal(state.history[0].completion, 'cancelled-before-measurement');
+  assert.equal(state.history[0].measurement, null);
+  assert.ok(state.history[0].records.every((record) => record.available));
+  assert.equal(state.history[0].phaseAtReset, 'isolated');
+  assert.match(state.history[0].cleanup, /no-live-resources/);
+  assert.equal(reduce(state, { type: 'reset' }), state);
+});
+
+test('six retained runs are a hard input/state bound without silent eviction', () => {
+  let state = createState();
+  for (let count = 0; count < 6; count += 1) {
+    state = reduce(state, { type: 'load', fixtureId: 'redundant', zoneId: 'zone-a' });
+    state = reduce(state, { type: 'verify-placement' });
+    state = reduce(state, { type: 'isolate', confirmed: true });
+    state = reduce(state, { type: 'measure' });
+    state = reduce(state, { type: 'restore' });
+    state = reduce(state, { type: 'check-recovery' });
+    state = reduce(state, { type: 'reset' });
+  }
+  assert.equal(state.history.length, 6);
+  assert.deepEqual(state.history.map((run) => run.id), ['run-1', 'run-2', 'run-3', 'run-4', 'run-5', 'run-6']);
+  assert.ok(state.history.every((run) => run.events.length === 7));
+  assert.throws(() => reduce(state, { type: 'load', fixtureId: 'redundant', zoneId: 'zone-a' }), {
+    code: 'ERR_HISTORY_LIMIT',
+  });
+  assert.deepEqual(require('../lesson.js').allowedActions(state), ['reset']);
+});

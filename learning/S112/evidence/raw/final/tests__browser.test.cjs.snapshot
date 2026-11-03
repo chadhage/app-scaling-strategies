@@ -1,0 +1,273 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { openIsolatedLesson } = require('../../../testing/browser/isolated.cjs');
+
+const directory = path.resolve(__dirname, '..');
+const root = path.resolve(directory, '..', '..');
+const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+const helperSha256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+
+function fileBytes(folder = directory) {
+  const entries = fs.readdirSync(folder, { withFileTypes: true }).flatMap((entry) => {
+    const file = path.join(folder, entry.name);
+    return entry.isDirectory() ? fileBytes(file) : [[path.relative(directory, file), hash(fs.readFileSync(file))]];
+  });
+  return entries.sort(([left], [right]) => left.localeCompare(right));
+}
+
+test('actual isolated DOM, keyboard, error, failure, unknown, recovery, reset, bounds and CSP', { timeout: 110000 }, async () => {
+  const before = fileBytes();
+  assert.equal(hash(fs.readFileSync(path.join(root, 'testing', 'browser', 'isolated.cjs'))), helperSha256);
+  const session = await openIsolatedLesson('learning\\S112\\index.html');
+  const page = session.page;
+  const snapshots = [];
+  const pageErrors = [];
+  const escapedConnectionRequests = [];
+  const requests = [];
+  let csp;
+  let cleanup;
+  const focusId = () => page.evaluate(() => document.activeElement?.id);
+
+  async function snapshot(label) {
+    snapshots.push({
+      label, phase: await page.locator('#phase').innerText(), focus: await focusId(),
+      placement: await page.locator('#placement').innerText(), cleanup: await page.locator('#cleanup').innerText(),
+      error: await page.locator('#error').isVisible() ? await page.locator('#error').innerText() : null,
+      topology: await page.locator('#topology tr').evaluateAll((rows) => rows.map((row) => ({
+        zoneId: row.dataset.zone, available: row.dataset.available,
+        cells: Array.from(row.cells, (cell) => cell.textContent),
+      }))),
+      measurement: await page.locator('#measurement').innerText(),
+      verifier: await page.locator('#measurement').getAttribute('data-verifier'),
+      journeyOutcomes: await page.locator('#measurement [data-journey-outcome]').evaluateAll((rows) =>
+        rows.map((row) => ({ outcome: row.dataset.journeyOutcome, cells: Array.from(row.cells, (cell) => cell.textContent) }))),
+      recovery: await page.locator('#recovery').innerText(),
+      retainedRuns: await page.locator('#history > li').evaluateAll((rows) =>
+        rows.map((row) => ({ runId: row.dataset.runId, originalVerifier: row.dataset.originalVerifier, text: row.textContent }))),
+    });
+  }
+
+  async function conduct(fixtureId, zoneId = 'zone-a') {
+    await page.locator('#fixture').selectOption(fixtureId);
+    await page.locator('#zone').selectOption(zoneId);
+    await page.locator('#load-fixture').click();
+    assert.equal(await page.locator('#phase').innerText(), 'prepared');
+    assert.equal(await page.locator('#measure').isDisabled(), true);
+    await page.locator('#verify-placement').click();
+    await page.locator('#confirm-isolation').check();
+    await page.locator('#isolate').click();
+    assert.equal(await page.locator('#topology tr[data-available="false"]').count(), 1);
+    assert.equal(await page.locator('#topology tr[data-available="false"]').getAttribute('data-zone'), zoneId);
+    await page.locator('#measure').click();
+    assert.equal(await page.locator('#phase').innerText(), 'measured');
+  }
+
+  async function recovery(expectedOriginal, expectedRecovery) {
+    const original = await page.locator('#measurement').innerText();
+    await page.locator('#restore').click();
+    assert.equal(await page.locator('#phase').innerText(), 'restored');
+    assert.equal(await page.locator('#recovery').getAttribute('data-verifier'), null);
+    assert.equal(await page.locator('#topology tr[data-available="true"]').count(), 3);
+    assert.equal(await page.locator('#measurement').innerText(), original);
+    await page.locator('#check-recovery').click();
+    assert.equal(await page.locator('#measurement').getAttribute('data-verifier'), expectedOriginal);
+    assert.equal(await page.locator('#recovery').getAttribute('data-verifier'), expectedRecovery);
+    assert.equal(await page.locator('#measurement').innerText(), original);
+  }
+
+  try {
+    page.on('pageerror', (error) => pageErrors.push(error.message));
+    page.on('request', (request) => requests.push(request.url()));
+    await page.route(/^https?:\/\//, async (route) => {
+      escapedConnectionRequests.push(route.request().url());
+      await route.abort('blockedbyclient');
+    });
+    assert.equal(await page.title(), 'S112 - Fictional zone-workload isolation');
+    assert.equal(await page.locator('#training-banner').innerText(), 'Training rehearsal - synthetic data - not a live Azure result');
+    assert.equal(await page.locator('#phase').innerText(), 'idle');
+    assert.match(await page.locator('#scope').innerText(), /fixed fictional teaching data only/);
+    assert.equal(await page.evaluate(() => typeof document.getElementById('setup-form').reset), 'function');
+    assert.equal(await page.locator('#isolate').isDisabled(), true);
+    await snapshot('initial');
+
+    await page.evaluate(() => {
+      window.s112TestInlineExecuted = false;
+      window.s112TestViolations = [];
+      document.addEventListener('securitypolicyviolation', (event) => {
+        window.s112TestViolations.push({
+          effectiveDirective: event.effectiveDirective, blockedURI: event.blockedURI,
+          disposition: event.disposition,
+        });
+      });
+      const script = document.createElement('script');
+      script.textContent = 'window.s112TestInlineExecuted = true;';
+      document.head.appendChild(script);
+    });
+    const fetchRejected = await page.evaluate(async () => {
+      try {
+        await fetch('https://s112-teaching.invalid/forbidden');
+        return false;
+      } catch {
+        return true;
+      }
+    });
+    await page.waitForFunction(() => window.s112TestViolations.some((entry) => entry.effectiveDirective.startsWith('script-src'))
+      && window.s112TestViolations.some((entry) => entry.effectiveDirective === 'connect-src'));
+    csp = await page.evaluate(() => ({
+      inlineExecuted: window.s112TestInlineExecuted, violations: window.s112TestViolations,
+    }));
+    csp.fetchRejected = fetchRejected;
+    csp.escapedConnectionRequests = escapedConnectionRequests;
+    assert.equal(csp.inlineExecuted, false);
+    assert.equal(csp.fetchRejected, true);
+    assert.equal(escapedConnectionRequests.length, 0);
+    assert.equal(requests.some((url) => /^https?:/.test(url)), false);
+    assert.ok(csp.violations.every((entry) => entry.disposition === 'enforce'));
+
+    await page.locator('#fixture').focus();
+    await page.keyboard.press('Home');
+    await page.keyboard.press('Tab');
+    assert.equal(await focusId(), 'zone');
+    await page.keyboard.press('Home');
+    await page.keyboard.press('Tab');
+    assert.equal(await focusId(), 'load-fixture');
+    await page.keyboard.press('Enter');
+    assert.equal(await focusId(), 'verify-placement');
+    await page.keyboard.press('Enter');
+    assert.equal(await focusId(), 'confirm-isolation');
+    assert.equal(await page.locator('#placement').innerText(), 'verified-fictional-records');
+    await page.keyboard.press('Tab');
+    assert.equal(await focusId(), 'isolate');
+    await page.keyboard.press('Enter');
+    assert.match(await page.locator('#error').innerText(), /ERR_CONFIRMATION/);
+    assert.equal(await focusId(), 'error');
+    assert.equal(await page.locator('#phase').innerText(), 'placement-verified');
+    assert.equal(await page.locator('#topology tr[data-available="true"]').count(), 3);
+    await snapshot('keyboard-unchecked-confirmation-error');
+    await page.locator('#confirm-isolation').focus();
+    await page.keyboard.press('Space');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Enter');
+    assert.equal(await focusId(), 'measure');
+    assert.equal(await page.locator('#error').isVisible(), false);
+    assert.equal(await page.locator('#topology tr[data-available="false"]').getAttribute('data-zone'), 'zone-a');
+    await snapshot('keyboard-data-only-isolation');
+    await page.keyboard.press('Enter');
+    assert.equal(await page.locator('#measurement').getAttribute('data-verifier'), 'pass');
+    assert.match(await page.locator('#measurement').innerText(), /4 \/ 4 \/ 0 \/ 0/);
+    assert.match(await page.locator('#measurement').innerText(), /4 units \/ 4 required/);
+    assert.equal(await page.locator('#measurement [data-journey-outcome="succeeded"]').count(), 4);
+    assert.equal(await focusId(), 'restore');
+    await snapshot('keyboard-positive-measurement');
+    await page.keyboard.press('Enter');
+    assert.equal(await focusId(), 'check-recovery');
+    await page.keyboard.press('Enter');
+    assert.equal(await focusId(), 'reset-lesson');
+    assert.equal(await page.locator('#recovery').getAttribute('data-verifier'), 'pass');
+    await page.keyboard.press('Enter');
+    assert.equal(await focusId(), 'fixture');
+    assert.equal(await page.locator('#phase').innerText(), 'idle');
+    assert.equal(await page.locator('#history > li').count(), 1);
+    assert.equal(await page.locator('#history > li').getAttribute('data-original-verifier'), 'pass');
+    assert.equal(await page.locator('#measurement').getAttribute('data-verifier'), null);
+    assert.equal(await page.locator('#confirm-isolation').isChecked(), false);
+    await snapshot('keyboard-reset-retains-positive-history');
+
+    await page.locator('#fixture').evaluate((select) => {
+      const option = document.createElement('option');
+      option.value = 'arbitrary-resource';
+      option.textContent = 'Invalid injected test option';
+      select.appendChild(option);
+    });
+    await page.locator('#fixture').selectOption('arbitrary-resource');
+    await page.locator('#load-fixture').click();
+    assert.match(await page.locator('#error').innerText(), /ERR_INPUT/);
+    assert.equal(await focusId(), 'error');
+    assert.equal(await page.locator('#phase').innerText(), 'idle');
+    assert.equal(await page.locator('#history > li').count(), 1);
+    await snapshot('typed-invalid-fixture-error');
+
+    await conduct('compute-shortfall');
+    assert.equal(await page.locator('#measurement').getAttribute('data-verifier'), 'fail');
+    assert.match(await page.locator('#measurement').innerText(), /2 \/ 2 \/ 0/);
+    assert.equal(await page.locator('#measurement [data-journey-outcome="interrupted"]').count(), 2);
+    assert.equal(await page.locator('#measurement [data-journey-outcome="succeeded"]').count(), 2);
+    await recovery('fail', 'pass');
+    await snapshot('compute-negative-with-separate-recovery');
+    await page.locator('#reset-lesson').click();
+    assert.equal(await page.locator('#history > li').nth(1).getAttribute('data-original-verifier'), 'fail');
+
+    await conduct('single-zone-data');
+    assert.equal(await page.locator('#measurement').getAttribute('data-verifier'), 'fail');
+    assert.match(await page.locator('#measurement').innerText(), /0 units \/ 4 required/);
+    assert.match(await page.locator('#measurement').innerText(), /4 \/ 0 \/ 4 \/ 0/);
+    assert.equal(await page.locator('#measurement [data-journey-outcome="interrupted"]').count(), 4);
+    await recovery('fail', 'pass');
+    await snapshot('data-negative-with-original-failure-retained');
+    await page.locator('#reset-lesson').click();
+    assert.equal(await page.locator('#history > li').nth(2).getAttribute('data-original-verifier'), 'fail');
+
+    await conduct('missing-data-evidence');
+    assert.equal(await page.locator('#measurement').getAttribute('data-verifier'), 'unverified');
+    assert.match(await page.locator('#measurement').innerText(), /unknown; not zero or configured capacity/);
+    assert.match(await page.locator('#measurement').innerText(), /4 \/ 0 \/ 0 \/ 4/);
+    assert.equal(await page.locator('#measurement [data-journey-outcome="unknown"]').count(), 4);
+    await recovery('unverified', 'unverified');
+    await snapshot('unknown-data-and-recovery-not-fabricated');
+    await page.locator('#reset-lesson').click();
+    assert.equal(await page.locator('#history > li').nth(3).getAttribute('data-original-verifier'), 'unverified');
+
+    await page.locator('#fixture').selectOption('redundant');
+    await page.locator('#zone').selectOption('zone-b');
+    await page.locator('#load-fixture').click();
+    await page.locator('#verify-placement').click();
+    await page.locator('#confirm-isolation').check();
+    await page.locator('#isolate').click();
+    assert.equal(await page.locator('#topology tr[data-available="false"]').getAttribute('data-zone'), 'zone-b');
+    await page.locator('#reset-lesson').click();
+    assert.match(await page.locator('#history > li').nth(4).innerText(), /cancelled-before-measurement/);
+    assert.equal(await page.locator('#history > li').nth(4).getAttribute('data-original-verifier'), 'not-attempted');
+    await snapshot('early-reset-clears-fictional-fault-without-inventing-journeys');
+
+    await conduct('single-zone-data', 'zone-c');
+    assert.equal(await page.locator('#measurement').getAttribute('data-verifier'), 'pass');
+    assert.equal(await page.locator('#measurement [data-journey-outcome="succeeded"]').count(), 4);
+    await page.locator('#reset-lesson').click();
+    assert.equal(await page.locator('#history > li').count(), 6);
+    assert.equal(await page.locator('#load-fixture').isDisabled(), true);
+    assert.match(await page.locator('#status').innerText(), /History bound reached/);
+    await page.locator('#setup-form').evaluate((form) => form.requestSubmit());
+    assert.match(await page.locator('#error').innerText(), /ERR_HISTORY_LIMIT/);
+    assert.equal(await page.locator('#history > li').count(), 6);
+    assert.deepEqual(await page.locator('#history > li').evaluateAll((items) =>
+      items.map((item) => item.dataset.originalVerifier)), ['pass', 'fail', 'fail', 'unverified', 'not-attempted', 'pass']);
+    await snapshot('six-run-bound-and-complete-retained-history');
+
+    await page.setViewportSize({ width: 360, height: 800 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+    assert.equal(await page.locator('#training-banner').isVisible(), true);
+    assert.deepEqual(pageErrors, []);
+  } finally {
+    await session.close();
+    cleanup = 'awaited session.close() completed';
+  }
+  assert.deepEqual(fileBytes(), before, 'Actual browser verification must not mutate any owned source or historical evidence.');
+  if (capture) {
+    const playwrightVersion = JSON.parse(fs.readFileSync(path.join(root, 'testing', 'browser', 'node_modules', 'playwright', 'package.json'), 'utf8')).version;
+    fs.writeFileSync(path.join(directory, 'evidence', 'browser-observations.json'), `${JSON.stringify({
+      cardId: 'A-S112', workerId: 'worker-A-S112', capturedAtUtc: new Date().toISOString(),
+      mode: 'actual-browser-observations-of-fixed-fictional-teaching-data',
+      observedAssertionsPassed: true, browserVersion: session.browserVersion,
+      nodeVersion: process.version, playwrightVersion, helperSha256, helperCommit: '53c0c0d',
+      capturePolicy: 'Written only for explicit exact CAPTURE_BROWSER_EVIDENCE=1; ordinary verification is read-only.',
+      cleanup, pageErrors, csp, snapshots,
+      limits: 'No native Azure, actual process/pod/VM/network/resource isolation, Node 24 production or source-parent acceptance. Known helper lifecycle limitations remain unqualified.',
+    }, null, 2)}\n`);
+  }
+});

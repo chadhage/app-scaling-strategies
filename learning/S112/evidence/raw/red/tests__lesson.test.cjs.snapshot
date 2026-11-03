@@ -1,0 +1,91 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createState, reduce } = require('../lesson.js');
+
+function measured(fixtureId = 'redundant', zoneId = 'zone-a') {
+  let state = reduce(createState(), { type: 'load', fixtureId, zoneId });
+  state = reduce(state, { type: 'verify-placement' });
+  state = reduce(state, { type: 'isolate', confirmed: true });
+  return reduce(state, { type: 'measure' });
+}
+
+test('verified fictional zone loss measures both capacities and all four journeys', () => {
+  const state = measured();
+  assert.equal(state.phase, 'measured');
+  const result = state.active.measurement;
+  assert.equal(result.computeCapacity, 4);
+  assert.equal(result.dataCapacity, 4);
+  assert.deepEqual(result.counts, { attempted: 4, succeeded: 4, interrupted: 0, unknown: 0 });
+  assert.equal(result.verifier, 'pass');
+  assert.equal(result.userImpact, 'synthetic-uninterrupted');
+  assert.equal(result.expectationMatched, true);
+});
+
+test('compute shortage is a failed verifier even when the negative lesson check matches', () => {
+  const state = measured('compute-shortfall');
+  assert.equal(state.phase, 'measured');
+  const result = state.active.measurement;
+  assert.equal(result.computeCapacity, 2);
+  assert.equal(result.dataCapacity, 4);
+  assert.deepEqual(result.counts, { attempted: 4, succeeded: 2, interrupted: 2, unknown: 0 });
+  assert.equal(result.verifier, 'fail');
+  assert.equal(result.expectationMatched, true);
+});
+
+test('sufficient compute cannot hide loss of the sole fictional data replica', () => {
+  const state = measured('single-zone-data');
+  assert.equal(state.phase, 'measured');
+  const result = state.active.measurement;
+  assert.equal(result.computeCapacity, 4);
+  assert.equal(result.dataCapacity, 0);
+  assert.deepEqual(result.counts, { attempted: 4, succeeded: 0, interrupted: 4, unknown: 0 });
+  assert.equal(result.verifier, 'fail');
+});
+
+test('unobserved data capacity and outcomes stay unknown', () => {
+  const state = measured('missing-data-evidence');
+  assert.equal(state.phase, 'measured');
+  const result = state.active.measurement;
+  assert.equal(result.dataCapacity, null);
+  assert.deepEqual(result.counts, { attempted: 4, succeeded: 0, interrupted: 0, unknown: 4 });
+  assert.equal(result.verifier, 'unverified');
+});
+
+test('unknown or coercible fixture inputs are rejected without mutation', () => {
+  const state = createState();
+  assert.throws(() => reduce(state, { type: 'load', fixtureId: 42, zoneId: 'zone-a' }), {
+    code: 'ERR_INPUT',
+  });
+  assert.equal(state.phase, 'idle');
+  assert.equal(state.history.length, 0);
+});
+
+test('out-of-order isolation is a typed state error', () => {
+  assert.throws(() => reduce(createState(), { type: 'isolate', confirmed: true }), {
+    code: 'ERR_PHASE',
+  });
+});
+
+test('reset retains the original failed report and ordered operator history', () => {
+  const before = measured('single-zone-data');
+  const state = reduce(before, { type: 'reset' });
+  assert.equal(state.phase, 'idle');
+  assert.equal(state.history.length, 1);
+  assert.equal(state.history[0].measurement.verifier, 'fail');
+  assert.deepEqual(state.history[0].events.map((event) => event.action),
+    ['load', 'verify-placement', 'isolate', 'measure', 'reset']);
+  assert.equal(state.active, null);
+});
+
+test('recovery adds a new measurement without rewriting an interrupted original', () => {
+  const before = measured('single-zone-data');
+  let state = reduce(before, { type: 'restore' });
+  state = reduce(state, { type: 'check-recovery' });
+  assert.equal(state.phase, 'recovered');
+  assert.equal(state.active.measurement.verifier, 'fail');
+  assert.equal(state.active.recovery.verifier, 'pass');
+  assert.equal(state.active.recovery.counts.succeeded, 4);
+  assert.deepEqual(before.active.measurement, state.active.measurement);
+});

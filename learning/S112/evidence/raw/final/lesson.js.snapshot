@@ -1,0 +1,218 @@
+(function (root, factory) {
+  'use strict';
+  const fixtures = typeof module === 'object' && module.exports
+    ? require('./fixtures.js') : root.S112Fixtures;
+  const api = factory(fixtures);
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S112Lesson = api;
+}(typeof globalThis === 'object' ? globalThis : this, function (fixtures) {
+  'use strict';
+
+  const states = new WeakSet();
+  const commands = {
+    load: ['type', 'fixtureId', 'zoneId'],
+    'verify-placement': ['type'],
+    isolate: ['type', 'confirmed'],
+    measure: ['type'],
+    restore: ['type'],
+    'check-recovery': ['type'],
+    reset: ['type'],
+  };
+  const phases = {
+    load: 'idle',
+    'verify-placement': 'prepared',
+    isolate: 'placement-verified',
+    measure: 'isolated',
+    restore: 'measured',
+    'check-recovery': 'restored',
+  };
+
+  function fail(code, message) {
+    const error = new Error(message);
+    error.code = code;
+    throw error;
+  }
+
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+
+  function save(state) {
+    freeze(state);
+    states.add(state);
+    return state;
+  }
+
+  function checkState(state) {
+    if (!state || typeof state !== 'object' || !states.has(state)) {
+      fail('ERR_STATE', 'Use an unchanged state created by this lesson; arbitrary or cloned state is not accepted.');
+    }
+  }
+
+  function checkCommand(command) {
+    if (!command || typeof command !== 'object' || Object.getPrototypeOf(command) !== Object.prototype) {
+      fail('ERR_INPUT', 'Expected an ordinary command object with exact typed fields.');
+    }
+    const descriptors = Object.getOwnPropertyDescriptors(command);
+    const keys = Reflect.ownKeys(command);
+    if (keys.some((key) => typeof key !== 'string' || !Object.hasOwn(descriptors[key], 'value'))) {
+      fail('ERR_INPUT', 'Accessors and symbol fields are not accepted.');
+    }
+    const type = descriptors.type?.value;
+    if (typeof type !== 'string' || !Object.hasOwn(commands, type)) {
+      fail('ERR_INPUT', 'Choose one documented operator action.');
+    }
+    if (keys.length !== commands[type].length || commands[type].some((key) => !Object.hasOwn(descriptors, key))) {
+      fail('ERR_INPUT', `Action ${type} requires only: ${commands[type].join(', ')}.`);
+    }
+    if (type === 'load' && (typeof command.fixtureId !== 'string'
+      || !fixtures.fixtureIds.includes(command.fixtureId)
+      || typeof command.zoneId !== 'string' || !fixtures.zoneIds.includes(command.zoneId))) {
+      fail('ERR_INPUT', 'Select one of the four fixed fixtures and zone-a, zone-b or zone-c; no coercion or custom topology.');
+    }
+    if (type === 'isolate' && typeof command.confirmed !== 'boolean') {
+      fail('ERR_INPUT', 'Isolation confirmation must be an exact boolean.');
+    }
+  }
+
+  function createState() {
+    return save({ schemaVersion: 1, mode: 'synthetic-data-only', phase: 'idle', active: null, history: [] });
+  }
+
+  function allowedActions(state) {
+    checkState(state);
+    return Object.keys(commands).filter((type) => type === 'reset'
+      || (phases[type] === state.phase && (type !== 'load' || state.history.length < fixtures.historyLimit)));
+  }
+
+  function event(active, action, detail) {
+    active.events.push({ sequence: active.events.length + 1, action, detail });
+  }
+
+  function expected(fixtureId, zoneId, point) {
+    if (fixtureId === 'missing-data-evidence') return 'unverified';
+    if (point === 'restored-fixture') return 'pass';
+    if (fixtureId === 'compute-shortfall' || (fixtureId === 'single-zone-data' && zoneId === 'zone-a')) return 'fail';
+    return 'pass';
+  }
+
+  function measure(active, point) {
+    const remaining = active.records.filter((record) => record.available);
+    const computeCapacity = remaining.reduce((sum, record) => sum + record.computeCapacity, 0);
+    const dataUnknown = remaining.some((record) => record.dataObservation === 'unknown');
+    const dataCapacity = dataUnknown ? null : remaining.reduce((sum, record) =>
+      sum + (record.dataObservation === 'complete' ? record.configuredDataCapacity : 0), 0);
+    const slots = remaining.flatMap((record) => Array(record.computeCapacity).fill(record.zoneId));
+    const journeys = fixtures.journeys.map((journey, index) => {
+      const zoneId = slots[index] ?? null;
+      const dataOutcome = zoneId === null ? 'not-attempted'
+        : dataCapacity === null ? 'unknown' : index < dataCapacity ? 'complete' : 'unavailable';
+      const outcome = zoneId === null || dataOutcome === 'unavailable' ? 'interrupted'
+        : dataOutcome === 'unknown' ? 'unknown' : 'succeeded';
+      return {
+        id: journey.id, profileId: journey.profileId, zoneId, outcome, dataOutcome,
+        latencyTicks: outcome === 'succeeded' ? journey.latencyTicks
+          : outcome === 'interrupted' ? fixtures.interruptedTicks : null,
+        budgetTicks: fixtures.budgetTicks,
+        profileVersion: outcome === 'succeeded' ? 'fixed-fictional-profile-v1' : null,
+        reason: zoneId === null ? 'Insufficient fictional compute units'
+          : dataOutcome === 'unavailable' ? 'No sufficient observed fictional data capacity'
+            : dataOutcome === 'unknown' ? 'Fictional data availability is unobserved'
+              : 'Fixed fictional profile read completed',
+      };
+    });
+    const counts = { attempted: journeys.length, succeeded: 0, interrupted: 0, unknown: 0 };
+    journeys.forEach((journey) => { counts[journey.outcome] += 1; });
+    const verifier = counts.interrupted > 0 ? 'fail' : counts.unknown > 0 ? 'unverified' : 'pass';
+    const expectedVerifier = expected(active.fixtureId, active.zoneId, point);
+    return {
+      point, source: 'fixed-fictional-fixture-calculation', demand: fixtures.demand,
+      computeCapacity, dataCapacity,
+      dataReplicas: dataUnknown ? null : remaining.filter((record) =>
+        record.dataObservation === 'complete' && record.configuredDataCapacity > 0).length,
+      survivingZoneIds: remaining.map((record) => record.zoneId),
+      counts, journeys, verifier, expectedVerifier, expectationMatched: verifier === expectedVerifier,
+      userImpact: verifier === 'pass' ? 'synthetic-uninterrupted'
+        : verifier === 'fail' ? 'synthetic-interrupted' : 'synthetic-unknown',
+      budgetTicks: fixtures.budgetTicks,
+    };
+  }
+
+  function reduce(state, command) {
+    checkState(state);
+    checkCommand(command);
+    if (command.type !== 'reset' && phases[command.type] !== state.phase) {
+      fail('ERR_PHASE', `Action ${command.type} requires ${phases[command.type]}; current phase is ${state.phase}.`);
+    }
+    if (command.type === 'load' && state.history.length >= fixtures.historyLimit) {
+      fail('ERR_HISTORY_LIMIT', 'Six archived fictional runs are retained. Reopen the page for a new teaching session; history is never silently evicted.');
+    }
+    if (command.type === 'isolate' && command.confirmed !== true) {
+      fail('ERR_CONFIRMATION', 'Confirm that only fictional zone-workload records change; this is not an actual Azure-zone outage.');
+    }
+    if (command.type === 'reset' && state.active === null) return state;
+    const next = JSON.parse(JSON.stringify(state));
+    const active = next.active;
+    switch (command.type) {
+      case 'load':
+        next.active = {
+          id: `run-${next.history.length + 1}`, fixtureId: command.fixtureId, zoneId: command.zoneId,
+          fixtureVersion: fixtures.version,
+          records: fixtures.fixtures[command.fixtureId].records.map((record) => ({ ...record, available: true })),
+          placement: null, measurement: null, recovery: null, events: [],
+          cleanup: 'no-live-resources; fictional-records-available',
+        };
+        next.phase = 'prepared';
+        event(next.active, 'load', `Loaded fixed ${command.fixtureId} teaching records; selected ${command.zoneId}.`);
+        break;
+      case 'verify-placement':
+        active.placement = {
+          status: 'verified-fictional-records', zoneIds: [...fixtures.zoneIds], targetZoneId: active.zoneId,
+          targetRecordIds: active.records.filter((record) => record.zoneId === active.zoneId)
+            .flatMap((record) => [record.workloadId, record.dataId]),
+        };
+        next.phase = 'placement-verified';
+        event(active, 'verify-placement', 'Checked the three fixed fictional zone assignments, not real compute/data placement.');
+        break;
+      case 'isolate':
+        active.records.forEach((record) => { if (record.zoneId === active.zoneId) record.available = false; });
+        active.cleanup = 'no-live-resources; fictional-zone-records-isolated';
+        next.phase = 'isolated';
+        event(active, 'isolate', `Data-only outage-proxy rehearsal: only ${active.zoneId} fictional workload/data records are unavailable.`);
+        break;
+      case 'measure':
+        active.measurement = measure(active, 'surviving-fixture');
+        next.phase = 'measured';
+        event(active, 'measure', `Fixed teaching calculation: ${active.measurement.verifier}; all four journey outcomes are recorded.`);
+        break;
+      case 'restore':
+        active.records.forEach((record) => { record.available = true; });
+        active.cleanup = 'no-live-resources; fictional-records-restored';
+        next.phase = 'restored';
+        event(active, 'restore', 'Restored fictional records only. Recovery is not yet checked; earlier failed/unknown outcomes remain.');
+        break;
+      case 'check-recovery':
+        active.recovery = measure(active, 'restored-fixture');
+        next.phase = 'recovered';
+        event(active, 'check-recovery', `New fixed recovery calculation: ${active.recovery.verifier}; original measurement is unchanged.`);
+        break;
+      case 'reset':
+        active.phaseAtReset = state.phase;
+        active.completion = active.measurement ? 'measured' : 'cancelled-before-measurement';
+        active.records.forEach((record) => { record.available = true; });
+        active.cleanup = 'no-live-resources; fictional-records-reset';
+        event(active, 'reset', 'Archived the original report and cleared fictional isolation; no actual cleanup occurred.');
+        next.history.push(active);
+        next.active = null;
+        next.phase = 'idle';
+        break;
+    }
+    return save(next);
+  }
+
+  return Object.freeze({ createState, reduce, allowedActions });
+}));
