@@ -1,0 +1,47 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S090Model = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const LIMITS = Object.freeze({ rehearsals: 4, attempts: 6, trace: 14, ticks: 2 });
+  const inventory = (newAdmissions, users, work, stateOwners, retentionUntil) =>
+    Object.freeze({ newAdmissions, users, work, stateOwners, retentionUntil });
+  const FIXTURES = Object.freeze({
+    'all-dependencies': inventory(1, 2, 2, 1, 2),
+    'traffic-only': inventory(1, 0, 0, 0, 0),
+    'users-only': inventory(0, 2, 0, 0, 0),
+    'work-only': inventory(0, 0, 2, 0, 0),
+    'ownership-only': inventory(0, 0, 0, 1, 0),
+    'retention-only': inventory(0, 0, 0, 0, 2),
+    unobserved: inventory(null, null, null, null, null),
+    'mixed-unknown': inventory(null, null, 1, null, null),
+    ready: inventory(0, 0, 0, 0, 0),
+  });
+  function createLesson() {
+    let current = null;
+    const snapshot = () => ({
+      phase: current ? 'active' : 'idle', current, history: [],
+      totals: { attempts: 0, success: 0, failure: 0, unknown: 0 }, limits: LIMITS,
+    });
+    return {
+      snapshot,
+      begin(fixture) {
+        current = {
+          id: 1, fixture, deployment: 'synthetic-old-v1', lifecycle: 'ACTIVE',
+          inventory: { ...FIXTURES['all-dependencies'] }, tick: 0, oldCapacity: 'AVAILABLE',
+          attempts: [], trace: [], prediction: null, migrationCertified: false,
+          lastAttempt: { id: 0, outcome: 'NOT_IMPLEMENTED', decision: 'NOT_IMPLEMENTED',
+            verifier: 'NOT_IMPLEMENTED', blockers: [], unknown: [] },
+        };
+        return snapshot();
+      },
+      act() { return snapshot(); },
+      checkPrediction() { return snapshot(); },
+      newRehearsal() { return snapshot(); },
+      reset() { current = null; return snapshot(); },
+    };
+  }
+  return Object.freeze({ createLesson, FIXTURES, LIMITS });
+}));

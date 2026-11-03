@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S090 · Retirement waits for every dependency</title>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#controls">Skip to operator controls</a>
+  <header>
+    <p id="training-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p class="eyebrow">S090 · Out-of-order cleanup · A-S090 · SC-S090</p>
+    <h1>Retirement waits for every dependency</h1>
+    <p>Attempt early retirement. Observe why traffic, pinned users, pending work, state ownership and rollback retention keep the old deployment available.</p>
+    <p class="notice">Retirement only changes teaching-trace data. Nothing is drained, deleted or retired outside this page. Rejection is not a completed migration.</p>
+  </header>
+  <main>
+    <section class="card" aria-labelledby="controls">
+      <h2 id="controls" tabindex="-1">Operator controls</h2>
+      <p>Start with all dependencies. Attempt retirement first, resolve the observed dependencies, then try again. Ticks are button-driven synthetic steps, not elapsed time.</p>
+      <div id="input-error" role="alert" tabindex="-1" hidden></div>
+      <div class="control-grid">
+        <form id="fixture-form" novalidate>
+          <fieldset id="fixture-fields">
+            <legend>1 · Choose a fixed synthetic fixture</legend>
+            <label for="fixture">Inventory condition</label>
+            <select id="fixture" name="fixture" required aria-describedby="fixture-help">
+              <option value="all-dependencies">All dependencies remain</option>
+              <option value="traffic-only">Only new traffic remains</option>
+              <option value="users-only">Only pinned users remain</option>
+              <option value="work-only">Only pending work remains</option>
+              <option value="ownership-only">Only state ownership remains</option>
+              <option value="retention-only">Only rollback retention remains</option>
+              <option value="unobserved">Inventory observations missing</option>
+              <option value="mixed-unknown">Known work plus missing observations</option>
+              <option value="ready">Observed dependencies already cleared</option>
+            </select>
+            <p id="fixture-help" class="help">Fixed synthetic-old-v1 inventory; no clients, identities or data come from Azure.</p>
+            <button id="start-lesson" type="submit">Start rehearsal</button>
+          </fieldset>
+        </form>
+        <form id="action-form" novalidate>
+          <fieldset id="action-fields" disabled>
+            <legend>2 · Conduct a synthetic action</legend>
+            <label for="action">Action</label>
+            <select id="action" name="action" required aria-describedby="action-help">
+              <option value="attempt-retirement">Attempt retirement</option>
+              <option value="stop-admission">Stop new admissions to old v1</option>
+              <option value="drain-users">Complete the two pinned users</option>
+              <option value="finish-work">Complete pending synthetic work</option>
+              <option value="transfer-ownership">Transfer synthetic state ownership</option>
+              <option value="advance-tick">Advance one rollback-retention tick</option>
+              <option value="observe-inventory">Apply named missing-inventory observation</option>
+            </select>
+            <p id="action-help" class="help">Stop admissions before draining users; finish work before ownership transfer. Missing evidence is never zero until the named observation is applied.</p>
+            <button id="apply-action" type="submit">Apply synthetic action</button>
+          </fieldset>
+        </form>
+        <form id="prediction-form" novalidate>
+          <fieldset id="prediction-fields" disabled>
+            <legend>3 · Check the latest attempted result</legend>
+            <label for="prediction">Prediction</label>
+            <select id="prediction" name="prediction" required>
+              <option value="">Choose a result</option>
+              <option value="SUCCESS">SUCCESS · simulated retirement</option>
+              <option value="FAILURE">FAILURE · safely rejected attempt</option>
+              <option value="UNKNOWN">UNKNOWN · unverified, held attempt</option>
+            </select>
+            <button id="check-prediction" type="submit">Check prediction</button>
+            <p id="prediction-result" role="status">No prediction checked.</p>
+          </fieldset>
+        </form>
+      </div>
+      <div class="button-row">
+        <button id="new-rehearsal" type="button" disabled>Archive and start another</button>
+        <button id="reset-lesson" type="button" class="secondary">Reset lesson and history</button>
+      </div>
+      <p class="help">Hard bounds: 4 rehearsals, 6 retirement attempts per rehearsal, 14 trace events and 2 ticks. History is retained without eviction until explicit reset or reload.</p>
+    </section>
+    <section class="card" aria-labelledby="result-heading">
+      <h2 id="result-heading">Observed synthetic result</h2>
+      <div id="live-result" role="status" aria-live="polite" aria-atomic="true">
+        <p id="phase">Lesson: idle</p>
+        <p id="outcome">Latest attempt: NOT_ATTEMPTED</p>
+        <p id="decision">Decision: NOT_CHECKED</p>
+        <p id="verifier">Safety verifier: NOT_CHECKED</p>
+        <p id="capacity">Synthetic old capacity: not evaluated</p>
+        <p id="blockers">Known blockers: not evaluated</p>
+        <p id="unknowns">Missing observations: not evaluated</p>
+        <p id="impact">Synthetic user impact: not evaluated</p>
+        <p id="totals">Retirement attempts: 0 · success 0 · failure 0 · unknown 0</p>
+      </div>
+      <p class="notice">SUCCESS means only the teaching model permitted retirement. FAILURE means this attempted retirement was rejected, not that users were interrupted. UNKNOWN is not success. The safety verifier can pass a correct rejection or hold. These are attempt counts, never migration or five-nines evidence.</p>
+      <div class="table-scroll">
+        <table>
+          <caption>Current dependency inventory</caption>
+          <thead><tr><th scope="col">Dependency</th><th scope="col">Observed synthetic value</th><th scope="col">Retirement gate</th></tr></thead>
+          <tbody id="inventory-rows"></tbody>
+        </table>
+      </div>
+      <details id="current-detail">
+        <summary>Inspect current attempt and complete trace</summary>
+        <div class="table-scroll">
+          <table>
+            <caption>Every accepted synthetic action, including failed and unknown retirement attempts</caption>
+            <thead><tr><th scope="col">Step</th><th scope="col">Action</th><th scope="col">Lifecycle</th><th scope="col">Tick</th><th scope="col">Latest attempted outcome</th></tr></thead>
+            <tbody id="trace-rows"></tbody>
+          </table>
+        </div>
+        <pre id="current-proof">No rehearsal started.</pre>
+      </details>
+    </section>
+    <section class="card" aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained rehearsal history</h2>
+      <p id="history-count">Archived rehearsals: 0 / 4 · active 0</p>
+      <div class="table-scroll">
+        <table>
+          <caption>Prior attempts remain in the measured denominator</caption>
+          <thead><tr><th scope="col">Rehearsal</th><th scope="col">Fixture</th><th scope="col">Attempts</th><th scope="col">Success</th><th scope="col">Failure</th><th scope="col">Unknown</th><th scope="col">Latest decision</th></tr></thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+      <details id="history-detail">
+        <summary>Inspect all retained full traces</summary>
+        <pre id="history-proof">No archived rehearsals.</pre>
+      </details>
+    </section>
+    <section class="card" aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Scope and source acceptance</h2>
+      <p>The exact <a href="../../README.md#i-state-machine-and-orchestration-correctness">S090 source</a> rejects retirement while traffic, work, state ownership or rollback requirements still depend on a deployment. <a href="../../.docs/wiki/backlog.md">D-S090</a> requires visible guarded rejection, not a completed migration.</p>
+      <p>This resource-free A-card is independently reviewable. B-S090, D-S007, D-S090 and the source demo remain incomplete. No native drain, retention, retirement, production Node.js 24 or reliability certification is provided. No cloud calls, identities, credentials, infrastructure, resource cleanup or shell operations exist in the lesson.</p>
+      <noscript><p class="notice">JavaScript is required for the synthetic controls. With scripts disabled, no result has been observed.</p></noscript>
+    </section>
+  </main>
+</body>
+</html>
