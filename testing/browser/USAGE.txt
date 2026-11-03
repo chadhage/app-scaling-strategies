@@ -19,6 +19,16 @@ Run from the repository root in PowerShell:
   npm test
   Pop-Location
 
+KNOWN LIFECYCLE LIMITATION
+Individual feature checks and the producer's thirteen-check run passed, but the
+parent's combined run was stopped after prolonged execution; it is not a pass.
+Context/page creation and context shutdown lack an overall recovery deadline.
+Windows scratch cleanup can also encounter a temporary file lock. A bounded,
+exact-owned-process recovery prototype failed verification and is not active.
+Do not treat this package as a fully qualified unattended CI runner or use the
+archived prototype. See evidence\lifecycle-blocked.json. Do not stop unrelated
+processes, cancel shared services, or delete profiles whose ownership is unknown.
+
 Offline reinstall, from testing\browser, if the seeded repository npm cache exists:
   npm ci --offline --ignore-scripts --registry=https://registry.npmjs.org --cache=..\..\.git\kanban-orchestrator\npm-cache --omit=optional --no-fund --no-audit
 The npm cache and browser executable are machine prerequisites, not committed
@@ -45,7 +55,8 @@ Each call launches its own fresh HEADLESS Edge browser, context, and page. Multi
 calls can run concurrently; there is no integrated-browser connection, focus
 request, shared profile, or shared context. Always await close() in finally.
 Repeated or concurrent close() calls reuse the same cleanup promise. Context
-cleanup errors still trigger browser shutdown. Load/setup failures clean up
+cleanup rejections still trigger browser shutdown; a never-settling cleanup
+promise is subject to the known lifecycle limitation above. Load/setup failures clean up
 before rejecting; simultaneous load and cleanup errors retain both causes.
 Each spawned Edge process also gets a unique owned TEMP/TMP/TMPDIR directory.
 The helper removes that directory, including Edge's debug log, after browser
