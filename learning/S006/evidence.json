@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S006",
+  "kano": "S",
+  "kanoUnit": "A-S006",
+  "parentId": "D-S006",
+  "sourceId": "S006",
+  "packet": "LP-PROFILE",
+  "workerId": "worker-A-S006",
+  "executionMode": "synthetic",
+  "configuration": "Offline file-browser lesson; seven route fixtures, four identity fixtures, two policies, and four callback conditions.",
+  "host": "Local file browser; no Azure host",
+  "outputNormalization": "Captured runner output uses repo-relative paths; trailing whitespace on diagnostic blank lines is stripped for Git diff-check. Commands, assertions, decisions, counts, and exit codes are unchanged.",
+  "nativeProof": false,
+  "sourceParentComplete": false,
+  "stageOrder": ["BDD", "TDD RED", "IaC N/A", "implementation", "TDD GREEN", "browser"],
+  "bdd": {
+    "status": "written-before-tests",
+    "artifact": "learning/S006/preview-access.feature",
+    "writtenAtUtc": "2026-11-03T09:00:25.2035074Z",
+    "testsWrittenAtUtc": "2026-11-03T09:01:26.0758277Z",
+    "execution": "Concrete Gherkin contract mapped to Node built-in tests; no Gherkin runner installed."
+  },
+  "red": {
+    "command": "node --test --test-reporter=spec learning\\S006\\tests\\preview-access.test.cjs",
+    "runtime": "v22.23.4",
+    "exitCode": 1,
+    "tests": 77,
+    "passed": 0,
+    "failed": 77,
+    "artifact": "learning/S006/evidence/red.txt",
+    "capturedAtUtc": "2026-11-03T09:01:31.9421801Z",
+    "cause": "Real ERR_ASSERTION failures for unimplemented behavior; both modules imported successfully."
+  },
+  "iac": {
+    "status": "N/A",
+    "recordedAfter": "TDD RED",
+    "reason": "SOURCE read-only lesson requires no Azure resources.",
+    "ungrantedApprovals": ["C001 runtime/auth/hosting", "separate scaffold approval", "separate deploy approval"],
+    "resourcesCreated": 0,
+    "managementCalls": 0
+  },
+  "implementation": {
+    "status": "implemented-and-unit-tested; browser interaction unverified",
+    "entry": "learning/S006/index.html",
+    "assets": ["learning/S006/model.js", "learning/S006/verifier.js", "learning/S006/app.js", "learning/S006/style.css"],
+    "behavior": [
+      "Separate GA and preview clients with fixed GA subject/session/attribution on v1.",
+      "Explicit approval required at every modeled candidate path; missing or unknown evidence fails closed.",
+      "Ordinary navigation remains v1; login/callback binding and local return targets are checked on relevant routes.",
+      "Deliberately broken obscure-URL-only policy exposes unauthorized access even with 0% automatic candidate routing; the independent verifier fails.",
+      "Separate verifier verdict, user-impact result, and cleanup; denied and unknown outcomes are retained in a bounded history and route matrix."
+    ],
+    "offlineSourceChecks": {
+      "passed": true,
+      "csp": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'",
+      "localAssetsOnly": true,
+      "noNetworkOrStorageApisInScripts": true,
+      "runtimeNetworkObservation": "unavailable because browser handles could not be reused"
+    }
+  },
+  "iterations": [
+    {
+      "artifact": "learning/S006/evidence/iteration-1.txt",
+      "command": "node --test --test-reporter=spec learning\\S006\\tests\\preview-access.test.cjs learning\\S006\\tests\\lesson-assets.test.cjs",
+      "exitCode": 1,
+      "passed": 83,
+      "failed": 1,
+      "cause": "Asset syntax test caught the app bootstrap closing-parenthesis error."
+    },
+    {
+      "artifact": "learning/S006/evidence/iteration-2.txt",
+      "command": "node --test --test-reporter=spec learning\\S006\\tests\\preview-access.test.cjs learning\\S006\\tests\\lesson-assets.test.cjs",
+      "exitCode": 1,
+      "passed": 83,
+      "failed": 1,
+      "cause": "First correction matched the history map closure instead; both closures were then corrected with explicit context."
+    }
+  ],
+  "green": {
+    "status": "passed",
+    "command": "node --test --test-reporter=spec learning\\S006\\tests\\preview-access.test.cjs learning\\S006\\tests\\lesson-assets.test.cjs",
+    "runtime": "v22.23.4",
+    "exitCode": 0,
+    "tests": 84,
+    "passed": 84,
+    "failed": 0,
+    "artifact": "learning/S006/evidence/green.txt",
+    "capturedAtUtc": "2026-11-03T09:08:41.0191132Z",
+    "coverage": "Model and independent oracle, all candidate paths, ordinary navigation, unknown identities/configuration, callback rejection, unsafe-policy exposure, corrupted evidence, fresh client state, local assets, CSP, and UMD execution. Not real browser or native identity proof."
+  },
+  "browser": {
+    "status": "blocked",
+    "browserObserved": false,
+    "entry": "learning/S006/index.html",
+    "toolDiscovery": "Searched deferred VS Code openBrowserPage, readPage, and runPlaywrightCode before opening.",
+    "forceNew": true,
+    "attempts": [
+      {
+        "pageId": "dbc1ff53-7796-40e7-a482-eccd751e0796",
+        "openObservation": "openBrowserPage returned this unique page ID, the S006 title, local-file URL, and an accessibility snapshot with the exact rehearsal banner.",
+        "interactions": [
+          {"tool": "runPlaywrightCode", "attempt": "Click #run-probe and assert approved v2 outcome, trace, verdict, and GA attribution.", "result": "Code execution failed: Page \"dbc1ff53-7796-40e7-a482-eccd751e0796\" not found"},
+          {"tool": "readPage", "attempt": "Read the same owned page.", "result": "Page \"dbc1ff53-7796-40e7-a482-eccd751e0796\" not found"}
+        ],
+        "observedDomOutcomes": []
+      },
+      {
+        "pageId": "bd07a017-c1c4-44a3-97c3-0c0452d0afb5",
+        "openObservation": "A bounded recovery opened a second forceNew S006 page and received this distinct page ID and the S006 accessibility snapshot.",
+        "interactions": [
+          {"tool": "runPlaywrightCode", "attempt": "Click #run-probe and verify the approved synthetic outcome in the replacement owned page.", "result": "Code execution failed: Page \"bd07a017-c1c4-44a3-97c3-0c0452d0afb5\" not found"},
+          {"tool": "clickElement", "attempt": "Use the alternate page-scoped click tool on #run-probe.", "result": "Page \"bd07a017-c1c4-44a3-97c3-0c0452d0afb5\" not found"}
+        ],
+        "observedDomOutcomes": []
+      }
+    ],
+    "blocker": "The integrated-browser tools cannot resolve their own newly returned page IDs. Safe, forbidden, unknown, callback, comparison, reset, and keyboard DOM interactions could not be observed. An initial load snapshot is not behavioral browser evidence.",
+    "pendingChecks": [
+      "Approved join: allowed, synthetic 200, v2, 11 passing assertions, login/callback trace, unchanged GA attribution.",
+      "Visitor on direct API and indirect gateway: forbidden, synthetic 403, no v2; history retains denials.",
+      "Missing/unrecognized evidence: unknown, synthetic 401, no v2; matrix retains unknown outcomes.",
+      "Ordinary navigation: v1 even for approved identity; no candidate admission.",
+      "Obscurity-only visitor: v2 exposure, verifier FAIL, unauthorized user impact.",
+      "Approved mismatched callback: callback-rejected, synthetic 400, no v2.",
+      "Actual keyboard route/identity choice and Enter/Space activation update live DOM status.",
+      "Compare 28 probes and explicitly Reset to clear only in-tab state."
+    ],
+    "acceptance": "Incomplete; no Kano credit requested. Restore page-handle reuse and perform the pending checks before controller empirical acceptance."
+  },
+  "verifierResult": {
+    "automated": "84 focused tests pass",
+    "browser": "blocked; not passed",
+    "acceptance": "pending controller review; not Done"
+  },
+  "publicationPreflight": {
+    "initialAttempt": "Publisher stopped before commit at scoped git diff --cached --check: the captured Node failure diagnostics contained trailing whitespace on blank lines.",
+    "remediation": "Normalize trailing whitespace in owned generated test-output artifacts, then retry the provided publisher. No index-lock removal, ref recovery, or other worker changes."
+  },
+  "userImpactResult": {
+    "scope": "Synthetic fixtures only",
+    "observedInTests": [
+      "Approved identities can enter modeled v2 without GA attribution changes.",
+      "Known unauthorized visitors are blocked; unknown identities remain unknown and blocked.",
+      "The broken policy intentionally causes unauthorized exposure and a failing verifier."
+    ],
+    "realUserImpact": "Not exercised or established."
+  },
+  "cleanup": {
+    "resourcesCreated": 0,
+    "packagesInstalled": 0,
+    "servicesStarted": 0,
+    "credentialsUsed": false,
+    "persistentApplicationStateCreated": false,
+    "tabState": "Application state is in-memory only. Actual Reset behavior remains browser-unverified.",
+    "browserTabCleanup": "Two owned tabs were opened but their handles became unresolvable. Closure cannot be verified; no global close/navigation was attempted because it could affect another worker.",
+    "artifacts": "Only lesson-local source, tests, manifest, and evidence are retained.",
+    "gitScope": "Only learning/S006 is authorized for publisher staging; other workers' dirty files are untouched."
+  },
+  "limits": [
+    "Client-side fixtures and the oracle are not an identity provider, trusted authorization boundary, or tamper-proof evidence.",
+    "Only seven enumerated route IDs are modeled; real routes, tokens, revocation, SSO/callback protocols, and hosting are unverified.",
+    "Actual browser behavioral evidence is blocked; source checks, VM execution, and an initial load snapshot are not substitutes.",
+    "No native B-S006 proof, source D-S006 completion, live Azure result, user-migration proof, or reliability claim.",
+    "C001 runtime/auth/hosting and separate scaffold/deploy approvals remain ungranted; no cloud resources are needed or provisioned.",
+    "History retains at most 12 single probes in memory; explicit Reset clears it. These UI behaviors await empirical browser checks.",
+    "Publication identifiers belong in the later worker result and controller ledger, not inside this artifact."
+  ]
+}

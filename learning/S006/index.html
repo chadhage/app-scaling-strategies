@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>S006 — Who may enter the preview?</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="model.js" defer></script>
+  <script src="verifier.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <p class="eyebrow">A-S006 · Kano S · stable kanoUnit A-S006 · parent D-S006 · source S006 · packet LP-PROFILE</p>
+    <h1>Who may enter the preview?</h1>
+    <p class="lede">An obscure address is a location, not authorization. Keep GA users on v1 while checking approval at every candidate entry.</p>
+  </header>
+  <main>
+    <section aria-labelledby="objective">
+      <h2 id="objective">Objective &amp; preconditions</h2>
+      <p>Compare an approved identity, a non-approved visitor, and unknown identity evidence across ordinary navigation and direct/indirect preview paths. Inspect the trace and check the independent oracle, not just a success label.</p>
+      <ul>
+        <li>Two independent <strong>synthetic</strong> client sessions: GA <code>ga-session-001</code> and probe <code>preview-session-001</code>. The companion GA client keeps its subject, attribution, and v1 route.</li>
+        <li>Approval and callback binding are predefined teaching fixtures, <strong>not real authentication</strong>. Status codes are model outputs, not HTTP responses.</li>
+        <li>All route strings are inert. No real redirects, requests, auth APIs, cookies, tokens, credentials, or management calls occur. Automatic candidate routing is fixed at 0% in both policies.</li>
+        <li>Ordinary v1 navigation represents routing only; it does not bypass or replace production login or reveal personal data.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="worked-example">
+      <h2 id="worked-example">Worked exercise: prove the boundary, then break it</h2>
+      <ol>
+        <li>Run the default approved identity with <strong>Join authorized preview</strong>. Expect v2, synthetic 200, and login → bound callback → per-request approval. GA attribution must not change.</li>
+        <li>Select the non-approved visitor and <strong>Direct candidate API</strong>. Expect forbidden / 403, even if the visitor knows <code>/candidate-7f3b/api/getProfile</code>. Try an indirect route too.</li>
+        <li>Try missing identity evidence. Expect unknown / 401 and no candidate service. <strong>Compare all routes</strong> retains these outcomes beside approved and denied probes.</li>
+        <li>Select the deliberately broken obscure-URL-only policy. The same visitor reaches v2: the verifier must <strong>FAIL</strong> and user impact must show unauthorized exposure, despite 0% automatic routing.</li>
+        <li>Return to the enforced policy; use an approved identity with a mismatched callback. Expect callback rejection, not a successful preview visit. Reset explicitly when finished.</li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Choose a synthetic probe</h2>
+      <form id="exercise" tabindex="-1" aria-describedby="probe-help">
+        <p id="probe-help">Use Tab to move, arrow keys to select, and Enter or Space on a button to run. Nothing leaves this tab.</p>
+        <div class="controls">
+          <div>
+            <label for="identity">Identity evidence</label>
+            <select id="identity" name="identity"></select>
+          </div>
+          <div>
+            <label for="route">Entry route</label>
+            <select id="route" name="route" aria-describedby="route-path"></select>
+          </div>
+          <div>
+            <label for="policy">Candidate access policy</label>
+            <select id="policy" name="policy">
+              <option value="enforced">Enforced: identity approval on every candidate entry</option>
+              <option value="obscurity-only">BROKEN counterexample: obscure URL only</option>
+            </select>
+          </div>
+          <div>
+            <label for="callback">Modeled callback evidence</label>
+            <select id="callback" name="callback" aria-describedby="callback-help">
+              <option value="bound">Bound: same session/subject, allowed local return</option>
+              <option value="missing">Missing state binding</option>
+              <option value="mismatch">Mismatched session binding</option>
+              <option value="external-return">Unapproved external return target</option>
+            </select>
+          </div>
+        </div>
+        <p id="route-path">Inert selected path: <code id="path"></code></p>
+        <p id="callback-help"></p>
+        <p id="policy-warning" class="warning" hidden><strong>Deliberately unsafe counterexample.</strong> URL obscurity and 0% routing do not authorize a visitor. A passing approved probe alone does not establish a safe policy.</p>
+        <div class="buttons">
+          <button type="submit" id="run-probe">Run synthetic probe</button>
+          <button type="button" id="compare-routes">Compare all routes</button>
+          <button type="button" id="reset" class="secondary">Reset rehearsal</button>
+        </div>
+      </form>
+      <p id="live-status" role="status" aria-live="polite" aria-atomic="true">Ready. No probe has run.</p>
+      <noscript>This offline exercise requires local JavaScript. Enable it and reopen the lesson; no live result can be inferred while it is disabled.</noscript>
+    </section>
+
+    <section id="outcome" aria-labelledby="outcome-heading" hidden>
+      <h2 id="outcome-heading">Observed synthetic outcome</h2>
+      <dl class="summary">
+        <div><dt>Decision</dt><dd id="decision"></dd></div>
+        <div><dt>Synthetic status</dt><dd id="synthetic-status"></dd></div>
+        <div><dt>Version served to probe</dt><dd id="served-version"></dd></div>
+        <div><dt>Verifier verdict</dt><dd id="verifier-result"></dd></div>
+        <div><dt>Preview user impact</dt><dd id="user-impact"></dd></div>
+        <div><dt>Companion GA impact</dt><dd id="ga-impact"></dd></div>
+      </dl>
+      <p>A PASS means this one probe matches the contract. An expected denial or unknown result may pass verification while the visitor still cannot use preview. FAIL does not get relabeled as success.</p>
+      <div class="clients">
+        <section aria-labelledby="ga-heading">
+          <h3 id="ga-heading">Independent GA client</h3>
+          <p>Before</p><pre id="ga-before"></pre>
+          <p>After</p><pre id="ga-after"></pre>
+        </section>
+        <section aria-labelledby="preview-heading">
+          <h3 id="preview-heading">Preview probe client</h3>
+          <p>Before</p><pre id="preview-before"></pre>
+          <p>After</p><pre id="preview-after"></pre>
+        </section>
+      </div>
+      <h3>Trace: input → gates → service or block</h3>
+      <div class="table-wrap" role="region" aria-label="Synthetic trace" tabindex="0">
+        <table>
+          <caption>Ordered model events; these are not Azure logs</caption>
+          <thead><tr><th scope="col">#</th><th scope="col">Stage</th><th scope="col">Client</th><th scope="col">Observed detail</th><th scope="col">Version</th></tr></thead>
+          <tbody id="trace-body"></tbody>
+        </table>
+      </div>
+      <h3>Independent assertions</h3>
+      <div class="table-wrap" role="region" aria-label="Verifier assertions" tabindex="0">
+        <table>
+          <caption>Contract expectations compared with the produced record</caption>
+          <thead><tr><th scope="col">Check</th><th scope="col">Expected</th><th scope="col">Observed</th><th scope="col">Verdict</th></tr></thead>
+          <tbody id="assertion-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="comparison-heading">
+      <h2 id="comparison-heading">Compare authorized / unauthorized / unknown routes</h2>
+      <p id="comparison-note">Run “Compare all routes” for 28 probes using the selected policy and callback evidence. The selected single probe's trace is retained above.</p>
+      <div class="table-wrap" role="region" aria-label="Route comparison" tabindex="0">
+        <table>
+          <caption id="comparison-caption">Not run. Cells will show decision · version · synthetic status · verifier.</caption>
+          <thead><tr><th scope="col">Entry path</th><th scope="col">Approved</th><th scope="col">Visitor, not approved</th><th scope="col">Missing evidence</th><th scope="col">Unrecognized evidence</th></tr></thead>
+          <tbody id="comparison-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Probe history</h2>
+      <p>Newest first, at most 12 single probes in tab memory. Denied, unknown, and failed outcomes are retained, not counted as successful preview visits. Older entries roll off; Reset explicitly clears all local results.</p>
+      <p id="history-empty">No probes yet.</p>
+      <ol id="history"></ol>
+    </section>
+
+    <section aria-labelledby="cleanup-heading">
+      <h2 id="cleanup-heading">Cleanup — independent of the verifier verdict</h2>
+      <p id="cleanup-result">N/A — no external resources or persistent application state created. Only displayed in-tab results need Reset.</p>
+      <p>No server, package, subscription, or deployment is needed. Closing this tab also discards its model state.</p>
+    </section>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits &amp; next real gates</h2>
+      <ul>
+        <li>This is a browser-editable instructional model, not an actual identity system. Client-side checks, a hidden URL, and 0% routing are not production access controls. A real trusted boundary must validate identity and preview approval for every candidate path.</li>
+        <li>Only the seven enumerated paths and fixture identities are modeled. Real APIs, callback protocols, token signatures/expiry, membership revocation, session isolation, host routing, and unlisted bypass paths are unverified.</li>
+        <li>Login/callback continuity and unchanged GA attribution are synthetic assertions, not live SSO, real-user migration, or a native authorization proof. No reliability or availability claim is made.</li>
+        <li><strong>IaC N/A:</strong> SOURCE read-only lesson requires no Azure resources. C001 runtime/auth/hosting and separate scaffold/deploy approvals are not granted.</li>
+        <li>A-S006 alone does not complete B-S006 or D-S006. Native proof still needs CORE, DATA, and CONTAINER gates and the source acceptance criteria. One stable Kano unit remains A-S006; packet LP-PROFILE is not closed by this lesson.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>
+    <p><strong>Microsoft disclaimer:</strong> Independent training material, not endorsed by Microsoft and not a Microsoft service guarantee. For product guidance, see <a href="https://learn.microsoft.com/azure/app-service/overview-authentication-authorization" target="_blank" rel="noopener noreferrer">Microsoft Learn: authentication and authorization in Azure App Service</a>. The link opens documentation only if you choose it; the exercise itself makes no network calls.</p>
+    <p>Local artifacts: <a href="preview-access.feature">BDD contract</a> · <a href="evidence.json">Recorded evidence</a> · <a href="lesson.json">Lesson manifest</a></p>
+  </footer>
+</body>
+</html>
