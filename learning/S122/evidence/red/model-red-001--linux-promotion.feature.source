@@ -1,0 +1,61 @@
+Feature: Choose a supported Linux code promotion without claiming native proof
+  All hosting, slot, setting, warm-up, routing, promotion and request records
+  are fixed fictional teaching data. No Azure operation is available.
+
+  Scenario: Choose a supported Linux path
+    Given fictional Linux code on a slot-capable Standard tier with two shared workers
+    When the operator chooses a reviewed manual swap or a controlled swap pipeline
+    Then that path can assess a candidate with production as the target
+    And native auto-swap is disabled with its Linux and container limitation explained
+    And adding a slot or promoting content does not increase the two-worker compute count
+
+  Scenario: Gate target configuration, meaningful readiness and overlap
+    Given staging has zero fictional production admissions
+    When a fixed fixture has HTTP 503, wrong target settings or insufficient shared headroom
+    Then promotion is unavailable and existing production is measured separately
+    And successful old-only requests earn zero migrated journeys and no success percentage
+    And a successful warm-up status alone never substitutes for all readiness checks
+
+  Scenario: Measure a supported, prepared promotion
+    Given all fixed readiness and continuation gates pass
+    When the operator promotes and then measures the three fixed crossing journeys
+    Then each intended migration includes observed frontend and API version, original budget,
+      authentication, state, correctness and business-effect evidence
+    And desired routing alone is not successful migration evidence
+    And the three synthetic successes do not certify native continuity or five-nines reliability
+
+  Scenario: Former production recycling exposes a continuity failure
+    Given the fixed long-running request has no durable continuation
+    When a prepared candidate is promoted and the three journeys are measured
+    Then the abandoned old-worker request is an interruption
+    And retaining the old slot does not prevent native swap worker recycling
+    And requesting a fictional rollback leaves the interruption in the record
+
+  Scenario: Missing observations remain unknown
+    Given two crossing journeys lack a receipt or destination-version evidence
+    When the operator measures after promotion
+    Then all three attempted transitions stay in the denominator
+    And one success and two unknowns are reported as unverified, not a successful transition
+
+  Scenario: Reject malformed inputs, forged states and premature actions
+    Given an idle, immutable lesson state
+    When input is coercible rather than correctly typed, contains extra fields,
+      chooses native auto-swap, exceeds the teaching budget, or forges state
+    Then a specific error is raised without changing routing or history
+    And promotion, measurement and rollback require their preceding state gates
+
+  Scenario: Reset retains observed and unfinished history
+    Given a measured interruption, an unknown result or an exposed unfinished attempt
+    When the operator resets the lesson
+    Then the current controls return to defaults and receive keyboard focus
+    And completed outcomes remain in history
+    And an exposed unfinished attempt is archived as cancelled with three unknown transitions
+    And six archived runs bound the lesson until the page is reloaded
+
+  Scenario: Exercise the actual offline browser safely
+    Given the exact synthetic-data banner and a restrictive local CSP
+    When the operator uses keyboard controls, encounters a guarded error and resets
+    Then real DOM observations show the positive, negative, unknown and recovery results
+    And inline scripts, inline styles and connections are blocked by Chromium CSP
+    And normal verification changes no source or evidence bytes
+    And only the exact deliberate CAPTURE_BROWSER_EVIDENCE=1 switch records new proof

@@ -1,0 +1,58 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { createHash } = require('node:crypto');
+const { openIsolatedLesson } = require('..\\..\\..\\testing\\browser\\isolated.cjs');
+
+const root = path.resolve(__dirname, '..');
+const helper = path.resolve(root, '..', '..', 'testing', 'browser', 'isolated.cjs');
+const HELPER_SHA = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+const BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
+const observations = [];
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+
+function sha(bytes) { return createHash('sha256').update(bytes).digest('hex'); }
+
+test('actual DOM supported Linux assessment begins the gated rehearsal', async () => {
+  let session;
+  const browserErrors = [];
+  let passed = false;
+  let failure = null;
+  try {
+    assert.equal(sha(fs.readFileSync(helper)), HELPER_SHA, 'published helper bytes must match the qualified helper');
+    session = await openIsolatedLesson('learning\\S122\\index.html');
+    session.page.on('pageerror', (error) => browserErrors.push(error.message));
+    const page = session.page;
+    assert.equal(await page.locator('#training-banner').textContent(), BANNER);
+    assert.equal(await page.locator('option[value="native-auto-swap"]').isDisabled(), true);
+    await page.locator('#assess-candidate').click();
+    assert.equal(await page.locator('#phase-label').getAttribute('data-phase'), 'ready',
+      'a real supported Linux assessment must enter READY after the operator click');
+    assert.equal(await page.locator('#desired-route').textContent(), 'old-v1');
+    observations.push({ check: 'actual DOM supported Linux assessment', phase: 'ready', desiredRoute: 'old-v1' });
+    passed = true;
+  } catch (error) {
+    failure = { name: error.name, code: error.code, message: error.message };
+    throw error;
+  } finally {
+    if (session) await session.close();
+    if (capture) {
+      const destination = path.join(root, 'evidence', 'browser');
+      fs.mkdirSync(destination, { recursive: true });
+      const index = fs.readdirSync(destination).filter((name) => /^capture-\d{3}\.json$/.test(name)).length + 1;
+      const name = `capture-${String(index).padStart(3, '0')}.json`;
+      const report = {
+        cardId: 'A-S122', workerId: 'worker-A-S122', mode: 'local-synthetic',
+        banner: BANNER, capturedAtUtc: new Date().toISOString(),
+        nodeVersion: process.version, playwrightVersion: require('..\\..\\..\\testing\\browser\\node_modules\\playwright\\package.json').version,
+        browserVersion: session && session.browserVersion, helperSha256: HELPER_SHA,
+        verifierPassed: passed && browserErrors.length === 0, failure,
+        observations, pageErrors: browserErrors, cleanup: session ? 'awaited session.close() in finally completed' : 'no session',
+      };
+      fs.writeFileSync(path.join(destination, name), `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+    }
+  }
+});

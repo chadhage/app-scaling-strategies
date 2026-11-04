@@ -1,0 +1,41 @@
+'use strict';
+
+(function startLesson() {
+  const model = window.S122Lesson;
+  const form = document.getElementById('lesson-form');
+  const error = document.getElementById('lesson-error');
+  const phase = document.getElementById('phase-label');
+  let state = model.initialState();
+
+  function submit(command) {
+    try {
+      state = model.apply(state, command);
+      error.hidden = true;
+      error.textContent = '';
+      phase.dataset.phase = state.phase;
+      phase.textContent = state.phase;
+    } catch (failure) {
+      error.textContent = `${failure.code || 'LESSON_ERROR'}: ${failure.message}`;
+      error.hidden = false;
+      error.focus();
+    }
+  }
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    submit({
+      type: 'assess',
+      input: {
+        path: document.getElementById('promotion-path').value,
+        fixture: document.getElementById('fixture-choice').value,
+        budgetMs: Number(document.getElementById('journey-budget').value),
+      },
+    });
+  });
+  for (const [id, type] of [
+    ['promote-candidate', 'promote'], ['measure-journeys', 'measure'],
+    ['request-rollback', 'rollback'], ['reset-lesson', 'reset'],
+  ]) {
+    document.getElementById(id).addEventListener('click', () => submit({ type }));
+  }
+}());

@@ -1,0 +1,25 @@
+'use strict';
+
+(function expose(root) {
+  const BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
+  const FIXTURES = Object.freeze({
+    healthy: 'Prepared candidate with durable continuation',
+    'warmup-503': 'Warm-up responds HTTP 503',
+    'config-mismatch': 'Effective target configuration is wrong',
+    'overlap-deficit': 'Shared-plan overlap exceeds capacity',
+    'recycle-loss': 'Former worker loses long-running work',
+    'missing-observation': 'Two journey observations are missing',
+  });
+
+  function initialState() {
+    return Object.freeze({ phase: 'idle', current: null, history: Object.freeze([]) });
+  }
+
+  function apply(state) {
+    return state;
+  }
+
+  const api = Object.freeze({ BANNER, FIXTURES, MAX_RUNS: 6, initialState, apply });
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S122Lesson = api;
+}(typeof globalThis === 'object' ? globalThis : this));
