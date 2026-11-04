@@ -1,0 +1,3672 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S128",
+  "recordedAtUtc": "2026-11-04T01:35:53.083Z",
+  "tooling": {
+    "node": "v22.23.4",
+    "playwright": "1.56.1",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "helperCommit": "53c0c0d",
+    "inactivePrototypeUsed": false,
+    "unattendedHelperQualified": false,
+    "edge": "156.0.4314.50"
+  },
+  "observations": [
+    {
+      "case": "baseline banner, inventory, labels and unknown gates",
+      "status": "passed",
+      "banner": "Training rehearsal - synthetic data - not a live Azure result",
+      "inventoryPods": 4,
+      "initialStatus": "unknown"
+    },
+    {
+      "case": "keyboard tab/focus/submit completes independent positive gates",
+      "status": "passed",
+      "focus": {
+        "visible": true,
+        "style": "solid"
+      },
+      "state": {
+        "schemaVersion": 1,
+        "choice": {
+          "gaSelector": "build-1-only",
+          "previewSelector": "build-2-only",
+          "routing": "cohort-gateway",
+          "fixture": "compatible"
+        },
+        "topology": {
+          "status": "passed",
+          "services": [
+            {
+              "id": "fictional-GA-service",
+              "audience": "GA",
+              "selectorId": "build-1-only",
+              "selectorData": {
+                "app": "profile-lesson",
+                "build": "build-1"
+              },
+              "expectedBuild": "build-1",
+              "matchedPods": [
+                "fictional-GA-pod-a",
+                "fictional-GA-pod-b"
+              ],
+              "matchedBuilds": [
+                "build-1"
+              ],
+              "status": "passed",
+              "note": "Version-separated endpoint DATA."
+            },
+            {
+              "id": "fictional-preview-service",
+              "audience": "preview",
+              "selectorId": "build-2-only",
+              "selectorData": {
+                "app": "profile-lesson",
+                "build": "build-2"
+              },
+              "expectedBuild": "build-2",
+              "matchedPods": [
+                "fictional-preview-pod-a",
+                "fictional-preview-pod-b"
+              ],
+              "matchedBuilds": [
+                "build-2"
+              ],
+              "status": "passed",
+              "note": "Version-separated endpoint DATA."
+            }
+          ],
+          "capability": {
+            "status": "passed",
+            "source": "cohort-gateway",
+            "note": "Fixed fictional capable-gateway DATA, not installed or configured routing."
+          },
+          "note": "Selectors choose endpoint DATA. Labels are not preview authorization or API contracts."
+        },
+        "traffic": {
+          "status": "passed",
+          "receipts": [
+            {
+              "id": "fictional-GA-route",
+              "audience": "GA",
+              "desiredService": "fictional-GA-service",
+              "expectedSoftwareVersion": "build-1",
+              "observedService": "fictional-GA-service",
+              "observedPod": "fictional-GA-pod-b",
+              "observedSoftwareVersion": "build-1",
+              "httpStatus": 200,
+              "status": "passed",
+              "note": "Observed finite destination DATA only."
+            },
+            {
+              "id": "fictional-preview-route",
+              "audience": "preview",
+              "desiredService": "fictional-preview-service",
+              "expectedSoftwareVersion": "build-2",
+              "observedService": "fictional-preview-service",
+              "observedPod": "fictional-preview-pod-b",
+              "observedSoftwareVersion": "build-2",
+              "httpStatus": 200,
+              "status": "passed",
+              "note": "Observed finite destination DATA only."
+            }
+          ],
+          "note": "Two fixed receipts are not statistical weight validation or authorized complete journeys."
+        },
+        "journeys": {
+          "status": "passed",
+          "items": [
+            {
+              "id": "fictional-GA-journey",
+              "audience": "GA",
+              "expectedSoftwareVersion": "build-1",
+              "observedSoftwareVersion": "build-1",
+              "requestApiContract": "profile-v1",
+              "responseApiContract": "profile-v1",
+              "httpStatus": 200,
+              "authorized": true,
+              "principalBefore": "fictional-GA-learner",
+              "principalAfter": "fictional-GA-learner",
+              "sessionBefore": "fictional-GA-session-7",
+              "sessionAfter": "fictional-GA-session-7",
+              "stateBefore": "cart:3",
+              "stateAfter": "cart:3",
+              "payload": {
+                "displayName": "Fictional Learner",
+                "cartItems": 3
+              },
+              "steps": [
+                {
+                  "step": "login",
+                  "status": "passed"
+                },
+                {
+                  "step": "callback",
+                  "status": "passed"
+                },
+                {
+                  "step": "navigation",
+                  "status": "passed"
+                },
+                {
+                  "step": "profile",
+                  "status": "passed"
+                },
+                {
+                  "step": "cart",
+                  "status": "passed"
+                }
+              ],
+              "completed": true,
+              "effectCount": 1,
+              "elapsedMs": 180,
+              "originalBudgetMs": 400,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-journey",
+              "audience": "preview",
+              "expectedSoftwareVersion": "build-2",
+              "observedSoftwareVersion": "build-2",
+              "requestApiContract": "profile-v1",
+              "responseApiContract": "profile-v1",
+              "httpStatus": 200,
+              "authorized": true,
+              "principalBefore": "fictional-preview-learner",
+              "principalAfter": "fictional-preview-learner",
+              "sessionBefore": "fictional-preview-session-7",
+              "sessionAfter": "fictional-preview-session-7",
+              "stateBefore": "cart:3",
+              "stateAfter": "cart:3",
+              "payload": {
+                "displayName": "Fictional Learner",
+                "cartItems": 3
+              },
+              "steps": [
+                {
+                  "step": "login",
+                  "status": "passed"
+                },
+                {
+                  "step": "callback",
+                  "status": "passed"
+                },
+                {
+                  "step": "navigation",
+                  "status": "passed"
+                },
+                {
+                  "step": "profile",
+                  "status": "passed"
+                },
+                {
+                  "step": "cart",
+                  "status": "passed"
+                }
+              ],
+              "completed": true,
+              "effectCount": 1,
+              "elapsedMs": 210,
+              "originalBudgetMs": 400,
+              "status": "passed"
+            }
+          ],
+          "note": "Login, callback, navigation, compatible payload, cart, one effect and original budget are independent checks."
+        },
+        "authorization": {
+          "status": "passed",
+          "probes": [
+            {
+              "id": "fictional-preview-gateway-GA",
+              "entryPath": "preview-gateway",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-gateway-preview",
+              "entryPath": "preview-gateway",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-service-GA",
+              "entryPath": "preview-service",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-service-preview",
+              "entryPath": "preview-service",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-navigation-GA",
+              "entryPath": "preview-navigation",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-navigation-preview",
+              "entryPath": "preview-navigation",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-callback-GA",
+              "entryPath": "preview-callback",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-callback-preview",
+              "entryPath": "preview-callback",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            }
+          ],
+          "routeLeak": false,
+          "note": "Every declared private path needs allow/deny observations. Zero GA selection to preview is not access control."
+        },
+        "history": [
+          {
+            "sequence": 1,
+            "command": {
+              "action": "inspect",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "compatible"
+            },
+            "held": false,
+            "stageStatus": "passed",
+            "note": "Inspected selected endpoint and capability DATA; prior route/journey/access observations cleared.",
+            "measured": {
+              "topology": "passed",
+              "traffic": "unknown",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          },
+          {
+            "sequence": 2,
+            "command": {
+              "action": "route",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "compatible"
+            },
+            "held": false,
+            "stageStatus": "passed",
+            "note": "Recorded destinations independently; complete journeys and authorization still require verification.",
+            "measured": {
+              "topology": "passed",
+              "traffic": "passed",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          },
+          {
+            "sequence": 3,
+            "command": {
+              "action": "verify",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "compatible"
+            },
+            "held": false,
+            "stageStatus": "passed",
+            "note": "Recorded both attempted complete journeys and all eight private-path permission probes.",
+            "measured": {
+              "topology": "passed",
+              "traffic": "passed",
+              "journeys": "passed",
+              "authorization": "passed"
+            }
+          }
+        ]
+      },
+      "counts": "2 attempted; 2 passed; 0 failed; 0 unknown. Original budget: 400 ms per journey."
+    },
+    {
+      "case": "keyboard app-only GA selection exposes mixed audience and retains prior positive history",
+      "status": "passed",
+      "state": {
+        "schemaVersion": 1,
+        "choice": {
+          "gaSelector": "app-only",
+          "previewSelector": "build-2-only",
+          "routing": "cohort-gateway",
+          "fixture": "compatible"
+        },
+        "topology": {
+          "status": "failed",
+          "services": [
+            {
+              "id": "fictional-GA-service",
+              "audience": "GA",
+              "selectorId": "app-only",
+              "selectorData": {
+                "app": "profile-lesson"
+              },
+              "expectedBuild": "build-1",
+              "matchedPods": [
+                "fictional-GA-pod-a",
+                "fictional-GA-pod-b",
+                "fictional-preview-pod-a",
+                "fictional-preview-pod-b"
+              ],
+              "matchedBuilds": [
+                "build-1",
+                "build-2"
+              ],
+              "status": "failed",
+              "note": "App-only selector mixes GA and private preview builds."
+            },
+            {
+              "id": "fictional-preview-service",
+              "audience": "preview",
+              "selectorId": "build-2-only",
+              "selectorData": {
+                "app": "profile-lesson",
+                "build": "build-2"
+              },
+              "expectedBuild": "build-2",
+              "matchedPods": [
+                "fictional-preview-pod-a",
+                "fictional-preview-pod-b"
+              ],
+              "matchedBuilds": [
+                "build-2"
+              ],
+              "status": "passed",
+              "note": "Version-separated endpoint DATA."
+            }
+          ],
+          "capability": {
+            "status": "passed",
+            "source": "cohort-gateway",
+            "note": "Fixed fictional capable-gateway DATA, not installed or configured routing."
+          },
+          "note": "Selectors choose endpoint DATA. Labels are not preview authorization or API contracts."
+        },
+        "traffic": {
+          "status": "failed",
+          "receipts": [
+            {
+              "id": "fictional-GA-route",
+              "audience": "GA",
+              "desiredService": "fictional-GA-service",
+              "expectedSoftwareVersion": "build-1",
+              "observedService": "fictional-GA-service",
+              "observedPod": "fictional-preview-pod-b",
+              "observedSoftwareVersion": "build-2",
+              "httpStatus": 200,
+              "status": "failed",
+              "note": "Observed destination does not preserve this cohort."
+            },
+            {
+              "id": "fictional-preview-route",
+              "audience": "preview",
+              "desiredService": "fictional-preview-service",
+              "expectedSoftwareVersion": "build-2",
+              "observedService": "fictional-preview-service",
+              "observedPod": "fictional-preview-pod-b",
+              "observedSoftwareVersion": "build-2",
+              "httpStatus": 200,
+              "status": "passed",
+              "note": "Observed finite destination DATA only."
+            }
+          ],
+          "note": "Two fixed receipts are not statistical weight validation or authorized complete journeys."
+        },
+        "journeys": {
+          "status": "failed",
+          "items": [
+            {
+              "id": "fictional-GA-journey",
+              "audience": "GA",
+              "expectedSoftwareVersion": "build-1",
+              "observedSoftwareVersion": "build-2",
+              "requestApiContract": "profile-v1",
+              "responseApiContract": "profile-v1",
+              "httpStatus": 200,
+              "authorized": false,
+              "principalBefore": "fictional-GA-learner",
+              "principalAfter": "fictional-GA-learner",
+              "sessionBefore": "fictional-GA-session-7",
+              "sessionAfter": "fictional-GA-session-7",
+              "stateBefore": "cart:3",
+              "stateAfter": "cart:3",
+              "payload": {
+                "displayName": "Fictional Learner",
+                "cartItems": 3
+              },
+              "steps": [
+                {
+                  "step": "login",
+                  "status": "passed"
+                },
+                {
+                  "step": "callback",
+                  "status": "passed"
+                },
+                {
+                  "step": "navigation",
+                  "status": "passed"
+                },
+                {
+                  "step": "profile",
+                  "status": "passed"
+                },
+                {
+                  "step": "cart",
+                  "status": "passed"
+                }
+              ],
+              "completed": true,
+              "effectCount": 1,
+              "elapsedMs": 180,
+              "originalBudgetMs": 400,
+              "status": "failed"
+            },
+            {
+              "id": "fictional-preview-journey",
+              "audience": "preview",
+              "expectedSoftwareVersion": "build-2",
+              "observedSoftwareVersion": "build-2",
+              "requestApiContract": "profile-v1",
+              "responseApiContract": "profile-v1",
+              "httpStatus": 200,
+              "authorized": true,
+              "principalBefore": "fictional-preview-learner",
+              "principalAfter": "fictional-preview-learner",
+              "sessionBefore": "fictional-preview-session-7",
+              "sessionAfter": "fictional-preview-session-7",
+              "stateBefore": "cart:3",
+              "stateAfter": "cart:3",
+              "payload": {
+                "displayName": "Fictional Learner",
+                "cartItems": 3
+              },
+              "steps": [
+                {
+                  "step": "login",
+                  "status": "passed"
+                },
+                {
+                  "step": "callback",
+                  "status": "passed"
+                },
+                {
+                  "step": "navigation",
+                  "status": "passed"
+                },
+                {
+                  "step": "profile",
+                  "status": "passed"
+                },
+                {
+                  "step": "cart",
+                  "status": "passed"
+                }
+              ],
+              "completed": true,
+              "effectCount": 1,
+              "elapsedMs": 210,
+              "originalBudgetMs": 400,
+              "status": "passed"
+            }
+          ],
+          "note": "Login, callback, navigation, compatible payload, cart, one effect and original budget are independent checks."
+        },
+        "authorization": {
+          "status": "failed",
+          "probes": [
+            {
+              "id": "fictional-preview-gateway-GA",
+              "entryPath": "preview-gateway",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-gateway-preview",
+              "entryPath": "preview-gateway",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-service-GA",
+              "entryPath": "preview-service",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-service-preview",
+              "entryPath": "preview-service",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-navigation-GA",
+              "entryPath": "preview-navigation",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-navigation-preview",
+              "entryPath": "preview-navigation",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-callback-GA",
+              "entryPath": "preview-callback",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-callback-preview",
+              "entryPath": "preview-callback",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            }
+          ],
+          "routeLeak": true,
+          "note": "Every declared private path needs allow/deny observations. Zero GA selection to preview is not access control."
+        },
+        "history": [
+          {
+            "sequence": 1,
+            "command": {
+              "action": "inspect",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "compatible"
+            },
+            "held": false,
+            "stageStatus": "passed",
+            "note": "Inspected selected endpoint and capability DATA; prior route/journey/access observations cleared.",
+            "measured": {
+              "topology": "passed",
+              "traffic": "unknown",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          },
+          {
+            "sequence": 2,
+            "command": {
+              "action": "route",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "compatible"
+            },
+            "held": false,
+            "stageStatus": "passed",
+            "note": "Recorded destinations independently; complete journeys and authorization still require verification.",
+            "measured": {
+              "topology": "passed",
+              "traffic": "passed",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          },
+          {
+            "sequence": 3,
+            "command": {
+              "action": "verify",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "compatible"
+            },
+            "held": false,
+            "stageStatus": "passed",
+            "note": "Recorded both attempted complete journeys and all eight private-path permission probes.",
+            "measured": {
+              "topology": "passed",
+              "traffic": "passed",
+              "journeys": "passed",
+              "authorization": "passed"
+            }
+          },
+          {
+            "sequence": 4,
+            "command": {
+              "action": "inspect",
+              "gaSelector": "app-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "compatible"
+            },
+            "held": false,
+            "stageStatus": "failed",
+            "note": "Inspected selected endpoint and capability DATA; prior route/journey/access observations cleared.",
+            "measured": {
+              "topology": "failed",
+              "traffic": "unknown",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          },
+          {
+            "sequence": 5,
+            "command": {
+              "action": "route",
+              "gaSelector": "app-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "compatible"
+            },
+            "held": false,
+            "stageStatus": "failed",
+            "note": "Recorded destinations independently; complete journeys and authorization still require verification.",
+            "measured": {
+              "topology": "failed",
+              "traffic": "failed",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          },
+          {
+            "sequence": 6,
+            "command": {
+              "action": "verify",
+              "gaSelector": "app-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "compatible"
+            },
+            "held": false,
+            "stageStatus": "failed",
+            "note": "Recorded both attempted complete journeys and all eight private-path permission probes.",
+            "measured": {
+              "topology": "failed",
+              "traffic": "failed",
+              "journeys": "failed",
+              "authorization": "failed"
+            }
+          }
+        ]
+      },
+      "retainedPositiveHistory": true
+    },
+    {
+      "case": "tampered invalid selector is a focused typed alert with no state/history mutation",
+      "status": "passed",
+      "error": "ERR_INPUT: Choose only the listed fictional action, selector, routing and fixture tokens. No command ran. Correct the controls or reset.",
+      "stateUnchanged": true,
+      "focusedAlert": true
+    },
+    {
+      "case": "keyboard reset survives actual form.reset shadowing and clears only page memory",
+      "status": "passed",
+      "shadowedFormMember": true,
+      "prototypeResetWorked": true,
+      "state": {
+        "schemaVersion": 1,
+        "choice": null,
+        "topology": {
+          "status": "unknown",
+          "note": "Selectors has not been independently observed.",
+          "services": [],
+          "capability": {
+            "status": "unknown",
+            "note": "Routing capability has not been independently observed."
+          }
+        },
+        "traffic": {
+          "status": "unknown",
+          "note": "Destinations has not been independently observed.",
+          "receipts": []
+        },
+        "journeys": {
+          "status": "unknown",
+          "note": "Complete journeys has not been independently observed.",
+          "items": []
+        },
+        "authorization": {
+          "status": "unknown",
+          "note": "Private-preview access has not been independently observed.",
+          "probes": [],
+          "routeLeak": null
+        },
+        "history": []
+      }
+    },
+    {
+      "case": "valid premature and changed-control commands are retained failed holds",
+      "status": "passed",
+      "state": {
+        "schemaVersion": 1,
+        "choice": {
+          "gaSelector": "build-1-only",
+          "previewSelector": "build-2-only",
+          "routing": "cohort-gateway",
+          "fixture": "compatible"
+        },
+        "topology": {
+          "status": "passed",
+          "services": [
+            {
+              "id": "fictional-GA-service",
+              "audience": "GA",
+              "selectorId": "build-1-only",
+              "selectorData": {
+                "app": "profile-lesson",
+                "build": "build-1"
+              },
+              "expectedBuild": "build-1",
+              "matchedPods": [
+                "fictional-GA-pod-a",
+                "fictional-GA-pod-b"
+              ],
+              "matchedBuilds": [
+                "build-1"
+              ],
+              "status": "passed",
+              "note": "Version-separated endpoint DATA."
+            },
+            {
+              "id": "fictional-preview-service",
+              "audience": "preview",
+              "selectorId": "build-2-only",
+              "selectorData": {
+                "app": "profile-lesson",
+                "build": "build-2"
+              },
+              "expectedBuild": "build-2",
+              "matchedPods": [
+                "fictional-preview-pod-a",
+                "fictional-preview-pod-b"
+              ],
+              "matchedBuilds": [
+                "build-2"
+              ],
+              "status": "passed",
+              "note": "Version-separated endpoint DATA."
+            }
+          ],
+          "capability": {
+            "status": "passed",
+            "source": "cohort-gateway",
+            "note": "Fixed fictional capable-gateway DATA, not installed or configured routing."
+          },
+          "note": "Selectors choose endpoint DATA. Labels are not preview authorization or API contracts."
+        },
+        "traffic": {
+          "status": "unknown",
+          "note": "Destinations has not been independently observed.",
+          "receipts": []
+        },
+        "journeys": {
+          "status": "unknown",
+          "note": "Complete journeys has not been independently observed.",
+          "items": []
+        },
+        "authorization": {
+          "status": "unknown",
+          "note": "Private-preview access has not been independently observed.",
+          "probes": [],
+          "routeLeak": null
+        },
+        "history": [
+          {
+            "sequence": 1,
+            "command": {
+              "action": "verify",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "compatible"
+            },
+            "held": true,
+            "stageStatus": "failed",
+            "note": "Failed hold: inspect these exact controls first, then observe routes before verifying journeys and access.",
+            "measured": {
+              "topology": "unknown",
+              "traffic": "unknown",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          },
+          {
+            "sequence": 2,
+            "command": {
+              "action": "inspect",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "compatible"
+            },
+            "held": false,
+            "stageStatus": "passed",
+            "note": "Inspected selected endpoint and capability DATA; prior route/journey/access observations cleared.",
+            "measured": {
+              "topology": "passed",
+              "traffic": "unknown",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          },
+          {
+            "sequence": 3,
+            "command": {
+              "action": "route",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "state-loss"
+            },
+            "held": true,
+            "stageStatus": "failed",
+            "note": "Failed hold: inspect these exact controls first, then observe routes before verifying journeys and access.",
+            "measured": {
+              "topology": "passed",
+              "traffic": "unknown",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          }
+        ]
+      },
+      "failedHoldGuidanceVisible": true
+    },
+    {
+      "case": "correct cohort selection cannot pass a leaked private-preview callback",
+      "status": "passed",
+      "state": {
+        "schemaVersion": 1,
+        "choice": {
+          "gaSelector": "build-1-only",
+          "previewSelector": "build-2-only",
+          "routing": "cohort-gateway",
+          "fixture": "private-preview-leak"
+        },
+        "topology": {
+          "status": "passed",
+          "services": [
+            {
+              "id": "fictional-GA-service",
+              "audience": "GA",
+              "selectorId": "build-1-only",
+              "selectorData": {
+                "app": "profile-lesson",
+                "build": "build-1"
+              },
+              "expectedBuild": "build-1",
+              "matchedPods": [
+                "fictional-GA-pod-a",
+                "fictional-GA-pod-b"
+              ],
+              "matchedBuilds": [
+                "build-1"
+              ],
+              "status": "passed",
+              "note": "Version-separated endpoint DATA."
+            },
+            {
+              "id": "fictional-preview-service",
+              "audience": "preview",
+              "selectorId": "build-2-only",
+              "selectorData": {
+                "app": "profile-lesson",
+                "build": "build-2"
+              },
+              "expectedBuild": "build-2",
+              "matchedPods": [
+                "fictional-preview-pod-a",
+                "fictional-preview-pod-b"
+              ],
+              "matchedBuilds": [
+                "build-2"
+              ],
+              "status": "passed",
+              "note": "Version-separated endpoint DATA."
+            }
+          ],
+          "capability": {
+            "status": "passed",
+            "source": "cohort-gateway",
+            "note": "Fixed fictional capable-gateway DATA, not installed or configured routing."
+          },
+          "note": "Selectors choose endpoint DATA. Labels are not preview authorization or API contracts."
+        },
+        "traffic": {
+          "status": "passed",
+          "receipts": [
+            {
+              "id": "fictional-GA-route",
+              "audience": "GA",
+              "desiredService": "fictional-GA-service",
+              "expectedSoftwareVersion": "build-1",
+              "observedService": "fictional-GA-service",
+              "observedPod": "fictional-GA-pod-b",
+              "observedSoftwareVersion": "build-1",
+              "httpStatus": 200,
+              "status": "passed",
+              "note": "Observed finite destination DATA only."
+            },
+            {
+              "id": "fictional-preview-route",
+              "audience": "preview",
+              "desiredService": "fictional-preview-service",
+              "expectedSoftwareVersion": "build-2",
+              "observedService": "fictional-preview-service",
+              "observedPod": "fictional-preview-pod-b",
+              "observedSoftwareVersion": "build-2",
+              "httpStatus": 200,
+              "status": "passed",
+              "note": "Observed finite destination DATA only."
+            }
+          ],
+          "note": "Two fixed receipts are not statistical weight validation or authorized complete journeys."
+        },
+        "journeys": {
+          "status": "passed",
+          "items": [
+            {
+              "id": "fictional-GA-journey",
+              "audience": "GA",
+              "expectedSoftwareVersion": "build-1",
+              "observedSoftwareVersion": "build-1",
+              "requestApiContract": "profile-v1",
+              "responseApiContract": "profile-v1",
+              "httpStatus": 200,
+              "authorized": true,
+              "principalBefore": "fictional-GA-learner",
+              "principalAfter": "fictional-GA-learner",
+              "sessionBefore": "fictional-GA-session-7",
+              "sessionAfter": "fictional-GA-session-7",
+              "stateBefore": "cart:3",
+              "stateAfter": "cart:3",
+              "payload": {
+                "displayName": "Fictional Learner",
+                "cartItems": 3
+              },
+              "steps": [
+                {
+                  "step": "login",
+                  "status": "passed"
+                },
+                {
+                  "step": "callback",
+                  "status": "passed"
+                },
+                {
+                  "step": "navigation",
+                  "status": "passed"
+                },
+                {
+                  "step": "profile",
+                  "status": "passed"
+                },
+                {
+                  "step": "cart",
+                  "status": "passed"
+                }
+              ],
+              "completed": true,
+              "effectCount": 1,
+              "elapsedMs": 180,
+              "originalBudgetMs": 400,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-journey",
+              "audience": "preview",
+              "expectedSoftwareVersion": "build-2",
+              "observedSoftwareVersion": "build-2",
+              "requestApiContract": "profile-v1",
+              "responseApiContract": "profile-v1",
+              "httpStatus": 200,
+              "authorized": true,
+              "principalBefore": "fictional-preview-learner",
+              "principalAfter": "fictional-preview-learner",
+              "sessionBefore": "fictional-preview-session-7",
+              "sessionAfter": "fictional-preview-session-7",
+              "stateBefore": "cart:3",
+              "stateAfter": "cart:3",
+              "payload": {
+                "displayName": "Fictional Learner",
+                "cartItems": 3
+              },
+              "steps": [
+                {
+                  "step": "login",
+                  "status": "passed"
+                },
+                {
+                  "step": "callback",
+                  "status": "passed"
+                },
+                {
+                  "step": "navigation",
+                  "status": "passed"
+                },
+                {
+                  "step": "profile",
+                  "status": "passed"
+                },
+                {
+                  "step": "cart",
+                  "status": "passed"
+                }
+              ],
+              "completed": true,
+              "effectCount": 1,
+              "elapsedMs": 210,
+              "originalBudgetMs": 400,
+              "status": "passed"
+            }
+          ],
+          "note": "Login, callback, navigation, compatible payload, cart, one effect and original budget are independent checks."
+        },
+        "authorization": {
+          "status": "failed",
+          "probes": [
+            {
+              "id": "fictional-preview-gateway-GA",
+              "entryPath": "preview-gateway",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-gateway-preview",
+              "entryPath": "preview-gateway",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-service-GA",
+              "entryPath": "preview-service",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-service-preview",
+              "entryPath": "preview-service",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-navigation-GA",
+              "entryPath": "preview-navigation",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-navigation-preview",
+              "entryPath": "preview-navigation",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-callback-GA",
+              "entryPath": "preview-callback",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "failed"
+            },
+            {
+              "id": "fictional-preview-callback-preview",
+              "entryPath": "preview-callback",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            }
+          ],
+          "routeLeak": false,
+          "note": "Every declared private path needs allow/deny observations. Zero GA selection to preview is not access control."
+        },
+        "history": [
+          {
+            "sequence": 1,
+            "command": {
+              "action": "inspect",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "private-preview-leak"
+            },
+            "held": false,
+            "stageStatus": "passed",
+            "note": "Inspected selected endpoint and capability DATA; prior route/journey/access observations cleared.",
+            "measured": {
+              "topology": "passed",
+              "traffic": "unknown",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          },
+          {
+            "sequence": 2,
+            "command": {
+              "action": "route",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "private-preview-leak"
+            },
+            "held": false,
+            "stageStatus": "passed",
+            "note": "Recorded destinations independently; complete journeys and authorization still require verification.",
+            "measured": {
+              "topology": "passed",
+              "traffic": "passed",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          },
+          {
+            "sequence": 3,
+            "command": {
+              "action": "verify",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "cohort-gateway",
+              "fixture": "private-preview-leak"
+            },
+            "held": false,
+            "stageStatus": "failed",
+            "note": "Recorded both attempted complete journeys and all eight private-path permission probes.",
+            "measured": {
+              "topology": "passed",
+              "traffic": "passed",
+              "journeys": "passed",
+              "authorization": "failed"
+            }
+          }
+        ]
+      },
+      "zeroGaSelectionIsNotAuthorization": true
+    },
+    {
+      "case": "API contract, state and original-budget regressions fail despite HTTP 200",
+      "status": "passed",
+      "states": [
+        {
+          "schemaVersion": 1,
+          "choice": {
+            "gaSelector": "build-1-only",
+            "previewSelector": "build-2-only",
+            "routing": "cohort-gateway",
+            "fixture": "contract-break"
+          },
+          "topology": {
+            "status": "passed",
+            "services": [
+              {
+                "id": "fictional-GA-service",
+                "audience": "GA",
+                "selectorId": "build-1-only",
+                "selectorData": {
+                  "app": "profile-lesson",
+                  "build": "build-1"
+                },
+                "expectedBuild": "build-1",
+                "matchedPods": [
+                  "fictional-GA-pod-a",
+                  "fictional-GA-pod-b"
+                ],
+                "matchedBuilds": [
+                  "build-1"
+                ],
+                "status": "passed",
+                "note": "Version-separated endpoint DATA."
+              },
+              {
+                "id": "fictional-preview-service",
+                "audience": "preview",
+                "selectorId": "build-2-only",
+                "selectorData": {
+                  "app": "profile-lesson",
+                  "build": "build-2"
+                },
+                "expectedBuild": "build-2",
+                "matchedPods": [
+                  "fictional-preview-pod-a",
+                  "fictional-preview-pod-b"
+                ],
+                "matchedBuilds": [
+                  "build-2"
+                ],
+                "status": "passed",
+                "note": "Version-separated endpoint DATA."
+              }
+            ],
+            "capability": {
+              "status": "passed",
+              "source": "cohort-gateway",
+              "note": "Fixed fictional capable-gateway DATA, not installed or configured routing."
+            },
+            "note": "Selectors choose endpoint DATA. Labels are not preview authorization or API contracts."
+          },
+          "traffic": {
+            "status": "passed",
+            "receipts": [
+              {
+                "id": "fictional-GA-route",
+                "audience": "GA",
+                "desiredService": "fictional-GA-service",
+                "expectedSoftwareVersion": "build-1",
+                "observedService": "fictional-GA-service",
+                "observedPod": "fictional-GA-pod-b",
+                "observedSoftwareVersion": "build-1",
+                "httpStatus": 200,
+                "status": "passed",
+                "note": "Observed finite destination DATA only."
+              },
+              {
+                "id": "fictional-preview-route",
+                "audience": "preview",
+                "desiredService": "fictional-preview-service",
+                "expectedSoftwareVersion": "build-2",
+                "observedService": "fictional-preview-service",
+                "observedPod": "fictional-preview-pod-b",
+                "observedSoftwareVersion": "build-2",
+                "httpStatus": 200,
+                "status": "passed",
+                "note": "Observed finite destination DATA only."
+              }
+            ],
+            "note": "Two fixed receipts are not statistical weight validation or authorized complete journeys."
+          },
+          "journeys": {
+            "status": "failed",
+            "items": [
+              {
+                "id": "fictional-GA-journey",
+                "audience": "GA",
+                "expectedSoftwareVersion": "build-1",
+                "observedSoftwareVersion": "build-1",
+                "requestApiContract": "profile-v1",
+                "responseApiContract": "profile-v1",
+                "httpStatus": 200,
+                "authorized": true,
+                "principalBefore": "fictional-GA-learner",
+                "principalAfter": "fictional-GA-learner",
+                "sessionBefore": "fictional-GA-session-7",
+                "sessionAfter": "fictional-GA-session-7",
+                "stateBefore": "cart:3",
+                "stateAfter": "cart:3",
+                "payload": {
+                  "displayName": "Fictional Learner",
+                  "cartItems": 3
+                },
+                "steps": [
+                  {
+                    "step": "login",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "callback",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "navigation",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "profile",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "cart",
+                    "status": "passed"
+                  }
+                ],
+                "completed": true,
+                "effectCount": 1,
+                "elapsedMs": 180,
+                "originalBudgetMs": 400,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-journey",
+                "audience": "preview",
+                "expectedSoftwareVersion": "build-2",
+                "observedSoftwareVersion": "build-2",
+                "requestApiContract": "profile-v1",
+                "responseApiContract": "profile-v2-breaking",
+                "httpStatus": 200,
+                "authorized": true,
+                "principalBefore": "fictional-preview-learner",
+                "principalAfter": "fictional-preview-learner",
+                "sessionBefore": "fictional-preview-session-7",
+                "sessionAfter": "fictional-preview-session-7",
+                "stateBefore": "cart:3",
+                "stateAfter": "cart:3",
+                "payload": {
+                  "displayName": "Fictional Learner",
+                  "cartItems": 3
+                },
+                "steps": [
+                  {
+                    "step": "login",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "callback",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "navigation",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "profile",
+                    "status": "failed"
+                  },
+                  {
+                    "step": "cart",
+                    "status": "passed"
+                  }
+                ],
+                "completed": true,
+                "effectCount": 1,
+                "elapsedMs": 210,
+                "originalBudgetMs": 400,
+                "status": "failed"
+              }
+            ],
+            "note": "Login, callback, navigation, compatible payload, cart, one effect and original budget are independent checks."
+          },
+          "authorization": {
+            "status": "passed",
+            "probes": [
+              {
+                "id": "fictional-preview-gateway-GA",
+                "entryPath": "preview-gateway",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-gateway-preview",
+                "entryPath": "preview-gateway",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-service-GA",
+                "entryPath": "preview-service",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-service-preview",
+                "entryPath": "preview-service",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-navigation-GA",
+                "entryPath": "preview-navigation",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-navigation-preview",
+                "entryPath": "preview-navigation",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-callback-GA",
+                "entryPath": "preview-callback",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-callback-preview",
+                "entryPath": "preview-callback",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              }
+            ],
+            "routeLeak": false,
+            "note": "Every declared private path needs allow/deny observations. Zero GA selection to preview is not access control."
+          },
+          "history": [
+            {
+              "sequence": 1,
+              "command": {
+                "action": "inspect",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "contract-break"
+              },
+              "held": false,
+              "stageStatus": "passed",
+              "note": "Inspected selected endpoint and capability DATA; prior route/journey/access observations cleared.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "unknown",
+                "journeys": "unknown",
+                "authorization": "unknown"
+              }
+            },
+            {
+              "sequence": 2,
+              "command": {
+                "action": "route",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "contract-break"
+              },
+              "held": false,
+              "stageStatus": "passed",
+              "note": "Recorded destinations independently; complete journeys and authorization still require verification.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "passed",
+                "journeys": "unknown",
+                "authorization": "unknown"
+              }
+            },
+            {
+              "sequence": 3,
+              "command": {
+                "action": "verify",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "contract-break"
+              },
+              "held": false,
+              "stageStatus": "failed",
+              "note": "Recorded both attempted complete journeys and all eight private-path permission probes.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "passed",
+                "journeys": "failed",
+                "authorization": "passed"
+              }
+            }
+          ]
+        },
+        {
+          "schemaVersion": 1,
+          "choice": {
+            "gaSelector": "build-1-only",
+            "previewSelector": "build-2-only",
+            "routing": "cohort-gateway",
+            "fixture": "state-loss"
+          },
+          "topology": {
+            "status": "passed",
+            "services": [
+              {
+                "id": "fictional-GA-service",
+                "audience": "GA",
+                "selectorId": "build-1-only",
+                "selectorData": {
+                  "app": "profile-lesson",
+                  "build": "build-1"
+                },
+                "expectedBuild": "build-1",
+                "matchedPods": [
+                  "fictional-GA-pod-a",
+                  "fictional-GA-pod-b"
+                ],
+                "matchedBuilds": [
+                  "build-1"
+                ],
+                "status": "passed",
+                "note": "Version-separated endpoint DATA."
+              },
+              {
+                "id": "fictional-preview-service",
+                "audience": "preview",
+                "selectorId": "build-2-only",
+                "selectorData": {
+                  "app": "profile-lesson",
+                  "build": "build-2"
+                },
+                "expectedBuild": "build-2",
+                "matchedPods": [
+                  "fictional-preview-pod-a",
+                  "fictional-preview-pod-b"
+                ],
+                "matchedBuilds": [
+                  "build-2"
+                ],
+                "status": "passed",
+                "note": "Version-separated endpoint DATA."
+              }
+            ],
+            "capability": {
+              "status": "passed",
+              "source": "cohort-gateway",
+              "note": "Fixed fictional capable-gateway DATA, not installed or configured routing."
+            },
+            "note": "Selectors choose endpoint DATA. Labels are not preview authorization or API contracts."
+          },
+          "traffic": {
+            "status": "passed",
+            "receipts": [
+              {
+                "id": "fictional-GA-route",
+                "audience": "GA",
+                "desiredService": "fictional-GA-service",
+                "expectedSoftwareVersion": "build-1",
+                "observedService": "fictional-GA-service",
+                "observedPod": "fictional-GA-pod-b",
+                "observedSoftwareVersion": "build-1",
+                "httpStatus": 200,
+                "status": "passed",
+                "note": "Observed finite destination DATA only."
+              },
+              {
+                "id": "fictional-preview-route",
+                "audience": "preview",
+                "desiredService": "fictional-preview-service",
+                "expectedSoftwareVersion": "build-2",
+                "observedService": "fictional-preview-service",
+                "observedPod": "fictional-preview-pod-b",
+                "observedSoftwareVersion": "build-2",
+                "httpStatus": 200,
+                "status": "passed",
+                "note": "Observed finite destination DATA only."
+              }
+            ],
+            "note": "Two fixed receipts are not statistical weight validation or authorized complete journeys."
+          },
+          "journeys": {
+            "status": "failed",
+            "items": [
+              {
+                "id": "fictional-GA-journey",
+                "audience": "GA",
+                "expectedSoftwareVersion": "build-1",
+                "observedSoftwareVersion": "build-1",
+                "requestApiContract": "profile-v1",
+                "responseApiContract": "profile-v1",
+                "httpStatus": 200,
+                "authorized": true,
+                "principalBefore": "fictional-GA-learner",
+                "principalAfter": "fictional-GA-learner",
+                "sessionBefore": "fictional-GA-session-7",
+                "sessionAfter": "fictional-GA-session-7",
+                "stateBefore": "cart:3",
+                "stateAfter": "cart:3",
+                "payload": {
+                  "displayName": "Fictional Learner",
+                  "cartItems": 3
+                },
+                "steps": [
+                  {
+                    "step": "login",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "callback",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "navigation",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "profile",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "cart",
+                    "status": "passed"
+                  }
+                ],
+                "completed": true,
+                "effectCount": 1,
+                "elapsedMs": 180,
+                "originalBudgetMs": 400,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-journey",
+                "audience": "preview",
+                "expectedSoftwareVersion": "build-2",
+                "observedSoftwareVersion": "build-2",
+                "requestApiContract": "profile-v1",
+                "responseApiContract": "profile-v1",
+                "httpStatus": 200,
+                "authorized": true,
+                "principalBefore": "fictional-preview-learner",
+                "principalAfter": "fictional-preview-learner",
+                "sessionBefore": "fictional-preview-session-7",
+                "sessionAfter": "fictional-preview-session-7",
+                "stateBefore": "cart:3",
+                "stateAfter": "cart:0",
+                "payload": {
+                  "displayName": "Fictional Learner",
+                  "cartItems": 0
+                },
+                "steps": [
+                  {
+                    "step": "login",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "callback",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "navigation",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "profile",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "cart",
+                    "status": "failed"
+                  }
+                ],
+                "completed": true,
+                "effectCount": 1,
+                "elapsedMs": 210,
+                "originalBudgetMs": 400,
+                "status": "failed"
+              }
+            ],
+            "note": "Login, callback, navigation, compatible payload, cart, one effect and original budget are independent checks."
+          },
+          "authorization": {
+            "status": "passed",
+            "probes": [
+              {
+                "id": "fictional-preview-gateway-GA",
+                "entryPath": "preview-gateway",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-gateway-preview",
+                "entryPath": "preview-gateway",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-service-GA",
+                "entryPath": "preview-service",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-service-preview",
+                "entryPath": "preview-service",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-navigation-GA",
+                "entryPath": "preview-navigation",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-navigation-preview",
+                "entryPath": "preview-navigation",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-callback-GA",
+                "entryPath": "preview-callback",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-callback-preview",
+                "entryPath": "preview-callback",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              }
+            ],
+            "routeLeak": false,
+            "note": "Every declared private path needs allow/deny observations. Zero GA selection to preview is not access control."
+          },
+          "history": [
+            {
+              "sequence": 1,
+              "command": {
+                "action": "inspect",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "state-loss"
+              },
+              "held": false,
+              "stageStatus": "passed",
+              "note": "Inspected selected endpoint and capability DATA; prior route/journey/access observations cleared.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "unknown",
+                "journeys": "unknown",
+                "authorization": "unknown"
+              }
+            },
+            {
+              "sequence": 2,
+              "command": {
+                "action": "route",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "state-loss"
+              },
+              "held": false,
+              "stageStatus": "passed",
+              "note": "Recorded destinations independently; complete journeys and authorization still require verification.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "passed",
+                "journeys": "unknown",
+                "authorization": "unknown"
+              }
+            },
+            {
+              "sequence": 3,
+              "command": {
+                "action": "verify",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "state-loss"
+              },
+              "held": false,
+              "stageStatus": "failed",
+              "note": "Recorded both attempted complete journeys and all eight private-path permission probes.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "passed",
+                "journeys": "failed",
+                "authorization": "passed"
+              }
+            }
+          ]
+        },
+        {
+          "schemaVersion": 1,
+          "choice": {
+            "gaSelector": "build-1-only",
+            "previewSelector": "build-2-only",
+            "routing": "cohort-gateway",
+            "fixture": "slow-200"
+          },
+          "topology": {
+            "status": "passed",
+            "services": [
+              {
+                "id": "fictional-GA-service",
+                "audience": "GA",
+                "selectorId": "build-1-only",
+                "selectorData": {
+                  "app": "profile-lesson",
+                  "build": "build-1"
+                },
+                "expectedBuild": "build-1",
+                "matchedPods": [
+                  "fictional-GA-pod-a",
+                  "fictional-GA-pod-b"
+                ],
+                "matchedBuilds": [
+                  "build-1"
+                ],
+                "status": "passed",
+                "note": "Version-separated endpoint DATA."
+              },
+              {
+                "id": "fictional-preview-service",
+                "audience": "preview",
+                "selectorId": "build-2-only",
+                "selectorData": {
+                  "app": "profile-lesson",
+                  "build": "build-2"
+                },
+                "expectedBuild": "build-2",
+                "matchedPods": [
+                  "fictional-preview-pod-a",
+                  "fictional-preview-pod-b"
+                ],
+                "matchedBuilds": [
+                  "build-2"
+                ],
+                "status": "passed",
+                "note": "Version-separated endpoint DATA."
+              }
+            ],
+            "capability": {
+              "status": "passed",
+              "source": "cohort-gateway",
+              "note": "Fixed fictional capable-gateway DATA, not installed or configured routing."
+            },
+            "note": "Selectors choose endpoint DATA. Labels are not preview authorization or API contracts."
+          },
+          "traffic": {
+            "status": "passed",
+            "receipts": [
+              {
+                "id": "fictional-GA-route",
+                "audience": "GA",
+                "desiredService": "fictional-GA-service",
+                "expectedSoftwareVersion": "build-1",
+                "observedService": "fictional-GA-service",
+                "observedPod": "fictional-GA-pod-b",
+                "observedSoftwareVersion": "build-1",
+                "httpStatus": 200,
+                "status": "passed",
+                "note": "Observed finite destination DATA only."
+              },
+              {
+                "id": "fictional-preview-route",
+                "audience": "preview",
+                "desiredService": "fictional-preview-service",
+                "expectedSoftwareVersion": "build-2",
+                "observedService": "fictional-preview-service",
+                "observedPod": "fictional-preview-pod-b",
+                "observedSoftwareVersion": "build-2",
+                "httpStatus": 200,
+                "status": "passed",
+                "note": "Observed finite destination DATA only."
+              }
+            ],
+            "note": "Two fixed receipts are not statistical weight validation or authorized complete journeys."
+          },
+          "journeys": {
+            "status": "failed",
+            "items": [
+              {
+                "id": "fictional-GA-journey",
+                "audience": "GA",
+                "expectedSoftwareVersion": "build-1",
+                "observedSoftwareVersion": "build-1",
+                "requestApiContract": "profile-v1",
+                "responseApiContract": "profile-v1",
+                "httpStatus": 200,
+                "authorized": true,
+                "principalBefore": "fictional-GA-learner",
+                "principalAfter": "fictional-GA-learner",
+                "sessionBefore": "fictional-GA-session-7",
+                "sessionAfter": "fictional-GA-session-7",
+                "stateBefore": "cart:3",
+                "stateAfter": "cart:3",
+                "payload": {
+                  "displayName": "Fictional Learner",
+                  "cartItems": 3
+                },
+                "steps": [
+                  {
+                    "step": "login",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "callback",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "navigation",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "profile",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "cart",
+                    "status": "passed"
+                  }
+                ],
+                "completed": true,
+                "effectCount": 1,
+                "elapsedMs": 180,
+                "originalBudgetMs": 400,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-journey",
+                "audience": "preview",
+                "expectedSoftwareVersion": "build-2",
+                "observedSoftwareVersion": "build-2",
+                "requestApiContract": "profile-v1",
+                "responseApiContract": "profile-v1",
+                "httpStatus": 200,
+                "authorized": true,
+                "principalBefore": "fictional-preview-learner",
+                "principalAfter": "fictional-preview-learner",
+                "sessionBefore": "fictional-preview-session-7",
+                "sessionAfter": "fictional-preview-session-7",
+                "stateBefore": "cart:3",
+                "stateAfter": "cart:3",
+                "payload": {
+                  "displayName": "Fictional Learner",
+                  "cartItems": 3
+                },
+                "steps": [
+                  {
+                    "step": "login",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "callback",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "navigation",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "profile",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "cart",
+                    "status": "passed"
+                  }
+                ],
+                "completed": true,
+                "effectCount": 1,
+                "elapsedMs": 450,
+                "originalBudgetMs": 400,
+                "status": "failed"
+              }
+            ],
+            "note": "Login, callback, navigation, compatible payload, cart, one effect and original budget are independent checks."
+          },
+          "authorization": {
+            "status": "passed",
+            "probes": [
+              {
+                "id": "fictional-preview-gateway-GA",
+                "entryPath": "preview-gateway",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-gateway-preview",
+                "entryPath": "preview-gateway",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-service-GA",
+                "entryPath": "preview-service",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-service-preview",
+                "entryPath": "preview-service",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-navigation-GA",
+                "entryPath": "preview-navigation",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-navigation-preview",
+                "entryPath": "preview-navigation",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-callback-GA",
+                "entryPath": "preview-callback",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-callback-preview",
+                "entryPath": "preview-callback",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              }
+            ],
+            "routeLeak": false,
+            "note": "Every declared private path needs allow/deny observations. Zero GA selection to preview is not access control."
+          },
+          "history": [
+            {
+              "sequence": 1,
+              "command": {
+                "action": "inspect",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "slow-200"
+              },
+              "held": false,
+              "stageStatus": "passed",
+              "note": "Inspected selected endpoint and capability DATA; prior route/journey/access observations cleared.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "unknown",
+                "journeys": "unknown",
+                "authorization": "unknown"
+              }
+            },
+            {
+              "sequence": 2,
+              "command": {
+                "action": "route",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "slow-200"
+              },
+              "held": false,
+              "stageStatus": "passed",
+              "note": "Recorded destinations independently; complete journeys and authorization still require verification.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "passed",
+                "journeys": "unknown",
+                "authorization": "unknown"
+              }
+            },
+            {
+              "sequence": 3,
+              "command": {
+                "action": "verify",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "slow-200"
+              },
+              "held": false,
+              "stageStatus": "failed",
+              "note": "Recorded both attempted complete journeys and all eight private-path permission probes.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "passed",
+                "journeys": "failed",
+                "authorization": "passed"
+              }
+            }
+          ]
+        }
+      ],
+      "softwareNotApiContract": true,
+      "http200NotJourneySuccess": true
+    },
+    {
+      "case": "missing destination, completion or access cannot pass and attempts stay counted",
+      "status": "passed",
+      "states": [
+        {
+          "schemaVersion": 1,
+          "choice": {
+            "gaSelector": "build-1-only",
+            "previewSelector": "build-2-only",
+            "routing": "cohort-gateway",
+            "fixture": "unobserved-route"
+          },
+          "topology": {
+            "status": "passed",
+            "services": [
+              {
+                "id": "fictional-GA-service",
+                "audience": "GA",
+                "selectorId": "build-1-only",
+                "selectorData": {
+                  "app": "profile-lesson",
+                  "build": "build-1"
+                },
+                "expectedBuild": "build-1",
+                "matchedPods": [
+                  "fictional-GA-pod-a",
+                  "fictional-GA-pod-b"
+                ],
+                "matchedBuilds": [
+                  "build-1"
+                ],
+                "status": "passed",
+                "note": "Version-separated endpoint DATA."
+              },
+              {
+                "id": "fictional-preview-service",
+                "audience": "preview",
+                "selectorId": "build-2-only",
+                "selectorData": {
+                  "app": "profile-lesson",
+                  "build": "build-2"
+                },
+                "expectedBuild": "build-2",
+                "matchedPods": [
+                  "fictional-preview-pod-a",
+                  "fictional-preview-pod-b"
+                ],
+                "matchedBuilds": [
+                  "build-2"
+                ],
+                "status": "passed",
+                "note": "Version-separated endpoint DATA."
+              }
+            ],
+            "capability": {
+              "status": "passed",
+              "source": "cohort-gateway",
+              "note": "Fixed fictional capable-gateway DATA, not installed or configured routing."
+            },
+            "note": "Selectors choose endpoint DATA. Labels are not preview authorization or API contracts."
+          },
+          "traffic": {
+            "status": "unknown",
+            "receipts": [
+              {
+                "id": "fictional-GA-route",
+                "audience": "GA",
+                "desiredService": "fictional-GA-service",
+                "expectedSoftwareVersion": "build-1",
+                "observedService": "fictional-GA-service",
+                "observedPod": "fictional-GA-pod-b",
+                "observedSoftwareVersion": "build-1",
+                "httpStatus": 200,
+                "status": "passed",
+                "note": "Observed finite destination DATA only."
+              },
+              {
+                "id": "fictional-preview-route",
+                "audience": "preview",
+                "desiredService": "fictional-preview-service",
+                "expectedSoftwareVersion": "build-2",
+                "observedService": null,
+                "observedPod": null,
+                "observedSoftwareVersion": null,
+                "httpStatus": null,
+                "status": "unknown",
+                "note": "Actual fictional destination unavailable; desired routing is not evidence."
+              }
+            ],
+            "note": "Two fixed receipts are not statistical weight validation or authorized complete journeys."
+          },
+          "journeys": {
+            "status": "unknown",
+            "items": [
+              {
+                "id": "fictional-GA-journey",
+                "audience": "GA",
+                "expectedSoftwareVersion": "build-1",
+                "observedSoftwareVersion": "build-1",
+                "requestApiContract": "profile-v1",
+                "responseApiContract": "profile-v1",
+                "httpStatus": 200,
+                "authorized": true,
+                "principalBefore": "fictional-GA-learner",
+                "principalAfter": "fictional-GA-learner",
+                "sessionBefore": "fictional-GA-session-7",
+                "sessionAfter": "fictional-GA-session-7",
+                "stateBefore": "cart:3",
+                "stateAfter": "cart:3",
+                "payload": {
+                  "displayName": "Fictional Learner",
+                  "cartItems": 3
+                },
+                "steps": [
+                  {
+                    "step": "login",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "callback",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "navigation",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "profile",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "cart",
+                    "status": "passed"
+                  }
+                ],
+                "completed": true,
+                "effectCount": 1,
+                "elapsedMs": 180,
+                "originalBudgetMs": 400,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-journey",
+                "audience": "preview",
+                "expectedSoftwareVersion": "build-2",
+                "observedSoftwareVersion": null,
+                "requestApiContract": "profile-v1",
+                "responseApiContract": null,
+                "httpStatus": null,
+                "authorized": null,
+                "principalBefore": "fictional-preview-learner",
+                "principalAfter": null,
+                "sessionBefore": "fictional-preview-session-7",
+                "sessionAfter": null,
+                "stateBefore": "cart:3",
+                "stateAfter": null,
+                "payload": {
+                  "displayName": null,
+                  "cartItems": null
+                },
+                "steps": [
+                  {
+                    "step": "login",
+                    "status": "unknown"
+                  },
+                  {
+                    "step": "callback",
+                    "status": "unknown"
+                  },
+                  {
+                    "step": "navigation",
+                    "status": "unknown"
+                  },
+                  {
+                    "step": "profile",
+                    "status": "unknown"
+                  },
+                  {
+                    "step": "cart",
+                    "status": "unknown"
+                  }
+                ],
+                "completed": null,
+                "effectCount": null,
+                "elapsedMs": null,
+                "originalBudgetMs": 400,
+                "status": "unknown"
+              }
+            ],
+            "note": "Login, callback, navigation, compatible payload, cart, one effect and original budget are independent checks."
+          },
+          "authorization": {
+            "status": "passed",
+            "probes": [
+              {
+                "id": "fictional-preview-gateway-GA",
+                "entryPath": "preview-gateway",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-gateway-preview",
+                "entryPath": "preview-gateway",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-service-GA",
+                "entryPath": "preview-service",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-service-preview",
+                "entryPath": "preview-service",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-navigation-GA",
+                "entryPath": "preview-navigation",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-navigation-preview",
+                "entryPath": "preview-navigation",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-callback-GA",
+                "entryPath": "preview-callback",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-callback-preview",
+                "entryPath": "preview-callback",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              }
+            ],
+            "routeLeak": false,
+            "note": "Every declared private path needs allow/deny observations. Zero GA selection to preview is not access control."
+          },
+          "history": [
+            {
+              "sequence": 1,
+              "command": {
+                "action": "inspect",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "unobserved-route"
+              },
+              "held": false,
+              "stageStatus": "passed",
+              "note": "Inspected selected endpoint and capability DATA; prior route/journey/access observations cleared.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "unknown",
+                "journeys": "unknown",
+                "authorization": "unknown"
+              }
+            },
+            {
+              "sequence": 2,
+              "command": {
+                "action": "route",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "unobserved-route"
+              },
+              "held": false,
+              "stageStatus": "unknown",
+              "note": "Recorded destinations independently; complete journeys and authorization still require verification.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "unknown",
+                "journeys": "unknown",
+                "authorization": "unknown"
+              }
+            },
+            {
+              "sequence": 3,
+              "command": {
+                "action": "verify",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "unobserved-route"
+              },
+              "held": false,
+              "stageStatus": "unknown",
+              "note": "Recorded both attempted complete journeys and all eight private-path permission probes.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "unknown",
+                "journeys": "unknown",
+                "authorization": "passed"
+              }
+            }
+          ]
+        },
+        {
+          "schemaVersion": 1,
+          "choice": {
+            "gaSelector": "build-1-only",
+            "previewSelector": "build-2-only",
+            "routing": "cohort-gateway",
+            "fixture": "incomplete-journey"
+          },
+          "topology": {
+            "status": "passed",
+            "services": [
+              {
+                "id": "fictional-GA-service",
+                "audience": "GA",
+                "selectorId": "build-1-only",
+                "selectorData": {
+                  "app": "profile-lesson",
+                  "build": "build-1"
+                },
+                "expectedBuild": "build-1",
+                "matchedPods": [
+                  "fictional-GA-pod-a",
+                  "fictional-GA-pod-b"
+                ],
+                "matchedBuilds": [
+                  "build-1"
+                ],
+                "status": "passed",
+                "note": "Version-separated endpoint DATA."
+              },
+              {
+                "id": "fictional-preview-service",
+                "audience": "preview",
+                "selectorId": "build-2-only",
+                "selectorData": {
+                  "app": "profile-lesson",
+                  "build": "build-2"
+                },
+                "expectedBuild": "build-2",
+                "matchedPods": [
+                  "fictional-preview-pod-a",
+                  "fictional-preview-pod-b"
+                ],
+                "matchedBuilds": [
+                  "build-2"
+                ],
+                "status": "passed",
+                "note": "Version-separated endpoint DATA."
+              }
+            ],
+            "capability": {
+              "status": "passed",
+              "source": "cohort-gateway",
+              "note": "Fixed fictional capable-gateway DATA, not installed or configured routing."
+            },
+            "note": "Selectors choose endpoint DATA. Labels are not preview authorization or API contracts."
+          },
+          "traffic": {
+            "status": "passed",
+            "receipts": [
+              {
+                "id": "fictional-GA-route",
+                "audience": "GA",
+                "desiredService": "fictional-GA-service",
+                "expectedSoftwareVersion": "build-1",
+                "observedService": "fictional-GA-service",
+                "observedPod": "fictional-GA-pod-b",
+                "observedSoftwareVersion": "build-1",
+                "httpStatus": 200,
+                "status": "passed",
+                "note": "Observed finite destination DATA only."
+              },
+              {
+                "id": "fictional-preview-route",
+                "audience": "preview",
+                "desiredService": "fictional-preview-service",
+                "expectedSoftwareVersion": "build-2",
+                "observedService": "fictional-preview-service",
+                "observedPod": "fictional-preview-pod-b",
+                "observedSoftwareVersion": "build-2",
+                "httpStatus": 200,
+                "status": "passed",
+                "note": "Observed finite destination DATA only."
+              }
+            ],
+            "note": "Two fixed receipts are not statistical weight validation or authorized complete journeys."
+          },
+          "journeys": {
+            "status": "unknown",
+            "items": [
+              {
+                "id": "fictional-GA-journey",
+                "audience": "GA",
+                "expectedSoftwareVersion": "build-1",
+                "observedSoftwareVersion": "build-1",
+                "requestApiContract": "profile-v1",
+                "responseApiContract": "profile-v1",
+                "httpStatus": 200,
+                "authorized": true,
+                "principalBefore": "fictional-GA-learner",
+                "principalAfter": "fictional-GA-learner",
+                "sessionBefore": "fictional-GA-session-7",
+                "sessionAfter": "fictional-GA-session-7",
+                "stateBefore": "cart:3",
+                "stateAfter": "cart:3",
+                "payload": {
+                  "displayName": "Fictional Learner",
+                  "cartItems": 3
+                },
+                "steps": [
+                  {
+                    "step": "login",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "callback",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "navigation",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "profile",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "cart",
+                    "status": "passed"
+                  }
+                ],
+                "completed": true,
+                "effectCount": 1,
+                "elapsedMs": 180,
+                "originalBudgetMs": 400,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-journey",
+                "audience": "preview",
+                "expectedSoftwareVersion": "build-2",
+                "observedSoftwareVersion": "build-2",
+                "requestApiContract": "profile-v1",
+                "responseApiContract": "profile-v1",
+                "httpStatus": 200,
+                "authorized": true,
+                "principalBefore": "fictional-preview-learner",
+                "principalAfter": "fictional-preview-learner",
+                "sessionBefore": "fictional-preview-session-7",
+                "sessionAfter": "fictional-preview-session-7",
+                "stateBefore": "cart:3",
+                "stateAfter": null,
+                "payload": {
+                  "displayName": "Fictional Learner",
+                  "cartItems": null
+                },
+                "steps": [
+                  {
+                    "step": "login",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "callback",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "navigation",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "profile",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "cart",
+                    "status": "unknown"
+                  }
+                ],
+                "completed": null,
+                "effectCount": null,
+                "elapsedMs": null,
+                "originalBudgetMs": 400,
+                "status": "unknown"
+              }
+            ],
+            "note": "Login, callback, navigation, compatible payload, cart, one effect and original budget are independent checks."
+          },
+          "authorization": {
+            "status": "passed",
+            "probes": [
+              {
+                "id": "fictional-preview-gateway-GA",
+                "entryPath": "preview-gateway",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-gateway-preview",
+                "entryPath": "preview-gateway",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-service-GA",
+                "entryPath": "preview-service",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-service-preview",
+                "entryPath": "preview-service",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-navigation-GA",
+                "entryPath": "preview-navigation",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-navigation-preview",
+                "entryPath": "preview-navigation",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-callback-GA",
+                "entryPath": "preview-callback",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-callback-preview",
+                "entryPath": "preview-callback",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              }
+            ],
+            "routeLeak": false,
+            "note": "Every declared private path needs allow/deny observations. Zero GA selection to preview is not access control."
+          },
+          "history": [
+            {
+              "sequence": 1,
+              "command": {
+                "action": "inspect",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "incomplete-journey"
+              },
+              "held": false,
+              "stageStatus": "passed",
+              "note": "Inspected selected endpoint and capability DATA; prior route/journey/access observations cleared.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "unknown",
+                "journeys": "unknown",
+                "authorization": "unknown"
+              }
+            },
+            {
+              "sequence": 2,
+              "command": {
+                "action": "route",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "incomplete-journey"
+              },
+              "held": false,
+              "stageStatus": "passed",
+              "note": "Recorded destinations independently; complete journeys and authorization still require verification.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "passed",
+                "journeys": "unknown",
+                "authorization": "unknown"
+              }
+            },
+            {
+              "sequence": 3,
+              "command": {
+                "action": "verify",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "incomplete-journey"
+              },
+              "held": false,
+              "stageStatus": "unknown",
+              "note": "Recorded both attempted complete journeys and all eight private-path permission probes.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "passed",
+                "journeys": "unknown",
+                "authorization": "passed"
+              }
+            }
+          ]
+        },
+        {
+          "schemaVersion": 1,
+          "choice": {
+            "gaSelector": "build-1-only",
+            "previewSelector": "build-2-only",
+            "routing": "cohort-gateway",
+            "fixture": "authorization-unknown"
+          },
+          "topology": {
+            "status": "passed",
+            "services": [
+              {
+                "id": "fictional-GA-service",
+                "audience": "GA",
+                "selectorId": "build-1-only",
+                "selectorData": {
+                  "app": "profile-lesson",
+                  "build": "build-1"
+                },
+                "expectedBuild": "build-1",
+                "matchedPods": [
+                  "fictional-GA-pod-a",
+                  "fictional-GA-pod-b"
+                ],
+                "matchedBuilds": [
+                  "build-1"
+                ],
+                "status": "passed",
+                "note": "Version-separated endpoint DATA."
+              },
+              {
+                "id": "fictional-preview-service",
+                "audience": "preview",
+                "selectorId": "build-2-only",
+                "selectorData": {
+                  "app": "profile-lesson",
+                  "build": "build-2"
+                },
+                "expectedBuild": "build-2",
+                "matchedPods": [
+                  "fictional-preview-pod-a",
+                  "fictional-preview-pod-b"
+                ],
+                "matchedBuilds": [
+                  "build-2"
+                ],
+                "status": "passed",
+                "note": "Version-separated endpoint DATA."
+              }
+            ],
+            "capability": {
+              "status": "passed",
+              "source": "cohort-gateway",
+              "note": "Fixed fictional capable-gateway DATA, not installed or configured routing."
+            },
+            "note": "Selectors choose endpoint DATA. Labels are not preview authorization or API contracts."
+          },
+          "traffic": {
+            "status": "passed",
+            "receipts": [
+              {
+                "id": "fictional-GA-route",
+                "audience": "GA",
+                "desiredService": "fictional-GA-service",
+                "expectedSoftwareVersion": "build-1",
+                "observedService": "fictional-GA-service",
+                "observedPod": "fictional-GA-pod-b",
+                "observedSoftwareVersion": "build-1",
+                "httpStatus": 200,
+                "status": "passed",
+                "note": "Observed finite destination DATA only."
+              },
+              {
+                "id": "fictional-preview-route",
+                "audience": "preview",
+                "desiredService": "fictional-preview-service",
+                "expectedSoftwareVersion": "build-2",
+                "observedService": "fictional-preview-service",
+                "observedPod": "fictional-preview-pod-b",
+                "observedSoftwareVersion": "build-2",
+                "httpStatus": 200,
+                "status": "passed",
+                "note": "Observed finite destination DATA only."
+              }
+            ],
+            "note": "Two fixed receipts are not statistical weight validation or authorized complete journeys."
+          },
+          "journeys": {
+            "status": "passed",
+            "items": [
+              {
+                "id": "fictional-GA-journey",
+                "audience": "GA",
+                "expectedSoftwareVersion": "build-1",
+                "observedSoftwareVersion": "build-1",
+                "requestApiContract": "profile-v1",
+                "responseApiContract": "profile-v1",
+                "httpStatus": 200,
+                "authorized": true,
+                "principalBefore": "fictional-GA-learner",
+                "principalAfter": "fictional-GA-learner",
+                "sessionBefore": "fictional-GA-session-7",
+                "sessionAfter": "fictional-GA-session-7",
+                "stateBefore": "cart:3",
+                "stateAfter": "cart:3",
+                "payload": {
+                  "displayName": "Fictional Learner",
+                  "cartItems": 3
+                },
+                "steps": [
+                  {
+                    "step": "login",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "callback",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "navigation",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "profile",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "cart",
+                    "status": "passed"
+                  }
+                ],
+                "completed": true,
+                "effectCount": 1,
+                "elapsedMs": 180,
+                "originalBudgetMs": 400,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-journey",
+                "audience": "preview",
+                "expectedSoftwareVersion": "build-2",
+                "observedSoftwareVersion": "build-2",
+                "requestApiContract": "profile-v1",
+                "responseApiContract": "profile-v1",
+                "httpStatus": 200,
+                "authorized": true,
+                "principalBefore": "fictional-preview-learner",
+                "principalAfter": "fictional-preview-learner",
+                "sessionBefore": "fictional-preview-session-7",
+                "sessionAfter": "fictional-preview-session-7",
+                "stateBefore": "cart:3",
+                "stateAfter": "cart:3",
+                "payload": {
+                  "displayName": "Fictional Learner",
+                  "cartItems": 3
+                },
+                "steps": [
+                  {
+                    "step": "login",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "callback",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "navigation",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "profile",
+                    "status": "passed"
+                  },
+                  {
+                    "step": "cart",
+                    "status": "passed"
+                  }
+                ],
+                "completed": true,
+                "effectCount": 1,
+                "elapsedMs": 210,
+                "originalBudgetMs": 400,
+                "status": "passed"
+              }
+            ],
+            "note": "Login, callback, navigation, compatible payload, cart, one effect and original budget are independent checks."
+          },
+          "authorization": {
+            "status": "unknown",
+            "probes": [
+              {
+                "id": "fictional-preview-gateway-GA",
+                "entryPath": "preview-gateway",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-gateway-preview",
+                "entryPath": "preview-gateway",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-service-GA",
+                "entryPath": "preview-service",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-service-preview",
+                "entryPath": "preview-service",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-navigation-GA",
+                "entryPath": "preview-navigation",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": 403,
+                "candidateReached": false,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-navigation-preview",
+                "entryPath": "preview-navigation",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              },
+              {
+                "id": "fictional-preview-callback-GA",
+                "entryPath": "preview-callback",
+                "audience": "GA",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "denied",
+                "observedHttpStatus": null,
+                "candidateReached": null,
+                "status": "unknown"
+              },
+              {
+                "id": "fictional-preview-callback-preview",
+                "entryPath": "preview-callback",
+                "audience": "preview",
+                "targetSoftwareVersion": "build-2",
+                "expectedPermission": "allowed",
+                "observedHttpStatus": 200,
+                "candidateReached": true,
+                "status": "passed"
+              }
+            ],
+            "routeLeak": false,
+            "note": "Every declared private path needs allow/deny observations. Zero GA selection to preview is not access control."
+          },
+          "history": [
+            {
+              "sequence": 1,
+              "command": {
+                "action": "inspect",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "authorization-unknown"
+              },
+              "held": false,
+              "stageStatus": "passed",
+              "note": "Inspected selected endpoint and capability DATA; prior route/journey/access observations cleared.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "unknown",
+                "journeys": "unknown",
+                "authorization": "unknown"
+              }
+            },
+            {
+              "sequence": 2,
+              "command": {
+                "action": "route",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "authorization-unknown"
+              },
+              "held": false,
+              "stageStatus": "passed",
+              "note": "Recorded destinations independently; complete journeys and authorization still require verification.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "passed",
+                "journeys": "unknown",
+                "authorization": "unknown"
+              }
+            },
+            {
+              "sequence": 3,
+              "command": {
+                "action": "verify",
+                "gaSelector": "build-1-only",
+                "previewSelector": "build-2-only",
+                "routing": "cohort-gateway",
+                "fixture": "authorization-unknown"
+              },
+              "held": false,
+              "stageStatus": "unknown",
+              "note": "Recorded both attempted complete journeys and all eight private-path permission probes.",
+              "measured": {
+                "topology": "passed",
+                "traffic": "passed",
+                "journeys": "passed",
+                "authorization": "unknown"
+              }
+            }
+          ]
+        }
+      ],
+      "unknownNotSuccess": true,
+      "bothAttemptsRetained": true
+    },
+    {
+      "case": "empty selector and Deployment-only routing are not valid substitutes",
+      "status": "passed",
+      "state": {
+        "schemaVersion": 1,
+        "choice": {
+          "gaSelector": "build-1-only",
+          "previewSelector": "build-2-only",
+          "routing": "deployments-only",
+          "fixture": "compatible"
+        },
+        "topology": {
+          "status": "failed",
+          "services": [
+            {
+              "id": "fictional-GA-service",
+              "audience": "GA",
+              "selectorId": "build-1-only",
+              "selectorData": {
+                "app": "profile-lesson",
+                "build": "build-1"
+              },
+              "expectedBuild": "build-1",
+              "matchedPods": [
+                "fictional-GA-pod-a",
+                "fictional-GA-pod-b"
+              ],
+              "matchedBuilds": [
+                "build-1"
+              ],
+              "status": "passed",
+              "note": "Version-separated endpoint DATA."
+            },
+            {
+              "id": "fictional-preview-service",
+              "audience": "preview",
+              "selectorId": "build-2-only",
+              "selectorData": {
+                "app": "profile-lesson",
+                "build": "build-2"
+              },
+              "expectedBuild": "build-2",
+              "matchedPods": [
+                "fictional-preview-pod-a",
+                "fictional-preview-pod-b"
+              ],
+              "matchedBuilds": [
+                "build-2"
+              ],
+              "status": "passed",
+              "note": "Version-separated endpoint DATA."
+            }
+          ],
+          "capability": {
+            "status": "failed",
+            "source": "deployments-only",
+            "note": "Deployment objects alone do not supply weighted user routing."
+          },
+          "note": "Selectors choose endpoint DATA. Labels are not preview authorization or API contracts."
+        },
+        "traffic": {
+          "status": "unknown",
+          "receipts": [
+            {
+              "id": "fictional-GA-route",
+              "audience": "GA",
+              "desiredService": "fictional-GA-service",
+              "expectedSoftwareVersion": "build-1",
+              "observedService": null,
+              "observedPod": null,
+              "observedSoftwareVersion": null,
+              "httpStatus": null,
+              "status": "unknown",
+              "note": "Actual fictional destination unavailable; desired routing is not evidence."
+            },
+            {
+              "id": "fictional-preview-route",
+              "audience": "preview",
+              "desiredService": "fictional-preview-service",
+              "expectedSoftwareVersion": "build-2",
+              "observedService": null,
+              "observedPod": null,
+              "observedSoftwareVersion": null,
+              "httpStatus": null,
+              "status": "unknown",
+              "note": "Actual fictional destination unavailable; desired routing is not evidence."
+            }
+          ],
+          "note": "Two fixed receipts are not statistical weight validation or authorized complete journeys."
+        },
+        "journeys": {
+          "status": "unknown",
+          "items": [
+            {
+              "id": "fictional-GA-journey",
+              "audience": "GA",
+              "expectedSoftwareVersion": "build-1",
+              "observedSoftwareVersion": null,
+              "requestApiContract": "profile-v1",
+              "responseApiContract": null,
+              "httpStatus": null,
+              "authorized": null,
+              "principalBefore": "fictional-GA-learner",
+              "principalAfter": null,
+              "sessionBefore": "fictional-GA-session-7",
+              "sessionAfter": null,
+              "stateBefore": "cart:3",
+              "stateAfter": null,
+              "payload": {
+                "displayName": null,
+                "cartItems": null
+              },
+              "steps": [
+                {
+                  "step": "login",
+                  "status": "unknown"
+                },
+                {
+                  "step": "callback",
+                  "status": "unknown"
+                },
+                {
+                  "step": "navigation",
+                  "status": "unknown"
+                },
+                {
+                  "step": "profile",
+                  "status": "unknown"
+                },
+                {
+                  "step": "cart",
+                  "status": "unknown"
+                }
+              ],
+              "completed": null,
+              "effectCount": null,
+              "elapsedMs": null,
+              "originalBudgetMs": 400,
+              "status": "unknown"
+            },
+            {
+              "id": "fictional-preview-journey",
+              "audience": "preview",
+              "expectedSoftwareVersion": "build-2",
+              "observedSoftwareVersion": null,
+              "requestApiContract": "profile-v1",
+              "responseApiContract": null,
+              "httpStatus": null,
+              "authorized": null,
+              "principalBefore": "fictional-preview-learner",
+              "principalAfter": null,
+              "sessionBefore": "fictional-preview-session-7",
+              "sessionAfter": null,
+              "stateBefore": "cart:3",
+              "stateAfter": null,
+              "payload": {
+                "displayName": null,
+                "cartItems": null
+              },
+              "steps": [
+                {
+                  "step": "login",
+                  "status": "unknown"
+                },
+                {
+                  "step": "callback",
+                  "status": "unknown"
+                },
+                {
+                  "step": "navigation",
+                  "status": "unknown"
+                },
+                {
+                  "step": "profile",
+                  "status": "unknown"
+                },
+                {
+                  "step": "cart",
+                  "status": "unknown"
+                }
+              ],
+              "completed": null,
+              "effectCount": null,
+              "elapsedMs": null,
+              "originalBudgetMs": 400,
+              "status": "unknown"
+            }
+          ],
+          "note": "Login, callback, navigation, compatible payload, cart, one effect and original budget are independent checks."
+        },
+        "authorization": {
+          "status": "unknown",
+          "probes": [
+            {
+              "id": "fictional-preview-gateway-GA",
+              "entryPath": "preview-gateway",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-gateway-preview",
+              "entryPath": "preview-gateway",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-service-GA",
+              "entryPath": "preview-service",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-service-preview",
+              "entryPath": "preview-service",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-navigation-GA",
+              "entryPath": "preview-navigation",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-navigation-preview",
+              "entryPath": "preview-navigation",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-callback-GA",
+              "entryPath": "preview-callback",
+              "audience": "GA",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "denied",
+              "observedHttpStatus": 403,
+              "candidateReached": false,
+              "status": "passed"
+            },
+            {
+              "id": "fictional-preview-callback-preview",
+              "entryPath": "preview-callback",
+              "audience": "preview",
+              "targetSoftwareVersion": "build-2",
+              "expectedPermission": "allowed",
+              "observedHttpStatus": 200,
+              "candidateReached": true,
+              "status": "passed"
+            }
+          ],
+          "routeLeak": null,
+          "note": "Every declared private path needs allow/deny observations. Zero GA selection to preview is not access control."
+        },
+        "history": [
+          {
+            "sequence": 1,
+            "command": {
+              "action": "inspect",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "deployments-only",
+              "fixture": "compatible"
+            },
+            "held": false,
+            "stageStatus": "failed",
+            "note": "Inspected selected endpoint and capability DATA; prior route/journey/access observations cleared.",
+            "measured": {
+              "topology": "failed",
+              "traffic": "unknown",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          },
+          {
+            "sequence": 2,
+            "command": {
+              "action": "route",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "deployments-only",
+              "fixture": "compatible"
+            },
+            "held": false,
+            "stageStatus": "unknown",
+            "note": "Recorded destinations independently; complete journeys and authorization still require verification.",
+            "measured": {
+              "topology": "failed",
+              "traffic": "unknown",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          },
+          {
+            "sequence": 3,
+            "command": {
+              "action": "verify",
+              "gaSelector": "build-1-only",
+              "previewSelector": "build-2-only",
+              "routing": "deployments-only",
+              "fixture": "compatible"
+            },
+            "held": false,
+            "stageStatus": "unknown",
+            "note": "Recorded both attempted complete journeys and all eight private-path permission probes.",
+            "measured": {
+              "topology": "failed",
+              "traffic": "unknown",
+              "journeys": "unknown",
+              "authorization": "unknown"
+            }
+          }
+        ]
+      },
+      "noDeploymentOnlyWeightedClaim": true
+    },
+    {
+      "case": "twelve-action bound retains history, typed limit error and reset recovery",
+      "status": "passed",
+      "twelveRetained": true,
+      "thirteenthNonmutating": true,
+      "resetRecovered": true,
+      "pageErrors": []
+    },
+    {
+      "case": "actual missing-model failure is an unknown alert, with disabled controls",
+      "status": "passed",
+      "error": "ERR_MODEL: Lesson model DATA unavailable. Reload the complete local bundle. No command ran. Correct the controls or reset.",
+      "missingModelNotSuccess": true
+    },
+    {
+      "case": "actual CSP denies inline script/event/style, eval, connections, images, frames and form navigation",
+      "status": "failed",
+      "error": "Expected values to be strictly equal:\n\ntrue !== false\n"
+    }
+  ],
+  "cleanup": [
+    "main: awaited close completed",
+    "missing-model: awaited close completed",
+    "CSP: awaited close completed"
+  ],
+  "actualDOM": true,
+  "outcome": "failed",
+  "captureFlag": "CAPTURE_BROWSER_EVIDENCE=1",
+  "nativeProofComplete": false,
+  "sourceParentComplete": false
+}

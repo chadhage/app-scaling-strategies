@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; frame-src 'none'; child-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'; media-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S128 — separate AKS versions, fictional rehearsal</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p id="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S128: Separate GA and private preview</h1>
+    <p>Fixed fictional teaching DATA ONLY. No actual AKS, network, identity, resource,
+      configuration, deployment or IaC. One bounded local rehearsal.</p>
+    <p><strong>Objective:</strong> Route GA/preview to separate AKS versions; identify
+      a selector that accidentally mixes audiences. Here “versions” means software
+      builds, not the Kubernetes API version or the profile API contract.</p>
+    <p>Both fictional builds normally serve <code>profile-v1</code>, which expects
+      <code>displayName</code> and <code>cartItems</code>. A Service
+      selector selects pod-label DATA, not user permissions. Deployment objects
+      alone do not supply weighted user routing; a capable ingress, gateway or
+      service mesh would be required and qualified separately.</p>
+    <section aria-labelledby="inventory-heading">
+      <h2 id="inventory-heading">Fixed fictional inventory</h2>
+      <p>Two Deployment records, four pod records, two Service records. No replica
+        count changes, resources or manifests. GA is eligible for build-1;
+        only the fictional authorized preview learner is eligible for build-2.</p>
+      <div class="table-scroll"><table>
+        <caption>Teaching DATA — not actual AKS objects</caption>
+        <thead><tr><th scope="col">Pod</th><th scope="col">Deployment</th><th scope="col">Audience</th>
+          <th scope="col">Software</th><th scope="col">API contract</th><th scope="col">Labels</th></tr></thead>
+        <tbody id="pod-rows"></tbody>
+      </table></div>
+    </section>
+    <h2>Operator actions on fictional DATA</h2>
+    <p>Inspect → observe → verify. Choose a negative or unknown fixture to expose a
+      limitation. Eight access probes cover both allow and deny at every declared
+      private gateway/service/navigation/callback path. No live requests occur.</p>
+    <form id="lesson-controls">
+      <label for="ga-selector">GA selector DATA</label>
+      <select id="ga-selector">
+        <option value="build-1-only">app + build-1 only</option>
+        <option value="build-2-only">app + build-2 only (wrong for GA)</option>
+        <option value="app-only">app only (mixes both builds)</option>
+        <option value="no-match">nonmatching app (empty endpoints)</option>
+      </select>
+      <label for="preview-selector">Preview selector DATA</label>
+      <select id="preview-selector">
+        <option value="build-2-only">app + build-2 only</option>
+        <option value="build-1-only">app + build-1 only (wrong for preview)</option>
+        <option value="app-only">app only (mixes both builds)</option>
+        <option value="no-match">nonmatching app (empty endpoints)</option>
+      </select>
+      <label for="routing">Routing capability DATA</label>
+      <select id="routing">
+        <option value="cohort-gateway">Cohort-capable gateway (fictional)</option>
+        <option value="deployments-only">Deployments alone (no weighted routing)</option>
+        <option value="unverified-gateway">Unverified gateway (unknown)</option>
+      </select>
+      <label for="fixture">Observation fixture DATA</label>
+      <select id="fixture">
+        <option value="compatible">Compatible, authorized, complete</option>
+      </select>
+      <div class="buttons">
+        <button type="submit" name="action" value="inspect">1. Inspect selectors</button>
+        <button type="submit" name="action" value="route">2. Observe routes</button>
+        <button type="submit" name="action" value="verify">3. Verify journeys and access</button>
+        <button type="button" id="reset-lesson">Reset rehearsal</button>
+      </div>
+    </form>
+    <p id="control-note">Record selectors first, destinations second, and complete journeys/access third.</p>
+    <p id="error" role="alert" tabindex="-1"></p>
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Measured fictional results</h2>
+      <p id="result" role="status" aria-live="polite">unknown — no observations yet</p>
+      <p id="journey-counts"></p>
+      <p id="action-count"></p>
+      <table><caption>Independent gates — missing evidence never passes</caption>
+        <thead><tr><th scope="col">Gate</th><th scope="col">Result</th></tr></thead><tbody id="stage-rows"></tbody>
+      </table>
+      <p id="capability-note"></p>
+      <div class="table-scroll"><table>
+        <caption>Selector inspection DATA</caption>
+        <thead><tr><th scope="col">Service</th><th scope="col">Selector</th><th scope="col">Matched pods</th>
+          <th scope="col">Matched builds</th><th scope="col">Result</th><th scope="col">Reason</th></tr></thead>
+        <tbody id="service-rows"></tbody>
+      </table></div>
+      <div class="table-scroll"><table>
+        <caption>Desired versus observed route receipt DATA — not complete journeys</caption>
+        <thead><tr><th scope="col">Audience</th><th scope="col">Desired Service</th><th scope="col">Observed Service</th>
+          <th scope="col">Observed pod</th><th scope="col">Observed build</th><th scope="col">HTTP</th><th scope="col">Result</th></tr></thead>
+        <tbody id="route-rows"></tbody>
+      </table></div>
+      <div class="table-scroll"><table>
+        <caption>Complete journey DATA — two attempts, one original 400 ms budget each</caption>
+        <thead><tr><th scope="col">Audience</th><th scope="col">Software</th><th scope="col">API contract</th>
+          <th scope="col">Session</th><th scope="col">Cart state</th><th scope="col">Steps</th>
+          <th scope="col">Completed / elapsed</th><th scope="col">Result</th></tr></thead>
+        <tbody id="journey-rows"></tbody>
+      </table></div>
+      <div class="table-scroll"><table>
+        <caption>Private-preview access DATA — zero traffic allocation is not authorization</caption>
+        <thead><tr><th scope="col">Entry path</th><th scope="col">Audience</th><th scope="col">Expected</th>
+          <th scope="col">Observed HTTP</th><th scope="col">Candidate reached</th><th scope="col">Result</th></tr></thead>
+        <tbody id="authorization-rows"></tbody>
+      </table></div>
+      <h3>Retained in-memory action history</h3>
+      <ol id="history"></ol>
+      <details><summary>All fixed request, authorization and state DATA</summary><pre id="state-view"></pre></details>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Preconditions and limits</h2>
+      <ul>
+        <li>All records are deterministic teaching DATA. All four pod records are
+          assumed ready; no readiness, capacity, termination or native routing is measured.</li>
+        <li>Two fixed learners exercise login, callback, navigation, profile and
+          cart continuity; identity, one effect and the original budget must also hold.</li>
+        <li>Positive selection or HTTP 200 is not proof of authorization, API
+          compatibility, state preservation, weighted distribution or user completion.</li>
+        <li>12 actions, no pruning. Invalid typed commands/states do not mutate
+          evidence. Valid premature actions record failed holds. Reset clears only
+          this page; refresh starts fresh. There is no durable/shared state.</li>
+        <li>B-S128 and D-S128 remain incomplete: approved native AKS,
+          CORE/DATA/AKS/C074, actual version-specific Services, routing,
+          authorized complete journeys and ordered promotion evidence are still required.</li>
+        <li>No cloud, IaC, scaffold, identity, credentials, framework, packages,
+          deployment or spend. No production Node 24 validation or five-nines claim.
+          A-S128 is one frozen S unit; parent acceptance alone awards it.</li>
+      </ul>
+      <p><a href="README.txt">Local usage and verification</a> ·
+        <a href="manifest.json">Scoped source/lesson manifest</a></p>
+    </section>
+  </main>
+  <noscript>This lesson requires JavaScript. No observations have run and no result passes.</noscript>
+</body>
+</html>

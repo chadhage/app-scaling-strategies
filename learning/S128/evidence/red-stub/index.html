@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; frame-src 'none'; child-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'; media-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S128 — separate AKS versions, fictional rehearsal</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p id="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S128: Separate GA and private preview</h1>
+    <p>Fixed fictional teaching DATA ONLY. No actual AKS, network, identity, resource,
+      configuration, deployment or IaC. One bounded local rehearsal.</p>
+    <form id="lesson-controls">
+      <label for="ga-selector">GA selector DATA</label>
+      <select id="ga-selector">
+        <option value="build-1-only">app + build-1 only</option>
+        <option value="build-2-only">app + build-2 only (wrong for GA)</option>
+        <option value="app-only">app only (mixes both builds)</option>
+        <option value="no-match">nonmatching app (empty endpoints)</option>
+      </select>
+      <label for="preview-selector">Preview selector DATA</label>
+      <select id="preview-selector">
+        <option value="build-2-only">app + build-2 only</option>
+        <option value="build-1-only">app + build-1 only (wrong for preview)</option>
+        <option value="app-only">app only (mixes both builds)</option>
+        <option value="no-match">nonmatching app (empty endpoints)</option>
+      </select>
+      <label for="routing">Routing capability DATA</label>
+      <select id="routing">
+        <option value="cohort-gateway">Cohort-capable gateway (fictional)</option>
+        <option value="deployments-only">Deployments alone (no weighted routing)</option>
+        <option value="unverified-gateway">Unverified gateway (unknown)</option>
+      </select>
+      <label for="fixture">Observation fixture DATA</label>
+      <select id="fixture">
+        <option value="compatible">Compatible, authorized, complete</option>
+      </select>
+      <div class="buttons">
+        <button type="submit" name="action" value="inspect">1. Inspect selectors</button>
+        <button type="submit" name="action" value="route">2. Observe routes</button>
+        <button type="submit" name="action" value="verify">3. Verify journeys and access</button>
+        <button type="button" id="reset-lesson">Reset rehearsal</button>
+      </div>
+    </form>
+    <p id="error" role="alert" tabindex="-1"></p>
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Measured fictional results</h2>
+      <p id="result" role="status" aria-live="polite">unknown — no observations yet</p>
+      <pre id="state-view"></pre>
+    </section>
+  </main>
+</body>
+</html>
