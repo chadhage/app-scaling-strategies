@@ -1,0 +1,120 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.S146Fixtures = factory();
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+
+  const PHASES = [
+    'provisioning', 'warming', 'promotion', 'serving', 'draining', 'rollback', 'cleanup',
+  ];
+  const PRESETS = [
+    { id: 'observed', label: 'Observed timing; continuous fixed samples' },
+    { id: 'interrupted', label: 'Observed interruption; later recovery' },
+    { id: 'unobserved', label: 'Detected and recovered; injection time unknown' },
+    { id: 'wrong-phase', label: 'Actual fault in a different fixed phase' },
+    { id: 'clock-unknown', label: 'Fault clock not joined to lifecycle clock' },
+    { id: 'window-unknown', label: 'Requested phase window unobserved' },
+    { id: 'journey-unknown', label: 'Recovery observed; during-fault journey unknown' },
+    { id: 'not-injected', label: 'Request only; observed fault did not occur' },
+    { id: 'boundary-end', label: 'Actual injection at exclusive right boundary' },
+    { id: 'recovery-failed', label: 'Observed fault; recovery failed' },
+  ];
+  const BOUNDS = [
+    [0, 1000], [1000, 2000], [2000, 3000], [3000, 4000],
+    [4000, 5000], [5000, 6000], [6000, 7000],
+  ];
+  const POINTS = [100, 1100, 2100, 3100, 4100, 5100, 6100];
+  const CLOCK = 'fictional-lifecycle-ms';
+  const EPOCH = 'fictional-zero-v1';
+  const RESOURCE = { id: 'fictional-workflow-01', version: 'fictional-workflow-v1' };
+
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+
+  function buildFixedTrace(index, preset) {
+    const requestedPhase = PHASES[index];
+    const fixtureId = `S146.${requestedPhase}.${preset}.v1`;
+    const requestId = `REQ.${requestedPhase}.${preset}`;
+    const actualIndex = preset === 'wrong-phase' ? (index + 6) % 7 : index;
+    const atMs = preset === 'boundary-end' ? BOUNDS[index][1] : POINTS[actualIndex];
+    const actualPhase = preset === 'boundary-end' ? (PHASES[index + 1] || null) : PHASES[actualIndex];
+    const faultClock = preset === 'clock-unknown' ? 'fictional-unjoined-ms' : CLOCK;
+    const observation = (suffix, time, clock = faultClock) => ({
+      requestId, atMs: time, clockId: clock, epoch: EPOCH,
+      resourceId: RESOURCE.id, version: RESOURCE.version,
+      observationId: `OBS.${fixtureId}.${suffix}`,
+    });
+    const trace = {
+      schemaVersion: 1,
+      dataKind: 'fixed-fictional-teaching-data-only',
+      fixtureId,
+      resource: { ...RESOURCE },
+      request: {
+        id: requestId, fault: 'TRACE', phase: requestedPhase,
+        atMs: POINTS[index], clockId: CLOCK, epoch: EPOCH,
+      },
+      windows: PHASES.map((phase, position) => ({
+        phase, startMs: BOUNDS[position][0], endMs: BOUNDS[position][1],
+        clockId: CLOCK, epoch: EPOCH, resourceId: RESOURCE.id,
+        version: RESOURCE.version, observationId: `OBS.lifecycle.${phase}.v1`,
+      })),
+      injection: {
+        ...observation('injection', atMs),
+        fault: 'TRACE', occurred: true, phase: actualPhase,
+      },
+      detection: { ...observation('detection', atMs + 1), detected: true },
+      recovery: { ...observation('recovery', atMs + 20), recovered: true },
+      journeys: ['before', 'during', 'after'].map((window, position) => ({
+        ...observation(`journey-${window}`, [atMs - 10, atMs + 2, atMs + 30][position], CLOCK),
+        id: `J.${window}`, window, result: 'continuous',
+      })),
+    };
+    if (preset === 'unobserved') {
+      Object.assign(trace.injection, { atMs: null, clockId: null, epoch: null });
+    }
+    if (preset === 'window-unknown') {
+      Object.assign(trace.windows[index], {
+        startMs: null, endMs: null, clockId: null, epoch: null, observationId: null,
+      });
+    }
+    if (preset === 'interrupted' || preset === 'recovery-failed') {
+      trace.journeys[1].result = 'interrupted';
+    }
+    if (preset === 'journey-unknown') {
+      Object.assign(trace.journeys[1], { result: 'unknown', atMs: null, observationId: null });
+    }
+    if (preset === 'not-injected') {
+      Object.assign(trace.injection, { occurred: false, atMs: null, clockId: null, epoch: null, phase: null });
+      trace.detection.detected = false;
+      Object.assign(trace.recovery, { recovered: null, atMs: null, observationId: null });
+    }
+    if (preset === 'recovery-failed') {
+      trace.recovery.recovered = false;
+      trace.journeys[2].result = 'interrupted';
+    }
+    return trace;
+  }
+
+  const traces = Object.fromEntries(PHASES.map((phase, index) => [
+    phase,
+    Object.fromEntries(PRESETS.map(({ id }) => [id, buildFixedTrace(index, id)])),
+  ]));
+  freeze(traces);
+  freeze(PHASES);
+  freeze(PRESETS);
+
+  function getFixture(phase, preset) {
+    if (!PHASES.includes(phase) || !PRESETS.some(({ id }) => id === preset)) {
+      throw new TypeError('Choose an exact fixed phase and preset.');
+    }
+    return traces[phase][preset];
+  }
+
+  return Object.freeze({ PHASES, PRESETS, getFixture });
+}));

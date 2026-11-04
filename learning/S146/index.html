@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; worker-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S146 — Lifecycle-phase fault rehearsal</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="fixtures.js" defer></script>
+  <script src="lesson.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S146: Fault injection at every phase</h1>
+    <p>All TRACE requests, injections, clocks, phases, resources, versions, observations,
+      journeys, coverage, and results below are <strong>fixed fictional teaching data only</strong>.
+      Conduct means replaying a fixed record, never injecting a real fault.</p>
+    <p>Preconditions: seven explicit lifecycle windows, one fictional workflow/version,
+      and fixed before/during/after journey samples. Windows are half-open:
+      <code>[startMs, endMs)</code>, inclusive start and exclusive end.</p>
+    <form id="operator-form" autocomplete="off">
+      <fieldset>
+        <legend>Choose the requested phase and a fixed observation fixture</legend>
+        <label for="phase">Requested lifecycle phase</label>
+        <select id="phase" name="phase">
+          <option value="provisioning">Provisioning</option>
+          <option value="warming">Warming</option>
+          <option value="promotion">Promotion</option>
+          <option value="serving">Serving</option>
+          <option value="draining">Draining</option>
+          <option value="rollback">Rollback</option>
+          <option value="cleanup">Cleanup</option>
+        </select>
+        <label for="preset">Fixed TRACE observation preset</label>
+        <select id="preset" name="preset">
+          <option value="observed">Observed timing; continuous fixed samples</option>
+          <option value="interrupted">Observed interruption; later recovery</option>
+          <option value="unobserved">Detected and recovered; injection time unknown</option>
+          <option value="wrong-phase">Actual fault in a different fixed phase</option>
+          <option value="clock-unknown">Fault clock not joined to lifecycle clock</option>
+          <option value="window-unknown">Requested phase window unobserved</option>
+          <option value="journey-unknown">Recovery observed; during-fault journey unknown</option>
+          <option value="not-injected">Request only; observed fault did not occur</option>
+          <option value="boundary-end">Actual injection at exclusive right boundary</option>
+          <option value="recovery-failed">Observed fault; recovery failed</option>
+        </select>
+        <button id="select-fixture" type="submit">1 Select fixed fixture</button>
+        <button id="conduct" type="button" disabled>2 Conduct fixed TRACE replay</button>
+        <button id="inspect" type="button" disabled>3 Inspect actual fixed observations</button>
+        <button id="measure" type="button" disabled>4 Measure requested phase</button>
+      </fieldset>
+    </form>
+    <p id="status" role="status" aria-live="polite">Loading fixed rehearsal.</p>
+    <p id="error" role="alert" tabindex="-1" hidden></p>
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Inspect the evidence, not the requested label</h2>
+      <p>A phase label or requested timestamp is not evidence of when the actual fault occurred.
+        Coverage needs an observed occurrence and timestamp joined to an observed window,
+        clock, epoch, resource, and version. An unobserved value stays unknown.</p>
+      <pre id="trace">Select a fixed fixture; no observation has been inspected.</pre>
+      <table id="matrix">
+        <caption>Current trace: separate coverage for all seven phases</caption>
+        <thead><tr><th scope="col">Phase</th><th scope="col">Observed window (fictional ms)</th>
+          <th scope="col">Coverage</th><th scope="col">Evidence / limit</th></tr></thead>
+        <tbody id="matrix-body"></tbody>
+      </table>
+    </section>
+    <section aria-labelledby="measurement-heading">
+      <h2 id="measurement-heading">Measure separate claims</h2>
+      <dl>
+        <dt>Requested phase coverage</dt><dd><output id="coverage-result">Not measured</output></dd>
+        <dt>Coverage evidence / limit</dt><dd><output id="coverage-reason">Not measured</output></dd>
+        <dt>Observed fault detection</dt><dd><output id="detected-result">Not measured</output></dd>
+        <dt>Observed recovery</dt><dd><output id="recovery-result">Not measured</output></dd>
+        <dt>Observed user impact</dt><dd><output id="impact-result">Not measured</output></dd>
+        <dt>Bounded rehearsal outcome</dt><dd><output id="outcome-result">Not measured</output></dd>
+      </dl>
+      <p>NO_OBSERVED_INTERRUPTION means only these fixed samples. It is not continuous
+        user success, a native result, or a reliability guarantee. Recovery never erases
+        an interruption or fills an unobserved interval.</p>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained measurement history</h2>
+      <p id="summary-coverage">0 / 7 phases covered by fixed observations.</p>
+      <p id="retained">No measured runs.</p>
+      <table>
+        <caption>At most twelve runs; replayed fixtures are not independent trials</caption>
+        <thead><tr><th scope="col">Run / fixture</th><th scope="col">Requested / actual covered phase</th>
+          <th scope="col">Coverage</th><th scope="col">Detection</th><th scope="col">Recovery</th>
+          <th scope="col">User impact</th><th scope="col">Outcome</th></tr></thead>
+        <tbody id="history-body"></tbody>
+      </table>
+      <button id="reset-lesson" type="button">Reset all rehearsal history</button>
+    </section>
+    <aside aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Native timing remains a separate, blocked remainder</h2>
+      <p>B-S146 requires CORE, DATA, HOST, and C090, an approved owned target, and independently
+        observable native phase/fault timing. Hidden native phases remain UNCOVERED.
+        This portable A slice does not complete D-S146. IaC is N/A; no Azure, infrastructure,
+        identity, credentials, workload, network, resource, or user-data operations occur.</p>
+      <p>Use one deliberate phase trace at a time. The seven-phase matrix is teaching coverage,
+        not proof of the actual deployment lifecycle.</p>
+    </aside>
+    <noscript>This lesson needs its local scripts. No result is available with JavaScript disabled.</noscript>
+  </main>
+</body>
+</html>

@@ -1,0 +1,81 @@
+Feature: S146 fixed-fictional lifecycle-phase TRACE fault rehearsal
+  All requests, faults, phases, clocks, versions, resources, observations,
+  journeys, measurements, and outcomes are fictional teaching data only.
+  Nothing injects a real fault or performs network, load, cloud, or resource work.
+
+  Background:
+    Given the exact banner "Training rehearsal - synthetic data - not a live Azure result"
+    And a standalone resource-free lesson with seven fixed observed lifecycle windows
+    And the source acceptance "Observable phases have explicit fault results; unobservable native timing is disclosed; no untested phase is reported covered."
+
+  Scenario Outline: Separately cover one actually observed phase
+    Given the fixed observed TRACE fixture for "<phase>"
+    When the operator selects, conducts the fixed replay, inspects, and measures
+    Then only "<phase>" is covered by that trace
+    And detection, recovery, observed user impact, and phase coverage are separate results
+    And the other six phases remain UNCOVERED
+    Examples:
+      | phase        |
+      | provisioning |
+      | warming      |
+      | promotion    |
+      | serving      |
+      | draining     |
+      | rollback     |
+      | cleanup      |
+
+  Scenario: A requested label and recovered service do not observe fault timing
+    Given a TRACE request naming promotion and a fixed observed detection and recovery
+    But the actual injection timestamp is unobserved
+    When the operator measures
+    Then requested promotion coverage is UNCOVERED
+    And the actual fault time remains unknown
+    And recovery cannot turn unknown timing into success
+
+  Scenario: The actual phase differs from the requested phase
+    Given a serving request and a fixed warming injection observation
+    When the operator measures
+    Then serving remains UNCOVERED
+    And only the independently observed warming phase may be covered
+    And changing the requested timestamp or phase label cannot move the observation
+
+  Scenario: Half-open observed coverage boundaries
+    Given an observed phase window [startMs, endMs)
+    Then an aligned actual injection at startMs is inside
+    And an aligned actual injection at endMs minus one is inside
+    But an injection at endMs is outside that phase
+    And an unobserved window, clock, epoch, version, or resource cannot establish coverage
+
+  Scenario: Detection and recovery do not erase an interruption
+    Given a covered TRACE injection with an observed interrupted journey
+    And a later observed recovery and continuous after-recovery sample
+    When the operator measures and then measures a fresh covered continuity fixture
+    Then the earlier interruption remains in history and the retained warning
+    And later recovery does not make the earlier run interruption-free
+
+  Scenario: Recovery does not erase an unknown journey
+    Given a covered TRACE injection with an unobserved during-fault journey
+    And an observed recovery
+    When the operator measures and then measures a fresh continuity fixture
+    Then the earlier unknown impact remains unknown in history
+    And repeated fictional replays are not new independent reliability trials
+
+  Scenario: Strict typed input and replayed workflow guards
+    Then numeric strings, truthy strings, nonfinite clocks, extra fields, and malformed observations are rejected
+    And measured results cannot be supplied or overwritten by a caller
+    And conduct before select, inspect before conduct, measure before inspect, and duplicate measure are rejected
+    And changing an operator selection invalidates unfinished work without deleting measured history
+    And no more than twelve runs or eighty-four events can be retained
+
+  Scenario: Actual keyboard, reset, error, dependency-failure, and CSP behavior
+    Then native keyboard controls complete select, conduct, inspect, and measure
+    And errors are announced without adding a result or destroying history
+    And an explicit reset clears the rehearsal and focuses the phase control
+    And a missing lesson dependency displays an error with actions disabled and no fabricated measurement
+    And the browser blocks inline scripts, inline styles, data connections, frames, and form submission under the declared CSP
+
+  Scenario: The original native remainder is still blocked
+    Then B-S146 still requires CORE, DATA, HOST, and C090
+    And one portable rehearsal does not complete D-S146 or qualify native lifecycle timing
+    And IaC is N/A because no infrastructure or resources are created
+    And only the parent may accept original A-S146 once

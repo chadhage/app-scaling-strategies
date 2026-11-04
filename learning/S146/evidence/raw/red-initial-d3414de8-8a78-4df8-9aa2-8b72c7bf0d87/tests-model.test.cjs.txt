@@ -1,0 +1,17 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fixtures = require('..\\fixtures.js');
+const model = require('..\\lesson.js');
+
+test('unobserved injection timing remains UNCOVERED even after recovery', () => {
+  const trace = fixtures.getFixture('promotion', 'unobserved');
+  assert.equal(trace.request.fault, 'TRACE');
+  assert.equal(trace.request.phase, 'promotion');
+  assert.equal(trace.injection.atMs, null);
+  assert.equal(trace.detection.detected, true);
+  assert.equal(trace.recovery.recovered, true);
+  const measured = model.evaluate(trace);
+  assert.equal(measured.coverage, 'UNCOVERED');
+});

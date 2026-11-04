@@ -1,0 +1,123 @@
+S146 — FIXED-FICTIONAL LIFECYCLE-PHASE TRACE FAULT REHEARSAL
+
+Training rehearsal - synthetic data - not a live Azure result
+
+Open learning\S146\index.html directly in a browser. No server, dependency
+installation, framework, network listener, or Azure subscription is needed.
+Conduct only replays a pre-existing fixed record. Every request, injection,
+phase, timestamp, clock, version, resource, observation, journey, measurement,
+coverage window, and outcome is fictional teaching DATA ONLY.
+
+ORIGINAL SOURCE / CONTRACT
+README S146: Fault injection at every phase: Test provisioning, warming,
+promotion, serving, draining, rollback, and cleanup separately.
+D-S146 / P1: Add a lifecycle-phase/fault matrix over the handoff workflow.
+Exact acceptance: Observable phases have explicit fault results; unobservable
+native timing is disclosed; no untested phase is reported covered.
+A-S146 is the frozen original S unit, SC-S146, SOURCE gate, D-S146 parent.
+Raw CRLF source rows and independently captured immutable Git LF rows are in
+evidence\source\. The original source revision is pinned in manifest.json.
+
+WORKED EXERCISE
+1. Choose promotion and "Detected and recovered; injection time unknown".
+2. Select the fixed fixture. The requested phase/time is not fault evidence.
+3. Conduct the fixed TRACE replay, then inspect the actual observation record.
+4. Measure: coverage UNCOVERED, detection OBSERVED, recovery RECOVERED, impact
+   UNKNOWN, outcome UNCOVERED. A detected/recovered fault has no observed time.
+5. Repeat promotion with "Observed interruption; later recovery", then the
+   observed continuous-sample fixture. The older interruption and the older
+   unknown/uncovered result remain in the history and retained warning.
+6. A different-phase or exclusive-right-edge fixture may cover another phase
+   from actual evidence, but cannot satisfy the requested phase.
+7. Select one observed fixture for each of the seven phases to see separately
+   justified matrix rows. Replays add no independent trials or reliability credit.
+8. Only explicit "Reset all rehearsal history" clears prior measurements.
+
+SHAPES / EVIDENCE
+The exact trace fields are schemaVersion=1, dataKind, fixtureId, resource,
+request, windows[7], injection, detection, recovery, and journeys[3].
+resource has id and version. request has id, fault=TRACE, phase, atMs,
+clockId, epoch. Each window has phase, startMs, endMs, clockId, epoch,
+resourceId, version, observationId. Each observation has requestId, atMs,
+clockId, epoch, resourceId, version, observationId; injection also has
+fault=TRACE, occurred, phase; detection has detected; recovery has recovered.
+Journeys also have id, window=before/during/after, and result
+continuous/interrupted/unknown. Null means unobserved, not a default value.
+Only booleans or null are accepted for occurred/detected/recovered; clocks are
+safe integers in 0..10000 or explicitly null, never strings/floats/truthy values.
+IDs are bounded typed tokens. Extra/accessor fields, sparse arrays, duplicate
+observation/journey IDs, wrong order, and overlapping aligned windows are rejected.
+
+Fixed observed windows (fictional ms, inclusive start / exclusive end):
+provisioning [0,1000), warming [1000,2000), promotion [2000,3000),
+serving [3000,4000), draining [4000,5000), rollback [5000,6000),
+cleanup [6000,7000). An injection at end belongs outside that phase.
+Coverage requires observed occurrence, injection observation/time, actual phase
+observation, observed window, matching request/resource/version, and identical
+known clock/epoch. A requested time never substitutes for an actual timestamp.
+Missing clocks/windows/scopes, mismatched labels, and unobserved native timing
+stay UNCOVERED. Detection, recovery, and impact are classified separately.
+Known interruption dominates later uncertainty. Positive fixed samples must
+join the actual fault/recovery clocks and have observed temporal placement;
+their before/during/after labels alone do not prove placement or continuity.
+NO_OBSERVED_INTERRUPTION is sample-only, not success throughout the window.
+
+WORKFLOW / UX
+Native selects/buttons support keyboard use and deliberate focus movement.
+Select -> conduct -> inspect -> measure is replay-validated; a changed selection
+discards only unfinished/current work, not measured history. Results cannot be
+supplied in a command or state. Immutable event history is bounded to 84 events
+and twelve measured runs, with explicit reset required at a limit.
+Handled errors focus an announced alert and preserve the prior session/history.
+Reset sets controls explicitly; it never calls a potentially shadowed form.reset.
+runtime-missing.html is only an owned local browser-test document deliberately
+omitting model dependencies. Its error/disabled actions are not a fault preset.
+CSP has no inline script/style, connection, image, frame, form-action, base,
+object, media, worker, or font permissions beyond local script/style assets.
+Browser CSP probes use denied inline/data elements and denied same-owned-file
+base/form targets; no external request is sent. The first CSP attempt used data
+URLs for base/form, which Edge rejected before those CSP directives could be
+observed. That failed run and diagnostic remain raw evidence, not a pass.
+
+BDD / RED / IAC / GREEN
+lesson.feature preceded the actual browser-loadable stub. evidence\red.json
+and its raw archive retain the genuine assertion RED (expected UNCOVERED,
+actual COVERED), the exact loadable stub, and raw TAP failure, outside test
+autodiscovery. evidence\iac.json records the subsequent IaC step as N/A.
+Implementation then adds evidence joins, boundaries, typed/replayed guards,
+retained history and the operator UX. Evidence is never rewritten by tests.
+
+FOCUSED VERIFICATION (from repository root, PowerShell)
+node --test --test-concurrency=1 learning\S146\tests\model.test.cjs learning\S146\tests\integrity.test.cjs
+node --check learning\S146\fixtures.js
+node --check learning\S146\lesson.js
+node --check learning\S146\app.js
+node --test --test-concurrency=1 learning\S146\tests\browser.test.cjs
+Normal verification is READ-ONLY. For one deliberate unique raw browser capture:
+$env:CAPTURE_BROWSER_EVIDENCE = '1'
+node --test --test-concurrency=1 learning\S146\tests\browser.test.cjs
+Any value other than exactly '1' writes no browser evidence. Each capture uses
+a new UUID directory; original RED and every raw failure remain preserved.
+The caller must restore its previous environment after deliberate capture.
+
+QUALIFICATION / BLOCKED NATIVE REMAINDER
+The published testing\browser\isolated.cjs SHA-256 is
+86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055.
+Use openIsolatedLesson and await close in finally. The explicitly approved
+offline pair is Playwright 1.56.1 / Microsoft-signed installed Edge 156,
+with Node 22.23.4 tooling. Missing tooling is an error, not a download/fallback.
+The inactive lifecycle recovery prototype remains unqualified and unused.
+Focused observed browser behavior is not broad unattended/concurrent CI,
+production Node 24, native Azure, or original-source-parent acceptance proof.
+B-S146 remains blocked on CORE, DATA, HOST, C090 and an approved owned target.
+Refinement: qualify one observable native phase/fault preset with independently
+joined actual injection/window/clock/epoch/resource/version evidence and client
+journey checks; disclose unobservable native timing explicitly. Expand separate
+native results across provisioning/warming/promotion/serving/draining/rollback/
+cleanup without claiming any hidden or untested phase covered. C090 must protect
+production, foreign leases, and the shared management plane before native work.
+The portable A slice does not complete D-S146. No native operations were performed.
+The parent alone may accept original A-S146 once. Tests, repairs, proof,
+refinement, and repeated fictional runs earn zero additional Kano credits.
+Immutable catalog source150/ebd7433 remains a 135-practice source; later accepted
+live cards do not silently appear there. C005-C008/local-harness are untouched.

@@ -1,0 +1,301 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { createHash, randomUUID } = require('node:crypto');
+
+const root = path.resolve(__dirname, '..');
+const repo = path.resolve(root, '..', '..');
+const helper = path.join(repo, 'testing', 'browser', 'isolated.cjs');
+const helperSha256 = createHash('sha256').update(fs.readFileSync(helper)).digest('hex');
+assert.equal(helperSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+const { openIsolatedLesson } = require(helper);
+const captureEnabled = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+const banner = 'Training rehearsal - synthetic data - not a live Azure result';
+
+async function withLesson(relativePath, observe) {
+  const session = await openIsolatedLesson(relativePath);
+  try {
+    await observe(session);
+  } finally {
+    await session.close();
+  }
+}
+
+async function checkpoint(page, record, name) {
+  record.checkpoints.push({
+    name,
+    stage: await page.locator('#operator-form').getAttribute('data-stage'),
+    focus: await page.evaluate(() => document.activeElement.id),
+    status: await page.locator('#status').textContent(),
+    alert: await page.locator('#error').textContent(),
+    alertVisible: await page.locator('#error').isVisible(),
+    coverage: await page.locator('#coverage-result').textContent(),
+    reason: await page.locator('#coverage-reason').textContent(),
+    detected: await page.locator('#detected-result').textContent(),
+    recovery: await page.locator('#recovery-result').textContent(),
+    impact: await page.locator('#impact-result').textContent(),
+    outcome: await page.locator('#outcome-result').textContent(),
+    actualTraceText: await page.locator('#trace').textContent(),
+    matrix: await page.locator('#matrix-body tr').allTextContents(),
+    history: await page.locator('#history-body tr').allTextContents(),
+    retained: await page.locator('#retained').textContent(),
+    summary: await page.locator('#summary-coverage').textContent(),
+  });
+}
+
+async function measureDOM(page, phase, preset) {
+  await page.locator('#phase').selectOption(phase);
+  await page.locator('#preset').selectOption(preset);
+  await page.locator('#select-fixture').click();
+  assert.equal(await page.locator('#operator-form').getAttribute('data-stage'), 'selected');
+  assert.equal(await page.locator('#coverage-result').textContent(), 'Not measured');
+  await page.locator('#conduct').click();
+  assert.equal(await page.locator('#operator-form').getAttribute('data-stage'), 'conducted');
+  await page.locator('#inspect').click();
+  assert.equal(await page.locator('#operator-form').getAttribute('data-stage'), 'inspected');
+  await page.locator('#measure').click();
+  assert.equal(await page.locator('#operator-form').getAttribute('data-stage'), 'measured');
+}
+
+test('actual DOM, keyboard, coverage/history, error/reset, dependency failure and CSP', { timeout: 90000 }, async () => {
+  const captureDirectory = captureEnabled
+    ? path.join(root, 'evidence', 'raw', `browser-${new Date().toISOString().replaceAll(':', '-')}-${randomUUID()}`) : null;
+  if (captureDirectory) fs.mkdirSync(captureDirectory, { recursive: true });
+  const record = {
+    schemaVersion: 1, cardId: 'A-S146', workerId: 'worker-A-S146',
+    kind: 'actual-local-file-DOM-and-keyboard-observations',
+    teachingDataOnly: true, helperSha256, nodeVersion: process.version,
+    playwrightVersion: require(path.join(repo, 'testing', 'browser', 'node_modules', 'playwright', 'package.json')).version,
+    lifecycleQualification: 'Focused checks only; inactive recovery prototype unused and unqualified.',
+    checkpoints: [], pageErrors: [], unexpectedExternalRequests: [], passed: false,
+  };
+  try {
+    assert.equal(record.playwrightVersion, '1.56.1');
+    await withLesson('learning\\S146\\index.html', async (session) => {
+      const page = session.page;
+      record.browserVersion = session.browserVersion;
+      assert.match(record.browserVersion, /^156\./);
+      page.on('pageerror', (error) => record.pageErrors.push(error.message));
+      page.on('request', (request) => {
+        if (!/^(?:file|data):/.test(request.url())) record.unexpectedExternalRequests.push(request.url());
+      });
+      assert.equal(await page.locator('.banner').textContent(), banner);
+      assert.equal(await page.title(), 'S146 — Lifecycle-phase fault rehearsal');
+      assert.equal(await page.locator('#operator-form').getAttribute('data-stage'), 'idle');
+      assert.equal(await page.locator('#matrix-body tr').count(), 7);
+      assert.equal(await page.locator('#conduct').isDisabled(), true);
+      assert.equal(await page.locator('#inspect').isDisabled(), true);
+      assert.equal(await page.locator('#measure').isDisabled(), true);
+      assert.equal(await page.locator('#error').isVisible(), false);
+      await checkpoint(page, record, 'initial-guards-and-unmeasured-seven-phase-matrix');
+
+      await page.evaluate(() => { document.getElementById('conduct').disabled = false; });
+      await page.locator('#conduct').click();
+      assert.equal(await page.locator('#error').isVisible(), true);
+      assert.match(await page.locator('#error').textContent(), /conduct requires selected/);
+      assert.equal(await page.locator('#history-body tr').count(), 0);
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'error');
+      assert.equal(await page.locator('#conduct').isDisabled(), true);
+      await checkpoint(page, record, 'out-of-order-DOM-action-errors-without-result');
+      await page.locator('#reset-lesson').click();
+
+      await page.evaluate(() => {
+        const option = document.createElement('option');
+        option.value = 'unsupported-phase';
+        option.textContent = 'Invalid typed local test value';
+        document.getElementById('phase').appendChild(option);
+      });
+      await page.locator('#phase').selectOption('unsupported-phase');
+      await page.locator('#select-fixture').click();
+      assert.match(await page.locator('#error').textContent(), /command.phase is unsupported/);
+      assert.equal(await page.locator('#history-body tr').count(), 0);
+      assert.equal(await page.locator('#coverage-result').textContent(), 'Not measured');
+      await checkpoint(page, record, 'unsupported-DOM-selection-rejected-transactionally');
+      await page.locator('#reset-lesson').click();
+      await page.evaluate(() => document.querySelector('#phase option[value="unsupported-phase"]').remove());
+
+      await page.locator('#phase').focus();
+      await page.keyboard.press('Home');
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('#phase').inputValue(), 'promotion');
+      await page.keyboard.press('Tab');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'preset');
+      await page.keyboard.press('Home');
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('#preset').inputValue(), 'unobserved');
+      await page.keyboard.press('Tab');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'select-fixture');
+      await page.keyboard.press('Enter');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'conduct');
+      await page.keyboard.press('Enter');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'inspect');
+      await page.keyboard.press('Enter');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'measure');
+      const inspected = JSON.parse(await page.locator('#trace').textContent());
+      assert.equal(inspected.fixedTrace.request.phase, 'promotion');
+      assert.equal(inspected.fixedTrace.injection.atMs, null);
+      await page.keyboard.press('Enter');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'select-fixture');
+      assert.equal(await page.locator('#coverage-result').textContent(), 'UNCOVERED');
+      assert.equal(await page.locator('#detected-result').textContent(), 'OBSERVED');
+      assert.equal(await page.locator('#recovery-result').textContent(), 'RECOVERED');
+      assert.equal(await page.locator('#impact-result').textContent(), 'UNKNOWN');
+      assert.equal(await page.locator('#outcome-result').textContent(), 'UNCOVERED');
+      assert.ok((await page.locator('#matrix-body tr').allTextContents()).every((value) => value.includes('UNCOVERED')));
+      const firstHistory = await page.locator('#history-body tr').first().textContent();
+      await checkpoint(page, record, 'keyboard-complete-unobserved-time-stays-uncovered-after-recovery');
+
+      await page.locator('#preset').selectOption('interrupted');
+      assert.equal(await page.locator('#operator-form').getAttribute('data-stage'), 'idle');
+      assert.equal(await page.locator('#conduct').isDisabled(), true);
+      assert.equal(await page.locator('#coverage-result').textContent(), 'Not measured');
+      assert.equal(await page.locator('#history-body tr').first().textContent(), firstHistory);
+      await checkpoint(page, record, 'changed-selection-invalidates-work-not-history');
+
+      await measureDOM(page, 'promotion', 'interrupted');
+      assert.equal(await page.locator('#coverage-result').textContent(), 'COVERED');
+      assert.equal(await page.locator('#recovery-result').textContent(), 'RECOVERED');
+      assert.equal(await page.locator('#impact-result').textContent(), 'INTERRUPTED');
+      const interruptedHistory = await page.locator('#history-body tr').nth(1).textContent();
+      await checkpoint(page, record, 'observed-interruption-survives-later-recovery');
+      await measureDOM(page, 'promotion', 'observed');
+      assert.equal(await page.locator('#outcome-result').textContent(), 'OBSERVED_NO_INTERRUPTION');
+      assert.equal(await page.locator('#history-body tr').first().textContent(), firstHistory);
+      assert.equal(await page.locator('#history-body tr').nth(1).textContent(), interruptedHistory);
+      assert.match(await page.locator('#retained').textContent(), /1 interrupted, 1 unknown-impact, 1 requested-phase uncovered/);
+      await checkpoint(page, record, 'fresh-continuous-samples-do-not-rewrite-interruption-or-unknown');
+
+      await measureDOM(page, 'serving', 'journey-unknown');
+      assert.equal(await page.locator('#coverage-result').textContent(), 'COVERED');
+      assert.equal(await page.locator('#recovery-result').textContent(), 'RECOVERED');
+      assert.equal(await page.locator('#impact-result').textContent(), 'UNKNOWN');
+      assert.equal(await page.locator('#outcome-result').textContent(), 'UNKNOWN');
+      const unknownHistory = await page.locator('#history-body tr').nth(3).textContent();
+      await measureDOM(page, 'serving', 'observed');
+      assert.equal(await page.locator('#history-body tr').nth(3).textContent(), unknownHistory);
+      assert.match(await page.locator('#retained').textContent(), /1 interrupted, 2 unknown-impact/);
+      await checkpoint(page, record, 'covered-but-unknown-journey-retained-after-fresh-recovery');
+
+      await measureDOM(page, 'serving', 'wrong-phase');
+      assert.equal(await page.locator('#coverage-result').textContent(), 'UNCOVERED');
+      assert.match(await page.locator('#history-body tr').nth(5).textContent(), /serving \/ promotion/);
+      const wrongPhase = JSON.parse(await page.locator('#trace').textContent()).fixedTrace;
+      assert.equal(wrongPhase.request.phase, 'serving');
+      assert.equal(wrongPhase.injection.phase, 'promotion');
+      assert.equal(wrongPhase.injection.atMs, 2100);
+      await checkpoint(page, record, 'actual-fixed-phase-not-requested-label-determines-coverage');
+
+      await measureDOM(page, 'warming', 'boundary-end');
+      assert.equal(await page.locator('#coverage-result').textContent(), 'UNCOVERED');
+      assert.equal(JSON.parse(await page.locator('#trace').textContent()).fixedTrace.injection.atMs, 2000);
+      assert.match(await page.locator('#matrix-body tr').nth(1).textContent(), /\[1000, 2000\).*UNCOVERED/);
+      assert.match(await page.locator('#matrix-body tr').nth(2).textContent(), /\[2000, 3000\).*COVERED/);
+      await checkpoint(page, record, 'exclusive-right-edge-is-not-covered-prior-phase');
+
+      for (const phase of ['provisioning', 'warming', 'draining', 'rollback', 'cleanup']) {
+        await measureDOM(page, phase, 'observed');
+        assert.equal(await page.locator('#coverage-result').textContent(), 'COVERED');
+        assert.equal((await page.locator('#matrix-body tr').allTextContents()).filter((value) => !value.includes('UNCOVERED')).length, 1);
+        await checkpoint(page, record, `separate-observed-${phase}-coverage`);
+      }
+      assert.equal(await page.locator('#history-body tr').count(), 12);
+      assert.match(await page.locator('#summary-coverage').textContent(), /^7 \/ 7 phases covered by actual fixed observations/);
+      assert.match(await page.locator('#retained').textContent(), /Retained outcome: INTERRUPTED/);
+      assert.equal(await page.locator('#select-fixture').isDisabled(), true);
+      const retainedBeforeError = await page.locator('#history-body tr').allTextContents();
+      await page.evaluate(() => { document.getElementById('select-fixture').disabled = false; });
+      await page.locator('#select-fixture').click();
+      assert.match(await page.locator('#error').textContent(), /twelve-run limit reached/);
+      assert.deepEqual(await page.locator('#history-body tr').allTextContents(), retainedBeforeError);
+      assert.equal(await page.locator('#select-fixture').isDisabled(), true);
+      await checkpoint(page, record, 'twelve-run-bound-error-retains-all-previous-results');
+      if (captureDirectory) await page.screenshot({ path: path.join(captureDirectory, 'retained-history.png'), fullPage: true });
+
+      await page.locator('#reset-lesson').focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await page.locator('#history-body tr').count(), 0);
+      assert.equal(await page.locator('#coverage-result').textContent(), 'Not measured');
+      assert.equal(await page.locator('#phase').inputValue(), 'provisioning');
+      assert.equal(await page.locator('#preset').inputValue(), 'observed');
+      assert.equal(await page.locator('#error').isVisible(), false);
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'phase');
+      assert.equal(await page.locator('#conduct').isDisabled(), true);
+      await checkpoint(page, record, 'explicit-keyboard-reset-clears-history-errors-and-restores-focus');
+
+      await page.evaluate(async () => {
+        window.__s146CspViolations = [];
+        window.__s146InlineExecuted = false;
+        document.addEventListener('securitypolicyviolation', (event) => {
+          window.__s146CspViolations.push({ directive: event.effectiveDirective, blockedURI: event.blockedURI });
+        });
+        const script = document.createElement('script');
+        script.textContent = 'window.__s146InlineExecuted = true;';
+        document.head.appendChild(script);
+        const style = document.createElement('style');
+        style.textContent = 'body { --s146-inline-style-ran: yes; }';
+        document.head.appendChild(style);
+        const frame = document.createElement('iframe');
+        frame.src = 'data:text/html,fixed-fictional-CSP-probe';
+        document.body.appendChild(frame);
+        const base = document.createElement('base');
+        base.href = 'data:text/plain,fixed-fictional-CSP-probe';
+        document.head.appendChild(base);
+        const form = document.createElement('form');
+        form.action = 'data:text/plain,fixed-fictional-CSP-probe';
+        document.body.appendChild(form);
+        form.submit();
+        window.__s146DataConnectionDenied = await fetch('data:text/plain,fixed-fictional-CSP-probe').then(() => false, () => true);
+      });
+      await page.waitForFunction(() => ['script-src-elem', 'style-src-elem', 'connect-src', 'frame-src', 'base-uri', 'form-action']
+        .every((directive) => window.__s146CspViolations.some((entry) => entry.directive === directive)));
+      record.csp = await page.evaluate(() => ({
+        violations: window.__s146CspViolations,
+        inlineExecuted: window.__s146InlineExecuted,
+        inlineStyleValue: getComputedStyle(document.body).getPropertyValue('--s146-inline-style-ran'),
+        dataConnectionDenied: window.__s146DataConnectionDenied,
+      }));
+      assert.equal(record.csp.inlineExecuted, false);
+      assert.equal(record.csp.inlineStyleValue, '');
+      assert.equal(record.csp.dataConnectionDenied, true);
+      assert.match(page.url(), /index\.html$/);
+      await checkpoint(page, record, 'actual-CSP-denials-inline-style-script-data-connect-frame-base-and-form');
+      assert.deepEqual(record.pageErrors, []);
+      assert.deepEqual(record.unexpectedExternalRequests, []);
+    });
+
+    await withLesson('learning\\S146\\runtime-missing.html', async (session) => {
+      const page = session.page;
+      assert.equal(await page.locator('.banner').textContent(), banner);
+      assert.match(await page.locator('#status').textContent(), /Lesson unavailable/);
+      assert.equal(await page.locator('#error').isVisible(), true);
+      assert.match(await page.locator('#error').textContent(), /Required local fixed-data lesson scripts did not load/);
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'error');
+      for (const id of ['select-fixture', 'conduct', 'inspect', 'measure', 'reset-lesson']) {
+        assert.equal(await page.locator(`#${id}`).isDisabled(), true);
+      }
+      assert.equal(await page.locator('#coverage-result').textContent(), 'Not measured');
+      record.dependencyFailure = {
+        title: await page.title(), browserVersion: session.browserVersion,
+        status: await page.locator('#status').textContent(), alert: await page.locator('#error').textContent(),
+        focus: await page.evaluate(() => document.activeElement.id),
+        coverage: await page.locator('#coverage-result').textContent(),
+        allActionsDisabled: true, fictionalFaultOperation: false,
+      };
+    });
+    record.passed = true;
+    console.log(`S146 actual browser: ${record.checkpoints.length} DOM checkpoints, six CSP denials, dependency-failure UX; ${record.browserVersion}.`);
+  } catch (error) {
+    record.failure = { name: error.name, message: error.message, stack: error.stack };
+    throw error;
+  } finally {
+    if (captureDirectory) {
+      fs.writeFileSync(path.join(captureDirectory, 'observation.json'), `${JSON.stringify(record, null, 2)}\n`, { flag: 'wx' });
+      console.log(`S146 deliberate unique raw capture: ${path.relative(root, captureDirectory)}`);
+    }
+  }
+});
