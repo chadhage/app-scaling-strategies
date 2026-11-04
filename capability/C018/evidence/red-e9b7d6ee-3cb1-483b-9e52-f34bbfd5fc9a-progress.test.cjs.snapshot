@@ -1,0 +1,34 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { newFixture } = require('./fixture.cjs');
+
+test('a fresh C018 process reopens actual prepared disk progress, not catalogue guesses', async (t) => {
+  const fixture = newFixture();
+  try {
+    const writer = fixture.write('synthetic-run-001', 1);
+    assert.equal(writer.exitCode, 0, writer.stderr);
+    assert.equal(writer.value.acknowledged, true);
+    const file = path.join(fixture.location.root, 'synthetic-run-001', 'epoch-001.json');
+    const bytes = fs.readFileSync(file);
+    const disk = JSON.parse(bytes);
+    const reader = fixture.read('synthetic-run-001');
+    assert.equal(reader.exitCode, 0, reader.stderr);
+    assert.deepEqual(reader.value?.state?.record, disk.state.record,
+      'Actual reopened progress must expose completed prepare and pending advance from the persisted run.');
+    assert.deepEqual(reader.value.state, disk.state);
+    assert.deepEqual(reader.value.acknowledgment, disk.acknowledgment);
+    assert.equal(reader.value.state.epoch, 1);
+    assert.equal(reader.value.writesPerformed, 0);
+    assert.notEqual(reader.value.pid, writer.value.pid);
+    assert.notEqual(reader.value.pid, process.pid);
+    assert.deepEqual(fs.readFileSync(file), bytes);
+    t.diagnostic(JSON.stringify({ writer: writer.value, freshReader: reader.value }));
+  } finally {
+    await fixture.cleanup();
+    t.diagnostic(JSON.stringify({ namespace: fixture.namespace, exactCleanup: fixture.removed, namespaceAbsent: !fs.existsSync(fixture.location.root) }));
+  }
+});

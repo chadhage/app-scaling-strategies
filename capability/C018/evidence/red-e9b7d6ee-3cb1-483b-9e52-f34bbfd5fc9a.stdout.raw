@@ -1,0 +1,45 @@
+TAP version 13
+# Subtest: a fresh C018 process reopens actual prepared disk progress, not catalogue guesses
+not ok 1 - a fresh C018 process reopens actual prepared disk progress, not catalogue guesses
+  ---
+  duration_ms: 15624.7483
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C018\\tests\\progress.test.cjs:9:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Actual reopened progress must expose completed prepare and pending advance from the persisted run.
+    + actual - expected
+    
+    + undefined
+    - {
+    -   acknowledgedUnits: 1,
+    -   completedStep: 'prepare',
+    -   pendingStep: 'advance',
+    -   status: 'prepared'
+    - }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    acknowledgedUnits: 1
+    completedStep: 'prepare'
+    pendingStep: 'advance'
+    status: 'prepared'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C018\tests\progress.test.cjs:20:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# {"namespace":"test-1ae7de6f-72de-469c-91bd-bd5432decc56","exactCleanup":["synthetic-run-001\\\\epoch-001.json","synthetic-run-001","(owned UUID directory)"],"namespaceAbsent":true}
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 16055.5455
