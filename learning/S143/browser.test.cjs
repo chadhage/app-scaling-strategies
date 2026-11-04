@@ -103,6 +103,8 @@ test('actual DOM/native keyboard: exact ten verdicts, original boundaries, cumul
       assert.equal(await text(page, 'start-ms'), '1000');
       assert.equal(await text(page, 'deadline-ms'), '4000');
       assert.equal(await text(page, 'budget-ms'), '3000');
+      assert.equal(await text(page, 'impact'), presetId === 'unsupported-condition' ? 'interrupted' : 'unknown');
+      assert.equal(await text(page, 'interruptions'), '0');
       assert.equal(await page.evaluate(() => document.activeElement.id), 'slow');
       await key(page, 'slow', 'slowed');
       assert.equal(await text(page, 'known-ms'), '1500');

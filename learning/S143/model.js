@@ -146,6 +146,7 @@
     };
   }
   const tri = (value) => value === null ? 'UNKNOWN' : value === true ? 'PASS' : 'FAIL';
+  const uncertainImpact = (current) => current && current.interruptions.length ? 'unknown-after-interruption' : 'unknown';
   function assess(current) {
     const totals = cumulative(current);
     const final = current && current.final;
@@ -196,7 +197,7 @@
     state.outcomes.push({
       run: state.current.run, presetId: state.current.presetId, reason, verdict,
       impact: verdict === 'PASS' ? 'recovered-after-interruption'
-        : verdict === 'FAIL' ? 'interrupted' : 'unknown-after-interruption',
+        : verdict === 'FAIL' ? 'interrupted' : uncertainImpact(state.current),
       originalStartMs: state.current.original.startMs, originalDeadlineMs: state.current.original.deadlineMs,
       budgetMs: state.current.original.budgetMs, cumulative: assessment.totals,
       trace: clone(state.current), nativeResult: 'unverified',
@@ -353,7 +354,7 @@
       allowedActions: [...new Set(allowed)], original: state.current ? state.current.original : null,
       profile: state.current ? state.current.profile : null, cumulative: assessment.totals,
       checks: assessment.checks, verdict, measured,
-      impact: verdict === 'FAIL' ? 'interrupted' : measured ? assessment.impact : 'unknown-after-interruption',
+      impact: verdict === 'FAIL' ? 'interrupted' : measured ? assessment.impact : uncertainImpact(state.current),
       verifier: measured ? verdict === PRESETS[state.current.presetId].expected ? 'MATCH' : 'MISMATCH' : 'not measured',
       nativeResult: 'unverified', trace: state.current,
       history: state.history, outcomes: state.outcomes, rejections: state.rejections,

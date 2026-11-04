@@ -1,0 +1,182 @@
+A-S143 / S143 — one original slow-client journey budget
+
+Open learning\S143\index.html directly in a browser.
+Training rehearsal - synthetic data - not a live Azure result
+
+All profiles, clients, reconnects, delays, attempts, results, versions, clocks,
+deadlines, budgets and state records are fixed fictional teaching DATA ONLY.
+No network, clock, traffic, load-generator, live client or user-data operation
+occurs. Buttons reveal records synchronously, not after actual delays. There
+is no service, server, account, credential, storage or arbitrary data entry.
+
+EXACT SOURCES — read before behavior design
+S143: Slow clients and network variability: Validate latency and connection
+recovery under explicitly supported network conditions.
+D-S143: Add bounded slow-client/network variability through labeled
+client-driver conditions.
+Acceptance: Original journey budgets include retries/reconnects; emulated
+conditions and observed native effects are distinguished.
+Original dependency: D-S042 (forced termination and over-budget retries count
+as interruptions; this portable lesson does not complete that source).
+A-S143: Slow a client/reconnect; retries must remain inside the original
+journey budget. SOURCE gate; P1; SC-S143; frozen original Kano S.
+B-S143: Conduct one labeled network-variability profile; verify real client
+impact and emulation limits. CORE, DATA, HOST, C090 gates remain unmet.
+evidence\raw\source\source-contract.json preserves the exact original rows,
+inventory card, source commit, raw CRLF and independent canonical Git hashes.
+It is not OP150/source150/catalog availability or a live acceptance snapshot.
+
+CONDUCT / INSPECT / MEASURE
+1. Choose one closed preset; Start fixes journey-amber/client-amber on
+   fixture-v1: original start 1000 ms, budget 3000 ms, deadline 4000 ms.
+2. Record slow interruption: first client wait 800 + first service 700 =
+   1500 ms, observed at 2500. attempt-1 is interrupted and retained.
+3. Record backoff/reconnect: normally backoff 400 + reconnect 300 = 700 ms;
+   cumulative 2200, observation 3200, remaining upper bound 800.
+   fixture-v2 is supplied version DATA, not proof of actual migration.
+4. Inspect final attempt: normally final wait 200 + service 500 = 700 ms;
+   original cumulative 2900, completion 3900, remaining 100.
+   Inspecting complete-looking DATA does not certify PASS.
+5. Measure original budget: all six independent checks must PASS. Equality
+   at the original deadline passes; 4001 fails. HTTP 200 or a short new
+   attempt cannot reset the original start/deadline or hide cumulative time.
+6. Reset controls / retain history: resets current controls and error,
+   but accepted/rejected records, original timing, outcomes and interruption
+   traces remain. A reset-before-measure is UNKNOWN unless a known failure
+   is already present. Reload intentionally discards this in-memory DATA.
+
+PRESETS AND EXACT THRESHOLDS
+within-budget: elapsed 2900, completion 3900, remaining 100, PASS.
+exact-deadline: final service 600; elapsed 3000, completion 4000,
+remaining 0, PASS. Original deadline equality is inclusive.
+one-ms-over: final service 601; final attempt 801 is below 3000 but
+elapsed 3001, completion 4001, remaining -1, FAIL despite HTTP 200.
+per-attempt-reset: final service 1300; final attempt 1500 is below 3000
+but elapsed 3700, completion 4700, remaining -700, FAIL.
+missing-final-time: HTTP 200, completion=true and correct=true DATA supplied;
+final wait/service/observation/completion time/elapsed are null, UNKNOWN.
+missing-completion: HTTP 200 and final observation 4000 supplied; completion
+and correctness are null. Completion time/elapsed remain null, UNKNOWN.
+Observation time is not invented as completion time.
+late-unknown: backoff 1101 + reconnect 600 after the first 1500 = known
+cumulative 3201, observation 4201, remaining upper bound -201. Final
+completion/time/elapsed remain null; known budget failure remains FAIL.
+reconnect-failed: known failed recovery; no final attempt/completion/time
+is invented; FAIL dominates remaining unknown observations.
+incorrect-200: correct original result=false despite elapsed 2900/HTTP 200,
+FAIL. Connection and response success do not establish correctness.
+unsupported-condition: an explicitly outside-support condition despite
+good timing/result DATA, FAIL. This is a labeled fixture, not an emulator.
+
+OUTPUT SHAPES / UNCERTAINTY
+Pure CommonJS/browser API: createState(), execute(state, command),
+inspect(state). Returned states, presets and outputs are recursively frozen.
+State keys: schemaVersion, phase, runCount, current, journal, history,
+outcomes, rejections. Phases: idle, started, slowed, reconnected, observed,
+measured. Original keys: journeyId, clientId, initialVersion, startMs,
+budgetMs, deadlineMs. The original never changes within a run.
+Current retains run, presetId, original, profile, attempts, recovery, final,
+knownElapsedMs, interruptions, verdict, records. Every attempt/wait/service/
+backoff/reconnect remains inspectable, including in archived outcome.trace.
+Cumulative keys: clientWaitKnownMs, serviceKnownMs, backoffKnownMs,
+reconnectKnownMs, knownElapsedMs, completedAtMs, elapsedMs,
+remainingAtKnownObservationMs, remainingAtCompletionMs, finalAttemptMs,
+perAttemptWithinBudget, unknownFinalTiming.
+Unknown is null, never zero, true, a guessed final clock or a new deadline.
+Known component sum is a lower bound when final time is unknown; remaining
+at that known observation is an upper bound, not a promised remaining SLA.
+The final-attempt-within-budget flag is diagnostic only, never a vote.
+Checks: supported-condition, connection-recovery, original-deadline,
+final-response, final-completion, correct-result. Known FAIL wins over
+UNKNOWN; only all six PASS plus explicit Measure certify lesson PASS.
+An expected negative may report preset verifier MATCH while user impact is
+interrupted. Passing recovery reports recovered-after-interruption, retains
+attempt-1's interruption and does not rewrite earlier failing journeys.
+Before any supplied interruption, initial or early-reset impact is unknown;
+no nonexistent earlier interruption is invented. model-02 retains the genuine
+regression assertion failure, followed by the resource-free IaC N/A refactor.
+Labeled condition evidence: fictional-emulation-data-only.
+Observed native effect: unverified — not observed. Native effects are never
+inferred from fixture timing, HTTP 200, response correctness or version DATA.
+Declared teaching support is one fictional client and at most two supplied
+attempts: first wait 800, known final wait 200; backoff 400 or 1101; reconnect
+300 or 600; known final service 500/600/601/1300 ms. These closed DATA labels
+are not a claim about native support. Missing final timing remains unobserved.
+
+STRICT / BOUNDED / ACCESSIBLE
+12 runs, 72 accepted actions and first 12 rejected actions per page.
+Exact commands: {type:'start',presetId:<closed string>} or
+{type:<slow|reconnect|observe|measure|reset>}. No coercion, extra fields,
+getters, symbols, sparse/extra arrays, cycles, nonplain prototypes, functions,
+arbitrary timing or result overrides. Rejected arbitrary input is replaced by
+a fixed invalid-action marker, not retained as user text.
+Every supplied state must exactly match a bounded canonical command replay;
+forged origin, budget, time, version, final completion, result, history,
+rejection or archived outcome fails ERR_STATE without trusting that result.
+Native buttons/select, semantic labels, visible focus and role=status/alert
+support keyboard conduct. Success focuses the next permitted action; rejection
+focuses the error. Reset focuses the select or exhausted-bound status.
+HTMLFormElement.prototype.reset.call(form) avoids form.reset shadowing.
+Missing/invalid local model safe-holds with disabled conducting controls and
+UNKNOWN, not a browser exception or a certified outcome. Rendering uses
+textContent/DOM creation; CSP permits only self assets and exact theme/style
+hashes, denies inline handlers, arbitrary scripts, connections and form actions.
+No general network sandbox or full accessibility certification is claimed.
+
+BDD → LOADABLE STUB → GENUINE RED → IaC N/A → IMPLEMENT / REFACTOR → GREEN
+original-budget.feature preceded the loadable stub. Actual isolated Edge
+keyboard Start stayed idle without page errors. The genuine model assertion
+failed ERR_ASSERTION ('idle' !== 'started'), child exit 1. The immutable
+stub/spec/source byte snapshots and full raw stdout/stderr are retained in
+evidence\raw\red-01\ with non-test raw suffixes outside autodiscovery.
+evidence\iac-na.json records explicit IaC N/A AFTER RED and BEFORE
+implementation. No cloud, IaC, scaffold, identity, credential, deployment,
+spend, package, framework, download or unsafe browser flag was used.
+The initial explicit producer capture lacked a uniform exact-environment
+guard. It is retained as historical provenance, not relabeled as opt-in proof.
+evidence\raw\qualify-01\ deliberately replays the byte-identical archived stub
+and genuine assertion under exact CAPTURE_BROWSER_EVIDENCE=1 after that guard
+was tightened. This is post-implementation requalification, not a replacement
+for the original pre-implementation RED chronology, and earns zero credit.
+
+From the repository root (smallest complete focused set):
+  node --test --test-concurrency=1 learning\S143\model.test.cjs learning\S143\integrity.test.cjs learning\S143\browser.test.cjs
+  node --check learning\S143\model.js
+  node --check learning\S143\app.js
+  node learning\S143\record.cjs verify
+The verify command also asserts every owned source/evidence byte unchanged.
+Normal verification is READ-ONLY. Only exact CAPTURE_BROWSER_EVIDENCE=1
+deliberately creates a new unique exclusive raw browser observation and source
+snapshot. Unset, 0, true and 01 never capture. All current producer
+red/qualify/model/syntax/green record commands also require exact opt-in and
+unique phase-NN names; they are not the normal verification path.
+Raw failures and prior captures are never overwritten or included as tests.
+Narrow raw-byte attributes preceded capture. Raw CRLF/byte hashes and
+canonical LF/Git blob identity are independently preserved and checked;
+legitimate LF Git checkout is not a raw-evidence rewrite.
+
+Browser tooling: published testing\browser\isolated.cjs only, SHA256
+86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055.
+openIsolatedLesson with awaited finally close; approved offline Playwright
+1.56.1 and Microsoft-signed Edge 156.0.4314.50, sandbox enabled.
+Tooling Node 22.23.4 is not production Node 24 validation. Published helper
+retains known unattended context/page/shutdown recovery limitations; the
+inactive lifecycle prototype is unqualified and unused. No foreground lease.
+Actual tests cover all ten outputs, threshold equality/overflow, null final
+completion/time, cumulative known failure, keyboard focus, retained prior
+failure, typed/error guards, shadow-safe reset, missing model and CSP's denied
+inline-script/empty-local-form behavior. No live network probe is used.
+
+HONEST REMAINDER / CREDIT
+remainder.json refines the original B-S143 Kano unit only, state To Do,
+readiness=false, CORE/DATA/HOST/C090, explicit client/profile/clock uncertainty,
+original budget, independent native observations and execution/cost/lease/
+cleanup approvals required. D-S143 remains incomplete; D-S042 is not erased.
+Parent alone accepts A-S143 once, after empirical source/publication review.
+Zero extra credits for tests, repair, proof, recapture, publication or refinement.
+No ledger, root/shared README, catalog C005-C008 or local-harness edit.
+The ignored evidence\publication-report.local.json is only the exact publisher
+receipt/result supplied to state.ps1 Report, not a self-awarded acceptance.
+Educational AS-IS; the repository's Microsoft Open Source Disclaimer applies.
+No native success, source-parent completion, production validation, SLA,
+five-nines certification, Microsoft endorsement or extra-unit claim.

@@ -175,6 +175,14 @@ test('archived loadable stub, exact assertion RED and post-RED pre-implementatio
     'trafficOperations', 'loadGeneratorOperations', 'userDataOperations', 'identityOperations',
     'downloads', 'packages', 'frameworks', 'extraKanoCredits',
   ]) assert.equal(iac[key], 0);
+  const refactor = parse(path.join('evidence', 'iac-refactor-na.json'));
+  const regression = parse(path.join('evidence', 'raw', 'model-02', 'run.json'));
+  assert.equal(regression.records[0].childExitCode, 1);
+  assert.equal(refactor.redStdoutSha256, regression.records[0].stdoutSha256);
+  assert.equal(refactor.genuineAssertionRed, true);
+  assert.equal(refactor.evaluatedAfterRegressionRedBeforeRefactor, true);
+  assert.equal(refactor.extraKanoCredits, 0);
+  assert.match(read(path.join('evidence', 'raw', 'model-02', 'model.stdout.tap')), /ERR_ASSERTION/);
 });
 
 test('narrow raw-byte attributes predate captures; every child transcript keeps its raw digest including historical failures', () => {

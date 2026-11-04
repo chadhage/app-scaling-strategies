@@ -14,6 +14,7 @@ Feature: A slow fictional client keeps its original journey budget
   Scenario: Conduct, inspect and explicitly measure the original journey
     When I start "within-budget"
     Then the phase is "started"
+    And impact is unknown before any supplied interruption is recorded
     When I record the supplied slow-client interruption
     And I record the supplied backoff and reconnect to fixture-v2
     And I inspect the supplied final attempt

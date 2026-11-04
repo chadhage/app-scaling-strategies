@@ -92,6 +92,9 @@ UNKNOWN; only all six PASS plus explicit Measure certify lesson PASS.
 An expected negative may report preset verifier MATCH while user impact is
 interrupted. Passing recovery reports recovered-after-interruption, retains
 attempt-1's interruption and does not rewrite earlier failing journeys.
+Before any supplied interruption, initial or early-reset impact is unknown;
+no nonexistent earlier interruption is invented. model-02 retains the genuine
+regression assertion failure, followed by the resource-free IaC N/A refactor.
 Labeled condition evidence: fictional-emulation-data-only.
 Observed native effect: unverified — not observed. Native effects are never
 inferred from fixture timing, HTTP 200, response correctness or version DATA.

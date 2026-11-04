@@ -1,0 +1,364 @@
+(function attach(root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S143Lesson = api;
+})(globalThis, function makeLesson() {
+  'use strict';
+  const MAX_RUNS = 12;
+  const MAX_HISTORY = 72;
+  const MAX_REJECTIONS = 12;
+  const ACTIONS = ['start', 'slow', 'reconnect', 'observe', 'measure', 'reset'];
+  const ORIGINAL = {
+    journeyId: 'journey-amber', clientId: 'client-amber', initialVersion: 'fixture-v1',
+    startMs: 1000, budgetMs: 3000, deadlineMs: 4000,
+  };
+  function preset(label, expected, override = {}) {
+    const final = {
+      clientWaitMs: 200, serviceMs: 500, httpStatus: 200, completed: true, correct: true,
+      ...override.final,
+    };
+    return {
+      label, expected, condition: 'slow-reader + reconnect / fictional DATA',
+      supported: true, backoffMs: 400, reconnectMs: 300, reconnectSucceeded: true,
+      ...override, final: override.final === null ? null : final,
+    };
+  }
+  const PRESETS = {
+    'within-budget': preset('Within original budget', 'PASS'),
+    'exact-deadline': preset('Completion exactly at original deadline', 'PASS', { final: { serviceMs: 600 } }),
+    'one-ms-over': preset('One millisecond beyond original deadline', 'FAIL', { final: { serviceMs: 601 } }),
+    'per-attempt-reset': preset('Short new attempt cannot reset original budget', 'FAIL', { final: { serviceMs: 1300 } }),
+    'missing-final-time': preset('Completion DATA supplied, final time unobserved', 'UNKNOWN', {
+      final: { clientWaitMs: null, serviceMs: null },
+    }),
+    'missing-completion': preset('HTTP 200 and observation time, completion unobserved', 'UNKNOWN', {
+      final: { serviceMs: 600, completed: null, correct: null },
+    }),
+    'late-unknown': preset('Known cumulative overrun, final completion/time unobserved', 'FAIL', {
+      backoffMs: 1101, reconnectMs: 600,
+      final: { clientWaitMs: null, serviceMs: null, completed: null, correct: null },
+    }),
+    'reconnect-failed': preset('Known failed connection recovery', 'FAIL', { reconnectSucceeded: false, final: null }),
+    'incorrect-200': preset('Incorrect original result despite HTTP 200', 'FAIL', { final: { correct: false } }),
+    'unsupported-condition': preset('Outside the explicitly supported condition', 'FAIL', {
+      condition: 'outside declared support / fictional DATA', supported: false,
+    }),
+  };
+
+  function freeze(value) {
+    if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+      for (const child of Object.values(value)) freeze(child);
+      Object.freeze(value);
+    }
+    return value;
+  }
+  freeze(PRESETS);
+  freeze(ORIGINAL);
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+  const has = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+
+  class LessonError extends Error {
+    constructor(code, message, state) {
+      super(`${code}: ${message}`);
+      this.name = 'LessonError';
+      this.code = code;
+      if (state) this.state = freeze(state);
+    }
+  }
+
+  function plainTree(value) {
+    let count = 0;
+    const seen = new Set();
+    function visit(item, depth) {
+      if (++count > 20000 || depth > 20) return false;
+      if (item === null || typeof item === 'boolean') return true;
+      if (typeof item === 'string') return item.length <= 512;
+      if (typeof item === 'number') return Number.isSafeInteger(item) && Math.abs(item) <= 10000;
+      if (typeof item !== 'object' || seen.has(item)) return false;
+      seen.add(item);
+      const array = Array.isArray(item);
+      if (Object.getPrototypeOf(item) !== (array ? Array.prototype : Object.prototype)) return false;
+      const keys = Reflect.ownKeys(item);
+      if (keys.some((key) => typeof key !== 'string')) return false;
+      if (array && (item.length > 84 || keys.length !== item.length + 1)) return false;
+      for (const key of keys) {
+        if (array && key === 'length') continue;
+        const descriptor = Object.getOwnPropertyDescriptor(item, key);
+        if (!descriptor || !descriptor.enumerable || !has(descriptor, 'value')) return false;
+        if (array && (!/^(0|[1-9]\d*)$/.test(key) || Number(key) >= item.length)) return false;
+        if (!visit(descriptor.value, depth + 1)) return false;
+      }
+      if (array) for (let index = 0; index < item.length; index++) if (!has(item, index)) return false;
+      seen.delete(item);
+      return true;
+    }
+    try { return visit(value, 0); } catch { return false; }
+  }
+
+  function exactKeys(value, keys) {
+    return value && typeof value === 'object' && !Array.isArray(value)
+      && Object.keys(value).length === keys.length && keys.every((key) => has(value, key));
+  }
+  function commandData(value) {
+    if (!plainTree(value) || !value || typeof value !== 'object' || Array.isArray(value)
+      || !exactKeys(value, value.type === 'start' ? ['type', 'presetId'] : ['type'])
+      || !ACTIONS.includes(value.type)
+      || (value.type === 'start' && (typeof value.presetId !== 'string' || !has(PRESETS, value.presetId)))) {
+      return { type: 'invalid-command' };
+    }
+    return clone(value);
+  }
+  function equalTree(left, right) {
+    if (left === right) return true;
+    if (!left || !right || typeof left !== 'object' || typeof right !== 'object'
+      || Array.isArray(left) !== Array.isArray(right)) return false;
+    const keys = Object.keys(left).sort();
+    const other = Object.keys(right).sort();
+    return keys.length === other.length && keys.every((key, index) => key === other[index] && equalTree(left[key], right[key]));
+  }
+  const fresh = () => ({
+    schemaVersion: 1, phase: 'idle', runCount: 0, current: null,
+    journal: [], history: [], outcomes: [], rejections: [],
+  });
+
+  function cumulative(current) {
+    if (!current) return null;
+    const first = current.attempts[0];
+    const final = current.final;
+    const clientWaitKnownMs = (first ? first.clientWaitMs : 0) + (final ? final.clientWaitMs || 0 : 0);
+    const serviceKnownMs = (first ? first.serviceMs : 0) + (final ? final.serviceMs || 0 : 0);
+    const backoffKnownMs = current.recovery ? current.recovery.backoffMs : 0;
+    const reconnectKnownMs = current.recovery ? current.recovery.reconnectMs : 0;
+    const completedAtMs = final ? final.completedAtMs : null;
+    const elapsedMs = completedAtMs === null ? null : completedAtMs - current.original.startMs;
+    const finalAttemptMs = final && final.clientWaitMs !== null && final.serviceMs !== null
+      ? final.clientWaitMs + final.serviceMs : null;
+    return {
+      clientWaitKnownMs, serviceKnownMs, backoffKnownMs, reconnectKnownMs,
+      knownElapsedMs: clientWaitKnownMs + serviceKnownMs + backoffKnownMs + reconnectKnownMs,
+      completedAtMs, elapsedMs,
+      remainingAtKnownObservationMs: current.original.budgetMs - current.knownElapsedMs,
+      remainingAtCompletionMs: elapsedMs === null ? null : current.original.budgetMs - elapsedMs,
+      finalAttemptMs,
+      perAttemptWithinBudget: finalAttemptMs === null ? null : finalAttemptMs <= current.original.budgetMs,
+      unknownFinalTiming: !final || final.observedAtMs === null,
+    };
+  }
+  const tri = (value) => value === null ? 'UNKNOWN' : value === true ? 'PASS' : 'FAIL';
+  const uncertainImpact = (current) => current && current.interruptions.length ? 'unknown-after-interruption' : 'unknown';
+  function assess(current) {
+    const totals = cumulative(current);
+    const final = current && current.final;
+    const completionElapsed = totals ? totals.elapsedMs : null;
+    const budget = !current ? 'UNKNOWN'
+      : current.knownElapsedMs > current.original.budgetMs ? 'FAIL'
+        : completionElapsed === null ? 'UNKNOWN'
+          : completionElapsed <= current.original.budgetMs ? 'PASS' : 'FAIL';
+    const checks = [
+      {
+        id: 'supported-condition', result: tri(current ? current.profile.supported : null),
+        evidence: current ? current.profile.condition : 'No selected original journey.',
+      },
+      {
+        id: 'connection-recovery', result: tri(current && current.recovery ? current.recovery.succeeded : null),
+        evidence: 'Supplied reconnect DATA; earlier connection interruption is retained.',
+      },
+      {
+        id: 'original-deadline', result: budget,
+        evidence: current
+          ? `Start ${current.original.startMs}; deadline ${current.original.deadlineMs}; budget ${current.original.budgetMs}; known cumulative ${current.knownElapsedMs}; completion elapsed ${completionElapsed === null ? 'UNKNOWN' : completionElapsed}. Equality passes; every wait/backoff/reconnect/attempt counts.`
+          : 'Original completion and deadline unobserved.',
+      },
+      {
+        id: 'final-response', result: tri(final ? final.httpStatus === null ? null : final.httpStatus === 200 : null),
+        evidence: 'HTTP 200 is one supplied DATA check, never a new start or proof of completion.',
+      },
+      {
+        id: 'final-completion', result: tri(final ? final.completed : null),
+        evidence: 'Unobserved final completion stays null even after HTTP 200 or version change.',
+      },
+      {
+        id: 'correct-result', result: tri(final ? final.correct : null),
+        evidence: 'Correct original client result is independent of connection or HTTP success.',
+      },
+    ];
+    const verdict = checks.some((check) => check.result === 'FAIL') ? 'FAIL'
+      : checks.every((check) => check.result === 'PASS') ? 'PASS' : 'UNKNOWN';
+    const impact = verdict === 'FAIL' ? 'interrupted'
+      : verdict === 'PASS' ? 'recovered-after-interruption'
+        : current && current.interruptions.length ? 'unknown-after-interruption' : 'unknown';
+    return { checks, verdict, impact, totals };
+  }
+
+  function archive(state, reason) {
+    const assessment = assess(state.current);
+    const verdict = reason === 'measured' ? assessment.verdict : assessment.verdict === 'FAIL' ? 'FAIL' : 'UNKNOWN';
+    state.outcomes.push({
+      run: state.current.run, presetId: state.current.presetId, reason, verdict,
+      impact: verdict === 'PASS' ? 'recovered-after-interruption'
+        : verdict === 'FAIL' ? 'interrupted' : uncertainImpact(state.current),
+      originalStartMs: state.current.original.startMs, originalDeadlineMs: state.current.original.deadlineMs,
+      budgetMs: state.current.original.budgetMs, cumulative: assessment.totals,
+      trace: clone(state.current), nativeResult: 'unverified',
+    });
+  }
+
+  function transition(prior, command) {
+    const state = clone(prior);
+    function reject(code, message) {
+      if (state.rejections.length < MAX_REJECTIONS) {
+        state.rejections.push({
+          sequence: state.rejections.length + 1,
+          action: ACTIONS.includes(command.type) ? command.type : 'invalid-action', code,
+        });
+        state.journal.push({ command, error: code });
+      } else message += ' Rejected history bound reached; earlier records retained.';
+      return { state, error: new LessonError(code, message, state) };
+    }
+    if (command.type === 'invalid-command') return reject('ERR_COMMAND', 'Use an exact closed DATA command; arbitrary input is not retained.');
+    const required = { start: 'idle', slow: 'started', reconnect: 'slowed', observe: 'reconnected', measure: 'observed' };
+    if (command.type !== 'reset' && state.phase !== required[command.type]) {
+      return reject('ERR_PHASE', 'Action is out of order; original journey and history retained.');
+    }
+    if (command.type === 'start' && (state.runCount >= MAX_RUNS || state.history.length > MAX_HISTORY - 6)) {
+      return reject('ERR_LIMIT', 'Teaching run/action bound reached; reset retains all earlier results.');
+    }
+    if (command.type === 'reset' && state.phase === 'idle') return { state, error: null };
+    let closing = null;
+    if (command.type === 'start') {
+      state.runCount++;
+      const selected = PRESETS[command.presetId];
+      state.current = {
+        run: state.runCount, presetId: command.presetId, original: clone(ORIGINAL),
+        profile: { label: selected.label, condition: selected.condition, supported: selected.supported, mode: 'fictional-emulation-data-only' },
+        attempts: [], recovery: null, final: null, knownElapsedMs: 0, interruptions: [], verdict: null,
+        records: [{
+          kind: 'original-start', version: 'fixture-v1', atMs: 1000,
+          clientWaitMs: 0, serviceMs: 0, backoffMs: 0, reconnectMs: 0,
+        }],
+      };
+      state.phase = 'started';
+    } else if (command.type === 'slow') {
+      const current = state.current;
+      current.attempts.push({
+        attemptId: 'attempt-1', version: 'fixture-v1', startedAtMs: 1000,
+        clientWaitMs: 800, serviceMs: 700, observedAtMs: 2500,
+        httpStatus: null, completed: false, completedAtMs: null,
+      });
+      current.knownElapsedMs = 1500;
+      current.interruptions.push({ attemptId: 'attempt-1', atMs: 2500, kind: 'connection-interrupted', retained: true });
+      current.records.push({
+        kind: 'slow-attempt / interrupted', version: 'fixture-v1', atMs: 2500,
+        clientWaitMs: 800, serviceMs: 700, backoffMs: 0, reconnectMs: 0,
+      });
+      state.phase = 'slowed';
+    } else if (command.type === 'reconnect') {
+      const current = state.current;
+      const selected = PRESETS[current.presetId];
+      const duration = selected.backoffMs + selected.reconnectMs;
+      current.recovery = {
+        fromVersion: 'fixture-v1', toVersion: 'fixture-v2', startedAtMs: 2500,
+        backoffMs: selected.backoffMs, reconnectMs: selected.reconnectMs,
+        observedAtMs: 2500 + duration, succeeded: selected.reconnectSucceeded,
+      };
+      current.knownElapsedMs += duration;
+      current.records.push({
+        kind: selected.reconnectSucceeded ? 'backoff / recovered' : 'backoff / reconnect failed',
+        version: 'fixture-v2', atMs: current.recovery.observedAtMs,
+        clientWaitMs: 0, serviceMs: 0, backoffMs: selected.backoffMs, reconnectMs: selected.reconnectMs,
+      });
+      state.phase = 'reconnected';
+    } else if (command.type === 'observe') {
+      const current = state.current;
+      const selected = PRESETS[current.presetId].final;
+      if (selected) {
+        const duration = selected.clientWaitMs === null || selected.serviceMs === null
+          ? null : selected.clientWaitMs + selected.serviceMs;
+        const observedAtMs = duration === null ? null : current.recovery.observedAtMs + duration;
+        current.final = {
+          attemptId: 'attempt-2', version: 'fixture-v2', startedAtMs: current.recovery.observedAtMs,
+          clientWaitMs: selected.clientWaitMs, serviceMs: selected.serviceMs,
+          observedAtMs, httpStatus: selected.httpStatus, completed: selected.completed,
+          completedAtMs: selected.completed === true ? observedAtMs : null, correct: selected.correct,
+        };
+        current.attempts.push(clone(current.final));
+        if (duration !== null) current.knownElapsedMs += duration;
+        current.records.push({
+          kind: 'final-attempt / supplied observation', version: 'fixture-v2', atMs: observedAtMs,
+          clientWaitMs: selected.clientWaitMs, serviceMs: selected.serviceMs, backoffMs: 0, reconnectMs: 0,
+        });
+      } else {
+        current.records.push({
+          kind: 'final-completion / unobserved', version: 'unobserved', atMs: null,
+          clientWaitMs: null, serviceMs: null, backoffMs: 0, reconnectMs: 0,
+        });
+      }
+      state.phase = 'observed';
+    } else if (command.type === 'measure') {
+      state.current.verdict = assess(state.current).verdict;
+      archive(state, 'measured');
+      state.phase = 'measured';
+    } else if (command.type === 'reset') {
+      closing = state.current;
+      if (state.phase !== 'measured') archive(state, 'reset-before-measure');
+      state.current = null;
+      state.phase = 'idle';
+    }
+    const current = state.current || closing;
+    state.history.push({
+      sequence: state.history.length + 1, run: current.run, action: command.type,
+      presetId: current.presetId, phase: state.phase, originalStartMs: current.original.startMs,
+      originalDeadlineMs: current.original.deadlineMs, budgetMs: current.original.budgetMs,
+      knownElapsedMs: current.knownElapsedMs, measuredVerdict: current.verdict,
+    });
+    state.journal.push({ command, error: null });
+    return { state, error: null };
+  }
+
+  function checkedState(value) {
+    function invalid() { throw new LessonError('ERR_STATE', 'Snapshot must exactly match bounded canonical command replay; no result is trusted.'); }
+    if (!plainTree(value) || !exactKeys(value, [
+      'schemaVersion', 'phase', 'runCount', 'current', 'journal', 'history', 'outcomes', 'rejections',
+    ]) || !Array.isArray(value.journal) || value.journal.length > MAX_HISTORY + MAX_REJECTIONS) invalid();
+    let replayed = fresh();
+    for (const entry of value.journal) {
+      if (!exactKeys(entry, ['command', 'error'])) invalid();
+      const command = entry.command;
+      if (command && command.type === 'invalid-command' && exactKeys(command, ['type'])) {
+        replayed = transition(replayed, clone(command)).state;
+      } else {
+        const normalized = commandData(command);
+        if (normalized.type === 'invalid-command') invalid();
+        replayed = transition(replayed, normalized).state;
+      }
+    }
+    if (!equalTree(value, replayed)) invalid();
+    return replayed;
+  }
+  const createState = () => freeze(fresh());
+  function execute(prior, command) {
+    const result = transition(checkedState(prior), commandData(command));
+    if (result.error) throw result.error;
+    return freeze(result.state);
+  }
+  function inspect(prior) {
+    const state = checkedState(prior);
+    const assessment = assess(state.current);
+    const measured = state.phase === 'measured';
+    const verdict = measured ? assessment.verdict : assessment.verdict === 'FAIL' ? 'FAIL' : 'UNKNOWN';
+    const allowed = state.phase === 'idle' ? state.runCount < MAX_RUNS && state.history.length <= MAX_HISTORY - 6 ? ['start', 'reset'] : ['reset']
+      : [({ started: 'slow', slowed: 'reconnect', reconnected: 'observe', observed: 'measure', measured: 'reset' })[state.phase], 'reset'];
+    return freeze({
+      schemaVersion: 1, phase: state.phase, runCount: state.runCount,
+      allowedActions: [...new Set(allowed)], original: state.current ? state.current.original : null,
+      profile: state.current ? state.current.profile : null, cumulative: assessment.totals,
+      checks: assessment.checks, verdict, measured,
+      impact: verdict === 'FAIL' ? 'interrupted' : measured ? assessment.impact : uncertainImpact(state.current),
+      verifier: measured ? verdict === PRESETS[state.current.presetId].expected ? 'MATCH' : 'MISMATCH' : 'not measured',
+      nativeResult: 'unverified', trace: state.current,
+      history: state.history, outcomes: state.outcomes, rejections: state.rejections,
+    });
+  }
+  return freeze({ createState, execute, inspect, PRESETS, ORIGINAL, ACTIONS, MAX_RUNS, MAX_HISTORY, MAX_REJECTIONS, LessonError });
+});

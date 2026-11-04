@@ -43,6 +43,21 @@ test('starting a supplied slow-client trace retains the original journey', () =>
   });
 });
 
+test('initial and early-reset impact do not invent an interruption; a supplied interruption is retained when it exists', () => {
+  const begun = start();
+  assert.equal(model.inspect(begun).impact, 'unknown');
+  assert.equal(begun.current.interruptions.length, 0);
+  const earlyReset = action(begun, 'reset');
+  assert.equal(earlyReset.outcomes[0].verdict, 'UNKNOWN');
+  assert.equal(earlyReset.outcomes[0].impact, 'unknown');
+  assert.equal(earlyReset.outcomes[0].trace.interruptions.length, 0);
+  const slowed = action(begun, 'slow');
+  assert.equal(model.inspect(slowed).impact, 'unknown-after-interruption');
+  const interruptedReset = action(slowed, 'reset');
+  assert.equal(interruptedReset.outcomes[0].impact, 'unknown-after-interruption');
+  assert.equal(interruptedReset.outcomes[0].trace.interruptions.length, 1);
+});
+
 for (const [presetId, [verdict, elapsed, known, finalAttempt, remaining]] of Object.entries(expected)) {
   test(`${presetId}: exact original ${verdict}, cumulative DATA and retained interrupted attempt`, () => {
     const state = conduct(presetId);
