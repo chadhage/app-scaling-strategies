@@ -1,0 +1,262 @@
+learning/S127/evidence/raw/red-bdd.snapshot:1: trailing whitespace.
++Feature: A-S127 bounded synthetic rolling-step rehearsal
+learning/S127/evidence/raw/red-bdd.snapshot:2: trailing whitespace.
++  All pods, nodes, probes, rollout, surge, disruption, grace, drain, requests and
+learning/S127/evidence/raw/red-bdd.snapshot:3: trailing whitespace.
++  state are fixed fictional teaching DATA ONLY. No Kubernetes operation occurs.
+learning/S127/evidence/raw/red-bdd.snapshot:4: trailing whitespace.
++
+learning/S127/evidence/raw/red-bdd.snapshot:5: trailing whitespace.
++  Scenario: Observed readiness, headroom and grace preserve one rolling step
+learning/S127/evidence/raw/red-bdd.snapshot:6: trailing whitespace.
++    Given three observed-ready old pods and one recorded spare pod slot
+learning/S127/evidence/raw/red-bdd.snapshot:7: trailing whitespace.
++    And both candidate probes and compatible business-state traces are recorded
+learning/S127/evidence/raw/red-bdd.snapshot:8: trailing whitespace.
++    When the operator chooses maxUnavailable 0, maxSurge 1 and grace 20 seconds
+learning/S127/evidence/raw/red-bdd.snapshot:9: trailing whitespace.
++    And observes the data, rehearses one rolling step and drains old work
+learning/S127/evidence/raw/red-bdd.snapshot:10: trailing whitespace.
++    Then the minimum observed-ready capacity is 3 and peak pod count is 4
+learning/S127/evidence/raw/red-bdd.snapshot:11: trailing whitespace.
++    And PreStop consumes 4 seconds leaving 16 seconds for the 8 and 14 second requests
+learning/S127/evidence/raw/red-bdd.snapshot:12: trailing whitespace.
++    And two transitions and two old requests succeed in the synthetic trace
+learning/S127/evidence/raw/red-bdd.snapshot:13: trailing whitespace.
++    And no complete Deployment, native readiness or real grace is certified
+learning/S127/evidence/raw/red-bdd.snapshot:14: trailing whitespace.
++
+learning/S127/evidence/raw/red-bdd.snapshot:15: trailing whitespace.
++  Scenario: An availability allowance can interrupt work despite a PDB
+learning/S127/evidence/raw/red-bdd.snapshot:16: trailing whitespace.
++    Given the fixed workload needs three ready pods and the PDB minimum is two
+learning/S127/evidence/raw/red-bdd.snapshot:17: trailing whitespace.
++    When maxUnavailable is 1 during the rehearsed step
+learning/S127/evidence/raw/red-bdd.snapshot:18: trailing whitespace.
++    Then the permitted readiness floor is 2 and one transition is interrupted
+learning/S127/evidence/raw/red-bdd.snapshot:19: trailing whitespace.
++    And the PDB is not treated as a rollout availability guard
+learning/S127/evidence/raw/red-bdd.snapshot:20: trailing whitespace.
++
+learning/S127/evidence/raw/red-bdd.snapshot:21: trailing whitespace.
++  Scenario: Short grace includes PreStop rather than starting after it
+learning/S127/evidence/raw/red-bdd.snapshot:22: trailing whitespace.
++    When a ready surge-first step uses grace 10 seconds
+learning/S127/evidence/raw/red-bdd.snapshot:23: trailing whitespace.
++    Then only 6 seconds remain and both old in-flight requests are interrupted
+learning/S127/evidence/raw/red-bdd.snapshot:24: trailing whitespace.
++    And later successful work does not erase those interruptions
+learning/S127/evidence/raw/red-bdd.snapshot:25: trailing whitespace.
++
+learning/S127/evidence/raw/red-bdd.snapshot:26: trailing whitespace.
++  Scenario: Missing or failed gates do not expose a candidate
+learning/S127/evidence/raw/red-bdd.snapshot:27: trailing whitespace.
++    When headroom is full or candidate readiness has failed
+learning/S127/evidence/raw/red-bdd.snapshot:28: trailing whitespace.
++    Then the step safely aborts before exposure and old-only journeys are not transitions
+learning/S127/evidence/raw/red-bdd.snapshot:29: trailing whitespace.
++    When readiness, surge headroom or a desired-only pod observation is missing
+learning/S127/evidence/raw/red-bdd.snapshot:30: trailing whitespace.
++    Or only a startup probe is chosen
+learning/S127/evidence/raw/red-bdd.snapshot:31: trailing whitespace.
++    Then the result is unverified and desired replicas do not become observed-ready capacity
+learning/S127/evidence/raw/red-bdd.snapshot:32: trailing whitespace.
++
+learning/S127/evidence/raw/red-bdd.snapshot:33: trailing whitespace.
++  Scenario: Probe success does not certify business state
+learning/S127/evidence/raw/red-bdd.snapshot:34: trailing whitespace.
++    When ready probes accompany a recorded incompatible-state HTTP 200 trace
+learning/S127/evidence/raw/red-bdd.snapshot:35: trailing whitespace.
++    Then both candidate transitions are interrupted
+learning/S127/evidence/raw/red-bdd.snapshot:36: trailing whitespace.
++    When candidate business-state trace results are missing
+learning/S127/evidence/raw/red-bdd.snapshot:37: trailing whitespace.
++    Then both transitions stay unknown instead of becoming successes
+learning/S127/evidence/raw/red-bdd.snapshot:38: trailing whitespace.
++
+learning/S127/evidence/raw/red-bdd.snapshot:39: trailing whitespace.
++  Scenario: The PDB comparison concerns voluntary Eviction API disruption only
+learning/S127/evidence/raw/red-bdd.snapshot:40: trailing whitespace.
++    When one voluntary eviction is compared against the fixed three-ready-pod snapshot
+learning/S127/evidence/raw/red-bdd.snapshot:41: trailing whitespace.
++    Then the budget permits eviction but surviving capacity 2 is below workload demand 3
+learning/S127/evidence/raw/red-bdd.snapshot:42: trailing whitespace.
++    When two voluntary evictions are compared
+learning/S127/evidence/raw/red-bdd.snapshot:43: trailing whitespace.
++    Then the budget blocks eviction without certifying a migration
+learning/S127/evidence/raw/red-bdd.snapshot:44: trailing whitespace.
++    When fixed node, zone or region loss records are compared
+learning/S127/evidence/raw/red-bdd.snapshot:45: trailing whitespace.
++    Then the PDB does not apply and the measured losses remain visible
+learning/S127/evidence/raw/red-bdd.snapshot:46: trailing whitespace.
++    When a failure outside the fixed records is selected
+learning/S127/evidence/raw/red-bdd.snapshot:47: trailing whitespace.
++    Then capacity and user results remain unknown
+learning/S127/evidence/raw/red-bdd.snapshot:48: trailing whitespace.
++
+learning/S127/evidence/raw/red-bdd.snapshot:49: trailing whitespace.
++  Scenario: Typed actions, bounded state and retained history
+learning/S127/evidence/raw/red-bdd.snapshot:50: trailing whitespace.
++    Then noncanonical numeric text, coercible values, unknown keys and accessors are rejected
+learning/S127/evidence/raw/red-bdd.snapshot:51: trailing whitespace.
++    And out-of-order actions and repeated disruption comparisons cannot mutate state
+learning/S127/evidence/raw/red-bdd.snapshot:52: trailing whitespace.
++    And at most eight rehearsals and 64 history entries can be retained
+learning/S127/evidence/raw/red-bdd.snapshot:53: trailing whitespace.
++    And reset clears current controls and state but preserves earlier failures and unknowns
+learning/S127/evidence/raw/red-bdd.snapshot:54: trailing whitespace.
++
+learning/S127/evidence/raw/red-bdd.snapshot:55: trailing whitespace.
++  Scenario: Actual browser observations
+learning/S127/evidence/raw/red-bdd.snapshot:56: trailing whitespace.
++    Then labelled controls work by keyboard
+learning/S127/evidence/raw/red-bdd.snapshot:57: trailing whitespace.
++    And input errors focus an alert and permit recovery
+learning/S127/evidence/raw/red-bdd.snapshot:58: trailing whitespace.
++    And reset does not shadow the native form reset method
+learning/S127/evidence/raw/red-bdd.snapshot:59: trailing whitespace.
++    And actual DOM results, negative paths, reset and blocked CSP actions are observed
+learning/S127/evidence/raw/red-bdd.snapshot:60: trailing whitespace.
++    And missing startup assets fail closed
+learning/S127/evidence/raw/red-bdd.snapshot:61: trailing whitespace.
++    And ordinary verification never rewrites published observations
+learning/S127/evidence/raw/red-bdd.snapshot:62: trailing whitespace.
++    And only exact CAPTURE_BROWSER_EVIDENCE=1 deliberately captures browser proof
+learning/S127/evidence/raw/red-model.snapshot:1: trailing whitespace.
++'use strict';
+learning/S127/evidence/raw/red-model.snapshot:2: trailing whitespace.
++
+learning/S127/evidence/raw/red-model.snapshot:3: trailing whitespace.
++(function expose(root) {
+learning/S127/evidence/raw/red-model.snapshot:4: trailing whitespace.
++  function createLesson() {
+learning/S127/evidence/raw/red-model.snapshot:5: trailing whitespace.
++    const state = Object.freeze({
+learning/S127/evidence/raw/red-model.snapshot:6: trailing whitespace.
++      phase: 'stub',
+learning/S127/evidence/raw/red-model.snapshot:7: trailing whitespace.
++      result: Object.freeze({
+learning/S127/evidence/raw/red-model.snapshot:8: trailing whitespace.
++        successfulTransitions: 0,
+learning/S127/evidence/raw/red-model.snapshot:9: trailing whitespace.
++        interruptedTransitions: 0,
+learning/S127/evidence/raw/red-model.snapshot:10: trailing whitespace.
++        unknownTransitions: 0,
+learning/S127/evidence/raw/red-model.snapshot:11: trailing whitespace.
++      }),
+learning/S127/evidence/raw/red-model.snapshot:12: trailing whitespace.
++    });
+learning/S127/evidence/raw/red-model.snapshot:13: trailing whitespace.
++    return Object.freeze({
+learning/S127/evidence/raw/red-model.snapshot:14: trailing whitespace.
++      dispatch() { return state; },
+learning/S127/evidence/raw/red-model.snapshot:15: trailing whitespace.
++      snapshot() { return state; },
+learning/S127/evidence/raw/red-model.snapshot:16: trailing whitespace.
++    });
+learning/S127/evidence/raw/red-model.snapshot:17: trailing whitespace.
++  }
+learning/S127/evidence/raw/red-model.snapshot:18: trailing whitespace.
++  const api = Object.freeze({ createLesson });
+learning/S127/evidence/raw/red-model.snapshot:19: trailing whitespace.
++  if (typeof module === 'object' && module.exports) module.exports = api;
+learning/S127/evidence/raw/red-model.snapshot:20: trailing whitespace.
++  else root.S127Lesson = api;
+learning/S127/evidence/raw/red-model.snapshot:21: trailing whitespace.
++}(globalThis));
+learning/S127/evidence/raw/red-test.snapshot:1: trailing whitespace.
++'use strict';
+learning/S127/evidence/raw/red-test.snapshot:2: trailing whitespace.
++
+learning/S127/evidence/raw/red-test.snapshot:3: trailing whitespace.
++const test = require('node:test');
+learning/S127/evidence/raw/red-test.snapshot:4: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S127/evidence/raw/red-test.snapshot:5: trailing whitespace.
++const { createLesson } = require('..\\model.js');
+learning/S127/evidence/raw/red-test.snapshot:6: trailing whitespace.
++
+learning/S127/evidence/raw/red-test.snapshot:7: trailing whitespace.
++const settings = Object.freeze({
+learning/S127/evidence/raw/red-test.snapshot:8: trailing whitespace.
++  maxUnavailable: 0,
+learning/S127/evidence/raw/red-test.snapshot:9: trailing whitespace.
++  maxSurge: 1,
+learning/S127/evidence/raw/red-test.snapshot:10: trailing whitespace.
++  probe: 'readiness-startup',
+learning/S127/evidence/raw/red-test.snapshot:11: trailing whitespace.
++  headroom: 'available',
+learning/S127/evidence/raw/red-test.snapshot:12: trailing whitespace.
++  graceSeconds: 20,
+learning/S127/evidence/raw/red-test.snapshot:13: trailing whitespace.
++  observation: 'complete',
+learning/S127/evidence/raw/red-test.snapshot:14: trailing whitespace.
++});
+learning/S127/evidence/raw/red-test.snapshot:15: trailing whitespace.
++
+learning/S127/evidence/raw/red-test.snapshot:16: trailing whitespace.
++test('observed gates and sufficient grace preserve two transitions in one synthetic step', () => {
+learning/S127/evidence/raw/red-test.snapshot:17: trailing whitespace.
++  const lesson = createLesson();
+learning/S127/evidence/raw/red-test.snapshot:18: trailing whitespace.
++  lesson.dispatch({ type: 'configure', settings });
+learning/S127/evidence/raw/red-test.snapshot:19: trailing whitespace.
++  lesson.dispatch({ type: 'observe' });
+learning/S127/evidence/raw/red-test.snapshot:20: trailing whitespace.
++  lesson.dispatch({ type: 'rollout' });
+learning/S127/evidence/raw/red-test.snapshot:21: trailing whitespace.
++  const state = lesson.dispatch({ type: 'drain' });
+learning/S127/evidence/raw/red-test.snapshot:22: trailing whitespace.
++  assert.equal(state.result.successfulTransitions, 2);
+learning/S127/evidence/raw/red-test.snapshot:23: trailing whitespace.
++  assert.equal(state.result.interruptedTransitions, 0);
+learning/S127/evidence/raw/red-test.snapshot:24: trailing whitespace.
++  assert.equal(state.result.unknownTransitions, 0);
+learning/S127/evidence/raw/red-test.snapshot:25: trailing whitespace.
++  assert.equal(state.phase, 'done');
+learning/S127/evidence/raw/red-test.snapshot:26: trailing whitespace.
++  assert.equal(state.result.readyFloor, 3);
+learning/S127/evidence/raw/red-test.snapshot:27: trailing whitespace.
++  assert.equal(state.result.peakPods, 4);
+learning/S127/evidence/raw/red-test.snapshot:28: trailing whitespace.
++  assert.equal(state.result.drain.availableSeconds, 16);
+learning/S127/evidence/raw/red-test.snapshot:29: trailing whitespace.
++  assert.equal(state.result.drain.succeeded, 2);
+learning/S127/evidence/raw/red-test.snapshot:30: trailing whitespace.
++  assert.equal(state.result.verification, 'pass');
+learning/S127/evidence/raw/red-test.snapshot:31: trailing whitespace.
++  assert.equal(state.result.nativeQualified, false);
+learning/S127/evidence/raw/red-test.snapshot:32: trailing whitespace.
++});
+learning/S127/evidence/raw/red.tap.txt:11: trailing whitespace.
++    
+learning/S127/evidence/raw/red.tap.txt:13: trailing whitespace.
++    
+learning/S127/evidence/raw/source-backlog.raw.snapshot:1: trailing whitespace.
++| D-S127 | P1 | Add an AKS rolling preset with readiness, surge, availability, and termination settings. | Native pod readiness and grace behavior match the manifest; surge capacity exists; PDBs are not presented as universal protection. | P003, D-S021, D-S015 |
+learning/S127/evidence/raw/source-cards.raw.snapshot:1: trailing whitespace.
++| A-S127 | D-S127 | S | Choose rollout/probe/surge/grace settings; a PDB is not universal failure protection. | SOURCE |
+learning/S127/evidence/raw/source-cards.raw.snapshot:2: trailing whitespace.
++| B-S127 | D-S127 | S | Conduct one AKS rolling preset; verify actual readiness, surge capacity, and graceful termination. | CORE, DATA, AKS, C075, C078 |
+learning/S127/evidence/raw/source-portable.git.snapshot:8: new blank line at EOF.
+learning/S127/evidence/raw/source-portable.raw.snapshot:1: trailing whitespace.
++### Portable A-card lesson contract
+learning/S127/evidence/raw/source-portable.raw.snapshot:2: trailing whitespace.
++
+learning/S127/evidence/raw/source-portable.raw.snapshot:3: trailing whitespace.
++An A card delivers a standalone, browser-openable lesson bundle with a small interactive exercise: choose an action or condition, inspect a synthetic trace, and check the expected outcome. Use standard HTML/browser behavior so an approved application framework or Azure subscription is not needed to begin.
+learning/S127/evidence/raw/source-portable.raw.snapshot:4: trailing whitespace.
++
+learning/S127/evidence/raw/source-portable.raw.snapshot:5: trailing whitespace.
++Each bundle declares source ID, objective, preconditions, actions, synthetic input/trace, expected assertions, and limits. It prominently says **Training rehearsal - synthetic data - not a live Azure result**, makes no management calls, contains no credentials, and supports keyboard operation.
+learning/S127/evidence/raw/source-portable.raw.snapshot:6: trailing whitespace.
++
+learning/S127/evidence/raw/source-portable.raw.snapshot:7: trailing whitespace.
++Each lesson must add a worked, testable exercise rather than copying the backlog sentence. Keep it portable for later mounting by C041. The native implementation and evidence remain a separate B card, and the source demo is not complete until both required slices and its original acceptance gates pass.
+learning/S127/evidence/raw/source-portable.raw.snapshot:8: trailing whitespace.
++
+learning/S127/evidence/raw/source-portable.raw.snapshot:8: new blank line at EOF.
+learning/S127/evidence/raw/source-readme.raw.snapshot:1: trailing whitespace.
++| S127 | **AKS, rolling deployment:** Combine readiness, available surge capacity, suitable rollout availability settings, and graceful termination. |
+learning/S127/evidence/raw/source-readme.raw.snapshot:2: trailing whitespace.
++- AKS rollout settings, readiness/startup probes, surge capacity, and graceful termination serve different purposes. Pod Disruption Budgets concern voluntary eviction through the Eviction API, not arbitrary failure or every rollout operation. A `PreStop` hook consumes part of the termination grace period. [Source][aks-reliability]

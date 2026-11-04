@@ -1,0 +1,32 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createLesson } = require('..\\model.js');
+
+const settings = Object.freeze({
+  maxUnavailable: 0,
+  maxSurge: 1,
+  probe: 'readiness-startup',
+  headroom: 'available',
+  graceSeconds: 20,
+  observation: 'complete',
+});
+
+test('observed gates and sufficient grace preserve two transitions in one synthetic step', () => {
+  const lesson = createLesson();
+  lesson.dispatch({ type: 'configure', settings });
+  lesson.dispatch({ type: 'observe' });
+  lesson.dispatch({ type: 'rollout' });
+  const state = lesson.dispatch({ type: 'drain' });
+  assert.equal(state.result.successfulTransitions, 2);
+  assert.equal(state.result.interruptedTransitions, 0);
+  assert.equal(state.result.unknownTransitions, 0);
+  assert.equal(state.phase, 'done');
+  assert.equal(state.result.readyFloor, 3);
+  assert.equal(state.result.peakPods, 4);
+  assert.equal(state.result.drain.availableSeconds, 16);
+  assert.equal(state.result.drain.succeeded, 2);
+  assert.equal(state.result.verification, 'pass');
+  assert.equal(state.result.nativeQualified, false);
+});

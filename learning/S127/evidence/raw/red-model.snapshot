@@ -1,0 +1,21 @@
+'use strict';
+
+(function expose(root) {
+  function createLesson() {
+    const state = Object.freeze({
+      phase: 'stub',
+      result: Object.freeze({
+        successfulTransitions: 0,
+        interruptedTransitions: 0,
+        unknownTransitions: 0,
+      }),
+    });
+    return Object.freeze({
+      dispatch() { return state; },
+      snapshot() { return state; },
+    });
+  }
+  const api = Object.freeze({ createLesson });
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S127Lesson = api;
+}(globalThis));

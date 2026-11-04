@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S127 - synthetic rolling-step lesson</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+<main>
+  <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+  <h1>S127: readiness, surge, rollout and grace</h1>
+  <p>Choose bounded settings, observe fixed data, rehearse one rolling step and drain old work.</p>
+  <p><strong>All pods, nodes, probes, rollout, surge, disruption, grace, drain, requests and state are fixed fictional teaching DATA ONLY.</strong> No actual Kubernetes, AKS, resource, configuration, fault, deployment or IaC operation occurs.</p>
+  <p>Demand is <strong>3 ready pods</strong>. Desired replicas <strong>3</strong> are not observed readiness. A fictional PDB minimum <strong>2</strong> only limits voluntary Eviction API disruption; it does not guard every rollout or arbitrary node/zone/region failure.</p>
+
+  <section aria-labelledby="settings-heading">
+    <h2 id="settings-heading">1. Choose synthetic settings</h2>
+    <form id="settings-form" novalidate>
+      <fieldset id="settings-fields" disabled>
+        <legend>Fixed teaching choices - not Kubernetes configuration</legend>
+        <div class="settings-grid">
+          <label for="max-unavailable">Maximum unavailable pods
+            <select id="max-unavailable" name="maxUnavailable"><option value="0">0 - retain ready floor</option><option value="1">1 - may fall below demand</option></select>
+          </label>
+          <label for="max-surge">Maximum surge pods
+            <select id="max-surge" name="maxSurge"><option value="1">1 - requires recorded headroom</option><option value="0">0 - replace before adding</option></select>
+          </label>
+          <label for="probe-policy">Probe evidence
+            <select id="probe-policy" name="probe"><option value="readiness-startup">Readiness and startup</option><option value="startup-only">Startup only - readiness unknown</option></select>
+          </label>
+          <label for="headroom-record">Surge headroom record
+            <select id="headroom-record" name="headroom"><option value="available">One observed spare slot</option><option value="full">No spare slot</option><option value="unknown">Unknown slot availability</option></select>
+          </label>
+          <label for="grace-seconds">Termination grace seconds (exactly 10 or 20)
+            <input id="grace-seconds" name="graceSeconds" type="text" inputmode="numeric" pattern="10|20" maxlength="8" value="20" aria-describedby="grace-help">
+          </label>
+          <label for="observation-record">Fixed pod/business observation
+            <select id="observation-record" name="observation">
+              <option value="complete">Ready probes, compatible state</option>
+              <option value="readiness-failed">Candidate readiness failed</option>
+              <option value="readiness-unknown">Candidate readiness missing</option>
+              <option value="desired-only">Desired 3; observed ready 1, unknown 1</option>
+              <option value="state-failed">Ready probes / HTTP 200, incompatible state</option>
+              <option value="state-unknown">Ready probes / HTTP 200, state outcome missing</option>
+            </select>
+          </label>
+        </div>
+        <p id="grace-help">PreStop consumes 4 seconds of the same grace clock. Old requests need 8 and 14 remaining seconds. Both rollout allowances zero are invalid.</p>
+        <button id="choose-settings" type="submit" disabled>Record synthetic settings</button>
+      </fieldset>
+    </form>
+  </section>
+
+  <section aria-labelledby="actions-heading">
+    <h2 id="actions-heading">2. Observe, rehearse, drain</h2>
+    <div class="actions">
+      <button id="observe-data" type="button" disabled>Observe pods and headroom</button>
+      <button id="rehearse-step" type="button" disabled>Rehearse one rolling step</button>
+      <button id="drain-work" type="button" disabled>Drain old requests</button>
+      <button id="reset-lesson" type="button" disabled>Reset current rehearsal</button>
+    </div>
+    <p id="lesson-status" role="status" aria-live="polite">Lesson code is not ready. If this persists, an asset failed; controls remain unavailable. Restore the complete folder and reload.</p>
+    <p id="lesson-error" role="alert" tabindex="-1" hidden></p>
+    <p id="current-result">No rehearsal yet.</p>
+    <pre id="current-trace" aria-label="Current fixed observation and measured result">No observation yet.</pre>
+  </section>
+
+  <section aria-labelledby="disruption-heading">
+    <h2 id="disruption-heading">3. Compare an independent disruption record</h2>
+    <p>This uses the initial recorded old-pod snapshot, not a later live cluster. It does not rewrite the rolling-step result. A budget-permitted eviction may still leave insufficient capacity.</p>
+    <label for="disruption-record">Fixed disruption DATA
+      <select id="disruption-record" disabled>
+        <option value="eviction-one">One voluntary Eviction API eviction</option>
+        <option value="eviction-two">Two voluntary Eviction API evictions</option>
+        <option value="node-loss">Recorded node-a loss</option>
+        <option value="zone-loss">Recorded zone-a loss</option>
+        <option value="region-loss">Recorded fictional-region loss</option>
+        <option value="unrecorded">Unrecorded failure - unknown</option>
+      </select>
+    </label>
+    <button id="compare-disruption" type="button" disabled>Compare fixed disruption</button>
+    <p id="disruption-result">No disruption comparison yet.</p>
+  </section>
+
+  <section aria-labelledby="history-heading">
+    <h2 id="history-heading">Retained history</h2>
+    <p id="history-count">0 / 64 entries; 0 / 8 rehearsals.</p>
+    <p>Reset clears only current controls and state. Failures, unknowns and old-only outcomes remain here. History is page-memory only; reload clears it.</p>
+    <ol id="retained-history"></ol>
+  </section>
+
+  <section aria-labelledby="limits-heading">
+    <h2 id="limits-heading">Evidence limits</h2>
+    <p>A safe abort is not a successful migration. Ready probes do not prove compatible business state. A single rolling step is not complete Deployment convergence. Fixed loss records are not universal failure protection.</p>
+    <p>All durations and counts are deterministic fictional measurements, not wall-clock load, native readiness, actual request delivery or an SLA. B-S127 and D-S127 remain incomplete. No cloud, IaC, framework, identity, credentials, deployment or spending is authorized.</p>
+    <p>A-S127 / SC-S127 / original frozen satisfier unit. Tests, proof, repairs and refinement earn no additional credits.</p>
+  </section>
+</main>
+</body>
+</html>
