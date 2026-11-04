@@ -1,0 +1,142 @@
+TAP version 13
+# Subtest: fresh exited writers and a new reader retain the exact acknowledged epoch state on disk
+not ok 1 - fresh exited writers and a new reader retain the exact acknowledged epoch state on disk
+  ---
+  duration_ms: 1017.0704
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C015\\tests\\restart.test.cjs:20:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    A fresh process must restore the actual persisted epoch, not an in-memory or synthetic fallback.
+    + actual - expected
+    
+    + null
+    - {
+    -   cardId: 'C015',
+    -   dataKind: 'closed-synthetic-fixture',
+    -   envelope: {
+    -     action: 'local.probe',
+    -     budget: {
+    -       cloudSpend: 0
+    -     },
+    -     capacity: {
+    -       units: 1
+    -     },
+    -     durationSeconds: 30,
+    -     load: {
+    -       concurrentUsers: 2,
+    -       requestsPerSecond: 10
+    -     },
+    -     schemaVersion: 1,
+    -     scope: {
+    -       liveAzureRuns: 0,
+    -       mode: 'local-implementation-only'
+    -     }
+    -   },
+    -   epoch: 2,
+    -   limits: {
+    -     budget: {
+    -       cloudSpend: {
+    -         max: 0,
+    -         min: 0
+    -       }
+    -     },
+    -     capacity: {
+    -       units: {
+    -         max: 4,
+    -         min: 1
+    -       }
+    -     },
+    -     durationSeconds: {
+    -       max: 300,
+    -       min: 1
+    -     },
+    -     kind: 'local-comparison-only',
+    -     label: 'C002 synthetic fixture: not Azure authorization or universal defaults',
+    -     load: {
+    -       concurrentUsers: {
+    -         max: 20,
+    -         min: 1
+    -       },
+    -       requestsPerSecond: {
+    -         max: 100,
+    -         min: 1
+    -       }
+    -     }
+    -   },
+    -   record: {
+    -     acknowledgedUnits: 2,
+    -     completedStep: 'advance',
+    -     pendingStep: 'finish',
+    -     status: 'running'
+    -   },
+    -   runId: 'synthetic-run-001',
+    -   schemaVersion: 1
+    - }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    schemaVersion: 1
+    cardId: 'C015'
+    dataKind: 'closed-synthetic-fixture'
+    runId: 'synthetic-run-001'
+    epoch: 2
+    envelope:
+      schemaVersion: 1
+      action: 'local.probe'
+      scope:
+        mode: 'local-implementation-only'
+        liveAzureRuns: 0
+      load:
+        requestsPerSecond: 10
+        concurrentUsers: 2
+      durationSeconds: 30
+      capacity:
+        units: 1
+      budget:
+        cloudSpend: 0
+    limits:
+      kind: 'local-comparison-only'
+      label: 'C002 synthetic fixture: not Azure authorization or universal defaults'
+      load:
+        requestsPerSecond:
+          min: 1
+          max: 100
+        concurrentUsers:
+          min: 1
+          max: 20
+      durationSeconds:
+        min: 1
+        max: 300
+      capacity:
+        units:
+          min: 1
+          max: 4
+      budget:
+        cloudSpend:
+          min: 0
+          max: 0
+    record:
+      status: 'running'
+      completedStep: 'advance'
+      pendingStep: 'finish'
+      acknowledgedUnits: 2
+  actual: ~
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C015\tests\restart.test.cjs:28:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1396.5386

@@ -1,0 +1,109 @@
+param(
+    [Parameter(Mandatory=$true)][string]$Message,
+    [switch]$CheckOnly
+)
+$ErrorActionPreference = 'Stop'
+$root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
+$namespace = 'capability\C015'
+$workerId = 'worker-C015'
+if ([IO.Path]::GetFullPath((Get-Location).Path) -ne $root) { throw 'C015 publication requires the repository working directory.' }
+if (-not $Message.StartsWith('[C015][D]')) { throw 'The frozen original C015 D prefix is required.' }
+
+# C015-only adapter of the standard publication protocol; no shared allowlist edits.
+function Run-Git([string[]]$Arguments) {
+    $output = & git --no-pager @Arguments 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "git $($Arguments -join ' ') failed ($LASTEXITCODE): $($output -join [Environment]::NewLine)" }
+    return $output
+}
+function Assert-OriginalAdmission {
+    $stateMutex = [Threading.Mutex]::new($false, 'Local\AppScalingStrategies_KanbanState_v1')
+    $stateHeld = $false
+    try {
+        $stateHeld = $stateMutex.WaitOne([TimeSpan]::FromSeconds(30))
+        if (-not $stateHeld) { throw 'Current admission state mutex timed out; no publication.' }
+        $state = [IO.File]::ReadAllText((Join-Path $root '.docs\wiki\flow-state.json')) | ConvertFrom-Json -AsHashtable
+        $cards = @($state.cards | Where-Object { $_.id -eq 'C015' })
+        if ($cards.Count -ne 1) { throw 'The original admitted C015 card is missing or duplicated.' }
+        $card = $cards[0]
+        if ($card.kanoUnit -ne 'C015' -or $card.kano -ne 'D' -or $card.priority -ne 'P0' -or
+            $card.packet -ne 'H001' -or $card.technicalEntryGate -ne 'C001' -or
+            $card.state -ne 'In Progress' -or $card.owner -ne $workerId) {
+            throw 'The frozen original C015 admission or active owner changed; no publication.'
+        }
+    } finally {
+        if ($stateHeld) { $stateMutex.ReleaseMutex() }
+        $stateMutex.Dispose()
+    }
+    & node -e "require('.\\capability\\C015\\consent.cjs').requireCurrentConsent().then(()=>{}).catch(e=>{console.error(e.code);process.exitCode=1;});"
+    if ($LASTEXITCODE -ne 0) { throw 'Strict current C001 and scoped C015 approval must both permit local fixture work.' }
+}
+function Assert-Evidence {
+    $index = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'evidence-index.json')) | ConvertFrom-Json -AsHashtable
+    foreach ($key in @('finalFocused', 'finalSyntax', 'readOnlyBrowser')) {
+        $name = $index[$key]
+        if ($name -notmatch '^[a-z]+-[0-9a-f-]{36}\.raw\.json$') { throw "Missing exact final evidence: $key" }
+        $result = [IO.File]::ReadAllText((Join-Path $PSScriptRoot "evidence\$name")) | ConvertFrom-Json -AsHashtable
+        if ($result.exitCode -ne 0 -or $result.error -or $result.signal) { throw "Unqualified final evidence: $key" }
+    }
+    $browser = [IO.File]::ReadAllText((Join-Path $PSScriptRoot "evidence\$($index.browserObservation)")) | ConvertFrom-Json -AsHashtable
+    if ($browser.kind -ne 'signed-edge-dom' -or $browser.passed -ne $true -or $browser.closed -ne $true -or $browser.checks.Count -ne 8) {
+        throw 'Actual signed Edge DOM evidence is required, distinct from Node filesystem evidence.'
+    }
+}
+$mutex = [Threading.Mutex]::new($false, 'Local\AppScalingStrategies_KanbanPublisher_v1')
+$held = $false
+try {
+    $held = $mutex.WaitOne([TimeSpan]::FromSeconds(180))
+    if (-not $held) { throw 'Publisher mutex timed out; no lock removal or bypass.' }
+    Assert-OriginalAdmission
+    $branch = (Run-Git @('branch', '--show-current') | Out-String).Trim()
+    if ($branch -ne 'main') { throw "Publication requires main, found $branch." }
+    $head = (Run-Git @('rev-parse', 'HEAD') | Out-String).Trim()
+    $mainRefs = @(Run-Git @('ls-remote', 'origin', 'refs/heads/main'))
+    if ($mainRefs.Count -ne 1) { throw 'Remote main is unavailable; no stage or commit.' }
+    $remoteBefore = ("$($mainRefs[0])" -split '\s+')[0]
+    if ($head -ne $remoteBefore) {
+        throw "HEAD_ALREADY_REMOTE_REQUIRED: HEAD $head is not current remote main $remoteBefore. Stop/report; never include an unqualified ahead foreign commit, reset, amend or force."
+    }
+    if ($CheckOnly) {
+        @{ cardId='C015'; workerId=$workerId; checkOnly=$true; head=$head; remoteMain=$remoteBefore; headAlreadyRemote=$true } | ConvertTo-Json -Compress
+        return
+    }
+    Assert-Evidence
+    $receiptPath = Join-Path $PSScriptRoot 'publication.json'
+    if (Test-Path -LiteralPath $receiptPath) { throw 'A prior publication receipt exists; preserve it rather than overwrite.' }
+    Run-Git @('add', '--', $namespace) | Out-Host
+    Run-Git @('diff', '--cached', '--check', '--', $namespace) | Out-Host
+    $fullMessage = "$Message`n`nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+    Run-Git @('commit', '--only', '-m', $fullMessage, '--', $namespace) | Out-Host
+    $commit = (Run-Git @('rev-parse', 'HEAD') | Out-String).Trim()
+    $tag = "kanban/C015/$($commit.Substring(0,12))"
+    Run-Git @('tag', '-a', $tag, $commit, '-m', "$Message; verified publication marker for $commit") | Out-Host
+    if ((Run-Git @('cat-file', '-t', "refs/tags/$tag") | Out-String).Trim() -ne 'tag') { throw 'Publication marker is not a real annotated tag.' }
+    Run-Git @('push', '--atomic', 'origin', 'main', "refs/tags/$tag") | Out-Host
+    $refs = @(Run-Git @('ls-remote', 'origin', 'refs/heads/main', "refs/tags/$tag", "refs/tags/$tag^{}"))
+    $main = @($refs | Where-Object { "$_" -match '\srefs/heads/main$' })
+    $peeled = @($refs | Where-Object { "$_" -match ([regex]::Escape("refs/tags/$tag^{}")+'$') })
+    if ($main.Count -ne 1 -or $peeled.Count -ne 1) { throw 'Remote main or annotated peeled tag is missing.' }
+    $remoteMain = ("$($main[0])" -split '\s+')[0]
+    $remoteTag = ("$($peeled[0])" -split '\s+')[0]
+    if ($remoteTag -ne $commit) { throw 'Remote peeled tag differs from the exact C015 publication.' }
+    if ($remoteMain -ne $commit) { Run-Git @('fetch', '--no-tags', 'origin', 'main') | Out-Host }
+    Run-Git @('merge-base', '--is-ancestor', $commit, $remoteMain) | Out-Host
+    $publication = [ordered]@{
+        schemaVersion=1; cardId='C015'; workerId=$workerId; outcome='published'
+        commit=$commit; tag=$tag; remoteMain=$remoteMain; remotePeeledTag=$remoteTag
+        remoteVerified=$true; headBefore=$head; remoteBefore=$remoteBefore
+        publishedAtUtc=[DateTime]::UtcNow.ToString('o'); paths=@($namespace); message=$Message
+        publisher='C015-only standard protocol adapter; existing shared publisher mutex'
+        scope='Actual local synthetic filesystem persistence and fresh-process recovery; no Azure result.'
+        evidenceIndex='capability\C015\evidence-index.json'; focusedTestsPassed=$true; browserObserved=$true
+        parentAcceptanceRequired=$true; originalUnitCreditsRequested=1; extraCredits=0
+        H001Complete=$false; H004Complete=$false; productionNode24Validated=$false; cloudExecution=$false
+    }
+    [IO.File]::WriteAllText($receiptPath, ($publication | ConvertTo-Json -Depth 12) + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
+    $publication | ConvertTo-Json -Depth 12
+} finally {
+    if ($held) { $mutex.ReleaseMutex() }
+    $mutex.Dispose()
+}

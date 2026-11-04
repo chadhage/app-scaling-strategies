@@ -1,0 +1,103 @@
+TAP version 13
+# Subtest: current consent is actually reread under the state mutex and both explicit approvals agree
+ok 1 - current consent is actually reread under the state mutex and both explicit approvals agree
+  ---
+  duration_ms: 1792.6722
+  type: 'test'
+  ...
+# Subtest: literal false, missing and string true deny each current approval without coercion
+ok 2 - literal false, missing and string true deny each current approval without coercion
+  ---
+  duration_ms: 11.3991
+  type: 'test'
+  ...
+# Subtest: missing approval records, altered scope, native spend and additional flags deny
+ok 3 - missing approval records, altered scope, native spend and additional flags deny
+  ---
+  duration_ms: 15.1972
+  type: 'test'
+  ...
+# Subtest: the C015 runtime has no approval override and denied current consent precedes every fixture write
+ok 4 - the C015 runtime has no approval override and denied current consent precedes every fixture write
+  ---
+  duration_ms: 20.1719
+  type: 'test'
+  ...
+# Subtest: current approval is rechecked immediately at the mutation boundary, not cached from initial validation
+ok 5 - current approval is rechecked immediately at the mutation boundary, not cached from initial validation
+  ---
+  duration_ms: 20.749
+  type: 'test'
+  ...
+# Subtest: valid state consumes the C002 versioned envelope and copies only closed synthetic records
+ok 6 - valid state consumes the C002 versioned envelope and copies only closed synthetic records
+  ---
+  duration_ms: 7.2813
+  type: 'test'
+  ...
+# Subtest: unknown IDs, traversal, namespaces, epochs and numeric coercion fail closed
+ok 7 - unknown IDs, traversal, namespaces, epochs and numeric coercion fail closed
+  ---
+  duration_ms: 1.7582
+  type: 'test'
+  ...
+# Subtest: wrong types, extra fields, getters, cycles and non-synthetic data are not serialized
+ok 8 - wrong types, extra fields, getters, cycles and non-synthetic data are not serialized
+  ---
+  duration_ms: 90.4053
+  type: 'test'
+  ...
+# Subtest: text parsing rejects duplicates, precision loss, invalid UTF8 and corrupt data before schema validation
+ok 9 - text parsing rejects duplicates, precision loss, invalid UTF8 and corrupt data before schema validation
+  ---
+  duration_ms: 2.9378
+  type: 'test'
+  ...
+# Subtest: fresh exited writers and a new reader retain the exact acknowledged epoch state on disk
+ok 10 - fresh exited writers and a new reader retain the exact acknowledged epoch state on disk
+  ---
+  duration_ms: 28956.8514
+  type: 'test'
+  ...
+# Subtest: a fresh reader does not fabricate a run or initialize missing disk state
+ok 11 - a fresh reader does not fabricate a run or initialize missing disk state
+  ---
+  duration_ms: 6443.1981
+  type: 'test'
+  ...
+# Subtest: separate synthetic runs retain independent epochs and all prior acknowledged fields
+not ok 12 - separate synthetic runs retain independent epochs and all prior acknowledged fields
+  ---
+  duration_ms: 67033.7653
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C015\\tests\\restart.test.cjs:54:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    {"schemaVersion":1,"acknowledged":false,"restored":false,"pid":56644,"code":"CURRENT_CONSENT_UNAVAILABLE","message":"Cannot establish current mutex-protected C001/C015 consent; no write or fallback."}
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C015\tests\restart.test.cjs:59:14)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 11
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 105186.8198

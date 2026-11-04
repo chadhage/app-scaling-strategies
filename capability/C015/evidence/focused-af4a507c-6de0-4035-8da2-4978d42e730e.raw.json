@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C015",
+  "label": "focused",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "-e",
+    "(async()=>{ const fs=require('node:fs');const path=require('node:path');const {newScratch}=require('./capability/C015/tests/scratch.cjs');const {resolveNamespace}=require('./capability/C015/paths.cjs');const s=newScratch();s.namespace='test-bb6976f8-fd14-46c4-b58b-f7d30cb87f75';s.location=resolveNamespace(s.namespace);const run=path.join(s.location.root,'synthetic-run-001');const a=path.join(run,'epoch-001.json');const b=path.join(run,'unknown.json');const sa=fs.lstatSync(a);const sb=fs.lstatSync(b);if(!sa.isFile()||!sb.isFile()||sa.nlink!==2||sb.nlink!==2||sa.ino!==sb.ino||sa.dev!==sb.dev)throw Error('Explicit owned cleanup repair does not match created hardlinks');s.files=new Map([[a,'hardlinked-file'],[b,'hardlinked-file']]);s.directories=new Set([run,s.location.root]);await s.cleanup();console.log(JSON.stringify({repair:'explicit-owned-hardlink-cleanup',namespace:s.namespace,removedFiles:2,removedEmptySubdirectories:2,categoryRootsRemoved:0}));})().catch(e=>{console.error(e);process.exitCode=1;});"
+  ],
+  "capturedAtUtc": "2026-11-04T05:16:00.715Z",
+  "exitCode": 0,
+  "signal": null,
+  "error": null,
+  "stdout": {
+    "file": "focused-af4a507c-6de0-4035-8da2-4978d42e730e.stdout.raw",
+    "sha256": "da9a76f104d1e1414d69b635e3cef41657461651351a52e9b261570d32bec343",
+    "bytes": 174
+  },
+  "stderr": {
+    "file": "focused-af4a507c-6de0-4035-8da2-4978d42e730e.stderr.raw",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "nodeVersion": "v22.23.4",
+  "originalUnitCredits": 0,
+  "sourceSnapshots": []
+}

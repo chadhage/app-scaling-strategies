@@ -1,0 +1,46 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { randomUUID } = require('node:crypto');
+const { spawnSync } = require('node:child_process');
+const { makeState } = require('..\\contract.cjs');
+
+const root = path.resolve(__dirname, '..');
+const worker = path.join(__dirname, 'worker.cjs');
+function child(...args) {
+  const result = spawnSync(process.execPath, [worker, ...args], { encoding: 'utf8', timeout: 90000 });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout);
+}
+
+test('fresh exited writers and a new reader retain the exact acknowledged epoch state on disk', async () => {
+  const namespace = `test-${randomUUID()}`;
+  const expected = makeState('synthetic-run-001', 2);
+  let cleanup;
+  try {
+    const first = child('write', namespace, expected.runId, '1');
+    const second = child('write', namespace, expected.runId, '2');
+    const reader = child('read', namespace, expected.runId);
+    assert.deepEqual(reader.state, expected, 'A fresh process must restore the actual persisted epoch, not an in-memory or synthetic fallback.');
+    assert.equal(first.acknowledged, true);
+    assert.equal(second.acknowledged, true);
+    assert.equal(reader.restored, true);
+    assert.notEqual(first.pid, second.pid);
+    assert.notEqual(second.pid, reader.pid);
+    assert.notEqual(reader.pid, process.pid);
+    assert.deepEqual(reader.acknowledgment, second.acknowledgment);
+    assert.deepEqual(reader.history.map((entry) => entry.epoch), [1, 2]);
+    const persisted = path.join(root, 'test-scratch', namespace, expected.runId, 'epoch-002.json');
+    assert.deepEqual(JSON.parse(fs.readFileSync(persisted, 'utf8')).state, expected);
+  } finally {
+    const helperPath = path.join(__dirname, 'scratch.cjs');
+    if (fs.existsSync(helperPath)) {
+      cleanup = require(helperPath).cleanupKnown;
+      await cleanup(namespace);
+    }
+  }
+});

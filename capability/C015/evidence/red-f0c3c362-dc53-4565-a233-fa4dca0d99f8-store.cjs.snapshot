@@ -1,0 +1,12 @@
+'use strict';
+
+// Loadable TDD stub. It deliberately does not persist or pretend to restore.
+async function persist(namespace, state) {
+  return { acknowledged: false, namespace, state, pid: process.pid };
+}
+
+async function restore(namespace, runId) {
+  return { restored: false, namespace, runId, state: null, pid: process.pid };
+}
+
+module.exports = Object.freeze({ persist, restore });
