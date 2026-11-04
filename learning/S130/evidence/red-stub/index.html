@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S130 - Flex trace rehearsal</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Single and multi-instance Flex traces</h1>
+    <p>All plans, instances, executions, restarts, grace windows, state, effects, latency and outcomes below are fixed fictional teaching <strong>DATA ONLY</strong>.</p>
+  </header>
+  <main>
+    <section aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">Conduct the bounded exercise</h2>
+      <p>Load a trace, inspect its executions and grace, then measure three asynchronous tracking journeys. These are not long-running HTTP responses: only their fictional polling journey has the original 900 ms budget. Compare the single and multi-compatible traces first.</p>
+      <form id="controls" novalidate>
+        <label for="preset">Fixed Flex trace preset</label>
+        <select id="preset" name="preset">
+          <option value="single-compatible">Single instance / compatible rolling</option>
+          <option value="multi-compatible">Three instances / compatible rolling</option>
+          <option value="multi-incompatible">Three instances / mixed-version state and effects fail</option>
+          <option value="multi-starved">Three instances / insufficient ready capacity</option>
+          <option value="multi-grace-expired">Three instances / rolling grace exceeded</option>
+          <option value="multi-grace-unknown">Three instances / grace and execution unknown</option>
+          <option value="multi-platform-restart">Three instances / platform-update restart</option>
+          <option value="multi-recreate">Three instances / recreate terminates work</option>
+        </select>
+        <label for="software-token">Software token (exactly v2)</label>
+        <input id="software-token" name="software-token" type="text" value="v2" maxlength="40" autocomplete="off" spellcheck="false">
+        <div class="actions">
+          <button id="load-button" type="submit">Load trace DATA</button>
+          <button id="inspect-button" type="button">Inspect executions and grace DATA</button>
+          <button id="measure-button" type="button">Measure attempted journeys</button>
+          <button id="reset-button" name="local-reset" type="button">Reset rehearsal</button>
+        </div>
+      </form>
+      <p id="error" role="alert" tabindex="-1">Lesson unavailable: local scripts have not loaded. No result measured.</p>
+      <p id="status" role="status" aria-live="polite">Waiting for local lesson scripts.</p>
+      <p>Phase: <output id="phase">unavailable</output>. Retained actions: <output id="history-count">0 / 12</output>.</p>
+      <noscript>This resource-free lesson needs local JavaScript. No successful outcome is available without it.</noscript>
+    </section>
+    <section aria-labelledby="trace-heading">
+      <h2 id="trace-heading">Fixed capacity, version and restart observations</h2>
+      <p id="trace-description">No trace loaded.</p>
+      <p id="grace">Grace: unobserved.</p>
+      <p id="completion">Fleet update completion: unknown — no authoritative platform completion signal.</p>
+      <table>
+        <caption>Fictional observation points, not platform progress or configuration</caption>
+        <thead><tr><th scope="col">Point</th><th scope="col">Instance/version observations</th><th scope="col">Ready capacity / demand</th><th scope="col">Restart observations</th></tr></thead>
+        <tbody id="capacity-body"></tbody>
+      </table>
+    </section>
+    <section aria-labelledby="work-heading">
+      <h2 id="work-heading">Executions and original journey contract</h2>
+      <p id="work-summary">Inspect the loaded trace before measuring. A documented window is not proof of completion.</p>
+      <table>
+        <caption>Fixed asynchronous work observations, independent of polling availability</caption>
+        <thead><tr><th scope="col">Execution / instance</th><th scope="col">Remaining work / grace (seconds)</th><th scope="col">Observed execution outcome</th></tr></thead>
+        <tbody id="execution-body"></tbody>
+      </table>
+      <table>
+        <caption>All three attempted version-transition journeys stay counted</caption>
+        <thead><tr><th scope="col">Journey / versions</th><th scope="col">Polling / state / effects / latency</th><th scope="col">Measured outcome and reasons</th></tr></thead>
+        <tbody id="outcomes-body"></tbody>
+      </table>
+      <p id="sample-summary">0 attempted; no measured result.</p>
+      <p id="claim">Not certified: a fixed sample, more instances or a grace window cannot prove every user or execution completed, native Azure behavior, or five-nines continuity.</p>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained history</h2>
+      <p>Four runs maximum (twelve actions); no interruption or unknown is pruned. Reset explicitly starts a new in-memory rehearsal.</p>
+      <ol id="history"></ol>
+      <ol id="run-history"></ol>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Documented constraints and limits</h2>
+      <p>Flex does not use deployment slots. Rolling batches and drain intervals are platform-managed; replacement capacity need not arrive before the next drain. Single-instance apps can have brief downtime. Mixed versions must be backward compatible.</p>
+      <p>The documented rolling scale-in grace reference is 60 minutes; platform updates have a separate 10-minute reference. HTTP responses have a 230-second limit regardless of execution timeout. Neither unbounded execution timeout nor an estimated log turnover proves completion. Unknown observed grace stays unknown here.</p>
+      <p>No actual Functions, resources, processes, configuration, network, deployment or IaC operation occurs. IaC: N/A. Native B-S130 and D-S130 acceptance, Node.js 24 production validation and five-nines proof remain outstanding. Parent alone accepts this original S unit once; testing, repair, proof and refinement earn zero extra credit.</p>
+      <p>Official references: <a href="https://learn.microsoft.com/en-us/azure/azure-functions/flex-consumption-site-updates" target="_blank" rel="noopener noreferrer">Flex site update constraints</a>; <a href="https://learn.microsoft.com/en-us/azure/azure-functions/functions-scale#timeout" target="_blank" rel="noopener noreferrer">Hosting timeout and grace distinctions</a>. Links are optional reading, never runtime requests.</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,514 @@
+learning/S130/evidence/red-stub/app.js:1: trailing whitespace.
++(function () {
+learning/S130/evidence/red-stub/app.js:2: trailing whitespace.
++  'use strict';
+learning/S130/evidence/red-stub/app.js:3: trailing whitespace.
++  const form = document.getElementById('controls');
+learning/S130/evidence/red-stub/app.js:4: trailing whitespace.
++  const model = globalThis.FlexLesson;
+learning/S130/evidence/red-stub/app.js:5: trailing whitespace.
++  if (!model) return;
+learning/S130/evidence/red-stub/app.js:6: trailing whitespace.
++  let state = model.createState();
+learning/S130/evidence/red-stub/app.js:7: trailing whitespace.
++  const render = () => {
+learning/S130/evidence/red-stub/app.js:8: trailing whitespace.
++    document.getElementById('phase').textContent = state.phase;
+learning/S130/evidence/red-stub/app.js:9: trailing whitespace.
++    document.getElementById('history-count').textContent = `${state.history.length} / 12`;
+learning/S130/evidence/red-stub/app.js:10: trailing whitespace.
++    document.getElementById('error').textContent = '';
+learning/S130/evidence/red-stub/app.js:11: trailing whitespace.
++    document.getElementById('status').textContent = 'Load a fixed trace, inspect, then measure.';
+learning/S130/evidence/red-stub/app.js:12: trailing whitespace.
++  };
+learning/S130/evidence/red-stub/app.js:13: trailing whitespace.
++  form.addEventListener('submit', (event) => {
+learning/S130/evidence/red-stub/app.js:14: trailing whitespace.
++    event.preventDefault();
+learning/S130/evidence/red-stub/app.js:15: trailing whitespace.
++    state = model.execute(state, { type: 'load', presetId: document.getElementById('preset').value, version: document.getElementById('software-token').value });
+learning/S130/evidence/red-stub/app.js:16: trailing whitespace.
++    render();
+learning/S130/evidence/red-stub/app.js:17: trailing whitespace.
++  });
+learning/S130/evidence/red-stub/app.js:18: trailing whitespace.
++  document.getElementById('reset-button').addEventListener('click', () => {
+learning/S130/evidence/red-stub/app.js:19: trailing whitespace.
++    HTMLFormElement.prototype.reset.call(form);
+learning/S130/evidence/red-stub/app.js:20: trailing whitespace.
++    state = model.createState();
+learning/S130/evidence/red-stub/app.js:21: trailing whitespace.
++    render();
+learning/S130/evidence/red-stub/app.js:22: trailing whitespace.
++    document.getElementById('preset').focus();
+learning/S130/evidence/red-stub/app.js:23: trailing whitespace.
++  });
+learning/S130/evidence/red-stub/app.js:24: trailing whitespace.
++  render();
+learning/S130/evidence/red-stub/app.js:25: trailing whitespace.
++}());
+learning/S130/evidence/red-stub/assertions.cjs:1: trailing whitespace.
++'use strict';
+learning/S130/evidence/red-stub/assertions.cjs:2: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S130/evidence/red-stub/assertions.cjs:3: trailing whitespace.
++const test = require('node:test');
+learning/S130/evidence/red-stub/assertions.cjs:4: trailing whitespace.
++const model = require('./model.js');
+learning/S130/evidence/red-stub/assertions.cjs:5: trailing whitespace.
++
+learning/S130/evidence/red-stub/assertions.cjs:6: trailing whitespace.
++test('an explicit typed trace load advances to loaded without certifying a journey', () => {
+learning/S130/evidence/red-stub/assertions.cjs:7: trailing whitespace.
++  const initial = model.createState();
+learning/S130/evidence/red-stub/assertions.cjs:8: trailing whitespace.
++  const state = model.execute(initial, { type: 'load', presetId: 'multi-compatible', version: 'v2' });
+learning/S130/evidence/red-stub/assertions.cjs:9: trailing whitespace.
++  assert.equal(state.phase, 'loaded');
+learning/S130/evidence/red-stub/assertions.cjs:10: trailing whitespace.
++  assert.equal(state.runs.length, 0);
+learning/S130/evidence/red-stub/assertions.cjs:11: trailing whitespace.
++  assert.equal(initial.phase, 'empty');
+learning/S130/evidence/red-stub/assertions.cjs:12: trailing whitespace.
++});
+learning/S130/evidence/red-stub/flex-traces.feature:1: trailing whitespace.
++Feature: Compare fictional single and multi-instance Flex update traces
+learning/S130/evidence/red-stub/flex-traces.feature:2: trailing whitespace.
++  A-S130 / D-S130 / SC-S130 / one original frozen S unit
+learning/S130/evidence/red-stub/flex-traces.feature:3: trailing whitespace.
++  Training rehearsal - synthetic data - not a live Azure result
+learning/S130/evidence/red-stub/flex-traces.feature:4: trailing whitespace.
++  Every plan, instance, execution, restart, grace, state, effect, latency and outcome is DATA ONLY.
+learning/S130/evidence/red-stub/flex-traces.feature:5: trailing whitespace.
++
+learning/S130/evidence/red-stub/flex-traces.feature:6: trailing whitespace.
++  Background:
+learning/S130/evidence/red-stub/flex-traces.feature:7: trailing whitespace.
++    Given a standalone resource-free browser lesson with eight fixed fictional traces
+learning/S130/evidence/red-stub/flex-traces.feature:8: trailing whitespace.
++    And three asynchronous tracking journeys with an original 900 ms polling budget
+learning/S130/evidence/red-stub/flex-traces.feature:9: trailing whitespace.
++    And Flex has no deployment slots or authoritative site-update completion signal
+learning/S130/evidence/red-stub/flex-traces.feature:10: trailing whitespace.
++    And rolling replacement uses a documented 60-minute scale-in grace reference
+learning/S130/evidence/red-stub/flex-traces.feature:11: trailing whitespace.
++    And platform updates have a different documented 10-minute grace reference
+learning/S130/evidence/red-stub/flex-traces.feature:12: trailing whitespace.
++    And neither a reference limit nor a log estimate proves execution completion
+learning/S130/evidence/red-stub/flex-traces.feature:13: trailing whitespace.
++
+learning/S130/evidence/red-stub/flex-traces.feature:14: trailing whitespace.
++  Scenario: A trace must be explicitly loaded before inspection and measurement
+learning/S130/evidence/red-stub/flex-traces.feature:15: trailing whitespace.
++    When I load multi-compatible with the exact software token v2
+learning/S130/evidence/red-stub/flex-traces.feature:16: trailing whitespace.
++    Then the phase is loaded
+learning/S130/evidence/red-stub/flex-traces.feature:17: trailing whitespace.
++    And no journey has yet been measured
+learning/S130/evidence/red-stub/flex-traces.feature:18: trailing whitespace.
++    When I inspect executions and grace DATA
+learning/S130/evidence/red-stub/flex-traces.feature:19: trailing whitespace.
++    And I measure the attempted journeys
+learning/S130/evidence/red-stub/flex-traces.feature:20: trailing whitespace.
++    Then all three observed journeys are uninterrupted in this fixture only
+learning/S130/evidence/red-stub/flex-traces.feature:21: trailing whitespace.
++    And fleet update completion remains unknown
+learning/S130/evidence/red-stub/flex-traces.feature:22: trailing whitespace.
++    And no native or five-nines certification is available
+learning/S130/evidence/red-stub/flex-traces.feature:23: trailing whitespace.
++
+learning/S130/evidence/red-stub/flex-traces.feature:24: trailing whitespace.
++  Scenario: Compare the same journeys on single and multiple instances
+learning/S130/evidence/red-stub/flex-traces.feature:25: trailing whitespace.
++    Given I have measured the single-compatible trace
+learning/S130/evidence/red-stub/flex-traces.feature:26: trailing whitespace.
++    Then one polling journey is interrupted during the recorded capacity gap
+learning/S130/evidence/red-stub/flex-traces.feature:27: trailing whitespace.
++    And all three already-running executions are recorded completed
+learning/S130/evidence/red-stub/flex-traces.feature:28: trailing whitespace.
++    When I measure the multi-compatible trace
+learning/S130/evidence/red-stub/flex-traces.feature:29: trailing whitespace.
++    Then three journeys pass within their original state, effect and latency contract
+learning/S130/evidence/red-stub/flex-traces.feature:30: trailing whitespace.
++    And both runs and the earlier interruption remain in history
+learning/S130/evidence/red-stub/flex-traces.feature:31: trailing whitespace.
++    And increased instances do not establish that every user or execution completed
+learning/S130/evidence/red-stub/flex-traces.feature:32: trailing whitespace.
++
+learning/S130/evidence/red-stub/flex-traces.feature:33: trailing whitespace.
++  Scenario Outline: Negative and unknown observations cannot be certified away
+learning/S130/evidence/red-stub/flex-traces.feature:34: trailing whitespace.
++    When I load, inspect and measure <preset>
+learning/S130/evidence/red-stub/flex-traces.feature:35: trailing whitespace.
++    Then the observed outcome is <outcome>
+learning/S130/evidence/red-stub/flex-traces.feature:36: trailing whitespace.
++    And all three attempted journeys remain in the denominator
+learning/S130/evidence/red-stub/flex-traces.feature:37: trailing whitespace.
++    And fleet update completion remains unknown
+learning/S130/evidence/red-stub/flex-traces.feature:38: trailing whitespace.
++    Examples:
+learning/S130/evidence/red-stub/flex-traces.feature:39: trailing whitespace.
++      | preset                 | outcome      |
+learning/S130/evidence/red-stub/flex-traces.feature:40: trailing whitespace.
++      | multi-incompatible     | interrupted  |
+learning/S130/evidence/red-stub/flex-traces.feature:41: trailing whitespace.
++      | multi-starved          | interrupted  |
+learning/S130/evidence/red-stub/flex-traces.feature:42: trailing whitespace.
++      | multi-grace-expired    | interrupted  |
+learning/S130/evidence/red-stub/flex-traces.feature:43: trailing whitespace.
++      | multi-grace-unknown    | unknown      |
+learning/S130/evidence/red-stub/flex-traces.feature:44: trailing whitespace.
++      | multi-platform-restart | interrupted  |
+learning/S130/evidence/red-stub/flex-traces.feature:45: trailing whitespace.
++      | multi-recreate         | interrupted  |
+learning/S130/evidence/red-stub/flex-traces.feature:46: trailing whitespace.
++
+learning/S130/evidence/red-stub/flex-traces.feature:47: trailing whitespace.
++  Scenario: Strict input and state guards retain bounded history
+learning/S130/evidence/red-stub/flex-traces.feature:48: trailing whitespace.
++    Given load, inspect and measure are exact typed commands
+learning/S130/evidence/red-stub/flex-traces.feature:49: trailing whitespace.
++    Then strings, extra keys, accessors, forged state and out-of-order commands are rejected
+learning/S130/evidence/red-stub/flex-traces.feature:50: trailing whitespace.
++    And errors do not mutate history
+learning/S130/evidence/red-stub/flex-traces.feature:51: trailing whitespace.
++    And four complete runs retain all twelve actions without pruning
+learning/S130/evidence/red-stub/flex-traces.feature:52: trailing whitespace.
++    And a thirteenth action is rejected until explicit reset
+learning/S130/evidence/red-stub/flex-traces.feature:53: trailing whitespace.
++
+learning/S130/evidence/red-stub/flex-traces.feature:54: trailing whitespace.
++  Scenario: Keyboard, error, reset and fail-closed operation
+learning/S130/evidence/red-stub/flex-traces.feature:55: trailing whitespace.
++    Then every control has a label and visible keyboard focus
+learning/S130/evidence/red-stub/flex-traces.feature:56: trailing whitespace.
++    And invalid software tokens produce a visible alert without measuring a journey
+learning/S130/evidence/red-stub/flex-traces.feature:57: trailing whitespace.
++    And reset uses the native form prototype and clears only this in-memory lesson
+learning/S130/evidence/red-stub/flex-traces.feature:58: trailing whitespace.
++    And missing local model DATA cannot produce a successful result
+learning/S130/evidence/red-stub/flex-traces.feature:59: trailing whitespace.
++    And actual browser CSP observations deny inline script, eval, style, connections,
+learning/S130/evidence/red-stub/flex-traces.feature:60: trailing whitespace.
++      images, frames and form navigation without unsafe flags
+learning/S130/evidence/red-stub/flex-traces.feature:61: trailing whitespace.
++
+learning/S130/evidence/red-stub/flex-traces.feature:62: trailing whitespace.
++  Scenario: Verification does not rewrite prior proof
+learning/S130/evidence/red-stub/flex-traces.feature:63: trailing whitespace.
++    Then normal verification is read-only
+learning/S130/evidence/red-stub/flex-traces.feature:64: trailing whitespace.
++    And only exact CAPTURE_BROWSER_EVIDENCE=1 deliberately creates a new unique browser capture
+learning/S130/evidence/red-stub/flex-traces.feature:65: trailing whitespace.
++    And the published isolated helper is hash-pinned and closed in an awaited finally
+learning/S130/evidence/red-stub/flex-traces.feature:66: trailing whitespace.
++    And raw RED and loadable stub bytes remain outside normal test autodiscovery
+learning/S130/evidence/red-stub/index.html:1: trailing whitespace.
++<!doctype html>
+learning/S130/evidence/red-stub/index.html:2: trailing whitespace.
++<html lang="en">
+learning/S130/evidence/red-stub/index.html:3: trailing whitespace.
++<head>
+learning/S130/evidence/red-stub/index.html:4: trailing whitespace.
++  <meta charset="utf-8">
+learning/S130/evidence/red-stub/index.html:5: trailing whitespace.
++  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+learning/S130/evidence/red-stub/index.html:6: trailing whitespace.
++  <meta name="viewport" content="width=device-width, initial-scale=1">
+learning/S130/evidence/red-stub/index.html:7: trailing whitespace.
++  <title>S130 - Flex trace rehearsal</title>
+learning/S130/evidence/red-stub/index.html:8: trailing whitespace.
++  <link rel="stylesheet" href="lesson.css">
+learning/S130/evidence/red-stub/index.html:9: trailing whitespace.
++  <script src="model.js" defer></script>
+learning/S130/evidence/red-stub/index.html:10: trailing whitespace.
++  <script src="app.js" defer></script>
+learning/S130/evidence/red-stub/index.html:11: trailing whitespace.
++</head>
+learning/S130/evidence/red-stub/index.html:12: trailing whitespace.
++<body>
+learning/S130/evidence/red-stub/index.html:13: trailing whitespace.
++  <header>
+learning/S130/evidence/red-stub/index.html:14: trailing whitespace.
++    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+learning/S130/evidence/red-stub/index.html:15: trailing whitespace.
++    <h1>Single and multi-instance Flex traces</h1>
+learning/S130/evidence/red-stub/index.html:16: trailing whitespace.
++    <p>All plans, instances, executions, restarts, grace windows, state, effects, latency and outcomes below are fixed fictional teaching <strong>DATA ONLY</strong>.</p>
+learning/S130/evidence/red-stub/index.html:17: trailing whitespace.
++  </header>
+learning/S130/evidence/red-stub/index.html:18: trailing whitespace.
++  <main>
+learning/S130/evidence/red-stub/index.html:19: trailing whitespace.
++    <section aria-labelledby="exercise-heading">
+learning/S130/evidence/red-stub/index.html:20: trailing whitespace.
++      <h2 id="exercise-heading">Conduct the bounded exercise</h2>
+learning/S130/evidence/red-stub/index.html:21: trailing whitespace.
++      <p>Load a trace, inspect its executions and grace, then measure three asynchronous tracking journeys. These are not long-running HTTP responses: only their fictional polling journey has the original 900 ms budget. Compare the single and multi-compatible traces first.</p>
+learning/S130/evidence/red-stub/index.html:22: trailing whitespace.
++      <form id="controls" novalidate>
+learning/S130/evidence/red-stub/index.html:23: trailing whitespace.
++        <label for="preset">Fixed Flex trace preset</label>
+learning/S130/evidence/red-stub/index.html:24: trailing whitespace.
++        <select id="preset" name="preset">
+learning/S130/evidence/red-stub/index.html:25: trailing whitespace.
++          <option value="single-compatible">Single instance / compatible rolling</option>
+learning/S130/evidence/red-stub/index.html:26: trailing whitespace.
++          <option value="multi-compatible">Three instances / compatible rolling</option>
+learning/S130/evidence/red-stub/index.html:27: trailing whitespace.
++          <option value="multi-incompatible">Three instances / mixed-version state and effects fail</option>
+learning/S130/evidence/red-stub/index.html:28: trailing whitespace.
++          <option value="multi-starved">Three instances / insufficient ready capacity</option>
+learning/S130/evidence/red-stub/index.html:29: trailing whitespace.
++          <option value="multi-grace-expired">Three instances / rolling grace exceeded</option>
+learning/S130/evidence/red-stub/index.html:30: trailing whitespace.
++          <option value="multi-grace-unknown">Three instances / grace and execution unknown</option>
+learning/S130/evidence/red-stub/index.html:31: trailing whitespace.
++          <option value="multi-platform-restart">Three instances / platform-update restart</option>
+learning/S130/evidence/red-stub/index.html:32: trailing whitespace.
++          <option value="multi-recreate">Three instances / recreate terminates work</option>
+learning/S130/evidence/red-stub/index.html:33: trailing whitespace.
++        </select>
+learning/S130/evidence/red-stub/index.html:34: trailing whitespace.
++        <label for="software-token">Software token (exactly v2)</label>
+learning/S130/evidence/red-stub/index.html:35: trailing whitespace.
++        <input id="software-token" name="software-token" type="text" value="v2" maxlength="40" autocomplete="off" spellcheck="false">
+learning/S130/evidence/red-stub/index.html:36: trailing whitespace.
++        <div class="actions">
+learning/S130/evidence/red-stub/index.html:37: trailing whitespace.
++          <button id="load-button" type="submit">Load trace DATA</button>
+learning/S130/evidence/red-stub/index.html:38: trailing whitespace.
++          <button id="inspect-button" type="button">Inspect executions and grace DATA</button>
+learning/S130/evidence/red-stub/index.html:39: trailing whitespace.
++          <button id="measure-button" type="button">Measure attempted journeys</button>
+learning/S130/evidence/red-stub/index.html:40: trailing whitespace.
++          <button id="reset-button" name="local-reset" type="button">Reset rehearsal</button>
+learning/S130/evidence/red-stub/index.html:41: trailing whitespace.
++        </div>
+learning/S130/evidence/red-stub/index.html:42: trailing whitespace.
++      </form>
+learning/S130/evidence/red-stub/index.html:43: trailing whitespace.
++      <p id="error" role="alert" tabindex="-1">Lesson unavailable: local scripts have not loaded. No result measured.</p>
+learning/S130/evidence/red-stub/index.html:44: trailing whitespace.
++      <p id="status" role="status" aria-live="polite">Waiting for local lesson scripts.</p>
+learning/S130/evidence/red-stub/index.html:45: trailing whitespace.
++      <p>Phase: <output id="phase">unavailable</output>. Retained actions: <output id="history-count">0 / 12</output>.</p>
+learning/S130/evidence/red-stub/index.html:46: trailing whitespace.
++      <noscript>This resource-free lesson needs local JavaScript. No successful outcome is available without it.</noscript>
+learning/S130/evidence/red-stub/index.html:47: trailing whitespace.
++    </section>
+learning/S130/evidence/red-stub/index.html:48: trailing whitespace.
++    <section aria-labelledby="trace-heading">
+learning/S130/evidence/red-stub/index.html:49: trailing whitespace.
++      <h2 id="trace-heading">Fixed capacity, version and restart observations</h2>
+learning/S130/evidence/red-stub/index.html:50: trailing whitespace.
++      <p id="trace-description">No trace loaded.</p>
+learning/S130/evidence/red-stub/index.html:51: trailing whitespace.
++      <p id="grace">Grace: unobserved.</p>
+learning/S130/evidence/red-stub/index.html:52: trailing whitespace.
++      <p id="completion">Fleet update completion: unknown — no authoritative platform completion signal.</p>
+learning/S130/evidence/red-stub/index.html:53: trailing whitespace.
++      <table>
+learning/S130/evidence/red-stub/index.html:54: trailing whitespace.
++        <caption>Fictional observation points, not platform progress or configuration</caption>
+learning/S130/evidence/red-stub/index.html:55: trailing whitespace.
++        <thead><tr><th scope="col">Point</th><th scope="col">Instance/version observations</th><th scope="col">Ready capacity / demand</th><th scope="col">Restart observations</th></tr></thead>
+learning/S130/evidence/red-stub/index.html:56: trailing whitespace.
++        <tbody id="capacity-body"></tbody>
+learning/S130/evidence/red-stub/index.html:57: trailing whitespace.
++      </table>
+learning/S130/evidence/red-stub/index.html:58: trailing whitespace.
++    </section>
+learning/S130/evidence/red-stub/index.html:59: trailing whitespace.
++    <section aria-labelledby="work-heading">
+learning/S130/evidence/red-stub/index.html:60: trailing whitespace.
++      <h2 id="work-heading">Executions and original journey contract</h2>
+learning/S130/evidence/red-stub/index.html:61: trailing whitespace.
++      <p id="work-summary">Inspect the loaded trace before measuring. A documented window is not proof of completion.</p>
+learning/S130/evidence/red-stub/index.html:62: trailing whitespace.
++      <table>
+learning/S130/evidence/red-stub/index.html:63: trailing whitespace.
++        <caption>Fixed asynchronous work observations, independent of polling availability</caption>
+learning/S130/evidence/red-stub/index.html:64: trailing whitespace.
++        <thead><tr><th scope="col">Execution / instance</th><th scope="col">Remaining work / grace (seconds)</th><th scope="col">Observed execution outcome</th></tr></thead>
+learning/S130/evidence/red-stub/index.html:65: trailing whitespace.
++        <tbody id="execution-body"></tbody>
+learning/S130/evidence/red-stub/index.html:66: trailing whitespace.
++      </table>
+learning/S130/evidence/red-stub/index.html:67: trailing whitespace.
++      <table>
+learning/S130/evidence/red-stub/index.html:68: trailing whitespace.
++        <caption>All three attempted version-transition journeys stay counted</caption>
+learning/S130/evidence/red-stub/index.html:69: trailing whitespace.
++        <thead><tr><th scope="col">Journey / versions</th><th scope="col">Polling / state / effects / latency</th><th scope="col">Measured outcome and reasons</th></tr></thead>
+learning/S130/evidence/red-stub/index.html:70: trailing whitespace.
++        <tbody id="outcomes-body"></tbody>
+learning/S130/evidence/red-stub/index.html:71: trailing whitespace.
++      </table>
+learning/S130/evidence/red-stub/index.html:72: trailing whitespace.
++      <p id="sample-summary">0 attempted; no measured result.</p>
+learning/S130/evidence/red-stub/index.html:73: trailing whitespace.
++      <p id="claim">Not certified: a fixed sample, more instances or a grace window cannot prove every user or execution completed, native Azure behavior, or five-nines continuity.</p>
+learning/S130/evidence/red-stub/index.html:74: trailing whitespace.
++    </section>
+learning/S130/evidence/red-stub/index.html:75: trailing whitespace.
++    <section aria-labelledby="history-heading">
+learning/S130/evidence/red-stub/index.html:76: trailing whitespace.
++      <h2 id="history-heading">Retained history</h2>
+learning/S130/evidence/red-stub/index.html:77: trailing whitespace.
++      <p>Four runs maximum (twelve actions); no interruption or unknown is pruned. Reset explicitly starts a new in-memory rehearsal.</p>
+learning/S130/evidence/red-stub/index.html:78: trailing whitespace.
++      <ol id="history"></ol>
+learning/S130/evidence/red-stub/index.html:79: trailing whitespace.
++      <ol id="run-history"></ol>
+learning/S130/evidence/red-stub/index.html:80: trailing whitespace.
++    </section>
+learning/S130/evidence/red-stub/index.html:81: trailing whitespace.
++    <section aria-labelledby="limits-heading">
+learning/S130/evidence/red-stub/index.html:82: trailing whitespace.
++      <h2 id="limits-heading">Documented constraints and limits</h2>
+learning/S130/evidence/red-stub/index.html:83: trailing whitespace.
++      <p>Flex does not use deployment slots. Rolling batches and drain intervals are platform-managed; replacement capacity need not arrive before the next drain. Single-instance apps can have brief downtime. Mixed versions must be backward compatible.</p>
+learning/S130/evidence/red-stub/index.html:84: trailing whitespace.
++      <p>The documented rolling scale-in grace reference is 60 minutes; platform updates have a separate 10-minute reference. HTTP responses have a 230-second limit regardless of execution timeout. Neither unbounded execution timeout nor an estimated log turnover proves completion. Unknown observed grace stays unknown here.</p>
+learning/S130/evidence/red-stub/index.html:85: trailing whitespace.
++      <p>No actual Functions, resources, processes, configuration, network, deployment or IaC operation occurs. IaC: N/A. Native B-S130 and D-S130 acceptance, Node.js 24 production validation and five-nines proof remain outstanding. Parent alone accepts this original S unit once; testing, repair, proof and refinement earn zero extra credit.</p>
+learning/S130/evidence/red-stub/index.html:86: trailing whitespace.
++      <p>Official references: <a href="https://learn.microsoft.com/en-us/azure/azure-functions/flex-consumption-site-updates" target="_blank" rel="noopener noreferrer">Flex site update constraints</a>; <a href="https://learn.microsoft.com/en-us/azure/azure-functions/functions-scale#timeout" target="_blank" rel="noopener noreferrer">Hosting timeout and grace distinctions</a>. Links are optional reading, never runtime requests.</p>
+learning/S130/evidence/red-stub/index.html:87: trailing whitespace.
++    </section>
+learning/S130/evidence/red-stub/index.html:88: trailing whitespace.
++  </main>
+learning/S130/evidence/red-stub/index.html:89: trailing whitespace.
++</body>
+learning/S130/evidence/red-stub/index.html:90: trailing whitespace.
++</html>
+learning/S130/evidence/red-stub/lesson.css:1: trailing whitespace.
++:root { font-family: system-ui, sans-serif; color-scheme: light; color: #182839; background: #f4f6fa; }
+learning/S130/evidence/red-stub/lesson.css:2: trailing whitespace.
++body { max-width: 72rem; margin: auto; padding: 1rem; }
+learning/S130/evidence/red-stub/lesson.css:3: trailing whitespace.
++.banner { padding: 1rem; background: #fff0bc; color: #342800; border: 2px solid #76600c; font-weight: 700; }
+learning/S130/evidence/red-stub/lesson.css:4: trailing whitespace.
++section { margin: 1rem 0; padding: 1rem; background: white; border: 1px solid #a2b0c0; border-radius: .3rem; }
+learning/S130/evidence/red-stub/lesson.css:5: trailing whitespace.
++label { display: block; font-weight: 650; margin-top: .7rem; }
+learning/S130/evidence/red-stub/lesson.css:6: trailing whitespace.
++select, input, button { font: inherit; padding: .55rem; max-width: 100%; box-sizing: border-box; }
+learning/S130/evidence/red-stub/lesson.css:7: trailing whitespace.
++select { width: 100%; }
+learning/S130/evidence/red-stub/lesson.css:8: trailing whitespace.
++button { cursor: pointer; border: 1px solid #345575; background: #eaf0f8; border-radius: .2rem; }
+learning/S130/evidence/red-stub/lesson.css:9: trailing whitespace.
++.actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1rem; }
+learning/S130/evidence/red-stub/lesson.css:10: trailing whitespace.
++:focus-visible { outline: 3px solid #153dcc; outline-offset: 3px; }
+learning/S130/evidence/red-stub/lesson.css:11: trailing whitespace.
++[aria-disabled="true"] { border-style: dashed; }
+learning/S130/evidence/red-stub/lesson.css:12: trailing whitespace.
++#error { color: #831c15; font-weight: 650; min-height: 1.5rem; }
+learning/S130/evidence/red-stub/lesson.css:13: trailing whitespace.
++#status { min-height: 1.5rem; }
+learning/S130/evidence/red-stub/lesson.css:14: trailing whitespace.
++table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+learning/S130/evidence/red-stub/lesson.css:15: trailing whitespace.
++caption { text-align: left; font-weight: 650; margin-bottom: .4rem; }
+learning/S130/evidence/red-stub/lesson.css:16: trailing whitespace.
++th, td { text-align: left; vertical-align: top; padding: .55rem; border: 1px solid #a2b0c0; overflow-wrap: anywhere; }
+learning/S130/evidence/red-stub/lesson.css:17: trailing whitespace.
++th { background: #eaf0f8; }
+learning/S130/evidence/red-stub/lesson.css:18: trailing whitespace.
++li { margin: .6rem 0; overflow-wrap: anywhere; }
+learning/S130/evidence/red-stub/lesson.css:19: trailing whitespace.
++output { font-weight: 700; }
+learning/S130/evidence/red-stub/lesson.css:20: trailing whitespace.
++@media (max-width: 40rem) { body { padding: .5rem; } section { padding: .7rem; } th, td { padding: .3rem; } }
+learning/S130/evidence/red-stub/model.js:1: trailing whitespace.
++(function (root) {
+learning/S130/evidence/red-stub/model.js:2: trailing whitespace.
++  'use strict';
+learning/S130/evidence/red-stub/model.js:3: trailing whitespace.
++  function createState() {
+learning/S130/evidence/red-stub/model.js:4: trailing whitespace.
++    return Object.freeze({ schemaVersion: 1, phase: 'empty', presetId: null, history: Object.freeze([]), runs: Object.freeze([]) });
+learning/S130/evidence/red-stub/model.js:5: trailing whitespace.
++  }
+learning/S130/evidence/red-stub/model.js:6: trailing whitespace.
++  function execute(state) { return state; }
+learning/S130/evidence/red-stub/model.js:7: trailing whitespace.
++  const api = Object.freeze({ createState, execute });
+learning/S130/evidence/red-stub/model.js:8: trailing whitespace.
++  if (typeof module === 'object' && module.exports) module.exports = api;
+learning/S130/evidence/red-stub/model.js:9: trailing whitespace.
++  else root.FlexLesson = api;
+learning/S130/evidence/red-stub/model.js:10: trailing whitespace.
++}(typeof globalThis === 'object' ? globalThis : this));
+learning/S130/evidence/red-stub/observe.cjs:1: trailing whitespace.
++'use strict';
+learning/S130/evidence/red-stub/observe.cjs:2: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S130/evidence/red-stub/observe.cjs:3: trailing whitespace.
++const fs = require('node:fs');
+learning/S130/evidence/red-stub/observe.cjs:4: trailing whitespace.
++const path = require('node:path');
+learning/S130/evidence/red-stub/observe.cjs:5: trailing whitespace.
++const crypto = require('node:crypto');
+learning/S130/evidence/red-stub/observe.cjs:6: trailing whitespace.
++const root = path.resolve(__dirname, '..', '..', '..', '..');
+learning/S130/evidence/red-stub/observe.cjs:7: trailing whitespace.
++const helper = path.join(root, 'testing', 'browser', 'isolated.cjs');
+learning/S130/evidence/red-stub/observe.cjs:8: trailing whitespace.
++const helperSha256 = crypto.createHash('sha256').update(fs.readFileSync(helper)).digest('hex');
+learning/S130/evidence/red-stub/observe.cjs:9: trailing whitespace.
++assert.equal(helperSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+learning/S130/evidence/red-stub/observe.cjs:10: trailing whitespace.
++const { openIsolatedLesson } = require(helper);
+learning/S130/evidence/red-stub/observe.cjs:11: trailing whitespace.
++
+learning/S130/evidence/red-stub/observe.cjs:12: trailing whitespace.
++(async () => {
+learning/S130/evidence/red-stub/observe.cjs:13: trailing whitespace.
++  const session = await openIsolatedLesson(path.join('learning', 'S130', 'evidence', 'red-stub', 'index.html'));
+learning/S130/evidence/red-stub/observe.cjs:14: trailing whitespace.
++  const report = { phase: 'loadable-stub', helperSha256, node: process.version, browser: session.browserVersion, pageErrors: [], awaitedCleanupCompleted: false };
+learning/S130/evidence/red-stub/observe.cjs:15: trailing whitespace.
++  try {
+learning/S130/evidence/red-stub/observe.cjs:16: trailing whitespace.
++    session.page.on('pageerror', (error) => report.pageErrors.push(error.message));
+learning/S130/evidence/red-stub/observe.cjs:17: trailing whitespace.
++    assert.equal(await session.page.locator('.banner').textContent(), 'Training rehearsal - synthetic data - not a live Azure result');
+learning/S130/evidence/red-stub/observe.cjs:18: trailing whitespace.
++    await session.page.locator('#preset').selectOption('multi-compatible');
+learning/S130/evidence/red-stub/observe.cjs:19: trailing whitespace.
++    await session.page.locator('#software-token').focus();
+learning/S130/evidence/red-stub/observe.cjs:20: trailing whitespace.
++    await session.page.keyboard.press('Enter');
+learning/S130/evidence/red-stub/observe.cjs:21: trailing whitespace.
++    report.phaseAfterKeyboardLoad = await session.page.locator('#phase').textContent();
+learning/S130/evidence/red-stub/observe.cjs:22: trailing whitespace.
++    report.historyAfterKeyboardLoad = await session.page.locator('#history-count').textContent();
+learning/S130/evidence/red-stub/observe.cjs:23: trailing whitespace.
++    assert.equal(report.phaseAfterKeyboardLoad, 'empty');
+learning/S130/evidence/red-stub/observe.cjs:24: trailing whitespace.
++    assert.equal(report.historyAfterKeyboardLoad, '0 / 12');
+learning/S130/evidence/red-stub/observe.cjs:25: trailing whitespace.
++    assert.deepEqual(report.pageErrors, []);
+learning/S130/evidence/red-stub/observe.cjs:26: trailing whitespace.
++  } finally {
+learning/S130/evidence/red-stub/observe.cjs:27: trailing whitespace.
++    await session.close();
+learning/S130/evidence/red-stub/observe.cjs:28: trailing whitespace.
++    report.awaitedCleanupCompleted = true;
+learning/S130/evidence/red-stub/observe.cjs:29: trailing whitespace.
++    if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') {
+learning/S130/evidence/red-stub/observe.cjs:30: trailing whitespace.
++      fs.writeFileSync(path.join(__dirname, '..', 'raw', 'stub-browser.json'), `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+learning/S130/evidence/red-stub/observe.cjs:31: trailing whitespace.
++    }
+learning/S130/evidence/red-stub/observe.cjs:32: trailing whitespace.
++    console.log(JSON.stringify(report));
+learning/S130/evidence/red-stub/observe.cjs:33: trailing whitespace.
++  }
+learning/S130/evidence/red-stub/observe.cjs:34: trailing whitespace.
++})().catch((error) => { console.error(error); process.exitCode = 1; });
