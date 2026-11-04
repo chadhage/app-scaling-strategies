@@ -208,7 +208,39 @@ function seal() {
     excluded: ['evidence\\integrity.json'], files,
   });
 }
+function canonicalize() {
+  let number = 1;
+  let directory;
+  do { directory = `evidence\\raw\\canonical-byte-correction-${String(number++).padStart(2, '0')}`; }
+  while (fs.existsSync(path.join(lesson, directory, 'report.json')));
+  const publicationPath = path.join(root, '.git', 'kanban-orchestrator', 'published', 'A-S140.json');
+  const priorPublication = fs.existsSync(publicationPath) ? JSON.parse(fs.readFileSync(publicationPath, 'utf8')) : null;
+  const files = listFiles().filter((file) => !relative(file).startsWith('evidence\\raw\\')
+    && (/\.(?:js|cjs|md|html|css|json|feature)$/.test(file) || path.basename(file) === '.gitattributes'));
+  const changed = [];
+  for (const file of files) {
+    const before = fs.readFileSync(file);
+    const crlfCount = (before.toString('utf8').match(/\r\n/g) || []).length;
+    if (!crlfCount) continue;
+    const name = relative(file);
+    const rawPath = `${directory}\\${name}.snapshot`;
+    const after = Buffer.from(before.toString('utf8').replace(/\r\n/g, '\n'));
+    write(rawPath, before);
+    const canonicalGitObject = git('hash-object', '--', file).toString('utf8').trim();
+    fs.writeFileSync(file, after);
+    changed.push({ file: name, rawPath, rawSha256: hash(before), canonicalSha256: hash(after), canonicalGitObject, crlfCount });
+  }
+  const proof = `${directory}\\report.json`;
+  write(proof, {
+    recordedAtUtc: new Date().toISOString(), action: 'Explicit owned text-file LF normalization; raw evidence is never converted.',
+    priorPublication, changed, originalKanoUnit: 'A-S140', extraCredits: 0,
+  });
+  workflow('canonical-byte-portability-correction', {
+    proof, supersededCommit: priorPublication?.commit || null, reason: 'Same original unit: ensure worktree seal and filtered canonical Git bytes agree on fresh checkout while retaining earlier raw CRLF proof.',
+  });
+}
 function main(action) {
+  if (action === 'canonicalize') return canonicalize();
   if (action === 'source') return source();
   if (action === 'red') {
     const run = captureRun('red', ['--test', '--test-reporter=tap', '.\\learning\\S140\\model.test.cjs'],
@@ -267,7 +299,7 @@ function main(action) {
     return;
   }
   if (action === 'seal') return seal();
-  throw new Error('Explicit capture action required: source, red, iac-na, green, syntax, tooling, integrity, browser, verify, seal.');
+  throw new Error('Explicit capture action required: source, red, iac-na, green, syntax, tooling, integrity, browser, verify, canonicalize, seal.');
 }
 
 module.exports = { hash, listFiles, relative, selected, sourceDefinitions };

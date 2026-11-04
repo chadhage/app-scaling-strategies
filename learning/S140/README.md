@@ -21,6 +21,10 @@ account, credentials, framework or deployment is required.
 portable contract and SC-S140 packet rule read before design. Full working-tree
 bytes, including CRLF, and canonical Git bytes are retained **separately** as gzip
 proof. Scoped `.gitattributes` disables text conversion only for raw evidence.
+Delivered application/test text is explicitly normalized to LF before its final
+seal. Read-only integrity compares raw and filtered Git object hashes, preventing
+a clean checkout from silently invalidating worktree-only hashes. Earlier raw
+CRLF RED, browser and correction snapshots remain unchanged.
 
 ## Exercise
 
@@ -121,7 +125,7 @@ finally { Remove-Item Env:\CAPTURE_BROWSER_EVIDENCE -ErrorAction SilentlyContinu
 ```
 
 Do not use capture as verification. `record.cjs` is an explicitly invoked evidence
-producer; its `source`, `red`, `iac-na`, `green`, `syntax`, `tooling`, `integrity`, `seal` and
+producer; its `source`, `red`, `iac-na`, `green`, `syntax`, `tooling`, `integrity`, `canonicalize`, `seal` and
 `verify` actions also write scoped evidence. After an intentional source/capture
 change, explicitly reseal; normal tests never repair a changed seal.
 Raw snapshots/TAP/JSON, including any failed capture, stay outside test discovery

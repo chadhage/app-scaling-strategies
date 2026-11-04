@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
 const vm = require('node:vm');
+const crypto = require('node:crypto');
 const { spawnSync } = require('node:child_process');
 const { hash, listFiles, relative, selected, sourceDefinitions } = require('./record.cjs');
 const root = path.resolve(__dirname, '..', '..');
@@ -27,6 +28,19 @@ test('exact scoped seal covers every persisted lesson file without regenerating 
     const bytes = read(entry.file);
     assert.equal(hash(bytes), entry.sha256, entry.file);
     assert.equal(bytes.length, entry.byteLength, entry.file);
+  }
+  const objectFormat = git('rev-parse', '--show-object-format').toString('utf8').trim();
+  for (const entry of seal.files) {
+    const bytes = read(entry.file);
+    const rawObject = crypto.createHash(objectFormat).update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+    // --path is canonical Git attribute metadata, not a Windows file operand.
+    const attributePath = `learning/S140/${entry.file.split('\\').join('/')}`;
+    const filtered = spawnSync('git', ['hash-object', '--stdin', `--path=${attributePath}`], {
+      cwd: root, input: bytes, encoding: null, windowsHide: true,
+    });
+    assert.equal(filtered.status, 0, String(filtered.stderr));
+    assert.equal(filtered.stdout.toString('utf8').trim(), rawObject,
+      `${entry.file}: sealed raw bytes must equal canonical Git bytes; verification never repairs them.`);
   }
 });
 
@@ -82,7 +96,10 @@ test('retained RED is a loadable stub with fifteen genuine assertion failures, n
   assert.equal(stub.createSession().stage, 'ready');
   assert.equal(stub.act(stub.createSession(), { type: 'submit' }).stage, 'ready');
   assert.notEqual(hash(read('model.js')), red.inputs.find((input) => input.file === 'model.js').sha256);
-  assert.equal(hash(read('model.test.cjs')), red.inputs.find((input) => input.file === 'model.test.cjs').sha256);
+  const testSource = red.inputs.find((input) => input.file === 'model.test.cjs');
+  const canonical = (bytes) => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+  assert.equal(hash(canonical(read('model.test.cjs'))), hash(canonical(read(testSource.snapshot))),
+    'The actual RED test source is unchanged apart from explicit CRLF-to-canonical-LF representation.');
 });
 
 test('BDD RED IaC N/A implementation and syntax order is explicit and all raw evidence attributes forbid conversion', () => {

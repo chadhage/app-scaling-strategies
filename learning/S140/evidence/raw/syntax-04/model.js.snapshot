@@ -1,0 +1,278 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.ExportRehearsal = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+  const CONTRACT = freeze({
+    banner: 'Training rehearsal - synthetic data - not a live Azure result',
+    requestId: 'request-fiction-140', jobId: 'job-fiction-140', exportId: 'export-fiction-140',
+    artifactId: 'artifact-fiction-140', owner: 'identity-fiction-owner-140', foreign: 'identity-fiction-other-140',
+    bytes: [83, 49, 52, 48, 10, 49, 44, 55, 10],
+    durations: { submit: 5, switchProcess: 1, process: 12, switchPoll: 1, poll: 4, switchDownload: 1, download: 6, check: 0, reset: 0 },
+    tiers: { submit: 'submit-v1', process: 'processor-v1', poll: 'poller-v1', download: 'download-v1' },
+  });
+  const SCENARIOS = freeze({
+    preserved: { title: 'Preserved export', expected: 'positive' },
+    'artifact-lost': { title: 'Artifact lost on download v2', expected: 'negative' },
+    'authorization-lost': { title: 'Owner authorization lost', expected: 'negative' },
+    'authorization-bypass': { title: 'Foreign identity allowed', expected: 'negative' },
+    'bytes-changed': { title: 'Artifact bytes changed', expected: 'negative' },
+    'job-lost': { title: 'Job state lost on processing v2', expected: 'negative' },
+    unobserved: { title: 'Poll and download unobserved', expected: 'unknown' },
+  });
+  const LIMITS = freeze({ maxAttempts: 8, maxEvents: 96, minBudgetMs: 1, maxBudgetMs: 100 });
+  const order = freeze({
+    switchProcess: ['submitted', 'process-switched'],
+    process: ['process-switched', 'processed'],
+    switchPoll: ['processed', 'poll-switched'],
+    poll: ['poll-switched', 'polled'],
+    switchDownload: ['polled', 'download-switched'],
+    download: ['download-switched', 'downloaded'],
+  });
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+  const plain = (value) => value !== null && typeof value === 'object'
+    && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype;
+  const sameKeys = (value, keys) => plain(value)
+    && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key));
+  function validData(value, depth = 0, seen = new Set(), count = { nodes: 0 }) {
+    if (++count.nodes > 100000 || depth > 14) return false;
+    if (value === null || typeof value === 'boolean') return true;
+    if (typeof value === 'string') return value.length <= 600;
+    if (typeof value === 'number') return Number.isSafeInteger(value);
+    if (typeof value !== 'object' || seen.has(value) || Object.getOwnPropertySymbols(value).length) return false;
+    if (!Array.isArray(value) && !plain(value)) return false;
+    if (Array.isArray(value) && (value.length > LIMITS.maxEvents || Object.keys(value).length !== value.length)) return false;
+    seen.add(value);
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    for (const [key, descriptor] of Object.entries(descriptors)) {
+      if (Array.isArray(value) && key === 'length') continue;
+      if (!Object.hasOwn(descriptor, 'value') || !validData(descriptor.value, depth + 1, seen, count)) return false;
+    }
+    seen.delete(value);
+    return true;
+  }
+  function canonical(value) {
+    if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+    if (plain(value)) return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`;
+    return JSON.stringify(value);
+  }
+  function base() {
+    return { version: 1, stage: 'ready', attempt: 0, active: null, history: [], results: [] };
+  }
+  function budget(value) {
+    if (!Number.isInteger(value) || value < LIMITS.minBudgetMs || value > LIMITS.maxBudgetMs) {
+      throw new Error('Invalid budget: use an integer from 1 to 100 fictional milliseconds.');
+    }
+    return value;
+  }
+  function parseBudget(value) {
+    if (typeof value !== 'string' || !/^[1-9][0-9]{0,2}$/.test(value)) {
+      throw new Error('Invalid budget: enter digits only, an integer from 1 to 100.');
+    }
+    return budget(Number(value));
+  }
+  function commandGuard(command) {
+    if (!validData(command) || !plain(command) || typeof command.type !== 'string') throw new Error('Invalid command: expected a plain typed data record.');
+    const keys = command.type === 'submit' ? ['type', 'scenario', 'requester', 'budgetMs'] : ['type'];
+    if (!sameKeys(command, keys)) throw new Error('Invalid command fields: no missing or extra input is accepted.');
+    if (command.type === 'submit') {
+      if (typeof command.scenario !== 'string' || !Object.hasOwn(SCENARIOS, command.scenario)) throw new Error('Invalid condition: choose a named fixed-fiction fixture.');
+      if (![CONTRACT.owner, CONTRACT.foreign].includes(command.requester)) throw new Error('Invalid requester: only the two fixed fictional identities are supported.');
+      budget(command.budgetMs);
+    } else if (!Object.hasOwn(order, command.type) && !['check', 'reset'].includes(command.type)) {
+      throw new Error('Invalid command: no network or external operation is supported.');
+    }
+  }
+  function assessment(state) {
+    const active = state.active;
+    const download = active?.download;
+    const checks = [];
+    function check(id, label, condition, detail) {
+      checks.push({ id, label, status: condition === null ? 'unknown' : condition ? 'pass' : 'fail', detail });
+    }
+    check('request', 'Fixed submission identity and acceptance', active
+      ? active.request.id === CONTRACT.requestId && active.request.owner === CONTRACT.owner
+        && active.request.exportId === CONTRACT.exportId && active.request.syntheticHttpStatus === 202
+      : null, active ? 'Fictional accepted request, not a sent HTTP request.' : 'Submission has not been observed.');
+    check('job', 'Job identity, owner and completed state survive processing', !active || active.job.state === 'queued' ? null
+      : active.job.id === CONTRACT.jobId && active.job.owner === CONTRACT.owner
+        && active.job.exportId === CONTRACT.exportId && active.job.state === 'completed'
+        && active.job.tier === 'processor-v2',
+    active?.job.state === 'missing' ? 'Job metadata was lost on processor-v2.' : 'Requires the same completed job on the switched processor.');
+    check('poll', 'Polling observes the same completed authorized job', !active?.poll?.observed ? null
+      : active.poll.jobId === CONTRACT.jobId && active.poll.owner === CONTRACT.owner
+        && active.poll.jobState === 'completed' && active.poll.syntheticHttpStatus === 200 && active.poll.tier === 'poller-v2',
+    active?.poll?.observed ? 'Compared fictional poll identity, owner, status and tier.' : 'No completed-job poll observation is available.');
+    check('artifact', 'Final artifact identity and export binding survive', !download?.observed ? null
+      : download.artifactId === CONTRACT.artifactId && download.exportId === CONTRACT.exportId
+        && download.jobId === CONTRACT.jobId && download.owner === CONTRACT.owner && active.artifact?.exists === true,
+    download?.syntheticHttpStatus === 404 ? 'Artifact is unavailable on download-v2.' : 'Requires the expected artifact, job, export and owner binding.');
+    check('bytes', 'Every final artifact byte matches the nine-byte oracle', !download?.observed || download.bytes === null ? null
+      : download.bytes.length === CONTRACT.bytes.length && CONTRACT.bytes.every((value, index) => download.bytes[index] === value),
+    download?.bytes ? 'Exact byte-by-byte comparison; HTTP 200 and byte length alone do not suffice.' : 'No final bytes were observed; none are invented.');
+    check('authorization', 'Intended owner retains export-read authorization', !download?.authorization ? null
+      : download.requester === CONTRACT.owner && download.authorization.identity === CONTRACT.owner
+        && download.authorization.allow === true && download.authorization.scope === 'export:read'
+        && download.authorization.boundJobId === CONTRACT.jobId && download.authorization.boundArtifactId === CONTRACT.artifactId,
+    download?.authorization ? 'Compared the fictional identity, allow decision, scope and artifact/job binding.' : 'An intended-owner authorization observation is missing.');
+    check('isolation', 'Foreign fictional identity is denied this artifact', !download?.foreignProbe ? null
+      : download.foreignProbe.identity === CONTRACT.foreign && download.foreignProbe.allow === false
+        && download.foreignProbe.syntheticHttpStatus === 403 && download.foreignProbe.boundArtifactId === CONTRACT.artifactId,
+    download?.foreignProbe ? 'A fixed fictional denial record, not an authentication or probe operation.' : 'The foreign-denial observation is missing.');
+    check('download', 'Client observes permitted access on download-v2', !download?.observed ? null
+      : download.syntheticHttpStatus === 200 && download.tier === 'download-v2',
+    download?.observed ? `Fictional download status ${download.syntheticHttpStatus}; no file was fetched or saved.` : 'No client download-access observation is available.');
+    check('transitions', 'Processing, polling and download switch independently', !active
+      || !Object.values(active.transitions).every((value) => value === true) ? null
+      : active.tiers.submit === 'submit-v1' && active.tiers.process === 'processor-v2'
+        && active.tiers.poll === 'poller-v2' && active.tiers.download === 'download-v2',
+    'Submission stays on v1; separate operator actions switch each downstream tier to its own v2.');
+    check('timing', 'Complete fictional client journey fits its declared budget', !active ? null
+      : active.elapsedMs > active.budgetMs ? false : state.stage === 'downloaded' ? true : null,
+    active ? `${active.elapsedMs} fictional ms elapsed / ${active.budgetMs} fictional ms budget; not measured Azure latency.` : 'No journey clock has started.');
+    const failedChecks = checks.filter((entry) => entry.status === 'fail').map((entry) => entry.id);
+    const unknownChecks = checks.filter((entry) => entry.status === 'unknown').map((entry) => entry.id);
+    const outcome = failedChecks.length ? 'negative' : unknownChecks.length ? 'unknown' : 'positive';
+    return {
+      attempt: state.attempt, outcome, scenario: active?.scenario || null, requester: active?.requester || null,
+      elapsedMs: active?.elapsedMs || 0, budgetMs: active?.budgetMs || null,
+      comparedBytes: download?.observed && download.bytes ? Math.min(download.bytes.length, CONTRACT.bytes.length) : 0,
+      checks, failedChecks, unknownChecks, syntheticOnly: true, nativeAzureResult: 'unverified',
+      reason: outcome === 'positive' ? 'All complete authorized fixed-fiction journey checks passed.'
+        : outcome === 'negative' ? `Detected failed client-journey checks: ${failedChecks.join(', ')}.`
+          : `Unobserved required checks: ${unknownChecks.join(', ')}.`,
+    };
+  }
+  function transition(state, command) {
+    commandGuard(command);
+    if (state.history.length >= LIMITS.maxEvents) throw new Error('Retained history limit: 96 events. Reload to start a new bounded rehearsal.');
+    if (command.type === 'submit' && state.stage !== 'ready') throw new Error('Invalid stage/order: reset the active exercise before submitting again.');
+    if (command.type === 'submit' && state.attempt >= LIMITS.maxAttempts) throw new Error('Attempt limit: eight (8) fictional journeys. Reload for a new rehearsal.');
+    if (Object.hasOwn(order, command.type) && state.stage !== order[command.type][0]) {
+      throw new Error(`Invalid stage/order: ${command.type} requires ${order[command.type][0]}, not ${state.stage}.`);
+    }
+    const next = clone(state);
+    if (command.type === 'submit') {
+      next.attempt++;
+      next.stage = 'submitted';
+      next.active = {
+        scenario: command.scenario, requester: command.requester, budgetMs: command.budgetMs,
+        elapsedMs: CONTRACT.durations.submit, tiers: clone(CONTRACT.tiers),
+        transitions: { process: false, poll: false, download: false },
+        request: { id: CONTRACT.requestId, exportId: CONTRACT.exportId, owner: CONTRACT.owner, syntheticHttpStatus: 202, tier: 'submit-v1' },
+        job: { id: CONTRACT.jobId, exportId: CONTRACT.exportId, owner: CONTRACT.owner, state: 'queued', tier: 'processor-v1' },
+        artifact: null, poll: null, download: null,
+      };
+    } else if (command.type === 'reset') {
+      next.stage = 'ready';
+      next.active = null;
+    } else if (command.type === 'check') {
+      next.results.push(assessment(next));
+    } else {
+      const active = next.active;
+      active.elapsedMs += CONTRACT.durations[command.type];
+      next.stage = order[command.type][1];
+      if (command.type === 'switchProcess') {
+        active.tiers.process = 'processor-v2';
+        active.transitions.process = true;
+        active.job.tier = 'processor-v2';
+        if (active.scenario === 'job-lost') active.job.state = 'missing';
+      } else if (command.type === 'process' && active.job.state !== 'missing') {
+        active.job.state = 'completed';
+        active.artifact = {
+          id: CONTRACT.artifactId, jobId: CONTRACT.jobId, exportId: CONTRACT.exportId, owner: CONTRACT.owner,
+          exists: true, bytes: [...CONTRACT.bytes], producedBy: 'processor-v2', originalDownloadTier: 'download-v1',
+        };
+      } else if (command.type === 'switchPoll') {
+        active.tiers.poll = 'poller-v2';
+        active.transitions.poll = true;
+      } else if (command.type === 'poll') {
+        const observed = active.scenario !== 'unobserved';
+        const found = active.job.state !== 'missing';
+        active.poll = {
+          observed, queriedJobId: CONTRACT.jobId, jobId: observed && found ? CONTRACT.jobId : null,
+          owner: observed && found ? CONTRACT.owner : null, jobState: observed ? active.job.state : null,
+          syntheticHttpStatus: observed ? found ? 200 : 404 : null, tier: 'poller-v2',
+        };
+      } else if (command.type === 'switchDownload') {
+        active.tiers.download = 'download-v2';
+        active.transitions.download = true;
+        if (active.artifact && active.scenario === 'artifact-lost') {
+          active.artifact.exists = false;
+          active.artifact.bytes = null;
+        }
+      } else if (command.type === 'download') {
+        const observed = active.scenario !== 'unobserved';
+        const exists = active.artifact?.exists === true;
+        const allow = active.scenario === 'authorization-bypass'
+          || active.requester === CONTRACT.owner && active.scenario !== 'authorization-lost';
+        const syntheticHttpStatus = !observed ? null : !exists ? 404 : !allow ? 403 : 200;
+        const bytes = syntheticHttpStatus === 200 ? [...active.artifact.bytes] : null;
+        if (bytes && active.scenario === 'bytes-changed') bytes[bytes.length - 1]++;
+        active.download = {
+          observed, requester: active.requester, requestId: CONTRACT.requestId, jobId: CONTRACT.jobId,
+          exportId: CONTRACT.exportId, artifactId: observed && exists ? CONTRACT.artifactId : null,
+          owner: observed && exists ? CONTRACT.owner : null, syntheticHttpStatus, tier: 'download-v2', bytes,
+          authorization: observed ? {
+            identity: active.requester, allow, scope: 'export:read', boundJobId: CONTRACT.jobId, boundArtifactId: CONTRACT.artifactId,
+          } : null,
+          foreignProbe: observed ? {
+            identity: CONTRACT.foreign, allow: active.scenario === 'authorization-bypass',
+            syntheticHttpStatus: active.scenario === 'authorization-bypass' ? 200 : 403, boundArtifactId: CONTRACT.artifactId,
+          } : null,
+        };
+      }
+    }
+    next.history.push({
+      sequence: next.history.length + 1, attempt: next.attempt, command: clone(command), type: command.type,
+      stage: next.stage, atMs: next.active?.elapsedMs || 0, tiers: clone(next.active?.tiers || CONTRACT.tiers),
+      jobState: next.active?.job.state || null, pollStatus: next.active?.poll?.syntheticHttpStatus || null,
+      downloadStatus: next.active?.download?.syntheticHttpStatus || null,
+      artifactBytes: next.active?.download?.bytes ? [...next.active.download.bytes] : null,
+      requester: next.active?.requester || null,
+    });
+    return next;
+  }
+  function stateGuard(state) {
+    if (!validData(state) || !sameKeys(state, ['version', 'stage', 'attempt', 'active', 'history', 'results'])
+      || !Array.isArray(state.history) || !Array.isArray(state.results)) throw new Error('Invalid rehearsal state: expected a bounded typed session.');
+    let replay = base();
+    try {
+      for (const entry of state.history) {
+        if (!plain(entry) || !Object.hasOwn(entry, 'command')) throw new Error('Missing event command.');
+        replay = transition(replay, entry.command);
+      }
+      // A forged status/byte/identity field must not become invented evidence.
+      if (canonical(replay) !== canonical(state)) throw new Error('State does not match its deterministic event history.');
+    } catch {
+      throw new Error('Invalid rehearsal state: typed records must exactly match the retained fixed-fiction history.');
+    }
+  }
+  function createSession() { return freeze(base()); }
+  function act(state, command) {
+    stateGuard(state);
+    return freeze(transition(state, command));
+  }
+  function assess(state) {
+    stateGuard(state);
+    return freeze(assessment(state));
+  }
+  function summary(state) {
+    stateGuard(state);
+    const latest = new Map();
+    for (const measured of state.results) if (measured.attempt > 0) latest.set(measured.attempt, measured.outcome);
+    const counts = { attempted: state.attempt, positive: 0, negative: 0, unknown: 0, unassessed: state.attempt - latest.size };
+    for (const outcome of latest.values()) counts[outcome]++;
+    return freeze(counts);
+  }
+  return freeze({ CONTRACT, SCENARIOS, LIMITS, createSession, act, assess, summary, parseBudget });
+}));

@@ -1,0 +1,129 @@
+(function () {
+  'use strict';
+  const model = globalThis.ExportRehearsal;
+  const byId = (id) => document.getElementById(id);
+  const form = byId('setup');
+  const condition = byId('condition');
+  const requester = byId('requester');
+  const budget = byId('budget');
+  let state = model.createSession();
+  const nextControl = {
+    submitted: 'switch-process', 'process-switched': 'process-job', processed: 'switch-poll',
+    'poll-switched': 'poll-job', polled: 'switch-download', 'download-switched': 'inspect-download',
+    downloaded: 'check-journey', ready: 'condition',
+  };
+  const stages = {
+    switchProcess: 'submitted', process: 'process-switched', switchPoll: 'processed',
+    poll: 'poll-switched', switchDownload: 'polled', download: 'download-switched',
+  };
+  const element = (tag, text, className) => {
+    const node = document.createElement(tag);
+    node.textContent = text;
+    if (className) node.className = className;
+    return node;
+  };
+  function clearError() {
+    byId('error').textContent = '';
+    for (const input of [condition, requester, budget]) input.removeAttribute('aria-invalid');
+  }
+  function showError(error, input) {
+    byId('error').textContent = `Rejected input/action — ${error.message}`;
+    byId('announcements').textContent = byId('error').textContent;
+    if (input) {
+      input.setAttribute('aria-invalid', 'true');
+      input.focus();
+    }
+  }
+  function render() {
+    const active = state.active;
+    const counts = model.summary(state);
+    const full = state.history.length >= model.LIMITS.maxEvents;
+    condition.disabled = requester.disabled = budget.disabled = state.stage !== 'ready' || full;
+    byId('submit-rehearsal').disabled = state.stage !== 'ready' || full || state.attempt >= model.LIMITS.maxAttempts;
+    for (const button of document.querySelectorAll('[data-action]')) {
+      button.disabled = full || Object.hasOwn(stages, button.dataset.action) && stages[button.dataset.action] !== state.stage;
+    }
+    byId('stage').textContent = `Active stage: ${state.stage}. Attempt ${state.attempt} of ${model.LIMITS.maxAttempts}.`;
+    const tiers = active?.tiers || model.CONTRACT.tiers;
+    byId('tiers').textContent = `Fictional tiers — submit: ${tiers.submit}; process: ${tiers.process}; poll: ${tiers.poll}; download: ${tiers.download}.`;
+    byId('counts').textContent = `Attempted ${counts.attempted} | Positive ${counts.positive} | Negative ${counts.negative} | Unknown ${counts.unknown} | Unassessed ${counts.unassessed}`;
+    const measured = state.active || state.attempt === 0
+      ? state.results.filter((entry) => entry.attempt === state.attempt).at(-1) : null;
+    byId('checklist').replaceChildren();
+    if (measured) {
+      byId('verdict').textContent = `${measured.outcome.toUpperCase()} — ${measured.reason} Fictional elapsed: ${measured.elapsedMs} ms; compared bytes: ${measured.comparedBytes}.`;
+      byId('verdict').className = `verdict ${measured.outcome}`;
+      for (const check of measured.checks) {
+        const row = element('li', `${check.status.toUpperCase()} — ${check.label}. ${check.detail}`, check.status);
+        row.dataset.check = check.id;
+        row.dataset.status = check.status;
+        byId('checklist').append(row);
+      }
+    } else {
+      byId('verdict').textContent = 'UNASSESSED — use Check complete authorized journey.';
+      byId('verdict').className = 'verdict';
+    }
+    const observedBytes = active?.download?.bytes;
+    byId('bytes').textContent = `Expected fixed bytes: ${JSON.stringify(model.CONTRACT.bytes)}. ${observedBytes
+      ? `Observed fictional final bytes: ${JSON.stringify(observedBytes)}.`
+      : 'No final download bytes observed; do not infer them from a completed job.'}`;
+    byId('records').textContent = JSON.stringify({
+      boundary: 'FIXED FICTIONAL TEACHING DATA ONLY — no operation was sent, authenticated, queued, fetched or saved.',
+      activeStage: state.stage, fixedOracle: model.CONTRACT, activeJourney: active,
+    }, null, 2);
+    byId('history').replaceChildren();
+    for (const event of state.history) {
+      const row = document.createElement('tr');
+      for (const text of [
+        event.sequence, event.attempt, `${event.type} / ${event.stage}`, event.atMs,
+        Object.values(event.tiers).join(' | '),
+        `${event.jobState || 'unobserved'} / ${event.pollStatus ?? 'unobserved'} / ${event.downloadStatus ?? 'unobserved'} / ${event.artifactBytes?.length ?? 'unobserved'}`,
+      ]) row.append(element('td', String(text)));
+      byId('history').append(row);
+    }
+    byId('results').replaceChildren();
+    for (const [index, measuredResult] of state.results.entries()) {
+      byId('results').append(element('li',
+        `Check ${index + 1}, attempt ${measuredResult.attempt}: ${measuredResult.outcome.toUpperCase()} — ${measuredResult.reason}`,
+        measuredResult.outcome));
+    }
+  }
+  function perform(command) {
+    try {
+      const next = model.act(state, command);
+      state = next;
+      clearError();
+      if (command.type === 'reset') {
+        condition.value = 'preserved';
+        requester.value = model.CONTRACT.owner;
+        budget.value = '40';
+      }
+      render();
+      byId('announcements').textContent = command.type === 'reset'
+        ? 'Active exercise reset. Default inputs restored; prior events and checks retained.'
+        : command.type === 'check' ? byId('verdict').textContent : `Fictional action ${command.type}; active stage ${state.stage}.`;
+      if (command.type !== 'check') byId(nextControl[state.stage]).focus();
+    } catch (error) {
+      showError(error);
+    }
+  }
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    clearError();
+    let budgetMs;
+    try { budgetMs = model.parseBudget(budget.value); } catch (error) { showError(error, budget); return; }
+    if (!Object.hasOwn(model.SCENARIOS, condition.value)) {
+      showError(new Error('Invalid condition: select a named fixed-fiction fixture.'), condition);
+      return;
+    }
+    if (![model.CONTRACT.owner, model.CONTRACT.foreign].includes(requester.value)) {
+      showError(new Error('Invalid requester: select one of the two fictional identities.'), requester);
+      return;
+    }
+    perform({ type: 'submit', scenario: condition.value, requester: requester.value, budgetMs });
+  });
+  for (const button of document.querySelectorAll('[data-action]')) {
+    button.addEventListener('click', () => perform({ type: button.dataset.action }));
+  }
+  render();
+}());
