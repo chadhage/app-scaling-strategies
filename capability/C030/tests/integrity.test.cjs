@@ -5,11 +5,20 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
 const { gunzipSync } = require('node:zlib');
-const { spawnSync } = require('node:child_process');
 const test = require('node:test');
+const { runNodeTest } = require('.\\nested-runner.cjs');
 const root = path.resolve(__dirname, '..');
 const seal = JSON.parse(fs.readFileSync(path.join(root, 'evidence-index.json'), 'utf8'));
+const amendmentFile = path.join(root, 'evidence-index-v2.json');
+const amendment = fs.existsSync(amendmentFile) ? JSON.parse(fs.readFileSync(amendmentFile, 'utf8')) : null;
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+// The v1 seal is never rewritten: v2 names each replaced artifact with the v1 hash it supersedes and appends the new files.
+function artifacts() {
+  const replaced = new Map((amendment?.replacedArtifacts || []).map((entry) => [entry.path, entry]));
+  return [...seal.artifactFiles.map((entry) => replaced.get(entry.path) || entry), ...(amendment?.addedArtifacts || [])];
+}
+const captureOf = (directory) => ({ record: JSON.parse(fs.readFileSync(path.join(root, directory, 'record.json'), 'utf8')),
+  stdout: gunzipSync(fs.readFileSync(path.join(root, directory, 'stdout.raw.gz'))).toString('utf8') });
 function checked(entry) {
   const file = path.resolve(root, entry.path);
   assert.ok(file.startsWith(`${root}${path.sep}`));
@@ -33,7 +42,8 @@ test('all sealed original raw evidence files remain exact and immutable', () => 
 });
 test('all sealed code, documentation and fixed import artifacts remain byte exact', () => {
   assert.ok(seal.artifactFiles.length > 20);
-  seal.artifactFiles.forEach(checked);
+  assert.ok(amendment, 'The amendment seal evidence-index-v2.json is required.');
+  artifacts().forEach(checked);
 });
 test('every command keeps complete raw stdout/stderr and the actual exit code', () => {
   for (const { directory, record } of captures()) {
@@ -58,9 +68,7 @@ test('BDD, loadable stub, genuine assertion RED and IaC N/A chronology is preser
   assert.equal(get('red').exitCode, 1);
 });
 test('retained initial stub still reproduces behavior assertion failure, never an import failure', () => {
-  const output = spawnSync(process.execPath, ['--test', path.join(root, 'evidence', 'red', 'delivery-is-not-effect.test.cjs')], {
-    timeout: 15000, windowsHide: true, encoding: 'utf8'
-  });
+  const output = runNodeTest(path.join(root, 'evidence', 'red', 'delivery-is-not-effect.test.cjs'));
   assert.equal(output.status, 1);
   assert.match(output.stdout, /ERR_ASSERTION/);
   assert.match(output.stdout, /'PASS' !== 'HOLD'/);
@@ -120,4 +128,97 @@ test('source pin manifest keeps historical sources separate from current private
   assert.equal(pins.mathematicalControlsAreNotSourceReceipts, true);
   assert.equal(pins.sourcePinsDoNotAuthorizeNativeClaims, true);
   assert.equal(require('..\\publisher-history.json').historicalOnly, true);
+});
+test('the original seal stays byte exact and the amendment replaces only named documentation and test tooling', () => {
+  assert.ok(amendment, 'The amendment seal evidence-index-v2.json is required.');
+  assert.equal(amendment.schema, 'C030-evidence-index/2');
+  const original = fs.readFileSync(path.join(root, 'evidence-index.json'));
+  assert.equal(amendment.supersedes.bytes, original.length);
+  assert.equal(amendment.supersedes.sha256, hash(original));
+  const sealed = new Map(seal.artifactFiles.map((entry) => [entry.path, entry]));
+  assert.deepEqual(amendment.replacedArtifacts.map((entry) => entry.path),
+    ['README.md', 'tests\\integrity.test.cjs', 'tests\\record.cjs', 'tests\\verify.cjs']);
+  for (const entry of amendment.replacedArtifacts) assert.equal(entry.supersedesSha256, sealed.get(entry.path).sha256, entry.path);
+  for (const entry of amendment.addedArtifacts) assert.equal(sealed.has(entry.path), false, entry.path);
+  assert.equal(amendment.proofCounts.originalKanoUnits, 1);
+  assert.equal(amendment.proofCounts.extraRepairOrTestCredits, 0);
+});
+test('every raw file and red copy the amendment adds stays byte exact', () => {
+  assert.ok(amendment, 'The amendment seal evidence-index-v2.json is required.');
+  assert.ok(amendment.addedEvidence.length > 100);
+  for (const name of ['nested-runner.test.cjs', 'nested-runner.stub.cjs']) {
+    assert.ok(amendment.addedEvidence.some((entry) => entry.path === `evidence\\red\\${name}`), name);
+  }
+  amendment.addedEvidence.forEach(checked);
+});
+test('retained nested-runner stub still fails the corrected contract for the behavioral reason, never an import failure', () => {
+  const output = runNodeTest(path.join(root, 'evidence', 'red', 'nested-runner.test.cjs'), { timeout: 60000 });
+  assert.equal(output.status, 1);
+  assert.match(output.stdout, /# fail 3/);
+  assert.match(output.stdout, /ERR_ASSERTION/);
+  assert.match(output.stdout, /0 !== 1/);
+  assert.doesNotMatch(output.stdout + output.stderr, /MODULE_NOT_FOUND/);
+});
+test('nested-runner and per-file coverage RED and GREEN are archived with their actual exit codes', () => {
+  assert.ok(amendment, 'The amendment seal evidence-index-v2.json is required.');
+  const red = captureOf(amendment.captures.nestedRed);
+  assert.equal(red.record.stage, 'nested-red');
+  assert.equal(red.record.exitCode, 1);
+  assert.match(red.stdout, /# pass 0/);
+  assert.match(red.stdout, /# fail 3/);
+  assert.match(red.stdout, /true !== false/);
+  assert.match(red.stdout, /0 !== 1/);
+  assert.doesNotMatch(red.stdout, /MODULE_NOT_FOUND/);
+  assert.equal(amendment.proofCounts.nestedRunnerRedFailures, 3);
+  const green = captureOf(amendment.captures.nestedGreen);
+  assert.equal(green.record.stage, 'nested-green');
+  assert.equal(green.record.exitCode, 0);
+  assert.match(green.stdout, /# pass 4/);
+  assert.match(green.stdout, /# fail 0/);
+  assert.ok(red.record.endedAtUtc <= green.record.startedAtUtc);
+  const gap = captureOf(amendment.captures.coverageRed);
+  assert.equal(gap.record.exitCode, 1);
+  const baseline = JSON.parse(gap.stdout.trim().split(/\r?\n/).at(-1));
+  assert.deepEqual(baseline.coverage.filter((entry) => !entry.passed).map((entry) => entry.file), ['cli.cjs', 'page.js', 'source.cjs']);
+  assert.equal(baseline.coverage.find((entry) => entry.file === 'page.js').loaded, false);
+  assert.ok(gap.record.endedAtUtc <= captureOf(amendment.captures.coverage).record.startedAtUtc);
+});
+test('every production script reaches 85 percent lines, branches and functions in its own measured run', () => {
+  assert.ok(amendment, 'The amendment seal evidence-index-v2.json is required.');
+  const { record, stdout } = captureOf(amendment.captures.coverage);
+  assert.equal(record.stage, 'coverage');
+  assert.equal(record.exitCode, 0);
+  const summary = JSON.parse(stdout.trim().split(/\r?\n/).at(-1));
+  const production = fs.readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isFile() && /\.(?:js|cjs)$/.test(entry.name))
+    .map((entry) => entry.name).sort();
+  assert.deepEqual(summary.productionFiles, production);
+  assert.deepEqual(amendment.proofCounts.coverage.map((entry) => entry.file), production);
+  assert.equal(summary.threshold, 85);
+  assert.equal(summary.passed, true);
+  for (const entry of summary.coverage) {
+    assert.equal(entry.loaded, true, entry.file);
+    assert.equal(entry.nodeExit, 0, entry.file);
+    assert.equal(entry.failedTests, 0, entry.file);
+    for (const metric of ['lines', 'branches', 'functions']) assert.ok(entry[metric] >= 85, `${entry.file} ${metric}`);
+  }
+});
+test('every nested node --test in the namespace tooling is started with the sanitized child environment (L-0002)', () => {
+  const tooling = fs.readdirSync(__dirname).filter((name) => name.endsWith('.cjs'));
+  const spawning = tooling.filter((name) => /['"]--test['"]/.test(fs.readFileSync(path.join(__dirname, name), 'utf8')));
+  assert.ok(spawning.includes('nested-runner.cjs'));
+  for (const name of spawning) assert.match(fs.readFileSync(path.join(__dirname, name), 'utf8'), /childEnvironment|runNodeTest/, name);
+});
+test('the amendment browser capture is a passed real signed Edge observation with exact cleanup', () => {
+  assert.ok(amendment, 'The amendment seal evidence-index-v2.json is required.');
+  const browser = JSON.parse(fs.readFileSync(path.join(root, amendment.captures.browser, 'browser', 'summary.json'), 'utf8'));
+  assert.equal(browser.outcome, 'passed');
+  assert.equal(browser.checks.length, amendment.proofCounts.actualBrowserChecks);
+  assert.equal(browser.playwrightVersion, '1.56.1');
+  assert.match(browser.browserVersion, /^156\./);
+  assert.match(browser.testRuntime, /^v22\./);
+  assert.equal(browser.actualSignedEdge.authenticodeStatus, 'Valid');
+  assert.equal(browser.helperRawSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+  assert.ok(Object.values(browser.cleanup).every((value) => value === true));
+  assert.equal(browser.unsafeFlagsUsed, false);
+  assert.equal(browser.foregroundLeaseUsed, false);
 });

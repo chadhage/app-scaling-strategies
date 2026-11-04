@@ -156,6 +156,75 @@ It awaits `close()` in `finally` and verifies the exact owned session, profile
 and browser are gone. No foreground lease, lifecycle prototype, unsafe flags,
 downloads, packages, framework, cloud, Entra, credentials, deployment or spend.
 
+## Nested-runner correction, per-file coverage and how to reproduce them
+
+A nested `node --test` started by a test inherits `NODE_TEST_CONTEXT` and then
+exits **0 even when its own test fails** (L-0002); an inherited `NODE_V8_COVERAGE`
+would also write into the outer coverage directory. The retained-stub integrity
+assertion therefore failed for the wrong reason (`0 !== 1`). `tests\nested-runner.cjs`
+builds the child environment without either variable, in any spelling, and every
+nested `node --test` in this namespace uses it: the integrity test, `record.cjs`,
+`verify.cjs` and `coverage.cjs`. The assertion is not weakened: the retained
+initial stub must still exit 1 with `ERR_ASSERTION`, `'PASS' !== 'HOLD'` and no
+`MODULE_NOT_FOUND`. `integrity.feature` is the specification;
+`evidence\red\nested-runner.stub.cjs` and `evidence\red\nested-runner.test.cjs`
+are the retained loadable stub and its genuine assertion RED (three failures).
+
+Production scripts (`detector.js`, `cli.cjs`, `source.cjs`, `publisher-policy.cjs`,
+`page.js`) are byte-for-byte unchanged. Only tests, this README and two capture
+scripts changed. Measured against the unchanged sources, the baseline was
+`cli.cjs` 33.33 % branches, `source.cjs` 79.63 % branches and `page.js` never
+loaded (0 %). `tests\cli.test.cjs`, `tests\source-fail-closed.test.cjs` and
+`tests\page.test.cjs` (browser-only `page.js` runs against a stub document built
+from the real `index.html`, so the markup and script must agree) close that gap.
+PowerShell scripts are exercised by behavior tests but are not measured by Node
+line coverage; no coverage is claimed for them. Archived per-file result (each
+script in its own measured run, thresholds 85 / 85 / 85):
+
+| Production script | Lines % | Branches % | Functions % |
+|---|---:|---:|---:|
+| `cli.cjs` | 100.00 | 100.00 | 100.00 |
+| `detector.js` | 99.53 | 93.88 | 100.00 |
+| `page.js` | 100.00 | 96.61 | 100.00 |
+| `publisher-policy.cjs` | 100.00 | 92.50 | 100.00 |
+| `source.cjs` | 100.00 | 100.00 | 100.00 |
+
+Reproduce every proof from the repository root (PowerShell 7, Node 22):
+
+```powershell
+# RED: retained initial nested-runner stub; exits 1 with three behavioral assertion failures
+node --test capability\C030\evidence\red\nested-runner.test.cjs
+# GREEN: corrected helper and corrected integrity assertion
+node --test capability\C030\tests\nested-runner.test.cjs
+node --test capability\C030\tests\integrity.test.cjs
+# whole non-browser suite, syntax and the actual browser run, read only
+node capability\C030\tests\verify.cjs
+# per-file coverage: one measured L-0004 run for each enumerated production script,
+# every tests\*.test.cjs except integrity; a script no test loads counts as 0 %
+node capability\C030\tests\coverage.cjs
+# actual isolated headless Edge observation of index.html
+node capability\C030\tests\browser.cjs
+```
+
+Each measured run is the L-0004 command, for example
+`node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include=capability/C030/cli.cjs --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 <tests>`.
+Raw captures use the closed recorder stages `nested-red`, `nested-green`,
+`coverage-red`, `coverage` and `browser`, each under `CAPTURE_BROWSER_EVIDENCE=1`:
+
+```powershell
+$env:CAPTURE_BROWSER_EVIDENCE = '1'
+try { node capability\C030\tests\record.cjs coverage }
+finally { Remove-Item Env:\CAPTURE_BROWSER_EVIDENCE }
+```
+
+`evidence-index.json` remains the unchanged v1 seal and is never rewritten.
+`evidence-index-v2.json`, created once by `tests\finalize-v2.cjs`, names the only
+superseded artifacts (this README, `tests\integrity.test.cjs`, `tests\record.cjs`
+and `tests\verify.cjs`) with the v1 hash each replaces, appends the new tests, red
+copies and raw captures, and points to the five captures above. The first
+`coverage` capture hit the recorder's 240 s limit (`ETIMEDOUT`); it is retained
+as a failed run and the limit for the coverage and `verify` stages was raised.
+
 ## Publication boundary
 
 Normal tests use a separate immutable **historical** publisher/approval fixture,
@@ -182,5 +251,9 @@ asserts restoration. Four separate success/failure/environment cases verify
 this without private publication. No TLS/global/proxy/auth configuration changes.
 Postpublication receipts are unique append-only bytes, not retroactively called
 committed/canonical. State Report carries the actual full SHA and proof counts.
+The wrapper is started directly from the repository root with no arguments and
+`CAPTURE_BROWSER_EVIDENCE=1`: `pwsh -NoProfile -File capability\C030\publish.ps1`.
+`tests\publish.cjs` belongs to the v1 seal (it expects the v1 test counts and
+reports to State itself) and is not used for the amended namespace.
 Only the parent may accept this original D once; **zero** repair/test credits.
 H006/H012, native proof and production Node 24 remain incomplete.

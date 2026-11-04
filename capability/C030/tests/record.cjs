@@ -6,6 +6,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { createHash, randomUUID } = require('node:crypto');
 const { gzipSync } = require('node:zlib');
+const { childEnvironment } = require('.\\nested-runner.cjs');
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -13,6 +14,11 @@ const scripts = {
   bdd: ['-e', "const a=require('node:assert/strict'),f=require('node:fs');const t=f.readFileSync('capability\\\\C030\\\\C030.feature','utf8');a.match(t,/Delivery counts cannot substitute/);a.match(t,/Unknown acknowledgement remains unknown/);console.log('BDD: seven scenarios written before loadable stub and genuine assertion RED');"],
   stub: ['-e', "const a=require('node:assert/strict'),s=require('.\\\\capability\\\\C030\\\\evidence\\\\red\\\\detector.stub.cjs');a.equal(typeof s.classify,'function');a.equal(s.classify({intendedEffects:3,deliveryAttempts:3,confirmedApplications:0}).decision,'PASS');console.log('Initial loadable stub incorrectly promotes delivery counts to effect success');"],
   red: ['--test', path.join(root, 'evidence', 'red', 'delivery-is-not-effect.test.cjs')],
+  'nested-red': ['--test', path.join(root, 'evidence', 'red', 'nested-runner.test.cjs')],
+  'nested-green': ['--test', '--test-concurrency=1', '--test-name-pattern=retained initial stub|child environment|live process environment',
+    path.join(__dirname, 'nested-runner.test.cjs'), path.join(__dirname, 'integrity.test.cjs')],
+  'coverage-red': [path.join(__dirname, 'coverage.cjs')],
+  coverage: [path.join(__dirname, 'coverage.cjs')],
   iac: ['-e', "console.log('IaC N/A: local Node CLI and static UI; no scaffold, cloud, infrastructure, Entra, package install, credentials, spend or new durable storage.');"],
   pins: [path.join(__dirname, 'capture-source.cjs')],
   implementation: ['-e', "const a=require('node:assert/strict'),f=require('node:fs'),c=require('node:crypto'),d=require('.\\\\capability\\\\C030\\\\detector.js');a.equal(d.inspectSource('control-deliveries-only').decision,'HOLD');console.log(JSON.stringify({implementedAfterRetainedAssertionRed:true,refactoredModelPrefixes:true,detectorSha256:c.createHash('sha256').update(f.readFileSync('capability\\\\C030\\\\detector.js')).digest('hex')}));"],
@@ -45,8 +51,8 @@ const inputSnapshots = inputs(root).sort().map((file, index) => {
 });
 const startedAtUtc = new Date().toISOString();
 const output = spawnSync(process.execPath, scripts[stage], {
-  cwd: repository, env: { ...process.env, C030_BROWSER_CAPTURE_DIR: path.join(directory, 'browser') },
-  windowsHide: true, timeout: 240000, maxBuffer: 16 * 1024 * 1024
+  cwd: repository, env: { ...childEnvironment(), C030_BROWSER_CAPTURE_DIR: path.join(directory, 'browser') },
+  windowsHide: true, timeout: ['coverage', 'coverage-red', 'verify'].includes(stage) ? 900000 : 240000, maxBuffer: 16 * 1024 * 1024
 });
 const stdout = output.stdout || Buffer.alloc(0);
 const stderr = output.stderr || Buffer.alloc(0);

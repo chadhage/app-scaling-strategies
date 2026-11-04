@@ -3,14 +3,16 @@
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { childEnvironment } = require('.\\nested-runner.cjs');
 const root = path.resolve(__dirname, '..');
 assert.equal(process.argv.length, 2);
 assert.match(process.version, /^v22\./);
-const env = { ...process.env };
+const env = childEnvironment();
 delete env.CAPTURE_BROWSER_EVIDENCE;
 delete env.C030_BROWSER_CAPTURE_DIR;
 const commands = [
-  ['--test', '--test-concurrency=1', ...['detector', 'boundary', 'surface', 'source', 'publisher-policy', 'integrity'].map((name) => path.join(__dirname, `${name}.test.cjs`))],
+  ['--test', '--test-concurrency=1', ...['detector', 'boundary', 'surface', 'source', 'publisher-policy', 'nested-runner', 'cli',
+    'source-fail-closed', 'page', 'integrity'].map((name) => path.join(__dirname, `${name}.test.cjs`))],
   [path.join(__dirname, 'syntax.cjs')],
   [path.join(__dirname, 'browser.cjs')]
 ];
