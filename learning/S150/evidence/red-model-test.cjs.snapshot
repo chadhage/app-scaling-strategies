@@ -1,0 +1,14 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createLesson } = require('..\\model.js');
+
+test('100 percent v2 routing must not permit retirement with required v1 dependencies', () => {
+  const lesson = createLesson();
+  const begun = lesson.dispatch({ type: 'begin', revision: 0, runId: null, value: 'outstanding' });
+  const checked = lesson.dispatch({
+    type: 'verify', revision: begun.revision, runId: begun.current.id, value: null,
+  });
+  assert.equal(checked.current.latest.decision, 'REJECTED');
+});

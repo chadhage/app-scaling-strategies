@@ -1,0 +1,22 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S150Model = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  function createLesson() {
+    let state = { revision: 0, current: null, history: [] };
+    const snapshot = () => JSON.parse(JSON.stringify(state));
+    return {
+      snapshot,
+      dispatch(command) {
+        if (command.type === 'begin') state.current = { id: 'run-1', latest: null };
+        if (command.type === 'verify') state.current.latest = { decision: 'NOT_IMPLEMENTED' };
+        state.revision++;
+        return snapshot();
+      },
+    };
+  }
+  return { createLesson };
+}));
