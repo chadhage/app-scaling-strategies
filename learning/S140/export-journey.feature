@@ -1,0 +1,75 @@
+Feature: A-S140 complete authorized asynchronous export rehearsal
+  All requests, jobs, polls, exports, artifacts, identities, states, tiers,
+  failures and timings are fixed fictional teaching DATA ONLY.
+  No network, storage, queue, business-data, authentication or Azure operation occurs.
+
+  Background:
+    Given the banner "Training rehearsal - synthetic data - not a live Azure result"
+    And one fixed request, job, export, artifact, owner and foreign identity
+    And nine fixed artifact bytes and a fictional 40 ms client journey budget
+    And independently named submission, processing, polling and download tiers
+
+  Scenario: Complete authorized download across independent tier transitions
+    When the operator submits the fixed rehearsal
+    And switches the processing tier to v2 and processes the fictional job
+    And switches the polling tier to v2 and polls the fictional job
+    And switches the download tier to v2 and inspects the fictional download
+    Then request and job identities and completed job state are preserved
+    And all nine expected bytes and the final artifact identity match
+    And the intended owner is allowed and the foreign identity is denied
+    And the observed download and each independent transition are recorded
+    And the fictional client elapsed time is 30 ms within the selected budget
+    And only this complete synthetic journey is measured positive
+
+  Scenario: HTTP 200 and a completed job are insufficient
+    Given the operator has submitted, switched processing, processed, switched polling and polled
+    When the operator checks before inspecting the fictional download
+    Then a synthetic HTTP 200 and completed job are visible
+    But artifact bytes, authorized download and identity isolation remain unknown
+    And the complete journey is measured unknown, never positive
+
+  Scenario Outline: Detected failures are negative client journeys
+    When the operator completes the rehearsal using "<condition>"
+    Then "<failure>" is observed even if the job completed or a synthetic HTTP 200 exists
+    And the measured complete journey is negative
+    And a correct teaching verifier does not relabel that failed journey positive
+
+    Examples:
+      | condition             | failure                                   |
+      | artifact-lost         | artifact absent after download transition |
+      | authorization-lost    | intended owner denied access               |
+      | authorization-bypass  | foreign identity incorrectly allowed       |
+      | bytes-changed         | same-length bytes differ from the oracle   |
+      | job-lost              | job state absent after processing cutover  |
+      | foreign requester     | intended owner's journey not completed     |
+      | budget below 30 ms    | fictional elapsed time exceeds the budget  |
+
+  Scenario: Missing observations stay unknown
+    When the operator completes the unobserved poll/download fixture
+    Then a processing record says completed
+    But no poll, authorization, bytes or download observation is invented
+    And the measured journey is unknown
+
+  Scenario: Strict bounded inputs and states
+    When malformed types, extra fields, forged state or out-of-order actions are supplied
+    Then an accessible error describes the rejected action
+    And the original state and retained history do not change
+    And no network or other side effect is introduced
+    And at most eight attempts and 96 retained operator events are allowed
+
+  Scenario: Keyboard reset and retained evidence
+    When the operator uses native keyboard controls to complete and check a journey
+    And resets the active exercise
+    Then the default inputs and initial tier states return
+    And focus returns to the condition selector without form-reset shadowing
+    And prior events and measured results remain visible
+
+  Scenario: Actual browser security observations
+    Given the published isolated browser helper has its required SHA-256
+    When the local lesson is loaded with CSP enforcement enabled
+    Then native DOM actions, keyboard, validation, failure, unknown and reset are observed
+    And injected inline script and inline event handlers are blocked by the real CSP
+    And no non-file request is observed
+    And the isolated browser is closed in an awaited finally
+    And ordinary verification never rewrites retained evidence
+    And only exact CAPTURE_BROWSER_EVIDENCE=1 deliberately records browser observations

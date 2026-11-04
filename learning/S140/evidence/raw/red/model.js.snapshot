@@ -1,0 +1,43 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.ExportRehearsal = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+  const CONTRACT = freeze({
+    banner: 'Training rehearsal - synthetic data - not a live Azure result',
+    requestId: 'request-fiction-140', jobId: 'job-fiction-140', exportId: 'export-fiction-140',
+    artifactId: 'artifact-fiction-140', owner: 'identity-fiction-owner-140', foreign: 'identity-fiction-other-140',
+    bytes: [83, 49, 52, 48, 10, 49, 44, 55, 10],
+    durations: { submit: 5, switchProcess: 1, process: 12, switchPoll: 1, poll: 4, switchDownload: 1, download: 6, check: 0, reset: 0 },
+    tiers: { submit: 'submit-v1', process: 'processor-v1', poll: 'poller-v1', download: 'download-v1' },
+  });
+  const SCENARIOS = freeze({
+    preserved: { title: 'Preserved export', expected: 'positive' },
+    'artifact-lost': { title: 'Artifact lost on download v2', expected: 'negative' },
+    'authorization-lost': { title: 'Owner authorization lost', expected: 'negative' },
+    'authorization-bypass': { title: 'Foreign identity allowed', expected: 'negative' },
+    'bytes-changed': { title: 'Artifact bytes changed', expected: 'negative' },
+    'job-lost': { title: 'Job state lost on processing v2', expected: 'negative' },
+    unobserved: { title: 'Poll and download unobserved', expected: 'unknown' },
+  });
+  const LIMITS = freeze({ maxAttempts: 8, maxEvents: 96, minBudgetMs: 1, maxBudgetMs: 100 });
+  function createSession() {
+    return freeze({ version: 1, stage: 'ready', attempt: 0, active: null, history: [], results: [] });
+  }
+  function act(state) { return state; }
+  function assess() { return freeze({ outcome: 'unknown', checks: [], elapsedMs: 0, comparedBytes: 0 }); }
+  function summary(state) {
+    return freeze({ attempted: state.attempt, positive: 0, negative: 0, unknown: 0, unassessed: state.attempt });
+  }
+  function parseBudget() { return 40; }
+  return freeze({ CONTRACT, SCENARIOS, LIMITS, createSession, act, assess, summary, parseBudget });
+}));

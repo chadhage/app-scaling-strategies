@@ -1,0 +1,321 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { hash, listFiles, relative } = require('./record.cjs');
+
+const repo = path.resolve(__dirname, '..', '..');
+const helperPath = path.join(repo, 'testing', 'browser', 'isolated.cjs');
+const expectedHelperSha = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+assert.equal(hash(fs.readFileSync(helperPath)), expectedHelperSha, 'Only the published helper is qualified.');
+const { openIsolatedLesson } = require(helperPath);
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+const inputs = ['browser.test.cjs', 'model.js', 'lesson.js', 'index.html', 'style.css'];
+const inputHashes = () => inputs.map((file) => ({ file, sha256: hash(fs.readFileSync(path.join(__dirname, file))) }));
+const inventory = () => listFiles().map((file) => ({ file: relative(file), sha256: hash(fs.readFileSync(file)) }));
+
+function saveCapture(report, html) {
+  const directory = path.join(__dirname, 'evidence', 'raw', 'browser-observed');
+  fs.mkdirSync(directory, { recursive: true });
+  let number = 1;
+  let prefix;
+  do { prefix = `capture-${String(number++).padStart(2, '0')}`; }
+  while (fs.existsSync(path.join(directory, `${prefix}.report.json`)));
+  const htmlBytes = Buffer.from(html || '');
+  const rawReport = { ...report, html: { file: `evidence\\raw\\browser-observed\\${prefix}.dom.snapshot`, sha256: hash(htmlBytes) } };
+  fs.writeFileSync(path.join(directory, `${prefix}.dom.snapshot`), htmlBytes);
+  const bytes = Buffer.from(`${JSON.stringify(rawReport, null, 2)}\n`);
+  fs.writeFileSync(path.join(directory, `${prefix}.report.json`), bytes);
+  fs.writeFileSync(path.join(__dirname, 'evidence', 'browser.json'), `${JSON.stringify({
+    ...rawReport, rawProof: `evidence\\raw\\browser-observed\\${prefix}.report.json`, rawProofSha256: hash(bytes),
+  }, null, 2)}\n`);
+}
+
+test('actual isolated DOM, keyboard, error, reset, failure, unknown and enforced CSP observations', { timeout: 180000 }, async () => {
+  const before = inventory();
+  const tooling = JSON.parse(fs.readFileSync(path.join(__dirname, 'evidence', 'tooling.json'), 'utf8'));
+  assert.equal(tooling.helper.sha256, expectedHelperSha);
+  assert.equal(tooling.playwright, '1.56.1');
+  assert.equal(tooling.browser.signatureStatus, 'Valid');
+  assert.equal(tooling.node, process.version);
+  if (!capture) {
+    const retained = JSON.parse(fs.readFileSync(path.join(__dirname, 'evidence', 'browser.json'), 'utf8'));
+    assert.equal(retained.passed, true, 'Normal verification reads successful retained capture, never creates it.');
+    assert.equal(retained.cleanup.awaitedFinallyClose, true);
+    assert.deepEqual(retained.inputs, inputHashes(), 'Changed browser inputs require a deliberate new capture.');
+  }
+  const report = {
+    cardId: 'A-S140', sourceId: 'S140', parentId: 'D-S140', kanoUnit: 'A-S140', kano: 'S', packet: 'SC-S140',
+    startedAtUtc: new Date().toISOString(), captureMode: capture, node: process.version,
+    playwright: tooling.playwright, signedBrowser: tooling.browser, helperSha256: expectedHelperSha,
+    helperPublication: '53c0c0d', inputs: inputHashes(), observations: [], requests: [], consoleErrors: [],
+    pageErrors: [], cspViolations: [], cleanup: { awaitedFinallyClose: false, pageClosed: false, browserDisconnected: false },
+    nativeAzureResult: 'unverified', sourceParentAcceptance: 'pending; parent only', passed: false,
+  };
+  let session;
+  let finalHTML = '';
+  let failure;
+  try {
+    session = await openIsolatedLesson('learning\\S140\\index.html');
+    const page = session.page;
+    report.browserVersion = session.browserVersion;
+    assert.equal(session.browserVersion, tooling.browser.productVersion);
+    page.on('request', (request) => report.requests.push({ url: request.url(), method: request.method() }));
+    page.on('console', (message) => { if (message.type() === 'error') report.consoleErrors.push(message.text()); });
+    page.on('pageerror', (error) => report.pageErrors.push(error.message));
+    const focus = () => page.evaluate(() => document.activeElement.id);
+    const records = async () => JSON.parse(await page.locator('#records').innerText());
+    const text = (id) => page.locator(`#${id}`).innerText();
+    async function observe(label, extra = {}) {
+      report.observations.push({
+        label, verdict: await text('verdict'), counts: await text('counts'), stage: await text('stage'),
+        tiers: await text('tiers'), bytes: await text('bytes'), error: await text('error'),
+        focusedControl: await focus(), historyRows: await page.locator('#history tr').count(),
+        retainedChecks: await page.locator('#results li').count(), renderedRecords: await records(), ...extra,
+      });
+    }
+    async function enter(id) {
+      await page.locator(`#${id}`).focus();
+      await page.keyboard.press('Enter');
+    }
+    async function reset() {
+      const oldRows = await page.locator('#history tr').count();
+      const oldChecks = await page.locator('#results li').count();
+      await enter('reset-active');
+      assert.equal(await focus(), 'condition');
+      assert.equal(await page.locator('#condition').inputValue(), 'preserved');
+      assert.equal(await page.locator('#requester').inputValue(), 'identity-fiction-owner-140');
+      assert.equal(await page.locator('#budget').inputValue(), '40');
+      assert.equal(await text('error'), '');
+      assert.equal(await page.locator('#history tr').count(), oldRows + 1);
+      assert.equal(await page.locator('#results li').count(), oldChecks);
+      assert.equal((await records()).activeJourney, null);
+      if ((await text('stage')).includes('Attempt 1') || oldChecks > 2) assert.match(await text('verdict'), /^UNASSESSED/);
+    }
+    async function complete(condition, budget = '40') {
+      await page.locator('#condition').selectOption(condition);
+      await page.locator('#budget').fill(budget);
+      await page.locator('#submit-rehearsal').click();
+      for (const id of ['switch-process', 'process-job', 'switch-poll', 'poll-job', 'switch-download', 'inspect-download']) {
+        assert.equal(await page.locator(`#${id}`).isEnabled(), true, id);
+        await page.locator(`#${id}`).click();
+      }
+      await enter('check-journey');
+    }
+    assert.equal(new URL(page.url()).protocol, 'file:');
+    assert.equal(await text('training-banner'), 'Training rehearsal - synthetic data - not a live Azure result');
+    assert.equal(await page.title(), 'S140 — Complete authorized export rehearsal');
+    assert.equal(await page.locator('#condition').getAttribute('id'), 'condition');
+    assert.equal(await page.locator('label[for="condition"]').innerText(), 'Fixed condition');
+    assert.match(await text('records'), /FIXED FICTIONAL TEACHING DATA ONLY/);
+    assert.equal(await page.locator('#history tr').count(), 0);
+    assert.equal(await page.locator('#inspect-download').isDisabled(), true);
+    report.initialResourceURLs = await page.evaluate(() => performance.getEntriesByType('resource').map((entry) => entry.name));
+    assert.ok(report.initialResourceURLs.every((url) => new URL(url).protocol === 'file:'));
+    await observe('local-load-and-labelled-native-controls');
+
+    await page.locator('#condition').focus();
+    await page.keyboard.press('Tab');
+    assert.equal(await focus(), 'requester');
+    await page.keyboard.press('Tab');
+    assert.equal(await focus(), 'budget');
+    await page.locator('#budget').fill('NaN');
+    await page.keyboard.press('Tab');
+    assert.equal(await focus(), 'submit-rehearsal');
+    await page.keyboard.press('Enter');
+    assert.equal(await focus(), 'budget');
+    assert.equal(await page.locator('#budget').getAttribute('aria-invalid'), 'true');
+    assert.match(await text('error'), /Invalid budget/);
+    assert.equal(await page.locator('#history tr').count(), 0);
+    await observe('keyboard-invalid-budget-no-state-change');
+    await page.locator('#budget').fill('40');
+
+    for (const [id, message] of [['condition', 'Invalid condition'], ['requester', 'Invalid requester']]) {
+      await page.evaluate((target) => {
+        const option = document.createElement('option');
+        option.value = 'not-a-fixed-fixture';
+        option.textContent = 'Fixed invalid-input probe';
+        option.id = 'invalid-input-probe';
+        document.getElementById(target).append(option);
+        document.getElementById(target).value = option.value;
+      }, id);
+      await page.locator('#submit-rehearsal').click();
+      assert.match(await text('error'), new RegExp(message));
+      assert.equal(await focus(), id);
+      assert.equal(await page.locator('#history tr').count(), 0);
+      await observe(`actual-DOM-rejects-unknown-${id}`);
+      await page.evaluate((target) => {
+        document.getElementById('invalid-input-probe').remove();
+        document.getElementById(target).selectedIndex = 0;
+      }, id);
+    }
+    await page.locator('#inspect-download').evaluate((button) => { button.disabled = false; });
+    await page.locator('#inspect-download').click();
+    assert.match(await text('error'), /Invalid stage\/order/);
+    assert.equal(await page.locator('#history tr').count(), 0);
+    assert.equal((await records()).activeJourney, null);
+    await observe('actual-DOM-out-of-order-action-rejected');
+    await page.locator('#inspect-download').evaluate((button) => { button.disabled = true; });
+    await enter('check-journey');
+    assert.match(await text('verdict'), /^UNKNOWN/);
+    assert.match(await text('counts'), /^Attempted 0 \| Positive 0/);
+    await observe('check-before-submission-does-not-invent-an-attempt');
+    await reset();
+
+    await page.locator('#condition').focus();
+    for (const expected of ['requester', 'budget', 'submit-rehearsal']) {
+      await page.keyboard.press('Tab');
+      assert.equal(await focus(), expected);
+    }
+    await page.keyboard.press('Enter');
+    for (const expected of ['switch-process', 'process-job', 'switch-poll', 'poll-job']) {
+      assert.equal(await focus(), expected);
+      await page.keyboard.press('Enter');
+    }
+    let active = (await records()).activeJourney;
+    assert.equal(active.job.state, 'completed');
+    assert.equal(active.poll.syntheticHttpStatus, 200);
+    assert.equal(active.download, null);
+    await enter('check-journey');
+    assert.match(await text('verdict'), /^UNKNOWN/);
+    assert.equal(await page.locator('[data-check="bytes"]').getAttribute('data-status'), 'unknown');
+    assert.equal(await page.locator('[data-check="authorization"]').getAttribute('data-status'), 'unknown');
+    assert.match(await text('counts'), /Attempted 1 \| Positive 0 \| Negative 0 \| Unknown 1/);
+    await observe('completed-job-and-HTTP-200-alone-are-unknown');
+    await enter('switch-download');
+    assert.equal(await focus(), 'inspect-download');
+    await page.keyboard.press('Enter');
+    assert.equal(await focus(), 'check-journey');
+    await page.keyboard.press('Enter');
+    assert.match(await text('verdict'), /^POSITIVE/);
+    assert.match(await text('verdict'), /30 ms; compared bytes: 9/);
+    active = (await records()).activeJourney;
+    assert.deepEqual(active.download.bytes, [83, 49, 52, 48, 10, 49, 44, 55, 10]);
+    assert.equal(active.download.authorization.allow, true);
+    assert.equal(active.download.foreignProbe.allow, false);
+    assert.equal(active.download.foreignProbe.syntheticHttpStatus, 403);
+    assert.deepEqual(active.tiers, { submit: 'submit-v1', process: 'processor-v2', poll: 'poller-v2', download: 'download-v2' });
+    assert.equal(await page.locator('#checklist [data-status="pass"]').count(), 10);
+    assert.match(await text('counts'), /Attempted 1 \| Positive 1 \| Negative 0 \| Unknown 0/);
+    assert.equal(await page.locator('#results li').count(), 3);
+    await observe('complete-keyboard-owner-positive-exact-bytes-and-foreign-denial');
+
+    const fixtures = [
+      ['artifact-lost', 'NEGATIVE', 'artifact', 404],
+      ['authorization-lost', 'NEGATIVE', 'authorization', 403],
+      ['authorization-bypass', 'NEGATIVE', 'isolation', 200],
+      ['bytes-changed', 'NEGATIVE', 'bytes', 200],
+      ['job-lost', 'NEGATIVE', 'job', 404],
+      ['unobserved', 'UNKNOWN', 'poll', null],
+    ];
+    for (const [condition, expected, failedCheck, downloadStatus] of fixtures) {
+      await reset();
+      assert.match(await text('verdict'), /^UNASSESSED/, 'Prior positive must not certify a new active exercise.');
+      await complete(condition);
+      assert.match(await text('verdict'), new RegExp(`^${expected}`));
+      assert.equal(await page.locator(`[data-check="${failedCheck}"]`).getAttribute('data-status'), expected === 'UNKNOWN' ? 'unknown' : 'fail');
+      active = (await records()).activeJourney;
+      assert.equal(active.download.syntheticHttpStatus, downloadStatus);
+      if (condition === 'unobserved') {
+        assert.equal(active.job.state, 'completed');
+        assert.equal(active.poll.observed, false);
+        assert.equal(active.download.observed, false);
+        assert.equal(active.download.authorization, null);
+        assert.equal(active.download.bytes, null);
+      }
+      if (condition === 'bytes-changed') {
+        assert.equal(active.download.bytes.length, 9);
+        assert.notDeepEqual(active.download.bytes, [83, 49, 52, 48, 10, 49, 44, 55, 10]);
+      }
+      if (condition === 'authorization-bypass') {
+        assert.equal(active.download.foreignProbe.allow, true);
+        assert.equal(active.download.foreignProbe.syntheticHttpStatus, 200);
+        assert.equal(await page.locator('[data-check="bytes"]').getAttribute('data-status'), 'pass');
+      }
+      await observe(`rendered-${condition}-client-result`);
+    }
+    await reset();
+    await complete('preserved', '29');
+    assert.match(await text('verdict'), /^NEGATIVE/);
+    assert.equal(await page.locator('[data-check="timing"]').getAttribute('data-status'), 'fail');
+    assert.equal(await page.locator('[data-check="bytes"]').getAttribute('data-status'), 'pass');
+    assert.match(await text('counts'), /^Attempted 8 \| Positive 1 \| Negative 6 \| Unknown 1 \| Unassessed 0$/);
+    await observe('fictional-budget-failure-not-Azure-latency');
+    await reset();
+    assert.equal(await page.locator('#submit-rehearsal').isDisabled(), true);
+    const boundedRows = await page.locator('#history tr').count();
+    await page.locator('#submit-rehearsal').evaluate((button) => { button.disabled = false; });
+    await page.locator('#submit-rehearsal').click();
+    assert.match(await text('error'), /Attempt limit/);
+    assert.equal(await page.locator('#history tr').count(), boundedRows);
+    assert.equal((await records()).activeJourney, null);
+    await page.locator('#submit-rehearsal').evaluate((button) => { button.disabled = true; });
+    await observe('actual-DOM-attempt-bound-and-retained-reset-history');
+
+    assert.deepEqual(report.pageErrors, []);
+    assert.deepEqual(report.consoleErrors, []);
+    report.csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
+    for (const directive of ["default-src 'none'", "script-src 'self'", "script-src-attr 'none'", "connect-src 'none'", "form-action 'none'", "base-uri 'none'"]) {
+      assert.ok(report.csp.includes(directive), directive);
+    }
+    await page.evaluate(() => {
+      window.__cspEvents = [];
+      window.__inlineRan = false;
+      window.__inlineHandlerRan = false;
+      document.addEventListener('securitypolicyviolation', (event) => {
+        window.__cspEvents.push({
+          effectiveDirective: event.effectiveDirective, blockedURI: event.blockedURI, disposition: event.disposition,
+        });
+      });
+      const script = document.createElement('script');
+      script.textContent = 'window.__inlineRan = true;';
+      document.body.append(script);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.id = 'csp-inline-probe';
+      button.textContent = 'Fixed CSP inline-handler probe';
+      button.setAttribute('onclick', 'window.__inlineHandlerRan = true;');
+      document.body.append(button);
+    });
+    await page.locator('#csp-inline-probe').click();
+    await page.waitForFunction(() => window.__cspEvents.length >= 2);
+    const csp = await page.evaluate(() => ({
+      events: window.__cspEvents, inlineRan: window.__inlineRan, inlineHandlerRan: window.__inlineHandlerRan,
+    }));
+    assert.equal(csp.inlineRan, false);
+    assert.equal(csp.inlineHandlerRan, false);
+    for (const directive of ['script-src-elem', 'script-src-attr']) {
+      assert.ok(csp.events.some((event) => event.effectiveDirective === directive && event.blockedURI === 'inline' && event.disposition === 'enforce'));
+    }
+    report.cspViolations = csp.events;
+    assert.ok(report.requests.every((request) => new URL(request.url).protocol === 'file:'), 'No actual network request is permitted or observed.');
+    assert.ok(report.consoleErrors.every((message) => /Content Security Policy/i.test(message)), 'Only intentional blocked-CSP probe errors are expected.');
+    assert.deepEqual(report.pageErrors, []);
+    await observe('real-CSP-blocked-inline-script-and-handler-no-network', csp);
+    finalHTML = await page.content();
+  } catch (error) {
+    failure = error;
+    report.failure = { name: error.name, message: error.message, stack: error.stack };
+  } finally {
+    if (session) {
+      try {
+        await session.close();
+        report.cleanup = {
+          awaitedFinallyClose: true, pageClosed: session.page.isClosed(), browserDisconnected: !session.page.context().browser()?.isConnected(),
+        };
+        assert.equal(report.cleanup.pageClosed, true);
+        assert.equal(report.cleanup.browserDisconnected, true);
+      } catch (error) {
+        failure = failure ? new AggregateError([failure, error], 'Browser assertions and cleanup failed') : error;
+        report.cleanup.failure = error.message;
+      }
+    }
+    report.completedAtUtc = new Date().toISOString();
+    report.passed = !failure;
+    if (capture) saveCapture(report, finalHTML);
+  }
+  if (failure) throw failure;
+  if (!capture) assert.deepEqual(inventory(), before, 'Normal browser verification is read-only for lesson/source/evidence.');
+});
