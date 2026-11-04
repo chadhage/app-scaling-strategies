@@ -12,7 +12,7 @@ const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const [mode, ...extra] = process.argv.slice(2);
 assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, '1', 'Capture requires exact deliberate opt-in.');
 assert.equal(extra.length, 0);
-assert.ok(['red', 'guards', 'focused', 'syntax', 'browser', 'fixtures', 'prerequisites', 'publication', 'boundary', 'authorization', 'metadata', 'separation'].includes(mode));
+assert.ok(['red', 'guards', 'focused', 'syntax', 'browser', 'fixtures', 'prerequisites', 'publication', 'boundary', 'authorization', 'metadata', 'separation', 'coverage'].includes(mode));
 const evidence = path.join(root, 'evidence');
 fs.mkdirSync(evidence, { recursive: true });
 const capture = path.join(evidence, `${mode}-${randomUUID()}`);
@@ -98,6 +98,16 @@ if (mode === 'prerequisites') {
   } else if (mode === 'publication') {
     snapshots.push({ path: '.git\\kanban-orchestrator\\publish.ps1',
       working: archive('publisher-observed.raw', fs.readFileSync(path.resolve('.git\\kanban-orchestrator\\publish.ps1'))) });
+  } else if (mode === 'coverage' || mode === 'browser') {
+    const inputs = mode === 'coverage'
+      ? ['app.js', 'errors.js', 'inspect.cjs', 'recovery.js', 'C019-verification.feature', 'tests\\coverage.cjs',
+        'tests\\verify.cjs', 'tests\\red.test.cjs', 'tests\\core.test.cjs', 'tests\\surface.test.cjs',
+        'tests\\app.test.cjs', 'tests\\fixture.test.cjs']
+      : ['index.html', 'app.js', 'C019-verification.feature', 'tests\\verify.cjs', 'tests\\browser.test.cjs',
+        'tests\\browser-current.test.cjs'];
+    for (const relative of inputs.filter((item) => fs.existsSync(path.join(root, item)))) {
+      snapshots.push({ path: relative, working: archive(relative.replaceAll('\\', '-') + '.raw', fs.readFileSync(path.join(root, relative))) });
+    }
   } else if (['authorization', 'separation'].includes(mode)) {
     snapshots.push({ path: 'publication.json',
       working: archive('prior-blocked-report.raw', fs.readFileSync(path.join(root, 'publication.json'))) });
@@ -127,8 +137,12 @@ if (boundaryRecord) save('boundary.raw.json', Buffer.from(JSON.stringify(boundar
 const authorizationMatch = /(?:^|\n)(?:# )?C019_AUTHORIZATION_RECORD=([^\r\n]+)/.exec(result.stdout.toString());
 const authorizationRecord = authorizationMatch ? JSON.parse(authorizationMatch[1]) : null;
 if (authorizationRecord) save('authorization.raw.json', Buffer.from(JSON.stringify(authorizationRecord, null, 2) + '\r\n'));
+const coverageMatch = /(?:^|\n)(?:# )?C019_COVERAGE_RECORD=([^\r\n]+)/.exec(result.stdout.toString());
+const coverageRecord = coverageMatch ? JSON.parse(coverageMatch[1]) : null;
+if (coverageRecord) save('coverage.raw.json', Buffer.from(JSON.stringify(coverageRecord, null, 2) + '\r\n'));
 const ordinaryPassed = result.status === 0 &&
-  (!['metadata', 'guards', 'focused', 'browser', 'syntax', 'publication'].includes(mode) || (verifierRecord !== null && verifierRecord.exitCode === 0)) &&
+  (!['metadata', 'guards', 'focused', 'browser', 'syntax', 'publication', 'coverage'].includes(mode) || (verifierRecord !== null && verifierRecord.exitCode === 0)) &&
+  (mode !== 'coverage' || (coverageRecord !== null && coverageRecord.passed === true)) &&
   (mode !== 'browser' || (browserRecord !== null && browserRecord.passed === true && browserRecord.closed === true)) &&
   (mode !== 'boundary' || boundaryRecord !== null) &&
   (!['authorization', 'separation'].includes(mode) || authorizationRecord !== null);
@@ -141,6 +155,11 @@ const record = {
   browserRecord,
   verifierRecord,
   boundaryRecord,
+  coverageRecord: coverageRecord === null ? null : {
+    passed: coverageRecord.passed, thresholds: coverageRecord.thresholds, enumerated: coverageRecord.enumerated,
+    files: coverageRecord.files.map(({ file, loaded, exitCode, lines, branches, functions, passed }) =>
+      ({ file, loaded, exitCode, lines, branches, functions, passed })),
+  },
   authorizationRecord: authorizationRecord === null ? null : {
     actualPublisherSha256: authorizationRecord.actualPublisherSha256,
     sourceSelector: authorizationRecord.authorization.sourceSelector,

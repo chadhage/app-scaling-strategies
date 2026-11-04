@@ -9,7 +9,7 @@ const { assessCurrent } = require('./authorization.cjs');
 const manifest = require('..\\manifest.json');
 const [mode, ...extra] = process.argv.slice(2);
 assert.equal(extra.length, 0);
-assert.ok(['authorization', 'guards', 'focused', 'browser', 'syntax', 'publication'].includes(mode));
+assert.ok(['authorization', 'guards', 'focused', 'browser', 'syntax', 'publication', 'coverage'].includes(mode));
 const before = inventory();
 const dependencyBefore = dependencies();
 const publisherObservedSha256 = sha(fs.readFileSync(path.join(repo, '.git', 'kanban-orchestrator', 'publish.ps1')));
@@ -33,6 +33,13 @@ try {
     publicationReady = publicationBoundary.publicationReady;
     status = publicationReady === true ? 0 : 1;
     assert.equal(publicationReady, true, 'Current approved source AND actual publisher-mutex HEAD==remote are required before staging.');
+  } else if (mode === 'coverage') {
+    const result = spawnSync(process.execPath, [path.join(__dirname, 'coverage.cjs')],
+      { env, encoding: 'utf8', timeout: 1500000, maxBuffer: 64 * 1024 * 1024, windowsHide: true });
+    assert.ifError(result.error);
+    process.stdout.write(result.stdout || '');
+    process.stderr.write(result.stderr || '');
+    status = result.status === 0 ? 0 : 1;
   } else if (mode === 'syntax') {
     for (const file of Object.keys(before).filter((file) => /\.(cjs|js)$/.test(file))) {
       const result = spawnSync(process.execPath, ['--check', path.join(root, file)], { env, timeout: 30000, windowsHide: true });
@@ -46,9 +53,10 @@ try {
     assert.ifError(parsed.error);
     assert.equal(parsed.status, 0);
   } else {
-    const files = mode === 'browser' ? ['browser.test.cjs'] : mode === 'authorization'
+    const files = mode === 'browser' ? ['browser-current.test.cjs'] : mode === 'authorization'
       ? ['authorization.test.cjs', 'transport.test.cjs', 'integrity.test.cjs'] :
-      ['red.test.cjs', 'core.test.cjs', 'fixture.test.cjs', 'surface.test.cjs', 'integrity.test.cjs']
+      ['red.test.cjs', 'core.test.cjs', 'fixture.test.cjs', 'surface.test.cjs', 'app.test.cjs', 'integrity.test.cjs',
+        'current-evidence.test.cjs']
         .filter((file) => mode !== 'guards' || file !== 'fixture.test.cjs');
     const result = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...files.map((file) => path.join(__dirname, file))], {
       env, timeout: 600000, maxBuffer: 16 * 1024 * 1024, windowsHide: true,
@@ -77,7 +85,7 @@ try {
     schemaVersion: 1, cardId: 'C019', mode, node: process.version, exitCode: status, counts, syntaxFiles,
     ownSourceEvidenceFilesUnchanged: Object.keys(before).length,
     dependencyFilesUnchanged: Object.keys(dependencyBefore).length,
-    captureByVerifier: false, fixtureIO: mode === 'focused'
+    captureByVerifier: false, fixtureIO: mode === 'focused' || mode === 'coverage'
       ? 'only explicit unique C015 tests; tracked cleanup asserted by each case'
       : 'no C015 fixture writes in this mode',
     publisherAuthorizedSha256: publisherAssessment.authorizedSha256, publisherObservedSha256,

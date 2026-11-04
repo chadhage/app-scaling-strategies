@@ -88,8 +88,10 @@ resolve uncertainty, or permit a write.
 
 ```powershell
 node capability\C019\tests\verify.cjs focused
+node capability\C019\tests\verify.cjs guards
 node capability\C019\tests\verify.cjs browser
 node capability\C019\tests\verify.cjs syntax
+node capability\C019\tests\verify.cjs coverage
 node capability\C019\tests\verify.cjs publication
 node capability\C019\tests\verify.cjs authorization
 ```
@@ -102,9 +104,15 @@ Behavior checks do not grant publication permission. The separate `publication`
 mode rejects any current publisher hash different from the exact authorized
 pin before staging; every verification record reports that independent readiness.
 Browser tests use the published `testing\browser\isolated.cjs` SHA
-`86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055`,
-offline Playwright 1.56.1 and installed Microsoft-signed Edge 156.0.4314.50,
-with the sandbox/CSP intact and an awaited `finally` close.
+`86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055` and
+offline Playwright 1.56.1. The sealed original `tests\browser.test.cjs` observed
+installed Microsoft-signed Edge 156.0.4314.50 and compares the file version with
+that constant, so it fails after any routine Edge update; it stays as immutable
+historical proof. `verify.cjs browser` now runs `tests\browser-current.test.cjs`,
+which qualifies the installed Edge by a valid Microsoft signature and the
+qualified major version 156 and records the actual version and msedge.exe
+SHA-256 (see "Verification addendum" below). The sandbox/CSP stays intact and
+the `finally` close is awaited.
 
 Only deliberate exact `CAPTURE_BROWSER_EVIDENCE=1` permits `tests\capture.cjs`
 to create a **new unique** capture directory. For example:
@@ -120,8 +128,66 @@ bundle. Raw stdout/stderr and raw working/Git-canonical source snapshots are
 compressed without line-ending conversion. Raw CRLF JSON and the historical
 script are Git `-text` with scoped CR-at-EOL handling; genuine source whitespace
 checks remain active. The loadable-stub genuine assertion RED and every failed
-capture remain immutable. BDD is `C019.feature`; `evidence-index.json` identifies
+capture remain immutable. BDD is `C019.feature` (plus `C019-verification.feature`
+for the addendum below); `evidence-index.json` identifies
 the distinct empirical records. Node tests are not browser observations.
+
+## Verification addendum: per-file coverage, Node page tests, qualified Edge
+
+Verification only. Runtime, error codes, actions, C015, retained RED and every sealed byte are
+unchanged, and it earns zero extra credits. Specification: `C019-verification.feature`.
+
+1. **Node page tests.** `tests\app.test.cjs` loads the unchanged `app.js` under Node with a stubbed
+   `document` (it rejects any HTML parsing), the pinned genuine bank and the real C019 modules. It asserts
+   the initial closed state, all 13 genuine failures with exact typed code, outcome, reason and explicit
+   unknowns, the bounded read-only steps, rejected unknown/forbidden input, reset, the 48-entry ceiling,
+   and rejection of 10 tampered bundles, 7 per-case closed checks (with a stubbed digest) and missing
+   dependencies. It never renders a success outcome. These are Node observations, not browser ones.
+2. **Per-file coverage.** Node prints no row and exits 0 for a file that no test loads, so a plain
+   `--test-coverage-include` run on an unloaded file looks green. `tests\coverage.cjs` enumerates the
+   production files from the namespace (`app.js`, `errors.js`, `inspect.cjs`, `recovery.js`), runs the
+   pinned command once per file, requires a row for the file (unloaded is 0 percent) and at least 85
+   percent lines, branches and functions. The 13-case process-fault test is skipped there only because it
+   takes minutes; skipping can only lower coverage, and `verify.cjs focused` still runs it.
+3. **Qualified Edge.** `tests\browser-current.test.cjs` runs the same 14 sealed observation groups
+   in a fresh isolated headless Edge, asserts a valid Microsoft Authenticode signature and major 156,
+   requires the helper to report the same version as the signed binary, and records the actual
+   version and SHA-256 without comparing them with a recorded constant.
+4. **Evidence.** New append-only captures (all hash-checked by `tests\integrity.test.cjs`, and by
+   `tests\current-evidence.test.cjs` for content): RED `evidence\coverage-c5c47520-...` (app.js
+   unloaded, 0 percent; its first attempt also tripped the dependency tripwire because another worker was
+   adding files under `capability\C015`), RED `evidence\browser-e5d8ba5a-...` (sealed pin fails on Edge
+   156.0.4314.58), GREEN `evidence\coverage-0af4848f-...` and GREEN `evidence\browser-3f5b2325-...`.
+   The index block is `currentVerification` in `evidence-index.json`.
+
+Reproduce (from the repository root, PowerShell; the capture variable is set for that run only; take
+a heavy-run slot first when other agents run browsers or coverage):
+
+```powershell
+# RED: archived and immutable. Re-reading it needs no run:
+node --test capability\C019\tests\current-evidence.test.cjs
+# GREEN: every verifier mode
+node capability\C019\tests\verify.cjs guards
+node capability\C019\tests\verify.cjs focused
+node capability\C019\tests\verify.cjs coverage
+node capability\C019\tests\verify.cjs browser
+node capability\C019\tests\coverage.cjs   # the same per-file proof without the dependency tripwire; exit 0 means every file passed
+# Per-file coverage by hand (repeat for errors.js, inspect.cjs, recovery.js):
+node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include=capability/C019/app.js --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 "--test-skip-pattern=actual C015 public API/process errors" capability/C019/tests/red.test.cjs capability/C019/tests/core.test.cjs capability/C019/tests/fixture.test.cjs capability/C019/tests/surface.test.cjs capability/C019/tests/app.test.cjs
+# Real isolated headless Edge observation (fresh capture only when you intend a new evidence directory):
+node --test capability\C019\tests\browser-current.test.cjs
+$env:CAPTURE_BROWSER_EVIDENCE='1'; node capability\C019\tests\capture.cjs browser; Remove-Item Env:CAPTURE_BROWSER_EVIDENCE
+```
+
+Per-file result (raw output archived in `evidence\coverage-0af4848f-...`): `app.js` 100/100/100,
+`errors.js` 98.24/95.05/100, `inspect.cjs` 96.43/86.96/100, `recovery.js` 96.15/95.65/100
+(lines/branches/functions, Node v22.23.4). Browser: Edge 156.0.4314.58 (Microsoft-signed), 14 groups,
+no page error, no non-file request, owned browser closed.
+
+Known trap: the dependency tripwire in `tests\provenance.cjs` hashes every file under
+`capability\C001`, `C002` and `C015`. Legitimate K work that adds test files there while a C019 verifier
+runs makes that run fail even though all 161 accepted dependency bytes are unchanged; retry when the
+other worker is idle.
 
 ## Publication and unapproved work
 
