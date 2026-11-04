@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>App Scaling Strategies: what the repository is and how to use it</title>
+  <meta name="description" content="Technical explainer for the app-scaling-strategies repository: why it exists, who it is for, what it contains, how it supports its claims, how to use it, where it applies and what it requires.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230b5cad'/%3E%3Cpath d='M3 11l3-3 2 2 5-5' fill='none' stroke='%23fff' stroke-width='1.6'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="layout">
+
+<nav class="toc" aria-label="On this page">
+  <p class="toc-title">On this page</p>
+  <ol>
+    <li><a href="#why">1. Why this repo exists</a></li>
+    <li><a href="#who">2. Who it is for</a></li>
+    <li><a href="#what">3. What it is</a></li>
+    <li><a href="#how">4. How it supports its claims</a></li>
+    <li><a href="#use">5. How to use it</a></li>
+    <li><a href="#where">6. Where to use it</a></li>
+    <li><a href="#when">7. When to use it</a></li>
+    <li class="toc-extra"><a href="#sources">Sources and provenance</a></li>
+  </ol>
+</nav>
+
+<main id="main">
+
+<header class="page-header">
+  <p class="kicker">Repository explainer for <a href="https://github.com/chadhage/app-scaling-strategies">chadhage/app-scaling-strategies</a></p>
+  <h1>App Scaling Strategies</h1>
+  <p class="lede">A specification for moving an n-tier web application between versions and capacity levels on Azure without interrupting its users, together with a plan, and local rehearsal tooling, for demonstrating it. This page answers seven questions about the repository using three of its documents: the README, the backlog and the kanban.</p>
+
+  <div class="note status" role="note" aria-labelledby="status-title">
+    <p class="note-title" id="status-title">Status: design and local implementation</p>
+    <ul>
+      <li><strong>Exists:</strong> the specification, the backlog and kanban plans, and portable synthetic lessons and local capabilities that open in a browser without an Azure account.</li>
+      <li><strong>Does not exist:</strong> native Azure proof. The README says IaC generation, identity registration, live Azure execution, deployment and expenditure remain unapproved, and that local runs do not establish native support or the five-nines goal.</li>
+      <li><strong>Changes often:</strong> accepted work lands continuously, so this page quotes no progress counts. The kanban's <a href="https://github.com/chadhage/app-scaling-strategies/blob/main/.docs/wiki/flow-state.json">live execution ledger</a> is the source for current totals.</li>
+    </ul>
+  </div>
+
+  <dl class="facts">
+    <dt>Goal metric</dt>
+    <dd>Uninterrupted-transition success ≥ 0.99999. A target, with no native measurement behind it yet.</dd>
+    <dt>Catalog</dt>
+    <dd>150 scenarios (S001–S150) in 15 groups (A–O), each a given/when/then to demonstrate or test.</dd>
+    <dt>Azure hosts</dt>
+    <dd>App Service, Container Apps, AKS and Functions, with Spring Boot as a runtime variant.</dd>
+    <dt>First native target</dt>
+    <dd>App Service code slots, per the design decision recorded in the kanban.</dd>
+  </dl>
+
+  <p class="legend"><strong>Labels used below.</strong>
+    <span class="tag spec">Specified</span> stated by the README as required behavior.
+    <span class="tag plan">Planned</span> described in the backlog or kanban; it may or may not be built.
+    <span class="tag ed">Editorial</span> this page's own synthesis, not stated in the sources.</p>
+  <p class="scroll-hint">On narrow screens, wide tables scroll sideways.</p>
+</header>
+
+<!-- ============================ 1. WHY ============================ -->
+<section id="why" class="doc-section" aria-labelledby="why-h">
+  <h2 id="why-h"><span class="num">1</span>Why this repo exists</h2>
+  <p class="short"><strong>Short answer.</strong> Swap, revision and rolling-update features decide where traffic goes. By themselves they do not guarantee that an in-flight request, a session, an upload or a transaction survives the change. The repository exists to state what has to be true for that to hold, to define how to measure it, and to plan a way to demonstrate it that does not depend on dashboards or configuration screens.</p>
+
+  <h3 id="why-problem">The stated problem, scope and goal <span class="tag spec">Specified</span></h3>
+  <dl class="facts">
+    <dt>Problem</dt>
+    <dd>Scaling a web application under high-availability conditions is hard because the disruption users can tolerate during a swap approaches zero.</dd>
+    <dt>Scope</dt>
+    <dd>Show the strategies for scaling an n-tier web application with no interruption to the end user's experience.</dd>
+    <dt>Goal</dt>
+    <dd>Move users across application slots with 99.999% success at achieving zero interruptions.</dd>
+    <dt>Reading of the goal</dt>
+    <dd>The percentage counts <em>transitions</em>, not endpoint uptime. An endpoint can stay up while a user's journey across a swap breaks, and the README treats that as a failure.</dd>
+  </dl>
+
+  <h3 id="why-assumptions">Where assumptions about "zero-downtime" features break <span class="tag spec">Specified</span></h3>
+  <p>The second and third columns restate the README's key findings, which summarize the Microsoft Learn pages listed under <a href="#sources">Sources</a>. The first column is this page's framing of the assumption each finding contradicts. This page has not re-checked the findings against current documentation, and the README itself says to verify OS, SKU, regional availability and platform limits before implementing each case.</p>
+
+  <div class="table-wrap" role="region" aria-labelledby="cap-assumptions" tabindex="0">
+    <table>
+      <caption id="cap-assumptions">Common assumption, recorded behavior, and what a demonstration has to do about it</caption>
+      <thead>
+        <tr><th scope="col">Common assumption</th><th scope="col">What the README records</th><th scope="col">Consequence</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>A new slot adds capacity.</td>
+          <td>App Service deployment slots run on the plan's existing instances.</td>
+          <td>Reserve headroom for the overlap, or use separate plans.</td>
+        </tr>
+        <tr>
+          <td>A passing health probe means the candidate is ready.</td>
+          <td>A probe says little about dependencies, effective configuration, authentication, state compatibility or latency. App Service swap warm-up accepts any HTTP response unless acceptable statuses are configured (<code>WEBSITE_SWAP_WARMUP_PING_PATH</code> and <code>WEBSITE_SWAP_WARMUP_PING_STATUSES</code>).</td>
+          <td>Gate readiness on dependency checks and representative journeys, not on one response.</td>
+        </tr>
+        <tr>
+          <td>Keeping the old slot makes the swap safe.</td>
+          <td>A native swap recycles the former production workers, and keeping the old slot does not prevent that.</td>
+          <td>Long-running work can be abandoned. Use draining, durable continuation or independently controlled deployments.</td>
+        </tr>
+        <tr>
+          <td>A 10% traffic setting means 10% of users moved.</td>
+          <td>Slot-routing cookies pin clients to a destination.</td>
+          <td>Observe where users actually went and what is left on the old side.</td>
+        </tr>
+        <tr>
+          <td>Autoscale behaves the same with slots.</td>
+          <td>App Service automatic scaling and rule-based autoscale are different mechanisms. HTTP-based automatic scaling does not currently support deployment-slot traffic.</td>
+          <td>Pick the mechanism the workload supports.</td>
+        </tr>
+        <tr>
+          <td>A Functions slot swap is zero-downtime.</td>
+          <td>It is not guaranteed. Executing functions can be terminated.</td>
+          <td>Test execution recovery and consider other update strategies.</td>
+        </tr>
+        <tr>
+          <td>Five-nines uptime implies five-nines transitions.</td>
+          <td>They measure different things.</td>
+          <td>Score user journeys that cross a transition, not endpoint availability.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Three further cautions from the same document:</p>
+  <ul>
+    <li>A 0% traffic allocation is not an access boundary for a live staging endpoint. Protect candidate environments, and keep warm-up or shadow traffic from causing real duplicate side effects.</li>
+    <li>Rollback limits blast radius. It does not erase interruptions users already experienced.</li>
+    <li>Routing through an external layer gives more control over the lifecycle, but it does not remove the chance of platform restarts.</li>
+  </ul>
+
+  <h3 id="why-harness">Why a demonstration harness <span class="tag plan">Planned</span></h3>
+  <p>Whether a given journey survives a transition depends on SKU, region, load, state and the mix of versions in flight. A written strategy cannot settle that. The backlog therefore plans a browser-accessible harness: pick a scenario, run it, observe what actually happened to the simulated users, then export or reset the run, without installing the Azure CLI, kubectl or application-development tools.</p>
+  <p>The premise, stated in the backlog's definition of done, is that configuration state and probe results are not evidence. A passing health probe or a 100% traffic weight does not show that users migrated. Client-observed journeys do.</p>
+</section>
+
+<!-- ============================ 2. WHO ============================ -->
+<section id="who" class="doc-section" aria-labelledby="who-h">
+  <h2 id="who-h"><span class="num">2</span>Who it is for</h2>
+  <p class="short"><strong>Short answer.</strong> Engineers and reviewers who need to know whether a deployment or scale event interrupts the users of an n-tier web application on Azure, and the people who build and run the demonstration harness described in the backlog. Neither group has a finished product yet. What exists to use today is the specification and local, synthetic lessons.</p>
+
+  <h3 id="who-audiences">Audiences <span class="tag ed">Editorial</span></h3>
+  <div class="table-wrap" role="region" aria-labelledby="cap-audiences" tabindex="0">
+    <table>
+      <caption id="cap-audiences">Who gets what from the repository today</caption>
+      <thead>
+        <tr><th scope="col">Audience</th><th scope="col">What they get</th><th scope="col">Start with</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Engineers and architects designing releases and scaling for n-tier apps on Azure</th>
+          <td>A catalog of failure modes and compatibility traps to test against, and the host-specific limits the README records.</td>
+          <td>README: Key findings, Scenario catalog</td>
+        </tr>
+        <tr>
+          <th scope="row">SREs, release managers and reviewers asked to sign off on a "zero-downtime" claim</th>
+          <td>A definition of interruption, outcome classes, a metric and an evidence record to hold the claim against.</td>
+          <td>README: Acceptance and evidence</td>
+        </tr>
+        <tr>
+          <th scope="row">Learners and trainers</th>
+          <td>Synthetic browser lessons that run without an Azure account.</td>
+          <td>README: Try the local demonstrations</td>
+        </tr>
+        <tr>
+          <th scope="row">Contributors building the harness</th>
+          <td>What to build and when it counts as done (backlog), and how to slice, pull and accept work (kanban).</td>
+          <td>backlog.md, kanban.md</td>
+        </tr>
+        <tr>
+          <th scope="row">People who will run demonstrations in the hosted harness</th>
+          <td>Three planned roles, described below.</td>
+          <td>backlog.md: Experience and access model</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="who-roles">Planned harness roles <span class="tag plan">Planned</span></h3>
+  <div class="table-wrap" role="region" aria-labelledby="cap-roles" tabindex="0">
+    <table>
+      <caption id="cap-roles">Personas in the backlog's recommended access model, subject to approval in H001</caption>
+      <thead>
+        <tr><th scope="col">Role</th><th scope="col">Can</th><th scope="col">Cannot</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Visitor</th>
+          <td>Browse scenario cards, instructions, supported configurations, limitations and sanitized completed-run reports.</td>
+          <td>Reach Azure management, or change anyone else's run.</td>
+        </tr>
+        <tr>
+          <th scope="row">Conductor</th>
+          <td>Sign in, obtain an approved sandbox lease, configure and run or step a demo, inspect the sample application, export or reset the run.</td>
+          <td>Act on anything outside the resources owned by their lease.</td>
+        </tr>
+        <tr>
+          <th scope="row">Operator</th>
+          <td>Approve expensive or privileged experiments, manage capacity pools, recover failed cleanups.</td>
+          <td>Use an unrestricted public execution endpoint. Administrative actions are audited.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>In the normal hosted experience a conductor does not need an Azure subscription of their own or any cloud credentials.</p>
+
+  <h3 id="who-not">Who it is not for, yet <span class="tag ed">Editorial</span></h3>
+  <ul>
+    <li><strong>Anyone who needs a deployable tool or Azure templates.</strong> The README says IaC generation, identity registration, live Azure execution, deployment and expenditure remain unapproved.</li>
+    <li><strong>Anyone who needs a platform guarantee.</strong> The 99.999% figure is a project goal, not a Microsoft service-level agreement, and the examples are provided "AS IS".</li>
+    <li><strong>Teams running non-web workloads, or hosts outside the ones listed in section 6.</strong> The scope is an n-tier web application on Azure.</li>
+    <li><strong>Anyone who needs a license grant.</strong> The README's disclaimer says it is not a license and grants no rights to use, modify or redistribute otherwise unlicensed material.</li>
+  </ul>
+</section>
+
+<!-- ============================ 3. WHAT ============================ -->
+<section id="what" class="doc-section" aria-labelledby="what-h">
+  <h2 id="what-h"><span class="num">3</span>What it is</h2>
+  <p class="short"><strong>Short answer.</strong> A specification, a plan and some local tooling. The README specifies 150 scenarios and the rules for judging them. The backlog turns them into 171 work items for a web demonstration harness. The kanban slices those into 414 small cards. The work accepted so far is local: synthetic browser lessons and local capabilities. It is not a library, a set of deployment templates or a set of measured results.</p>
+
+  <h3 id="what-chain">The chain: three documents, then the work they track <span class="tag spec">Specified</span></h3>
+  <ol class="chain">
+    <li><strong>README.md: the specification</strong>
+      <span class="sub">150 scenarios, the transition lifecycle, and the rules for acceptance and evidence. It is the source baseline for the other two documents.</span></li>
+    <li><strong>.docs/wiki/backlog.md: the product plan</strong>
+      <span class="sub">171 items: 12 harness stories (H), 7 platform enablers (P), 150 scenario demos (D-S) and 2 guided workflows (W). Carries the shared definition of done and the milestone sequence.</span></li>
+    <li><strong>.docs/wiki/kanban.md: the delivery plan</strong>
+      <span class="sub">414 cards: 108 capability cards (C), 150 portable lessons (A), 150 native-proof cards (B) and 6 optional delighters (X). Carries the pull policy, entry gates and completion rules. The backlog stays authoritative for parent acceptance.</span></li>
+    <li><strong>learning/, capability/, testing/: local implementation</strong>
+      <span class="sub">Work delivered for individual cards. A card counts as Done only after acceptance by someone other than its author, which the kanban's live execution ledger records.</span></li>
+  </ol>
+
+  <h3 id="what-not">What it is not</h3>
+  <ul>
+    <li><strong>Validated results.</strong> The README calls the scenarios proposed, not already-validated guarantees or platform SLAs.</li>
+    <li><strong>A service-level agreement or certification.</strong> The 99.999% figure is a project goal.</li>
+    <li><strong>Deployable infrastructure.</strong> IaC generation and deployment are both unapproved.</li>
+  </ul>
+
+  <h3 id="what-map">Repository map <span class="tag ed">Editorial</span></h3>
+  <p>These are the paths the three documents link to.</p>
+  <div class="table-wrap" role="region" aria-labelledby="cap-map" tabindex="0">
+    <table>
+      <caption id="cap-map">Where things live</caption>
+      <thead>
+        <tr><th scope="col">Path</th><th scope="col">Contents</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row"><code>README.md</code></th><td>Problem, scope and goal; key findings; the S001–S150 catalog; lifecycle; acceptance and evidence rules; "Try the local demonstrations".</td></tr>
+        <tr><th scope="row"><code>.docs/wiki/backlog.md</code></th><td>Personas, shared definition of done, the H, P, D-S and W items, milestones M0–M5, completion and evidence policy.</td></tr>
+        <tr><th scope="row"><code>.docs/wiki/kanban.md</code></th><td>Card inventory, pull policy, Kano completion rules, entry gates, dated status notes.</td></tr>
+        <tr><th scope="row"><code>.docs/wiki/flow-state.json</code></th><td>The live execution ledger named in the kanban: admitted work, owners, acceptance, blockers and actual Kano totals.</td></tr>
+        <tr><th scope="row"><code>learning/Snnn/</code></th><td>One portable lesson per scenario (the A card): opens in a browser, uses synthetic data.</td></tr>
+        <tr><th scope="row"><code>capability/Cnnn/</code></th><td>Local capabilities (C cards), for example the catalog (C005), search (C006), filters (C007), preparation view (C008), the getProfile fixture (C020) and the isolated lesson host (C041).</td></tr>
+        <tr><th scope="row"><code>capability/local-harness/</code></th><td>The unified local learner interface: search and filter the scenarios, read preparation and limits, open an accepted lesson.</td></tr>
+        <tr><th scope="row"><code>testing/browser/</code></th><td>Isolated headless helper used for real-browser checks.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note caution" role="note" aria-labelledby="gaps-title">
+    <p class="note-title" id="gaps-title">Known gaps in the source documents</p>
+    <ul>
+      <li>The README's introduction is a placeholder ("Introduction..."), and its Container Apps, AKS, Functions and Spring Boot subsections under "Azure" are empty headings. The host detail is in scenario group M and the platform qualifications instead.</li>
+      <li>The README links to <code>background.md</code> and <code>flavors.md</code>. Neither file is in the repository.</li>
+    </ul>
+  </div>
+
+  <h3 id="what-ids">Naming scheme <span class="tag ed">Editorial</span></h3>
+  <p>The three documents share one numbering. Each scenario <span class="id">S###</span> has exactly one backlog story <span class="id">D-S###</span> and exactly two required kanban children, <span class="id">A-S###</span> and <span class="id">B-S###</span>.</p>
+  <div class="table-wrap" role="region" aria-labelledby="cap-ids" tabindex="0">
+    <table>
+      <caption id="cap-ids">IDs used across the documents</caption>
+      <thead>
+        <tr><th scope="col">Pattern</th><th scope="col">Meaning</th><th scope="col">Defined in</th><th scope="col">Count</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="id">S001–S150</td><td>Scenario: expected behavior to demonstrate or test.</td><td>README</td><td>150</td></tr>
+        <tr><td class="id">D-S001–D-S150</td><td>Scenario-demo story: the web-UI demo and its acceptance criteria.</td><td>backlog</td><td>150</td></tr>
+        <tr><td class="id">H001–H012</td><td>Shared harness story.</td><td>backlog</td><td>12</td></tr>
+        <tr><td class="id">P001–P007</td><td>Platform and fixture enabler.</td><td>backlog</td><td>7</td></tr>
+        <tr><td class="id">W001–W002</td><td>Integrated guided demonstration.</td><td>backlog</td><td>2</td></tr>
+        <tr><td class="id">A-S001–A-S150</td><td>Portable lesson card: synthetic rehearsal, no Azure needed.</td><td>kanban</td><td>150</td></tr>
+        <tr><td class="id">B-S001–B-S150</td><td>Native-proof card: a real experiment on a qualified host.</td><td>kanban</td><td>150</td></tr>
+        <tr><td class="id">C001–C108</td><td>Capability or guided-workflow card.</td><td>kanban</td><td>108</td></tr>
+        <tr><td class="id">X001–X006</td><td>Optional delighter.</td><td>kanban</td><td>6</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <form class="tool" id="id-form" novalidate>
+    <h4>ID decoder</h4>
+    <div class="row">
+      <div>
+        <label for="id-input">Scenario or work-item ID</label>
+        <input id="id-input" type="text" value="D-S042" autocomplete="off" spellcheck="false" autocapitalize="characters" aria-describedby="id-hint">
+      </div>
+      <button class="btn" type="submit">Decode</button>
+    </div>
+    <p class="hint" id="id-hint">Examples: S042, D-S042, A-S042, B-S042, H003, P001, W002, C041, X003. Links open the matching section on GitHub.</p>
+    <output id="id-output" for="id-input" aria-live="polite"></output>
+    <noscript><p class="hint">The decoder needs JavaScript. The table above lists the patterns.</p></noscript>
+  </form>
+
+  <h3 id="what-groups">The 150 scenarios in 15 groups <span class="tag spec">Specified</span></h3>
+  <p>Each group holds ten consecutive scenarios. The last column is the backlog's priority mix for that group's demo stories: P0 is needed for the first usable release, P1 for broader coverage, and P2 marks advanced, expensive or destructive experiments that need extra operational controls. Priority is ordering guidance, not an effort estimate.</p>
+  <div class="table-wrap" role="region" aria-labelledby="cap-groups" tabindex="0">
+    <table>
+      <caption id="cap-groups">Scenario groups A–O<span class="cap-note">Priority mix shown as P0 / P1 / P2 counts of D-S items. Totals: 56 / 84 / 10.</span></caption>
+      <thead>
+        <tr><th scope="col">Group</th><th scope="col">IDs</th><th scope="col">What the ten scenarios cover</th><th scope="col">P0 / P1 / P2</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">A. Deployment and traffic migration</th><td class="id">S001–S010</td><td>Ways to move users: blue-green handoff, native slot swap, canary, 50/50 split, tenant-by-tenant, opt-in preview, session-boundary, release rings, shadow traffic, feature flags.</td><td class="id">7 / 3 / 0</td></tr>
+        <tr><th scope="row">B. Capacity scaling</th><td class="id">S011–S020</td><td>Real capacity changes: manual, metric-driven and scheduled scale-out; scale-in; autoscale oscillation; vertical scaling by replacement; per-tier scaling; cell-based expansion; quota exhaustion.</td><td class="id">3 / 7 / 0</td></tr>
+        <tr><th scope="row">C. Readiness and warm-up</th><td class="id">S021–S030</td><td>Per-instance and dependency-aware checks, representative journeys, effective production configuration, runtime and cache warm-up, slow image pulls, false-positive health, timeouts, flapping, warm-up overload.</td><td class="id">4 / 6 / 0</td></tr>
+        <tr><th scope="row">D. Sessions, authentication, and state</th><td class="id">S031–S040</td><td>Externalized sessions, routing cookies, instance affinity, key continuity, login callbacks mid-cutover, anti-forgery tokens, serialization changes, tenant authorization, instance-local state, cookie-less clients.</td><td class="id">4 / 6 / 0</td></tr>
+        <tr><th scope="row">E. In-flight requests and long-lived work</th><td class="id">S041–S050</td><td>Work in flight at a cutover: short and long requests, multipart uploads, large downloads, WebSocket, server-sent events, gRPC streams, batch jobs, ambiguous POSTs, stale keep-alive connections.</td><td class="id">3 / 7 / 0</td></tr>
+        <tr><th scope="row">F. N-tier and version compatibility</th><td class="id">S051–S060</td><td>Version coexistence: old frontend with new API and the reverse, breaking API changes, database expand-migrate-contract, cache payloads, event schemas, static assets, workflow history, configuration, rollback after schema change.</td><td class="id">6 / 4 / 0</td></tr>
+        <tr><th scope="row">G. Database and persistent data</th><td class="id">S061–S070</td><td>The data tier under change: read replicas, connection-pool multiplication, vertical scaling, new shards, hot-shard rebalancing, failover during commit, replica lag, online indexing, writer handoff, replica promotion.</td><td class="id">1 / 9 / 0</td></tr>
+        <tr><th scope="row">H. Caches, queues, and workers</th><td class="id">S071–S080</td><td>Cache expansion and stampede, cache outage, eviction, consumer scale-out and scale-in, redelivery, duplicate schedulers, backlog surges, partition reassignment.</td><td class="id">2 / 8 / 0</td></tr>
+        <tr><th scope="row">I. State machine and orchestration</th><td class="id">S081–S090</td><td>Controller correctness: durable lifecycle tracking, stale epochs, restarts, duplicate commands, concurrent pipelines, stale readiness, partial routing, permission failure, control-plane outage, out-of-order cleanup.</td><td class="id">9 / 1 / 0</td></tr>
+        <tr><th scope="row">J. Failure containment and rollback</th><td class="id">S091–S100</td><td>Candidate crashes, failed canaries, latency and authentication regressions, dependency partitions, shared-plan contention, cold rollback targets, rollback after new writes, failed rollbacks, forced termination.</td><td class="id">8 / 2 / 0</td></tr>
+        <tr><th scope="row">K. Networking, configuration, and routing</th><td class="id">S101–S110</td><td>Stable hostname, DNS caching, TLS continuity, host-header and redirect differences, non-swapped settings, private endpoints, CORS, WAF policy, outbound SNAT pressure, edge propagation.</td><td class="id">1 / 8 / 1</td></tr>
+        <tr><th scope="row">L. Zones, regions, and failure domains</th><td class="id">S111–S120</td><td>Worker loss, zone loss, planned and unplanned regional failover, active-passive and active-active, partial regional failure, global routing failover, failback, total partition.</td><td class="id">0 / 1 / 9</td></tr>
+        <tr><th scope="row">M. Hosting-model-specific</th><td class="id">S121–S130</td><td>App Service (Windows, Linux, containers, separate plans), Container Apps (single and multiple revisions), AKS (rolling, blue-green and canary), Functions (slots, Flex Consumption).</td><td class="id">2 / 8 / 0</td></tr>
+        <tr><th scope="row">N. Complete end-user journeys</th><td class="id">S131–S140</td><td>Anonymous browsing, sign-in in progress, multi-step form, checkout, webhook, offline mobile sync, cached frontend, pagination, collaborative editing, asynchronous export.</td><td class="id">2 / 8 / 0</td></tr>
+        <tr><th scope="row">O. Demonstration and acceptance testing</th><td class="id">S141–S150</td><td>How to demonstrate and accept: steady load, bursts during warm-up, slow clients, combined tier pressure, soak, fault injection per phase, a client-side oracle, proof of actual migration, five-nines evidence, post-retirement verification.</td><td class="id">4 / 6 / 0</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>The README notes that the catalog mixes deployment strategies, supporting capabilities, failure-injection scenarios and acceptance tests. The backlog therefore keeps all 150 as separate runnable demonstrations rather than treating each as a distinct deployment mechanism.</p>
+</section>
+
+<!-- ============================ 4. HOW ============================ -->
+<section id="how" class="doc-section" aria-labelledby="how-h">
+  <h2 id="how-h"><span class="num">4</span>How it supports its claims</h2>
+  <p class="short"><strong>Short answer.</strong> It does not deliver zero interruption by itself. It makes the claim checkable: a transition strategy with explicit gates, a definition of failure and of the denominator, a statistical bound, a harness design that reports what happened rather than what was configured, and delivery rules that block false completion. Today the strategy, metric, statistics and delivery rules are written down. The harness design is planned and partly built as local, synthetic tooling. None of it is native Azure evidence yet.</p>
+
+  <h3 id="how-promises">Promises, mechanisms and where each stands</h3>
+  <div class="table-wrap" role="region" aria-labelledby="cap-promises" tabindex="0">
+    <table>
+      <caption id="cap-promises">What the documents promise and what backs each promise</caption>
+      <thead>
+        <tr><th scope="col">Promise</th><th scope="col">Mechanism</th><th scope="col">Defined in</th><th scope="col">State</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Users are not interrupted by a swap, scale event or failure.</td>
+          <td>Overlap old and new capacity, gate admission on readiness, keep state and contracts compatible, and drain before retiring.</td>
+          <td>README: Alignment, Lifecycle, groups A–L</td>
+          <td>Specified. Not demonstrated on Azure.</td>
+        </tr>
+        <tr>
+          <td>Transition success is at least 99.999%.</td>
+          <td>A journey-level metric with a fixed denominator, outcome classes and a zero-failure confidence bound.</td>
+          <td>README: Acceptance and evidence</td>
+          <td>Specified. No native measurements exist.</td>
+        </tr>
+        <tr>
+          <td>A green dashboard cannot produce a pass.</td>
+          <td>A client-side correctness oracle, per-tier version stamps, observed-versus-configured routing, and fixtures that expose false migrations.</td>
+          <td>README: S147–S149. Backlog: H006, H007</td>
+          <td>Planned.</td>
+        </tr>
+        <tr>
+          <td>Other people can run demonstrations safely.</td>
+          <td>Roles, per-conductor leases, server-side authorization, spend and runtime limits, bounded fault injection, idempotent cleanup.</td>
+          <td>Backlog: H003, H010, shared definition of done</td>
+          <td>Planned. Live Azure execution is not approved.</td>
+        </tr>
+        <tr>
+          <td>Reports say what happened.</td>
+          <td>Execution modes are labeled; verdict, user impact and cleanup are reported separately; thin evidence never earns a five-nines badge.</td>
+          <td>Backlog: definition of done items 7–9, D-S149</td>
+          <td>Planned.</td>
+        </tr>
+        <tr>
+          <td>Delivery progress is not overstated.</td>
+          <td>A/B card split, an execution ledger, ratio rules for completion credit, acceptance by someone other than the author.</td>
+          <td>Kanban</td>
+          <td>In use. See the ledger.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="how-strategy">A transition strategy with explicit gates <span class="tag spec">Specified</span></h3>
+  <p>The README states its central strategy in one line: <strong>overlap before handoff, compatibility during coexistence, and verified retirement afterward.</strong> Old and new capacity exist side by side with admission controlled; both versions work against the same state and contracts while they coexist; and the old side is removed only when nothing depends on it. Slots are one mechanism for this, not a solution to zero-interruption n-tier scaling on their own.</p>
+
+  <div class="table-wrap" role="region" aria-labelledby="cap-timeline" tabindex="0">
+    <table class="timeline">
+      <caption id="cap-timeline">One candidate (v2) replacing one incumbent (v1) <span class="tag ed">Editorial</span><span class="cap-note">An illustration of the README lifecycle. A real rollout may skip CANARY or loop back for rollback.</span></caption>
+      <thead>
+        <tr>
+          <th scope="col">Deployment</th>
+          <th scope="col">1. Prepare</th>
+          <th scope="col">2. Ready</th>
+          <th scope="col">3. Expose</th>
+          <th scope="col">4. Promote</th>
+          <th scope="col">5. Retain</th>
+          <th scope="col">6. Retire</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">v2 (candidate)</th>
+          <td class="st-prep">CREATED, WARMING<small>no user admission</small></td>
+          <td class="st-ready">READY<small>fresh evidence</small></td>
+          <td class="st-canary">CANARY<small>bounded cohort</small></td>
+          <td class="st-active" colspan="3">ACTIVE<small>serves its intended population</small></td>
+        </tr>
+        <tr>
+          <th scope="row">v1 (incumbent)</th>
+          <td class="st-active" colspan="3">ACTIVE<small>serves users while v2 is prepared and measured</small></td>
+          <td class="st-drain">DRAINING<small>no new admissions</small></td>
+          <td class="st-retained">RETAINED<small>rollback window</small></td>
+          <td class="st-retired">RETIRED<small>nothing depends on it</small></td>
+        </tr>
+        <tr>
+          <th scope="row">Must hold</th>
+          <td class="need" colspan="2">Overlap capacity is reserved and readiness evidence is fresh.</td>
+          <td class="need" colspan="3">Both versions work against the same sessions, data, caches, events and assets.</td>
+          <td class="need">Verified: no routing, sessions, jobs, artifacts or leases depend on v1.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-wrap" role="region" aria-labelledby="cap-states" tabindex="0">
+    <table>
+      <caption id="cap-states">Lifecycle states for a deployment whose routing and retirement can be controlled<span class="cap-note">CREATED → WARMING → READY → CANARY → ACTIVE → DRAINING → RETAINED → RETIRED. CANARY is optional when a validated direct promotion is appropriate.</span></caption>
+      <thead>
+        <tr><th scope="col">State</th><th scope="col">Meaning and exit gate</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row"><code>CREATED</code></th><td>Identity and endpoint are recorded. No readiness or traffic eligibility is assumed.</td></tr>
+        <tr><th scope="row"><code>WARMING</code></th><td>Initialization and validation are running. Not eligible for ordinary user admission.</td></tr>
+        <tr><th scope="row"><code>READY</code></th><td>Fresh readiness, compatibility and capacity evidence allow controlled admission.</td></tr>
+        <tr><th scope="row"><code>CANARY</code></th><td>A bounded cohort is exposed and its real journeys are measured before further promotion.</td></tr>
+        <tr><th scope="row"><code>ACTIVE</code></th><td>Serves its intended population while acceptance monitoring continues.</td></tr>
+        <tr><th scope="row"><code>DRAINING</code></th><td>New admissions stop through supported mechanisms while remaining clients and work are accounted for.</td></tr>
+        <tr><th scope="row"><code>RETAINED</code></th><td>Drain gates have passed, but ready compatible capacity and artifacts stay for the agreed rollback window.</td></tr>
+        <tr><th scope="row"><code>RETIRED</code></th><td>Routing, work, ownership and retention requirements no longer depend on the deployment.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Other transitions the README allows:</p>
+  <ul>
+    <li><code>CREATED</code>, <code>WARMING</code> or <code>READY</code> may become <code>ABORTED</code> before any user is exposed, with failure evidence and safe cleanup.</li>
+    <li>An exposed candidate that turns unhealthy may become <code>QUARANTINED</code>: stop further exposure, run the tested recovery path, and keep the interruption records.</li>
+    <li><code>DRAINING</code> or <code>RETAINED</code> may return to <code>ACTIVE</code> as a rollback, but only after fresh readiness, capacity and compatibility checks.</li>
+    <li>After an irreversible data change, forward recovery may be the only option.</li>
+  </ul>
+  <p>Gate decisions rest on recorded evidence: deployment identity and epoch, endpoint, desired versus effective routing, readiness freshness, available capacity, compatibility versions, remaining work, ownership and checkpoints, the rollback deadline, and explicit errors. Promotion and retirement must not rely on a stale controller command or on a single successful response. If the platform gives no reliable progress signal, the uncertainty is recorded and no completed state is invented. The lifecycle does not override platform behavior such as native swap recycling or autoscale termination.</p>
+
+  <h3 id="how-interruption">What counts as an interruption <span class="tag spec">Specified</span></h3>
+  <p>The unit of measurement is one declared user journey that crosses a deployment or capacity transition. A journey is interrupted if any of these happens:</p>
+  <ul>
+    <li>a user-visible error, a timeout, or a broken connection the journey needs;</li>
+    <li>completion later than the journey's agreed latency budget;</li>
+    <li>an unexpected logout, lost session or form state, or broken navigation or assets;</li>
+    <li>a missing or duplicated business effect;</li>
+    <li>data freshness, ordering or consistency outside the declared contract.</li>
+  </ul>
+  <p>A retry or reconnect counts as "seamless" only if correctness, state and user experience stay intact within the original journey budget. Unlimited retries and success-shaped fallbacks must not hide failures.</p>
+
+  <div class="table-wrap" role="region" aria-labelledby="cap-outcomes" tabindex="0">
+    <table>
+      <caption id="cap-outcomes">Outcome classes and how each is counted</caption>
+      <thead>
+        <tr><th scope="col">Outcome</th><th scope="col">Treatment</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">Uninterrupted successful transition</th><td>The intended migration is evidenced and the whole journey meets every acceptance criterion. Counts as a success.</td></tr>
+        <tr><th scope="row">Safe abort before exposure</th><td>Production stays usable, but no user migrated. Reported separately; not a migration success.</td></tr>
+        <tr><th scope="row">Interrupted transition</th><td>Counts as a failure, including failures that happened before a rollback.</td></tr>
+        <tr><th scope="row">Unverified or unsupported</th><td>Missing evidence or a platform limit. Not counted as a success.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Two rules follow. Users who stayed on the old deployment prove nothing about migration just because their requests succeeded. And a failed or uncertain transition that had started cannot be dropped from the denominator.</p>
+
+  <h3 id="how-metric">The metric, and how much evidence it takes <span class="tag spec">Specified</span></h3>
+<pre tabindex="0"><code>success = uninterrupted successful transition journeys
+          / all attempted transition journeys
+
+target:  success &gt;= 0.99999        (interruption probability &lt;= 0.00001)</code></pre>
+  <p>The event boundary, affected population, observation window and outcome attribution are fixed before a run. Results are reported per hosting model, cohort, protocol, load and failure condition as well as in aggregate. An empty sample is no evidence, not 100%. Endpoint uptime, throughput, average latency and tail percentiles stay useful as diagnostics but do not replace the journey metric.</p>
+  <p>The sample size comes from a one-sided bound. With zero failures in <em>n</em> independent, comparable trials:</p>
+<pre tabindex="0"><code>p_upper = 1 - 0.05^(1/n)
+n >= ceil( ln(0.05) / ln(1 - 0.00001) ) = 299572</code></pre>
+  <p>So roughly 300,000 independent zero-failure transitions are needed for a 95% bound at 0.00001. The README presents this as an illustration, not a universal sample size: users in one swap can share a correlated failure, and repeated requests from one user are not independent transitions. What has to be counted is independent rollout events across varied failure contexts.</p>
+
+  <form class="tool" id="bound-form" novalidate>
+    <h4>Zero-failure confidence bound</h4>
+    <div class="row">
+      <div>
+        <label for="bound-target">Target success (%)</label>
+        <input id="bound-target" type="text" inputmode="decimal" value="99.999" autocomplete="off">
+      </div>
+      <div>
+        <label for="bound-conf">Confidence (%)</label>
+        <input id="bound-conf" type="text" inputmode="decimal" value="95" autocomplete="off">
+      </div>
+      <div>
+        <label for="bound-n">Zero-failure trials observed</label>
+        <input id="bound-n" type="text" inputmode="numeric" value="299572" autocomplete="off">
+      </div>
+      <button class="btn" type="submit">Calculate</button>
+    </div>
+    <output id="bound-out" for="bound-target bound-conf bound-n" aria-live="polite"></output>
+    <p class="hint">Assumes independent, comparable trials and no observed failures. If failures occur, more trials are needed for the same bound; this calculator does not model that.</p>
+    <noscript><p class="hint">The calculator needs JavaScript. The figures above are the default case.</p></noscript>
+  </form>
+
+  <p><span class="tag ed">Editorial</span> Practical reading: a handful of rollouts cannot support a 99.999% claim, however many requests they carried. The claim needs on the order of 300,000 independent transitions without an interruption, and more if interruptions occur.</p>
+
+  <h3 id="how-controls">Controls that make results hard to fake</h3>
+  <div class="table-wrap" role="region" aria-labelledby="cap-controls" tabindex="0">
+    <table>
+      <caption id="cap-controls">Evidence controls and the failure each one guards against</caption>
+      <thead>
+        <tr><th scope="col">Control</th><th scope="col">What it prevents</th><th scope="col">Defined in</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Client-side correctness oracle</td><td>Empty-success responses, silent logout, lost state and duplicate effects being counted as success.</td><td>README S147; backlog H006</td></tr>
+        <tr><td>Per-tier version stamps and per-user traces</td><td>Users who never left v1 being counted as migrated.</td><td>README S148; backlog D-S148</td></tr>
+        <tr><td>Observed routing shown next to configured routing</td><td>A 100% traffic weight standing in for proof of migration.</td><td>Backlog H007; kanban C037</td></tr>
+        <tr><td>Fresh, per-instance readiness evidence</td><td>One healthy response approving a whole pool.</td><td>README S021, S027; kanban C038</td></tr>
+        <tr><td>Unknown outcomes stay in the denominator</td><td>Dropping uncertain or failed transitions.</td><td>README: Outcome classification</td></tr>
+        <tr><td>Confidence analysis that treats correlated failures</td><td>A large request count passing as proof of five nines.</td><td>README S149; backlog D-S149</td></tr>
+        <tr><td>Labeled execution modes</td><td>A simulation certifying a native strategy.</td><td>Backlog: definition of done, item 7</td></tr>
+        <tr><td>Verdict, user impact and cleanup reported separately</td><td>A passing negative test reading as a successful migration.</td><td>Backlog: definition of done, item 8</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="how-levels">Evidence levels and execution modes</h3>
+  <p>The README is explicit that a successful rehearsal, a documented platform capability and a qualified native Azure result are different evidence levels. The A/B card split in the kanban follows the same line.</p>
+  <div class="table-wrap" role="region" aria-labelledby="cap-levels" tabindex="0">
+    <table>
+      <caption id="cap-levels">From specification to a qualified claim</caption>
+      <thead>
+        <tr><th scope="col">Level</th><th scope="col">What it is</th><th scope="col">Azure needed</th><th scope="col">What it can and cannot show</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">1. Specified</th><td>A scenario in the README catalog.</td><td>No</td><td>Intended behavior only.</td></tr>
+        <tr><th scope="row">2. Rehearsed</th><td>A portable lesson (A card) on synthetic data, labeled "Training rehearsal - synthetic data - not a live Azure result".</td><td>No</td><td>Teaches the failure mode and the check. Shows nothing about a platform.</td></tr>
+        <tr><th scope="row">3. Local capability</th><td>Catalog, search, filters, fixtures and isolation helpers (C cards) running locally.</td><td>No (loopback only)</td><td>That the learning and control contracts work locally.</td></tr>
+        <tr><th scope="row">4. Native proof</th><td>A bounded real experiment on leased Azure resources with client-side evidence (B card).</td><td>Yes</td><td>Behavior of that host, SKU, region and configuration. A Container Apps result is not proof for AKS.</td></tr>
+        <tr><th scope="row">5. Qualified claim</th><td>Many independent transitions, analyzed with uncertainty and correlated failures.</td><td>Yes</td><td>The 99.999% goal. The backlog says insufficient evidence never yields a five-nines-certified badge.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Inside the harness, live native operations, fault emulation, recorded replay and simulation are labeled separately. A simulation cannot certify a native strategy. Zone and region isolation experiments are outage proxies unless the real failure was observed. Each result shows three things independently: the verification verdict, the user-transition outcome and the cleanup status. The supported outcomes are uninterrupted transition, safe abort before exposure, interrupted transition, expected interruption observed, unsupported, unverified and cancelled.</p>
+
+  <h3 id="how-harness">Controls on the harness <span class="tag plan">Planned</span></h3>
+  <ul>
+    <li>Authenticated roles, server-side authorization, and per-conductor leases with an ownership check on every resource target.</li>
+    <li>Bounded inputs, concurrency, runtime, capacity and spend. Concurrent over-admission is rejected.</li>
+    <li>Management secrets stay on the server. Browsers never receive Azure management credentials or any ability to run arbitrary ARM or kubectl commands.</li>
+    <li>Synthetic data only. Faults are injected only into leased resources, never into production, another conductor's resources or the harness's own management plane.</li>
+    <li>Runs are durable and commands idempotent. A browser refresh does not cancel a run, duplicate commands have one effect, and cancellation reconciles with in-flight platform actions instead of pretending to undo them.</li>
+    <li>Reset and lease expiry clean up idempotently. A failed cleanup stays visible and alerts an operator.</li>
+    <li>Every run saves a versioned manifest and a sanitized evidence export. A rerun starts from a known fixture state and keeps earlier results.</li>
+  </ul>
+
+  <h3 id="how-delivery">Controls on delivery <span class="tag plan">Planned</span></h3>
+  <ul>
+    <li>Each scenario has two required kanban children: an A card (portable rehearsal) and a B card (native proof). Finishing A gives a learning asset. It does not give a native demo or evidence of uninterrupted migration.</li>
+    <li>Every card has one owner or pair, one reviewable change set and one observable acceptance result. A cards target 1–2 focused hours; C, B and X cards target 2–4.</li>
+    <li>The working order is: BDD specification, a genuine failing test, the IaC step (or an explicit N/A for a lesson with no resources), implementation, green tests and real-browser checks, scoped tagged publication, then acceptance by someone other than the author. A worker cannot award its own Done credit.</li>
+    <li>The board has three columns. To Do holds at most 2N cards and In Progress at most N, with one active card per contributor, where N is the number of active contributors. Review, tests and acceptance stay inside In Progress.</li>
+    <li>Completion credit follows Kano classes: D (must-be), S (satisfier) and L (delighter). With d, s and l as the counts of accepted cards in each class, the totals must satisfy the two inequalities below.</li>
+  </ul>
+<pre tabindex="0"><code>s + l &gt;= 4 * d
+s     &gt;= 6 * l</code></pre>
+  <p>In plain terms, must-be work is admitted only after enough value work is done, and each optional delighter needs six designated satisfiers first. The kanban adds that safety is never waived to satisfy a quota: live features stay disabled until their must-be guards pass. Planning inventory earns no credit. The ledger records admitted work, owners, acceptance, commits and tags, blockers and the actual totals.</p>
+</section>
+
+<!-- ============================ 5. USE ============================ -->
+<section id="use" class="doc-section" aria-labelledby="use-h">
+  <h2 id="use-h"><span class="num">5</span>How to use it</h2>
+  <p class="short"><strong>Short answer.</strong> Three ways, in order of what is available today. Open the local learner harness and work through synthetic lessons: no server and no Azure account. Use the README as a test plan for your own system. Or, if you are building the harness, pull cards from the kanban. A hosted harness that runs real Azure experiments is planned and is not available.</p>
+
+  <h3 id="use-local">Try the local lessons <span class="tag spec">Specified</span></h3>
+  <p>These steps follow the README's "Try the local demonstrations" section.</p>
+  <ol>
+    <li>Clone the repository: <code>git clone https://github.com/chadhage/app-scaling-strategies.git</code></li>
+    <li>In the clone, open <code>capability/local-harness/index.html</code> directly in a browser. No server or Azure account is needed. The folder is <a href="https://github.com/chadhage/app-scaling-strategies/tree/main/capability/local-harness">on GitHub</a>, but GitHub shows its source there and does not run it.</li>
+    <li>Search and filter the 150 scenarios and two guided workflows. Open a scenario's preparation and limits view.</li>
+    <li>Open an accepted portable lesson. Use its synthetic controls, run its failure cases, and reset it.</li>
+    <li>Treat availability labels as a snapshot. The catalog names the acceptance snapshot it reflects and is not a live feed. For newer accepted work, evidence and native-proof blockers, use the kanban's links and its ledger.</li>
+  </ol>
+  <div class="note caution" role="note" aria-labelledby="http-title">
+    <p class="note-title" id="http-title">Two pieces need more than opening a file</p>
+    <p>The <a href="https://github.com/chadhage/app-scaling-strategies/blob/main/capability/C020/README.md">versioned getProfile fixture (C020)</a> and the <a href="https://github.com/chadhage/app-scaling-strategies/blob/main/capability/C041/README.md">isolated lesson host (C041)</a> are HTTP-backed. They have their own bounded, loopback-only launch and cleanup instructions. Their HTML cannot be run by opening it as a file, and their listeners should not be exposed publicly.</p>
+  </div>
+  <p>Local lessons use synthetic data. A lesson teaches a failure mode and the check for it. It is not native evidence and does not complete a scenario's source demonstration.</p>
+
+  <h3 id="use-plan">Use the README as a test plan for your own system <span class="tag ed">Editorial</span></h3>
+  <p>No tooling from the repository is needed to do this. The README is written so that it can be applied directly.</p>
+  <ol>
+    <li><strong>Declare the operating envelope</strong> before each demonstration (worksheet below). A combination that is unsupported, or an outage outside the envelope, is reported as a limitation and never counted as a success.</li>
+    <li><strong>Choose scenarios.</strong> Start with the README's recommended sequence (table below), then widen with the coverage matrix.</li>
+    <li><strong>Write each chosen scenario as given/when/then</strong> in your environment, and apply the shared acceptance criteria to it.</li>
+    <li><strong>Instrument.</strong> Stamp a version in every tier, add a client-side oracle that checks content and effects as well as status codes, and record observed routing, capacity and readiness.</li>
+    <li><strong>Run and record</strong> using the demonstration record fields below.</li>
+    <li><strong>Score</strong> with the outcome classes and the metric. Keep failed and unknown transitions in the denominator.</li>
+  </ol>
+
+  <h4 id="use-envelope">Operating-envelope worksheet</h4>
+  <ul class="checks">
+    <li>Hosting model, deployment format, SKU, region and the platform limits that apply.</li>
+    <li>User journeys, protocols and compatibility requirements.</li>
+    <li>Minimum, normal and peak load, including the demand the overlapping deployment adds.</li>
+    <li>Journey latency budgets and the maximum supported request and job durations.</li>
+    <li>Dependency capacity, data freshness, ordering and transaction guarantees.</li>
+    <li>Supported failure conditions and the capacity that must survive them.</li>
+    <li>Drain, rollback-retention and recovery budgets.</li>
+  </ul>
+
+  <h4 id="use-record">Demonstration record</h4>
+  <ul class="checks">
+    <li>Scenario ID, platform and format, deployment epochs, and the operating envelope.</li>
+    <li>Preconditions, trigger, routing changes and the intended affected population.</li>
+    <li>Client-observed journey outcomes, plus tier and version evidence end to end.</li>
+    <li>Capacity, readiness, active-work, data-correctness and latency observations.</li>
+    <li>Injected failures, recovery actions, safe aborts, interruptions and unknown outcomes.</li>
+    <li>Effective routing and ownership of work and state after rollback or retirement.</li>
+    <li>The evidence behind the conclusion, and the limits left unresolved.</li>
+  </ul>
+
+  <h4 id="use-sequence">Recommended sequence <span class="tag spec">Specified</span></h4>
+  <div class="table-wrap" role="region" aria-labelledby="cap-sequence" tabindex="0">
+    <table class="compact">
+      <caption id="cap-sequence">The README's suggested order of demonstration<span class="cap-note">Repeat the applicable cases for each hosting model and deployment format, using S121–S130 for platform specifics.</span></caption>
+      <thead>
+        <tr><th scope="col">Step</th><th scope="col">Focus</th><th scope="col">Scenarios</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>Warm handoff and controlled exposure</td><td class="id">S001, S003, S004</td></tr>
+        <tr><td>2</td><td>Real capacity changes</td><td class="id">S011, S015, S017, S020</td></tr>
+        <tr><td>3</td><td>Session and authentication continuity</td><td class="id">S031, S034, S035, S037</td></tr>
+        <tr><td>4</td><td>Mixed-version n-tier operation</td><td class="id">S051, S052, S054, S056</td></tr>
+        <tr><td>5</td><td>In-flight and long-lived work</td><td class="id">S041, S042, S045, S049</td></tr>
+        <tr><td>6</td><td>Dependency and worker pressure</td><td class="id">S062, S066, S072, S076</td></tr>
+        <tr><td>7</td><td>Controller recovery and rollback</td><td class="id">S083, S085, S087, S098</td></tr>
+        <tr><td>8</td><td>Client-side acceptance and evidence</td><td class="id">S141, S145, S147, S148, S149, S150</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Coverage widens across this matrix: hosting model × deployment format × scaling trigger × lifecycle phase × user state × protocol × tier compatibility × load × failure. Not every combination is supported. Prioritize the critical interacting conditions, document exclusions, and do not infer untested combinations from unrelated successes.</p>
+
+  <h4 id="use-example">Worked example: S001, warm blue-green handoff</h4>
+  <p>Condensed from the README's first foundational scenario.</p>
+  <dl class="facts">
+    <dt>Given</dt>
+    <dd>A live production deployment, a candidate that can be routed independently, and enough compute and dependency capacity for the two to overlap.</dd>
+    <dt>When</dt>
+    <dd>The candidate is provisioned and registered as <code>WARMING</code>; its instances, dependencies, configuration and journeys pass the readiness gates; it becomes <code>READY</code>; and eligible new admissions are routed to it.</dd>
+    <dt>Then</dt>
+    <dd>Migrated journeys keep authentication, state, correctness and latency budgets. Work already admitted finishes, or continues through a tested durable handoff. Actual routing and drain progress are verified. The old deployment stays available for remaining clients and for rollback, and is retired only after the routing, drain, ownership and retention gates pass.</dd>
+  </dl>
+
+  <h3 id="use-build">If you are implementing the harness <span class="tag plan">Planned</span></h3>
+  <ol>
+    <li>Read the backlog's Experience and access model, Shared definition of done, and Priorities and dependencies. Then read the kanban's Atomic card contract, Entry gates and Kano policy.</li>
+    <li>Check the ledger before taking a card. Only ready, unowned work is pullable, and a returned remainder stays in To Do, marked not ready, until its gates pass.</li>
+    <li>Choose by gate. An A card needs only the source documents and the portable lesson contract, so it can start without Azure. A B card needs the core capabilities, the data fixtures and a qualified host, among other gates.</li>
+    <li>Follow the lesson contract for an A card: a standalone, browser-openable bundle with a small interactive exercise. It declares its source ID, objective, preconditions, actions, synthetic input or trace, expected assertions and limits. It says "Training rehearsal - synthetic data - not a live Azure result", makes no management calls, holds no credentials, and works from the keyboard.</li>
+  </ol>
+
+  <h3 id="use-conductor">The planned conductor journey <span class="tag plan">Planned</span></h3>
+  <p>This is how the hosted harness is meant to be used once it exists. It does not exist yet.</p>
+  <ol>
+    <li>Select a scenario card and read its purpose, expected outcome, limits and prerequisites.</li>
+    <li>Choose a supported host, deployment format, load profile, user cohorts and operating budgets.</li>
+    <li>Review the estimated cost, duration, permissions and leased resources, then approve the run.</li>
+    <li>Open the sample application and start real or synthetic user journeys.</li>
+    <li>Run guided actions: warm, promote, scale, inject an approved fault, drain, roll back.</li>
+    <li>Watch actual routing, deployment versions, state transitions, client outcomes and dependency behavior.</li>
+    <li>Review the evidence-backed result, export a sanitized report, and reset or release the sandbox.</li>
+  </ol>
+  <p>Both a guided single-step mode and an automated complete-run mode are planned. A browser refresh or disconnection must not cancel a durable run.</p>
+</section>
+
+<!-- ============================ 6. WHERE ============================ -->
+<section id="where" class="doc-section" aria-labelledby="where-h">
+  <h2 id="where-h"><span class="num">6</span>Where to use it</h2>
+  <p class="short"><strong>Short answer.</strong> Today it runs locally, in a browser, on synthetic data. It applies to n-tier web applications on Azure App Service, Container Apps, AKS and Functions, with Spring Boot as a runtime variant. Real Azure runs are planned for leased sandbox resources, never for production, and none is approved yet.</p>
+
+  <h3 id="where-hosts">Hosting models <span class="tag spec">Specified</span></h3>
+  <p>The README treats a "slot" literally only for App Service and for Functions plans that support slots. For Container Apps and AKS the demonstrations use the equivalent revision or deployment transitions, without pretending those platforms expose App Service slots.</p>
+  <div class="table-wrap" role="region" aria-labelledby="cap-hosts" tabindex="0">
+    <table>
+      <caption id="cap-hosts">What each host is used for, the limits recorded for it, and the planned adapter<span class="cap-note">Adapters are backlog enablers P001–P007. P0 is needed for the first usable release, P1 for broader coverage.</span></caption>
+      <thead>
+        <tr><th scope="col">Host and format</th><th scope="col">What is exercised</th><th scope="col">Limits recorded in the documents</th><th scope="col">Adapter</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">App Service, Windows code <span class="id">S121</span></th>
+          <td>Prepared slot swaps with strict warm-up and compatible state.</td>
+          <td>Slots share the plan's instances. A native swap recycles the former production workers. Routing cookies pin clients.</td>
+          <td class="id">P001 (P0)</td>
+        </tr>
+        <tr>
+          <th scope="row">App Service, Linux code <span class="id">S122</span></th>
+          <td>A controlled deployment and swap pipeline.</td>
+          <td>Native auto-swap is not supported for Linux web apps.</td>
+          <td class="id">P001 (P0)</td>
+        </tr>
+        <tr>
+          <th scope="row">App Service, custom containers <span class="id">S123</span></th>
+          <td>Immutable image deployment and initialization.</td>
+          <td>Native auto-swap is not supported for Web App for Containers.</td>
+          <td class="id">P001 (P0)</td>
+        </tr>
+        <tr>
+          <th scope="row">App Service, separate plans <span class="id">S124</span></th>
+          <td>Compares externally routed blue-green deployments with shared-plan slots, for capacity isolation and lifecycle control.</td>
+          <td>Slots in one plan share its capacity; separate plans isolate it. External routing adds lifecycle control but does not remove the chance of platform restarts.</td>
+          <td class="id">P001 (P0)</td>
+        </tr>
+        <tr>
+          <th scope="row">Container Apps, single revision <span class="id">S125</span></th>
+          <td>Readiness-gated replacement, and user continuity beyond the routing switch.</td>
+          <td>Revisions, not slots. Neither revision mode removes the need to validate application state and active work.</td>
+          <td class="id">P002 (P0)</td>
+        </tr>
+        <tr>
+          <th scope="row">Container Apps, multiple revisions <span class="id">S126</span></th>
+          <td>Weighted canaries, controlled retirement, compatible rollback.</td>
+          <td>Preview access must be protected separately from traffic weights, and direct revision or label access must be reported.</td>
+          <td class="id">P002 (P0)</td>
+        </tr>
+        <tr>
+          <th scope="row">AKS, rolling deployment <span class="id">S127</span></th>
+          <td>Readiness, surge capacity, rollout availability settings and graceful termination working together.</td>
+          <td>Pod Disruption Budgets cover voluntary eviction only. A <code>PreStop</code> hook uses part of the termination grace period.</td>
+          <td class="id">P003 (P1)</td>
+        </tr>
+        <tr>
+          <th scope="row">AKS, blue-green and canary <span class="id">S128</span></th>
+          <td>Weighted routing through a capable ingress, gateway or service mesh.</td>
+          <td>Deployment objects alone do not give weighted user routing. Selectors must not mix preview and GA versions.</td>
+          <td class="id">P003 (P1)</td>
+        </tr>
+        <tr>
+          <th scope="row">Functions, slots <span class="id">S129</span></th>
+          <td>Interrupted execution and replay.</td>
+          <td>Slots exist only on supporting plans, and a swap can terminate executing functions. Functions on Container Apps use revisions.</td>
+          <td class="id">P004 (P1)</td>
+        </tr>
+        <tr>
+          <th scope="row">Functions, Flex Consumption <span class="id">S130</span></th>
+          <td>Rolling site updates, mixed-version compatibility and execution-grace limits.</td>
+          <td>No slots. Execution grace is bounded, single-instance apps may see brief downtime, and update completion is not always observable.</td>
+          <td class="id">P004 (P1)</td>
+        </tr>
+        <tr>
+          <th scope="row">Spring Boot, as a runtime variant</th>
+          <td>JVM and bean warm-up, session compatibility, graceful servlet or reactive shutdown.</td>
+          <td>A runtime, not a routing primitive. The host supplies the deployment mechanism.</td>
+          <td class="id">P007 (P1)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Proof is configuration-specific. The kanban says a Container Apps result is not proof on AKS, and a code deployment is not proof of a custom container.</p>
+
+  <h3 id="where-shape">Application shape <span class="tag spec">Specified</span></h3>
+  <ul>
+    <li><strong>Tiers.</strong> Frontend, API, database, cache, messaging and workers, exercised together. Verifying each tier alone is not enough, because scaling one tier can overload another.</li>
+    <li><strong>Protocols.</strong> Short and long HTTP requests, multipart upload, large download, WebSocket, server-sent events and gRPC streaming.</li>
+    <li><strong>State.</strong> Sessions, authentication keys, uploads, workflow state, caches and tenant ownership.</li>
+  </ul>
+
+  <h3 id="where-envs">Environments <span class="tag ed">Editorial</span></h3>
+  <div class="table-wrap" role="region" aria-labelledby="cap-envs" tabindex="0">
+    <table>
+      <caption id="cap-envs">What runs where, and its state</caption>
+      <thead>
+        <tr><th scope="col">Environment</th><th scope="col">What runs there</th><th scope="col">State</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">Your browser, from local files</th><td>The learner harness and portable lessons, on synthetic data.</td><td>Available, per the README.</td></tr>
+        <tr><th scope="row">Local loopback services</th><td>The getProfile fixture (C020) and the isolated lesson host (C041).</td><td>Available. Follow their own instructions and do not expose the listeners.</td></tr>
+        <tr><th scope="row">A leased Azure sandbox</th><td>Native-proof runs under per-conductor leases and budgets.</td><td>Planned. Live Azure execution, deployment and expenditure are unapproved.</td></tr>
+        <tr><th scope="row">Your own pre-production system</th><td>Scenarios you run yourself, using the README as a test plan.</td><td>Possible today. The repository provides no tooling for it.</td></tr>
+        <tr><th scope="row">Production</th><td>Not a target for harness fault injection.</td><td>The backlog forbids injecting faults into production. The README says to validate security, reliability, compatibility and cost before any production use.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="where-harness">Where the harness itself is meant to run <span class="tag plan">Planned</span></h3>
+  <p>The backlog deliberately left the front-end framework, control-service language, identity provider, hosting, IaC format, regions and SKUs for H001 to approve. The kanban records that the operator has since approved the following, for design and local implementation only:</p>
+  <ul>
+    <li>portable HTML and JavaScript lessons;</li>
+    <li>a proposed Node.js 24 LTS and Express control API on App Service Linux;</li>
+    <li>single-tenant Microsoft Entra ID with invited guests;</li>
+    <li>Azure Storage tables, queues and blobs for control state;</li>
+    <li>App Service code slots as the first planned native target;</li>
+    <li>Bicep as the preferred future IaC format.</li>
+  </ul>
+  <p>Node.js 22.23.4 remains test tooling. The exact target, SKU and region, and separate approvals for scaffolding and deployment, are still required.</p>
+
+  <h3 id="where-not">Where it does not apply <span class="tag ed">Editorial</span></h3>
+  <ul>
+    <li>Clouds other than Azure, and Azure services outside the hosts listed above.</li>
+    <li>Workloads that are not n-tier web applications.</li>
+    <li>Spring Boot as a deployment platform: it is a runtime that sits on one of the hosts.</li>
+  </ul>
+</section>
+
+<!-- ============================ 7. WHEN ============================ -->
+<section id="when" class="doc-section" aria-labelledby="when-h">
+  <h2 id="when-h"><span class="num">7</span>When to use it</h2>
+  <p class="short"><strong>Short answer.</strong> Use it when a release or scale event must not interrupt users and you need evidence rather than assurance. Before running any scenario you should be able to state your latency budget, your state model and your version-compatibility plan. The catalog will mostly show you which of those are missing. The local lessons have almost no prerequisites. Native Azure runs have several that are not yet met.</p>
+
+  <h3 id="when-triggers">Situations, and the groups to start with <span class="tag ed">Editorial</span></h3>
+  <div class="table-wrap" role="region" aria-labelledby="cap-triggers" tabindex="0">
+    <table>
+      <caption id="cap-triggers">A suggested starting point; group letters refer to the table in section 3</caption>
+      <thead>
+        <tr><th scope="col">Situation</th><th scope="col">Start with</th><th scope="col">Why</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Adopting slots, revisions or blue-green for the first time.</td><td class="id">A, C, D, J, M</td><td>Moving users, readiness, state pinned to a destination, rollback, and the specifics of the host.</td></tr>
+        <tr><td>Turning on autoscale or changing instance counts.</td><td class="id">B, E, G, H</td><td>Capacity changes, work in flight at scale-in, connection limits, worker and consumer behavior.</td></tr>
+        <tr><td>Shipping an API, schema, cache or event change in a rolling release.</td><td class="id">F, G, H, I</td><td>Old and new versions coexisting, expand-migrate-contract, event schemas, rollback after a schema change.</td></tr>
+        <tr><td>Writing or buying a release controller or pipeline.</td><td class="id">I, J, K</td><td>Lifecycle and epoch correctness, duplicate commands, partial routing, cleanup order.</td></tr>
+        <tr><td>Planning zone or region failover or evacuation.</td><td class="id">L, K, G</td><td>The destination needs capacity, state and routing before the source is lost.</td></tr>
+        <tr><td>Preparing evidence for a "zero-interruption" claim.</td><td class="id">N, O</td><td>Whole user journeys, a client-side oracle, proof of actual migration, post-retirement verification.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="when-prereq-own">Prerequisites for running scenarios on your own system <span class="tag ed">Editorial</span></h3>
+  <p>Derived from the README's scenarios and declaration rules. Each item is something a scenario would otherwise expose as a gap.</p>
+
+  <h4>Platform and capacity</h4>
+  <ul class="checks">
+    <li>Host, format, SKU, region and limits are written down, and the limits are checked against current platform documentation.</li>
+    <li>There is headroom for the overlap at peak load, in one plan or by using separate plans.</li>
+    <li>Dependencies can absorb the extra instances: database connections, caches and outbound connections.</li>
+  </ul>
+
+  <h4>Application and state</h4>
+  <ul class="checks">
+    <li>Sessions, authentication keys, uploads and workflow state are shared or durable, or you know exactly what is instance-local.</li>
+    <li>Requests that outlast a drain period have a durable continuation.</li>
+    <li>A retried POST or a redelivered message cannot repeat a business effect.</li>
+  </ul>
+
+  <h4>Compatibility</h4>
+  <ul class="checks">
+    <li>Old and new versions can coexist: frontend and API contracts, schema changes (expand, migrate, contract), cache payloads, event schemas, static assets, workflows and configuration.</li>
+    <li>A rollback path exists, or you have decided that forward recovery is the plan.</li>
+  </ul>
+
+  <h4>Observability and evidence</h4>
+  <ul class="checks">
+    <li>Every tier reports its version, so you can see where each user actually went.</li>
+    <li>Readiness checks cover dependencies and representative journeys, not one status code.</li>
+    <li>A client-side check looks at content and effects, not only HTTP status.</li>
+  </ul>
+
+  <h4>Test hygiene</h4>
+  <ul class="checks">
+    <li>Test data is synthetic, and anything with external side effects runs against a sandbox.</li>
+    <li>Candidate environments are protected. A 0% traffic allocation is not access control.</li>
+    <li>Each journey has a declared latency budget and a maximum request or job duration.</li>
+  </ul>
+
+  <h4>Statistical honesty</h4>
+  <ul class="checks">
+    <li>If you intend to claim 99.999%, you have a plan to collect on the order of 300,000 independent transitions and to analyze correlated outcomes.</li>
+  </ul>
+
+  <h3 id="when-prereq-local">Prerequisites for the local lessons <span class="tag spec">Specified</span></h3>
+  <ul>
+    <li>A browser that opens local HTML files. No server, Azure account or credentials are needed for the learner harness.</li>
+    <li>The getProfile fixture and the isolated lesson host are the exception. Follow their own instructions, keep them on loopback, and do not expose them publicly.</li>
+    <li>To run the repository's automated tests, the README names Node.js 22.23.4 as the validated test-tooling runtime.</li>
+  </ul>
+
+  <h3 id="when-prereq-native">Prerequisites for native Azure runs <span class="tag plan">Planned</span></h3>
+  <ul>
+    <li><strong>Approvals.</strong> The README lists IaC generation, identity registration, live Azure execution, deployment and expenditure as unapproved. The kanban adds that the exact target, SKU and region, and separate scaffold and deployment approvals, are still required.</li>
+    <li><strong>The harness foundation.</strong> Every scenario demo (D-S) requires BASE, which is H011 (the deployed harness), P005 (leased data, cache, storage and messaging fixtures) and one qualified host adapter: P001, P002, P003 or P004.</li>
+    <li><strong>Kanban gates.</strong> A B card needs the core capabilities, the data fixtures and a qualified host, among others listed in its row.</li>
+    <li><strong>A qualified configuration.</strong> Proof does not transfer between hosts or formats.</li>
+    <li><strong>A leased sandbox, a cost estimate and a budget.</strong> Experiments classed P2 also need explicit cost and risk approvals.</li>
+    <li><strong>Recorded decisions (H001).</strong> The supported configuration matrix, budgets, capacity, duration limits, data contracts, native constraints and approval requirements. Unresolved choices block the provisioning that depends on them.</li>
+  </ul>
+
+  <h3 id="when-milestones">Planned milestones <span class="tag plan">Planned</span></h3>
+  <div class="table-wrap" role="region" aria-labelledby="cap-milestones" tabindex="0">
+    <table>
+      <caption id="cap-milestones">Backlog delivery sequence<span class="cap-note">Milestone order is not an implicit dependency; item-level prerequisites are authoritative. The backlog asserts no story points, delivery dates or Azure cost estimates.</span></caption>
+      <thead>
+        <tr><th scope="col">Milestone</th><th scope="col">Focus</th><th scope="col">Exit criteria</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">M0 Approved contract</th><td>H001 and the concrete capability, cost and access decisions.</td><td>First-host configurations, limits, budgets, fixture contracts and approval gates are recorded. Nothing is generated or provisioned without approval.</td></tr>
+        <tr><th scope="row">M1 Harness foundation</th><td>H002–H012, P001, P002 and P005, in dependency order.</td><td>A discoverable catalog and an authenticated, leased execution path work. Security, accessibility and recovery checks pass. Planned entries cannot execute.</td></tr>
+        <tr><th scope="row">M2 First complete demonstrations</th><td>The P0 scenario demos and the two guided workflows, with their real prerequisites.</td><td>Baseline migration, private preview, rings, scale, a guarded failure, rollback and retirement can be run through the hosted UI with client evidence.</td></tr>
+        <tr><th scope="row">M3 Broader coverage</th><td>P003, P004, P007 and the remaining P1 demos.</td><td>Every supported source strategy has a working card on an appropriate host, and native claims have target-host evidence.</td></tr>
+        <tr><th scope="row">M4 Advanced failure domains</th><td>P006 and the P2 experiments, with explicit cost and risk approvals.</td><td>Privileged experiments stay isolated and bounded. Outage proxies and platform limits are visible. Recovery and cleanup are verified.</td></tr>
+        <tr><th scope="row">M5 Coverage and evidence completion</th><td>All remaining demos, matrix coverage, soak and statistical collection, learner documentation, operational readiness.</td><td>All 150 cards and both workflows meet the shared definition of done. Exclusions and insufficient evidence are explicit. No unverified reliability claim is published.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Neither the backlog nor the kanban declares a milestone complete. What has been accepted so far is recorded in the ledger, and it is local, non-native work.</p>
+
+  <h3 id="when-not">When not to rely on it</h3>
+  <ul>
+    <li>As a source of validated results. The scenarios are proposals.</li>
+    <li>As a platform guarantee or service-level agreement.</li>
+    <li>Without checking current platform limits. The README says to verify OS, SKU, regional availability and limits for each case.</li>
+    <li>To claim 99.999% from a small sample, or to infer untested combinations from unrelated successes.</li>
+  </ul>
+</section>
+
+<!-- ============================ SOURCES ============================ -->
+<section id="sources" class="doc-section" aria-labelledby="sources-h">
+  <h2 id="sources-h">Sources and provenance</h2>
+
+  <h3 id="sources-repo">Repository documents</h3>
+  <ul>
+    <li><a href="https://github.com/chadhage/app-scaling-strategies/blob/main/README.md">README.md</a>: specification</li>
+    <li><a href="https://github.com/chadhage/app-scaling-strategies/blob/main/.docs/wiki/backlog.md">.docs/wiki/backlog.md</a>: harness backlog</li>
+    <li><a href="https://github.com/chadhage/app-scaling-strategies/blob/main/.docs/wiki/kanban.md">.docs/wiki/kanban.md</a>: delivery board design</li>
+    <li><a href="https://github.com/chadhage/app-scaling-strategies/blob/main/.docs/wiki/flow-state.json">.docs/wiki/flow-state.json</a>: live execution ledger</li>
+  </ul>
+
+  <h3 id="sources-learn">Microsoft Learn pages cited by the README</h3>
+  <ul>
+    <li><a href="https://learn.microsoft.com/azure/app-service/overview-hosting-plans">What are Azure App Service plans?</a></li>
+    <li><a href="https://learn.microsoft.com/azure/app-service/deploy-staging-slots">Set up staging environments in Azure App Service</a></li>
+    <li><a href="https://learn.microsoft.com/azure/app-service/manage-automatic-scaling">Automatic scaling in Azure App Service</a></li>
+    <li><a href="https://learn.microsoft.com/azure/container-apps/revisions">Update and deploy changes in Azure Container Apps</a></li>
+    <li><a href="https://learn.microsoft.com/azure/aks/best-practices-app-cluster-reliability">Deployment and cluster reliability best practices for AKS</a></li>
+    <li><a href="https://learn.microsoft.com/azure/azure-functions/functions-deployment-slots">Azure Functions deployment slots</a></li>
+    <li><a href="https://learn.microsoft.com/azure/azure-functions/flex-consumption-site-updates">Site update strategies in Flex Consumption</a></li>
+  </ul>
+
+  <h3 id="sources-provenance">Provenance</h3>
+  <p>This page was written from <code>README.md</code>, <code>.docs/wiki/backlog.md</code> and <code>.docs/wiki/kanban.md</code> on <code>main</code>. When it was written, the last commit to touch each was <code>81c9cca</code> (README), <code>8e7fb3c</code> (backlog) and <code>14703e7</code> (kanban). The counts and the priority mix were recomputed from the documents' tables at that point. The kanban and ledger change with every accepted card, so any statement about status is as of then. Platform behavior is the README's summary of the pages above and has not been re-verified here.</p>
+
+  <h3 id="sources-disclaimer">Disclaimer</h3>
+  <p>Reproduced from the <a href="https://github.com/chadhage/app-scaling-strategies/blob/main/README.md#microsoft-open-source-disclaimer">README's Microsoft Open Source Disclaimer</a>, which this page inherits.</p>
+  <blockquote>
+    <p>The examples and guidance in this repository are provided "AS IS" for educational and demonstration purposes, without warranties or guarantees, express or implied, except as otherwise required by applicable law or binding terms. Validate their security, reliability, compatibility, and cost implications before production use.</p>
+    <p>References to Microsoft, Azure, and other Microsoft products or services are for identification and illustration only. They do not imply endorsement, sponsorship, certification, or support by Microsoft. The 99.999% transition-success target is a project goal, not a Microsoft service-level agreement or guarantee.</p>
+    <p>Microsoft and Azure are trademarks of the Microsoft group of companies. Other trademarks are the property of their respective owners.</p>
+    <p>This disclaimer is not an open-source license and does not grant rights to use, modify, or redistribute otherwise unlicensed material. It does not replace or change any applicable license, Microsoft product terms, support agreement, or published service-level agreement.</p>
+  </blockquote>
+</section>
+
+</main>
+</div>
+</body>
+</html>
