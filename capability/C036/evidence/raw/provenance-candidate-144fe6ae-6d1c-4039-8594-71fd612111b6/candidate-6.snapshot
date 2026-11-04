@@ -1,0 +1,61 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { gunzipSync } = require('node:zlib');
+const { root, repository, snapshot } = require('./inventory.cjs');
+const { hash, checkImports } = require('..\\pins.cjs');
+const { history, readSnapshot, historicalPublisherBoundary } = require('..\\publisher-provenance.cjs');
+if (process.argv.length !== 2 || process.env.CAPTURE_BROWSER_EVIDENCE !== '1') throw new Error('One-time own corrective index requires exact deliberate capture.');
+const records = fs.readdirSync(path.join(root, 'evidence', 'raw')).flatMap((name) => {
+  const directory = path.join(root, 'evidence', 'raw', name);
+  const file = path.join(directory, 'run.json');
+  if (!fs.existsSync(file)) return [];
+  const value = JSON.parse(fs.readFileSync(file, 'utf8'));
+  return [{ ...value, stdout: gunzipSync(fs.readFileSync(path.join(directory, 'stdout.raw.gz'))).toString('utf8'),
+    path: path.relative(repository, directory) }];
+}).sort((a, b) => a.completedAtUtc.localeCompare(b.completedAtUtc));
+const latest = (stage, exit = 0) => records.filter((record) => record.stage === stage && record.exitCode === exit).at(-1);
+const red = latest('provenance-red', 1);
+assert.ok(red);
+assert.match(red.stdout, /name: 'AssertionError'/);
+assert.match(red.stdout, /actual: false/);
+const green = latest('provenance');
+assert.ok(green);
+assert.match(green.stdout, /# pass 30/);
+const qualified = latest('provenance-verify');
+assert.ok(qualified);
+const verified = JSON.parse(qualified.stdout.trim().split(/\r?\n/).at(-1));
+assert.equal(verified.outcome, 'read-only-green');
+assert.equal(verified.normalVerificationReadsMutablePrivatePublisher, false);
+assert.equal(verified.normalSourceOrEvidenceWrites, 0);
+assert.equal(verified.outcomes[0].focusedLeaves, 133);
+const original = history();
+const changed = original.approvedRecoveryPaths.filter((relative) =>
+  hash(fs.readFileSync(path.join(root, relative))) !== original.snapshots[relative].rawSha256);
+const result = {
+  schemaVersion: 1, cardId: 'C036', workerId: 'worker-C036', kano: 'D', kanoUnit: 'C036',
+  role: 'bounded-same-original-provenance-correction', previousCommit: original.usedForCommit,
+  previousTag: original.tag, historicalPublisher: historicalPublisherBoundary(),
+  historyManifestRawSha256: hash(fs.readFileSync(path.join(root, 'publisher-history.json'))),
+  originalEvidenceIndexRawSha256: hash(readSnapshot(original.originalEvidenceIndex)),
+  parentGreenArchive: original.parentGreen, changedOriginalProvenanceFiles: changed,
+  unchangedDependencies: checkImports(), proof: {
+    originalArchive: latest('provenance-archive').path, genuineSuccessorRed: red.path,
+    pureSuccessorGreen: green.path, currentReadOnlyQualification: qualified.path,
+    historical51Publisher: latest('publisher').path
+  },
+  counts: { focusedLeaves: 133, originalFocusedLeaves: 103, pureProvenanceControls: 30,
+    integrityLeaves: 5, historicalPublisherGroups: 51, actualEdgeGroups: 17,
+    freshC015UUIDsPerFocusedRun: 3, publicClosedEpochWritesPerFocusedRun: 5, extraCredits: 0 },
+  qualification: verified,
+  sourceAndProofFiles: snapshot(root).filter((file) => file.kind === 'file'),
+  finalizedAtUtc: new Date().toISOString(), pureSuccessorControlsAreNotRealApproval: true,
+  normalVerificationAuthorizesPublication: false,
+  nativeCorrelationVerified: false, authenticatedIdentityVerified: false, leaseAuthority: false,
+  productionNode24Validated: false, extraCredits: 0
+};
+fs.writeFileSync(path.join(root, 'publisher-recovery-index.json'), `${JSON.stringify(result, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify({ cardId: 'C036', outcome: 'corrective-index-finalized', changedOriginalFiles: changed,
+  sourceAndProofFiles: result.sourceAndProofFiles.length, counts: result.counts, originalIndexUnchanged: true }));

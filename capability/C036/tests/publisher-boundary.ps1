@@ -1,8 +1,15 @@
 $ErrorActionPreference = 'Stop'
 if ($args.Count -ne 0) { throw 'No publisher or path overrides accepted.' }
 $repository = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
-$publisher = Join-Path $repository '.git\kanban-orchestrator\publish.ps1'
-$source = [IO.File]::ReadAllText($publisher)
+$root = Join-Path $repository 'capability\C036'
+$history = [IO.File]::ReadAllText((Join-Path $root 'publisher-history.json')) | ConvertFrom-Json -AsHashtable
+if ($history.usedForCommit -cne '4b2339f77704c79449270598b0896704ce7533c8' -or
+    $history.publisherSource.path -notmatch '^evidence\\raw\\provenance-archive-[0-9a-f-]{36}\\[^\\]+$') { throw 'Only own immutable actual 4b-used source supported.' }
+$bytes = [IO.File]::ReadAllBytes((Join-Path $root $history.publisherSource.path))
+$sha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+if ($sha -cne '60ae100b96622c8ca828d7db2f8000780476e7c7411a9f3d26f0959fd182aeea' -or $sha -cne $history.publisherSource.rawSha256) { throw 'Historical source bytes changed.' }
+$source = [Text.Encoding]::UTF8.GetString($bytes)
+$publisher = [ScriptBlock]::Create($source)
 $script:checks = [Collections.Generic.List[object]]::new()
 $global:C036PublisherGuardCalls = [Collections.Generic.List[string]]::new()
 $global:C036PublisherGuardMode = 'boundary'
@@ -127,7 +134,7 @@ try {
     $sha=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($removed))).ToLowerInvariant()
     Check '51 removing ONLY the two parent-approved class tokens reproduces immutable E6 bytes' ($sha -eq 'e6d9e8bf9c9ff592bf463bd85656ecfec46c4eb33b0ab7f14bb7f317fcc65e22') $sha
     if($script:checks.Count -ne 51){throw 'Exactly 51 current publisher guard groups required'}
-    [Console]::WriteLine(([ordered]@{cardId='C036';checks=@($script:checks);count=$script:checks.Count;actualGitWrites=0;mockedPublicationNotClaimed=$true;whitespaceUsedRealGitNoIndex=$true}|ConvertTo-Json -Depth 10 -Compress))
+    [Console]::WriteLine(([ordered]@{cardId='C036';role='historical-4b-used-60ae-fixtures';historicalPublisherSha256=$history.usedPublisherSha256;checks=@($script:checks);count=$script:checks.Count;actualGitWrites=0;mockedPublicationNotClaimed=$true;whitespaceUsedRealGitNoIndex=$true;mutablePrivateSourceRead=$false}|ConvertTo-Json -Depth 10 -Compress))
 } finally {
     if($oldFunction){Set-Item Function:\git $oldFunction.ScriptBlock}else{Remove-Item Function:\git -ErrorAction SilentlyContinue}
     Set-Location -LiteralPath $oldLocation

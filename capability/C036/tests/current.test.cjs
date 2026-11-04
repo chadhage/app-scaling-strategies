@@ -7,7 +7,8 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { readCurrent } = require('..\\current.cjs');
 const { freshFixtureOwner } = require('./support.cjs');
-const { checkImports, publisherAuthorized, checkPublisher } = require('..\\pins.cjs');
+const { checkImports, publisherAuthorized } = require('..\\pins.cjs');
+const { historicalPublisherBoundary } = require('..\\publisher-provenance.cjs');
 
 test('actual current public C015 receipt preserves its existing epoch 1..3 record and independent gates', async () => {
   const read = await readCurrent();
@@ -82,21 +83,19 @@ test('current consent and unreadable actual fixture never use a previous-state s
   assert.equal(fs.existsSync(owner.root), false);
 });
 
-test('current parent authorization, not a historical digest, pins the actual publisher', () => {
-  const boundary = checkPublisher();
-  assert.equal(boundary.actualSha256, boundary.currentParentAuthorization.publisherSha256);
-  assert.equal(boundary.currentParentAuthorization.exactAddedClasses.C036, 'D');
-  assert.equal(boundary.currentParentAuthorization.focusedGuardChecksPassed >= 41, true);
-  const gates = {
-    controllerId: boundary.controllerId, currentParentPublisherAuthorization: structuredClone(boundary.currentParentAuthorization)
-  };
-  assert.equal(publisherAuthorized(boundary.actualSha256, gates), true);
+test('pure current approval controls stay separate from immutable actual-used publisher history', () => {
+  const { control } = require('./publisher-controls.cjs');
+  const boundary = historicalPublisherBoundary();
+  const gates = control();
+  assert.equal(boundary.usedPublisherSha256, gates.authorization.publisherSha256);
+  assert.equal(gates.authorization.exactAddedClasses.C036, 'D');
+  assert.equal(publisherAuthorized(boundary.usedPublisherSha256, gates), true);
   assert.equal(publisherAuthorized('0'.repeat(64), gates), false);
-  gates.currentParentPublisherAuthorization.exactAddedClasses.C036 = 'S';
-  assert.equal(publisherAuthorized(boundary.actualSha256, gates), false);
-  gates.currentParentPublisherAuthorization.exactAddedClasses.C036 = 'D';
-  gates.currentParentPublisherAuthorization.approvedBy = 'caller';
-  assert.equal(publisherAuthorized(boundary.actualSha256, gates), false);
+  gates.authorization.exactAddedClasses.C036 = 'S';
+  assert.equal(publisherAuthorized(boundary.usedPublisherSha256, gates), false);
+  gates.authorization.exactAddedClasses.C036 = 'D';
+  gates.authorization.approvedBy = 'caller';
+  assert.equal(publisherAuthorized(boundary.usedPublisherSha256, gates), false);
 });
 
 test('raw CRLF, Git-canonical source and underlying saved provenance remain separately pinned', () => {

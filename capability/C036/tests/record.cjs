@@ -21,7 +21,11 @@ const commands = Object.freeze({
   browser: [owned('tests', 'browser.cjs')],
   verify: [owned('tests', 'verify.cjs')],
   integrity: ['--test', owned('tests', 'integrity.test.cjs')],
-  publication: [owned('tests', 'publish.cjs')]
+  publication: [owned('tests', 'publish.cjs')],
+  'provenance-red': ['--test', owned('evidence', 'red', 'publisher-successor.initial.cjs')],
+  'provenance-marker-red': ['--test', owned('evidence', 'red', 'publisher-marker.initial.cjs')],
+  provenance: ['--test', owned('tests', 'publisher-provenance.test.cjs')],
+  'provenance-verify': [owned('tests', 'verify.cjs')]
 });
 const stage = process.argv[2];
 if (process.argv.length !== 3 || !Object.hasOwn(commands, stage) || process.env.CAPTURE_BROWSER_EVIDENCE !== '1') {

@@ -92,43 +92,24 @@ function readGates() {
   return freeze(gates);
 }
 function publisherAuthorized(actualSha256, gates) {
-  const approval = gates?.currentParentPublisherAuthorization;
-  const revision = approval?.budgetAndGoalRevision;
-  return Boolean(gates?.controllerId === '942b9aec-aa3f-4179-b6ed-e2bc57abeed2' &&
-    typeof actualSha256 === 'string' && /^[0-9a-f]{64}$/.test(actualSha256) &&
-    approval?.approvedBy === 'parent-controller' && approval.publisherSha256 === actualSha256 &&
-    approval.exactAddedClasses?.C036 === 'D' && approval.mainMustEqualRemoteBeforeStaging === true &&
-    approval.namespaceAndFrozenClassGuardsUnchanged === true && approval.cloudAuthorityExpanded === false &&
-    Number.isSafeInteger(approval.focusedGuardChecksPassed) && approval.focusedGuardChecksPassed >= 41 &&
-    approval.correlationGuardRevision?.approvedBy === 'parent-controller' &&
-    approval.correlationGuardRevision.exactAddedClasses?.C036 === 'D' &&
-    approval.correlationGuardRevision.namespaceFrozenClassAdminHeadWhitespaceAndCloudPermissionsUnchanged === true &&
-    (!revision || (revision.approvedBy === 'parent-controller' &&
-      revision.publisherSha256 === actualSha256 && revision.exactAddedClasses?.C029 === 'D' &&
-      revision.exactAddedClasses?.X003 === 'L' && revision.onlyTwoExactClassTokensChanged === true &&
-      revision.namespaceFrozenClassAdminHeadAndWhitespaceRulesRetained === true &&
-      revision.cloudIdentityOrInfrastructureAuthorityExpanded === false &&
-      revision.focusedGuardChecksPassed === 51 && revision.extraCredits === 0 &&
-      approval.focusedGuardChecksPassed >= 51)));
+  return require('./publisher-provenance.cjs').inspectCurrent(gates, actualSha256).exactAuthorizedBytes;
 }
 function checkPublisher() {
   if (arguments.length) fail('NO_PUBLISHER_OVERRIDES');
-  const gates = readGates();
+  const provenance = require('./publisher-provenance.cjs');
+  const { snapshot } = provenance.readCurrentAuthority();
   const file = path.join('.git', 'kanban-orchestrator', 'publish.ps1');
   const actualSha256 = hash(readRegular(file));
-  if (!publisherAuthorized(actualSha256, gates)) fail('CURRENT_PARENT_PUBLISHER_AUTHORIZATION_REQUIRED');
-  const revision = gates.currentParentPublisherAuthorization.budgetAndGoalRevision;
-  if (revision) {
-    const stripped = readRegular(file).toString('utf8').replace("; C029='D'", '').replace("; X003='L'", '');
-    if (hash(Buffer.from(stripped, 'utf8')) !== revision.previousPublisherSha256) fail('ONLY_PARENT_AUTHORIZED_CLASS_TOKEN_CHANGE_REQUIRED');
-  }
+  const assessed = provenance.inspectCurrent(snapshot, actualSha256);
+  if (!assessed.exactAuthorizedBytes) fail(assessed.code);
   return freeze({
     actualSha256, currentAuthorizationSource: '.docs\\wiki\\flow-state.json.localPublisherAuthorization',
-    currentParentAuthorization: gates.currentParentPublisherAuthorization,
-    controllerId: gates.controllerId, ledgerRevision: gates.ledgerRevision,
-    observedAtUtc: gates.observedAtUtc, readerPid: gates.readerPid,
+    currentParentAuthorization: snapshot.authorization, assessment: assessed,
+    controllerId: snapshot.controllerId, ledgerRevision: snapshot.ledgerRevision,
+    observedAtUtc: snapshot.observedAtUtc, readerPid: snapshot.readerPid,
     historicalInitialSha256: imports().historicalInitialPublisherSha256,
-    historicalDigestIsNotCurrentAuthority: true
+    historicalDigestIsNotCurrentAuthority: true, diagnosticOnly: true,
+    normalVerificationAuthorizesPublication: false, publicationPerformed: false
   });
 }
 module.exports = Object.freeze({ hash, normalize, imports, readRegular, checkImports, readGates, checkPublisher, publisherAuthorized });

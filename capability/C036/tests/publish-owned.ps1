@@ -8,61 +8,69 @@ if([IO.Path]::GetDirectoryName($directory) -ne (Join-Path $root 'evidence\raw') 
     [IO.Path]::GetFileName($directory) -notmatch '^publication-[0-9a-f-]{36}$'){throw 'Only a unique exact own publication capture directory is supported'}
 if((Get-ChildItem -LiteralPath $directory -Force).Count -ne 0){throw 'Publication capture directory must be newly empty'}
 $publisher=Join-Path $repository '.git\kanban-orchestrator\publish.ps1'
+$canonicalJson = & node -e "process.stdout.write(JSON.stringify(require('.\\capability\\C036\\publisher-provenance.cjs').readCurrentAuthority()));"
+if ($LASTEXITCODE -ne 0) { throw 'Current canonical parent observation unavailable; no publication.' }
+$canonical = ($canonicalJson | Out-String) | ConvertFrom-Json -AsHashtable
+$assessment = $canonical.assessment
+if ($assessment.approved -ne $true -or $assessment.delegationReady -ne $true) { throw 'Original current C036 delegation is held by parent qualification or current scope; no staging.' }
 $publisherMutex=[Threading.Mutex]::new($false,'Local\AppScalingStrategies_KanbanPublisher_v1')
 $held=$false
-function True-Boolean($Value) { return $Value -is [bool] -and $Value -eq $true }
-function False-Boolean($Value) { return $Value -is [bool] -and $Value -eq $false }
+function Unowned-Index {
+    $lines = @(& git -c core.quotepath=false ls-files --stage --debug)
+    if ($LASTEXITCODE -ne 0) { throw 'Read-only unowned index metadata unavailable.' }
+    $entries = [Collections.Generic.List[object]]::new()
+    $pending = $null
+    foreach ($line in $lines) {
+        if ($line -match '^([0-7]{6}) ([0-9a-f]{40}) ([0-3])\t(.+)$') {
+            if ($pending) { throw 'Incomplete index entry.' }
+            $pending = [ordered]@{mode=$Matches[1];blob=$Matches[2];stage=$Matches[3];path=$Matches[4]}
+        } elseif ($line -match '^\s*size:\s+\d+\s+flags:\s+([0-9a-fA-F]+)\s*$') {
+            if (-not $pending) { throw 'Index flags without entry.' }
+            $pending.flags=$Matches[1].ToLowerInvariant()
+            if (-not $pending.path.StartsWith('capability/C036/',[StringComparison]::Ordinal)) { $entries.Add($pending) }
+            $pending=$null
+        }
+    }
+    if ($pending) { throw 'Unfinished index entry.' }
+    $bytes=[Text.UTF8Encoding]::new($false).GetBytes(($entries.ToArray()|ConvertTo-Json -Depth 5 -Compress))
+    return [ordered]@{entries=$entries.Count;sha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()}
+}
 try {
     $held=$publisherMutex.WaitOne([TimeSpan]::FromSeconds(180))
     if(-not $held){throw 'Publisher mutex timed out; no lock removal or bypass'}
-    $stateMutex=[Threading.Mutex]::new($false,'Local\AppScalingStrategies_KanbanState_v1')
-    $stateHeld=$false
-    try {
-        $stateHeld=$stateMutex.WaitOne([TimeSpan]::FromSeconds(30))
-        if(-not $stateHeld){throw 'Current parent state mutex timed out'}
-        $ledger=[IO.File]::ReadAllText((Join-Path $repository '.docs\wiki\flow-state.json'))|ConvertFrom-Json -AsHashtable -Depth 80
-        $authorization=$ledger.localPublisherAuthorization
-        if($ledger.controllerId -ne '942b9aec-aa3f-4179-b6ed-e2bc57abeed2'){throw 'Current parent controller mismatch'}
-        foreach($id in @('C015','C034')){
-            $cards=@($ledger.cards|Where-Object{$_.id -eq $id})
-            if($cards.Count -ne 1 -or $cards[0].state -ne 'Done' -or
-                -not (True-Boolean $cards[0].review.accepted) -or -not (True-Boolean $cards[0].review.focusedTestsPassed) -or
-                -not (True-Boolean $cards[0].review.browserObserved) -or -not (True-Boolean $cards[0].review.remoteVerified)){throw 'Independent current C015/C034 Done required'}
-        }
-        $card=@($ledger.cards|Where-Object{$_.id -eq 'C036'})
-        if($card.Count -ne 1 -or $card[0].owner -ne 'worker-C036' -or $card[0].state -ne 'In Progress' -or $card[0].kano -ne 'D'){throw 'Original C036 owner/frozen D state mismatch'}
-        $bytes=[IO.File]::ReadAllBytes($publisher)
-        $actualSha=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
-        $revision=$authorization.budgetAndGoalRevision
-        if($authorization.approvedBy -cne 'parent-controller' -or $actualSha -cne $authorization.publisherSha256 -or
-            $authorization.exactAddedClasses.C036 -cne 'D' -or
-            -not (True-Boolean $authorization.mainMustEqualRemoteBeforeStaging) -or
-            -not (True-Boolean $authorization.namespaceAndFrozenClassGuardsUnchanged) -or
-            -not (False-Boolean $authorization.cloudAuthorityExpanded) -or $authorization.focusedGuardChecksPassed -lt 51 -or
-            $revision.approvedBy -cne 'parent-controller' -or $revision.publisherSha256 -cne $actualSha -or
-            $revision.exactAddedClasses.C029 -cne 'D' -or $revision.exactAddedClasses.X003 -cne 'L' -or
-            -not (True-Boolean $revision.onlyTwoExactClassTokensChanged) -or
-            -not (True-Boolean $revision.namespaceFrozenClassAdminHeadAndWhitespaceRulesRetained) -or
-            -not (False-Boolean $revision.cloudIdentityOrInfrastructureAuthorityExpanded)){throw 'Current explicit canonical parent authorization does not cover actual publisher bytes'}
-        $stripped=[Text.Encoding]::UTF8.GetString($bytes).Replace("; C029='D'",'').Replace("; X003='L'",'')
-        $priorSha=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($stripped))).ToLowerInvariant()
-        if($priorSha -cne $revision.previousPublisherSha256 -or $priorSha -cne 'e6d9e8bf9c9ff592bf463bd85656ecfec46c4eb33b0ab7f14bb7f317fcc65e22'){throw 'Publisher changed beyond the exact two parent-authorized class tokens'}
-        $boundary=[ordered]@{
-            cardId='C036';workerId='worker-C036';actualPublisherSha256=$actualSha
-            currentCanonicalAuthorizationSource='.docs\wiki\flow-state.json.localPublisherAuthorization.budgetAndGoalRevision'
-            currentCanonicalAuthorization=$authorization;currentLedgerRevision=$ledger.revision
-            publisherMutexHeld=$true;stateReadMutexHeld=$true;sourceHandlesClosedBeforeRelease=$true
-            removingOnlyTwoClassTokensSha256=$priorSha;observedAtUtc=[DateTime]::UtcNow.ToString('o')
-        }
-    } finally {if($stateHeld){$stateMutex.ReleaseMutex()};$stateMutex.Dispose()}
+    $actualSha=(Get-FileHash -LiteralPath $publisher -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($actualSha -cne $assessment.authorizedSha256) { throw 'Current private publisher bytes lack current top canonical approval; no staging.' }
+    $head=(& git rev-parse HEAD | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0) { throw 'HEAD unavailable.' }
+    $branch=(& git branch --show-current | Out-String).Trim()
+    $remote=@(& git ls-remote origin refs/heads/main)
+    if ($LASTEXITCODE -ne 0 -or $remote.Count -ne 1) { throw 'Exact remote main unavailable.' }
+    $remoteMain=("$($remote[0])" -split '\s+')[0]
+    if ($branch -cne 'main' -or $head -cne $remoteMain) { throw 'Parent-qualified main must equal remote before any staging; never carry a failed C016 candidate.' }
+    $boundary=[ordered]@{
+        cardId='C036';workerId='worker-C036';actualPublisherSha256=$actualSha
+        currentCanonicalAuthorizationSource='.docs\wiki\flow-state.json.localPublisherAuthorization'
+        currentCanonicalSnapshot=$canonical.snapshot;assessment=$assessment
+        publisherMutexHeld=$true;stateMutexReleasedBeforePublisher=$true;stateAcquiredUnderPublisher=$false
+        historical4bUsedPublisherSha256='60ae100b96622c8ca828d7db2f8000780476e7c7411a9f3d26f0959fd182aeea'
+        historicalNestedRevisionsAreNotCurrentAuthority=$true
+        preStagingHead=$head;preStagingRemoteMain=$remoteMain;observedAtUtc=[DateTime]::UtcNow.ToString('o')
+    }
     [IO.File]::WriteAllText((Join-Path $directory 'publisher-boundary-locked.json'),($boundary|ConvertTo-Json -Depth 20)+[Environment]::NewLine,[Text.UTF8Encoding]::new($false))
-    $output=@(& $publisher -CardId C036 -WorkerId worker-C036 -Paths @('capability\C036') -Message '[C036][D][BDD-TDD-IaC-N/A] guard current fictional attribution; missing correlation HOLD; 103 assertions, 51 publisher guards, 17 signed Edge groups')
+    $unownedBefore=Unowned-Index
+    if ((Get-FileHash -LiteralPath $publisher -Algorithm SHA256).Hash.ToLowerInvariant() -cne $assessment.authorizedSha256) { throw 'Private bytes changed immediately before unchanged standard delegation.' }
+    $output=@(& $publisher -CardId C036 -WorkerId worker-C036 -Paths @('capability\C036') -Message '[C036][D][provenance-correction] Separate immutable actually-used 60AE history from current top canonical authority; preserve attribution and authentic proof; zero extra units')
+    $unownedAfter=Unowned-Index
+    if ($unownedBefore.entries -ne $unownedAfter.entries -or $unownedBefore.sha256 -cne $unownedAfter.sha256) { throw 'Unowned staged entries/flags changed; stop without repair.' }
     $publication=($output|Out-String)|ConvertFrom-Json -AsHashtable
     if($publication.remoteVerified -ne $true -or $publication.cardId -cne 'C036' -or
         $publication.workerId -cne 'worker-C036' -or $publication.commit -notmatch '^[0-9a-f]{40}$' -or
         $publication.tag -cne "kanban/C036/$($publication.commit.Substring(0,12))"){throw 'Standard publisher did not return a verified exact C036 publication'}
     $publication.publisherBoundary=$boundary
-    $target=Join-Path $root 'publication.json'
+    $publication.recoveryForCommit='4b2339f77704c79449270598b0896704ce7533c8'
+    $publication.unownedIndexEntriesAndFlagsUnchanged=$true
+    $publication.extraCredits=0
+    $target=Join-Path $directory 'receipt.json'
     $stream=[IO.File]::Open($target,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
     try {
         $data=[Text.UTF8Encoding]::new($false).GetBytes(($publication|ConvertTo-Json -Depth 30)+[Environment]::NewLine)

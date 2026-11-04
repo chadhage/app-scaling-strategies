@@ -1,0 +1,119 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { control, successor } = require('./publisher-controls.cjs');
+const { assessAuthority, inspectCurrent, history, readSnapshot, historicalPublisherBoundary } = require('..\\publisher-provenance.cjs');
+const { publisherAuthorized } = require('..\\pins.cjs');
+const root = path.resolve(__dirname, '..');
+
+test('known actual-used 60AE unit control assesses without authorizing a real publication', () => {
+  const snapshot = control();
+  const result = inspectCurrent(snapshot, snapshot.authorization.publisherSha256);
+  assert.equal(result.approved, true);
+  assert.equal(result.exactAuthorizedBytes, true);
+  assert.equal(result.normalVerificationAuthorizesPublication, false);
+  assert.equal(result.publicationPerformed, false);
+});
+test('genuine successor regression GREEN: top current approval may advance while historical revisions remain fixed', () => {
+  const old = control();
+  const later = successor();
+  assert.equal(later.snapshot.authorization.budgetAndGoalRevision.publisherSha256, old.authorization.publisherSha256);
+  assert.equal(later.snapshot.authorization.correlationGuardRevision.publisherSha256,
+    old.authorization.correlationGuardRevision.publisherSha256);
+  const result = inspectCurrent(later.snapshot, later.actualSha256);
+  assert.equal(result.approved, true);
+  assert.equal(result.exactAuthorizedBytes, true);
+  assert.equal(publisherAuthorized(later.actualSha256, later.snapshot), true);
+  assert.equal(result.publicationPerformed, false);
+  assert.equal(historicalPublisherBoundary().usedPublisherSha256, old.authorization.publisherSha256);
+});
+test('current assessment does not require or relabel nested historical revisions', () => {
+  const later = successor();
+  delete later.snapshot.authorization.budgetAndGoalRevision;
+  delete later.snapshot.authorization.correlationGuardRevision;
+  assert.equal(inspectCurrent(later.snapshot, later.actualSha256).exactAuthorizedBytes, true);
+  assert.equal(historicalPublisherBoundary().exactHistoricalTwoTokenLinkVerified, true);
+});
+test('unknown actual hash is not blessed by the valid current top approval', () => {
+  const snapshot = control();
+  assert.equal(inspectCurrent(snapshot, '0'.repeat(64)).exactAuthorizedBytes, false);
+  assert.equal(inspectCurrent(snapshot, '0'.repeat(64)).code, 'HOLD_UNAPPROVED_ACTUAL_PUBLISHER');
+});
+for (const [name, change] of [
+  ['own frozen class', (s) => { s.authorization.exactAddedClasses.C036 = 'S'; }],
+  ['own card class', (s) => { s.card.kano = 'S'; }],
+  ['own original unit', (s) => { s.card.kanoUnit = 'new-unit'; }],
+  ['own scope', (s) => { s.card.localScope = 'arbitrary new scope'; }],
+  ['caller path', (s) => { s.ownedPaths = ['capability\\C018']; }],
+  ['concealed second path', (s) => { s.ownedPaths.push('README.md'); }],
+  ['controller', (s) => { s.controllerId = 'caller'; }],
+  ['approver', (s) => { s.authorization.approvedBy = 'caller'; }],
+  ['source selector', (s) => { s.sourceSelector = 'budgetAndGoalRevision'; }],
+  ['nonboolean namespace guard', (s) => { s.authorization.namespaceAndFrozenClassGuardsUnchanged = 'true'; }],
+  ['nonboolean HEAD guard', (s) => { s.authorization.mainMustEqualRemoteBeforeStaging = 'true'; }],
+  ['nonboolean cloud guard', (s) => { s.authorization.cloudAuthorityExpanded = 'false'; }],
+  ['nonboolean syntax guard', (s) => { s.authorization.syntaxPassed = 'true'; }],
+  ['nonboolean local consent', (s) => { s.C001LocalConsent = 'true'; }],
+  ['nonboolean fixture approval', (s) => { s.C015FixtureApproval = 'true'; }],
+  ['nonboolean readiness', (s) => { s.card.readiness = 'true'; }],
+  ['invalid current digest', (s) => { s.authorization.publisherSha256 = 'not-a-digest'; }],
+  ['nonboolean prerequisite review', (s) => { s.prerequisites[0].accepted = 'true'; }],
+  ['stale prerequisite publication', (s) => { s.prerequisites[1].publication.commit = '0'.repeat(40); }],
+  ['missing prerequisite', (s) => { s.prerequisites.pop(); }],
+  ['guard count string', (s) => { s.authorization.focusedGuardChecksPassed = '53'; }],
+  ['extra credit', (s) => { s.authorization.originalKanoCredit = 1; }]
+]) {
+  test(`${name} fails current unit assessment without private changes or Git`, () => {
+    const snapshot = control();
+    change(snapshot);
+    assert.equal(inspectCurrent(snapshot, snapshot.authorization.publisherSha256).exactAuthorizedBytes, false);
+  });
+}
+test('current readiness controls delegation; opaque historical recovery markers cannot veto current approval', () => {
+  const snapshot = control();
+  snapshot.publicationHeld = 'cd5cdecd14fcb296b30e2cfe182b62421ba98489';
+  assert.equal(assessAuthority(snapshot).approved, true);
+  assert.equal(assessAuthority(snapshot).delegationReady, true);
+  snapshot.card.readiness = false;
+  assert.equal(assessAuthority(snapshot).approved, true);
+  assert.equal(assessAuthority(snapshot).delegationReady, false);
+  snapshot.card.readiness = true;
+  snapshot.card.state = 'Done';
+  snapshot.worker.status = 'accepted';
+  assert.equal(assessAuthority(snapshot).delegationReady, false);
+  assert.equal(historicalPublisherBoundary().historicalSnapshotVerified, true);
+});
+test('current-reader functions and attribution/browser/import assets remain the original bytes', () => {
+  const archived = history();
+  const oldPins = readSnapshot(archived.snapshots['pins.cjs']).toString('utf8');
+  const current = fs.readFileSync(path.join(root, 'pins.cjs'), 'utf8');
+  assert.equal(current.split('function publisherAuthorized')[0], oldPins.split('function publisherAuthorized')[0]);
+  const index = JSON.parse(readSnapshot(archived.originalEvidenceIndex).toString('utf8'));
+  const { hash } = require('..\\pins.cjs');
+  for (const name of ['attribution.js', 'current.cjs', 'captured.js', 'page.js', 'read-gates.ps1', 'imports.json', 'index.html', 'style.css', 'manifest.json']) {
+    const entry = index.sourceAndProofFiles.find((file) => file.path === `capability\\C036\\${name}`);
+    assert.equal(hash(fs.readFileSync(path.join(root, name))), entry.rawSha256, name);
+  }
+});
+test('historical 51-group fixture never opens mutable private source or assumes future live IDs', () => {
+  const source = fs.readFileSync(path.join(__dirname, 'publisher-boundary.ps1'), 'utf8');
+  assert.doesNotMatch(source, /Join-Path \$repository '\.git\\kanban-orchestrator\\publish\.ps1'/);
+  assert.match(source, /\[ScriptBlock\]::Create\(\$source\)/);
+  assert.match(source, /mutablePrivateSourceRead=\$false/);
+});
+test('actual wrapper observes State-before-Publisher order and checks actual bytes before unchanged delegation', () => {
+  const wrapper = fs.readFileSync(path.join(__dirname, 'publish-owned.ps1'), 'utf8');
+  const reader = fs.readFileSync(path.join(__dirname, 'publisher-current.ps1'), 'utf8');
+  assert.ok(wrapper.indexOf('readCurrentAuthority()') < wrapper.indexOf('$publisherMutex.WaitOne'));
+  assert.doesNotMatch(wrapper, /KanbanState_v1|budgetAndGoalRevision|\.Replace\("; C029/);
+  assert.match(reader, /Local\\AppScalingStrategies_KanbanState_v1/);
+  assert.match(reader, /finally.*ReleaseMutex/s);
+  assert.match(wrapper, /Private bytes changed immediately before unchanged standard delegation/);
+  assert.match(wrapper, /currentCanonicalAuthorizationSource='\.docs\\wiki\\flow-state\.json\.localPublisherAuthorization'/);
+  assert.match(wrapper, /-Paths @\('capability\\C036'\)/);
+  assert.match(wrapper, /unownedBefore\.sha256 -cne \$unownedAfter\.sha256/);
+  assert.match(wrapper, /main must equal remote before any staging/);
+});

@@ -6,19 +6,57 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { gunzipSync } = require('node:zlib');
 const { root, repository } = require('./inventory.cjs');
-const { hash, normalize, readRegular, checkImports, checkPublisher } = require('..\\pins.cjs');
+const { hash, normalize, readRegular, checkImports } = require('..\\pins.cjs');
+const { history, readSnapshot, historicalPublisherBoundary } = require('..\\publisher-provenance.cjs');
 const index = JSON.parse(fs.readFileSync(path.join(root, 'evidence-index.json'), 'utf8'));
 
 test('all indexed own source and immutable proof bytes remain unchanged including original RED/failures', () => {
+  const archive = history();
+  assert.equal(hash(readSnapshot(archive.originalEvidenceIndex)), hash(fs.readFileSync(path.join(root, 'evidence-index.json'))));
   for (const file of index.sourceAndProofFiles) {
     assert.ok(file.path.startsWith('capability\\C036\\'));
     const bytes = readRegular(file.path, 8388608);
-    assert.equal(bytes.length, file.bytes);
-    assert.equal(hash(bytes), file.rawSha256, file.path);
-    if (file.crlfToLfSha256) assert.equal(hash(normalize(bytes)), file.crlfToLfSha256, file.path);
+    const relative = path.relative(root, path.resolve(repository, file.path));
+    const original = archive.snapshots[relative];
+    if (original) {
+      assert.ok(archive.approvedRecoveryPaths.includes(relative));
+      const preserved = readSnapshot(original);
+      assert.equal(preserved.length, file.bytes);
+      assert.equal(hash(preserved), file.rawSha256, file.path);
+      assert.equal(hash(normalize(preserved)), file.crlfToLfSha256, file.path);
+      assert.equal(original.acceptedGitSha256, file.crlfToLfSha256, file.path);
+    } else {
+      assert.equal(bytes.length, file.bytes);
+      assert.equal(hash(bytes), file.rawSha256, file.path);
+      if (file.crlfToLfSha256) assert.equal(hash(normalize(bytes)), file.crlfToLfSha256, file.path);
+    }
   }
   assert.equal(index.extraCredits, 0);
   assert.equal(index.kano, 'D');
+  const v1Path = path.join(root, 'publisher-recovery-index.json');
+  if (fs.existsSync(v1Path)) {
+    const v1 = JSON.parse(fs.readFileSync(v1Path, 'utf8'));
+    const candidatePath = path.join(root, 'publisher-candidate-history.json');
+    const candidate = fs.existsSync(candidatePath) ? JSON.parse(fs.readFileSync(candidatePath, 'utf8')) : null;
+    if (candidate) assert.equal(hash(fs.readFileSync(v1Path)), candidate.index.rawSha256);
+    for (const file of v1.sourceAndProofFiles) {
+      const relative = path.relative(root, path.resolve(repository, file.path));
+      const archived = candidate?.snapshots[relative];
+      const original = archived ? readRegular(path.join('capability', 'C036', archived.path), 8388608) : readRegular(file.path, 8388608);
+      if (archived) assert.equal(hash(original), archived.rawSha256);
+      assert.equal(hash(original), file.rawSha256, file.path);
+    }
+    const v2Path = path.join(root, 'publisher-recovery-index-v2.json');
+    const recovery = fs.existsSync(v2Path) ? JSON.parse(fs.readFileSync(v2Path, 'utf8')) : null;
+    if (!recovery) return;
+    assert.equal(recovery.previousCommit, archive.usedForCommit);
+    assert.equal(recovery.historyManifestRawSha256, hash(fs.readFileSync(path.join(root, 'publisher-history.json'))));
+    assert.equal(recovery.extraCredits, 0);
+    for (const file of recovery.sourceAndProofFiles) {
+      assert.ok(file.path.startsWith('capability\\C036\\'));
+      assert.equal(hash(readRegular(file.path, 8388608)), file.rawSha256, file.path);
+    }
+  }
 });
 test('genuine false-attribution assertion RED remains an original failure, not syntax or dependency evidence', () => {
   const directory = path.resolve(repository, index.sequence.genuineAssertionRed);
@@ -36,7 +74,7 @@ test('all actual append-only raw captures retain their exact original stdout/std
   for (const entry of fs.readdirSync(path.join(root, 'evidence', 'raw'), { withFileTypes: true })) {
     assert.equal(entry.isSymbolicLink(), false);
     assert.equal(entry.isDirectory(), true);
-    assert.match(entry.name, /^(?:bdd|stub|red|iac|pins|context|focused|syntax|publisher|browser|verify|integrity|publication)-[0-9a-f-]{36}$/);
+    assert.match(entry.name, /^(?:bdd|stub|red|iac|pins|context|focused|syntax|publisher|browser|verify|integrity|publication|provenance|provenance-red|provenance-marker-red|provenance-archive|provenance-candidate|provenance-verify)-[0-9a-f-]{36}$/);
     const directory = path.join(root, 'evidence', 'raw', entry.name);
     const file = path.join(directory, 'run.json');
     if (!fs.existsSync(file)) {
@@ -67,12 +105,12 @@ test('actual browser proof separates fictional fixture verification from native/
   assert.equal(fs.existsSync(report.actualProfile.actualIsolatedProfile), false);
   assert.equal(fs.existsSync(report.actualHelperSession), false);
 });
-test('current publication authorization is read live and archived E6 remains only historical evidence', () => {
-  const current = checkPublisher();
-  assert.equal(current.actualSha256, current.currentParentAuthorization.publisherSha256);
+test('actual-used 60AE and E6 historical provenance remains independent of future current authorization', () => {
+  const captured = historicalPublisherBoundary();
+  assert.equal(captured.usedPublisherSha256, '60ae100b96622c8ca828d7db2f8000780476e7c7411a9f3d26f0959fd182aeea');
   const old = JSON.parse(fs.readFileSync(path.join(root, 'publisher-boundary.json'), 'utf8'));
   assert.equal(old.actualSha256, 'e6d9e8bf9c9ff592bf463bd85656ecfec46c4eb33b0ab7f14bb7f317fcc65e22');
-  assert.equal(current.historicalDigestIsNotCurrentAuthority, true);
+  assert.equal(captured.normalVerificationAuthorizesPublication, false);
   assert.equal(index.counts.publisherGuardGroups, 51);
   assert.deepEqual(checkImports(), index.unchangedDependencies);
 });

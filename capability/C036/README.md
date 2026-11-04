@@ -112,17 +112,57 @@ The historical boundary is preserved, but **current parent
 historical digest. Unknown unauthorized guard changes fail. The same-task parent
 update explicitly authorizes current SHA
 `60ae100b96622c8ca828d7db2f8000780476e7c7411a9f3d26f0959fd182aeea`
-through `localPublisherAuthorization.budgetAndGoalRevision`. The E6 boundary and
-old proof stay immutable. Fifty-one current own publisher
+through the then-current approval. The E6 boundary and
+old proof stay immutable. Fifty-one historical own publisher
 guard groups cover exact namespace/frozen D/Admin/HEAD-equals-remote-before-staging,
 annotated atomic publication and genuine CRLF-aware whitespace cases without
 real staging or publishing in tests. Removing only the two newly approved
 `C029='D'` / `X003='L'` tokens must reproduce the E6 bytes; other X IDs remain denied.
-Immediately before delegation, the current canonical approval and actual publisher
-bytes are checked while holding the existing publisher mutex. Only the standard publisher stages
+These fixtures execute only the archived, actually 4b-used 60AE source, not a future
+mutable private publisher. They cannot assume future IDs remain unadmitted.
+Current delegation separately reads canonical **top**
+`localPublisherAuthorization`, original C036 D/scope/paths, accepted prerequisites
+and strict boolean invariants under State, releases State, then acquires Publisher.
+Actual private bytes must match that current approval immediately before the
+unchanged standard call. No State acquisition occurs under Publisher.
+Nested `budgetAndGoalRevision` / `correlationGuardRevision` remain historical,
+not forever-current hash constraints. Only the standard publisher stages
 `capability\C036`, uses `[C036][D]` and the Copilot trailer, annotates
 `kanban/C036/<12sha>`, atomically pushes main/tag and verifies remote ancestry.
 The full publication/proof/counts are reported for parent-only acceptance.
+
+### Same-original provenance recovery
+
+The immutable original publication is
+`4b2339f77704c79449270598b0896704ce7533c8` /
+`kanban/C036/4b2339f77704`. `publisher-history.json` identifies its own verified
+60AE source, exact two-token E6 predecessor, old helpers/index/reports and the
+parent's actual 103-focused/5-integrity/51-publisher/17-Edge GREEN raw archive.
+Original proof is never refreshed. Changed approved provenance helpers are
+checked against their preserved original bytes; all attribution, actual reader,
+captured/page/runtime and import-pin bytes still match the original index.
+
+`publisher-provenance-recovery.feature` and the appended genuine
+`evidence\red\publisher-successor.initial.cjs` expose the old future-approval
+failure without changing private code or performing Git operations. New pure
+successor controls are explicitly **not real approval**. They verify that a later
+current top approval can assess while nested history stays fixed, and that
+unauthorized actual hashes, wrong original class/scope/paths or nonboolean guards
+still fail. Normal verification authorizes no publication.
+
+```powershell
+node --test capability\C036\tests\publisher-provenance.test.cjs
+```
+
+The correction is the same original C036 D, zero extra credit. Publication stays
+held until exact parent remote qualification; it must never stage, carry or push
+an unqualified C016 local candidate. Original reports remain unchanged; correction
+receipts and qualification proof append uniquely.
+
+Opaque retained recovery-candidate commit markers are audit history, not boolean
+authorization invariants. The first qualified correction index/helpers and its
+subsequent genuine marker-guard failure are archived, not overwritten.
+`publisher-recovery-index-v2.json` qualifies the final bounded correction.
 
 This is only a local read-only attribution model: **no Azure, control API,
 authentication, lease authority, new storage engine, packages/downloads,

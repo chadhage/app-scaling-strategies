@@ -1,0 +1,15 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+const { checkPublisher } = require('..\\pins.cjs');
+if (process.argv.length !== 2 || process.env.CAPTURE_BROWSER_EVIDENCE !== '1') throw new Error('Exact explicit own publication capture required.');
+checkPublisher();
+const run = spawnSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive',
+  '-File', path.join(__dirname, 'publish-owned.ps1')], {
+  timeout: 240000, maxBuffer: 4 * 1024 * 1024, encoding: null, windowsHide: true
+});
+process.stdout.write(run.stdout || Buffer.alloc(0));
+process.stderr.write(run.stderr || Buffer.alloc(0));
+assert.equal(run.status, 0, 'Actual standard publication must succeed; never hide a failed push or infer completion.');
