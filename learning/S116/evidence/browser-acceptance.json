@@ -1,0 +1,137 @@
+{
+  "cardId": "A-S116",
+  "mode": "synthetic",
+  "helper": "openIsolatedLesson",
+  "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "recordedAtUtc": "2026-11-04T00:18:01.651Z",
+  "browserObservations": [
+    {
+      "label": "keyboard serving-only; unknown writing proof",
+      "outcome": "unknown",
+      "currentDOM": "Observation 1: UNKNOWN - Both regions serve, but missing data-contract observations prevent a positive result. No supported writing capability is inferred.\n\nDeclared single writer: region-one. Observed synthetic writer target: unknown (unobserved). Multi-writer support: not supported by this fixture.\n\nFixed regional serving measurements\nServing origin\tFictional journey\tOutcome\tSynthetic ms\nregion-one\tfictional-user-one\tserved\t18\nregion-two\tfictional-user-two\tserved\t24\n\nWrite routes: unknown (unobserved); serving alone is not writer proof.\n\nMutation and post-commit reader observations: unknown (unobserved).\n\nboth-serving: POSITIVE - 2/2 fictional user journeys served: region-one 18 synthetic ms; region-two 24 synthetic ms.\nwriter-topology: UNKNOWN - Serving-only action does not observe writes or post-commit consistency.\nepoch-fencing: UNKNOWN - Serving-only action does not observe writes or post-commit consistency.\nconflict-handling: UNKNOWN - Serving-only action does not observe writes or post-commit consistency.\nmutation-outcome: UNKNOWN - Serving-only action does not observe writes or post-commit consistency.\nread-your-writes: UNKNOWN - Serving-only action does not observe writes or post-commit consistency.",
+      "totalsDOM": "Recorded 1/12 | Positive 0 | Negative 0 | Unknown 1 | Remaining 11",
+      "retainedRecords": 1
+    },
+    {
+      "label": "keyboard supported writer and consistency",
+      "outcome": "positive",
+      "currentDOM": "Observation 2: POSITIVE - Synthetic contract met: two serving regions, one supported writer, preserved session read minimum.\n\nDeclared single writer: region-one. Observed synthetic writer target: region-one. Multi-writer support: not supported by this fixture.\n\nFixed regional serving measurements\nServing origin\tFictional journey\tOutcome\tSynthetic ms\nregion-one\tfictional-user-one\tserved\t18\nregion-two\tfictional-user-two\tserved\t24\nObserved synthetic write routes\nServing origin\tWriter target\tRoute\nregion-one\tregion-one\tlocal\nregion-two\tregion-one\tforwarded\nSynthetic mutation observation\nMeasurement\tValue\nRequested writer target\tregion-one\nRequired epoch\t7\nObserved epoch\t7\nExpected revision\t10\nCurrent revision\t10\nMutation outcome\tcommitted\nCommitted effects\t1\nCommitted revision\t11\nSynthetic duration ms\t9\nObserved synthetic reader consistency\nReader\tRevision\tClient minimum\tReplication lag synthetic ms\tRead synthetic ms\nregion-one\t11\t11\t0\t6\nregion-two\t11\t11\t0\t8\nboth-serving: POSITIVE - 2/2 fictional user journeys served: region-one 18 synthetic ms; region-two 24 synthetic ms.\nwriter-topology: POSITIVE - Both supported write routes target the one observed writer region-one; region-two forwards, not writes independently.\nepoch-fencing: POSITIVE - Observed epoch 7 equals required epoch 7.\nconflict-handling: POSITIVE - Expected revision 10 matches current revision 10; optimistic guard permits revision 11.\nmutation-outcome: POSITIVE - 1 synthetic committed effect, revision 11, 9 synthetic ms.\nread-your-writes: POSITIVE - Both readers return revision 11, meeting client minimum 11; observed lag 0 synthetic ms, reads 6/8 synthetic ms.",
+      "totalsDOM": "Recorded 2/12 | Positive 1 | Negative 0 | Unknown 1 | Remaining 10",
+      "retainedRecords": 2
+    },
+    {
+      "label": "keyboard stale reader: serving positive, contract negative",
+      "outcome": "negative",
+      "currentDOM": "Observation 3: NEGATIVE - Both regions serve, but the requested synthetic data journey fails. Inspect protection and user impact separately.\n\nDeclared single writer: region-one. Observed synthetic writer target: region-one. Multi-writer support: not supported by this fixture.\n\nFixed regional serving measurements\nServing origin\tFictional journey\tOutcome\tSynthetic ms\nregion-one\tfictional-user-one\tserved\t18\nregion-two\tfictional-user-two\tserved\t24\nObserved synthetic write routes\nServing origin\tWriter target\tRoute\nregion-one\tregion-one\tlocal\nregion-two\tregion-one\tforwarded\nSynthetic mutation observation\nMeasurement\tValue\nRequested writer target\tregion-one\nRequired epoch\t7\nObserved epoch\t7\nExpected revision\t10\nCurrent revision\t10\nMutation outcome\tcommitted\nCommitted effects\t1\nCommitted revision\t11\nSynthetic duration ms\t9\nObserved synthetic reader consistency\nReader\tRevision\tClient minimum\tReplication lag synthetic ms\tRead synthetic ms\nregion-one\t11\t11\t0\t6\nregion-two\t10\t11\t40\t8\nboth-serving: POSITIVE - 2/2 fictional user journeys served: region-one 18 synthetic ms; region-two 24 synthetic ms.\nwriter-topology: POSITIVE - Both supported write routes target the one observed writer region-one; region-two forwards, not writes independently.\nepoch-fencing: POSITIVE - Observed epoch 7 equals required epoch 7.\nconflict-handling: POSITIVE - Expected revision 10 matches current revision 10; optimistic guard permits revision 11.\nmutation-outcome: POSITIVE - 1 synthetic committed effect, revision 11, 9 synthetic ms.\nread-your-writes: NEGATIVE - region-two revision 10 is below client minimum 11; observed replication lag 40 synthetic ms, read 8 synthetic ms.",
+      "totalsDOM": "Recorded 3/12 | Positive 1 | Negative 1 | Unknown 1 | Remaining 9",
+      "retainedRecords": 3
+    },
+    {
+      "label": "missing writer/epoch/effect/duration remain unknown",
+      "outcome": "unknown",
+      "currentDOM": "Observation 4: UNKNOWN - Both regions serve, but missing data-contract observations prevent a positive result. No supported writing capability is inferred.\n\nDeclared single writer: region-one. Observed synthetic writer target: unknown (unobserved). Multi-writer support: not supported by this fixture.\n\nFixed regional serving measurements\nServing origin\tFictional journey\tOutcome\tSynthetic ms\nregion-one\tfictional-user-one\tserved\t18\nregion-two\tfictional-user-two\tserved\t24\nObserved synthetic write routes\nServing origin\tWriter target\tRoute\nregion-one\tunknown (unobserved)\tunobserved\nregion-two\tunknown (unobserved)\tunobserved\nSynthetic mutation observation\nMeasurement\tValue\nRequested writer target\tunknown (unobserved)\nRequired epoch\t7\nObserved epoch\tunknown (unobserved)\nExpected revision\t10\nCurrent revision\tunknown (unobserved)\nMutation outcome\tunobserved\nCommitted effects\tunknown (unobserved)\nCommitted revision\tunknown (unobserved)\nSynthetic duration ms\tunknown (unobserved)\nObserved synthetic reader consistency\nReader\tRevision\tClient minimum\tReplication lag synthetic ms\tRead synthetic ms\nregion-one\tunknown (unobserved)\tunknown (unobserved)\tunknown (unobserved)\tunknown (unobserved)\nregion-two\tunknown (unobserved)\tunknown (unobserved)\tunknown (unobserved)\tunknown (unobserved)\nboth-serving: POSITIVE - 2/2 fictional user journeys served: region-one 18 synthetic ms; region-two 24 synthetic ms.\nwriter-topology: UNKNOWN - Actual synthetic writer target and routes are unobserved (null).\nepoch-fencing: UNKNOWN - Observed writer epoch is null, not verified.\nconflict-handling: UNKNOWN - Writer observation missing; optimistic conflict handling is unobserved.\nmutation-outcome: UNKNOWN - Mutation status, effects, committed revision and duration are unobserved (null).\nread-your-writes: UNKNOWN - Read and committed-minimum observations are null; missing replication evidence is not zero lag.",
+      "totalsDOM": "Recorded 4/12 | Positive 1 | Negative 1 | Unknown 2 | Remaining 8",
+      "retainedRecords": 4
+    },
+    {
+      "label": "stale-epoch",
+      "overall": "negative",
+      "protectiveCheck": "epoch-fencing",
+      "protectiveResult": "positive",
+      "mutationCheckDOM": "mutation-outcome: NEGATIVE - rejected-stale-epoch: requested user mutation did not commit, 0 effects, 5 synthetic ms. Correct protection is not user success."
+    },
+    {
+      "label": "version-conflict",
+      "overall": "negative",
+      "protectiveCheck": "conflict-handling",
+      "protectiveResult": "positive",
+      "mutationCheckDOM": "mutation-outcome: NEGATIVE - rejected-revision-conflict: requested user mutation did not commit, 0 effects, 7 synthetic ms. Correct protection is not user success."
+    },
+    {
+      "label": "local-writer",
+      "overall": "negative",
+      "protectiveCheck": "writer-topology",
+      "protectiveResult": "negative",
+      "mutationCheckDOM": "mutation-outcome: NEGATIVE - rejected-unsupported-writer: requested user mutation did not commit, 0 effects, 4 synthetic ms. Correct protection is not user success."
+    }
+  ],
+  "nativeAzureValidated": false,
+  "sourceParentValidated": false,
+  "productionNode24Validated": false,
+  "captureWasDeliberate": true,
+  "normalOwnedVerificationReadOnly": true,
+  "awaitedFinallyClose": true,
+  "browserVersion": "156.0.4314.50",
+  "nodeVersion": "v22.23.4",
+  "playwrightVersion": "1.56.1",
+  "invalidInput": {
+    "focusedError": true,
+    "unchangedHistory": true,
+    "actualDOM": "Observation not recorded: Invalid input: choose exactly one listed teaching trace and operator action."
+  },
+  "keyboardReset": {
+    "defaultsRestored": true,
+    "currentCleared": true,
+    "focusedFirstControl": true,
+    "historyRetained": 1
+  },
+  "retainedHistory": {
+    "summaries": [
+      "Observation 1: UNKNOWN - Supported single writer, caught-up readers / Inspect serving only",
+      "Observation 2: POSITIVE - Supported single writer, caught-up readers / Verify writer and consistency contract",
+      "Observation 3: NEGATIVE - Serving succeeds, region-two reader is stale / Verify writer and consistency contract",
+      "Observation 4: UNKNOWN - Serving succeeds, writer observation is missing / Verify writer and consistency contract",
+      "Observation 5: NEGATIVE - Stale writer epoch is fenced / Verify writer and consistency contract",
+      "Observation 6: NEGATIVE - Optimistic revision conflict is rejected / Verify writer and consistency contract",
+      "Observation 7: NEGATIVE - Unsupported direct region-two writer / Verify writer and consistency contract"
+    ],
+    "negative": 4,
+    "unknown": 2,
+    "positive": 1
+  },
+  "limitError": {
+    "focusedError": true,
+    "retainedRecords": 12,
+    "actualDOM": "Observation not recorded: The 12-observation allowance is exhausted. Reset retains it; reload begins a new session."
+  },
+  "finalReset": {
+    "retainedRecords": 12,
+    "defaultsRestored": true,
+    "focusedFirstControl": true,
+    "totalsDOM": "Recorded 12/12 | Positive 6 | Negative 4 | Unknown 2 | Remaining 0"
+  },
+  "csp": {
+    "complete": true,
+    "inlineRan": false,
+    "evalRan": false,
+    "evalError": {
+      "name": "EvalError",
+      "message": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self'\".\n"
+    },
+    "connectionResult": "TypeError",
+    "violations": [
+      {
+        "effectiveDirective": "script-src-elem",
+        "blockedURI": "inline",
+        "disposition": "enforce"
+      },
+      {
+        "effectiveDirective": "script-src",
+        "blockedURI": "eval",
+        "disposition": "enforce"
+      },
+      {
+        "effectiveDirective": "connect-src",
+        "blockedURI": "data",
+        "disposition": "enforce"
+      }
+    ],
+    "pageOwnedExternalLocalProbe": true,
+    "devtoolsEvaluationUsedAsOracle": false,
+    "noRemoteURL": true
+  },
+  "unexpectedPageErrors": [],
+  "httpRequests": [],
+  "ownedFilesUnchanged": 60,
+  "passed": true
+}

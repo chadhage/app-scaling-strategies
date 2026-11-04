@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S116 - Two serving regions, one writer</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p id="training-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Two serving regions, one writer</h1>
+    <p>Serving users in both regions does not establish multi-writer support.
+      Observe the declared writer, fencing, conflict handling and read-your-writes contract.</p>
+    <section aria-labelledby="contract-heading">
+      <h2 id="contract-heading">Fixed teaching data contract</h2>
+      <p><strong>Both serving origins:</strong> region-one and region-two.
+        <strong>Only supported writer:</strong> region-one, fenced epoch 7.</p>
+      <p>Optimistic conflict handling rejects an expected-revision mismatch without overwriting.
+        A synthetic accepted mutation advances revision 10 to 11 exactly once.
+        Replication is asynchronous; a session read must return at least its committed revision 11.</p>
+      <p>Regions, writers, replication, epochs, state, routing, reads, writes and user journeys
+        are fixed fictional <strong>DATA ONLY</strong>. Durations are fixed synthetic measurements,
+        not browser timing or actual resource observations. No network or configuration operations occur.</p>
+    </section>
+    <section aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">Operator rehearsal</h2>
+      <form id="observe-form" novalidate>
+        <label for="trace-choice">Teaching trace</label>
+        <select id="trace-choice" name="trace-choice">
+          <option value="supported">Supported single writer, caught-up readers</option>
+          <option value="stale-reader">Serving succeeds, region-two reader is stale</option>
+          <option value="writer-unobserved">Serving succeeds, writer observation is missing</option>
+          <option value="stale-epoch">Stale writer epoch is fenced</option>
+          <option value="version-conflict">Optimistic revision conflict is rejected</option>
+          <option value="local-writer">Unsupported direct region-two writer</option>
+        </select>
+        <label for="action-choice">Operator action</label>
+        <select id="action-choice" name="action-choice">
+          <option value="inspect-serving">Inspect serving only (not writing proof)</option>
+          <option value="verify-contract">Verify writer and consistency contract</option>
+        </select>
+        <div class="buttons">
+          <button type="submit" id="observe-button">Record observation</button>
+          <button type="button" id="restart-button">Reset current exercise</button>
+        </div>
+      </form>
+      <p id="error-output" role="alert" tabindex="-1" hidden></p>
+      <p id="totals" role="status" aria-live="polite"></p>
+      <p>Reset retains history and the 12-observation allowance. Reload starts a new in-memory session.</p>
+    </section>
+    <section aria-labelledby="output-heading">
+      <h2 id="output-heading">Current observation</h2>
+      <div id="current-output" role="status" aria-live="polite">
+        No observation yet. Choose an action and record.
+      </div>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained observation history</h2>
+      <ol id="history-output"></ol>
+    </section>
+    <section aria-labelledby="worked-heading">
+      <h2 id="worked-heading">Worked exercise</h2>
+      <ol>
+        <li>Inspect serving only. Both regions serve, but data-contract proof remains unknown.</li>
+        <li>Verify the stale-reader trace. Both regions still serve; revision 10 fails minimum 11.</li>
+        <li>Verify the missing-writer trace. Null observations remain unknown, not zero or success.</li>
+        <li>Verify the supported trace. Both routes use region-one; both readers meet revision 11.</li>
+        <li>Try stale epoch, revision conflict and unsupported local writer. Protective rejection
+          is not a committed user mutation. Reset and review the retained earlier outcomes.</li>
+      </ol>
+      <p>Tab, arrow keys and Enter operate the native controls. Invalid input focuses the error.
+        This is one portable A-S116 lesson; B-S116, D-S116 and native Azure acceptance remain unverified.
+        IaC is N/A. No cloud, identity, credentials, deployment, spending, framework or packages.</p>
+    </section>
+  </main>
+</body>
+</html>
