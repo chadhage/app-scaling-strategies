@@ -1,0 +1,11 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { profiles } = require('..\\fixtures.js');
+const { measureWindow } = require('..\\lesson.js');
+
+test('boundary: measure the exact combined shared pool, not isolated successes', () => {
+  const actual = measureWindow(profiles.boundary);
+  assert.equal(actual.shared.observedConnections, 12);
+});

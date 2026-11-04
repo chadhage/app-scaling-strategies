@@ -1,0 +1,149 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const root = path.resolve(__dirname, '..');
+const read = (name) => fs.readFileSync(path.join(root, name), 'utf8');
+const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const manifest = JSON.parse(read('manifest.json'));
+const approvedHash = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+function owned(relative) {
+  const target = path.resolve(root, relative);
+  assert.ok(target.startsWith(`${root}${path.sep}`));
+  return target;
+}
+
+test('integrity: exact frozen original source identity, acceptance, limits, and blocked native remainder', () => {
+  assert.deepEqual([
+    manifest.cardId, manifest.workerId, manifest.sourceId, manifest.parentId, manifest.kanoUnit,
+    manifest.kano, manifest.priority, manifest.packet, manifest.technicalEntryGate,
+  ], ['A-S144', 'worker-A-S144', 'S144', 'D-S144', 'A-S144', 'S', 'P1', 'SC-S144', 'SOURCE']);
+  assert.deepEqual(manifest.limits, {
+    windowMs: 10000, connectionsMaximum: 12, queueDepthMaximum: 4,
+    workerWaitMsMaximum: 400, originalJourneyMsMaximum: 1500,
+    successfulJourneysPerWindowMinimum: 3, measuredWindowsMaximum: 2,
+  });
+  assert.equal(manifest.mode, 'fixed-fictional-teaching-data-only');
+  assert.equal(manifest.nativeProof, false);
+  assert.equal(manifest.originalSourceParentCompleted, false);
+  const scope = JSON.parse(read('evidence\\resource-scope.json'));
+  assert.equal(scope.iac, 'N/A');
+  assert.equal(scope.nativeSibling, 'B-S144');
+  assert.equal(scope.nativeSiblingGate, 'CORE, DATA, HOST');
+  assert.deepEqual(scope.actualOperations, []);
+  assert.match(scope.nativeRemainder, /simultaneous frontend\/API\/database\/cache\/worker/);
+  assert.match(read('lesson.feature'), /successful isolated measurements|successful isolated tier measurements|successful isolated tier/);
+  assert.match(manifest.sourceAcceptance.README, /simultaneous frontend, API, database, cache, and worker/);
+  assert.match(manifest.sourceAcceptance.backlog, /measured together, not inferred/);
+});
+
+test('integrity: original raw CRLF and independent canonical baseline LF source bytes are preserved', () => {
+  const snapshot = JSON.parse(read('evidence\\source\\snapshot.json'));
+  assert.equal(snapshot.baseline, manifest.sourceBaseline);
+  assert.equal(snapshot.rows.length, 3);
+  for (const row of snapshot.rows) {
+    const raw = fs.readFileSync(owned(row.rawPath));
+    const canonical = fs.readFileSync(owned(row.canonicalPath));
+    assert.equal(hash(raw), row.rawSha256);
+    assert.equal(hash(canonical), row.canonicalSha256);
+    assert.ok(raw.includes(Buffer.from('\r\n')));
+    assert.equal(canonical.includes(Buffer.from('\r')), false);
+    assert.equal(raw.toString('utf8').replace(/\r\n/g, '\n'), canonical.toString('utf8'));
+    assert.match(row.worktreeFileSha256, /^[a-f0-9]{64}$/);
+    assert.match(row.baselineFileSha256, /^[a-f0-9]{64}$/);
+  }
+  const inventory = fs.readFileSync(path.join(root, 'evidence', 'source', 'selected-inventory.json.txt'));
+  assert.equal(hash(inventory), snapshot.selectedInventorySha256);
+  const selected = JSON.parse(inventory);
+  assert.equal(selected.totalInventoryCards, 414);
+  assert.equal(selected.card.id, 'A-S144');
+  assert.equal(selected.card.packet, 'SC-S144');
+  assert.equal(selected.card.kanoUnit, 'A-S144');
+  assert.equal(selected.sourceGate, 'The supplied backlog and portable lesson contract; available now.');
+  const attributes = read('.gitattributes');
+  assert.match(attributes, /^\/evidence\/raw\/\*\* -text -whitespace$/m);
+  assert.match(attributes, /^\/evidence\/source\/\*\* -text whitespace=cr-at-eol$/m);
+});
+
+test('integrity: genuine assertion RED and archived loadable stub/test remain outside autodiscovery', () => {
+  const red = JSON.parse(read('evidence\\red.json'));
+  assert.equal(red.exitCode, 1);
+  assert.equal(red.genuineBehavioralAssertion, true);
+  assert.equal(red.expected, 12);
+  assert.equal(red.actual, 0);
+  for (const file of [...red.files, red.stdout, red.stderr]) {
+    const relative = file.archived || file.path;
+    assert.ok(relative.endsWith('.txt'));
+    const bytes = fs.readFileSync(owned(relative));
+    assert.equal(hash(bytes), file.sha256);
+  }
+  const stdout = fs.readFileSync(owned(red.stdout.path), 'utf8');
+  assert.match(stdout, /ERR_ASSERTION/);
+  assert.match(stdout, /0 !== 12/);
+  assert.match(stdout, /# pass 0/);
+  assert.match(stdout, /# fail 1/);
+  const archivedStub = red.files.find((file) => file.source === 'lesson.js');
+  assert.match(fs.readFileSync(owned(archivedStub.archived), 'utf8'), /observedConnections: 0/);
+  const failedPath = manifest.publicationPrecheckFailure;
+  const failed = JSON.parse(read(failedPath));
+  assert.equal(failed.exitCode, 1);
+  assert.equal(failed.reproduced, true);
+  for (const stream of ['stdout', 'stderr']) {
+    const bytes = fs.readFileSync(owned(path.join(path.dirname(failedPath), `${stream}.txt`)));
+    assert.equal(hash(bytes), failed[`${stream}Sha256`]);
+  }
+  for (const file of failed.archivedBeforeRepair) {
+    assert.equal(hash(fs.readFileSync(owned(file.archived))), file.sha256);
+  }
+  assert.match(read(path.join(path.dirname(failedPath), 'stderr.txt')), /trailing whitespace/);
+});
+
+test('integrity: portable source has exact banner, native keyboard controls, strict CSP, and no live operation code', () => {
+  const html = read('index.html');
+  assert.equal((html.match(/Training rehearsal - synthetic data - not a live Azure result/g) || []).length, 1);
+  assert.match(html, /fixed fictional teaching DATA ONLY/);
+  assert.match(html, /connect-src 'none'/);
+  assert.match(html, /script-src 'self'; style-src 'self'/);
+  assert.match(html, /form-action 'none'/);
+  assert.match(html, /worker-src 'none'/);
+  assert.doesNotMatch(html, /unsafe-inline|unsafe-eval|\son[a-z]+\s*=|\sstyle\s*=/i);
+  assert.doesNotMatch(html, /<(?:script|style)[^>]*>[^<\s]/i);
+  assert.match(html, /id="error"[^>]*role="alert"[^>]*tabindex="-1"/);
+  assert.match(html, /id="start-again" type="button"/);
+  assert.doesNotMatch(html, /(?:id|name)="reset"/);
+  const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(new Set(ids).size, ids.length);
+  for (const asset of ['fixtures.js', 'lesson.js', 'app.js', 'style.css']) {
+    assert.ok(fs.existsSync(path.join(root, asset)));
+    assert.doesNotMatch(read(asset), /\bfetch\s*\(|XMLHttpRequest|WebSocket|EventSource|sendBeacon|serviceWorker|localStorage|sessionStorage|indexedDB|https?:\/\//i);
+  }
+  assert.doesNotMatch(read('app.js'), /innerHTML|\.reset\s*\(/);
+  assert.match(read('app.js'), /event\.preventDefault\(\)/);
+});
+
+test('integrity: exact published isolated helper and approved offline tooling only', () => {
+  const helper = path.resolve(root, '..', '..', 'testing', 'browser', 'isolated.cjs');
+  assert.equal(hash(fs.readFileSync(helper)), approvedHash);
+  assert.equal(manifest.browserHelper.sha256, approvedHash);
+  const browserTest = read('tests\\browser.test.cjs');
+  assert.match(browserTest, /openIsolatedLesson\('learning\\\\S144\\\\index\.html'\)/);
+  assert.match(browserTest, /finally/);
+  assert.match(browserTest, /await session\.close\(\)/);
+  assert.doesNotMatch(browserTest, /chromium\.launch|browser_navigate|openIsolatedLoopback|bypassCSP:\s*true|--no-sandbox/);
+  assert.equal(require(path.resolve(root, '..', '..', 'testing', 'browser', 'node_modules', 'playwright', 'package.json')).version, '1.56.1');
+  assert.equal(process.version, 'v22.23.4');
+});
+
+test('integrity: browser capture is exact opt-in, unique raw, and never overwrites historical observations', () => {
+  const source = read('tests\\browser.test.cjs');
+  assert.match(source, /process\.env\.CAPTURE_BROWSER_EVIDENCE === '1'/);
+  assert.match(source, /if \(!capture\) return;/);
+  assert.match(source, /randomUUID\(\)/);
+  assert.match(source, /flag: 'wx'/);
+  assert.doesNotMatch(source, /writeFileSync\([^)]*browser-acceptance\.json/);
+  assert.equal(manifest.iac, 'N/A');
+  assert.match(read('USAGE.txt'), /Normal verification is read-only/);
+});

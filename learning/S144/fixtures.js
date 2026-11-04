@@ -1,0 +1,102 @@
+'use strict';
+
+(function expose(root) {
+  const DATA_MODE = 'fixed-fictional-teaching-data-only';
+  const TIERS = ['frontend', 'api', 'database', 'cache', 'worker'];
+  const LIMITS = {
+    connections: 12, queueDepth: 4, workerWaitMs: 400,
+    journeyMs: 1500, successfulJourneysPerWindow: 3,
+  };
+  const isolated = [
+    { tier: 'frontend', latencyMs: 120, budgetMs: 150, http: 200, ready: true },
+    { tier: 'api', latencyMs: 200, budgetMs: 250, http: 200, ready: true },
+    { tier: 'database', latencyMs: 300, budgetMs: 350, http: 200, ready: true },
+    { tier: 'cache', latencyMs: 40, budgetMs: 50, http: 200, ready: true },
+    { tier: 'worker', latencyMs: 250, budgetMs: 300, http: 200, ready: true },
+  ];
+
+  function journey(id, requiredTiers, overrides = {}) {
+    return {
+      id, requiredTiers, elapsedMs: 1500, completedMs: 1500,
+      http: 200, clientResult: 'complete', stateCorrect: true,
+      effectCount: 1, expectedEffects: 1,
+      versions: Object.fromEntries(requiredTiers.map((tier) => [tier, 'v2'])),
+      waitResource: null, ...overrides,
+    };
+  }
+
+  function window(id, windowId, connections, queueDepth, workerWaitMs, journeys) {
+    const contributors = ['api', 'cache', 'worker'].map((tier, index) => ({
+      id: ['api-foreground', 'cache-refill', 'worker-processing'][index],
+      tier, windowId, connections: connections[index],
+    }));
+    return {
+      schemaVersion: 1, dataMode: DATA_MODE, id, windowId, windowMs: 10000,
+      simultaneous: true, limits: LIMITS, isolated,
+      tiers: [
+        { tier: 'frontend', windowId, concurrency: 3, latencyMs: 120, requestsPerSecond: 30 },
+        { tier: 'api', windowId, concurrency: 7, latencyMs: 200, requestsPerSecond: 25 },
+        { tier: 'database', windowId, concurrency: 12, latencyMs: 300, requestsPerSecond: 18 },
+        { tier: 'cache', windowId, concurrency: 5, latencyMs: 40, requestsPerSecond: 35 },
+        { tier: 'worker', windowId, concurrency: 4, latencyMs: 250, requestsPerSecond: 10 },
+      ],
+      contributors, queue: { windowId, depth: queueDepth, workerWaitMs },
+      diagnostics: { http: 200, ready: true, averageMs: 80, requestCount: 2000 },
+      journeys,
+    };
+  }
+
+  const browse = ['frontend', 'api', 'database', 'cache'];
+  const full = [...TIERS];
+  const initialJourneys = () => [
+    journey('initial-browse', browse),
+    journey('initial-checkout', full),
+    journey('initial-export', full),
+  ];
+  const missing = {
+    completedMs: null, elapsedMs: 1200, clientResult: null,
+    stateCorrect: null, effectCount: null,
+    versions: Object.fromEntries(full.map((tier) => [tier, null])),
+  };
+  const profiles = {
+    boundary: window('boundary', 'combined-initial', [5, 3, 4], 4, 400, initialJourneys()),
+    overload: window('overload', 'combined-initial', [7, 5, 4], 8, 600, [
+      journey('initial-browse', browse, {
+        elapsedMs: 1600, completedMs: 1600, waitResource: 'database-connections',
+      }),
+      journey('initial-checkout', full, {
+        elapsedMs: 1100, completedMs: 1100, clientResult: 'error',
+        stateCorrect: false, effectCount: 0, waitResource: 'database-connections',
+      }),
+      journey('initial-export', full, missing),
+    ]),
+    gap: window('gap', 'combined-initial', [null, null, 4], null, null, [
+      journey('initial-browse', browse, { elapsedMs: 1501, completedMs: 1501 }),
+      journey('initial-checkout', full),
+      journey('initial-export', full, missing),
+    ]),
+    unknown: window('unknown', 'combined-initial', [null, null, null], null, null, [
+      journey('initial-browse', browse, {
+        ...missing, versions: Object.fromEntries(browse.map((tier) => [tier, null])),
+      }),
+      journey('initial-checkout', full, missing),
+      journey('initial-export', full, missing),
+    ]),
+    mitigated: window('mitigated', 'combined-follow-up', [4, 3, 4], 3, 399, [
+      journey('follow-up-browse', browse, { elapsedMs: 1400, completedMs: 1400 }),
+      journey('follow-up-checkout', full, { elapsedMs: 1450, completedMs: 1450 }),
+      journey('follow-up-export', full),
+    ]),
+  };
+
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+  const exported = freeze({ DATA_MODE, TIERS, LIMITS, profiles });
+  if (typeof module === 'object' && module.exports) module.exports = exported;
+  else root.S144Data = exported;
+}(typeof globalThis === 'object' ? globalThis : this));
