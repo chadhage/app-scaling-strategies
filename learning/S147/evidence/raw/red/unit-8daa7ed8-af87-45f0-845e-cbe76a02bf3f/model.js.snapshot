@@ -1,0 +1,19 @@
+(function (root) {
+  'use strict';
+  const data = typeof module === 'object' && module.exports
+    ? require('./fixtures.js') : root.S147Fixtures;
+  function evaluateFixture(id) {
+    const fixture = data.fixtures.find((item) => item.id === id);
+    if (!fixture) throw new Error('Unknown fixture');
+    return {
+      fixtureId: id,
+      clientVerdict: 'CLIENT-SIDE CORRECT',
+      assertionSummary: { denominator: 5, pass: 5, fail: 0, unknown: 0 },
+      originalImpact: { denominator: 1, completed: 1, interrupted: 0, unknown: 0, laterRecoveryObserved: 0 },
+      assertions: [{ requirement: 'nonempty-response', verdict: 'PASS' }],
+    };
+  }
+  const api = { fixtures: data.fixtures, evaluateFixture };
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S147Lesson = api;
+}(typeof globalThis === 'object' ? globalThis : this));

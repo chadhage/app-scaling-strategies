@@ -1,0 +1,24 @@
+(function () {
+  'use strict';
+  const lesson = globalThis.S147Lesson;
+  const picker = document.getElementById('fixture-picker');
+  for (const fixture of lesson.fixtures) {
+    const option = document.createElement('option');
+    option.value = fixture.id;
+    option.textContent = fixture.title;
+    picker.append(option);
+  }
+  document.getElementById('conduct-button').addEventListener('click', () => {
+    document.getElementById('trace-output').textContent = JSON.stringify(
+      lesson.fixtures.find((fixture) => fixture.id === picker.value), null, 2,
+    );
+    document.getElementById('inspect-button').disabled = false;
+  });
+  document.getElementById('inspect-button').addEventListener('click', () => {
+    const report = lesson.evaluateFixture(picker.value);
+    document.getElementById('assertions-output').textContent = JSON.stringify(report.assertions, null, 2);
+    document.getElementById('impact-output').textContent = JSON.stringify(report.originalImpact, null, 2);
+    document.getElementById('status-output').textContent = report.clientVerdict;
+  });
+  document.body.dataset.lessonReady = 'true';
+}());

@@ -1,0 +1,335 @@
+(function (root) {
+  'use strict';
+  const data = typeof module === 'object' && module.exports
+    ? require('./fixtures.js') : root.S147Fixtures;
+
+  const VERSION = 'S147/lesson-v1';
+  const MAX_RUNS = 8;
+  const MAX_CHECKS = 3;
+  const MAX_COMMANDS = MAX_RUNS * (2 + MAX_CHECKS);
+  const VERDICTS = ['CLIENT-SIDE FAILURE', 'CLIENT-SIDE CORRECT', 'UNKNOWN'];
+  const issuedStates = new WeakSet();
+
+  class LessonError extends Error {
+    constructor(code, message) {
+      super(message);
+      this.name = 'LessonError';
+      this.code = code;
+    }
+  }
+
+  function reject(code, message) {
+    throw new LessonError(code, message);
+  }
+
+  function freeze(value) {
+    if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+
+  function record(value, code) {
+    if (!value || typeof value !== 'object' || Object.getPrototypeOf(value) !== Object.prototype) {
+      reject(code, 'Expected a plain record, not a coercible value or custom prototype.');
+    }
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    for (const key of Reflect.ownKeys(descriptors)) {
+      const descriptor = descriptors[key];
+      if (typeof key !== 'string' || !descriptor.enumerable || !Object.hasOwn(descriptor, 'value')) {
+        reject(code, 'Only ordinary enumerable data fields are supported; no symbols or accessors.');
+      }
+    }
+  }
+
+  function exact(value, keys, code) {
+    record(value, code);
+    const actual = Object.keys(value).sort();
+    if (actual.length !== keys.length || actual.some((key, index) => key !== [...keys].sort()[index])) {
+      reject(code, 'Unexpected or missing fields. Use the exact command/state shape.');
+    }
+  }
+
+  function canonical(value) {
+    let nodes = 0;
+    const active = new Set();
+    function visit(item, depth) {
+      nodes += 1;
+      if (nodes > 16000 || depth > 24) reject('ERR_STATE', 'State exceeds the bounded plain-data envelope.');
+      if (item === null || typeof item === 'boolean') return JSON.stringify(item);
+      if (typeof item === 'string' && item.length <= 4096) return JSON.stringify(item);
+      if (typeof item === 'number' && Number.isSafeInteger(item)) return JSON.stringify(item);
+      if (!item || typeof item !== 'object' || active.has(item)) {
+        reject('ERR_STATE', 'State must be finite plain JSON data, without cycles or coercion.');
+      }
+      active.add(item);
+      let result;
+      if (Array.isArray(item)) {
+        const descriptors = Object.getOwnPropertyDescriptors(item);
+        const length = descriptors.length.value;
+        if (Object.getPrototypeOf(item) !== Array.prototype || length > 256
+            || Reflect.ownKeys(descriptors).length !== length + 1) {
+          reject('ERR_STATE', 'State arrays must be dense, bounded and free of extra fields.');
+        }
+        const values = [];
+        for (let index = 0; index < length; index += 1) {
+          const descriptor = descriptors[index];
+          if (!descriptor || !descriptor.enumerable || !Object.hasOwn(descriptor, 'value')) {
+            reject('ERR_STATE', 'State arrays cannot contain holes or accessors.');
+          }
+          values.push(visit(descriptor.value, depth + 1));
+        }
+        result = `[${values.join(',')}]`;
+      } else {
+        record(item, 'ERR_STATE');
+        const descriptors = Object.getOwnPropertyDescriptors(item);
+        result = `{${Object.keys(descriptors).sort().map(
+          (key) => `${JSON.stringify(key)}:${visit(descriptors[key].value, depth + 1)}`,
+        ).join(',')}}`;
+      }
+      active.delete(item);
+      return result;
+    }
+    return visit(value, 0);
+  }
+
+  function fixtureById(id) {
+    if (typeof id !== 'string') reject('ERR_FIXTURE', 'Choose one of the eight exact fixed fixture IDs.');
+    const fixture = data.fixtures.find((item) => item.id === id);
+    if (!fixture) reject('ERR_FIXTURE', 'Choose one of the eight exact fixed fixture IDs.');
+    return fixture;
+  }
+
+  function requirements(wanted) {
+    return [
+      ['nonempty-response', 'response', { body: wanted.body }],
+      ['authentication', 'authentication', {
+        signedIn: wanted.signedIn, identity: wanted.identity, session: wanted.session,
+      }],
+      ['preserved-state', 'state', { version: wanted.stateVersion, items: wanted.items }],
+      ['exactly-one-effect', 'effect', {
+        key: wanted.effectKey, count: wanted.effectCount, identity: wanted.identity,
+      }],
+      ['usable-compatible-ui', 'ui', {
+        view: wanted.view, clientVersion: wanted.clientVersion, apiVersion: wanted.apiVersion,
+      }],
+    ];
+  }
+
+  function assertionsFor(journey, attempt) {
+    return requirements(journey.expected).map(([requirement, group, expected]) => {
+      const observed = attempt.observations[group];
+      let verdict = 'UNKNOWN';
+      let explanation = 'Required client observation is missing; do not infer failure or success.';
+      if (observed.available === true) {
+        const matches = Object.entries(expected).every(
+          ([key, wanted]) => canonical(observed[key]) === canonical(wanted),
+        );
+        verdict = matches ? 'PASS' : 'FAIL';
+        explanation = matches
+          ? `Observed ${requirement} matches the exact fictional requirement.`
+          : `Observed ${requirement} violates the exact fictional requirement; health status cannot override it.`;
+      }
+      return {
+        assertionId: `${attempt.id}:${requirement}`,
+        journeyId: journey.id, attemptId: attempt.id, requirement,
+        verdict, expected, observed, explanation,
+      };
+    });
+  }
+
+  function observationOutcome(assertions) {
+    if (assertions.some((item) => item.verdict === 'FAIL')) return 'interrupted';
+    if (assertions.some((item) => item.verdict === 'UNKNOWN')) return 'unknown';
+    return 'completed';
+  }
+
+  function evaluateFixture(id) {
+    const fixture = fixtureById(id);
+    const assertions = [];
+    const signals = [];
+    const journeys = fixture.journeys.map((journey) => {
+      const attempts = journey.attempts.map((attempt) => {
+        const attemptAssertions = assertionsFor(journey, attempt);
+        assertions.push(...attemptAssertions);
+        signals.push(attempt.server);
+        return {
+          attemptId: attempt.id,
+          observationOutcome: observationOutcome(attemptAssertions),
+          assertionIds: attemptAssertions.map((item) => item.assertionId),
+        };
+      });
+      const effect = assertions.find((item) => item.attemptId === attempts[0].attemptId
+        && item.requirement === 'exactly-one-effect');
+      return {
+        journeyId: journey.id,
+        originalAttemptId: attempts[0].attemptId,
+        originalOutcome: attempts[0].observationOutcome,
+        originalExactlyOneEffectObserved: effect.verdict === 'UNKNOWN' ? null : effect.verdict === 'PASS',
+        laterRecoveryObserved: attempts.slice(1).some((item) => item.observationOutcome === 'completed'),
+        attempts,
+      };
+    });
+    const count = (field, wanted) => journeys.filter((item) => item[field] === wanted).length;
+    const originalImpact = {
+      denominator: journeys.length,
+      completed: count('originalOutcome', 'completed'),
+      interrupted: count('originalOutcome', 'interrupted'),
+      unknown: count('originalOutcome', 'unknown'),
+      laterRecoveryObserved: count('laterRecoveryObserved', true),
+    };
+    const detectedAcceptanceFailure = assertions.some((item) => item.verdict === 'FAIL');
+    const clientVerdict = originalImpact.interrupted > 0 ? 'CLIENT-SIDE FAILURE'
+      : originalImpact.unknown > 0 ? 'UNKNOWN' : 'CLIENT-SIDE CORRECT';
+    return freeze({
+      schema: 'S147/oracle-report-v1',
+      fixtureId: id, fixtureKind: fixture.kind,
+      clientVerdict, detectedAcceptanceFailure,
+      expectedNegativeConformance: {
+        applies: fixture.expectedNegative,
+        verdict: fixture.expectedNegative ? (detectedAcceptanceFailure ? 'PASS' : 'FAIL') : 'NOT-APPLICABLE',
+        scope: 'Only detection of the supplied fixed fictional acceptance failure; not successful user impact.',
+      },
+      assertionSummary: {
+        denominator: assertions.length,
+        pass: assertions.filter((item) => item.verdict === 'PASS').length,
+        fail: assertions.filter((item) => item.verdict === 'FAIL').length,
+        unknown: assertions.filter((item) => item.verdict === 'UNKNOWN').length,
+      },
+      transportSummary: {
+        denominator: signals.length,
+        http200: signals.filter((item) => item.httpStatus === 200).length,
+        ready: signals.filter((item) => item.ready === true).length,
+        reportedRequestsPerSecond: signals.map((item) => item.reportedRequestsPerSecond),
+      },
+      originalImpact, journeys, assertions,
+    });
+  }
+
+  function emptyState(epoch) {
+    return { schema: VERSION, epoch, revision: 0, journal: [], runs: [] };
+  }
+
+  function issue(state, previous) {
+    freeze(state);
+    issuedStates.add(state);
+    if (previous) issuedStates.delete(previous);
+    return state;
+  }
+
+  function initialState() {
+    return issue(emptyState(0));
+  }
+
+  function validateCommand(command, state) {
+    record(command, 'ERR_COMMAND');
+    if (typeof command.type !== 'string') reject('ERR_COMMAND', 'Command type must be an exact string.');
+    const fields = {
+      conduct: ['type', 'epoch', 'revision', 'fixtureId'],
+      inspect: ['type', 'epoch', 'revision', 'runId'],
+      check: ['type', 'epoch', 'revision', 'runId', 'verdict'],
+    };
+    if (!Object.hasOwn(fields, command.type)) reject('ERR_COMMAND', 'Unknown command; no operations are inferred.');
+    exact(command, fields[command.type], 'ERR_COMMAND');
+    if (!Number.isSafeInteger(command.epoch) || command.epoch < 0
+        || !Number.isSafeInteger(command.revision) || command.revision < 0) {
+      reject('ERR_COMMAND', 'Epoch and revision must be nonnegative safe integers, not strings or booleans.');
+    }
+    if (command.epoch !== state.epoch || command.revision !== state.revision) {
+      reject('ERR_REPLAY', 'Stale or replayed command; use the current rehearsal epoch and revision.');
+    }
+    if (command.type === 'conduct') fixtureById(command.fixtureId);
+    else {
+      if (typeof command.runId !== 'string' || command.runId !== state.runs.at(-1)?.runId) {
+        reject('ERR_RUN', 'Inspect and check must target the current exact run ID.');
+      }
+      if (command.type === 'check' && !VERDICTS.includes(command.verdict)) {
+        reject('ERR_VERDICT', 'Choose CLIENT-SIDE FAILURE, CLIENT-SIDE CORRECT or UNKNOWN exactly.');
+      }
+    }
+  }
+
+  function applyCommand(state, command) {
+    const runs = [...state.runs];
+    const current = runs.at(-1);
+    if (command.type === 'conduct') {
+      if (current && current.phase !== 'checked') reject('ERR_PHASE', 'Inspect and check this run before conducting another.');
+      if (runs.length >= MAX_RUNS) reject('ERR_LIMIT', 'Eight runs are retained. Explicit reset is required; nothing is evicted.');
+      runs.push({
+        runId: `run-${runs.length + 1}`, fixtureId: command.fixtureId,
+        phase: 'conducted', report: null, checks: [],
+      });
+    } else if (command.type === 'inspect') {
+      if (current.phase !== 'conducted') reject('ERR_PHASE', 'Inspect exactly once after conducting the current fixture.');
+      runs[runs.length - 1] = {
+        ...current, phase: 'inspected', report: evaluateFixture(current.fixtureId),
+      };
+    } else {
+      if (current.phase === 'conducted') reject('ERR_PHASE', 'Inspect the actual fixed client evidence before checking.');
+      if (current.checks.length >= MAX_CHECKS) reject('ERR_LIMIT', 'Three checks are retained for this run. Conduct another fixture or reset.');
+      const correct = command.verdict === current.report.clientVerdict;
+      const check = {
+        checkNumber: current.checks.length + 1,
+        selectedVerdict: command.verdict,
+        expectedVerdict: current.report.clientVerdict,
+        verifierVerdict: correct ? 'PASS' : 'FAIL',
+        detectedAcceptanceFailure: current.report.detectedAcceptanceFailure,
+        expectedNegativeConformance: current.report.expectedNegativeConformance,
+        originalImpact: current.report.originalImpact,
+        explanation: correct
+          ? 'Correct learner selection only. Original interruptions and unknowns remain unchanged.'
+          : 'Incorrect learner selection. Inspect the client assertions; health and later recovery do not erase original impact.',
+      };
+      runs[runs.length - 1] = { ...current, phase: 'checked', checks: [...current.checks, check] };
+    }
+    return {
+      schema: VERSION, epoch: state.epoch, revision: state.revision + 1,
+      journal: [...state.journal, { ...command }], runs,
+    };
+  }
+
+  function validateState(state) {
+    const encoded = canonical(state);
+    exact(state, ['schema', 'epoch', 'revision', 'journal', 'runs'], 'ERR_STATE');
+    if (state.schema !== VERSION || !Number.isSafeInteger(state.epoch) || state.epoch < 0
+        || state.epoch > 1000000 || !Array.isArray(state.journal) || !Array.isArray(state.runs)
+        || state.journal.length > MAX_COMMANDS || state.revision !== state.journal.length) {
+      reject('ERR_STATE', 'State schema, epoch, revision or bounded journal is invalid.');
+    }
+    let replayed = emptyState(state.epoch);
+    try {
+      for (const command of state.journal) {
+        validateCommand(command, replayed);
+        replayed = applyCommand(replayed, command);
+      }
+    } catch (error) {
+      reject('ERR_STATE_REPLAY', `State journal cannot be replayed: ${error.message}`);
+    }
+    if (encoded !== canonical(replayed)) {
+      reject('ERR_STATE_REPLAY', 'State reports, checks and history must exactly match replay of the typed journal.');
+    }
+    if (!issuedStates.has(state)) {
+      reject('ERR_STATE_HANDLE', 'Only the current model-issued state can advance. Display snapshots and spent states cannot be replayed.');
+    }
+  }
+
+  function transition(state, command) {
+    validateState(state);
+    validateCommand(command, state);
+    return issue(applyCommand(state, command), state);
+  }
+
+  function reset(state) {
+    validateState(state);
+    if (state.epoch === 1000000) reject('ERR_LIMIT', 'Rehearsal epoch limit reached; reopen this standalone lesson.');
+    return issue(emptyState(state.epoch + 1), state);
+  }
+
+  const api = freeze({
+    VERSION, MAX_RUNS, MAX_CHECKS, MAX_COMMANDS, VERDICTS,
+    fixtures: data.fixtures, evaluateFixture, initialState, transition, reset,
+  });
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S147Lesson = api;
+}(typeof globalThis === 'object' ? globalThis : this));
