@@ -1,0 +1,196 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const lesson = require('..\\model.js');
+
+const input = (changes = {}) => ({
+  fixtureId: 'baseline', journey: 'checkout', policy: 'dependency-aware', samples: 4, ...changes
+});
+const run = (changes = {}, state = lesson.createState()) => lesson.rehearse(state, input(changes));
+const fault = { fixtureId: 'cedar-inventory-failure', policy: 'shallow' };
+const inputError = error => error instanceof TypeError && error.code === 'ERR_LESSON_INPUT';
+const stateError = error => error instanceof TypeError && error.code === 'ERR_LESSON_STATE';
+
+test('baseline measures positive checkout without pretending to measure Azure', () => {
+  const { result } = run();
+  assert.equal(result.verdict, 'positive');
+  assert.equal(result.route.selected, 'cedar');
+  assert.equal(result.diagnosis.status, 'passed');
+  assert.deepEqual(result.metrics, { attempted: 4, completed: 4, failed: 0, unknown: 0, syntheticElapsedMs: 168 });
+  assert.ok(result.samples.every(sample => sample.identity === 'fictional-shopper' && sample.stateVersion === 7));
+});
+
+test('shallow green must expose the failed regional checkout path', () => {
+  const { result } = run(fault);
+  assert.ok(result.probes.every(probe => probe.httpStatus === 200));
+  assert.equal(result.verdict, 'negative');
+  assert.equal(result.route.selected, 'cedar');
+  assert.equal(result.probes[0].readiness, 'failed');
+  assert.equal(result.probes[1].readiness, 'passed');
+  assert.equal(result.diagnosis.status, 'failed');
+  assert.equal(result.diagnosis.affectedPath, 'Cedar -> inventory -> checkout');
+  assert.deepEqual(result.metrics, { attempted: 4, completed: 0, failed: 4, unknown: 0, syntheticElapsedMs: 280 });
+  assert.ok(result.samples.every(sample => sample.region === 'cedar' && sample.outcome === 'failed'));
+});
+
+test('dependency-aware routing measures the viable alternate and retains the failed diagnosis', () => {
+  const first = run(fault);
+  const second = run({ fixtureId: fault.fixtureId }, first.state);
+  assert.equal(second.result.route.selected, 'maple');
+  assert.equal(second.result.verdict, 'positive');
+  assert.equal(second.result.diagnosis.status, 'failed');
+  assert.equal(second.result.diagnosis.affectedPath, 'Cedar -> inventory -> checkout');
+  assert.deepEqual(second.result.metrics, { attempted: 4, completed: 4, failed: 0, unknown: 0, syntheticElapsedMs: 196 });
+  assert.equal(second.state.history[0].metrics.failed, 4);
+  assert.equal(second.state.history.length, 2);
+});
+
+test('catalog remains available in Cedar during the inventory-only failure', () => {
+  const { result } = run({ ...fault, journey: 'catalog' });
+  assert.equal(result.verdict, 'positive');
+  assert.equal(result.route.selected, 'cedar');
+  assert.equal(result.diagnosis.status, 'failed');
+  assert.ok(result.probes.every(probe => probe.readiness === 'passed'));
+  assert.ok(result.samples.every(sample => sample.dependency === 'catalog-cache' && sample.outcome === 'passed'));
+  assert.equal(result.metrics.syntheticElapsedMs, 72);
+});
+
+test('missing evidence stays unknown with no invented latency or checkout result', () => {
+  const { result } = run({ fixtureId: 'missing-cedar-evidence', policy: 'shallow' });
+  assert.equal(result.verdict, 'unknown');
+  assert.equal(result.diagnosis.status, 'unknown');
+  assert.equal(result.probes[0].readiness, 'unknown');
+  assert.deepEqual(result.metrics, { attempted: 4, completed: 0, failed: 0, unknown: 4, syntheticElapsedMs: null });
+  assert.ok(result.samples.every(sample => sample.outcome === 'unknown' && sample.latencyMs === null));
+});
+
+test('a successful alternate cannot certify the missing Cedar diagnosis or recovery', () => {
+  const { result } = run({ fixtureId: 'missing-cedar-evidence' });
+  assert.equal(result.route.selected, 'maple');
+  assert.equal(result.metrics.completed, 4);
+  assert.equal(result.metrics.unknown, 0);
+  assert.equal(result.verdict, 'unknown');
+  assert.equal(result.diagnosis.status, 'unknown');
+  assert.match(result.message, /cannot certify Cedar recovery/i);
+});
+
+test('recovery is rejected before a failure and with the wrong journey or policy', () => {
+  assert.throws(() => run({ fixtureId: 'recovered' }), stateError);
+  const observed = run(fault).state;
+  assert.throws(() => run({ fixtureId: 'recovered', policy: 'shallow' }, observed), stateError);
+  assert.throws(() => run({ fixtureId: 'recovered', journey: 'catalog' }, observed), stateError);
+  assert.throws(() => run({ fixtureId: 'recovered' }, run({ ...fault, journey: 'catalog' }).state), stateError);
+});
+
+test('recovered data measures Cedar checkout and preserves the earlier interruption', () => {
+  const first = run(fault);
+  const recovered = run({ fixtureId: 'recovered' }, first.state);
+  assert.equal(recovered.result.route.selected, 'cedar');
+  assert.equal(recovered.result.verdict, 'positive');
+  assert.equal(recovered.result.diagnosis.status, 'passed');
+  assert.equal(recovered.state.phase, 'recovered');
+  assert.equal(recovered.state.history[0].verdict, 'negative');
+  assert.equal(recovered.state.history[1].input.fixtureId, 'recovered');
+  assert.throws(() => run({ fixtureId: 'recovered' }, recovered.state), stateError);
+});
+
+test('sample counts require typed bounded integers', () => {
+  for (const samples of [0, 7, -1, 1.5, NaN, Infinity, '4', true, null, {}]) {
+    assert.throws(() => run({ samples }), inputError);
+  }
+  for (const samples of [1, 6]) assert.equal(run({ samples }).result.metrics.attempted, samples);
+});
+
+test('only exact fixture, journey and policy enum values are accepted', () => {
+  for (const fixtureId of ['http://invalid.example', '__proto__', '', 'Baseline', true, null]) {
+    assert.throws(() => run({ fixtureId }), inputError);
+  }
+  for (const journey of ['orders', '<img>', 1, null]) assert.throws(() => run({ journey }), inputError);
+  for (const policy of ['automatic', false, [], null]) assert.throws(() => run({ policy }), inputError);
+});
+
+test('UI parsing rejects coercions, whitespace, leading zeroes and extra keys', () => {
+  const raw = { fixtureId: 'baseline', journey: 'checkout', policy: 'dependency-aware', sampleText: '4' };
+  assert.deepEqual(lesson.parseInput(raw), input());
+  for (const sampleText of ['', ' 4', '4 ', '04', '1.0', '4e0', '+4', '4\n', '0', '7', 4, null, true]) {
+    assert.throws(() => lesson.parseInput({ ...raw, sampleText }), inputError);
+  }
+  assert.throws(() => lesson.parseInput({ ...raw, url: 'data:text/plain,no' }), inputError);
+});
+
+test('record guards reject missing, extra, inherited and accessor fields without reading getters', () => {
+  for (const malformed of [null, [], 'input', {}, { ...input(), auth: true }, Object.create(input())]) {
+    assert.throws(() => lesson.rehearse(lesson.createState(), malformed), inputError);
+  }
+  let reads = 0;
+  const accessor = input();
+  Object.defineProperty(accessor, 'samples', { enumerable: true, get() { reads += 1; return 4; } });
+  assert.throws(() => lesson.rehearse(lesson.createState(), accessor), inputError);
+  assert.equal(reads, 0);
+  const symbol = input();
+  symbol[Symbol('extra')] = true;
+  assert.throws(() => lesson.rehearse(lesson.createState(), symbol), inputError);
+});
+
+test('state guards reject altered phases, history, trace, counters and prototypes', () => {
+  const actual = run(fault).state;
+  const corruptions = [
+    state => { state.version = '1'; },
+    state => { state.nextRun = 9; },
+    state => { state.phase = 'recovered'; },
+    state => { state.history[0].metrics.completed = 4; },
+    state => { state.history[0].probes[0].httpStatus = 503; },
+    state => { state.history[0].samples[0].region = 'maple'; },
+    state => { state.history[0].input.samples = 2; },
+    state => { state.history.push({}); },
+    state => { state.history[0].url = 'http://invalid.example'; },
+    state => { delete state.history[0]; }
+  ];
+  for (const corrupt of corruptions) {
+    const forged = structuredClone(actual);
+    corrupt(forged);
+    assert.throws(() => run({}, forged), stateError);
+  }
+  for (const forged of [null, [], {}, { ...actual, extra: true }, Object.create(actual)]) {
+    assert.throws(() => run({}, forged), stateError);
+  }
+  const cyclic = structuredClone(actual);
+  cyclic.history[0].cycle = cyclic;
+  assert.throws(() => run({}, cyclic), stateError);
+  assert.equal(actual.history[0].metrics.failed, 4);
+});
+
+test('a failed operation is nonmutating and results are deeply frozen detached data', () => {
+  const state = lesson.createState();
+  const chosen = input(fault);
+  const next = lesson.rehearse(state, chosen);
+  chosen.samples = 1;
+  assert.equal(state.history.length, 0);
+  assert.equal(next.state.history[0].input.samples, 4);
+  assert.ok(Object.isFrozen(next.state) && Object.isFrozen(next.state.history));
+  assert.ok(Object.isFrozen(next.result) && Object.isFrozen(next.result.samples[0]));
+  const before = JSON.stringify(next.state);
+  assert.throws(() => run({ samples: 99 }, next.state), inputError);
+  assert.equal(JSON.stringify(next.state), before);
+});
+
+test('identical fixed sequences produce identical histories without clocks or randomness', () => {
+  function sequence() {
+    let state = run(fault).state;
+    state = run({ fixtureId: fault.fixtureId }, state).state;
+    return run({ fixtureId: 'recovered' }, state).state;
+  }
+  assert.deepEqual(sequence(), sequence());
+});
+
+test('history is bounded to eight runs and reset starts a distinct empty rehearsal', () => {
+  let state = lesson.createState();
+  for (let index = 0; index < 8; index += 1) state = run({}, state).state;
+  assert.equal(state.history.length, 8);
+  assert.throws(() => run({}, state), error => stateError(error) && /Reset/i.test(error.message));
+  assert.equal(state.history.length, 8);
+  const reset = lesson.createState();
+  assert.deepEqual(reset, { version: 1, phase: 'ready', nextRun: 1, history: [] });
+  assert.notEqual(reset, state);
+  assert.ok(Object.isFrozen(reset));
+});

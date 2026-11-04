@@ -1,0 +1,34 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const base = path.resolve(__dirname, '..');
+const read = file => fs.readFileSync(path.join(base, file));
+const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+
+test('captured browser evidence binds actual DOM, keyboard, error, reset, failure and CSP observations to this source', () => {
+  const manifest = JSON.parse(read('manifest.json'));
+  const proof = JSON.parse(read('evidence\\browser.json'));
+  assert.equal(proof.cardId, 'A-S117');
+  assert.equal(proof.workerId, 'worker-A-S117');
+  assert.equal(proof.packet, 'SC-S117');
+  assert.equal(proof.mode, 'synthetic');
+  assert.equal(proof.evidenceCapture, true);
+  assert.equal(proof.passed, true);
+  assert.equal(proof.playwrightVersion, '1.56.1');
+  assert.match(proof.browserVersion, /^156\./);
+  assert.equal(proof.helperWorkingSha256, manifest.verification.helperWorkingSha256);
+  assert.equal(proof.helperCanonicalGitSha256, manifest.verification.helperCanonicalGitSha256);
+  assert.equal(proof.helperPublishedCommit, manifest.verification.helperPublishedCommit);
+  assert.ok(proof.observations.length >= 18);
+  assert.ok(proof.observations.every(observation => observation.passed === true && observation.actual));
+  assert.deepEqual(proof.remoteRequests, []);
+  assert.deepEqual(proof.pageErrors, []);
+  assert.deepEqual(proof.cleanup, { awaitedFinallyClose: true, browserDisconnected: true });
+  assert.equal(proof.nativeEvidence, false);
+  assert.equal(proof.sourceParentCompleted, false);
+  assert.equal(proof.additionalKanoCredits, 0);
+  for (const [file, expected] of Object.entries(proof.sourceSha256)) assert.equal(sha(read(file)), expected, file);
+});

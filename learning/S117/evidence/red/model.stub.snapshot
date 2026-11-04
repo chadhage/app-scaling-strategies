@@ -1,0 +1,28 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S117Lesson = api;
+})(globalThis, function () {
+  'use strict';
+  function createState() {
+    return { version: 1, phase: 'ready', nextRun: 1, history: [] };
+  }
+  function parseInput(raw) {
+    return { fixtureId: raw.fixtureId, journey: raw.journey, policy: raw.policy, samples: Number(raw.sampleText) };
+  }
+  function rehearse(state, input) {
+    const result = {
+      id: state.nextRun,
+      input,
+      verdict: 'positive',
+      probes: [{ region: 'cedar', httpStatus: 200 }, { region: 'maple', httpStatus: 200 }],
+      metrics: { attempted: input.samples, completed: input.samples, failed: 0, unknown: 0 }
+    };
+    return {
+      state: { version: 1, phase: 'ready', nextRun: state.nextRun + 1, history: [...state.history, result] },
+      result
+    };
+  }
+  return { createState, parseInput, rehearse };
+});

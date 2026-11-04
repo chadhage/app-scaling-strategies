@@ -1,0 +1,73 @@
+Feature: Detect the regional business path hidden by a shallow healthy probe
+  A-S117 / D-S117 / SC-S117; frozen Kano S, one original unit.
+  All regions, dependencies, probes, network, authorization, state, failures,
+  journeys, counters and times are fixed fictional teaching data.
+  No Azure, network, resource, identity, deployment or fault operation is conducted.
+
+  Background:
+    Given a standalone browser lesson using no framework or management service
+    And the banner "Training rehearsal - synthetic data - not a live Azure result"
+    And fictional Cedar and Maple origins with shallow HTTP 200 samples
+    And fictional authorized shopper data and synchronized state version 7
+    And four synthetic journey samples, bounded to one through six
+
+  Scenario: Shallow green hides a failed regional checkout
+    Given the fixed Cedar inventory-failure fixture
+    When I rehearse checkout using shallow-only routing
+    Then both regional shallow samples remain HTTP 200
+    And Cedar inventory readiness fails while Maple readiness passes
+    And checkout is attributed to Cedar -> inventory -> checkout
+    And zero of four checkout samples complete and four fail
+    And the verdict is negative, not a whole-region outage claim
+
+  Scenario: Dependency-aware routing uses the demonstrated viable business path
+    Given the fixed Cedar inventory-failure fixture
+    When I rehearse checkout using dependency-aware routing
+    Then Cedar is excluded because inventory readiness fails
+    And Maple completes four of four synthetic checkout samples
+    And the diagnosis still names the Cedar inventory failure
+    And earlier interrupted samples remain in the bounded history
+
+  Scenario: An unaffected journey does not inherit a region-wide failure
+    Given the fixed Cedar inventory-failure fixture
+    When I rehearse catalog using shallow-only routing
+    Then Cedar completes the catalog samples through its available catalog cache
+    And the recorded inventory failure is not labeled a catalog failure
+
+  Scenario: Missing evidence remains unknown even with a working alternate
+    Given the fixed missing-Cedar-inventory-evidence fixture
+    When I rehearse checkout using shallow-only routing
+    Then no checkout success or failure is invented
+    And the sample counts and latency explicitly retain unknown evidence
+    When I rehearse checkout using dependency-aware routing
+    Then Maple completes the synthetic journey samples
+    But the Cedar diagnosis and overall recovery claim remain unknown
+
+  Scenario: Recovery requires an earlier observed partial failure
+    Given an earlier Cedar inventory-failure checkout rehearsal
+    When I select recovered fixture data and dependency-aware checkout
+    Then Cedar dependency readiness and checkout samples pass
+    And history retains the earlier failure and the recovery observation
+    But native failover, real recovery budgets and source-parent acceptance remain unproved
+
+  Scenario: Malformed inputs and forged state do not change history
+    When a selection is unknown or a sample count is not a strict integer from one through six
+    Or recovery lacks a prior checkout failure or the required policy and journey
+    Or supplied state, trace, counters, phase or history is altered
+    Then a typed, actionable error rejects the operation without mutation
+    And after eight runs another run requires an explicit lesson reset
+
+  Scenario: Keyboard, error and reset operate in the actual browser
+    When I tab through labelled controls and submit using Enter
+    Then the real DOM shows the selected synthetic result and retained history
+    When I submit an invalid count
+    Then the alert names the error and focus returns to the count
+    When I activate Reset lesson with the keyboard
+    Then controls, result, errors and history return to their unmeasured initial state
+    And no control shadows the form reset method
+
+  Scenario: The actual document enforces its local-only CSP
+    Then the external local scripts load and no remote request occurs
+    And injected inline scripts and local data-fetch attempts are blocked by CSP
+    And ordinary verification never rewrites observations
+    And only exact CAPTURE_BROWSER_EVIDENCE=1 deliberately captures browser evidence
