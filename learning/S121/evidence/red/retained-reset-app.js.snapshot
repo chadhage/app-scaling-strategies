@@ -1,0 +1,113 @@
+(function () {
+  'use strict';
+  const model = globalThis.WindowsSlotLesson;
+  const byId = (id) => document.getElementById(id);
+  const form = byId('lesson-form');
+  const fixture = byId('fixture');
+  const target = byId('target');
+  const acknowledgement = byId('synthetic-ack');
+  const controls = {
+    configure: byId('configure'), inspect: byId('inspect'),
+    request: byId('request-promotion'), observe: byId('observe'),
+  };
+  let state = model.create();
+  for (const entry of model.FIXTURES) {
+    const option = document.createElement('option');
+    option.value = entry.id;
+    option.textContent = entry.label;
+    fixture.append(option);
+  }
+  function text(id, value) { byId(id).textContent = value; }
+  function row(values) {
+    const element = document.createElement('tr');
+    for (const value of values) {
+      const cell = document.createElement('td');
+      cell.textContent = String(value);
+      element.append(cell);
+    }
+    return element;
+  }
+  function render() {
+    text('phase', state.phase);
+    text('declared-configuration', state.configuration ? state.configuration.declared : 'Not configured');
+    text('configuration-receipt', state.configuration
+      ? state.configuration.receipt || 'UNKNOWN — effective configuration not observed' : 'Not observed');
+    text('desired-routing', state.desiredRouting);
+    text('observed-routing', state.observedRouting);
+    text('verification', state.report ? `${state.report.verdict.toUpperCase()} — ${state.report.verifier}`
+      : 'PENDING — not a completed verification');
+    text('classification', state.report ? state.report.classification : 'Not measured');
+    const totals = state.report || { attempted: 0, successful: 0, interrupted: 0, unknown: 0 };
+    text('counts', `${totals.attempted} / ${totals.successful} / ${totals.interrupted} / ${totals.unknown}`);
+    text('fraction', totals.attempted
+      ? `${totals.successful} / ${totals.attempted} (synthetic sample; no reliability claim)`
+      : 'No transition sample (0 attempts; no migration proof)');
+    byId('gates').replaceChildren(...state.gates.map((gate) =>
+      row([gate.name, gate.expected, gate.observed, gate.verdict])));
+    byId('journeys').replaceChildren(...state.journeys.map((journey) =>
+      row([journey.id, journey.destination === null ? 'UNKNOWN' : journey.destination,
+        `${journey.identity ?? 'UNKNOWN'} / ${journey.state ?? 'UNKNOWN'}`,
+        `${journey.effects ?? 'UNKNOWN'} / ${journey.duplicates ?? 'UNKNOWN'}`,
+        `${journey.latencyMs ?? 'UNKNOWN'} / ${journey.httpStatus ?? 'UNKNOWN'}`,
+        `${journey.outcome}: ${journey.reason}`])));
+    byId('history').replaceChildren(...state.history.map((entry) => {
+      const item = document.createElement('li');
+      item.textContent = `${entry.sequence}. ${entry.action}: ${entry.detail}`;
+      return item;
+    }));
+    fixture.disabled = state.phase !== 'baseline';
+    target.disabled = state.phase !== 'baseline';
+    acknowledgement.disabled = state.phase !== 'baseline';
+    controls.configure.disabled = state.phase !== 'baseline';
+    controls.inspect.disabled = state.phase !== 'configured';
+    controls.request.disabled = state.phase !== 'prepared';
+    controls.observe.disabled = state.phase !== 'promotion-requested';
+  }
+  function clearError() {
+    text('input-error', '');
+    byId('input-error').hidden = true;
+    for (const input of [fixture, target, acknowledgement]) input.removeAttribute('aria-invalid');
+  }
+  function conduct(command) {
+    try {
+      state = model.step(state, command);
+      clearError();
+      render();
+      text('action-status', `Accepted ${command.kind}. Phase: ${state.phase}. Synthetic data only.`);
+      const next = {
+        configured: controls.inspect, prepared: controls.request,
+        'promotion-requested': controls.observe,
+      }[state.phase] || byId('result-heading');
+      next.focus();
+    } catch (error) {
+      const field = { fixture, target, acknowledged: acknowledgement }[error.field];
+      text('input-error', `${error.message} State and retained history are unchanged.`);
+      byId('input-error').hidden = false;
+      if (field) {
+        field.setAttribute('aria-invalid', 'true');
+        field.focus();
+      } else byId('input-error').focus();
+    }
+  }
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    conduct({
+      kind: 'configure', fixture: fixture.value, target: target.value,
+      acknowledged: acknowledgement.checked,
+    });
+  });
+  controls.inspect.addEventListener('click', () => conduct({ kind: 'inspect' }));
+  controls.request.addEventListener('click', () => conduct({ kind: 'request' }));
+  controls.observe.addEventListener('click', () => conduct({ kind: 'observe' }));
+  byId('reset-lesson').addEventListener('click', () => {
+    const removed = state.history.length;
+    state = model.create();
+    form.reset();
+    clearError();
+    render();
+    text('action-status', `Reset cleared ${removed} retained records. Synthetic baseline restored.`);
+    fixture.focus();
+  });
+  render();
+  document.body.dataset.ready = 'true';
+}());

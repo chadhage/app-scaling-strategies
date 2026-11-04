@@ -1,0 +1,244 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.WindowsSlotLesson = factory();
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      for (const child of Object.values(value)) freeze(child);
+      Object.freeze(value);
+    }
+    return value;
+  }
+  const FIXTURES = freeze([
+    { id: 'ready', label: 'Complete synthetic preparation and journeys' },
+    { id: 'declared-only', label: 'Declared settings; effective configuration unobserved' },
+    { id: 'shallow-200', label: 'Healthy HTTP 200; required dependency fails' },
+    { id: 'setting-mismatch', label: 'Destination slot-specific setting mismatch' },
+    { id: 'incompatible-state', label: 'Candidate cannot decode existing session state' },
+    { id: 'missing-routing', label: 'One client destination is unobserved' },
+    { id: 'unfinished', label: 'One started journey lacks a final receipt' },
+    { id: 'pinned-old', label: 'One routing-cookie client remains on old code' },
+    { id: 'recycled-worker', label: 'Retained old slot; former worker loses active work' },
+  ]);
+  const ENVELOPE = freeze({
+    mode: 'synthetic-teaching-data', host: 'App Service', os: 'Windows', format: 'code',
+    sku: 'TEACH-SLOT-SKU', region: 'classroom-region', sharedPlan: true,
+    candidateCode: 'win-code-v2', oldCode: 'win-code-v1',
+    setting: 'profile-store=shared-teaching-store', warmupPath: '/ready/strict',
+    acceptableStatuses: [200], readinessBudgetMs: 120, journeyBudgetMs: 180,
+    attemptedJourneys: 3, expectedEffectsPerJourney: 1,
+  });
+  const expectedCounts = freeze({
+    ready: [3, 0, 0], 'missing-routing': [2, 0, 1], unfinished: [2, 0, 1],
+    'pinned-old': [2, 0, 1], 'recycled-worker': [2, 1, 0],
+  });
+  const states = new WeakSet();
+  function register(value) {
+    states.add(value);
+    return freeze(value);
+  }
+  function error(code, message, field) {
+    const failure = new Error(message);
+    failure.code = code;
+    if (field) failure.field = field;
+    throw failure;
+  }
+  function validateCommand(command) {
+    if (!command || typeof command !== 'object' || Object.getPrototypeOf(command) !== Object.prototype) {
+      error('ERR_INPUT', 'Use a plain, strictly typed lesson command.');
+    }
+    const descriptors = Object.getOwnPropertyDescriptors(command);
+    const keys = Reflect.ownKeys(command);
+    if (keys.some((key) => typeof key !== 'string'
+      || !Object.hasOwn(descriptors[key], 'value') || !descriptors[key].enumerable)) {
+      error('ERR_INPUT', 'Command properties must be enumerable data, not getters or symbols.');
+    }
+    if (!['configure', 'inspect', 'request', 'observe'].includes(command.kind)) {
+      error('ERR_INPUT', 'Choose a documented local lesson action; native actions are unavailable.');
+    }
+    const allowed = command.kind === 'configure'
+      ? ['kind', 'fixture', 'target', 'acknowledged'] : ['kind'];
+    if (keys.length !== allowed.length || keys.some((key) => !allowed.includes(key))) {
+      error('ERR_INPUT', 'Command has missing or unknown properties.');
+    }
+    if (command.kind === 'configure') {
+      if (typeof command.fixture !== 'string' || !FIXTURES.some((entry) => entry.id === command.fixture)) {
+        error('ERR_INPUT', 'Choose an exact fixed teaching case.', 'fixture');
+      }
+      if (typeof command.target !== 'string' || !['production', 'staging'].includes(command.target)) {
+        error('ERR_INPUT', 'Choose an exact fictional production or staging target.', 'target');
+      }
+      if (command.acknowledged !== true) {
+        error('ERR_INPUT', 'Acknowledge the synthetic-only boundary with the checkbox.', 'acknowledged');
+      }
+    }
+  }
+  function create() {
+    return register({
+      mode: ENVELOPE.mode,
+      phase: 'baseline', fixture: null, target: null, configuration: null,
+      gates: [], journeys: [], history: [], report: null,
+      desiredRouting: 'production -> win-code-v1',
+      observedRouting: 'production -> win-code-v1 (fictional baseline)',
+      nativeClaim: false, sourceParentComplete: false, fiveNinesProven: false,
+    });
+  }
+  function gate(name, expected, observed, verdict) {
+    return { name, expected, observed, verdict };
+  }
+  function preparation(state) {
+    const absent = state.fixture === 'declared-only';
+    const known = absent ? 'unknown' : 'pass';
+    return [
+      gate('Production target', 'production is the swap target', state.target,
+        state.target === 'production' ? 'pass' : 'fail'),
+      gate('Windows code / slot-capable teaching plan', 'Windows/code; TEACH-SLOT-SKU; shared overlap',
+        absent ? 'Declared only; no effective host/plan receipt'
+          : 'Fixture receipt: Windows/code; TEACH-SLOT-SKU; two slots on shared plan', known),
+      gate('Effective destination configuration', ENVELOPE.setting,
+        absent ? 'UNKNOWN: no effective configuration receipt'
+          : state.fixture === 'setting-mismatch' ? 'Fixture receipt: profile-store=isolated-empty-store'
+            : `Fixture receipt: ${ENVELOPE.setting}; candidate win-code-v2`,
+        absent ? 'unknown' : state.fixture === 'setting-mismatch' ? 'fail' : 'pass'),
+      gate('Strict warm-up path / statuses / budget', '/ready/strict; explicit [200]; <=120 ms',
+        absent ? 'Declarations only; warm-up execution not observed'
+          : 'Fixture receipt: /ready/strict; configured [200]; HTTP 200; 80 ms', known),
+      gate('Required dependency readiness', 'profile store read/write check succeeds',
+        state.fixture === 'shallow-200' ? 'Fixture receipt: shallow HTTP 200; dependency check failed'
+          : absent ? 'UNKNOWN: no dependency receipt' : 'Fixture receipt: dependency read/write check passed',
+        absent ? 'unknown' : state.fixture === 'shallow-200' ? 'fail' : 'pass'),
+      gate('Authentication readiness', 'same teaching identity accepted at destination',
+        absent ? 'UNKNOWN: no authentication receipt' : 'Fixture receipt: identity teaching-user-121 accepted', known),
+      gate('Compatible existing state', 'candidate decodes session schema v1 and preserves cart 7',
+        absent ? 'UNKNOWN: no state receipt' : state.fixture === 'incompatible-state'
+          ? 'Fixture receipt: session decoder rejected schema v1'
+          : 'Fixture receipt: schema v1 decoded; cart 7 preserved',
+        absent ? 'unknown' : state.fixture === 'incompatible-state' ? 'fail' : 'pass'),
+      gate('Shared-plan overlap headroom', 'reserve capacity for old plus candidate; slots add no compute',
+        absent ? 'UNKNOWN: no overlap receipt' : 'Fixture receipt: reserved overlap capacity sufficient', known),
+    ];
+  }
+  function abortReport(gates) {
+    const failed = gates.some((entry) => entry.verdict === 'fail');
+    return {
+      verdict: 'pass', verifier: failed ? 'Expected unsafe preparation rejected'
+        : 'Expected absent evidence recognized, not promoted',
+      classification: failed ? 'safe-abort' : 'unverified',
+      attempted: 0, successful: 0, interrupted: 0, unknown: 0, fraction: null,
+      nativeClaim: false, cleanup: 'Local memory only; no resources created',
+    };
+  }
+  function classify(journey) {
+    const required = ['destination', 'identity', 'state', 'effects', 'duplicates', 'latencyMs', 'httpStatus'];
+    if (!journey.finished || required.some((key) => journey[key] === null)) {
+      return { outcome: 'unknown', reason: 'Started journey lacks a destination or complete final receipt' };
+    }
+    if (journey.destination !== ENVELOPE.candidateCode) {
+      return { outcome: 'unknown', reason: 'Observed old code; client never proved a candidate transition' };
+    }
+    const failures = [];
+    if (journey.httpStatus !== 200) failures.push('client error');
+    if (journey.identity !== 'preserved') failures.push('identity loss');
+    if (journey.state !== 'compatible') failures.push('state loss');
+    if (journey.effects !== ENVELOPE.expectedEffectsPerJourney) failures.push('missing/extra committed effect');
+    if (journey.duplicates !== 0) failures.push('duplicate effect');
+    if (journey.latencyMs > ENVELOPE.journeyBudgetMs) failures.push('whole-journey budget exceeded');
+    if (journey.workerWork === 'abandoned') failures.push('former worker recycled; volatile work abandoned');
+    return failures.length ? { outcome: 'interrupted', reason: failures.join('; ') }
+      : { outcome: 'successful', reason: 'Finished candidate journey; identity/state/effect/latency receipts match' };
+  }
+  function clientReceipts(fixture) {
+    return [104, 117, 132].map((latencyMs, index) => {
+      const journey = {
+        id: `J121-${index + 1}`, destination: ENVELOPE.candidateCode,
+        identity: 'preserved', state: 'compatible', effects: 1, duplicates: 0,
+        latencyMs, httpStatus: 200, finished: true, workerWork: 'completed',
+      };
+      if (index === 2) {
+        if (fixture === 'missing-routing') journey.destination = null;
+        if (fixture === 'unfinished') {
+          Object.assign(journey, {
+            finished: false, effects: null, duplicates: null, latencyMs: null, httpStatus: null,
+          });
+        }
+        if (fixture === 'pinned-old') journey.destination = ENVELOPE.oldCode;
+        if (fixture === 'recycled-worker') {
+          Object.assign(journey, { effects: 0, httpStatus: 500, latencyMs: 235, workerWork: 'abandoned' });
+        }
+      }
+      return Object.assign(journey, classify(journey));
+    });
+  }
+  function journeyReport(fixture, journeys) {
+    const successful = journeys.filter((entry) => entry.outcome === 'successful').length;
+    const interrupted = journeys.filter((entry) => entry.outcome === 'interrupted').length;
+    const unknown = journeys.filter((entry) => entry.outcome === 'unknown').length;
+    const measured = [successful, interrupted, unknown];
+    const matches = measured.every((count, index) => count === expectedCounts[fixture][index]);
+    return {
+      verdict: matches ? 'pass' : 'fail',
+      verifier: matches ? 'Expected fixed teaching receipts classified' : 'Teaching expectation mismatch',
+      classification: interrupted ? 'interrupted-rehearsal'
+        : unknown ? 'unverified-transition' : 'uninterrupted-rehearsal',
+      attempted: journeys.length, successful, interrupted, unknown,
+      fraction: successful / journeys.length, nativeClaim: false,
+      cleanup: 'Local memory only; no resources created',
+    };
+  }
+  function advance(state, command, changes, detail) {
+    if (state.history.length >= 4) error('ERR_BOUND', 'This bounded run has four actions. Reset before another run.');
+    return register(Object.assign({}, state, changes, {
+      history: [...state.history, { sequence: state.history.length + 1, action: command.kind, detail }],
+    }));
+  }
+  function step(state, command) {
+    if (!state || typeof state !== 'object' || !states.has(state)) {
+      error('ERR_STATE', 'Only authentic immutable states produced by this lesson are accepted.');
+    }
+    validateCommand(command);
+    const requiredPhase = {
+      configure: 'baseline', inspect: 'configured', request: 'prepared', observe: 'promotion-requested',
+    }[command.kind];
+    if (state.phase !== requiredPhase) {
+      error('ERR_ORDER', `Action ${command.kind} requires phase ${requiredPhase}. Reset to start another run.`);
+    }
+    if (command.kind === 'configure') {
+      return advance(state, command, {
+        phase: 'configured', fixture: command.fixture, target: command.target,
+        configuration: {
+          declared: `Windows/code; TEACH-SLOT-SKU; ${command.target} target; win-code-v2; ${ENVELOPE.setting}; /ready/strict; [200]`,
+          receipt: null,
+        },
+      }, 'Fixed teaching declarations selected; no effective configuration or journey inferred.');
+    }
+    if (command.kind === 'inspect') {
+      const gates = preparation(state);
+      const prepared = gates.every((entry) => entry.verdict === 'pass');
+      const receipt = state.fixture === 'declared-only' ? null
+        : `DATA ONLY: Windows/code; TEACH-SLOT-SKU; effective ${state.fixture === 'setting-mismatch'
+          ? 'profile-store=isolated-empty-store' : ENVELOPE.setting}; candidate win-code-v2; old slot retained`;
+      return advance(state, command, {
+        phase: prepared ? 'prepared' : 'blocked', gates,
+        configuration: Object.assign({}, state.configuration, { receipt }),
+        report: prepared ? null : abortReport(gates),
+      }, prepared ? 'All eight fictional preparation gates passed; no user transition measured.'
+        : 'Preparation failed closed; transition exposure remains zero.');
+    }
+    if (command.kind === 'request') {
+      return advance(state, command, {
+        phase: 'promotion-requested', desiredRouting: 'production -> win-code-v2 (fictional request)',
+      }, 'Wished promotion only: observed routing and finished client evidence are unchanged.');
+    }
+    const journeys = clientReceipts(state.fixture);
+    const observed = state.fixture === 'missing-routing' ? '2 candidate code receipts; 1 destination UNKNOWN'
+      : state.fixture === 'pinned-old' ? '2 candidate code receipts; 1 old-code routing-cookie client'
+        : '3 candidate code receipts (fixed fictional observations)';
+    return advance(state, command, {
+      phase: 'measured', journeys, report: journeyReport(state.fixture, journeys), observedRouting: observed,
+    }, 'All started fictional journeys retained; failures/unknowns do not become native success.');
+  }
+  return freeze({ BANNER, FIXTURES, ENVELOPE, create, step });
+}));

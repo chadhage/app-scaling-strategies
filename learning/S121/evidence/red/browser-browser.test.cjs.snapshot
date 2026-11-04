@@ -1,0 +1,20 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { openIsolatedLesson } = require(path.join(__dirname, '..', '..', '..', 'testing', 'browser', 'isolated.cjs'));
+
+test('actual DOM prepares the fictional Windows code target', async () => {
+  const session = await openIsolatedLesson('learning\\S121\\index.html');
+  try {
+    const page = session.page;
+    assert.equal(await page.locator('#training-banner').textContent(),
+      'Training rehearsal - synthetic data - not a live Azure result');
+    await page.locator('#synthetic-ack').check();
+    await page.locator('#configure').click();
+    await page.locator('#inspect').click();
+    assert.equal(await page.locator('#phase').textContent(), 'prepared');
+  } finally {
+    await session.close();
+  }
+});

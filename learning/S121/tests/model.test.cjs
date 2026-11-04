@@ -1,0 +1,248 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const lesson = require(path.join(__dirname, '..', 'model.js'));
+
+test('ready fixture reaches prepared only after configuration and inspection', () => {
+  const configured = lesson.step(lesson.create(), {
+    kind: 'configure', fixture: 'ready', target: 'production', acknowledged: true,
+  });
+  const prepared = lesson.step(configured, { kind: 'inspect' });
+  assert.equal(prepared.phase, 'prepared');
+  assert.ok(prepared.gates.length >= 7);
+  assert.ok(prepared.gates.every((gate) => gate.verdict === 'pass'));
+  assert.equal(prepared.nativeClaim, false);
+});
+
+const configure = (fixture = 'ready', target = 'production') => lesson.step(lesson.create(), {
+  kind: 'configure', fixture, target, acknowledged: true,
+});
+const prepare = (fixture = 'ready', target = 'production') =>
+  lesson.step(configure(fixture, target), { kind: 'inspect' });
+const conduct = (fixture = 'ready') =>
+  lesson.step(lesson.step(prepare(fixture), { kind: 'request' }), { kind: 'observe' });
+
+test('baseline and declarations never imply effective config, native qualification, or journeys', () => {
+  const baseline = lesson.create();
+  const configured = configure();
+  assert.equal(baseline.mode, 'synthetic-teaching-data');
+  assert.equal(configured.configuration.receipt, null);
+  assert.equal(configured.report, null);
+  assert.deepEqual(configured.journeys, []);
+  assert.equal(lesson.ENVELOPE.sku, 'TEACH-SLOT-SKU');
+  assert.equal(lesson.ENVELOPE.sharedPlan, true);
+  assert.equal(baseline.nativeClaim, false);
+  assert.equal(baseline.sourceParentComplete, false);
+  assert.equal(baseline.fiveNinesProven, false);
+});
+
+test('wished promotion differs from observed routing and complete client evidence', () => {
+  const prepared = prepare();
+  const requested = lesson.step(prepared, { kind: 'request' });
+  assert.equal(requested.phase, 'promotion-requested');
+  assert.match(requested.desiredRouting, /win-code-v2/);
+  assert.equal(requested.observedRouting, prepared.observedRouting);
+  assert.match(requested.observedRouting, /win-code-v1/);
+  assert.equal(requested.report, null);
+  assert.equal(requested.journeys.length, 0);
+  assert.equal(requested.nativeClaim, false);
+  const measured = lesson.step(requested, { kind: 'observe' });
+  assert.equal(measured.report.classification, 'uninterrupted-rehearsal');
+  assert.deepEqual(
+    [measured.report.attempted, measured.report.successful, measured.report.interrupted, measured.report.unknown],
+    [3, 3, 0, 0],
+  );
+  assert.equal(measured.report.fraction, 1);
+  assert.ok(measured.journeys.every((entry) => entry.destination === 'win-code-v2'
+    && entry.identity === 'preserved' && entry.state === 'compatible'
+    && entry.effects === 1 && entry.duplicates === 0
+    && entry.latencyMs <= lesson.ENVELOPE.journeyBudgetMs && entry.finished));
+  assert.equal(measured.nativeClaim, false);
+  assert.equal(measured.report.nativeClaim, false);
+  assert.equal(measured.sourceParentComplete, false);
+  assert.equal(measured.fiveNinesProven, false);
+});
+
+for (const [fixture, target, classification, failingGate] of [
+  ['ready', 'staging', 'safe-abort', 'Production target'],
+  ['declared-only', 'production', 'unverified', 'Effective destination configuration'],
+  ['shallow-200', 'production', 'safe-abort', 'Required dependency readiness'],
+  ['setting-mismatch', 'production', 'safe-abort', 'Effective destination configuration'],
+  ['incompatible-state', 'production', 'safe-abort', 'Compatible existing state'],
+]) {
+  test(`${fixture}/${target}: preparation rejects without fabricating a transition sample`, () => {
+    const state = prepare(fixture, target);
+    assert.equal(state.phase, 'blocked');
+    assert.equal(state.report.classification, classification);
+    assert.equal(state.report.verdict, 'pass');
+    assert.equal(state.report.attempted, 0);
+    assert.equal(state.report.successful, 0);
+    assert.equal(state.report.fraction, null);
+    assert.equal(state.journeys.length, 0);
+    assert.equal(state.nativeClaim, false);
+    assert.notEqual(state.gates.find((entry) => entry.name === failingGate).verdict, 'pass');
+    assert.throws(() => lesson.step(state, { kind: 'request' }), { code: 'ERR_ORDER' });
+    assert.match(state.observedRouting, /win-code-v1/);
+    assert.equal(state.history.length, 2);
+  });
+}
+
+test('HTTP 200 with explicit warm-up declarations cannot replace dependency-aware readiness', () => {
+  const state = prepare('shallow-200');
+  const warmup = state.gates.find((entry) => entry.name.startsWith('Strict warm-up'));
+  const dependencies = state.gates.find((entry) => entry.name.startsWith('Required dependency'));
+  assert.equal(warmup.verdict, 'pass');
+  assert.match(warmup.observed, /HTTP 200/);
+  assert.equal(dependencies.verdict, 'fail');
+  assert.match(dependencies.observed, /shallow HTTP 200/);
+  assert.equal(state.phase, 'blocked');
+});
+
+test('declared settings and an expected warm-up path are unknown without effective receipts', () => {
+  const state = prepare('declared-only');
+  assert.match(state.configuration.declared, /\/ready\/strict; \[200\]/);
+  assert.equal(state.configuration.receipt, null);
+  assert.ok(state.gates.filter((entry) => entry.name !== 'Production target')
+    .every((entry) => entry.verdict === 'unknown'));
+  assert.equal(state.report.classification, 'unverified');
+});
+
+for (const [fixture, counts, category] of [
+  ['missing-routing', [3, 2, 0, 1], 'unverified-transition'],
+  ['unfinished', [3, 2, 0, 1], 'unverified-transition'],
+  ['pinned-old', [3, 2, 0, 1], 'unverified-transition'],
+  ['recycled-worker', [3, 2, 1, 0], 'interrupted-rehearsal'],
+]) {
+  test(`${fixture}: started unknown or failed outcomes remain in denominator and history`, () => {
+    const state = conduct(fixture);
+    assert.equal(state.phase, 'measured');
+    assert.equal(state.report.classification, category);
+    assert.equal(state.report.verdict, 'pass');
+    assert.deepEqual(
+      [state.report.attempted, state.report.successful, state.report.interrupted, state.report.unknown], counts,
+    );
+    assert.equal(state.report.fraction, 2 / 3);
+    assert.equal(state.journeys.length, 3);
+    assert.equal(state.history.length, 4);
+    assert.equal(state.nativeClaim, false);
+    assert.equal(state.report.nativeClaim, false);
+    assert.equal(state.sourceParentComplete, false);
+    assert.equal(state.fiveNinesProven, false);
+    assert.throws(() => lesson.step(state, { kind: 'observe' }), { code: 'ERR_ORDER' });
+  });
+}
+
+test('old-slot retention does not protect the modeled former worker or its effect', () => {
+  const state = conduct('recycled-worker');
+  assert.match(state.configuration.receipt, /old slot retained/);
+  assert.equal(state.journeys[2].workerWork, 'abandoned');
+  assert.equal(state.journeys[2].effects, 0);
+  assert.match(state.journeys[2].reason, /former worker recycled/);
+  assert.match(state.journeys[2].reason, /budget exceeded/);
+  assert.equal(state.report.interrupted, 1);
+});
+
+const validCommand = { kind: 'configure', fixture: 'ready', target: 'production', acknowledged: true };
+for (const [label, command] of [
+  ['null', null],
+  ['array', []],
+  ['prototype', Object.create({ kind: 'configure' })],
+  ['unknown action', { kind: 'nativeSwap' }],
+  ['extra authority', { ...validCommand, nativeClaim: true }],
+  ['missing acknowledgement', { kind: 'configure', fixture: 'ready', target: 'production' }],
+  ['string acknowledgement', { ...validCommand, acknowledged: 'true' }],
+  ['numeric acknowledgement', { ...validCommand, acknowledged: 1 }],
+  ['false acknowledgement', { ...validCommand, acknowledged: false }],
+  ['unknown fixture', { ...validCommand, fixture: 'azure-live' }],
+  ['non-string fixture', { ...validCommand, fixture: {} }],
+  ['fixture whitespace', { ...validCommand, fixture: 'ready ' }],
+  ['unsupported target', { ...validCommand, target: 'https://example.invalid' }],
+  ['non-string target', { ...validCommand, target: true }],
+  ['target case coercion', { ...validCommand, target: 'Production' }],
+  ['symbol property', { ...validCommand, [Symbol('native')]: true }],
+  ['hidden property', Object.defineProperty({ ...validCommand }, 'native', { value: true })],
+  ['getter', Object.defineProperty({ ...validCommand }, 'fixture', {
+    enumerable: true, get() { throw new Error('Getter must not execute'); },
+  })],
+]) {
+  test(`strict input rejects ${label} without changing state`, () => {
+    const state = lesson.create();
+    const before = JSON.stringify(state);
+    assert.throws(() => lesson.step(state, command), { code: 'ERR_INPUT' });
+    assert.equal(JSON.stringify(state), before);
+    assert.deepEqual(state.history, []);
+  });
+}
+
+for (const [label, state, command] of [
+  ['inspect before configuration', lesson.create(), { kind: 'inspect' }],
+  ['request before inspection', configure(), { kind: 'request' }],
+  ['observe before request', prepare(), { kind: 'observe' }],
+  ['configure after preparation', prepare(), validCommand],
+  ['inspect after measurement', conduct(), { kind: 'inspect' }],
+]) {
+  test(`state order rejects ${label}`, () => {
+    const before = JSON.stringify(state);
+    assert.throws(() => lesson.step(state, command), { code: 'ERR_ORDER' });
+    assert.equal(JSON.stringify(state), before);
+  });
+}
+
+test('authentic immutable state guards reject forged and cloned evidence', () => {
+  const state = prepare();
+  assert.ok(Object.isFrozen(state));
+  assert.ok(Object.isFrozen(state.gates));
+  assert.ok(Object.isFrozen(state.gates[0]));
+  assert.ok(Object.isFrozen(state.history[0]));
+  assert.throws(() => { state.nativeClaim = true; }, TypeError);
+  assert.throws(() => { state.gates[0].verdict = 'pass'; }, TypeError);
+  assert.throws(() => lesson.step({ ...state }, { kind: 'request' }), { code: 'ERR_STATE' });
+  assert.throws(() => lesson.step(JSON.parse(JSON.stringify(state)), { kind: 'request' }), { code: 'ERR_STATE' });
+  assert.throws(() => lesson.step({ phase: 'prepared', nativeClaim: true }, { kind: 'request' }), { code: 'ERR_STATE' });
+});
+
+for (const fixture of lesson.FIXTURES) {
+  test(`${fixture.id}: fixed synthetic trace is deterministic, bounded, and never native`, () => {
+    const run = () => {
+      const state = prepare(fixture.id);
+      return state.phase === 'prepared' ? conduct(fixture.id) : state;
+    };
+    assert.deepEqual(run(), run());
+    assert.ok(run().history.length <= 4);
+    assert.equal(run().report.verdict, 'pass');
+    assert.equal(run().nativeClaim, false);
+  });
+}
+
+test('reset is allowed and retains interrupted receipts without replenishing the session allowance', () => {
+  const failed = conduct('recycled-worker');
+  let reset;
+  assert.doesNotThrow(() => { reset = lesson.step(failed, { kind: 'reset' }); },
+    'A local reset must restore current state without erasing earlier failed evidence.');
+  assert.equal(reset.phase, 'baseline');
+  assert.equal(reset.report, null);
+  assert.deepEqual(reset.journeys, []);
+  assert.deepEqual(reset.history, failed.history);
+  assert.equal(reset.history.length, 4);
+  assert.equal(reset.history[3].report.interrupted, 1);
+  assert.equal(reset.history[3].journeys[2].workerWork, 'abandoned');
+  assert.equal(reset.nativeClaim, false);
+});
+
+test('sixteen accepted actions are a strict page-session bound; reset cannot erase failures or refill it', () => {
+  let state = lesson.create();
+  for (let run = 0; run < 4; run++) {
+    state = lesson.step(state, { ...validCommand, fixture: 'recycled-worker' });
+    for (const kind of ['inspect', 'request', 'observe']) state = lesson.step(state, { kind });
+    state = lesson.step(state, { kind: 'reset' });
+  }
+  assert.equal(state.phase, 'baseline');
+  assert.equal(state.history.length, 16);
+  assert.equal(state.history.filter((entry) => entry.report && entry.report.interrupted === 1).length, 4);
+  assert.throws(() => lesson.step(state, validCommand), { code: 'ERR_BOUND' });
+  const reset = lesson.step(state, { kind: 'reset' });
+  assert.deepEqual(reset.history, state.history);
+  assert.throws(() => lesson.step(reset, validCommand), { code: 'ERR_BOUND' });
+  assert.equal(reset.nativeClaim, false);
+});

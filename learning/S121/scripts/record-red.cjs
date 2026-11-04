@@ -1,0 +1,55 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
+
+const root = path.resolve(__dirname, '..');
+const name = process.argv[2];
+assert.ok(['model', 'browser', 'retained-reset'].includes(name), 'Choose an exact documented RED recording.');
+if (name === 'browser') {
+  assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, '1', 'Browser RED recording must be deliberate.');
+}
+const relativeTest = `tests\\${name === 'retained-reset' ? 'model' : name}.test.cjs`;
+const command = ['--test', '--test-reporter=spec', path.join(root, relativeTest)];
+const result = spawnSync(process.execPath, command, { encoding: null, timeout: 90000 });
+if (result.error) throw result.error;
+const combined = Buffer.concat([result.stdout, result.stderr]).toString('utf8');
+assert.equal(result.status, 1, 'RED must be a real test failure, not a missing tool or timeout.');
+assert.match(combined, /ERR_ASSERTION/);
+if (name === 'retained-reset') assert.match(combined, /reset must restore current state/);
+else {
+  assert.match(combined, /stub/);
+  assert.match(combined, /prepared/);
+}
+const directory = path.join(root, 'evidence', 'red');
+fs.mkdirSync(directory, { recursive: true });
+const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const snapshots = {};
+for (const relative of [
+  '.gitattributes', 'windows-slot-promotion.feature', 'model.js', 'index.html',
+  'app.js', 'styles.css', relativeTest, 'scripts\\record-red.cjs',
+]) {
+  const bytes = fs.readFileSync(path.join(root, relative));
+  const file = `${name}-${path.basename(relative)}.snapshot`;
+  fs.writeFileSync(path.join(directory, file), bytes, { flag: 'wx' });
+  snapshots[file] = { source: relative, rawSha256: sha(bytes), byteLength: bytes.length };
+}
+for (const stream of ['stdout', 'stderr']) {
+  fs.writeFileSync(path.join(directory, `${name}.${stream}.raw`), result[stream], { flag: 'wx' });
+}
+const record = {
+  cardId: 'A-S121', workerId: 'worker-A-S121', packet: 'SC-S121',
+  stage: name === 'retained-reset' ? 'coupled reset-retention assertion RED on loadable implementation'
+    : 'genuine behavioral RED on loadable stub', observedAtUtc: new Date().toISOString(),
+  command: [process.execPath, ...command], exitCode: result.status,
+  assertion: name === 'retained-reset'
+    ? 'assert.doesNotThrow expected local reset support; actual rejected reset; ERR_ASSERTION'
+    : "expected prepared; actual stub; ERR_ASSERTION (not tool/syntax failure)",
+  nodeVersion: process.version, snapshots,
+  stdoutSha256: sha(result.stdout), stderrSha256: sha(result.stderr),
+  browserCaptureDeliberate: name === 'browser',
+};
+fs.writeFileSync(path.join(directory, `${name}.json`), `${JSON.stringify(record, null, 2)}\n`, { flag: 'wx' });
+process.stdout.write(`${JSON.stringify(record, null, 2)}\n`);

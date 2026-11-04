@@ -1,0 +1,37 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.WindowsSlotLesson = factory();
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
+  const FIXTURES = [
+    { id: 'ready', label: 'Complete synthetic preparation and journeys' },
+    { id: 'declared-only', label: 'Declared settings; effective configuration unobserved' },
+    { id: 'shallow-200', label: 'Healthy HTTP 200; required dependency fails' },
+    { id: 'setting-mismatch', label: 'Destination slot-specific setting mismatch' },
+    { id: 'incompatible-state', label: 'Candidate cannot decode existing session state' },
+    { id: 'missing-routing', label: 'One client destination is unobserved' },
+    { id: 'unfinished', label: 'One started journey lacks a final receipt' },
+    { id: 'pinned-old', label: 'One routing-cookie client remains on old code' },
+    { id: 'recycled-worker', label: 'Retained old slot; former worker loses active work' },
+  ];
+  function create() {
+    return {
+      phase: 'baseline', fixture: null, target: null, configuration: null,
+      gates: [], journeys: [], history: [], report: null,
+      desiredRouting: 'production -> win-code-v1',
+      observedRouting: 'production -> win-code-v1 (fictional baseline)',
+      nativeClaim: false, sourceParentComplete: false, fiveNinesProven: false,
+    };
+  }
+  function step(state, command) {
+    if (command.kind === 'configure') {
+      return Object.assign({}, state, {
+        phase: 'configured', fixture: command.fixture, target: command.target,
+      });
+    }
+    return Object.assign({}, state, { phase: 'stub' });
+  }
+  return { BANNER, FIXTURES, create, step };
+}));

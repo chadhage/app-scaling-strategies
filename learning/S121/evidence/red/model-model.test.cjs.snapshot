@@ -1,0 +1,16 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const lesson = require(path.join(__dirname, '..', 'model.js'));
+
+test('ready fixture reaches prepared only after configuration and inspection', () => {
+  const configured = lesson.step(lesson.create(), {
+    kind: 'configure', fixture: 'ready', target: 'production', acknowledged: true,
+  });
+  const prepared = lesson.step(configured, { kind: 'inspect' });
+  assert.equal(prepared.phase, 'prepared');
+  assert.ok(prepared.gates.length >= 7);
+  assert.ok(prepared.gates.every((gate) => gate.verdict === 'pass'));
+  assert.equal(prepared.nativeClaim, false);
+});
