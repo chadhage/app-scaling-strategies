@@ -1,0 +1,33 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('./model.js');
+const start = {
+  type: 'begin', host: 'supporting-slots', policy: 'deduplicate',
+  budget: 6, consent: true,
+};
+function through(actions) {
+  let state = model.send(model.createState(), start);
+  for (const type of actions) state = model.send(state, { type });
+  return state;
+}
+
+test('the behavioral baseline loads without module or syntax failure', () => {
+  assert.equal(typeof model.send, 'function');
+  assert.equal(typeof model.assess, 'function');
+  assert.equal(model.createState().runs.length, 0);
+});
+
+test('swap retains every started journey: positive, interruption and unknown', () => {
+  const result = model.assess(through(['swap']));
+  assert.deepEqual(result.counts, {
+    attempted: 3, uninterrupted: 1, interrupted: 1, unknown: 1,
+  });
+});
+
+test('successful replay cannot erase the original interruption or unknown execution', () => {
+  const result = model.assess(through(['swap', 'probe', 'replay', 'evaluate']));
+  assert.equal(result.counts.interrupted, 1);
+  assert.equal(result.counts.unknown, 1);
+  assert.equal(result.knownQueueEffects, 1);
+});
