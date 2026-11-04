@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { root, repo, sha, checkDependencies, publisherBoundary } = require('./provenance.cjs');
+const { root, repo, sha, checkDependencies, historicalPublisherBoundary } = require('./provenance.cjs');
 
 test('accepted API, retained demo and current documentation raw/Git canonical bytes remain exactly pinned', () => {
   const files = checkDependencies();
@@ -15,7 +15,7 @@ test('accepted API, retained demo and current documentation raw/Git canonical by
   assert.equal(pins.files.filter((entry) => entry.originalGitBlob !== entry.referenceGitBlob).length, 1);
 });
 
-test('publisher activation uses explicit current parent scope and retains the dispatch pin and real hold failure', () => {
+test('immutable 845079 F6 publisher attribution retains its authority and dispatch history independently of the live publisher', () => {
   const boundary = JSON.parse(fs.readFileSync(path.join(root, 'publisher-boundary.json'), 'utf8'));
   const observed = JSON.parse(fs.readFileSync(path.join(root, boundary.parentAuthorizationEvidence), 'utf8'));
   const previous = JSON.parse(fs.readFileSync(path.join(root, boundary.previousBoundaryArchive), 'utf8'));
@@ -32,7 +32,11 @@ test('publisher activation uses explicit current parent scope and retains the di
   assert.equal(observed.currentCard.id, 'C018');
   assert.equal(observed.currentCard.kano, 'S');
   assert.equal(observed.scopeExpanded, false);
-  assert.equal(publisherBoundary().exactAuthorizedBytes, true);
+  const historical = historicalPublisherBoundary();
+  assert.equal(historical.usedPublisherSha256, boundary.expectedSha256);
+  assert.equal(historical.commit, '845079a65b74f73a5d6b163e7d7f88527b53d828');
+  assert.equal(historical.historicalSnapshotVerified, true);
+  assert.equal(historical.normalVerificationAuthorizesPublication, false);
 });
 
 test('every explicitly observed own test UUID from raw captures is absent without inspecting or deleting other workers UUIDs', () => {

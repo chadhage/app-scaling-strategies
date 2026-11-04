@@ -24,8 +24,9 @@ try {
     visit(root);
   } else {
     const names = phase === 'focused'
-      ? ['progress.test.cjs', 'inspection.test.cjs', 'http.test.cjs', 'integrity.test.cjs']
-      : phase === 'routes' ? ['http.test.cjs'] : phase === 'integrity' ? ['integrity.test.cjs'] : ['browser.acceptance.cjs'];
+      ? ['progress.test.cjs', 'inspection.test.cjs', 'http.test.cjs', 'integrity.test.cjs', 'publisher-authority.test.cjs']
+      : phase === 'routes' ? ['http.test.cjs'] : phase === 'integrity'
+        ? ['integrity.test.cjs', 'publisher-authority.test.cjs'] : ['browser.acceptance.cjs'];
     commands.push(['--test', '--test-concurrency=1', ...names.map((name) => path.join(__dirname, name))]);
   }
   for (const args of commands) {

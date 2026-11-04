@@ -113,18 +113,35 @@ certification of Chromium's native TCP transport**. All exact owned browser and
 listener handles are awaited closed in `finally`. Its documented lifecycle
 limitations are not silently promoted to unattended CI qualification.
 
-Publication uses only parent-approved standard `publish.ps1`, current exact SHA-256
+Historical publication `845079a65b74f73a5d6b163e7d7f88527b53d828` used the parent-approved standard `publish.ps1`, exact SHA-256
 `f6df80bdafc028538813330fe810bd81a69a50822a4a862e0bf42f59b2b0b2a4`.
 The task's original `48846487727dd2ef35f03d88d65e64121059b6867188bbf34daeaee3fda1c09d`
 boundary and genuine pin-hold failure remain archived. A subsequently read,
 mutex-protected parent-controller authorization explicitly retains C018/S at the
 new hash and declares unchanged scope/class/Admin/HEAD/whitespace guards and zero
 additional authority or credit. Its 40 checks are parent-reported, not tests
-executed by this worker. `publisher-boundary.json` links that actual record.
+executed by this worker. `publisher-boundary.json` and `publisher-history.json`
+retain that historical attribution, preserved F6 source bytes and authentic
+parent 14-pass/1-fail regression. They are not forever-current authorization.
+Normal verification checks those immutable snapshots independently of the live
+private publisher. Diagnostics separately read current canonical parent authority
+under the state mutex; an unauthorized actual hash remains HOLD. A normal check
+never authorizes publication or relabels an old commit with a later hash.
+
+`tests\publisher-wrapper.ps1 -Action Publish` is the bounded C018-only guard.
+It reads current `localPublisherAuthorization` plus the original class, scope,
+owner and delegation under the state mutex, releases it before the publisher
+mutex, then checks the actual private bytes and HEAD against actual remote main
+inside that publisher lock before unchanged standard delegation. Later explicit
+parent admissions may advance the current hash; an unknown change is never
+silently repinned or accepted. The parent-reported E6/41-check C036-only addition
+does not alter the historical F6 attribution or grant C018 new runtime scope.
 Only `capability\C018` is staged/committed, with `[C018][S]`, Copilot trailer,
 annotated `kanban/C018/<12sha>`, atomic main/tag push and remote verification.
-The owned ignored `publication.json` supplies the full Report to the parent;
-this worker never Accepts itself.
+The full published Report is delivered through the named owned publication-result
+file. The old ignored pointer and its installation failure remain historical
+evidence; this provenance correction does not rewrite or repair them.
+This worker never Accepts itself.
 
 **IaC: N/A.** No package/download, cloud resource, framework scaffold, Entra,
 real-user data, credentials, deployment or spend. Approved production design
