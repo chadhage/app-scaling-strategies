@@ -1,0 +1,354 @@
+'use strict';
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const model = require('./model.js');
+
+test('Start must retain the two original acknowledged edits before reconnect', () => {
+  const initial = model.createState();
+  const started = model.execute(initial, { type: 'start', presetId: 'preserved' });
+  assert.equal(started.phase, 'old-acked');
+  assert.deepEqual(started.current.original.acknowledgments.map((ack) => ack.editId), ['edit-01', 'edit-02']);
+  assert.equal(started.current.original.documentText, 'ready: amber + teal');
+  assert.equal(started.current.original.documentVersion, 12);
+  assert.equal(initial.phase, 'idle');
+});
+
+const copy = (value) => JSON.parse(JSON.stringify(value));
+const action = (state, type) => model.execute(state, { type });
+function run(presetId, stop = 'measure') {
+  let state = model.execute(model.createState(), { type: 'start', presetId });
+  for (const type of ['disconnect', 'reconnect', 'observe', 'measure']) {
+    state = action(state, type);
+    if (type === stop) break;
+  }
+  return state;
+}
+const check = (state, id) => model.inspect(state).checks.find((item) => item.id === id);
+const throws = (callback, code) => assert.throws(callback, (error) => error instanceof model.LessonError && error.code === code);
+
+test('idle and successful reconnect receipts cannot certify ordered/document effects', () => {
+  assert.deepEqual(model.inspect(model.createState()).counts, { pass: 0, fail: 0, unknown: 10 });
+  const state = run('preserved', 'reconnect');
+  const result = model.inspect(state);
+  assert.equal(result.verdict, 'unknown');
+  assert.equal(result.measured, false);
+  assert.equal(result.matchesPreset, null);
+  assert.equal(check(state, 'reconnect').result, 'pass');
+  assert.equal(check(state, 'acknowledgment-receipt').result, 'pass');
+  for (const id of ['acknowledgments', 'acknowledged-order', 'document-state', 'document-version']) {
+    assert.equal(check(state, id).result, 'unknown');
+  }
+  assert.equal(state.current.observation, null);
+  assert.equal(state.outcomes.length, 0);
+});
+
+test('even complete observed positive facts remain unmeasured unknown until Measure', () => {
+  const state = run('preserved', 'observe');
+  assert.equal(model.inspect(state).counts.pass, 10);
+  assert.equal(model.inspect(state).verdict, 'unknown');
+  assert.equal(state.current.result, null);
+});
+
+for (const [id, expected] of Object.entries(model.EXPECTATIONS)) {
+  test(`fixed ${id}: measure ${expected}, never native or source-parent proof`, () => {
+    const state = run(id);
+    const result = model.inspect(state);
+    assert.equal(state.phase, 'measured');
+    assert.equal(result.verdict, expected);
+    assert.equal(result.matchesPreset, true);
+    assert.equal(result.measured, true);
+    assert.equal(result.nativeResult, 'unverified');
+    assert.equal(result.sourceParentComplete, false);
+    assert.equal(state.outcomes.length, 1);
+    assert.deepEqual(state.outcomes[0].result, result);
+    assert.equal(result.counts.pass + result.counts.fail + result.counts.unknown, 10);
+    assert.equal(result.counts.fail > 0, expected === 'interrupted');
+    assert.equal(result.counts.unknown > 0 && result.counts.fail === 0, expected === 'unknown');
+  });
+}
+
+for (const [id, failing] of [
+  ['reordered', 'acknowledged-order'], ['lost-edit', 'once-only-edit-count'],
+  ['duplicate-edit', 'once-only-edit-count'], ['wrong-document', 'document-state'],
+  ['wrong-version', 'document-version'], ['changed-identity', 'original-identity'],
+  ['incompatible-version', 'version-contract'],
+]) {
+  test(`${id}: connected/ACK receipt success still fails independent ${failing}`, () => {
+    const state = run(id);
+    assert.equal(check(state, 'reconnect').result, 'pass');
+    assert.equal(check(state, 'acknowledgment-receipt').result, 'pass');
+    assert.equal(check(state, failing).result, 'fail');
+    assert.equal(model.inspect(state).verdict, 'interrupted');
+  });
+}
+
+test('reordered trace with correct document/version and ACK list is still interrupted', () => {
+  const state = run('reordered');
+  for (const id of ['acknowledgments', 'once-only-edit-count', 'document-state', 'document-version']) {
+    assert.equal(check(state, id).result, 'pass');
+  }
+  assert.deepEqual(check(state, 'acknowledged-order').observed, ['edit-02', 'edit-01']);
+});
+
+test('unobserved state preserves null observations instead of using receipt success as proof', () => {
+  const state = run('unobserved-state');
+  for (const field of ['acknowledgments', 'appliedOrder', 'documentText', 'documentVersion']) {
+    assert.equal(state.current.observation[field], null);
+  }
+  for (const id of ['acknowledgments', 'once-only-edit-count', 'acknowledged-order', 'document-state', 'document-version']) {
+    assert.equal(check(state, id).observed, null);
+    assert.equal(check(state, id).result, 'unknown');
+  }
+  assert.equal(model.inspect(state).counts.unknown, 5);
+});
+
+test('pending unknown preserves acknowledged projection without inventing edit-03, gold text, version 13 or merge ACK', () => {
+  const state = run('pending-unknown');
+  const observed = state.current.observation;
+  assert.deepEqual(state.current.pending, [model.PENDING_EDIT]);
+  assert.equal(state.current.pending[0].acknowledged, false);
+  assert.equal(observed.pendingResolution, 'unknown');
+  assert.equal(observed.mergeAcknowledgment, null);
+  assert.deepEqual(observed.appliedOrder, ['edit-01', 'edit-02']);
+  assert.equal(observed.acknowledgments.length, 2);
+  assert.equal(observed.documentText, model.ORIGINAL.documentText);
+  assert.equal(observed.documentVersion, 12);
+  assert.equal(check(state, 'pending-merge').result, 'unknown');
+  assert.equal(check(state, 'document-state').result, 'pass');
+  assert.equal(check(state, 'acknowledged-order').result, 'pass');
+  assert.deepEqual(model.inspect(state).counts, { pass: 9, fail: 0, unknown: 1 });
+});
+
+test('pending confirmed uses only supplied immutable third ACK and fixed snapshot, not a merge operation', () => {
+  const state = run('pending-confirmed');
+  const observed = state.current.observation;
+  assert.deepEqual(observed.mergeAcknowledgment, model.CONFIRMED_PENDING.acknowledgment);
+  assert.deepEqual(observed.appliedOrder, ['edit-01', 'edit-02', 'edit-03']);
+  assert.equal(observed.documentText, 'ready: amber + teal + gold');
+  assert.equal(observed.documentVersion, 13);
+  assert.deepEqual(model.inspect(state).counts, { pass: 10, fail: 0, unknown: 0 });
+  throws(() => model.execute(state, { type: 'merge', editId: 'edit-03' }), 'ERR_COMMAND');
+});
+
+test('known reconnect failure dominates otherwise unknown document observations', () => {
+  const state = run('reconnect-failed');
+  assert.equal(check(state, 'reconnect').result, 'fail');
+  assert.equal(check(state, 'document-state').result, 'unknown');
+  assert.equal(model.inspect(state).verdict, 'interrupted');
+});
+
+test('reset retains measured interruption and unknown, and a later positive never erases them', () => {
+  let state = run('wrong-document');
+  state = action(state, 'reset');
+  state = model.execute(state, { type: 'start', presetId: 'pending-unknown' });
+  for (const type of ['disconnect', 'reconnect', 'observe', 'measure', 'reset']) state = action(state, type);
+  state = model.execute(state, { type: 'start', presetId: 'preserved' });
+  for (const type of ['disconnect', 'reconnect', 'observe', 'measure']) state = action(state, type);
+  assert.deepEqual(state.outcomes.map((item) => item.result.verdict), ['interrupted', 'unknown', 'preserved']);
+  assert.equal(state.history.length, 17);
+  assert.equal(state.runCount, 3);
+  const reset = action(state, 'reset');
+  assert.equal(reset.phase, 'idle');
+  assert.equal(reset.current, null);
+  assert.equal(reset.history.length, 18);
+  assert.deepEqual(reset.outcomes, state.outcomes);
+});
+
+for (const stop of ['start', 'disconnect', 'reconnect', 'observe']) {
+  test(`reset unfinished preserved trace after ${stop} archives unknown, never success`, () => {
+    const state = stop === 'start'
+      ? model.execute(model.createState(), { type: 'start', presetId: 'preserved' })
+      : run('preserved', stop);
+    const reset = action(state, 'reset');
+    assert.equal(reset.outcomes[0].completion, 'reset-before-measure');
+    assert.equal(reset.outcomes[0].result.verdict, 'unknown');
+    assert.equal(reset.outcomes[0].result.measured, false);
+    assert.equal(reset.outcomes[0].result.matchesPreset, null);
+  });
+}
+
+test('reset retains a known identity failure even when document observation never happened', () => {
+  const reset = action(run('changed-identity', 'reconnect'), 'reset');
+  assert.equal(reset.outcomes[0].result.verdict, 'interrupted');
+  assert.equal(reset.outcomes[0].result.counts.unknown > 0, true);
+});
+
+test('reset idle is a non-destructive no-op, not a history or run-counter eraser', () => {
+  const initial = model.createState();
+  assert.deepEqual(action(initial, 'reset'), initial);
+});
+
+for (const [phaseName, permitted] of [
+  ['idle', ['start', 'reset']], ['old-acked', ['disconnect', 'reset']],
+  ['disconnected', ['reconnect', 'reset']], ['reconnected', ['observe', 'reset']],
+  ['observed', ['measure', 'reset']], ['measured', ['reset']],
+]) {
+  test(`${phaseName} rejects every other supported action without mutation`, () => {
+    let state = model.createState();
+    if (phaseName !== 'idle') state = model.execute(state, { type: 'start', presetId: 'preserved' });
+    for (const type of ['disconnect', 'reconnect', 'observe', 'measure']) {
+      if (state.phase === phaseName) break;
+      state = action(state, type);
+    }
+    const before = JSON.stringify(state);
+    for (const type of ['start', 'disconnect', 'reconnect', 'observe', 'measure', 'reset']) {
+      if (!permitted.includes(type)) {
+        throws(() => model.execute(state, type === 'start' ? { type, presetId: 'preserved' } : { type }), 'ERR_PHASE');
+      }
+    }
+    assert.equal(JSON.stringify(state), before);
+  });
+}
+
+test('twelve complete runs and exactly 72 actions exhaust finite teaching bounds without erasing outcomes', () => {
+  let state = model.createState();
+  for (let index = 0; index < model.MAX_RUNS; index++) {
+    state = model.execute(state, { type: 'start', presetId: 'preserved' });
+    for (const type of ['disconnect', 'reconnect', 'observe', 'measure', 'reset']) state = action(state, type);
+  }
+  assert.equal(state.runCount, 12);
+  assert.equal(state.history.length, 72);
+  assert.equal(state.outcomes.length, 12);
+  assert.equal(state.phase, 'idle');
+  throws(() => model.execute(state, { type: 'start', presetId: 'preserved' }), 'ERR_BOUND');
+  assert.deepEqual(action(state, 'reset'), state);
+  assert.equal(model.inspect(state).measured, false);
+});
+
+const malformedCommands = [
+  null, undefined, true, 0, 'start', [], {}, new String('start'),
+  { type: 'Start', presetId: 'preserved' }, { type: ' start', presetId: 'preserved' },
+  { type: 'start' }, { type: 'start', presetId: null }, { type: 'start', presetId: true },
+  { type: 'start', presetId: ['preserved'] }, { type: 'start', presetId: ' preserved' },
+  { type: 'start', presetId: 'preserved ' }, { type: 'start', presetId: '__proto__' },
+  { type: 'start', presetId: 'constructor' }, { type: 'start', presetId: 'unknown' },
+  { type: 'start', presetId: 'preserved', edits: ['arbitrary'] },
+  { type: 'reset', clearHistory: true }, { type: 'merge' }, { type: 'acknowledge' },
+  Object.create({ type: 'start', presetId: 'preserved' }),
+  Object.assign(Object.create(null), { type: 'start', presetId: 'preserved' }),
+  { type: 'start', presetId: 'preserved', [Symbol('extra')]: true },
+];
+for (const [index, input] of malformedCommands.entries()) {
+  test(`typed command guard rejects malformed input ${index + 1}`, () => {
+    const state = model.createState();
+    throws(() => model.execute(state, input), 'ERR_COMMAND');
+    assert.equal(state.history.length, 0);
+  });
+}
+
+test('command accessors and hidden extra fields are rejected without invoking getters', () => {
+  let invoked = 0;
+  for (const input of [
+    { get type() { invoked++; return 'start'; }, presetId: 'preserved' },
+    { type: 'start', get presetId() { invoked++; return 'preserved'; } },
+    Object.defineProperty({ type: 'start', presetId: 'preserved' }, 'hidden', { value: true }),
+    Object.defineProperty({ presetId: 'preserved' }, 'type', { value: 'start', enumerable: false }),
+  ]) throws(() => model.execute(model.createState(), input), 'ERR_COMMAND');
+  assert.equal(invoked, 0);
+});
+
+const forgeries = [
+  ['schema', (state) => { state.schemaVersion = '1'; }],
+  ['phase', (state) => { state.phase = 'idle'; }],
+  ['run count', (state) => { state.runCount++; }],
+  ['original editor', (state) => { state.current.original.editorId = 'editor-violet'; }],
+  ['original document', (state) => { state.current.original.documentText = 'invented'; }],
+  ['original version', (state) => { state.current.original.documentVersion = 13; }],
+  ['original ACK order', (state) => { state.current.original.acknowledgments.reverse(); }],
+  ['reconnect identity', (state) => { state.current.reconnect.editorId = 'editor-violet'; }],
+  ['connection success', (state) => { state.current.reconnect.connected = 'true'; }],
+  ['ACK receipt', (state) => { state.current.reconnect.acknowledgmentReceipt = 1; }],
+  ['client version', (state) => { state.current.reconnect.clientVersion = 'teaching-v3'; }],
+  ['server version', (state) => { state.current.reconnect.serverVersion = 'teaching-v3'; }],
+  ['ACK ID', (state) => { state.current.observation.acknowledgments[0].acknowledgmentId = 'invented'; }],
+  ['ACK sequence', (state) => { state.current.observation.acknowledgments[0].sequence = 2; }],
+  ['ACK version', (state) => { state.current.observation.acknowledgments[0].documentVersion = 13; }],
+  ['ACK identity', (state) => { state.current.observation.acknowledgments[0].editorId = 'editor-violet'; }],
+  ['applied order', (state) => { state.current.observation.appliedOrder.reverse(); }],
+  ['duplicate applied edit', (state) => { state.current.observation.appliedOrder.push('edit-02'); }],
+  ['document text', (state) => { state.current.observation.documentText = 'invented merged result'; }],
+  ['document version', (state) => { state.current.observation.documentVersion = 13; }],
+  ['pending resolution', (state) => { state.current.observation.pendingResolution = 'confirmed'; }],
+  ['merge acknowledgment', (state) => { state.current.observation.mergeAcknowledgment = copy(model.CONFIRMED_PENDING.acknowledgment); }],
+  ['invented pending edit', (state) => { state.current.pending.push(copy(model.PENDING_EDIT)); }],
+  ['fabricated measured success', (state) => { state.current.result.verdict = 'unknown'; }],
+  ['deleted outcome', (state) => { state.outcomes = []; }],
+  ['forged archived result', (state) => { state.outcomes[0].result.nativeResult = 'preserved'; }],
+  ['history command', (state) => { state.history[0].command.presetId = 'pending-confirmed'; }],
+  ['history step', (state) => { state.history[0].step = 2; }],
+  ['deleted history', (state) => { state.history.pop(); }],
+  ['extra root field', (state) => { state.approved = true; }],
+];
+for (const [name, mutate] of forgeries) {
+  test(`snapshot replay rejects forged ${name} for both execution and inspection`, () => {
+    const state = copy(run('preserved'));
+    mutate(state);
+    const before = JSON.stringify(state);
+    throws(() => model.execute(state, { type: 'reset' }), 'ERR_STATE');
+    throws(() => model.inspect(state), 'ERR_STATE');
+    assert.equal(JSON.stringify(state), before);
+  });
+}
+
+test('unknown pending snapshots cannot be forged into authoritative merged success', () => {
+  const state = copy(run('pending-unknown'));
+  state.current.observation = copy(model.PRESETS['pending-confirmed'].observation);
+  state.current.result = copy(run('pending-confirmed').current.result);
+  throws(() => model.inspect(state), 'ERR_STATE');
+  throws(() => action(state, 'reset'), 'ERR_STATE');
+});
+
+test('snapshot guards reject accessors, symbols, sparse/extra arrays, cycles, prototypes and nonfinite primitives', () => {
+  let invoked = 0;
+  const malformed = [
+    null, undefined, true, [], new Date(), Object.create(null),
+    Object.assign(copy(run('preserved')), { [Symbol('extra')]: true }),
+  ];
+  const accessor = copy(run('preserved'));
+  Object.defineProperty(accessor.current.observation, 'documentText', {
+    enumerable: true, get() { invoked++; return 'ready: amber + teal'; },
+  });
+  malformed.push(accessor);
+  const hole = copy(run('preserved'));
+  delete hole.history[1];
+  malformed.push(hole);
+  const extraArray = copy(run('preserved'));
+  extraArray.history.extra = true;
+  malformed.push(extraArray);
+  const arrayGetter = copy(run('preserved'));
+  Object.defineProperty(arrayGetter.history, '1', { enumerable: true, get() { invoked++; return null; } });
+  malformed.push(arrayGetter);
+  const cycle = copy(run('preserved'));
+  cycle.current.original.loop = cycle;
+  malformed.push(cycle);
+  const prototype = copy(run('preserved'));
+  Object.setPrototypeOf(prototype.current.observation, { fabricated: true });
+  malformed.push(prototype);
+  for (const value of [NaN, Infinity, -1, 1.5, '12', null]) {
+    const state = copy(run('preserved'));
+    state.current.original.documentVersion = value;
+    malformed.push(state);
+  }
+  const oversized = copy(run('preserved'));
+  oversized.current.original.documentText = 'x'.repeat(513);
+  malformed.push(oversized);
+  for (const state of malformed) throws(() => model.inspect(state), 'ERR_STATE');
+  assert.equal(invoked, 0);
+});
+
+test('all returned states, fixtures and observations are recursively immutable; valid JSON snapshots replay deterministically', () => {
+  const state = run('pending-confirmed');
+  function frozen(value) {
+    if (value && typeof value === 'object') {
+      assert.equal(Object.isFrozen(value), true);
+      Object.values(value).forEach(frozen);
+    }
+  }
+  frozen(state);
+  frozen(model.PRESETS);
+  frozen(model.inspect(state));
+  assert.throws(() => { state.current.observation.documentText = 'changed'; }, TypeError);
+  assert.throws(() => { model.PRESETS.preserved.observation.appliedOrder.reverse(); }, TypeError);
+  assert.deepEqual(action(copy(state), 'reset'), action(state, 'reset'));
+  assert.deepEqual(run('preserved'), run('preserved'));
+});

@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "id": "A-S139",
+  "sourceId": "S139",
+  "parentId": "D-S139",
+  "title": "One original acknowledged document reconnect",
+  "kano": "S",
+  "kanoUnit": "A-S139",
+  "packet": "SC-S139",
+  "technicalEntryGate": "SOURCE",
+  "mode": "portable-synthetic",
+  "entry": "index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Reconnect collaborative editing; preserve acknowledged edit order and document state.",
+  "sourceContract": {
+    "readmeRow": "| S139 | **Collaborative real-time editing:** Preserve acknowledged edits, ordering, and document state during connection migration. |",
+    "backlogRow": "| D-S139 | P1 | Add collaborative editing over a resumable real-time fixture. | Acknowledged edits and document state remain ordered and correct through reconnection/version migration. | D-S045 |",
+    "acceptance": "Acknowledged edits and document state remain ordered and correct through reconnection/version migration.",
+    "dependencies": ["D-S045"],
+    "portableRow": "| A-S139 | D-S139 | S | Reconnect collaborative editing; preserve acknowledged edit order and document state. | SOURCE |",
+    "nativeSiblingRow": "| B-S139 | D-S139 | S | Conduct one real-time editing transition; verify actual acknowledged state through connection recovery. | CORE, DATA, CONTAINER, C026 |",
+    "nativeSibling": "B-S139",
+    "nativeSiblingGates": "CORE, DATA, CONTAINER, C026",
+    "exactSourcesReadBeforeBehaviorDesign": true,
+    "rawAndCanonicalSourceEvidence": "evidence\\raw\\source-contract.json"
+  },
+  "preconditions": [
+    "Open the standalone local index.html in a JavaScript-capable browser; no server or account.",
+    "Use only a closed fixed preset and exact ordered actions; there is no text/editor/user-data input.",
+    "Original fictional editor-amber/document-amber/client-amber acknowledged edit-01 then edit-02 on teaching-v1.",
+    "The acknowledged projection is fixed document DATA ready: amber + teal, document version 12.",
+    "Pending presets contain only supplied fictional unacknowledged edit-03; a confirmed pending snapshot is DATA, not a merge operation."
+  ],
+  "syntheticInputs": {
+    "fixtureVersion": "collaborative-reconnect-data/1",
+    "clientVersion": "teaching-v1",
+    "candidateVersion": "teaching-v2",
+    "editContract": "ordered-data/1",
+    "maximumRuns": 12,
+    "maximumAcceptedActions": 72,
+    "maximumRetainedRejectedActions": 12,
+    "presets": [
+      "preserved", "reordered", "lost-edit", "duplicate-edit", "wrong-document", "wrong-version",
+      "changed-identity", "incompatible-version", "reconnect-failed", "unobserved-state",
+      "pending-unknown", "pending-confirmed"
+    ]
+  },
+  "actions": ["start", "disconnect", "reconnect", "observe", "measure", "reset"],
+  "assertions": [
+    "reconnect", "acknowledgment-receipt", "original-identity", "version-contract", "acknowledgments",
+    "once-only-edit-count", "acknowledged-order", "document-state", "document-version", "pending-merge"
+  ],
+  "verification": {
+    "iac": "N/A evaluated after genuine assertion RED and before implementation; no infrastructure or resource operation.",
+    "focusedCommand": "node --test learning\\S139\\model.test.cjs learning\\S139\\integrity.test.cjs learning\\S139\\browser.test.cjs",
+    "deliberateCapture": "Exact CAPTURE_BROWSER_EVIDENCE=1 only; new exclusive raw browser observations. Normal verification is READ-ONLY.",
+    "publishedHelper": "testing\\browser\\isolated.cjs",
+    "publishedHelperCommit": "53c0c0d",
+    "publishedHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "playwright": "1.56.1",
+    "browser": "Microsoft-signed Edge 156.0.4314.50, isolated headless session with awaited finally close",
+    "toolingRuntime": "Node.js 22.23.4; not production Node.js 24 validation",
+    "lifecycleLimit": "Published helper retains known unattended context/page/cleanup lifecycle limitations; inactive recovery prototype is unqualified.",
+    "cspObservations": "Actual DOM inline-script denial and empty local form-action denial; no network, editor, storage or user-data probe is performed."
+  },
+  "limits": [
+    "All edits, acknowledgments, documents, versions, order, reconnect, identity, pending and merge outcomes are fixed fictional teaching DATA ONLY.",
+    "No actual network, collaboration, document editing, merge, authentication, storage or user-data operation.",
+    "Connection or acknowledgment receipt success does not certify ordered/document effects; missing observations stay null/unknown.",
+    "Unknown pending edits are not invented as merged, acknowledged, dropped or version-advanced.",
+    "Only finite deterministic teaching counts are measured, not latency, capacity, reliability, actual users or five-nines success.",
+    "No cloud, IaC, scaffold, identity registration, credentials, deployment, spend, downloads, packages or framework.",
+    "No root/shared/catalog/local-harness changes; mounting and availability remain parent-owned.",
+    "No native proof, source-parent completion, production Node.js 24 validation, full accessibility certification, SLA or endorsement."
+  ],
+  "nativeProofComplete": false,
+  "sourceParentComplete": false,
+  "productionNode24Validated": false,
+  "accepted": false,
+  "extraKanoCredits": 0
+}

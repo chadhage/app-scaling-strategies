@@ -1,0 +1,14 @@
+'use strict';
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const model = require('./model.js');
+
+test('Start must retain the two original acknowledged edits before reconnect', () => {
+  const initial = model.createState();
+  const started = model.execute(initial, { type: 'start', presetId: 'preserved' });
+  assert.equal(started.phase, 'old-acked');
+  assert.deepEqual(started.current.original.acknowledgments.map((ack) => ack.editId), ['edit-01', 'edit-02']);
+  assert.equal(started.current.original.documentText, 'ready: amber + teal');
+  assert.equal(started.current.original.documentVersion, 12);
+  assert.equal(initial.phase, 'idle');
+});

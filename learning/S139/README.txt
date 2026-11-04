@@ -1,0 +1,159 @@
+A-S139 / S139 — one original acknowledged document reconnect
+
+Open learning\S139\index.html directly in a browser.
+Training rehearsal - synthetic data - not a live Azure result
+
+All edits, acknowledgments, documents, versions, order, reconnects, identities,
+pending queues and merge outcomes are fixed fictional teaching DATA ONLY.
+There is no actual network, collaboration, document editing, authentication,
+storage, user content or merge operation. A select preset is not user/editor
+data. No arbitrary edits or data-entry fields are accepted.
+A connection/receipt success cannot certify document correctness; unknown pending edits
+are never invented as merged.
+
+EXACT SOURCE CONTRACT — read before behavior design
+S139: Collaborative real-time editing: Preserve acknowledged edits, ordering,
+and document state during connection migration.
+D-S139: Add collaborative editing over a resumable real-time fixture.
+Acceptance: Acknowledged edits and document state remain ordered and correct
+through reconnection/version migration.
+Source dependency: D-S045.
+A-S139: Reconnect collaborative editing; preserve acknowledged edit order and
+document state. SOURCE gate; SC-S139 packet; frozen Kano S; one original
+kanoUnit A-S139.
+B-S139: Conduct one real-time editing transition; verify actual acknowledged
+state through connection recovery. Gates: CORE, DATA, CONTAINER, C026.
+The original source rows, card/packet and portable contract were read before
+design. evidence\raw\source-contract.json retains exact row snapshots, source
+hashes and separate raw CRLF/canonical Git claims.
+
+CONDUCT ONE FIXED TRACE
+1. Select a fixed preset; Start seeds editor-amber/document-amber/client-amber
+   on teaching-v1, with acknowledged edit-01 then edit-02. Their fixed ordered
+   document projection is ready: amber + teal, document version 12.
+2. Disconnect DATA. This is an operator state transition, not a network call.
+3. Reconnect DATA to teaching-v2. Connected and receipt indicators are DATA;
+   ordered effects and document state are still unobserved and not certified.
+4. Observe supplied snapshot. The independent table shows exact acknowledgments,
+   once-only edit count, ordered effects, original identity, version contract,
+   document text/version and pending disposition. Null stays UNKNOWN.
+5. Measure original document. Known failure overrides unknown; preserved requires
+   all ten checks and the explicit measurement step. The preset verifier is
+   separate from document impact and native result.
+6. Reset controls / retain history. Controls and current error reset; accepted
+   actions, bounded rejected actions and measured/unfinished outcomes remain.
+   Focus returns to the preset, or to the status at the exhausted teaching bound.
+   Reload intentionally discards this nonpersistent in-memory teaching DATA.
+
+FIXED OUTCOMES
+preserved: exact original ACKs/order/document/version are preserved.
+reordered: connection and ACK success, exact document/version and once-only
+count still cannot excuse edit-02 before edit-01 (interrupted).
+lost-edit: edit-02 is missing; acknowledged document/version are wrong
+despite a successful acknowledgment receipt (interrupted).
+duplicate-edit: edit-02 has a repeated effect and wrong text/version
+despite successful receipts (interrupted).
+wrong-document: exact ACKs/order/version but wrong document text (interrupted).
+wrong-version: correct text/order but document version 13 instead of 12
+(interrupted).
+changed-identity: connected replacement editor/document/client and matching
+replacement ACKs do not preserve the original acknowledged journey (interrupted).
+incompatible-version: connected teaching-v2 cannot read the declared old edit
+contract, despite other good supplied observations (interrupted).
+reconnect-failed: known connection/receipt failure defeats otherwise unobserved
+document facts (interrupted).
+unobserved-state: connected/receipt DATA succeeds, but actual ACKs/order/document/
+version observations remain null (UNKNOWN).
+pending-unknown: the two acknowledged edits and their document projection match;
+fixed unacknowledged edit-03 remains unresolved. No gold text, third effect,
+merge ACK or version 13 is invented (UNKNOWN).
+pending-confirmed: a separately supplied fixed ACK-03 and exact ordered three-edit
+snapshot at version 13 match. ready: amber + teal + gold is teaching DATA,
+not an executed merge.
+
+An expected negative can match its preset verifier while the document is
+interrupted. Native result remains unverified. A later positive does not erase
+earlier failures or unknowns. Reset before Measure archives unknown unless a
+known failure was already observed; complete-looking DATA is not auto-success.
+
+STRICT, FINITE, KEYBOARD-OPERABLE
+12 runs, 72 accepted actions, first 12 rejected actions retained per page.
+Additional errors never overwrite earlier rejected history or retain arbitrary
+input. All are deterministic teaching counts, not elapsed-time guarantees.
+Pure CommonJS/browser API: createState(), execute(state, command), inspect(state).
+Exact commands are {type:'start',presetId:<closed fixed string>} or
+{type:<disconnect|reconnect|observe|measure|reset>}. No coercion, extra fields,
+accessors, symbols, sparse/extra arrays, cycles, nonplain prototypes, arbitrary
+edits or merge commands. Snapshots must exactly match a bounded canonical action
+replay; forged identity/ACK/document/version/order/pending/merge/outcome/history
+DATA is rejected with typed safe-hold errors without mutating prior state.
+Returned states, fixtures and observations are recursively immutable.
+
+Native buttons/select, semantic labels, visible focus, role=status and role=alert
+support keyboard operation. Successful actions focus the next allowed button.
+Rejected actions focus the error; reset clears it but retains rejected history.
+HTMLFormElement.prototype.reset.call(form) avoids form.reset shadowing.
+The local model-load failure safe-holds with disabled conducting controls and an
+uncertified UNKNOWN outcome. Production rendering uses textContent, not HTML
+injection. There is no network or storage API.
+
+BDD → LOADABLE STUB → GENUINE RED → IaC N/A → GREEN
+collaborative-reconnect.feature precedes the loadable stub.
+evidence\red-stub\ preserves stub/spec/test/UI bytes with .txt suffixes outside
+test autodiscovery. Actual isolated Edge keyboard Start kept the stub idle without
+page exceptions. The genuine model assertion failed with ERR_ASSERTION,
+idle != old-acked, exit 1; raw stdout/stderr and hashes remain in evidence\raw\.
+evidence\iac-na.json records the explicit resource-free IaC N/A decision AFTER
+genuine RED and BEFORE implementation. No infrastructure, cloud, scaffold,
+identity, credentials, deployment, spend, packages, framework or download followed.
+
+From the repository root:
+  node --test learning\S139\model.test.cjs learning\S139\integrity.test.cjs learning\S139\browser.test.cjs
+  node --check learning\S139\model.js
+  node --check learning\S139\app.js
+
+Normal verification is READ-ONLY for lesson source and persistent evidence.
+Only exact CAPTURE_BROWSER_EVIDENCE=1 deliberately creates a new exclusive raw
+browser record and source-byte snapshots; unset, 0, true or 01 does not capture.
+Capture never rewrites existing proof. Initial RED/stub capture is a separate
+deliberate producer stage, not the normal verification command.
+The narrow raw-byte .gitattributes rules preceded proof capture.
+Raw CRLF hashes and canonical Git/blob identities are separate integrity claims.
+Live-source integrity compares canonical bytes so a legitimate Git LF checkout
+does not invalidate the byte-preserved original CRLF observations.
+Historical failed browser observations, if any, remain visible and are not green.
+
+Actual browser assertions use published testing\browser\isolated.cjs, commit
+53c0c0d, SHA-256
+86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055,
+openIsolatedLesson with awaited finally close. Existing offline Playwright
+1.56.1 and Microsoft-signed Edge 156.0.4314.50 on Node 22.23.4 are the tested
+pair, not production Node 24 validation. No browser download, package install,
+unsafe flag, shared profile, foreground lease or native/source-parent validation.
+The helper's owned ephemeral profiles are cleaned up; normal verification
+does not modify persistent lesson proof. Its unattended lifecycle limitations
+remain; the inactive recovery prototype is unqualified.
+
+Actual DOM observations cover positive, negative and unknown document outcomes,
+native keyboard progression, visible focus, invalid preset/out-of-order errors,
+bounded rejected history, shadow-safe native reset, retained failure/uncertainty,
+finite run exhaustion and missing-model safe hold. Actual CSP observations cover
+inline-script denial and an empty form targeting the current local file denied
+before navigation. No network/editor/storage/user-data probe is performed.
+connect-src 'none' and the other explicit directives are also statically checked;
+these checks do not claim a network sandbox or a complete accessibility audit.
+
+HONEST REMAINDER / NO EXTRA CREDIT
+Parent alone accepts A-S139 once after its independent review and remote checks.
+Zero extra credits for tests, repair, raw proof, repeated verification or refinement.
+The original B-S139 Kano unit remains separate; proposed remaining To Do is
+readiness=false until CORE, DATA, CONTAINER, C026, approved native real-time target,
+bounded identity/connection-recovery fixture, and real authoritative document
+observations are available. Native pending reconciliation must be observed,
+never invented from a connection or receipt. This mission does not admit,
+implement, validate, deploy or accept that native unit.
+D-S139 remains incomplete until native B-S139 and the original acceptance pass.
+Catalog C005-C008/local-harness mounting and availability are parent-owned;
+this bundle does not modify them, root README, shared tooling or the ledger.
+No SLA, Microsoft endorsement, five-nines claim or full accessibility certificate.
+The repository's Microsoft Open Source Disclaimer and license limitations apply.

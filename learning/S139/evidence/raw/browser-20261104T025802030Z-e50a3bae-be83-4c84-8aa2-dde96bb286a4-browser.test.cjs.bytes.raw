@@ -1,0 +1,329 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { execFileSync } = require('node:child_process');
+const test = require('node:test');
+
+const root = path.resolve(__dirname, '..', '..');
+const helperPath = path.join(root, 'testing', 'browser', 'isolated.cjs');
+const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const helperSha256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+assert.equal(sha256(fs.readFileSync(helperPath)), helperSha256);
+const { openIsolatedLesson } = require(helperPath);
+const playwrightVersion = require(path.join(root, 'testing', 'browser', 'node_modules', 'playwright', 'package.json')).version;
+assert.equal(playwrightVersion, '1.56.1');
+const startedAtUtc = new Date().toISOString();
+const groups = [];
+const expected = {
+  preserved: 'preserved', reordered: 'interrupted', 'lost-edit': 'interrupted',
+  'duplicate-edit': 'interrupted', 'wrong-document': 'interrupted', 'wrong-version': 'interrupted',
+  'changed-identity': 'interrupted', 'incompatible-version': 'interrupted',
+  'reconnect-failed': 'interrupted', 'unobserved-state': 'unknown',
+  'pending-unknown': 'unknown', 'pending-confirmed': 'preserved',
+};
+const text = (page, id) => page.locator(`#${id}`).textContent();
+async function key(page, id, phase) {
+  await page.locator(`#${id}`).focus();
+  await page.keyboard.press('Space');
+  if (phase) assert.equal(await text(page, 'phase'), phase);
+}
+async function withSession(name, body) {
+  const record = { name, status: 'running', pageErrors: [], console: [], awaitedCleanupCompleted: false };
+  groups.push(record);
+  let session;
+  let bodyError;
+  try {
+    session = await openIsolatedLesson(path.join('learning', 'S139', 'index.html'));
+    record.browserVersion = session.browserVersion;
+    record.url = session.page.url();
+    assert.equal(record.browserVersion, '156.0.4314.50');
+    session.page.on('pageerror', (error) => { if (record.pageErrors.length < 32) record.pageErrors.push(error.message); });
+    session.page.on('console', (message) => {
+      if (record.console.length < 64) record.console.push({ type: message.type(), text: message.text() });
+    });
+    await body(session.page, record);
+    record.status = 'passed';
+  } catch (error) {
+    bodyError = error;
+    record.status = 'failed';
+    record.failure = { name: error.name, code: error.code || null, message: error.message };
+    throw error;
+  } finally {
+    try {
+      if (session) await session.close();
+      record.awaitedCleanupCompleted = true;
+    } catch (cleanupError) {
+      record.status = 'failed';
+      record.cleanupFailure = cleanupError.message;
+      if (bodyError) throw new AggregateError([bodyError, cleanupError], 'Browser assertion and owned cleanup both failed');
+      throw cleanupError;
+    }
+  }
+}
+
+test('actual DOM and native keyboard: twelve closed reconnect outcomes, independent checks and retained history', async (t) => {
+  await withSession('fixed-outcomes-keyboard-history-and-run-bound', async (page, record) => {
+    assert.equal(await page.locator('.banner').textContent(), 'Training rehearsal - synthetic data - not a live Azure result');
+    assert.equal(await page.getByLabel('Fixed collaborative reconnect preset').count(), 1);
+    assert.equal(await page.locator('#preset option').count(), 12);
+    assert.equal(await page.locator('#error').getAttribute('role'), 'alert');
+    assert.equal(await page.locator('#status').getAttribute('role'), 'status');
+    await page.locator('#preset').focus();
+    await page.keyboard.press('Tab');
+    record.initialKeyboardFocus = await page.evaluate(() => document.activeElement.id);
+    record.focusOutline = await page.locator('#start').evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { width: style.outlineWidth, style: style.outlineStyle };
+    });
+    assert.equal(record.initialKeyboardFocus, 'start');
+    assert.deepEqual(record.focusOutline, { width: '3px', style: 'solid' });
+    record.journeys = [];
+    let index = 0;
+    let subtestError;
+    for (const [id, verdict] of Object.entries(expected)) {
+      await t.test(`${id}: actual synthetic ${verdict}`, async () => {
+        try {
+        index++;
+        await page.locator('#preset').selectOption(id);
+        await key(page, 'start', 'old-acked');
+        const old = JSON.parse(await text(page, 'trace'));
+        assert.equal(old.original.documentText, 'ready: amber + teal');
+        assert.equal(old.original.documentVersion, 12);
+        assert.deepEqual(old.original.acknowledgments.map((ack) => ack.editId), ['edit-01', 'edit-02']);
+        assert.equal(await page.locator('#preset').isDisabled(), true);
+        await key(page, 'disconnect', 'disconnected');
+        await key(page, 'reconnect', 'reconnected');
+        assert.match(await text(page, 'verdict'), /not measured/);
+        assert.equal(await text(page, 'document'), 'unobserved');
+        assert.equal(await page.locator('#measure').isDisabled(), true);
+        await key(page, 'observe', 'observed');
+        assert.match(await text(page, 'verdict'), /not measured/);
+        await key(page, 'measure', 'measured');
+        const observed = {
+          presetId: id, verdict: await text(page, 'verdict'),
+          connection: await text(page, 'connection'), receipt: await text(page, 'receipt'),
+          acknowledgmentOrder: await text(page, 'ack-order'), appliedOrder: await text(page, 'applied-order'),
+          documentText: await text(page, 'document'), documentVersion: await text(page, 'version'),
+          pending: await text(page, 'pending'), verifier: await text(page, 'verifier'),
+          checks: await page.locator('#assertions tr').evaluateAll((rows) => rows.map((row) => ({
+            id: row.dataset.check, result: row.dataset.result,
+            cells: [...row.cells].map((cell) => cell.textContent),
+          }))),
+          acceptedActions: await text(page, 'history-count'), outcomes: await text(page, 'outcome-count'),
+        };
+        record.journeys.push(observed);
+        assert.equal(observed.verdict, `${verdict.toUpperCase()} — measured synthetic DATA`);
+        assert.match(observed.verifier, /^MATCHES fixed expected outcome; not native proof$/);
+        assert.equal(observed.checks.length, 10);
+        assert.equal(observed.outcomes, String(index));
+        assert.equal(observed.acceptedActions, String(index * 6 - 1));
+        if (id !== 'reconnect-failed') {
+          assert.equal(observed.connection, 'true');
+          assert.equal(observed.receipt, 'true');
+        }
+        if (id === 'reordered') {
+          assert.equal(observed.documentText, 'ready: amber + teal');
+          assert.equal(observed.documentVersion, '12');
+          assert.equal(observed.appliedOrder, '["edit-02","edit-01"]');
+          assert.equal(observed.checks.find((item) => item.id === 'acknowledged-order').result, 'fail');
+        }
+        if (id === 'wrong-document') assert.equal(observed.documentText, 'ready: amber + violet');
+        if (id === 'wrong-version') assert.equal(observed.documentVersion, '13');
+        if (id === 'unobserved-state') {
+          assert.equal(observed.documentText, 'unobserved / UNKNOWN');
+          assert.equal(observed.documentVersion, 'unobserved / UNKNOWN');
+          assert.equal(observed.checks.filter((item) => item.result === 'unknown').length, 5);
+        }
+        if (id === 'pending-unknown') {
+          assert.equal(observed.documentText, 'ready: amber + teal');
+          assert.equal(observed.documentVersion, '12');
+          assert.equal(observed.appliedOrder, '["edit-01","edit-02"]');
+          assert.match(observed.pending, /disposition: unknown; merge ACK: unobserved \/ UNKNOWN/);
+          assert.equal(observed.checks.find((item) => item.id === 'pending-merge').result, 'unknown');
+        }
+        if (id === 'pending-confirmed') {
+          assert.equal(observed.documentText, 'ready: amber + teal + gold');
+          assert.equal(observed.documentVersion, '13');
+          assert.equal(observed.appliedOrder, '["edit-01","edit-02","edit-03"]');
+          assert.match(observed.pending, /"acknowledgmentId":"ack-03"/);
+        }
+        await key(page, 'reset-button', 'idle');
+        assert.equal(await text(page, 'history-count'), String(index * 6));
+        assert.equal(await text(page, 'outcome-count'), String(index));
+        assert.match(await page.locator('#outcomes li').first().textContent(), /preserved: PRESERVED/);
+        if (index < 12) {
+          assert.equal(await page.evaluate(() => document.activeElement.id), 'preset');
+          assert.equal(await page.locator('#preset').inputValue(), 'preserved');
+        }
+        } catch (error) {
+          subtestError = error;
+          throw error;
+        }
+      });
+      if (subtestError) throw subtestError;
+    }
+    record.finalAcceptedActions = await text(page, 'history-count');
+    record.finalOutcomeCount = await text(page, 'outcome-count');
+    record.finalHistory = await page.locator('#outcomes li').allTextContents();
+    record.exhaustedStatus = await text(page, 'status');
+    assert.equal(record.finalAcceptedActions, '72');
+    assert.equal(record.finalOutcomeCount, '12');
+    assert.equal(await page.locator('#start').isDisabled(), true);
+    assert.equal(await page.locator('#preset').isDisabled(), true);
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'status');
+    assert.match(record.exhaustedStatus, /Teaching run bound reached/);
+    assert.deepEqual(record.pageErrors, []);
+  });
+});
+
+test('actual errors and reset: typed guards, bounded rejected history, native reset shadow and unfinished uncertainty', async () => {
+  await withSession('errors-shadow-safe-reset-and-unfinished-outcomes', async (page, record) => {
+    await page.locator('#reconnect').evaluate((button) => { button.disabled = false; });
+    await key(page, 'reconnect', 'idle');
+    assert.match(await text(page, 'error'), /^ERR_PHASE:/);
+    assert.equal(await text(page, 'history-count'), '0');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'error');
+    const arbitrary = 'not-a-fixed-preset-<script>';
+    await page.locator('#preset').evaluate((select, value) => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = 'Invalid test-only option';
+      select.append(option);
+    }, arbitrary);
+    await page.locator('#preset').selectOption(arbitrary);
+    await key(page, 'start', 'idle');
+    assert.match(await text(page, 'error'), /^ERR_COMMAND:/);
+    assert.equal((await page.locator('#rejections').textContent()).includes(arbitrary), false);
+    assert.equal(await text(page, 'outcome-count'), '0');
+    await key(page, 'reset-button', 'idle');
+    assert.equal(await page.locator('#preset').inputValue(), 'preserved');
+    assert.equal(await text(page, 'error'), '');
+    assert.equal(await text(page, 'rejection-count'), '2');
+    await page.locator('#start').evaluate((button) => { button.dataset.action = 'arbitrary-action-<script>'; });
+    await key(page, 'start', 'idle');
+    assert.match(await page.locator('#rejections li').last().textContent(), /invalid-action: ERR_COMMAND/);
+    assert.equal((await page.locator('#rejections').textContent()).includes('arbitrary-action-<script>'), false);
+    await page.locator('#start').evaluate((button) => { button.dataset.action = 'start'; });
+    await key(page, 'reset-button', 'idle');
+    for (let index = 0; index < 12; index++) {
+      await page.locator('#measure').evaluate((button) => { button.disabled = false; });
+      await key(page, 'measure', 'idle');
+    }
+    assert.equal(await text(page, 'rejection-count'), '12');
+    assert.equal(await page.locator('#rejections li').count(), 12);
+    assert.match(await page.locator('#rejections li').first().textContent(), /^1\. reconnect: ERR_PHASE/);
+    assert.match(await text(page, 'error'), /Rejected history bound reached/);
+    assert.equal(await text(page, 'history-count'), '0');
+    record.shadowedResetType = await page.locator('#controls').evaluate((form) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.name = 'reset';
+      button.textContent = 'Test-only reset shadow';
+      form.append(button);
+      return typeof form.reset;
+    });
+    assert.equal(record.shadowedResetType, 'object');
+    await key(page, 'reset-button', 'idle');
+    assert.equal(await page.locator('#preset').inputValue(), 'preserved');
+    assert.equal(await text(page, 'error'), '');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'preset');
+    await page.locator('#preset').selectOption('reordered');
+    for (const [id, phase] of [['start', 'old-acked'], ['disconnect', 'disconnected'], ['reconnect', 'reconnected'], ['observe', 'observed']]) await key(page, id, phase);
+    await key(page, 'reset-button', 'idle');
+    assert.match(await page.locator('#outcomes li').first().textContent(), /reordered: INTERRUPTED — reset-before-measure/);
+    await key(page, 'start', 'old-acked');
+    await key(page, 'reset-button', 'idle');
+    assert.match(await page.locator('#outcomes li').last().textContent(), /preserved: UNKNOWN — reset-before-measure/);
+    record.outcomes = await page.locator('#outcomes li').allTextContents();
+    record.rejections = await page.locator('#rejections li').allTextContents();
+    record.currentErrorAfterReset = await text(page, 'error');
+    record.retainedAcceptedActions = await text(page, 'history-count');
+    assert.equal(record.retainedAcceptedActions, '7');
+    assert.equal(await text(page, 'outcome-count'), '2');
+    assert.equal(await text(page, 'rejection-count'), '12');
+    assert.deepEqual(record.pageErrors, []);
+  });
+});
+
+test('actual CSP and local-model failure: denied inline script/empty form, no navigation and no certified outcome', async () => {
+  await withSession('csp-denials-and-missing-model-safe-hold', async (page, record) => {
+    const initialURL = page.url();
+    await page.evaluate(() => {
+      globalThis.__s139Csp = [];
+      document.addEventListener('securitypolicyviolation', (event) => {
+        globalThis.__s139Csp.push({ directive: event.effectiveDirective, blockedURI: event.blockedURI });
+      });
+      const script = document.createElement('script');
+      script.textContent = 'globalThis.__s139InlineRan = true;';
+      document.head.append(script);
+    });
+    await page.waitForFunction(() => globalThis.__s139Csp.some((item) => item.directive.startsWith('script-src')));
+    assert.equal(await page.evaluate(() => globalThis.__s139InlineRan === true), false);
+    await page.evaluate(() => {
+      const form = document.createElement('form');
+      form.method = 'get';
+      form.action = location.href;
+      document.body.append(form);
+      HTMLFormElement.prototype.submit.call(form);
+    });
+    await page.waitForFunction(() => globalThis.__s139Csp.some((item) => item.directive === 'form-action'));
+    record.cspViolations = await page.evaluate(() => globalThis.__s139Csp);
+    record.inlineScriptRan = await page.evaluate(() => globalThis.__s139InlineRan === true);
+    record.formNavigationOccurred = page.url() !== initialURL;
+    assert.equal(record.formNavigationOccurred, false);
+    assert.equal(await text(page, 'history-count'), '0');
+    assert.equal(await text(page, 'outcome-count'), '0');
+    await page.route('**/model.js', (route) => route.abort('failed'));
+    await page.reload({ waitUntil: 'load' });
+    record.missingModelError = await text(page, 'error');
+    record.missingModelStatus = await text(page, 'status');
+    record.missingModelVerdict = await text(page, 'verdict');
+    assert.match(record.missingModelError, /Local model did not load/);
+    assert.match(record.missingModelStatus, /Safe hold/);
+    assert.equal(record.missingModelVerdict, 'UNKNOWN — not measured');
+    assert.equal(await page.locator('#start').isDisabled(), true);
+    assert.equal(await page.locator('#preset').isDisabled(), true);
+    assert.equal(await page.locator('#reset-button').isDisabled(), false);
+    await key(page, 'reset-button', 'idle');
+    assert.match(await text(page, 'error'), /No document result is certified/);
+    assert.equal(await text(page, 'history-count'), '0');
+    assert.equal(await text(page, 'outcome-count'), '0');
+    assert.deepEqual(record.pageErrors, []);
+  });
+});
+
+test.after(() => {
+  // Normal verification must remain READ-ONLY for source and persistent proof.
+  if (!(process.env.CAPTURE_BROWSER_EVIDENCE === '1')) return;
+  const prefix = `browser-${new Date().toISOString().replace(/[-:.]/g, '')}-${crypto.randomUUID()}`;
+  const raw = path.join(__dirname, 'evidence', 'raw');
+  const sourceSnapshots = {};
+  for (const name of [
+    '.gitattributes', 'collaborative-reconnect.feature', 'manifest.json', 'README.txt',
+    'model.js', 'app.js', 'index.html', 'lesson.css', 'model.test.cjs', 'integrity.test.cjs', 'browser.test.cjs',
+  ]) {
+    const bytes = fs.readFileSync(path.join(__dirname, name));
+    const snapshot = `${prefix}-${name.replace(/^\./, '')}.bytes.raw`;
+    fs.writeFileSync(path.join(raw, snapshot), bytes, { flag: 'wx' });
+    const canonicalBytes = Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+    const gitPath = `learning/S139/${name}`;
+    const canonicalGitBlobOid = execFileSync('git', ['hash-object', `--path=${gitPath}`, '--stdin'], { input: bytes, encoding: 'utf8' }).trim();
+    sourceSnapshots[name] = {
+      snapshot, rawSha256: sha256(bytes), rawByteLength: bytes.length,
+      canonicalGitSha256: sha256(canonicalBytes), canonicalGitByteLength: canonicalBytes.length, canonicalGitBlobOid,
+    };
+  }
+  const observation = {
+    kind: 's139-actual-browser-observation', cardId: 'A-S139', workerId: 'worker-A-S139',
+    startedAtUtc, capturedAtUtc: new Date().toISOString(), mode: 'portable-synthetic',
+    helperCommit: '53c0c0d', helperSha256, playwrightVersion, toolingRuntime: process.version,
+    captureAuthorization: 'CAPTURE_BROWSER_EVIDENCE=1', groups, sourceSnapshots,
+    rawAndCanonicalClaimsAreSeparate: true, unattendedLifecycleQualified: false,
+    nativeProofComplete: false, sourceParentComplete: false, extraKanoCredits: 0,
+  };
+  const name = `${prefix}.json`;
+  fs.writeFileSync(path.join(raw, name), JSON.stringify(observation, null, 2) + '\n', { flag: 'wx' });
+  console.log(`Deliberate unique raw browser observation: ${path.join('learning', 'S139', 'evidence', 'raw', name)}`);
+});

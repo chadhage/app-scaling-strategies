@@ -1,0 +1,100 @@
+Feature: Preserve one original acknowledged collaborative document through a fictional reconnect
+  All edits, acknowledgments, documents, versions, ordering, identities, reconnects,
+  pending queues and merge outcomes are fixed fictional teaching DATA ONLY.
+  No actual network, collaboration, identity, storage, user data or merge operation occurs.
+  Source S139: Preserve acknowledged edits, ordering, and document state during connection migration.
+  D-S139 acceptance: Acknowledged edits and document state remain ordered and correct through reconnection/version migration.
+  A-S139 objective: Reconnect collaborative editing; preserve acknowledged edit order and document state.
+  SOURCE gate; SC-S139 packet; frozen S; one original Kano unit A-S139.
+  Native B-S139 and source parent D-S139 remain incomplete.
+
+  Background:
+    Given the exact banner "Training rehearsal - synthetic data - not a live Azure result"
+    And one original fictional editor and document on teaching-v1
+    And acknowledged edit-01 then edit-02 produced "ready: amber + teal" at document version 12
+    And only a closed fixed preset and exact ordered operator actions are accepted
+
+  Scenario: Successful connection and acknowledgment receipts are not document proof
+    Given the preserved fixed preset has started with the old acknowledgments
+    When the operator disconnects and reconnects to teaching-v2
+    Then connection success is visible as fictional DATA
+    But ordered effects, document bytes and document version are still unobserved
+    And no preserved outcome is certified until Observe and Measure
+
+  Scenario: The same original acknowledged document is preserved
+    Given the preserved fixed preset
+    When Start, Disconnect, Reconnect, Observe and Measure occur in order
+    Then the original identity and compatible edit contract match
+    And exact acknowledgments, once-only edit count, applied order, document and version match
+    And the measured synthetic outcome is preserved
+    But the native result is unverified
+
+  Scenario Outline: Transport and receipt success cannot hide incorrect document effects
+    Given the <preset> fixed preset
+    When Start, Disconnect, Reconnect, Observe and Measure occur in order
+    Then the measured synthetic outcome is interrupted
+    And the failing <check> remains visible alongside successful transport or receipt DATA
+    And an expected negative may match its verifier without preserving the document
+    Examples:
+      | preset               | check                 |
+      | reordered            | acknowledged-order    |
+      | lost-edit            | once-only-edit-count  |
+      | duplicate-edit       | once-only-edit-count  |
+      | wrong-document       | document-state        |
+      | wrong-version        | document-version      |
+      | changed-identity     | original-identity     |
+      | incompatible-version | version-contract      |
+      | reconnect-failed     | reconnect             |
+
+  Scenario: Unobserved effects are not invented from successful receipts
+    Given the unobserved-state fixed preset
+    When the operator finishes the ordered actions
+    Then connected and acknowledgment-receipt DATA may be successful
+    But applied order, document and version remain null and unknown
+    And the measured outcome is unknown, not preserved
+
+  Scenario: A pending unknown edit is not silently merged
+    Given the pending-unknown preset includes fixed unacknowledged edit-03
+    When the operator finishes the ordered actions
+    Then the two acknowledged edits and their document projection match
+    But pending disposition remains unknown with no merge acknowledgment
+    And no gold text, third effect or document version 13 is invented
+    And the overall synthetic outcome is unknown
+
+  Scenario: A fixed authoritative pending observation is distinct from an invented merge
+    Given the pending-confirmed preset includes fixed unacknowledged edit-03
+    When the operator observes the supplied fictional acknowledgment-03 and snapshot
+    Then exact ordered edit-01, edit-02, edit-03 and document version 13 are measured
+    And "ready: amber + teal + gold" is supplied teaching DATA, not a performed merge
+    And the synthetic outcome is preserved
+
+  Scenario: Strict guards reject malformed commands and forged state without mutation
+    Given a valid immutable state
+    When a command is out of order, mistyped, has extra fields or accessors
+    Or a snapshot changes an acknowledgment, document, version, identity, pending result or history
+    Then a typed safe-hold error is raised without modifying prior state
+    And arbitrary pending edits, user content and merge commands are never accepted
+
+  Scenario: Reset retains original outcomes and unfinished uncertainty
+    Given a measured interruption followed by an unfinished run
+    When Reset controls / retain history is activated by keyboard
+    Then native controls and the current error reset with focus on the fixed preset
+    And accepted history, bounded rejected history and earlier outcomes remain
+    And the unfinished run is archived as unknown unless a known failure was observed
+    And reset never manufactures a successful document outcome
+
+  Scenario: Standalone safety and failure UX are actually observed
+    Given the local lesson in a fresh isolated Edge session
+    Then controls have labels, native keyboard behavior, visible focus, status and alert regions
+    And a missing local model safe-holds with no certified outcome
+    And CSP blocks inline script and form submission before any document or network effect
+    And the owned browser session is closed in an awaited finally
+
+  Scenario: Verification preserves historical evidence
+    Given byte-preserved loadable stub and genuine ERR_ASSERTION RED outside autodiscovery
+    And IaC N/A was recorded after RED and before implementation
+    When normal focused verification runs without exact CAPTURE_BROWSER_EVIDENCE=1
+    Then it is READ-ONLY and historical proof is unchanged
+    And only deliberately authorized capture creates new exclusive raw observations
+    And tests, repairs, proof and refinement earn zero additional Kano credits
+    And the parent alone accepts A-S139 once

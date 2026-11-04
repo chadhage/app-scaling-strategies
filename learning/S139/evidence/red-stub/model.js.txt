@@ -1,0 +1,18 @@
+(function (root) {
+  'use strict';
+  const PRESETS = Object.freeze({
+    preserved: Object.freeze({ label: 'Preserved acknowledged document', expected: 'preserved' }),
+  });
+  const createState = () => Object.freeze({
+    schemaVersion: 1, phase: 'idle', runCount: 0, current: null,
+    history: Object.freeze([]), outcomes: Object.freeze([]),
+  });
+  const execute = (state) => state;
+  const inspect = () => Object.freeze({
+    verdict: 'unknown', measured: false, checks: Object.freeze([]),
+    matchesPreset: null, nativeResult: 'unverified',
+  });
+  const api = Object.freeze({ PRESETS, createState, execute, inspect });
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.CollaborativeRehearsal = api;
+}(typeof globalThis === 'object' ? globalThis : this));

@@ -1,0 +1,1 @@
+| S139 | **Collaborative real-time editing:** Preserve acknowledged edits, ordering, and document state during connection migration. |
