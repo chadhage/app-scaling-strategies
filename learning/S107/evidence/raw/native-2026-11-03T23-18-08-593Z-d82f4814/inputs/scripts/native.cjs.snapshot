@@ -1,0 +1,158 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { randomUUID } = require('node:crypto');
+const { pathToFileURL } = require('node:url');
+const { ownedOrigin, files } = require('../serve.cjs');
+const { verifyPins } = require('./pins.cjs');
+const root = path.resolve(__dirname, '..');
+const repo = path.resolve(root, '..', '..');
+
+function bounded(promise, ms, label) {
+  let timer;
+  return Promise.race([promise, new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} exceeded ${ms}ms`)), ms);
+  })]).finally(() => clearTimeout(timer));
+}
+function allowlist(fixture) {
+  if (!fixture || !Array.isArray(fixture.servers) || fixture.servers.length !== 3
+      || !fixture.origins || Object.keys(fixture.origins).sort().join(',') !== 'A,B,api') {
+    throw new Error('Native proof requires exactly three actual caller-owned listening application servers');
+  }
+  const origins = fixture.servers.map(ownedOrigin);
+  if (new Set(origins).size !== 3 || origins.join(',') !== [fixture.origins.A, fixture.origins.B, fixture.origins.api].join(',')) {
+    throw new Error('Caller-owned origins do not match their actual listener addresses');
+  }
+  return origins;
+}
+
+async function openNative(fixture) {
+  const origins = allowlist(fixture);
+  const pins = verifyPins();
+  const scratch = path.join(root, `.owned-browser-${randomUUID()}`);
+  fs.mkdirSync(scratch);
+  const previous = Object.fromEntries(['TEMP', 'TMP', 'TMPDIR', 'PLAYWRIGHT_BROWSERS_PATH']
+    .map(name => [name, process.env[name]]));
+  const requests = [];
+  const violations = [];
+  const events = { console: [], pageErrors: [], requestFailures: [], responses: [] };
+  const allowedFiles = new Set(files.map(file => pathToFileURL(path.join(root, file)).href));
+  let browserServer;
+  let browser;
+  let context;
+  let processHandle;
+  let closePromise;
+  let lifetime;
+  let timedOut = false;
+  const cleanup = { ownedScratch: path.relative(root, scratch), browserPID: null, processExited: false,
+    scratchRemoved: false, controlListenerClosed: false, forcedOwnedClose: false, broaderLifecycleQualified: false };
+
+  const close = () => {
+    if (!closePromise) {
+      clearTimeout(lifetime);
+      closePromise = (async () => {
+        const failures = [];
+        try {
+          if (context) {
+            try { await bounded(context.close(), 5000, 'Owned context close'); }
+            catch (failure) { failures.push(failure.message); }
+          }
+        } finally {
+          if (browserServer) {
+            try { await bounded(browserServer.close(), 5000, 'Owned browser-server close'); }
+            catch (failure) {
+              cleanup.forcedOwnedClose = true;
+              failures.push(failure.message);
+              await bounded(browserServer.kill(), 5000, 'Exact owned browser-handle kill');
+            }
+            cleanup.controlListenerClosed = true;
+          }
+          cleanup.processExited = processHandle
+            ? processHandle.exitCode !== null || processHandle.signalCode !== null
+            : !browserServer && fs.readdirSync(scratch).length === 0;
+          if (!cleanup.processExited) throw new Error('Owned browser process exit is unconfirmed; profile is NOT removed');
+          if (fs.realpathSync(scratch).toLowerCase() !== scratch.toLowerCase()) {
+            throw new Error('Owned scratch path was redirected; refusing uncertain cleanup');
+          }
+          await fs.promises.rm(scratch, { recursive: true, force: false, maxRetries: 3, retryDelay: 100 });
+          cleanup.scratchRemoved = !fs.existsSync(scratch);
+        }
+        cleanup.failures = failures;
+        cleanup.timedOut = timedOut;
+        if (failures.length || timedOut) throw new Error('Bounded native verification cleanup or lifetime was not a clean pass');
+      })();
+    }
+    return closePromise;
+  };
+  try {
+    for (const name of ['TEMP', 'TMP', 'TMPDIR']) process.env[name] = scratch;
+    process.env.PLAYWRIGHT_BROWSERS_PATH = path.join(scratch, 'unused-browser-download-cache');
+    const { chromium } = require(path.join(repo, 'testing', 'browser', 'node_modules', 'playwright'));
+    browserServer = await chromium.launchServer({
+      host: '127.0.0.1', port: 0, executablePath: pins.edge.path,
+      headless: true, chromiumSandbox: true, timeout: 15000,
+      args: ['--disable-background-networking', '--no-proxy-server'],
+      env: { ...process.env, TEMP: scratch, TMP: scratch, TMPDIR: scratch },
+    });
+    processHandle = browserServer.process();
+    cleanup.browserPID = processHandle.pid;
+    const profile = processHandle.spawnargs.find(argument => argument.startsWith('--user-data-dir='));
+    if (!profile || !path.resolve(profile.substring(16)).toLowerCase().startsWith(`${scratch.toLowerCase()}${path.sep}`)) {
+      throw new Error('Browser did not use this launcher-owned scratch profile');
+    }
+    const unsafe = /^(?:--no-sandbox|--disable-web-security|--ignore-certificate-errors|--allow-running-insecure-content)(?:=|$)/;
+    if (processHandle.spawnargs.some(argument => unsafe.test(argument))) throw new Error('Unsafe browser flag refused');
+    const endpoint = new URL(browserServer.wsEndpoint());
+    if (endpoint.protocol !== 'ws:' || endpoint.hostname !== '127.0.0.1' || !Number.isInteger(Number(endpoint.port))
+        || Number(endpoint.port) < 1) throw new Error('Automation transport is not its own literal loopback endpoint');
+    cleanup.controlTransport = { address: endpoint.hostname, port: Number(endpoint.port),
+      qualification: 'Public Playwright control transport only; not an application origin, proxy or CORS request.' };
+    lifetime = setTimeout(() => { timedOut = true; close().catch(() => {}); }, 60000);
+    lifetime.unref();
+    browser = await bounded(chromium.connect(endpoint.href, { timeout: 15000 }), 16000, 'Owned browser connect');
+    context = await bounded(browser.newContext({ serviceWorkers: 'block', bypassCSP: false,
+      acceptDownloads: false }), 10000, 'Owned context creation');
+    context.on('request', request => {
+      const url = request.url();
+      const entry = { url, method: request.method(), resourceType: request.resourceType() };
+      requests.push(entry);
+      const parsed = new URL(url);
+      if ((parsed.protocol === 'file:' ? !allowedFiles.has(url)
+        : parsed.protocol !== 'http:' || !origins.includes(parsed.origin))
+          || !['GET', 'HEAD'].includes(entry.method) || requests.length > 200) {
+        violations.push(entry);
+      }
+    });
+    const open = async url => {
+      allowlist(fixture);
+      const page = await bounded(context.newPage(), 10000, 'Owned page creation');
+      page.setDefaultTimeout(5000);
+      page.setDefaultNavigationTimeout(5000);
+      page.on('console', message => events.console.push({ page: url, type: message.type(), text: message.text() }));
+      page.on('pageerror', error => events.pageErrors.push({ page: url, message: String(error) }));
+      page.on('requestfailed', request => events.requestFailures.push({
+        page: url, url: request.url(), method: request.method(), error: request.failure()?.errorText,
+      }));
+      page.on('response', response => events.responses.push({ page: url, url: response.url(), status: response.status() }));
+      await page.goto(url, { waitUntil: 'load' });
+      return page;
+    };
+    return { pins, browserVersion: browser.version(), cleanup, requests, violations, events, close,
+      openFrontend: label => {
+        if (!['A', 'B'].includes(label)) throw new Error('Only caller-owned frontend A or B may be navigated');
+        return open(`${fixture.origins[label]}/`);
+      },
+      openStatic: () => open(pathToFileURL(path.join(root, 'index.html')).href) };
+  } catch (failure) {
+    try { await close(); } catch (cleanupError) { throw new AggregateError([failure, cleanupError], 'Native setup and cleanup failed'); }
+    throw failure;
+  } finally {
+    for (const [name, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  }
+}
+
+module.exports = { openNative, allowlist, bounded };

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'self'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S107 — CORS across two owned origins</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script defer src="model.js"></script>
+  <script defer src="runtime.js"></script>
+  <script defer src="lesson.js"></script>
+</head>
+<body>
+  <a class="skip" href="#exercise">Skip to exercise</a>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S107: preserve browser access during a CORS transition</h1>
+    <p>A-S107 · D-S107 · SC-S107 · one S unit. All policies and profiles are fictional. No Azure calls or certification.</p>
+  </header>
+  <main id="exercise">
+    <section aria-labelledby="setup-title">
+      <h2 id="setup-title">Two real frontend origins, one owned API</h2>
+      <p id="mode" role="status">Static entry: actual CORS and user impact are unknown.</p>
+      <p>For real browser-origin observations, run <code>node learning\S107\serve.cjs</code> from the repository root.
+        Open both printed frontend URLs. All three listeners bind only literal <code>127.0.0.1</code>, choose actual ephemeral ports,
+        and stop after 15 minutes. Press Ctrl+C in that terminal when finished. Nothing is deployed.</p>
+      <pre id="origins">No owned HTTP fixture is connected.</pre>
+      <p>Baseline v1 allows A and B. Compatible v2 still allows both existing origins.
+        Incompatible v2 omits B's allow-origin header while A continues. Return B to compatible v2 to rehearse recovery.
+        The denied profile is never proxied to the frontend; its receipt is metadata only.</p>
+      <p>Each document has a non-secret correlation ID, not a credential. A new document cannot reuse an older receipt
+        to turn a network failure into CORS evidence. The fixture bounds issued IDs and response slots without evicting earlier receipts.</p>
+    </section>
+    <section aria-labelledby="rehearsal-title">
+      <h2 id="rehearsal-title">Predict, request, inspect</h2>
+      <form id="rehearsal-form">
+        <label for="origin">Authored caller
+          <select id="origin">
+            <option value="A">A — existing origin</option>
+            <option value="B">B — existing origin</option>
+          </select>
+        </label>
+        <label for="policy">Migration destination
+          <select id="policy">
+            <option value="baseline">Baseline v1 — A and B</option>
+            <option value="compatible">Compatible v2 — A and B</option>
+            <option value="incompatible">Incompatible v2 — A only</option>
+          </select>
+        </label>
+        <label for="prediction">Education prediction
+          <select id="prediction">
+            <option value="readable">Browser can read the profile</option>
+            <option value="cors-denied">Browser reading is CORS-denied</option>
+          </select>
+        </label>
+        <label for="measurement">Observation condition
+          <select id="measurement">
+            <option value="request">Attempt the real HTTP request (when started)</option>
+            <option value="not-measured">Deliberately leave observation missing</option>
+          </select>
+        </label>
+        <button id="run-attempt" type="submit">Check teaching expectation (CORS unmeasured)</button>
+        <button id="reset-controls" type="button">Reset controls — retain all attempts</button>
+      </form>
+      <p id="error" role="alert" tabindex="-1" hidden></p>
+      <p id="status" role="status" aria-live="polite" data-cors="unknown" data-impact="unknown">No attempt yet; real CORS remains unknown.</p>
+      <p id="metrics"></p>
+      <pre id="trace" aria-label="Current expectation and transport receipt">No trace yet.</pre>
+      <p id="csp-summary">CSP violations observed: 0</p>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained journal (six attempts per page)</h2>
+      <p>Education pass/fail is separate from preserved/interrupted/unknown user impact. Later success and reset never erase a failure.
+        Reset changes controls only. Reload ends this in-memory client journal; the bounded API receipt ledger remains until the fixture exits.
+        Restart the fixture for a genuinely new run, not to relabel the old one.</p>
+      <ol id="history"></ol>
+    </section>
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">Evidence limits</h2>
+      <p>A static expectation, model flag, Node request, CSP denial or generic network error is not CORS proof.
+        HTTP observations need the actual browser's result and a matching finished API receipt with its actual Origin and response headers.
+        Automated proof additionally records Chromium's native CORS diagnostic and excludes API CSP violations.</p>
+      <p>This local rehearsal does not complete D-S107 or B-S107, validate Azure, certify the five-nines goal,
+        qualify arbitrary browsers or establish broader unattended browser lifecycle reliability. No cookies or credentials are used.</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,46 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.resolve(__dirname, '..');
+const read = file => fs.readFileSync(path.join(root, file), 'utf8');
+
+test('standalone surface states exact banner, sources, true-origin startup and honest limits', () => {
+  const html = read('index.html');
+  assert.match(html, /Training rehearsal - synthetic data - not a live Azure result/);
+  assert.match(html, /A-S107 · D-S107 · SC-S107 · one S unit/);
+  assert.match(html, /node learning\\S107\\serve\.cjs/);
+  assert.match(html, /Static entry: actual CORS and user impact are unknown/);
+  assert.match(html, /receipt is metadata only/);
+  assert.match(html, /Reset changes controls only/);
+  assert.match(html, /broader unattended browser lifecycle/);
+  assert.match(html, /connect-src 'none'/);
+  assert.doesNotMatch(html, /unsafe-inline|unsafe-eval|<script[^>]*>[^<]+<\/script>|https?:\/\/(?:localhost|0\.0\.0\.0)/);
+});
+test('accessible native controls do not shadow form.reset and traces cannot inject HTML', () => {
+  const html = read('index.html');
+  const script = read('lesson.js');
+  for (const id of ['origin', 'policy', 'prediction', 'measurement']) {
+    assert.match(html, new RegExp(`label for="${id}"`));
+    assert.match(html, new RegExp(`select id="${id}"`));
+  }
+  assert.match(html, /id="error" role="alert" tabindex="-1" hidden/);
+  assert.match(html, /aria-live="polite"/);
+  assert.doesNotMatch(html, /(?:id|name)="reset"/);
+  assert.match(script, /form\.reset\(\)/);
+  assert.match(script, /credentials: 'omit'/);
+  assert.match(script, /mode, credentials/);
+  assert.match(script, /redirect: 'error'/);
+  assert.doesNotMatch(script, /innerHTML|localStorage|sessionStorage|document\.cookie|XMLHttpRequest|WebSocket/);
+});
+test('necessary native launcher deviation stays in S107 and never intercepts or disables browser security', () => {
+  const launcher = read('scripts\\native.cjs');
+  assert.match(launcher, /chromiumSandbox: true/);
+  assert.match(launcher, /bypassCSP: false/);
+  assert.match(launcher, /serviceWorkers: 'block'/);
+  assert.match(launcher, /host: '127\.0\.0\.1', port: 0/);
+  assert.doesNotMatch(launcher, /context\.route|page\.route|route\.fulfill|route\.fetch|route\.continue/);
+  assert.doesNotMatch(launcher, /ignoreHTTPSErrors:\s*true|chromiumSandbox:\s*false|bypassCSP:\s*true/);
+});

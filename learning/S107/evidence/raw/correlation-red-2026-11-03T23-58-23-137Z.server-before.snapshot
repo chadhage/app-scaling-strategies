@@ -1,0 +1,203 @@
+'use strict';
+
+const fs = require('node:fs');
+const http = require('node:http');
+const path = require('node:path');
+const { createHash } = require('node:crypto');
+const model = require('./model.js');
+const root = __dirname;
+const files = ['index.html', 'lesson.css', 'model.js', 'runtime.js', 'lesson.js'];
+const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8' };
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const permissions = 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), clipboard-read=(), clipboard-write=(), fullscreen=(), display-capture=()';
+
+function policyCsp(apiOrigin) {
+  return `default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self' ${apiOrigin}; img-src 'self'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; frame-ancestors 'none'`;
+}
+function assets() {
+  return new Map(files.map(file => {
+    const expected = path.join(root, file);
+    const actual = fs.realpathSync(expected);
+    if (actual.toLowerCase() !== expected.toLowerCase() || !fs.statSync(actual).isFile()) {
+      throw new Error('Only owned regular S107 assets without redirected paths are served');
+    }
+    return [`/${file}`, { bytes: fs.readFileSync(actual), type: mime[path.extname(file)] }];
+  }));
+}
+function ownedOrigin(server) {
+  const address = server instanceof http.Server && server.listening ? server.address() : null;
+  if (!address || address.address !== '127.0.0.1' || address.family !== 'IPv4'
+      || !Number.isInteger(address.port) || address.port < 1 || address.port > 65535) {
+    const error = new Error('Expected a live caller-owned Node HTTP server bound only to literal 127.0.0.1');
+    error.code = 'OWNED_ORIGIN';
+    throw error;
+  }
+  return `http://127.0.0.1:${address.port}`;
+}
+function listen(server) {
+  return new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => { server.removeListener('error', reject); resolve(); });
+  });
+}
+function stop(server) {
+  if (!server.listening) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const deadline = setTimeout(() => reject(new Error('Owned listener shutdown exceeded 3s')), 3000);
+    server.close(error => { clearTimeout(deadline); error ? reject(error) : resolve(); });
+    server.closeAllConnections();
+  });
+}
+function configuredServer(handler) {
+  const server = http.createServer({ maxHeaderSize: 8192 }, handler);
+  server.requestTimeout = 5000;
+  server.headersTimeout = 5000;
+  server.keepAliveTimeout = 1000;
+  server.maxHeadersCount = 25;
+  server.on('clientError', (_error, socket) => socket.end('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n'));
+  return server;
+}
+
+async function startFixture(options = {}) {
+  if (!options || Object.getPrototypeOf(options) !== Object.prototype
+      || Reflect.ownKeys(options).some(key => key !== 'ttlMs'
+        || !Object.hasOwn(Object.getOwnPropertyDescriptor(options, key), 'value'))) {
+    throw new TypeError('Only a plain bounded ttlMs option is supported; host, port and URL are not configurable');
+  }
+  const ttlMs = Object.hasOwn(options, 'ttlMs') ? options.ttlMs : 900000;
+  if (!Number.isInteger(ttlMs) || ttlMs < 1000 || ttlMs > 900000) throw new RangeError('Lifetime must be 1s–15min');
+  const routes = assets();
+  const origins = {};
+  const receipts = new Map();
+  const wireReceipts = new Map();
+  const counts = { apiGETs: 0, frontendGETs: 0, rejected: 0 };
+  let deadline;
+  let closing;
+  let stoppedAtUtc = null;
+  const base = {
+    'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
+    'Permissions-Policy': permissions, 'X-Frame-Options': 'DENY', 'Content-Type': 'text/plain; charset=utf-8',
+  };
+  function respond(req, res, status, bytes, headers = {}) {
+    for (const [name, value] of Object.entries({ ...base,
+      'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'",
+      ...headers, 'Content-Length': bytes.length })) res.setHeader(name, value);
+    res.writeHead(status);
+    res.end(req.method === 'HEAD' ? undefined : bytes);
+  }
+  function refuse(req, res, status) {
+    counts.rejected++;
+    respond(req, res, status, Buffer.from('Not available in this owned fixture.\n'),
+      status === 405 ? { Allow: 'GET, HEAD' } : {});
+  }
+  function guard(req, res, origin, api = false) {
+    if (req.headers.host !== origin?.substring(7)) { refuse(req, res, 421); return false; }
+    if (req.headers.cookie !== undefined || req.headers.authorization !== undefined) {
+      refuse(req, res, 403); return false;
+    }
+    if (!['GET', 'HEAD'].includes(req.method)) { refuse(req, res, 405); return false; }
+    if (api ? ![origins.A, origins.B].includes(req.headers.origin)
+      : req.headers.origin !== undefined && req.headers.origin !== origin) {
+      refuse(req, res, 403); return false;
+    }
+    return true;
+  }
+  const apiServer = configuredServer((req, res) => {
+    if (!guard(req, res, origins.api, true)) return;
+    const match = /^\/profile\?policy=(baseline|compatible|incompatible)&attempt=([1-6])$/.exec(req.url);
+    if (!match || req.method !== 'GET') return refuse(req, res, 400);
+    const [, policy, number] = match;
+    const attempt = Number(number);
+    const key = `${req.headers.origin}#${attempt}`;
+    if (receipts.has(key)) return refuse(req, res, 409);
+    if (receipts.size >= 2 * model.constants.maxAttempts) return refuse(req, res, 429);
+    receipts.set(key, null);
+    counts.apiGETs++;
+    const allowOrigin = policy !== 'incompatible' || req.headers.origin === origins.A ? req.headers.origin : null;
+    const bytes = Buffer.from(JSON.stringify({ id: 'fictional-profile', displayName: 'Cedar learner',
+      version: policy === 'baseline' ? 'v1' : 'v2' }));
+    res.once('finish', () => {
+      const receipt = Object.freeze({ attempt, policy, origin: req.headers.origin, apiOrigin: origins.api,
+        method: req.method, status: res.statusCode, allowOrigin: res.getHeader('Access-Control-Allow-Origin') || null,
+        finished: res.writableFinished, bodySHA256: sha(bytes), bodyBytes: bytes.length });
+      receipts.set(key, receipt);
+      wireReceipts.set(key, { receipt, finishedAtUtc: new Date().toISOString(),
+        request: { method: req.method, target: req.url, origin: req.headers.origin,
+          host: req.headers.host, remoteAddress: req.socket.remoteAddress },
+        response: { status: res.statusCode, headers: { ...res.getHeaders() },
+          finished: res.writableFinished, bodyBytes: bytes.length, bodySHA256: sha(bytes) } });
+    });
+    respond(req, res, 200, bytes, { 'Content-Type': 'application/json; charset=utf-8',
+      Vary: 'Origin', ...(allowOrigin ? { 'Access-Control-Allow-Origin': allowOrigin } : {}) });
+  });
+  const frontend = label => configuredServer((req, res) => {
+    const origin = origins[label];
+    if (!guard(req, res, origin)) return;
+    counts.frontendGETs++;
+    const csp = policyCsp(origins.api);
+    const receiptMatch = /^\/receipt\?attempt=([1-6])$/.exec(req.url);
+    if (receiptMatch) {
+      const receipt = receipts.get(`${origin}#${receiptMatch[1]}`) || null;
+      return respond(req, res, 200, Buffer.from(JSON.stringify({ receipt })),
+        { 'Content-Type': 'application/json; charset=utf-8', 'Content-Security-Policy': csp });
+    }
+    if (req.url === '/runtime.js') {
+      const cfg = { origin: label, frontendOrigin: origin, apiOrigin: origins.api,
+        origins: [origins.A, origins.B, origins.api] };
+      return respond(req, res, 200, Buffer.from(`'use strict';\nwindow.S107_RUNTIME = ${JSON.stringify(cfg)};\n`),
+        { 'Content-Type': mime['.js'], 'Content-Security-Policy': csp });
+    }
+    if (req.url === '/favicon.ico') return respond(req, res, 204, Buffer.alloc(0), { 'Content-Security-Policy': csp });
+    const asset = routes.get(req.url === '/' ? '/index.html' : req.url);
+    if (!asset) return refuse(req, res, /^\/[a-z.-]+$/.test(req.url) ? 404 : 400);
+    const bytes = req.url === '/' || req.url === '/index.html'
+      ? Buffer.from(asset.bytes.toString().replace("connect-src 'none'", `connect-src 'self' ${origins.api}`))
+      : asset.bytes;
+    respond(req, res, 200, bytes, { 'Content-Type': asset.type, 'Content-Security-Policy': csp });
+  });
+  const frontendA = frontend('A');
+  const frontendB = frontend('B');
+  const servers = [frontendA, frontendB, apiServer];
+  const close = () => {
+    if (!closing) {
+      clearTimeout(deadline);
+      closing = Promise.allSettled(servers.map(stop)).then(results => {
+        const failures = results.filter(result => result.status === 'rejected').map(result => result.reason);
+        if (failures.length) throw new AggregateError(failures, 'Owned fixture cleanup failed');
+        stoppedAtUtc = new Date().toISOString();
+      });
+    }
+    return closing;
+  };
+  try {
+    await listen(apiServer);
+    origins.api = ownedOrigin(apiServer);
+    await listen(frontendA);
+    origins.A = ownedOrigin(frontendA);
+    await listen(frontendB);
+    origins.B = ownedOrigin(frontendB);
+    deadline = setTimeout(() => { close().catch(() => { process.exitCode = 1; }); }, ttlMs);
+    deadline.unref();
+    return Object.freeze({ servers: Object.freeze(servers), origins: Object.freeze(origins),
+      close, receiptSnapshot: () => [...receipts.values()].filter(Boolean).map(value => ({ ...value })),
+      wireSnapshot: () => JSON.parse(JSON.stringify([...wireReceipts.values()])),
+      metrics: () => ({ ...counts }), cleanup: () => ({ stoppedAtUtc, listenersClosed: servers.every(server => !server.listening) }) });
+  } catch (failure) {
+    try { await close(); } catch (cleanupError) { throw new AggregateError([failure, cleanupError], 'Startup and cleanup failed'); }
+    throw failure;
+  }
+}
+
+if (require.main === module) {
+  startFixture().then(fixture => {
+    console.log(model.constants.banner);
+    console.log(`Frontend A: ${fixture.origins.A}\nFrontend B: ${fixture.origins.B}\nOwned API: ${fixture.origins.api}`);
+    console.log('Open BOTH frontend URLs. No external addresses, cookies or credentials. Ctrl+C closes only these owned listeners; automatic limit 15 minutes.');
+    const shutdown = () => fixture.close().catch(failure => { console.error(failure); process.exitCode = 1; });
+    process.once('SIGINT', shutdown);
+    process.once('SIGTERM', shutdown);
+  }).catch(failure => { console.error(failure); process.exitCode = 1; });
+}
+
+module.exports = { startFixture, ownedOrigin, policyCsp, files };

@@ -1,0 +1,162 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { createHash } = require('node:crypto');
+const { spawnSync } = require('node:child_process');
+const root = path.resolve(__dirname, '..');
+const repo = path.resolve(root, '..', '..');
+const evidence = path.join(root, 'evidence');
+const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+const canonical = bytes => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+const now = () => new Date().toISOString();
+
+function save(file, bytes) {
+  const destination = path.join(evidence, file);
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  fs.writeFileSync(destination, bytes, { flag: 'wx' });
+  return { path: file, bytes: bytes.length, sha256: hash(bytes),
+    crlf: (bytes.toString('utf8').match(/\r\n/g) || []).length };
+}
+function json(file, value) {
+  return save(file, Buffer.from(`${JSON.stringify(value, null, 2)}\n`));
+}
+function git(...args) {
+  const result = spawnSync('git', ['--no-pager', ...args], { cwd: repo, maxBuffer: 8 * 1024 * 1024 });
+  if (result.status !== 0 || result.error) throw new Error(result.error?.message || result.stderr.toString());
+  return result.stdout;
+}
+function line(bytes, prefix) {
+  const start = bytes.indexOf(Buffer.from(prefix));
+  const end = bytes.indexOf(10, start);
+  if (start < 0 || end < 0) throw new Error(`Missing exact source ${prefix}`);
+  return bytes.subarray(start, end + 1);
+}
+function section(bytes, first, last) {
+  const start = bytes.indexOf(Buffer.from(first));
+  const end = bytes.indexOf(Buffer.from(last), start + first.length);
+  if (start < 0 || end < 0) throw new Error('Missing portable contract');
+  return bytes.subarray(start, end);
+}
+function source() {
+  const commit = git('rev-parse', 'HEAD').toString().trim();
+  const descriptors = [
+    ['readme', 'README.md', bytes => line(bytes, '| S107 |')],
+    ['backlog', '.docs\\wiki\\backlog.md', bytes => line(bytes, '| D-S107 |')],
+    ['a-card', '.docs\\wiki\\kanban.md', bytes => line(bytes, '| A-S107 |')],
+    ['b-card', '.docs\\wiki\\kanban.md', bytes => line(bytes, '| B-S107 |')],
+    ['portable', '.docs\\wiki\\kanban.md', bytes => section(bytes, '## Atomic card contract', '## Concurrent pull and one-piece flow')],
+    ['packet', '.docs\\wiki\\kanban.md', bytes => line(bytes, 'Packet membership is fixed before admission.')],
+  ];
+  const entries = descriptors.map(([name, file, extract]) => {
+    const gitPath = file.split(path.sep).join('/');
+    const raw = extract(fs.readFileSync(path.join(repo, file)));
+    const blob = git('show', `${commit}:${gitPath}`);
+    const exactGit = extract(blob);
+    if (!canonical(raw).equals(exactGit)) throw new Error(`Semantic source mismatch: ${name}`);
+    return { name, source: file, commit,
+      gitBlob: git('rev-parse', `${commit}:${gitPath}`).toString().trim(),
+      rawWorking: save(`raw\\source-${name}.snapshot`, raw),
+      canonicalGit: save(`raw\\source-${name}.git.snapshot`, exactGit) };
+  });
+  const helperCommit = '53c0c0d82cc1db6780a87ac2b1085734af6d5c60';
+  const helper = fs.readFileSync(path.join(repo, 'testing', 'browser', 'isolated.cjs'));
+  const helperGit = git('show', `${helperCommit}:testing/browser/isolated.cjs`);
+  if (hash(helper) !== '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055'
+      || !canonical(helper).equals(helperGit)) throw new Error('Unqualified shared browser helper');
+  const ledger = JSON.parse(fs.readFileSync(path.join(repo, '.docs', 'wiki', 'flow-state.json')));
+  const card = ledger.cards.find(entry => entry.id === 'A-S107');
+  if (card?.owner !== 'worker-A-S107' || card.state !== 'In Progress' || card.kano !== 'S'
+      || card.packet !== 'SC-S107') throw new Error('Claim or frozen unit mismatch');
+  json('source-contract.json', { cardId: 'A-S107', parentId: 'D-S107', kano: 'S', kanoUnit: 'A-S107',
+    packet: 'SC-S107', capturedAtUtc: now(), sourceCommit: commit,
+    readBeforeDesign: true, owner: card.owner, claimedAtUtc: card.claimedAtUtc,
+    authorization: card.authorization, entries,
+    helper: { commit: helperCommit, rawWorking: save('raw\\helper-working.snapshot', helper),
+      canonicalGit: save('raw\\helper-git.snapshot', helperGit) },
+    priorArt: ['learning\\S104\\scripts\\evidence.cjs', 'learning\\S105\\model.js',
+      'learning\\S105\\tools\\browser.cjs', 'testing\\browser\\USAGE.txt',
+      'testing\\browser\\evidence\\offline-provenance.json'],
+    qualification: 'Exact raw CRLF excerpts are distinct from pinned canonical Git LF source. Shared same-origin response-buffering helper cannot qualify native cross-origin CORS; it is not modified.',
+    nativeAzureCertified: false, broaderLifecycleQualified: false });
+}
+function run(stage) {
+  const label = stage === 'green' ? `${stage}-${now().replace(/[:.]/g, '-')}` : stage;
+  const selectors = stage === 'red' ? ['tests\\model.test.cjs']
+    : ['tests\\model.test.cjs', 'tests\\server.test.cjs', 'tests\\surface.test.cjs', 'tests\\integrity.test.cjs'];
+  const startedAtUtc = now();
+  const result = spawnSync(process.execPath, ['--test', ...selectors.map(file => path.join(root, file))], {
+    cwd: repo, maxBuffer: 8 * 1024 * 1024, timeout: 90000,
+    env: { ...process.env, CAPTURE_BROWSER_EVIDENCE: '0' },
+  });
+  if (result.error) throw result.error;
+  const stdout = save(`raw\\${label}.stdout.snapshot`, result.stdout);
+  const stderr = save(`raw\\${label}.stderr.snapshot`, result.stderr);
+  if (stage === 'red') {
+    save('raw\\red-model.stub.snapshot', fs.readFileSync(path.join(root, 'model.js')));
+    save('raw\\red-model.assertions.snapshot', fs.readFileSync(path.join(root, 'tests', 'model.test.cjs')));
+    if (result.status !== 1 || !/ERR_ASSERTION/.test(result.stdout.toString())
+        || /MODULE_NOT_FOUND|SyntaxError|ENOENT/.test(result.stdout.toString())) {
+      throw new Error('RED must be actual behavioral assertion failure, not missing code or tools');
+    }
+  }
+  json(`${label}.json`, { cardId: 'A-S107', startedAtUtc, finishedAtUtc: now(),
+    command: `node --test ${selectors.map(file => `learning\\S107\\${file}`).join(' ')}`,
+    exitCode: result.status, stdout, stderr, qualification: stage === 'red'
+      ? 'Loadable baseline with missing retention/measurement behavior; genuine assertion RED before implementation.'
+      : 'Focused read-only automated verification; native browser proof is separate.' });
+  if (stage === 'green' && result.status !== 0) throw new Error(`${stage} failed; raw output and failed result retained`);
+}
+function index() {
+  const indexName = `integrity-${now().replace(/[:.]/g, '-')}.json`;
+  const previousIndexes = fs.readdirSync(evidence).filter(file => /^integrity(?:-.*)?\.json$/.test(file)).map(file => {
+    const bytes = fs.readFileSync(path.join(evidence, file));
+    const backup = `raw\\prior-index-${hash(bytes)}.snapshot`;
+    let descriptor;
+    if (fs.existsSync(path.join(evidence, backup))) {
+      if (!fs.readFileSync(path.join(evidence, backup)).equals(bytes)) throw new Error('Prior immutable index backup differs');
+      descriptor = { path: backup, bytes: bytes.length, sha256: hash(bytes),
+        crlf: (bytes.toString().match(/\r\n/g) || []).length };
+    } else descriptor = save(backup, bytes);
+    return { path: file, raw: descriptor };
+  });
+  const excluded = [...previousIndexes.map(entry => `evidence\\${entry.path}`),
+    `evidence\\${indexName}`, 'evidence\\green.json',
+    'evidence\\raw\\green.stdout.snapshot', 'evidence\\raw\\green.stderr.snapshot'];
+  function files(directory = root) {
+    return fs.readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
+      if (entry.name.startsWith('.owned-browser-')) throw new Error('Owned browser scratch remains; no publication index');
+      const file = path.join(directory, entry.name);
+      if (entry.isSymbolicLink()) throw new Error('Redirected bundle member');
+      return entry.isDirectory() ? files(file) : [path.relative(root, file)];
+    });
+  }
+  const entries = files().filter(file => !excluded.includes(file)).sort().map(file => {
+    const bytes = fs.readFileSync(path.join(root, file));
+    const gitPath = `learning/S107/${file.split(path.sep).join('/')}`;
+    const result = spawnSync('git', ['hash-object', '--path', gitPath, '--stdin'], {
+      cwd: repo, input: bytes, maxBuffer: 1024 * 1024,
+    });
+    if (result.error || result.status !== 0) throw new Error('Unable to qualify Git-filtered blob identity');
+    return { path: file, bytes: bytes.length, rawSHA256: hash(bytes),
+      normalizedLfSHA256: hash(canonical(bytes)), gitFilteredBlobSHA1: result.stdout.toString().trim() };
+  });
+  json(indexName, { cardId: 'A-S107', capturedAtUtc: now(), excluded, files: entries, previousIndexes,
+    qualification: 'All bundle/source/browser/raw historical bytes are pinned. Index metadata and the exact GREEN command transcript/metadata are non-self-referential exclusions; prior indexes are also pinned as byte-exact raw backups. No browser failure is excluded or evicted. Raw -text CRLF evidence is separate from normalized LF and actual Git-filtered blob qualification.' });
+}
+
+if (require.main === module) {
+  if (process.env.CAPTURE_BROWSER_EVIDENCE !== '1') throw new Error('Deliberate capture requires exact CAPTURE_BROWSER_EVIDENCE=1');
+  const stage = process.argv[2];
+  if (stage === 'source') source();
+  else if (stage === 'red' || stage === 'green') run(stage);
+  else if (stage === 'index') index();
+  else if (stage === 'iac') json('iac.json', { cardId: 'A-S107', recordedAtUtc: now(),
+    stage: 'IaC applicability after genuine RED', applicability: 'N/A',
+    reason: 'Only fictional browser data and owned ephemeral 127.0.0.1 Node HTTP listeners. No infrastructure, cloud, identity, configuration or deployment changes.',
+    nativeAzureCertified: false, broaderLifecycleQualified: false });
+  else throw new Error('Unknown deliberate capture stage');
+  console.log(`Captured ${stage} without replacing any historical file.`);
+}
+
+module.exports = { root, repo, hash, canonical, save, json };

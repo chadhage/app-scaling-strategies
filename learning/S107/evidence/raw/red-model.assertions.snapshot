@@ -1,0 +1,46 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('../model.js');
+
+function begin(state, policy = 'compatible', prediction = 'readable', mode = 'static', origin = 'B') {
+  return model.transition(state, { type: 'begin', policy, prediction, mode, origin,
+    frontendOrigin: mode === 'http' ? 'http://127.0.0.1:21001' : null,
+    apiOrigin: mode === 'http' ? 'http://127.0.0.1:21002' : null });
+}
+const unmeasured = { browser: 'not-measured', receipt: null, cspBlocked: false, payloadVerified: false };
+const finish = (state, observation = unmeasured) => model.transition(state, { type: 'complete', observation });
+
+test('a loadable baseline retains an attempted rehearsal before its observation', () => {
+  const initial = model.createState();
+  const started = begin(initial);
+  assert.equal(model.summarize(started).counts.attempted, 1);
+  assert.equal(model.summarize(started).current.cors, 'unknown');
+  assert.equal(initial.attempts.length, 0);
+});
+
+test('a correct static prediction passes education but never fabricates measured CORS', () => {
+  const state = finish(begin(model.createState(), 'incompatible', 'cors-denied'));
+  const result = model.summarize(state);
+  assert.equal(result.current.verifier, 'pass');
+  assert.equal(result.current.userImpact, 'unknown');
+  assert.equal(result.current.cors, 'unknown');
+  assert.equal(result.current.actualBrowserCORS, false);
+});
+
+test('reset restores the view without deleting an original failed or unknown attempt', () => {
+  const first = finish(begin(model.createState(), 'compatible', 'cors-denied'));
+  const reset = model.transition(first, { type: 'reset' });
+  assert.equal(model.summarize(reset).counts.attempted, 1);
+  assert.equal(model.summarize(reset).history[0].verifier, 'fail');
+  assert.equal(model.summarize(reset).history[0].userImpact, 'unknown');
+  assert.equal(model.summarize(reset).current, null);
+});
+
+test('a seventh attempt is refused without conveniently evicting history', () => {
+  let state = model.createState();
+  for (let index = 0; index < 6; index++) state = finish(begin(state));
+  assert.throws(() => begin(state), { code: 'HISTORY_LIMIT' });
+  assert.equal(model.summarize(state).counts.attempted, 6);
+});

@@ -1,0 +1,105 @@
+A-S107 / S107 — two-owned-origin CORS rehearsal
+Training rehearsal - synthetic data - not a live Azure result
+
+LOCAL CONDUCTING (no packages or Azure needed)
+1. Open index.html directly to check an authored policy prediction. The education
+   verifier may pass/fail; actual CORS and user impact MUST remain unknown.
+2. For genuine HTTP-origin observations, from the repository root in PowerShell:
+     node .\learning\S107\serve.cjs
+   Open BOTH printed frontend URLs, A and B. Do not substitute URLs or hostnames.
+   The API and two frontends are core Node http listeners on literal 127.0.0.1,
+   each with its actual ephemeral port. Nothing binds publicly or uses DNS/TLS.
+3. On both pages select Baseline v1, predict readable, and send the request.
+   Repeat with Compatible v2. Both existing origins should continue reading.
+4. Select Incompatible v2. A stays readable. On B predict CORS-denied: education
+   passes, but user impact is interrupted. The API sends HTTP 200 without B's
+   allow-origin header; the real browser cannot read its fictional profile.
+5. Return B to Compatible v2. Recovery does not erase attempt 3. Also try a
+   mistaken prediction or deliberately missing observation. Inspect the trace,
+   counts and retained journal. Reset restores controls, not history.
+6. Each page has six attempts; the server retains at most twelve finished
+   receipts and refuses duplicate IDs. Reload ends the client journal, not the
+   server ledger. A new fixture is a new run, never a replacement for old proof.
+7. Press Ctrl+C in the owning terminal when done. All three owned listeners also
+   close automatically after 15 minutes. No server is left running by tests.
+
+WHAT THE RECEIPT DOES AND DOES NOT DO
+Same-origin /receipt exposes only the API's actual Origin, finished HTTP status,
+allow-origin header, policy/attempt identity and payload hash/length. It never
+returns the profile, grants access to the denied response or fetches/proxies it.
+The API's full response headers and request target are separately recorded by
+the automated fixture. Native proof corroborates these with browser-readable or
+blocked fetch results and Chromium's actual CORS diagnostic. A bare TypeError,
+painted flag, Node request, CSP denial or missing transport is not CORS proof.
+The model has no empirical certification authority, including for HTTP mode.
+
+FOCUSED VERIFICATION (existing tools only; default READ-ONLY)
+  node --test .\learning\S107\tests\model.test.cjs .\learning\S107\tests\server.test.cjs .\learning\S107\tests\surface.test.cjs .\learning\S107\tests\integrity.test.cjs
+  node .\learning\S107\scripts\syntax.cjs
+  node .\learning\S107\scripts\browser.cjs
+
+Capture ONLY when intentionally preserving a new observation:
+  $env:CAPTURE_BROWSER_EVIDENCE='1'
+  node .\learning\S107\scripts\browser.cjs
+  Remove-Item Env:\CAPTURE_BROWSER_EVIDENCE
+Exact "1" is required; "true" is not capture. Captures use new immutable paths,
+including original failures, and never replace historical reports. Raw RED,
+source CRLF, canonical Git LF, browser/server observations and tested source
+snapshots live in evidence\raw outside test autodiscovery. The newest explicitly
+captured integrity-*.json pins the publication's bytes and preserves previous
+indexes as raw backups. A later deliberate capture intentionally needs a new
+reviewed index, not automatic mutation during normal verification.
+
+NECESSARY TEST-ONLY PROTOCOL DEVIATION
+Read testing\browser\USAGE.txt. Its published openIsolatedLoopback API intercepts
+same-origin requests and buffers/fulfills responses. It cannot qualify native
+cross-origin CORS. It was not widened, bypassed, edited or used for this proof.
+scripts\native.cjs instead launches fresh sandboxed Edge using only the existing
+approved public Microsoft Playwright 1.56.1 distributions and signed installed
+Edge 156.0.4314.50. scripts\pins.cjs reads exact approved public cache SHA-512
+digests, compares all 510 installed package files with those cached tarballs,
+and verifies Edge's Microsoft Authenticode signature before importing Playwright.
+No dependency install, browser download, TLS weakening or extension code copy.
+
+The public launchServer/process API gives an exact caller-owned browser handle
+for bounded cleanup. Its control transport binds a separate ephemeral literal
+127.0.0.1 endpoint; it is automation IPC, not an application origin or proxy.
+All application HTTP travels natively: no routes, response fulfillment, proxy
+fetch, CORS bypass, cookies, credentials, arbitrary URL input or unsafe flag.
+Only the three actual listener origins and fixed owned files can be navigated.
+Caller-owned pages use exact-origin CSP and fixed assets/actions; request events
+audit that allowlist. This is not a general-purpose runner or OS network sandbox.
+The context blocks service workers and does not bypass CSP. Each browser has an
+exclusive S107-owned scratch directory; close runs in finally, uses only public
+owned handles, confirms process exit, and removes only that literal directory.
+Setup/actions and shutdown are bounded. The failed shared lifecycle prototype
+is NOT copied or revived. Broader lifecycle qualification remains false.
+
+OBSERVED LOCAL RUNS
+The first native attempt stalled during concurrent creation of another page;
+it did not prove CORS and its original failed/cleanup-unknown report remains.
+Its public owned-handle shutdown completed late. A separate exact-PID/token
+follow-up verified exit before removing only its original exclusive directory;
+that follow-up does not turn the failed attempt into a pass. Sequential page
+creation (closing the static page first) subsequently passed 22 actual DOM/
+keyboard/error/reset/failure/CSP observations with eight finished API receipts:
+seven browser-readable responses and one native CORS-denied HTTP 200 response.
+All three application listeners, control listener, browser and owned scratch
+closed cleanly in that successful run. This does not fix or qualify the broader
+shared lifecycle limitation.
+A subsequent read-only rerun passed 25 focused checks and syntax, but timed out
+waiting for native mouse-click stability on A's compatible request. Its failed
+tool-return facts are retained separately, without pretending a byte-exact
+transport stream was available. Ordinary verification did not overwrite proof.
+Automation now activates the actual native form buttons with keyboard Enter,
+avoiding hidden-tab animation-stability waits without forcing clicks, routing,
+disabling security or stealing integrated-browser foreground.
+
+SCOPE AND REMAINDER
+One original frozen S unit in SC-S107. Fixture, helper, repairs, proof and tests
+earn no extra credit. All policies/payloads/business data are fictional.
+This is real local native-browser CORS evidence, NOT native Azure/cloud evidence.
+B-S107, C092/P006 and the full D-S107 leased/native acceptance remain gated by
+their original approvals and target/tooling requirements. No infrastructure,
+identity, credentials, deployment, system configuration or spending is changed.
+Node 22.23.4 is test tooling, not production Node 24 qualification.

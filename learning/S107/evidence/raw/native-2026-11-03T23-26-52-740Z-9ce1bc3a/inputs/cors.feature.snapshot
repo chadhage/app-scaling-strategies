@@ -1,0 +1,53 @@
+Feature: S107 owned-origin CORS migration rehearsal
+  All policies, profiles and business data are fictional.
+  The banner is exactly "Training rehearsal - synthetic data - not a live Azure result".
+  One A-S107 satisfier owns this bundle; B-S107 and D-S107 remain separately gated.
+
+  Scenario: A static entry cannot measure HTTP browser-origin enforcement
+    Given the learner opens index.html directly from disk
+    When the learner checks a prediction about an authored policy
+    Then the education verifier can pass or fail
+    But user impact and actual CORS remain unknown
+    And the page provides explicit local Node startup instructions
+
+  Scenario: Existing browser origins survive a compatible migration
+    Given two owned HTTP frontends and an API listen only on literal 127.0.0.1 at actual ephemeral ports
+    And a fresh sandboxed, signed Edge browser uses native HTTP without routing interception
+    When each frontend requests baseline v1 and compatible v2 cross-origin
+    Then both browsers can read the fictional profile
+    And each server receipt records the actual Origin, HTTP 200 and matching allow-origin header
+
+  Scenario: An incompatible candidate interrupts one existing origin without bypass
+    Given both origins were valid existing v1 callers
+    When frontend B requests the incompatible v2 policy
+    Then the API actually sends HTTP 200 without an allow-origin header
+    And Chromium blocks reading that response specifically because of CORS
+    And the same-origin receipt contains metadata only, never the denied profile
+    And frontend A can still read the incompatible candidate
+    And B can read a compatible rollback without erasing its original interruption
+
+  Scenario: CSP or missing transport evidence is not CORS denial
+    When an attempt has a CSP violation or no matching finished HTTP receipt
+    Then its user impact and CORS observation remain unknown
+    And neither a model flag nor a generic fetch error qualifies as CORS proof
+
+  Scenario: History cannot conveniently evict failures
+    Given a denied, a failed prediction or an unknown attempt is retained
+    When the learner resets controls or completes later successful attempts
+    Then the original attempts and their separate outcomes remain
+    And a seventh attempt is rejected without changing the six-attempt history
+
+  Scenario: Keyboard, invalid inputs and CSP are exercised in the actual DOM
+    Then the core controls work with keyboard focus and activation
+    And malformed conditions produce an accessible error without mutation
+    And explicit reset restores controls but retains the journal
+    And inline scripts and a disallowed owned-origin connection are blocked by CSP
+
+  Scenario: Verification is isolated, bounded and read-only by default
+    Given only the published Playwright 1.56.1 public cache digests and signed Edge 156 are selected
+    Then no install, download, credentials, external request, unsafe security flag or shared helper edit occurs
+    And all caller-owned listeners and browser resources close in finally
+    And only literal owned scratch directories are removed after process exit
+    And historical observations change only with exact CAPTURE_BROWSER_EVIDENCE=1 deliberate capture
+    And raw CRLF source bytes and canonical Git bytes are qualified separately
+    And broader lifecycle qualification and native Azure certification remain false

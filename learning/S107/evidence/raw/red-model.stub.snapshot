@@ -1,0 +1,21 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S107 = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  function createState() {
+    return { version: 1, attempts: [], currentVisible: false };
+  }
+  function transition(state) {
+    return state;
+  }
+  function summarize() {
+    return {
+      counts: { attempted: 0, readable: 0, corsDenied: 0, unknown: 0 },
+      current: null, history: [],
+    };
+  }
+  return { createState, transition, summarize };
+}));

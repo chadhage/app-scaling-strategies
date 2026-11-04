@@ -1,0 +1,145 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('../model.js');
+
+function begin(state, policy = 'compatible', prediction = 'readable', mode = 'static', origin = 'B') {
+  return model.transition(state, { type: 'begin', policy, prediction, mode, origin,
+    frontendOrigin: mode === 'http' ? 'http://127.0.0.1:21001' : null,
+    apiOrigin: mode === 'http' ? 'http://127.0.0.1:21002' : null });
+}
+const unmeasured = { browser: 'not-measured', receipt: null, cspBlocked: false, payloadVerified: false };
+const finish = (state, observation = unmeasured) => model.transition(state, { type: 'complete', observation });
+
+test('a loadable baseline retains an attempted rehearsal before its observation', () => {
+  const initial = model.createState();
+  const started = begin(initial);
+  assert.equal(model.summarize(started).counts.attempted, 1);
+  assert.equal(model.summarize(started).current.cors, 'unknown');
+  assert.equal(initial.attempts.length, 0);
+});
+
+test('a correct static prediction passes education but never fabricates measured CORS', () => {
+  const state = finish(begin(model.createState(), 'incompatible', 'cors-denied'));
+  const result = model.summarize(state);
+  assert.equal(result.current.verifier, 'pass');
+  assert.equal(result.current.userImpact, 'unknown');
+  assert.equal(result.current.cors, 'unknown');
+  assert.equal(result.current.actualBrowserCORS, false);
+});
+
+test('reset restores the view without deleting an original failed or unknown attempt', () => {
+  const first = finish(begin(model.createState(), 'compatible', 'cors-denied'));
+  const reset = model.transition(first, { type: 'reset' });
+  assert.equal(model.summarize(reset).counts.attempted, 1);
+  assert.equal(model.summarize(reset).history[0].verifier, 'fail');
+  assert.equal(model.summarize(reset).history[0].userImpact, 'unknown');
+  assert.equal(model.summarize(reset).current, null);
+});
+
+test('a seventh attempt is refused without conveniently evicting history', () => {
+  let state = model.createState();
+  for (let index = 0; index < 6; index++) state = finish(begin(state));
+  assert.throws(() => begin(state), { code: 'HISTORY_LIMIT' });
+  assert.equal(model.summarize(state).counts.attempted, 6);
+});
+
+function receipt(policy = 'compatible', allowOrigin = 'http://127.0.0.1:21001') {
+  return { attempt: 1, policy, origin: 'http://127.0.0.1:21001', apiOrigin: 'http://127.0.0.1:21002',
+    method: 'GET', status: 200, allowOrigin, finished: true, bodySHA256: 'a'.repeat(64), bodyBytes: 79 };
+}
+test('HTTP assessment requires a matching finished receipt and never gives the model certification authority', () => {
+  const readable = finish(begin(model.createState(), 'compatible', 'readable', 'http'), {
+    browser: 'readable', receipt: receipt(), cspBlocked: false, payloadVerified: true,
+  });
+  assert.equal(model.summarize(readable).current.userImpact, 'preserved');
+  assert.equal(model.summarize(readable).current.cors, 'browser-readable');
+  assert.equal(model.summarize(readable).current.actualBrowserCORS, false);
+  const denied = finish(begin(model.createState(), 'incompatible', 'cors-denied', 'http'), {
+    browser: 'blocked', receipt: receipt('incompatible', null), cspBlocked: false, payloadVerified: false,
+  });
+  assert.equal(model.summarize(denied).current.verifier, 'pass');
+  assert.equal(model.summarize(denied).current.userImpact, 'interrupted');
+  assert.equal(model.summarize(denied).counts.corsDenied, 1);
+});
+test('generic fetch errors, CSP denial, wrong Origin, wrong attempt and unchecked payload remain unknown', () => {
+  const observations = [
+    { browser: 'blocked', receipt: null, cspBlocked: false, payloadVerified: false },
+    { browser: 'blocked', receipt: receipt('incompatible', null), cspBlocked: true, payloadVerified: false },
+    { browser: 'blocked', receipt: { ...receipt('incompatible', null), origin: 'http://127.0.0.1:21003' }, cspBlocked: false, payloadVerified: false },
+    { browser: 'blocked', receipt: { ...receipt('incompatible', null), attempt: 2 }, cspBlocked: false, payloadVerified: false },
+    { browser: 'readable', receipt: receipt('incompatible'), cspBlocked: false, payloadVerified: false },
+  ];
+  for (const observation of observations) {
+    const summary = model.summarize(finish(begin(model.createState(), 'incompatible', 'cors-denied', 'http'), observation));
+    assert.equal(summary.current.cors, 'unknown');
+    assert.equal(summary.current.userImpact, 'unknown');
+    assert.equal(summary.counts.unknown, 1);
+  }
+});
+test('a later success preserves the first real-denial assessment and its interruption', () => {
+  const denied = finish(begin(model.createState(), 'incompatible', 'cors-denied', 'http'), {
+    browser: 'blocked', receipt: receipt('incompatible', null), cspBlocked: false, payloadVerified: false,
+  });
+  const recovered = finish(begin(model.transition(denied, { type: 'reset' }), 'compatible', 'readable', 'http'), {
+    browser: 'readable', receipt: { ...receipt(), attempt: 2 }, cspBlocked: false, payloadVerified: true,
+  });
+  assert.equal(model.summarize(recovered).history[0].userImpact, 'interrupted');
+  assert.equal(model.summarize(recovered).counts.corsDenied, 1);
+  assert.equal(model.summarize(recovered).counts.readable, 1);
+});
+test('wrong education prediction remains failed even when actual browser reading is preserved', () => {
+  const state = finish(begin(model.createState(), 'compatible', 'cors-denied', 'http'), {
+    browser: 'readable', receipt: receipt(), cspBlocked: false, payloadVerified: true,
+  });
+  assert.equal(model.summarize(state).current.verifier, 'fail');
+  assert.equal(model.summarize(state).current.userImpact, 'preserved');
+});
+test('commands reject null, wrong prototypes, extra fields, accessors, symbols and string booleans without mutation', () => {
+  const initial = model.createState();
+  const valid = { type: 'begin', policy: 'baseline', origin: 'A', prediction: 'readable', mode: 'static',
+    frontendOrigin: null, apiOrigin: null };
+  const accessor = { ...valid };
+  Object.defineProperty(accessor, 'policy', { get() { throw new Error('Getter must not run'); }, enumerable: true });
+  const invalid = [null, [], Object.create(null), { ...valid, extra: true }, { ...valid, [Symbol('extra')]: true },
+    accessor, { ...valid, policy: 'anything' }, { ...valid, origin: 'https://external.invalid' },
+    { ...valid, mode: true }, { ...valid, frontendOrigin: 'http://127.0.0.1:80' },
+    { ...valid, type: 'reset' }, { type: 'complete', observation: unmeasured }];
+  for (const command of invalid) assert.throws(() => model.transition(initial, command));
+  assert.deepEqual(initial, model.createState());
+  const started = begin(initial);
+  assert.throws(() => finish(started, { ...unmeasured, cspBlocked: 'false' }), { code: 'OBSERVATION_VALUE' });
+  assert.throws(() => finish(started, { ...unmeasured, payloadVerified: 0 }), { code: 'OBSERVATION_VALUE' });
+  assert.equal(model.summarize(started).counts.pending, 1);
+});
+test('state forgery, sparse history, reorder, mixed origin pairs and static transport promotion fail closed', () => {
+  const started = begin(model.createState());
+  const entry = started.attempts[0];
+  const invalid = [
+    { ...started, version: '1' }, { ...started, extra: 1 },
+    { ...started, attempts: Array(1) }, { ...started, attempts: [{ ...entry, id: 2 }] },
+    { ...started, currentVisible: false }, { ...started, attempts: [{ ...entry, observation: unmeasured }, entry] },
+    { ...started, attempts: [{ ...entry, observation: { browser: 'blocked', receipt: null, cspBlocked: false, payloadVerified: false } }] },
+  ];
+  for (const value of invalid) assert.throws(() => model.summarize(value));
+  assert.throws(() => begin(started), { code: 'ACTION_ORDER' });
+  assert.throws(() => model.transition(started, { type: 'reset' }), { code: 'ACTION_ORDER' });
+  assert.throws(() => finish(finish(started)), { code: 'ACTION_ORDER' });
+  const http = finish(begin(model.createState(), 'baseline', 'readable', 'http'));
+  assert.throws(() => model.transition(http, { type: 'begin', policy: 'baseline', prediction: 'readable',
+    mode: 'http', origin: 'A', frontendOrigin: 'http://127.0.0.1:21003', apiOrigin: 'http://127.0.0.1:21002' }),
+  { code: 'STATE_ORIGIN' });
+});
+test('receipt shape cannot admit arbitrary URLs, unfinished responses, credentials headers or forged allowlists', () => {
+  for (const value of [null, { ...receipt(), status: 503 }, { ...receipt(), finished: 'true' },
+    { ...receipt(), allowOrigin: '*' }, { ...receipt(), bodyBytes: Infinity }, { ...receipt(), cookie: 'not-allowed' },
+    { ...receipt(), origin: 'http://localhost:21001' }, { ...receipt(), apiOrigin: 'http://127.1:21002' }]) {
+    assert.throws(() => model.validateReceipt(value));
+  }
+  for (const value of ['http://127.0.0.1:0', 'http://127.0.0.1:65536', 'http://127.0.0.1:080',
+    'http://127.0.0.1:80/', 'http://user@127.0.0.1:80', 'https://127.0.0.1:80', true]) {
+    assert.equal(model.literalOrigin(value), false);
+  }
+  assert.equal(model.literalOrigin('http://127.0.0.1:65535'), true);
+});
