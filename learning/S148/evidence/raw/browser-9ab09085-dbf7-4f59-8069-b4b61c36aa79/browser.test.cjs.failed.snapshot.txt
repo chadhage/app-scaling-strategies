@@ -1,0 +1,321 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { createHash, randomUUID } = require('node:crypto');
+const helperPath = path.resolve(__dirname, '..', '..', 'testing', 'browser', 'isolated.cjs');
+const { openIsolatedLesson } = require(helperPath);
+const expectedHelper = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
+
+function tree(root) {
+  const files = [];
+  function visit(directory) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const file = path.join(directory, entry.name);
+      if (entry.isDirectory()) visit(file);
+      else {
+        const stat = fs.statSync(file);
+        files.push([path.relative(root, file), stat.size, stat.mtimeMs, sha(fs.readFileSync(file))]);
+      }
+    }
+  }
+  visit(root);
+  return files.sort((left, right) => left[0].localeCompare(right[0]));
+}
+
+test('actual isolated file DOM, keyboard, guards, negative traces, reset/history, asset failure and CSP', { timeout: 90000 }, async () => {
+  const before = capture ? null : tree(__dirname);
+  const rawDirectory = capture ? path.join(__dirname, 'evidence', 'raw', `browser-${randomUUID()}`) : null;
+  if (rawDirectory) fs.mkdirSync(rawDirectory);
+  const record = {
+    cardId: 'A-S148', syntheticDataOnly: true, captureEnabled: capture,
+    nodeVersion: process.version, helperSha256: sha(fs.readFileSync(helperPath)),
+    browserVersion: null, checks: [], console: [], pageErrors: [], requestedURLs: [],
+    nativeResult: false, productionNode24Validated: false, sourceParentComplete: false,
+    cleanup: { awaitedFinallyClose: false, completed: false }, passed: false,
+  };
+  let session;
+  let failure;
+  let cleanupFailure;
+  let finalDOM = '';
+
+  try {
+    assert.equal(record.helperSha256, expectedHelper);
+    session = await openIsolatedLesson('learning\\S148\\index.html');
+    const { page } = session;
+    record.browserVersion = session.browserVersion;
+    assert.match(record.browserVersion, /^156\./);
+    page.on('console', (message) => {
+      if (message.type() === 'error') record.console.push(message.text());
+    });
+    page.on('pageerror', (error) => record.pageErrors.push(error.stack || error.message));
+    page.on('request', (request) => record.requestedURLs.push(request.url()));
+
+    async function dom() {
+      return page.evaluate(() => ({
+        counts: Object.fromEntries([...document.querySelectorAll('[data-count]')].map((item) => [item.dataset.count, item.textContent])),
+        rows: Object.fromEntries([...document.querySelectorAll('#results tbody tr')].map((row) => [row.dataset.case, [...row.cells].map((cell) => cell.textContent)])),
+        history: [...document.querySelectorAll('#history li[data-measurement]')].map((item) => ({ measurement: item.dataset.measurement, text: item.textContent })),
+        error: { visible: !document.getElementById('error').hidden, text: document.getElementById('error').textContent },
+      }));
+    }
+
+    async function measure(id) {
+      await page.locator('#packet-selection').selectOption(id);
+      await page.locator('#inspect-packet').click();
+      await page.locator('#confirmation').check();
+      await page.locator('#measure-packet').click();
+      assert.equal(await page.locator('#error').isVisible(), false);
+    }
+
+    assert.equal(await page.locator('#training-banner').textContent(), 'Training rehearsal - synthetic data - not a live Azure result.');
+    assert.equal(await page.locator('#packet-selection option').count(), 13);
+    assert.equal(await page.locator('#results tbody tr').count(), 0);
+    assert.equal((await dom()).counts['migration-success'], '0');
+    assert.equal((await dom()).counts.journeys, '0 measured / 12 fixed; 12 unmeasured');
+    record.checks.push({ name: 'load-and-explicit-fixed-data-contract', observed: await dom() });
+
+    await page.locator('#measure-packet').click();
+    assert.equal(await page.locator('#error').isVisible(), true);
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'error');
+    await page.locator('#confirmation').check();
+    await page.locator('#measure-packet').click();
+    assert.equal(await page.locator('#results tbody tr').count(), 0);
+    assert.equal((await dom()).counts['migration-success'], '0');
+    record.checks.push({ name: 'missing-confirmation-and-inspection-are-focused-errors', observed: await dom() });
+
+    await page.locator('#packet-selection').focus();
+    await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'inspect-packet');
+    await page.keyboard.press('Enter');
+    assert.equal(await page.locator('#inspection article').count(), 12);
+    await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'confirmation');
+    await page.keyboard.press('Space');
+    assert.equal(await page.locator('#confirmation').isChecked(), true);
+    await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'measure-packet');
+    await page.keyboard.press('Enter');
+
+    const cohort = await dom();
+    assert.deepEqual(cohort.counts, {
+      transitions: '1 measured / 1 declared',
+      journeys: '12 measured / 12 fixed; 0 unmeasured',
+      requests: '24 records / 24 HTTP 200',
+      movement: '5 observed / 1 unchanged / 1 contrary / 5 unknown',
+      completions: '10 successful / 1 failed / 1 unknown',
+      whole: '7 uninterrupted / 1 failed / 1 interrupted / 1 over-budget / 2 unknown',
+      'migration-success': '1',
+      'unchanged-success': '1',
+    });
+    const expected = [
+      ['observed', 'successful', 'uninterrupted', 'yes'],
+      ['unchanged', 'successful', 'uninterrupted', 'no'],
+      ['unknown', 'successful', 'uninterrupted', 'no'],
+      ['unknown', 'unknown', 'unknown', 'no'],
+      ['unknown', 'successful', 'uninterrupted', 'no'],
+      ['unknown', 'successful', 'uninterrupted', 'no'],
+      ['contrary', 'successful', 'uninterrupted', 'no'],
+      ['observed', 'failed', 'failed', 'no'],
+      ['observed', 'successful', 'interrupted', 'no'],
+      ['observed', 'successful', 'over-budget', 'no'],
+      ['unknown', 'successful', 'uninterrupted', 'no'],
+      ['observed', 'successful', 'unknown', 'no'],
+    ];
+    assert.equal(Object.keys(cohort.rows).length, 12);
+    expected.forEach((values, index) => {
+      const row = cohort.rows[`case-${String(index + 1).padStart(2, '0')}`];
+      assert.deepEqual([row[1], row[2], row[3], row[6]], values);
+    });
+    assert.match(cohort.rows['case-09'][4], /observed; retained unknown: no/);
+    assert.equal(cohort.rows['case-10'][5], '2600 / 2000 ms (exceeded)');
+    assert.match(cohort.rows['case-12'][4], /retained unknown: yes/);
+    assert.equal(cohort.history.length, 1);
+    record.checks.push({ name: 'keyboard-cohort-exact-transition-completion-and-journey-shapes', observed: cohort });
+    if (rawDirectory) await page.locator('#results').screenshot({ path: path.join(rawDirectory, 'cohort-results.png') });
+
+    await page.keyboard.press('Enter');
+    const replay = await dom();
+    assert.match(replay.error.text, /already measured/);
+    assert.deepEqual(replay.rows, cohort.rows);
+    assert.deepEqual(replay.counts, cohort.counts);
+    assert.equal(replay.history.length, 1);
+    record.checks.push({ name: 'replayed-measurement-cannot-inflate-or-overwrite', observed: replay });
+
+    await measure('case-02');
+    assert.match(await page.locator('#inspection').textContent(), /Entirely unchanged blue/);
+    assert.match(await page.locator('#inspection').textContent(), /Shared data movement: not required/);
+    assert.equal((await dom()).rows['case-02'][6], 'no');
+    assert.equal((await dom()).counts['unchanged-success'], '1');
+    assert.equal((await dom()).counts['migration-success'], '1');
+    assert.equal(await page.locator('#results tbody tr').count(), 12);
+    record.checks.push({ name: 'unchanged-success-is-separate-and-reinspection-deduplicates-originals', observed: await dom() });
+
+    const priorToError = await dom();
+    await page.evaluate(() => {
+      const selection = document.getElementById('packet-selection');
+      const invalid = document.createElement('option');
+      invalid.value = 'foreign-selection';
+      invalid.textContent = 'Foreign selection probe';
+      selection.append(invalid);
+      selection.value = invalid.value;
+      selection.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await page.locator('#measure-packet').click();
+    const foreign = await dom();
+    assert.match(foreign.error.text, /Choose one of the fixed/);
+    assert.deepEqual(foreign.rows, priorToError.rows);
+    assert.deepEqual(foreign.counts, priorToError.counts);
+    assert.deepEqual(foreign.history, priorToError.history);
+    record.checks.push({ name: 'foreign-selection-error-preserves-prior-results-and-history', observed: foreign });
+
+    await measure('case-04');
+    assert.match(await page.locator('#inspection').textContent(), /S148-new-journey-04/);
+    assert.equal((await dom()).rows['case-04'][1], 'unknown');
+    assert.equal((await dom()).rows['case-04'][2], 'unknown');
+    await measure('case-08');
+    assert.equal((await dom()).rows['case-08'][1], 'observed');
+    assert.equal((await dom()).rows['case-08'][3], 'failed');
+    await measure('case-09');
+    assert.equal((await dom()).rows['case-09'][3], 'interrupted');
+    await measure('case-10');
+    assert.equal((await dom()).rows['case-10'][5], '2600 / 2000 ms (exceeded)');
+    await measure('case-12');
+    assert.equal((await dom()).rows['case-12'][3], 'unknown');
+    assert.match((await dom()).rows['case-12'][4], /retained unknown: yes/);
+    assert.equal((await dom()).counts['migration-success'], '1');
+    assert.equal((await dom()).history.length, 7);
+    record.checks.push({ name: 'foreign-attempt-state-loss-interruption-budget-and-unknown-recovery', observed: await dom() });
+
+    await page.locator('#packet-selection').selectOption('case-11');
+    await page.locator('#confirmation').check();
+    await page.locator('#measure-packet').click();
+    assert.equal(await page.locator('#error').isVisible(), true);
+    assert.equal((await dom()).history.length, 7);
+    record.checks.push({ name: 'changed-selection-requires-fresh-inspection', observed: await dom() });
+
+    await page.locator('#reset-lesson').focus();
+    await page.keyboard.press('Space');
+    const reset = await dom();
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'packet-selection');
+    assert.equal(await page.locator('#packet-selection').inputValue(), 'cohort');
+    assert.equal(await page.locator('#confirmation').isChecked(), false);
+    assert.equal(await page.evaluate(() => typeof document.getElementById('lesson-controls').reset), 'function');
+    assert.equal(Object.keys(reset.rows).length, 0);
+    assert.equal(reset.counts['migration-success'], '0');
+    assert.equal(reset.history.length, 7);
+    assert.match(reset.history.map((entry) => entry.text).join('\n'), /"retainedInterruption": true/);
+    assert.match(reset.history.map((entry) => entry.text).join('\n'), /"retainedUnknown": true/);
+    assert.match(reset.history.map((entry) => entry.text).join('\n'), /"originalMs": 2000/);
+    record.checks.push({ name: 'keyboard-reset-no-form-shadowing-retains-prior-negative-and-unknown-history', observed: reset });
+
+    await measure('case-09');
+    await measure('case-12');
+    const bounded = await dom();
+    assert.equal(bounded.history.length, 8);
+    assert.equal(bounded.history[0].measurement, '2');
+    assert.equal(bounded.counts.journeys, '2 measured / 12 fixed; 10 unmeasured');
+    assert.equal(bounded.counts.transitions, '1 measured / 1 declared');
+    assert.equal(bounded.counts['migration-success'], '0');
+    assert.equal(bounded.counts.completions, '2 successful / 0 failed / 0 unknown');
+    assert.equal(bounded.counts.whole, '0 uninterrupted / 0 failed / 1 interrupted / 0 over-budget / 1 unknown');
+    await page.locator('#history li[data-measurement="9"] summary').click();
+    assert.equal(await page.locator('#history li[data-measurement="9"] details').getAttribute('open'), '');
+    record.checks.push({ name: 'bounded-eight-entry-history-and-terminal-success-not-original-success', observed: bounded });
+
+    const originalURL = page.url();
+    await page.evaluate(() => {
+      globalThis.__s148Csp = [];
+      addEventListener('securitypolicyviolation', (event) => {
+        globalThis.__s148Csp.push({ directive: event.effectiveDirective, blockedURI: event.blockedURI });
+      });
+      const script = document.createElement('script');
+      script.textContent = 'globalThis.__s148InlineRan = true';
+      document.body.append(script);
+      script.remove();
+      const button = document.createElement('button');
+      button.id = 'csp-handler-probe';
+      button.type = 'button';
+      button.textContent = 'Offline CSP handler probe';
+      button.setAttribute('onclick', 'globalThis.__s148HandlerRan = true');
+      document.body.append(button);
+      const form = document.createElement('form');
+      form.id = 'csp-form-probe';
+      form.action = 'data:text/html,S148-offline-form-probe';
+      document.body.append(form);
+      HTMLFormElement.prototype.submit.call(form);
+    });
+    await page.locator('#csp-handler-probe').click();
+    const connectionAllowed = await page.evaluate(() => fetch('data:text/plain,S148-offline-connect-probe').then(() => true, () => false));
+    assert.equal(connectionAllowed, false);
+    await page.waitForFunction(() => ['script-src-elem', 'script-src-attr', 'connect-src', 'form-action']
+      .every((directive) => globalThis.__s148Csp.some((event) => event.directive === directive)));
+    const csp = await page.evaluate(() => ({
+      inlineRan: globalThis.__s148InlineRan === true,
+      handlerRan: globalThis.__s148HandlerRan === true,
+      violations: globalThis.__s148Csp,
+    }));
+    assert.equal(csp.inlineRan, false);
+    assert.equal(csp.handlerRan, false);
+    assert.equal(page.url(), originalURL);
+    assert.equal(record.requestedURLs.some((url) => /^https?:/i.test(url)), false);
+    record.checks.push({ name: 'actual-csp-inline-handler-data-connect-and-form-blocking-without-network', observed: csp });
+
+    await page.route('**/fixtures.js', (route) => route.abort());
+    await page.reload({ waitUntil: 'load' });
+    assert.equal(await page.locator('#error').isVisible(), true);
+    assert.match(await page.locator('#error').textContent(), /assets did not load/);
+    assert.equal(await page.locator('#inspect-packet').isDisabled(), true);
+    assert.equal(await page.locator('#measure-packet').isDisabled(), true);
+    assert.equal(await page.locator('#results tbody tr').count(), 0);
+    assert.match(await page.locator('#notice').textContent(), /No fictional result has been measured/);
+    record.checks.push({ name: 'actual-missing-local-asset-fails-closed-with-readable-error', observed: await dom() });
+    await page.unroute('**/fixtures.js');
+    await page.reload({ waitUntil: 'load' });
+    assert.equal(await page.locator('#error').isVisible(), false);
+    assert.equal(await page.locator('#training-banner').textContent(), 'Training rehearsal - synthetic data - not a live Azure result.');
+    assert.equal((await dom()).counts['migration-success'], '0');
+    assert.equal(record.pageErrors.length, 0);
+    record.checks.push({ name: 'asset-recovery-reload-is-new-local-rehearsal-not-migration', observed: await dom() });
+    finalDOM = await page.content();
+    record.passed = true;
+  } catch (error) {
+    failure = error;
+    record.failure = { name: error.name, message: error.message, stack: error.stack };
+  } finally {
+    if (session) {
+      record.cleanup.awaitedFinallyClose = true;
+      try {
+        if (rawDirectory && !finalDOM && !session.page.isClosed()) finalDOM = await session.page.content();
+      } catch (error) {
+        record.domCaptureError = error.message;
+      } finally {
+        try {
+          await session.close();
+          record.cleanup.completed = true;
+        } catch (error) {
+          cleanupFailure = error;
+          record.cleanupFailure = { name: error.name, message: error.message, stack: error.stack };
+          record.passed = false;
+        }
+      }
+    }
+    if (rawDirectory) {
+      fs.writeFileSync(path.join(rawDirectory, 'browser.json'), JSON.stringify(record, null, 2) + '\n');
+      fs.writeFileSync(path.join(rawDirectory, 'dom-final.raw.html'), finalDOM);
+      fs.writeFileSync(path.join(rawDirectory, 'console.raw.json'), JSON.stringify(record.console, null, 2) + '\n');
+      console.log(`Deliberate raw browser capture: ${path.relative(process.cwd(), rawDirectory)}`);
+    }
+  }
+  if (!capture) assert.deepEqual(tree(__dirname), before, 'Normal browser verification must not modify any lesson or historical proof file.');
+  if (failure && cleanupFailure) throw new AggregateError([failure, cleanupFailure], 'Browser assertion and cleanup both failed.');
+  if (failure) throw failure;
+  if (cleanupFailure) throw cleanupFailure;
+  assert.equal(record.cleanup.awaitedFinallyClose, true);
+  assert.equal(record.cleanup.completed, true);
+  console.log(`Observed ${record.checks.length} actual DOM/keyboard/error/reset/failure/CSP groups in Edge ${record.browserVersion}; native result: false.`);
+});

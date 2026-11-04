@@ -1,0 +1,20 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { evaluate, packets } = require('./model.js');
+
+test('observed same-original movement does not demand an unchanged data tier move', () => {
+  const result = evaluate(packets[0]);
+  assert.equal(result.movement, 'observed');
+  assert.equal(result.successfulMigration, true);
+  assert.equal(result.wholeJourney.outcome, 'uninterrupted');
+});
+
+test('unchanged successful HTTP 200 users never inflate successful migration', () => {
+  const result = evaluate(packets[1]);
+  assert.equal(result.movement, 'unchanged');
+  assert.equal(result.wholeJourney.completion, 'successful');
+  assert.equal(result.unchangedSuccessful, true);
+  assert.equal(result.successfulMigration, false);
+});

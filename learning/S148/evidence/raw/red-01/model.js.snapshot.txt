@@ -1,0 +1,20 @@
+'use strict';
+
+(function expose(root, factory) {
+  const fixtures = typeof module === 'object' && module.exports ? require('./fixtures.js') : root.S148Fixtures;
+  const api = factory(fixtures);
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S148Model = api;
+}(typeof globalThis === 'object' ? globalThis : this, (fixtures) => {
+  function evaluate(packet) {
+    return {
+      caseId: packet.id,
+      movement: 'unknown',
+      successfulMigration: false,
+      unchangedSuccessful: false,
+      wholeJourney: { outcome: 'unknown', completion: 'unknown' },
+      tierEvidence: [],
+    };
+  }
+  return { evaluate, packets: fixtures.packets };
+}));

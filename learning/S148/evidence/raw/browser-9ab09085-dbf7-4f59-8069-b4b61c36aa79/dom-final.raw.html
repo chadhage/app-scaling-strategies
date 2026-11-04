@@ -1,0 +1,478 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>S148 · Actual migration evidence</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="fixtures.js" defer=""></script>
+  <script src="model.js" defer=""></script>
+  <script src="app.js" defer=""></script>
+</head>
+<body>
+  <header>
+    <p id="training-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result.</p>
+    <h1>S148 · Did the same original journey actually move?</h1>
+    <p>Successful migration requires observed intended version movement. Unchanged successful users stay separate; HTTP 200, healthy tiers, new-version-only stamps and successful new attempts cannot prove original movement.</p>
+  </header>
+  <main>
+    <section aria-labelledby="contract-heading">
+      <h2 id="contract-heading">Fixed fictional operating contract</h2>
+      <p>One transition event; twelve original journeys; twenty-four request records. Each journey starts at <strong>0 ms</strong> with an original <strong>2000 ms</strong> budget. Transition: <strong>1000–1100 ms</strong>. Frontend and API must move <strong>blue v1 → green v2</strong>. Shared data stays v1 and <strong>is not required to move</strong>.</p>
+      <p>Every user, journey, attempt, tier, version, correlation, transition time, observation, completion, request and trace below is fixed teaching DATA ONLY. Inspecting does not observe a real service; measuring computes those records. No live telemetry, network requests, user data, cloud operations, capacity scaling or five-nines certification.</p>
+      <p>Bounds: 12 originals, at most 48 inspections, 24 measurements and 8 retained history entries. Times are fictional, not wall-clock measurements or Azure budgets.</p>
+    </section>
+
+    <section aria-labelledby="conduct-heading">
+      <h2 id="conduct-heading">Select → inspect → measure</h2>
+      <form id="lesson-controls" novalidate="">
+        <label for="packet-selection">Fixed trace packet</label>
+        <select id="packet-selection" name="packet">
+          <option value="cohort">All twelve original journeys</option>
+        <option value="case-01">case-01 · Observed intended movement</option><option value="case-02">case-02 · Entirely unchanged blue</option><option value="case-03">case-03 · New version only</option><option value="case-04">case-04 · Successful new attempt</option><option value="case-05">case-05 · Missing required API target</option><option value="case-06">case-06 · Wrong correlation</option><option value="case-07">case-07 · Wrong intended target</option><option value="case-08">case-08 · Moved but lost state</option><option value="case-09">case-09 · Recovery retains interruption</option><option value="case-10">case-10 · Recovery exceeds original budget</option><option value="case-11">case-11 · Missing target timing</option><option value="case-12">case-12 · Recovery retains unknown</option><option value="foreign-selection">Foreign selection probe</option></select>
+        <button id="inspect-packet" type="button">Inspect selected traces</button>
+        <label class="confirmation"><input id="confirmation" type="checkbox" style=""> I inspected the original identities, required tiers, transition timing and stateful evidence.</label>
+        <button id="measure-packet" type="submit">Measure inspected evidence</button>
+        <button id="reset-lesson" type="button">Reset current run (retain history)</button>
+      </form>
+      <p id="notice" role="status" aria-live="polite">Measured fixed evidence. 0 successful intended migration(s); unchanged users remain separate.</p>
+      <p id="error" role="alert" tabindex="-1" hidden=""></p>
+    </section>
+
+    <section aria-labelledby="inspection-heading">
+      <h2 id="inspection-heading">Original contracts and per-tier trace inspection</h2>
+      <div id="inspection"><article data-packet="case-12"><h3>case-12 · Recovery retains unknown</h3><p>A later correct completion cannot replace an earlier unknown original observation.</p><p>Original user S148-user-12; journey S148-journey-12; attempt S148-original-12; correlation S148-correlation-12; transition S148-transition-01 at 1000–1100 ms. Original start 0 ms; budget 2000 ms.</p><p>Required: frontend and API blue v1 → green v2. Shared data movement: not required. Requests: 2 fixed HTTP 200 records, not migration evidence.</p><div class="table-scroll"><table><caption>Fixed per-user/tier version traces; absent fields are shown as unknown</caption><thead><tr><th scope="col">Tier / phase</th><th scope="col">User / journey / attempt</th><th scope="col">Correlation / transition</th><th scope="col">Observed time (ms)</th><th scope="col">Deployment / version</th><th scope="col">Healthy (not proof)</th></tr></thead><tbody><tr><td>frontend / before</td><td>S148-user-12 / S148-journey-12 / S148-original-12</td><td>S148-correlation-12 / S148-transition-01</td><td>900</td><td>blue / v1</td><td>true</td></tr><tr><td>frontend / after</td><td>S148-user-12 / S148-journey-12 / S148-original-12</td><td>S148-correlation-12 / S148-transition-01</td><td>1200</td><td>green / v2</td><td>true</td></tr><tr><td>api / before</td><td>S148-user-12 / S148-journey-12 / S148-original-12</td><td>S148-correlation-12 / S148-transition-01</td><td>900</td><td>blue / v1</td><td>true</td></tr><tr><td>api / after</td><td>S148-user-12 / S148-journey-12 / S148-original-12</td><td>S148-correlation-12 / S148-transition-01</td><td>1200</td><td>green / v2</td><td>true</td></tr><tr><td>data / before</td><td>S148-user-12 / S148-journey-12 / S148-original-12</td><td>S148-correlation-12 / S148-transition-01</td><td>900</td><td>shared-data / v1</td><td>true</td></tr><tr><td>data / after</td><td>S148-user-12 / S148-journey-12 / S148-original-12</td><td>S148-correlation-12 / S148-transition-01</td><td>1200</td><td>shared-data / v1</td><td>true</td></tr></tbody></table></div><details><summary>Inspect fixed original contract, requests, observations and terminal completion</summary><pre>{
+  "original": {
+    "userId": "S148-user-12",
+    "journeyId": "S148-journey-12",
+    "attemptId": "S148-original-12",
+    "correlationId": "S148-correlation-12",
+    "transitionId": "S148-transition-01",
+    "startedAtMs": 0,
+    "budgetMs": 2000,
+    "transition": {
+      "id": "S148-transition-01",
+      "startedAtMs": 1000,
+      "endedAtMs": 1100
+    },
+    "tiers": [
+      {
+        "tier": "frontend",
+        "movementRequired": true,
+        "origin": {
+          "deployment": "blue",
+          "version": "v1"
+        },
+        "target": {
+          "deployment": "green",
+          "version": "v2"
+        }
+      },
+      {
+        "tier": "api",
+        "movementRequired": true,
+        "origin": {
+          "deployment": "blue",
+          "version": "v1"
+        },
+        "target": {
+          "deployment": "green",
+          "version": "v2"
+        }
+      },
+      {
+        "tier": "data",
+        "movementRequired": false,
+        "origin": {
+          "deployment": "shared-data",
+          "version": "v1"
+        },
+        "target": {
+          "deployment": "shared-data",
+          "version": "v1"
+        }
+      }
+    ],
+    "expectedState": {
+      "authenticated": true,
+      "stateToken": "S148-profile-12",
+      "businessEffects": 1,
+      "uiReady": true
+    }
+  },
+  "requests": [
+    {
+      "id": "S148-request-12-1",
+      "userId": "S148-user-12",
+      "journeyId": "S148-journey-12",
+      "attemptId": "S148-original-12",
+      "correlationId": "S148-correlation-12",
+      "transitionId": "S148-transition-01",
+      "observedAtMs": 900,
+      "httpStatus": 200,
+      "version": "v1"
+    },
+    {
+      "id": "S148-request-12-2",
+      "userId": "S148-user-12",
+      "journeyId": "S148-journey-12",
+      "attemptId": "S148-original-12",
+      "correlationId": "S148-correlation-12",
+      "transitionId": "S148-transition-01",
+      "observedAtMs": 1300,
+      "httpStatus": 200,
+      "version": "v2"
+    }
+  ],
+  "observations": [
+    {
+      "id": "S148-observation-12-baseline",
+      "userId": "S148-user-12",
+      "journeyId": "S148-journey-12",
+      "attemptId": "S148-original-12",
+      "correlationId": "S148-correlation-12",
+      "transitionId": "S148-transition-01",
+      "observedAtMs": 900,
+      "kind": "correct"
+    },
+    {
+      "id": "S148-observation-12-unknown",
+      "userId": "S148-user-12",
+      "journeyId": "S148-journey-12",
+      "attemptId": "S148-original-12",
+      "correlationId": "S148-correlation-12",
+      "transitionId": "S148-transition-01",
+      "kind": "unknown",
+      "observedAtMs": 1050
+    },
+    {
+      "id": "S148-observation-12-recovery",
+      "userId": "S148-user-12",
+      "journeyId": "S148-journey-12",
+      "attemptId": "S148-original-12",
+      "correlationId": "S148-correlation-12",
+      "transitionId": "S148-transition-01",
+      "kind": "recovery",
+      "observedAtMs": 1450
+    }
+  ],
+  "completion": {
+    "userId": "S148-user-12",
+    "journeyId": "S148-journey-12",
+    "attemptId": "S148-original-12",
+    "correlationId": "S148-correlation-12",
+    "transitionId": "S148-transition-01",
+    "observedAtMs": 1500,
+    "completed": true,
+    "authenticated": true,
+    "stateToken": "S148-profile-12",
+    "businessEffects": 1,
+    "uiReady": true
+  }
+}</pre></details></article></div>
+    </section>
+
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Measured original results</h2>
+      <p>Movement, terminal completion, whole stateful outcome, interruption and original budget are separate. A later recovery never erases prior interruption or unknown evidence.</p>
+      <dl id="counts"><dt>Transition events</dt><dd data-count="transitions">1 measured / 1 declared</dd><dt>Original journeys</dt><dd data-count="journeys">2 measured / 12 fixed; 10 unmeasured</dd><dt>Request observations (not journeys)</dt><dd data-count="requests">4 records / 4 HTTP 200</dd><dt>Intended movement</dt><dd data-count="movement">2 observed / 0 unchanged / 0 contrary / 0 unknown</dd><dt>Terminal completions</dt><dd data-count="completions">2 successful / 0 failed / 0 unknown</dd><dt>Whole original journeys</dt><dd data-count="whole">0 uninterrupted / 0 failed / 1 interrupted / 0 over-budget / 1 unknown</dd><dt>Successful intended migrations</dt><dd data-count="migration-success">0</dd><dt>Unchanged successful journeys (not migrated)</dt><dd data-count="unchanged-success">0</dd></dl>
+      <div class="table-scroll">
+        <table id="results">
+          <caption>One row per measured original journey, never one row per successful request</caption>
+          <thead><tr><th scope="col">Original journey</th><th scope="col">Intended movement</th><th scope="col">Terminal completion</th><th scope="col">Whole original outcome</th><th scope="col">Interruption / uncertainty</th><th scope="col">Original elapsed / budget</th><th scope="col">Successful migration</th></tr></thead>
+          <tbody><tr data-case="case-09"><th scope="row">S148-journey-09</th><td>observed</td><td>successful</td><td>interrupted</td><td>observed; retained unknown: no</td><td>1500 / 2000 ms (within)</td><td>no</td></tr><tr data-case="case-12"><th scope="row">S148-journey-12</th><td>observed</td><td>successful</td><td>unknown</td><td>unknown; retained unknown: yes</td><td>1500 / 2000 ms (within)</td><td>no</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained bounded measurement history</h2>
+      <p>Reset clears the current run, not these past measured outcomes. Re-inspection does not create another original journey or transition event. Only the last eight measurements are retained until page reload.</p>
+      <ol id="history"><li data-measurement="2"><p>Measurement 2, run 1, case-02: 1 original journeys, 0 successful migration(s), 1 unchanged success(es).</p><details><summary>Retained original outcomes, interruption, uncertainty and budgets</summary><pre>[
+  {
+    "journeyId": "S148-journey-02",
+    "movement": "unchanged",
+    "successfulMigration": false,
+    "wholeJourney": {
+      "outcome": "uninterrupted",
+      "completion": "successful",
+      "stateCorrect": true,
+      "interruption": "none-observed",
+      "budget": {
+        "originalMs": 2000,
+        "elapsedMs": 1500,
+        "status": "within"
+      },
+      "retainedInterruption": false,
+      "retainedStateFailure": false,
+      "retainedUnknown": false,
+      "retainedObservations": [
+        {
+          "id": "S148-observation-02-baseline",
+          "kind": "correct",
+          "observedAtMs": 900,
+          "trusted": true
+        }
+      ]
+    }
+  }
+]</pre></details></li><li data-measurement="3"><p>Measurement 3, run 1, case-04: 1 original journeys, 0 successful migration(s), 0 unchanged success(es).</p><details><summary>Retained original outcomes, interruption, uncertainty and budgets</summary><pre>[
+  {
+    "journeyId": "S148-journey-04",
+    "movement": "unknown",
+    "successfulMigration": false,
+    "wholeJourney": {
+      "outcome": "unknown",
+      "completion": "unknown",
+      "stateCorrect": null,
+      "interruption": "none-observed",
+      "budget": {
+        "originalMs": 2000,
+        "elapsedMs": null,
+        "status": "unknown"
+      },
+      "retainedInterruption": false,
+      "retainedStateFailure": false,
+      "retainedUnknown": false,
+      "retainedObservations": [
+        {
+          "id": "S148-observation-04-baseline",
+          "kind": "correct",
+          "observedAtMs": 900,
+          "trusted": true
+        }
+      ]
+    }
+  }
+]</pre></details></li><li data-measurement="4"><p>Measurement 4, run 1, case-08: 1 original journeys, 0 successful migration(s), 0 unchanged success(es).</p><details><summary>Retained original outcomes, interruption, uncertainty and budgets</summary><pre>[
+  {
+    "journeyId": "S148-journey-08",
+    "movement": "observed",
+    "successfulMigration": false,
+    "wholeJourney": {
+      "outcome": "failed",
+      "completion": "failed",
+      "stateCorrect": false,
+      "interruption": "none-observed",
+      "budget": {
+        "originalMs": 2000,
+        "elapsedMs": 1500,
+        "status": "within"
+      },
+      "retainedInterruption": false,
+      "retainedStateFailure": false,
+      "retainedUnknown": false,
+      "retainedObservations": [
+        {
+          "id": "S148-observation-08-baseline",
+          "kind": "correct",
+          "observedAtMs": 900,
+          "trusted": true
+        }
+      ]
+    }
+  }
+]</pre></details></li><li data-measurement="5"><p>Measurement 5, run 1, case-09: 1 original journeys, 0 successful migration(s), 0 unchanged success(es).</p><details><summary>Retained original outcomes, interruption, uncertainty and budgets</summary><pre>[
+  {
+    "journeyId": "S148-journey-09",
+    "movement": "observed",
+    "successfulMigration": false,
+    "wholeJourney": {
+      "outcome": "interrupted",
+      "completion": "successful",
+      "stateCorrect": true,
+      "interruption": "observed",
+      "budget": {
+        "originalMs": 2000,
+        "elapsedMs": 1500,
+        "status": "within"
+      },
+      "retainedInterruption": true,
+      "retainedStateFailure": false,
+      "retainedUnknown": false,
+      "retainedObservations": [
+        {
+          "id": "S148-observation-09-baseline",
+          "kind": "correct",
+          "observedAtMs": 900,
+          "trusted": true
+        },
+        {
+          "id": "S148-observation-9-interruption",
+          "kind": "interruption",
+          "observedAtMs": 1050,
+          "trusted": true
+        },
+        {
+          "id": "S148-observation-9-recovery",
+          "kind": "recovery",
+          "observedAtMs": 1450,
+          "trusted": true
+        }
+      ]
+    }
+  }
+]</pre></details></li><li data-measurement="6"><p>Measurement 6, run 1, case-10: 1 original journeys, 0 successful migration(s), 0 unchanged success(es).</p><details><summary>Retained original outcomes, interruption, uncertainty and budgets</summary><pre>[
+  {
+    "journeyId": "S148-journey-10",
+    "movement": "observed",
+    "successfulMigration": false,
+    "wholeJourney": {
+      "outcome": "over-budget",
+      "completion": "successful",
+      "stateCorrect": true,
+      "interruption": "none-observed",
+      "budget": {
+        "originalMs": 2000,
+        "elapsedMs": 2600,
+        "status": "exceeded"
+      },
+      "retainedInterruption": false,
+      "retainedStateFailure": false,
+      "retainedUnknown": false,
+      "retainedObservations": [
+        {
+          "id": "S148-observation-10-baseline",
+          "kind": "correct",
+          "observedAtMs": 900,
+          "trusted": true
+        },
+        {
+          "id": "S148-observation-10-recovery",
+          "kind": "recovery",
+          "observedAtMs": 2600,
+          "trusted": true
+        }
+      ]
+    }
+  }
+]</pre></details></li><li data-measurement="7"><p>Measurement 7, run 1, case-12: 1 original journeys, 0 successful migration(s), 0 unchanged success(es).</p><details><summary>Retained original outcomes, interruption, uncertainty and budgets</summary><pre>[
+  {
+    "journeyId": "S148-journey-12",
+    "movement": "observed",
+    "successfulMigration": false,
+    "wholeJourney": {
+      "outcome": "unknown",
+      "completion": "successful",
+      "stateCorrect": true,
+      "interruption": "unknown",
+      "budget": {
+        "originalMs": 2000,
+        "elapsedMs": 1500,
+        "status": "within"
+      },
+      "retainedInterruption": false,
+      "retainedStateFailure": false,
+      "retainedUnknown": true,
+      "retainedObservations": [
+        {
+          "id": "S148-observation-12-baseline",
+          "kind": "correct",
+          "observedAtMs": 900,
+          "trusted": true
+        },
+        {
+          "id": "S148-observation-12-unknown",
+          "kind": "unknown",
+          "observedAtMs": 1050,
+          "trusted": true
+        },
+        {
+          "id": "S148-observation-12-recovery",
+          "kind": "recovery",
+          "observedAtMs": 1450,
+          "trusted": true
+        }
+      ]
+    }
+  }
+]</pre></details></li><li data-measurement="8"><p>Measurement 8, run 2, case-09: 1 original journeys, 0 successful migration(s), 0 unchanged success(es).</p><details><summary>Retained original outcomes, interruption, uncertainty and budgets</summary><pre>[
+  {
+    "journeyId": "S148-journey-09",
+    "movement": "observed",
+    "successfulMigration": false,
+    "wholeJourney": {
+      "outcome": "interrupted",
+      "completion": "successful",
+      "stateCorrect": true,
+      "interruption": "observed",
+      "budget": {
+        "originalMs": 2000,
+        "elapsedMs": 1500,
+        "status": "within"
+      },
+      "retainedInterruption": true,
+      "retainedStateFailure": false,
+      "retainedUnknown": false,
+      "retainedObservations": [
+        {
+          "id": "S148-observation-09-baseline",
+          "kind": "correct",
+          "observedAtMs": 900,
+          "trusted": true
+        },
+        {
+          "id": "S148-observation-9-interruption",
+          "kind": "interruption",
+          "observedAtMs": 1050,
+          "trusted": true
+        },
+        {
+          "id": "S148-observation-9-recovery",
+          "kind": "recovery",
+          "observedAtMs": 1450,
+          "trusted": true
+        }
+      ]
+    }
+  }
+]</pre></details></li><li data-measurement="9"><p>Measurement 9, run 2, case-12: 1 original journeys, 0 successful migration(s), 0 unchanged success(es).</p><details open=""><summary>Retained original outcomes, interruption, uncertainty and budgets</summary><pre>[
+  {
+    "journeyId": "S148-journey-12",
+    "movement": "observed",
+    "successfulMigration": false,
+    "wholeJourney": {
+      "outcome": "unknown",
+      "completion": "successful",
+      "stateCorrect": true,
+      "interruption": "unknown",
+      "budget": {
+        "originalMs": 2000,
+        "elapsedMs": 1500,
+        "status": "within"
+      },
+      "retainedInterruption": false,
+      "retainedStateFailure": false,
+      "retainedUnknown": true,
+      "retainedObservations": [
+        {
+          "id": "S148-observation-12-baseline",
+          "kind": "correct",
+          "observedAtMs": 900,
+          "trusted": true
+        },
+        {
+          "id": "S148-observation-12-unknown",
+          "kind": "unknown",
+          "observedAtMs": 1050,
+          "trusted": true
+        },
+        {
+          "id": "S148-observation-12-recovery",
+          "kind": "recovery",
+          "observedAtMs": 1450,
+          "trusted": true
+        }
+      ]
+    }
+  }
+]</pre></details></li></ol>
+    </section>
+    <noscript><p class="banner">JavaScript is required for this local rehearsal. No result has been measured.</p></noscript>
+  </main>
+  <footer>
+    <p>A-S148 · D-S148 · P0 · original S satisfier · LP-EXPORT · SOURCE gate. Portable local rehearsal only; B-S148, D-S148 and native evidence remain incomplete.</p>
+    <p>Educational, AS-IS, not endorsed by Microsoft; no Microsoft SLA or native Azure result is claimed. <a href="../../README.md">Read the original source and disclaimer</a>. <a href="README.txt">Lesson instructions and evidence limits</a>.</p>
+  </footer>
+
+
+<button id="csp-handler-probe" type="button" onclick="globalThis.__s148HandlerRan = true">Offline CSP handler probe</button><form id="csp-form-probe" action="data:text/html,S148-offline-form-probe"></form></body></html>
