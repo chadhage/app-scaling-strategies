@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S132 - Original sign-in journey rehearsal</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S132: Finish the original sign-in across cutover</h1>
+    <p>A-S132 · D-S132 · SC-S132 · one frozen satisfier. Fixed fictional teaching <strong>DATA ONLY</strong>.</p>
+  </header>
+  <main>
+    <section aria-labelledby="objective">
+      <h2 id="objective">Objective and declared contract</h2>
+      <p>Finish a sign-in across cutover; detect forced restart or lost callback state.</p>
+      <p>The user finishes login without restarting, losing state, or exceeding the agreed budget.
+        This exercise also checks the intended identity, callback correlation, issued session and final signed-in page.
+        A callback HTTP 200 or new version label cannot certify continuous sign-in.</p>
+      <p>Preconditions: one fictional journey begins on v1 at 0 ms; cutover is at 500 ms.
+        All times are fixed trace DATA, not clocks or measurements of a live system.
+        The original budget is pinned at start and includes callback and signed-in page completion.</p>
+      <p>The pending session and authenticated session are deliberately different fictional records.
+        Legitimate session rotation is modeled; the final session must match the issued authenticated session
+        for the intended identity. These strings are not tokens, accounts, credentials or OAuth data.</p>
+    </section>
+    <section aria-labelledby="exercise">
+      <h2 id="exercise">Conduct one bounded journey</h2>
+      <form id="controls" novalidate>
+        <label for="preset">Fixed fictional sign-in trace</label>
+        <select id="preset" name="preset">
+          <option value="compatible" selected>Compatible original sign-in</option>
+          <option value="lost-state">Lost callback state despite HTTP 200</option>
+          <option value="state-mismatch">Mismatched callback state despite HTTP 200</option>
+          <option value="wrong-identity">Signed in as the wrong fictional identity</option>
+          <option value="session-mismatch">Final session does not match the issued session</option>
+          <option value="forced-restart">Signed in only after a forced restart</option>
+          <option value="slow-200">HTTP 200, original completion at 4200 ms</option>
+          <option value="incompatible-state-version">v2 cannot consume v1 callback state</option>
+          <option value="wrong-route">Callback still routed to the old version</option>
+          <option value="wrong-page">Signed-in identity lands on the wrong page</option>
+          <option value="callback-unobserved">Callback correlation observations missing</option>
+          <option value="timing-unobserved">Original completion time unobserved</option>
+        </select>
+        <label for="budget">Agreed original journey budget (1000-5000 ms)</label>
+        <input id="budget" name="budget" type="text" inputmode="numeric" value="2000" maxlength="8" autocomplete="off" aria-describedby="budget-help">
+        <p id="budget-help">An exact whole-number string, no spaces, signs, decimals or exponent notation. Equality passes.</p>
+        <button id="start-button" type="submit">1. Start original sign-in</button>
+      </form>
+      <div class="actions">
+        <button id="cutover-button" type="button" aria-disabled="true">2. Cut over to v2</button>
+        <button id="callback-button" type="button" aria-disabled="true">3. Deliver callback record</button>
+        <button id="finish-button" type="button" aria-disabled="true">4. Finish and verify sign-in</button>
+        <button id="reset-button" type="button">Reset this rehearsal</button>
+      </div>
+      <p>Repeat from step 1 after a measured run to compare another trace. Up to four runs / sixteen accepted actions.
+        Out-of-order buttons stay keyboard-focusable to demonstrate safe-hold errors; they cannot advance state.</p>
+      <p id="error" role="alert" aria-live="assertive"></p>
+      <p id="status" role="status" aria-live="polite">Ready for fixed fictional DATA.</p>
+      <noscript>This rehearsal requires its local JavaScript files. No sign-in result is measured without them.</noscript>
+    </section>
+    <section aria-labelledby="records-title">
+      <h2 id="records-title">Observed fictional journey records</h2>
+      <p>Phase: <strong id="phase">idle</strong>. Retained actions: <strong id="history-count">0 / 16</strong>.</p>
+      <p id="trace-description">No journey started.</p>
+      <pre id="trace-data" aria-label="Fixed fictional journey records">No records loaded.</pre>
+      <p id="result" role="status">No measured original sign-in result.</p>
+      <p id="claim">No continuous-sign-in claim.</p>
+      <table>
+        <caption>Original-journey checks; positive, negative and unknown are distinct</caption>
+        <thead><tr><th scope="col">Check</th><th scope="col">Result</th><th scope="col">Observed DATA</th><th scope="col">Required contract</th></tr></thead>
+        <tbody id="checks-body"></tbody>
+      </table>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained comparisons and actions</h2>
+      <p id="run-count">0 / 4 measured runs</p>
+      <ol id="run-history"></ol>
+      <ol id="history"></ol>
+    </section>
+    <section aria-labelledby="limits">
+      <h2 id="limits">Limits and separately blocked native work</h2>
+      <p>No actual sign-in, OAuth, identity, credential, session, cookie, network, routing, restart,
+        resource, infrastructure or deployment operation occurs. No account, server or package is needed to open this page.</p>
+      <p>Positive means one fixed fictional journey meets its declared contract. Negative means a detected broken original journey;
+        unknown means observations are insufficient. None is a live Azure result, universal continuity or an SLA claim.</p>
+      <p>B-S132 remains To Do, readiness=false: CORE, DATA, HOST, an approved native target and separately authorized
+        real sign-in/identity/session/callback/route/time evidence are missing. D-S132 and its D-S035 dependency remain
+        source-parent incomplete. IaC is N/A for this resource-free lesson.</p>
+      <p>Only the parent may accept A-S132 once. Tests, repairs, proof and refinement earn zero extra credits.
+        Catalog and shared-harness integration are parent-owned and untouched.</p>
+    </section>
+  </main>
+</body>
+</html>

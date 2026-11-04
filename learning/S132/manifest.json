@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "id": "A-S132",
+  "sourceId": "S132",
+  "parentId": "D-S132",
+  "packet": "SC-S132",
+  "kano": "S",
+  "kanoUnit": "A-S132",
+  "mode": "portable-synthetic",
+  "title": "Finish the original sign-in across cutover",
+  "entry": "index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Finish a sign-in across cutover; detect forced restart or lost callback state.",
+  "sourceContract": {
+    "readmeRow": "| S132 | **Sign-in in progress:** Finish authentication across the transition without requiring the user to restart. |",
+    "backlogRow": "| D-S132 | P0 | Add an interactive sign-in journey spanning the cutover boundary. | The user finishes login without restarting, losing state, or exceeding the agreed budget. | D-S035 |",
+    "portableRow": "| A-S132 | D-S132 | S | Finish a sign-in across cutover; detect forced restart or lost callback state. | SOURCE |",
+    "nativeRow": "| B-S132 | D-S132 | S | Conduct one interactive sign-in transition; verify continuity and the original journey budget. | CORE, DATA, HOST |",
+    "packetRule": "Packet membership is fixed before admission. This register overrides default membership for its named cards; every other A/B card belongs to SC-Snnn, and every other capability card belongs to its first listed source parent. A card has one packet, not duplicate packet credits.",
+    "acceptance": "The user finishes login without restarting, losing state, or exceeding the agreed budget.",
+    "dependency": "D-S035",
+    "nativeEntryGate": "CORE, DATA, HOST"
+  },
+  "preconditions": [
+    "All sign-in, identity, session, callback, state, version, routing, restart and journey records are fixed fictional teaching DATA ONLY.",
+    "One fictional original journey begins on old/v1 at 0 ms, cutover is at 500 ms, callback is normally at 1400 ms, and final signed-in page normally completes at 1800 ms.",
+    "The agreed budget is an exact typed integer 1000 through 5000 ms pinned at original start. Equality passes.",
+    "The fixture models legitimate pending-to-authenticated session rotation; the final page must use the issued authenticated session bound to the intended identity.",
+    "No operator input supplies an account, identity, token, callback URL, credential or network destination."
+  ],
+  "actions": [
+    "Choose one fixed fictional trace and an exact original journey budget; start the original sign-in.",
+    "Load the cutover DATA record while retaining original state and budget.",
+    "Deliver the callback DATA; HTTP success alone does not measure end-to-end sign-in.",
+    "Finish and verify the final signed-in page against state, identity, session, original journey, versions, routing, restart and original budget.",
+    "Compare up to four complete runs while retaining all earlier results and sixteen actions.",
+    "Reset only this page's in-memory rehearsal."
+  ],
+  "syntheticInputs": {
+    "presets": [
+      "compatible", "lost-state", "state-mismatch", "wrong-identity", "session-mismatch",
+      "forced-restart", "slow-200", "incompatible-state-version", "wrong-route", "wrong-page",
+      "callback-unobserved", "timing-unobserved"
+    ],
+    "budgetMs": { "minimum": 1000, "maximum": 5000, "default": 2000 },
+    "maximumActions": 16,
+    "maximumMeasuredRuns": 4
+  },
+  "assertions": [
+    "Four ordered operator actions are required. Callback HTTP 200 and v2 labels never certify a full original sign-in.",
+    "Matching original state, intended identity, original journey, issued/final authenticated session, final page, state-version contract and routing are all checked.",
+    "Forced restart, lost/mismatched state, wrong identity/session/page, incompatible state version and original-budget overruns are negative even with HTTP 200.",
+    "Unknown callback or completion timing stays unknown; any known negative dominates partial unknown evidence.",
+    "The complete budget is measured from the original 0 ms start, not cutover, callback or forced restart.",
+    "Exact plain DATA records, descriptor/type guards and deterministic state-history replay reject coercion, accessors, forged materialized state, unknown presets and out-of-order actions without mutation.",
+    "Four runs and sixteen actions remain retained without pruning; further action requires explicit reset.",
+    "Actual browser observations cover keyboard/focus, malformed input, safe-hold errors, native prototype reset, missing model failure and actual CSP denials.",
+    "Normal verification is READ-ONLY; only exact CAPTURE_BROWSER_EVIDENCE=1 deliberately creates a new exclusive raw browser capture."
+  ],
+  "verification": {
+    "command": "node --test learning\\S132\\model.test.cjs learning\\S132\\integrity.test.cjs learning\\S132\\browser.test.cjs",
+    "normalVerification": "READ-ONLY: no lesson or historical evidence writes.",
+    "deliberateCapture": "Only exact CAPTURE_BROWSER_EVIDENCE=1 creates a new unique browser JSON, with flag wx, after awaited cleanup.",
+    "helper": "testing\\browser\\isolated.cjs at 53c0c0d; openIsolatedLesson with awaited finally close.",
+    "publishedHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "tooling": "Existing Node 22.23.4, offline Playwright 1.56.1 and Microsoft-signed Edge 156.0.4314.50; local test tooling only.",
+    "archivedRed": "evidence\\red-stub\\assertions.cjs and exact loadable stub files, outside normal test autodiscovery.",
+    "rawProof": "evidence\\raw",
+    "byteIntegrity": "evidence\\source-hashes.json separates measured raw bytes, canonical LF SHA-256 and canonical Git blob identities. Raw proof and stub bytes have narrow -text -diff attributes.",
+    "iac": "N/A evaluated after genuine assertion RED: resource-free fixed fictional DATA ONLY browser lesson; no infrastructure generated."
+  },
+  "limits": [
+    "No actual OAuth, sign-in, identity, credentials, session, cookie, network, resource, routing, restart, IaC or deployment operation.",
+    "No cloud execution, scaffold, packages, frameworks, downloads, unsafe browser flags, foreground leases or spending.",
+    "A positive fixed fictional sample is not native Azure proof, all-user continuity, source-parent completion, production Node.js 24 validation or an SLA.",
+    "Published isolated helper retains known unattended context/page/cleanup lifecycle limitations; the inactive recovery prototype remains unqualified.",
+    "B-S132 remains To Do, readiness=false until CORE, DATA, HOST, an approved native target, sign-in fixture consent and separately authorized real identity/session/state/route/timing evidence are available.",
+    "D-S132 and dependency D-S035 remain source-parent incomplete.",
+    "Parent alone accepts A-S132 once. Tests, repair, proof and refinement earn zero extra Kano credits.",
+    "C005-C008, local-harness and shared integration are parent-owned and untouched."
+  ],
+  "nativeProofComplete": false,
+  "sourceParentComplete": false,
+  "productionNode24Validated": false,
+  "accepted": false,
+  "extraKanoCredits": 0,
+  "relevantToDo": {
+    "cardId": "B-S132",
+    "kanoUnit": "B-S132",
+    "state": "To Do",
+    "readiness": false,
+    "admissionImplied": false,
+    "refinement": "ONE separately authorized native interactive sign-in crossing one cutover; verify the original journey budget, correct intended identity, callback correlation, issued/final session, final page and no forced user restart. Retain known failure and unknown outcomes.",
+    "blocker": "CORE, DATA, HOST, approved native target, authorized real sign-in fixture and identity/session/state/route/completion-time observations are absent. No cloud/IaC/identity/credential/deployment/spend approval."
+  }
+}
