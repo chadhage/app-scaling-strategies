@@ -180,6 +180,34 @@ test('actual failed file-resource-timing assumption and successful DOM proofs bo
   assert.equal(actualPass, true);
 });
 
+test('original canonical-byte publication failure and semantic-free LF repair preserve original raw evidence', () => {
+  const repair = json('evidence\\publication-repair.json');
+  assert.equal(repair.kanoUnit, 'A-S149');
+  assert.equal(repair.extraCredits, 0);
+  assert.equal(repair.originalRemoteVerified, true);
+  assert.equal(hash(bytes(repair.receipt.file)), repair.receipt.sha256);
+  const receipt = json(repair.receipt.file);
+  assert.equal(receipt.commit, repair.originalCommit);
+  assert.equal(receipt.tag, repair.originalTag);
+  const failed = json(repair.assertionProof);
+  assert.equal(failed.expected, 'publication-byte-failure');
+  assert.equal(failed.exitCode, 1);
+  assert.match(bytes(failed.stdout.file).toString('utf8'), /ERR_ASSERTION/);
+  const workflow = json('evidence\\workflow.json');
+  const normalized = workflow.events.find((event) => event.phase === 'owned-text-normalized-for-canonical-publication');
+  assert.ok(normalized);
+  const proof = json(normalized.proof);
+  assert.equal(proof.extraCredits, 0);
+  for (const record of proof.records) {
+    const before = bytes(record.beforePath);
+    const after = bytes(record.afterPath);
+    assert.equal(hash(before), record.beforeSha256);
+    assert.equal(hash(after), record.afterSha256);
+    assert.deepEqual(Buffer.from(before.toString('utf8').replace(/\r\n/g, '\n')), after);
+    assert.equal(record.semanticChange, false);
+  }
+});
+
 test('standalone runtime, restrictive CSP, native reset and honest bounded native remainder', () => {
   const html = bytes('index.html').toString('utf8');
   const runtime = ['model.js', 'lesson.js'].map((file) => bytes(file).toString('utf8')).join('\n');
@@ -234,7 +262,7 @@ test('only exact capture opt-in can write; nonexact values fail before producing
 });
 
 test('current JavaScript and focused test files pass native syntax checks without extra tooling', () => {
-  for (const file of ['model.js', 'lesson.js', 'record.cjs', 'model.test.cjs', 'integrity.test.cjs', 'browser.test.cjs']) {
+  for (const file of ['model.js', 'lesson.js', 'record.cjs', 'model.test.cjs', 'integrity.test.cjs', 'canonical.test.cjs', 'browser.test.cjs']) {
     const result = spawnSync(process.execPath, ['--check', path.join(__dirname, file)], {
       cwd: root, encoding: 'utf8', windowsHide: true,
     });

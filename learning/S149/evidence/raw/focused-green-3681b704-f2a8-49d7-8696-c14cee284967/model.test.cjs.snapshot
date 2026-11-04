@@ -1,0 +1,317 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('./model.js');
+
+test('loadable contract exposes an empty retained session and evidence shape', () => {
+  assert.equal(model.createSession().schema, 'S149/session/v1');
+  assert.equal(model.createSession().revision, 0);
+  assert.deepEqual(model.createSession().attempts, []);
+  assert.equal(model.evaluate('qualified-minimum', 'JOURNEY').schema, 'S149/evidence/v1');
+});
+
+test('qualifying complete independent comparable record crosses the exact minimal bound', () => {
+  assert.equal(model.evaluate('qualified-minimum', 'JOURNEY').confidence.status, 'CONDITIONAL_BOUND_MET');
+});
+
+const copy = (value) => JSON.parse(JSON.stringify(value));
+const select = (session, profileId = 'qualified-minimum', basis = 'JOURNEY', expected = 'CONDITIONAL_BOUND_MET') =>
+  model.dispatch(session, { action: 'select', revision: session.revision, profileId, basis, expected });
+const act = (session, action, revision = session.revision) => model.dispatch(session, { action, revision });
+
+test('stable one-sided 95 percent arithmetic verifies the exact minimal n and n-1 threshold', () => {
+  const record = model.illustration;
+  assert.equal(record.minimumN, 299572);
+  assert.equal(record.previousN, 299571);
+  assert.equal(record.minimumN, Math.ceil(Math.log(0.05) / Math.log1p(-1e-5)));
+  assert.equal(record.minimumUpper, -Math.expm1(Math.log(0.05) / 299572));
+  assert.equal(record.previousUpper, -Math.expm1(Math.log(0.05) / 299571));
+  assert.ok(record.previousUpper > 1e-5, 'n-1 must FAIL the threshold, not round to a pass.');
+  assert.ok(record.minimumUpper <= 1e-5, 'n must PASS the threshold without epsilon slack.');
+  assert.equal(record.previousFails, true);
+  assert.equal(record.minimumPasses, true);
+  assert.ok(Math.abs(record.minimumUpper - 0.000009999990970054557) < 1e-20);
+  assert.ok(Math.abs(record.previousUpper - 0.00001000002435092577) < 1e-20);
+  assert.ok(Math.abs(model.upperBound(1) - 0.95) < 1e-15);
+  for (const n of [0, -1, 299572.5, '299572', true, NaN, Infinity, null, undefined, 1000000001]) {
+    assert.throws(() => model.upperBound(n), /bounded positive typed integer/);
+  }
+});
+
+test('exact confidence record is conditional on qualifying journey assumptions, never certification', () => {
+  const evidence = model.evaluate('qualified-minimum', 'JOURNEY');
+  assert.deepEqual(Object.keys(evidence), [
+    'schema', 'profileId', 'evidenceClass', 'selected', 'diagnostics', 'boundary', 'representation',
+    'journeys', 'assumptions', 'confidence', 'warnings',
+  ]);
+  assert.deepEqual(Object.keys(evidence.confidence), [
+    'method', 'confidenceLevel', 'alpha', 'targetInterruptionProbability', 'qualifyingUnit', 'qualifyingN',
+    'upperInterruptionProbability', 'thresholdMet', 'status', 'conclusion', 'certification', 'countsProveAssumptions', 'illustration',
+  ]);
+  assert.deepEqual(evidence.assumptions, {
+    independent: true, comparable: true, completeObservation: true, provenByCounts: false,
+    declaration: 'Independence and comparability are stipulated for this fictional illustration, not measured or inferred from counts.',
+  });
+  assert.equal(evidence.confidence.qualifyingN, 299572);
+  assert.equal(evidence.confidence.upperInterruptionProbability, model.illustration.minimumUpper);
+  assert.equal(evidence.confidence.thresholdMet, true);
+  assert.equal(evidence.confidence.certification, false);
+  assert.equal(evidence.confidence.countsProveAssumptions, false);
+  assert.equal(evidence.journeys.started, 299572);
+  assert.equal(evidence.journeys.successFraction, 1);
+  assert.equal(evidence.journeys.observedInterruptionFraction, 0);
+  assert.equal(evidence.journeys.unknownFraction, 0);
+  assert.match(evidence.warnings.join('\n'), /Zero observed failures is not five-nines proof/);
+  assert.match(evidence.warnings.join('\n'), /not a real Azure SLA/);
+  assert.match(evidence.warnings.join('\n'), /explicitly stipulated independence, comparability and complete observation/);
+  const previous = model.evaluate('qualified-one-short', 'JOURNEY');
+  assert.equal(previous.confidence.status, 'INSUFFICIENT_EVIDENCE');
+  assert.equal(previous.confidence.qualifyingN, 299571);
+  assert.equal(previous.confidence.upperInterruptionProbability, model.illustration.previousUpper);
+  assert.equal(previous.confidence.thresholdMet, false);
+});
+
+test('REQUEST, USER and EVENT diagnostic counts cannot replace the original journey denominator', () => {
+  const counts = { REQUEST: 5991440, USER: 149786, EVENT: 1, JOURNEY: 299572 };
+  for (const [unit, count] of Object.entries(counts)) {
+    const record = model.evaluate('correlated-single-event', unit);
+    assert.deepEqual(record.selected, { unit, count, isJourneyDenominator: unit === 'JOURNEY' });
+    assert.deepEqual(record.diagnostics.map((row) => [row.unit, row.count]), [
+      ['REQUEST', 5991440], ['USER', 149786], ['EVENT', 1],
+    ]);
+    assert.equal(record.journeys.started, 299572);
+    assert.equal(record.journeys.successFraction, 1);
+    assert.equal(record.confidence.qualifyingN, null);
+    assert.equal(record.confidence.upperInterruptionProbability, null);
+    assert.equal(record.confidence.thresholdMet, null);
+    assert.equal(record.confidence.status, unit === 'JOURNEY' ? 'ASSUMPTIONS_UNQUALIFIED' : 'WRONG_DENOMINATOR');
+    assert.match(record.warnings.join('\n'), /correlated requests, users and transitions/);
+  }
+  for (const unit of ['REQUEST', 'USER', 'EVENT']) {
+    const record = model.evaluate('qualified-minimum', unit);
+    assert.equal(record.confidence.status, 'WRONG_DENOMINATOR');
+    assert.equal(record.confidence.upperInterruptionProbability, null);
+    assert.equal(record.journeys.started, 299572);
+  }
+});
+
+test('large request success and distinct event counts alone do not produce confidence', () => {
+  const small = model.evaluate('request-heavy-small', 'JOURNEY');
+  assert.equal(small.diagnostics[0].count, 6000000);
+  assert.equal(small.journeys.started, 1000);
+  assert.equal(small.journeys.successFraction, 1);
+  assert.equal(small.confidence.status, 'INSUFFICIENT_EVIDENCE');
+  assert.equal(small.confidence.upperInterruptionProbability, 0.002991249545095296);
+  assert.ok(small.confidence.upperInterruptionProbability > 1e-5);
+  const incomparable = model.evaluate('incomparable-contexts', 'JOURNEY');
+  assert.equal(incomparable.diagnostics[2].count, 299572);
+  assert.equal(incomparable.assumptions.independent, true);
+  assert.equal(incomparable.assumptions.comparable, false);
+  assert.equal(incomparable.confidence.status, 'ASSUMPTIONS_UNQUALIFIED');
+  assert.equal(incomparable.confidence.qualifyingN, null);
+  assert.equal(incomparable.confidence.upperInterruptionProbability, null);
+  assert.match(incomparable.warnings.join('\n'), /contexts are not comparable/);
+});
+
+test('original interruption and unknown outcomes remain in the denominator after separate recovery', () => {
+  const expected = [
+    ['interrupted-recovered', 3, 1, 0, 'OBSERVED_INTERRUPTION'],
+    ['unknown-recovered', 3, 0, 1, 'UNKNOWN_EVIDENCE'],
+    ['failure-and-unknown', 2, 1, 1, 'OBSERVED_INTERRUPTION'],
+  ];
+  for (const [id, successful, interrupted, unknown, status] of expected) {
+    const record = model.evaluate(id, 'JOURNEY');
+    assert.equal(record.journeys.started, 4);
+    assert.equal(record.journeys.accountedOutcomes, 4);
+    assert.equal(record.journeys.uninterrupted, successful);
+    assert.equal(record.journeys.interrupted, interrupted);
+    assert.equal(record.journeys.unknown, unknown);
+    assert.equal(record.journeys.successFraction, successful / 4);
+    assert.equal(record.journeys.observedInterruptionFraction, interrupted / 4);
+    assert.equal(record.journeys.unknownFraction, unknown / 4);
+    assert.equal(record.journeys.originals.length, 4);
+    assert.equal(record.journeys.originals[1].outcome, interrupted ? 'interrupted' : 'unknown');
+    assert.deepEqual(record.journeys.recoveries, [{
+      originalId: 'J149-2', laterOutcome: 'uninterrupted', countsAsOriginalSuccess: false,
+    }]);
+    assert.equal(record.journeys.unknownExcluded, false);
+    assert.equal(record.journeys.recoveryReplacesOriginal, false);
+    assert.equal(record.confidence.status, status);
+    assert.equal(record.confidence.qualifyingN, null);
+    assert.equal(record.confidence.upperInterruptionProbability, null);
+    if (unknown) assert.match(record.warnings.join('\n'), /unknown started outcomes remain counted/);
+    if (interrupted) assert.match(record.warnings.join('\n'), /original interruption remains counted/);
+  }
+});
+
+test('empty starts produce null rates and no confidence, not 100 percent success', () => {
+  const record = model.evaluate('empty-transition-sample', 'JOURNEY');
+  assert.equal(record.journeys.started, 0);
+  assert.equal(record.journeys.successFraction, null);
+  assert.equal(record.journeys.observedInterruptionFraction, null);
+  assert.equal(record.journeys.unknownFraction, null);
+  assert.equal(record.confidence.status, 'NO_EVIDENCE');
+  assert.equal(record.confidence.qualifyingN, null);
+  assert.equal(record.confidence.upperInterruptionProbability, null);
+  assert.match(record.warnings.join('\n'), /empty transition sample is not 100% success/);
+});
+
+test('all nine immutable profiles are fixed count records, not actual sampled trials', () => {
+  assert.equal(model.profiles.length, 9);
+  assert.deepEqual([...new Set(model.profiles.map((profile) => profile.evidenceClass))].sort(), ['negative', 'positive', 'unknown']);
+  for (const profile of model.profiles) {
+    assert.equal(model.validateProfile(copy(profile)), true);
+    assert.ok(Object.isFrozen(profile));
+    assert.ok(Object.isFrozen(profile.assumptions));
+    assert.match(profile.representation, /[Ff]ixed/);
+    assert.equal(profile.journeys.started, profile.journeys.uninterrupted + profile.journeys.interrupted + profile.journeys.unknown);
+    for (const field of ['independent', 'comparable', 'completeObservation', 'provenByCounts']) {
+      assert.equal(typeof profile.assumptions[field], 'boolean');
+    }
+    assert.equal(profile.assumptions.provenByCounts, false);
+    assert.ok(profile.journeys.originals.length <= 4, 'The large illustration never generates 299,572 trials.');
+  }
+});
+
+test('typed and exact fixed profile guards reject altered counts, assumption strings and extra fields', () => {
+  for (const id of [undefined, null, 149, true, {}, 'missing-profile', 'Qualified-minimum']) {
+    assert.throws(() => model.evaluate(id, 'JOURNEY'), /Invalid fixed profile/);
+  }
+  for (const unit of [undefined, null, 1, true, 'request', 'TRIAL']) {
+    assert.throws(() => model.evaluate('qualified-minimum', unit), /Invalid fixed counting unit/);
+  }
+  const edits = [
+    (p) => { p.assumptions.independent = 'true'; },
+    (p) => { p.assumptions.completeObservation = 1; },
+    (p) => { p.assumptions.provenByCounts = true; },
+    (p) => { p.counts.requests = '5991440'; },
+    (p) => { p.journeys.started--; },
+    (p) => { p.confidence = { certified: true }; },
+    (p) => { p.label = 'Real Azure result'; },
+  ];
+  for (const edit of edits) {
+    const profile = copy(model.getProfile('qualified-minimum'));
+    edit(profile);
+    assert.throws(() => model.validateProfile(profile), /Invalid typed or altered/);
+  }
+  const accessor = copy(model.getProfile('qualified-minimum'));
+  Object.defineProperty(accessor, 'id', { enumerable: true, get() { throw new Error('Getter must never execute'); } });
+  assert.throws(() => model.validateProfile(accessor), /Invalid typed or altered/);
+});
+
+test('inspect/check/reset retain wrong answers and original negative/unknown evidence without pooling', () => {
+  let session = select(model.createSession(), 'request-heavy-small', 'REQUEST', 'CONDITIONAL_BOUND_MET');
+  session = act(session, 'check');
+  const wrong = copy(session.attempts[0]);
+  assert.equal(wrong.result.verdict, 'FAIL');
+  assert.equal(wrong.result.actual, 'WRONG_DENOMINATOR');
+  session = act(session, 'reset');
+  session = select(session, 'unknown-recovered', 'JOURNEY', 'UNKNOWN_EVIDENCE');
+  session = act(session, 'check');
+  session = act(session, 'reset');
+  session = select(session, 'interrupted-recovered', 'JOURNEY', 'OBSERVED_INTERRUPTION');
+  session = act(session, 'check');
+  session = act(session, 'reset');
+  session = select(session);
+  session = act(session, 'check');
+  assert.deepEqual(session.attempts[0], wrong);
+  assert.equal(session.attempts[1].assessment.journeys.unknown, 1);
+  assert.equal(session.attempts[2].assessment.journeys.interrupted, 1);
+  assert.equal(session.attempts[3].result.verdict, 'PASS');
+  assert.deepEqual(model.summary(session), {
+    attempts: 4, checked: 4, unchecked: 0, answerFailures: 1, teachingVerdict: 'FAIL',
+    evidenceStatuses: ['WRONG_DENOMINATOR', 'UNKNOWN_EVIDENCE', 'OBSERVED_INTERRUPTION', 'CONDITIONAL_BOUND_MET'],
+    reliabilityPooling: false, certification: false,
+  });
+  assert.equal(model.validateSession(copy(session)), true);
+  assert.ok(Object.isFrozen(session.attempts[0].assessment));
+});
+
+test('partial exercises survive reset as unchecked UNKNOWN and reset without an active exercise is idempotent', () => {
+  let session = model.createSession();
+  assert.equal(model.summary(session).teachingVerdict, 'UNKNOWN');
+  assert.equal(act(session, 'reset'), session);
+  session = select(session, 'failure-and-unknown', 'JOURNEY', 'OBSERVED_INTERRUPTION');
+  session = act(session, 'reset');
+  assert.equal(session.attempts.length, 1);
+  assert.equal(session.attempts[0].result, null);
+  assert.equal(session.attempts[0].assessment.journeys.unknown, 1);
+  assert.equal(session.attempts[0].assessment.journeys.interrupted, 1);
+  session = select(session);
+  session = act(session, 'check');
+  assert.equal(model.summary(session).teachingVerdict, 'UNKNOWN');
+  assert.equal(model.summary(session).unchecked, 1);
+});
+
+test('strict command revisions, invalid choice and duplicate checks fail before mutating current session', () => {
+  const empty = model.createSession();
+  assert.throws(() => act(empty, 'check'), /Select and inspect/);
+  for (const revision of ['0', false, null, undefined, NaN, -1, 1]) {
+    assert.throws(() => model.dispatch(empty, { action: 'check', revision }), /Stale or invalid typed revision/);
+  }
+  for (const command of [
+    { action: 'select', revision: 0, profileId: 'fake', basis: 'JOURNEY', expected: 'NO_EVIDENCE' },
+    { action: 'select', revision: 0, profileId: 'qualified-minimum', basis: 'request', expected: 'NO_EVIDENCE' },
+    { action: 'select', revision: 0, profileId: 'qualified-minimum', basis: 'JOURNEY', expected: true },
+    { action: 'select', revision: 0, profileId: 'qualified-minimum', basis: 'JOURNEY', expected: 'certified' },
+    { action: 'check', revision: 0, success: true },
+    { action: 'live-trials', revision: 0 },
+  ]) assert.throws(() => model.dispatch(empty, command), /Invalid/);
+  assert.deepEqual(empty, model.createSession());
+  const selected = select(empty);
+  const before = copy(selected);
+  assert.throws(() => select(selected), /Archive\/reset/);
+  assert.throws(() => act(selected, 'check', 0), /Stale/);
+  assert.deepEqual(selected, before);
+  const checked = act(selected, 'check');
+  assert.throws(() => act(checked, 'check'), /already checked/);
+  assert.equal(checked.journal.length, 2);
+});
+
+test('journal replay rejects forged history, reordered events, unknown removal and typed confidence corruption', () => {
+  let good = select(model.createSession(), 'unknown-recovered', 'JOURNEY', 'UNKNOWN_EVIDENCE');
+  good = act(good, 'check');
+  const edits = [
+    (s) => { s.revision = '2'; },
+    (s) => { s.attempts[0].result.matched = 'true'; },
+    (s) => { s.attempts[0].result.verdict = 'PASS_REAL_SLA'; },
+    (s) => { s.attempts[0].assessment.journeys.started = 3; },
+    (s) => { s.attempts[0].assessment.journeys.unknown = 0; },
+    (s) => { s.attempts[0].assessment.journeys.originals[1].outcome = 'uninterrupted'; },
+    (s) => { s.attempts[0].assessment.confidence.upperInterruptionProbability = 0; },
+    (s) => { s.attempts[0].assessment.assumptions.completeObservation = 'true'; },
+    (s) => { s.attempts[0].assessment.warnings = []; },
+    (s) => { s.journal[0].seq = 2; },
+    (s) => { s.journal.reverse(); },
+    (s) => { s.journal.push(copy(s.journal[1])); },
+    (s) => { s.journal[1].extra = true; },
+    (s) => { s.certified = true; },
+  ];
+  for (const edit of edits) {
+    const forged = copy(good);
+    edit(forged);
+    assert.throws(() => model.validateSession(forged), /Invalid|replay|already checked/);
+    assert.throws(() => model.dispatch(forged, { action: 'reset', revision: 2 }), /Invalid|replay|already checked/);
+  }
+  const accessor = copy(good);
+  Object.defineProperty(accessor, 'journal', { enumerable: true, get() { throw new Error('Getter must never execute'); } });
+  assert.throws(() => model.validateSession(accessor), /Invalid typed session/);
+  assert.equal(model.validateSession(good), true);
+});
+
+test('twelve exercises and thirty-six journal events are bounded with no history truncation', () => {
+  let session = model.createSession();
+  for (let index = 0; index < 12; index++) {
+    session = select(session);
+    session = act(session, 'check');
+    session = act(session, 'reset');
+  }
+  const before = copy(session);
+  assert.equal(session.attempts.length, 12);
+  assert.equal(session.journal.length, 36);
+  assert.equal(model.summary(session).checked, 12);
+  assert.equal(model.summary(session).reliabilityPooling, false);
+  assert.throws(() => select(session), /Twelve-exercise bound/);
+  assert.deepEqual(session, before);
+});

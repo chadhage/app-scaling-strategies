@@ -47,6 +47,19 @@ function git(...args) {
   if (result.status !== 0) throw new Error(`Read-only Git failed: ${String(result.stderr)}`);
   return result.stdout;
 }
+function filteredBlob(bytes, logical) {
+  const result = spawnSync('git', ['hash-object', '--stdin', `--path=${logical}`], {
+    cwd: root, input: bytes, encoding: null, windowsHide: true,
+  });
+  if (result.status !== 0) throw new Error(`Read-only canonical filtering failed: ${String(result.stderr)}`);
+  return result.stdout.toString('utf8').trim();
+}
+function rawBlob(bytes) {
+  return crypto.createHash('sha1').update(Buffer.from(`blob ${bytes.length}\0`)).update(bytes).digest('hex');
+}
+function rootTextFiles() {
+  return listFiles().filter((file) => !relative(file).includes('\\')).map(relative);
+}
 function powershell(command) {
   const result = spawnSync('pwsh', ['-NoProfile', '-NonInteractive', '-Command', command], {
     cwd: root, encoding: 'utf8', windowsHide: true, timeout: 60000, maxBuffer: 8 * 1024 * 1024,
@@ -235,9 +248,45 @@ function tooling() {
     limits: 'No installs, downloads, unsafe flags, foreground leases, production Node24, native/source-parent proof or lifecycle-prototype qualification.',
   }, true);
 }
+function canonicalRed() {
+  const result = captureRun('canonical-byte-failure', ['canonical.test.cjs'], 'publication-byte-failure',
+    ['canonical.test.cjs', '.gitattributes', 'record.cjs', 'README.md']);
+  if (result.result.status !== 1 || !result.stdout.includes('ERR_ASSERTION')) throw new Error('Expected canonical-byte assertion failure before repair.');
+  const directory = path.dirname(result.proof);
+  const receipt = fs.readFileSync(path.join(root, '.git', 'kanban-orchestrator', 'published', 'A-S149.json'));
+  const receiptPath = `${directory}\\original-publication.raw.snapshot`;
+  write(receiptPath, receipt, true);
+  const publication = JSON.parse(receipt);
+  write('evidence\\publication-repair.json', {
+    ...identity, originalCommit: publication.commit, originalTag: publication.tag, originalRemoteVerified: publication.remoteVerified,
+    receipt: { file: receiptPath, sha256: hash(receipt) }, assertionProof: result.proof,
+    reason: 'Working CRLF lesson text hashed differently from canonically published LF; original raw evidence is retained. Normalize owned text to its explicit LF policy and deliberately rebind proofs, not source raw bytes.',
+    extraCredits: 0,
+  }, true);
+  workflow('publication-byte-repair-required', { proof: result.proof, originalCommit: publication.commit, extraCredits: 0 });
+}
+function normalize() {
+  const directory = unique('owned-text-normalization');
+  const records = rootTextFiles().map((file) => {
+    const target = path.join(__dirname, file);
+    const before = fs.readFileSync(target);
+    if (!Buffer.from(before.toString('utf8'), 'utf8').equals(before)) throw new Error('Only exact UTF-8 owned text can be normalized.');
+    const after = Buffer.from(before.toString('utf8').replace(/\r\n/g, '\n'));
+    const beforePath = `${directory}\\${file}.before.snapshot`;
+    const afterPath = `${directory}\\${file}.after.snapshot`;
+    write(beforePath, before, true);
+    write(afterPath, after, true);
+    if (!before.equals(after)) fs.writeFileSync(target, after);
+    return { file, beforePath, afterPath, beforeSha256: hash(before), afterSha256: hash(after),
+      semanticChange: false, onlyChange: 'CRLF to LF for owned lesson text; original raw evidence untouched' };
+  });
+  const proof = `${directory}\\normalization.json`;
+  write(proof, { ...identity, records, extraCredits: 0 }, true);
+  workflow('owned-text-normalized-for-canonical-publication', { proof, extraCredits: 0 });
+}
 function green() {
-  const result = captureRun('focused-green', ['model.test.cjs', 'integrity.test.cjs'], 'green',
-    ['model.test.cjs', 'integrity.test.cjs', 'model.js', 'lesson.js', 'record.cjs', 'statistics.feature', 'index.html', 'style.css', 'manifest.json', 'remainder.json', 'README.md']);
+  const result = captureRun('focused-green', ['model.test.cjs', 'integrity.test.cjs', 'canonical.test.cjs'], 'green',
+    ['model.test.cjs', 'integrity.test.cjs', 'canonical.test.cjs', '.gitattributes', 'model.js', 'lesson.js', 'record.cjs', 'statistics.feature', 'index.html', 'style.css', 'manifest.json', 'remainder.json', 'README.md']);
   if (result.result.status !== 0) throw new Error(`Focused GREEN failed; retained ${result.proof}`);
   workflow('focused-green', { proof: result.proof });
 }
@@ -252,6 +301,10 @@ function seal() {
   if (!data.events.some((event) => event.phase === 'focused-green')
       || !data.events.some((event) => event.phase === 'actual-browser-green')
       || !read('evidence\\browser.json').passed) throw new Error('Verified unit and browser proofs are required before sealing.');
+  for (const file of rootTextFiles()) {
+    const bytes = fs.readFileSync(path.join(__dirname, file));
+    if (filteredBlob(bytes, `learning/S149/${file}`) !== rawBlob(bytes)) throw new Error(`Unpublishable byte policy: ${file}`);
+  }
   write('evidence\\seal.json', { ...identity, files: inventory().filter((entry) => entry.file !== 'evidence\\seal.json'), extraCredits: 0 });
 }
 function runReadOnly(files) {
@@ -271,23 +324,38 @@ function verify() {
   }
   let failure;
   try {
-    runReadOnly(['model.test.cjs', 'integrity.test.cjs']);
+    runReadOnly(['model.test.cjs', 'integrity.test.cjs', 'canonical.test.cjs']);
     runReadOnly(['browser.test.cjs']);
   } catch (error) { failure = error; }
   if (JSON.stringify(inventory()) !== JSON.stringify(before)) throw new Error('Normal verification changed owned bytes.');
   if (failure) throw failure;
   console.log('READ-ONLY verified: model, syntax/source/raw integrity, actual isolated DOM/keyboard/error/reset/CSP; all owned bytes unchanged.');
 }
-const modes = { source, red, iac, tooling, green, browser, seal, verify };
+function published() {
+  if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') throw new Error('Unset deliberate capture for read-only published audit.');
+  const before = inventory();
+  const commit = process.argv[3];
+  if (!/^[a-f0-9]{40}$/.test(commit || '')) throw new Error('Exact publication commit is required.');
+  const files = read('evidence\\seal.json').files.map((entry) => entry.file).concat('evidence\\seal.json');
+  for (const file of files) {
+    const logical = `learning/S149/${file.split('\\').join('/')}`;
+    if (!git('show', `${commit}:${logical}`).equals(fs.readFileSync(path.join(__dirname, file)))) {
+      throw new Error(`Canonical publication byte mismatch: ${file}`);
+    }
+  }
+  if (JSON.stringify(before) !== JSON.stringify(inventory())) throw new Error('Published audit changed owned bytes.');
+  console.log(`READ-ONLY canonical publication verified: ${commit}, ${files.length} exact owned blobs; raw and canonical source evidence unchanged.`);
+}
+const modes = { source, red, iac, tooling, 'canonical-red': canonicalRed, normalize, green, browser, seal, verify, published };
 if (require.main === module) {
   try {
     const mode = process.argv[2];
-    if (!Object.hasOwn(modes, mode)) throw new Error('Use source, red, iac, tooling, green, browser, seal or verify.');
-    if (mode !== 'verify') captureOnly();
+    if (!Object.hasOwn(modes, mode)) throw new Error('Use source, red, iac, tooling, canonical-red, normalize, green, browser, seal, verify or published.');
+    if (!['verify', 'published'].includes(mode)) captureOnly();
     modes[mode]();
   } catch (error) {
     console.error(error.stack);
     process.exitCode = 1;
   }
 }
-module.exports = { hash, relative, listFiles, inventory, selectBytes, definitions, git, identity };
+module.exports = { hash, relative, listFiles, inventory, selectBytes, definitions, git, identity, rawBlob, filteredBlob, rootTextFiles };

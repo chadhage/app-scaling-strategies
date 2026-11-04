@@ -121,6 +121,17 @@ request listeners before an owned file reload, verifies the exact four local
 entry/script/style assets and computed CSS, and keeps the empty timing list
 honest rather than inventing entries.
 
+The first scoped publication was remotely verified, but an independent
+post-publication audit found working lesson CRLF hashes differed from Git's
+canonical LF. The original annotated publication, receipt, assertion failure
+and before/after byte snapshots are retained in
+[publication-repair evidence](evidence/publication-repair.json). Only owned
+lesson text was normalized to its explicit LF checkout policy; original source
+CRLF/canonical bytes and all historical raw proofs were untouched. Fresh
+deliberate browser/model captures rebind the final hashes. Canonical-byte
+regressions and an exact published-blob audit prevent recurrence. This repair
+earns zero additional original-unit credit.
+
 Normal verification from the repository root is **read-only**:
 
 ```powershell
@@ -134,6 +145,15 @@ every owned byte before/after. It creates no capture, report or snapshot.
 Only exact **`CAPTURE_BROWSER_EVIDENCE=1`** deliberately creates unique raw
 captures; other values do not. Capture/resealing is a maintenance operation,
 not a verification side effect or new Kano credit.
+
+For the exact annotated implementation commit, the additional read-only audit is:
+
+```powershell
+node .\learning\S149\record.cjs published <full-40-character-commit>
+```
+
+It compares every sealed owned file (including the seal) directly with that
+immutable Git commit, not merely the working tree or the latest moving HEAD.
 
 The exact published `testing\browser\isolated.cjs` SHA-256 is
 `86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055`.
