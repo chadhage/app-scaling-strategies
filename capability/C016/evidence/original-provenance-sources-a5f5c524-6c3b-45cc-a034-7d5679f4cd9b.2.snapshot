@@ -1,0 +1,160 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+const { root, repo, sha } = require('./provenance.cjs');
+const observed = require('..\\observations.js');
+const read = (file) => fs.readFileSync(path.join(root, file));
+
+test('accepted C001 C002 C015 bytes and raw CRLF versus Git canonical bytes remain pinned separately', () => {
+  const pins = JSON.parse(read('dependency-pins.json'));
+  assert.equal(pins.independentlyAcceptedC015Commit, '78341b3370d7764b7f9c3eacc1796892dbc4f40f');
+  assert.equal(pins.records.length, 160);
+  let differingLineEndings = 0;
+  for (const entry of pins.records) {
+    assert.match(entry.file, /^capability\\C0(?:01|02|15)\\/);
+    const raw = fs.readFileSync(path.join(repo, entry.file));
+    assert.equal(raw.length, entry.rawBytes, entry.file);
+    assert.equal(sha(raw), entry.rawSha256, entry.file);
+    assert.equal((raw.toString('utf8').match(/\r\n/g) || []).length, entry.rawCRLF, entry.file);
+    const canonical = execFileSync('git', ['--no-pager', 'show', `${pins.observedHead}:${entry.file.split(path.sep).join('/')}`],
+      { cwd: repo, maxBuffer: 8 * 1024 * 1024 });
+    assert.equal(canonical.length, entry.gitCanonicalBytes, entry.file);
+    assert.equal(sha(canonical), entry.gitCanonicalSha256, entry.file);
+    if (entry.rawSha256 !== entry.gitCanonicalSha256) differingLineEndings++;
+  }
+  assert.ok(differingLineEndings > 0, 'Do not silently equate working CRLF and Git canonical bytes.');
+});
+
+test('genuine RED, failures and actual subprocess streams retain exclusive captured raw bytes', () => {
+  const reports = fs.readdirSync(path.join(root, 'evidence')).filter((file) =>
+    file.endsWith('.raw.json') && !/^browser-[0-9a-f-]{36}\.raw\.json$/.test(file));
+  let redFound = false;
+  let journeysFound = false;
+  for (const file of reports) {
+    const raw = read(path.join('evidence', file)).toString('utf8');
+    assert.match(raw, /\r\n/);
+    assert.doesNotMatch(raw, /(?<!\r)\n/);
+    const report = JSON.parse(raw);
+    for (const entry of [report.stdout, report.stderr, ...report.sourceSnapshots]) {
+      const bytes = read(path.join('evidence', entry.file));
+      assert.equal(bytes.length, entry.bytes);
+      assert.equal(sha(bytes), entry.sha256);
+    }
+    if (report.kind === 'red') {
+      redFound = true;
+      assert.equal(report.exitCode, 1);
+      const output = read(path.join('evidence', report.stdout.file)).toString('utf8');
+      assert.match(output, /A fresh submit must actually publish/);
+      assert.doesNotMatch(output, /MODULE_NOT_FOUND|Cannot find module/);
+      assert.equal(report.sourceSnapshots.length, 2);
+      assert.match(read(path.join('evidence', report.sourceSnapshots[0].file)).toString('utf8'), /disposition: 'unimplemented'/);
+    }
+    if (report.kind === 'journeys' && report.exitCode === 0) {
+      journeysFound = true;
+      assert.deepEqual(JSON.parse(read(path.join('evidence', report.stdout.file))), observed);
+    }
+  }
+  assert.ok(redFound && journeysFound);
+  const setup = JSON.parse(read(path.join('evidence', 'setup-failure.json')));
+  assert.equal(setup.behaviorTestExecuted, false);
+  assert.equal(setup.rawProcessBytesCaptured, false);
+});
+
+test('one actual concurrent publication, negative condition and original unknown are actual captured evidence, not browser predictions', () => {
+  const duplicate = observed.cases.find((item) => item.id === 'duplicates');
+  assert.equal(duplicate.actualEpochFiles, 1);
+  assert.equal(duplicate.entries.filter((item) => item.result.disposition === 'published').length, 1);
+  const conflict = observed.cases.find((item) => item.id === 'conflict');
+  assert.equal(conflict.entries[1].result.outcome, 'negative');
+  assert.equal(conflict.entries[1].result.code, 'EXPECTED_EPOCH_CONFLICT');
+  assert.equal(conflict.actualEpochFiles, 1);
+  const unknown = observed.cases.find((item) => item.id === 'unknown');
+  assert.equal(unknown.entries[0].process.exitCode, 87);
+  assert.equal(unknown.entries[1].result.code, 'MATCHING_LOCAL_ACK');
+  const hold = observed.cases.find((item) => item.id === 'hold');
+  assert.equal(hold.entries[1].process.exitCode, 86);
+  for (const item of hold.entries.slice(2)) {
+    assert.equal(item.result.outcome, 'unknown');
+    assert.equal(item.result.acknowledgment, null);
+  }
+  for (const item of observed.cases) {
+    assert.equal(item.exactOwnedScratchCleaned, true);
+    assert.equal(fs.existsSync(item.createdNamespacePath), false);
+    assert.equal(item.externalBusinessExactlyOnce, false);
+    assert.equal(item.cloudTransaction, false);
+  }
+});
+
+test('resource-free browser surface and exact approved publisher and browser helper boundaries remain honest', () => {
+  const html = read('index.html').toString('utf8');
+  const app = read('app.js').toString('utf8');
+  assert.match(html, /Training rehearsal - synthetic data - not a live Azure result/);
+  assert.match(html, /connect-src 'none'/);
+  assert.match(html, /form-action 'none'/);
+  assert.match(html, /H004, H012, native execution, and production Node 24 remain incomplete/);
+  assert.doesNotMatch(html, /<script[^>]*>[^<]+<\/script>|<form|https?:\/\//);
+  assert.doesNotMatch(app, /\b(fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|innerHTML)\b/);
+  const boundary = JSON.parse(read('publisher-boundary.json'));
+  const publisher = fs.readFileSync(path.join(repo, boundary.path));
+  assert.equal(sha(publisher), boundary.parentApprovedSha256);
+  assert.equal(sha(read(boundary.approvedSourceSnapshot)), boundary.parentApprovedSha256);
+  assert.equal(sha(Buffer.from(publisher.toString('utf8').replace("; C034='S'", ''))), boundary.taskOriginalApprovedSha256);
+  const predecessor = JSON.parse(read(boundary.preservedOriginalBoundarySnapshot));
+  assert.equal(predecessor.parentApprovedSha256, boundary.taskOriginalApprovedSha256);
+  const approved = JSON.parse(read(boundary.approvedSuccessorEvidence));
+  assert.equal(approved.authority.savedTraceRevision.approvedBy, 'parent-controller');
+  assert.deepEqual(approved.authority.savedTraceRevision.exactAddedClasses, { C034: 'S' });
+  assert.equal(approved.sharedSourceWrites, 0);
+  assert.match(publisher.toString('utf8'), /C016='D'/);
+  assert.match(publisher.toString('utf8'), /Main must already equal remote before staging/);
+  assert.match(publisher.toString('utf8'), /'push','--atomic'/);
+  assert.match(publisher.toString('utf8'), /cr-at-eol/);
+  assert.equal(sha(fs.readFileSync(path.join(repo, 'testing', 'browser', 'isolated.cjs'))),
+    '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+});
+
+test('exactly one deliberate append-only raw signed Edge proof is distinct from filesystem proof', () => {
+  const files = fs.readdirSync(path.join(root, 'evidence')).filter((file) => /^browser-[0-9a-f-]{36}\.raw\.json$/.test(file));
+  assert.equal(files.length, 1);
+  const raw = read(path.join('evidence', files[0])).toString('utf8');
+  assert.match(raw, /\r\n/);
+  assert.doesNotMatch(raw, /(?<!\r)\n/);
+  const proof = JSON.parse(raw);
+  assert.equal(proof.kind, 'actual-signed-edge-dom-keyboard-csp');
+  assert.equal(proof.passed, true);
+  assert.equal(proof.closed, true);
+  assert.equal(proof.signature.status, 'Valid');
+  assert.match(proof.signature.signer, /Microsoft Corporation/);
+  assert.equal(proof.browserVersion, '156.0.4314.50');
+  assert.equal(proof.playwrightVersion, '1.56.1');
+  assert.equal(proof.browserFilesystemOperation, false);
+  assert.equal(proof.liveConsentRead, false);
+  assert.equal(proof.foregroundLease, false);
+  assert.equal(proof.sourceEvidenceReadOnly, true);
+  assert.equal(proof.checks.length, 7);
+  assert.equal(proof.checks.every((entry) => entry.passed), true);
+});
+
+test('evidence index pins exact immutable proof files and separates verifier pass from original unknown user impact', () => {
+  const index = JSON.parse(read('evidence-index.json'));
+  assert.equal(index.cardId, 'C016');
+  assert.equal(index.kano, 'D');
+  assert.deepEqual(index.parents, ['H004', 'H012']);
+  assert.equal(index.browserCaptureCount, 1);
+  assert.equal(index.additionalCredits, 0);
+  for (const entry of index.rawFiles) {
+    const bytes = read(path.join('evidence', entry.file));
+    assert.equal(bytes.length, entry.bytes);
+    assert.equal(sha(bytes), entry.sha256);
+    assert.equal((bytes.toString('utf8').match(/\r\n/g) || []).length, entry.crlfCount);
+  }
+  assert.equal(index.verifier.focusedPassed, true);
+  assert.equal(index.userImpact.originalUnobservedAcknowledgment, 'unknown even after a later confirmed positive retry');
+  assert.equal(index.externalBusinessExactlyOnce, false);
+  assert.equal(index.cloudTransaction, false);
+  assert.equal(index.parentAcceptanceRequired, true);
+});

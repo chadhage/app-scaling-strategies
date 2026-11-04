@@ -4,8 +4,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
+const { execFileSync, spawnSync } = require('node:child_process');
 const { root, repo, sha } = require('./provenance.cjs');
+const authorization = require('./authorization.cjs');
 const observed = require('..\\observations.js');
 const read = (file) => fs.readFileSync(path.join(root, file));
 
@@ -99,7 +100,8 @@ test('resource-free browser surface and exact approved publisher and browser hel
   assert.doesNotMatch(html, /<script[^>]*>[^<]+<\/script>|<form|https?:\/\//);
   assert.doesNotMatch(app, /\b(fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|innerHTML)\b/);
   const boundary = JSON.parse(read('publisher-boundary.json'));
-  const publisher = fs.readFileSync(path.join(repo, boundary.path));
+  const publisher = read(boundary.approvedSourceSnapshot);
+  authorization.verifyHistorical(boundary, publisher);
   assert.equal(sha(publisher), boundary.parentApprovedSha256);
   assert.equal(sha(read(boundary.approvedSourceSnapshot)), boundary.parentApprovedSha256);
   assert.equal(sha(Buffer.from(publisher.toString('utf8').replace("; C034='S'", ''))), boundary.taskOriginalApprovedSha256);
@@ -152,9 +154,111 @@ test('evidence index pins exact immutable proof files and separates verifier pas
     assert.equal(sha(bytes), entry.sha256);
     assert.equal((bytes.toString('utf8').match(/\r\n/g) || []).length, entry.crlfCount);
   }
+  for (const entry of index.correctiveEvidence || []) {
+    const bytes = read(path.join('evidence', entry.file));
+    assert.equal(bytes.length, entry.bytes);
+    assert.equal(sha(bytes), entry.sha256);
+  }
   assert.equal(index.verifier.focusedPassed, true);
   assert.equal(index.userImpact.originalUnobservedAcknowledgment, 'unknown even after a later confirmed positive retry');
   assert.equal(index.externalBusinessExactlyOnce, false);
   assert.equal(index.cloudTransaction, false);
   assert.equal(index.parentAcceptanceRequired, true);
+});
+
+test('historical 2dd F6 attribution remains sealed despite later explicitly approved source', () => {
+  const boundary = JSON.parse(read('publisher-boundary.json'));
+  const historical = read(boundary.approvedSourceSnapshot);
+  const later = read(boundary.currentApprovedSourceAtCapture);
+  const before = Buffer.from(historical);
+  assert.equal(authorization.verifyHistorical(boundary, historical).commit, '2dd1199364eecf26b34cd5f727dfb4c33041d95e');
+  assert.deepEqual(historical, before);
+  assert.throws(() => authorization.verifyHistorical(boundary, later), { code: 'HISTORICAL_SNAPSHOT_MISMATCH' });
+  assert.throws(() => authorization.verifyHistorical({ ...boundary, parentApprovedSha256: sha(later) }, historical),
+    { code: 'HISTORICAL_ATTRIBUTION_MISMATCH' });
+});
+
+test('current-at-capture source matches its preserved explicit canonical parent record, not F6 history', () => {
+  const boundary = JSON.parse(read('publisher-boundary.json'));
+  const capture = JSON.parse(read(boundary.currentApprovalAtCapture));
+  const source = read(boundary.currentApprovedSourceAtCapture);
+  const assessed = authorization.verifyLive(capture.authorizationSnapshot, source);
+  assert.equal(assessed.authorizedSha256, capture.authorizedSha256);
+  assert.equal(assessed.canonicalParentRecordSha256, capture.canonicalParentRecordSha256);
+  assert.equal(assessed.approved, true);
+  assert.equal(assessed.originalUnitCredits, 0);
+  assert.notEqual(assessed.authorizedSha256, authorization.historicalSha256);
+});
+
+test('a future explicit canonical admission does not invalidate historical or current-at-capture proof', () => {
+  const boundary = JSON.parse(read('publisher-boundary.json'));
+  const capture = JSON.parse(read(boundary.currentApprovalAtCapture));
+  const future = structuredClone(capture.authorizationSnapshot);
+  const source = Buffer.from('synthetic future explicitly approved publisher fixture; not an executed script');
+  future.central.publisherSha256 = sha(source);
+  future.central.id = 'explicit-future-parent-approval-fixture';
+  future.central.focusedGuardChecksPassed++;
+  const proof = authorization.verifyLive(future, source);
+  assert.equal(proof.authorizedSha256, sha(source));
+  authorization.verifyHistorical(boundary, read(boundary.approvedSourceSnapshot));
+  authorization.verifyLive(capture.authorizationSnapshot, read(boundary.currentApprovedSourceAtCapture));
+  assert.throws(() => authorization.verifyLive(capture.authorizationSnapshot, source), { code: 'PUBLISHER_SCRIPT_MISMATCH' });
+});
+
+test('unknown source, forged authorization, changed original class/worker/scope and relaxed guards reject', () => {
+  const boundary = JSON.parse(read('publisher-boundary.json'));
+  const capture = JSON.parse(read(boundary.currentApprovalAtCapture));
+  const source = read(boundary.currentApprovedSourceAtCapture);
+  const changed = Buffer.from(source);
+  changed[0] ^= 1;
+  assert.throws(() => authorization.verifyLive(capture.authorizationSnapshot, changed), { code: 'PUBLISHER_SCRIPT_MISMATCH' });
+  for (const mutate of [
+    (value) => { value.central.approvedBy = 'visitor'; },
+    (value) => { value.central.exactAddedClasses.C016 = 'S'; },
+    (value) => { value.central.mainMustEqualRemoteBeforeStaging = false; },
+    (value) => { value.central.namespaceAndFrozenClassGuardsUnchanged = false; },
+    (value) => { value.central.cloudAuthorityExpanded = true; },
+    (value) => { value.delegation.owner = 'worker-other'; },
+    (value) => { value.delegation.workerId = 'worker-other'; },
+    (value) => { value.delegation.kano = 'L'; },
+    (value) => { value.delegation.localScope = 'unrestricted'; },
+    (value) => { value.delegation.readiness = 'true'; },
+  ]) {
+    const value = structuredClone(capture.authorizationSnapshot);
+    mutate(value);
+    assert.throws(() => authorization.verifyLive(value, source));
+  }
+  const held = structuredClone(capture.authorizationSnapshot);
+  held.delegation.readiness = false;
+  assert.equal(authorization.verifyLive(held, source).delegationReady, false);
+});
+
+test('actual publication tooling rejects Admin, path, card and worker overrides before any delegation', () => {
+  const wrapper = path.join(root, 'tests', 'publisher-wrapper.ps1');
+  for (const extra of [['-Admin'], ['-Paths', 'capability\\C036'], ['-CardId', 'C036'], ['-WorkerId', 'worker-other']]) {
+    const result = spawnSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-File', wrapper, '-Action', 'Inspect', ...extra],
+      { encoding: 'utf8', timeout: 30000, windowsHide: true });
+    assert.ifError(result.error);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /No card, class, worker, path, message, publisher or Admin overrides/);
+  }
+  const source = read(path.join('tests', 'publisher-wrapper.ps1')).toString('utf8');
+  assert.match(source, /\$head -eq \$remoteMain/);
+  assert.match(source, /shaBeforeDelegation -ne \$rechecked.authorizedSha256/);
+  assert.match(source, /-CardId C016 -WorkerId worker-C016 -Paths @\('capability\\C016'\)/);
+});
+
+test('parent failure and old qualified publication are exact owned archives, not rewritten success', () => {
+  const boundary = JSON.parse(read('publisher-boundary.json'));
+  const failure = JSON.parse(read(boundary.parentFailureArchive));
+  const tap = read(path.join('evidence', failure.stdout.file));
+  assert.equal(sha(tap), 'cbfbf36c91f4a5c130f0a67f4e23abf956df4bb7cca8d301b0b02bb17e7f2e1d');
+  assert.equal(failure.exitCode, 1);
+  assert.equal(failure.parentReportedFail, 1);
+  assert.match(tap.toString('utf8'), /not ok/);
+  const old = JSON.parse(read(boundary.priorQualifiedPublicationReport));
+  assert.equal(old.commit, '2dd1199364eecf26b34cd5f727dfb4c33041d95e');
+  assert.equal(old.tag, 'kanban/C016/2dd1199364ee');
+  assert.equal(old.publisherBoundary.actualExecutedSha256, authorization.historicalSha256);
+  assert.equal(old.remoteVerified, true);
 });

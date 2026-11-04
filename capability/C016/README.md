@@ -16,6 +16,7 @@ node capability\C016\cli.cjs conduct hold
 node capability\C016\cli.cjs conduct duplicates
 node capability\C016\cli.cjs inspect
 node capability\C016\tests\verify.cjs focused
+node capability\C016\tests\verify.cjs integrity
 node capability\C016\tests\verify.cjs syntax
 node capability\C016\tests\verify.cjs browser
 ```
@@ -118,9 +119,25 @@ uses approved Node **22.23.4**, Playwright **1.56.1**, signed Edge **156.0.4314.
 and unchanged pinned `testing\browser\isolated.cjs`; every session closes in finally.
 Their known lifecycle limitation is not disguised as unattended CI qualification.
 
-The standard publisher is pinned by `publisher-boundary.json`: original C016=D,
-owned paths only, main already equal remote before staging, Copilot trailer,
-annotated `kanban/C016/<12sha>`, atomic main+tag push and remote peel/ancestry.
+`publisher-boundary.json` seals the **historical F6 source used for original
+`2dd11993…`**, not a forever-current private file. Normal historical tests read
+the existing approved source snapshot, validate its original approval, and remove
+only the historically authorized `C034=S` token to reproduce `48846487…`.
+Future explicit parent admissions do not invalidate that immutable proof.
+
+For an actual next transaction, `tests\publisher-wrapper.ps1` reads fresh
+mutex-protected canonical `localPublisherAuthorization`, verifies the exact
+original C016 D/worker/scope, closes state handles, and acquires the publisher
+mutex. It rechecks actual source bytes against current explicit approval immediately
+before delegating to the **unchanged standard publisher**. No historical digest or
+current-at-capture snapshot authorizes a future transaction. Unknown source, scope,
+owner/class/path/Admin overrides, or main/remote mismatch reject before staging.
+The C048/C019 separation pattern is reused read-only; no storage/runtime engine
+or shared guard is modified.
+
+Publication still requires owned paths only, main already equal remote before
+staging, Copilot trailer, annotated `kanban/C016/<12sha>`, atomic main+tag push and
+remote peel/ancestry.
 The owned ignored `publication.json` reports the full result through the existing
 state controller. The worker never accepts itself or edits the shared ledger.
 
@@ -133,6 +150,11 @@ D/path/Admin/main/remote/whitespace guards are unchanged. The actual approval,
 current source bytes and original owned boundary snapshot are retained; the
 parent's 40 guard checks are explicitly parent-reported, not claimed as C016 runs.
 No private publisher was edited, copied for execution, patched or bypassed.
+The parent’s subsequent `C016-parent-focused-170.tap` failure is retained exactly
+under `evidence\parent-provenance-review-a3a2b0d7-c737-458d-b0c4-dd573d3f94ac.*`,
+alongside the old qualified `2dd…` report. It exposed an erroneous live-F6 check,
+not a lost local acknowledgment or runtime failure. The provenance-only correction
+preserves that failure and every original source/evidence/RED byte snapshot.
 
 The prior unpublished/quarantined result is retained byte-for-byte in
 `evidence\blocked-report-cc35608d-d45e-47ed-8461-3011e0f5f9b8.snapshot`.

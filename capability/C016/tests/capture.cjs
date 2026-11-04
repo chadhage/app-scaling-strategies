@@ -7,7 +7,7 @@ const { spawnSync } = require('node:child_process');
 
 const root = path.resolve(__dirname, '..');
 const [mode, ...extra] = process.argv.slice(2);
-if (extra.length || !['red', 'input-red', 'input-green', 'focused', 'syntax', 'journeys', 'browser-check'].includes(mode)) throw new Error('Unknown explicit capture mode.');
+if (extra.length || !['red', 'input-red', 'input-green', 'focused', 'integrity', 'syntax', 'journeys', 'browser-check'].includes(mode)) throw new Error('Unknown explicit capture mode.');
 const id = `${mode}-${randomUUID()}`;
 const evidence = path.join(root, 'evidence');
 if (!fs.existsSync(evidence)) fs.mkdirSync(evidence);

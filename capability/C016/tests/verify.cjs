@@ -6,7 +6,7 @@ const { spawnSync } = require('node:child_process');
 const { root, inventory, dependencies } = require('./provenance.cjs');
 
 const [mode, ...extra] = process.argv.slice(2);
-if (extra.length || !['focused', 'browser', 'syntax'].includes(mode)) throw new Error('Use focused, browser or syntax only.');
+if (extra.length || !['focused', 'integrity', 'browser', 'syntax'].includes(mode)) throw new Error('Use focused, integrity, browser or syntax only.');
 const before = inventory(root, ['publication.json']);
 const acceptedBefore = dependencies();
 const env = { ...process.env };
@@ -21,9 +21,15 @@ if (mode === 'syntax') {
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr);
   }
-  console.log(JSON.stringify({ syntaxFiles: files.length, passed: true }));
+  const psFiles = Object.keys(before).filter((file) => /\.ps1$/.test(file));
+  const psScript = `foreach($file in @(${psFiles.map((file) => `'${path.join(root, file).replace(/'/g, "''")}'`).join(',')})){$tokens=$null;$errors=$null;[System.Management.Automation.Language.Parser]::ParseFile($file,[ref]$tokens,[ref]$errors)|Out-Null;if($errors.Count){$errors|Out-String|Write-Error;exit 1}}`;
+  const ps = spawnSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', psScript],
+    { env, timeout: 30000, encoding: 'utf8', windowsHide: true });
+  assert.ifError(ps.error);
+  assert.equal(ps.status, 0, ps.stderr);
+  console.log(JSON.stringify({ syntaxFiles: files.length, powershellSyntaxFiles: psFiles.length, passed: true }));
 } else {
-  const files = mode === 'browser' ? ['browser.acceptance.cjs'] :
+  const files = mode === 'browser' ? ['browser.acceptance.cjs'] : mode === 'integrity' ? ['integrity.test.cjs'] :
     ['conditional.test.cjs', 'concurrency.test.cjs', 'errors.test.cjs', 'journal.test.cjs', 'integrity.test.cjs'];
   const result = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...files.map((file) => path.join(__dirname, file))], {
     env, timeout: 900000, maxBuffer: 16 * 1024 * 1024, windowsHide: true,
