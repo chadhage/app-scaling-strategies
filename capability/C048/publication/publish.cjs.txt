@@ -10,9 +10,13 @@ const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 assert.equal(process.argv.length, 2, 'C048 publication has one fixed worker, scope and message; no override arguments.');
 assert.equal(process.env.NODE_TEST_CONTEXT, undefined, 'Publication cannot execute inside a test-runner context.');
-const approvedPublisherSha256 = '91c8cf83dd07e34a467eae35445e2337783ce28aaf9c4d3d2d4932b17fb59244';
+const boundary = require('./publisher-boundary.cjs.txt');
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json')));
-assert.equal(manifest.publicationAuthority.approvedRawSha256, approvedPublisherSha256);
+boundary.verifyHistorical(manifest.publicationAuthority,
+  zlib.gunzipSync(fs.readFileSync(path.join(repository, manifest.publicationAuthority.sourceSnapshot))));
+boundary.verifyCaptured(manifest.currentPublicationApproval,
+  zlib.gunzipSync(fs.readFileSync(path.join(repository, manifest.currentPublicationApproval.sourceSnapshot))),
+  JSON.parse(fs.readFileSync(path.join(repository, manifest.currentPublicationApproval.authorizationSnapshot))));
 const qualification = JSON.parse(fs.readFileSync(path.join(root, 'evidence.json'))).browserAuthority;
 assert.equal(qualification.current, true, 'Full source proof must be refreshed after an approved boundary/source change.');
 const proofFile = path.resolve(repository, qualification.record);
@@ -35,6 +39,32 @@ function Read-Git([string[]]$Arguments) {
     if ($LASTEXITCODE -ne 0) { throw "Read-only Git check failed: $($Arguments -join ' '): $($output -join [Environment]::NewLine)" }
     return ($output | Out-String).Trim()
 }
+function Read-AuthorizedPublisher {
+    $stateMutex = [Threading.Mutex]::new($false, 'Local\AppScalingStrategies_KanbanState_v1')
+    $stateHeld = $false
+    try {
+        $stateHeld = $stateMutex.WaitOne([TimeSpan]::FromSeconds(60))
+        if (-not $stateHeld) { throw 'Canonical publisher authorization state mutex timeout.' }
+        $flow = [IO.File]::ReadAllText([IO.Path]::GetFullPath('.docs\wiki\flow-state.json')) | ConvertFrom-Json -AsHashtable
+        $approval = $flow.localPublisherAuthorization
+        if ($flow.controllerId -ne '942b9aec-aa3f-4179-b6ed-e2bc57abeed2' -or
+            -not $approval -or $approval.approvedBy -ne 'parent-controller' -or
+            $approval.publisherSha256 -notmatch '^[a-f0-9]{64}$' -or
+            $approval.exactAddedClasses.C048 -ne 'D' -or
+            -not ($approval.mainMustEqualRemoteBeforeStaging -is [bool]) -or
+            -not ($approval.namespaceAndFrozenClassGuardsUnchanged -is [bool]) -or
+            -not ($approval.cloudAuthorityExpanded -is [bool]) -or
+            $approval.mainMustEqualRemoteBeforeStaging -ne $true -or
+            $approval.namespaceAndFrozenClassGuardsUnchanged -ne $true -or
+            $approval.cloudAuthorityExpanded -ne $false) {
+            throw 'UNKNOWN_CONTROLLER_AUTHORIZATION: no fallback, approval inference or arbitrary publisher hash.'
+        }
+        return $approval
+    } finally {
+        if ($stateHeld) { $stateMutex.ReleaseMutex() }
+        $stateMutex.Dispose()
+    }
+}
 $mutex = [Threading.Mutex]::new($false, 'Local\AppScalingStrategies_KanbanPublisher_v1')
 $held = $false
 try {
@@ -51,13 +81,19 @@ try {
     if ($branch -ne 'main' -or $head -ne $main -or $head -ne $tracking -or $head -ne $remote) {
         throw 'HEAD_MAIN_MISMATCH: stop/report; no staging or publication may carry an unpublished foreign commit.'
     }
-    $approvedPublisherSha256 = '91c8cf83dd07e34a467eae35445e2337783ce28aaf9c4d3d2d4932b17fb59244'
+    $canonicalApproval = Read-AuthorizedPublisher
+    $approvedPublisherSha256 = $canonicalApproval.publisherSha256
     $observedPublisherSha256 = (Get-FileHash -LiteralPath .git\kanban-orchestrator\publish.ps1 -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($observedPublisherSha256 -ne $approvedPublisherSha256) {
         throw 'PUBLISHER_BOUNDARY_MISMATCH: stop/report; no silent shared version update or guard bypass.'
     }
-    [ordered]@{approvedPublisherSha256=$approvedPublisherSha256;observedPublisherSha256=$observedPublisherSha256;underPublisherMutex=$true} | ConvertTo-Json -Compress | Write-Output
-    & .git\kanban-orchestrator\publish.ps1 -CardId C048 -WorkerId worker-C048 -Paths @('capability\C048') -Message '[C048][D] Gate local DATA/EVENT admission with retained RED and actual signed-browser proof'
+    [ordered]@{approvalId=$canonicalApproval.id;approvedPublisherSha256=$approvedPublisherSha256;observedPublisherSha256=$observedPublisherSha256;underPublisherMutex=$true;canonicalAuthorizationReadUnderStateMutex=$true} | ConvertTo-Json -Compress | Write-Output
+    & .git\kanban-orchestrator\publish.ps1 -CardId C048 -WorkerId worker-C048 -Paths @('capability\C048') -Message '[C048][D] Distinguish immutable publication source from current approved wrapper boundary'
+    $afterApproval = Read-AuthorizedPublisher
+    $afterPublisherSha256 = (Get-FileHash -LiteralPath .git\kanban-orchestrator\publish.ps1 -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($afterApproval.publisherSha256 -ne $approvedPublisherSha256 -or $afterPublisherSha256 -ne $approvedPublisherSha256) {
+        throw 'PUBLISHER_CHANGED_DURING_PUBLICATION: hold/report exact observed source; never silently fall back or misattribute.'
+    }
 } finally {
     if ($held) { $mutex.ReleaseMutex() }
     $mutex.Dispose()

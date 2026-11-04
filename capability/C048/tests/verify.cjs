@@ -34,7 +34,7 @@ function run(args) {
 
 const before = digest();
 try {
-  run(['--test', '--test-reporter=dot', ...['admission', 'schema', 'guards', 'lineage', 'surface', 'integrity']
+  run(['--test', '--test-reporter=dot', ...['admission', 'schema', 'guards', 'lineage', 'surface', 'integrity', 'publisher-boundary']
     .map((name) => path.join('capability', 'C048', 'tests', `${name}.test.cjs`))]);
   run([path.join('capability', 'C048', 'tests', 'syntax.cjs')]);
   run([path.join('capability', 'C048', 'tests', 'browser.cjs')]);

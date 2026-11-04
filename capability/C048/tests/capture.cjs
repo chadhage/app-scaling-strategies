@@ -22,7 +22,8 @@ const snapshots = [];
 for (const name of ['.gitattributes', '.gitignore', 'C048.feature', 'admission.js', 'index.html', 'page.js', 'styles.css',
   'tests\\fixtures.cjs', 'tests\\admission.test.cjs', 'tests\\guards.test.cjs', 'tests\\schema.test.cjs',
   'tests\\lineage.test.cjs', 'tests\\surface.test.cjs', 'tests\\browser.cjs', 'tests\\integrity.test.cjs',
-  'tests\\syntax.cjs', 'tests\\verify.cjs', 'publication\\publish.cjs.txt', 'tests\\capture.cjs',
+  'tests\\syntax.cjs', 'tests\\verify.cjs', 'tests\\publisher-boundary.test.cjs',
+  'publication\\publish.cjs.txt', 'publication\\publisher-boundary.cjs.txt', 'tests\\capture.cjs',
   'manifest.json', 'evidence.json', 'CONTRACT.txt', 'PUBLICATION.txt']) {
   const file = path.join(root, name);
   if (!fs.existsSync(file)) continue;

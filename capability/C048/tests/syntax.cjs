@@ -13,6 +13,7 @@ assert.doesNotMatch(html, /\son\w+\s*=|<style\b|\sstyle\s*=/i);
 const scripts = new Set([
   ...references.map((name) => path.resolve(root, name)),
   path.join(root, 'publication', 'publish.cjs.txt'),
+  path.join(root, 'publication', 'publisher-boundary.cjs.txt'),
   ...fs.readdirSync(path.join(root, 'tests')).filter((name) => name.endsWith('.cjs'))
     .map((name) => path.join(root, 'tests', name))
 ]);

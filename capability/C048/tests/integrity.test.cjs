@@ -8,6 +8,7 @@ const zlib = require('node:zlib');
 const crypto = require('node:crypto');
 const vm = require('node:vm');
 const { execFileSync } = require('node:child_process');
+const publisherBoundary = require('../publication/publisher-boundary.cjs.txt');
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json')));
@@ -209,12 +210,67 @@ test('current C048 raw CRLF and Git-canonical bytes are separately checked; raw 
 test('owned publication wrapper checks actual main equality under publisher lock and delegates only to standard scoped publisher', () => {
   const publisher = fs.readFileSync(path.join(root, 'publication', 'publish.cjs.txt'), 'utf8');
   const authority = manifest.publicationAuthority;
-  const privatePublisher = fs.readFileSync(path.join(repository, authority.path));
+  const privatePublisher = zlib.gunzipSync(fs.readFileSync(owned(authority.sourceSnapshot)));
+  publisherBoundary.verifyHistorical(authority, privatePublisher);
   assert.equal(sha256(privatePublisher), authority.approvedRawSha256);
   assert.equal(sha256(canonical(privatePublisher)), authority.gitCanonicalSha256);
   assert.equal(crlf(privatePublisher), authority.rawCRLF);
   assert.equal(authority.approvedRawSha256, '91c8cf83dd07e34a467eae35445e2337783ce28aaf9c4d3d2d4932b17fb59244');
   assert.equal(authority.sharedPublisherModifiedByWorker, false);
+  const currentApproval = manifest.currentPublicationApproval;
+  const currentSnapshot = zlib.gunzipSync(fs.readFileSync(owned(currentApproval.sourceSnapshot)));
+  const capturedAuthorization = JSON.parse(fs.readFileSync(owned(currentApproval.authorizationSnapshot)));
+  publisherBoundary.verifyCaptured(currentApproval, currentSnapshot, capturedAuthorization);
+  assert.equal(sha256(canonical(currentSnapshot)), currentApproval.gitCanonicalSha256);
+  assert.equal(crlf(currentSnapshot), currentApproval.rawCRLF);
+  const authorizationRepair = JSON.parse(fs.readFileSync(owned(currentApproval.boundaryRecord)));
+  assert.equal(authorizationRepair.schema, 'C048/controller-authorization-repair/1');
+  assert.equal(authorizationRepair.additionalUnits, 0);
+  assert.equal(sha256(fs.readFileSync(owned(authorizationRepair.authorizationSnapshot))), authorizationRepair.authorizationSnapshotSha256);
+  for (const snapshot of [...authorizationRepair.previousOwnedSnapshots, authorizationRepair.currentPublisher]) {
+    const bytes = zlib.gunzipSync(fs.readFileSync(owned(snapshot.snapshot)));
+    assert.equal(sha256(bytes), snapshot.rawSha256);
+    assert.equal(sha256(canonical(bytes)), snapshot.gitCanonicalSha256);
+    assert.equal(crlf(bytes), snapshot.rawCRLF);
+  }
+  const repair = JSON.parse(fs.readFileSync(owned(currentApproval.provenanceRepairRecord)));
+  assert.equal(repair.schema, 'C048/publisher-provenance-repair/1');
+  assert.equal(repair.historicalPublication.commit, publisherBoundary.historicalCommit);
+  assert.equal(repair.historicalPublication.publisherUsedRawSha256, publisherBoundary.historicalSha256);
+  assert.equal(repair.currentApproval.approvedRawSha256, '48846487727dd2ef35f03d88d65e64121059b6867188bbf34daeaee3fda1c09d');
+  assert.equal(repair.additionalUnits, 0);
+  for (const snapshot of [...repair.previousOwnedSnapshots, repair.historicalPublication.receipt,
+    repair.parentFailedReview, repair.currentApproval.source]) {
+    const bytes = zlib.gunzipSync(fs.readFileSync(owned(snapshot.snapshot)));
+    assert.equal(sha256(bytes), snapshot.rawSha256);
+    assert.equal(sha256(canonical(bytes)), snapshot.gitCanonicalSha256);
+    assert.equal(crlf(bytes), snapshot.rawCRLF);
+  }
+  for (const item of repair.unchangedRuntime) {
+    const bytes = fs.readFileSync(owned(item.path));
+    assert.equal(sha256(bytes), item.rawSha256);
+    assert.equal(sha256(canonical(bytes)), item.gitCanonicalSha256);
+  }
+  const oldTreeBytes = fs.readFileSync(owned(repair.historicalPublication.all654PublishedFiles));
+  assert.equal(sha256(oldTreeBytes), repair.historicalPublication.treeManifestSha256);
+  const oldTree = JSON.parse(oldTreeBytes);
+  assert.equal(oldTree.files.length, 654);
+  assert.equal(execFileSync('git', ['rev-parse', `${oldTree.annotatedTag}^{}`], { cwd: repository, encoding: 'utf8' }).trim(),
+    publisherBoundary.historicalCommit);
+  const batch = execFileSync('git', ['cat-file', '--batch'], {
+    cwd: repository, input: `${oldTree.files.map((item) => item.oid).join('\n')}\n`, maxBuffer: 128 * 1024 * 1024
+  });
+  let offset = 0;
+  for (const item of oldTree.files) {
+    const newline = batch.indexOf(10, offset);
+    const header = batch.subarray(offset, newline).toString().split(' ');
+    const bytes = batch.subarray(newline + 1, newline + 1 + Number(header[2]));
+    assert.equal(header[0], item.oid);
+    assert.equal(bytes.length, item.bytes);
+    assert.equal(sha256(bytes), item.publishedSha256);
+    offset = newline + 2 + bytes.length;
+  }
+  assert.equal(offset, batch.length);
   const boundary = JSON.parse(fs.readFileSync(owned(authority.boundaryRecord)));
   assert.equal(boundary.schema, 'C048/parent-publisher-boundary/2');
   assert.equal(boundary.cardId, 'C048');
@@ -266,6 +322,9 @@ test('owned publication wrapper checks actual main equality under publisher lock
   }), { code: 'ERR_ASSERTION' });
   assert.equal(spawned, false);
   assert.match(publisher, /Local\\AppScalingStrategies_KanbanPublisher_v1/);
+  assert.match(publisher, /Local\\AppScalingStrategies_KanbanState_v1/);
+  assert.match(publisher, /\$flow\.localPublisherAuthorization/);
+  assert.match(publisher, /PUBLISHER_CHANGED_DURING_PUBLICATION/);
   assert.match(publisher, /'ls-remote', 'origin', 'refs\/heads\/main'/);
   assert.match(publisher, /HEAD_MAIN_MISMATCH/);
   assert.match(publisher, /PUBLISHER_BOUNDARY_MISMATCH/);
@@ -335,7 +394,7 @@ test('finalized browser authority is actual captured signed-Edge proof with bloc
   assert.equal(proof.finalSession.counts.expansions, 1);
   assert.equal(proof.finalSession.counts.modeledEffectApplications, 6);
   const current = evidence.browserAuthority.current !== false;
-  const boundary = current ? null : JSON.parse(fs.readFileSync(owned(manifest.publicationAuthority.boundaryRecord)));
+  const boundary = current ? null : JSON.parse(fs.readFileSync(owned(manifest.currentPublicationApproval.boundaryRecord)));
   if (!current) assert.equal(evidence.status, 'parent-approved-publisher-boundary-refresh-pending');
   for (const [file, expected] of Object.entries(proof.sourceHashes)) {
     const historical = boundary?.previousOwnedSnapshots.find((item) => item.path === file);

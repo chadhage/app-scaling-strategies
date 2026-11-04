@@ -1,0 +1,65 @@
+'use strict';
+
+const crypto = require('node:crypto');
+const historicalCommit = '06377e77bbc29690468ceba27a04b14de33166fa';
+const historicalSha256 = '91c8cf83dd07e34a467eae35445e2337783ce28aaf9c4d3d2d4932b17fb59244';
+const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+
+function reject(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  throw error;
+}
+
+function verifyHistorical(authority, snapshot) {
+  if (!authority || authority.role !== 'historical-publication-used' ||
+      authority.usedForCommit !== historicalCommit || authority.approvedRawSha256 !== historicalSha256) {
+    reject('HISTORICAL_ATTRIBUTION_MISMATCH', 'The immutable 06377e publication used 91c8, not the current publisher.');
+  }
+  if (!Buffer.isBuffer(snapshot) || hash(snapshot) !== historicalSha256) {
+    reject('HISTORICAL_SNAPSHOT_MISMATCH', 'Validate historical publisher bytes from their preserved snapshot, never the live private path.');
+  }
+  return Object.freeze({ role: authority.role, commit: historicalCommit, rawSha256: historicalSha256 });
+}
+
+function verifyAuthorization(authorization) {
+  const record = authorization?.localPublisherAuthorization;
+  if (!authorization || authorization.schema !== 'C048/controller-publisher-authorization-snapshot/1' ||
+      authorization.controllerId !== '942b9aec-aa3f-4179-b6ed-e2bc57abeed2' ||
+      !record || record.approvedBy !== 'parent-controller' || typeof record.id !== 'string' ||
+      !/^[a-f0-9]{64}$/.test(record.publisherSha256 || '') ||
+      record.exactAddedClasses?.C048 !== 'D' || record.mainMustEqualRemoteBeforeStaging !== true ||
+      record.namespaceAndFrozenClassGuardsUnchanged !== true || record.cloudAuthorityExpanded !== false) {
+    reject('UNKNOWN_CONTROLLER_AUTHORIZATION', 'A complete explicit canonical parent authorization for C048 D is required.');
+  }
+  return Object.freeze({ id: record.id, rawSha256: record.publisherSha256 });
+}
+
+function verifyCaptured(approval, snapshot, authorization) {
+  const parent = verifyAuthorization(authorization);
+  if (!approval || approval.schema !== 'C048/current-publisher-approval/1' ||
+      approval.role !== 'current-next-publication-approved' || approval.version !== 'controller-at-capture-v1' ||
+      approval.cardId !== 'C048' || approval.kano !== 'D' || approval.approvedRawSha256 !== parent.rawSha256) {
+    reject('UNKNOWN_CURRENT_APPROVAL', 'The versioned captured source must match its preserved explicit controller authorization.');
+  }
+  if (!Buffer.isBuffer(snapshot) || hash(snapshot) !== parent.rawSha256) {
+    reject('CURRENT_SNAPSHOT_MISMATCH', 'Current approval requires the exact preserved approved source snapshot.');
+  }
+  return Object.freeze({ role: approval.role, version: approval.version, rawSha256: parent.rawSha256 });
+}
+
+function verifyLive(authorization, live) {
+  const parent = verifyAuthorization(authorization);
+  if (!Buffer.isBuffer(live) || hash(live) !== parent.rawSha256) {
+    reject('CURRENT_BOUNDARY_MISMATCH', 'Unknown or changed live publisher bytes cannot authorize another publication.');
+  }
+  return parent;
+}
+
+function verifyCurrent(approval, live, snapshot, authorization) {
+  verifyCaptured(approval, snapshot, authorization);
+  return verifyLive(authorization, live);
+}
+
+module.exports = Object.freeze({ historicalCommit, historicalSha256, verifyHistorical, verifyAuthorization,
+  verifyCaptured, verifyLive, verifyCurrent });
