@@ -1,0 +1,94 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawn, spawnSync } = require('node:child_process');
+const { root, sha, randomUUID } = require('./provenance.cjs');
+
+function schedule() {
+  const file = path.join(root, 'tests', 'publisher-wrapper.ps1').replace(/'/g, "''");
+  const script = `$tokens=$null;$errors=$null;$ast=[System.Management.Automation.Language.Parser]::ParseFile('${file}',[ref]$tokens,[ref]$errors);if($errors.Count){throw 'Wrapper syntax invalid'};$reads=@($ast.FindAll({param($n)$n -is [System.Management.Automation.Language.CommandAst] -and $n.GetCommandName() -eq 'Read-Current'},$true));$lock=@($ast.FindAll({param($n)$n -is [System.Management.Automation.Language.InvokeMemberExpressionAst] -and $n.Member.Value -eq 'WaitOne' -and $n.Expression.VariablePath.UserPath -eq 'mutex'},$true));if($lock.Count -ne 1){throw 'Expected one publisher acquisition'};$at=$lock[0].Extent.StartOffset;[ordered]@{before=@($reads|Where-Object {$_.Extent.StartOffset -lt $at}).Count;inside=@($reads|Where-Object {$_.Extent.StartOffset -gt $at}).Count}|ConvertTo-Json -Compress`;
+  const result = spawnSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
+    { encoding: 'utf8', timeout: 30000, windowsHide: true });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout);
+}
+
+function child(script) {
+  const process = spawn('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
+    { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+  const ended = new Promise((resolve, reject) => {
+    let stdout = '';
+    let stderr = '';
+    const timer = setTimeout(() => { process.kill(); reject(new Error('Owned isolated mutex fixture timed out.')); }, 15000);
+    process.stdout.on('data', (bytes) => { stdout += bytes; });
+    process.stderr.on('data', (bytes) => { stderr += bytes; });
+    process.once('error', reject);
+    process.once('close', (exitCode) => {
+      clearTimeout(timer);
+      try { resolve({ pid: process.pid, exitCode, stdout, stderr, value: stdout.trim() ? JSON.parse(stdout) : null }); }
+      catch (error) { reject(error); }
+    });
+  });
+  return { process, ended };
+}
+
+async function marker(file) {
+  const deadline = Date.now() + 8000;
+  while (!fs.existsSync(file)) {
+    if (Date.now() > deadline) throw new Error('Owned isolated mutex fixture marker unavailable.');
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
+
+test('publisher critical section never calls the state-dependent current reader', () => {
+  const order = schedule();
+  assert.ok(order.before >= 1);
+  assert.equal(order.inside, 0, 'STATE-dependent Read-Current must never execute while PUBLISHER is held.');
+  const reader = fs.readFileSync(path.join(root, 'tests', 'publisher-current.ps1'), 'utf8');
+  assert.match(reader, /Local\\AppScalingStrategies_KanbanState_v1/);
+});
+
+test('actual isolated named-mutex call-order race leaves controller STATE-to-PUBLISHER acquisition unblocked', { timeout: 30000 }, async (t) => {
+  const order = schedule();
+  const id = randomUUID();
+  const directory = path.join(root, `lock-order-fixture-${id}`);
+  assert.equal(fs.existsSync(directory), false);
+  fs.mkdirSync(directory);
+  const stateName = `Local\\C016_LockOrder_${id}_State`;
+  const publisherName = `Local\\C016_LockOrder_${id}_Publisher`;
+  const markers = ['controller-publisher-gate', 'pre-state-complete', 'controller-state-held',
+    'worker-publisher-held', 'worker-state-request'];
+  const common = `$ErrorActionPreference='Stop';$root='${directory.replace(/'/g, "''")}';$s=[Threading.Mutex]::new($false,'${stateName}');$p=[Threading.Mutex]::new($false,'${publisherName}');$sh=$false;$ph=$false;function Mark($name){[IO.File]::WriteAllText((Join-Path $root $name),'owned fixture')};function Await($name){$until=[DateTime]::UtcNow.AddSeconds(8);while(-not (Test-Path -LiteralPath (Join-Path $root $name))){if([DateTime]::UtcNow -gt $until){throw 'Fixture wait timed out'};Start-Sleep -Milliseconds 10}};`;
+  let controller;
+  let worker;
+  let results;
+  try {
+    controller = child(common + "try{$ph=$p.WaitOne(5000);if(-not $ph){throw 'Gate unavailable'};Mark 'controller-publisher-gate';Await 'pre-state-complete';$sh=$s.WaitOne(5000);if(-not $sh){throw 'State unavailable'};Mark 'controller-state-held';$p.ReleaseMutex();$ph=$false;Await 'worker-publisher-held';$ph=$p.WaitOne(800);[ordered]@{role='controller';stateHeldDuringPublisherRequest=$sh;publisherAcquiredWhileStateHeld=$ph}|ConvertTo-Json -Compress}finally{if($ph){$p.ReleaseMutex()};if($sh){$s.ReleaseMutex()};$p.Dispose();$s.Dispose()}");
+    await marker(path.join(directory, 'controller-publisher-gate'));
+    worker = child(common + `try{for($i=0;$i -lt ${order.before};$i++){$sh=$s.WaitOne(5000);if(-not $sh){throw 'Initial state read unavailable'};$s.ReleaseMutex();$sh=$false};Mark 'pre-state-complete';$ph=$p.WaitOne(5000);if(-not $ph){throw 'Publisher unavailable'};Mark 'worker-publisher-held';for($i=0;$i -lt ${order.inside};$i++){Mark 'worker-state-request';$sh=$s.WaitOne(5000);if(-not $sh){throw 'Inverted state read timed out'};$s.ReleaseMutex();$sh=$false};[ordered]@{role='wrapper-schedule';stateReadsBeforePublisher=${order.before};stateReadsWhilePublisher=${order.inside}}|ConvertTo-Json -Compress}finally{if($sh){$s.ReleaseMutex()};if($ph){$p.ReleaseMutex()};$s.Dispose();$p.Dispose()}`);
+    results = await Promise.all([controller.ended, worker.ended]);
+    for (const result of results) assert.equal(result.exitCode, 0, result.stderr);
+  } finally {
+    for (const owned of [controller, worker]) {
+      if (owned && owned.process.exitCode === null) owned.process.kill();
+    }
+    await Promise.allSettled([controller?.ended, worker?.ended].filter(Boolean));
+    for (const name of markers) {
+      const file = path.join(directory, name);
+      if (!fs.existsSync(file)) continue;
+      assert.equal(fs.lstatSync(file).isFile(), true);
+      fs.unlinkSync(file);
+    }
+    fs.rmdirSync(directory);
+    t.diagnostic(JSON.stringify({ sourceWrapperSha256: sha(fs.readFileSync(path.join(root, 'tests', 'publisher-wrapper.ps1'))),
+      order, stateName, publisherName, results, exactOwnedFixtureCleaned: true,
+      sharedMutexesUsed: false, gitWrites: 0,
+      method: 'Actual two-process named-mutex schedule extracted from production wrapper AST; no production overrides or hooks.' }));
+  }
+  assert.equal(results[0].value.publisherAcquiredWhileStateHeld, true,
+    'Controller must acquire PUBLISHER while holding STATE; wrapper must not request STATE under PUBLISHER.');
+});

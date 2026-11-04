@@ -17,7 +17,8 @@ $held = $false
 try {
     $held = $mutex.WaitOne([TimeSpan]::FromSeconds(180))
     if (-not $held) { throw 'Publisher mutex unavailable; no lock removal or fallback.' }
-    $current = Read-Current
+    # A controller may hold STATE while waiting for PUBLISHER; never reread STATE here.
+    $current = $initial
     $head = (Read-Git @('rev-parse', 'HEAD') | Out-String).Trim()
     $branch = (Read-Git @('branch', '--show-current') | Out-String).Trim()
     $refs = @(Read-Git @('ls-remote', 'origin', 'refs/heads/main'))
@@ -35,13 +36,20 @@ try {
         return
     }
     if (-not $ready) { throw 'Current original admission, approved source, main and remote must all match before staging.' }
-    $rechecked = Read-Current
+    $rechecked = $initial
     $shaBeforeDelegation = (Get-FileHash -LiteralPath '.git\kanban-orchestrator\publish.ps1' -Algorithm SHA256).Hash.ToLowerInvariant()
     if (-not $rechecked.approved -or -not $rechecked.delegationReady -or
         $rechecked.authorizedSha256 -ne $current.authorizedSha256 -or
         $rechecked.canonicalParentRecordSha256 -ne $current.canonicalParentRecordSha256 -or
         $shaBeforeDelegation -ne $rechecked.authorizedSha256) {
         throw 'Current canonical approval, original scope or actual source changed before delegation; no staging.'
+    }
+    $delegation = $rechecked.authorizationSnapshot.delegation
+    if ($delegation.cardId -ne 'C016' -or $delegation.kano -ne 'D' -or $delegation.kanoUnit -ne 'C016' -or
+        $delegation.owner -ne 'worker-C016' -or $delegation.workerId -ne 'worker-C016' -or
+        $delegation.state -ne 'In Progress' -or $delegation.workerStatus -ne 'running' -or
+        $delegation.readiness -ne $true) {
+        throw 'Original frozen C016 delegation snapshot is not valid; no staging.'
     }
     [ordered]@{ schemaVersion = 1; kind = 'actual-current-transaction-authorization'
         cardId = 'C016'; workerId = 'worker-C016'; authorizedSha256 = $shaBeforeDelegation

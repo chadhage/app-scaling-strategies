@@ -30,7 +30,7 @@ if (mode === 'syntax') {
   console.log(JSON.stringify({ syntaxFiles: files.length, powershellSyntaxFiles: psFiles.length, passed: true }));
 } else {
   const files = mode === 'browser' ? ['browser.acceptance.cjs'] : mode === 'integrity' ? ['integrity.test.cjs'] :
-    ['conditional.test.cjs', 'concurrency.test.cjs', 'errors.test.cjs', 'journal.test.cjs', 'integrity.test.cjs'];
+    ['conditional.test.cjs', 'concurrency.test.cjs', 'errors.test.cjs', 'journal.test.cjs', 'integrity.test.cjs', 'publisher-lock-order.test.cjs'];
   const result = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...files.map((file) => path.join(__dirname, file))], {
     env, timeout: 900000, maxBuffer: 16 * 1024 * 1024, windowsHide: true,
   });

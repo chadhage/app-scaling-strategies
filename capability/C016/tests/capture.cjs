@@ -7,7 +7,7 @@ const { spawnSync } = require('node:child_process');
 
 const root = path.resolve(__dirname, '..');
 const [mode, ...extra] = process.argv.slice(2);
-if (extra.length || !['red', 'input-red', 'input-green', 'focused', 'integrity', 'syntax', 'journeys', 'browser-check'].includes(mode)) throw new Error('Unknown explicit capture mode.');
+if (extra.length || !['red', 'lock-red', 'lock-green', 'input-red', 'input-green', 'focused', 'integrity', 'syntax', 'journeys', 'browser-check'].includes(mode)) throw new Error('Unknown explicit capture mode.');
 const id = `${mode}-${randomUUID()}`;
 const evidence = path.join(root, 'evidence');
 if (!fs.existsSync(evidence)) fs.mkdirSync(evidence);
@@ -19,10 +19,14 @@ function save(suffix, bytes) {
   fs.writeFileSync(path.join(evidence, file), bytes, { flag: 'wx' });
   return entry(file, bytes);
 }
-const sourceSnapshots = ['red', 'input-red'].includes(mode) ? ['commands.cjs', path.join('tests', 'conditional.test.cjs')].map((file, index) =>
-  save(`${index}.snapshot`, fs.readFileSync(path.join(root, file)))) : [];
+const snapshotFiles = mode === 'lock-red' ? [path.join('tests', 'publisher-wrapper.ps1'), path.join('tests', 'publisher-lock-order.test.cjs')] :
+  ['red', 'input-red'].includes(mode) ? ['commands.cjs', path.join('tests', 'conditional.test.cjs')] : [];
+const sourceSnapshots = snapshotFiles.map((file, index) =>
+  save(`${index}.snapshot`, fs.readFileSync(path.join(root, file))));
 const args = mode === 'red'
   ? ['--test', path.join(__dirname, 'conditional.test.cjs')]
+  : ['lock-red', 'lock-green'].includes(mode)
+    ? ['--test', path.join(__dirname, 'publisher-lock-order.test.cjs')]
   : ['input-red', 'input-green'].includes(mode)
     ? ['--test', '--test-name-pattern', '^command input snapshot', path.join(__dirname, 'conditional.test.cjs')]
   : mode === 'journeys' ? [path.join(root, 'cli.cjs'), 'conduct', 'all']
@@ -42,8 +46,9 @@ const report = {
 const raw = Buffer.from(`${JSON.stringify(report, null, 2).replace(/\n/g, '\r\n')}\r\n`);
 const record = save('raw.json', raw);
 console.log(JSON.stringify({ ...record, exitCode: result.status }));
-if (['red', 'input-red'].includes(mode)) {
-  const assertion = mode === 'red' ? 'A fresh submit must actually publish' : 'A pending command must keep its declared input identity';
+if (['red', 'input-red', 'lock-red'].includes(mode)) {
+  const assertion = mode === 'red' ? 'A fresh submit must actually publish' : mode === 'lock-red'
+    ? 'STATE-dependent Read-Current must never execute while PUBLISHER is held' : 'A pending command must keep its declared input identity';
   if (result.status !== 1 || !result.stdout.toString('utf8').includes(assertion) ||
       /MODULE_NOT_FOUND|Cannot find module/.test(result.stdout.toString('utf8'))) {
     throw new Error('RED must be a genuine loadable-stub behavior assertion failure.');

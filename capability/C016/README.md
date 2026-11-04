@@ -132,6 +132,13 @@ mutex. It rechecks actual source bytes against current explicit approval immedia
 before delegating to the **unchanged standard publisher**. No historical digest or
 current-at-capture snapshot authorizes a future transaction. Unknown source, scope,
 owner/class/path/Admin overrides, or main/remote mismatch reject before staging.
+Lock order is **STATE read/validate/release, then PUBLISHER**. The held publisher
+section uses only that copied validated authority/scope and actual byte/Git
+rechecks. It never calls a state reader, including indirect Node/PowerShell readers.
+If a refresh is needed, the publisher is released before a fresh ordered attempt.
+An isolated two-process named-mutex regression derives the real wrapper call
+schedule from its PowerShell AST; it uses no shared mutexes, production overrides
+or Git writes. Its genuine old-order RED and corrected GREEN remain separate.
 The C048/C019 separation pattern is reused read-only; no storage/runtime engine
 or shared guard is modified.
 

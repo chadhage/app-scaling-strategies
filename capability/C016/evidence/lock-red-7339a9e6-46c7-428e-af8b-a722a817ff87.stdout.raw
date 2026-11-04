@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: publisher critical section never calls the state-dependent current reader
+not ok 1 - publisher critical section never calls the state-dependent current reader
+  ---
+  duration_ms: 598.0796
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C016\\tests\\publisher-lock-order.test.cjs:47:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    STATE-dependent Read-Current must never execute while PUBLISHER is held.
+    
+    2 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C016\tests\publisher-lock-order.test.cjs:50:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: actual isolated named-mutex call-order race leaves controller STATE-to-PUBLISHER acquisition unblocked
+not ok 2 - actual isolated named-mutex call-order race leaves controller STATE-to-PUBLISHER acquisition unblocked
+  ---
+  duration_ms: 2389.8084
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C016\\tests\\publisher-lock-order.test.cjs:55:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Controller must acquire PUBLISHER while holding STATE; wrapper must not request STATE under PUBLISHER.
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C016\tests\publisher-lock-order.test.cjs:92:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# {"sourceWrapperSha256":"8878167f91479a5c5bc4e1bdd659bdce15fc54046d97897aa19af477ead88faa","order":{"before":1,"inside":2},"stateName":"Local\\\\C016_LockOrder_6355acf4-21b4-44d3-8028-0d3d5a7e8533_State","publisherName":"Local\\\\C016_LockOrder_6355acf4-21b4-44d3-8028-0d3d5a7e8533_Publisher","results":[{"pid":68388,"exitCode":0,"stdout":"{\\"role\\":\\"controller\\",\\"stateHeldDuringPublisherRequest\\":true,\\"publisherAcquiredWhileStateHeld\\":false}\\r\\n","stderr":"","value":{"role":"controller","stateHeldDuringPublisherRequest":true,"publisherAcquiredWhileStateHeld":false}},{"pid":66788,"exitCode":0,"stdout":"{\\"role\\":\\"wrapper-schedule\\",\\"stateReadsBeforePublisher\\":1,\\"stateReadsWhilePublisher\\":2}\\r\\n","stderr":"","value":{"role":"wrapper-schedule","stateReadsBeforePublisher":1,"stateReadsWhilePublisher":2}}],"exactOwnedFixtureCleaned":true,"sharedMutexesUsed":false,"gitWrites":0,"method":"Actual two-process named-mutex schedule extracted from production wrapper AST; no production overrides or hooks."}
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3109.74
