@@ -37,6 +37,7 @@
 
   <div class="note status" role="note" aria-labelledby="status-title">
     <p class="note-title" id="status-title">Status: design and local implementation</p>
+    <p><strong>Current focus: P0 — foundations and first usable release (in progress).</strong> <a href="#current-priority">Priority status and source</a>.</p>
     <ul>
       <li><strong>Exists:</strong> the specification, the backlog and kanban plans, and portable synthetic lessons and local capabilities that open in a browser without an Azure account.</li>
       <li><strong>Does not exist:</strong> native Azure proof. The README says IaC generation, identity registration, live Azure execution, deployment and expenditure remain unapproved, and that local runs do not establish native support or the five-nines goal.</li>
@@ -231,7 +232,7 @@
     <li><strong>.docs/wiki/backlog.md: the product plan</strong>
       <span class="sub">171 items: 12 harness stories (H), 7 platform enablers (P), 150 scenario demos (D-S) and 2 guided workflows (W). Carries the shared definition of done and the milestone sequence.</span></li>
     <li><strong>.docs/wiki/kanban.md: the delivery plan</strong>
-      <span class="sub">414 cards: 108 capability cards (C), 150 portable lessons (A), 150 native-proof cards (B) and 6 optional delighters (X). Carries the pull policy, entry gates and completion rules. The backlog stays authoritative for parent acceptance.</span></li>
+      <span class="sub">414 cards: 108 capability cards (C), 150 portable lessons (A), 150 native-proof cards (B) and 6 optional delighters (X). Carries the seven standing rules, the pull policy, entry gates and completion rules, plus zero-credit unblock (U) and quality-debt (K) cards. The backlog stays authoritative for parent acceptance.</span></li>
     <li><strong>learning/, capability/, testing/: local implementation</strong>
       <span class="sub">Work delivered for individual cards. A card counts as Done only after acceptance by someone other than its author, which the kanban's live execution ledger records.</span></li>
   </ol>
@@ -255,7 +256,7 @@
         <tr><th scope="row"><code>README.md</code></th><td>Problem, scope and goal; key findings; the S001–S150 catalog; lifecycle; acceptance and evidence rules; "Try the local demonstrations".</td></tr>
         <tr><th scope="row"><code>.docs/wiki/backlog.md</code></th><td>Personas, shared definition of done, the H, P, D-S and W items, milestones M0–M5, completion and evidence policy.</td></tr>
         <tr><th scope="row"><code>.docs/wiki/kanban.md</code></th><td>Card inventory, pull policy, Kano completion rules, entry gates, dated status notes.</td></tr>
-        <tr><th scope="row"><code>.docs/wiki/flow-state.json</code></th><td>The live execution ledger named in the kanban: admitted work, owners, acceptance, blockers and actual Kano totals.</td></tr>
+        <tr><th scope="row"><code>.docs/wiki/flow-state.json</code></th><td>The live execution ledger named in the kanban: admitted work, owners, acceptance, unblock work, shared lessons and actual Kano totals.</td></tr>
         <tr><th scope="row"><code>learning/Snnn/</code></th><td>One portable lesson per scenario (the A card): opens in a browser, uses synthetic data.</td></tr>
         <tr><th scope="row"><code>capability/Cnnn/</code></th><td>Local capabilities (C cards), for example the catalog (C005), search (C006), filters (C007), preparation view (C008), the getProfile fixture (C020) and the isolated lesson host (C041).</td></tr>
         <tr><th scope="row"><code>capability/local-harness/</code></th><td>The unified local learner interface: search and filter the scenarios, read preparation and limits, open an accepted lesson.</td></tr>
@@ -290,9 +291,12 @@
         <tr><td class="id">B-S001–B-S150</td><td>Native-proof card: a real experiment on a qualified host.</td><td>kanban</td><td>150</td></tr>
         <tr><td class="id">C001–C108</td><td>Capability or guided-workflow card.</td><td>kanban</td><td>108</td></tr>
         <tr><td class="id">X001–X006</td><td>Optional delighter.</td><td>kanban</td><td>6</td></tr>
+        <tr><td class="id">U001–U018</td><td>Zero-credit unblock, slice or tooling card. Every obstacle becomes one; there is no blocked state.</td><td>kanban</td><td>18 so far</td></tr>
+        <tr><td class="id">K-C015, K-A-S042</td><td>Zero-credit quality-debt card for one accepted card: failing tests or coverage under the 85% bar.</td><td>kanban</td><td>derived from the ledger</td></tr>
       </tbody>
     </table>
   </div>
+  <p>The 414 cards above are the only source of Kano credit. U and K cards carry none and cannot satisfy or fund a ratio. The decoder below covers the credit-bearing IDs only.</p>
 
   <form class="tool" id="id-form" novalidate>
     <h4>ID decoder</h4>
@@ -310,6 +314,11 @@
 
   <h3 id="what-groups">The 150 scenarios in 15 groups <span class="tag spec">Specified</span></h3>
   <p>Each group holds ten consecutive scenarios. The last column is the backlog's priority mix for that group's demo stories: P0 is needed for the first usable release, P1 for broader coverage, and P2 marks advanced, expensive or destructive experiments that need extra operational controls. Priority is ordering guidance, not an effort estimate.</p>
+  <div class="note status" id="current-priority" role="note" aria-labelledby="current-priority-title">
+    <p class="note-title" id="current-priority-title">Current focus: P0 (in progress) <span class="tag ed">Editorial</span></p>
+    <p>As of <time datetime="2026-11-04T12:09:14Z">4 November 2026, 12:09 UTC</time>, execution-ledger revision <code>1117</code> marks all in-progress cards as P0 and records no completed original backlog parents. The P0 foundations and first complete native release are still unfinished.</p>
+    <p>P0, P1 and P2 are priorities, not exclusive phases. Accepted portable lessons for P1 or P2 scenarios do not establish native completion of those priorities. This is a dated snapshot, not an automatically refreshed status; check the <a href="https://github.com/chadhage/app-scaling-strategies/blob/main/.docs/wiki/flow-state.json">live execution ledger</a> for later changes and the <a href="#when-milestones">milestone exit criteria</a> for what completion requires.</p>
+  </div>
   <div class="table-wrap" role="region" aria-labelledby="cap-groups" tabindex="0">
     <table>
       <caption id="cap-groups">Scenario groups A–O<span class="cap-note">Priority mix shown as P0 / P1 / P2 counts of D-S items. Totals: 56 / 84 / 10.</span></caption>
@@ -583,7 +592,7 @@ n >= ceil( ln(0.05) / ln(1 - 0.00001) ) = 299572</code></pre>
   </ul>
 <pre tabindex="0"><code>s + l &gt;= 4 * d
 s     &gt;= 6 * l</code></pre>
-  <p>In plain terms, must-be work is admitted only after enough value work is done, and each optional delighter needs six designated satisfiers first. The kanban adds that safety is never waived to satisfy a quota: live features stay disabled until their must-be guards pass. Planning inventory earns no credit. The ledger records admitted work, owners, acceptance, commits and tags, blockers and the actual totals.</p>
+  <p>In plain terms, must-be work is admitted only after enough value work is done, and each optional delighter needs six designated satisfiers first. The kanban adds that safety is never waived to satisfy a quota: live features stay disabled until their must-be guards pass. Planning inventory earns no credit. The ledger records admitted work, owners, acceptance, commits and tags, hints and shared lessons, and the actual totals.</p>
 </section>
 
 <!-- ============================ 5. USE ============================ -->
@@ -598,7 +607,7 @@ s     &gt;= 6 * l</code></pre>
     <li>In the clone, open <code>capability/local-harness/index.html</code> directly in a browser. No server or Azure account is needed. The folder is <a href="https://github.com/chadhage/app-scaling-strategies/tree/main/capability/local-harness">on GitHub</a>, but GitHub shows its source there and does not run it.</li>
     <li>Search and filter the 150 scenarios and two guided workflows. Open a scenario's preparation and limits view.</li>
     <li>Open an accepted portable lesson. Use its synthetic controls, run its failure cases, and reset it.</li>
-    <li>Treat availability labels as a snapshot. The catalog names the acceptance snapshot it reflects and is not a live feed. For newer accepted work, evidence and native-proof blockers, use the kanban's links and its ledger.</li>
+    <li>Treat availability labels as a snapshot. The catalog names the acceptance snapshot it reflects and is not a live feed. For newer accepted work, evidence and the unblock work that gates native proof, use the kanban's links and its ledger.</li>
   </ol>
   <div class="note caution" role="note" aria-labelledby="http-title">
     <p class="note-title" id="http-title">Two pieces need more than opening a file</p>
@@ -956,7 +965,7 @@ s     &gt;= 6 * l</code></pre>
   </ul>
 
   <h3 id="sources-provenance">Provenance</h3>
-  <p>This page was written from <code>README.md</code>, <code>.docs/wiki/backlog.md</code> and <code>.docs/wiki/kanban.md</code> on <code>main</code>. When it was written, the last commit to touch each was <code>81c9cca</code> (README), <code>8e7fb3c</code> (backlog) and <code>14703e7</code> (kanban). The counts and the priority mix were recomputed from the documents' tables at that point. The kanban and ledger change with every accepted card, so any statement about status is as of then. Platform behavior is the README's summary of the pages above and has not been re-verified here.</p>
+  <p>This page was written from <code>README.md</code>, <code>.docs/wiki/backlog.md</code> and <code>.docs/wiki/kanban.md</code> on <code>main</code>. When it was written, the last commit to touch each was <code>81c9cca</code> (README), <code>8e7fb3c</code> (backlog) and <code>14703e7</code> (kanban). The counts and the priority mix were recomputed from the documents' tables at that point. The kanban and ledger change with every accepted card; the <a href="#current-priority">current-priority callout</a> records its own later ledger revision and timestamp, not a live status feed. Platform behavior is the README's summary of the pages above and has not been re-verified here.</p>
 
   <h3 id="sources-disclaimer">Disclaimer</h3>
   <p>Reproduced from the <a href="https://github.com/chadhage/app-scaling-strategies/blob/main/README.md#microsoft-open-source-disclaimer">README's Microsoft Open Source Disclaimer</a>, which this page inherits.</p>

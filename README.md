@@ -53,7 +53,7 @@ Implementation work is tracked in the [web demonstration harness backlog](.docs/
 
 1. Open the [local learner harness](capability/local-harness/index.html) directly in a browser. Search and filter all 150 scenarios and two guided workflows, inspect preparation and limits, then open an accepted portable lesson. The underlying [source catalog](capability/C005/index.html) is also available separately; neither view needs a server or Azure account.
 2. Select an available, accepted portable lesson and conduct its synthetic controls, failure cases, and reset. The catalog explicitly identifies its historical acceptance snapshot; its availability labels are not a live feed.
-3. Use the [live Kanban and accepted-demo links](.docs/wiki/kanban.md) for newer accepted work, implementation evidence, and native-proof blockers.
+3. Use the [live Kanban and accepted-demo links](.docs/wiki/kanban.md) for newer accepted work, implementation evidence, and the unblock work that gates native proof.
 
 The [versioned getProfile fixture](capability/C020/README.md) and [isolated lesson host](capability/C041/README.md) have separate bounded, loopback-only launch and cleanup instructions. Their HTTP-backed interfaces cannot be run by simply opening their HTML files. Follow their own instructions rather than exposing the listeners publicly.
 
