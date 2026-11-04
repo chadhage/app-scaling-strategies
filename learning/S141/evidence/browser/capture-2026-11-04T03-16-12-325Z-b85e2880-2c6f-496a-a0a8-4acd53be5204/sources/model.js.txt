@@ -1,0 +1,321 @@
+'use strict';
+
+(function expose(root) {
+  const BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
+  const MAX_RUNS = 6;
+  const SCENARIOS = Object.freeze(['positive', 'interrupted', 'unknown']);
+
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+
+  function fail(code, message) {
+    const error = new Error(message);
+    error.code = code;
+    throw error;
+  }
+
+  function scenarioName(value) {
+    if (typeof value !== 'string' || !SCENARIOS.includes(value)) {
+      fail('ERR_ACTION', 'Choose exactly one fixed synthetic trace: positive, interrupted, or unknown.');
+    }
+    return value;
+  }
+
+  function makeTrace(scenario) {
+    const transitions = [
+      { id: 'T1', startedMs: 1000, endedMs: 1100, from: 'v1', to: 'v2', correlationId: 'C1' },
+      { id: 'T2', startedMs: 3000, endedMs: 3100, from: 'v1', to: 'v2', correlationId: 'C2' },
+    ];
+    const originals = ['J1', 'J2', 'J3', 'J4'].map((id, index) => ({
+      id, transitionId: index < 2 ? 'T1' : 'T2', correlationId: index < 2 ? 'C1' : 'C2',
+      attemptId: `A-${id}-original`, startedMs: index < 2 ? 500 : 2500,
+    }));
+    const attempts = originals.map((original) => ({
+      id: original.attemptId, originalId: original.id, kind: 'original',
+      transitionId: original.transitionId, correlationId: original.correlationId,
+      startedMs: original.startedMs,
+    }));
+    const requests = [];
+    const clientEvents = [];
+    const errors = [];
+
+    for (const original of originals) {
+      const transition = transitions.find((item) => item.id === original.transitionId);
+      const interrupted = scenario === 'interrupted' && original.id === 'J2';
+      const unknown = scenario === 'unknown' && original.id === 'J4';
+      const completedMs = original.startedMs + (interrupted ? 1400 : 1000);
+      const request = (suffix, atMs, version) => ({
+        id: `R-${original.id}-${suffix}`, attemptId: original.attemptId,
+        originalId: original.id, kind: 'original', transitionId: original.transitionId,
+        correlationId: original.correlationId, atMs, version, httpStatus: 200,
+      });
+      requests.push(request('before', original.startedMs, 'v1'));
+      requests.push(request('during', transition.startedMs + 50, unknown ? null : interrupted ? 'v1' : 'v2'));
+      if (!unknown) {
+        requests.push(request('terminal', completedMs, interrupted ? 'v1' : 'v2'));
+        clientEvents.push({
+          attemptId: original.attemptId, originalId: original.id,
+          atMs: completedMs, type: 'completed',
+        });
+      }
+      if (interrupted) {
+        clientEvents.push(
+          { attemptId: original.attemptId, originalId: original.id, atMs: 1120, type: 'interrupted' },
+          { attemptId: original.attemptId, originalId: original.id, atMs: 1800, type: 'recovered' },
+        );
+        errors.push({
+          id: 'E-J2', originalId: 'J2', attemptId: original.attemptId,
+          atMs: 1120, code: 'STATE_LOST', correlationId: 'C1',
+          meaning: 'Recorded user interruption remains true after later recovery and completion.',
+        });
+      }
+      if (unknown) {
+        errors.push({
+          id: 'E-J4', originalId: 'J4', attemptId: original.attemptId,
+          atMs: 4000, code: 'MISSING_ORIGINAL_TERMINAL', correlationId: 'C2',
+          meaning: 'Missing client terminal and original target-version evidence; not an observed success.',
+        });
+      }
+    }
+
+    if (scenario !== 'positive') {
+      const original = originals.find((item) => item.id === (scenario === 'interrupted' ? 'J2' : 'J4'));
+      const startedMs = scenario === 'interrupted' ? 2100 : 3600;
+      const attempt = {
+        id: `A-${original.id}-new`, originalId: original.id, kind: 'new',
+        transitionId: original.transitionId, correlationId: original.correlationId, startedMs,
+      };
+      attempts.push(attempt);
+      for (const [suffix, atMs] of [['start', startedMs], ['terminal', startedMs + 200]]) {
+        requests.push({
+          id: `R-${original.id}-new-${suffix}`, attemptId: attempt.id,
+          originalId: original.id, kind: 'new', transitionId: original.transitionId,
+          correlationId: original.correlationId, atMs, version: 'v2', httpStatus: 200,
+        });
+      }
+      clientEvents.push({
+        attemptId: attempt.id, originalId: original.id, atMs: startedMs + 200, type: 'completed',
+      });
+    }
+
+    const windows = [0, 1000, 2000, 3000].map((startedMs, index) => ({
+      id: `W${index + 1}`, startedMs, endedMs: startedMs + 1000, offeredRequests: 250,
+    }));
+    // These aggregate rows are fixed fictional records, not generated traffic.
+    const unaffectedRequestGroups = windows.map((window) => ({
+      id: `U-${window.id}`, windowId: window.id, affected: false,
+      count: 250 - requests.filter((item) => item.atMs >= window.startedMs && item.atMs < window.endedMs).length,
+      httpStatus: 200, version: 'v1', scope: 'unaffected fictional cohort',
+    }));
+    return freeze({
+      schema: 1, id: `steady-${scenario}`, scenario, synthetic: true, recordedThroughMs: 4000,
+      boundary: BANNER,
+      workload: {
+        kind: 'fixed-fictional-records', durationMs: 4000, windows,
+        note: '250 offered request records per simulated second. Production equivalence is not demonstrated.',
+      },
+      budgets: {
+        originalJourneyMs: 1200, maxFailedOriginals: 0, maxUnknownOriginals: 0,
+        requiredOriginalContinuityFraction: 1, maxFailedTransitions: 0,
+        maxUnknownTransitions: 0, requiredTransitionContinuityFraction: 1,
+      },
+      routing: transitions.map((transition) => ({
+        transitionId: transition.id, atMs: transition.endedMs,
+        percentToTarget: 100, targetVersion: 'v2', scope: 'affected fictional cohort',
+        note: 'Routing intent alone is not original-journey movement evidence.',
+      })),
+      transitions, originals, attempts,
+      requests: requests.sort((a, b) => a.atMs - b.atMs || a.id.localeCompare(b.id)),
+      unaffectedRequestGroups,
+      clientEvents: clientEvents.sort((a, b) => a.atMs - b.atMs || a.attemptId.localeCompare(b.attemptId)),
+      errors,
+      correlations: transitions.map((transition) => ({
+        id: transition.correlationId, transitionId: transition.id,
+        originalIds: originals.filter((original) => original.transitionId === transition.id).map((original) => original.id),
+        independentEvidence: 'unestablished; these originals share a fictional transition',
+      })),
+    });
+  }
+
+  const traces = freeze(Object.fromEntries(SCENARIOS.map((scenario) => [scenario, makeTrace(scenario)])));
+
+  function traceFor(scenario) {
+    return traces[scenarioName(scenario)];
+  }
+
+  function measureTrace(scenario) {
+    const trace = traceFor(scenario);
+    const perOriginal = trace.originals.map((original) => {
+      const transition = trace.transitions.find((item) => item.id === original.transitionId);
+      const events = trace.clientEvents.filter((event) => event.attemptId === original.attemptId);
+      const terminal = events.find((event) => ['completed', 'failed'].includes(event.type));
+      const interrupted = events.some((event) => event.type === 'interrupted');
+      const requests = trace.requests.filter((request) => request.attemptId === original.attemptId);
+      const before = requests.some((request) => request.atMs < transition.startedMs && request.version === transition.from);
+      const after = requests.some((request) => request.atMs >= transition.startedMs && request.version === transition.to);
+      const terminalTarget = terminal?.type === 'completed'
+        && requests.some((request) => request.atMs === terminal.atMs && request.version === transition.to);
+      const versionMoved = Boolean(before && after && terminalTarget);
+      const durationMs = terminal ? terminal.atMs - original.startedMs : null;
+      const openAgeMs = terminal ? null : trace.recordedThroughMs - original.startedMs;
+      const withinBudget = (durationMs ?? openAgeMs) <= trace.budgets.originalJourneyMs;
+      const reasons = [];
+      if (interrupted) reasons.push('Retained original interruption; later recovery cannot erase it.');
+      if (!terminal) reasons.push('Original terminal evidence is missing; started original remains counted.');
+      if (terminal?.type === 'failed') reasons.push('Client recorded an original failure.');
+      if (!withinBudget) reasons.push('Original elapsed time exceeds the 1200 ms deadline; a new attempt cannot restart it.');
+      if (!versionMoved) reasons.push('Original v1-to-v2 completion evidence is absent; routing and new attempts do not substitute.');
+      const outcome = interrupted || terminal?.type === 'failed' || (terminal && (!withinBudget || !versionMoved))
+        ? 'failed' : !terminal ? 'unknown' : 'successful';
+      return {
+        originalId: original.id, attemptId: original.attemptId, transitionId: original.transitionId,
+        correlationId: original.correlationId, startedMs: original.startedMs,
+        deadlineMs: original.startedMs + trace.budgets.originalJourneyMs,
+        terminal: terminal?.type ?? null, terminalAtMs: terminal?.atMs ?? null,
+        durationMs, openAgeMs, withinBudget, interrupted, versionMoved, outcome, reasons,
+      };
+    });
+    const count = (records, outcome) => records.filter((record) => record.outcome === outcome).length;
+    const perTransition = trace.transitions.map((transition) => {
+      const affected = perOriginal.filter((original) => original.transitionId === transition.id);
+      const outcome = affected.some((original) => original.outcome === 'failed') ? 'failed'
+        : affected.some((original) => original.outcome === 'unknown') ? 'unknown' : 'successful';
+      return {
+        transitionId: transition.id, correlationId: transition.correlationId,
+        startedMs: transition.startedMs, affectedOriginalIds: affected.map((original) => original.originalId), outcome,
+      };
+    });
+    const originals = {
+      denominator: perOriginal.length, successful: count(perOriginal, 'successful'),
+      failed: count(perOriginal, 'failed'), unknown: count(perOriginal, 'unknown'),
+      completedTerminal: perOriginal.filter((original) => original.terminal === 'completed').length,
+      interrupted: perOriginal.filter((original) => original.interrupted).length,
+      withinBudget: perOriginal.filter((original) => original.withinBudget).length,
+      versionMoved: perOriginal.filter((original) => original.versionMoved).length,
+      continuityFraction: count(perOriginal, 'successful') / perOriginal.length,
+    };
+    const transitions = {
+      denominator: perTransition.length, successful: count(perTransition, 'successful'),
+      failed: count(perTransition, 'failed'), unknown: count(perTransition, 'unknown'),
+      continuityFraction: count(perTransition, 'successful') / perTransition.length,
+    };
+    const unaffected = trace.unaffectedRequestGroups.reduce((sum, group) => sum + group.count, 0);
+    const total = trace.requests.length + unaffected;
+    const newAttempts = trace.attempts.filter((attempt) => attempt.kind === 'new');
+    return freeze({
+      scenario, verdict: originals.failed ? 'FAIL' : originals.unknown ? 'UNKNOWN' : 'PASS',
+      requests: {
+        total, http200: trace.requests.filter((request) => request.httpStatus === 200).length
+          + trace.unaffectedRequestGroups.filter((group) => group.httpStatus === 200).reduce((sum, group) => sum + group.count, 0),
+        unaffected, originalRequests: trace.requests.filter((request) => request.kind === 'original').length,
+        newAttemptRequests: trace.requests.filter((request) => request.kind === 'new').length,
+        durationMs: trace.workload.durationMs, perSimulatedSecond: total / (trace.workload.durationMs / 1000),
+        windows: trace.workload.windows.map((window) => ({
+          windowId: window.id, offered: window.offeredRequests,
+          recorded: trace.requests.filter((request) => request.atMs >= window.startedMs && request.atMs < window.endedMs).length
+            + trace.unaffectedRequestGroups.find((group) => group.windowId === window.id).count,
+        })),
+      },
+      attempts: {
+        total: trace.attempts.length, original: trace.originals.length, new: newAttempts.length,
+        newCompleted: newAttempts.filter((attempt) => trace.clientEvents.some((event) => event.attemptId === attempt.id && event.type === 'completed')).length,
+      },
+      originals, transitions, perOriginal, perTransition, budgets: trace.budgets,
+      correlationGroups: trace.correlations.length,
+      reliability: 'No reliability estimate or five-nines certification: a small correlated fictional sample is not native evidence.',
+      boundary: BANNER,
+    });
+  }
+
+  function sameData(actual, expected) {
+    if (!expected || typeof expected !== 'object') return typeof actual === typeof expected && actual === expected;
+    if (!actual || typeof actual !== 'object') return false;
+    if (Object.getPrototypeOf(actual) !== (Array.isArray(expected) ? Array.prototype : Object.prototype)) return false;
+    const keys = Reflect.ownKeys(expected);
+    const actualKeys = Reflect.ownKeys(actual);
+    if (actualKeys.length !== keys.length || actualKeys.some((key) => !keys.includes(key))) return false;
+    return keys.every((key) => {
+      const descriptor = Object.getOwnPropertyDescriptor(actual, key);
+      return descriptor && Object.hasOwn(descriptor, 'value') && sameData(descriptor.value, expected[key]);
+    });
+  }
+
+  function actionFor(action) {
+    const type = action && typeof action === 'object'
+      ? Object.getOwnPropertyDescriptor(action, 'type')?.value : undefined;
+    if (type === 'conduct') {
+      const scenario = scenarioName(Object.getOwnPropertyDescriptor(action, 'scenario')?.value);
+      const expected = { type, scenario };
+      if (sameData(action, expected)) return expected;
+    } else if (['inspect', 'measure', 'reset'].includes(type)) {
+      if (sameData(action, { type })) return { type };
+    }
+    fail('ERR_ACTION', 'Actions must have the exact typed fields and no extra keys.');
+  }
+
+  function replay(events) {
+    const runs = [];
+    const recorded = [];
+    for (const input of events) {
+      const action = actionFor(input);
+      const active = runs.at(-1);
+      if (action.type === 'conduct') {
+        if (active && active.phase !== 'measured') fail('ERR_ORDER', 'Inspect and measure the current trace before conducting another.');
+        if (runs.length >= MAX_RUNS) fail('ERR_LIMIT', 'Six runs is the rehearsal limit. Reset explicitly to begin again.');
+        runs.push({ id: `run-${runs.length + 1}`, scenario: action.scenario, phase: 'conducted', result: null });
+      } else if (action.type === 'inspect') {
+        if (active?.phase !== 'conducted') fail('ERR_ORDER', 'Conduct a trace exactly once before inspection.');
+        active.phase = 'inspected';
+      } else if (action.type === 'measure') {
+        if (active?.phase !== 'inspected') fail('ERR_ORDER', 'Inspect the trace exactly once before measurement.');
+        active.result = measureTrace(active.scenario);
+        active.phase = 'measured';
+      } else {
+        fail('ERR_STATE', 'Reset cannot be inserted into retained event history.');
+      }
+      recorded.push(action);
+    }
+    return freeze({ schema: 1, phase: runs.at(-1)?.phase ?? 'ready', events: recorded, runs });
+  }
+
+  function createState() {
+    return replay([]);
+  }
+
+  function validateState(state) {
+    const events = state && typeof state === 'object'
+      ? Object.getOwnPropertyDescriptor(state, 'events')?.value : undefined;
+    if (!Array.isArray(events) || Object.getPrototypeOf(events) !== Array.prototype
+        || events.length > MAX_RUNS * 3 || Reflect.ownKeys(events).length !== events.length + 1) {
+      fail('ERR_STATE', 'State must contain a bounded plain typed event history.');
+    }
+    let canonical;
+    try {
+      const safeEvents = [];
+      for (let index = 0; index < events.length; index++) {
+        const descriptor = Object.getOwnPropertyDescriptor(events, String(index));
+        if (!descriptor || !Object.hasOwn(descriptor, 'value')) fail('ERR_STATE', 'History entries must be data, not accessors.');
+        safeEvents.push(actionFor(descriptor.value));
+      }
+      canonical = replay(safeEvents);
+    }
+    catch { fail('ERR_STATE', 'Retained history is not an ordered replay of this fixed lesson.'); }
+    if (!sameData(state, canonical)) fail('ERR_STATE', 'State and results must exactly match retained event replay.');
+    return canonical;
+  }
+
+  function applyAction(state, input) {
+    const canonical = validateState(state);
+    const action = actionFor(input);
+    return action.type === 'reset' ? createState() : replay([...canonical.events, action]);
+  }
+
+  const api = freeze({ BANNER, MAX_RUNS, SCENARIOS, createState, traceFor, measureTrace, validateState, applyAction });
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.S141Lesson = api;
+}(typeof globalThis === 'undefined' ? this : globalThis));

@@ -1,0 +1,329 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { createHash, randomUUID } = require('node:crypto');
+const repo = path.resolve(__dirname, '..', '..');
+const helperPath = path.join(repo, 'testing', 'browser', 'isolated.cjs');
+const helperSha256 = createHash('sha256').update(fs.readFileSync(helperPath)).digest('hex');
+assert.equal(helperSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+const { openIsolatedLesson } = require(helperPath);
+const lesson = require('.\\model.js');
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+const sourceNames = [
+  '.gitattributes', 'steady-load.feature', 'index.html', 'styles.css', 'model.js', 'app.js',
+  'model.test.cjs', 'integrity.test.cjs', 'browser.test.cjs', 'manifest.json', 'README.txt',
+  'evidence\\iac-na.json', 'evidence\\source-acceptance.json',
+];
+const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+
+function ownedHashes(directory = __dirname, prefix = '') {
+  const hashes = {};
+  for (const item of fs.readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    const relative = path.join(prefix, item.name);
+    if (item.isDirectory()) Object.assign(hashes, ownedHashes(path.join(directory, item.name), relative));
+    else hashes[relative] = sha256(fs.readFileSync(path.join(directory, item.name)));
+  }
+  return hashes;
+}
+
+function saveProof(proof) {
+  if (!capture) return;
+  const id = `capture-${new Date().toISOString().replace(/[:.]/g, '-')}-${randomUUID()}`;
+  const directory = path.join(__dirname, 'evidence', 'browser', id);
+  fs.mkdirSync(directory, { recursive: true });
+  proof.proofId = id;
+  proof.capturedAtUtc = new Date().toISOString();
+  proof.exactCaptureOptIn = true;
+  proof.sources = sourceNames.map((name) => {
+    const bytes = fs.readFileSync(path.join(__dirname, name));
+    const snapshot = path.join('sources', `${name}.txt`);
+    fs.mkdirSync(path.dirname(path.join(directory, snapshot)), { recursive: true });
+    fs.writeFileSync(path.join(directory, snapshot), bytes);
+    return { path: name, snapshot, bytes: bytes.length, sha256: sha256(bytes) };
+  });
+  fs.writeFileSync(path.join(directory, 'observations.json'), JSON.stringify(proof, null, 2) + '\n');
+}
+
+test('S141 actual isolated DOM, keyboard, failure/unknown, retained history, error/reset, limit and CSP', { timeout: 120000 }, async (t) => {
+  const before = ownedHashes();
+  const proof = {
+    cardId: 'A-S141', workerId: 'worker-A-S141', helperSha256, runtime: process.version,
+    playwright: JSON.parse(fs.readFileSync(path.join(repo, 'testing', 'browser', 'node_modules', 'playwright', 'package.json'), 'utf8')).version,
+    browser: null, outcome: 'running', closedSessions: 0, groups: [], pageErrors: [], console: [], requests: [],
+    lifecycleBoundary: 'Individual isolated checks only; inactive recovery prototype remains unqualified.',
+  };
+  let session;
+  let failure;
+  async function group(name, body) {
+    try {
+      const observations = await body();
+      proof.groups.push({ name, passed: true, observations });
+      t.diagnostic(`Observed ${name}`);
+    } catch (error) {
+      proof.groups.push({ name, passed: false, failure: { name: error.name, message: error.message, stack: error.stack } });
+      throw error;
+    }
+  }
+  async function close() {
+    if (session) {
+      try { await session.close(); proof.closedSessions++; }
+      finally { session = undefined; }
+    }
+  }
+  async function collect(page) {
+    return {
+      status: await page.locator('#status').innerText(),
+      verdict: await page.locator('#verdict').innerText(),
+      requests: await page.locator('#request-summary').innerText(),
+      originals: await page.locator('#original-summary').innerText(),
+      transitions: await page.locator('#transition-summary').innerText(),
+      budgets: await page.locator('#budget-summary').innerText(),
+      attempts: await page.locator('#attempt-summary').innerText(),
+      originalTable: await page.locator('#result table').innerText(),
+      trace: JSON.parse(await page.locator('#trace').textContent()),
+      retainedRuns: await page.locator('#history > li').count(),
+    };
+  }
+  async function conduct(page, scenario) {
+    await page.locator('#preset').selectOption(scenario);
+    await page.locator('#conduct').click();
+    await page.locator('#inspect').click();
+    await page.locator('#measure').click();
+  }
+  function observePage(page) {
+    page.on('pageerror', (error) => proof.pageErrors.push(error.message));
+    page.on('console', (message) => proof.console.push({ type: message.type(), text: message.text() }));
+    page.on('request', (request) => proof.requests.push({ url: request.url(), method: request.method() }));
+  }
+  try {
+    assert.equal(process.versions.node, '22.23.4', 'only approved Node 22 tooling is qualified here');
+    assert.equal(proof.playwright, '1.56.1');
+    session = await openIsolatedLesson('learning\\S141\\index.html');
+    proof.browser = session.browserVersion;
+    assert.equal(proof.browser, '156.0.4314.50');
+    const page = session.page;
+    observePage(page);
+    await page.reload({ waitUntil: 'load' });
+
+    await group('ready DOM and exact rehearsal boundary', async () => {
+      const banner = await page.locator('#training-banner').innerText();
+      assert.equal(banner, lesson.BANNER);
+      assert.equal(await page.locator('#conduct').isEnabled(), true);
+      assert.equal(await page.locator('#inspect').isDisabled(), true);
+      assert.equal(await page.locator('#measure').isDisabled(), true);
+      assert.equal(await page.locator('#inspection').isHidden(), true);
+      assert.equal(await page.locator('#result').isHidden(), true);
+      assert.equal(await page.locator('#history > li').count(), 0);
+      assert.equal(await page.evaluate(() => typeof document.getElementById('trace-form').reset), 'function');
+      return { banner, title: await page.title(), nativeBoundary: await page.locator('#native-boundary').innerText() };
+    });
+
+    await group('keyboard conduct/inspect/measure: interruption survives recovery and HTTP 200', async () => {
+      await page.locator('#preset').focus();
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('#preset').inputValue(), 'interrupted');
+      await page.keyboard.press('Tab');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'conduct');
+      await page.keyboard.press('Enter');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'inspect');
+      assert.equal(await page.locator('#measure').isDisabled(), true);
+      await page.keyboard.press('Enter');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'measure');
+      await page.keyboard.press('Space');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'preset');
+      const observed = await collect(page);
+      assert.match(observed.verdict, /^FAIL/);
+      assert.match(observed.requests, /1000 \/ 4 simulated seconds = 250 requests\/s\. HTTP 200: 1000 \/ 1000/);
+      assert.match(observed.originals, /started 4; successful 3; failed 1; unknown 0/);
+      assert.match(observed.transitions, /started 2; successful 1; failed 1; unknown 0/);
+      assert.match(observed.originalTable, /1400 ms/);
+      assert.match(observed.originalTable, /Retained original interruption/);
+      assert.match(observed.budgets, /retained original interruptions: 1/);
+      assert.match(observed.attempts, /4 original \+ 1 new = 5/);
+      assert.equal(observed.retainedRuns, 1);
+      assert.ok(observed.trace.attempts.some((attempt) => attempt.id === 'A-J2-new' && attempt.originalId === 'J2'));
+      return observed;
+    });
+
+    await group('later positive run and actual retained negative original details', async () => {
+      await conduct(page, 'positive');
+      const observed = await collect(page);
+      assert.match(observed.verdict, /^PASS/);
+      assert.match(observed.originals, /started 4; successful 4; failed 0; unknown 0/);
+      assert.match(observed.transitions, /started 2; successful 2; failed 0; unknown 0/);
+      await page.locator('#history > li').first().locator('summary').click();
+      observed.retainedNegative = await page.locator('#history > li').first().innerText();
+      assert.match(observed.retainedNegative, /FAIL/);
+      assert.match(observed.retainedNegative, /J2 \/ A-J2-original: failed/);
+      assert.match(observed.retainedNegative, /Retained original interruption/);
+      assert.equal(observed.retainedRuns, 2);
+      return observed;
+    });
+
+    await group('unknown original and transition stay counted after new-attempt success', async () => {
+      await conduct(page, 'unknown');
+      const observed = await collect(page);
+      assert.match(observed.verdict, /^UNKNOWN/);
+      assert.match(observed.originals, /started 4; successful 3; failed 0; unknown 1/);
+      assert.match(observed.transitions, /started 2; successful 1; failed 0; unknown 1/);
+      assert.match(observed.originalTable, /unknown terminal; open age 1500 ms/);
+      assert.match(observed.originalTable, /Original terminal evidence is missing/);
+      assert.match(observed.attempts, /Successful new attempts: 1; excluded/);
+      assert.equal(observed.retainedRuns, 3);
+      return observed;
+    });
+
+    await group('invalid literal preset produces focused accessible error, not a result or HTML', async () => {
+      await page.evaluate(() => {
+        const option = document.createElement('option');
+        option.value = 'not-a-fixed-trace';
+        option.textContent = '<img src=x onerror="window.unexpectedMarkup=true">';
+        document.getElementById('preset').append(option);
+      });
+      await page.locator('#preset').selectOption('not-a-fixed-trace');
+      await page.locator('#conduct').click();
+      const error = await page.locator('#lesson-error').innerText();
+      assert.match(error, /^ERR_ACTION:/);
+      assert.equal(await page.locator('#lesson-error').getAttribute('role'), 'alert');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'lesson-error');
+      assert.equal(await page.locator('#preset img').count(), 0);
+      assert.equal(await page.evaluate(() => window.unexpectedMarkup === true), false);
+      assert.equal(await page.locator('#history > li').count(), 3);
+      assert.match(await page.locator('#verdict').innerText(), /^UNKNOWN/);
+      return { error, focused: 'lesson-error', retainedRuns: 3, lastVerdict: 'UNKNOWN', literalMarkupNotExecuted: true };
+    });
+
+    await group('keyboard reset clears explicitly and restores initial controls/focus', async () => {
+      await page.locator('#reset-lesson').focus();
+      await page.keyboard.press('Space');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'preset');
+      assert.equal(await page.locator('#preset').inputValue(), 'positive');
+      assert.equal(await page.locator('#history > li').count(), 0);
+      assert.equal(await page.locator('#lesson-error').isHidden(), true);
+      assert.equal(await page.locator('#result').isHidden(), true);
+      assert.equal(await page.locator('#inspection').isHidden(), true);
+      assert.equal(await page.locator('#inspect').isDisabled(), true);
+      assert.equal(await page.locator('#measure').isDisabled(), true);
+      const status = await page.locator('#status').innerText();
+      assert.match(status, /explicitly cleared.*did not repair/);
+      return { status, focused: 'preset', preset: 'positive', retainedRuns: 0 };
+    });
+
+    await group('out-of-order UI event and replayed typed state cannot forge continuity', async () => {
+      await page.evaluate(() => document.getElementById('measure').dispatchEvent(new MouseEvent('click', { bubbles: true })));
+      const error = await page.locator('#lesson-error').innerText();
+      assert.match(error, /^ERR_ORDER:/);
+      assert.equal(await page.locator('#history > li').count(), 0);
+      const codes = await page.evaluate(() => {
+        const model = window.S141Lesson;
+        let state = model.createState();
+        for (const action of [{ type: 'conduct', scenario: 'interrupted' }, { type: 'inspect' }, { type: 'measure' }]) state = model.applyAction(state, action);
+        const altered = JSON.parse(JSON.stringify(state));
+        altered.runs[0].result.originals.interrupted = 0;
+        let stateCode;
+        let actionCode;
+        try { model.applyAction(altered, { type: 'conduct', scenario: 'positive' }); } catch (failure) { stateCode = failure.code; }
+        try { model.applyAction(state, { type: 'conduct', scenario: 'positive', approved: 'true' }); } catch (failure) { actionCode = failure.code; }
+        return { stateCode, actionCode, retainedInterruptions: state.runs[0].result.originals.interrupted };
+      });
+      assert.deepEqual(codes, { stateCode: 'ERR_STATE', actionCode: 'ERR_ACTION', retainedInterruptions: 1 });
+      await page.locator('#reset-lesson').click();
+      return { error, codes, qualification: 'actual error DOM plus browser-executed pure model guard checks' };
+    });
+
+    await group('six bounded runs retain failures; a seventh submit is rejected and reset recovers', async () => {
+      for (let index = 0; index < 6; index++) await conduct(page, lesson.SCENARIOS[index % 3]);
+      assert.equal(await page.locator('#history > li').count(), 6);
+      assert.equal(await page.locator('#conduct').isDisabled(), true);
+      assert.equal(await page.locator('#preset').isDisabled(), true);
+      await page.evaluate(() => document.getElementById('trace-form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+      const error = await page.locator('#lesson-error').innerText();
+      assert.match(error, /^ERR_LIMIT:/);
+      assert.equal(await page.locator('#history > li').count(), 6);
+      const history = await page.locator('#history').textContent();
+      assert.match(history, /FAIL/);
+      assert.match(history, /UNKNOWN/);
+      await page.locator('#reset-lesson').focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await page.locator('#history > li').count(), 0);
+      assert.equal(await page.locator('#conduct').isEnabled(), true);
+      return { error, retainedRunsBeforeReset: 6, retainedHistory: history, resetRestoredConduct: true };
+    });
+
+    await group('actual CSP blocks inline/data scripts and data fetch without network traffic', async () => {
+      await page.evaluate(async () => {
+        window.__s141Csp = [];
+        window.__s141Inline = false;
+        window.__s141Data = false;
+        document.addEventListener('securitypolicyviolation', (event) => {
+          window.__s141Csp.push({ directive: event.effectiveDirective, blockedURI: event.blockedURI, disposition: event.disposition });
+        });
+        const inline = document.createElement('script');
+        inline.textContent = 'window.__s141Inline = true';
+        document.body.append(inline);
+        const data = document.createElement('script');
+        data.src = 'data:text/javascript,window.__s141Data%3Dtrue';
+        document.body.append(data);
+        try { await fetch('data:text/plain,local-csp-probe'); window.__s141ConnectBlocked = false; }
+        catch { window.__s141ConnectBlocked = true; }
+      });
+      await page.waitForFunction(() => window.__s141Csp.length >= 3);
+      const observed = await page.evaluate(() => ({
+        inlineRan: window.__s141Inline, dataRan: window.__s141Data,
+        connectBlocked: window.__s141ConnectBlocked, violations: window.__s141Csp,
+        policy: document.querySelector('meta[http-equiv="Content-Security-Policy"]').content,
+      }));
+      assert.equal(observed.inlineRan, false);
+      assert.equal(observed.dataRan, false);
+      assert.equal(observed.connectBlocked, true);
+      assert.ok(observed.violations.some((event) => event.directive === 'script-src-elem' && event.blockedURI === 'inline'));
+      assert.ok(observed.violations.some((event) => event.directive === 'script-src-elem' && event.blockedURI === 'data'));
+      assert.ok(observed.violations.some((event) => event.directive === 'connect-src'));
+      assert.ok(observed.violations.every((event) => event.disposition === 'enforce'));
+      assert.ok(!proof.requests.some((request) => /^https?:/i.test(request.url)));
+      return observed;
+    });
+    await close();
+
+    await group('injected unavailable local model gives startup error and no measured result', async () => {
+      session = await openIsolatedLesson('learning\\S141\\index.html');
+      observePage(session.page);
+      await session.page.addInitScript(() => {
+        Object.defineProperty(window, 'S141Lesson', { configurable: true, get: () => undefined, set: () => {} });
+      });
+      await session.page.reload({ waitUntil: 'load' });
+      const error = await session.page.locator('#lesson-error').innerText();
+      assert.match(error, /^ERR_MODEL:/);
+      for (const id of ['preset', 'conduct', 'inspect', 'measure', 'reset-lesson']) {
+        assert.equal(await session.page.locator(`#${id}`).isDisabled(), true);
+      }
+      assert.equal(await session.page.locator('#result').isHidden(), true);
+      assert.equal(await session.page.evaluate(() => document.activeElement.id), 'lesson-error');
+      return { error, allActionControlsDisabled: true, resultUnavailable: true, injection: 'Unavailable model simulated before startup; no file changes or network calls.' };
+    });
+    assert.deepEqual(proof.pageErrors, []);
+    proof.outcome = 'passed';
+  } catch (error) {
+    failure = error;
+  } finally {
+    try { await close(); }
+    catch (error) { failure = failure ? new AggregateError([failure, error], 'Observation and awaited cleanup failed') : error; }
+    try {
+      assert.deepEqual(ownedHashes(), before, 'normal browser observation must not modify owned bytes');
+      proof.readOnlyBeforeCapture = true;
+    } catch (error) {
+      failure = failure ? new AggregateError([failure, error], 'Observation and read-only guard failed') : error;
+    }
+    if (failure) {
+      proof.outcome = 'failed';
+      proof.failure = { name: failure.name, message: failure.message, stack: failure.stack };
+    }
+    saveProof(proof);
+  }
+  if (failure) throw failure;
+  assert.equal(proof.closedSessions, 2);
+  t.diagnostic(`10 actual browser groups; ${proof.browser}; awaited close of both sessions; owned bytes unchanged before deliberate capture.`);
+});

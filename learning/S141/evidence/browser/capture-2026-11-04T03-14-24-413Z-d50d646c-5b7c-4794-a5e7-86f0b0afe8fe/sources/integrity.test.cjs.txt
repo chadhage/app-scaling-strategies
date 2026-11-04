@@ -1,0 +1,176 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { createHash } = require('node:crypto');
+const lesson = require('.\\model.js');
+const root = __dirname;
+const read = (name) => fs.readFileSync(path.join(root, name));
+const json = (name) => JSON.parse(read(name).toString('utf8'));
+const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+
+function ownedHashes(directory = root, prefix = '') {
+  const hashes = {};
+  for (const item of fs.readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    const relative = path.join(prefix, item.name);
+    if (item.isDirectory()) Object.assign(hashes, ownedHashes(path.join(directory, item.name), relative));
+    else hashes[relative] = sha256(fs.readFileSync(path.join(directory, item.name)));
+  }
+  return hashes;
+}
+const before = ownedHashes();
+test.after(() => assert.deepEqual(ownedHashes(), before, 'integrity verification must not change any owned bytes'));
+
+test('frozen original S/P0/LP-EXPORT/SOURCE identity and exact source acceptance are retained', () => {
+  const manifest = json('manifest.json');
+  for (const [key, expected] of Object.entries({
+    cardId: 'A-S141', workerId: 'worker-A-S141', source: 'S141', parent: 'D-S141',
+    kano: 'S', kanoUnit: 'A-S141', priority: 'P0', packet: 'LP-EXPORT',
+    technicalEntryGate: 'SOURCE', authorization: 'local-synthetic-only', banner: lesson.BANNER,
+  })) assert.equal(manifest[key], expected);
+  const source = json('evidence\\source-acceptance.json');
+  assert.equal(source.sourceReadBeforeDesign, true);
+  assert.equal(source.frozenInventory.length, 2);
+  assert.deepEqual(source.frozenInventory.find((card) => card.id === 'A-S141'), {
+    technicalEntryGate: 'SOURCE', kano: 'S', priority: 'P0', kanoUnit: 'A-S141',
+    deliver: 'Inspect a steady-load trace; distinguish affected user transitions from total request throughput.',
+    packet: 'LP-EXPORT', id: 'A-S141', parents: ['D-S141'],
+  });
+  assert.equal(source.originalSourceAcceptance, 'Attempted/successful/failed/unknown journeys and latency budgets are measured at the client with actual migration evidence.');
+  const excerpts = source.sources.flatMap((item) => item.excerpts.map((excerpt) => excerpt.rawLine));
+  assert.ok(excerpts.includes('| S141 | **Steady production-equivalent load:** Perform transitions continuously while measuring complete journeys. |\r\n'));
+  assert.ok(excerpts.includes('| D-S141 | P0 | Add approved steady-load profiles and repeated complete-journey execution during transitions. | Attempted/successful/failed/unknown journeys and latency budgets are measured at the client with actual migration evidence. | none |\r\n'));
+  assert.ok(excerpts.includes('| A-S141 | D-S141 | S | Inspect a steady-load trace; distinguish affected user transitions from total request throughput. | SOURCE |\r\n'));
+  assert.ok(excerpts.includes('| B-S141 | D-S141 | S | Conduct one approved steady-load batch; verify client outcomes and actual version movement. | CORE, DATA, HOST |\r\n'));
+  assert.ok(excerpts.includes('| LP-EXPORT | X006 | C039, C057, A-S141, B-S141, A-S148, B-S148 |\r\n'));
+});
+
+test('raw source CRLF SHA256 and canonical LF Git identities are independently verifiable', () => {
+  for (const source of json('evidence\\source-acceptance.json').sources) {
+    const bytes = read(source.snapshot);
+    assert.equal(bytes.length, source.bytes);
+    assert.equal(sha256(bytes), source.sha256);
+    assert.equal(source.hasCRLF, true);
+    assert.ok(bytes.includes(Buffer.from('\r\n')));
+    for (const excerpt of source.excerpts) {
+      assert.ok(bytes.includes(Buffer.from(excerpt.rawLine, 'utf8')));
+      assert.equal(sha256(Buffer.from(excerpt.rawLine, 'utf8')), excerpt.sha256);
+    }
+    const lf = Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+    assert.notEqual(sha256(lf), source.sha256);
+    assert.equal(sha256(lf), source.canonicalLfSha256);
+    const git = createHash('sha1').update(Buffer.from(`blob ${lf.length}\0`)).update(lf).digest('hex');
+    assert.equal(git, source.canonicalGitBlobSha1);
+  }
+});
+
+test('manifest thresholds agree with every fixed measurable trace', () => {
+  const manifest = json('manifest.json');
+  assert.equal(manifest.boundedRuns, lesson.MAX_RUNS);
+  assert.deepEqual(manifest.thresholds, {
+    requestRecords: 1000, simulatedDurationMs: 4000, offeredRequestRecordsPerSecond: 250,
+    startedOriginalDenominator: 4, startedAffectedTransitionDenominator: 2,
+    originalJourneyBudgetMsInclusive: 1200, requiredOriginalContinuityFraction: 1,
+    requiredAffectedTransitionContinuityFraction: 1,
+    maximumFailedOrUnknownOriginals: 0, maximumFailedOrUnknownAffectedTransitions: 0,
+  });
+  for (const scenario of lesson.SCENARIOS) {
+    const result = lesson.measureTrace(scenario);
+    assert.equal(result.verdict, manifest.expected[scenario].verdict);
+    assert.equal(result.originals.successful, manifest.expected[scenario].successfulOriginals);
+    assert.equal(result.originals.failed, manifest.expected[scenario].failedOriginals);
+    assert.equal(result.originals.unknown, manifest.expected[scenario].unknownOriginals);
+  }
+  assert.deepEqual(manifest.dataOnly, [
+    'workload', 'load windows', 'routing', 'version', 'request',
+    'transition', 'original journey', 'new attempt', 'error', 'budget', 'correlation',
+  ]);
+});
+
+test('lesson has external local assets, restrictive CSP and no execution/storage/load-generator surface', () => {
+  const html = read('index.html').toString('utf8');
+  const code = read('app.js').toString('utf8') + read('model.js').toString('utf8');
+  const csp = html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];
+  assert.equal(csp, "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'");
+  assert.ok(html.indexOf('Content-Security-Policy') < html.indexOf('<script'));
+  assert.deepEqual([...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map((match) => match[1]), ['model.js', 'app.js']);
+  assert.match(html, /href="styles.css"/);
+  assert.ok(!/<(?:iframe|img|object|input)\b|(?:href|src)="(?:https?:|data:)|\bon\w+=|\bstyle=/.test(html));
+  assert.ok(!/\b(?:fetch|XMLHttpRequest|WebSocket|Worker|setInterval|setTimeout|eval)\b|\b(?:localStorage|sessionStorage|indexedDB|cookie|innerHTML)\b/.test(code));
+  assert.ok(!/\b(?:id|name)="reset"/.test(html));
+  assert.ok(!/\bform\.reset\s*\(/.test(code));
+  assert.match(html, /role="alert" tabindex="-1"/);
+  assert.match(html, /B-S141 and D-S141 remain unverified/);
+  assert.ok(html.includes(lesson.BANNER));
+  assert.ok(read('steady-load.feature').toString('utf8').startsWith('Feature:'));
+});
+
+test('genuine assertion RED, raw output hashes and loadable pre-implementation stub remain outside autodiscovery', () => {
+  const raw = fs.readdirSync(path.join(root, 'evidence', 'raw'));
+  const summaryNames = raw.filter((name) => /^red-.*\.summary\.json$/.test(name));
+  assert.equal(summaryNames.length, 1);
+  const summary = json(path.join('evidence', 'raw', summaryNames[0]));
+  assert.equal(summary.exitCode, 1);
+  assert.equal(summary.error, null);
+  const stdout = read(path.join('evidence', 'raw', `${summary.proofId}.stdout.tap`));
+  const stderr = read(path.join('evidence', 'raw', `${summary.proofId}.stderr.txt`));
+  assert.equal(sha256(stdout), summary.stdoutSha256);
+  assert.equal(sha256(stderr), summary.stderrSha256);
+  assert.match(stdout.toString('utf8'), /ERR_ASSERTION/);
+  assert.match(stdout.toString('utf8'), /0 !== 4/);
+  assert.match(stdout.toString('utf8'), /# fail 1/);
+  assert.match(read('evidence\\red-stub\\model.js.txt').toString('utf8'), /denominator: 0/);
+  assert.match(read('evidence\\red-stub\\model.test.cjs.txt').toString('utf8'), /originals\.denominator, 4/);
+  assert.ok(fs.readdirSync(path.join(root, 'evidence', 'red-stub')).every((name) => name.endsWith('.txt')));
+  const stubNames = raw.filter((name) => /^stub-browser-.*\.json$/.test(name));
+  assert.equal(stubNames.length, 1);
+  const stub = json(path.join('evidence', 'raw', stubNames[0]));
+  assert.equal(stub.modelLoaded, true);
+  assert.equal(stub.awaitedClose, true);
+  assert.equal(stub.banner, lesson.BANNER);
+  assert.match(stub.status, /not implemented/);
+});
+
+test('IaC/native/production/catalog boundaries and zero-extra-credit refinement remain honest', () => {
+  const decision = json('evidence\\iac-na.json');
+  const manifest = json('manifest.json');
+  assert.equal(decision.decision, 'N/A');
+  assert.equal(decision.nativeRemainder.blocked, true);
+  assert.deepEqual(decision.nativeRemainder.gates, ['CORE', 'DATA', 'HOST']);
+  assert.match(decision.nativeRemainder.acceptance, /Neither B-S141 nor D-S141 is completed/);
+  assert.equal(manifest.browserTooling.productionNode24Validated, false);
+  assert.equal(manifest.browserTooling.inactiveLifecyclePrototypeQualified, false);
+  assert.match(manifest.catalogBoundary, /OP150.*untouched.*135 practices only, not live acceptance/);
+  assert.match(manifest.credit, /zero extra credits/);
+  assert.equal(read('.gitattributes').toString('utf8').replace(/\r\n/g, '\n'),
+    'evidence/raw/** -text whitespace=cr-at-eol\nevidence/red-stub/** -text whitespace=cr-at-eol\nevidence/browser/** -text whitespace=cr-at-eol\n');
+});
+
+test('historical browser proof verifies captured bytes, not mutable current sources', () => {
+  const directory = path.join(root, 'evidence', 'browser');
+  if (!fs.existsSync(directory)) return;
+  for (const name of fs.readdirSync(directory)) {
+    assert.match(name, /^capture-[\w-]+$/);
+    const proof = json(path.join('evidence', 'browser', name, 'observations.json'));
+    assert.equal(proof.cardId, 'A-S141');
+    assert.equal(proof.exactCaptureOptIn, true);
+    assert.equal(proof.helperSha256, json('manifest.json').browserTooling.sha256);
+    assert.ok(proof.sources.length >= 13);
+    for (const source of proof.sources) {
+      const bytes = read(path.join('evidence', 'browser', name, source.snapshot));
+      assert.equal(sha256(bytes), source.sha256);
+      assert.equal(bytes.length, source.bytes);
+    }
+    if (proof.outcome === 'passed') {
+      assert.equal(proof.closedSessions, 2);
+      assert.equal(proof.readOnlyBeforeCapture, true);
+      assert.ok(proof.groups.length >= 9);
+      assert.ok(proof.groups.every((group) => group.passed === true));
+    } else {
+      assert.equal(proof.outcome, 'failed');
+      assert.ok(proof.failure?.message);
+    }
+  }
+});

@@ -1,0 +1,167 @@
+'use strict';
+
+(function start() {
+  const lesson = window.S141Lesson;
+  const byId = (id) => document.getElementById(id);
+  const form = byId('trace-form');
+  const preset = byId('preset');
+  const errorBox = byId('lesson-error');
+  const status = byId('status');
+  let state;
+
+  function showError(error) {
+    errorBox.textContent = `${error.code || 'ERR_LESSON'}: ${error.message}`;
+    errorBox.hidden = false;
+    errorBox.focus();
+  }
+
+  if (!lesson || typeof lesson.applyAction !== 'function') {
+    ['preset', 'conduct', 'inspect', 'measure', 'reset-lesson'].forEach((id) => { byId(id).disabled = true; });
+    showError({ code: 'ERR_MODEL', message: 'Local lesson model is unavailable. Reload the intact local files; no result can be measured.' });
+    return;
+  }
+  state = lesson.createState();
+
+  function element(tag, text, id) {
+    const node = document.createElement(tag);
+    if (text !== undefined) node.textContent = text;
+    if (id) node.id = id;
+    return node;
+  }
+
+  function table(caption, headings, rows) {
+    const node = element('table');
+    node.append(element('caption', caption));
+    const head = element('thead');
+    const header = element('tr');
+    headings.forEach((heading) => {
+      const cell = element('th', heading);
+      cell.scope = 'col';
+      header.append(cell);
+    });
+    head.append(header);
+    const body = element('tbody');
+    rows.forEach((row) => {
+      const line = element('tr');
+      row.forEach((value) => line.append(element('td', String(value))));
+      body.append(line);
+    });
+    node.append(head, body);
+    return node;
+  }
+
+  function renderInspection(run) {
+    const visible = run && ['inspected', 'measured'].includes(run.phase);
+    byId('inspection').hidden = !visible;
+    if (!visible) {
+      byId('trace').textContent = '';
+      byId('attempt-table').replaceChildren();
+      byId('event-table').replaceChildren();
+      return;
+    }
+    const trace = lesson.traceFor(run.scenario);
+    byId('inspection-summary').textContent = `Fixed ${run.scenario} trace: 4 started originals, 2 started affected transitions, ${trace.attempts.length} attempts. All timestamps are simulated milliseconds from the same recorded origin; observation ends at 4000 ms.`;
+    byId('attempt-table').replaceChildren(table('Original identity is not new-attempt identity',
+      ['Attempt ID', 'Original journey', 'Kind', 'Transition', 'Correlation', 'Start ms', 'Original deadline ms'],
+      trace.attempts.map((attempt) => {
+        const original = trace.originals.find((item) => item.id === attempt.originalId);
+        return [attempt.id, attempt.originalId, attempt.kind, attempt.transitionId, attempt.correlationId,
+          attempt.startedMs, original.startedMs + trace.budgets.originalJourneyMs];
+      })));
+    byId('event-table').replaceChildren(table('Retained client observations (HTTP status is separate)',
+      ['Attempt ID', 'Original journey', 'Observed ms', 'Client event'],
+      trace.clientEvents.map((event) => [event.attemptId, event.originalId, event.atMs, event.type])));
+    byId('trace').textContent = JSON.stringify(trace, null, 2);
+  }
+
+  function renderResult(run) {
+    const resultBox = byId('result');
+    resultBox.replaceChildren();
+    resultBox.hidden = !run?.result;
+    if (!run?.result) return;
+    const result = run.result;
+    const originals = result.originals;
+    const transitions = result.transitions;
+    resultBox.append(
+      element('h2', `${result.verdict} — fictional original-journey continuity`, 'verdict'),
+      element('p', `Requests (not the continuity denominator): ${result.requests.total} / 4 simulated seconds = ${result.requests.perSimulatedSecond} requests/s. HTTP 200: ${result.requests.http200} / ${result.requests.total}. Unaffected requests: ${result.requests.unaffected}; new-attempt requests: ${result.requests.newAttemptRequests}.`, 'request-summary'),
+      element('p', `Affected originals: started ${originals.denominator}; successful ${originals.successful}; failed ${originals.failed}; unknown ${originals.unknown}. Continuity: ${originals.successful} / ${originals.denominator} (${originals.continuityFraction * 100}%).`, 'original-summary'),
+      element('p', `Shared affected transition events: started ${transitions.denominator}; successful ${transitions.successful}; failed ${transitions.failed}; unknown ${transitions.unknown}. Continuity: ${transitions.successful} / ${transitions.denominator} (${transitions.continuityFraction * 100}%). Started unknown transitions stay counted; these are shared events, not independent user exposures.`, 'transition-summary'),
+      element('p', `Original budget: 1200 ms inclusive from original start. Within budget: ${originals.withinBudget} / ${originals.denominator}; completed client terminals: ${originals.completedTerminal} / ${originals.denominator}; original version movement: ${originals.versionMoved} / ${originals.denominator}; retained original interruptions: ${originals.interrupted}.`, 'budget-summary'),
+      element('p', `Attempts: ${result.attempts.original} original + ${result.attempts.new} new = ${result.attempts.total}. Successful new attempts: ${result.attempts.newCompleted}; excluded from original success and transition denominators.`, 'attempt-summary'),
+    );
+    const wrapper = element('div');
+    wrapper.className = 'table-wrap';
+    wrapper.append(table('Measured original journeys — no denominator exclusions',
+      ['Original / attempt', 'Transition / correlation', 'Outcome', 'Elapsed / open age', 'Deadline', 'Movement', 'Interruption', 'Reasons'],
+      result.perOriginal.map((original) => [
+        `${original.originalId} / ${original.attemptId}`, `${original.transitionId} / ${original.correlationId}`,
+        original.outcome, original.durationMs === null ? `unknown terminal; open age ${original.openAgeMs} ms` : `${original.durationMs} ms`,
+        `${original.deadlineMs} ms`, original.versionMoved ? 'v1 → v2 at original completion' : 'not proved for this original',
+        original.interrupted ? 'retained' : 'none observed', original.reasons.join(' ') || 'All declared original checks satisfied.',
+      ])));
+    resultBox.append(wrapper, element('p', `${result.correlationGroups} correlation groups. ${result.reliability}`, 'reliability'));
+  }
+
+  function render() {
+    const run = state.runs.at(-1);
+    const canConduct = ['ready', 'measured'].includes(state.phase) && state.runs.length < lesson.MAX_RUNS;
+    preset.disabled = !canConduct;
+    byId('conduct').disabled = !canConduct;
+    byId('inspect').disabled = state.phase !== 'conducted';
+    byId('measure').disabled = state.phase !== 'inspected';
+    renderInspection(run);
+    renderResult(run);
+    byId('history').replaceChildren(...state.runs.map((item) => {
+      const result = item.result;
+      const itemNode = element('li', result
+        ? `${item.id} · ${item.scenario} · ${result.verdict} · originals ${result.originals.successful}/${result.originals.denominator} successful, ${result.originals.failed} failed, ${result.originals.unknown} unknown · transitions ${result.transitions.successful}/${result.transitions.denominator} successful · interruptions ${result.originals.interrupted} retained · new attempts ${result.attempts.new} excluded.`
+        : `${item.id} · ${item.scenario} · ${item.phase}; no measured verdict yet.`);
+      if (result) {
+        const details = element('details');
+        details.append(element('summary', 'Review retained original outcomes'));
+        const outcomes = element('ul');
+        result.perOriginal.forEach((original) => outcomes.append(element('li',
+          `${original.originalId} / ${original.attemptId}: ${original.outcome}. ${original.reasons.join(' ') || 'All declared original checks satisfied.'}`)));
+        details.append(outcomes);
+        itemNode.append(details);
+      }
+      return itemNode;
+    }));
+  }
+
+  function dispatch(action) {
+    try {
+      state = lesson.applyAction(state, action);
+      errorBox.hidden = true;
+      errorBox.textContent = '';
+      render();
+      if (action.type === 'conduct') {
+        status.textContent = `${state.runs.at(-1).id} conducted from fixed fictional records. Inspect identities and retained observations next.`;
+        byId('inspect').focus();
+      } else if (action.type === 'inspect') {
+        status.textContent = 'Records inspected. Measure started affected originals, not total requests.';
+        byId('measure').focus();
+      } else if (action.type === 'measure') {
+        status.textContent = `${state.runs.at(-1).result.verdict} recorded. Prior interruptions and unknown originals remain in retained history.`;
+        (preset.disabled ? byId('reset-lesson') : preset).focus();
+      } else {
+        preset.value = 'positive';
+        byId('trace').closest('details').open = false;
+        status.textContent = 'Reset explicitly cleared this fictional rehearsal history; it did not repair an original journey.';
+        preset.focus();
+      }
+    } catch (error) {
+      showError(error);
+    }
+  }
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    dispatch({ type: 'conduct', scenario: preset.value });
+  });
+  byId('inspect').addEventListener('click', () => dispatch({ type: 'inspect' }));
+  byId('measure').addEventListener('click', () => dispatch({ type: 'measure' }));
+  byId('reset-lesson').addEventListener('click', () => dispatch({ type: 'reset' }));
+  render();
+}());

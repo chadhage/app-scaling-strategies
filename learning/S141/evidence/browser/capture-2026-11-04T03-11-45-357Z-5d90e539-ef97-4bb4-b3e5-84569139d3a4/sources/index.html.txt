@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S141 — Steady-load trace rehearsal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p id="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S141: Inspect a steady-load trace</h1>
+    <p>Conduct means selecting and replaying fixed fictional teaching DATA ONLY, not sending requests.
+      Inspect the original client journeys, then measure their continuity separately from request throughput.</p>
+    <p>The four simulated one-second windows each offer 250 request records. Four original journeys
+      overlap two transitions; originals sharing a transition are correlated, not independent trials.</p>
+    <form id="trace-form">
+      <label for="preset">Fixed fictional trace</label>
+      <select id="preset" name="preset">
+        <option value="positive">Positive — four continuous originals</option>
+        <option value="interrupted">Negative — interrupted original, later recovery</option>
+        <option value="unknown">Unknown — original terminal evidence missing</option>
+      </select>
+      <button id="conduct" type="submit">Conduct trace</button>
+    </form>
+    <div class="controls">
+      <button id="inspect" type="button" disabled>Inspect records</button>
+      <button id="measure" type="button" disabled>Measure originals</button>
+      <button id="reset-lesson" type="button">Reset lesson</button>
+    </div>
+    <p>Limit: six runs. Each measured run stays in history until an explicit reset.
+      Reset clears a rehearsal; it does not repair an interrupted original.</p>
+    <p id="status" role="status" aria-live="polite">Ready. Choose a fixed fictional trace.</p>
+    <p id="lesson-error" role="alert" tabindex="-1" hidden></p>
+    <section id="inspection" aria-label="Inspected fictional records" hidden>
+      <h2>Inspect identity, timing and attribution</h2>
+      <p id="inspection-summary"></p>
+      <div id="attempt-table" class="table-wrap"></div>
+      <div id="event-table" class="table-wrap"></div>
+      <p>Routing is an intent record for the affected cohort. HTTP 200 is a request outcome.
+        Neither proves a complete original journey or observed original v1-to-v2 movement.</p>
+      <details>
+        <summary>Show all fixed fictional workload, routing, version, request, transition, journey, error, budget and correlation records</summary>
+        <pre id="trace"></pre>
+      </details>
+    </section>
+    <section id="result" aria-label="Measured result" hidden></section>
+    <section aria-label="Retained rehearsal history">
+      <h2>Retained rehearsal history</h2>
+      <ol id="history"></ol>
+    </section>
+    <section aria-label="Acceptance boundary">
+      <h2>Thresholds and limits of this evidence</h2>
+      <p>Original deadline: start + 1200 ms, inclusive; retries and recovery cannot restart it.
+        Continuity requires every started affected original to finish correctly, without any
+        interruption, within that budget, with observed v1-before and v2-at-original-completion evidence.</p>
+      <p>Required original continuity: 4 / 4 = 100%; required affected-transition continuity: 2 / 2 = 100%.
+        Maximum failed or unknown originals and transitions: zero. A started unknown original or
+        affected transition stays in its denominator. Known interruption yields FAIL; missing evidence yields UNKNOWN.</p>
+      <p id="native-boundary">B-S141 and D-S141 remain unverified. This is not an approved client driver,
+        real load, actual migration evidence, production-equivalence proof, or a reliability/five-nines result.
+        No cloud/API calls, user data, storage, infrastructure, identity, credentials, deployment or spend.</p>
+    </section>
+    <noscript><p role="alert">JavaScript is required for this local rehearsal. No measured result is available.</p></noscript>
+  </main>
+</body>
+</html>
