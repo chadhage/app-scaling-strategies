@@ -1,0 +1,14 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('./model.js');
+
+test('a preserved cursor actually observes six correctly ordered profiles after migration', () => {
+  let state = model.openFirstPage(model.createState());
+  state = model.migrate(state, 'preserved');
+  state = model.reuseCursor(state, model.SAVED_CURSOR);
+  state = model.check(state);
+  assert.equal(state.audit.verdict, 'positive');
+  assert.equal(state.audit.observed, 6);
+});

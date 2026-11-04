@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'none'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S138 — Pagination across migration</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner" id="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S138 — Reuse a pagination cursor after migration</h1>
+    <p>Keep the original browsing snapshot, then detect missing, duplicate or wrongly ordered results. An accepted cursor and a fictional status 200 are not a correctness verdict.</p>
+    <section aria-labelledby="contract-heading">
+      <h2 id="contract-heading">Declared, fixed teaching contract</h2>
+      <ul>
+        <li>Dataset: <code>fictional-profiles-s138</code>. Pinned snapshot: <code>s138-pinned-snapshot-v1</code>.</li>
+        <li>Expected order: <code>profile-01 → profile-02 → profile-03 → profile-04 → profile-05 → profile-06</code>, by <code>ordinal ASC, id ASC</code>.</li>
+        <li>The old v1 client requires <code>profile-v1</code> labels; v2 must preserve the opaque cursor's query and snapshot contract.</li>
+        <li>Each fictional request allows at most four rows. A short first page is nonterminal; only an explicit terminal observation can certify completeness.</li>
+        <li>A separate fictional live-v2 snapshot adds profile-07. It must not silently replace the pinned six-profile snapshot.</li>
+      </ul>
+      <p class="limits">Every cursor, dataset, order, schema, token, state, version, request and response below is fixed fictional teaching DATA ONLY. There is no database, HTTP call, migration, service worker, credential or real user data. One attempt is bounded to two pages and four retained history entries.</p>
+    </section>
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Conduct one attempt</h2>
+      <form id="lesson-controls" novalidate autocomplete="off">
+        <fieldset id="steps" disabled>
+          <legend>Follow the steps in order; disabled steps are not yet available.</legend>
+          <button type="button" id="open-page">1. Open v1 first page</button>
+          <label for="condition">Migration condition</label>
+          <select id="condition" disabled>
+            <option value="preserved">Preserved cursor, snapshot and schema</option>
+            <option value="accepted-missing">Accepted 200, missing profile-05</option>
+            <option value="accepted-duplicate">Accepted 200, duplicate profile-03</option>
+            <option value="accepted-reorder">Accepted 200, wrong result order</option>
+            <option value="changed-schema">Accepted 200, incompatible profile-v2 schema</option>
+            <option value="changed-snapshot">Accepted 200, switched live-v2 snapshot</option>
+            <option value="unknown-completion">Accepted 200, completion observation unknown</option>
+            <option value="rejected-cursor">Rejected old cursor, fictional status 410</option>
+          </select>
+          <button type="button" id="migrate">2. Migrate fictional target to v2</button>
+          <p>Saved opaque teaching cursor: <code id="saved-token">Not observed yet</code></p>
+          <label for="cursor-input">Cursor to reuse</label>
+          <input id="cursor-input" type="text" maxlength="80" spellcheck="false" aria-describedby="cursor-help" disabled>
+          <p id="cursor-help">This is a fixed teaching string, not a database token. It is copied when the first page is observed. Altered or padded strings are rejected without changing the attempt.</p>
+          <button type="button" id="reuse">3. Reuse saved cursor on v2</button>
+          <button type="button" id="check">4. Check complete result</button>
+        </fieldset>
+      </form>
+      <button type="button" id="reset-all">Reset all (clears history)</button>
+      <p id="error" role="alert" aria-live="assertive" tabindex="-1" hidden></p>
+      <p id="status" role="status" aria-live="polite">Controls unavailable until the local scripts load. If this persists, check the local bundle and reload; no result has been observed.</p>
+    </section>
+    <section aria-labelledby="outcome-heading">
+      <h2 id="outcome-heading">Measured synthetic observations</h2>
+      <dl class="metrics">
+        <div><dt>Outcome</dt><dd id="verdict">Not checked</dd></div>
+        <div><dt>Target version</dt><dd id="version">v1</dd></div>
+        <div><dt>Expected profiles</dt><dd id="expected-count">6</dd></div>
+        <div><dt>Observed rows</dt><dd id="observed-count">0</dd></div>
+        <div><dt>Duplicate rows</dt><dd id="duplicate-count">0 observed</dd></div>
+        <div><dt>Missing profiles</dt><dd id="missing-count">Unknown — 6 not yet observed</dd></div>
+        <div><dt>Order breaks</dt><dd id="order-count">0 observed</dd></div>
+        <div><dt>Schema errors</dt><dd id="schema-count">0 observed</dd></div>
+        <div><dt>Snapshot match</dt><dd id="snapshot-match">No page observed</dd></div>
+        <div><dt>Completion</dt><dd id="completion">Unknown</dd></div>
+      </dl>
+      <p id="explanation">No attempted transition or complete result has been observed.</p>
+      <h3>Observed profile/result order</h3>
+      <ol id="results"></ol>
+      <h3>Retained fictional request/response receipts</h3>
+      <pre id="receipts">No receipts observed.</pre>
+      <h3>Retained action history</h3>
+      <ol id="history"></ol>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">What this does not establish</h2>
+      <p>A-S138 / D-S138 / SC-S138: one original satisfier, standalone local rehearsal. Fixed responses demonstrate a declared snapshot contract; they do not describe universal database continuation-token guarantees.</p>
+      <p>Native B-S138 cursor semantics, real dataset mutation, database/SDK behavior, latency budgets, native migration, production Node.js 24 and source-parent acceptance remain unverified. This bounded lesson cannot certify five nines. Reset explicitly clears only this in-memory synthetic attempt.</p>
+      <p>Educational examples are provided AS IS, without a reliability warranty or Microsoft endorsement. Microsoft and Azure are their owners' trademarks. The project's five-nines goal is not a Microsoft SLA.</p>
+    </section>
+  </main>
+</body>
+</html>

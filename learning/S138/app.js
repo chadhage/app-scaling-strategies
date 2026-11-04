@@ -1,0 +1,118 @@
+(function () {
+  'use strict';
+  const byId = id => document.getElementById(id);
+  const model = globalThis.PaginationLesson;
+  let state = null;
+  const labels = {
+    ready: 'Open the v1 first page to begin a fictional transition.',
+    'paged-v1': 'First page retained. Choose a condition and migrate the fictional target.',
+    migrated: 'Target is fictional v2. Reuse the exact saved cursor.',
+    received: 'Second receipt retained. Check result correctness; status alone cannot pass.',
+    checked: 'Result checked. Observations remain until Reset all explicitly clears them.',
+  };
+
+  function showError(message) {
+    byId('error').textContent = message;
+    byId('error').hidden = false;
+    byId('error').focus();
+  }
+
+  function unavailable() {
+    byId('steps').disabled = true;
+    byId('status').textContent = 'Lesson unavailable: the local model did not load. Check the bundle and reload. Reset cannot fabricate a successful result.';
+    showError('Local model unavailable. No cursor reuse or complete result was observed.');
+  }
+
+  function render() {
+    const measured = model.measure(state);
+    byId('steps').disabled = false;
+    byId('open-page').disabled = state.phase !== 'ready';
+    byId('condition').disabled = state.phase !== 'paged-v1';
+    byId('migrate').disabled = state.phase !== 'paged-v1';
+    byId('cursor-input').disabled = state.phase !== 'migrated';
+    byId('reuse').disabled = state.phase !== 'migrated';
+    byId('check').disabled = state.phase !== 'received';
+    byId('saved-token').textContent = state.savedCursor || 'Not observed yet';
+    byId('status').textContent = labels[state.phase];
+    byId('verdict').textContent = state.audit ? {
+      positive: 'POSITIVE — synthetic contract preserved',
+      interrupted: 'INTERRUPTED — synthetic contract failed',
+      unknown: 'UNKNOWN — completion unverified',
+    }[state.audit.verdict] : 'Not checked';
+    byId('version').textContent = state.version;
+    byId('expected-count').textContent = String(measured.expected);
+    byId('observed-count').textContent = String(measured.observed);
+    byId('duplicate-count').textContent = `${measured.duplicateCount} observed`;
+    byId('missing-count').textContent = measured.missingIds === null
+      ? `Unknown — ${measured.unobservedIds.length} not yet observed`
+      : `${measured.missingIds.length}: ${measured.missingIds.join(', ') || 'none'}`;
+    byId('order-count').textContent = `${measured.orderBreaks.length} observed`;
+    byId('schema-count').textContent = `${measured.schemaErrors.length} observed`;
+    byId('snapshot-match').textContent = !state.pages.length ? 'No page observed'
+      : measured.snapshotMatches ? 'Pinned snapshot retained' : 'MISMATCH — live-v2 snapshot';
+    byId('completion').textContent = measured.terminalObserved ? 'Explicit terminal observation' : 'Unknown';
+    byId('explanation').textContent = state.audit ? state.audit.reasons.join(' ')
+      : 'Not checked. Known observations are shown; no accepted cursor or status 200 is a correctness verdict.';
+    const results = byId('results');
+    results.replaceChildren();
+    state.pages.forEach((page, pageIndex) => {
+      page.response.items.forEach(row => {
+        const li = document.createElement('li');
+        const label = row.schemaVersion === 1 ? row.label : 'required profile-v1 label unavailable';
+        li.textContent = `${row.id} · ordinal ${row.ordinal} · profile-v${row.schemaVersion} · ${label} · page ${pageIndex + 1}/${page.response.version}`;
+        results.append(li);
+      });
+    });
+    byId('receipts').textContent = state.pages.length
+      ? `FIXED FICTIONAL DATA — no HTTP or database operation\n${JSON.stringify(state.pages, null, 2)}`
+      : 'No receipts observed.';
+    const history = byId('history');
+    history.replaceChildren();
+    state.history.forEach(entry => {
+      const li = document.createElement('li');
+      li.textContent = `${entry.step}. ${entry.action} / ${entry.version}: ${entry.note}`;
+      history.append(li);
+    });
+  }
+
+  function act(action) {
+    try {
+      const next = action(state);
+      model.validateState(next);
+      state = next;
+      byId('error').hidden = true;
+      byId('error').textContent = '';
+      render();
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'The lesson could not finish this step. Use Reset all.');
+    }
+  }
+
+  byId('lesson-controls').addEventListener('submit', event => event.preventDefault());
+  byId('reset-all').addEventListener('click', () => {
+    byId('condition').selectedIndex = 0;
+    byId('cursor-input').value = '';
+    if (!model) {
+      unavailable();
+      byId('reset-all').focus();
+      return;
+    }
+    act(() => model.createState());
+    if (state && state.phase === 'ready') {
+      byId('status').textContent = 'Rehearsal reset. Synthetic receipts and history cleared; open v1 first page to begin.';
+      byId('open-page').focus();
+    }
+  });
+  if (!model) {
+    unavailable();
+    return;
+  }
+  byId('open-page').addEventListener('click', () => {
+    act(model.openFirstPage);
+    if (state && state.phase === 'paged-v1') byId('cursor-input').value = state.savedCursor;
+  });
+  byId('migrate').addEventListener('click', () => act(current => model.migrate(current, byId('condition').value)));
+  byId('reuse').addEventListener('click', () => act(current => model.reuseCursor(current, byId('cursor-input').value)));
+  byId('check').addEventListener('click', () => act(model.check));
+  act(() => model.createState());
+}());
