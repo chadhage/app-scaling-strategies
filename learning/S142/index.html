@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S142 - Burst during initialization</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="model.js" defer></script>
+  <script src="lesson.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#controls">Skip to rehearsal controls</a>
+  <header>
+    <p class="banner" data-training-banner>Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S142 - Burst during initialization</h1>
+    <p>Detect shared initialization/demand contention hidden by passing separate tier samples.</p>
+    <p class="scope">A-S142 · original S satisfier · D-S142 · P1 · SC-S142 · SOURCE</p>
+  </header>
+  <main>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">1. Read the frozen operating envelope</h2>
+      <p><strong>DATA ONLY:</strong> Every load, demand, initialization, tier, resource, contention, queue, latency, health, throughput, version and journey record below is fixed fictional teaching data. Buttons only replay these rows in memory: no actual load generator, benchmark, network, cloud or user-data operation.</p>
+      <ul id="envelope">
+        <li>Peak demand ≤ 120 fictional requests/s; initialization and production share one pool.</li>
+        <li>Combined connections ≤ 100; combined CPU allocation ≤ 85% of the fictional shared budget.</li>
+        <li>Queue depth ≤ 20 entries; queue wait ≤ 300 ms.</li>
+        <li>Initialization completion ≤ 1000 ms from its original start.</li>
+        <li>Complete journey ≤ 1500 ms from its original start, including interruption/recovery.</li>
+        <li>Fictional window 0–2000 ms; overlapping burst sample at 800 ms; recovery sample at 1700 ms.</li>
+      </ul>
+      <p>These inclusive thresholds are teaching choices, not platform limits. Four correlated started journeys form each burst's denominator. Passing isolated tier samples, readiness, HTTP 200 or average throughput cannot certify the coupled burst.</p>
+    </section>
+    <section id="controls" aria-labelledby="controls-heading">
+      <h2 id="controls-heading">2. Conduct → inspect → measure</h2>
+      <form id="rehearsal-form">
+        <label for="trace">Fixed fictional trace</label>
+        <select id="trace" name="trace">
+          <option value="within-envelope">Within envelope - positive boundary fixture</option>
+          <option value="contention">Shared contention - negative fixture</option>
+          <option value="unobserved-peak">Unobserved peak - unknown fixture</option>
+        </select>
+        <button id="initialize" type="submit" disabled>Record initialization</button>
+        <div class="actions">
+          <button id="burst" type="button" data-command="burst" disabled>Conduct coupled burst</button>
+          <button id="inspect" type="button" data-command="inspect" disabled>Inspect shared window</button>
+          <button id="measure" type="button" data-command="measure" disabled>Measure original journeys</button>
+          <button id="recover" type="button" data-command="recover" disabled>Record later recovery</button>
+          <button id="reset-rehearsal" type="button" data-command="reset" disabled>Reset to next retained run</button>
+        </div>
+      </form>
+      <p id="phase" role="status" aria-live="polite">Loading local lesson…</p>
+      <p id="instruction">If this message remains, the local scripts did not load. No measurement is available.</p>
+      <p id="error" role="alert" tabindex="-1"></p>
+      <noscript><p class="error">JavaScript is required for this in-memory rehearsal. No result has been measured.</p></noscript>
+      <p>At most three runs / 23 commands per page. Reset starts an empty run but retains all previous started outcomes and measurements without truncation. Reload starts a new teaching session; this is not a durable evidence service.</p>
+    </section>
+    <section aria-labelledby="isolated-heading">
+      <h2 id="isolated-heading">3. Inspect separate samples, then the coupled window</h2>
+      <p id="diagnostics">No fictional trace started.</p>
+      <div class="scroll" tabindex="0" aria-label="Separate fictional tier samples">
+        <table>
+          <caption>Separate tier samples: diagnostics only, not simultaneous initialization/demand proof</caption>
+          <thead><tr><th scope="col">Tier/version</th><th scope="col">Demand/s</th><th scope="col">Connections</th><th scope="col">CPU %</th><th scope="col">Latency ms</th><th scope="col">Ready</th><th scope="col">Isolated verdict</th></tr></thead>
+          <tbody id="tiers-body"></tbody>
+        </table>
+      </div>
+      <div class="scroll" tabindex="0" aria-label="Coupled fictional pressure observations">
+        <table>
+          <caption>Shared-window records: original peak remains alongside later recovery</caption>
+          <thead><tr><th scope="col">Record/time ms</th><th scope="col">Demand/s</th><th scope="col">Init + demand connections / 100</th><th scope="col">Init + demand CPU % / 85</th><th scope="col">Queue entries / 20</th><th scope="col">Queue wait ms / 300</th><th scope="col">Init complete ms / 1000</th><th scope="col">Requested/deployed/ready/eligible</th><th scope="col">Ready / HTTP / avg throughput</th></tr></thead>
+          <tbody id="pressure-body"></tbody>
+        </table>
+      </div>
+      <div class="scroll" tabindex="0" aria-label="Original fictional journey observations">
+        <table>
+          <caption>Journey snapshots: recovery is another observation, not another attempted journey</caption>
+          <thead><tr><th scope="col">Journey/snapshot</th><th scope="col">Start/complete ms</th><th scope="col">Tier-version path</th><th scope="col">State/effects</th><th scope="col">Recorded interruption</th></tr></thead>
+          <tbody id="journeys-body"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="measurement-heading">
+      <h2 id="measurement-heading">4. Measure the source acceptance</h2>
+      <p id="verdict" class="verdict" data-verdict="unmeasured">NOT MEASURED</p>
+      <p id="verifier">Conduct, inspect and measure before drawing any synthetic verdict.</p>
+      <p id="counts">No attempted transition evidence.</p>
+      <p id="latency">No complete-journey latency evidence.</p>
+      <ul id="checks"></ul>
+      <p>Known envelope or original-journey failure wins over missing evidence. Unknown started journeys stay unknown and in the denominator. Recovery cannot erase an earlier interruption; an old-version-only completion does not prove intended migration.</p>
+      <details>
+        <summary>Inspect the actual synthetic measurement JSON</summary>
+        <pre id="measurement-json">{"status":"not measured","nativeProof":false}</pre>
+      </details>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">5. Retained history in this page session</h2>
+      <p id="session-counts">All retained runs: attempted 0; successful 0; interrupted 0; unknown 0.</p>
+      <ol id="history"></ol>
+      <details>
+        <summary>Inspect all retained runs, measurements and original inspection records</summary>
+        <pre id="retained-json">[]</pre>
+      </details>
+    </section>
+    <section aria-labelledby="limits-native-heading">
+      <h2 id="limits-native-heading">What remains unverified</h2>
+      <p>No native load, capacity expansion, contention, tier version, client outcome, Azure behavior, production Node.js 24 or five-nines reliability is proven. B-S142 and source parent D-S142 remain unfulfilled; CORE/DATA/HOST execution approvals and instrumentation are separate gates.</p>
+      <p><a href="README.md">Local instructions and evidence</a> · <a href="remainder.json">Honest blocked native remainder</a></p>
+    </section>
+  </main>
+</body>
+</html>

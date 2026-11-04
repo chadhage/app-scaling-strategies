@@ -1,0 +1,23 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('./model.js');
+
+function conduct(traceId) {
+  let state = model.createState();
+  for (const command of [
+    { type: 'initialize', traceId },
+    { type: 'burst' },
+    { type: 'inspect' },
+    { type: 'measure' },
+  ]) state = model.dispatch(state, command);
+  return state;
+}
+
+test('coupled contention fails despite passing separate tiers, readiness and average throughput', () => {
+  const result = model.read(conduct('contention')).latestMeasurement;
+  assert.equal(result.verdict, 'FAIL', 'known coupled pressure must not be masked by separate tier passes');
+  assert.deepEqual(result.counts, { attempted: 4, successful: 1, interrupted: 2, unknown: 1 });
+  assert.equal(result.successFraction, 0.25);
+});
