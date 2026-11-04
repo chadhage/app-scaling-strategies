@@ -1,0 +1,222 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const root = path.resolve(__dirname, '..', '..');
+const read = (name) => fs.readFileSync(path.join(__dirname, name), 'utf8');
+const hash = (bytes, algorithm = 'sha256') => crypto.createHash(algorithm).update(bytes).digest('hex');
+const canonical = (bytes) => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+const blobOid = (bytes) => hash(Buffer.concat([Buffer.from(`blob ${bytes.length}\0`), bytes]), 'sha1');
+const manifest = JSON.parse(read('manifest.json'));
+const model = require('./model.js');
+
+test('exact S137 source, D-S137 acceptance and SC-S137 portable/native packet identity preserve one frozen S unit', () => {
+  assert.equal(manifest.id, 'A-S137');
+  assert.equal(manifest.sourceId, 'S137');
+  assert.equal(manifest.parentId, 'D-S137');
+  assert.equal(manifest.kano, 'S');
+  assert.equal(manifest.kanoUnit, 'A-S137');
+  assert.equal(manifest.packet, 'SC-S137');
+  assert.equal(manifest.technicalEntryGate, 'SOURCE');
+  assert.equal(manifest.mode, 'portable-synthetic');
+  assert.equal(manifest.objective, 'Reuse an old service-worker bundle; detect incompatible API/assets despite a fresh backend.');
+  assert.equal(manifest.sourceContract.acceptance, 'Existing bundles/assets/contracts remain supported; incompatible stale clients produce detected failures, not silent UI corruption.');
+  assert.deepEqual(manifest.sourceContract.dependencies, ['D-S051', 'D-S057']);
+  for (const [file, rows] of [
+    ['README.md', [manifest.sourceContract.readmeRow]],
+    [path.join('.docs', 'wiki', 'backlog.md'), [manifest.sourceContract.backlogRow, ...manifest.sourceContract.dependencyRows]],
+    [path.join('.docs', 'wiki', 'kanban.md'), [manifest.sourceContract.portableRow, manifest.sourceContract.nativeSiblingRow]],
+  ]) {
+    const source = fs.readFileSync(path.join(root, file), 'utf8');
+    for (const row of rows) assert.equal(source.includes(row), true, `Exact source row: ${row}`);
+  }
+  assert.equal(manifest.nativeRemainder.cardId, 'B-S137');
+  assert.equal(manifest.nativeRemainder.kanoUnit, 'B-S137');
+  assert.equal(manifest.nativeRemainder.gates, 'CORE, DATA, HOST, OBJECT');
+  assert.equal(manifest.nativeRemainder.readiness, false);
+  for (const field of ['nativeProofComplete', 'sourceParentComplete', 'productionNode24Validated', 'accepted']) assert.equal(manifest[field], false);
+  assert.equal(manifest.extraKanoCredits, 0);
+});
+
+test('closed DATA envelope, measured verdicts, explicit source remainder and read-only scope are documented', () => {
+  assert.deepEqual(manifest.syntheticInputs.presets, Object.keys(model.PRESETS));
+  assert.equal(manifest.syntheticInputs.maximumRuns, model.MAX_RUNS);
+  assert.equal(manifest.syntheticInputs.maximumAcceptedActions, model.MAX_HISTORY);
+  assert.equal(manifest.syntheticInputs.maximumLatestRejectedActions, model.MAX_ERRORS);
+  assert.equal(manifest.syntheticInputs.measuredChecksPerRun, 7);
+  assert.equal(manifest.syntheticInputs.requiredOldAssets, 2);
+  let measured = model.execute(model.createState(), { type: 'pin', presetId: 'preserved' });
+  measured = model.execute(measured, { type: 'cutover' });
+  measured = model.execute(measured, { type: 'measure' });
+  assert.deepEqual(manifest.assertions, measured.current.result.checks.map((row) => row.id));
+  const documentation = read('README.txt');
+  for (const phrase of [
+    'DATA ONLY', 'SC-S137', 'UNKNOWN', 'Parent alone accepts A-S137 once',
+    'readiness=false', 'original B-S137 Kano unit', 'D-S137 remains incomplete',
+    'Zero extra credits', 'Normal verification is READ-ONLY',
+    'CAPTURE_BROWSER_EVIDENCE=1', 'inactive recovery prototype is unqualified',
+    'Node 24', 'Microsoft Open Source Disclaimer',
+    'File-origin Worker rejection is not worker-src or real service-worker proof.',
+  ]) assert.equal(documentation.includes(phrase), true, phrase);
+});
+
+test('narrow raw resource attributes and normalized inline CSP hashes authorize only the standalone local lesson', () => {
+  const raw = fs.readFileSync(path.join(__dirname, 'index.html'));
+  const html = raw.toString('utf8');
+  const policy = /<meta[ \t]+http-equiv="Content-Security-Policy"[ \t]+content="([^"\r\n>]*)"[ \t]*>/.exec(html)?.[1];
+  assert.ok(policy);
+  assert.equal(html.indexOf('Content-Security-Policy') < html.indexOf('<script>'), true);
+  assert.equal(html.indexOf('Content-Security-Policy') < html.indexOf('<style>'), true);
+  assert.equal(html.includes(manifest.banner), true);
+  for (const directive of [
+    "default-src 'none'", "script-src 'self'", "connect-src 'none'", "worker-src 'none'",
+    "object-src 'none'", "base-uri 'none'", "form-action 'none'", "frame-src 'none'",
+    "img-src 'none'", "font-src 'none'", "media-src 'none'",
+  ]) assert.equal(policy.includes(directive), true, directive);
+  const resourceTags = [...html.matchAll(/<script[ \t]+src="([^"\r\n>]*)"[ \t]*><\/script>/g)];
+  assert.deepEqual(resourceTags.map((match) => match[1]), ['model.js', 'app.js']);
+  assert.equal([...html.matchAll(/<script\b/g)].length, 3);
+  assert.doesNotMatch(html, /\bhref\s*=|unsafe-inline|unsafe-eval|\son[a-z]+\s*=|<iframe|\bhttps?:/i);
+  const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+  const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)];
+  assert.equal(scripts.length, 1);
+  assert.equal(styles.length, 1);
+  for (const [kind, content] of [['script', scripts[0][1]], ['style', styles[0][1]]]) {
+    const digest = crypto.createHash('sha256').update(content.replace(/\r\n/g, '\n')).digest('base64');
+    assert.equal(policy.includes(`'sha256-${digest}'`), true, `${kind} hash uses HTML-parser LF normalization, not raw CRLF bytes`);
+  }
+  assert.match(scripts[0][1], /clawpilotTheme/);
+  assert.equal(html.indexOf('<script>') < html.indexOf('<script src='), true);
+  assert.match(html, /<label for="preset">Fixed old-client observations<\/label>/);
+  assert.match(html, /role="alert"/);
+  assert.match(html, /role="status"/);
+  assert.match(styles[0][1], /:focus-visible \{ outline: 3px/);
+  assert.doesNotMatch(styles[0][1], /@import|\burl\s*\(/);
+  assert.match(read('app.js'), /HTMLFormElement\.prototype\.reset\.call\(form\)/);
+  for (const file of ['model.js', 'app.js']) {
+    assert.doesNotMatch(read(file), /\bfetch\s*\(|XMLHttpRequest|WebSocket|EventSource|\bcaches\b|\bserviceWorker\b|\bWorker\s*\(|localStorage|sessionStorage|indexedDB|document\.cookie|\beval\s*\(|innerHTML|Math\.random|Date\.now|\bsetTimeout\s*\(|\brequire\s*\(/);
+  }
+});
+
+test('genuine loadable-stub assertion RED and its exact raw bytes stay archived outside autodiscovery before IaC N/A', () => {
+  const red = JSON.parse(read(path.join('evidence', 'raw', 'red-summary.json')));
+  const stdout = fs.readFileSync(path.join(__dirname, 'evidence', 'raw', 'red.stdout.tap'));
+  const stderr = fs.readFileSync(path.join(__dirname, 'evidence', 'raw', 'red.stderr.txt'));
+  assert.equal(red.childExitCode, 1);
+  assert.equal(red.errorCode, 'ERR_ASSERTION');
+  assert.equal(red.genuineAssertionRed, true);
+  assert.equal(red.beforeImplementation, true);
+  assert.equal(red.expected, 'pinned');
+  assert.equal(red.actual, 'idle');
+  assert.equal(hash(stdout), red.stdoutSha256);
+  assert.equal(hash(stderr), red.stderrSha256);
+  assert.match(stdout.toString('utf8'), /not ok 1/);
+  assert.match(stdout.toString('utf8'), /ERR_ASSERTION/);
+  assert.doesNotMatch(stdout.toString('utf8'), /MODULE_NOT_FOUND|ENOENT|SyntaxError/);
+  for (const [file, digest] of Object.entries(red.archivedStubSha256)) {
+    assert.equal(file.endsWith('.txt'), true);
+    assert.equal(hash(fs.readFileSync(path.join(__dirname, 'evidence', 'red-stub', file))), digest);
+    assert.doesNotMatch(file, /(?:^test[-.]|[.-]test\.[cm]?js$)/i);
+  }
+  const stub = require('./evidence/red-stub/model.js.txt');
+  assert.equal(stub.execute(stub.createState(), { type: 'pin', presetId: 'preserved' }).phase, 'idle');
+  const observed = JSON.parse(read(path.join('evidence', 'raw', 'stub-browser.json')));
+  assert.equal(observed.phaseBefore, 'idle');
+  assert.equal(observed.phaseAfterKeyboardPin, 'idle');
+  assert.equal(observed.browserVersion, '156.0.4314.50');
+  assert.equal(observed.awaitedCleanupCompleted, true);
+  assert.deepEqual(observed.pageErrors, []);
+  assert.deepEqual(observed.remoteRequests, []);
+  const iac = JSON.parse(read(path.join('evidence', 'iac-na.json')));
+  assert.equal(iac.iac, manifest.verification.iac);
+  assert.equal(iac.redStdoutSha256, red.stdoutSha256);
+  assert.equal(Date.parse(iac.evaluatedAtUtc) >= Date.parse(red.capturedAtUtc), true);
+  for (const field of ['cloudResources', 'networkOperations', 'serviceWorkerInstalls', 'cacheOperations', 'storageOperations', 'authorizedCloudSpend', 'extraKanoCredits']) assert.equal(iac[field], 0);
+});
+
+test('published isolated helper, awaited cleanup, exact capture authorization and declared-only worker scope remain pinned', () => {
+  assert.equal(manifest.verification.publishedHelperCommit, '53c0c0d');
+  assert.equal(hash(fs.readFileSync(path.join(root, 'testing', 'browser', 'isolated.cjs'))), manifest.verification.publishedHelperSha256);
+  assert.equal(manifest.verification.publishedHelperSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+  const browser = read('browser.test.cjs');
+  assert.match(browser, /process\.env\.CAPTURE_BROWSER_EVIDENCE === '1'/);
+  assert.match(browser, /flag: 'wx'/);
+  assert.match(browser, /await session\.close\(\)/);
+  assert.match(browser, /Normal verification must remain READ-ONLY/);
+  assert.doesNotMatch(browser, /openIsolatedLoopback|chromium\.launch|--no-sandbox|bypassCSP:\s*true|ignoreHTTPSErrors:\s*true|\bWorker\s*\(|\bfetch\s*\(/);
+  assert.match(browser, /workerProbePerformed: false/);
+  assert.match(read('.gitattributes'), /evidence\/raw\/\*\* -text -diff/);
+  assert.match(read('.gitattributes'), /evidence\/red-stub\/\*\* -text -diff/);
+  assert.match(read('.gitattributes'), /evidence\/browser\/\*\* -text -diff/);
+  assert.equal(read('.gitattributes').split(/\r?\n/).filter((line) => line.includes('-diff')).every((line) => line.startsWith('evidence/')), true);
+});
+
+test('deliberately captured browser proof retains honest outcomes and separate raw/canonical source-byte identities', () => {
+  const directory = path.join(__dirname, 'evidence', 'browser');
+  const captures = fs.existsSync(directory) ? fs.readdirSync(directory, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith('capture-')).map((entry) => entry.name) : [];
+  let currentPassingCaptures = 0;
+  for (const name of captures) {
+    const record = JSON.parse(read(path.join('evidence', 'browser', name, 'observations.json')));
+    assert.equal(record.cardId, 'A-S137');
+    assert.equal(record.workerId, 'worker-A-S137');
+    assert.equal(record.mode, 'portable-synthetic');
+    assert.equal(record.workerProbePerformed, false);
+    assert.equal(record.workerSrcBehaviorValidated, false);
+    assert.equal(record.realServiceWorkerValidated, false);
+    assert.equal(record.productionNode24Validated, false);
+    assert.equal(record.sourceParentComplete, false);
+    assert.equal(record.extraKanoCredits, 0);
+    assert.equal(record.success, record.failures.length === 0 && record.awaitedCleanupCompleted && record.lessonAndExistingProofUnchanged);
+    assert.deepEqual(Object.keys(record.sourceProvenance).sort(), [
+      '.gitattributes', 'old-bundle.feature', 'model.js', 'app.js', 'index.html',
+      'manifest.json', 'README.txt', 'model.test.cjs', 'integrity.test.cjs', 'browser.test.cjs',
+    ].sort());
+    let currentSourceMatches = true;
+    for (const [file, provenance] of Object.entries(record.sourceProvenance)) {
+      const snapshot = fs.readFileSync(path.join(directory, name, 'sources', `${file}.txt`));
+      assert.equal(hash(snapshot), provenance.rawSha256);
+      assert.equal(snapshot.length, provenance.rawByteLength);
+      assert.equal((snapshot.toString('utf8').match(/\r\n/g) || []).length, provenance.rawCrlfCount);
+      assert.equal(hash(canonical(snapshot)), provenance.canonicalSha256);
+      assert.equal(blobOid(canonical(snapshot)), provenance.canonicalGitOid);
+      if (hash(canonical(fs.readFileSync(path.join(__dirname, file)))) !== provenance.canonicalSha256) currentSourceMatches = false;
+    }
+    if (!record.success) continue;
+    if (currentSourceMatches) currentPassingCaptures += 1;
+    assert.equal(record.node, 'v22.23.4');
+    assert.equal(record.playwright, '1.56.1');
+    assert.equal(record.browserVersion, '156.0.4314.50');
+    assert.deepEqual(record.pageErrors, []);
+    assert.deepEqual(record.remoteRequests, []);
+    assert.equal(record.csp.inlineScriptRan, false);
+    assert.equal(record.csp.inlineStyleApplied, false);
+    assert.equal(record.csp.violations.some((entry) => entry.directive.startsWith('script-src') && entry.blockedURI === 'inline'), true);
+    assert.equal(record.csp.violations.some((entry) => entry.directive.startsWith('style-src')), true);
+    const retained = record.observations.find((entry) => entry.name === 'retained-positive-negative-unknown-reset-envelope');
+    assert.equal(retained.retainedRuns.length, 12);
+    assert.equal(retained.retainedRuns.filter((entry) => entry.includes('NEGATIVE')).length, 5);
+    assert.equal(retained.retainedRuns.filter((entry) => entry.includes('UNKNOWN -')).length, 2);
+    assert.equal(retained.formResetWasShadowed, true);
+    assert.match(retained.fields.error, /ERR_S137_LIMIT/);
+    for (const [file, digest] of Object.entries(record.rawLessonHashesBefore)) {
+      if (file.startsWith(`evidence${path.sep}`)) assert.equal(hash(fs.readFileSync(path.join(__dirname, file))), digest, `Earlier raw proof unchanged: ${file}`);
+    }
+  }
+  if (captures.length > 0) assert.equal(currentPassingCaptures > 0, true, 'Historical green is retained, but at least one passing capture must match every current canonical source file.');
+});
+
+test('captured runner stdout/stderr are raw proof and failures are never relabeled green', () => {
+  const directory = path.join(__dirname, 'evidence', 'raw');
+  for (const name of fs.readdirSync(directory).filter((file) => /^run-.*\.summary\.json$/.test(file))) {
+    const record = JSON.parse(read(path.join('evidence', 'raw', name)));
+    assert.equal(record.cardId, 'A-S137');
+    assert.equal(record.workerId, 'worker-A-S137');
+    assert.equal(record.expectedPass, record.exitCode === 0 && record.signal === null);
+    assert.equal(hash(fs.readFileSync(path.join(directory, record.stdoutFile))), record.stdoutSha256);
+    assert.equal(hash(fs.readFileSync(path.join(directory, record.stderrFile))), record.stderrSha256);
+    assert.equal(record.extraKanoCredits, 0);
+  }
+});

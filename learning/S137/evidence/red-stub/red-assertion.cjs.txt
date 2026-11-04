@@ -1,0 +1,9 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('./model.js');
+
+test('pinning the original old bundle changes idle to pinned', () => {
+  const state = model.execute(model.createState(), { type: 'pin', presetId: 'preserved' });
+  assert.equal(state.phase, 'pinned');
+});

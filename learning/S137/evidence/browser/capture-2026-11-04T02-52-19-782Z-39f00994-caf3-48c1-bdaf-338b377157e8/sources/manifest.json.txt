@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "id": "A-S137",
+  "sourceId": "S137",
+  "parentId": "D-S137",
+  "title": "One reused old bundle against a fresh backend",
+  "kano": "S",
+  "kanoUnit": "A-S137",
+  "packet": "SC-S137",
+  "technicalEntryGate": "SOURCE",
+  "mode": "portable-synthetic",
+  "entry": "index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Reuse an old service-worker bundle; detect incompatible API/assets despite a fresh backend.",
+  "sourceContract": {
+    "readmeRow": "| S137 | **Cached/service-worker frontend:** Support an older client bundle talking to the new backend. |",
+    "backlogRow": "| D-S137 | P1 | Add cached/service-worker old-frontend journeys against the new API. | Existing bundles/assets/contracts remain supported; incompatible stale clients produce detected failures, not silent UI corruption. | D-S051, D-S057 |",
+    "acceptance": "Existing bundles/assets/contracts remain supported; incompatible stale clients produce detected failures, not silent UI corruption.",
+    "dependencies": ["D-S051", "D-S057"],
+    "dependencyRows": [
+      "| D-S051 | P0 | Add **Old frontend to new API** with compatible and breaking response fixtures. | Old client journeys still function under the compatible contract; breaking changes fail the gate visibly. | none |",
+      "| D-S057 | P1 | Add cached old HTML with immutable old/new assets and deploy/retire controls. | Existing pages resolve required assets correctly; early asset removal produces a visible failing result. | none |"
+    ],
+    "portableRow": "| A-S137 | D-S137 | S | Reuse an old service-worker bundle; detect incompatible API/assets despite a fresh backend. | SOURCE |",
+    "nativeSiblingRow": "| B-S137 | D-S137 | S | Conduct one cached-client transition; verify actual old-bundle rendering and API contract continuity. | CORE, DATA, HOST, OBJECT |",
+    "nativeSibling": "B-S137",
+    "nativeSiblingGates": "CORE, DATA, HOST, OBJECT"
+  },
+  "preconditions": [
+    "Open this standalone local index.html alongside model.js and app.js in a JavaScript-capable browser.",
+    "Only fixed fictional teaching DATA: no actual old application bundle, service worker, cache, HTTP response, API, assets, user state or backend version.",
+    "The old client contract is catalog-v1 with label:string and stock:integer; additive server metadata is allowed.",
+    "Two required old asset paths/content IDs, ui-draft-v1 item/quantity and the rendered result must remain compatible.",
+    "The same teaching-client-v1 ID is retained through teaching-backend-v1 to teaching-backend-v2; no forced refresh substitutes a new client."
+  ],
+  "syntheticInputs": {
+    "fixtureVersion": "old-bundle-data/1",
+    "oldBundle": "teaching-client-v1",
+    "oldServiceWorker": "teaching-sw-v1",
+    "oldCache": "teaching-cache-v1",
+    "oldBackend": "teaching-backend-v1",
+    "candidateBackend": "teaching-backend-v2",
+    "maximumRuns": 12,
+    "maximumAcceptedActions": 64,
+    "maximumLatestRejectedActions": 12,
+    "measuredChecksPerRun": 7,
+    "requiredOldAssets": 2,
+    "presets": [
+      "preserved", "api-shape-break", "missing-old-asset", "changed-old-asset",
+      "lost-client-state", "corrupt-render", "backend-only", "cache-unknown"
+    ]
+  },
+  "actions": ["pin", "cutover", "measure", "reset"],
+  "assertions": [
+    "old-bundle-retained", "new-backend", "cache-lineage", "old-assets",
+    "old-api-contract", "retained-state", "render-integrity"
+  ],
+  "verification": {
+    "iac": "N/A evaluated after genuine assertion RED and before implementation; no infrastructure operation.",
+    "focusedCommand": "node --test learning\\S137\\model.test.cjs learning\\S137\\integrity.test.cjs learning\\S137\\browser.test.cjs",
+    "deliberateCapture": "Exact CAPTURE_BROWSER_EVIDENCE=1 only; unique append-only raw browser proof. Normal verification is READ-ONLY.",
+    "publishedHelper": "testing\\browser\\isolated.cjs",
+    "publishedHelperCommit": "53c0c0d",
+    "publishedHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "playwright": "1.56.1",
+    "browser": "Microsoft-signed Edge 156.0.4314.50, isolated headless with awaited finally close",
+    "toolingRuntime": "Node.js 22.23.4; not Node 24 production validation",
+    "lifecycleLimit": "Published helper retains known unattended context/page/cleanup limitations; inactive recovery prototype is unqualified.",
+    "workerScope": "CSP declares worker-src none. No worker probe. File-origin Worker rejection is not worker-src or real service-worker proof.",
+    "cspObservation": "Actual DOM probe of unapproved inline script checks script-src denial; not native SWA/cache/network proof."
+  },
+  "nativeRemainder": {
+    "cardId": "B-S137",
+    "kanoUnit": "B-S137",
+    "readiness": false,
+    "gates": "CORE, DATA, HOST, OBJECT",
+    "requiredProof": "Approved isolated native cached-client transition with actual old bundle/asset rendering, old API contract continuity, retained state, incompatible-client detection and observed backend/version identity.",
+    "blocker": "This file-origin DATA-only lesson performs no actual service-worker registration, cache, API, asset, network or deployment operation. Native hosting/data/object fixtures and authorization are not supplied.",
+    "sourceParent": "D-S137 remains incomplete."
+  },
+  "limits": [
+    "All bundle/service-worker/cache/asset/API/state/backend/version observations are fixed fictional teaching DATA ONLY.",
+    "No actual SWA, global browser service-worker installation, cache, storage, network, deployment or business effect.",
+    "No cloud, IaC, scaffold, identity, credentials, spend, packages, framework, downloads, unsafe browser flags, root/shared/ledger edits or catalog integration.",
+    "A fresh backend and HTTP 200 alone cannot certify an old bundle; unknown observations remain UNKNOWN.",
+    "Positive, negative and unknown results are seven-check matches inside this finite fixture, not elapsed-time, reliability, SLA, production or native evidence.",
+    "Reset retains in-memory history; reload intentionally loses it. Latest errors are bounded at 12; accepted results/events are never silently trimmed.",
+    "One original frozen S unit only; parent alone accepts A-S137 once; zero extra test, repair, proof or refinement credits."
+  ],
+  "nativeProofComplete": false,
+  "sourceParentComplete": false,
+  "productionNode24Validated": false,
+  "accepted": false,
+  "extraKanoCredits": 0
+}

@@ -1,0 +1,258 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('./model.js');
+
+test('pinning the original old bundle changes idle to pinned', () => {
+  const state = model.execute(model.createState(), { type: 'pin', presetId: 'preserved' });
+  assert.equal(state.phase, 'pinned');
+});
+
+const clone = (value) => JSON.parse(JSON.stringify(value));
+const pin = (presetId = 'preserved') => model.execute(model.createState(), { type: 'pin', presetId });
+function conduct(presetId = 'preserved', initial = model.createState()) {
+  let state = model.execute(initial, { type: 'pin', presetId });
+  state = model.execute(state, { type: 'cutover' });
+  return model.execute(state, { type: 'measure' });
+}
+const rejects = (state, action, code) => {
+  const before = JSON.stringify(state);
+  assert.throws(() => model.execute(state, action), { code });
+  assert.equal(JSON.stringify(state), before);
+};
+
+test('canonical phases keep the original client while only backend DATA changes', () => {
+  let state = pin();
+  assert.equal(state.current.bundleId, 'teaching-client-v1');
+  assert.equal(state.current.backendVersion, 'teaching-backend-v1');
+  assert.equal(state.current.result, null);
+  state = model.execute(state, { type: 'cutover' });
+  assert.equal(state.phase, 'cutover');
+  assert.equal(state.current.bundleId, 'teaching-client-v1');
+  assert.equal(state.current.backendVersion, 'teaching-backend-v2');
+  state = model.execute(state, { type: 'measure' });
+  assert.equal(state.phase, 'measured');
+  assert.equal(state.current.result.verdict, 'POSITIVE');
+  assert.equal(state.current.result.counts.total, 7);
+  assert.equal(state.current.result.counts.oldAssetsMatched, 2);
+  assert.match(state.current.result.scope, /DATA ONLY/);
+  assert.equal(model.validateState(state), true);
+  assert.deepEqual(state.history.map((event) => event.phase), ['pinned', 'cutover', 'measured']);
+});
+
+test('every closed fictional fixture is measured as positive, negative or unknown', async (t) => {
+  for (const [presetId, expected] of Object.entries(model.EXPECTATIONS)) {
+    await t.test(presetId, () => {
+      const result = conduct(presetId).current.result;
+      assert.equal(model.PRESETS[presetId].backend.httpStatus, 200);
+      assert.equal(model.PRESETS[presetId].backend.version, 'teaching-backend-v2');
+      if (model.PRESETS[presetId].api) assert.equal(model.PRESETS[presetId].api.httpStatus, 200);
+      assert.equal(result.verdict, expected.verdict);
+      for (const field of ['passed', 'failed', 'unknown']) assert.equal(result.counts[field], expected[field]);
+      assert.equal(result.counts.total, result.counts.passed + result.counts.failed + result.counts.unknown);
+      assert.equal(result.candidateAccepted, expected.verdict === 'POSITIVE');
+      assert.deepEqual(result.checks.map((row) => row.id), [
+        'old-bundle-retained', 'new-backend', 'cache-lineage', 'old-assets',
+        'old-api-contract', 'retained-state', 'render-integrity',
+      ]);
+    });
+  }
+});
+
+test('a fresh backend and HTTP 200 alone leave five continuity checks UNKNOWN', () => {
+  const result = conduct('backend-only').current.result;
+  assert.deepEqual(result.counts, { passed: 2, failed: 0, unknown: 5, total: 7, oldAssetsMatched: null });
+  assert.equal(result.verdict, 'UNKNOWN');
+  assert.equal(result.candidateAccepted, false);
+  assert.equal(result.checks.find((row) => row.id === 'old-api-contract').result, 'UNKNOWN');
+  assert.equal(result.checks.find((row) => row.id === 'cache-lineage').result, 'UNKNOWN');
+});
+
+test('v1 API consumer accepts additive metadata but rejects renamed and mistyped fields despite HTTP 200', () => {
+  assert.equal(typeof model.PRESETS.preserved.api.body.additiveMetadata, 'string');
+  assert.equal(conduct().current.result.checks.find((row) => row.id === 'old-api-contract').result, 'PASS');
+  const broken = conduct('api-shape-break').current.result;
+  const row = broken.checks.find((check) => check.id === 'old-api-contract');
+  assert.equal(row.result, 'FAIL');
+  assert.match(row.detail, /label=undefined; stock=string/);
+  assert.equal(broken.verdict, 'NEGATIVE');
+});
+
+test('missing and changed old asset content IDs are detected separately from successful API or backend DATA', () => {
+  for (const presetId of ['missing-old-asset', 'changed-old-asset']) {
+    const result = conduct(presetId).current.result;
+    assert.equal(result.counts.oldAssetsMatched, 1);
+    assert.equal(result.checks.find((row) => row.id === 'old-assets').result, 'FAIL');
+    assert.equal(result.checks.find((row) => row.id === 'old-api-contract').result, 'PASS');
+    assert.equal(result.candidateAccepted, false);
+  }
+  assert.equal(model.PRESETS['missing-old-asset'].assets[0].httpStatus, 404);
+  assert.equal(model.PRESETS['changed-old-asset'].assets[0].httpStatus, 200);
+});
+
+test('known state/render corruption and missing evidence withhold the candidate and preserve the safe old view', () => {
+  for (const [presetId, expected] of Object.entries(model.EXPECTATIONS)) {
+    const result = conduct(presetId).current.result;
+    assert.equal(result.safeView, 'Paper star × 2');
+    if (expected.verdict !== 'POSITIVE') assert.equal(result.candidateAccepted, false);
+  }
+  assert.equal(conduct('lost-client-state').current.result.checks.find((row) => row.id === 'retained-state').result, 'FAIL');
+  assert.equal(conduct('corrupt-render').current.result.checks.find((row) => row.id === 'render-integrity').result, 'FAIL');
+});
+
+test('out-of-order, repeated and idle-reset actions reject without mutating accepted state', () => {
+  const idle = model.createState();
+  for (const type of ['cutover', 'measure', 'reset']) rejects(idle, { type }, 'ERR_S137_ORDER');
+  const pinned = pin();
+  rejects(pinned, { type: 'measure' }, 'ERR_S137_ORDER');
+  rejects(pinned, { type: 'pin', presetId: 'preserved' }, 'ERR_S137_ORDER');
+  const cutover = model.execute(pinned, { type: 'cutover' });
+  rejects(cutover, { type: 'cutover' }, 'ERR_S137_ORDER');
+  const measured = model.execute(cutover, { type: 'measure' });
+  rejects(measured, { type: 'measure' }, 'ERR_S137_ORDER');
+});
+
+test('strict typed actions and preset IDs reject coercion, extra keys, prototypes and arbitrary DATA', () => {
+  const state = model.createState();
+  const inputs = [
+    undefined, null, true, 1, 'pin', [], new Date(0), Object.create(null),
+    { type: 1 }, { type: 'unknown' }, { type: 'reset', ignored: true },
+    { type: 'pin' }, { type: 'pin', presetId: 'preserved', api: {} },
+    ...[undefined, null, true, 0, [], {}, new String('preserved'), ' preserved', 'preserved ', 'PRESERVED', '__proto__', 'constructor']
+      .map((presetId) => ({ type: 'pin', presetId })),
+  ];
+  for (const action of inputs) rejects(state, action, 'ERR_S137_INPUT');
+  const symbol = { type: 'pin', presetId: 'preserved', [Symbol('hidden')]: true };
+  rejects(state, symbol, 'ERR_S137_INPUT');
+});
+
+test('accessor-bearing inputs and state are rejected before getters are evaluated', () => {
+  let reads = 0;
+  const action = { presetId: 'preserved' };
+  Object.defineProperty(action, 'type', { enumerable: true, get() { reads += 1; return 'pin'; } });
+  rejects(model.createState(), action, 'ERR_S137_INPUT');
+  const state = clone(conduct());
+  Object.defineProperty(state, 'phase', { enumerable: true, get() { reads += 1; return 'measured'; } });
+  assert.throws(() => model.execute(state, { type: 'reset' }), { code: 'ERR_S137_STATE' });
+  assert.equal(reads, 0);
+});
+
+test('canonical replay rejects forged nested bundle, backend, API verdict, state, counters and event history', () => {
+  const original = conduct();
+  const changes = [
+    (state) => { state.schema = 1; },
+    (state) => { state.phase = 'certified'; },
+    (state) => { state.current.bundleId = 'fresh-client-v2'; },
+    (state) => { state.current.backendVersion = 'teaching-backend-v1'; },
+    (state) => { state.current.id = '1'; },
+    (state) => { state.current.presetId = 'backend-only'; },
+    (state) => { state.current.result.counts.passed = '7'; },
+    (state) => { state.current.result.counts.failed = NaN; },
+    (state) => { state.current.result.counts.unknown = -0; },
+    (state) => { state.current.result.checks[4].result = 'FAIL'; },
+    (state) => { state.current.result.candidateAccepted = 1; },
+    (state) => { state.current.result.safeView = 'silently corrupted'; },
+    (state) => { state.runs[0].result.verdict = 'UNKNOWN'; },
+    (state) => { state.history[0].sequence = 1.5; },
+    (state) => { state.history[1].phase = 'measured'; },
+    (state) => { state.history[2].runId = true; },
+    (state) => { state.history[0].presetId = 'cache-unknown'; },
+    (state) => { state.history[0].extra = 'ignored'; },
+    (state) => { state.history.reverse(); },
+    (state) => { state.extra = true; },
+    (state) => { state.runs = {}; },
+  ];
+  for (const change of changes) {
+    const state = clone(original);
+    change(state);
+    assert.throws(() => model.execute(state, { type: 'reset' }), { code: 'ERR_S137_STATE' });
+  }
+  assert.equal(model.validateState(original), true);
+});
+
+test('sparse, augmented, overlong and mistyped state containers cannot manufacture acceptance', () => {
+  for (const state of [undefined, null, true, [], Object.create(null), { schema: 's137/1' }]) {
+    assert.throws(() => model.execute(state, { type: 'pin', presetId: 'preserved' }), { code: 'ERR_S137_STATE' });
+  }
+  for (const mutate of [
+    (state) => { delete state.history[1]; },
+    (state) => { state.history.extra = true; },
+    (state) => { state.history[Symbol('extra')] = true; },
+    (state) => { state.history = Array(65).fill(state.history[0]); },
+    (state) => { state.runs = Array(13).fill(state.runs[0]); },
+    (state) => { state.history[0] = Object.create(state.history[0]); },
+  ]) {
+    const state = clone(conduct());
+    mutate(state);
+    assert.throws(() => model.validateState(state), { code: 'ERR_S137_STATE' });
+  }
+});
+
+test('reset retains all measured positive, negative, unknown results and accepted events', () => {
+  let state = model.createState();
+  for (const presetId of Object.keys(model.PRESETS)) {
+    state = conduct(presetId, state);
+    const retained = state.runs;
+    const history = state.history;
+    state = model.execute(state, { type: 'reset' });
+    assert.equal(state.phase, 'idle');
+    assert.equal(state.current, null);
+    assert.equal(state.runs, retained);
+    assert.deepEqual(state.history.slice(0, -1), history);
+  }
+  assert.equal(state.runs.length, 8);
+  assert.equal(state.history.length, 32);
+  assert.equal(state.runs[0].result.verdict, 'POSITIVE');
+  assert.equal(state.runs[1].result.verdict, 'NEGATIVE');
+  assert.equal(state.runs[6].result.verdict, 'UNKNOWN');
+});
+
+test('an explicitly abandoned run is recorded by reset without erasing earlier measurements', () => {
+  let state = model.execute(conduct(), { type: 'reset' });
+  state = model.execute(state, { type: 'pin', presetId: 'api-shape-break' });
+  state = model.execute(state, { type: 'reset' });
+  assert.equal(state.runs.length, 1);
+  assert.equal(state.history.at(-1).action, 'reset');
+  assert.equal(state.history.at(-1).runId, 2);
+  state = conduct('backend-only', state);
+  assert.equal(state.runs.length, 2);
+  assert.equal(state.current.id, 2);
+  assert.equal(state.current.result.verdict, 'UNKNOWN');
+});
+
+test('12-run envelope refuses new work rather than trimming retained results', () => {
+  let state = model.createState();
+  for (let i = 0; i < model.MAX_RUNS; i += 1) state = model.execute(conduct('preserved', state), { type: 'reset' });
+  assert.equal(state.runs.length, 12);
+  assert.equal(state.history.length, 48);
+  rejects(state, { type: 'pin', presetId: 'preserved' }, 'ERR_S137_LIMIT');
+});
+
+test('64-action envelope reserves a complete run and final reset', () => {
+  let state = model.createState();
+  for (let i = 0; i < 30; i += 1) {
+    state = model.execute(state, { type: 'pin', presetId: 'preserved' });
+    state = model.execute(state, { type: 'reset' });
+  }
+  assert.equal(state.history.length, 60);
+  state = model.execute(conduct('preserved', state), { type: 'reset' });
+  assert.equal(state.history.length, 64);
+  rejects(state, { type: 'pin', presetId: 'preserved' }, 'ERR_S137_LIMIT');
+  let noRoom = model.createState();
+  for (let i = 0; i < 31; i += 1) {
+    noRoom = model.execute(noRoom, { type: 'pin', presetId: 'preserved' });
+    noRoom = model.execute(noRoom, { type: 'reset' });
+  }
+  rejects(noRoom, { type: 'pin', presetId: 'preserved' }, 'ERR_S137_LIMIT');
+});
+
+test('fixed DATA and all returned histories/results are deeply frozen and deterministic', () => {
+  const state = conduct();
+  for (const value of [model.PRESETS, model.PRESETS.preserved.api.body.item, model.ORIGINAL, state, state.history, state.current, state.current.result, state.current.result.checks]) {
+    assert.equal(Object.isFrozen(value), true);
+  }
+  assert.throws(() => { model.PRESETS.preserved.api.body.item.stock = '4'; }, TypeError);
+  assert.throws(() => { state.current.result.verdict = 'UNKNOWN'; }, TypeError);
+  assert.deepEqual(conduct('corrupt-render'), conduct('corrupt-render'));
+  assert.equal(model.PRESETS.preserved.api.body.item.stock, 4);
+});

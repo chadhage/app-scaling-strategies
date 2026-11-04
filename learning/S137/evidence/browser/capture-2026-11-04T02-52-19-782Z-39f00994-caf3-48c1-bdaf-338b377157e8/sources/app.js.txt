@@ -1,0 +1,169 @@
+(function () {
+  'use strict';
+  const byId = (id) => document.getElementById(id);
+  const form = byId('operator-form');
+  const selector = byId('preset');
+  const buttons = ['pin', 'cutover', 'measure', 'reset'].map((action) => byId(`${action}-button`));
+  const api = globalThis.S137;
+  let state;
+  let rejected = [];
+  let faulted = false;
+
+  function text(id, value) {
+    byId(id).textContent = value;
+  }
+
+  function panic(message) {
+    faulted = true;
+    text('phase', 'unavailable');
+    text('outcome', 'UNAVAILABLE - no compatibility claim');
+    text('error', message);
+    text('status', 'FAIL CLOSED. Reload the local lesson to recover; no worker, cache or API action occurred.');
+    selector.disabled = true;
+    for (const button of buttons) {
+      button.disabled = true;
+      button.setAttribute('aria-disabled', 'true');
+    }
+  }
+
+  function list(id, values) {
+    const items = values.map((value) => {
+      const item = document.createElement('li');
+      item.textContent = value;
+      return item;
+    });
+    byId(id).replaceChildren(...items);
+  }
+
+  function render() {
+    const run = state.current;
+    const data = run && state.phase !== 'pinned' ? api.PRESETS[run.presetId] : null;
+    const result = run?.result;
+    text('phase', state.phase);
+    text('current-run', run ? String(run.id) : 'none');
+    text('fixture', run?.presetId ?? 'none');
+    text('bundle', run?.bundleId ?? 'not pinned');
+    text('backend', run?.backendVersion ?? 'not observed');
+    text('cache-lineage', data ? data.lineage === null ? 'UNKNOWN - no lineage DATA'
+      : `${data.lineage.serviceWorkerId} / ${data.lineage.cacheId} / ${data.lineage.bundleId} (DATA ONLY)` : 'not observed');
+    text('warmup', data ? `HTTP ${data.backend.httpStatus} (DATA ONLY; not compatibility proof)` : 'not observed');
+    text('api-observation', data ? data.api === null ? 'UNKNOWN - no API DATA'
+      : JSON.stringify(data.api) : 'not observed');
+    text('asset-observation', data ? data.assets === null ? 'UNKNOWN - no old asset DATA'
+      : JSON.stringify(data.assets) : 'not observed');
+    text('state-observation', data ? data.state === null ? 'UNKNOWN - no draft DATA'
+      : JSON.stringify(data.state) : 'not observed');
+    text('candidate-render', data ? data.render === null ? 'UNKNOWN - no rendered-result DATA'
+      : JSON.stringify(data.render) : 'not observed');
+    text('safe-view', result?.safeView ?? api.ORIGINAL.safeView);
+    text('outcome', result?.verdict ?? 'NOT MEASURED');
+    byId('outcome').dataset.verdict = result?.verdict ?? '';
+    text('measurement-summary', result
+      ? `${result.counts.passed} PASS / ${result.counts.failed} FAIL / ${result.counts.unknown} UNKNOWN; ${result.counts.total} fictional checks.`
+      : 'No measured checks yet.');
+    text('render-decision', result?.candidateAccepted
+      ? 'Candidate view allowed for this fictional record only; original bundle unchanged.'
+      : 'Candidate view withheld; safe old view retained. Missing evidence or failure cannot certify compatibility.');
+    const rows = (result?.checks ?? []).map((check) => {
+      const row = document.createElement('tr');
+      row.dataset.check = check.id;
+      for (const value of [check.id, check.result, check.detail]) {
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.appendChild(cell);
+      }
+      return row;
+    });
+    byId('checks-body').replaceChildren(...rows);
+    text('history-summary', `${state.runs.length} / ${api.MAX_RUNS} measured runs; ${state.history.length} / ${api.MAX_HISTORY} accepted actions`);
+    const runs = state.runs.map((retained) => {
+      const item = document.createElement('li');
+      const summary = document.createElement('p');
+      const measured = retained.result;
+      summary.textContent = `Run ${retained.id} / ${retained.presetId}: ${measured.verdict} - ${measured.counts.passed} PASS, ${measured.counts.failed} FAIL, ${measured.counts.unknown} UNKNOWN; ${retained.bundleId} → ${retained.backendVersion}; ${measured.candidateAccepted ? 'candidate DATA allowed' : 'candidate withheld'}.`;
+      item.appendChild(summary);
+      const details = document.createElement('details');
+      const heading = document.createElement('summary');
+      heading.textContent = `Retained seven check measurements for run ${retained.id}`;
+      details.appendChild(heading);
+      const checks = document.createElement('ol');
+      for (const check of measured.checks) {
+        const row = document.createElement('li');
+        row.textContent = `${check.id}: ${check.result} - ${check.detail}`;
+        checks.appendChild(row);
+      }
+      details.appendChild(checks);
+      item.appendChild(details);
+      return item;
+    });
+    byId('run-history').replaceChildren(...runs);
+    list('action-history', state.history.map((event) =>
+      `${event.sequence}: ${event.action} / run ${event.runId} / ${event.presetId} → ${event.phase}`));
+    list('rejected-history', rejected);
+    const available = {
+      pin: state.phase === 'idle' && state.runs.length < api.MAX_RUNS && state.history.length <= api.MAX_HISTORY - 4,
+      cutover: state.phase === 'pinned',
+      measure: state.phase === 'cutover',
+      reset: state.phase !== 'idle' && state.history.length < api.MAX_HISTORY,
+    };
+    for (const action of Object.keys(available)) {
+      byId(`${action}-button`).setAttribute('aria-disabled', String(!available[action]));
+    }
+    selector.disabled = state.phase !== 'idle';
+    const messages = {
+      idle: 'Choose a fixed preset, then reuse the old bundle. Retained history remains in memory.',
+      pinned: 'Old bundle pinned. Now select the fixed new backend DATA; do not replace the client.',
+      cutover: 'Fresh backend DATA selected. Measure old assets, API, state and rendered-result continuity.',
+      measured: `${result?.verdict}: ${result?.candidateAccepted ? 'all fixed checks match' : 'candidate withheld; safe old view retained'}. Reset preserves this result.`,
+    };
+    text('status', available.pin || state.phase !== 'idle' ? messages[state.phase]
+      : 'The finite envelope is full. History is retained; reload starts a new in-memory lesson.');
+  }
+
+  function act(type) {
+    if (faulted) return;
+    try {
+      const action = type === 'pin' ? { type, presetId: selector.value } : { type };
+      const next = api.execute(state, action);
+      state = next;
+      text('error', '');
+      if (type === 'reset') HTMLFormElement.prototype.reset.call(form);
+      render();
+      if (type === 'reset') selector.focus();
+    } catch (error) {
+      if (!(error instanceof api.LessonError)) {
+        panic('Lesson unavailable: an unexpected local error occurred. No result is trusted; reload to recover.');
+        return;
+      }
+      const message = `${error.code}: ${error.message}`;
+      rejected = [...rejected, message].slice(-api.MAX_ERRORS);
+      render();
+      text('error', message);
+      text('status', 'Action rejected. Accepted state and retained results are unchanged.');
+      if (error.code === 'ERR_S137_INPUT' && !selector.disabled) selector.focus();
+      else byId('error').focus();
+    }
+  }
+
+  form.addEventListener('submit', (event) => event.preventDefault());
+  if (!api || typeof api.createState !== 'function' || typeof api.execute !== 'function') {
+    panic('Lesson unavailable: model failed to load. Reload the local lesson; no compatibility claim.');
+    return;
+  }
+  try {
+    state = api.createState();
+    api.validateState(state);
+    for (const action of ['pin', 'cutover', 'measure', 'reset']) {
+      byId(`${action}-button`).addEventListener('click', () => act(action));
+    }
+    globalThis.addEventListener('error', (event) => {
+      if (event.error) panic('Lesson unavailable: a local runtime error occurred. Reload to recover; no result is trusted.');
+    });
+    globalThis.addEventListener('unhandledrejection', () => {
+      panic('Lesson unavailable: an unexpected local promise failed. Reload to recover; no result is trusted.');
+    });
+    render();
+  } catch {
+    panic('Lesson unavailable: initialization failed. Reload the local lesson; no result is trusted.');
+  }
+}());

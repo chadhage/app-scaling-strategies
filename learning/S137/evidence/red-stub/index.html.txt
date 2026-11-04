@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-6smd9voUY0VkyA6NT2acrI+jbKMEnJea/u0SMBWEj40='; style-src 'sha256-/7Ncai4abdfMcRdz91PBcuIF6LLuV+mKsZMYH1i4Yyg='; connect-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; img-src 'none'; font-src 'none'; media-src 'none';">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S137 - Old bundle compatibility rehearsal</title>
+  <script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
+    const theme =
+      param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+  </script>
+  <style>
+:root {
+  color-scheme: light;
+  --cp-bg: #f7f4ef;
+  --cp-bg-elevated: #fcfbf8;
+  --cp-surface: #ffffff;
+  --cp-surface-soft: #f5f5f5;
+  --cp-border: #dedede;
+  --cp-border-strong: #919191;
+  --cp-text: #242424;
+  --cp-text-muted: #5c5c5c;
+  --cp-text-soft: #6f6f6f;
+  --cp-accent: #b11f4b;
+  --cp-accent-hover: #9a1a41;
+  --cp-accent-soft: rgba(177, 31, 75, 0.08);
+  --cp-accent-fg: #ffffff;
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  --cp-warning: #f59e0b;
+  --cp-link: #0078d4;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+  --cp-overlay: rgba(255, 255, 255, 0.8);
+  --cp-panel: rgba(255, 255, 255, 0.86);
+  --cp-panel-strong: rgba(255, 255, 255, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.55);
+  --cp-highlight: rgba(177, 31, 75, 0.12);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #3d3b3a;
+  --cp-bg-elevated: #343231;
+  --cp-surface: #292929;
+  --cp-surface-soft: #2e2e2e;
+  --cp-border: #474747;
+  --cp-border-strong: #5f5f5f;
+  --cp-text: #dedede;
+  --cp-text-muted: #919191;
+  --cp-text-soft: #b0b0b0;
+  --cp-accent: #fd8ea1;
+  --cp-accent-hover: #fb7b91;
+  --cp-accent-soft: rgba(253, 142, 161, 0.14);
+  --cp-accent-fg: #1a1a1a;
+  --cp-success: #4ade80;
+  --cp-danger: #f87171;
+  --cp-warning: #fbbf24;
+  --cp-link: #4da6ff;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --cp-overlay: rgba(41, 41, 41, 0.88);
+  --cp-panel: rgba(41, 41, 41, 0.72);
+  --cp-panel-strong: rgba(41, 41, 41, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.04);
+  --cp-highlight: rgba(253, 142, 161, 0.12);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--cp-bg);
+  color: var(--cp-text);
+  font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.5;
+}
+main, header, footer { max-width: 72rem; margin: 0 auto; padding: 1rem; }
+h1 { margin: 0.5rem 0; font-size: clamp(1.5rem, 4vw, 2.25rem); }
+h2 { margin: 0 0 0.75rem; font-size: 1.25rem; }
+h3 { font-size: 1rem; }
+p { margin: 0.5rem 0; }
+.banner {
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--cp-accent);
+  border-radius: 0.625rem;
+  background: var(--cp-accent-soft);
+  font-weight: 700;
+}
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+section {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: 16px;
+  box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border);
+}
+label { display: block; margin-bottom: 0.25rem; font-weight: 600; }
+select, button {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--cp-border-strong);
+  border-radius: 0.625rem;
+  background: var(--cp-surface);
+  color: var(--cp-text);
+  font: inherit;
+}
+select { width: 100%; max-width: 32rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.75rem 0; }
+button { cursor: pointer; }
+button:hover { border-color: var(--cp-accent); }
+button[aria-disabled="true"] { color: var(--cp-text-muted); border-color: var(--cp-border); }
+button:disabled { cursor: not-allowed; }
+button:first-child { background: var(--cp-accent); color: var(--cp-accent-fg); }
+:focus-visible { outline: 3px solid var(--cp-accent); outline-offset: 3px; }
+dl { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 0.5rem 0.75rem; margin: 0; }
+dt { color: var(--cp-text-muted); }
+dd { margin: 0; overflow-wrap: anywhere; }
+code, .mono { font-family: Consolas, "Courier New", Courier, monospace; }
+.muted { color: var(--cp-text-muted); }
+#error { color: var(--cp-danger); min-height: 1.5rem; }
+#outcome { font-weight: 700; }
+[data-verdict="POSITIVE"] { color: var(--cp-success); }
+[data-verdict="NEGATIVE"] { color: var(--cp-danger); }
+[data-verdict="UNKNOWN"] { color: var(--cp-text); }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th, td { padding: 0.5rem; border-bottom: 1px solid var(--cp-border); vertical-align: top; }
+caption { text-align: left; color: var(--cp-text-muted); margin-bottom: 0.5rem; }
+ol { padding-left: 1.5rem; overflow-wrap: anywhere; }
+li { margin: 0.5rem 0; }
+#run-history li { border-left: 3px solid var(--cp-border-strong); padding-left: 0.5rem; }
+@media (max-width: 48rem) { .grid { grid-template-columns: 1fr; } dl { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<header>
+  <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+  <h1>Keep the old bundle; test the new backend</h1>
+  <p>A fresh backend and an HTTP 200 can still leave an old client broken.</p>
+  <p class="muted">Every bundle, service-worker, cache, asset, API, state, backend and version below is fixed fictional teaching <strong>DATA ONLY</strong>. This page does not install a worker, touch a cache or call an API.</p>
+</header>
+<main>
+  <section aria-labelledby="operator-heading">
+    <h2 id="operator-heading">1. Conduct a bounded old-client rehearsal</h2>
+    <form id="operator-form">
+      <label for="preset">Fixed old-client observations</label>
+      <select id="preset" name="preset">
+        <option value="preserved">Preserved old bundle, assets, API and state</option>
+        <option value="api-shape-break">HTTP 200, incompatible old API shape</option>
+        <option value="missing-old-asset">Fresh backend, old asset missing</option>
+        <option value="changed-old-asset">HTTP 200, old asset content changed</option>
+        <option value="lost-client-state">HTTP 200, prior draft state lost</option>
+        <option value="corrupt-render">HTTP 200, silent render corruption detected</option>
+        <option value="backend-only">Fresh backend and HTTP 200 only</option>
+        <option value="cache-unknown">Worker/cache lineage unobserved</option>
+      </select>
+      <div class="actions">
+        <button id="pin-button" type="button" aria-disabled="false">Reuse old bundle</button>
+        <button id="cutover-button" type="button" aria-disabled="true">Use new backend DATA</button>
+        <button id="measure-button" type="button" aria-disabled="true">Measure compatibility</button>
+        <button id="reset-button" type="button" aria-disabled="true">Reset current run</button>
+      </div>
+    </form>
+    <p id="status" role="status" aria-live="polite">Choose a fixed preset, then reuse the old bundle.</p>
+    <p id="error" role="alert" tabindex="-1"></p>
+    <noscript>This lesson requires local JavaScript. No compatibility outcome is available without it.</noscript>
+  </section>
+  <div class="grid">
+    <section aria-labelledby="observation-heading">
+      <h2 id="observation-heading">2. Recorded observations, not live telemetry</h2>
+      <dl>
+        <dt>Phase</dt><dd id="phase" class="mono">idle</dd>
+        <dt>Current run</dt><dd id="current-run">none</dd>
+        <dt>Fixture</dt><dd id="fixture">none</dd>
+        <dt>Old bundle</dt><dd id="bundle">not pinned</dd>
+        <dt>Worker/cache</dt><dd id="cache-lineage">not observed</dd>
+        <dt>Backend version</dt><dd id="backend">not observed</dd>
+        <dt>Warm-up DATA</dt><dd id="warmup">not observed</dd>
+        <dt>Old API DATA</dt><dd id="api-observation">not observed</dd>
+        <dt>Old asset DATA</dt><dd id="asset-observation">not observed</dd>
+        <dt>Draft state DATA</dt><dd id="state-observation">not observed</dd>
+        <dt>Attempted render</dt><dd id="candidate-render">not observed</dd>
+      </dl>
+    </section>
+    <section aria-labelledby="outcome-heading">
+      <h2 id="outcome-heading">3. Compatibility result</h2>
+      <p id="outcome" aria-live="polite">NOT MEASURED</p>
+      <p id="measurement-summary">No measured checks yet.</p>
+      <p>Safe sample view DATA: <strong id="safe-view">Paper star × 2</strong></p>
+      <p id="render-decision">Candidate view withheld until all seven recorded checks pass.</p>
+      <p class="muted">NEGATIVE detects an incompatible stale client. UNKNOWN means evidence is missing, not compatible. POSITIVE is only a match within this closed fictional fixture.</p>
+    </section>
+  </div>
+  <section aria-labelledby="check-heading">
+    <h2 id="check-heading">Seven measured continuity checks</h2>
+    <div class="table-scroll">
+      <table>
+        <caption>Fictional DATA checks; no network, cache or service-worker measurement</caption>
+        <thead><tr><th scope="col">Check</th><th scope="col">Result</th><th scope="col">Recorded measurement</th></tr></thead>
+        <tbody id="checks-body"></tbody>
+      </table>
+    </div>
+  </section>
+  <section aria-labelledby="history-heading">
+    <h2 id="history-heading">Retained in-memory history</h2>
+    <p id="history-summary">0 / 12 measured runs; 0 / 64 accepted actions</p>
+    <p class="muted">Reset retains results and actions; reload starts over. No persistent storage. New work is refused at the envelope, not silently discarded.</p>
+    <ol id="run-history" aria-label="Measured run history"></ol>
+    <h3>Accepted operator actions</h3>
+    <ol id="action-history" aria-label="Accepted action history"></ol>
+    <h3>Latest rejected actions (maximum 12)</h3>
+    <ol id="rejected-history" aria-label="Rejected action history"></ol>
+  </section>
+</main>
+<footer>
+  <p><strong>Scope:</strong> A-S137 / S / SC-S137. No actual SWA, service worker, browser cache, API, deployment or Azure result.</p>
+  <p class="muted">CSP declares worker-src 'none'; a file-origin Worker rejection alone is not worker-src or real service-worker proof. No worker probe is used. B-S137 and D-S137 remain incomplete; only the parent accepts this original teaching unit once.</p>
+</footer>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
