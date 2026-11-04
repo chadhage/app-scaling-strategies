@@ -1,0 +1,457 @@
+{
+  "cardId": "A-S145",
+  "sourceId": "S145",
+  "parentId": "D-S145",
+  "kanoUnit": "A-S145",
+  "kano": "S",
+  "priority": "P1",
+  "packet": "SC-S145",
+  "technicalEntryGate": "SOURCE",
+  "capturedAtUtc": "2026-11-04T03:23:17.525Z",
+  "canonicalCommit": "872cbb300887aba727f83f1f1dbc4482bab0adbc",
+  "sources": [
+    {
+      "file": "README.md",
+      "canonicalPath": "README.md",
+      "name": "README",
+      "working": {
+        "fullPath": "evidence\\raw\\source\\README.working.raw.gz",
+        "selectedPath": "evidence\\raw\\source\\README.working.selected.snapshot",
+        "sha256": "826c1e3b1f1f8866f05d45f3d6b9eca5c06e901a2b67737774ad18aa1607e4d1",
+        "byteLength": 46303,
+        "crlfCount": 584,
+        "selectionSha256": "6c838de8012fd325d104ddbc11ae3e865c294aea7e1237ea07373af0d69961dc",
+        "slices": [
+          {
+            "label": "S145",
+            "startLine": 427,
+            "endLine": 427,
+            "text": [
+              "| S145 | **Repeated transitions and soak:** Detect memory leaks, connection leaks, cache growth, and degradation across many migrations. |"
+            ]
+          },
+          {
+            "label": "declared envelope",
+            "startLine": 114,
+            "endLine": 124,
+            "text": [
+              "Before each demonstration, declare:",
+              "",
+              "- Hosting model, deployment format, SKU, region, and relevant platform limits.",
+              "- User journeys, protocols, and compatibility requirements.",
+              "- Minimum, normal, and peak load, including overlapping deployment demand.",
+              "- Journey latency budgets and maximum supported request/job durations.",
+              "- Dependency capacity, data freshness, ordering, and transaction guarantees.",
+              "- Supported failure conditions and required surviving capacity.",
+              "- Drain, rollback-retention, and recovery budgets.",
+              "",
+              "An unsupported combination or an outage outside the declared envelope must be reported as a limitation, not counted as a successful uninterrupted transition."
+            ]
+          },
+          {
+            "label": "acceptance and evidence",
+            "startLine": 469,
+            "endLine": 533,
+            "text": [
+              "## Acceptance and evidence",
+              "",
+              "### Definition of an interruption",
+              "",
+              "A recommended measurement unit is one declared user journey crossing a deployment or capacity transition. An interruption includes:",
+              "",
+              "- A user-visible error, timeout, or broken required connection.",
+              "- Completion latency beyond the agreed journey budget.",
+              "- Unexpected logout, lost session/form state, or broken navigation/assets.",
+              "- Missing or duplicate business effects.",
+              "- Data freshness, ordering, or consistency outside the declared contract.",
+              "",
+              "Retries or reconnects count as seamless only when correctness, state, and UX remain intact within the original journey budget. Unlimited retries or success-shaped fallbacks must not conceal failures.",
+              "",
+              "### Outcome classification",
+              "",
+              "| Outcome | Reporting treatment |",
+              "| --- | --- |",
+              "| Uninterrupted successful transition | Actual intended migration is evidenced and the complete journey passes all acceptance criteria. |",
+              "| Safe abort before exposure | Existing production remains usable, but no completed user migration is claimed; report deployment aborts separately. |",
+              "| Interrupted transition | Count the affected attempted journey as a failure, including failures preceding rollback. |",
+              "| Unverified or unsupported result | Report missing evidence or platform limits explicitly; do not count the result as successful. |",
+              "",
+              "Users remaining entirely on the old deployment do not establish successful migration merely because their requests succeeded. Conversely, failed or uncertain started transitions must not be removed from the denominator.",
+              "",
+              "### Five-nines transition metric",
+              "",
+              "```text",
+              "Uninterrupted-transition success =",
+              "    uninterrupted successful transition journeys",
+              "    / all attempted transition journeys",
+              "",
+              "Target >= 0.99999",
+              "Allowed interruption probability <= 0.00001",
+              "```",
+              "",
+              "Define the event boundary, affected population, observation window, and outcome attribution before running the demonstration. Report by hosting model, cohort, protocol, load, and failure condition as well as in aggregate.",
+              "",
+              "An empty transition sample produces no evidence, not 100% success. Endpoint uptime, request throughput, average latency, and tail percentiles are useful diagnostics but do not replace the journey-based metric.",
+              "",
+              "### Statistical evidence",
+              "",
+              "With zero failures in independent, comparable Bernoulli trials, the one-sided 95% upper bound on interruption probability is:",
+              "",
+              "```text",
+              "p_upper = 1 - 0.05^(1/n)",
+              "",
+              "n >= ceil(ln(0.05) / ln(1 - 0.00001)) = 299572",
+              "```",
+              "",
+              "Thus, approximately 299,572 independent zero-failure transition trials are needed for that illustrative confidence bound. This is not a universal sample-size guarantee: users in one swap can share a correlated failure, and repeated requests from one user are not independent user transitions.",
+              "",
+              "Collect representative evidence across independent rollout events and failure contexts. Analyze correlated outcomes and uncertainty rather than treating a large request count or one successful mass migration as proof of five-nines reliability.",
+              "",
+              "### Demonstration record",
+              "",
+              "For each applicable scenario, record:",
+              "",
+              "- Scenario ID, platform/format, deployment epochs, and operating envelope.",
+              "- Preconditions, trigger, routing changes, and intended affected population.",
+              "- Client-observed journey outcomes and end-to-end tier/version evidence.",
+              "- Capacity, readiness, active-work, data-correctness, and latency observations.",
+              "- Injected failures, recovery actions, safe aborts, interruptions, and unknown outcomes.",
+              "- Effective routing and work/state ownership after rollback or retirement.",
+              "- Evidence supporting the conclusion, plus unresolved limits."
+            ]
+          }
+        ]
+      },
+      "canonical": {
+        "fullPath": "evidence\\raw\\source\\README.canonical.raw.gz",
+        "selectedPath": "evidence\\raw\\source\\README.canonical.selected.snapshot",
+        "sha256": "852a82420f3b17a41c6aa56ae32fc1ba37829181654bcd6fa32fd00e88310519",
+        "byteLength": 45719,
+        "crlfCount": 0,
+        "selectionSha256": "75a10cb411d9f53d2a795ce624759642e7e948a1427a61733b749d43655b9d04",
+        "slices": [
+          {
+            "label": "S145",
+            "startLine": 427,
+            "endLine": 427,
+            "text": [
+              "| S145 | **Repeated transitions and soak:** Detect memory leaks, connection leaks, cache growth, and degradation across many migrations. |"
+            ]
+          },
+          {
+            "label": "declared envelope",
+            "startLine": 114,
+            "endLine": 124,
+            "text": [
+              "Before each demonstration, declare:",
+              "",
+              "- Hosting model, deployment format, SKU, region, and relevant platform limits.",
+              "- User journeys, protocols, and compatibility requirements.",
+              "- Minimum, normal, and peak load, including overlapping deployment demand.",
+              "- Journey latency budgets and maximum supported request/job durations.",
+              "- Dependency capacity, data freshness, ordering, and transaction guarantees.",
+              "- Supported failure conditions and required surviving capacity.",
+              "- Drain, rollback-retention, and recovery budgets.",
+              "",
+              "An unsupported combination or an outage outside the declared envelope must be reported as a limitation, not counted as a successful uninterrupted transition."
+            ]
+          },
+          {
+            "label": "acceptance and evidence",
+            "startLine": 469,
+            "endLine": 533,
+            "text": [
+              "## Acceptance and evidence",
+              "",
+              "### Definition of an interruption",
+              "",
+              "A recommended measurement unit is one declared user journey crossing a deployment or capacity transition. An interruption includes:",
+              "",
+              "- A user-visible error, timeout, or broken required connection.",
+              "- Completion latency beyond the agreed journey budget.",
+              "- Unexpected logout, lost session/form state, or broken navigation/assets.",
+              "- Missing or duplicate business effects.",
+              "- Data freshness, ordering, or consistency outside the declared contract.",
+              "",
+              "Retries or reconnects count as seamless only when correctness, state, and UX remain intact within the original journey budget. Unlimited retries or success-shaped fallbacks must not conceal failures.",
+              "",
+              "### Outcome classification",
+              "",
+              "| Outcome | Reporting treatment |",
+              "| --- | --- |",
+              "| Uninterrupted successful transition | Actual intended migration is evidenced and the complete journey passes all acceptance criteria. |",
+              "| Safe abort before exposure | Existing production remains usable, but no completed user migration is claimed; report deployment aborts separately. |",
+              "| Interrupted transition | Count the affected attempted journey as a failure, including failures preceding rollback. |",
+              "| Unverified or unsupported result | Report missing evidence or platform limits explicitly; do not count the result as successful. |",
+              "",
+              "Users remaining entirely on the old deployment do not establish successful migration merely because their requests succeeded. Conversely, failed or uncertain started transitions must not be removed from the denominator.",
+              "",
+              "### Five-nines transition metric",
+              "",
+              "```text",
+              "Uninterrupted-transition success =",
+              "    uninterrupted successful transition journeys",
+              "    / all attempted transition journeys",
+              "",
+              "Target >= 0.99999",
+              "Allowed interruption probability <= 0.00001",
+              "```",
+              "",
+              "Define the event boundary, affected population, observation window, and outcome attribution before running the demonstration. Report by hosting model, cohort, protocol, load, and failure condition as well as in aggregate.",
+              "",
+              "An empty transition sample produces no evidence, not 100% success. Endpoint uptime, request throughput, average latency, and tail percentiles are useful diagnostics but do not replace the journey-based metric.",
+              "",
+              "### Statistical evidence",
+              "",
+              "With zero failures in independent, comparable Bernoulli trials, the one-sided 95% upper bound on interruption probability is:",
+              "",
+              "```text",
+              "p_upper = 1 - 0.05^(1/n)",
+              "",
+              "n >= ceil(ln(0.05) / ln(1 - 0.00001)) = 299572",
+              "```",
+              "",
+              "Thus, approximately 299,572 independent zero-failure transition trials are needed for that illustrative confidence bound. This is not a universal sample-size guarantee: users in one swap can share a correlated failure, and repeated requests from one user are not independent user transitions.",
+              "",
+              "Collect representative evidence across independent rollout events and failure contexts. Analyze correlated outcomes and uncertainty rather than treating a large request count or one successful mass migration as proof of five-nines reliability.",
+              "",
+              "### Demonstration record",
+              "",
+              "For each applicable scenario, record:",
+              "",
+              "- Scenario ID, platform/format, deployment epochs, and operating envelope.",
+              "- Preconditions, trigger, routing changes, and intended affected population.",
+              "- Client-observed journey outcomes and end-to-end tier/version evidence.",
+              "- Capacity, readiness, active-work, data-correctness, and latency observations.",
+              "- Injected failures, recovery actions, safe aborts, interruptions, and unknown outcomes.",
+              "- Effective routing and work/state ownership after rollback or retirement.",
+              "- Evidence supporting the conclusion, plus unresolved limits."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "file": ".docs\\wiki\\backlog.md",
+      "canonicalPath": ".docs/wiki/backlog.md",
+      "name": "backlog",
+      "working": {
+        "fullPath": "evidence\\raw\\source\\backlog.working.raw.gz",
+        "selectedPath": "evidence\\raw\\source\\backlog.working.selected.snapshot",
+        "sha256": "40b4d8e2ab4774f47de029f97dd8ff4e267d9412292c3c47f72726b002831418",
+        "byteLength": 64336,
+        "crlfCount": 483,
+        "selectionSha256": "2369c47ec83f1891e47296154b2e459c09fa661e871d3d1fb111db0f406aa829",
+        "slices": [
+          {
+            "label": "D-S145",
+            "startLine": 397,
+            "endLine": 397,
+            "text": [
+              "| D-S145 | P1 | Add resumable swap/rollback soak runs with resource and correctness trends. | Memory/connections/cache growth and cumulative failures remain attributable across cycles; cancellation preserves evidence. | D-S001 |"
+            ]
+          },
+          {
+            "label": "source parent prerequisites",
+            "startLine": 110,
+            "endLine": 110,
+            "text": [
+              "- Every D-S item additionally requires **BASE = H011 + P005 + HOST**. Its Dependencies cell lists prerequisites beyond BASE."
+            ]
+          }
+        ]
+      },
+      "canonical": {
+        "fullPath": "evidence\\raw\\source\\backlog.canonical.raw.gz",
+        "selectedPath": "evidence\\raw\\source\\backlog.canonical.selected.snapshot",
+        "sha256": "9a414030b4ef63b5d90a0f6d89e1cbc30b0300bf194ad87b9e7e3d2912b59a65",
+        "byteLength": 63853,
+        "crlfCount": 0,
+        "selectionSha256": "e67f1ddbff79f3e94e86603e315fcab8326680bf22cbfff979150ea946f00d55",
+        "slices": [
+          {
+            "label": "D-S145",
+            "startLine": 397,
+            "endLine": 397,
+            "text": [
+              "| D-S145 | P1 | Add resumable swap/rollback soak runs with resource and correctness trends. | Memory/connections/cache growth and cumulative failures remain attributable across cycles; cancellation preserves evidence. | D-S001 |"
+            ]
+          },
+          {
+            "label": "source parent prerequisites",
+            "startLine": 110,
+            "endLine": 110,
+            "text": [
+              "- Every D-S item additionally requires **BASE = H011 + P005 + HOST**. Its Dependencies cell lists prerequisites beyond BASE."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "file": ".docs\\wiki\\kanban.md",
+      "canonicalPath": ".docs/wiki/kanban.md",
+      "name": "kanban",
+      "working": {
+        "fullPath": "evidence\\raw\\source\\kanban.working.raw.gz",
+        "selectedPath": "evidence\\raw\\source\\kanban.working.selected.snapshot",
+        "sha256": "fe7ed151694f7771f2c8a567b3fbcc2d541254a9d851901241e66d274a8da36d",
+        "byteLength": 97258,
+        "crlfCount": 766,
+        "selectionSha256": "d23cc6306341f10cc2a376e02efc511a1ac8143acddf043984b53d251e83168e",
+        "slices": [
+          {
+            "label": "A-S145",
+            "startLine": 702,
+            "endLine": 702,
+            "text": [
+              "| A-S145 | D-S145 | S | Repeat transition cycles; detect cumulative connection/memory/cache growth and retained failures. | SOURCE |"
+            ]
+          },
+          {
+            "label": "B-S145",
+            "startLine": 703,
+            "endLine": 703,
+            "text": [
+              "| B-S145 | D-S145 | S | Conduct one resumable bounded soak segment; verify trends and preserved per-cycle outcomes. | CORE, DATA, HOST |"
+            ]
+          },
+          {
+            "label": "portable contract",
+            "startLine": 164,
+            "endLine": 170,
+            "text": [
+              "### Portable A-card lesson contract",
+              "",
+              "An A card delivers a standalone, browser-openable lesson bundle with a small interactive exercise: choose an action or condition, inspect a synthetic trace, and check the expected outcome. Use standard HTML/browser behavior so an approved application framework or Azure subscription is not needed to begin.",
+              "",
+              "Each bundle declares source ID, objective, preconditions, actions, synthetic input/trace, expected assertions, and limits. It prominently says **Training rehearsal - synthetic data - not a live Azure result**, makes no management calls, contains no credentials, and supports keyboard operation.",
+              "",
+              "Each lesson must add a worked, testable exercise rather than copying the backlog sentence. Keep it portable for later mounting by C041. The native implementation and evidence remain a separate B card, and the source demo is not complete until both required slices and its original acceptance gates pass."
+            ]
+          },
+          {
+            "label": "BDD workflow",
+            "startLine": 153,
+            "endLine": 153,
+            "text": [
+              "Implementation order is BDD specification, genuine behavioral TDD red, the IaC step (or an explicit N/A for a resource-free lesson), implementation/refactoring, green tests and actual browser checks, scoped tagged publication, and parent-owned empirical acceptance. A worker cannot award its own Done credit. Subdivision preserves the original `kanoUnit`; partial work does not manufacture extra value."
+            ]
+          },
+          {
+            "label": "fixed packet",
+            "startLine": 739,
+            "endLine": 739,
+            "text": [
+              "Packet membership is fixed before admission. This register overrides default membership for its named cards; every other A/B card belongs to SC-Snnn, and every other capability card belongs to its first listed source parent. A card has one packet, not duplicate packet credits."
+            ]
+          },
+          {
+            "label": "original parent",
+            "startLine": 745,
+            "endLine": 745,
+            "text": [
+              "- Every one of the 150 D-S parents has exactly two required children: A-Snnn and B-Snnn."
+            ]
+          }
+        ]
+      },
+      "canonical": {
+        "fullPath": "evidence\\raw\\source\\kanban.canonical.raw.gz",
+        "selectedPath": "evidence\\raw\\source\\kanban.canonical.selected.snapshot",
+        "sha256": "55b650e832a74dac301caf88c945c022b2e6a3d6237598682ef6022837d58226",
+        "byteLength": 96492,
+        "crlfCount": 0,
+        "selectionSha256": "a30d0fc5e84cfdcb7530df54907edd2395f0ed21fff7c026d7bd2cf718ca8028",
+        "slices": [
+          {
+            "label": "A-S145",
+            "startLine": 702,
+            "endLine": 702,
+            "text": [
+              "| A-S145 | D-S145 | S | Repeat transition cycles; detect cumulative connection/memory/cache growth and retained failures. | SOURCE |"
+            ]
+          },
+          {
+            "label": "B-S145",
+            "startLine": 703,
+            "endLine": 703,
+            "text": [
+              "| B-S145 | D-S145 | S | Conduct one resumable bounded soak segment; verify trends and preserved per-cycle outcomes. | CORE, DATA, HOST |"
+            ]
+          },
+          {
+            "label": "portable contract",
+            "startLine": 164,
+            "endLine": 170,
+            "text": [
+              "### Portable A-card lesson contract",
+              "",
+              "An A card delivers a standalone, browser-openable lesson bundle with a small interactive exercise: choose an action or condition, inspect a synthetic trace, and check the expected outcome. Use standard HTML/browser behavior so an approved application framework or Azure subscription is not needed to begin.",
+              "",
+              "Each bundle declares source ID, objective, preconditions, actions, synthetic input/trace, expected assertions, and limits. It prominently says **Training rehearsal - synthetic data - not a live Azure result**, makes no management calls, contains no credentials, and supports keyboard operation.",
+              "",
+              "Each lesson must add a worked, testable exercise rather than copying the backlog sentence. Keep it portable for later mounting by C041. The native implementation and evidence remain a separate B card, and the source demo is not complete until both required slices and its original acceptance gates pass."
+            ]
+          },
+          {
+            "label": "BDD workflow",
+            "startLine": 153,
+            "endLine": 153,
+            "text": [
+              "Implementation order is BDD specification, genuine behavioral TDD red, the IaC step (or an explicit N/A for a resource-free lesson), implementation/refactoring, green tests and actual browser checks, scoped tagged publication, and parent-owned empirical acceptance. A worker cannot award its own Done credit. Subdivision preserves the original `kanoUnit`; partial work does not manufacture extra value."
+            ]
+          },
+          {
+            "label": "fixed packet",
+            "startLine": 739,
+            "endLine": 739,
+            "text": [
+              "Packet membership is fixed before admission. This register overrides default membership for its named cards; every other A/B card belongs to SC-Snnn, and every other capability card belongs to its first listed source parent. A card has one packet, not duplicate packet credits."
+            ]
+          },
+          {
+            "label": "original parent",
+            "startLine": 745,
+            "endLine": 745,
+            "text": [
+              "- Every one of the 150 D-S parents has exactly two required children: A-Snnn and B-Snnn."
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "inventory": {
+    "file": "evidence\\raw\\source\\inventory.raw.snapshot",
+    "sha256": "5d3e2d9e8cbdc8ff1688765495f1e0909a23f864240b86ed30a68d72d225f063",
+    "cards": [
+      {
+        "technicalEntryGate": "SOURCE",
+        "kano": "S",
+        "priority": "P1",
+        "kanoUnit": "A-S145",
+        "deliver": "Repeat transition cycles; detect cumulative connection/memory/cache growth and retained failures.",
+        "packet": "SC-S145",
+        "id": "A-S145",
+        "parents": [
+          "D-S145"
+        ]
+      },
+      {
+        "technicalEntryGate": "CORE, DATA, HOST",
+        "kano": "S",
+        "priority": "P1",
+        "kanoUnit": "B-S145",
+        "deliver": "Conduct one resumable bounded soak segment; verify trends and preserved per-cycle outcomes.",
+        "packet": "SC-S145",
+        "id": "B-S145",
+        "parents": [
+          "D-S145"
+        ]
+      }
+    ],
+    "source": ".docs/wiki/kanban.md"
+  },
+  "limit": "Working raw bytes, including CRLF, and canonical Git bytes are independently preserved. Synthetic lesson is not native proof or source-parent completion."
+}

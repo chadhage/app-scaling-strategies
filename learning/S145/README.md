@@ -1,0 +1,165 @@
+# S145 — Repeated transition and soak rehearsal
+
+**Training rehearsal - synthetic data - not a live Azure result**
+
+Open [index.html](index.html) directly in a browser. This standalone A-S145
+lesson owns only `learning\S145`. The frozen original unit is **S / P1 /
+SC-S145 / SOURCE**, mapped to S145 and D-S145. No server, framework, account,
+subscription, package installation or management interface is needed.
+
+Every cycle, version, connection, memory/cache value, resource, load, metric,
+budget, journey, failure and recovery is **fixed fictional teaching DATA ONLY**.
+The lesson does not inspect or manipulate live processes, memory, connections,
+caches, storage, networks, load generators, cloud resources or user data.
+
+## Conduct and inspect
+
+1. Select **Growth exactly at all limits**, then **Begin declared sequence**.
+   Inspect the original fleet baseline: memory 100 fictional MiB, 8 connections,
+   20 cache entries. Every measurement uses the same fictional scope/load and
+   post-drain sample boundary.
+2. Conduct c1 swap v1→v2, c2 rollback v2→v1, c3 swap v1→v2 and c4 rollback v2→v1.
+   Each declares four complete transition journeys with preserved correctness,
+   state and exactly-once effects. Before the full sequence, **Measure** is
+   UNKNOWN: a successful prefix is not a complete soak.
+3. Inspect and measure equality: final samples **108 / 12 / 28**, original-baseline
+   growth **8 / 4 / 8**, 16 uninterrupted journeys, and fictional latency
+   **150 ms == 150 ms**. The complete trace passes the lesson-specific limits.
+4. Archive/reset, then conduct memory-, connection- or cache-growth traces.
+   Small increments **3 / 2 / 3** do not individually exceed their respective
+   limits; cumulative growth **12 / 8 / 12** does. All 16 journeys can still
+   succeed while the resource verdict fails.
+5. **Earlier growth breach** has one-unit overflows **9 / 5 / 9** in c1, followed
+   by recovery to the original values. Latest growth is zero; the original c1
+   breaches and whole-sequence FAIL remain.
+6. **151 ms interruption** retains original J145-c1-4 as interrupted and records
+   its separate c2 recovery. Counts stay **16 attempted, 15 uninterrupted,
+   1 interrupted**. **Unknown original journey** retains **15 uninterrupted,
+   1 unknown** even after later usability.
+7. Try missing c2 cycle evidence, missing c2 memory, or missing original memory
+   baseline. Missing evidence stays UNKNOWN and unavailable cumulative growth is
+   `null`; unrelated successful throughput supplies no memory evidence. The
+   mixed trace remains FAIL with its unknown metric still displayed.
+8. Cancel after c1, measure, and resume the same sequence. Baseline, c1, declared
+   c2–c4, cancellation and earlier measurements are retained. Archive/reset keeps
+   the full old attempt; a new PASS cannot erase session FAIL or UNKNOWN.
+
+Controls use native Tab / Shift+Tab, select arrows, Enter / Space and visible
+focus. Invalid fixed choices focus the labelled input; guarded actions focus an
+alert and do not mutate state. Reset clears errors, restores the first trace and
+returns focus. No control shadows native `form.reset()`. Tables scroll at narrow
+widths; expandable records expose full journals and output.
+
+## Exact cumulative output contract
+
+`assessment.cycles` always retains four declared IDs. `conducted` records fixed
+attempts, `evidenced` requires observed receipts, `missing` includes unobserved
+or unconducted cycles, and `sequenceComplete` does not imply all evidence exists.
+
+Each `resources.<metric>` record contains:
+
+```text
+unit, originalBaseline, limitGrowth,
+samples[{cycleId, value, growthFromOriginal, incrementFromPrevious}],
+latestValue, latestGrowth, maxKnownGrowth, cumulativeGrowth,
+missingCycleIds, baselineMissing, breaches[{cycleId, growth, limit}], verdict
+```
+
+Growth is `sample - originalBaseline`; cumulative growth is
+`max(0, all declared sample growth)`, **not** the newest cycle's increment.
+An unavailable baseline or required sample makes `cumulativeGrowth: null`.
+Known maximum growth and attributable breaches remain visible. Increment across
+a missing preceding sample is null, never interpolated.
+
+- Complete, known maximum **≤ limit**: PASS, including equality.
+- Any known growth **> limit**: FAIL, even after recovery or with other missing data.
+- Otherwise unavailable baseline/sample/cycle: UNKNOWN, never zero or inferred PASS.
+
+`journeys` records attempted, uninterrupted, interrupted, unknown, notAttempted,
+successFraction, original budgetMs, failedIds, unknownIds and separate recoveries.
+Unknown attempted outcomes stay in the denominator; unattempted cycles are not
+invented as journeys. Empty attempted evidence has `successFraction: null`.
+
+Whole-sequence FAIL takes precedence over UNKNOWN without deleting it. PASS
+requires complete sequence, resource evidence and all original journeys.
+`session` aggregates **all retained attempts**, not only the latest success.
+Earlier partial measurement UNKNOWNs remain inspectable; later real-in-fixture
+completion can resolve pending coverage, but cannot replace an immutable unknown
+cycle/original outcome. Missing memory cannot be diagnosed from throughput.
+
+Twelve attempts, four cycles and six journal actions per attempt bound the
+lesson. Cancellation/resumption is allowed once per attempt. Identical
+revision measurements are not duplicated. No earlier record is truncated.
+Reload starts a fresh in-memory teaching session; there is no durable-soak or
+live-resource cleanup claim.
+
+## Verified workflow and read-only replay
+
+The exact S145/README row, D-S145 acceptance/dependency, A/B rows, portable
+contract and private inventory were read **before** lesson design. See
+[source evidence](evidence/source.json): original working CRLF bytes and
+canonical Git bytes are independently frozen in raw gzip/snapshot files.
+Narrow [attributes](.gitattributes) protect raw evidence from text conversion.
+An unqualified Windows `hash-object --stdin-paths` probe misapplied attribute
+paths without changing files; its explicitly identified raw reproduction is
+retained. Independent canonical checks pass bytes through `--stdin` with an
+explicit Git logical attribute path. Filesystem reads still use Windows paths.
+Raw byte preservation and canonical Git filtering are checked independently.
+
+[BDD](soak.feature) preceded the loadable stub's genuine assertion
+`UNKNOWN !== PASS`, then explicit resource-free **IaC N/A**, implementation,
+refactoring and focused GREEN. Original RED, the test-message mismatch in the
+first GREEN attempt and every raw capture remain outside test autodiscovery.
+The first browser attempt exposed a closed-details `innerText` lookup; its raw
+failure remains preserved. The corrected driver genuinely opens the inspection
+widget before reading the rendered output.
+The earlier root-scope Playwright lookup failed; its explicitly identified raw
+reproduction is a tooling limit, **not** a behavioral RED. The published helper
+resolves its own installed offline module scope without installation/fallback.
+
+From the repository root, normal verification is **read-only**:
+
+```powershell
+Remove-Item Env:CAPTURE_BROWSER_EVIDENCE -ErrorAction SilentlyContinue
+node .\learning\S145\record.cjs verify
+```
+
+It reruns the focused model/integrity suites and actual isolated browser checks,
+requires retained successful proof/current input hashes, and checks all owned
+bytes before/after. It creates no capture, report, snapshot or seal.
+
+Only deliberate capture uses the exact opt-in:
+
+```powershell
+$env:CAPTURE_BROWSER_EVIDENCE = '1'
+node .\learning\S145\record.cjs browser
+Remove-Item Env:CAPTURE_BROWSER_EVIDENCE
+```
+
+Every capture has a unique raw directory; failures are retained and never
+replace successful proof. Changed scripts require new deliberate capture and
+an explicit producer re-seal, not rewriting evidence during normal verification.
+
+The actual DOM/keyboard/error/reset/positive/negative/unknown/CSP checks use
+published `testing\browser\isolated.cjs`, SHA256
+`86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055`,
+`openIsolatedLesson` and an **awaited finally close**. First-party Playwright
+**1.56.1** cached distribution digests, Microsoft-signed Edge **156.0.4314.50**
+and Node **22.23.4** are pinned local tooling. No downloads or unsafe flags.
+This does not qualify production Node24, Azure, unattended bounded lifecycle
+recovery, or the inactive recovery prototype.
+
+## Honest native/source-parent remainder
+
+[remainder.json](remainder.json) retains B-S145's original CORE/DATA/HOST gates,
+D-S001 dependency and BASE/shared acceptance. The outstanding native segment
+must be approved, bounded and resumable, preserve a real comparable baseline and
+every cycle/failure/unknown, and collect actual resource and complete-journey
+evidence. Native targets, ownership, permission, capacity/quota, durable workflow,
+cost and execution approvals remain missing. No cloud, IaC, scaffold, identity,
+credential, deployment or spend work is authorized here.
+
+Fictional growth is **not a real memory-leak causal finding**, native migration
+proof, source-parent completion or five-nines certification. Only the parent
+independently accepts this original A-S145 once. Tests, repairs, captures,
+refinements and retries earn **zero extra credits**.

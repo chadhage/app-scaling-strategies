@@ -1,0 +1,298 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const zlib = require('node:zlib');
+const { spawnSync } = require('node:child_process');
+
+const root = path.resolve(__dirname, '..', '..');
+const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const relative = (file) => path.relative(__dirname, file).split(path.sep).join('\\');
+const read = (file) => JSON.parse(fs.readFileSync(path.join(__dirname, file), 'utf8'));
+function write(file, value) {
+  const target = path.join(__dirname, file);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, Buffer.isBuffer(value) ? value : `${JSON.stringify(value, null, 2)}\n`);
+}
+function listFiles(directory = __dirname) {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const file = path.join(directory, entry.name);
+    if (entry.isSymbolicLink()) throw new Error('Lesson evidence cannot contain symbolic links.');
+    return entry.isDirectory() ? listFiles(file) : [file];
+  }).sort();
+}
+function unique(name) {
+  const prefix = `evidence\\raw\\${name}`;
+  let directory = prefix;
+  for (let number = 2; fs.existsSync(path.join(__dirname, directory)); number++) {
+    directory = `${prefix}-${String(number).padStart(2, '0')}`;
+  }
+  fs.mkdirSync(path.join(__dirname, directory), { recursive: true });
+  return directory;
+}
+function snapshot(files, directory) {
+  return files.map((file) => {
+    const bytes = fs.readFileSync(path.join(__dirname, file));
+    const target = `${directory}\\${file}.snapshot`;
+    write(target, bytes);
+    return { file, snapshot: target, sha256: hash(bytes), byteLength: bytes.length };
+  });
+}
+function git(...args) {
+  const result = spawnSync('git', args, { cwd: root, encoding: null, windowsHide: true });
+  if (result.status !== 0) throw new Error(`Read-only Git failed: ${result.stderr}`);
+  return result.stdout;
+}
+function workflow(phase, detail) {
+  const file = 'evidence\\workflow.json';
+  const data = fs.existsSync(path.join(__dirname, file)) ? read(file) : {
+    cardId: 'A-S145', kanoUnit: 'A-S145', kano: 'S', priority: 'P1', packet: 'SC-S145',
+    technicalEntryGate: 'SOURCE', extraCredits: 0, events: [],
+  };
+  data.events.push({ phase, recordedAtUtc: new Date().toISOString(), ...detail });
+  write(file, data);
+}
+function selectBytes(buffer, definitions) {
+  const lines = [];
+  let start = 0;
+  for (let index = 0; index < buffer.length; index++) {
+    if (buffer[index] === 10) {
+      lines.push(buffer.subarray(start, index + 1));
+      start = index + 1;
+    }
+  }
+  if (start < buffer.length) lines.push(buffer.subarray(start));
+  const text = lines.map((line) => line.toString('utf8').replace(/\r?\n$/, ''));
+  const slices = definitions.map(({ label, first, until }) => {
+    const begin = text.findIndex((line) => line.startsWith(first));
+    if (begin < 0) throw new Error(`Missing exact source ${label}`);
+    let end = begin;
+    if (until) {
+      end = text.findIndex((line, index) => index > begin && line.startsWith(until)) - 1;
+      if (end < begin) throw new Error(`Missing exact source boundary ${label}`);
+      while (end > begin && text[end] === '') end--;
+    }
+    const bytes = Buffer.concat(lines.slice(begin, end + 1));
+    return { label, startLine: begin + 1, endLine: end + 1, text: text.slice(begin, end + 1), bytes };
+  });
+  return { bytes: Buffer.concat(slices.map((slice) => slice.bytes)), slices };
+}
+const definitions = [
+  {
+    file: 'README.md', name: 'README', selectors: [
+      { label: 'S145', first: '| S145 |' },
+      { label: 'declared envelope', first: 'Before each demonstration, declare:', until: '## Key findings' },
+      { label: 'acceptance and evidence', first: '## Acceptance and evidence', until: '## Recommended demonstration sequence' },
+    ],
+  },
+  {
+    file: '.docs\\wiki\\backlog.md', name: 'backlog', selectors: [
+      { label: 'D-S145', first: '| D-S145 |' },
+      { label: 'source parent prerequisites', first: '- Every D-S item additionally requires' },
+    ],
+  },
+  {
+    file: '.docs\\wiki\\kanban.md', name: 'kanban', selectors: [
+      { label: 'A-S145', first: '| A-S145 |' },
+      { label: 'B-S145', first: '| B-S145 |' },
+      { label: 'portable contract', first: '### Portable A-card lesson contract', until: '## Concurrent pull' },
+      { label: 'BDD workflow', first: 'Implementation order is BDD specification,' },
+      { label: 'fixed packet', first: 'Packet membership is fixed before admission.' },
+      { label: 'original parent', first: '- Every one of the 150 D-S parents' },
+    ],
+  },
+];
+function source() {
+  if (fs.existsSync(path.join(__dirname, 'evidence', 'source.json'))) {
+    throw new Error('Frozen source is write-once; do not replace original evidence.');
+  }
+  const directory = unique('source');
+  const commit = git('rev-parse', 'HEAD').toString('utf8').trim();
+  const sources = definitions.map((definition) => {
+    const working = fs.readFileSync(path.join(root, definition.file));
+    const canonicalPath = definition.file.split('\\').join('/');
+    const canonical = git('show', `${commit}:${canonicalPath}`);
+    const variants = {};
+    for (const [variant, bytes] of [['working', working], ['canonical', canonical]]) {
+      const selection = selectBytes(bytes, definition.selectors);
+      const fullPath = `${directory}\\${definition.name}.${variant}.raw.gz`;
+      const selectedPath = `${directory}\\${definition.name}.${variant}.selected.snapshot`;
+      write(fullPath, zlib.gzipSync(bytes));
+      write(selectedPath, selection.bytes);
+      variants[variant] = {
+        fullPath, selectedPath, sha256: hash(bytes), byteLength: bytes.length,
+        crlfCount: (bytes.toString('utf8').match(/\r\n/g) || []).length,
+        selectionSha256: hash(selection.bytes),
+        slices: selection.slices.map(({ bytes: sliceBytes, ...slice }) => slice),
+      };
+    }
+    return { file: definition.file, canonicalPath, name: definition.name, ...variants };
+  });
+  const inventoryBytes = fs.readFileSync(path.join(root, '.git', 'kanban-orchestrator', 'inventory.json'));
+  write(`${directory}\\inventory.raw.snapshot`, inventoryBytes);
+  const inventory = JSON.parse(inventoryBytes);
+  const cards = inventory.cards.filter((card) => ['A-S145', 'B-S145'].includes(card.id));
+  write('evidence\\source.json', {
+    cardId: 'A-S145', sourceId: 'S145', parentId: 'D-S145', kanoUnit: 'A-S145',
+    kano: 'S', priority: 'P1', packet: 'SC-S145', technicalEntryGate: 'SOURCE',
+    capturedAtUtc: new Date().toISOString(), canonicalCommit: commit, sources,
+    inventory: { file: `${directory}\\inventory.raw.snapshot`, sha256: hash(inventoryBytes), cards, source: inventory.source },
+    limit: 'Working raw bytes, including CRLF, and canonical Git bytes are independently preserved. Synthetic lesson is not native proof or source-parent completion.',
+  });
+  workflow('source-read-and-frozen', { canonicalCommit: commit, exactAcceptanceRead: true });
+}
+function captureRun(name, files, expected, inputs) {
+  const directory = unique(name);
+  const snapshots = snapshot(inputs, directory);
+  const args = ['--test', '--test-reporter=tap', ...files.map((file) => path.join(__dirname, file))];
+  const startedAtUtc = new Date().toISOString();
+  const result = spawnSync(process.execPath, args, {
+    cwd: root, encoding: null, windowsHide: true, timeout: 180000, maxBuffer: 8 * 1024 * 1024,
+    env: process.env,
+  });
+  const stdout = result.stdout || Buffer.alloc(0);
+  const stderr = result.stderr || Buffer.alloc(0);
+  write(`${directory}\\stdout.tap`, stdout);
+  write(`${directory}\\stderr.txt`, stderr);
+  const proof = `${directory}\\run.json`;
+  write(proof, {
+    command: [process.execPath, ...args], startedAtUtc, completedAtUtc: new Date().toISOString(),
+    node: process.version, exitCode: result.status, signal: result.signal, error: result.error?.message || null,
+    expected, inputs: snapshots,
+    stdout: { file: `${directory}\\stdout.tap`, sha256: hash(stdout), byteLength: stdout.length },
+    stderr: { file: `${directory}\\stderr.txt`, sha256: hash(stderr), byteLength: stderr.length },
+  });
+  process.stdout.write(stdout);
+  process.stderr.write(stderr);
+  if (expected === 'assertion-red') {
+    if (result.status !== 1 || !stdout.includes('ERR_ASSERTION') || !stdout.includes('ok 1 - loadable contract')
+      || /MODULE_NOT_FOUND|SyntaxError|ReferenceError/.test(`${stdout}${stderr}`)) {
+      throw new Error('A loadable behavioral assertion RED is required; failed attempt retained.');
+    }
+  } else if (result.status !== 0 || result.error) {
+    throw new Error(`${name} failed; immutable raw attempt retained.`);
+  }
+  workflow(name, { exitCode: result.status, proof });
+}
+function syntax() {
+  const directory = unique('syntax');
+  const files = fs.readdirSync(__dirname).filter((file) => /\.(js|cjs)$/.test(file)).sort();
+  const inputs = snapshot(files, directory);
+  const checks = files.map((file) => {
+    const result = spawnSync(process.execPath, ['--check', path.join(__dirname, file)], {
+      cwd: root, encoding: 'utf8', windowsHide: true,
+    });
+    return { file, sha256: hash(fs.readFileSync(path.join(__dirname, file))), exitCode: result.status, stdout: result.stdout, stderr: result.stderr };
+  });
+  const report = { node: process.version, inputs, checks, proof: `${directory}\\report.json`, recordedAtUtc: new Date().toISOString() };
+  write(report.proof, report);
+  write('evidence\\syntax.json', report);
+  if (checks.some((check) => check.exitCode !== 0)) throw new Error('Syntax failure retained.');
+  workflow('syntax-green', { proof: report.proof });
+}
+function canonicalize() {
+  const directory = unique('canonicalize');
+  const changed = [];
+  for (const file of listFiles().filter((file) => !relative(file).startsWith('evidence\\'))) {
+    const before = fs.readFileSync(file);
+    if (!before.includes('\r\n')) continue;
+    const name = relative(file);
+    const after = Buffer.from(before.toString('utf8').replace(/\r\n/g, '\n'));
+    const rawPath = `${directory}\\${name}.snapshot`;
+    write(rawPath, before);
+    fs.writeFileSync(file, after);
+    changed.push({ file: name, rawPath, rawSha256: hash(before), canonicalSha256: hash(after) });
+  }
+  write(`${directory}\\report.json`, { changed, action: 'Explicit owned text LF normalization before final captures; all raw bytes remain untouched.' });
+}
+function tooling() {
+  const directory = unique('tooling');
+  const inputs = snapshot(['record.cjs'], directory);
+  const command = "$item=Get-Item -LiteralPath 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'; "
+    + "$signature=Get-AuthenticodeSignature -LiteralPath $item.FullName; "
+    + "[ordered]@{path=$item.FullName;signatureStatus=$signature.Status.ToString();signer=$signature.SignerCertificate.Subject;productVersion=$item.VersionInfo.ProductVersion}|ConvertTo-Json -Compress";
+  const result = spawnSync('pwsh.exe', ['-NoProfile', '-NonInteractive', '-Command', command], {
+    cwd: root, encoding: null, windowsHide: true, timeout: 30000,
+  });
+  write(`${directory}\\stdout.txt`, result.stdout || Buffer.alloc(0));
+  write(`${directory}\\stderr.txt`, result.stderr || Buffer.alloc(0));
+  write(`${directory}\\run.json`, {
+    command: ['pwsh.exe', '-NoProfile', '-NonInteractive', '-Command', command],
+    exitCode: result.status, error: result.error?.message || null, inputs,
+  });
+  if (result.status !== 0) throw new Error('Approved signed Edge preflight failed; raw attempt retained.');
+  const browser = JSON.parse(result.stdout);
+  const pins = {
+    playwright: 'sha512-aFi5B0WovBHTEvpM3DzXTUaeN6eN0qWnTkKx4NQaH4Wvcmc153PdaY2UBdSYKaGYw+UyWXSVyxDUg5DoPEttjw==',
+    'playwright-core': 'sha512-hutraynyn31F+Bifme+Ps9Vq59hKuUCz7H1kDOcBs+2oGguKkWTU50bBWrtz34OUWmIwpBTWDxaRPXrIXkgvmQ==',
+  };
+  const packages = Object.entries(pins).map(([name, integrity]) => {
+    const digest = Buffer.from(integrity.slice(7), 'base64').toString('hex');
+    const cached = path.join(root, '.git', 'kanban-orchestrator', 'npm-cache', '_cacache', 'content-v2', 'sha512',
+      digest.slice(0, 2), digest.slice(2, 4), digest.slice(4));
+    const bytes = fs.readFileSync(cached);
+    const actual = `sha512-${crypto.createHash('sha512').update(bytes).digest('base64')}`;
+    const version = readPackage(name).version;
+    if (version !== '1.56.1' || actual !== integrity) throw new Error('Existing offline public package does not match the approved digest.');
+    return { name, version, integrity, cachedDigestVerified: true, registrySignatureIndependentlyVerified: false };
+  });
+  const helper = 'testing\\browser\\isolated.cjs';
+  const helperSha256 = hash(fs.readFileSync(path.join(root, helper)));
+  if (browser.signatureStatus !== 'Valid' || browser.productVersion !== '156.0.4314.50'
+    || !browser.signer.includes('Microsoft Corporation') || process.version !== 'v22.23.4'
+    || helperSha256 !== '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055') {
+    throw new Error('Installed browser, Node or helper is outside the approved offline teaching pair.');
+  }
+  write('evidence\\tooling.json', {
+    node: process.version, browser, packages, helper: { file: helper, sha256: helperSha256 },
+    proof: `${directory}\\run.json`, limits: 'Local tooling only; no production Node24, native Azure, source-parent or broad lifecycle recovery qualification.',
+  });
+}
+function readPackage(name) {
+  return JSON.parse(fs.readFileSync(path.join(root, 'testing', 'browser', 'node_modules', name, 'package.json')));
+}
+function seal() {
+  const files = listFiles().filter((file) => relative(file) !== 'evidence\\integrity.json');
+  write('evidence\\integrity.json', {
+    cardId: 'A-S145', recordedAtUtc: new Date().toISOString(), rawByteAttributes: 'evidence/raw/** -text -diff',
+    files: files.map((file) => ({ file: relative(file), sha256: hash(fs.readFileSync(file)), byteLength: fs.statSync(file).size })),
+  });
+}
+function main(action) {
+  if (action === 'source') return source();
+  if (action === 'canonicalize') return canonicalize();
+  if (action === 'red') return captureRun('bdd-loadable-assertion-red', ['model.test.cjs'], 'assertion-red', ['soak.feature', 'model.js', 'model.test.cjs']);
+  if (action === 'iac-na') return workflow('iac-not-applicable', {
+    reason: 'Fixed fictional teaching DATA ONLY. Resource-free lesson; no live process, storage, network, load generation, cloud, identity, IaC, scaffold, credentials, deployment or spend.',
+  });
+  if (action === 'green') return captureRun('focused-green', ['model.test.cjs'], 'green', ['model.js', 'model.test.cjs', 'theme.js', 'lesson.js', 'index.html', 'style.css']);
+  if (action === 'syntax') return syntax();
+  if (action === 'tooling') return tooling();
+  if (action === 'integrity') return captureRun('integrity-green', ['integrity.test.cjs'], 'green', []);
+  if (action === 'browser') {
+    if (process.env.CAPTURE_BROWSER_EVIDENCE !== '1') throw new Error('Only exact CAPTURE_BROWSER_EVIDENCE=1 permits deliberate raw browser capture.');
+    return captureRun('browser', ['browser.test.cjs'], 'green', ['browser.test.cjs', 'model.js', 'theme.js', 'lesson.js', 'index.html', 'style.css']);
+  }
+  if (action === 'seal') return seal();
+  if (action === 'verify') {
+    if (process.env.CAPTURE_BROWSER_EVIDENCE !== undefined) throw new Error('Normal verification requires the capture variable to be absent.');
+    const before = listFiles().map((file) => [relative(file), hash(fs.readFileSync(file))]);
+    const result = spawnSync(process.execPath, ['--test', '--test-reporter=tap',
+      path.join(__dirname, 'model.test.cjs'), path.join(__dirname, 'integrity.test.cjs'), path.join(__dirname, 'browser.test.cjs')], {
+      cwd: root, encoding: null, windowsHide: true, timeout: 240000, maxBuffer: 8 * 1024 * 1024,
+    });
+    process.stdout.write(result.stdout || '');
+    process.stderr.write(result.stderr || '');
+    const after = listFiles().map((file) => [relative(file), hash(fs.readFileSync(file))]);
+    if (JSON.stringify(before) !== JSON.stringify(after)) throw new Error('Normal verification altered owned files or evidence.');
+    if (result.status !== 0 || result.error) throw new Error('Read-only verification failed.');
+    return;
+  }
+  throw new Error('Use an explicit source/red/iac-na/green/syntax/integrity/browser/canonicalize/seal/verify action.');
+}
+
+module.exports = { hash, listFiles, relative, selectBytes, definitions };
+if (require.main === module) {
+  try { main(process.argv[2]); } catch (error) { console.error(error.message); process.exitCode = 1; }
+}

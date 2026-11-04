@@ -1,0 +1,292 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.Soak145 = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+
+  const copy = (value) => JSON.parse(JSON.stringify(value));
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+  function invalid(message) {
+    const error = new Error(message);
+    error.code = 'ERR_S145_INPUT';
+    throw error;
+  }
+  function record(value, keys, label) {
+    if (!value || Object.getPrototypeOf(value) !== Object.prototype
+      || Reflect.ownKeys(value).length !== keys.length
+      || !keys.every((key) => {
+        const descriptor = Object.getOwnPropertyDescriptor(value, key);
+        return descriptor && descriptor.enumerable && Object.hasOwn(descriptor, 'value');
+      })) invalid(`Invalid ${label}: exact plain data record required.`);
+  }
+  function array(value, maximum, label) {
+    if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype
+      || value.length > maximum || Reflect.ownKeys(value).length !== value.length + 1
+      || !Array.from({ length: value.length }, (_, index) => {
+        const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+        return descriptor && descriptor.enumerable && Object.hasOwn(descriptor, 'value');
+      }).every(Boolean)) invalid(`Invalid ${label}: bounded dense data array required.`);
+  }
+  function exact(actual, expected, label) {
+    if (Array.isArray(expected)) {
+      array(actual, expected.length, label);
+      if (actual.length !== expected.length) invalid(`Invalid ${label}: missing evidence.`);
+      expected.forEach((item, index) => exact(actual[index], item, label));
+    } else if (expected && typeof expected === 'object') {
+      record(actual, Object.keys(expected), label);
+      Object.keys(expected).forEach((key) => exact(actual[key], expected[key], `${label}.${key}`));
+    } else if (!Object.is(actual, expected)) {
+      invalid(`Invalid ${label}: fixed typed evidence does not match.`);
+    }
+  }
+  const MAX_ATTEMPTS = 12;
+  const MAX_ACTIONS = 6;
+  const DISCLAIMER = 'FIXED FICTIONAL TEACHING DATA ONLY';
+  const cycles = freeze([
+    { cycleId: 'c1', epoch: 'E145-1', action: 'swap', fromVersion: 'v1', toVersion: 'v2', atTick: 10 },
+    { cycleId: 'c2', epoch: 'E145-2', action: 'rollback', fromVersion: 'v2', toVersion: 'v1', atTick: 20 },
+    { cycleId: 'c3', epoch: 'E145-3', action: 'swap', fromVersion: 'v1', toVersion: 'v2', atTick: 30 },
+    { cycleId: 'c4', epoch: 'E145-4', action: 'rollback', fromVersion: 'v2', toVersion: 'v1', atTick: 40 },
+  ]);
+  const metricDefinitions = freeze({
+    memoryMiB: { unit: 'fictional MiB', baseline: 100, limit: 8 },
+    connections: { unit: 'fictional connections', baseline: 8, limit: 4 },
+    cacheEntries: { unit: 'fictional cache entries', baseline: 20, limit: 8 },
+  });
+  const TRACES = freeze([
+    { id: 'threshold-equality', label: 'Growth exactly at all limits', lesson: 'Whole-sequence equality passes.' },
+    { id: 'steady', label: 'Steady repeated swap / rollback', lesson: 'Bounded complete sequence passes.' },
+    { id: 'memory-growth', label: 'Small increments, cumulative memory growth', lesson: 'Successful throughput cannot excuse retained memory growth.' },
+    { id: 'connection-growth', label: 'Small increments, cumulative connection growth', lesson: 'A per-cycle allowance must not reset the original baseline.' },
+    { id: 'cache-growth', label: 'Small increments, cumulative cache growth', lesson: 'The fourth cycle is not an independent clean run.' },
+    { id: 'recovered-growth', label: 'Earlier growth breach, latest resources recovered', lesson: 'The peak breach remains attributable to c1.' },
+    { id: 'interrupted-recovered', label: '151 ms interruption, separate later recovery', lesson: 'Recovery does not make the original journey uninterrupted.' },
+    { id: 'unknown-recovered', label: 'Unknown original journey, later usable again', lesson: 'Later usability cannot supply missing original completion evidence.' },
+    { id: 'unknown-cycle', label: 'c2 cycle evidence missing', lesson: 'Keep the whole declaration and four unknown attempted journeys.' },
+    { id: 'unknown-metric', label: 'c2 memory sample missing', lesson: 'Do not interpolate a required metric from successful throughput.' },
+    { id: 'missing-baseline', label: 'Original memory baseline missing', lesson: 'A later successful cycle cannot invent the baseline.' },
+    { id: 'failed-and-unknown', label: 'Earlier interruption and missing memory evidence', lesson: 'FAIL takes precedence while the unknown evidence remains visible.' },
+  ]);
+  const DECLARATION = freeze({
+    scenarioId: 'S145', resourceScope: 'fictional-fleet-145', sampleBoundary: 'same fixed post-drain point',
+    load: { profile: 'fixed-teaching-load-145', offeredJourneysPerCycle: 4 },
+    journeyBudgetMs: 150, cycles, limits: metricDefinitions, maxAttempts: MAX_ATTEMPTS, maxActions: MAX_ACTIONS,
+  });
+  function trace(id) {
+    if (typeof id !== 'string' || !TRACES.some((entry) => entry.id === id)) invalid('Invalid trace: select one fixed teaching trace.');
+    return id;
+  }
+  function attemptNumber(value) {
+    if (!Number.isSafeInteger(value) || value < 1 || value > MAX_ATTEMPTS) invalid('Attempt limit or invalid typed attempt number.');
+  }
+  function baselineFor(traceId) {
+    trace(traceId);
+    return freeze({
+      baselineId: 'baseline-145', resourceScope: DECLARATION.resourceScope, atTick: 0,
+      sampleBoundary: DECLARATION.sampleBoundary, load: DECLARATION.load,
+      resources: { memoryMiB: traceId === 'missing-baseline' ? null : 100, connections: 8, cacheEntries: 20 },
+    });
+  }
+  function makeReceipt(traceId, cycle) {
+    const index = cycles.indexOf(cycle);
+    const values = {
+      memoryMiB: [100, 101, 100, 100], connections: [8, 8, 8, 8], cacheEntries: [20, 20, 20, 20],
+    };
+    if (traceId === 'threshold-equality') {
+      values.memoryMiB = [102, 104, 106, 108];
+      values.connections = [9, 10, 11, 12];
+      values.cacheEntries = [22, 24, 26, 28];
+    }
+    if (traceId === 'memory-growth') values.memoryMiB = [103, 106, 109, 112];
+    if (traceId === 'connection-growth') values.connections = [10, 12, 14, 16];
+    if (traceId === 'cache-growth') values.cacheEntries = [23, 26, 29, 32];
+    if (traceId === 'recovered-growth') {
+      values.memoryMiB = [109, 106, 102, 100];
+      values.connections = [13, 11, 10, 8];
+      values.cacheEntries = [29, 26, 22, 20];
+    }
+    const observed = !(traceId === 'unknown-cycle' && index === 1);
+    const resources = Object.fromEntries(Object.keys(values).map((key) => [key, observed ? values[key][index] : null]));
+    if (['unknown-metric', 'failed-and-unknown'].includes(traceId) && index === 1) resources.memoryMiB = null;
+    const journeys = observed ? Array.from({ length: 4 }, (_, journeyIndex) => ({
+      id: `J145-${cycle.cycleId}-${journeyIndex + 1}`, fromVersion: cycle.fromVersion, toVersion: cycle.toVersion,
+      outcome: 'complete', elapsedMs: traceId === 'threshold-equality' && index === 3 ? 150 : 100,
+      correct: true, statePreserved: true, effectsExactlyOnce: true,
+    })) : null;
+    if (['interrupted-recovered', 'failed-and-unknown'].includes(traceId) && index === 0) {
+      journeys[3].outcome = 'interrupted';
+      journeys[3].elapsedMs = 151;
+    }
+    if (traceId === 'unknown-recovered' && index === 0) {
+      Object.assign(journeys[3], {
+        outcome: 'unknown', elapsedMs: null, correct: null, statePreserved: null, effectsExactlyOnce: null,
+      });
+    }
+    const recovery = index === 1 && ['interrupted-recovered', 'unknown-recovered', 'failed-and-unknown'].includes(traceId);
+    return freeze({
+      ...cycle, observed, resourceScope: DECLARATION.resourceScope, sampleBoundary: DECLARATION.sampleBoundary,
+      load: DECLARATION.load, resources, journeys,
+      recoveries: recovery ? [{
+        originalJourneyId: 'J145-c1-4', recoveryCycleId: 'c2', recoveryElapsedMs: 30,
+        currentState: 'usable', originalOutcomeUnchanged: true,
+      }] : [],
+    });
+  }
+  const fixtures = freeze(Object.fromEntries(TRACES.map(({ id }) => [id, cycles.map((cycle) => makeReceipt(id, cycle))])));
+  function receiptFor(traceId, cycleId) {
+    trace(traceId);
+    const index = cycles.findIndex((cycle) => cycle.cycleId === cycleId);
+    if (index < 0) invalid('Invalid cycle ID.');
+    return fixtures[traceId][index];
+  }
+  function createRun(traceId = 'threshold-equality', attempt = 1) {
+    trace(traceId);
+    attemptNumber(attempt);
+    return freeze({ schema: 'S145/run/v1', traceId, attempt, journal: [] });
+  }
+  function step(cursor, command, traceId, revision) {
+    if (!command || Object.getPrototypeOf(command) !== Object.prototype
+      || !Object.hasOwn(Object.getOwnPropertyDescriptor(command, 'kind') || {}, 'value')) invalid('Invalid action record.');
+    if (command.kind === 'cycle') {
+      if (cursor.status !== 'running') invalid('Conduct requires a running incomplete segment.');
+      const expected = fixtures[traceId][cursor.receipts.length];
+      if (!expected) invalid('All declared cycles are already conducted.');
+      exact(command, { kind: 'cycle', revision, receipt: expected }, 'cycle action / ordered receipt');
+      cursor.receipts.push(expected);
+      if (cursor.receipts.length === cycles.length) cursor.status = 'complete';
+    } else if (command.kind === 'cancel') {
+      exact(command, { kind: 'cancel', revision }, 'cancel action');
+      if (cursor.status !== 'running' || cursor.cancelledAfterCycles !== null) invalid('Cancel requires a running segment and is bounded to once.');
+      cursor.cancelledAfterCycles = cursor.receipts.length;
+      cursor.status = 'paused';
+    } else if (command.kind === 'resume') {
+      exact(command, { kind: 'resume', revision }, 'resume action');
+      if (cursor.status !== 'paused') invalid('Resume requires a cancelled / paused segment.');
+      cursor.resumed = true;
+      cursor.status = 'running';
+    } else invalid('Invalid action kind.');
+  }
+  function verifyRun(run) {
+    record(run, ['schema', 'traceId', 'attempt', 'journal'], 'run');
+    exact(run.schema, 'S145/run/v1', 'run schema');
+    trace(run.traceId);
+    attemptNumber(run.attempt);
+    array(run.journal, MAX_ACTIONS, 'journal');
+    const cursor = { status: 'running', cancelledAfterCycles: null, resumed: false, receipts: [] };
+    run.journal.forEach((event, revision) => step(cursor, event, run.traceId, revision));
+    return cursor;
+  }
+  function apply(run, command) {
+    const cursor = verifyRun(run);
+    if (run.journal.length >= MAX_ACTIONS) invalid('Action limit reached.');
+    step(cursor, command, run.traceId, run.journal.length);
+    return freeze({ ...run, journal: [...run.journal, copy(command)] });
+  }
+  const verdict = (failed, unknown) => failed ? 'FAIL' : unknown ? 'UNKNOWN' : 'PASS';
+  function measure(run) {
+    const cursor = verifyRun(run);
+    const baseline = baselineFor(run.traceId);
+    const receipts = cursor.receipts;
+    const resources = {};
+    for (const [key, definition] of Object.entries(metricDefinitions)) {
+      const original = baseline.resources[key];
+      let previous = original;
+      const missingCycleIds = [];
+      const samples = cycles.map(({ cycleId }, index) => {
+        const value = receipts[index]?.resources[key] ?? null;
+        if (value === null) missingCycleIds.push(cycleId);
+        const sample = {
+          cycleId, value, growthFromOriginal: value === null || original === null ? null : value - original,
+          incrementFromPrevious: value === null || previous === null ? null : value - previous,
+        };
+        previous = value;
+        return sample;
+      });
+      const known = samples.filter((sample) => sample.growthFromOriginal !== null);
+      const maxKnownGrowth = original === null ? null : Math.max(0, ...known.map((sample) => sample.growthFromOriginal));
+      const breaches = known.filter((sample) => sample.growthFromOriginal > definition.limit)
+        .map((sample) => ({ cycleId: sample.cycleId, growth: sample.growthFromOriginal, limit: definition.limit }));
+      const latest = receipts.length ? samples[receipts.length - 1] : null;
+      resources[key] = {
+        unit: definition.unit, originalBaseline: original, limitGrowth: definition.limit, samples,
+        latestValue: latest?.value ?? null, latestGrowth: latest?.growthFromOriginal ?? null, maxKnownGrowth,
+        cumulativeGrowth: original === null || missingCycleIds.length ? null : maxKnownGrowth,
+        missingCycleIds, baselineMissing: original === null, breaches,
+        verdict: verdict(breaches.length, original === null || missingCycleIds.length),
+      };
+    }
+    const journeys = {
+      attempted: receipts.length * 4, uninterrupted: 0, interrupted: 0, unknown: 0,
+      notAttempted: (cycles.length - receipts.length) * 4, successFraction: null,
+      budgetMs: 150, failedIds: [], unknownIds: [], recoveries: receipts.flatMap((receipt) => receipt.recoveries),
+    };
+    receipts.forEach((receipt) => {
+      if (receipt.journeys === null) {
+        journeys.unknown += 4;
+        journeys.unknownIds.push(...Array.from({ length: 4 }, (_, index) => `J145-${receipt.cycleId}-${index + 1}`));
+        return;
+      }
+      receipt.journeys.forEach((journey) => {
+        const failed = journey.outcome === 'interrupted' || journey.elapsedMs > 150
+          || journey.correct === false || journey.statePreserved === false || journey.effectsExactlyOnce === false;
+        const complete = journey.outcome === 'complete' && Number.isInteger(journey.elapsedMs)
+          && journey.correct === true && journey.statePreserved === true && journey.effectsExactlyOnce === true
+          && journey.fromVersion === receipt.fromVersion && journey.toVersion === receipt.toVersion;
+        if (failed) {
+          journeys.interrupted++;
+          journeys.failedIds.push(journey.id);
+        } else if (complete) journeys.uninterrupted++;
+        else {
+          journeys.unknown++;
+          journeys.unknownIds.push(journey.id);
+        }
+      });
+    });
+    if (journeys.attempted) journeys.successFraction = journeys.uninterrupted / journeys.attempted;
+    const resourceResults = Object.values(resources);
+    return freeze({
+      disclaimer: DISCLAIMER, traceId: run.traceId, attempt: run.attempt, baseline, declaration: DECLARATION,
+      segment: {
+        status: cursor.status, cancelledAfterCycles: cursor.cancelledAfterCycles, resumed: cursor.resumed,
+      },
+      cycles: {
+        declared: cycles.map((cycle) => cycle.cycleId), conducted: receipts.map((receipt) => receipt.cycleId),
+        evidenced: receipts.filter((receipt) => receipt.observed).map((receipt) => receipt.cycleId),
+        missing: cycles.filter((cycle, index) => !receipts[index]?.observed).map((cycle) => cycle.cycleId),
+        sequenceComplete: receipts.length === cycles.length,
+      },
+      resources, journeys, receipts,
+      verdict: verdict(journeys.interrupted || resourceResults.some((metric) => metric.verdict === 'FAIL'),
+        journeys.unknown || journeys.notAttempted || resourceResults.some((metric) => metric.verdict === 'UNKNOWN')),
+      causality: 'UNVERIFIED: fictional growth observations are not a diagnosis of a real memory, connection or cache leak.',
+      nativeAzureResult: 'unverified',
+    });
+  }
+  function summarize(runs) {
+    array(runs, MAX_ATTEMPTS, 'retained attempts');
+    const reports = runs.map((run, index) => {
+      verifyRun(run);
+      if (run.attempt !== index + 1) invalid('Retained attempts must preserve their complete original order.');
+      return measure(run);
+    });
+    const sum = (key) => reports.reduce((total, report) => total + report.journeys[key], 0);
+    return freeze({
+      attempts: reports.length, maxAttempts: MAX_ATTEMPTS, declaredCycles: reports.length * 4,
+      conductedCycles: reports.reduce((total, report) => total + report.cycles.conducted.length, 0),
+      attemptedJourneys: sum('attempted'), uninterrupted: sum('uninterrupted'), interrupted: sum('interrupted'),
+      unknown: sum('unknown'), notAttempted: sum('notAttempted'),
+      verdict: reports.length ? verdict(reports.some((report) => report.verdict === 'FAIL'),
+        reports.some((report) => report.verdict === 'UNKNOWN')) : 'UNKNOWN',
+      limit: 'Every baseline and declared sequence is retained; a separately successful/reset cycle is not a whole-session pass.',
+    });
+  }
+  return freeze({ createRun, receiptFor, baselineFor, apply, verifyRun, measure, summarize, TRACES, DECLARATION, DISCLAIMER });
+}));

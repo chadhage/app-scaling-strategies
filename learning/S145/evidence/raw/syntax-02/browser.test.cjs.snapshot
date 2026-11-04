@@ -1,0 +1,373 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { hash, listFiles, relative } = require('./record.cjs');
+
+const root = path.resolve(__dirname, '..', '..');
+const helper = path.join(root, 'testing', 'browser', 'isolated.cjs');
+const helperSha256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+assert.equal(hash(fs.readFileSync(helper)), helperSha256, 'Only the exact published helper is qualified.');
+const { openIsolatedLesson } = require(helper);
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+const inputs = ['browser.test.cjs', 'model.js', 'theme.js', 'lesson.js', 'index.html', 'style.css'];
+const inputHashes = () => inputs.map((file) => ({ file, sha256: hash(fs.readFileSync(path.join(__dirname, file))) }));
+const inventory = () => listFiles().map((file) => [relative(file), hash(fs.readFileSync(file))]);
+
+function saveCapture(report, snapshots) {
+  const directory = path.join(__dirname, 'evidence', 'raw', `browser-observed-${crypto.randomUUID()}`);
+  fs.mkdirSync(directory);
+  report.domSnapshots = snapshots.map(({ label, html }, index) => {
+    const file = path.join(directory, `${String(index + 1).padStart(2, '0')}.dom.snapshot`);
+    const bytes = Buffer.from(html);
+    fs.writeFileSync(file, bytes, { flag: 'wx' });
+    return { label, file: relative(file), sha256: hash(bytes), byteLength: bytes.length };
+  });
+  const rawProof = path.join(directory, 'report.json');
+  const rawBytes = Buffer.from(`${JSON.stringify(report, null, 2)}\n`);
+  fs.writeFileSync(rawProof, rawBytes, { flag: 'wx' });
+  if (report.passed) fs.writeFileSync(path.join(__dirname, 'evidence', 'browser.json'),
+    `${JSON.stringify({ ...report, rawProof: relative(rawProof), rawProofSha256: hash(rawBytes) }, null, 2)}\n`);
+}
+
+test('actual isolated DOM / keyboard / error / reset / cumulative failure / unknown / enforced CSP', { timeout: 180000 }, async () => {
+  const before = inventory();
+  const tooling = JSON.parse(fs.readFileSync(path.join(__dirname, 'evidence', 'tooling.json')));
+  assert.equal(tooling.node, process.version);
+  assert.equal(tooling.browser.signatureStatus, 'Valid');
+  assert.ok(tooling.packages.every((entry) => entry.version === '1.56.1' && entry.cachedDigestVerified === true));
+  assert.equal(tooling.helper.sha256, helperSha256);
+  if (!capture) {
+    const retained = JSON.parse(fs.readFileSync(path.join(__dirname, 'evidence', 'browser.json')));
+    assert.equal(retained.passed, true, 'Normal verification requires retained proof, never creates it.');
+    assert.deepEqual(retained.inputs, inputHashes(), 'Changed browser inputs require exact deliberate capture.');
+    assert.equal(retained.cleanup.awaitedFinallyClose, true);
+  }
+  const report = {
+    cardId: 'A-S145', sourceId: 'S145', parentId: 'D-S145', kanoUnit: 'A-S145', kano: 'S', packet: 'SC-S145',
+    captureMode: capture, startedAtUtc: new Date().toISOString(), node: process.version, helperSha256,
+    signedBrowser: tooling.browser, packages: tooling.packages, inputs: inputHashes(),
+    observations: [], requests: [], consoleErrors: [], pageErrors: [], cspViolations: [],
+    cleanup: { awaitedFinallyClose: false }, nativeAzureResult: 'unverified', passed: false,
+  };
+  const snapshots = [];
+  let session;
+  let failure;
+  try {
+    session = await openIsolatedLesson('learning\\S145\\index.html');
+    const page = session.page;
+    report.browserVersion = session.browserVersion;
+    assert.equal(report.browserVersion, '156.0.4314.50');
+    page.on('request', (request) => report.requests.push({ url: request.url(), method: request.method() }));
+    page.on('console', (message) => { if (message.type() === 'error') report.consoleErrors.push(message.text()); });
+    page.on('pageerror', (error) => report.pageErrors.push(error.message));
+    const focus = () => page.evaluate(() => document.activeElement.id);
+    const text = (id) => page.locator(`#${id}`).innerText();
+    const records = async () => {
+      const details = page.locator('details').filter({ has: page.locator('#records') });
+      if (await details.getAttribute('open') === null) await details.locator('summary').click();
+      return JSON.parse(await page.locator('#records').innerText());
+    };
+    async function press(id, key = 'Enter') {
+      await page.locator(`#${id}`).focus();
+      await page.keyboard.press(key);
+    }
+    async function observe(label) {
+      const data = await records();
+      report.observations.push({
+        label, focusedControl: await focus(), error: await text('error'), verdict: await text('verdict'),
+        segment: await text('segment'), sessionVerdict: await text('session-verdict'),
+        journeyCounts: await text('journey-counts'), session: data.session,
+        assessment: data.assessment, activeJournal: data.activeRun?.journal || null,
+        archivedAttempts: data.archivedAttempts.length, retainedMeasurements: data.retainedMeasurements.length,
+      });
+    }
+    async function archive() {
+      const data = await records();
+      const prior = data.archivedAttempts.length;
+      const checks = data.retainedMeasurements.length;
+      await press('archive-reset', 'Space');
+      const reset = await records();
+      assert.equal(reset.archivedAttempts.length, prior + (data.activeRun ? 1 : 0));
+      assert.equal(reset.retainedMeasurements.length, checks);
+      assert.equal(reset.activeRun, null);
+      assert.equal(await page.locator('#trace').inputValue(), 'threshold-equality');
+      assert.equal(await focus(), 'trace');
+      assert.equal(await text('error'), '');
+      assert.equal(await page.evaluate(() => typeof document.getElementById('controls').reset), 'function');
+    }
+    async function conductAll(traceId) {
+      await page.locator('#trace').selectOption(traceId);
+      await press('begin-run');
+      for (let index = 0; index < 4; index++) await press('conduct-cycle', index % 2 ? 'Space' : 'Enter');
+      await press('measure-soak');
+      return (await records()).assessment;
+    }
+    assert.equal(new URL(page.url()).protocol, 'file:');
+    assert.equal(await page.title(), 'S145 — Repeated transition and soak rehearsal');
+    assert.equal(await text('training-banner'), 'Training rehearsal - synthetic data - not a live Azure result');
+    assert.equal(await page.locator('label[for="trace"]').innerText(), 'Fixed teaching trace');
+    assert.equal(await page.locator('#trace option').count(), 12);
+    assert.equal(await page.locator('#cycle-rows tr').count(), 4);
+    assert.equal(await page.locator('#metric-rows tr').count(), 3);
+    assert.equal((await records()).session.verdict, 'UNKNOWN');
+    report.initialResourceURLs = await page.evaluate(() => performance.getEntriesByType('resource').map((entry) => entry.name));
+    assert.ok(report.initialResourceURLs.every((url) => new URL(url).protocol === 'file:'));
+    assert.match(await page.locator('#trace').evaluate((node) => getComputedStyle(node).fontFamily), /Segoe UI/);
+    await observe('local-load-labelled-controls-four-declared-cycles-no-invented-empty-pass');
+
+    await page.locator('#conduct-cycle').evaluate((node) => { node.disabled = false; });
+    await page.locator('#conduct-cycle').click();
+    assert.match(await text('error'), /Begin the declared sequence first/);
+    assert.equal(await focus(), 'error');
+    assert.equal((await records()).activeRun, null);
+    await archive();
+    await page.evaluate(() => {
+      const option = document.createElement('option');
+      option.id = 's145-invalid-option';
+      option.value = 'forged-trace';
+      option.textContent = 'Fixed invalid guard probe';
+      document.getElementById('trace').append(option);
+      document.getElementById('trace').value = option.value;
+    });
+    await press('begin-run');
+    assert.match(await text('error'), /Invalid trace/);
+    assert.equal(await focus(), 'trace');
+    assert.equal(await page.locator('#trace').getAttribute('aria-invalid'), 'true');
+    assert.equal((await records()).session.attempts, 0);
+    await observe('actual-invalid-choice-focused-error-no-data-mutation');
+    await page.locator('#s145-invalid-option').evaluate((node) => node.remove());
+    await archive();
+
+    await page.locator('#trace').focus();
+    await page.keyboard.press('ArrowDown');
+    assert.equal(await page.locator('#trace').inputValue(), 'steady');
+    await page.keyboard.press('ArrowUp');
+    assert.equal(await page.locator('#trace').inputValue(), 'threshold-equality');
+    await page.keyboard.press('Tab');
+    assert.equal(await focus(), 'begin-run');
+    await page.keyboard.press('Shift+Tab');
+    assert.equal(await focus(), 'trace');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Enter');
+    await press('measure-soak');
+    assert.equal((await records()).assessment.verdict, 'UNKNOWN');
+    await press('conduct-cycle');
+    await press('measure-soak');
+    assert.equal((await records()).assessment.journeys.uninterrupted, 4);
+    assert.equal((await records()).assessment.verdict, 'UNKNOWN');
+    await press('cancel-segment');
+    await press('measure-soak');
+    const paused = await records();
+    assert.equal(paused.assessment.segment.status, 'paused');
+    assert.equal(paused.assessment.segment.cancelledAfterCycles, 1);
+    assert.deepEqual(paused.assessment.cycles.missing, ['c2', 'c3', 'c4']);
+    await page.locator('#conduct-cycle').evaluate((node) => { node.disabled = false; });
+    await page.locator('#conduct-cycle').click();
+    assert.match(await text('error'), /running incomplete/);
+    assert.deepEqual((await records()).activeRun, paused.activeRun, 'DOM disablement is not the only guard.');
+    await observe('keyboard-cancel-preserves-baseline-prefix-full-sequence-and-unknown-checks');
+    await press('resume-segment');
+    for (const id of ['c2', 'c3', 'c4']) {
+      await press('conduct-cycle', 'Space');
+      assert.equal((await records()).assessment.cycles.conducted.at(-1), id);
+    }
+    await press('measure-soak');
+    let result = (await records()).assessment;
+    assert.equal(result.verdict, 'PASS');
+    assert.deepEqual(result.cycles.conducted, ['c1', 'c2', 'c3', 'c4']);
+    assert.equal(result.baseline.resources.memoryMiB, 100);
+    assert.equal(result.segment.resumed, true);
+    assert.deepEqual(Object.values(result.resources).map((metric) => metric.cumulativeGrowth), [8, 4, 8]);
+    assert.equal(result.journeys.uninterrupted, 16);
+    for (const [metric, value] of [['memoryMiB', '8'], ['connections', '4'], ['cacheEntries', '8']]) {
+      assert.equal(await page.locator(`[data-metric="${metric}"] td`).nth(4).innerText(), value);
+      assert.equal(await page.locator(`[data-metric="${metric}"]`).getAttribute('data-status'), 'PASS');
+    }
+    assert.match(await text('journey-counts'), /^Attempted 16 \| Uninterrupted 16 \| Interrupted 0 \| Unknown 0 \| Not attempted 0$/);
+    assert.equal((await records()).retainedMeasurements.filter((entry) => entry.result.verdict === 'UNKNOWN').length, 3);
+    const measured = (await records()).retainedMeasurements.length;
+    await press('measure-soak');
+    assert.equal((await records()).retainedMeasurements.length, measured);
+    await observe('actual-entire-sequence-threshold-equality-and-150-ms-inclusive-measured-PASS');
+
+    const expected = [
+      ['steady', 'PASS', null, null],
+      ['memory-growth', 'FAIL', 'memoryMiB', 12],
+      ['connection-growth', 'FAIL', 'connections', 8],
+      ['cache-growth', 'FAIL', 'cacheEntries', 12],
+      ['recovered-growth', 'FAIL', 'memoryMiB', 9],
+      ['interrupted-recovered', 'FAIL', null, null],
+      ['unknown-recovered', 'UNKNOWN', null, null],
+      ['unknown-cycle', 'UNKNOWN', 'memoryMiB', null],
+      ['unknown-metric', 'UNKNOWN', 'memoryMiB', null],
+      ['missing-baseline', 'UNKNOWN', 'memoryMiB', null],
+      ['failed-and-unknown', 'FAIL', 'memoryMiB', null],
+    ];
+    for (const [traceId, expectedVerdict, metric, growth] of expected) {
+      await archive();
+      result = await conductAll(traceId);
+      assert.equal(result.verdict, expectedVerdict, traceId);
+      assert.ok((await text('verdict')).startsWith(expectedVerdict));
+      assert.equal(result.journeys.attempted, 16);
+      if (metric) {
+        assert.equal(result.resources[metric].cumulativeGrowth, growth);
+        assert.equal(await page.locator(`[data-metric="${metric}"] td`).nth(4).innerText(), growth === null ? 'UNKNOWN (null)' : String(growth));
+      }
+      if (['memory-growth', 'connection-growth', 'cache-growth', 'recovered-growth'].includes(traceId)) {
+        assert.equal(result.journeys.uninterrupted, 16, 'Actual displayed throughput is independent of resource failure.');
+      }
+      if (traceId === 'recovered-growth') {
+        assert.deepEqual(Object.values(result.resources).map((entry) => entry.latestGrowth), [0, 0, 0]);
+        assert.deepEqual(Object.values(result.resources).map((entry) => entry.cumulativeGrowth), [9, 5, 9]);
+        assert.deepEqual(result.resources.memoryMiB.breaches.map((entry) => entry.cycleId), ['c1']);
+      }
+      if (traceId === 'interrupted-recovered' || traceId === 'failed-and-unknown') {
+        assert.equal(result.journeys.uninterrupted, 15);
+        assert.equal(result.journeys.interrupted, 1);
+        assert.equal(result.journeys.recoveries[0].originalJourneyId, 'J145-c1-4');
+        assert.equal(result.receipts[0].journeys[3].elapsedMs, 151);
+      }
+      if (traceId === 'unknown-recovered') {
+        assert.equal(result.journeys.unknown, 1);
+        assert.equal(result.journeys.recoveries[0].currentState, 'usable');
+      }
+      if (traceId === 'unknown-cycle') {
+        assert.deepEqual(result.cycles.evidenced, ['c1', 'c3', 'c4']);
+        assert.deepEqual(result.cycles.missing, ['c2']);
+        assert.equal(result.journeys.unknown, 4);
+      }
+      if (traceId === 'missing-baseline') assert.equal(result.baseline.resources.memoryMiB, null);
+      await observe(`actual-rendered-${traceId}-retains-entire-sequence`);
+    }
+    const total = (await records()).session;
+    assert.deepEqual([total.attempts, total.declaredCycles, total.conductedCycles, total.attemptedJourneys], [12, 48, 48, 192]);
+    assert.deepEqual([total.uninterrupted, total.interrupted, total.unknown, total.verdict], [185, 2, 5, 'FAIL']);
+    await archive();
+    assert.equal(await page.locator('#history > li').count(), 12);
+    assert.equal(await page.locator('#begin-run').isDisabled(), true);
+    const bounded = await records();
+    await page.locator('#begin-run').evaluate((node) => { node.disabled = false; });
+    await page.locator('#begin-run').click();
+    assert.match(await text('error'), /Attempt limit/);
+    assert.deepEqual(await records(), bounded);
+    await observe('actual-bounded-attempt-limit-no-truncation-or-extra-original-credit');
+    snapshots.push({ label: 'all-twelve-attempts-entire-declarations-and-retained-history', html: await page.content() });
+
+    await page.reload({ waitUntil: 'load' });
+    assert.equal((await records()).session.attempts, 0, 'Explicit reload is a fresh non-durable teaching session, not native reset or acceptance.');
+    await page.locator('#trace').selectOption('steady');
+    await press('begin-run');
+    await press('conduct-cycle');
+    await press('measure-soak');
+    await archive();
+    await conductAll('steady');
+    assert.equal((await records()).assessment.verdict, 'PASS');
+    assert.equal((await records()).session.verdict, 'UNKNOWN');
+    assert.equal((await records()).archivedAttempts[0].report.cycles.declared.length, 4);
+    assert.equal((await records()).archivedAttempts[0].report.cycles.conducted.length, 1);
+    assert.equal((await records()).session.notAttempted, 12);
+    await observe('actual-reset-complete-later-PASS-cannot-hide-earlier-partial-UNKNOWN');
+    await archive();
+    await conductAll('interrupted-recovered');
+    await archive();
+    await conductAll('steady');
+    assert.equal((await records()).assessment.verdict, 'PASS');
+    assert.equal((await records()).session.verdict, 'FAIL');
+    assert.equal((await records()).session.interrupted, 1);
+    await page.locator('#resume-segment').evaluate((node) => { node.disabled = false; });
+    const beforeInvalidResume = (await records()).activeRun;
+    await page.locator('#resume-segment').click();
+    assert.match(await text('error'), /Resume requires/);
+    assert.deepEqual((await records()).activeRun, beforeInvalidResume);
+    assert.equal(await focus(), 'error');
+    await archive();
+    await observe('actual-reset-later-PASS-cannot-hide-original-interruption-recovery-or-errors');
+    await page.locator('#history summary').first().focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await page.locator('#history details').first().getAttribute('open'), '');
+    await page.setViewportSize({ width: 320, height: 900 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+    await page.locator('#trace').focus();
+    assert.equal(await page.locator('#trace').evaluate((node) => getComputedStyle(node).outlineWidth), '3px');
+    await observe('actual-keyboard-expand-retained-history-narrow-layout-visible-focus');
+    assert.deepEqual(report.consoleErrors, []);
+    assert.deepEqual(report.pageErrors, []);
+
+    report.csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
+    for (const directive of ["default-src 'none'", "script-src 'self'", "style-src 'self'", "connect-src 'none'", "form-action 'none'"]) {
+      assert.ok(report.csp.includes(directive));
+    }
+    await page.evaluate(() => {
+      window.__s145Csp = [];
+      window.__s145InlineScript = false;
+      window.__s145InlineHandler = false;
+      document.addEventListener('securitypolicyviolation', (event) => window.__s145Csp.push({
+        effectiveDirective: event.effectiveDirective, blockedURI: event.blockedURI, disposition: event.disposition,
+      }));
+      const script = document.createElement('script');
+      script.textContent = 'window.__s145InlineScript = true;';
+      document.body.append(script);
+      const style = document.createElement('style');
+      style.textContent = 'body { --s145-inline-style-probe: blocked; }';
+      document.head.append(style);
+      const button = document.createElement('button');
+      button.id = 's145-csp-probe';
+      button.type = 'button';
+      button.textContent = 'Fixed blocked-inline CSP probe';
+      button.setAttribute('onclick', 'window.__s145InlineHandler = true;');
+      button.setAttribute('style', '--s145-inline-attribute-probe: blocked;');
+      document.body.append(button);
+    });
+    await page.locator('#s145-csp-probe').click();
+    await page.waitForFunction(() => window.__s145Csp.length >= 4);
+    const csp = await page.evaluate(() => ({
+      events: window.__s145Csp, inlineScript: window.__s145InlineScript, inlineHandler: window.__s145InlineHandler,
+      style: getComputedStyle(document.body).getPropertyValue('--s145-inline-style-probe'),
+      attributeStyle: getComputedStyle(document.getElementById('s145-csp-probe')).getPropertyValue('--s145-inline-attribute-probe'),
+    }));
+    assert.equal(csp.inlineScript, false);
+    assert.equal(csp.inlineHandler, false);
+    assert.equal(csp.style, '');
+    assert.equal(csp.attributeStyle, '');
+    for (const directive of ['script-src-elem', 'script-src-attr', 'style-src-elem', 'style-src-attr']) {
+      assert.ok(csp.events.some((event) => event.effectiveDirective === directive
+        && event.blockedURI === 'inline' && event.disposition === 'enforce'), directive);
+    }
+    report.cspViolations = csp.events;
+    assert.ok(report.requests.every((request) => new URL(request.url).protocol === 'file:' && request.method === 'GET'));
+    assert.ok(report.consoleErrors.every((message) => /Content Security Policy/i.test(message)));
+    assert.deepEqual(report.pageErrors, []);
+    await observe('actual-enforced-script-handler-style-CSP-no-network-or-management-request');
+    snapshots.push({ label: 'retained-unknown-failure-reset-error-and-CSP', html: await page.content() });
+  } catch (error) {
+    failure = error;
+    report.failure = { name: error.name, message: error.message, stack: error.stack };
+    if (session && !session.page.isClosed()) {
+      try { snapshots.push({ label: 'failed-browser-attempt', html: await session.page.content() }); } catch {}
+    }
+  } finally {
+    if (session) {
+      try {
+        await session.close();
+        report.cleanup = {
+          awaitedFinallyClose: true, pageClosed: session.page.isClosed(),
+          browserDisconnected: !session.page.context().browser()?.isConnected(),
+        };
+        assert.equal(report.cleanup.pageClosed, true);
+        assert.equal(report.cleanup.browserDisconnected, true);
+      } catch (error) {
+        failure = failure ? new AggregateError([failure, error], 'Browser assertions and close failed') : error;
+        report.cleanup.failure = error.message;
+      }
+    }
+    report.passed = !failure;
+    report.completedAtUtc = new Date().toISOString();
+    if (capture) saveCapture(report, snapshots);
+  }
+  if (failure) throw failure;
+  if (!capture) assert.deepEqual(inventory(), before, 'Normal verification must not write lesson, source, history, proof or seal files.');
+});

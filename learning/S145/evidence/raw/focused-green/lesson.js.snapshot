@@ -1,0 +1,183 @@
+'use strict';
+
+(() => {
+  const model = window.Soak145;
+  const element = (id) => document.getElementById(id);
+  const form = element('controls');
+  const traceControl = element('trace');
+  const archived = [];
+  const measurements = [];
+  let active = null;
+  let latestMeasurement = null;
+
+  model.TRACES.forEach(({ id, label }) => {
+    const option = document.createElement('option');
+    option.value = id;
+    option.textContent = label;
+    traceControl.append(option);
+  });
+  function clearError() {
+    element('error').textContent = '';
+    traceControl.removeAttribute('aria-invalid');
+  }
+  function showError(error, input) {
+    element('error').textContent = error.message || 'The fixed teaching action could not be verified.';
+    if (input) {
+      input.setAttribute('aria-invalid', 'true');
+      input.focus();
+    } else element('error').focus();
+  }
+  const display = (value) => value === null ? 'UNKNOWN (null)' : String(value);
+  function row(parent, cells, attributes = {}) {
+    const tr = document.createElement('tr');
+    Object.entries(attributes).forEach(([key, value]) => tr.setAttribute(key, value));
+    cells.forEach((value) => {
+      const cell = document.createElement('td');
+      cell.textContent = value;
+      tr.append(cell);
+    });
+    parent.append(tr);
+  }
+  function render() {
+    const reports = archived.map((entry) => entry.report);
+    const runs = archived.map((entry) => entry.run);
+    if (active) runs.push(active);
+    const session = model.summarize(runs);
+    const report = active ? model.measure(active) : null;
+    const declaration = model.DECLARATION;
+    const baseline = report?.baseline || model.baselineFor('threshold-equality');
+    const cursor = active ? model.verifyRun(active) : null;
+    element('segment').textContent = active
+      ? `Attempt ${active.attempt} | ${cursor.status.toUpperCase()} | Conducted ${cursor.receipts.length} / 4 declared cycles | Revision ${active.journal.length}`
+      : `No active sequence | Archived ${archived.length} / ${declaration.maxAttempts} attempts.`;
+    element('baseline').textContent = `Original fictional baseline ${baseline.baselineId}: memory ${display(baseline.resources.memoryMiB)}, connections ${baseline.resources.connections}, cache ${baseline.resources.cacheEntries}. Same fixed load and post-drain sample boundary; never reset between cycles.`;
+    const current = active && latestMeasurement?.attempt === active.attempt
+      && latestMeasurement.revision === active.journal.length;
+    element('verdict').textContent = current
+      ? `${latestMeasurement.result.verdict} — measured whole declared sequence, attempt ${active.attempt}`
+      : 'UNMEASURED — conduct, inspect, then measure the current revision; earlier measurements remain below.';
+    element('session-verdict').textContent = `${session.verdict} — cumulative retained session evidence (not a live result)`;
+    const counts = report?.journeys || { attempted: 0, uninterrupted: 0, interrupted: 0, unknown: 0, notAttempted: 0 };
+    element('journey-counts').textContent = `Attempted ${counts.attempted} | Uninterrupted ${counts.uninterrupted} | Interrupted ${counts.interrupted} | Unknown ${counts.unknown} | Not attempted ${counts.notAttempted}`;
+    element('session-counts').textContent = `Session attempts ${session.attempts} | Declared cycles ${session.declaredCycles} | Conducted ${session.conductedCycles} | Attempted journeys ${session.attemptedJourneys} | Interrupted ${session.interrupted} | Unknown ${session.unknown}`;
+    traceControl.disabled = Boolean(active);
+    element('begin-run').disabled = Boolean(active) || archived.length >= declaration.maxAttempts;
+    element('conduct-cycle').disabled = !active || cursor.status !== 'running';
+    element('cancel-segment').disabled = !active || cursor.status !== 'running' || cursor.cancelledAfterCycles !== null;
+    element('resume-segment').disabled = !active || cursor.status !== 'paused';
+    element('measure-soak').disabled = !active;
+
+    const cycleRows = element('cycle-rows');
+    cycleRows.replaceChildren();
+    declaration.cycles.forEach((cycle, index) => {
+      const receipt = report?.receipts[index];
+      let original = 'NOT ATTEMPTED — no outcome inferred';
+      if (receipt?.journeys === null) original = '4 UNKNOWN attempted journeys';
+      else if (receipt) {
+        original = receipt.journeys.map((journey) => `${journey.id}: ${journey.outcome}, ${display(journey.elapsedMs)} fictional ms`).join('; ');
+      }
+      row(cycleRows, [
+        `${cycle.cycleId} / ${cycle.epoch}`, `${cycle.action}: ${cycle.fromVersion} → ${cycle.toVersion}`,
+        !receipt ? 'Not conducted; evidence pending' : receipt.observed ? 'Fixed observed receipt' : 'UNKNOWN — cycle evidence missing',
+        receipt ? Object.values(receipt.resources).map(display).join(' / ') : 'UNKNOWN / UNKNOWN / UNKNOWN',
+        original, receipt?.recoveries.length ? `${receipt.recoveries[0].originalJourneyId} usable again; original outcome unchanged` : 'No recovery observation',
+      ], { 'data-cycle': cycle.cycleId });
+    });
+    const metricRows = element('metric-rows');
+    metricRows.replaceChildren();
+    Object.entries(declaration.limits).forEach(([key, definition]) => {
+      const metric = report?.resources[key];
+      row(metricRows, [
+        `${key} (${definition.unit})`, display(baseline.resources[key]), display(metric?.latestGrowth ?? null),
+        display(metric?.maxKnownGrowth ?? null), display(metric?.cumulativeGrowth ?? null), String(definition.limit),
+        !metric ? 'All cycles pending' : [metric.baselineMissing ? 'original baseline' : '', ...metric.missingCycleIds].filter(Boolean).join(', ') || 'None',
+        metric?.verdict || 'UNKNOWN',
+      ], { 'data-metric': key, 'data-status': metric?.verdict || 'UNKNOWN' });
+    });
+    const measurementHistory = element('measurement-history');
+    measurementHistory.replaceChildren();
+    measurements.forEach((measurement) => {
+      const item = document.createElement('li');
+      item.textContent = `Attempt ${measurement.attempt}, revision ${measurement.revision}: ${measurement.result.verdict}; conducted ${measurement.result.cycles.conducted.length}/4; original interrupted ${measurement.result.journeys.interrupted}, unknown ${measurement.result.journeys.unknown}.`;
+      measurementHistory.append(item);
+    });
+    const history = element('history');
+    history.replaceChildren();
+    archived.forEach((entry) => {
+      const item = document.createElement('li');
+      const details = document.createElement('details');
+      const summary = document.createElement('summary');
+      summary.textContent = `Attempt ${entry.run.attempt} — ${entry.run.traceId}: ${entry.report.verdict}; ${entry.report.cycles.conducted.length}/4 cycles; baseline and full journal retained`;
+      const pre = document.createElement('pre');
+      pre.textContent = JSON.stringify(entry, null, 2);
+      details.append(summary, pre);
+      item.append(details);
+      history.append(item);
+    });
+    element('records').textContent = JSON.stringify({
+      disclaimer: model.DISCLAIMER, activeRun: active, assessment: report, session,
+      archivedAttempts: archived, retainedMeasurements: measurements,
+      sourceParentAcceptance: 'Pending original native and parent gates; no source-parent completion.',
+      cleanup: 'In-memory control reset only; no live resources exist or are cleaned up.',
+    }, null, 2);
+    element('trace-help').textContent = `${model.TRACES.find((entry) => entry.id === (active?.traceId || traceControl.value))?.lesson || 'Choose a valid fixed trace.'} Native keyboard controls: arrows, Tab / Shift+Tab, Enter / Space.`;
+  }
+  function action(work, input) {
+    try {
+      work();
+      clearError();
+      render();
+    } catch (error) {
+      showError(error, input);
+    }
+  }
+  function requireActive() {
+    if (!active) throw new Error('Begin the declared sequence first; no action or evidence was added.');
+    return model.verifyRun(active);
+  }
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    action(() => {
+      if (active) throw new Error('Archive and reset before beginning a separate attempt.');
+      if (archived.length >= model.DECLARATION.maxAttempts) throw new Error('Attempt limit reached; all earlier records remain retained.');
+      active = model.createRun(traceControl.value, archived.length + 1);
+      latestMeasurement = null;
+    }, traceControl);
+  });
+  element('conduct-cycle').addEventListener('click', () => action(() => {
+    const cursor = requireActive();
+    const cycle = model.DECLARATION.cycles[cursor.receipts.length];
+    if (!cycle) throw new Error('All declared cycles are already conducted.');
+    active = model.apply(active, {
+      kind: 'cycle', revision: active.journal.length, receipt: model.receiptFor(active.traceId, cycle.cycleId),
+    });
+  }));
+  for (const [id, kind] of [['cancel-segment', 'cancel'], ['resume-segment', 'resume']]) {
+    element(id).addEventListener('click', () => action(() => {
+      requireActive();
+      active = model.apply(active, { kind, revision: active.journal.length });
+    }));
+  }
+  element('measure-soak').addEventListener('click', () => action(() => {
+    requireActive();
+    latestMeasurement = { attempt: active.attempt, revision: active.journal.length, result: model.measure(active) };
+    if (!measurements.some((entry) => entry.attempt === active.attempt && entry.revision === active.journal.length)) {
+      measurements.push(latestMeasurement);
+    }
+  }));
+  element('archive-reset').addEventListener('click', () => action(() => {
+    if (active) archived.push({ run: active, report: model.measure(active) });
+    active = null;
+    latestMeasurement = null;
+    form.reset();
+    render();
+    traceControl.focus();
+  }));
+  traceControl.addEventListener('change', () => {
+    if (!active) {
+      clearError();
+      render();
+    }
+  });
+  render();
+})();

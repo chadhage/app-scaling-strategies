@@ -1,0 +1,9 @@
+'use strict';
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+const { listFiles } = require('.\\learning\\S145\\record.cjs');
+const names = listFiles().map(file => path.relative(process.cwd(), file));
+const run = args => { const result = spawnSync('git', args, { input: names.join('\n') + '\n', encoding: 'utf8', windowsHide: true }); if (result.status !== 0) throw new Error(result.stderr); return result.stdout.trim().split(/\r?\n/); };
+const canonical = run(['hash-object', '--stdin-paths']);
+const raw = run(['hash-object', '--no-filters', '--stdin-paths']);
+if (JSON.stringify(canonical) !== JSON.stringify(raw)) throw new Error('Working/raw lesson bytes differ from canonical Git filters.');

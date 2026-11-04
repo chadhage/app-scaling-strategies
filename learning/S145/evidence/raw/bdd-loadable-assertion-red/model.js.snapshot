@@ -1,0 +1,18 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.Soak145 = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  return {
+    createRun(traceId, attempt = 1) {
+      return { schema: 'S145/run/v1', traceId, attempt, journal: [] };
+    },
+    receiptFor(traceId, cycleId) { return { traceId, cycleId }; },
+    apply(run) { return run; },
+    verifyRun(run) { return run; },
+    measure() { return { verdict: 'UNKNOWN' }; },
+    summarize() { return { verdict: 'UNKNOWN' }; },
+  };
+}));

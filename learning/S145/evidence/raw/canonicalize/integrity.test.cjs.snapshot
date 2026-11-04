@@ -1,0 +1,158 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const zlib = require('node:zlib');
+const vm = require('node:vm');
+const { spawnSync } = require('node:child_process');
+const { hash, listFiles, relative, selectBytes, definitions } = require('./record.cjs');
+
+const root = path.resolve(__dirname, '..', '..');
+const bytes = (file) => fs.readFileSync(path.join(__dirname, file));
+const json = (file) => JSON.parse(bytes(file));
+const git = (...args) => {
+  const result = spawnSync('git', args, { cwd: root, encoding: null, windowsHide: true });
+  assert.equal(result.status, 0, String(result.stderr));
+  return result.stdout;
+};
+
+test('exact original source acceptance, working CRLF and canonical Git bytes remain independently preserved', () => {
+  const source = json('evidence\\source.json');
+  assert.equal(source.cardId, 'A-S145');
+  assert.equal(source.kanoUnit, 'A-S145');
+  assert.equal(source.priority, 'P1');
+  assert.equal(source.kano, 'S');
+  assert.equal(source.packet, 'SC-S145');
+  assert.equal(source.technicalEntryGate, 'SOURCE');
+  for (const entry of source.sources) {
+    const definition = definitions.find((item) => item.name === entry.name);
+    for (const variant of ['working', 'canonical']) {
+      const proof = entry[variant];
+      const raw = zlib.gunzipSync(bytes(proof.fullPath));
+      assert.equal(hash(raw), proof.sha256);
+      assert.equal(raw.length, proof.byteLength);
+      assert.equal((raw.toString('utf8').match(/\r\n/g) || []).length, proof.crlfCount);
+      const selected = selectBytes(raw, definition.selectors);
+      assert.equal(hash(selected.bytes), proof.selectionSha256);
+      assert.deepEqual(selected.bytes, bytes(proof.selectedPath));
+      assert.deepEqual(selected.slices.map(({ bytes: slice, ...record }) => record), proof.slices);
+      if (variant === 'canonical') assert.deepEqual(raw, git('show', `${source.canonicalCommit}:${entry.canonicalPath}`));
+    }
+    assert.ok(entry.working.crlfCount > 0, 'Original raw CRLF is retained, not reconstructed from canonical text.');
+    assert.equal(entry.canonical.crlfCount, 0);
+    assert.notEqual(entry.working.sha256, entry.canonical.sha256);
+    const current = fs.readFileSync(path.join(root, entry.file));
+    assert.deepEqual(selectBytes(current, definition.selectors).slices.map((slice) => slice.text),
+      entry.working.slices.map((slice) => slice.text), 'Only unrelated live documentation changes may differ.');
+  }
+  const rows = source.sources.flatMap((entry) => entry.working.slices);
+  assert.equal(rows.find((row) => row.label === 'S145').text[0],
+    '| S145 | **Repeated transitions and soak:** Detect memory leaks, connection leaks, cache growth, and degradation across many migrations. |');
+  assert.equal(rows.find((row) => row.label === 'D-S145').text[0],
+    '| D-S145 | P1 | Add resumable swap/rollback soak runs with resource and correctness trends. | Memory/connections/cache growth and cumulative failures remain attributable across cycles; cancellation preserves evidence. | D-S001 |');
+  assert.equal(hash(bytes(source.inventory.file)), source.inventory.sha256);
+  const inventory = json(source.inventory.file);
+  assert.deepEqual(inventory.cards.filter((card) => ['A-S145', 'B-S145'].includes(card.id)), source.inventory.cards);
+  assert.equal(source.inventory.cards[0].deliver,
+    'Repeat transition cycles; detect cumulative connection/memory/cache growth and retained failures.');
+});
+
+test('BDD, loadable stub and genuine assertion RED precede IaC N/A and implementation GREEN', () => {
+  const workflow = json('evidence\\workflow.json');
+  const phases = workflow.events.map((event) => event.phase);
+  assert.deepEqual(phases.slice(0, 3), ['source-read-and-frozen', 'bdd-loadable-assertion-red', 'iac-not-applicable']);
+  assert.ok(phases.indexOf('focused-green') > phases.indexOf('iac-not-applicable'));
+  const red = json(workflow.events[1].proof);
+  assert.equal(red.expected, 'assertion-red');
+  assert.equal(red.exitCode, 1);
+  const output = bytes(red.stdout.file).toString('utf8');
+  assert.match(output, /ok 1 - loadable contract/);
+  assert.match(output, /ERR_ASSERTION/);
+  assert.match(output, /'UNKNOWN' !== 'PASS'/);
+  assert.doesNotMatch(output, /MODULE_NOT_FOUND|SyntaxError|ReferenceError/);
+  assert.equal(hash(bytes(red.stdout.file)), red.stdout.sha256);
+  assert.equal(hash(bytes(red.stderr.file)), red.stderr.sha256);
+  red.inputs.forEach((input) => assert.equal(hash(bytes(input.snapshot)), input.sha256));
+  const stub = red.inputs.find((input) => input.file === 'model.js');
+  const context = { module: { exports: {} } };
+  vm.runInNewContext(bytes(stub.snapshot).toString('utf8'), context);
+  assert.equal(context.module.exports.createRun('threshold-equality').schema, 'S145/run/v1');
+  assert.equal(context.module.exports.measure().verdict, 'UNKNOWN');
+  assert.match(bytes(red.inputs.find((input) => input.file === 'soak.feature').snapshot).toString('utf8'),
+    /Small per-cycle increments accumulate/);
+  assert.equal(workflow.extraCredits, 0);
+});
+
+test('standalone runtime is fixed teaching data, restrictive CSP and unshadowed native controls', () => {
+  const html = bytes('index.html').toString('utf8');
+  const runtime = ['model.js', 'lesson.js', 'theme.js'].map((file) => bytes(file).toString('utf8')).join('\n');
+  assert.match(html, /Training rehearsal - synthetic data - not a live Azure result/);
+  for (const directive of [
+    "default-src 'none'", "script-src 'self'", "script-src-attr 'none'", "style-src 'self'",
+    "style-src-attr 'none'", "connect-src 'none'", "form-action 'none'", "base-uri 'none'", "worker-src 'none'",
+  ]) assert.ok(html.includes(directive), directive);
+  assert.doesNotMatch(html, /unsafe-inline|unsafe-eval|\son[a-z]+\s*=|\sstyle\s*=/i);
+  assert.deepEqual([...html.matchAll(/<script src="([^"]+)"/g)].map((match) => match[1]),
+    ['theme.js', 'model.js', 'lesson.js']);
+  assert.doesNotMatch(runtime, /\bfetch\s*\(|XMLHttpRequest|new\s+WebSocket|serviceWorker|localStorage|sessionStorage|indexedDB|performance\.memory|process\.memoryUsage/);
+  assert.doesNotMatch(html, /(?:name|id)="reset"/);
+  assert.match(runtime, /form\.reset\(\)/);
+  const manifest = json('manifest.json');
+  assert.equal(manifest.bounds.attempts, 12);
+  assert.equal(manifest.bounds.journalActionsPerAttempt, 6);
+  assert.equal(manifest.mode, 'bounded standalone fixed fictional teaching DATA ONLY');
+  const remainder = json('remainder.json');
+  assert.equal(remainder.readiness, false);
+  assert.equal(remainder.technicalEntryGate, 'CORE, DATA, HOST');
+  assert.equal(remainder.nativeEvidence, 'unverified');
+  assert.equal(remainder.extraCreditsForRefinement, 0);
+  assert.match(remainder.originalParentDependency, /D-S001.*H011 \+ P005 \+ HOST/);
+});
+
+test('all historical raw run inputs, stdout and stderr preserve exact failed and successful attempts', () => {
+  const records = listFiles().filter((file) => relative(file).startsWith('evidence\\raw\\') && path.basename(file) === 'run.json');
+  assert.ok(records.length >= 3);
+  let retainedMismatch = false;
+  for (const file of records) {
+    const proof = JSON.parse(fs.readFileSync(file));
+    for (const input of proof.inputs || []) assert.equal(hash(bytes(input.snapshot)), input.sha256);
+    for (const stream of ['stdout', 'stderr']) {
+      if (proof[stream]?.sha256) assert.equal(hash(bytes(proof[stream].file)), proof[stream].sha256);
+    }
+    if (proof.expected === 'green' && proof.exitCode === 1) {
+      retainedMismatch ||= bytes(proof.stdout.file).toString('utf8').includes('Attempt limit or invalid typed attempt number.');
+    }
+  }
+  assert.equal(retainedMismatch, true, 'The first GREEN message-mismatch failure remains raw evidence, not replaced.');
+  const source = json('evidence\\source.json');
+  const rawPath = source.sources[0].working.selectedPath;
+  const attributes = git('check-attr', 'text', 'diff', '--', `learning/S145/${rawPath.split('\\').join('/')}`).toString('utf8');
+  assert.match(attributes, /text: unset/);
+  assert.match(attributes, /diff: unset/);
+});
+
+test('publication-ready seal and deliberate browser proof are immutable during normal replay', () => {
+  const sealed = fs.existsSync(path.join(__dirname, 'evidence', 'integrity.json'));
+  const captured = fs.existsSync(path.join(__dirname, 'evidence', 'browser.json'));
+  if (!sealed) {
+    assert.equal(captured, false, 'Captured browser proof requires an explicit publication-ready seal before normal verification.');
+    return;
+  }
+  const seal = json('evidence\\integrity.json');
+  const files = listFiles().filter((file) => relative(file) !== 'evidence\\integrity.json');
+  assert.deepEqual(files.map(relative).sort(), seal.files.map((entry) => entry.file).sort());
+  seal.files.forEach((entry) => assert.equal(hash(bytes(entry.file)), entry.sha256, entry.file));
+  if (captured) {
+    const browser = json('evidence\\browser.json');
+    assert.equal(browser.passed, true);
+    assert.equal(browser.captureMode, true);
+    assert.equal(browser.cleanup.awaitedFinallyClose, true);
+    assert.equal(browser.cleanup.pageClosed, true);
+    assert.equal(browser.cleanup.browserDisconnected, true);
+    assert.equal(hash(bytes(browser.rawProof)), browser.rawProofSha256);
+    browser.inputs.forEach((entry) => assert.equal(hash(bytes(entry.file)), entry.sha256));
+    browser.domSnapshots.forEach((entry) => assert.equal(hash(bytes(entry.file)), entry.sha256));
+  }
+});

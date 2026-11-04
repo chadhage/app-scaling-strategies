@@ -1,0 +1,318 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('./model.js');
+
+function complete(traceId, attempt = 1) {
+  let run = model.createRun(traceId, attempt);
+  for (const cycleId of ['c1', 'c2', 'c3', 'c4']) {
+    run = model.apply(run, { kind: 'cycle', revision: run.journal.length, receipt: model.receiptFor(traceId, cycleId) });
+  }
+  return run;
+}
+
+test('loadable contract exports typed rehearsal operations', () => {
+  for (const name of ['createRun', 'receiptFor', 'apply', 'verifyRun', 'measure', 'summarize']) {
+    assert.equal(typeof model[name], 'function');
+  }
+  assert.equal(model.createRun('threshold-equality').schema, 'S145/run/v1');
+});
+
+test('all fixed trace outcomes retain the full four-cycle declaration', () => {
+  const expected = {
+    'threshold-equality': 'PASS', steady: 'PASS', 'memory-growth': 'FAIL', 'connection-growth': 'FAIL',
+    'cache-growth': 'FAIL', 'recovered-growth': 'FAIL', 'interrupted-recovered': 'FAIL',
+    'unknown-recovered': 'UNKNOWN', 'unknown-cycle': 'UNKNOWN', 'unknown-metric': 'UNKNOWN',
+    'missing-baseline': 'UNKNOWN', 'failed-and-unknown': 'FAIL',
+  };
+  assert.deepEqual(model.TRACES.map((entry) => entry.id).sort(), Object.keys(expected).sort());
+  for (const [traceId, expectedVerdict] of Object.entries(expected)) {
+    const result = model.measure(complete(traceId));
+    assert.equal(result.verdict, expectedVerdict, traceId);
+    assert.equal(result.cycles.declared.length, 4);
+    assert.equal(result.cycles.conducted.length, 4);
+    assert.equal(result.receipts.length, 4);
+    assert.equal(result.journeys.attempted, 16);
+    assert.equal(result.journeys.uninterrupted + result.journeys.interrupted + result.journeys.unknown, 16);
+    assert.equal(result.nativeAzureResult, 'unverified');
+    assert.match(result.causality, /not a diagnosis/);
+  }
+});
+
+for (const [traceId, metric, growth, increment] of [
+  ['memory-growth', 'memoryMiB', 12, 3],
+  ['connection-growth', 'connections', 8, 2],
+  ['cache-growth', 'cacheEntries', 12, 3],
+]) {
+  test(`${traceId}: per-step increments cannot reset cumulative baseline`, () => {
+    const result = model.measure(complete(traceId));
+    assert.equal(result.journeys.uninterrupted, 16, 'Throughput remains successful, independently.');
+    assert.equal(result.resources[metric].cumulativeGrowth, growth);
+    assert.equal(result.resources[metric].verdict, 'FAIL');
+    assert.ok(result.resources[metric].samples.every((sample) => sample.incrementFromPrevious === increment));
+    assert.ok(increment < result.resources[metric].limitGrowth);
+    assert.deepEqual(result.resources[metric].breaches.map((breach) => breach.cycleId), ['c3', 'c4']);
+  });
+}
+
+test('all resource threshold equalities are inclusive, and one-unit overflow remains FAIL after recovery', () => {
+  const equality = model.measure(complete('threshold-equality'));
+  for (const key of ['memoryMiB', 'connections', 'cacheEntries']) {
+    assert.equal(equality.resources[key].cumulativeGrowth, equality.resources[key].limitGrowth);
+    assert.equal(equality.resources[key].verdict, 'PASS');
+  }
+  const recovery = model.measure(complete('recovered-growth'));
+  assert.equal(recovery.resources.memoryMiB.latestGrowth, 0);
+  assert.equal(recovery.resources.memoryMiB.maxKnownGrowth, 9);
+  assert.equal(recovery.resources.memoryMiB.cumulativeGrowth, 9);
+  assert.deepEqual(recovery.resources.memoryMiB.breaches, [{ cycleId: 'c1', growth: 9, limit: 8 }]);
+  for (const key of ['memoryMiB', 'connections', 'cacheEntries']) {
+    assert.equal(recovery.resources[key].cumulativeGrowth, recovery.resources[key].limitGrowth + 1);
+    assert.equal(recovery.resources[key].latestGrowth, 0);
+    assert.equal(recovery.resources[key].verdict, 'FAIL');
+  }
+  assert.equal(recovery.verdict, 'FAIL');
+});
+
+test('150 ms equality passes; 151 ms original interruption is not reclassified by later recovery', () => {
+  const equality = model.measure(complete('threshold-equality'));
+  assert.ok(equality.receipts[3].journeys.every((journey) => journey.elapsedMs === 150));
+  assert.equal(equality.journeys.interrupted, 0);
+  const recovered = model.measure(complete('interrupted-recovered'));
+  assert.equal(recovered.journeys.attempted, 16);
+  assert.equal(recovered.journeys.uninterrupted, 15);
+  assert.equal(recovered.journeys.interrupted, 1);
+  assert.equal(recovered.journeys.unknown, 0);
+  assert.equal(recovered.journeys.successFraction, 15 / 16);
+  assert.deepEqual(recovered.journeys.failedIds, ['J145-c1-4']);
+  assert.deepEqual(recovered.journeys.recoveries, [{
+    originalJourneyId: 'J145-c1-4', recoveryCycleId: 'c2', recoveryElapsedMs: 30,
+    currentState: 'usable', originalOutcomeUnchanged: true,
+  }]);
+  assert.equal(recovered.receipts[0].journeys[3].elapsedMs, 151);
+  assert.equal(recovered.verdict, 'FAIL');
+});
+
+test('unknown original journey remains unknown even when later usability is evidenced', () => {
+  const result = model.measure(complete('unknown-recovered'));
+  assert.equal(result.journeys.uninterrupted, 15);
+  assert.equal(result.journeys.unknown, 1);
+  assert.equal(result.journeys.interrupted, 0);
+  assert.deepEqual(result.journeys.unknownIds, ['J145-c1-4']);
+  assert.equal(result.journeys.recoveries[0].currentState, 'usable');
+  assert.equal(result.receipts[0].journeys[3].elapsedMs, null);
+  assert.equal(result.verdict, 'UNKNOWN');
+});
+
+test('a missing cycle is not omitted from the declaration or attempted denominator', () => {
+  const result = model.measure(complete('unknown-cycle'));
+  assert.deepEqual(result.cycles, {
+    declared: ['c1', 'c2', 'c3', 'c4'], conducted: ['c1', 'c2', 'c3', 'c4'],
+    evidenced: ['c1', 'c3', 'c4'], missing: ['c2'], sequenceComplete: true,
+  });
+  assert.equal(result.journeys.attempted, 16);
+  assert.equal(result.journeys.uninterrupted, 12);
+  assert.equal(result.journeys.unknown, 4);
+  for (const metric of Object.values(result.resources)) {
+    assert.equal(metric.cumulativeGrowth, null);
+    assert.deepEqual(metric.missingCycleIds, ['c2']);
+    assert.equal(metric.samples[1].value, null);
+    assert.equal(metric.samples[2].incrementFromPrevious, null, 'Never interpolate through the gap.');
+    assert.equal(metric.verdict, 'UNKNOWN');
+  }
+});
+
+test('missing metric does not contaminate known metrics or invent a cumulative measurement', () => {
+  const result = model.measure(complete('unknown-metric'));
+  assert.equal(result.journeys.uninterrupted, 16);
+  assert.equal(result.resources.memoryMiB.cumulativeGrowth, null);
+  assert.equal(result.resources.memoryMiB.maxKnownGrowth, 0);
+  assert.equal(result.resources.memoryMiB.latestValue, 100);
+  assert.deepEqual(result.resources.memoryMiB.missingCycleIds, ['c2']);
+  assert.equal(result.resources.connections.verdict, 'PASS');
+  assert.equal(result.resources.cacheEntries.verdict, 'PASS');
+  assert.equal(result.verdict, 'UNKNOWN');
+});
+
+test('missing original baseline remains null despite later known samples', () => {
+  const result = model.measure(complete('missing-baseline'));
+  assert.equal(result.baseline.resources.memoryMiB, null);
+  assert.equal(result.resources.memoryMiB.originalBaseline, null);
+  assert.equal(result.resources.memoryMiB.baselineMissing, true);
+  assert.equal(result.resources.memoryMiB.maxKnownGrowth, null);
+  assert.equal(result.resources.memoryMiB.cumulativeGrowth, null);
+  assert.ok(result.resources.memoryMiB.samples.every((sample) => sample.growthFromOriginal === null));
+  assert.equal(result.journeys.uninterrupted, 16);
+  assert.equal(result.verdict, 'UNKNOWN');
+});
+
+test('known failure dominates unknown evidence without deleting either', () => {
+  const result = model.measure(complete('failed-and-unknown'));
+  assert.equal(result.verdict, 'FAIL');
+  assert.equal(result.journeys.interrupted, 1);
+  assert.equal(result.resources.memoryMiB.verdict, 'UNKNOWN');
+  assert.equal(result.resources.memoryMiB.cumulativeGrowth, null);
+  assert.deepEqual(result.resources.memoryMiB.missingCycleIds, ['c2']);
+  assert.equal(result.journeys.recoveries.length, 1);
+});
+
+test('empty and one-successful-cycle prefixes do not certify the sequence', () => {
+  let run = model.createRun('steady');
+  const empty = model.measure(run);
+  assert.equal(empty.verdict, 'UNKNOWN');
+  assert.equal(empty.journeys.successFraction, null);
+  assert.equal(empty.journeys.attempted, 0);
+  assert.equal(empty.journeys.notAttempted, 16);
+  run = model.apply(run, { kind: 'cycle', revision: 0, receipt: model.receiptFor('steady', 'c1') });
+  const prefix = model.measure(run);
+  assert.equal(prefix.journeys.uninterrupted, 4);
+  assert.equal(prefix.journeys.notAttempted, 12);
+  assert.equal(prefix.verdict, 'UNKNOWN');
+  assert.equal(prefix.resources.memoryMiB.cumulativeGrowth, null);
+  assert.deepEqual(prefix.cycles.missing, ['c2', 'c3', 'c4']);
+});
+
+test('cancel and resume keep the same baseline, receipt, journal and full declaration', () => {
+  let run = model.createRun('threshold-equality');
+  run = model.apply(run, { kind: 'cycle', revision: 0, receipt: model.receiptFor(run.traceId, 'c1') });
+  run = model.apply(run, { kind: 'cancel', revision: 1 });
+  const paused = model.measure(run);
+  assert.deepEqual(paused.segment, { status: 'paused', cancelledAfterCycles: 1, resumed: false });
+  assert.equal(paused.verdict, 'UNKNOWN');
+  assert.throws(() => model.apply(run, { kind: 'cycle', revision: 2, receipt: model.receiptFor(run.traceId, 'c2') }), /running/);
+  run = model.apply(run, { kind: 'resume', revision: 2 });
+  for (const cycleId of ['c2', 'c3', 'c4']) {
+    run = model.apply(run, { kind: 'cycle', revision: run.journal.length, receipt: model.receiptFor(run.traceId, cycleId) });
+  }
+  const result = model.measure(run);
+  assert.equal(result.verdict, 'PASS');
+  assert.equal(result.baseline.resources.memoryMiB, 100);
+  assert.deepEqual(result.segment, { status: 'complete', cancelledAfterCycles: 1, resumed: true });
+  assert.equal(run.journal.length, 6);
+  assert.deepEqual(run.journal.map((event) => event.kind), ['cycle', 'cancel', 'resume', 'cycle', 'cycle', 'cycle']);
+  assert.throws(() => model.apply(run, { kind: 'cancel', revision: 6 }), /limit/);
+});
+
+test('separately successful attempts cannot launder earlier failure, unknown or incomplete evidence', () => {
+  for (const [firstTrace, expected] of [['memory-growth', 'FAIL'], ['unknown-metric', 'UNKNOWN']]) {
+    const first = complete(firstTrace, 1);
+    const second = complete('steady', 2);
+    const total = model.summarize([first, second]);
+    assert.equal(model.measure(second).verdict, 'PASS');
+    assert.equal(total.verdict, expected);
+    assert.equal(total.declaredCycles, 8);
+    assert.equal(total.conductedCycles, 8);
+    assert.equal(total.attemptedJourneys, 32);
+  }
+  const incomplete = model.createRun('steady', 1);
+  assert.equal(model.summarize([incomplete, complete('steady', 2)]).verdict, 'UNKNOWN');
+  assert.equal(model.summarize([]).verdict, 'UNKNOWN');
+  assert.throws(() => model.summarize([complete('steady', 2)]), /complete original order/);
+});
+
+test('strict creation rejects unknown, string, non-finite and out-of-bound inputs', () => {
+  for (const id of ['', null, true, {}, 'STEADY', 'steady ']) assert.throws(() => model.createRun(id), /Invalid trace/);
+  for (const number of [0, 13, -1, 1.5, NaN, Infinity, '1', null, true]) {
+    assert.throws(() => model.createRun('steady', number), /Attempt limit|typed/);
+  }
+  assert.throws(() => model.receiptFor('steady', 'c5'), /cycle ID/);
+});
+
+test('strict replay rejects stale, reordered, duplicate, extended and wrong-version receipts without mutation', () => {
+  const initial = model.createRun('threshold-equality');
+  const good = { kind: 'cycle', revision: 0, receipt: model.receiptFor(initial.traceId, 'c1') };
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+  const before = JSON.stringify(initial);
+  const actions = [
+    { ...good, revision: '0' }, { ...good, revision: 1 }, { ...good, extra: true },
+    { ...good, receipt: model.receiptFor(initial.traceId, 'c2') },
+    { ...good, receipt: model.receiptFor('steady', 'c1') },
+  ];
+  for (const mutate of [
+    (receipt) => { receipt.observed = 'true'; },
+    (receipt) => { receipt.resources.memoryMiB = '102'; },
+    (receipt) => { receipt.resources.connections = NaN; },
+    (receipt) => { receipt.toVersion = 'v1'; },
+    (receipt) => { receipt.resourceScope = 'another-fleet'; },
+    (receipt) => { receipt.journeys[0].correct = 'true'; },
+    (receipt) => { receipt.journeys[0].elapsedMs = 149; },
+    (receipt) => { receipt.recoveries.push({ success: true }); },
+  ]) {
+    const receipt = clone(good.receipt);
+    mutate(receipt);
+    actions.push({ ...good, receipt });
+  }
+  for (const action of actions) assert.throws(() => model.apply(initial, action), /Invalid/);
+  assert.equal(JSON.stringify(initial), before);
+  const progressed = model.apply(initial, good);
+  assert.throws(() => model.apply(progressed, { ...good, revision: 1 }), /Invalid/);
+  assert.throws(() => model.apply(initial, { kind: 'resume', revision: 0 }), /requires/);
+});
+
+test('forged state, accessors, prototypes, sparse arrays and symbols are rejected before getter evaluation', () => {
+  const valid = complete('steady');
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+  const mutations = [
+    (run) => { run.schema = 'other'; }, (run) => { run.attempt = '1'; },
+    (run) => { run.traceId = 'threshold-equality'; }, (run) => { run.extra = true; },
+    (run) => { run.journal[0].revision = 2; }, (run) => { run.journal.reverse(); },
+    (run) => { run.journal[0].receipt.resources.memoryMiB = 0; },
+    (run) => { delete run.journal[1]; }, (run) => { run.journal.extra = 1; },
+    (run) => { run[Symbol('extra')] = 1; }, (run) => { Object.setPrototypeOf(run, {}); },
+  ];
+  for (const mutate of mutations) {
+    const run = clone(valid);
+    mutate(run);
+    assert.throws(() => model.measure(run), { code: 'ERR_S145_INPUT' });
+  }
+  let invoked = false;
+  const accessor = clone(valid);
+  Object.defineProperty(accessor, 'traceId', { enumerable: true, get() { invoked = true; return 'steady'; } });
+  assert.throws(() => model.measure(accessor), /Invalid/);
+  assert.equal(invoked, false);
+  assert.ok(Object.isFrozen(valid));
+  assert.ok(Object.isFrozen(valid.journal));
+  assert.ok(Object.isFrozen(model.receiptFor('steady', 'c1').resources));
+});
+
+test('bounded retained attempts and action history never silently truncate old records', () => {
+  const runs = Array.from({ length: 12 }, (_, index) => complete('steady', index + 1));
+  const total = model.summarize(runs);
+  assert.equal(total.attempts, 12);
+  assert.equal(total.conductedCycles, 48);
+  assert.equal(total.attemptedJourneys, 192);
+  assert.equal(total.verdict, 'PASS');
+  assert.throws(() => model.summarize([...runs, runs[0]]), /bounded/);
+  let run = model.createRun('steady');
+  run = model.apply(run, { kind: 'cancel', revision: 0 });
+  run = model.apply(run, { kind: 'resume', revision: 1 });
+  assert.throws(() => model.apply(run, { kind: 'cancel', revision: 2 }), /bounded to once/);
+  const completed = complete('steady');
+  assert.throws(() => model.apply(completed, { kind: 'cancel', revision: 4 }), /running/);
+  assert.throws(() => model.apply(completed, { kind: 'cycle', revision: 4, receipt: model.receiptFor('steady', 'c1') }), /incomplete/);
+});
+
+test('whole declared threshold-equality sequence passes without replacing its original baseline', () => {
+  const result = model.measure(complete('threshold-equality'));
+  assert.equal(result.verdict, 'PASS');
+  assert.deepEqual(result.cycles, {
+    declared: ['c1', 'c2', 'c3', 'c4'], conducted: ['c1', 'c2', 'c3', 'c4'],
+    evidenced: ['c1', 'c2', 'c3', 'c4'], missing: [], sequenceComplete: true,
+  });
+  assert.deepEqual(result.journeys, {
+    attempted: 16, uninterrupted: 16, interrupted: 0, unknown: 0, notAttempted: 0,
+    successFraction: 1, budgetMs: 150, failedIds: [], unknownIds: [], recoveries: [],
+  });
+  assert.deepEqual(result.resources.memoryMiB, {
+    unit: 'fictional MiB', originalBaseline: 100, limitGrowth: 8,
+    samples: [
+      { cycleId: 'c1', value: 102, growthFromOriginal: 2, incrementFromPrevious: 2 },
+      { cycleId: 'c2', value: 104, growthFromOriginal: 4, incrementFromPrevious: 2 },
+      { cycleId: 'c3', value: 106, growthFromOriginal: 6, incrementFromPrevious: 2 },
+      { cycleId: 'c4', value: 108, growthFromOriginal: 8, incrementFromPrevious: 2 },
+    ],
+    latestValue: 108, latestGrowth: 8, maxKnownGrowth: 8, cumulativeGrowth: 8,
+    missingCycleIds: [], baselineMissing: false, breaches: [], verdict: 'PASS',
+  });
+});

@@ -1,0 +1,44 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('./model.js');
+
+function complete(traceId) {
+  let run = model.createRun(traceId);
+  for (const cycleId of ['c1', 'c2', 'c3', 'c4']) {
+    run = model.apply(run, { kind: 'cycle', revision: run.journal.length, receipt: model.receiptFor(traceId, cycleId) });
+  }
+  return run;
+}
+
+test('loadable contract exports typed rehearsal operations', () => {
+  for (const name of ['createRun', 'receiptFor', 'apply', 'verifyRun', 'measure', 'summarize']) {
+    assert.equal(typeof model[name], 'function');
+  }
+  assert.equal(model.createRun('threshold-equality').schema, 'S145/run/v1');
+});
+
+test('whole declared threshold-equality sequence passes without replacing its original baseline', () => {
+  const result = model.measure(complete('threshold-equality'));
+  assert.equal(result.verdict, 'PASS');
+  assert.deepEqual(result.cycles, {
+    declared: ['c1', 'c2', 'c3', 'c4'], conducted: ['c1', 'c2', 'c3', 'c4'],
+    evidenced: ['c1', 'c2', 'c3', 'c4'], missing: [], sequenceComplete: true,
+  });
+  assert.deepEqual(result.journeys, {
+    attempted: 16, uninterrupted: 16, interrupted: 0, unknown: 0, notAttempted: 0,
+    successFraction: 1, budgetMs: 150, failedIds: [], unknownIds: [], recoveries: [],
+  });
+  assert.deepEqual(result.resources.memoryMiB, {
+    unit: 'fictional MiB', originalBaseline: 100, limitGrowth: 8,
+    samples: [
+      { cycleId: 'c1', value: 102, growthFromOriginal: 2, incrementFromPrevious: 2 },
+      { cycleId: 'c2', value: 104, growthFromOriginal: 4, incrementFromPrevious: 2 },
+      { cycleId: 'c3', value: 106, growthFromOriginal: 6, incrementFromPrevious: 2 },
+      { cycleId: 'c4', value: 108, growthFromOriginal: 8, incrementFromPrevious: 2 },
+    ],
+    latestValue: 108, latestGrowth: 8, maxKnownGrowth: 8, cumulativeGrowth: 8,
+    missingCycleIds: [], baselineMissing: false, breaches: [], verdict: 'PASS',
+  });
+});
