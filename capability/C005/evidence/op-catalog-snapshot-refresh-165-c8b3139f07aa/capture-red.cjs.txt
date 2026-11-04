@@ -1,0 +1,50 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const read = file => fs.readFileSync(path.join(root, file));
+const data = 'capability\\C005\\catalog-data.js';
+const assertions = 'capability\\C005\\tests\\snapshot-refresh-165.test.cjs';
+const bdd = 'capability\\C005\\snapshot-refresh-165.feature';
+const catalog = require(path.join(root, data));
+const contract = require(path.join(root, 'capability', 'C005', 'catalog-contract.js'));
+const matrix = require(path.join(root, 'capability', 'C003', 'matrix-data.js'));
+const beforeSha256 = sha(read(data));
+assert.equal(beforeSha256, '00df2f58566b4cb663b8dabcb175ef96fb7bdac269256781b34d29f579467863');
+assert.equal(catalog.source.commit, 'ebd7433ac143242ab633b52aff864bb2923dac2c');
+assert.equal(catalog.entries.filter(entry => entry.learning.available).length, 135);
+assert.deepEqual(contract.validateCatalog(catalog, matrix), { valid: true, errors: [] });
+const result = spawnSync(process.execPath, [path.join(__dirname, 'record-command.cjs.txt'),
+  'red-01', '1', process.execPath, '--test', '--test-reporter=tap', assertions],
+{ cwd: root, windowsHide: true, maxBuffer: 32 * 1024 * 1024 });
+process.stdout.write(result.stdout);
+process.stderr.write(result.stderr);
+const red = JSON.parse(fs.readFileSync(path.join(__dirname, 'red-01.json')));
+const afterSha256 = sha(read(data));
+const binding = {
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165',
+  kind: 'actual-genuine-red-against-loadable-unchanged135-snapshot',
+  recordedAtUtc: new Date().toISOString(), red: 'red-01.json',
+  oldSourceCommit: catalog.source.commit, oldCatalogSha256: beforeSha256,
+  oldCatalogAfterSha256: afterSha256, oldCatalogLoadable: true,
+  unchangedValidatorBeforeRed: { valid: true, errors: [] },
+  assertionsPath: assertions, assertionsSha256: sha(read(assertions)),
+  bddPath: bdd, bddSha256: sha(read(bdd)),
+  expectedPositiveFailures: 17, expectedNegativePasses: 1, rawStreamsPreserved: true
+};
+fs.writeFileSync(path.join(__dirname, 'red-binding-01.json'),
+  `${JSON.stringify(binding, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+assert.equal(result.status, 0);
+assert.equal(afterSha256, beforeSha256);
+assert.equal(red.exitCode, 1);
+assert.deepEqual(red.summary, { tests: 18, suites: 0, pass: 1, fail: 17, cancelled: 0, skipped: 0, todo: 0 });
+assert.match(red.stdout, /135 !== 150/);
+assert.match(red.stdout, /ERR_ASSERTION/);
+assert.doesNotMatch(red.stdout + red.stderr, /MODULE_NOT_FOUND|SyntaxError/);
+console.log(JSON.stringify({ actualBehavioralFailures: 17, negativeGatePassed: 1,
+  unchanged135Sha256: beforeSha256, oldCatalogLoadableAndValid: true }));

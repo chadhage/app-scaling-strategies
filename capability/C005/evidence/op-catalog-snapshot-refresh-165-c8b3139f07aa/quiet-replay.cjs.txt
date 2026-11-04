@@ -1,0 +1,97 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const { gzipSync } = require('node:zlib');
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const scopes = ['C005', 'C006', 'C007', 'C008', 'local-harness'].map(scope => path.join('capability', scope));
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+function walk(directory) {
+  return fs.readdirSync(path.join(root, directory), { withFileTypes: true }).flatMap(entry =>
+    entry.isDirectory() ? walk(path.join(directory, entry.name)) : [path.join(directory, entry.name)]);
+}
+const inventory = () => scopes.flatMap(walk).sort().map(file => {
+  const bytes = fs.readFileSync(path.join(root, file));
+  return { path: file, bytes: bytes.length, sha256: sha(bytes) };
+});
+function parseTap(text) {
+  const summary = {};
+  for (const key of ['tests', 'pass', 'fail', 'cancelled', 'skipped', 'todo']) {
+    summary[key] = Number(new RegExp(`^# ${key} (\\d+)\\r?$`, 'm').exec(text)?.[1] || 0);
+  }
+  const stack = [];
+  const parents = new Set();
+  let total = 0;
+  for (const line of text.split(/\r?\n/)) {
+    const match = /^(\s*)# Subtest: /.exec(line);
+    if (!match) continue;
+    const indent = match[1].length;
+    while (stack.length && stack.at(-1).indent >= indent) stack.pop();
+    if (stack.length) parents.add(stack.at(-1).id);
+    stack.push({ indent, id: total++ });
+  }
+  return { ...summary, total, parents: parents.size, leaves: total - parents.size };
+}
+assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, undefined);
+assert.equal(process.env.NODE_V8_COVERAGE, undefined);
+const modelFiles = scopes.flatMap(scope => walk(path.join(scope, 'tests')))
+  .filter(file => file.endsWith('.test.cjs') && !file.endsWith('\\browser.test.cjs')).sort();
+assert.equal(modelFiles.length, 23);
+const browserFiles = scopes.map(scope => path.join(scope, 'tests', 'browser.test.cjs'));
+const before = inventory();
+const startedAtUtc = new Date().toISOString();
+const runs = [];
+for (const [name, files] of [['quiet-model-01', modelFiles], ['quiet-browser-01', browserFiles]]) {
+  const start = new Date().toISOString();
+  const args = ['--test', '--test-reporter=tap', ...(name === 'quiet-browser-01' ? ['--test-concurrency=1'] : []), ...files];
+  const result = spawnSync(process.execPath, args, { cwd: root, windowsHide: true, maxBuffer: 32 * 1024 * 1024 });
+  runs.push({ name, command: [process.execPath, ...args], startedAtUtc: start,
+    completedAtUtc: new Date().toISOString(), exitCode: result.status, signal: result.signal,
+    spawnError: result.error?.message || null, tests: parseTap((result.stdout || Buffer.alloc(0)).toString('utf8')),
+    stdout: result.stdout || Buffer.alloc(0), stderr: result.stderr || Buffer.alloc(0) });
+}
+const after = inventory();
+const same = JSON.stringify(before) === JSON.stringify(after);
+const counts = runs.reduce((sum, run) => {
+  for (const [key, value] of Object.entries(run.tests)) sum[key] = (sum[key] || 0) + value;
+  return sum;
+}, {});
+const persisted = runs.map(run => {
+  const transcripts = {};
+  for (const stream of ['stdout', 'stderr']) {
+    const bytes = run[stream];
+    const compressed = gzipSync(bytes);
+    const relative = path.join('raw', `${run.name}.${stream}.raw.gz`);
+    fs.writeFileSync(path.join(__dirname, relative), compressed, { flag: 'wx' });
+    transcripts[stream] = { path: relative, bytes: bytes.length, sha256: sha(bytes),
+      gzipBytes: compressed.length, gzipSha256: sha(compressed) };
+  }
+  const { stdout, stderr, ...metadata } = run;
+  return { ...metadata, transcripts };
+});
+const report = {
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165',
+  worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-165',
+  kind: 'actual-capture-unset-readonly-replay-not-new-unique-tests-or-credit',
+  sourceCommit: 'c8b3139f07aa60a64833a5380503b2bd794c0e0e',
+  startedAtUtc, completedAtUtc: new Date().toISOString(), nodeVersion: process.version,
+  captureVariableUnset: true, tests: counts, runs: persisted,
+  ownedFilesChecked: before.length, beforeInventorySha256: sha(JSON.stringify(before)),
+  afterInventorySha256: sha(JSON.stringify(after)), ownedBytesAndFileSetUnchanged: same,
+  before, after, parentAcceptanceClaimed: false, kanoCredits: { S: 0, D: 0, L: 0 },
+  recordingBoundary: 'Both complete inventories precede deliberate wrapper transcript/report persistence; normal model and browser invocations append, delete and rewrite nothing.'
+};
+fs.writeFileSync(path.join(__dirname, 'quiet-readonly-confirmed-01.json'),
+  `${JSON.stringify(report, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+console.log(JSON.stringify({ tests: counts, ownedFilesChecked: before.length,
+  byteAndFileSetUnchanged: same, beforeInventorySha256: report.beforeInventorySha256,
+  afterInventorySha256: report.afterInventorySha256 }));
+assert.equal(same, true, 'Every ordinary verification path and byte must be unchanged.');
+for (const run of runs) {
+  if (run.exitCode !== 0) { process.stdout.write(run.stdout); process.stderr.write(run.stderr); }
+  assert.equal(run.exitCode, 0, run.name);
+  assert.equal(run.tests.fail, 0, run.name);
+}

@@ -9,7 +9,7 @@ const matrixContract = require('../../C003/matrix-contract.js');
 const filters = require('../catalog-filters.js');
 const ids = result => result.items.map(item => item.entry.id);
 const originalIds = catalog.entries.map(entry => entry.id);
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-150-ebd7433ac143/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-165-c8b3139f07aa/generation.json');
 
 test('C007 loads as a reusable module before any assertion about behavior', () => {
   assert.equal(typeof filters.filterCatalog, 'function');
@@ -73,7 +73,7 @@ test('risk remains UNCLASSIFIED for every priority; assessed risks have honest e
   assert.ok(catalog.entries.every(entry => entry.risk === 'unclassified'));
 });
 
-test('readiness separates 135 historical practices, 17 unavailable, and zero native/parent claims', () => {
+test('readiness separates 150 historical practices, two unavailable workflows, and zero native/parent claims', () => {
   const accepted = filters.filterCatalog(catalog, matrix, { readiness: 'portable-available' });
   assert.deepEqual(ids(accepted), catalog.entries.filter(entry => entry.learning.available).map(entry => entry.id));
   assert.deepEqual(ids(accepted), generation.acceptedPortableIds);
@@ -86,7 +86,8 @@ test('readiness separates 135 historical practices, 17 unavailable, and zero nat
     assert.equal(result.valid, true);
     assert.deepEqual(ids(result), []);
   }
-  for (const id of ['S136', 'S137', 'S138', 'S139']) assert.ok(!ids(accepted).includes(id), id);
+  for (const id of ['W001', 'W002']) assert.ok(!ids(accepted).includes(id), id);
+  for (const id of ['S136', 'S137', 'S138', 'S139', 'S150']) assert.ok(ids(accepted).includes(id), id);
   assert.ok(ids(accepted).includes('S103'));
 });
 

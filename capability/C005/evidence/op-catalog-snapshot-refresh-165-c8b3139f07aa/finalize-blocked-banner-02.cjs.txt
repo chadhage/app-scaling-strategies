@@ -1,0 +1,137 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const relative = path.relative(root, __dirname);
+const scopes = ['C005', 'C006', 'C007', 'C008', 'local-harness'].map(scope => path.join('capability', scope));
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const read = file => fs.readFileSync(path.join(root, file));
+const load = name => JSON.parse(fs.readFileSync(path.join(__dirname, name)));
+const save = (name, value) => fs.writeFileSync(path.join(__dirname, name),
+  `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+function walk(directory) {
+  return fs.readdirSync(path.join(root, directory), { withFileTypes: true }).flatMap(entry =>
+    entry.isDirectory() ? walk(path.join(directory, entry.name)) : [path.join(directory, entry.name)]);
+}
+const inventory = () => scopes.flatMap(walk).sort().map(file => {
+  const bytes = read(file);
+  return { path: file, canonicalGitPath: file.replaceAll('\\', '/'), bytes: bytes.length, sha256: sha(bytes) };
+});
+const old = load('result-blocked-banner-01.json');
+const oldValidation = load('validation-blocked-banner-01.json');
+const version = load('readonly-boundary-version-change-02.json');
+const generation = load('generation.json');
+const focused = load('focused-04.json');
+const filtersBrowser = load('browser-c007-02.json');
+const integrityCommand = load('integrity-readonly-03.json');
+const integrity = JSON.parse(integrityCommand.stdout);
+const blocker = load('browser-banner-blocker-01.json');
+assert.equal(focused.exitCode, 0);
+assert.deepEqual(focused.testNodes, { total: 301, parents: 3, leaves: 298 });
+assert.equal(filtersBrowser.exitCode, 0);
+assert.deepEqual(filtersBrowser.testNodes, { total: 16, parents: 1, leaves: 15 });
+assert.equal(integrityCommand.exitCode, 0);
+assert.equal(integrity.byteAndFileSetUnchanged, true);
+assert.equal(version.parentApproved, true);
+assert.equal(sha(read(version.currentPublisher.path)), version.currentPublisher.sha256);
+assert.equal(sha(read(generation.data.path)), generation.data.sha256);
+assert.equal(blocker.requiredUniformBannerMatches, false);
+assert.equal(sha(read(path.join(relative, 'result-blocked-banner-01.json'))),
+  'cbca863ca344d134b73e73b8f7f5532f5671041b3e4cff342992463c6a99b59e');
+assert.equal(sha(read(path.join(relative, 'validation-blocked-banner-01.json'))),
+  'ecfcc159139b1fe8a61d9fec8782c562342f7032ec7c9a8ee08de0392534b272');
+assert.equal(sha(read(path.join(relative, 'hashes-blocked-banner-01.json'))),
+  '8ac4480e007aed4db4780f85cecfa9d5d62bb89b4b1d9144657e48c80c788bb6');
+const initial = load('initial-owned-hashes.json');
+const historical = load('historical-proof-hashes.json');
+const bundle = load('source-archives.json');
+const archives = new Map(bundle.files.map(file => [file.originalPath, file.path]));
+for (const file of initial.entries) assert.equal(sha(read(archives.get(file.path) || file.path)), file.sha256, file.path);
+for (const file of historical.files) assert.equal(sha(read(file.path)), file.sha256, file.path);
+const before = inventory();
+const finalCount = before.length + 3;
+const currentArchives = before.filter(file => /\.(?:txt|gz)$/.test(file.path));
+const archiveCounts = {
+  total: currentArchives.length, text: currentArchives.filter(file => file.path.endsWith('.txt')).length,
+  gzip: currentArchives.filter(file => file.path.endsWith('.gz')).length,
+  previousOp150: { total: 111, text: 45, gzip: 66 },
+  allInitialArchives: { total: 276, text: 152, gzip: 124 },
+  originalSourceBundleText: 74, allInitialArchivesUnchanged: true, textArchivesAreNotGzip: true
+};
+const validation = {
+  ...oldValidation, recordedAtUtc: new Date().toISOString(),
+  kind: 'current-banner-blocked-validation-with-explicit-second-publisher-approval',
+  focused: { record: 'focused-04.json', files: 22, total: 301, parents: 3, leaves: 298,
+    passed: 301, failed: 0, privatePublisherExpectedSha256AtExecution: version.currentPublisher.sha256 },
+  correctedC007Browser: { record: 'browser-c007-02.json', files: 1, total: 16, parents: 1,
+    leaves: 15, passed: 16, failed: 0, captureEnabled: true },
+  lastSuccessfulIntegrity: { commandRecord: 'integrity-readonly-03.json', ...integrity },
+  latestCurrentIntegrity: { commandRecord: 'integrity-readonly-03.json', exitCode: 0,
+    fullVerificationCompleted: true, approvedExpectedSha256: version.currentPublisher.sha256,
+    boundaryApprovalRecord: 'readonly-boundary-version-change-02.json' },
+  attemptedBrowser: { ...oldValidation.attemptedBrowser,
+    originalC007WordingFailureResolved: true, currentRemainingFullSweepBlocker: 'S148 exact uniform-banner mismatch',
+    partialSuccessfulProducerReports: 4, qualifiedFullSweep: false },
+  archiveCounts, finalOwnedFilesWithManifest: finalCount, finalManifestEntries: finalCount - 1,
+  privatePublisherLastApprovedVersion: version.currentPublisher,
+  privatePublisherObservedUnapprovedVersion: null, oldBoundarySnapshotPreserved: true,
+  parentAcceptanceClaimed: false
+};
+save('validation-blocked-banner-02.json', validation);
+const result = {
+  ...old, recordedAtUtc: new Date().toISOString(),
+  kind: 'current-final-banner-blocked-worker-report-not-publication-or-acceptance',
+  outcome: 'blocked-exact-uniform-banner-before-any-staging-or-commit',
+  supersedesForCurrentStatusOnly: 'result-blocked-banner-01.json',
+  previousBlockedReportAndManifestBytesUnchanged: true,
+  currentConsumerBehaviorVerified: 'All150 current catalog/consumer behaviors pass focused-04 and current readonly integrity under explicit91c8 publisher approval.',
+  tests: validation.focused, browser: validation.attemptedBrowser,
+  correctedC007Browser: validation.correctedC007Browser,
+  lastSuccessfulIntegrity: validation.lastSuccessfulIntegrity,
+  latestCurrentIntegrity: validation.latestCurrentIntegrity,
+  blocker: { ...old.blocker,
+    requestedParentDirection: 'The fixed original S148 has a trailing period. Explicitly authorize exact original per-destination banners (149 unpunctuated + S148 punctuated), or direct another permitted resolution. No banner assertion, source or qualification is relaxed.' },
+  preserved: { ...old.preserved, archiveCounts },
+  boundaryAuthorization: {
+    record: 'readonly-boundary-version-change-02.json',
+    originalPublisherSha256: version.originalPublisher.sha256,
+    previousApprovedPublisherSha256: version.previousPublisher.sha256,
+    currentExplicitlyApprovedAndVerifiedPublisherSha256: version.currentPublisher.sha256,
+    observedPublisherMatchesApprovedExpectedVersion: true, initialBoundaryRewritten: false,
+    firstApprovedVersionEvidenceRewritten: false, unapprovedAtObservationFailureRetained: true,
+    workerPrivateGuardEdits: false, otherHashesUnchanged: true,
+    parentWhitespaceValidationTests: 14, parentTestsNotCountedAsWorkerTests: true
+  },
+  publication: { commit: null, tag: null, resultCommitted: false, stagingAttempted: false,
+    mutexAcquired: false, tagCreated: false, pushAttempted: false, remoteVerifiedAsPublication: false,
+    workerIndexWrites: false, reason: 'Only the unresolved original S148 exact uniform-banner mismatch blocks full qualification and publication.' },
+  validation: path.join(relative, 'validation-blocked-banner-02.json'),
+  validationSha256: sha(read(path.join(relative, 'validation-blocked-banner-02.json'))),
+  hashManifest: path.join(relative, 'hashes-blocked-banner-02.json'),
+  finalOwnedFilesWithManifest: finalCount, finalManifestEntries: finalCount - 1,
+  kanoCredits: { S: 0, D: 0, L: 0 }, originalCredits: 0, parentAcceptanceClaimed: false
+};
+save('result-blocked-banner-02.json', result);
+const files = inventory();
+assert.equal(files.length, finalCount - 1);
+save('hashes-blocked-banner-02.json', {
+  schemaVersion: 1, operation: generation.operation, kind: 'current-banner-blocked-owned-raw-byte-manifest',
+  recordedAtUtc: new Date().toISOString(), entries: files.length, ownedFilesIncludingThisManifest: finalCount,
+  exclusion: path.join(relative, 'hashes-blocked-banner-02.json'),
+  resultSha256: sha(read(path.join(relative, 'result-blocked-banner-02.json'))),
+  validationSha256: result.validationSha256, inventorySha256: sha(JSON.stringify(files)), files
+});
+for (const file of files) assert.equal(sha(read(file.path)), file.sha256, file.path);
+assert.equal(inventory().length, finalCount);
+console.log(JSON.stringify({
+  outcome: result.outcome, commit: null, tag: null, result: path.join(relative, 'result-blocked-banner-02.json'),
+  resultSha256: sha(read(path.join(relative, 'result-blocked-banner-02.json'))),
+  validationSha256: result.validationSha256,
+  manifestSha256: sha(read(path.join(relative, 'hashes-blocked-banner-02.json'))),
+  ownedFilesWithManifest: finalCount, manifestEntries: files.length, archiveCounts,
+  focusedRecords: 301, focusedLeaves: 298, correctedC007Records: 16, correctedC007Leaves: 15,
+  currentPublisherSha256: version.currentPublisher.sha256, historicalProofFiles: 561, snapshots: 8
+}));

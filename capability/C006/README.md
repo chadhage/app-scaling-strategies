@@ -50,16 +50,16 @@ C005 **1.0.0**, originally published at
 `219a2c0c20e095a1b8d5a8e66f19d8a3299b4329`, remains the only source-derived
 catalog. C006 imports its `catalog-data.js`, `catalog-contract.js` and readonly
 declaration, with no extraction, copied catalog or worktree-ledger discovery.
-The zero-credit `OP-CATALOG-SNAPSHOT-REFRESH-150` changes only that generated data
+The zero-credit `OP-CATALOG-SNAPSHOT-REFRESH-165` changes only that generated data
 and necessary proof bindings, not the contract or search API. The UI now uses:
 
-- Commit: `ebd7433ac143242ab633b52aff864bb2923dac2c`.
-- Annotated source tag: `kanban/flow-admin/ebd7433ac143`.
-- Commit time: `2026-11-04T02:53:48.000Z`.
-- Ledger update: `2026-11-04T02:53:47.0882168Z`.
-- 135 accepted portable lesson links **in that historical snapshot**, not
-  live availability: exactly S001–S135. S136+ remain
-  unavailable even when the live board advances.
+- Commit: `c8b3139f07aa60a64833a5380503b2bd794c0e0e`.
+- Annotated source tag: `kanban/flow-admin/c8b3139f07aa`.
+- Commit time: `2026-11-04T05:06:17.000Z`.
+- Ledger update: `2026-11-04T05:06:14.4697468Z`.
+- All 150 accepted portable lesson links **in that historical snapshot**, not
+  live availability: exactly S001–S150. W001/W002 remain unavailable.
+  Later live capability acceptance cannot alter this fixed source.
 - Native runnable/qualified: **false for every entry**. Target support remains
   unknown with original reasons and the unchanged C003 capability authority.
 - Every source parent remains planned/incomplete. Risk is **unclassified**, with
@@ -71,9 +71,9 @@ source-demo parent. C001 approvals and the original parent gates are unchanged.
 Integrity tests still compare all original publication bytes, using C005's
 byte-preserved archive for the old generated artifact, then authenticate the new
 artifact with its fixed-generation hash and reproducible extraction. The binding
-is `capability\C005\evidence\op-catalog-snapshot-refresh-150-ebd7433ac143\generation.json`;
-it binds the source's 150 accepted units (148 S + 2 D), not a new unit-acceptance record.
-All seven earlier catalogs (11/20/36/61/86/100/120 practices), all 371 original
+is `capability\C005\evidence\op-catalog-snapshot-refresh-165-c8b3139f07aa\generation.json`;
+it binds the source's 165 accepted units (163 S + 2 D), not a new unit-acceptance record.
+All eight earlier catalogs (11/20/36/61/86/100/120/135 practices), all 561 initial
 proof files and the entire 51-file blocked OP150 attempt remain byte-for-byte
 historical. The parent approved the existing source-pin recovery after the
 unchanged validator rejected the former source's 18 ms chronology conflict;
@@ -111,7 +111,7 @@ finally { Remove-Item Env:\CAPTURE_BROWSER_EVIDENCE }
 
 Any other value, including `true`, `0` or an unset variable, does not capture.
 Successful refresh captures append uniquely named
-`evidence\browser-op-catalog-snapshot-refresh-150-ebd7433ac143-*.json` files with
+`evidence\browser-op-catalog-snapshot-refresh-165-c8b3139f07aa-*.json` files with
 exclusive creation, never replacing earlier observations. Existing proof remains
 byte-for-byte historical and does not attest to this generation.
 The actual browser tests use only the existing

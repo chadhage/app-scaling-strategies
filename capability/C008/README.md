@@ -16,13 +16,13 @@ needed. [Microsoft disclaimer](../../README.md#microsoft-open-source-disclaimer)
 
 ## Three different preparation modes
 
-- **Accepted synthetic practice:** 135 original lesson links from C005's
+- **Accepted synthetic practice:** all 150 original lesson links from C005's
   historical snapshot. Read each lesson's own preconditions, synthetic inputs,
   controls, assertions and limitations. **Training rehearsal — synthetic data —
   not a live Azure result.**
-- **Unavailable practice:** other scenarios do not have accepted learning in
-  that snapshot, even if a file or later publication exists. The workflows have
-  no portable A-card exercise; portable practice is unsupported here. Their
+- **Unavailable practice:** W001/W002 have no portable A-card exercise;
+  portable practice is unsupported here. Later live capability acceptance
+  cannot change the fixed snapshot or confer native qualification. Their
   source/preparation reading views still work. No replacement exercise, current
   availability claim or universal unsupported-host claim is invented.
 - **Separately gated native prerequisites:** every entry remains not runnable,
@@ -43,20 +43,20 @@ matrix checks to C003. It verifies the unchanged C001 artifact through C001's
 existing cryptographic integrity guard. Ready views hold references to the
 shared catalog, selected entry, matrix and approval artifact, not copied metadata
 or approval tables. There is no extraction, filesystem/ledger discovery, JSON
-import or new catalog. Zero-credit `OP-CATALOG-SNAPSHOT-REFRESH-150` changes only
+import or new catalog. Zero-credit `OP-CATALOG-SNAPSHOT-REFRESH-165` changes only
 C005's generated snapshot and necessary test/proof bindings, not preparation,
 catalog schemas/APIs or the authorities.
 
 - Catalog: `capability\C005\catalog-data.js`, one immutable generated module.
-- Source/availability pin: `ebd7433ac143242ab633b52aff864bb2923dac2c`,
-  annotated source tag `kanban/flow-admin/ebd7433ac143`.
+- Source/availability pin: `c8b3139f07aa60a64833a5380503b2bd794c0e0e`,
+  annotated source tag `kanban/flow-admin/c8b3139f07aa`.
   The shared commit time and ledger-update time are displayed. This is
   **historical snapshot availability, not live state**.
-  Accepted IDs are exactly S001–S135. S136+ remain
-  unavailable even if the live board later advances. C005's `generation.json` under
-  `evidence\op-catalog-snapshot-refresh-150-ebd7433ac143` binds source, hashes and IDs.
-  Its source accepts 150 original units (148 S + 2 D); this operation adds none.
-  All seven previous catalogs, 371 original proofs and the entire 51-file blocked
+  Accepted IDs are exactly S001–S150. W001/W002 remain unavailable.
+  C005's `generation.json` under
+  `evidence\op-catalog-snapshot-refresh-165-c8b3139f07aa` binds source, hashes and IDs.
+  Its source accepts 165 original units (163 S + 2 D); this operation adds none.
+  All eight previous catalogs, 561 initial proofs and the entire 51-file blocked
   OP150 attempt remain byte-preserved. Parent-approved existing source recovery
   leaves exact timestamps, chronology validation, authorities and helper unchanged.
 - Capability authority: unchanged C003 matrix and constraints. All 17
@@ -109,7 +109,7 @@ This operation does not edit those documents or weaken the CLI.
 
 Ordinary browser verification **does not write or delete observations**. To
 deliberately append a fresh uniquely named
-`evidence\browser-op-catalog-snapshot-refresh-150-ebd7433ac143-*.json`:
+`evidence\browser-op-catalog-snapshot-refresh-165-c8b3139f07aa-*.json`:
 
 ```powershell
 $env:CAPTURE_BROWSER_EVIDENCE='1'

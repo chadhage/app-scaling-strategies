@@ -10,7 +10,7 @@ const { createRequire } = require('node:module');
 const { execFileSync } = require('node:child_process');
 const catalog = require('../../C005/catalog-data.js');
 const contract = require('../../C005/catalog-contract.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-150-ebd7433ac143/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-165-c8b3139f07aa/generation.json');
 const helperPath = path.resolve(__dirname, '..', '..', '..', 'testing', 'browser', 'isolated.cjs');
 const helperSourceSha256 = createHash('sha256').update(readFileSync(helperPath)).digest('hex');
 const PUBLISHED_HELPER_COMMIT = '53c0c0d82cc1db6780a87ac2b1085734af6d5c60';
@@ -82,7 +82,7 @@ test('C006 actual isolated browser search, keyboard, failure, reset, literal and
       assert.equal(await page.locator('#search-error').isVisible(), false);
       assert.equal(await page.locator('#search-empty').isVisible(), false);
     });
-    await check('historical provenance and all 135 accepted lesson destinations bind to the fixed generation, not live state', async () => {
+    await check('historical provenance and all 150 accepted lesson destinations bind to the fixed generation, not live state', async () => {
       const summary = await page.locator('#snapshot-summary').innerText();
       for (const value of [catalog.acceptanceSnapshot.commit, catalog.acceptanceSnapshot.commitTimeUtc,
         catalog.acceptanceSnapshot.ledgerUpdatedAtUtc, catalog.acceptanceSnapshot.ledgerSha256]) {
@@ -94,10 +94,10 @@ test('C006 actual isolated browser search, keyboard, failure, reset, literal and
       assert.deepEqual(await page.locator('.lesson-link').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))),
         catalog.entries.filter(entry => entry.learning.available).map(entry => entry.learning.href));
       assert.equal(await page.locator('.lesson-link').count(), generation.acceptedPortableLessons);
-      assert.equal(await page.locator('#S136 .lesson-link, #S137 .lesson-link, #S138 .lesson-link, #S139 .lesson-link, #W001 .lesson-link, #W002 .lesson-link').count(), 0);
-      assert.ok((await page.locator('#S136 .learning-status').innerText()).includes(catalog.entries[135].learning.reason));
+      assert.equal(await page.locator('#W001 .lesson-link, #W002 .lesson-link').count(), 0);
+      assert.ok((await page.locator('#W001 .learning-status').innerText()).includes(catalog.entries[150].learning.reason));
       assert.equal(await page.locator('#S103 .lesson-link').getAttribute('href'), '../../learning/S103/index.html');
-      assert.equal(await page.locator('#S135 .lesson-link').getAttribute('href'), '../../learning/S135/index.html');
+      assert.equal(await page.locator('#S150 .lesson-link').getAttribute('href'), '../../learning/S150/index.html');
       assert.match(await page.locator('#availability-summary').innerText(),
         new RegExp(`${generation.acceptedPortableLessons} accepted portable lessons.*0 native runnable.*0 native qualified.*0 completed source parents`));
     });
@@ -338,7 +338,7 @@ test('C006 actual isolated browser search, keyboard, failure, reset, literal and
     });
     assert.equal(checks.length, 16);
     report = {
-      schemaVersion: 1, cardId: 'C006', operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', status: 'passed',
+      schemaVersion: 1, cardId: 'C006',       operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165', status: 'passed',
       observedAtUtc: new Date().toISOString(), mode: 'actual-isolated-headless',
       nodeVersion: process.version, browser: 'Microsoft Edge', browserVersion,
       playwrightVersion: helperRequire('playwright/package.json').version,
@@ -352,7 +352,7 @@ test('C006 actual isolated browser search, keyboard, failure, reset, literal and
       sourceScenarios: 150, guidedWorkflows: 2, acceptedHistoricalLessons: generation.acceptedPortableLessons,
       acceptedPracticeDestinations: catalog.entries.filter(entry => entry.learning.available).map(entry => entry.learning.href),
       practiceNavigations: [acceptedPracticeNavigation], actualPracticeNavigationCount: 1,
-      unavailablePracticeIdsChecked: ['S136', 'S137', 'S138', 'S139'],
+      unavailablePracticeIdsChecked: ['W001', 'W002'],
       unknownSupport: 152,
       nativeRunnable: 0, nativeQualified: 0, completedSourceParents: 0,
       checks, cspObservation, pageErrors, remoteRequests,
@@ -368,7 +368,7 @@ test('C006 actual isolated browser search, keyboard, failure, reset, literal and
   if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') {
     assert.equal(t.signal.aborted, false, 'A timed-out or cancelled suite cannot append a success observation.');
     const reportPath = path.join(__dirname, '..', 'evidence',
-      `browser-op-catalog-snapshot-refresh-150-ebd7433ac143-${randomUUID()}.json`);
+      `browser-op-catalog-snapshot-refresh-165-c8b3139f07aa-${randomUUID()}.json`);
     await fs.writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
   }
   console.log(`C006 actual browser: Edge ${browserVersion}; Playwright ${report.playwrightVersion}; ${checks.length} acceptance groups; close awaited; evidence ${process.env.CAPTURE_BROWSER_EVIDENCE === '1' ? 'deliberately captured' : 'unchanged'}.`);

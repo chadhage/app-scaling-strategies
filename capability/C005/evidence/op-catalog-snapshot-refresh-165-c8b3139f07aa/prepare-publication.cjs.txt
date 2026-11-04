@@ -1,0 +1,33 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const checks = require('./publication-checks.cjs.txt');
+const planned = ['publication-owned-paths.json', 'publication-pathspec.txt', 'publication-preparation-01.json',
+  'raw\\publication-preparation-01.stdout.raw.gz', 'raw\\publication-preparation-01.stderr.raw.gz',
+  'result-final.json', 'validation-final.json', 'predicted-object-storage.json', 'hashes-final.json']
+  .map(file => checks.logical(path.join(checks.relative, file)));
+assert.equal(fs.existsSync(path.join(__dirname, 'publication-owned-paths.json')), false);
+checks.preserved();
+const paths = [...new Set([...checks.proposed(), ...planned])].sort();
+for (const file of paths) assert.equal(checks.owned(file), true, file);
+const excluded = checks.load('initial-owned-hashes.json').entries
+  .find(file => file.canonicalGitPath === checks.excludedStandalone);
+assert.ok(excluded);
+assert.equal(checks.sha(checks.read(excluded.path)), excluded.sha256);
+fs.writeFileSync(path.join(__dirname, 'publication-pathspec.txt'),
+  Buffer.from(paths.map(file => `${file}\0`).join(''), 'utf8'), { flag: 'wx' });
+fs.writeFileSync(path.join(__dirname, 'publication-owned-paths.json'), `${JSON.stringify({
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165',
+  kind: 'explicit-five-scope-inventory-including-final-proof-and-this-record',
+  recordedAtUtc: new Date().toISOString(), paths, entries: paths.length,
+  pathspecFile: path.join(checks.relative, 'publication-pathspec.txt'),
+  pathspecEncoding: 'exact canonical Git logical paths, UTF-8 NUL-separated; archival TXT is not gzip',
+  pathspecSha256: checks.sha(checks.read(path.join(checks.relative, 'publication-pathspec.txt'))),
+  excludedExistingUntrackedHistoricalReport: { path: checks.excludedStandalone,
+    sha256: excluded.sha256, reason: 'Preserve already-accepted OP150 standalone receipt without staging unrelated history.' },
+  plannedFinalAndWrapperPaths: planned, unownedPathsIncluded: false, parentAcceptanceClaimed: false
+}, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+console.log(JSON.stringify({ explicitOwnedPaths: paths.length, excludedExistingHistoricalStandalone: 1,
+  canonicalNulPathspecSha256: checks.sha(checks.read(path.join(checks.relative, 'publication-pathspec.txt'))) }));

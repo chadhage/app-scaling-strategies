@@ -1,0 +1,96 @@
+Feature: Honest host, risk and readiness filters of the accepted shared catalog
+  C007 is one frozen S unit under H002 and LP-LEARN.
+  C003 and C005 must already be accepted. This local consumer changes neither.
+
+  Background:
+    Given the unchanged C005 v1 catalog contains S001 through S150 and W001/W002
+    And its historical snapshot has eleven accepted portable lessons
+    And C003 alone supplies the validated documented-only host matrix and denials
+    And no entry is native runnable, qualified or a completed source parent
+
+  Scenario: Default, omitted and empty selections preserve the complete catalog
+    When the reusable pure filter receives all, omitted or empty selections
+    Then all 152 original entry objects remain in their original order
+    And their IDs, source references and historical provenance remain unchanged
+
+  Scenario: A selected host excludes only explicit direct prerequisite conflicts
+    When I choose App Service with the keyboard
+    Then entries explicitly requiring another host under test are incompatible
+    And W002 explains its CONTAINER prerequisite means P002 OR P003
+    And each excluded entry retains its original ID, source and reason
+    And excluded entries still explain portable unavailability, native denial and incomplete source parents
+    And entries without a proven conflict remain visibly unknown, not supported
+    And matching a prerequisite never certifies transitive dependencies or a target
+
+  Scenario: Alternative host prerequisites are OR groups, not all-host requirements
+    When I choose either Container Apps or AKS
+    Then W002 remains visible with unknown target support
+    And App Service may retain IMAGEHOST only with its unresolved container-mode limit
+    And unselected host context preserves all unresolved entries
+
+  Scenario: Documented host configurations retain incompatible and unknown reasons
+    When I choose a host
+    Then its configuration rows come unchanged from C003 filtering
+    And unsupported configuration reasons, constraints and source links are visible
+    And documented support is not native evidence or target approval
+    And all cloud, run, IaC, scaffold, identity, deploy and spend denials remain intact
+
+  Scenario Outline: Risk is not priority
+    When I choose risk "<risk>" with the keyboard
+    Then exactly <count> entries are visible
+    And no P0, P1 or P2 value is converted into an assessed risk
+    Examples:
+      | risk         | count |
+      | all          | 152   |
+      | unclassified | 152   |
+      | assessed     | 0     |
+      | low          | 0     |
+      | medium       | 0     |
+      | high         | 0     |
+
+  Scenario: Readiness distinguishes portable history from native availability
+    When I choose accepted portable learning
+    Then only the eleven historical snapshot lessons are shown
+    When I choose unavailable portable learning
+    Then 141 entries are shown with their original unavailability reasons
+    When I choose native runnable, native qualified or completed source parent
+    Then the honest result is empty, with no executable run control
+
+  Scenario: Filters combine consistently and keyboard reset restores defaults
+    When I choose a host, unclassified risk and accepted portable learning
+    Then all three predicates apply together, independently of selection order
+    And explicit host conflicts appear separately with reasons
+    When I activate Reset filters using Tab and Enter
+    Then all selections are restored to all and all 152 entries reappear
+    And the actual host select receives focus
+
+  Scenario: Bad, absent, empty, promoted or incompatible-version data clears stale results
+    Given valid results, provenance, source links and permission displays are visible
+    When catalog data, matrix data or a filter selection fails validation
+    Then no previous result, excluded entry, source claim or permission display remains
+    And an alert explains the failure, distinct from a successful no-match result
+    And a later selection change does not resurrect an earlier valid catalog
+    And controls remain keyboard operable for reset and subsequent valid mounting
+
+  Scenario: The actual browser surface is accessible and local-only
+    When isolated headless Edge loads the page through openIsolatedLesson
+    Then labels, skip navigation, live counts, empty states and visible focus work
+    And actual Tab, Arrow, Enter and Space controls exercise the filter journey
+    And original source links, lesson links, IDs and objectives are preserved
+    And 320-pixel layout does not require horizontal scrolling
+    And source text renders literally rather than as markup
+    And the browser enforces CSP against inline code and connection attempts
+    And close is awaited in finally without an integrated foreground lease
+
+  Scenario: Verification preserves historical browser proof
+    Given committed observation evidence exists
+    When normal verification succeeds or fails
+    Then the observation evidence is neither overwritten nor deleted
+    And only explicit CAPTURE_BROWSER_EVIDENCE=1 deliberately refreshes successful proof
+    And RED source snapshots end in txt and are not auto-discovered tests
+
+  Scenario: No adjacent work or native completion credit is claimed
+    Then C006 search and C008 preparation remain unimplemented by C007
+    And H002 and all original source parents remain incomplete
+    And IaC is not applicable and all Azure actions remain unauthorized
+    And Node 22 test tooling does not validate production Node 24

@@ -1,0 +1,192 @@
+$ErrorActionPreference = 'Stop'
+$operation = 'OP-CATALOG-SNAPSHOT-REFRESH-165'
+$worker = 'worker-OP-CATALOG-SNAPSHOT-REFRESH-165'
+$evidence = 'capability\C005\evidence\op-catalog-snapshot-refresh-165-c8b3139f07aa'
+$fixedSource = 'c8b3139f07aa60a64833a5380503b2bd794c0e0e'
+$message = '[flow][catalog-refresh][no-kano-credit] OP-CATALOG-SNAPSHOT-REFRESH-165 Expose all150 fixed-source practices; exact original S148 banner compatibility'
+$rawOut = [IO.MemoryStream]::new()
+$rawErr = [IO.MemoryStream]::new()
+$commands = [Collections.Generic.List[object]]::new()
+function Run-Tool([string]$Executable, [string[]]$Arguments) {
+    $start = [Diagnostics.ProcessStartInfo]::new()
+    $start.FileName = $Executable
+    $start.WorkingDirectory = (Get-Location).Path
+    $start.UseShellExecute = $false
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    foreach ($argument in $Arguments) { $start.ArgumentList.Add($argument) }
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $start
+    $out = [IO.MemoryStream]::new()
+    $err = [IO.MemoryStream]::new()
+    try {
+        if (-not $process.Start()) { throw "Cannot start $Executable." }
+        $outTask = $process.StandardOutput.BaseStream.CopyToAsync($out)
+        $errTask = $process.StandardError.BaseStream.CopyToAsync($err)
+        $process.WaitForExit()
+        $outTask.GetAwaiter().GetResult()
+        $errTask.GetAwaiter().GetResult()
+        $outBytes = $out.ToArray()
+        $errBytes = $err.ToArray()
+        $record = [ordered]@{
+            executable = $Executable; arguments = $Arguments; exitCode = $process.ExitCode
+            stdoutOffset = $rawOut.Length; stdoutBytes = $outBytes.Length
+            stdoutSha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($outBytes)).ToLowerInvariant()
+            stderrOffset = $rawErr.Length; stderrBytes = $errBytes.Length
+            stderrSha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($errBytes)).ToLowerInvariant()
+        }
+        $commands.Add($record)
+        $rawOut.Write($outBytes, 0, $outBytes.Length)
+        $rawErr.Write($errBytes, 0, $errBytes.Length)
+        $outText = [Text.Encoding]::UTF8.GetString($outBytes)
+        $errText = [Text.Encoding]::UTF8.GetString($errBytes)
+        if ($process.ExitCode -ne 0) { throw "$Executable $($Arguments -join ' ') failed ($($process.ExitCode)): $outText$errText" }
+        return $outText
+    } finally {
+        $out.Dispose(); $err.Dispose(); $process.Dispose()
+    }
+}
+function Run-Git([string[]]$Arguments) { return Run-Tool 'git' (@('--no-pager') + $Arguments) }
+function Check([string[]]$Arguments) {
+    return (Run-Tool 'node' (@("$evidence\publication-checks.cjs.txt") + $Arguments) | ConvertFrom-Json)
+}
+function File-Hash([string]$Path) {
+    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+function Assert-Index($Before) {
+    $after = Check @('--index')
+    foreach ($key in @('entries', 'flags', 'stageBytes', 'flagBytes',
+        'unownedLsFilesStageRawByteSha256', 'unownedLsFilesFlagsRawByteSha256')) {
+        if ($Before.$key -ne $after.$key) { throw "Unowned index bytes or flags changed: $key" }
+    }
+}
+function Save-Raw([string]$Path, [byte[]]$Bytes) {
+    $stream = [IO.File]::Open($Path, [IO.FileMode]::CreateNew)
+    try {
+        $gzip = [IO.Compression.GZipStream]::new($stream, [IO.Compression.CompressionLevel]::Optimal, $true)
+        try { $gzip.Write($Bytes, 0, $Bytes.Length) } finally { $gzip.Dispose() }
+    } finally { $stream.Dispose() }
+    return [ordered]@{ path = $Path; bytes = $Bytes.Length
+        sha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($Bytes)).ToLowerInvariant()
+        gzipBytes = (Get-Item -LiteralPath $Path).Length; gzipSha256 = File-Hash $Path }
+}
+$mutex = [Threading.Mutex]::new($false, 'Local\AppScalingStrategies_KanbanPublisher_v1')
+$held = $false
+$headBefore = $null
+$commit = $null
+$tag = $null
+$receipt = $null
+$failure = $null
+try {
+    $held = $mutex.WaitOne([TimeSpan]::FromSeconds(180))
+    if (-not $held) { throw 'Publisher mutex timed out; never bypass serialization.' }
+    if ((Run-Git @('branch', '--show-current')).Trim() -ne 'main') { throw 'Checked-out main is required.' }
+    if (Test-Path -LiteralPath '.git\index.lock') { throw 'Existing index lock; never remove or bypass it.' }
+    $headBefore = (Run-Git @('rev-parse', 'HEAD')).Trim()
+    $remoteBefore = (Run-Git @('ls-remote', 'origin', 'refs/heads/main')).Trim() -split '\s+'
+    if ($remoteBefore.Count -ne 2 -or $remoteBefore[0] -ne $headBefore) {
+        throw 'HEAD must exactly equal remote main before any staging; no ahead exception, reset or force.'
+    }
+    Run-Git @('merge-base', '--is-ancestor', $fixedSource, $headBefore) | Out-Null
+    $preflight = Check @('--verify-current')
+    $unownedBefore = Check @('--index')
+    $inventory = Get-Content -LiteralPath "$evidence\publication-owned-paths.json" -Raw | ConvertFrom-Json
+    $paths = @($inventory.paths)
+    if (-not $paths.Count) { throw 'Explicit owned inventory is empty.' }
+    $pathspec = "$evidence\publication-pathspec.txt"
+    Run-Git @('add', "--pathspec-from-file=$pathspec", '--pathspec-file-nul') | Out-Null
+    Assert-Index $unownedBefore
+    for ($offset = 0; $offset -lt $paths.Count; $offset += 40) {
+        $last = [Math]::Min($offset + 39, $paths.Count - 1)
+        Run-Git (@('-c', 'core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol',
+            'diff', '--cached', '--check', '--') + $paths[$offset..$last]) | Out-Null
+    }
+    Check @('--verify-current') | Out-Null
+    $fullMessage = "$message`n`nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+    Run-Git @('commit', '--quiet', '--only', "--pathspec-from-file=$pathspec", '--pathspec-file-nul',
+        '-m', $fullMessage) | Out-Null
+    $commit = (Run-Git @('rev-parse', 'HEAD')).Trim()
+    if ((Run-Git @('rev-parse', "$commit^")).Trim() -ne $headBefore) { throw 'Unexpected commit parent.' }
+    Assert-Index $unownedBefore
+    $committed = Check @('--verify-commit', $commit)
+    $tag = "kanban/flow-catalog-refresh/$($commit.Substring(0, 12))"
+    if ((Run-Git @('tag', '--list', $tag)).Trim()) { throw 'Annotated operation tag already exists; never overwrite it.' }
+    $resultHash = File-Hash "$evidence\result-final.json"
+    $validationHash = File-Hash "$evidence\validation-final.json"
+    $manifestHash = File-Hash "$evidence\hashes-final.json"
+    $annotation = "$message; commit $commit; fixed source $fixedSource; result $evidence\result-final.json SHA256 $resultHash; validation SHA256 $validationHash; manifest SHA256 $manifestHash; 150 unique practice URLs, 155 exact ID-specific banners, canonical149 sweep plus exact original S148 one-period literal; 314 focused records/311 leaves; 71 browser records/66 leaves; all historical proofs preserved; zero S/D/L credits; parent-only acceptance."
+    Run-Git @('tag', '-a', $tag, $commit, '-m', $annotation) | Out-Null
+    if ((Run-Git @('cat-file', '-t', $tag)).Trim() -ne 'tag' -or
+        (Run-Git @('rev-parse', "$tag^{}")).Trim() -ne $commit) { throw 'Local annotated tag target differs.' }
+    Run-Git @('push', '--atomic', 'origin', 'main', "refs/tags/$tag") | Out-Null
+    $refs = (Run-Git @('ls-remote', 'origin', 'refs/heads/main', "refs/tags/$tag", "refs/tags/$tag^{}")).Trim() -split '\r?\n'
+    function Remote-Ref([string]$Ref) {
+        $matching = @($refs | Where-Object { ($_ -split '\s+')[1] -eq $Ref })
+        if ($matching.Count -ne 1) { throw "Missing or duplicate remote ref: $Ref" }
+        return ($matching[0] -split '\s+')[0]
+    }
+    $remoteMain = Remote-Ref 'refs/heads/main'
+    $tagObject = Remote-Ref "refs/tags/$tag"
+    if ((Remote-Ref "refs/tags/$tag^{}") -ne $commit -or
+        $tagObject -ne (Run-Git @('rev-parse', $tag)).Trim()) { throw 'Remote annotated tag object/peeled target differs.' }
+    if ($remoteMain -ne $commit) { Run-Git @('fetch', '--no-tags', 'origin', 'main') | Out-Null }
+    Run-Git @('merge-base', '--is-ancestor', $commit, $remoteMain) | Out-Null
+    $committed = Check @('--verify-commit', $commit)
+    Assert-Index $unownedBefore
+    $dirty = @((Run-Git @('status', '--porcelain', '--', 'capability/C005', 'capability/C006',
+        'capability/C007', 'capability/C008', 'capability/local-harness')).Trim() -split '\r?\n' | Where-Object { $_ })
+    if (@($dirty).Count -ne 1 -or $dirty[0] -ne "?? $($inventory.excludedExistingUntrackedHistoricalReport.path)") {
+        throw 'Owned scope is not clean except the one explicitly retained historical standalone receipt.'
+    }
+    $receipt = [ordered]@{
+        schemaVersion = 1; operation = $operation; worker = $worker
+        kind = 'standalone-postpublication-report-not-parent-acceptance'; outcome = 'published-remotely-verified'
+        commit = $commit; tag = $tag; tagObject = $tagObject; parentCommit = $headBefore
+        remoteMainAtVerification = $remoteMain; mainEqualRemoteBeforeAnyStaging = $true
+        atomicMainAndAnnotatedTagPush = $true; remotePeeledTagAndAncestryVerified = $true
+        explicitOwnedCommittedPaths = $paths.Count; precommitCanonicalObjectPredictions = $preflight
+        postcommitObjectAndSha256Verification = $committed; unownedIndexBeforeAndAfter = $unownedBefore
+        sourceCommit = $fixedSource; acceptedOriginalSourceUnits = 165; portablePractices = 150
+        uniquePracticeDestinations = 150; actualPracticeNavigations = 155; exactIdSpecificBanners = 155
+        result = "$evidence\result-final.json"; resultSha256 = $resultHash
+        validation = "$evidence\validation-final.json"; validationSha256 = $validationHash
+        committedManifest = "$evidence\hashes-final.json"; committedManifestSha256 = $manifestHash
+        excludedExistingHistoricalStandalone = $inventory.excludedExistingUntrackedHistoricalReport
+        parentAcceptanceClaimed = $false; kanoCredits = [ordered]@{ S = 0; D = 0; L = 0 }
+        recordedAtUtc = [DateTime]::UtcNow.ToString('o')
+    }
+} catch {
+    $failure = $_.Exception.Message
+    if ($headBefore -and -not $commit) {
+        try {
+            $observedHead = (Run-Git @('rev-parse', 'HEAD')).Trim()
+            if ($observedHead -ne $headBefore) { $commit = $observedHead }
+        } catch { }
+    }
+} finally {
+    if ($held) { $mutex.ReleaseMutex() }
+    $mutex.Dispose()
+}
+$stdoutArchive = Save-Raw "$evidence\raw\publication-transaction.stdout.raw.gz" ($rawOut.ToArray())
+$stderrArchive = Save-Raw "$evidence\raw\publication-transaction.stderr.raw.gz" ($rawErr.ToArray())
+$rawOut.Dispose(); $rawErr.Dispose()
+if ($failure) {
+    $receipt = [ordered]@{ schemaVersion = 1; operation = $operation; worker = $worker
+        kind = 'terminal-publication-failure-no-fallback'; outcome = 'publication-failed'
+        exactCreatedCommit = $commit; attemptedTag = $tag; error = $failure
+        resetAmendForceRetryOrGuardWideningPerformed = $false; parentAcceptanceClaimed = $false
+        kanoCredits = [ordered]@{ S = 0; D = 0; L = 0 }; recordedAtUtc = [DateTime]::UtcNow.ToString('o') }
+}
+$receipt['publisherMutexReleasedBeforeStandaloneReport'] = $true
+$receipt['rawCommandStreams'] = [ordered]@{ stdout = $stdoutArchive; stderr = $stderrArchive }
+$receipt['commands'] = $commands.ToArray()
+$receipt['rawStreamMeaning'] = 'Exact concatenated subprocess stream bytes; command offsets identify boundaries. Not normalized text and not a claim about the launcher parent stream.'
+$receipt['reportPersistence'] = 'Deliberate untracked standalone report plus two raw gzip streams after publication; no self-referential committed receipt.'
+$reportName = if ($failure) { 'publication-failure-01.json' } else { 'publication-final.json' }
+$reportPath = "$evidence\$reportName"
+if (Test-Path -LiteralPath $reportPath) { throw 'Never overwrite a standalone transaction report.' }
+$json = $receipt | ConvertTo-Json -Depth 20
+[IO.File]::WriteAllText((Join-Path (Get-Location).Path $reportPath),
+    $json.Replace("`r`n", "`n") + "`n", [Text.UTF8Encoding]::new($false))
+$json
+if ($failure) { throw "Stopped without fallback; exact created commit: $commit; $failure" }

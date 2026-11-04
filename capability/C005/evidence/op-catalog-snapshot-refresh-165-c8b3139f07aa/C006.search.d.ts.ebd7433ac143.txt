@@ -1,0 +1,13 @@
+import type { CatalogEntry, SourceCatalog } from '../C005/catalog-contract';
+import type { CapabilityMatrix } from '../C003/matrix-contract';
+
+export const SEARCH_VERSION: '1.0.0';
+/** Literal, case-insensitive title/objective substring search in original source order.
+ * Returns original entry references in a frozen array. Empty/whitespace returns all.
+ * Throws TypeError with code ERR_SEARCH_QUERY or ERR_CATALOG_DATA on invalid input.
+ */
+export function searchCatalog(
+  catalog: SourceCatalog,
+  matrix: CapabilityMatrix,
+  query: string
+): readonly CatalogEntry[];

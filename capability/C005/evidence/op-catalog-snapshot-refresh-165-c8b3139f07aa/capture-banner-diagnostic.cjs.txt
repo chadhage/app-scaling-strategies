@@ -1,0 +1,84 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const { createRequire } = require('node:module');
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const helperPath = path.join(root, 'testing', 'browser', 'isolated.cjs');
+const helperSha256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+const uniformBanner = 'Training rehearsal - synthetic data - not a live Azure result';
+const originalBanner = `${uniformBanner}.`;
+
+async function main() {
+  assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, '1');
+  assert.equal(sha(fs.readFileSync(helperPath)), helperSha256);
+  const playwrightVersion = createRequire(helperPath)('playwright/package.json').version;
+  assert.equal(playwrightVersion, '1.56.1');
+  const edge = path.join(process.env['ProgramFiles(x86)'], 'Microsoft', 'Edge', 'Application', 'msedge.exe');
+  const shell = path.join(process.env.ProgramFiles, 'PowerShell', '7', 'pwsh.exe');
+  const command = `$p='${edge.replaceAll("'", "''")}';$s=Get-AuthenticodeSignature -FilePath $p;`
+    + '[ordered]@{status=[string]$s.Status;subject=$s.SignerCertificate.Subject;version=(Get-Item -LiteralPath $p).VersionInfo.ProductVersion}|ConvertTo-Json -Compress';
+  const signature = JSON.parse(execFileSync(shell, ['-NoProfile', '-NonInteractive', '-Command', command],
+    { encoding: 'utf8', windowsHide: true }).trim());
+  assert.equal(signature.status, 'Valid');
+  assert.match(signature.subject, /Microsoft Corporation/);
+  assert.match(signature.version, /^156\./);
+  const sourceCommit = 'c8b3139f07aa60a64833a5380503b2bd794c0e0e';
+  const original = execFileSync('git', ['--no-pager', 'show', `${sourceCommit}:learning/S148/index.html`],
+    { cwd: root, maxBuffer: 8388608 });
+  assert.ok(original.toString('utf8').includes(`>${originalBanner}</p>`));
+  const { openIsolatedLesson } = require(helperPath);
+  const session = await openIsolatedLesson('capability\\local-harness\\index.html');
+  let lesson;
+  let observation;
+  try {
+    const { page } = session;
+    assert.equal(session.browserVersion, signature.version);
+    await page.waitForFunction(() => !document.getElementById('catalog-status').textContent.startsWith('Validating'));
+    await page.locator('#prepare-S148').focus();
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => !document.getElementById('preparation').hidden);
+    const href = await page.locator('.lesson-link').getAttribute('href');
+    assert.equal(href, '../../learning/S148/index.html');
+    const popup = page.waitForEvent('popup');
+    await page.locator('.lesson-link').focus();
+    await page.keyboard.press('Enter');
+    lesson = await popup;
+    await lesson.waitForLoadState('load');
+    const actualBanner = await lesson.locator('#training-banner').innerText();
+    assert.ok(lesson.url().endsWith('/learning/S148/index.html'));
+    assert.equal(actualBanner, originalBanner);
+    observation = {
+      schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165',
+      kind: 'actual-source-exact-banner-diagnosis-not-full-sweep-qualification',
+      outcome: 'uniform-no-period-banner-mismatch', observedAtUtc: new Date().toISOString(),
+      id: 'S148', originalHref: href, loadedUrl: lesson.url(), actualBanner,
+      requiredUniformBanner: uniformBanner, requiredUniformBannerMatches: false,
+      immutableOriginalSourceBanner: originalBanner, exactOriginalSourceBannerMatches: true,
+      sourceCommit, originalGitHtmlSha256: sha(original),
+      currentHtmlSha256: sha(fs.readFileSync(path.join(root, 'learning', 'S148', 'index.html'))),
+      browserVersion: session.browserVersion, signature, playwrightVersion, nodeVersion: process.version,
+      helperSha256, helperPublishedCommit: '53c0c0d82cc1db6780a87ac2b1085734af6d5c60',
+      diagnosticPracticeNavigations: 1, includedInFullSweepOrNodeLeafCounts: false,
+      lessonSourceEdited: false, bannerNormalizedOrRewritten: false, assertionRelaxed: false,
+      nativeAzureResult: false, parentAcceptanceClaimed: false, kanoCredits: { S: 0, D: 0, L: 0 }
+    };
+  } finally {
+    try {
+      if (lesson && !lesson.isClosed()) await lesson.close();
+    } finally {
+      await session.close();
+    }
+  }
+  assert.equal(sha(fs.readFileSync(helperPath)), helperSha256);
+  observation.awaitedFinallyCleanup = true;
+  fs.writeFileSync(path.join(__dirname, 'browser-banner-blocker-01.json'),
+    `${JSON.stringify(observation, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+  console.log(JSON.stringify({ id: 'S148', actualBanner: observation.actualBanner,
+    immutableSourceMatches: true, requiredUniformBannerMatches: false, qualificationClaimed: false }));
+}
+main().catch(error => { console.error(error); process.exitCode = 1; });

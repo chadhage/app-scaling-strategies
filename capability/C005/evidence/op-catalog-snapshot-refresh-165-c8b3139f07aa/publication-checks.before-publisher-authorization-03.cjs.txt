@@ -1,0 +1,171 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const relative = path.relative(root, __dirname);
+const scopes = ['C005', 'C006', 'C007', 'C008', 'local-harness'].map(scope => `capability/${scope}`);
+const excludedStandalone = 'capability/C005/evidence/op-catalog-snapshot-refresh-150-ebd7433ac143-publication-recovery/publication-final.json';
+const disk = file => file.replaceAll('/', '\\');
+const logical = file => file.replaceAll('\\', '/');
+const read = file => fs.readFileSync(path.join(root, disk(file)));
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const load = name => JSON.parse(fs.readFileSync(path.join(__dirname, name)));
+const git = args => execFileSync('git', ['--no-pager', ...args], { cwd: root, maxBuffer: 32 * 1024 * 1024 });
+const owned = file => scopes.some(scope => file.startsWith(`${scope}/`));
+function walk(directory) {
+  return fs.readdirSync(path.join(root, disk(directory)), { withFileTypes: true }).flatMap(entry =>
+    entry.isDirectory() ? walk(path.join(disk(directory), entry.name)) : [path.join(disk(directory), entry.name)]);
+}
+const inventory = () => scopes.flatMap(walk).sort().map(file => {
+  const bytes = read(file);
+  return { path: file, canonicalGitPath: logical(file), bytes: bytes.length, sha256: sha(bytes) };
+});
+function proposed() {
+  return [...new Set([
+    ...git(['diff', '--name-only', '-z', 'HEAD', '--', ...scopes]).toString('utf8').split('\0'),
+    ...git(['ls-files', '--others', '--exclude-standard', '-z', '--', ...scopes]).toString('utf8').split('\0')
+  ].filter(file => file && file !== excludedStandalone))].sort();
+}
+function indexSnapshot() {
+  const stage = git(['ls-files', '--stage', '-z']).toString('utf8').split('\0').filter(Boolean)
+    .filter(row => !owned(row.split('\t')[1]));
+  const flags = git(['ls-files', '-v', '-z']).toString('utf8').split('\0').filter(Boolean)
+    .filter(row => !owned(row.slice(2)));
+  const stageBytes = Buffer.from(stage.map(row => `${row}\0`).join(''), 'utf8');
+  const flagBytes = Buffer.from(flags.map(row => `${row}\0`).join(''), 'utf8');
+  return {
+    entries: stage.length, flags: flags.length, stageBytes: stageBytes.length, flagBytes: flagBytes.length,
+    unownedLsFilesStageRawByteSha256: sha(stageBytes), unownedLsFilesFlagsRawByteSha256: sha(flagBytes)
+  };
+}
+function preserved() {
+  const initial = load('initial-owned-hashes.json');
+  const archives = new Map(load('source-archives.json').files.map(file => [file.originalPath, file.path]));
+  for (const file of initial.entries) assert.equal(sha(read(archives.get(file.path) || file.path)), file.sha256, file.path);
+  const interfaces = initial.entries.filter(file => /\.(?:js|cjs|ts|css|html)$/.test(file.path)
+    && !/\\(?:tests|evidence)\\/.test(file.path)
+    && !['capability\\C005\\catalog-data.js', 'capability\\C005\\catalog-source.cjs'].includes(file.path));
+  for (const file of interfaces) assert.equal(sha(read(file.path)), file.sha256, file.path);
+  const generation = load('generation.json');
+  const providers = JSON.parse(read('capability\\local-harness\\evidence\\provider-integrity.json'));
+  for (const file of providers.files) {
+    assert.equal(sha(read(file.path === generation.data.path ? generation.original.path : file.path)), file.sha256, file.path);
+  }
+  const resumed = load('initial-before-banner-approval-01.json');
+  const recent = new Map(resumed.currentSourceArchives.map(file => [file.originalPath, file.path]));
+  for (const file of resumed.files) assert.equal(sha(read(recent.get(file.path) || file.path)), file.sha256, file.path);
+  const historical = load('historical-proof-hashes.json');
+  for (const file of historical.files) assert.equal(sha(read(file.path)), file.sha256, file.path);
+  const boundary = load('initial-boundary.json');
+  for (const name of [boundary.frozenBlockedManifest, boundary.frozenRetryManifest]) {
+    const frozen = JSON.parse(read(name));
+    assert.deepEqual(walk(frozen.path).sort(), frozen.files.map(file => file.path).sort());
+    for (const file of frozen.files) assert.equal(sha(read(file.path)), file.sha256, file.path);
+  }
+  const version = load('readonly-boundary-version-change-02.json');
+  assert.equal(version.parentApproved, true);
+  assert.equal(version.currentPublisher.sha256, '91c8cf83dd07e34a467eae35445e2337783ce28aaf9c4d3d2d4932b17fb59244');
+  for (const file of Object.values(boundary.readonlyExtra)) {
+    assert.equal(sha(read(file.path)),
+      file.path === version.currentPublisher.path ? version.currentPublisher.sha256 : file.sha256, file.path);
+  }
+  const snapshots = load('previous-snapshots.json').files;
+  assert.deepEqual(snapshots.map(file => file.acceptedPortableLessons), [11, 20, 36, 61, 86, 100, 120, 135]);
+  for (const file of snapshots) assert.equal(sha(read(file.path)), file.sha256, file.path);
+  for (const file of boundary.exactRawJsonExceptions) {
+    assert.equal(sha(read(file.path)), file.sha256);
+    assert.equal(git(['hash-object', '--no-filters', '--', disk(file.path)]).toString().trim(), file.gitObject);
+    assert.equal(git(['hash-object', `--path=${logical(file.path)}`, '--', disk(file.path)]).toString().trim(), file.gitObject);
+    assert.equal(git(['rev-parse', `HEAD:${logical(file.path)}`]).toString().trim(), file.gitObject);
+  }
+  assert.equal(git(['rev-parse', boundary.unqualifiedTag]).toString().trim(), boundary.unqualifiedTagObject);
+  assert.equal(sha(git(['cat-file', 'tag', boundary.unqualifiedTag])), boundary.unqualifiedTagBodySha256);
+  const approval = load('banner-approval-01.json');
+  assert.equal(approval.parentApproved, true);
+  const pinned = git(['show', `${approval.sourceCommit}:learning/S148/index.html`]);
+  assert.deepEqual(pinned, git(['show', `${approval.originalPublicationCommit}:learning/S148/index.html`]));
+  assert.equal(sha(pinned), approval.sourceGitHtmlSha256);
+  assert.equal(sha(read('learning\\S148\\index.html')), load('browser-banner-blocker-01.json').currentHtmlSha256);
+  assert.equal(sha(read('capability\\C005\\catalog-data.js')), load('generation.json').data.sha256);
+  return { initial: 635, resumed: 818, historical: 561, snapshots: 8, frozen: 51, retry: 85 };
+}
+function predict(file) {
+  assert.ok(owned(file), file);
+  const bytes = read(file);
+  const rawObject = git(['hash-object', '--no-filters', '--', disk(file)]).toString().trim();
+  const predictedObject = git(['hash-object', `--path=${file}`, '--', disk(file)]).toString().trim();
+  assert.match(git(['check-attr', 'filter', '--', file]).toString(), /: filter: unspecified/);
+  const byteExact = file.endsWith('.json') || file.endsWith('.txt') || file.endsWith('.gz')
+    || file === 'capability/C005/catalog-data.js';
+  let stored = bytes;
+  if (byteExact) assert.equal(predictedObject, rawObject, `Raw proof/JSON/data filtering changes bytes: ${file}`);
+  else if (predictedObject !== rawObject) {
+    stored = Buffer.from(bytes.toString('utf8').replaceAll('\r\n', '\n'), 'utf8');
+    const object = createHash('sha1').update(Buffer.from(`blob ${stored.length}\0`)).update(stored).digest('hex');
+    assert.equal(object, predictedObject, `Only established active-text canonical LF storage is allowed: ${file}`);
+  }
+  if (file.endsWith('.txt') || file.endsWith('.gz')) {
+    const attributes = git(['check-attr', 'text', 'diff', '--', file]).toString();
+    assert.match(attributes, /: text: unset/);
+    assert.match(attributes, /: diff: unset/);
+  }
+  return {
+    path: disk(file), canonicalGitPath: file, workingBytes: bytes.length, workingSha256: sha(bytes),
+    rawGitObject: rawObject, predictedGitObject: predictedObject, expectedGitBytes: stored.length,
+    expectedGitSha256: sha(stored), byteExact,
+    storage: predictedObject === rawObject ? 'exact-current-raw-bytes' : 'existing-canonical-LF-active-text-with-raw-history-archived'
+  };
+}
+function verifyCurrent() {
+  const before = inventory();
+  const manifest = load('hashes-final.json');
+  const manifestPath = path.join(relative, 'hashes-final.json');
+  assert.deepEqual(before.filter(file => file.path !== manifestPath), manifest.files);
+  const expected = load('publication-owned-paths.json').paths;
+  assert.deepEqual(proposed(), expected);
+  const pathspec = read(path.join(relative, 'publication-pathspec.txt')).toString('utf8').split('\0').filter(Boolean);
+  assert.deepEqual(pathspec, expected);
+  const retained = preserved();
+  const recorded = new Map(load('predicted-object-storage.json').files.map(file => [file.canonicalGitPath, file]));
+  const predictions = expected.map(predict);
+  for (const file of predictions) if (recorded.has(file.canonicalGitPath)) assert.deepEqual(file, recorded.get(file.canonicalGitPath));
+  assert.deepEqual(inventory(), before, 'Prepublication verification is read-only.');
+  return { ownedFiles: before.length, proposedFiles: expected.length, predictions: predictions.length,
+    byteExactPredictions: predictions.filter(file => file.byteExact).length, preserved: retained };
+}
+function verifyCommit(commit) {
+  const expected = load('publication-owned-paths.json').paths;
+  const changed = git(['diff-tree', '--no-commit-id', '--name-only', '-z', '-r', commit])
+    .toString('utf8').split('\0').filter(Boolean).sort();
+  assert.deepEqual(changed, expected);
+  const predictions = expected.map(predict);
+  for (const file of predictions) {
+    assert.equal(git(['rev-parse', `${commit}:${file.canonicalGitPath}`]).toString().trim(), file.predictedGitObject);
+    assert.equal(sha(git(['show', `${commit}:${file.canonicalGitPath}`])), file.expectedGitSha256, file.canonicalGitPath);
+  }
+  const boundary = load('initial-boundary.json');
+  const frozen = JSON.parse(read(boundary.frozenBlockedManifest));
+  const rawPaths = [...new Set([
+    ...inventory().filter(file => file.canonicalGitPath.startsWith('capability/C005/evidence/')
+      && (file.path.endsWith('.txt') || file.path.endsWith('.gz'))).map(file => file.canonicalGitPath),
+    ...frozen.files.map(file => logical(file.path))
+  ])].sort();
+  for (const file of rawPaths) assert.equal(sha(git(['show', `${commit}:${file}`])), sha(read(file)), file);
+  preserved();
+  return { proposedCommittedFiles: expected.length, proposedObjectAndSha256Checks: predictions.length,
+    exactCommittedRawOrFrozenFiles: rawPaths.length, exactFrozenFiles: frozen.files.length };
+}
+if (require.main === module) {
+  const [mode, value] = process.argv.slice(2);
+  const result = mode === '--index' ? indexSnapshot()
+    : mode === '--verify-current' ? verifyCurrent()
+      : mode === '--verify-commit' ? verifyCommit(value) : null;
+  assert.ok(result, 'Use --index, --verify-current or --verify-commit <fullSHA>.');
+  console.log(JSON.stringify(result));
+}
+module.exports = { root, relative, scopes, excludedStandalone, disk, logical, read, sha, load, git,
+  owned, walk, inventory, proposed, indexSnapshot, preserved, predict, verifyCurrent, verifyCommit };

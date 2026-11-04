@@ -1,0 +1,82 @@
+import type { CapabilityMatrix, ValidationResult } from '../C003/matrix-contract';
+
+export type ScenarioId = `S${string}`;
+export type WorkflowId = 'W001' | 'W002';
+export type EntryId = ScenarioId | WorkflowId;
+export interface SourceReference {
+  readonly document: 'readme' | 'backlog';
+  readonly path: 'README.md' | '.docs\\wiki\\backlog.md';
+  readonly line: number;
+  readonly anchor: string;
+}
+export interface SourceSection {
+  readonly text: string;
+  readonly reference: SourceReference;
+}
+export interface LearningEvidence {
+  readonly commit: string;
+  readonly tag: string;
+  readonly acceptedAtUtc: string;
+}
+export type LearningAvailability =
+  | { readonly status: 'accepted-snapshot'; readonly available: true;
+      readonly cardId: `A-S${string}`; readonly href: string;
+      readonly evidence: LearningEvidence; readonly reason: string }
+  | { readonly status: 'unavailable'; readonly available: false;
+      readonly cardId: `A-S${string}` | null; readonly href: null;
+      readonly evidence: null; readonly reason: string };
+export interface CatalogEntry {
+  readonly id: EntryId;
+  readonly kind: 'scenario' | 'workflow';
+  readonly parentId: `D-S${string}` | WorkflowId;
+  readonly category: { readonly id: string; readonly title: string };
+  readonly title: string;
+  readonly objective: string;
+  readonly priority: 'P0' | 'P1' | 'P2';
+  readonly implementation: string;
+  readonly acceptance: string;
+  readonly prerequisites: { readonly additional: string; readonly inheritsBase: boolean };
+  readonly sourceReferences: readonly SourceReference[];
+  readonly risk: 'unclassified';
+  readonly learning: LearningAvailability;
+  readonly native: {
+    readonly status: 'unverified'; readonly runnable: false; readonly qualified: false;
+    readonly evidence: readonly never[]; readonly reason: string;
+  };
+  readonly support: { readonly status: 'unknown'; readonly reason: string };
+  readonly parent: { readonly completed: false; readonly status: 'planned'; readonly reason: string };
+}
+export interface SourceCatalog {
+  readonly schemaVersion: '1.0.0';
+  readonly kind: 'source-scenario-catalog';
+  readonly cardId: 'C005';
+  readonly scope: 'local-source-derived-snapshot';
+  readonly source: {
+    readonly commit: string; readonly commitTimeUtc: string;
+    readonly readme: { readonly path: 'README.md'; readonly sha256: string };
+    readonly backlog: { readonly path: '.docs\\wiki\\backlog.md'; readonly sha256: string };
+  };
+  readonly acceptanceSnapshot: {
+    readonly commit: string; readonly commitTimeUtc: string;
+    readonly ledgerPath: '.docs\\wiki\\flow-state.json'; readonly ledgerSha256: string;
+    readonly ledgerUpdatedAtUtc: string; readonly live: false;
+  };
+  readonly capabilityMatrix: {
+    readonly cardId: 'C003'; readonly schemaVersion: '1.0.0'; readonly sourceCommit: string;
+    readonly dataPath: 'capability\\C003\\matrix-data.js';
+    readonly contractPath: 'capability\\C003\\matrix-contract.js'; readonly href: '../C003/index.html';
+  };
+  readonly common: {
+    readonly riskReason: string;
+    readonly dependencyRules: SourceSection;
+    readonly sharedDefinitionOfDone: SourceSection;
+    readonly operatingLimits: SourceSection;
+    readonly acceptanceAndEvidence: SourceSection;
+    readonly workflowScope: string;
+  };
+  /** Exactly S001..S150, W001, W002, in that order. Runtime validation enforces this. */
+  readonly entries: readonly CatalogEntry[];
+}
+export const SCHEMA_VERSION: '1.0.0';
+export function validateCatalog(catalog: unknown, matrix: CapabilityMatrix | unknown): ValidationResult;
+export function sourceHref(catalog: SourceCatalog, reference: SourceReference): string;

@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { createHash } = require('node:crypto');
-const catalog = require('../catalog-data.js');
+const catalog = require('../evidence/op-catalog-snapshot-refresh-165-c8b3139f07aa/catalog-data.ebd7433ac143.js.txt');
 const contract = require('../catalog-contract.js');
 const matrix = require('../../C003/matrix-data.js');
 const source = require('../catalog-source.cjs');
@@ -52,8 +52,13 @@ test('the approved full source has exactly150 originals/135 practices and valid 
   assert.deepEqual(ledger.cards.filter(source.acceptedLesson).filter(card => /^A-S\d{3}$/.test(card.id))
     .map(card => card.id.slice(2)).sort(), Array.from({ length: 135 }, (_, index) => `S${String(index + 1).padStart(3, '0')}`));
   assert.deepEqual(contract.validateCatalog(catalog, matrix), { valid: true, errors: [] });
-  assert.equal(source.PINNED_COMMIT, generation.sourceCommit);
-  assert.deepEqual(source.buildCatalog(), catalog);
+  const archivedGenerator = read('capability\\C005\\evidence\\op-catalog-snapshot-refresh-165-c8b3139f07aa\\catalog-source.ebd7433ac143.cjs.txt')
+    .toString('utf8').replaceAll('\r\n', '\n');
+  assert.ok(archivedGenerator.includes(`const PINNED_COMMIT = '${generation.sourceCommit}';`));
+  assert.equal(archivedGenerator.replace(generation.sourceCommit, source.PINNED_COMMIT),
+    read('capability\\C005\\catalog-source.cjs').toString('utf8').replaceAll('\r\n', '\n'));
+  assert.equal(sha(read('capability\\C005\\evidence\\op-catalog-snapshot-refresh-165-c8b3139f07aa\\catalog-data.ebd7433ac143.js.txt')),
+    generation.data.sha256);
   assert.deepEqual(ledger.completedParents, []);
   assert.equal(generation.recovery.timestampFalsification, false);
   assert.equal(generation.recovery.validatorSchemaAuthorityOrChronologyRelaxation, false);

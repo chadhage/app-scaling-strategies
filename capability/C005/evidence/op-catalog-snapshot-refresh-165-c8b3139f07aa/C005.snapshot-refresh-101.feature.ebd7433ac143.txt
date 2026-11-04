@@ -1,0 +1,47 @@
+Feature: Refresh exactly one immutable 101-unit historical catalog snapshot
+  OP-CATALOG-SNAPSHOT-REFRESH-101 / zero S, D and L credits / no original C or H completion
+
+  Scenario: Only the fixed accepted source determines portable availability
+    Given annotated source tag kanban/flow-admin/541256d56385
+    And immutable commit 541256d563853396745381b9aa5fffd8ee29148e accepts 101 original units
+    And exactly A-S001 through A-S086 have accepted portable publications in that source
+    When real new-source assertions run against the unchanged accepted 61-practice snapshot
+    Then the source, 86-practice count and newly accepted S062 availability assertions fail
+    And the unaccepted, native and parent gates still pass
+    When IaC is recorded not applicable and the existing deterministic generator changes only its pin
+    Then all 152 IDs, source objectives and references remain unchanged
+    And exactly 86 practices pass existing search, AND filters, preparation and composition
+    But A-S087 and later never gain availability from advancing live state
+    And native runnable, native qualified and completed source parents remain zero
+    And H001 and H002 remain incomplete without S, D or L credit
+
+  Scenario: All four preceding snapshots and every old proof remain byte exact
+    Given a historical raw-byte hash manifest is captured before edits
+    And the current 61-practice catalog and generator metadata are archived byte for byte
+    And original CRLF bytes are preserved separately from canonical Git-source integrity
+    When only the owned catalog snapshot, affected expectations and related usage are refreshed
+    Then the 11, 20, 36 and 61-practice snapshots retain their exact recorded hashes
+    And every prior failure, timestamp, screenshot, inventory and evidence file remains unchanged
+    And generation is deterministic and controlled canonical drift is still rejected
+    But no provider, authority, API, schema, registry or runtime behavior changes
+
+  Scenario: Real signed-Edge verification is isolated, bounded and read only by default
+    Given only published testing\browser\isolated.cjs from 53c0c0d is authorized
+    And its SHA256 is 86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055
+    And existing offline Playwright 1.56.1, signed Edge 156 and Node 22 are used
+    When the five existing browser suites use openIsolatedLesson and awaited finally close
+    Then browse, search, AND filters and preparation retain unknown, native and approval distinctions
+    And all 86 actual practice destinations load with their exact synthetic banners
+    And accepted S001 demonstrates PASS, negative FAIL, reset and return with query and every filter preserved
+    And only deliberate CAPTURE_BROWSER_EVIDENCE=1 appends unique new captures
+    And quiet before and after hashes prove ordinary reruns append nothing and alter no proof
+    But no shared foreground, abandoned lifecycle prototype, Node 24 or native proof is qualified
+    And no Azure execution, install, download or spending occurs
+
+  Scenario: Publish once without changing operational authority
+    Given the parent alone activates and accepts this zero-credit operational mission
+    When explicit owned-only staging and commit --only run under Local\AppScalingStrategies_KanbanPublisher_v1
+    Then one annotated kanban/flow-catalog-refresh/<12sha> tag and main are pushed atomically and verified
+    And the standard publisher guards and unowned staging remain untouched
+    And no state Claim, Accept, state-lock, central ledger or root documentation changes occur
+    And the worker stops after this single refresh

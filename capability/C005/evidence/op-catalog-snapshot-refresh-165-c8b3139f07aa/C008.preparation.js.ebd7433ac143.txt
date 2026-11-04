@@ -1,0 +1,49 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory(
+      require('../C005/catalog-contract.js'),
+      require('../C001/approved-contract.js'),
+      require('../C001/contract-guard.js')
+    );
+  } else {
+    Object.defineProperty(root, 'C008Preparation', {
+      value: factory(root.C005Contract, root.C001ApprovedContract, root.C001ContractGuard)
+    });
+  }
+}(globalThis, function (catalogContract, approved, approvalGuard) {
+  'use strict';
+
+  function failure(errors) {
+    return Object.freeze({ state: 'error', errors: Object.freeze(errors), entry: null });
+  }
+
+  async function prepare(catalog, matrix, entryId) {
+    try {
+      if (!catalogContract || typeof catalogContract.validateCatalog !== 'function') {
+        return failure(['The shared C005 validator is unavailable. No replacement catalog is inferred.']);
+      }
+      const validation = catalogContract.validateCatalog(catalog, matrix);
+      if (!validation.valid) return failure(validation.errors);
+      if (!approved || !approvalGuard || typeof approvalGuard.validateApproval !== 'function') {
+        return failure(['The C001 approval artifact or its integrity guard is unavailable.']);
+      }
+      const approvalValidation = await approvalGuard.validateApproval(approved.approval);
+      if (!approvalValidation.valid) {
+        return failure(approvalValidation.reasons.map(reason => `${reason.code}: ${reason.message}`));
+      }
+      const shared = { catalog, matrix, approved, approvalValidation, errors: Object.freeze([]) };
+      if (entryId === '') return Object.freeze({ ...shared, state: 'empty', entry: null });
+      const entry = typeof entryId === 'string' && catalog.entries.find(candidate => candidate.id === entryId);
+      if (!entry) return failure(['Choose an exact source ID from the validated catalog.']);
+      return Object.freeze({
+        ...shared, state: 'ready', entry,
+        learningMode: entry.learning.available ? 'synthetic-learning'
+          : entry.kind === 'workflow' ? 'unsupported-learning' : 'unavailable-learning'
+      });
+    } catch {
+      return failure(['Shared source or authority validation failed. Preparation remains unverified.']);
+    }
+  }
+  return Object.freeze({ prepare });
+}));

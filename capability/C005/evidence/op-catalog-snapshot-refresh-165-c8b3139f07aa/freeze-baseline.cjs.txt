@@ -1,0 +1,157 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const relative = path.relative(root, __dirname);
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const read = file => fs.readFileSync(path.join(root, file));
+const git = args => execFileSync('git', ['--no-pager', ...args], { cwd: root, maxBuffer: 8388608 });
+const save = (name, value) => fs.writeFileSync(path.join(__dirname, name),
+  `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+const proof = file => /(?:^|\\)evidence(?:\\|\.json$)|\\result\.json$/.test(file.path);
+const initial = JSON.parse(read(path.join(relative, 'initial-owned-hashes.json')));
+assert.equal(initial.files, 635);
+assert.equal(initial.sourceCommit, 'c8b3139f07aa60a64833a5380503b2bd794c0e0e');
+git(['merge-base', '--is-ancestor', initial.sourceCommit, initial.head]);
+for (const file of initial.entries) assert.equal(sha(read(file.path)), file.sha256, file.path);
+const old = 'capability\\C005\\evidence\\op-catalog-snapshot-refresh-150-ebd7433ac143';
+const recovered = `${old}-publication-recovery`;
+const recoveryBoundary = JSON.parse(read(path.join(recovered, 'initial-boundary.json')));
+const generation = JSON.parse(read(path.join(old, 'generation.json')));
+const old517 = JSON.parse(read(path.join(recovered, 'historical-proof-hashes.json')));
+assert.equal(old517.files.length, 517);
+for (const file of old517.files) assert.equal(sha(read(file.path)), file.sha256, file.path);
+const frozen = JSON.parse(read(path.join(old, 'blocked-attempt-frozen-hashes.json')));
+const retry = JSON.parse(read(path.join(recovered, 'prior-attempt-frozen-hashes.json')));
+function walk(directory) {
+  return fs.readdirSync(path.join(root, directory), { withFileTypes: true }).flatMap(entry =>
+    entry.isDirectory() ? walk(path.join(directory, entry.name)) : [path.join(directory, entry.name)]);
+}
+for (const manifest of [frozen, retry]) {
+  assert.deepEqual(walk(manifest.path).sort(), manifest.files.map(file => file.path).sort());
+  for (const file of manifest.files) assert.equal(sha(read(file.path)), file.sha256, file.path);
+}
+assert.equal(frozen.files.length, 51);
+assert.equal(retry.files.length, 85);
+const readonlyExtra = {};
+for (const [name, oldFile] of Object.entries(recoveryBoundary.readOnlyBoundaries)) {
+  const bytes = read(oldFile.path);
+  assert.equal(sha(bytes), oldFile.sha256, oldFile.path);
+  readonlyExtra[name] = { path: oldFile.path, bytes: bytes.length, sha256: sha(bytes) };
+}
+const tree = new Map(git(['ls-tree', '-r', '-z', initial.head, '--', ...initial.ownedRoots])
+  .toString('utf8').split('\0').filter(Boolean).map(line => {
+    const [header, file] = line.split('\t');
+    return [file, header.split(' ')[2]];
+  }));
+const historical = initial.entries.filter(proof).map(file => ({
+  ...file, initialGitObject: tree.get(file.canonicalGitPath) || null
+}));
+assert.equal(historical.length, 561);
+save('historical-proof-hashes.json', {
+  operation: initial.operation, kind: 'all-existing-historical-working-bytes-not-new-proof',
+  recordedAtUtc: new Date().toISOString(), initialOwnedFiles: 635,
+  files: historical, count: historical.length, prior517Files: 517,
+  blockedAttemptFiles: 51, sourceRetryFiles: 85, recoveryFiles: 44,
+  inheritedStandaloneReportIncluded: true
+});
+const archives = initial.entries.filter(file => !proof(file)).map(file => {
+  const parts = file.path.split('\\');
+  let name = `${parts[1]}.${parts.slice(2).join('.').replace(/^\./, 'dot-')}.ebd7433ac143.txt`;
+  if (file.path === 'capability\\C005\\catalog-data.js') name = 'catalog-data.ebd7433ac143.js.txt';
+  if (file.path === 'capability\\C005\\catalog-source.cjs') name = 'catalog-source.ebd7433ac143.cjs.txt';
+  const target = path.join(relative, name);
+  fs.writeFileSync(path.join(root, target), read(file.path), { flag: 'wx' });
+  assert.equal(sha(read(target)), file.sha256);
+  return { originalPath: file.path, path: target, bytes: file.bytes, sha256: file.sha256 };
+});
+assert.equal(archives.length, 74);
+save('source-archives.json', {
+  operation: initial.operation, kind: 'byte-exact-current135-source-bundle-before-edits',
+  files: archives, count: archives.length, archivalExtension: '.txt', normalized: false
+});
+const rawArchives = initial.entries.filter(file => /\.(?:txt|gz)$/.test(file.path));
+const op150 = rawArchives.filter(file => /^capability\\C005\\evidence\\op-catalog-snapshot-refresh-150-/.test(file.path));
+assert.equal(op150.length, 111);
+assert.equal(op150.filter(file => file.path.endsWith('.txt')).length, 45);
+assert.equal(op150.filter(file => file.path.endsWith('.gz')).length, 66);
+save('prior-archives.json', {
+  operation: initial.operation, kind: 'all-existing-raw-archive-preservation-manifest',
+  files: rawArchives, count: rawArchives.length,
+  textArchives: rawArchives.filter(file => file.path.endsWith('.txt')).length,
+  gzipArchives: rawArchives.filter(file => file.path.endsWith('.gz')).length,
+  previousOp150Archives: op150, previousOp150Count: 111, previousOp150Text: 45, previousOp150Gzip: 66,
+  textArchivesAreNotGzip: true
+});
+const currentArchive = file => archives.find(item => item.originalPath === file).path;
+const current135 = {
+  path: currentArchive('capability\\C005\\catalog-data.js'),
+  sourceCommit: generation.sourceCommit,
+  acceptedPublication: '62b1a3c3fe8be08f040d2239a8a2903f3e70e746',
+  sha256: generation.data.sha256, acceptedPortableLessons: 135,
+  generationPath: path.join(old, 'generation.json'),
+  generationSha256: sha(read(path.join(old, 'generation.json'))),
+  generatorPath: currentArchive('capability\\C005\\catalog-source.cjs')
+};
+assert.equal(sha(read(current135.path)), '00df2f58566b4cb663b8dabcb175ef96fb7bdac269256781b34d29f579467863');
+const snapshots = [generation.original, generation.intermediate, generation.prior36,
+  generation.prior61, generation.prior86, generation.prior100, generation.previous, current135];
+assert.deepEqual(snapshots.map(file => file.acceptedPortableLessons), [11, 20, 36, 61, 86, 100, 120, 135]);
+for (const file of snapshots) assert.equal(sha(read(file.path)), file.sha256, file.path);
+save('previous-snapshots.json', {
+  operation: initial.operation, kind: 'eight-previous-fixed-snapshots-byte-preserved',
+  files: snapshots, count: 8, current135
+});
+const sourceCommit = initial.sourceCommit;
+const ledgerBytes = git(['show', `${sourceCommit}:.docs/wiki/flow-state.json`]);
+const ledger = JSON.parse(ledgerBytes);
+const commitTimeUtc = new Date(git(['show', '-s', '--format=%cI', sourceCommit]).toString().trim()).toISOString();
+const source = require(path.join(root, 'capability', 'C005', 'catalog-source.cjs'));
+assert.equal(ledger.updatedAtUtc, '2026-11-04T05:06:14.4697468Z');
+assert.equal(commitTimeUtc, '2026-11-04T05:06:17.000Z');
+assert.ok(Date.parse(ledger.updatedAtUtc) < Date.parse(commitTimeUtc));
+assert.equal(ledger.cards.filter(source.acceptedLesson).length, 165);
+assert.deepEqual(ledger.kanoDone, { S: 163, L: 0, D: 2 });
+assert.deepEqual(ledger.cards.filter(source.acceptedLesson).filter(card => /^A-S\d{3}$/.test(card.id))
+  .map(card => card.id.slice(2)).sort(), Array.from({ length: 150 }, (_, index) =>
+    `S${String(index + 1).padStart(3, '0')}`));
+assert.deepEqual(ledger.completedParents, []);
+const sourceTag = 'kanban/flow-admin/c8b3139f07aa';
+assert.equal(git(['cat-file', '-t', sourceTag]).toString().trim(), 'tag');
+assert.equal(git(['rev-parse', `${sourceTag}^{}`]).toString().trim(), sourceCommit);
+const unqualifiedTag = 'kanban/flow-catalog-refresh-unqualified/86e31de6c9eb';
+assert.equal(git(['cat-file', '-t', unqualifiedTag]).toString().trim(), 'tag');
+assert.equal(git(['rev-parse', `${unqualifiedTag}^{}`]).toString().trim(),
+  '86e31de6c9ebdfb5dc4d76763c94a119ee959b75');
+const remoteMain = git(['ls-remote', 'origin', 'refs/heads/main']).toString().trim().split(/\s+/)[0];
+save('initial-boundary.json', {
+  operation: initial.operation, worker: initial.worker, kind: 'before-existing-owned-file-edits',
+  recordedAtUtc: new Date().toISOString(), initialOwnedFiles: 635, historicalFiles: 561,
+  prior517Files: 517, sourceArchiveFiles: 74, previousSnapshots: 8,
+  previousOp150Archives: { total: 111, text: 45, gzip: 66 },
+  allExistingRawArchives: { total: rawArchives.length, text: 152, gzip: 124 },
+  sourceCommit, sourceTag, sourceTagObject: git(['rev-parse', sourceTag]).toString().trim(),
+  originalSourceLedgerSha256: sha(ledgerBytes), originalSourceLedgerUpdatedAtUtc: ledger.updatedAtUtc,
+  sourceCommitTimeUtc: commitTimeUtc, chronologyValidatorUnchanged: true,
+  headAtInspection: git(['rev-parse', 'HEAD']).toString().trim(), remoteMainAtInspection: remoteMain,
+  mainRemoteParityMustBeRecheckedUnderPublisherMutex: true, readonlyExtra,
+  frozenBlockedManifest: path.join(old, 'blocked-attempt-frozen-hashes.json'),
+  frozenRetryManifest: path.join(recovered, 'prior-attempt-frozen-hashes.json'),
+  prior517Manifest: path.join(recovered, 'historical-proof-hashes.json'),
+  exactRawJsonExceptions: recoveryBoundary.exactRawJsonExceptions,
+  unqualifiedTag, unqualifiedTagObject: git(['rev-parse', unqualifiedTag]).toString().trim(),
+  unqualifiedTagBodySha256: sha(git(['cat-file', 'tag', unqualifiedTag])),
+  sourceCodeOrHistoricalEditsBeforeFreeze: false, parentAcceptanceClaimed: false,
+  kanoCredits: { S: 0, D: 0, L: 0 }
+});
+console.log(JSON.stringify({
+  initialOwnedFiles: 635, historicalFiles: 561, prior517Verified: 517,
+  archivedCurrentSourceFiles: 74, frozenBlockedFiles: 51, frozenRetryFiles: 85,
+  snapshots: 8, previousOp150Archives: { total: 111, text: 45, gzip: 66 },
+  allExistingArchives: { total: 276, text: 152, gzip: 124 },
+  sourceCommit, sourceLedgerSha256: sha(ledgerBytes), ledgerUpdatedAtUtc: ledger.updatedAtUtc, commitTimeUtc
+}));

@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
-const catalog = require('../catalog-data.js');
+const catalog = require('../evidence/op-catalog-snapshot-refresh-165-c8b3139f07aa/catalog-data.ebd7433ac143.js.txt');
 const matrix = require('../../C003/matrix-data.js');
 const contract = require('../catalog-contract.js');
 const source = require('../catalog-source.cjs');
@@ -25,7 +25,7 @@ const exactIds = Array.from({ length: 135 }, (_, index) => `S${String(index + 1)
 const newlyAcceptedIds = expectedIds.filter(id => !previous.acceptedPortableIds.includes(id));
 const exactNewIds = Array.from({ length: 15 }, (_, index) => `S${String(index + 121).padStart(3, '0')}`);
 
-test('the catalog and generator bind to the full immutable 150-unit source, never live HEAD', () => {
+test('the archived catalog binds to the full immutable 150-unit source, never live HEAD', () => {
   assert.equal(acceptedUnits.length, 150);
   assert.deepEqual(ledger.kanoDone, { S: 148, L: 0, D: 2 });
   assert.deepEqual(expectedIds, exactIds);
@@ -33,7 +33,7 @@ test('the catalog and generator bind to the full immutable 150-unit source, neve
   assert.equal(catalog.source.commit, FIXED_SOURCE);
   assert.equal(catalog.acceptanceSnapshot.commit, FIXED_SOURCE);
   assert.equal(catalog.acceptanceSnapshot.live, false);
-  assert.equal(source.PINNED_COMMIT, FIXED_SOURCE);
+  assert.equal(catalog.capabilityMatrix.sourceCommit, FIXED_SOURCE);
 });
 
 test('all 135 accepted practices survive every existing consumer unchanged', async () => {

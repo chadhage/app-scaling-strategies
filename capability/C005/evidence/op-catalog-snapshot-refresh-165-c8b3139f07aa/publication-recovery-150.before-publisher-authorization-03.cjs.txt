@@ -1,0 +1,77 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const recovery = require('../evidence/op-catalog-snapshot-refresh-150-ebd7433ac143-publication-recovery/recovery-lib.cjs.txt');
+const archive = 'capability\\C005\\evidence\\op-catalog-snapshot-refresh-165-c8b3139f07aa';
+
+test('publication recovery preserves all historical working bytes and both complete failed-attempt file sets', () => {
+  const initial = recovery.load('initial-boundary.json');
+  const historical = recovery.load('historical-proof-hashes.json');
+  const retry = recovery.load('prior-attempt-frozen-hashes.json');
+  const blocked = JSON.parse(recovery.read(path.join(initial.priorEvidence, 'blocked-attempt-frozen-hashes.json')));
+  for (const file of historical.files) assert.equal(recovery.sha(recovery.read(file.path)), file.sha256, file.path);
+  for (const frozen of [retry, blocked]) {
+    assert.deepEqual(recovery.walk(frozen.path).sort(), frozen.files.map(file => file.path).sort());
+    for (const file of frozen.files) assert.equal(recovery.sha(recovery.read(file.path)), file.sha256, file.path);
+  }
+  const version = JSON.parse(recovery.read(path.join(archive, 'readonly-boundary-version-change-02.json')));
+  assert.equal(version.parentApproved, true);
+  assert.equal(version.originalPublisher.sha256, '7120de03173ca30bd993c8a7a77c81ebdafa504a508060aed18ec00bef6de7d3');
+  assert.equal(version.previousPublisher.sha256, '815a1f0c7b17a63b53f4ff3aed169bf81ba3cec3b6a1b088ea337591fdd9e65b');
+  assert.equal(version.currentPublisher.sha256, '91c8cf83dd07e34a467eae35445e2337783ce28aaf9c4d3d2d4932b17fb59244');
+  for (const file of Object.values(initial.readOnlyBoundaries)) {
+    const expected = file.path === version.currentPublisher.path ? version.currentPublisher.sha256 : file.sha256;
+    assert.equal(recovery.sha(recovery.read(file.path)), expected, file.path);
+  }
+  assert.deepEqual({ historical: historical.files.length, priorAttempt: retry.files.length, blocked: blocked.files.length },
+    { historical: 517, priorAttempt: 85, blocked: 51 });
+});
+
+test('only the two parent-approved frozen JSON exceptions change historical archive filtering', () => {
+  const exceptions = recovery.load('initial-boundary.json').exactRawJsonExceptions;
+  assert.equal(exceptions.length, 2);
+  for (const file of exceptions) {
+    assert.equal(recovery.sha(recovery.read(file.path)), file.sha256, file.path);
+    const logical = file.path.replaceAll('\\', '/');
+    assert.equal(recovery.git(['hash-object', '--no-filters', '--', file.path]).toString().trim(), file.gitObject);
+    assert.equal(recovery.git(['hash-object', `--path=${logical}`, '--', file.path]).toString().trim(), file.gitObject);
+    const attributes = recovery.git(['check-attr', 'text', 'diff', '--', logical]).toString();
+    assert.match(attributes, /: text: unset/);
+    assert.match(attributes, /: diff: unset/);
+  }
+  const publisher = recovery.read(path.join(recovery.relative, 'publication-command.ps1.txt')).toString();
+  assert.ok(publisher.includes("Run-Git (@('add', '--renormalize', '--') + $exactJsonPaths)"));
+  assert.ok(publisher.includes('Exact staged CRLF blob differs before commit'));
+});
+
+test('publication repair retains its exact135 source/runtime bytes in archives, independently of the new active snapshot', () => {
+  const initial = recovery.load('initial-boundary.json');
+  const manifest = JSON.parse(recovery.read(initial.oldVerifiedManifest));
+  const bundle = JSON.parse(recovery.read(path.join(archive, 'source-archives.json')));
+  const archives = new Map(bundle.files.map(file => [file.originalPath, file.path]));
+  for (const file of manifest.files.filter(file => /\.(?:js|cjs|ts|css|html)$/.test(file.path)
+    && !/\\evidence\\/.test(file.path))) {
+    assert.equal(recovery.sha(recovery.read(archives.get(file.path) || file.path)), file.sha256, file.path);
+  }
+  const generation = JSON.parse(recovery.read(path.join(initial.priorEvidence, 'generation.json')));
+  const browser = JSON.parse(recovery.read(path.join(initial.priorEvidence, 'browser-qualification-01.json')));
+  assert.equal(generation.acceptedPortableLessons, 135);
+  assert.equal(recovery.sha(recovery.read(archives.get(generation.data.path))), generation.data.sha256);
+  assert.equal(browser.sourceCommit, generation.sourceCommit);
+  assert.equal(browser.sourceGenerationSha256, generation.data.sha256);
+  assert.equal(browser.exhaustiveSweepNavigations, 135);
+  assert.equal(browser.exactBannersAcrossAllActualNavigations, 140);
+  const snapshots = [generation.original, generation.intermediate, generation.prior36,
+    generation.prior61, generation.prior86, generation.prior100, generation.previous];
+  assert.equal(snapshots.length, 7);
+  for (const file of snapshots) assert.equal(recovery.sha(recovery.read(file.path)), file.sha256, file.path);
+  for (const file of browser.observations) assert.equal(recovery.sha(recovery.read(file.path)), file.sha256, file.path);
+});
+
+test('86e31 is a published unqualified ancestor, not a qualified catalog refresh or an accepted unit', () => {
+  const result = recovery.verifyPrecursor();
+  assert.equal(result.rawMismatchesAtPrecursor.length, 2);
+  assert.equal(result.publishedPrecursor, '86e31de6c9ebdfb5dc4d76763c94a119ee959b75');
+});

@@ -1,0 +1,37 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const scopes = ['C005', 'C006', 'C007', 'C008', 'local-harness'].map(scope => path.join('capability', scope));
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+function walk(directory) {
+  return fs.readdirSync(path.join(root, directory), { withFileTypes: true }).flatMap(entry =>
+    entry.isDirectory() ? walk(path.join(directory, entry.name)) : [path.join(directory, entry.name)]);
+}
+const inventory = () => scopes.flatMap(walk).sort().map(file => {
+  const bytes = fs.readFileSync(path.join(root, file));
+  return { path: file, bytes: bytes.length, sha256: sha(bytes) };
+});
+assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, undefined);
+assert.equal(process.env.NODE_V8_COVERAGE, undefined);
+const files = scopes.flatMap(scope => walk(path.join(scope, 'tests')))
+  .filter(file => file.endsWith('.test.cjs') && !file.endsWith('\\browser.test.cjs')).sort();
+assert.equal(files.length, 23);
+const before = inventory();
+const result = spawnSync(process.execPath, ['--test', '--test-reporter=tap', ...files],
+  { cwd: root, windowsHide: true, maxBuffer: 32 * 1024 * 1024 });
+const after = inventory();
+process.stdout.write(result.stdout || Buffer.alloc(0));
+process.stderr.write(result.stderr || Buffer.alloc(0));
+console.log('OWNED_READONLY_INVENTORY=' + JSON.stringify({
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165', files: files.length,
+  ownedFiles: before.length, beforeInventorySha256: sha(JSON.stringify(before)),
+  afterInventorySha256: sha(JSON.stringify(after)), byteAndFileSetUnchanged: JSON.stringify(before) === JSON.stringify(after),
+  captureVariableUnset: true, exitCode: result.status, testFiles: files
+}));
+assert.deepEqual(after, before, 'Ordinary focused tests must change no owned path or byte.');
+process.exitCode = result.status === 0 && !result.error ? 0 : 1;

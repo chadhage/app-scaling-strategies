@@ -8,7 +8,7 @@ The page consumes the **same 152 immutable C005 v1 entries**: S001–S150,
 W001/W002. It neither extracts source documents nor copies catalog data.
 C003's matrix/validator and C005's validator/API are imported unchanged.
 Only C005's generated snapshot is refreshed by zero-credit
-`OP-CATALOG-SNAPSHOT-REFRESH-135`. `tests\integrity.test.cjs` retains all original
+`OP-CATALOG-SNAPSHOT-REFRESH-165`. `tests\integrity.test.cjs` retains all original
 accepted-commit/hash checks, reading the byte-preserved old artifact for its
 original data baseline, and separately checks the new fixed-generation hash.
 Source authenticity is
@@ -66,18 +66,18 @@ example rows or imply that unclassified means safe.
 | Selection, with all hosts/risks | Entries | Meaning |
 | --- | ---: | --- |
 | All | 152 | Proposed source scenarios/workflows. |
-| Portable lesson accepted | 135 | Historical accepted snapshot only. |
-| Portable lesson unavailable | 17 | Original explicit unavailable reasons retained. |
+| Portable lesson accepted | 150 | Historical accepted snapshot only. |
+| Portable lesson unavailable | 2 | W001/W002 retain their original explicit unavailable reasons. |
 | Native unavailable / unverified | 152 | Not runnable; no target-specific native proof. |
 | Native runnable | 0 | No execution is enabled. |
 | Native qualified | 0 | Documentation/portable learning is not qualification. |
 | Source parent complete | 0 | Portable A-card acceptance does not complete D-S/W parents. |
 
 Historical acceptance/source pin:
-**`ebd7433ac143242ab633b52aff864bb2923dac2c`**, annotated source tag
-`kanban/flow-admin/ebd7433ac143`.
-Accepted portable IDs are exactly S001–S135. S136+
-remain unavailable in this fixed snapshot even when live acceptance advances.
+**`c8b3139f07aa60a64833a5380503b2bd794c0e0e`**, annotated source tag
+`kanban/flow-admin/c8b3139f07aa`.
+Accepted portable IDs are exactly S001–S150. W001/W002 remain unavailable.
+Later live capability acceptance cannot alter this fixed snapshot.
 The commit/time/ledger update and pinned source links are displayed, not live
 worktree state. Original lesson destinations are preserved.
 
@@ -90,7 +90,7 @@ const { filterCatalog } = require('.\\capability\\C007\\catalog-filters.js');
 const result = filterCatalog(catalog, matrix, {
   host: 'aks', risk: 'unclassified', readiness: 'portable-available'
 });
-// result.items: 117 original C005 objects wrapped with unknown host reasons.
+// result.items: 132 original C005 objects wrapped with unknown host reasons.
 // result.incompatible: S002/S012/S014/S017/S024/S032/S033/S058/S096/S105,
 // S121/S122/S123/S124/S125/S126/S129/S130, with unchanged source conflicts.
 // result.matrixRows / result.permissions: unchanged validated C003 objects.
@@ -112,14 +112,14 @@ rendered with text nodes, not HTML. No search or preparation workflow is added.
 ## Verification and preserved evidence
 
 The one-shot refresh has separate `snapshot-refresh-150.feature` and evidence under
-`capability\C005\evidence\op-catalog-snapshot-refresh-150-ebd7433ac143`.
-The fixed source accepts 150 original units (148 S + 2 D); this refresh adds no credit.
+`capability\C005\evidence\op-catalog-snapshot-refresh-165-c8b3139f07aa`.
+The fixed source accepts 165 original units (163 S + 2 D); this refresh adds no credit.
 All seven earlier catalogs, all 371 original proof files and the entire 51-file
 blocked OP150 attempt remain byte-for-byte historical. The existing approved
 source-pin recovery fixes the input chronology without changing the validator,
 source timestamps, predicates, authorities or helper. Current browser
 captures require exactly `CAPTURE_BROWSER_EVIDENCE=1` and append uniquely named
-`evidence\browser-op-catalog-snapshot-refresh-150-ebd7433ac143-*.json` files only after
+`evidence\browser-op-catalog-snapshot-refresh-165-c8b3139f07aa-*.json` files only after
 successful checks and awaited cleanup. No earlier browser result is relabeled.
 The published `53c0c0d` helper hash/source is enforced before import.
 

@@ -1,0 +1,21 @@
+$ErrorActionPreference = 'Stop'
+$scriptPath = 'capability\C005\evidence\op-catalog-snapshot-refresh-165-c8b3139f07aa\publication-command.ps1.txt'
+$text = [IO.File]::ReadAllText((Join-Path (Get-Location).Path $scriptPath))
+$tokens = $null
+$errors = $null
+$ast = [Management.Automation.Language.Parser]::ParseInput($text, [ref]$tokens, [ref]$errors)
+if ($errors.Count) { throw ($errors | ForEach-Object Message | Out-String) }
+$stop = $text.IndexOf('$mutex = ')
+if ($stop -lt 0) { throw 'Publisher transaction boundary was not found.' }
+. ([ScriptBlock]::Create($text.Substring(0, $stop)))
+$branch = (Run-Git @('branch', '--show-current')).Trim()
+if ($branch -ne 'main') { throw "Readonly Git argument dispatch returned unexpected branch: $branch" }
+$snapshot = Check @('--index')
+if ($snapshot.entries -lt 1 -or $snapshot.unownedLsFilesStageRawByteSha256.Length -ne 64) {
+    throw 'Readonly index argument dispatch failed.'
+}
+$rawOut.Dispose()
+$rawErr.Dispose()
+[ordered]@{ parserErrors = $errors.Count; readonlyBranch = $branch
+    readonlyIndexSnapshot = $snapshot; transactionPrefixExecutedOnly = $true
+    publisherMutexAcquired = $false; stagingCommitTagPushAttempted = $false } | ConvertTo-Json -Depth 5

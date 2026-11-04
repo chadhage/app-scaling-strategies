@@ -1,0 +1,142 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const generation = JSON.parse(fs.readFileSync(path.join(__dirname, 'generation.json')));
+const approval = JSON.parse(fs.readFileSync(path.join(__dirname, 'banner-approval-01.json')));
+const { assertTrainingBanner } = require(path.join(root, 'capability', 'local-harness', 'tests', 'banner-expectations.cjs'));
+assert.equal(approval.parentApproved, true);
+assert.equal(approval.sourceCommit, generation.sourceCommit);
+const commandName = process.argv[2] || 'browser-capture-02';
+const command = JSON.parse(fs.readFileSync(path.join(__dirname, `${commandName}.json`)));
+assert.equal(command.exitCode, 0);
+assert.equal(command.captureEnabled, true);
+assert.equal(command.captureValue, '1');
+assert.deepEqual(command.testNodes, { total: 71, parents: 5, leaves: 66 });
+assert.deepEqual(command.summary, { tests: 71, suites: 0, pass: 71, fail: 0, cancelled: 0, skipped: 0, todo: 0 });
+const banner = 'Training rehearsal - synthetic data - not a live Azure result';
+const helperSha256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+const observations = [];
+const actualNavigations = [];
+let unified;
+let preparationCoverage;
+for (const scope of ['C005', 'C006', 'C007', 'C008', 'local-harness']) {
+  const relative = path.join('capability', scope, 'evidence');
+  const names = fs.readdirSync(path.join(root, relative))
+    .filter(file => file.startsWith('browser-op-catalog-snapshot-refresh-165-c8b3139f07aa-') && file.endsWith('.json'))
+    .filter(file => {
+      const report = JSON.parse(fs.readFileSync(path.join(root, relative, file)));
+      return Date.parse(report.observedAtUtc) >= Date.parse(command.startedAtUtc)
+        && Date.parse(report.observedAtUtc) <= Date.parse(command.completedAtUtc);
+    });
+  assert.equal(names.length, 1, `${scope}: one unique deliberate capture from this successful invocation`);
+  const file = path.join(relative, names[0]);
+  const bytes = fs.readFileSync(path.join(root, file));
+  const report = JSON.parse(bytes);
+  assert.equal(report.status, 'passed', file);
+  assert.equal(report.operation, 'OP-CATALOG-SNAPSHOT-REFRESH-165', file);
+  assert.equal(report.sourcePin, generation.sourceCommit, file);
+  assert.equal(report.helperSourceSha256, helperSha256, file);
+  assert.equal(report.helperPublishedCommit, '53c0c0d82cc1db6780a87ac2b1085734af6d5c60', file);
+  assert.equal(report.helperApi, 'openIsolatedLesson', file);
+  assert.match(report.browserCleanup, /awaited.*finally|finally.*awaited/, file);
+  assert.match(report.browserVersion, /^156\./, file);
+  assert.equal(report.playwrightVersion, '1.56.1', file);
+  assert.equal(report.productionNode24Validated, false, file);
+  assert.equal(report.nativeAzureObserved, false, file);
+  assert.deepEqual(report.pageErrors, [], file);
+  assert.deepEqual(report.remoteRequests, [], file);
+  assert.ok(report.checks.every(check => check.passed === true), file);
+  assert.deepEqual(report.unavailablePracticeIdsChecked, ['W001', 'W002'], file);
+  const destinations = scope === 'C008' ? report.coverage.practiceLinks : report.acceptedPracticeDestinations;
+  const ids = destinations.map(item => typeof item === 'string'
+    ? /learning\/(S\d{3})\/index\.html$/.exec(item)[1] : item.id);
+  assert.deepEqual(ids, generation.acceptedPortableIds, file);
+  const navigations = report.practiceNavigations;
+  if (scope === 'local-harness') {
+    unified = report;
+    assert.deepEqual(navigations.map(item => item.id), generation.acceptedPortableIds);
+    assert.deepEqual(report.practiceNavigationCounts, {
+      sweep: 150, repeatedS001Controls: 1, totalActual: 151, uniqueDestinations: 150
+    });
+    actualNavigations.push({ scope, ...report.lessonObservation, repeatedControlVisit: true });
+  } else {
+    assert.equal(report.actualPracticeNavigationCount, 1, file);
+    assert.equal(navigations.length, 1, file);
+    assert.equal(navigations[0].id, 'S001', file);
+  }
+  if (scope === 'C008') preparationCoverage = report.coverage;
+  for (const item of navigations) {
+    assert.ok(item.loadedUrl.endsWith(`/learning/${item.id}/index.html`), item.id);
+    assertTrainingBanner(item.id, item.trainingBanner, generation.sourceCommit);
+    actualNavigations.push({ scope, ...item });
+  }
+  observations.push({
+    path: file, bytes: bytes.length, sha256: sha(bytes), status: report.status,
+    leafGroups: report.checks.length, sourcePin: report.sourcePin, acceptedPracticeLinks: ids.length,
+    recordedPracticeNavigations: navigations.length,
+    actualPracticeNavigationsIncludingControlRepeat: scope === 'local-harness' ? 151 : 1,
+    browserVersion: report.browserVersion, playwrightVersion: report.playwrightVersion,
+    helperSourceSha256: report.helperSourceSha256, helperPublishedCommit: report.helperPublishedCommit,
+    awaitedFinallyCleanup: report.browserCleanup, signature: report.signature || null
+  });
+}
+assert.equal(observations.reduce((sum, item) => sum + item.leafGroups, 0), 66);
+assert.equal(actualNavigations.length, 155);
+assert.equal(new Set(actualNavigations.map(item => item.id)).size, 150);
+assert.equal(unified.checks.length, 12);
+assert.equal(unified.lessonObservation.trainingBanner, banner);
+assert.equal(unified.lessonObservation.safeResult.verdict, 'PASS');
+assert.equal(unified.lessonObservation.unsafeVerdict, 'FAIL');
+assert.deepEqual(unified.lessonObservation.resetAfterNegative, {
+  verdict: 'NOT RUN', samples: 'Attempted: 0 · proven successful: 0 · interrupted: 0', v1: 'ACTIVE', admission: 'v1'
+});
+assert.deepEqual(unified.lessonObservation.returnToResults, {
+  query: '  BLUE-GREEN  ', host: 'aks', risk: 'unclassified', readiness: 'portable-available',
+  focusedId: 'prepare-S001', preparationHidden: true, matchingIds: ['S001', 'S128'], excludedIds: ['S124']
+});
+assert.equal(unified.signature.status, 'Valid');
+assert.match(unified.signature.subject, /Microsoft Corporation/);
+assert.equal(unified.signature.version, unified.browserVersion);
+assert.ok(observations.every(report => report.browserVersion === unified.browserVersion));
+const historical = JSON.parse(fs.readFileSync(path.join(__dirname, 'historical-proof-hashes.json')));
+for (const file of historical.files) assert.equal(sha(fs.readFileSync(path.join(root, file.path))), file.sha256, file.path);
+const report = {
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165',
+  worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-165',
+  kind: 'fresh-actual-browser-producer-verification-not-parent-acceptance',
+  recordedAtUtc: new Date().toISOString(), sourceCommit: generation.sourceCommit,
+  sourceGenerationSha256: generation.data.sha256, browserCommandEvidence: `${commandName}.json`,
+  tests: { total: 71, parents: 5, leaves: 66, passed: 71, failed: 0 },
+  unifiedLeafGroups: 12, observations, freshCaptureFiles: observations.length,
+  actualPracticeNavigations: 155, uniquePracticeDestinations: 150, exhaustiveSweepNavigations: 150,
+  exactSweepBanners: 150, repeatedS001PracticeNavigations: 5, exactBannersAcrossAllActualNavigations: 155,
+  exactCanonicalNoPeriodSweepBanners: 149, exactSourcePinnedS148PeriodSweepBanners: 1,
+  exactCanonicalNoPeriodAllActualBanners: 154, exactSourcePinnedS148PeriodAllActualBanners: 1,
+  exactApprovedBannerVariants: approval.approvedBannerVariants,
+  bannerApprovalRecord: 'banner-approval-01.json', originalS148GitHtmlSha256: approval.sourceGitHtmlSha256,
+  priorFailedSweepRetainedUnchanged: 'browser-capture-01.json',
+  counting: '150 unique sweep destinations; four standalone S001 visits plus one unified S001 control repeat add five actual navigations, not new lessons or Node tests. Internal C008 DOM cases are not Node leaves.',
+  preparationInternalDomCoverage: preparationCoverage,
+  S150Navigation: unified.practiceNavigations.find(item => item.id === 'S150'),
+  S107Navigation: unified.practiceNavigations.find(item => item.id === 'S107'),
+  S107StaticEntryCertifiesHttpOriginBehavior: false, S107NativeAzureProof: false,
+  unavailableWorkflowIdsChecked: ['W001', 'W002'], acceptedS001: unified.lessonObservation,
+  signedEdge: unified.signature, playwrightVersion: '1.56.1', nodeVersion: process.version, helperSha256,
+  historicalProofsStillByteExact: 561, prior517StillByteExact: 517,
+  frozenBlockedAttemptFilesStillByteExact: 51, frozenRetryAttemptFilesStillByteExact: 85,
+  pageErrors: [], remoteRequests: [], awaitedFinallyCleanup: true, nativeQualified: 0,
+  completedSourceParents: 0, H001Complete: false, H002Complete: false,
+  productionNode24Validated: false, kanoCredits: { S: 0, D: 0, L: 0 }, parentAcceptanceClaimed: false
+};
+fs.writeFileSync(path.join(__dirname, 'browser-qualification-02.json'),
+  `${JSON.stringify(report, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+console.log(JSON.stringify({
+  tests: report.tests, unifiedLeafGroups: 12, actualPracticeNavigations: 155,
+  uniquePracticeDestinations: 150, exactBanners: 155, freshCaptureFiles: 5,
+  preparationCoverageKeys: Object.keys(preparationCoverage), signedEdge: unified.signature.version
+}));

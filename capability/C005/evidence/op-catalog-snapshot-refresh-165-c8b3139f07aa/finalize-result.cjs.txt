@@ -1,0 +1,147 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const checks = require('./publication-checks.cjs.txt');
+const load = checks.load;
+const save = (name, value) => fs.writeFileSync(path.join(__dirname, name),
+  `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+const focused = load('focused-07.json');
+const browser = load('browser-qualification-02.json');
+const quiet = load('quiet-readonly-confirmed-02.json');
+const integrity = JSON.parse(load('integrity-readonly-04.json').stdout);
+const generation = load('generation.json');
+const approval = load('banner-approval-01.json');
+const version = load('readonly-boundary-version-change-04.json');
+assert.equal(focused.exitCode, 0);
+assert.deepEqual(focused.testNodes, { total: 314, parents: 3, leaves: 311 });
+assert.deepEqual(browser.tests, { total: 71, parents: 5, leaves: 66, passed: 71, failed: 0 });
+assert.equal(browser.uniquePracticeDestinations, 150);
+assert.equal(browser.exactBannersAcrossAllActualNavigations, 155);
+assert.equal(quiet.ownedBytesAndFileSetUnchanged, true);
+assert.deepEqual(quiet.tests, { tests: 385, pass: 385, fail: 0, cancelled: 0, skipped: 0, todo: 0,
+  total: 385, parents: 8, leaves: 377 });
+assert.equal(integrity.byteAndFileSetUnchanged, true);
+assert.equal(load('publisher-dispatch-03.json').exitCode, 0);
+assert.equal(load('publication-preparation-01.json').exitCode, 0);
+checks.preserved();
+const before = checks.inventory();
+const finalOwnedFiles = before.length + 4;
+const archiveFiles = before.filter(file => /\.(?:txt|gz)$/.test(file.path));
+const archiveCounts = { total: archiveFiles.length,
+  text: archiveFiles.filter(file => file.path.endsWith('.txt')).length,
+  gzip: archiveFiles.filter(file => file.path.endsWith('.gz')).length,
+  originalInitial: { total: 276, text: 152, gzip: 124 }, priorOp150: { total: 111, text: 45, gzip: 66 },
+  textArchivesAreNotGzip: true, nulPathspecIsOneExactTxtArchive: true };
+const validation = {
+  schemaVersion: 1, operation: generation.operation,
+  kind: 'current-complete-prepublication-validation-not-parent-acceptance',
+  recordedAtUtc: new Date().toISOString(), sourceCommit: generation.sourceCommit,
+  dataSha256: generation.data.sha256,
+  focused: { record: 'focused-07.json', files: 23, total: 314, parents: 3, leaves: 311, passed: 314, failed: 0,
+    preservedPreviousLeafBaseline: 298, newExactBannerGuards: 13 },
+  actualBrowser: { record: 'browser-qualification-02.json', files: 5, total: 71, parents: 5, leaves: 66,
+    passed: 71, failed: 0, unifiedGroups: 12, uniquePracticeDestinations: 150, sweepNavigations: 150,
+    actualNavigations: 155, repeatedS001Navigations: 5, exactIdSpecificBanners: 155,
+    sweepCanonicalBareBanners: 149, sweepOriginalS148PeriodBanners: 1,
+    totalCanonicalBareBanners: 154, totalOriginalS148PeriodBanners: 1,
+    internalC008DomCases: 152, internalC008Modes: { synthetic: 150, unavailable: 0, unsupported: 2 },
+    internalDomCasesAreNotNodeLeaves: true, priorC007Retry16RecordsNotIncluded: true,
+    oldFailedSweepNotRelabeled: true, signedEdge: browser.signedEdge, playwright: '1.56.1',
+    awaitedFinallyCleanup: true, exactS001PassFailResetAndQueryAndFilterReturn: browser.acceptedS001 },
+  quietReplay: { record: 'quiet-readonly-confirmed-02.json', tests: quiet.tests,
+    ownedFilesChecked: quiet.ownedFilesChecked, beforeInventorySha256: quiet.beforeInventorySha256,
+    afterInventorySha256: quiet.afterInventorySha256, byteAndFileSetUnchanged: true,
+    repeatedInvocationsNotAdditionalUniqueTests: true,
+    singleContinuousFullOwnedWindow: false, individualCompleteReadonlyWindows: quiet.windows,
+    runtimeAndBrowserInputsVerifiedUnchangedAcrossExplicitAuthorizationRevision: quiet.unchangedRuntimeAndBrowserSourceFiles,
+    failedEarlierWholeReplayRetainedNotRelabeled: 'quiet-readonly-confirmed-01.json' },
+  integrity: { record: 'integrity-readonly-04.json', ...integrity },
+  bannerApproval: { record: 'banner-approval-01.json', ...approval },
+  privatePublisherExpectedVersion: version.currentPublisher,
+  preservation: { initialOwnedBytes: 635, priorResumedBytes: 818, historicalProofFiles: 561,
+    earlier517ProofFiles: 517, frozenFailedSourceFiles: 51, frozenRetryFiles: 85, precedingSnapshots: 8 },
+  archiveCounts, ownedFilesBeforeStandalonePublication: finalOwnedFiles,
+  finalManifestEntries: finalOwnedFiles - 1, predictedObjectManifestExclusions: ['predicted-object-storage.json', 'hashes-final.json'],
+  parentAcceptanceClaimed: false, kanoCredits: { S: 0, D: 0, L: 0 }
+};
+save('validation-final.json', validation);
+const result = {
+  schemaVersion: 1, operation: generation.operation, worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-165',
+  kind: 'qualified-fixed-source-worker-result-ready-for-publication-not-parent-acceptance',
+  outcome: 'verified-full150-exact-original-banners-ready-for-guarded-publication',
+  recordedAtUtc: new Date().toISOString(), source: {
+    commit: generation.sourceCommit, originalAcceptedUnits: 165, sourceKanoDone: { S: 163, L: 0, D: 2 },
+    portablePractices: 150, nonPortableCapabilities: generation.acceptedNonPortableUnits,
+    entries: 152, unavailableWorkflowIds: ['W001', 'W002'], dataSha256: generation.data.sha256,
+    originalLedgerSha256: generation.acceptanceSnapshot.ledgerSha256,
+    originalLedgerUpdatedAtUtc: '2026-11-04T05:06:14.4697468Z',
+    gitCommitTimeUtc: '2026-11-04T05:06:17.000Z', chronologyValidatorUnchanged: true,
+    sourcePinOnlyGeneratorChange: true, gitReadMaxBufferBytes: 8388608,
+    liveAvailability: false, nativeRunnable: 0, nativeQualified: 0, completedSourceParents: 0,
+    H001Complete: false, H002Complete: false, productionNode24Validated: false,
+    S107StaticEntryIsNotNativeCorsOrHttpOriginQualification: true
+  },
+  genuineRed: { record: 'red-01.json', binding: 'red-binding-01.json',
+    tests: 18, positiveFailures: 17, negativePasses: 1, old135SnapshotLoadableAndValidatorValid: true,
+    oldDataSha256: '00df2f58566b4cb663b8dabcb175ef96fb7bdac269256781b34d29f579467863',
+    oldBytesUnchangedDuringRed: true, iacNotApplicableAfterRed: 'iac-na.json' },
+  focused: validation.focused, actualBrowser: validation.actualBrowser, quietReplay: validation.quietReplay,
+  integrity: validation.integrity, exactBannerApproval: validation.bannerApproval,
+  preservation: { ...validation.preservation, archives: archiveCounts,
+    snapshotManifest: 'previous-snapshots.json', originalSourceBundleFiles: 74,
+    originalHistoricalProofsUnchanged: true, oldBlockedReportsAndFailureStreamsUnchanged: true,
+    exactOriginalS148AndItsPublicationUnmodified: true, exactHistoricalJsonObjectsUnchanged: true,
+    unqualified86e31TagAndAncestorHistoryUnchanged: true },
+  retainedDistinctPriorProof: ['browser-capture-01.json', 'browser-c007-02.json', 'browser-banner-blocker-01.json',
+    'result-blocked-banner-01.json', 'result-blocked-banner-02.json', 'hashes-blocked-banner-01.json',
+    'hashes-blocked-banner-02.json', 'publisher-dispatch-01.json', 'readonly-boundary-drift-02.json'],
+  privatePublisherBoundary: { currentExplicitApprovedVersion: version.currentPublisher,
+    versionRecord: 'readonly-boundary-version-change-04.json', original7120Previous81591And488ProofsPreserved: true,
+    workerGuardEdits: false, parentGuardChecksNotWorkerTests: true },
+  publication: { explicitInventory: 'publication-owned-paths.json', pathspec: 'publication-pathspec.txt',
+    pattern: 'five owned scopes; exact HEAD/remote parity before staging; publisher mutex only; explicit git commit --only; unowned index byte/flag preservation; annotated real-SHA flow-catalog-refresh; atomic main+tag push; postcommit raw/object/SHA256 and remote verification',
+    resultHasNoSelfReferentialCommitClaim: true, standalonePostpublicationReport: 'publication-final.json',
+    predictedRawObjectsRequiredBeforeCommit: true, postcommitVerificationStillRequired: true,
+    terminalCommitByteTagPushFailureHasNoFallbackResetAmendForceOrGuardWidening: true },
+  validation: path.join(checks.relative, 'validation-final.json'),
+  validationSha256: checks.sha(checks.read(path.join(checks.relative, 'validation-final.json'))),
+  hashManifest: path.join(checks.relative, 'hashes-final.json'),
+  ownedFilesBeforeStandalonePublication: finalOwnedFiles, finalManifestEntries: finalOwnedFiles - 1,
+  plannedOwnedFilesAfterStandaloneReportAndTwoRawGzipStreams: finalOwnedFiles + 3,
+  archiveCountsBeforePublication: archiveCounts, plannedArchiveCountsAfterPublication: {
+    total: archiveCounts.total + 2, text: archiveCounts.text, gzip: archiveCounts.gzip + 2 },
+  parentAcceptanceClaimed: false, kanoCredits: { S: 0, D: 0, L: 0 }, originalCredits: 0,
+  packagesDownloadsCloudInfrastructureIdentityBackendDeploySpendOrSharedRootChanges: false,
+  stopAfterOneSameQualifiedOperationPublication: true
+};
+save('result-final.json', result);
+const expected = load('publication-owned-paths.json').paths;
+const exclusions = new Set(['predicted-object-storage.json', 'hashes-final.json']
+  .map(file => checks.logical(path.join(checks.relative, file))));
+const predictions = expected.filter(file => !exclusions.has(file)).map(checks.predict);
+save('predicted-object-storage.json', {
+  schemaVersion: 1, operation: generation.operation, kind: 'actual-readonly-canonical-path-git-object-predictions-before-staging',
+  recordedAtUtc: new Date().toISOString(), files: predictions, entries: predictions.length,
+  explicitSelfAndFinalManifestExclusions: [...exclusions],
+  exclusionsStillVerifiedDynamicallyBeforeCommit: true, historicalProofNormalizedOrRewritten: false
+});
+const files = checks.inventory();
+assert.equal(files.length, finalOwnedFiles - 1);
+save('hashes-final.json', {
+  schemaVersion: 1, operation: generation.operation, kind: 'complete-current-owned-working-byte-manifest-before-publication',
+  recordedAtUtc: new Date().toISOString(), entries: files.length, ownedFilesIncludingThisManifest: finalOwnedFiles,
+  exclusion: path.join(checks.relative, 'hashes-final.json'), files,
+  resultSha256: checks.sha(checks.read(path.join(checks.relative, 'result-final.json'))),
+  validationSha256: result.validationSha256, inventorySha256: checks.sha(JSON.stringify(files)),
+  excludedFromCommitButPreservedHistoricalStandalone: checks.excludedStandalone,
+  newPostpublicationStandaloneAndTwoRawStreamsAreNotSelfReferentialCommittedBlobs: true
+});
+const verified = checks.verifyCurrent();
+console.log(JSON.stringify({
+  outcome: result.outcome, verified, resultSha256: checks.sha(checks.read(path.join(checks.relative, 'result-final.json'))),
+  validationSha256: result.validationSha256,
+  manifestSha256: checks.sha(checks.read(path.join(checks.relative, 'hashes-final.json'))),
+  archiveCounts, fullOwnedFiles: finalOwnedFiles, finalManifestEntries: finalOwnedFiles - 1
+}));

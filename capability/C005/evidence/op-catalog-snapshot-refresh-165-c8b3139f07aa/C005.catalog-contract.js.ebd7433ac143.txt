@@ -1,0 +1,205 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('../C003/matrix-contract.js'));
+  else Object.defineProperty(root, 'C005Contract', { value: factory(root.C003Contract) });
+}(globalThis, function (matrixContract) {
+  'use strict';
+
+  const SCHEMA_VERSION = '1.0.0';
+  const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+  const isTime = value => typeof value === 'string' && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,7})?Z$/.test(value)
+    && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 19) === value.slice(0, 19);
+  const isCommit = value => typeof value === 'string' && /^[a-f0-9]{40}$/.test(value);
+  const isHash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+  const paths = Object.freeze({ readme: 'README.md', backlog: '.docs\\wiki\\backlog.md' });
+
+  /** @param {unknown} catalog @param {unknown} matrix @returns {import('./catalog-contract').ValidationResult} */
+  function validateCatalog(catalog, matrix) {
+    const errors = [];
+    function error(key, message) {
+      if (errors.length < 32) errors.push(`${key}: ${message}`);
+    }
+    function object(value, keys, key) {
+      if (!isObject(value)) {
+        error(key, 'must be an object');
+        return false;
+      }
+      if (Object.keys(value).some(name => !keys.includes(name))) error(key, 'unexpected property');
+      keys.forEach(name => { if (!Object.hasOwn(value, name)) error(`${key}.${name}`, 'required'); });
+      return true;
+    }
+    function equal(value, expected, key) {
+      if (value !== expected) error(key, `must equal ${JSON.stringify(expected)}`);
+    }
+    function text(value, key, max = 6000) {
+      if (typeof value !== 'string' || value.trim().length === 0 || value.length > max) {
+        error(key, 'must be nonempty bounded source text');
+      }
+    }
+    function time(value, key) {
+      if (!isTime(value)) error(key, 'must be a valid UTC timestamp');
+    }
+    function commit(value, key) {
+      if (!isCommit(value)) error(key, 'must be a full lowercase commit SHA');
+    }
+    function hash(value, key) {
+      if (!isHash(value)) error(key, 'must be a SHA-256 fingerprint');
+    }
+    function reference(value, key) {
+      if (!object(value, ['document', 'path', 'line', 'anchor'], key)) return;
+      if (!Object.hasOwn(paths, value.document)) error(`${key}.document`, 'unknown source');
+      equal(value.path, paths[value.document], `${key}.path`);
+      if (!Number.isSafeInteger(value.line) || value.line < 1 || value.line > 10000) error(`${key}.line`, 'invalid source line');
+      if (typeof value.anchor !== 'string' || !/^[a-z0-9-]{1,120}$/.test(value.anchor)) error(`${key}.anchor`, 'invalid source anchor');
+    }
+    function section(value, key) {
+      if (!object(value, ['text', 'reference'], key)) return;
+      text(value.text, `${key}.text`, 24000);
+      reference(value.reference, `${key}.reference`);
+    }
+    if (!object(catalog, [
+      'schemaVersion', 'kind', 'cardId', 'scope', 'source', 'acceptanceSnapshot', 'capabilityMatrix', 'common', 'entries'
+    ], 'catalog')) return { valid: false, errors };
+    equal(catalog.schemaVersion, SCHEMA_VERSION, 'schemaVersion');
+    equal(catalog.kind, 'source-scenario-catalog', 'kind');
+    equal(catalog.cardId, 'C005', 'cardId');
+    equal(catalog.scope, 'local-source-derived-snapshot', 'scope');
+    const source = catalog.source;
+    if (object(source, ['commit', 'commitTimeUtc', 'readme', 'backlog'], 'source')) {
+      commit(source.commit, 'source.commit');
+      time(source.commitTimeUtc, 'source.commitTimeUtc');
+      for (const document of ['readme', 'backlog']) {
+        if (object(source[document], ['path', 'sha256'], `source.${document}`)) {
+          equal(source[document].path, paths[document], `source.${document}.path`);
+          hash(source[document].sha256, `source.${document}.sha256`);
+        }
+      }
+    }
+    const snapshot = catalog.acceptanceSnapshot;
+    if (object(snapshot, ['commit', 'commitTimeUtc', 'ledgerPath', 'ledgerSha256', 'ledgerUpdatedAtUtc', 'live'], 'acceptanceSnapshot')) {
+      commit(snapshot.commit, 'acceptanceSnapshot.commit');
+      equal(snapshot.commit, source?.commit, 'acceptanceSnapshot.commit');
+      time(snapshot.commitTimeUtc, 'acceptanceSnapshot.commitTimeUtc');
+      equal(snapshot.commitTimeUtc, source?.commitTimeUtc, 'acceptanceSnapshot.commitTimeUtc');
+      equal(snapshot.ledgerPath, '.docs\\wiki\\flow-state.json', 'acceptanceSnapshot.ledgerPath');
+      hash(snapshot.ledgerSha256, 'acceptanceSnapshot.ledgerSha256');
+      time(snapshot.ledgerUpdatedAtUtc, 'acceptanceSnapshot.ledgerUpdatedAtUtc');
+      if (isTime(snapshot.ledgerUpdatedAtUtc) && isTime(snapshot.commitTimeUtc)
+          && Date.parse(snapshot.ledgerUpdatedAtUtc) > Date.parse(snapshot.commitTimeUtc)) {
+        error('acceptanceSnapshot.ledgerUpdatedAtUtc', 'cannot postdate the committed snapshot');
+      }
+      equal(snapshot.live, false, 'acceptanceSnapshot.live');
+    }
+    const capability = catalog.capabilityMatrix;
+    if (object(capability, ['cardId', 'schemaVersion', 'sourceCommit', 'dataPath', 'contractPath', 'href'], 'capabilityMatrix')) {
+      equal(capability.cardId, 'C003', 'capabilityMatrix.cardId');
+      equal(capability.schemaVersion, '1.0.0', 'capabilityMatrix.schemaVersion');
+      commit(capability.sourceCommit, 'capabilityMatrix.sourceCommit');
+      equal(capability.dataPath, 'capability\\C003\\matrix-data.js', 'capabilityMatrix.dataPath');
+      equal(capability.contractPath, 'capability\\C003\\matrix-contract.js', 'capabilityMatrix.contractPath');
+      equal(capability.href, '../C003/index.html', 'capabilityMatrix.href');
+    }
+    if (!matrixContract || typeof matrixContract.validateMatrix !== 'function') {
+      error('capabilityMatrix', 'C003 validator unavailable; no replacement capability or approval logic is inferred');
+    } else {
+      const validated = matrixContract.validateMatrix(matrix);
+      if (!validated.valid) error('capabilityMatrix', `C003 rejected its documented-only matrix: ${validated.errors.join('; ')}`);
+      equal(matrix?.schemaVersion, capability?.schemaVersion, 'capabilityMatrix.schemaVersion');
+    }
+    const common = catalog.common;
+    if (object(common, ['riskReason', 'dependencyRules', 'sharedDefinitionOfDone', 'operatingLimits',
+      'acceptanceAndEvidence', 'workflowScope'], 'common')) {
+      text(common.riskReason, 'common.riskReason');
+      text(common.workflowScope, 'common.workflowScope');
+      for (const key of ['dependencyRules', 'sharedDefinitionOfDone', 'operatingLimits', 'acceptanceAndEvidence']) {
+        section(common[key], `common.${key}`);
+      }
+    }
+    if (!Array.isArray(catalog.entries) || catalog.entries.length !== 152) {
+      error('entries', 'must contain exactly 150 source scenarios plus W001 and W002');
+    } else {
+      catalog.entries.forEach((entry, index) => {
+        const key = `entries[${index}]`;
+        if (!object(entry, ['id', 'kind', 'parentId', 'category', 'title', 'objective', 'priority',
+          'implementation', 'acceptance', 'prerequisites', 'sourceReferences', 'risk', 'learning',
+          'native', 'support', 'parent'], key)) return;
+        const scenario = index < 150;
+        const expectedId = scenario ? `S${String(index + 1).padStart(3, '0')}` : `W00${index - 149}`;
+        equal(entry.id, expectedId, `${key}.id`);
+        equal(entry.kind, scenario ? 'scenario' : 'workflow', `${key}.kind`);
+        equal(entry.parentId, scenario ? `D-${expectedId}` : expectedId, `${key}.parentId`);
+        if (object(entry.category, ['id', 'title'], `${key}.category`)) {
+          equal(entry.category.id, scenario ? String.fromCharCode(65 + Math.floor(index / 10)) : 'W', `${key}.category.id`);
+          text(entry.category.title, `${key}.category.title`, 120);
+        }
+        for (const name of ['title', 'objective', 'implementation', 'acceptance']) text(entry[name], `${key}.${name}`, name === 'title' ? 200 : 3000);
+        if (!['P0', 'P1', 'P2'].includes(entry.priority)) error(`${key}.priority`, 'unknown priority');
+        equal(entry.risk, 'unclassified', `${key}.risk`);
+        if (object(entry.prerequisites, ['additional', 'inheritsBase'], `${key}.prerequisites`)) {
+          text(entry.prerequisites.additional, `${key}.prerequisites.additional`, 600);
+          if (typeof entry.prerequisites.additional === 'string'
+              && !/^(?:none|(?:[HPW]\d{3}|D-S\d{3}|HOST|CONTAINER|IMAGEHOST|HOSTJAVA)(?:, (?:[HPW]\d{3}|D-S\d{3}|HOST|CONTAINER|IMAGEHOST|HOSTJAVA))*)$/.test(entry.prerequisites.additional)) {
+            error(`${key}.prerequisites.additional`, 'unknown dependency notation; preserve AND/OR rules rather than inventing prerequisites');
+          }
+          equal(entry.prerequisites.inheritsBase, scenario, `${key}.prerequisites.inheritsBase`);
+        }
+        if (!Array.isArray(entry.sourceReferences) || entry.sourceReferences.length !== (scenario ? 2 : 1)) {
+          error(`${key}.sourceReferences`, 'missing canonical row references');
+        } else entry.sourceReferences.forEach((ref, i) => {
+          reference(ref, `${key}.sourceReferences[${i}]`);
+          equal(ref?.document, scenario && i === 0 ? 'readme' : 'backlog', `${key}.sourceReferences[${i}].document`);
+        });
+        const lesson = entry.learning;
+        if (object(lesson, ['status', 'available', 'cardId', 'href', 'evidence', 'reason'], `${key}.learning`)) {
+          text(lesson.reason, `${key}.learning.reason`);
+          equal(lesson.cardId, scenario ? `A-${expectedId}` : null, `${key}.learning.cardId`);
+          if (lesson.status === 'accepted-snapshot') {
+            equal(lesson.available, true, `${key}.learning.available`);
+            if (!scenario) error(`${key}.learning`, 'integrated workflows have no portable A-card lesson');
+            equal(lesson.href, `../../learning/${expectedId}/index.html`, `${key}.learning.href`);
+            if (object(lesson.evidence, ['commit', 'tag', 'acceptedAtUtc'], `${key}.learning.evidence`)) {
+              commit(lesson.evidence.commit, `${key}.learning.evidence.commit`);
+              equal(lesson.evidence.tag, `kanban/A-${expectedId}/${String(lesson.evidence.commit).slice(0, 12)}`, `${key}.learning.evidence.tag`);
+              time(lesson.evidence.acceptedAtUtc, `${key}.learning.evidence.acceptedAtUtc`);
+              if (isTime(lesson.evidence.acceptedAtUtc) && isTime(snapshot?.ledgerUpdatedAtUtc)
+                  && Date.parse(lesson.evidence.acceptedAtUtc) > Date.parse(snapshot.ledgerUpdatedAtUtc)) {
+                error(`${key}.learning.evidence.acceptedAtUtc`, 'cannot postdate the ledger snapshot');
+              }
+            }
+          } else {
+            equal(lesson.status, 'unavailable', `${key}.learning.status`);
+            equal(lesson.available, false, `${key}.learning.available`);
+            equal(lesson.href, null, `${key}.learning.href`);
+            equal(lesson.evidence, null, `${key}.learning.evidence`);
+          }
+        }
+        if (object(entry.native, ['status', 'runnable', 'qualified', 'evidence', 'reason'], `${key}.native`)) {
+          equal(entry.native.status, 'unverified', `${key}.native.status`);
+          equal(entry.native.runnable, false, `${key}.native.runnable`);
+          equal(entry.native.qualified, false, `${key}.native.qualified`);
+          if (!Array.isArray(entry.native.evidence) || entry.native.evidence.length !== 0) error(`${key}.native.evidence`, 'no native evidence may be claimed');
+          text(entry.native.reason, `${key}.native.reason`);
+        }
+        if (object(entry.support, ['status', 'reason'], `${key}.support`)) {
+          equal(entry.support.status, 'unknown', `${key}.support.status`);
+          text(entry.support.reason, `${key}.support.reason`);
+        }
+        if (object(entry.parent, ['completed', 'status', 'reason'], `${key}.parent`)) {
+          equal(entry.parent.completed, false, `${key}.parent.completed`);
+          equal(entry.parent.status, 'planned', `${key}.parent.status`);
+          text(entry.parent.reason, `${key}.parent.reason`);
+        }
+      });
+    }
+    return { valid: errors.length === 0, errors };
+  }
+  function sourceHref(catalog, reference) {
+    if (!isCommit(catalog?.source?.commit) || !isObject(reference)
+        || !Object.hasOwn(paths, reference.document) || paths[reference.document] !== reference.path
+        || !Number.isSafeInteger(reference.line) || reference.line < 1 || reference.line > 10000) {
+      throw new TypeError('Invalid pinned source reference');
+    }
+    return `https://github.com/chadhage/app-scaling-strategies/blob/${catalog.source.commit}/${reference.path.replaceAll('\\', '/')}#L${reference.line}`;
+  }
+  return Object.freeze({ SCHEMA_VERSION, validateCatalog, sourceHref });
+}));

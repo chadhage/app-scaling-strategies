@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Catalog host, risk and readiness filters — C007</title>
+  <link rel="stylesheet" href="filters.css">
+  <script defer src="../C003/matrix-contract.js"></script>
+  <script defer src="../C003/matrix-data.js"></script>
+  <script defer src="../C005/catalog-contract.js"></script>
+  <script defer src="../C005/catalog-data.js"></script>
+  <script defer src="catalog-filters.js"></script>
+  <script defer src="filters-page.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#catalog">Skip to filtered catalog</a>
+  <header>
+    <p class="eyebrow">C007 · H002 · one local, read-only S unit</p>
+    <h1>Filter the shared scenario catalog</h1>
+    <p>The original 150 scenarios and two workflows come unchanged from
+      <a href="../C005/index.html">C005's accepted v1 catalog</a>.</p>
+    <p class="notice"><strong>Training rehearsal — synthetic data — not a live Azure result.</strong>
+      A historical portable lesson is not native runnable, native qualified or a completed source parent.
+      Documented host support is not target approval.</p>
+    <p>No cloud, IaC, scaffold, identity-registration, deployment or spending actions.
+      Node.js 22 is test tooling only; production Node.js 24 remains unvalidated.
+      <a href="../C001/index.html">C001 local contract</a> and
+      <a href="../C003/index.html">C003 host / format matrix</a> retain sole authority.</p>
+  </header>
+  <main>
+    <section aria-labelledby="filters-heading">
+      <h2 id="filters-heading">Host, risk and readiness</h2>
+      <form id="filters">
+        <fieldset>
+          <legend>Combine all three filters</legend>
+          <div class="filter-grid">
+            <div class="filter-field">
+              <label for="host-filter">Host under test</label>
+              <select id="host-filter" name="host" aria-describedby="host-help">
+                <option value="all">All hosts</option>
+              </select>
+              <p id="host-help">Only explicit direct host-prerequisite conflicts are excluded.
+                Unknown support stays visible; matching is not target qualification or a transitive dependency check.</p>
+            </div>
+            <div class="filter-field">
+              <label for="risk-filter">Risk classification</label>
+              <select id="risk-filter" name="risk" aria-describedby="risk-help">
+                <option value="all">All risk classifications</option>
+                <option value="unclassified">UNCLASSIFIED (source value)</option>
+                <option value="assessed">Assessed risk only (none in v1)</option>
+                <option value="low">Low assessed risk (none in v1)</option>
+                <option value="medium">Medium assessed risk (none in v1)</option>
+                <option value="high">High assessed risk (none in v1)</option>
+              </select>
+              <p id="risk-help">All 152 entries are UNCLASSIFIED. Priority is not risk.
+                An empty assessed-risk view is intentional, not evidence of low risk.</p>
+            </div>
+            <div class="filter-field">
+              <label for="readiness-filter">Readiness / availability</label>
+              <select id="readiness-filter" name="readiness" aria-describedby="readiness-help">
+                <option value="all">All readiness states</option>
+                <option value="portable-available">Portable lesson accepted (historical snapshot)</option>
+                <option value="portable-unavailable">Portable lesson unavailable (historical snapshot)</option>
+                <option value="native-unavailable">Native unavailable / unverified</option>
+                <option value="native-runnable">Native runnable (none in v1)</option>
+                <option value="native-qualified">Native qualified (none in v1)</option>
+                <option value="parent-complete">Source parent complete (none in v1)</option>
+              </select>
+              <p id="readiness-help">Accepted portable learning, native execution and source-parent
+                completion are separate. New files or later acceptances do not change this historical snapshot.</p>
+            </div>
+          </div>
+          <button type="reset" id="reset-filters">Reset filters</button>
+        </fieldset>
+      </form>
+    </section>
+    <section aria-labelledby="provenance-heading">
+      <h2 id="provenance-heading">Validated historical provenance</h2>
+      <p id="snapshot-summary">No validated committed snapshot. Availability is unverified.</p>
+      <p id="snapshot-source"></p>
+      <p id="risk-reason"></p>
+      <p id="dependency-reference"></p>
+    </section>
+    <section id="catalog" tabindex="-1" aria-labelledby="catalog-heading">
+      <h2 id="catalog-heading">Matching entries — unknowns preserved</h2>
+      <p id="catalog-count" role="status" aria-live="polite" aria-atomic="true">Catalog unavailable / unverified.</p>
+      <p id="catalog-error" role="alert">Catalog unavailable until the accepted C005/C003 data and validators load.</p>
+      <p id="catalog-empty">No entries are displayed; data has not been validated.</p>
+      <div id="catalog-entries"></div>
+    </section>
+    <section aria-labelledby="incompatible-heading">
+      <h2 id="incompatible-heading">Excluded direct host-prerequisite conflicts</h2>
+      <p id="incompatible-summary">No validated host assessment.</p>
+      <div id="incompatible-entries"></div>
+    </section>
+    <section aria-labelledby="matrix-heading">
+      <h2 id="matrix-heading">C003 configuration reasons for the selected host</h2>
+      <p>These are configuration rows, not per-scenario support claims. Unsupported and unknown reasons remain explicit.
+        No adapter is made runnable or qualified.</p>
+      <div id="matrix-rows"></div>
+    </section>
+    <section aria-labelledby="permission-heading">
+      <h2 id="permission-heading">Validated C003 denials — not a price quote</h2>
+      <p>Zero authorized live runs or spend means forbidden, not free-resource approval.
+        The filter never grants permissions.</p>
+      <pre id="permission-values">No validated permissions.</pre>
+    </section>
+    <noscript><p role="alert">JavaScript is required for validated filtering. No availability
+      claim is made. Read the canonical catalog and backlog instead.</p></noscript>
+  </main>
+  <footer>
+    <p><a href="../../README.md#scenario-catalog">Canonical README catalog</a> ·
+      <a href="../../.docs/wiki/backlog.md#integrated-guided-demonstrations">Canonical workflow backlog</a> ·
+      <a href="../../README.md#microsoft-open-source-disclaimer">Microsoft disclaimer</a></p>
+    <p>C006 search and C008 preparation are separate, incomplete work. This page does not finish H002,
+      source-demo parents, native evidence, production hosting or a Microsoft SLA.</p>
+  </footer>
+</body>
+</html>

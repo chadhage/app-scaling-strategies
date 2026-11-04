@@ -1,0 +1,30 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const red = JSON.parse(fs.readFileSync(path.join(__dirname, 'red-01.json')));
+const binding = JSON.parse(fs.readFileSync(path.join(__dirname, 'red-binding-01.json')));
+assert.equal(red.exitCode, 1);
+assert.equal(red.summary.fail, 17);
+assert.equal(red.summary.pass, 1);
+assert.equal(binding.oldCatalogSha256, binding.oldCatalogAfterSha256);
+const recordedAtUtc = new Date().toISOString();
+assert.ok(Date.parse(recordedAtUtc) >= Date.parse(red.completedAtUtc));
+const report = {
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165',
+  worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-165', recordedAtUtc,
+  applicability: 'not-applicable', recordedAfter: 'genuine unchanged135 behavioral RED',
+  recordedBefore: 'fixed165 source-pin catalog write',
+  reason: 'An existing static file-loadable catalog and its existing consumers require no infrastructure.',
+  immutableSource: 'c8b3139f07aa60a64833a5380503b2bd794c0e0e',
+  newBackend: false, packageInstall: false, download: false, infrastructureGenerated: false,
+  cloudActionsExecuted: false, scaffoldCreated: false, identityRegistered: false,
+  deploymentExecuted: false, spendAuthorized: false, maximumLiveAzureRuns: 0,
+  authorizedCloudSpend: 0, productionNode24Validated: false,
+  ledgerOrKanbanEdited: false, sharedHelpersEdited: false, kanoCredits: { S: 0, D: 0, L: 0 },
+  parentAcceptanceClaimed: false
+};
+fs.writeFileSync(path.join(__dirname, 'iac-na.json'),
+  `${JSON.stringify(report, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+console.log(JSON.stringify({ applicability: report.applicability, recordedAtUtc, redFailedLeaves: 17 }));

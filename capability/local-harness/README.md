@@ -29,7 +29,7 @@ files remain byte-exact. All **358** pre-existing owned files were fingerprinted
 before existing-file edits. The existing 8 MiB Git read bound is retained;
 only the deterministic generator's full-SHA pin changes. No original card or
 parent is accepted here, and the operation has zero S/D/L credit.
-**OP-CATALOG-SNAPSHOT-REFRESH-150** now exposes exactly one immutable
+**OP-CATALOG-SNAPSHOT-REFRESH-150** previously exposed exactly one immutable
 150-unit/135-practice snapshot: **S001–S135**. All seven preceding catalogs,
 all **371** original proof files and the entire **51-file** blocked OP150 attempt
 are byte-exact. The retry inventories **422** historical proofs and **494**
@@ -37,6 +37,26 @@ pre-existing owned files. The parent approved existing published `ebd7433ac143`
 instead of the chronology-invalid `38ecc22ba606`; this remains the same mission
 with zero S/D/L credit, not a new unit. Exact timestamps, validator, API,
 authorities, 8 MiB Git transport and published helper are unchanged.
+**OP-CATALOG-SNAPSHOT-REFRESH-165** now exposes one fixed source with **165 original
+units (163 S + 2 D)** and **all150 practices, S001–S150**. W001/W002 remain
+unavailable, and all native/parent/runtime gates are unchanged. An initial
+**635-file** byte manifest precedes edits; all **561** historical proofs
+(including the prior517), **74** archived source files, eight previous snapshots,
+the complete 51-file failed-source and 85-file retry attempts, and **111 OP150
+archives (45 TXT + 66 gzip)** are preserved. Current proof is in
+`capability\C005\evidence\op-catalog-snapshot-refresh-165-c8b3139f07aa`.
+The parent alone may accept this one zero-credit operation.
+The earlier uniform-banner sweep was not qualified: S148's immutable original
+banner has a trailing period, observed in actual signed Edge. See
+`browser-banner-blocker-01.json` in that namespace. Publication remains blocked
+before staging or commit pending parent direction; no source or assertion
+relaxation was made, and partial successful captures are not full-sweep proof.
+The parent subsequently approved only the exact source-pinned S148 original
+banner ending in one period. Test-only guards require that literal for S148,
+and the exact no-period literal for every other149 ID. No whitespace/punctuation
+normalization, wildcard, unknown-ID acceptance or lesson edit is allowed.
+`banner-approval-01.json` and `banner-compatibility-165.feature` bind the approval;
+fresh actual full150 sweep evidence, not the failed sweep, is required.
 
 Open `capability\local-harness\index.html` directly in a browser with JavaScript.
 No install, server, framework, dependency, account, credential or cloud access is
@@ -83,20 +103,20 @@ The original `evidence\provider-integrity.json` records **13 original consumed
 interfaces**, accepted publication commits and exact fingerprints. Twelve remain
 unchanged. Tests still verify the thirteenth's old accepted data baseline against
 C005's byte-preserved snapshot archive, then verify the active data against
-`capability\C005\evidence\op-catalog-snapshot-refresh-150-ebd7433ac143\generation.json`
+`capability\C005\evidence\op-catalog-snapshot-refresh-165-c8b3139f07aa\generation.json`
 and deterministic extraction. No original fingerprint check is dropped; the new
 generation binding is not self-acceptance. All APIs, declarations and authorities
 remain unchanged.
 
 Availability remains the C005 historical source/acceptance pin
-**`ebd7433ac143242ab633b52aff864bb2923dac2c`**, annotated source tag
-**`kanban/flow-admin/ebd7433ac143`**, commit time
-**`2026-11-04T02:53:48.000Z`**, ledger update
-**`2026-11-04T02:53:47.0882168Z`**. The UI displays those values and pinned source
-links. It is **not live availability**. Exactly 135 accepted snapshot lessons are
-available: S001–S135. S136+ remain unavailable even
-if their live board state advances.
-The source's 150 accepted units (148 S + 2 D) are not reclassified or credited here.
+**`c8b3139f07aa60a64833a5380503b2bd794c0e0e`**, annotated source tag
+**`kanban/flow-admin/c8b3139f07aa`**, commit time
+**`2026-11-04T05:06:17.000Z`**, ledger update
+**`2026-11-04T05:06:14.4697468Z`**. The UI displays those values and pinned source
+links. It is **not live availability**. All 150 accepted snapshot lessons are
+available: S001–S150. W001/W002 remain unavailable.
+Later live capability acceptance cannot change this fixed source.
+The source's 165 accepted units (163 S + 2 D) are not reclassified or credited here.
 
 - Portable practice is distinct from native runnable/qualified and source-parent
   completion. Native flags and all source-parent completion flags remain false.
