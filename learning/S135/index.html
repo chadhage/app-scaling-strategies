@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S135 - Synthetic webhook redelivery</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S135: Redeliver a delayed webhook; count effects, not attempts</h1>
+    <p>A-S135 / D-S135 / SC-S135 · one original frozen Kano S learning unit.</p>
+    <p>All event, webhook, acknowledgement, retry, deduplication, key, state, effect, version, elapsed-time and budget values are <strong>fixed fictional teaching DATA ONLY</strong>. These buttons load observations; they do not send a webhook, make a network request or perform a business/user-data operation.</p>
+    <section aria-labelledby="objective">
+      <h2 id="objective">Objective and contract</h2>
+      <p>Redeliver a delayed webhook; distinguish event attempts from business effects.</p>
+      <p>Source S135: Process repeated or delayed delivery without duplicate business effects. D-S135: Repeated deliveries preserve one business effect and correct observable processing status.</p>
+      <ol>
+        <li>Choose one fixed preset and load its first v1 delivery DATA.</li>
+        <li>Record the fictional cutover to v2; the original event/key/budget do not restart.</li>
+        <li>Redeliver the delayed fixture DATA, then measure the original event.</li>
+        <li>Inspect attempts, latest effect snapshot and processing status separately. Two attempts must not become two correct results.</li>
+      </ol>
+      <p><strong>Unknown stays unknown:</strong> a lost acknowledgement or unobserved original completion is retained even after an acknowledged retry and a later one-effect snapshot. A later positive rehearsal never erases an earlier negative or unknown.</p>
+    </section>
+    <h2 id="operator">Operator actions (DATA ONLY)</h2>
+    <form id="controls" novalidate>
+      <label for="preset">Fixed preset DATA</label>
+      <select id="preset" name="preset">
+        <option value="stable-key">Stable event key</option>
+        <option value="versioned-key">Unsafe version-scoped key</option>
+        <option value="lost-ack">Lost original acknowledgement</option>
+        <option value="unknown-completion">Unobserved original completion</option>
+        <option value="budget-exceeded">Retry exceeds original budget</option>
+        <option value="wrong-effect">One effect, wrong state/result</option>
+      </select>
+      <p id="preset-explanation">Choose fixed fictional DATA; no live operation.</p>
+      <label for="event-token">Exact fictional event token</label>
+      <input id="event-token" name="eventToken" value="fictional-event-135" autocomplete="off" spellcheck="false" aria-describedby="event-help">
+      <p class="help" id="event-help">Exact token fictional-event-135 only; no URLs, payloads, secrets or user identifiers.</p>
+      <label for="budget">Original budget DATA in ms</label>
+      <input id="budget" name="budget" value="1000" inputmode="numeric" autocomplete="off" spellcheck="false" aria-describedby="budget-help">
+      <p class="help" id="budget-help">Exactly 1000; fictional original start is 0 ms. No real waits or operating/spend budget.</p>
+      <div class="actions">
+        <button id="load" type="submit">Load first delivery DATA</button>
+        <button id="cutover" type="button" disabled>Record cutover DATA</button>
+        <button id="redeliver" type="button" disabled>Redeliver delayed attempt DATA</button>
+        <button id="measure" type="button" disabled>Measure original event DATA</button>
+        <button id="reset-lesson" type="button">Reset lesson</button>
+      </div>
+    </form>
+    <p role="status" aria-live="polite" aria-atomic="true" id="status">Ready. No event or business result verified.</p>
+    <p role="alert" id="error" tabindex="-1"></p>
+    <noscript><p>This resource-free lesson requires local JavaScript. No event or result is verified while it is unavailable.</p></noscript>
+    <section aria-labelledby="measurements">
+      <h2 id="measurements">Measured results</h2>
+      <p>Phase: <span id="phase">ready</span> · Retained actions: <span id="history-count">0 / 16</span></p>
+      <p id="active-run">No rehearsal loaded.</p>
+      <p id="limit">Maximum four rehearsals / sixteen actions; explicit page-local reset.</p>
+      <dl class="metrics">
+        <div><dt>Delivery attempts loaded</dt><dd id="attempt-count">0</dd></div>
+        <div><dt>Original events measured</dt><dd id="event-count">0</dd></div>
+        <div><dt>Verified correct business results</dt><dd id="positive-count">0</dd></div>
+        <div><dt>Negative business results</dt><dd id="negative-count">0</dd></div>
+        <div><dt>Unverified business results</dt><dd id="unknown-count">0</dd></div>
+        <div><dt>Retained unknown attempt statuses</dt><dd id="unknown-attempt-count">0</dd></div>
+      </dl>
+      <p>One event has at most one verified correct business result. Effect snapshots are <strong>not additive</strong>: one row observed twice is not two new effects. Rehearsal totals count teaching runs, not real events or users.</p>
+      <div class="table-scroll" tabindex="0" aria-label="Scroll delivery DATA table">
+        <table>
+          <caption>Retained delivery observations: effect snapshots are not additive</caption>
+          <thead><tr><th scope="col">Run</th><th scope="col">Attempt DATA</th><th scope="col">Same event</th><th scope="col">Version</th><th scope="col">Key DATA</th><th scope="col">Completion</th><th scope="col">Acknowledgement</th><th scope="col">Dedup state</th><th scope="col">Effect rows after attempt</th><th scope="col">Effect state/result</th><th scope="col">Elapsed / original budget ms</th></tr></thead>
+          <tbody id="attempt-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-scroll" tabindex="0" aria-label="Scroll event result table">
+        <table>
+          <caption>One measured business event per fictional rehearsal, not one per attempt</caption>
+          <thead><tr><th scope="col">Run</th><th scope="col">Preset</th><th scope="col">Events</th><th scope="col">Attempts</th><th scope="col">Latest effect rows</th><th scope="col">Verified correct results</th><th scope="col">Unknown attempt statuses</th><th scope="col">Outcome / verification</th><th scope="col">Reasons and recovery limits</th></tr></thead>
+          <tbody id="result-rows"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="history">
+      <h2 id="history">Retained operator history</h2>
+      <div class="table-scroll" tabindex="0" aria-label="Scroll retained operator history">
+        <table>
+          <caption>Earlier lost acknowledgements, failures and unknowns remain until explicit reset</caption>
+          <thead><tr><th scope="col">Step</th><th scope="col">Run</th><th scope="col">Action</th><th scope="col">Fixed DATA observation</th></tr></thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="limits">
+      <h2 id="limits">Limits and unfinished native proof</h2>
+      <p>Standard local HTML/JavaScript only. No network API, persistence, cookies, identity, credentials, server, framework, cloud, IaC, deployment or spend. Refresh/reset clears only this page's in-memory DATA; previously captured proof is never rewritten.</p>
+      <p>A positive fixed sample is not a live Azure result, native B-S135 proof, D-S135/source-parent completion, a reliability guarantee, five-nines evidence or Node.js 24 production validation. B-S135 remains separate and blocked on approved native prerequisites and real evidence. Parent alone accepts A-S135 once; zero extra test/repair/proof/refinement credits.</p>
+      <p>Educational material is provided AS IS, with no warranties, Microsoft endorsement or SLA claim. The source README's Microsoft disclaimer and rights restrictions continue to apply.</p>
+    </section>
+  </main>
+</body>
+</html>
