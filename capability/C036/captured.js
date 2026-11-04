@@ -1,0 +1,277 @@
+(function (root) {
+  'use strict';
+  function freeze(value) {
+    if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value); }
+    return value;
+  }
+  Object.defineProperty(root, 'C036Captured', { value: freeze({
+  "cardId": "C036",
+  "capturedAtUtc": "2026-11-04T09:01:10.781Z",
+  "interpretation": "Bundled historical actual C015 read; browser has no live disk, consent, authentication or lease authority.",
+  "context": {
+    "contextOrigin": "bundled-historical-C015-observation-only",
+    "readStartedAtUtc": "2026-11-04T09:01:08.941Z",
+    "readCompletedAtUtc": "2026-11-04T09:01:09.942Z",
+    "receipt": {
+      "schemaVersion": 1,
+      "mode": "actual-local-filesystem",
+      "restored": true,
+      "namespace": "synthetic-restart-v1",
+      "pid": 53732,
+      "state": {
+        "cardId": "C015",
+        "dataKind": "closed-synthetic-fixture",
+        "envelope": {
+          "action": "local.probe",
+          "budget": {
+            "cloudSpend": 0
+          },
+          "capacity": {
+            "units": 1
+          },
+          "durationSeconds": 30,
+          "load": {
+            "concurrentUsers": 2,
+            "requestsPerSecond": 10
+          },
+          "schemaVersion": 1,
+          "scope": {
+            "liveAzureRuns": 0,
+            "mode": "local-implementation-only"
+          }
+        },
+        "epoch": 3,
+        "limits": {
+          "budget": {
+            "cloudSpend": {
+              "max": 0,
+              "min": 0
+            }
+          },
+          "capacity": {
+            "units": {
+              "max": 4,
+              "min": 1
+            }
+          },
+          "durationSeconds": {
+            "max": 300,
+            "min": 1
+          },
+          "kind": "local-comparison-only",
+          "label": "C002 synthetic fixture: not Azure authorization or universal defaults",
+          "load": {
+            "concurrentUsers": {
+              "max": 20,
+              "min": 1
+            },
+            "requestsPerSecond": {
+              "max": 100,
+              "min": 1
+            }
+          }
+        },
+        "record": {
+          "acknowledgedUnits": 3,
+          "completedStep": "finish",
+          "pendingStep": "none",
+          "status": "completed"
+        },
+        "runId": "synthetic-run-001",
+        "schemaVersion": 1
+      },
+      "acknowledgment": {
+        "epoch": 3,
+        "kind": "local-file-write-receipt",
+        "published": true,
+        "regularFileFlushed": true,
+        "runId": "synthetic-run-001",
+        "schemaVersion": 1,
+        "stateSha256": "66f2593752364d65b37d145cf9b784e09dc86867643766bd9f14f8c7d0f1f135"
+      },
+      "stateSha256": "66f2593752364d65b37d145cf9b784e09dc86867643766bd9f14f8c7d0f1f135",
+      "history": [
+        {
+          "epoch": 1,
+          "stateSha256": "bd0ae163641540855c091f8fe367f07378ecd1befdd52c47ae795de395c69d57"
+        },
+        {
+          "epoch": 2,
+          "stateSha256": "789afc63196ba012724221c60914d3065f7c93056e48892e2ceb5f22031ea95b"
+        },
+        {
+          "epoch": 3,
+          "stateSha256": "66f2593752364d65b37d145cf9b784e09dc86867643766bd9f14f8c7d0f1f135"
+        }
+      ],
+      "source": "read-and-verified-immutable-files",
+      "writesPerformed": 0,
+      "directoryDurability": "not-guaranteed",
+      "powerLossGuarantee": false
+    },
+    "gates": {
+      "observedAtUtc": "2026-11-04T09:01:08.3892084Z",
+      "readerPid": 38676,
+      "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
+      "ledgerRevision": 1062,
+      "C001LocalConsent": true,
+      "C015FixtureApproval": true,
+      "cards": [
+        {
+          "id": "C015",
+          "state": "Done",
+          "publication": {
+            "commit": "78341b3370d7764b7f9c3eacc1796892dbc4f40f",
+            "tag": "kanban/C015/78341b3370d7"
+          },
+          "reviewCommit": "78341b3370d7764b7f9c3eacc1796892dbc4f40f",
+          "reviewTag": "kanban/C015/78341b3370d7",
+          "accepted": true,
+          "focusedTestsPassed": true,
+          "browserObserved": true,
+          "remoteVerified": true
+        },
+        {
+          "id": "C034",
+          "state": "Done",
+          "publication": {
+            "commit": "01cc2dceb8ea078cd44198765b0feef0ec6ea9e0",
+            "tag": "kanban/C034/01cc2dceb8ea"
+          },
+          "reviewCommit": "01cc2dceb8ea078cd44198765b0feef0ec6ea9e0",
+          "reviewTag": "kanban/C034/01cc2dceb8ea",
+          "accepted": true,
+          "focusedTestsPassed": true,
+          "browserObserved": true,
+          "remoteVerified": true
+        }
+      ],
+      "currentParentPublisherAuthorization": {
+        "originalKanoCredit": 0,
+        "approvedBy": "parent-controller",
+        "focusedGuardChecksPassed": 41,
+        "approvedAtUtc": "2026-11-04T05:30:29.5668952Z",
+        "mainMustEqualRemoteBeforeStaging": true,
+        "namespaceAndFrozenClassGuardsUnchanged": true,
+        "gitWritesDuringGuardTests": 0,
+        "syntaxPassed": true,
+        "previousPublisherSha256": "7120de03173ca30bd993c8a7a77c81ebdafa504a508060aed18ec00bef6de7d3",
+        "exactAddedClasses": {
+          "C048": "D",
+          "C033": "S",
+          "C045": "S",
+          "C015": "D",
+          "C018": "S",
+          "C019": "S",
+          "C016": "D",
+          "C034": "S",
+          "C036": "D"
+        },
+        "publisherSha256": "e6d9e8bf9c9ff592bf463bd85656ecfec46c4eb33b0ab7f14bb7f317fcc65e22",
+        "cloudAuthorityExpanded": false,
+        "id": "local-publisher-authorizations-19",
+        "authorizationRevisionSha256": "815a1f0c7b17a63b53f4ff3aed169bf81ba3cec3b6a1b088ea337591fdd9e65b",
+        "whitespaceRevision": {
+          "stagedRawFixtureIdentityPreserved": true,
+          "rawProofOrRuntimeBytesChanged": false,
+          "focusedWhitespaceAndRawByteChecksPassed": 14,
+          "approvedAtUtc": "2026-11-04T05:52:14.2684776Z",
+          "generatedTestFixtureCleaned": true,
+          "actualC033CrlfAwareCheckExit": 0,
+          "realTrailingSpacesTabsSpaceBeforeTabAndBlankEofRejected": true,
+          "publisherSha256": "91c8cf83dd07e34a467eae35445e2337783ce28aaf9c4d3d2d4932b17fb59244",
+          "scope": "Command-local Git cached whitespace validation preserves CR-before-LF while retaining blank-at-eol/blank-at-eof/space-before-tab.",
+          "actualC033ExistingCheckExit": 2,
+          "approvedBy": "parent-controller",
+          "previousPublisherSha256": "815a1f0c7b17a63b53f4ff3aed169bf81ba3cec3b6a1b088ea337591fdd9e65b",
+          "globalGitConfigurationChanged": false,
+          "originalCreditAdded": 0
+        },
+        "durabilityConsumerRevision": {
+          "publisherSha256": "48846487727dd2ef35f03d88d65e64121059b6867188bbf34daeaee3fda1c09d",
+          "extraCredits": 0,
+          "scope": "Only current-approved C015 public local fixture API consumers; source/evidence and retained demo files immutable, fresh scratch isolated.",
+          "namespaceFrozenClassAdminHeadAndWhitespaceRulesUnchanged": true,
+          "cloudIdentityOrInfrastructureAuthorityExpanded": false,
+          "approvedAtUtc": "2026-11-04T06:23:39.5886853Z",
+          "acceptedPrerequisite": "C015",
+          "exactAddedClasses": {
+            "C018": "S",
+            "C019": "S",
+            "C016": "D"
+          },
+          "focusedGuardChecksPassed": 39,
+          "approvedBy": "parent-controller",
+          "previousPublisherSha256": "91c8cf83dd07e34a467eae35445e2337783ce28aaf9c4d3d2d4932b17fb59244"
+        },
+        "savedTraceRevision": {
+          "approvedBy": "parent-controller",
+          "acceptedDependencies": [
+            "C020",
+            "C015",
+            "C033"
+          ],
+          "cloudIdentityOrInfrastructureAuthorityExpanded": false,
+          "approvedAtUtc": "2026-11-04T06:42:36.955267Z",
+          "publisherSha256": "f6df80bdafc028538813330fe810bd81a69a50822a4a862e0bf42f59b2b0b2a4",
+          "previousPublisherSha256": "48846487727dd2ef35f03d88d65e64121059b6867188bbf34daeaee3fda1c09d",
+          "exactAddedClasses": {
+            "C034": "S"
+          },
+          "namespaceFrozenClassAdminHeadAndWhitespaceRulesUnchanged": true,
+          "focusedGuardChecksPassed": 40,
+          "extraCredits": 0
+        },
+        "correlationGuardRevision": {
+          "exactAddedClasses": {
+            "C036": "D"
+          },
+          "previousPublisherSha256": "f6df80bdafc028538813330fe810bd81a69a50822a4a862e0bf42f59b2b0b2a4",
+          "acceptedPrerequisites": [
+            "C015",
+            "C034"
+          ],
+          "publisherSha256": "e6d9e8bf9c9ff592bf463bd85656ecfec46c4eb33b0ab7f14bb7f317fcc65e22",
+          "extraCredit": 0,
+          "focusedGuardChecksPassed": 41,
+          "namespaceFrozenClassAdminHeadWhitespaceAndCloudPermissionsUnchanged": true,
+          "approvedBy": "parent-controller",
+          "approvedAtUtc": "2026-11-04T08:49:35.0598037Z"
+        }
+      }
+    },
+    "source": {
+      "kind": "exact-source-pinned-historical-C033-DOM",
+      "acceptedC033": {
+        "commit": "dd0870986cfcdd6b5069e5b1da9ff74e9ad3819c",
+        "tag": "kanban/C033/dd0870986cfc"
+      },
+      "report": {
+        "path": "capability\\C033\\evidence\\raw\\browser-0a54fabc-0ef0-4632-9241-95a196bc4461\\summary.json",
+        "rawSha256": "39c92e3ff020e09f75f19789ae1d4b9325ec34663feca7d91aa1c4a8e5e5b58d"
+      },
+      "historicalStartedAtUtc": "2026-11-04T05:05:06.759Z",
+      "historicalCompletedAtUtc": "2026-11-04T05:05:35.438Z",
+      "historicalBrowserPid": 58288,
+      "historicalBrowserVersion": "156.0.4314.50",
+      "historicalNodeVersion": "v22.23.4",
+      "helperRawSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+      "clock": "saved C033 performance.now; not this inspection clock",
+      "missingObservationFields": [
+        "requestToken",
+        "per-response headers",
+        "lease/user/run/epoch correlation"
+      ],
+      "newLiveRunAttested": false,
+      "authenticatedIdentityAttested": false,
+      "migrationAttested": false
+    },
+    "directDependenciesVerified": 16,
+    "underlyingC034DependenciesVerified": 22,
+    "association": "C015 fixture association only; no authenticated C034 client/run/user/lease/epoch link",
+    "nativeCorrelationVerified": false,
+    "authenticatedIdentityVerified": false,
+    "leaseAuthority": false
+  }
+}) });
+}(globalThis));
