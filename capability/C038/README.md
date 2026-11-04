@@ -96,9 +96,8 @@ node capability\C038\tests\audit.cjs
 Ordinary checks are **source/evidence/retained-fixture read-only**. Unit tests
 use a test-only loader of unchanged C036 with its actual captured receipt; reader
 denial/epoch fault simulations are labeled tests, not actual current-disk proof.
-No accepted files or shared retained fixtures are changed. Coverage measures
-production model/core with explicit **90% lines / 80% branches / 90% functions**
-thresholds, without writing a V8 coverage directory.
+No accepted files or shared retained fixtures are changed. Coverage is enforced
+**per production file** (next section), without writing a V8 coverage directory.
 
 `C038.feature` precedes the loadable stub and genuine **AssertionError RED**:
 `evidence\red\one-probe.initial.cjs` demonstrates `true !== false` because the
@@ -126,6 +125,80 @@ cleanup are observed. No foreground lease, unsafe flag, download, private helper
 edit or inactive lifecycle recovery exists. Broader helper lifecycle and native
 transport remain unqualified. CSP denies connections, inline scripts, forms,
 frames, objects and workers; there is no server or persistence endpoint.
+
+## Coverage gate: every production file, per file
+
+Specification: `C038-coverage.feature`. `tests\coverage.cjs` (library
+`tests\coverage-gate.cjs`) no longer trusts Node's report of loaded files. It
+enumerates the production scripts from the namespace (`boundary.cjs`, `cli.cjs`,
+`model.js`, `page.js`, `readiness.js`, `sources.cjs`; `tests\` and `evidence\` are test
+tooling and evidence), runs the focused tests listed in `TESTS` under
+`node --test --experimental-test-coverage` with one `--test-coverage-include` per
+enumerated file and `NODE_TEST_CONTEXT`, `NODE_V8_COVERAGE`,
+`CAPTURE_BROWSER_EVIDENCE` and `C038_CAPTURE_DIR` removed from the nested
+environment, and judges **each file**: at least **85% lines, 85% branches and 85%
+functions** (`readiness.js` and `model.js` keep their earlier 90% lines and
+functions floors, so no threshold is lowered). A file with no report row counts as
+**0%** and fails, a measured file outside the enumeration fails, and the Node
+aggregate cannot hide a low file. Exit 0 only when all six pass.
+
+| File | Lines % | Branches % | Functions % |
+| --- | ---: | ---: | ---: |
+| `boundary.cjs` | 100.00 | 100.00 | 100.00 |
+| `cli.cjs` | 100.00 | 100.00 | 100.00 |
+| `model.js` | 99.28 | 96.36 | 100.00 |
+| `page.js` | 100.00 | 100.00 | 100.00 |
+| `readiness.js` | 97.92 | 97.03 | 96.77 |
+| `sources.cjs` | 100.00 | 100.00 | 100.00 |
+
+The committed gate before this one measured only `readiness.js` and `model.js`
+against aggregate 90/80/90 thresholds. Over the loaded files the aggregate was
+96.39 / 94.31 / 96.77 while `page.js` was unloaded (0%), `cli.cjs` had 69.23 lines
+and 42.86 branches and `boundary.cjs` 75.00 functions.
+
+`page.js` is browser-only: `tests\dom-stub.cjs` builds a DOM from the ids of the real
+`index.html` and runs the unchanged `page.js` in a `vm` context named by its file
+URL, so Node coverage measures the real file (`tests\page.test.cjs`). `cli.cjs` runs
+in process with an injected fixture session and captured console
+(`tests\cli.test.cjs`). `boundary.cjs` `currentDiagnostic` and the fail-closed
+`sources.cjs` branches use the archived 2CABA publisher and archived State authority or
+tampered private module copies (`tests\boundary-current.test.cjs`,
+`tests\sources-closed.test.cjs`); none reads the live private publisher.
+
+Not measured by Node, therefore disclosed in the gate output and never counted or
+excluded: `index.html` and `style.css` (observed in real headless Edge by
+`tests\browser.cjs`) and `read-gates.ps1` (PowerShell: it is exercised through
+`sources.readGates()` by the State-reading tests, but no coverage tool exists for it).
+
+### Reproduce RED, GREEN, coverage and browser
+
+```powershell
+# RED, retained and intentionally failing: the aggregate-only gate subject certifies an unloaded page.js (9 of 12 AssertionErrors, exit 1)
+node --test capability\C038\evidence\red\aggregate-gate.initial.cjs
+# original product RED, unchanged: one HTTP 200 becomes pool readiness (true !== false)
+node --test capability\C038\evidence\red\one-probe.initial.cjs
+# GREEN: the gate library, then the whole per-file gate (exit 0, six ok rows)
+node --test capability\C038\tests\coverage-gate.test.cjs
+node capability\C038\tests\coverage.cjs
+# one file at a time (L-0004 form), for example the browser page under Node
+node --test --test-concurrency=1 --experimental-test-coverage "--test-coverage-include=**/C038/page.js" --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 capability\C038\tests\page.test.cjs
+# real isolated headless Edge (Microsoft-signed, offline Playwright 1.56.1), read-only
+node capability\C038\tests\browser.cjs
+# whole ordinary suite: syntax, per-file coverage, publisher guards, index probe and browser
+node capability\C038\tests\verify.cjs
+```
+
+Archived raw runs (stdout and stderr gzip, exit code, input hashes) under
+`evidence\raw`: `gate-red-5a033e71-47f3-4c8b-8aa2-ed79372805c0` (RED of the gate
+library, exit 1), `coverage-red-c10c6d02-6f31-4f8d-b121-6cff1485b882` (first
+per-file run on the pre-existing tests: `boundary.cjs`, `cli.cjs` and the unloaded
+`page.js` fail, exit 1), then `focused-7dcd76c2-cc2a-444b-b4de-b8170f35b6c6` and
+`coverage-4a79432b-b992-4999-a2f8-6cece822ba60` (GREEN; the earlier
+`focused-1654e5aa-...` and `coverage-6af16cdf-...` runs predate the nested-environment helper and
+stay as immutable history). Only exact
+`CAPTURE_BROWSER_EVIDENCE=1` with `tests\record.cjs <stage>` appends a new unique
+directory; `evidence-index.json` points at the sealed qualification and
+`node capability\C038\tests\audit.cjs` rechecks it.
 
 ## Publication boundary
 

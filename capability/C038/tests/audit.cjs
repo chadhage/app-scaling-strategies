@@ -19,6 +19,15 @@ function audit() {
   assert.equal(qualification.archivedPublisherGuardGroups, 61);
   assert.ok(qualification.coverage.lines >= 90 && qualification.coverage.branches >= 80 &&
     qualification.coverage.functions >= 90);
+  const gate = require('./coverage-gate.cjs');
+  const perFile = qualification.coverage.perFile;
+  assert.deepEqual(perFile.map((entry) => entry.file), gate.enumerate(gate.listNamespaceFiles(root)),
+    'Every production file enumerated now was measured at qualification.');
+  for (const entry of perFile) {
+    assert.equal(entry.loaded, true, entry.file);
+    assert.deepEqual(entry.failures, [], entry.file);
+    for (const metric of gate.METRICS) assert.ok(entry[metric] >= entry.floors[metric] && entry.floors[metric] >= 85, `${entry.file} ${metric}`);
+  }
   assert.deepEqual(inventory({ sourcesOnly: true, gitClean: true }), qualification.sourceSnapshot,
     'No changed/new/missing owned source after qualification, including the publication caller.');
   for (const entry of qualification.retainedEvidence) {
@@ -28,7 +37,7 @@ function audit() {
     qualificationRawSha256: index.qualificationRawSha256,
     qualifiedSourceFiles: qualification.sourceSnapshot.length,
     immutableEvidenceFilesVerified: qualification.retainedEvidence.length,
-    coverage: qualification.coverage,
+    coverage: qualification.coverage, focusedTests: qualification.focusedTests,
     originalRedPreserved: true, ordinaryReadOnly: true };
 }
 module.exports = Object.freeze({ audit });

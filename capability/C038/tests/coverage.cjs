@@ -1,22 +1,27 @@
 'use strict';
 
-const assert = require('node:assert/strict');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const repository = path.resolve(__dirname, '..', '..', '..');
+const gate = require('./coverage-gate.cjs');
+const root = path.resolve(__dirname, '..');
+const repository = path.resolve(root, '..', '..');
+const paths = gate.listNamespaceFiles(root);
+const enumerated = gate.enumerate(paths);
+const tests = gate.TESTS.map((file) => path.join(__dirname, file));
+// Node applies --test-coverage-* to the aggregate only; the per-file floors are enforced by the gate below.
 const args = ['--test', '--test-concurrency=1', '--experimental-test-coverage',
-  '--test-coverage-include=**/C038/readiness.js', '--test-coverage-include=**/C038/model.js',
-  '--test-coverage-lines=90', '--test-coverage-branches=80', '--test-coverage-functions=90',
-  ...['readiness.test.cjs', 'guards.test.cjs', 'context.test.cjs', 'surface.test.cjs'].map((file) => path.join(__dirname, file))];
-const env = { ...process.env };
-delete env.CAPTURE_BROWSER_EVIDENCE;
-delete env.C038_CAPTURE_DIR;
-delete env.NODE_V8_COVERAGE;
+  ...enumerated.map((file) => `--test-coverage-include=**/C038/${file}`),
+  '--test-coverage-lines=85', '--test-coverage-branches=85', '--test-coverage-functions=85', ...tests];
+const env = gate.nestedEnvironment(process.env);
 const run = spawnSync(process.execPath, args, { cwd: repository, env, encoding: 'utf8',
-  windowsHide: true, timeout: 180000, maxBuffer: 8 * 1024 * 1024 });
+  windowsHide: true, timeout: 300000, maxBuffer: 16 * 1024 * 1024 });
 process.stdout.write(run.stdout || '');
 process.stderr.write(run.stderr || '');
-assert.match(run.stdout || '', /readiness\.js\s*\|/);
-assert.match(run.stdout || '', /model\.js\s*\|/);
-assert.equal(run.status, 0, 'Focused production model/core coverage must meet 90% lines, 80% branches, 90% functions.');
-console.log('C038 coverage GREEN: actual model/core measured; >=90% lines, >=80% branches, >=90% functions; no V8 coverage files or evidence writes.');
+const result = gate.evaluate(enumerated, gate.parse(run.stdout || ''));
+process.stdout.write(gate.format(result, gate.unmeasured(paths)));
+if (run.status !== 0 || !result.passed) {
+  console.error(`C038 coverage RED: nested runner exit ${run.status}; ${result.files.filter((item) => item.failures.length).length} of ${enumerated.length} production files below their per-file floors (unloaded counts as 0%).`);
+  process.exitCode = 1;
+} else {
+  console.log(`C038 coverage GREEN: ${enumerated.length}/${enumerated.length} enumerated production files at or above their per-file floors (85/85/85; readiness.js and model.js keep 90 lines and functions); unloaded counts as 0%; no V8 coverage files or evidence writes.`);
+}

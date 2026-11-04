@@ -30,4 +30,4 @@ async function inspect(id) {
   const session = await fixtureSession();
   return session.inspectText(JSON.stringify(session.getEvidence(id)));
 }
-module.exports = Object.freeze({ captured, fixtureSubject, fixtureSession, inspect });
+module.exports = Object.freeze({ captured, load, fixtureSubject, fixtureSession, inspect });

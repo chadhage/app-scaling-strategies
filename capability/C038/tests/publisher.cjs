@@ -16,7 +16,7 @@ assert.equal(result.mutablePrivateSourceRead, false);
 assert.equal(result.whitespaceUsedRealGitNoIndex, true);
 const tests = spawnSync(process.execPath, ['--test', '--test-concurrency=1',
   path.join(__dirname, 'publisher-authority.test.cjs'), path.join(__dirname, 'transport.test.cjs')],
-  { encoding: 'utf8', windowsHide: true, timeout: 30000, maxBuffer: 131072 });
+  { encoding: 'utf8', windowsHide: true, timeout: 240000, maxBuffer: 131072 });
 process.stdout.write(tests.stdout || '');
 process.stderr.write(tests.stderr || '');
 assert.equal(tests.status, 0);

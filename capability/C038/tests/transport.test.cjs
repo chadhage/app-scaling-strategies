@@ -12,7 +12,7 @@ function run(entries) {
   delete env.C038_CAPTURE_DIR;
   Object.assign(env, entries);
   return spawnSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-File', script, '-Mode', 'Probe'],
-    { env, windowsHide: true, timeout: 20000, encoding: 'utf8', maxBuffer: 65536 });
+    { env, windowsHide: true, timeout: 120000, encoding: 'utf8', maxBuffer: 65536 });
 }
 for (const [name, entries] of [
   ['initial absent count and slots', {}],

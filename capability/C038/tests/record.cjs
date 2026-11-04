@@ -5,6 +5,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { randomUUID, createHash } = require('node:crypto');
 const { gzipSync } = require('node:zlib');
+const gate = require('./coverage-gate.cjs');
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const owned = (...parts) => path.join('capability', 'C038', ...parts);
@@ -12,11 +13,11 @@ const commands = Object.freeze({
   bdd: [owned('tests', 'phase.cjs'), 'bdd'],
   stub: [owned('tests', 'phase.cjs'), 'stub'],
   red: ['--test', owned('evidence', 'red', 'one-probe.initial.cjs')],
+  'gate-red': ['--test', owned('evidence', 'red', 'aggregate-gate.initial.cjs')],
+  'coverage-red': [owned('tests', 'coverage.cjs')],
   iac: [owned('tests', 'phase.cjs'), 'iac'],
   sources: [owned('tests', 'capture-sources.cjs')],
-  focused: ['--test', '--test-concurrency=1', owned('tests', 'readiness.test.cjs'),
-    owned('tests', 'guards.test.cjs'), owned('tests', 'context.test.cjs'),
-    owned('tests', 'surface.test.cjs')],
+  focused: ['--test', '--test-concurrency=1', ...gate.TESTS.map((file) => owned('tests', file))],
   syntax: [owned('tests', 'syntax.cjs')],
   coverage: [owned('tests', 'coverage.cjs')],
   archive: [owned('tests', 'archive-publisher.cjs')],
@@ -66,7 +67,7 @@ else delete env.CAPTURE_BROWSER_EVIDENCE;
 const startedAtUtc = new Date().toISOString();
 const started = performance.now();
 const run = spawnSync(process.execPath, commands[stage], {
-  cwd: repository, env, encoding: null, timeout: stage === 'publication' ? 600000 : 240000,
+  cwd: repository, env, encoding: null, timeout: ['publication', 'verify'].includes(stage) ? 600000 : 240000,
   maxBuffer: 8 * 1024 * 1024, windowsHide: true
 });
 const stdout = run.stdout || Buffer.alloc(0);

@@ -43,5 +43,6 @@ console.log(JSON.stringify({ cardId: 'C038', outcome: 'passed', ordinaryVerifica
   sourceAndEvidenceFilesUnchanged: before.length, acceptedSourcesUnchanged: true,
   currentC015FixtureWriteCalls: 0, retainedDemoWrites: 0,
   actualBrowserExecuted: true, noImplicitCapture: true,
-  groups: ['syntax', '84 focused + measured 90/80/90 coverage', '61 archived publisher guards + 20 authority + 12 transport',
+  groups: ['syntax', 'focused tests under the per-file 85/85/85 coverage gate over every enumerated production file (unloaded = 0%)',
+    '61 archived publisher guards + 20 authority + 12 transport',
     'all-index-entry-and-flag read-only parsing', '17 actual signed Edge DOM/keyboard/CSP/cleanup checks'] }));

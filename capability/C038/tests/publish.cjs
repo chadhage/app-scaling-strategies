@@ -43,7 +43,7 @@ const result = {
   parents: ['H007'], technicalEntryGate: 'accepted C036 df7a4e1f4f07d834f17edd8f816bb2b5d166ae6e',
   ownedPaths: ['capability\\C038'], proposedOriginalCreditsForParentReview: 1,
   selfAwardedCredits: 0, extraTestRepairOrEvidenceCredits: 0, parentAcceptanceRequired: true,
-  focusedTestsPassed: 84, coverage: qualified.coverage,
+  focusedTestsPassed: qualified.focusedTests, coverage: qualified.coverage,
   syntaxPassed: true, actualSignedEdgeDomChecksPassed: 17,
   historicalPublisherGuardGroupsPassed: 61, authorityTestsPassed: 20, transportTestsPassed: 12,
   actualPublisherSha256: before.actualPublisherSha256,
