@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S115",
+  "sourceId": "S115",
+  "parentId": "D-S115",
+  "kano": "S",
+  "kanoUnit": "A-S115",
+  "packet": "SC-S115",
+  "title": "Active-passive standby readiness",
+  "objective": "Compare warm/cold standby; a healthy shallow endpoint is not complete readiness.",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "mode": "fixed-fictional-teaching-data-only",
+  "entryPoint": "index.html",
+  "preconditions": [
+    "Open the owned HTML bundle in a browser with local JavaScript enabled.",
+    "Region Alder is the fictional active region; Region Birch is the fictional passive region.",
+    "All standby, capacity, health, cache, dependency, authentication, state, recovery and journey fields are declared data, not real resources or operations."
+  ],
+  "actions": [
+    "Select one fixed standby fixture and one original client interruption budget.",
+    "Measure full standby readiness.",
+    "Rehearse recovery once after measurement.",
+    "Reset current rehearsal without clearing completed or unfinished history."
+  ],
+  "fixtures": [
+    "warm-ready",
+    "cold-ready",
+    "compute-short",
+    "cache-incompatible",
+    "dependency-denied",
+    "auth-denied",
+    "state-behind",
+    "unobserved"
+  ],
+  "syntheticInputAndTrace": {
+    "fixtureVersion": "standby-teaching-v1",
+    "demandCapacityUnits": 10,
+    "requiredInstanceCount": 2,
+    "warmReadyCapacityUnits": 12,
+    "coldInitialReadyCapacityUnits": 0,
+    "shallowHttpStatus": 200,
+    "cacheCanaryPayloadRevision": 7,
+    "cacheAndDependencyLatencyLimitMs": 20,
+    "requiredProfileRevision": 7,
+    "requiredSessionRevision": 3,
+    "priorCommittedEffectCount": 1,
+    "clientBudgetMsChoices": [6000, 24000],
+    "warmPhaseMs": [0, 0, 2000, 2000],
+    "coldPhaseMs": [4000, 12000, 2000, 2000],
+    "clientServiceMs": [100, 150],
+    "phaseOrder": ["compute activation", "cache warm-up", "full-path validation", "alternate routing"],
+    "unknownRepresentation": null
+  },
+  "expectedAssertions": [
+    "Shallow HTTP 200 is not complete readiness.",
+    "All required compute, cache, dependency, authentication and state assertions must pass.",
+    "Warm recovery is 4000 synthetic ms; cold recovery is 20000 synthetic ms where full-path evidence allows admission.",
+    "Each client keeps the original budget, session/state checks and effect attribution.",
+    "Cold recovery under 24000 ms may meet client budgets but cannot make cold standby ready at the outset.",
+    "Known failures dominate aggregate verdicts; missing evidence remains unknown.",
+    "Blocked admission is not observed alternate routing, and eventual completion does not erase interruptions.",
+    "Resets retain prior budgets, failed/unknown checks and the unchanged session allowance."
+  ],
+  "limits": {
+    "maximumChecksPerInMemorySession": 10,
+    "clientsPerCompletedRehearsal": 2,
+    "persistence": "none; reload starts a new independent session",
+    "networkCalls": false,
+    "credentials": false,
+    "infrastructure": "N/A",
+    "actualFaults": false,
+    "nativeProof": false,
+    "sourceParentComplete": false,
+    "productionNode24Validated": false,
+    "additionalTestRepairOrProofCredits": 0
+  },
+  "sourceEvidence": "evidence/source-contract.json",
+  "nativeRemainder": {
+    "cardId": "B-S115",
+    "parentId": "D-S115",
+    "blockedBy": [
+      "Native CORE, DATA and REGION gates",
+      "Original P006, D-S021 and D-S022 prerequisites plus BASE",
+      "Approved target, lease, safety/identity/deployment execution authority and actual native measurements"
+    ],
+    "portableLessonDoesNotRemoveGates": true
+  }
+}

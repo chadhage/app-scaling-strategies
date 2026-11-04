@@ -1,0 +1,12 @@
+'use strict';
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const model = require('.\\stub-model.cjs.txt');
+
+test('shallow 200 cannot certify required dependency readiness', () => {
+  const state = model.inspect(model.createState(), {
+    fixtureId: 'dependency-denied', budgetMs: 6000,
+  });
+  assert.equal(state.current.readiness, 'failure',
+    'a shallow healthy endpoint is not complete standby readiness');
+});

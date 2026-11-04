@@ -1,0 +1,24 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.StandbyLesson = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
+  const FIXTURES = Object.freeze([
+    { id: 'warm-ready', label: 'Warm reference', shallowStatus: 200 },
+    { id: 'dependency-denied', label: 'Warm, required dependency denied', shallowStatus: 200 },
+  ]);
+  function createState() { return { phase: 'idle', current: null, history: [] }; }
+  function inspect(state, input) {
+    const fixture = FIXTURES.find((value) => value.id === input.fixtureId);
+    return { ...state, phase: 'measured', current: {
+      fixtureId: fixture.id, budgetMs: input.budgetMs,
+      readiness: fixture.shallowStatus === 200 ? 'success' : 'failure',
+    } };
+  }
+  function rehearse(state) { return { ...state, phase: 'complete' }; }
+  function reset(state) { return { ...state, phase: 'idle', current: null }; }
+  return Object.freeze({ BANNER, FIXTURES, createState, inspect, rehearse, reset });
+}));

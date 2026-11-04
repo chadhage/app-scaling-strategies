@@ -1,0 +1,75 @@
+Feature: Active-passive standby readiness across two fictional regions
+  All regions, capacities, probes, dependencies, authentication, state,
+  recovery phases and client journeys are fixed synthetic teaching data.
+  This original A-S115 satisfier belongs to SC-S115, not S097's LP-COMPARE.
+
+  Background:
+    Given fictional Region Alder is active and Region Birch is passive
+    And the exact banner is "Training rehearsal - synthetic data - not a live Azure result"
+    And demand is 10 synthetic capacity units
+    And an original client interruption budget is 6000 or 24000 synthetic milliseconds
+
+  Scenario: A shallow healthy response is insufficient
+    Given a warm standby has a shallow HTTP status of 200
+    And its required dependency access is false
+    When the operator measures full standby readiness
+    Then dependency readiness and complete readiness are failure
+    And shallow health is success, not readiness certification
+
+  Scenario: Warm and cold standby have different measured readiness and recovery
+    When the operator measures and rehearses the warm reference under 6000 milliseconds
+    Then 12 ready capacity units, cache, dependency, authentication and state pass
+    And the fixed recovery phases total 4000 milliseconds
+    And both client journeys pass the original budget
+    When the operator resets and rehearses the cold reference under 6000 milliseconds
+    Then the initial standby is not ready despite a shallow 200
+    And its fixed activation, warm-up, validation and routing total 20000 milliseconds
+    And eventual completion does not erase either over-budget client interruption
+
+  Scenario: A larger budget cannot change earlier outcomes
+    Given a completed cold comparison under 6000 milliseconds
+    When the operator resets and rehearses cold standby under 24000 milliseconds
+    Then the later client journeys pass their own original budget
+    And the initial cold readiness remains failure
+    And the prior failed check and two interruptions remain in history
+
+  Scenario Outline: Required readiness dimensions are independent
+    Given shallow health is 200
+    When the operator measures "<fixture>"
+    Then the "<dimension>" readiness measurement is failure
+    And rehearsed admission is blocked
+    And both fictional client journeys are recorded as failure, not uninterrupted
+    Examples:
+      | fixture           | dimension      |
+      | compute-short     | compute        |
+      | cache-incompatible| cache          |
+      | dependency-denied | dependency     |
+      | auth-denied       | authentication |
+      | state-behind      | state          |
+
+  Scenario: Missing evidence is unknown, not borrowed success
+    Given the unobserved standby has a shallow 200
+    When the operator measures and rehearses it
+    Then required readiness and recovery measurements are unknown
+    And both client outcomes are unknown
+    And the warm comparison cannot supply missing evidence
+
+  Scenario: Invalid input and illegal transitions are rejected
+    Given a privately issued immutable lesson state
+    Then missing, extra, coerced, non-finite and out-of-range inputs are rejected
+    And stale, forged or serialized states, duplicate measures and premature rehearsals are rejected
+    And rejected commands do not change history
+
+  Scenario: Reset retains bounded history
+    Given completed or measured work in this in-memory session
+    When the operator activates Reset current rehearsal with the keyboard
+    Then default warm standby and 6000 millisecond controls return
+    And focus returns to the labelled standby selector
+    And completed outcomes and the ten-check allowance are not erased
+    And an inspected unfinished rehearsal is retained as unknown
+
+  Scenario: Browser failure and CSP remain observable
+    Then labels, live results, focussed actionable errors and reset work in the actual DOM
+    And an unexpected command failure is not replaced by success
+    And inline scripts and external connections are denied by CSP
+    And browser verification writes evidence only when CAPTURE_BROWSER_EVIDENCE is exactly "1"

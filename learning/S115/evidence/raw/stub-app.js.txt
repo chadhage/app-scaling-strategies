@@ -1,0 +1,20 @@
+(function () {
+  'use strict';
+  const model = globalThis.StandbyLesson;
+  let state = model.createState();
+  const form = document.getElementById('lesson-form');
+  const standby = document.getElementById('standby');
+  for (const fixture of model.FIXTURES) {
+    const option = document.createElement('option');
+    option.value = fixture.id;
+    option.textContent = fixture.label;
+    standby.append(option);
+  }
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    state = model.inspect(state, {
+      fixtureId: standby.value, budgetMs: Number(document.getElementById('budget').value),
+    });
+    document.getElementById('result').textContent = `Complete readiness: ${state.current.readiness}`;
+  });
+}());
