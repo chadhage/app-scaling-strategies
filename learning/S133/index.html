@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S133 - Preserved form rehearsal</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S133: Preserve one old multi-step form</h1>
+    <p><strong>DATA ONLY:</strong> every form, answer, token, identity, session, validation, permission, state, version, submission, effect and HTTP response below is fixed fictional teaching data. Do not enter actual user data. No actual authentication, network, storage or business operation is performed.</p>
+    <p>The original journey must finish, not merely a replacement form on v2. HTTP 200 and an expected negative-test verifier are not evidence of a preserved journey.</p>
+    <section aria-labelledby="instructions-title">
+      <h2 id="instructions-title">Conduct one form journey</h2>
+      <ol>
+        <li>Choose a fixed trace and <strong>Start old form</strong>: two answers and prior v1 validation/token/session DATA already exist.</li>
+        <li><strong>Cut over between steps</strong> to inspect candidate teaching-v2 DATA.</li>
+        <li><strong>Continue final step</strong> with the fixed fictional-pickup answer, then <strong>Submit final form</strong>.</li>
+        <li>Optionally <strong>Retry same submission</strong> once. Count intended effects, not attempts or HTTP success.</li>
+        <li><strong>Measure original journey</strong>. Inspect every pass, failure and unknown separately.</li>
+        <li><strong>Reset controls / retain history</strong> before another trace. Earlier failures, unknowns and incomplete resets remain visible.</li>
+      </ol>
+      <p>Finite whole-page envelope: 10 journeys, 90 accepted actions, one retry per journey, 12 retained rejected actions. These are teaching bounds, not production limits or latency measurements. Reload deliberately discards this nonpersistent in-memory DATA; there is no save/export/storage operation.</p>
+    </section>
+    <section aria-labelledby="operator-title">
+      <h2 id="operator-title">Operator actions</h2>
+      <form id="controls" aria-describedby="control-help">
+        <label for="preset">Fixed form trace preset</label>
+        <select id="preset" name="preset">
+          <option value="preserved">Preserved original form</option>
+          <option value="lost-answers">Lost original answer</option>
+          <option value="invalid-prior-token">Invalid prior token DATA</option>
+          <option value="lost-validation">Lost prior validation DATA</option>
+          <option value="permission-denied">Lost permission DATA</option>
+          <option value="changed-identity-session">Changed identity/session DATA</option>
+          <option value="duplicate-submission">Duplicate fictional submission</option>
+          <option value="receipt-unknown">HTTP 200, receipt/effects unknown</option>
+          <option value="replacement-http200">HTTP 200, replacement form instead</option>
+        </select>
+        <div class="actions">
+          <button id="start-button" type="submit">Start old form</button>
+          <button id="cutover-button" type="button" aria-disabled="true">Cut over between steps</button>
+          <button id="continue-button" type="button" aria-disabled="true">Continue final step</button>
+          <button id="submit-button" type="button" aria-disabled="true">Submit final form</button>
+          <button id="retry-button" type="button" aria-disabled="true">Retry same submission</button>
+          <button id="measure-button" type="button" aria-disabled="true">Measure original journey</button>
+          <button id="reset-button" type="button">Reset controls / retain history</button>
+        </div>
+        <p id="control-help">Tab reaches every control; Enter or Space activates buttons. Unavailable-order actions remain focusable and give a typed safe-hold error without changing the run. Changing the selector does not replace an active journey.</p>
+      </form>
+      <p id="status" role="status" aria-live="polite">Ready; no measured journey.</p>
+      <p id="error" role="alert"></p>
+    </section>
+    <section aria-labelledby="snapshot-title">
+      <h2 id="snapshot-title">Original and current fixed DATA</h2>
+      <p>Phase: <output id="phase">idle</output>. Active preset: <output id="active-preset">not started</output>.</p>
+      <dl class="facts">
+        <dt>Original journey</dt><dd><code>fictional-form-01</code></dd>
+        <dt>Current journey</dt><dd id="current-journey">not started</dd>
+        <dt>Server version DATA</dt><dd id="version">not started</dd>
+        <dt>Answers DATA</dt><dd id="answers">not started</dd>
+        <dt>Prior validation DATA</dt><dd id="prior-validation">not started</dd>
+        <dt>Prior token and bindings DATA</dt><dd id="prior-token">not started</dd>
+        <dt>Identity / session DATA</dt><dd id="identity-session">not started</dd>
+        <dt>Permissions DATA</dt><dd id="permissions">not started</dd>
+        <dt>Final step DATA</dt><dd id="final-step">not attempted</dd>
+        <dt>Attempt / effect counts</dt><dd id="attempt-summary">0 attempts; no measured final effect</dd>
+        <dt>HTTP response DATA</dt><dd id="http-statuses">not observed</dd>
+      </dl>
+    </section>
+    <section aria-labelledby="measurement-title">
+      <h2 id="measurement-title">Measure the complete original journey</h2>
+      <p>Latest measured journey outcome: <output id="outcome">no measured journey</output>.</p>
+      <p>Preset verifier: <output id="verifier">not measured</output>. Native result: <strong>unverified / not performed</strong>.</p>
+      <p id="run-summary">attempted=0; preserved=0; interrupted=0; unknown=0; unmeasured=0</p>
+      <div class="table-scroll">
+        <table>
+          <caption>Current fixed-DATA checks; unknown is never fabricated as success</caption>
+          <thead><tr><th scope="col">Required check</th><th scope="col">Observed teaching DATA</th><th scope="col">Result</th></tr></thead>
+          <tbody id="checks-body"></tbody>
+        </table>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <caption>Fictional final submission attempts, not real form submissions</caption>
+          <thead><tr><th scope="col">Attempt / key / version</th><th scope="col">HTTP / client DATA</th><th scope="col">Receipt DATA / retry</th></tr></thead>
+          <tbody id="attempts-body"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="retained-title">
+      <h2 id="retained-title">Retained evidence, including failures and unknowns</h2>
+      <h3>Archived original journey runs</h3>
+      <ol id="run-history"></ol>
+      <h3>Accepted operator actions: <output id="history-count">0 / 90</output></h3>
+      <ol id="history"></ol>
+      <h3>Rejected-action history (reset keeps it)</h3>
+      <ol id="rejected-history"></ol>
+    </section>
+    <footer>
+      <p>S133: Preserve answers, validation state, and submission across deployments. D-S133: Answers, validation, permissions, and one final submission survive the transition.</p>
+      <p>A-S133 is one original S unit in SC-S133. B-S133 and D-S133 remain incomplete; native evidence and source-parent acceptance are not supplied here. IaC is N/A; no cloud resources, credentials, registration, deployment, spend, package or framework is needed.</p>
+      <p>This teaching artifact is not a Microsoft SLA, uptime/reliability guarantee, qualification, endorsement or license grant. The source README.md Microsoft Open Source Disclaimer still applies.</p>
+    </footer>
+  </main>
+</body>
+</html>

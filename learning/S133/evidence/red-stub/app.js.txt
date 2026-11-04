@@ -1,0 +1,20 @@
+(function () {
+  'use strict';
+  const form = document.getElementById('controls');
+  let state = FormContinuity.createState();
+  const render = () => {
+    document.getElementById('phase').textContent = state.phase;
+    document.getElementById('history-count').textContent = String(state.history.length);
+  };
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    state = FormContinuity.execute(state, { type: 'start', presetId: document.getElementById('preset').value });
+    render();
+  });
+  document.getElementById('reset-button').addEventListener('click', () => {
+    HTMLFormElement.prototype.reset.call(form);
+    render();
+    document.getElementById('preset').focus();
+  });
+  render();
+}());

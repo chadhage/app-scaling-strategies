@@ -1,0 +1,52 @@
+(async function () {
+  'use strict';
+  const result = { violations: [], complete: false };
+  globalThis.__s133Csp = result;
+  document.addEventListener('securitypolicyviolation', (event) => {
+    result.violations.push({ directive: event.effectiveDirective, blockedURI: event.blockedURI });
+  });
+  try {
+    const script = document.createElement('script');
+    script.textContent = 'globalThis.__s133InlineExecuted = true;';
+    document.head.append(script);
+    result.inlineScriptBlocked = globalThis.__s133InlineExecuted !== true;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.setAttribute('onclick', 'globalThis.__s133EventExecuted = true;');
+    document.body.append(button);
+    button.click();
+    result.inlineEventBlocked = globalThis.__s133EventExecuted !== true;
+    try { globalThis.eval('globalThis.__s133EvalExecuted = true;'); }
+    catch (error) { result.evalBlocked = error instanceof EvalError; }
+    const style = document.createElement('div');
+    style.setAttribute('style', 'color: rgb(1, 2, 3)');
+    document.body.append(style);
+    result.inlineStyleBlocked = getComputedStyle(style).color !== 'rgb(1, 2, 3)';
+    try { await fetch('data:application/json,%7B%22fictional%22%3Atrue%7D'); result.connectBlocked = false; }
+    catch { result.connectBlocked = true; }
+    const image = document.createElement('img');
+    const imageResult = new Promise((resolve) => {
+      image.addEventListener('load', () => resolve(false), { once: true });
+      image.addEventListener('error', () => resolve(true), { once: true });
+    });
+    image.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+    document.body.append(image);
+    result.imageBlocked = await imageResult;
+    const frame = document.createElement('iframe');
+    frame.src = 'data:text/html,%3Cp%3Efictional%20CSP%20probe%3C%2Fp%3E';
+    document.body.append(frame);
+    const before = globalThis.location.href;
+    const form = document.createElement('form');
+    form.action = before;
+    document.body.append(form);
+    HTMLFormElement.prototype.submit.call(form);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    result.formNavigationBlocked = globalThis.location.href === before;
+    result.frameBlocked = result.violations.some((entry) => entry.directive === 'frame-src');
+    for (const element of [script, button, style, image, frame, form]) element.remove();
+  } catch (error) {
+    result.error = error.message;
+  } finally {
+    result.complete = true;
+  }
+}());

@@ -1,0 +1,25 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.FormContinuity = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const PRESETS = Object.freeze({
+    preserved: 'Preserved original form',
+    'lost-answers': 'Lost original answer',
+    'invalid-prior-token': 'Invalid prior token DATA',
+    'lost-validation': 'Lost prior validation DATA',
+    'permission-denied': 'Lost permission DATA',
+    'changed-identity-session': 'Changed identity/session DATA',
+    'duplicate-submission': 'Duplicate fictional submission',
+    'receipt-unknown': 'HTTP 200, receipt/effects unknown',
+    'replacement-http200': 'HTTP 200, replacement form instead',
+  });
+  function createState() {
+    return Object.freeze({ schemaVersion: 1, phase: 'idle', current: null, runs: Object.freeze([]), history: Object.freeze([]) });
+  }
+  function execute(state) { return state; }
+  function inspect(state) { return { phase: state.phase, counts: { attempted: 0, preserved: 0, interrupted: 0, unknown: 0 } }; }
+  return Object.freeze({ PRESETS, createState, execute, inspect });
+}));

@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "A-S133",
+  "sourceId": "S133",
+  "parentId": "D-S133",
+  "title": "One preserved old multi-step form",
+  "kano": "S",
+  "kanoUnit": "A-S133",
+  "packet": "SC-S133",
+  "technicalEntryGate": "SOURCE",
+  "mode": "portable-synthetic",
+  "entry": "index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Continue an old multi-step form; detect lost answers, invalid prior tokens, or duplicate submission.",
+  "sourceContract": {
+    "readmeRow": "| S133 | **Multi-step form:** Preserve answers, validation state, and submission across deployments. |",
+    "backlogRow": "| D-S133 | P1 | Add a multi-step form with prior validation/token/session state and cutover between steps. | Answers, validation, permissions, and one final submission survive the transition. | D-S036, D-S037 |",
+    "acceptance": "Answers, validation, permissions, and one final submission survive the transition.",
+    "dependencies": ["D-S036", "D-S037"],
+    "portableRow": "| A-S133 | D-S133 | S | Continue an old multi-step form; detect lost answers, invalid prior tokens, or duplicate submission. | SOURCE |",
+    "nativeSiblingRow": "| B-S133 | D-S133 | S | Conduct one form journey across versions; verify state, validation, permissions, and one final effect. | CORE, DATA, HOST |",
+    "nativeSibling": "B-S133",
+    "nativeSiblingGates": "CORE, DATA, HOST",
+    "nativeBase": "H011 + P005 + HOST",
+    "tokenCompatibility": "Valid old anti-forgery tokens must remain valid without weakening validation; only fixed fictional token DATA is used here.",
+    "sessionCompatibility": "Existing session payloads must remain readable; only fixed fictional session DATA is used here."
+  },
+  "preconditions": [
+    "Open this standalone local index.html in a JavaScript-capable browser.",
+    "Use only the nine fixed fictional teaching presets; no actual user answers, tokens, sessions, identity or credentials.",
+    "The original v1 form has paper-star and violet answers, valid prior validation, fictional token/session/identity bindings and continue/submit permissions.",
+    "Cutover occurs between old step and final step; HTTP and effects below are DATA ONLY, not actual operations."
+  ],
+  "syntheticInputs": {
+    "fixtureVersion": "form-continuity-data/1",
+    "originalJourneyId": "fictional-form-01",
+    "oldVersion": "teaching-v1",
+    "candidateVersion": "teaching-v2",
+    "maximumJourneys": 10,
+    "maximumAcceptedActions": 90,
+    "maximumRejectedActions": 12,
+    "maximumRetriesPerJourney": 1,
+    "presets": [
+      "preserved", "lost-answers", "invalid-prior-token", "lost-validation", "permission-denied",
+      "changed-identity-session", "duplicate-submission", "receipt-unknown", "replacement-http200"
+    ]
+  },
+  "actions": ["start", "cutover", "continue", "submit", "retry", "measure", "reset"],
+  "assertions": [
+    "original-journey", "original-answers", "prior-validation", "prior-token", "identity-session",
+    "permissions", "final-step", "final-validation", "one-submission-effect", "client-result"
+  ],
+  "verification": {
+    "iac": "N/A evaluated after genuine assertion RED and before implementation; no resource or infrastructure operation.",
+    "focusedCommand": "node --test learning\\S133\\model.test.cjs learning\\S133\\integrity.test.cjs learning\\S133\\browser.test.cjs",
+    "deliberateCapture": "Exact CAPTURE_BROWSER_EVIDENCE=1 only; unique append-only raw proof. Normal verification is READ-ONLY.",
+    "publishedHelper": "testing\\browser\\isolated.cjs",
+    "publishedHelperCommit": "53c0c0d",
+    "publishedHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "playwright": "1.56.1",
+    "browser": "Microsoft-signed Edge 156.0.4314.50, isolated headless session with awaited finally close",
+    "toolingRuntime": "Node.js 22.23.4; not Node 24 production validation",
+    "lifecycleLimit": "Published helper retains known unattended context/page/cleanup lifecycle limitations; inactive recovery prototype is unqualified."
+  },
+  "limits": [
+    "No real user data, form journey, authentication, token validation, session persistence, network, storage, submission or business effect.",
+    "No cloud, IaC, scaffold, identity registration, credentials, deployment, spend, packages, framework or root/shared integration changes.",
+    "All versions and HTTP responses are fixed fictional DATA, not actual deployment or HTTP observations.",
+    "Finite deterministic steps and counts are teaching bounds, not elapsed-time, capacity, latency or reliability evidence.",
+    "No Microsoft SLA, endorsement, full accessibility certification, native qualification, source-parent completion or additional Kano credit."
+  ],
+  "nativeProofComplete": false,
+  "sourceParentComplete": false,
+  "productionNode24Validated": false,
+  "accepted": false,
+  "extraKanoCredits": 0
+}

@@ -1,0 +1,253 @@
+'use strict';
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const lesson = require('./model.js');
+
+test('old form begins with preserved v1 answers rather than staying idle', () => {
+  assert.equal(typeof lesson.createState, 'function');
+  assert.equal(typeof lesson.execute, 'function');
+  const before = lesson.createState();
+  assert.equal(before.phase, 'idle');
+  const started = lesson.execute(before, { type: 'start', presetId: 'preserved' });
+  assert.equal(started.phase, 'old-step', 'starting an old form must create an observable journey');
+  assert.deepEqual(started.current.form, lesson.ORIGINAL);
+  assert.equal(before.current, null);
+  assert.equal(started.history.length, 1);
+});
+
+const copy = (value) => JSON.parse(JSON.stringify(value));
+const act = (state, type) => lesson.execute(state, { type });
+function conduct(presetId, retry = false, state = lesson.createState()) {
+  state = lesson.execute(state, { type: 'start', presetId });
+  for (const type of ['cutover', 'continue', 'submit', ...(retry ? ['retry'] : []), 'measure']) state = act(state, type);
+  return state;
+}
+const expectError = (code) => (error) => error instanceof lesson.LessonError && error.code === code && /Safe hold/.test(error.message);
+
+test('compatible old form preserves every required fact and one correct effect across two attempts', () => {
+  const state = conduct('preserved', true);
+  const report = state.current.report;
+  assert.equal(report.outcome, 'preserved');
+  assert.equal(report.verifierPassed, true);
+  assert.equal(report.nativeProof, false);
+  assert.equal(report.checks.length, 10);
+  assert.equal(report.checks.every((check) => check.result === 'pass'), true);
+  assert.equal(report.attemptCount, 2);
+  assert.equal(report.effectCount, 1);
+  assert.deepEqual(report.httpStatuses, [200, 200]);
+  assert.equal(state.current.attempts[0].deduplicated, false);
+  assert.equal(state.current.attempts[1].deduplicated, true);
+  assert.equal(state.current.form.journeyId, lesson.ORIGINAL.journeyId);
+  assert.deepEqual(state.current.form.answers, lesson.INTENDED_ANSWERS);
+  assert.deepEqual(state.current.form.priorValidation, lesson.ORIGINAL.priorValidation);
+  assert.deepEqual(state.current.form.permissions, lesson.ORIGINAL.permissions);
+  assert.deepEqual(lesson.inspect(state).counts, { attempted: 1, preserved: 1, interrupted: 0, unknown: 0 });
+});
+
+test('every negative preset measures its exact original-journey failure', async (t) => {
+  for (const [presetId, expected] of Object.entries(lesson.EXPECTATIONS)) {
+    if (expected.outcome !== 'interrupted') continue;
+    await t.test(presetId, () => {
+      const state = conduct(presetId, true);
+      const report = state.current.report;
+      assert.equal(report.outcome, 'interrupted');
+      assert.equal(report.verifierPassed, true, 'an expected negative verifier is not a preserved journey');
+      assert.equal(report.checks.find((entry) => entry.id === expected.failedCheck).result, 'fail');
+      assert.equal(report.nativeProof, false);
+      assert.equal(lesson.inspect(state).counts.interrupted, 1);
+      assert.equal(lesson.inspect(state).counts.preserved, 0);
+      assert.equal(state.runs[0].attempts.length, 2);
+    });
+  }
+});
+
+test('a completed replacement form and HTTP 200 do not complete the original form', () => {
+  const state = conduct('replacement-http200');
+  const report = state.current.report;
+  assert.equal(state.current.finalStep, 'completed');
+  assert.deepEqual(state.current.form.answers, lesson.INTENDED_ANSWERS);
+  assert.equal(state.current.form.priorValidation.status, 'valid');
+  assert.equal(report.effectCount, 1);
+  assert.deepEqual(report.httpStatuses, [200]);
+  assert.equal(state.current.activeVersion, 'teaching-v2');
+  assert.notEqual(state.current.form.journeyId, lesson.ORIGINAL.journeyId);
+  assert.equal(report.outcome, 'interrupted');
+  for (const id of ['original-journey', 'prior-token', 'one-submission-effect', 'client-result']) {
+    assert.equal(report.checks.find((entry) => entry.id === id).result, 'fail', id);
+  }
+});
+
+test('duplicate effect fails even when both attempts report HTTP 200 and correct receipts', () => {
+  const state = conduct('duplicate-submission', true);
+  const report = state.current.report;
+  assert.deepEqual(report.httpStatuses, [200, 200]);
+  assert.equal(report.checks.find((entry) => entry.id === 'client-result').result, 'pass');
+  assert.equal(report.effectCount, 2);
+  assert.equal(state.current.effects[0].key, state.current.effects[1].key);
+  assert.equal(report.checks.find((entry) => entry.id === 'one-submission-effect').result, 'fail');
+  assert.equal(report.outcome, 'interrupted');
+});
+
+test('unobserved receipt and effect ledger stay unknown through HTTP success and retry', () => {
+  const state = conduct('receipt-unknown', true);
+  const report = state.current.report;
+  assert.equal(report.outcome, 'unknown');
+  assert.equal(report.verifierPassed, true);
+  assert.equal(report.effectCount, null);
+  assert.equal(state.current.effects, null, 'unknown is not fabricated zero or one');
+  assert.deepEqual(report.httpStatuses, [200, 200]);
+  assert.equal(state.current.attempts.every((attempt) => attempt.clientResult === 'unknown' && attempt.receiptId === null), true);
+  for (const id of ['one-submission-effect', 'client-result']) assert.equal(report.checks.find((entry) => entry.id === id).result, 'unknown');
+  assert.equal(report.checks.some((entry) => entry.result === 'fail'), false);
+  assert.deepEqual(lesson.inspect(state).counts, { attempted: 1, preserved: 0, interrupted: 0, unknown: 1 });
+});
+
+test('reset retains failures, unknowns, original snapshots, attempt history and later successes separately', () => {
+  let state = conduct('lost-answers');
+  const failedRun = state.runs[0];
+  state = act(state, 'reset');
+  assert.equal(state.phase, 'idle');
+  assert.equal(state.current, null);
+  assert.deepEqual(state.runs[0], failedRun);
+  state = conduct('receipt-unknown', true, state);
+  const unknownRun = state.runs[1];
+  state = act(state, 'reset');
+  state = conduct('preserved', true, state);
+  assert.deepEqual(state.runs[0], failedRun);
+  assert.deepEqual(state.runs[1], unknownRun);
+  assert.deepEqual(lesson.inspect(state).counts, { attempted: 3, preserved: 1, interrupted: 1, unknown: 1 });
+  assert.equal(state.history.filter((event) => event.command.type === 'start').length, 3);
+  assert.equal(state.history.filter((event) => event.command.type === 'reset').length, 2);
+});
+
+test('reset before final submission archives an incomplete unknown rather than a completed journey', () => {
+  let state = lesson.execute(lesson.createState(), { type: 'start', presetId: 'preserved' });
+  state = act(state, 'cutover');
+  state = act(state, 'reset');
+  assert.equal(state.runs.length, 1);
+  assert.equal(state.runs[0].report.outcome, 'unknown');
+  assert.equal(state.runs[0].report.incomplete, true);
+  assert.equal(state.runs[0].report.verifierPassed, null);
+  assert.equal(state.runs[0].report.attemptCount, 0);
+  assert.equal(state.runs[0].report.checks.find((entry) => entry.id === 'final-step').result, 'unknown');
+});
+
+test('a known lost answer stays a failure even if reset occurs before final submission', () => {
+  let state = lesson.execute(lesson.createState(), { type: 'start', presetId: 'lost-answers' });
+  state = act(state, 'cutover');
+  state = act(state, 'reset');
+  assert.equal(state.runs[0].report.outcome, 'interrupted');
+  assert.equal(state.runs[0].report.incomplete, true);
+});
+
+test('unmeasured new version cannot bypass ordered completion guards', () => {
+  let state = lesson.createState();
+  for (const type of ['cutover', 'continue', 'submit', 'retry', 'measure']) assert.throws(() => act(state, type), expectError('ERR_STATE'));
+  state = lesson.execute(state, { type: 'start', presetId: 'preserved' });
+  assert.throws(() => lesson.execute(state, { type: 'start', presetId: 'replacement-http200' }), expectError('ERR_STATE'));
+  assert.throws(() => act(state, 'submit'), expectError('ERR_STATE'));
+  state = act(state, 'cutover');
+  assert.equal(state.current.activeVersion, 'teaching-v2');
+  assert.equal(state.runs.length, 0);
+  assert.equal(lesson.inspect(state).lastReport, null);
+  assert.throws(() => act(state, 'measure'), expectError('ERR_STATE'));
+  state = act(state, 'continue');
+  state = act(state, 'submit');
+  state = act(state, 'retry');
+  const before = JSON.stringify(state);
+  assert.throws(() => act(state, 'retry'), expectError('ERR_STATE'));
+  assert.equal(JSON.stringify(state), before);
+  state = act(state, 'measure');
+  assert.throws(() => act(state, 'measure'), expectError('ERR_STATE'));
+});
+
+test('strict typed commands reject coercion, extras, unknown presets and non-DATA without mutation', () => {
+  const state = lesson.createState();
+  const before = JSON.stringify(state);
+  const invalid = [
+    null, undefined, '', 1, [], NaN, () => {}, { type: 1 }, { type: ' start', presetId: 'preserved' },
+    { type: 'start' }, { type: 'start', presetId: 1 }, { type: 'start', presetId: null },
+    ...[' preserved', 'preserved ', 'constructor', '__proto__', '<script>fictional</script>'].map((presetId) => ({ type: 'start', presetId })),
+    { type: 'start', presetId: 'preserved', answers: lesson.INTENDED_ANSWERS }, { type: 'reset', presetId: 'preserved' },
+    Object.assign(Object.create(null), { type: 'reset' }), new Date(0),
+    { type: 'reset', [Symbol('fixture')]: true },
+  ];
+  for (const command of invalid) assert.throws(() => lesson.execute(state, command), expectError('ERR_INPUT'));
+  assert.equal(JSON.stringify(state), before);
+});
+
+test('accessor and hidden fields are rejected before caller getters run', () => {
+  let reads = 0;
+  const getter = { type: 'start', get presetId() { reads++; return 'preserved'; } };
+  assert.throws(() => lesson.execute(lesson.createState(), getter), expectError('ERR_INPUT'));
+  const snapshot = copy(lesson.createState());
+  Object.defineProperty(snapshot, 'phase', { enumerable: true, get() { reads++; return 'idle'; } });
+  assert.throws(() => lesson.inspect(snapshot), expectError('ERR_STATE'));
+  const hidden = { type: 'reset' };
+  Object.defineProperty(hidden, 'unobserved', { value: true });
+  assert.throws(() => lesson.execute(lesson.createState(), hidden), expectError('ERR_INPUT'));
+  assert.equal(reads, 0);
+});
+
+test('exact replay permits plain serialized DATA but rejects state, token, answer, effect and history forgery', () => {
+  const state = conduct('preserved', true);
+  assert.deepEqual(lesson.inspect(copy(state)), lesson.inspect(state));
+  const changed = [
+    (value) => { value.schemaVersion = '1'; },
+    (value) => { value.phase = 'idle'; },
+    (value) => { value.current.form.answers.colour = 'fictional-other-colour'; },
+    (value) => { value.current.form.priorValidation.tokenAccepted = false; },
+    (value) => { value.current.form.permissions.submit = false; },
+    (value) => { value.current.form.identityId = 'fictional-other-actor'; },
+    (value) => { value.current.form.sessionId = 'fictional-other-session'; },
+    (value) => { value.current.activeVersion = 'teaching-v3'; },
+    (value) => { value.current.effects.push(copy(value.current.effects[0])); },
+    (value) => { value.current.report.outcome = 'unknown'; },
+    (value) => { value.runs[0].report.effectCount = 2; },
+    (value) => { value.history[0].ordinal = 2; },
+    (value) => { value.history[0].command.presetId = 'lost-answers'; },
+    (value) => { value.history.pop(); },
+    (value) => { value.extra = true; },
+    (value) => { value.history.extra = true; },
+    (value) => { delete value.history[1]; },
+  ];
+  for (const change of changed) {
+    const forged = copy(state);
+    change(forged);
+    assert.throws(() => lesson.inspect(forged), expectError('ERR_STATE'));
+    assert.throws(() => lesson.execute(forged, { type: 'reset' }), expectError('ERR_STATE'));
+  }
+  assert.equal(state.current.report.outcome, 'preserved');
+});
+
+test('recursive immutable state prevents caller mutations and inspection does not write', () => {
+  const state = conduct('receipt-unknown');
+  const before = JSON.stringify(state);
+  assert.throws(() => { state.current.form.answers.colour = 'fictional-other'; }, TypeError);
+  assert.throws(() => { state.history.push({}); }, TypeError);
+  assert.throws(() => { state.runs[0].report.outcome = 'preserved'; }, TypeError);
+  const inspection = lesson.inspect(state);
+  assert.equal(Object.isFrozen(inspection.lastReport.checks[0]), true);
+  assert.equal(JSON.stringify(state), before);
+});
+
+test('finite run bound rejects further starts without dropping retained results', () => {
+  let state = lesson.createState();
+  for (let index = 0; index < lesson.MAX_RUNS; index++) state = act(conduct('preserved', false, state), 'reset');
+  const before = JSON.stringify(state);
+  assert.equal(state.runs.length, 10);
+  assert.throws(() => lesson.execute(state, { type: 'start', presetId: 'preserved' }), expectError('ERR_LIMIT'));
+  assert.equal(JSON.stringify(state), before);
+  assert.equal(lesson.inspect(state).counts.preserved, 10);
+});
+
+test('finite action bound and structural bounds are explicit safe holds', () => {
+  let state = lesson.createState();
+  for (let index = 0; index < lesson.MAX_HISTORY; index++) state = act(state, 'reset');
+  assert.equal(state.history.length, 90);
+  assert.throws(() => act(state, 'reset'), expectError('ERR_LIMIT'));
+  const oversized = copy(state);
+  oversized.history.push(copy(oversized.history[0]));
+  assert.throws(() => lesson.inspect(oversized), expectError('ERR_STATE'));
+  assert.throws(() => lesson.execute(lesson.createState(), { type: 'start', presetId: 'p'.repeat(2049) }), expectError('ERR_INPUT'));
+});

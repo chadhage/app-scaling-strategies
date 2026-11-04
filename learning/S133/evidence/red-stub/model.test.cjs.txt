@@ -1,0 +1,13 @@
+'use strict';
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const lesson = require('./model.js');
+
+test('old form begins with preserved v1 answers rather than staying idle', () => {
+  assert.equal(typeof lesson.createState, 'function');
+  assert.equal(typeof lesson.execute, 'function');
+  const before = lesson.createState();
+  assert.equal(before.phase, 'idle');
+  const started = lesson.execute(before, { type: 'start', presetId: 'preserved' });
+  assert.equal(started.phase, 'old-step', 'starting an old form must create an observable journey');
+});

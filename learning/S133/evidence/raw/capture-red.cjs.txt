@@ -1,0 +1,61 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
+const lesson = path.resolve(__dirname, '..', '..');
+const root = path.resolve(lesson, '..', '..');
+const digest = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const helper = path.join(root, 'testing', 'browser', 'isolated.cjs');
+if (digest(fs.readFileSync(helper)) !== '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055') throw new Error('Published helper hash mismatch.');
+const { openIsolatedLesson } = require(helper);
+
+async function main() {
+  const archive = path.join(lesson, 'evidence', 'red-stub');
+  fs.mkdirSync(archive, { recursive: true });
+  const names = ['.gitattributes', 'form-continuity.feature', 'model.js', 'app.js', 'index.html', 'lesson.css', 'model.test.cjs'];
+  const archivedStubSha256 = {};
+  for (const name of names) {
+    const bytes = fs.readFileSync(path.join(lesson, name));
+    const target = `${name}.txt`;
+    fs.writeFileSync(path.join(archive, target), bytes, { flag: 'wx' });
+    archivedStubSha256[target] = digest(bytes);
+  }
+  const summary = {
+    cardId: 'A-S133', workerId: 'worker-A-S133', observedAtUtc: new Date().toISOString(),
+    mode: 'portable-synthetic', node: process.version, archivedStubSha256,
+    sourceReadBeforeDesign: ['README S133', 'D-S133 backlog', 'portable A-S133 card', 'SC-S133 inventory packet'],
+  };
+  const browser = { phaseBefore: null, phaseAfterKeyboardStart: null, actionCount: null, pageErrors: [], awaitedCleanupCompleted: false };
+  const session = await openIsolatedLesson(path.join('learning', 'S133', 'index.html'));
+  try {
+    session.page.on('pageerror', (error) => browser.pageErrors.push(error.message));
+    browser.browserVersion = session.browserVersion;
+    browser.phaseBefore = await session.page.locator('#phase').textContent();
+    await session.page.locator('#preset').focus();
+    await session.page.keyboard.press('Tab');
+    await session.page.keyboard.press('Enter');
+    browser.phaseAfterKeyboardStart = await session.page.locator('#phase').textContent();
+    browser.actionCount = await session.page.locator('#history-count').textContent();
+  } finally {
+    await session.close();
+    browser.awaitedCleanupCompleted = true;
+    fs.writeFileSync(path.join(__dirname, 'stub-browser.json'), `${JSON.stringify(browser, null, 2)}\n`, { flag: 'wx' });
+  }
+  if (browser.phaseBefore !== 'idle' || browser.phaseAfterKeyboardStart !== 'idle' || browser.pageErrors.length || !browser.awaitedCleanupCompleted) throw new Error('Loadable stub observation failed.');
+  const red = spawnSync(process.execPath, ['--test', path.join(lesson, 'model.test.cjs')], { cwd: root, encoding: 'buffer', timeout: 20000 });
+  fs.writeFileSync(path.join(__dirname, 'red.stdout.tap'), red.stdout, { flag: 'wx' });
+  fs.writeFileSync(path.join(__dirname, 'red.stderr.txt'), red.stderr, { flag: 'wx' });
+  summary.childExitCode = red.status;
+  summary.stdoutSha256 = digest(red.stdout);
+  summary.stderrSha256 = digest(red.stderr);
+  summary.errorCode = red.stdout.includes(Buffer.from('ERR_ASSERTION')) ? 'ERR_ASSERTION' : null;
+  summary.genuineAssertionRed = red.status === 1 && summary.errorCode === 'ERR_ASSERTION'
+    && red.stdout.includes(Buffer.from('old-step')) && red.stdout.includes(Buffer.from('idle'));
+  fs.writeFileSync(path.join(__dirname, 'red-summary.json'), `${JSON.stringify(summary, null, 2)}\n`, { flag: 'wx' });
+  process.stdout.write(red.stdout);
+  process.stderr.write(red.stderr);
+  if (!summary.genuineAssertionRed) throw new Error('Expected behavioral assertion RED, not an import or syntax error.');
+  console.log(JSON.stringify({ genuineAssertionRed: true, childExitCode: red.status, browser }));
+}
+main().catch((error) => { console.error(error); process.exitCode = 1; });

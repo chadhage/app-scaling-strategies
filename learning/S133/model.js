@@ -1,0 +1,294 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.FormContinuity = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      for (const child of Object.values(value)) freeze(child);
+      Object.freeze(value);
+    }
+    return value;
+  }
+  function clone(value) {
+    if (Array.isArray(value)) return value.map(clone);
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, clone(child)]));
+    return value;
+  }
+  const MAX_HISTORY = 90;
+  const MAX_RUNS = 10;
+  const PRESETS = freeze({
+    preserved: 'Preserved original form',
+    'lost-answers': 'Lost original answer',
+    'invalid-prior-token': 'Invalid prior token DATA',
+    'lost-validation': 'Lost prior validation DATA',
+    'permission-denied': 'Lost permission DATA',
+    'changed-identity-session': 'Changed identity/session DATA',
+    'duplicate-submission': 'Duplicate fictional submission',
+    'receipt-unknown': 'HTTP 200, receipt/effects unknown',
+    'replacement-http200': 'HTTP 200, replacement form instead',
+  });
+  const ORIGINAL = freeze({
+    journeyId: 'fictional-form-01',
+    formSchema: 'fictional-form-v1',
+    identityId: 'fictional-actor-07',
+    sessionId: 'fictional-session-07',
+    answers: { symbol: 'paper-star', colour: 'violet', delivery: null },
+    priorValidation: {
+      status: 'valid', schema: 'fictional-form-v1', tokenValue: 'fictional-prior-token-07',
+      tokenAccepted: true, journeyId: 'fictional-form-01',
+      identityId: 'fictional-actor-07', sessionId: 'fictional-session-07',
+    },
+    permissions: { continue: true, submit: true },
+  });
+  const INTENDED_ANSWERS = freeze({ symbol: 'paper-star', colour: 'violet', delivery: 'fictional-pickup' });
+  const SUBMISSION_KEY = 'fictional-final-submission-01';
+  const EXPECTATIONS = freeze({
+    preserved: { outcome: 'preserved', failedCheck: null },
+    'lost-answers': { outcome: 'interrupted', failedCheck: 'original-answers' },
+    'invalid-prior-token': { outcome: 'interrupted', failedCheck: 'prior-token' },
+    'lost-validation': { outcome: 'interrupted', failedCheck: 'prior-validation' },
+    'permission-denied': { outcome: 'interrupted', failedCheck: 'permissions' },
+    'changed-identity-session': { outcome: 'interrupted', failedCheck: 'identity-session' },
+    'duplicate-submission': { outcome: 'interrupted', failedCheck: 'one-submission-effect' },
+    'receipt-unknown': { outcome: 'unknown', failedCheck: null },
+    'replacement-http200': { outcome: 'interrupted', failedCheck: 'original-journey' },
+  });
+
+  class LessonError extends Error {
+    constructor(code, message) { super(`${code}: Safe hold. ${message}`); this.name = 'LessonError'; this.code = code; }
+  }
+  const reject = (code, message) => { throw new LessonError(code, message); };
+  function dataGuard(value, code, depth = 0, budget = { nodes: 0 }) {
+    if (++budget.nodes > 12000 || depth > 16) reject(code, 'DATA exceeds the finite structural bound.');
+    if (value === null || typeof value === 'boolean') return;
+    if (typeof value === 'string' && value.length <= 2048) return;
+    if (typeof value === 'number' && Number.isSafeInteger(value)) return;
+    if (!value || typeof value !== 'object') reject(code, 'Only bounded plain teaching DATA is accepted.');
+    const array = Array.isArray(value);
+    if (Object.getPrototypeOf(value) !== (array ? Array.prototype : Object.prototype)) reject(code, 'DATA must have a plain prototype.');
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    if (Reflect.ownKeys(descriptors).some((key) => typeof key !== 'string')) reject(code, 'Symbol fields are not accepted.');
+    if (array && (value.length > MAX_HISTORY || Object.keys(descriptors).length !== value.length + 1)) reject(code, 'Arrays must be dense and bounded.');
+    if (!array && Object.keys(descriptors).length > 24) reject(code, 'Too many DATA fields.');
+    for (const [key, descriptor] of Object.entries(descriptors)) {
+      if (array && key === 'length') continue;
+      if (!Object.hasOwn(descriptor, 'value') || !descriptor.enumerable) reject(code, 'Accessors and hidden fields are not accepted.');
+      if (array && !/^(0|[1-9]\d*)$/.test(key)) reject(code, 'Unexpected array field.');
+      dataGuard(descriptor.value, code, depth + 1, budget);
+    }
+  }
+  function equalData(left, right) {
+    if (left === right) return true;
+    if (!left || !right || typeof left !== 'object' || typeof right !== 'object' || Array.isArray(left) !== Array.isArray(right)) return false;
+    const a = Object.keys(left).sort();
+    const b = Object.keys(right).sort();
+    return a.length === b.length && a.every((key, index) => key === b[index] && equalData(left[key], right[key]));
+  }
+  function commandGuard(command) {
+    dataGuard(command, 'ERR_INPUT');
+    if (!command || Array.isArray(command) || typeof command.type !== 'string') reject('ERR_INPUT', 'An exact action record is required.');
+    const keys = Object.keys(command).sort().join(',');
+    if (command.type === 'start') {
+      if (keys !== 'presetId,type' || typeof command.presetId !== 'string' || !Object.hasOwn(PRESETS, command.presetId)) {
+        reject('ERR_INPUT', 'Choose an exact fixed preset; no coercion or arbitrary form input is allowed.');
+      }
+    } else if (!['cutover', 'continue', 'submit', 'retry', 'measure', 'reset'].includes(command.type) || keys !== 'type') {
+      reject('ERR_INPUT', 'Choose an exact action without extra fields.');
+    }
+  }
+  const empty = () => ({ schemaVersion: 1, phase: 'idle', current: null, runs: [], history: [] });
+  const requirePhase = (state, phases) => {
+    if (!phases.includes(state.phase)) reject('ERR_STATE', 'Follow Start -> Cut over -> Continue -> Submit -> optional Retry -> Measure -> Reset.');
+  };
+
+  function candidateFor(presetId) {
+    const form = clone(ORIGINAL);
+    switch (presetId) {
+      case 'lost-answers': form.answers.colour = null; break;
+      case 'invalid-prior-token':
+        form.priorValidation.tokenValue = 'fictional-invalid-prior-token-07';
+        form.priorValidation.tokenAccepted = false;
+        break;
+      case 'lost-validation': form.priorValidation.status = 'missing'; break;
+      case 'permission-denied': form.permissions.submit = false; break;
+      case 'changed-identity-session':
+        form.identityId = 'fictional-actor-08';
+        form.sessionId = 'fictional-session-08';
+        break;
+      case 'replacement-http200':
+        form.journeyId = 'fictional-restarted-form-02';
+        form.priorValidation.journeyId = 'fictional-restarted-form-02';
+        break;
+    }
+    return form;
+  }
+  function canContinue(current) {
+    return !['invalid-prior-token', 'lost-validation', 'changed-identity-session'].includes(current.presetId);
+  }
+  function submissionFor(current, retry) {
+    const accepted = current.finalStep === 'completed' && current.form.permissions.submit;
+    const unknown = accepted && current.presetId === 'receipt-unknown';
+    const replacement = current.presetId === 'replacement-http200';
+    return {
+      ordinal: current.attempts.length + 1, key: SUBMISSION_KEY, version: current.activeVersion,
+      journeyId: current.form.journeyId, httpStatus: accepted ? 200 : (current.form.permissions.submit ? 422 : 403),
+      clientResult: unknown ? 'unknown' : (accepted ? 'confirmed' : 'rejected'),
+      receiptId: accepted && !unknown ? (replacement ? 'fictional-receipt-form-02' : 'fictional-receipt-form-01') : null,
+      receiptJourneyId: accepted && !unknown ? current.form.journeyId : null,
+      receiptAnswers: accepted && !unknown ? clone(current.form.answers) : null,
+      deduplicated: retry && accepted && !unknown && current.presetId !== 'duplicate-submission',
+    };
+  }
+  function effectsFor(current, attempt) {
+    if (attempt.clientResult === 'unknown') return null;
+    if (attempt.clientResult === 'rejected') return [];
+    const effect = {
+      effectId: 'fictional-effect-01', key: SUBMISSION_KEY,
+      journeyId: current.form.journeyId, answers: clone(current.form.answers),
+    };
+    return current.presetId === 'duplicate-submission'
+      ? [effect, { ...clone(effect), effectId: 'fictional-duplicate-effect-02' }] : [effect];
+  }
+  function checksFor(current) {
+    const form = current.form;
+    const prior = form.priorValidation;
+    const latest = current.attempts.at(-1);
+    const check = (id, label, value, detail) => ({ id, label, result: value === null ? 'unknown' : (value ? 'pass' : 'fail'), detail });
+    return [
+      check('original-journey', 'Same original form journey', form.journeyId === ORIGINAL.journeyId, form.journeyId),
+      check('original-answers', 'Both original answers preserved', form.answers.symbol === ORIGINAL.answers.symbol && form.answers.colour === ORIGINAL.answers.colour,
+        `symbol=${form.answers.symbol}; colour=${form.answers.colour === null ? 'known lost answer' : form.answers.colour}`),
+      check('prior-validation', 'Prior v1 validation preserved', prior.status === 'valid' && prior.schema === ORIGINAL.priorValidation.schema, `${prior.status}; ${prior.schema}`),
+      check('prior-token', 'Original token DATA accepted with original bindings', prior.tokenValue === ORIGINAL.priorValidation.tokenValue && prior.tokenAccepted
+        && prior.journeyId === ORIGINAL.journeyId && prior.identityId === ORIGINAL.identityId && prior.sessionId === ORIGINAL.sessionId,
+      `${prior.tokenValue}; accepted=${prior.tokenAccepted}; bound=${prior.journeyId}/${prior.identityId}/${prior.sessionId}`),
+      check('identity-session', 'Original identity/session DATA preserved', form.identityId === ORIGINAL.identityId && form.sessionId === ORIGINAL.sessionId, `${form.identityId}; ${form.sessionId}`),
+      check('permissions', 'Continue and submit permissions DATA preserved', form.permissions.continue && form.permissions.submit, `continue=${form.permissions.continue}; submit=${form.permissions.submit}`),
+      check('final-step', 'Intended final answer completed', current.finalStep === 'not-attempted' ? null : current.finalStep === 'completed' && form.answers.delivery === INTENDED_ANSWERS.delivery,
+        `${current.finalStep}; delivery=${form.answers.delivery === null ? 'not completed' : form.answers.delivery}`),
+      check('final-validation', 'Final step validation DATA recorded', current.finalValidation === null ? null : current.finalValidation.status === 'valid',
+        current.finalValidation === null ? 'not observed yet' : `${current.finalValidation.status}; ${current.finalValidation.schema}`),
+      check('one-submission-effect', 'Exactly one intended final submission/effect', !latest || current.effects === null ? null : current.effects.length === 1
+        && current.effects[0].key === SUBMISSION_KEY && current.effects[0].journeyId === ORIGINAL.journeyId && equalData(current.effects[0].answers, INTENDED_ANSWERS),
+      !latest ? 'no submission attempted yet' : (current.effects === null ? 'authoritative effect ledger not observed' : `${current.effects.length} observed fictional effects`)),
+      check('client-result', 'Correct confirmed result for the original form', !latest || latest.clientResult === 'unknown' ? null : latest.clientResult === 'confirmed'
+        && latest.receiptId === 'fictional-receipt-form-01' && latest.receiptJourneyId === ORIGINAL.journeyId && equalData(latest.receiptAnswers, INTENDED_ANSWERS),
+      !latest ? 'no final result yet' : `${latest.clientResult}; receipt=${latest.receiptId === null ? 'not observed' : latest.receiptId}`),
+    ];
+  }
+  function measure(current, incomplete) {
+    const checks = checksFor(current);
+    const outcome = checks.some((entry) => entry.result === 'fail') ? 'interrupted'
+      : (incomplete || checks.some((entry) => entry.result === 'unknown') ? 'unknown' : 'preserved');
+    const expected = EXPECTATIONS[current.presetId];
+    return {
+      runId: current.runId, presetId: current.presetId, outcome, incomplete, activeVersion: current.activeVersion,
+      originalVersion: 'teaching-v1', attemptCount: current.attempts.length,
+      effectCount: current.effects === null ? null : current.effects.length,
+      httpStatuses: current.attempts.map((attempt) => attempt.httpStatus), checks,
+      verifierPassed: incomplete ? null : outcome === expected.outcome
+        && (!expected.failedCheck || checks.some((entry) => entry.id === expected.failedCheck && entry.result === 'fail')),
+      nativeProof: false,
+    };
+  }
+  function archive(state, report) {
+    state.runs.push({
+      runId: state.current.runId, presetId: state.current.presetId, report,
+      formSnapshot: clone(state.current.form), finalValidation: clone(state.current.finalValidation),
+      attempts: clone(state.current.attempts), effects: clone(state.current.effects),
+    });
+  }
+  function transition(before, command) {
+    if (before.history.length >= MAX_HISTORY) reject('ERR_LIMIT', '90 accepted actions is the whole-page bound. Reload deliberately for a fresh, nonpersistent rehearsal.');
+    const state = clone(before);
+    const previousRunId = state.current ? state.current.runId : null;
+    switch (command.type) {
+      case 'start':
+        requirePhase(state, ['idle']);
+        if (state.runs.length >= MAX_RUNS) reject('ERR_LIMIT', '10 original rehearsal journeys is the whole-page bound; retained evidence is not discarded.');
+        state.current = {
+          runId: `rehearsal-${String(state.runs.length + 1).padStart(2, '0')}`,
+          presetId: command.presetId, form: clone(ORIGINAL), activeVersion: 'teaching-v1',
+          finalStep: 'not-attempted', finalValidation: null, attempts: [], effects: [], report: null,
+        };
+        state.phase = 'old-step';
+        break;
+      case 'cutover':
+        requirePhase(state, ['old-step']);
+        state.current.form = candidateFor(state.current.presetId);
+        state.current.activeVersion = 'teaching-v2';
+        state.phase = 'cutover';
+        break;
+      case 'continue': {
+        requirePhase(state, ['cutover']);
+        const continued = canContinue(state.current);
+        state.current.finalStep = continued ? 'completed' : 'blocked';
+        state.current.form.answers.delivery = continued ? INTENDED_ANSWERS.delivery : null;
+        state.current.finalValidation = { status: continued ? 'valid' : 'rejected', schema: 'fictional-form-v2' };
+        state.phase = 'continued';
+        break;
+      }
+      case 'submit':
+      case 'retry': {
+        requirePhase(state, command.type === 'submit' ? ['continued'] : ['submitted']);
+        const attempt = submissionFor(state.current, command.type === 'retry');
+        state.current.attempts.push(attempt);
+        state.current.effects = effectsFor(state.current, attempt);
+        state.phase = command.type === 'submit' ? 'submitted' : 'retried';
+        break;
+      }
+      case 'measure': {
+        requirePhase(state, ['submitted', 'retried']);
+        const report = measure(state.current, false);
+        state.current.report = report;
+        archive(state, report);
+        state.phase = 'measured';
+        break;
+      }
+      case 'reset':
+        if (state.current && state.phase !== 'measured') archive(state, measure(state.current, true));
+        state.current = null;
+        state.phase = 'idle';
+        break;
+    }
+    state.history.push({
+      ordinal: state.history.length + 1, command: clone(command),
+      runId: state.current ? state.current.runId : previousRunId, phaseAfter: state.phase,
+    });
+    return state;
+  }
+  function stateGuard(state) {
+    dataGuard(state, 'ERR_STATE');
+    if (!state || Array.isArray(state) || !Array.isArray(state.history) || state.history.length > MAX_HISTORY) reject('ERR_STATE', 'An exact bounded replay snapshot is required.');
+    let expected = empty();
+    try {
+      for (const event of state.history) {
+        commandGuard(event.command);
+        expected = transition(expected, event.command);
+      }
+    } catch {
+      reject('ERR_STATE', 'Snapshot history is not a valid bounded action sequence.');
+    }
+    if (!equalData(state, expected)) reject('ERR_STATE', 'Snapshot differs from its fixed-DATA replay; no state, validation or effect forgery is accepted.');
+  }
+  const createState = () => freeze(empty());
+  function execute(state, command) {
+    stateGuard(state);
+    commandGuard(command);
+    return freeze(transition(state, command));
+  }
+  function inspect(state) {
+    stateGuard(state);
+    const counts = { attempted: state.runs.length + (state.current && state.phase !== 'measured' ? 1 : 0), preserved: 0, interrupted: 0, unknown: 0 };
+    for (const run of state.runs) counts[run.report.outcome]++;
+    return freeze({
+      phase: state.phase, counts, actionCount: state.history.length,
+      checks: state.current ? checksFor(state.current) : [],
+      lastReport: state.current && state.current.report ? clone(state.current.report) : (state.runs.length ? clone(state.runs.at(-1).report) : null),
+    });
+  }
+  return freeze({ PRESETS, ORIGINAL, INTENDED_ANSWERS, SUBMISSION_KEY, EXPECTATIONS, MAX_HISTORY, MAX_RUNS, LessonError, createState, execute, inspect });
+}));

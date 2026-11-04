@@ -1,0 +1,54 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { spawnSync, execFileSync } = require('node:child_process');
+if (process.env.CAPTURE_BROWSER_EVIDENCE !== '1') throw new Error('Deliberate proof creation requires exact CAPTURE_BROWSER_EVIDENCE=1; normal verification is READ-ONLY.');
+const lesson = path.resolve(__dirname, '..', '..');
+const root = path.resolve(lesson, '..', '..');
+const digest = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const token = crypto.randomUUID();
+const sourceFolder = `source-${token}`;
+fs.mkdirSync(path.join(__dirname, sourceFolder));
+const sourceProof = {};
+for (const name of [
+  '.gitattributes', 'form-continuity.feature', 'model.js', 'app.js', 'index.html', 'lesson.css', 'manifest.json',
+  'README.txt', 'model.test.cjs', 'integrity.test.cjs', 'browser.test.cjs',
+  path.join('evidence', 'csp-probe.js'), path.join('evidence', 'missing-model.html'),
+]) {
+  const absolute = path.join(lesson, name);
+  const raw = fs.readFileSync(absolute);
+  const snapshot = path.join(sourceFolder, `${name.replace(/[\\]/g, '--')}.txt`);
+  fs.writeFileSync(path.join(__dirname, snapshot), raw, { flag: 'wx' });
+  sourceProof[name] = {
+    snapshot, rawSha256: digest(raw), rawCrlfCount: (raw.toString('utf8').match(/\r\n/g) || []).length,
+    canonicalSha256: digest(Buffer.from(raw.toString('utf8').replace(/\r\n/g, '\n'))),
+    canonicalGitOid: execFileSync('git', ['--no-pager', 'hash-object', '--path', path.relative(root, absolute), absolute], { cwd: root, encoding: 'utf8' }).trim(),
+  };
+}
+function run(stage, args, timeout) {
+  const child = spawnSync(process.execPath, args, { cwd: root, env: { ...process.env }, encoding: 'buffer', timeout, maxBuffer: 8 * 1024 * 1024 });
+  const prefix = `green-${token}-${stage}`;
+  const stdout = child.stdout || Buffer.alloc(0);
+  const stderr = child.stderr || Buffer.alloc(0);
+  const record = {
+    cardId: 'A-S133', workerId: 'worker-A-S133', mode: 'portable-synthetic', observedAtUtc: new Date().toISOString(),
+    stage, args, node: process.version, exitCode: child.status, signal: child.signal, spawnError: child.error ? child.error.message : null,
+    stdoutFile: `${prefix}.stdout.tap`, stderrFile: `${prefix}.stderr.txt`,
+    stdoutSha256: digest(stdout), stderrSha256: digest(stderr),
+    expectedPass: child.status === 0 && child.signal === null, sourceProof,
+    nativeProof: false, sourceParentComplete: false, productionNode24Validated: false, extraKanoCredits: 0,
+  };
+  fs.writeFileSync(path.join(__dirname, record.stdoutFile), stdout, { flag: 'wx' });
+  fs.writeFileSync(path.join(__dirname, record.stderrFile), stderr, { flag: 'wx' });
+  fs.writeFileSync(path.join(__dirname, `${prefix}.summary.json`), `${JSON.stringify(record, null, 2)}\n`, { flag: 'wx' });
+  process.stdout.write(stdout);
+  process.stderr.write(stderr);
+  if (!record.expectedPass) throw new Error(`Actual ${stage} did not pass; immutable raw failure remains in ${prefix}.summary.json.`);
+}
+run('browser', ['--test', path.join(lesson, 'browser.test.cjs')], 150000);
+run('focused', ['--test', path.join(lesson, 'model.test.cjs'), path.join(lesson, 'integrity.test.cjs')], 30000);
+for (const name of ['model.js', 'app.js', 'model.test.cjs', 'integrity.test.cjs', 'browser.test.cjs', path.join('evidence', 'csp-probe.js')]) {
+  run(`syntax-${path.basename(name).replace(/\./g, '-')}`, ['--check', path.join(lesson, name)], 20000);
+}
+console.log(JSON.stringify({ cardId: 'A-S133', deliberateCapture: true, rawProofToken: token, allStagesPassed: true, extraKanoCredits: 0 }));
