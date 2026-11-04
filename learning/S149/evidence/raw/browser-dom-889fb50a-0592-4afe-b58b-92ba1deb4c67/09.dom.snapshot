@@ -1,0 +1,3324 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'">
+  <title>S149 — Five-nines evidence rehearsal</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="model.js" defer=""></script>
+  <script src="lesson.js" defer=""></script>
+</head>
+<body>
+  <main>
+    <p id="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S149 — Five-nines evidence</h1>
+    <p>Compare counting units, inspect a fixed record, and check an expected conclusion.
+      Every count, journey, event, request, user, outcome and assumption is
+      <strong>fixed fictional teaching DATA ONLY</strong>. No trials, load, telemetry,
+      network, cloud or user-data operations run.</p>
+    <p class="notice">A correct teaching answer is not a reliability result.
+      Zero observed failures is not five-nines proof. No Azure SLA or certification is claimed.</p>
+
+    <section aria-labelledby="conduct-heading">
+      <h2 id="conduct-heading">1. Select and inspect</h2>
+      <form id="controls">
+        <div class="choices">
+          <div>
+            <label for="profile-choice">Fixed fictional evidence profile</label>
+            <select id="profile-choice" name="profile">
+              <option value="qualified-minimum">299,572 stipulated qualifying journeys</option>
+              <option value="qualified-one-short">299,571 — exactly one trial short</option>
+              <option value="request-heavy-small" selected="">6,000,000 requests; only 1,000 journeys</option>
+              <option value="correlated-single-event">299,572 journeys in one correlated event</option>
+              <option value="incomparable-contexts">299,572 journeys; incomparable contexts</option>
+              <option value="interrupted-recovered">Four starts; original interruption then recovery</option>
+              <option value="unknown-recovered">Four starts; unknown original then recovery</option>
+              <option value="failure-and-unknown">Four starts; interruption and unknown retained</option>
+              <option value="empty-transition-sample">Successful diagnostic requests; no journey starts</option>
+            </select>
+          </div>
+          <div>
+            <label for="count-basis">Proposed denominator unit</label>
+            <select id="count-basis" name="basis">
+              <option value="REQUEST" selected="">REQUEST — diagnostic requests</option>
+              <option value="USER">USER — diagnostic distinct users</option>
+              <option value="EVENT">EVENT — transition clusters/contexts</option>
+              <option value="JOURNEY">JOURNEY — all original attempted transition journeys</option>
+            </select>
+          </div>
+          <div>
+            <label for="expected-conclusion">Expected evidence conclusion</label>
+            <select id="expected-conclusion" name="expected">
+              <option value="CONDITIONAL_BOUND_MET" selected="">Conditional illustrative bound met — not certification</option>
+              <option value="INSUFFICIENT_EVIDENCE">Insufficient qualifying sample</option>
+              <option value="ASSUMPTIONS_UNQUALIFIED">Independence or comparability unqualified</option>
+              <option value="OBSERVED_INTERRUPTION">Original interruption retained</option>
+              <option value="UNKNOWN_EVIDENCE">Unknown started outcome retained</option>
+              <option value="NO_EVIDENCE">No attempted transition evidence</option>
+              <option value="WRONG_DENOMINATOR">Wrong counting unit for the journey denominator</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="inspect-record" type="submit">Select and inspect fixed record</button>
+          <button id="check-answer" type="button" disabled="">Check teaching answer</button>
+          <button id="archive-reset" type="button">Archive and reset controls</button>
+        </div>
+      </form>
+      <p id="error" role="alert" tabindex="-1">Twelve-exercise bound reached; retained history is not truncated.</p>
+      <p id="attempt-mode" aria-live="polite">Preview only — 12 retained attempts; select to begin an exercise.</p>
+      <output id="answer-status" role="status" tabindex="-1">UNCHECKED — teaching answer only</output>
+      <p>Native Tab / Shift+Tab, select arrows, Enter and Space work. At most twelve
+        exercises are retained; reload begins a new in-memory teaching session.</p>
+    </section>
+
+    <section aria-labelledby="count-heading">
+      <h2 id="count-heading">2. Compare counts and original outcomes</h2>
+      <p id="profile-scope">One declared user journey crossing a deployment or capacity transition. Population: 1,000 fictional users and stipulated comparable independent journey events; many diagnostic requests. Window: Fixed fictional original-start to declared original-budget outcome.</p>
+      <p id="representation">Fixed fictional count summary; request throughput is not additional journey evidence.</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Counting units table">
+        <table>
+          <caption>Fixed fictional counts — these units are not interchangeable trials</caption>
+          <thead><tr><th scope="col">Unit</th><th scope="col">Count</th><th scope="col">Meaning</th></tr></thead>
+          <tbody id="count-rows"><tr><th scope="row">REQUEST</th><td>6,000,000</td><td>Diagnostic requests, not independent transition trials.</td></tr><tr><th scope="row">USER</th><td>1,000</td><td>Distinct diagnostic users, not an interchangeable trial denominator.</td></tr><tr><th scope="row">EVENT</th><td>1,000</td><td>Transition clusters/contexts, not assumed independent comparable user journeys.</td></tr><tr><th scope="row">JOURNEY</th><td>1,000</td><td>All original started transition journeys, including interrupted and unknown outcomes.</td></tr></tbody>
+        </table>
+      </div>
+      <p><strong>Selected count:</strong> <output id="selected-count">6,000,000 REQUEST — wrong unit for the journey denominator</output></p>
+      <p><strong>Original journey accounting:</strong> <output id="journey-counts">1,000 started / 1,000 uninterrupted / 0 interrupted / 0 unknown</output></p>
+      <dl>
+        <dt>Uninterrupted-transition success fraction</dt><dd><output id="success-rate">1.0000000000000000 = 1,000 / 1,000</output></dd>
+        <dt>Observed interruption fraction</dt><dd><output id="interruption-rate">0.0000000000000000 = 0 / 1,000</output></dd>
+        <dt>Unknown started-outcome fraction</dt><dd><output id="unknown-rate">0.0000000000000000 = 0 / 1,000</output></dd>
+      </dl>
+      <p>The denominator includes every started original journey. Unknown outcomes are
+        not successes and cannot disappear. A later successful recovery does not repair
+        the original budget or replace its outcome.</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Original outcomes table">
+        <table>
+          <caption>Original fixed outcomes (large examples use count summaries, not generated trials)</caption>
+          <thead><tr><th scope="col">Original ID</th><th scope="col">Outcome</th><th scope="col">Attribution</th></tr></thead>
+          <tbody id="original-rows"><tr><th scope="row">Summary only</th><td>Fixed fictional aggregate</td><td>No individual trials generated, executed or observed.</td></tr></tbody>
+        </table>
+      </div>
+      <p id="recoveries">No separate recovery record; diagnostic request success supplies no missing journey outcome.</p>
+    </section>
+
+    <section aria-labelledby="confidence-heading">
+      <h2 id="confidence-heading">3. Inspect uncertainty and assumptions</h2>
+      <p><strong>Evidence conclusion:</strong> <output id="confidence-status">WRONG_DENOMINATOR</output></p>
+      <p id="confidence-conclusion">Wrong counting unit for the journey denominator</p>
+      <ul id="assumptions"><li>Independence: stipulated for the fictional illustration, not proven.</li><li>Comparability: stipulated for the fictional illustration, not proven.</li><li>Complete original observation: stipulated / no unknown originals in this fixed record.</li><li>Aggregate counts prove assumptions: false. Independence and comparability are stipulated for this fictional illustration, not measured or inferred from counts.</li></ul>
+      <p><strong>Qualifying n assigned to this record:</strong> <output id="qualifying-n">null — no qualifying n assigned</output></p>
+      <p><strong>Conditional one-sided 95% upper interruption probability:</strong>
+        <output id="upper-bound">null — unqualified / unavailable, not zero</output></p>
+      <p id="certification">No certification — all assumptions and counts are fictional.</p>
+      <h3>Mathematical illustration only — not confidence assigned to an unqualified record</h3>
+      <p><code>p_upper = -expm1(log(0.05) / n) = 1 - 0.05^(1/n)</code></p>
+      <p><code>n_min = ceil(log(0.05) / log1p(-0.00001))</code></p>
+      <p>With zero failures in <strong>independent, comparable, completely observed
+        Bernoulli transition journeys</strong>, the smallest illustrative n is
+        <output id="minimum-n">299,572</output> for an upper bound ≤ <code>0.00001</code>
+        (success target ≥ <code>0.99999</code>).</p>
+      <dl>
+        <dt>n = 299,571 — threshold fails</dt><dd><output id="previous-upper">0.000010000024350925770 &gt; 0.00001</output></dd>
+        <dt>n = 299,572 — threshold passes conditionally</dt><dd><output id="minimum-upper">0.0000099999909700545574 ≤ 0.00001 — conditional only</output></dd>
+      </dl>
+      <p>Requests from one user and users/transitions sharing a swap may be correlated.
+        Distinct users or events alone do not establish independence, comparability or
+        complete observation. This is not a universal sample-size guarantee.</p>
+      <h3>Warnings and limits</h3>
+      <ul id="warnings"><li>All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.</li><li>Zero observed failures is not five-nines proof.</li><li>Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.</li><li>REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.</li><li>Retained exercises reuse fixed records, not extra independent trials; never pool them.</li><li>Wrong denominator: the selected REQUEST count cannot replace attempted transition journeys.</li></ul>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained exercise history — never pooled as new trials</h2>
+      <p><strong>Session teaching verdict:</strong> <output id="session-verdict">FAIL — teaching answers only</output></p>
+      <p id="history-summary">12 retained / 12 checked / 1 wrong answers / 0 unchecked. No reliability pooling or certification.</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Retained teaching attempts table">
+        <table>
+          <caption>Earlier answers, interruptions and uncertainty survive archive/reset</caption>
+          <thead><tr><th scope="col">Attempt</th><th scope="col">Profile / unit</th><th scope="col">Evidence</th><th scope="col">Teaching answer</th></tr></thead>
+          <tbody id="history-rows"><tr><th scope="row">1</th><td>6,000,000 requests; only 1,000 journeys / REQUEST</td><td>WRONG_DENOMINATOR</td><td>FAIL — teaching only</td></tr><tr><th scope="row">2</th><td>6,000,000 requests; only 1,000 journeys / JOURNEY</td><td>INSUFFICIENT_EVIDENCE</td><td>PASS — teaching only</td></tr><tr><th scope="row">3</th><td>299,572 journeys in one correlated event / REQUEST</td><td>WRONG_DENOMINATOR</td><td>PASS — teaching only</td></tr><tr><th scope="row">4</th><td>299,572 journeys in one correlated event / USER</td><td>WRONG_DENOMINATOR</td><td>PASS — teaching only</td></tr><tr><th scope="row">5</th><td>299,572 journeys in one correlated event / EVENT</td><td>WRONG_DENOMINATOR</td><td>PASS — teaching only</td></tr><tr><th scope="row">6</th><td>299,572 journeys in one correlated event / JOURNEY</td><td>ASSUMPTIONS_UNQUALIFIED</td><td>PASS — teaching only</td></tr><tr><th scope="row">7</th><td>299,571 — exactly one trial short / JOURNEY</td><td>INSUFFICIENT_EVIDENCE</td><td>PASS — teaching only</td></tr><tr><th scope="row">8</th><td>299,572 stipulated qualifying journeys / JOURNEY</td><td>CONDITIONAL_BOUND_MET</td><td>PASS — teaching only</td></tr><tr><th scope="row">9</th><td>299,572 journeys; incomparable contexts / JOURNEY</td><td>ASSUMPTIONS_UNQUALIFIED</td><td>PASS — teaching only</td></tr><tr><th scope="row">10</th><td>Four starts; unknown original then recovery / JOURNEY</td><td>UNKNOWN_EVIDENCE</td><td>PASS — teaching only</td></tr><tr><th scope="row">11</th><td>Four starts; original interruption then recovery / JOURNEY</td><td>OBSERVED_INTERRUPTION</td><td>PASS — teaching only</td></tr><tr><th scope="row">12</th><td>Four starts; interruption and unknown retained / JOURNEY</td><td>OBSERVED_INTERRUPTION</td><td>PASS — teaching only</td></tr></tbody>
+        </table>
+      </div>
+      <details id="record-details" open="">
+        <summary>Inspect exact typed records, assumptions, confidence and retained journal</summary>
+        <pre id="records">{
+  "schema": "S149/ui/v1",
+  "session": {
+    "attempts": 12,
+    "checked": 12,
+    "unchecked": 0,
+    "answerFailures": 1,
+    "teachingVerdict": "FAIL",
+    "evidenceStatuses": [
+      "WRONG_DENOMINATOR",
+      "INSUFFICIENT_EVIDENCE",
+      "WRONG_DENOMINATOR",
+      "WRONG_DENOMINATOR",
+      "WRONG_DENOMINATOR",
+      "ASSUMPTIONS_UNQUALIFIED",
+      "INSUFFICIENT_EVIDENCE",
+      "CONDITIONAL_BOUND_MET",
+      "ASSUMPTIONS_UNQUALIFIED",
+      "UNKNOWN_EVIDENCE",
+      "OBSERVED_INTERRUPTION",
+      "OBSERVED_INTERRUPTION"
+    ],
+    "reliabilityPooling": false,
+    "certification": false
+  },
+  "activeAttempt": null,
+  "assessment": {
+    "schema": "S149/evidence/v1",
+    "profileId": "request-heavy-small",
+    "evidenceClass": "negative",
+    "selected": {
+      "unit": "REQUEST",
+      "count": 6000000,
+      "isJourneyDenominator": false
+    },
+    "diagnostics": [
+      {
+        "unit": "REQUEST",
+        "count": 6000000,
+        "role": "Diagnostic requests, not independent transition trials."
+      },
+      {
+        "unit": "USER",
+        "count": 1000,
+        "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+      },
+      {
+        "unit": "EVENT",
+        "count": 1000,
+        "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+      }
+    ],
+    "boundary": {
+      "unit": "JOURNEY",
+      "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+      "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+      "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+      "population": "1,000 fictional users and stipulated comparable independent journey events; many diagnostic requests."
+    },
+    "representation": "Fixed fictional count summary; request throughput is not additional journey evidence.",
+    "journeys": {
+      "started": 1000,
+      "uninterrupted": 1000,
+      "interrupted": 0,
+      "unknown": 0,
+      "originals": [],
+      "recoveries": [],
+      "accountedOutcomes": 1000,
+      "successFraction": 1,
+      "observedInterruptionFraction": 0,
+      "unknownFraction": 0,
+      "unknownExcluded": false,
+      "recoveryReplacesOriginal": false
+    },
+    "assumptions": {
+      "independent": true,
+      "comparable": true,
+      "completeObservation": true,
+      "provenByCounts": false,
+      "declaration": "Independence and comparability are stipulated for this fictional illustration, not measured or inferred from counts."
+    },
+    "confidence": {
+      "method": "one-sided 95 percent zero-failure binomial",
+      "confidenceLevel": 0.95,
+      "alpha": 0.05,
+      "targetInterruptionProbability": 0.00001,
+      "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+      "qualifyingN": null,
+      "upperInterruptionProbability": null,
+      "thresholdMet": null,
+      "status": "WRONG_DENOMINATOR",
+      "conclusion": "Wrong counting unit for the journey denominator",
+      "certification": false,
+      "countsProveAssumptions": false,
+      "illustration": {
+        "method": "one-sided 95 percent zero-failure binomial",
+        "confidenceLevel": 0.95,
+        "alpha": 0.05,
+        "targetInterruptionProbability": 0.00001,
+        "minimumN": 299572,
+        "previousN": 299571,
+        "previousUpper": 0.00001000002435092577,
+        "minimumUpper": 0.000009999990970054557,
+        "previousFails": true,
+        "minimumPasses": true,
+        "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+        "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+      }
+    },
+    "warnings": [
+      "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+      "Zero observed failures is not five-nines proof.",
+      "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+      "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+      "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+      "Wrong denominator: the selected REQUEST count cannot replace attempted transition journeys."
+    ]
+  },
+  "history": [
+    {
+      "number": 1,
+      "profileId": "request-heavy-small",
+      "basis": "REQUEST",
+      "expected": "CONDITIONAL_BOUND_MET",
+      "assessment": {
+        "schema": "S149/evidence/v1",
+        "profileId": "request-heavy-small",
+        "evidenceClass": "negative",
+        "selected": {
+          "unit": "REQUEST",
+          "count": 6000000,
+          "isJourneyDenominator": false
+        },
+        "diagnostics": [
+          {
+            "unit": "REQUEST",
+            "count": 6000000,
+            "role": "Diagnostic requests, not independent transition trials."
+          },
+          {
+            "unit": "USER",
+            "count": 1000,
+            "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+          },
+          {
+            "unit": "EVENT",
+            "count": 1000,
+            "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+          }
+        ],
+        "boundary": {
+          "unit": "JOURNEY",
+          "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+          "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+          "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+          "population": "1,000 fictional users and stipulated comparable independent journey events; many diagnostic requests."
+        },
+        "representation": "Fixed fictional count summary; request throughput is not additional journey evidence.",
+        "journeys": {
+          "started": 1000,
+          "uninterrupted": 1000,
+          "interrupted": 0,
+          "unknown": 0,
+          "originals": [],
+          "recoveries": [],
+          "accountedOutcomes": 1000,
+          "successFraction": 1,
+          "observedInterruptionFraction": 0,
+          "unknownFraction": 0,
+          "unknownExcluded": false,
+          "recoveryReplacesOriginal": false
+        },
+        "assumptions": {
+          "independent": true,
+          "comparable": true,
+          "completeObservation": true,
+          "provenByCounts": false,
+          "declaration": "Independence and comparability are stipulated for this fictional illustration, not measured or inferred from counts."
+        },
+        "confidence": {
+          "method": "one-sided 95 percent zero-failure binomial",
+          "confidenceLevel": 0.95,
+          "alpha": 0.05,
+          "targetInterruptionProbability": 0.00001,
+          "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+          "qualifyingN": null,
+          "upperInterruptionProbability": null,
+          "thresholdMet": null,
+          "status": "WRONG_DENOMINATOR",
+          "conclusion": "Wrong counting unit for the journey denominator",
+          "certification": false,
+          "countsProveAssumptions": false,
+          "illustration": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "minimumN": 299572,
+            "previousN": 299571,
+            "previousUpper": 0.00001000002435092577,
+            "minimumUpper": 0.000009999990970054557,
+            "previousFails": true,
+            "minimumPasses": true,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+          }
+        },
+        "warnings": [
+          "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+          "Zero observed failures is not five-nines proof.",
+          "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+          "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+          "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+          "Wrong denominator: the selected REQUEST count cannot replace attempted transition journeys."
+        ]
+      },
+      "result": {
+        "verdict": "FAIL",
+        "expected": "CONDITIONAL_BOUND_MET",
+        "actual": "WRONG_DENOMINATOR",
+        "matched": false
+      }
+    },
+    {
+      "number": 2,
+      "profileId": "request-heavy-small",
+      "basis": "JOURNEY",
+      "expected": "INSUFFICIENT_EVIDENCE",
+      "assessment": {
+        "schema": "S149/evidence/v1",
+        "profileId": "request-heavy-small",
+        "evidenceClass": "negative",
+        "selected": {
+          "unit": "JOURNEY",
+          "count": 1000,
+          "isJourneyDenominator": true
+        },
+        "diagnostics": [
+          {
+            "unit": "REQUEST",
+            "count": 6000000,
+            "role": "Diagnostic requests, not independent transition trials."
+          },
+          {
+            "unit": "USER",
+            "count": 1000,
+            "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+          },
+          {
+            "unit": "EVENT",
+            "count": 1000,
+            "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+          }
+        ],
+        "boundary": {
+          "unit": "JOURNEY",
+          "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+          "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+          "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+          "population": "1,000 fictional users and stipulated comparable independent journey events; many diagnostic requests."
+        },
+        "representation": "Fixed fictional count summary; request throughput is not additional journey evidence.",
+        "journeys": {
+          "started": 1000,
+          "uninterrupted": 1000,
+          "interrupted": 0,
+          "unknown": 0,
+          "originals": [],
+          "recoveries": [],
+          "accountedOutcomes": 1000,
+          "successFraction": 1,
+          "observedInterruptionFraction": 0,
+          "unknownFraction": 0,
+          "unknownExcluded": false,
+          "recoveryReplacesOriginal": false
+        },
+        "assumptions": {
+          "independent": true,
+          "comparable": true,
+          "completeObservation": true,
+          "provenByCounts": false,
+          "declaration": "Independence and comparability are stipulated for this fictional illustration, not measured or inferred from counts."
+        },
+        "confidence": {
+          "method": "one-sided 95 percent zero-failure binomial",
+          "confidenceLevel": 0.95,
+          "alpha": 0.05,
+          "targetInterruptionProbability": 0.00001,
+          "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+          "qualifyingN": 1000,
+          "upperInterruptionProbability": 0.002991249545095296,
+          "thresholdMet": false,
+          "status": "INSUFFICIENT_EVIDENCE",
+          "conclusion": "Insufficient qualifying sample",
+          "certification": false,
+          "countsProveAssumptions": false,
+          "illustration": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "minimumN": 299572,
+            "previousN": 299571,
+            "previousUpper": 0.00001000002435092577,
+            "minimumUpper": 0.000009999990970054557,
+            "previousFails": true,
+            "minimumPasses": true,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+          }
+        },
+        "warnings": [
+          "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+          "Zero observed failures is not five-nines proof.",
+          "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+          "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+          "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+          "Insufficient evidence: 1,000 qualifying fictional journeys fall short of the illustrative minimum 299,572.",
+          "This bound is conditional on explicitly stipulated independence, comparability and complete observation; none is proven by counts here."
+        ]
+      },
+      "result": {
+        "verdict": "PASS",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "actual": "INSUFFICIENT_EVIDENCE",
+        "matched": true
+      }
+    },
+    {
+      "number": 3,
+      "profileId": "correlated-single-event",
+      "basis": "REQUEST",
+      "expected": "WRONG_DENOMINATOR",
+      "assessment": {
+        "schema": "S149/evidence/v1",
+        "profileId": "correlated-single-event",
+        "evidenceClass": "unknown",
+        "selected": {
+          "unit": "REQUEST",
+          "count": 5991440,
+          "isJourneyDenominator": false
+        },
+        "diagnostics": [
+          {
+            "unit": "REQUEST",
+            "count": 5991440,
+            "role": "Diagnostic requests, not independent transition trials."
+          },
+          {
+            "unit": "USER",
+            "count": 149786,
+            "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+          },
+          {
+            "unit": "EVENT",
+            "count": 1,
+            "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+          }
+        ],
+        "boundary": {
+          "unit": "JOURNEY",
+          "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+          "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+          "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+          "population": "149,786 fictional users with two journeys each in one shared transition event."
+        },
+        "representation": "Fixed fictional count summary with explicit dependence; no effective independent n is invented.",
+        "journeys": {
+          "started": 299572,
+          "uninterrupted": 299572,
+          "interrupted": 0,
+          "unknown": 0,
+          "originals": [],
+          "recoveries": [],
+          "accountedOutcomes": 299572,
+          "successFraction": 1,
+          "observedInterruptionFraction": 0,
+          "unknownFraction": 0,
+          "unknownExcluded": false,
+          "recoveryReplacesOriginal": false
+        },
+        "assumptions": {
+          "independent": false,
+          "comparable": true,
+          "completeObservation": true,
+          "provenByCounts": false,
+          "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+        },
+        "confidence": {
+          "method": "one-sided 95 percent zero-failure binomial",
+          "confidenceLevel": 0.95,
+          "alpha": 0.05,
+          "targetInterruptionProbability": 0.00001,
+          "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+          "qualifyingN": null,
+          "upperInterruptionProbability": null,
+          "thresholdMet": null,
+          "status": "WRONG_DENOMINATOR",
+          "conclusion": "Wrong counting unit for the journey denominator",
+          "certification": false,
+          "countsProveAssumptions": false,
+          "illustration": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "minimumN": 299572,
+            "previousN": 299571,
+            "previousUpper": 0.00001000002435092577,
+            "minimumUpper": 0.000009999990970054557,
+            "previousFails": true,
+            "minimumPasses": true,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+          }
+        },
+        "warnings": [
+          "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+          "Zero observed failures is not five-nines proof.",
+          "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+          "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+          "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+          "Wrong denominator: the selected REQUEST count cannot replace attempted transition journeys.",
+          "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+        ]
+      },
+      "result": {
+        "verdict": "PASS",
+        "expected": "WRONG_DENOMINATOR",
+        "actual": "WRONG_DENOMINATOR",
+        "matched": true
+      }
+    },
+    {
+      "number": 4,
+      "profileId": "correlated-single-event",
+      "basis": "USER",
+      "expected": "WRONG_DENOMINATOR",
+      "assessment": {
+        "schema": "S149/evidence/v1",
+        "profileId": "correlated-single-event",
+        "evidenceClass": "unknown",
+        "selected": {
+          "unit": "USER",
+          "count": 149786,
+          "isJourneyDenominator": false
+        },
+        "diagnostics": [
+          {
+            "unit": "REQUEST",
+            "count": 5991440,
+            "role": "Diagnostic requests, not independent transition trials."
+          },
+          {
+            "unit": "USER",
+            "count": 149786,
+            "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+          },
+          {
+            "unit": "EVENT",
+            "count": 1,
+            "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+          }
+        ],
+        "boundary": {
+          "unit": "JOURNEY",
+          "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+          "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+          "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+          "population": "149,786 fictional users with two journeys each in one shared transition event."
+        },
+        "representation": "Fixed fictional count summary with explicit dependence; no effective independent n is invented.",
+        "journeys": {
+          "started": 299572,
+          "uninterrupted": 299572,
+          "interrupted": 0,
+          "unknown": 0,
+          "originals": [],
+          "recoveries": [],
+          "accountedOutcomes": 299572,
+          "successFraction": 1,
+          "observedInterruptionFraction": 0,
+          "unknownFraction": 0,
+          "unknownExcluded": false,
+          "recoveryReplacesOriginal": false
+        },
+        "assumptions": {
+          "independent": false,
+          "comparable": true,
+          "completeObservation": true,
+          "provenByCounts": false,
+          "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+        },
+        "confidence": {
+          "method": "one-sided 95 percent zero-failure binomial",
+          "confidenceLevel": 0.95,
+          "alpha": 0.05,
+          "targetInterruptionProbability": 0.00001,
+          "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+          "qualifyingN": null,
+          "upperInterruptionProbability": null,
+          "thresholdMet": null,
+          "status": "WRONG_DENOMINATOR",
+          "conclusion": "Wrong counting unit for the journey denominator",
+          "certification": false,
+          "countsProveAssumptions": false,
+          "illustration": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "minimumN": 299572,
+            "previousN": 299571,
+            "previousUpper": 0.00001000002435092577,
+            "minimumUpper": 0.000009999990970054557,
+            "previousFails": true,
+            "minimumPasses": true,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+          }
+        },
+        "warnings": [
+          "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+          "Zero observed failures is not five-nines proof.",
+          "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+          "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+          "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+          "Wrong denominator: the selected USER count cannot replace attempted transition journeys.",
+          "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+        ]
+      },
+      "result": {
+        "verdict": "PASS",
+        "expected": "WRONG_DENOMINATOR",
+        "actual": "WRONG_DENOMINATOR",
+        "matched": true
+      }
+    },
+    {
+      "number": 5,
+      "profileId": "correlated-single-event",
+      "basis": "EVENT",
+      "expected": "WRONG_DENOMINATOR",
+      "assessment": {
+        "schema": "S149/evidence/v1",
+        "profileId": "correlated-single-event",
+        "evidenceClass": "unknown",
+        "selected": {
+          "unit": "EVENT",
+          "count": 1,
+          "isJourneyDenominator": false
+        },
+        "diagnostics": [
+          {
+            "unit": "REQUEST",
+            "count": 5991440,
+            "role": "Diagnostic requests, not independent transition trials."
+          },
+          {
+            "unit": "USER",
+            "count": 149786,
+            "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+          },
+          {
+            "unit": "EVENT",
+            "count": 1,
+            "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+          }
+        ],
+        "boundary": {
+          "unit": "JOURNEY",
+          "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+          "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+          "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+          "population": "149,786 fictional users with two journeys each in one shared transition event."
+        },
+        "representation": "Fixed fictional count summary with explicit dependence; no effective independent n is invented.",
+        "journeys": {
+          "started": 299572,
+          "uninterrupted": 299572,
+          "interrupted": 0,
+          "unknown": 0,
+          "originals": [],
+          "recoveries": [],
+          "accountedOutcomes": 299572,
+          "successFraction": 1,
+          "observedInterruptionFraction": 0,
+          "unknownFraction": 0,
+          "unknownExcluded": false,
+          "recoveryReplacesOriginal": false
+        },
+        "assumptions": {
+          "independent": false,
+          "comparable": true,
+          "completeObservation": true,
+          "provenByCounts": false,
+          "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+        },
+        "confidence": {
+          "method": "one-sided 95 percent zero-failure binomial",
+          "confidenceLevel": 0.95,
+          "alpha": 0.05,
+          "targetInterruptionProbability": 0.00001,
+          "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+          "qualifyingN": null,
+          "upperInterruptionProbability": null,
+          "thresholdMet": null,
+          "status": "WRONG_DENOMINATOR",
+          "conclusion": "Wrong counting unit for the journey denominator",
+          "certification": false,
+          "countsProveAssumptions": false,
+          "illustration": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "minimumN": 299572,
+            "previousN": 299571,
+            "previousUpper": 0.00001000002435092577,
+            "minimumUpper": 0.000009999990970054557,
+            "previousFails": true,
+            "minimumPasses": true,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+          }
+        },
+        "warnings": [
+          "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+          "Zero observed failures is not five-nines proof.",
+          "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+          "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+          "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+          "Wrong denominator: the selected EVENT count cannot replace attempted transition journeys.",
+          "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+        ]
+      },
+      "result": {
+        "verdict": "PASS",
+        "expected": "WRONG_DENOMINATOR",
+        "actual": "WRONG_DENOMINATOR",
+        "matched": true
+      }
+    },
+    {
+      "number": 6,
+      "profileId": "correlated-single-event",
+      "basis": "JOURNEY",
+      "expected": "ASSUMPTIONS_UNQUALIFIED",
+      "assessment": {
+        "schema": "S149/evidence/v1",
+        "profileId": "correlated-single-event",
+        "evidenceClass": "unknown",
+        "selected": {
+          "unit": "JOURNEY",
+          "count": 299572,
+          "isJourneyDenominator": true
+        },
+        "diagnostics": [
+          {
+            "unit": "REQUEST",
+            "count": 5991440,
+            "role": "Diagnostic requests, not independent transition trials."
+          },
+          {
+            "unit": "USER",
+            "count": 149786,
+            "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+          },
+          {
+            "unit": "EVENT",
+            "count": 1,
+            "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+          }
+        ],
+        "boundary": {
+          "unit": "JOURNEY",
+          "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+          "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+          "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+          "population": "149,786 fictional users with two journeys each in one shared transition event."
+        },
+        "representation": "Fixed fictional count summary with explicit dependence; no effective independent n is invented.",
+        "journeys": {
+          "started": 299572,
+          "uninterrupted": 299572,
+          "interrupted": 0,
+          "unknown": 0,
+          "originals": [],
+          "recoveries": [],
+          "accountedOutcomes": 299572,
+          "successFraction": 1,
+          "observedInterruptionFraction": 0,
+          "unknownFraction": 0,
+          "unknownExcluded": false,
+          "recoveryReplacesOriginal": false
+        },
+        "assumptions": {
+          "independent": false,
+          "comparable": true,
+          "completeObservation": true,
+          "provenByCounts": false,
+          "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+        },
+        "confidence": {
+          "method": "one-sided 95 percent zero-failure binomial",
+          "confidenceLevel": 0.95,
+          "alpha": 0.05,
+          "targetInterruptionProbability": 0.00001,
+          "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+          "qualifyingN": null,
+          "upperInterruptionProbability": null,
+          "thresholdMet": null,
+          "status": "ASSUMPTIONS_UNQUALIFIED",
+          "conclusion": "Independence or comparability unqualified",
+          "certification": false,
+          "countsProveAssumptions": false,
+          "illustration": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "minimumN": 299572,
+            "previousN": 299571,
+            "previousUpper": 0.00001000002435092577,
+            "minimumUpper": 0.000009999990970054557,
+            "previousFails": true,
+            "minimumPasses": true,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+          }
+        },
+        "warnings": [
+          "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+          "Zero observed failures is not five-nines proof.",
+          "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+          "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+          "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+          "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+        ]
+      },
+      "result": {
+        "verdict": "PASS",
+        "expected": "ASSUMPTIONS_UNQUALIFIED",
+        "actual": "ASSUMPTIONS_UNQUALIFIED",
+        "matched": true
+      }
+    },
+    {
+      "number": 7,
+      "profileId": "qualified-one-short",
+      "basis": "JOURNEY",
+      "expected": "INSUFFICIENT_EVIDENCE",
+      "assessment": {
+        "schema": "S149/evidence/v1",
+        "profileId": "qualified-one-short",
+        "evidenceClass": "negative",
+        "selected": {
+          "unit": "JOURNEY",
+          "count": 299571,
+          "isJourneyDenominator": true
+        },
+        "diagnostics": [
+          {
+            "unit": "REQUEST",
+            "count": 5991420,
+            "role": "Diagnostic requests, not independent transition trials."
+          },
+          {
+            "unit": "USER",
+            "count": 299571,
+            "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+          },
+          {
+            "unit": "EVENT",
+            "count": 299571,
+            "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+          }
+        ],
+        "boundary": {
+          "unit": "JOURNEY",
+          "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+          "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+          "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+          "population": "299,571 fictional distinct users, one journey in each stipulated independent comparable event."
+        },
+        "representation": "Fixed fictional count summary only; no individual trials are generated, executed or observed.",
+        "journeys": {
+          "started": 299571,
+          "uninterrupted": 299571,
+          "interrupted": 0,
+          "unknown": 0,
+          "originals": [],
+          "recoveries": [],
+          "accountedOutcomes": 299571,
+          "successFraction": 1,
+          "observedInterruptionFraction": 0,
+          "unknownFraction": 0,
+          "unknownExcluded": false,
+          "recoveryReplacesOriginal": false
+        },
+        "assumptions": {
+          "independent": true,
+          "comparable": true,
+          "completeObservation": true,
+          "provenByCounts": false,
+          "declaration": "Independence and comparability are stipulated for this fictional illustration, not measured or inferred from counts."
+        },
+        "confidence": {
+          "method": "one-sided 95 percent zero-failure binomial",
+          "confidenceLevel": 0.95,
+          "alpha": 0.05,
+          "targetInterruptionProbability": 0.00001,
+          "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+          "qualifyingN": 299571,
+          "upperInterruptionProbability": 0.00001000002435092577,
+          "thresholdMet": false,
+          "status": "INSUFFICIENT_EVIDENCE",
+          "conclusion": "Insufficient qualifying sample",
+          "certification": false,
+          "countsProveAssumptions": false,
+          "illustration": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "minimumN": 299572,
+            "previousN": 299571,
+            "previousUpper": 0.00001000002435092577,
+            "minimumUpper": 0.000009999990970054557,
+            "previousFails": true,
+            "minimumPasses": true,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+          }
+        },
+        "warnings": [
+          "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+          "Zero observed failures is not five-nines proof.",
+          "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+          "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+          "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+          "Insufficient evidence: 299,571 qualifying fictional journeys fall short of the illustrative minimum 299,572.",
+          "This bound is conditional on explicitly stipulated independence, comparability and complete observation; none is proven by counts here."
+        ]
+      },
+      "result": {
+        "verdict": "PASS",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "actual": "INSUFFICIENT_EVIDENCE",
+        "matched": true
+      }
+    },
+    {
+      "number": 8,
+      "profileId": "qualified-minimum",
+      "basis": "JOURNEY",
+      "expected": "CONDITIONAL_BOUND_MET",
+      "assessment": {
+        "schema": "S149/evidence/v1",
+        "profileId": "qualified-minimum",
+        "evidenceClass": "positive",
+        "selected": {
+          "unit": "JOURNEY",
+          "count": 299572,
+          "isJourneyDenominator": true
+        },
+        "diagnostics": [
+          {
+            "unit": "REQUEST",
+            "count": 5991440,
+            "role": "Diagnostic requests, not independent transition trials."
+          },
+          {
+            "unit": "USER",
+            "count": 299572,
+            "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+          },
+          {
+            "unit": "EVENT",
+            "count": 299572,
+            "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+          }
+        ],
+        "boundary": {
+          "unit": "JOURNEY",
+          "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+          "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+          "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+          "population": "299,572 fictional distinct users, one journey in each stipulated independent comparable event."
+        },
+        "representation": "Fixed fictional count summary only; no individual trials are generated, executed or observed.",
+        "journeys": {
+          "started": 299572,
+          "uninterrupted": 299572,
+          "interrupted": 0,
+          "unknown": 0,
+          "originals": [],
+          "recoveries": [],
+          "accountedOutcomes": 299572,
+          "successFraction": 1,
+          "observedInterruptionFraction": 0,
+          "unknownFraction": 0,
+          "unknownExcluded": false,
+          "recoveryReplacesOriginal": false
+        },
+        "assumptions": {
+          "independent": true,
+          "comparable": true,
+          "completeObservation": true,
+          "provenByCounts": false,
+          "declaration": "Independence and comparability are stipulated for this fictional illustration, not measured or inferred from counts."
+        },
+        "confidence": {
+          "method": "one-sided 95 percent zero-failure binomial",
+          "confidenceLevel": 0.95,
+          "alpha": 0.05,
+          "targetInterruptionProbability": 0.00001,
+          "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+          "qualifyingN": 299572,
+          "upperInterruptionProbability": 0.000009999990970054557,
+          "thresholdMet": true,
+          "status": "CONDITIONAL_BOUND_MET",
+          "conclusion": "Conditional illustrative bound met — not certification",
+          "certification": false,
+          "countsProveAssumptions": false,
+          "illustration": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "minimumN": 299572,
+            "previousN": 299571,
+            "previousUpper": 0.00001000002435092577,
+            "minimumUpper": 0.000009999990970054557,
+            "previousFails": true,
+            "minimumPasses": true,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+          }
+        },
+        "warnings": [
+          "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+          "Zero observed failures is not five-nines proof.",
+          "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+          "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+          "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+          "This bound is conditional on explicitly stipulated independence, comparability and complete observation; none is proven by counts here."
+        ]
+      },
+      "result": {
+        "verdict": "PASS",
+        "expected": "CONDITIONAL_BOUND_MET",
+        "actual": "CONDITIONAL_BOUND_MET",
+        "matched": true
+      }
+    },
+    {
+      "number": 9,
+      "profileId": "incomparable-contexts",
+      "basis": "JOURNEY",
+      "expected": "ASSUMPTIONS_UNQUALIFIED",
+      "assessment": {
+        "schema": "S149/evidence/v1",
+        "profileId": "incomparable-contexts",
+        "evidenceClass": "unknown",
+        "selected": {
+          "unit": "JOURNEY",
+          "count": 299572,
+          "isJourneyDenominator": true
+        },
+        "diagnostics": [
+          {
+            "unit": "REQUEST",
+            "count": 5991440,
+            "role": "Diagnostic requests, not independent transition trials."
+          },
+          {
+            "unit": "USER",
+            "count": 299572,
+            "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+          },
+          {
+            "unit": "EVENT",
+            "count": 299572,
+            "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+          }
+        ],
+        "boundary": {
+          "unit": "JOURNEY",
+          "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+          "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+          "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+          "population": "Fictional host, protocol and cohort contexts with no established comparable observation contract."
+        },
+        "representation": "Fixed fictional count summary; distinct events alone do not prove comparable Bernoulli trials.",
+        "journeys": {
+          "started": 299572,
+          "uninterrupted": 299572,
+          "interrupted": 0,
+          "unknown": 0,
+          "originals": [],
+          "recoveries": [],
+          "accountedOutcomes": 299572,
+          "successFraction": 1,
+          "observedInterruptionFraction": 0,
+          "unknownFraction": 0,
+          "unknownExcluded": false,
+          "recoveryReplacesOriginal": false
+        },
+        "assumptions": {
+          "independent": true,
+          "comparable": false,
+          "completeObservation": true,
+          "provenByCounts": false,
+          "declaration": "Fictional host/protocol/cohort contexts differ; comparability is explicitly unqualified."
+        },
+        "confidence": {
+          "method": "one-sided 95 percent zero-failure binomial",
+          "confidenceLevel": 0.95,
+          "alpha": 0.05,
+          "targetInterruptionProbability": 0.00001,
+          "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+          "qualifyingN": null,
+          "upperInterruptionProbability": null,
+          "thresholdMet": null,
+          "status": "ASSUMPTIONS_UNQUALIFIED",
+          "conclusion": "Independence or comparability unqualified",
+          "certification": false,
+          "countsProveAssumptions": false,
+          "illustration": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "minimumN": 299572,
+            "previousN": 299571,
+            "previousUpper": 0.00001000002435092577,
+            "minimumUpper": 0.000009999990970054557,
+            "previousFails": true,
+            "minimumPasses": true,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+          }
+        },
+        "warnings": [
+          "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+          "Zero observed failures is not five-nines proof.",
+          "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+          "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+          "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+          "Insufficient evidence: contexts are not comparable; a large event count does not establish applicability."
+        ]
+      },
+      "result": {
+        "verdict": "PASS",
+        "expected": "ASSUMPTIONS_UNQUALIFIED",
+        "actual": "ASSUMPTIONS_UNQUALIFIED",
+        "matched": true
+      }
+    },
+    {
+      "number": 10,
+      "profileId": "unknown-recovered",
+      "basis": "JOURNEY",
+      "expected": "UNKNOWN_EVIDENCE",
+      "assessment": {
+        "schema": "S149/evidence/v1",
+        "profileId": "unknown-recovered",
+        "evidenceClass": "unknown",
+        "selected": {
+          "unit": "JOURNEY",
+          "count": 4,
+          "isJourneyDenominator": true
+        },
+        "diagnostics": [
+          {
+            "unit": "REQUEST",
+            "count": 80,
+            "role": "Diagnostic requests, not independent transition trials."
+          },
+          {
+            "unit": "USER",
+            "count": 4,
+            "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+          },
+          {
+            "unit": "EVENT",
+            "count": 1,
+            "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+          }
+        ],
+        "boundary": {
+          "unit": "JOURNEY",
+          "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+          "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+          "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+          "population": "Four fictional original journeys; one original outcome remains unobserved."
+        },
+        "representation": "Four fixed original outcome records; later usability cannot fill the missing original outcome.",
+        "journeys": {
+          "started": 4,
+          "uninterrupted": 3,
+          "interrupted": 0,
+          "unknown": 1,
+          "originals": [
+            {
+              "id": "J149-1",
+              "outcome": "uninterrupted",
+              "reason": "Complete original fictional journey met all declared criteria."
+            },
+            {
+              "id": "J149-2",
+              "outcome": "unknown",
+              "reason": "Original started outcome was not observed."
+            },
+            {
+              "id": "J149-3",
+              "outcome": "uninterrupted",
+              "reason": "Complete original fictional journey met all declared criteria."
+            },
+            {
+              "id": "J149-4",
+              "outcome": "uninterrupted",
+              "reason": "Complete original fictional journey met all declared criteria."
+            }
+          ],
+          "recoveries": [
+            {
+              "originalId": "J149-2",
+              "laterOutcome": "uninterrupted",
+              "countsAsOriginalSuccess": false
+            }
+          ],
+          "accountedOutcomes": 4,
+          "successFraction": 0.75,
+          "observedInterruptionFraction": 0,
+          "unknownFraction": 0.25,
+          "unknownExcluded": false,
+          "recoveryReplacesOriginal": false
+        },
+        "assumptions": {
+          "independent": false,
+          "comparable": true,
+          "completeObservation": false,
+          "provenByCounts": false,
+          "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+        },
+        "confidence": {
+          "method": "one-sided 95 percent zero-failure binomial",
+          "confidenceLevel": 0.95,
+          "alpha": 0.05,
+          "targetInterruptionProbability": 0.00001,
+          "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+          "qualifyingN": null,
+          "upperInterruptionProbability": null,
+          "thresholdMet": null,
+          "status": "UNKNOWN_EVIDENCE",
+          "conclusion": "Unknown started outcome retained",
+          "certification": false,
+          "countsProveAssumptions": false,
+          "illustration": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "minimumN": 299572,
+            "previousN": 299571,
+            "previousUpper": 0.00001000002435092577,
+            "minimumUpper": 0.000009999990970054557,
+            "previousFails": true,
+            "minimumPasses": true,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+          }
+        },
+        "warnings": [
+          "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+          "Zero observed failures is not five-nines proof.",
+          "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+          "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+          "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+          "Insufficient evidence: unknown started outcomes remain counted; complete observation is unqualified.",
+          "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+        ]
+      },
+      "result": {
+        "verdict": "PASS",
+        "expected": "UNKNOWN_EVIDENCE",
+        "actual": "UNKNOWN_EVIDENCE",
+        "matched": true
+      }
+    },
+    {
+      "number": 11,
+      "profileId": "interrupted-recovered",
+      "basis": "JOURNEY",
+      "expected": "OBSERVED_INTERRUPTION",
+      "assessment": {
+        "schema": "S149/evidence/v1",
+        "profileId": "interrupted-recovered",
+        "evidenceClass": "negative",
+        "selected": {
+          "unit": "JOURNEY",
+          "count": 4,
+          "isJourneyDenominator": true
+        },
+        "diagnostics": [
+          {
+            "unit": "REQUEST",
+            "count": 80,
+            "role": "Diagnostic requests, not independent transition trials."
+          },
+          {
+            "unit": "USER",
+            "count": 4,
+            "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+          },
+          {
+            "unit": "EVENT",
+            "count": 1,
+            "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+          }
+        ],
+        "boundary": {
+          "unit": "JOURNEY",
+          "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+          "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+          "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+          "population": "Four fictional original journeys crossing one shared event."
+        },
+        "representation": "Four fixed original outcome records and one separate later usability record.",
+        "journeys": {
+          "started": 4,
+          "uninterrupted": 3,
+          "interrupted": 1,
+          "unknown": 0,
+          "originals": [
+            {
+              "id": "J149-1",
+              "outcome": "uninterrupted",
+              "reason": "Complete original fictional journey met all declared criteria."
+            },
+            {
+              "id": "J149-2",
+              "outcome": "interrupted",
+              "reason": "Original fictional timeout exceeded its declared journey budget."
+            },
+            {
+              "id": "J149-3",
+              "outcome": "uninterrupted",
+              "reason": "Complete original fictional journey met all declared criteria."
+            },
+            {
+              "id": "J149-4",
+              "outcome": "uninterrupted",
+              "reason": "Complete original fictional journey met all declared criteria."
+            }
+          ],
+          "recoveries": [
+            {
+              "originalId": "J149-2",
+              "laterOutcome": "uninterrupted",
+              "countsAsOriginalSuccess": false
+            }
+          ],
+          "accountedOutcomes": 4,
+          "successFraction": 0.75,
+          "observedInterruptionFraction": 0.25,
+          "unknownFraction": 0,
+          "unknownExcluded": false,
+          "recoveryReplacesOriginal": false
+        },
+        "assumptions": {
+          "independent": false,
+          "comparable": true,
+          "completeObservation": true,
+          "provenByCounts": false,
+          "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+        },
+        "confidence": {
+          "method": "one-sided 95 percent zero-failure binomial",
+          "confidenceLevel": 0.95,
+          "alpha": 0.05,
+          "targetInterruptionProbability": 0.00001,
+          "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+          "qualifyingN": null,
+          "upperInterruptionProbability": null,
+          "thresholdMet": null,
+          "status": "OBSERVED_INTERRUPTION",
+          "conclusion": "Original interruption retained",
+          "certification": false,
+          "countsProveAssumptions": false,
+          "illustration": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "minimumN": 299572,
+            "previousN": 299571,
+            "previousUpper": 0.00001000002435092577,
+            "minimumUpper": 0.000009999990970054557,
+            "previousFails": true,
+            "minimumPasses": true,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+          }
+        },
+        "warnings": [
+          "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+          "Zero observed failures is not five-nines proof.",
+          "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+          "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+          "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+          "An original interruption remains counted after later recovery; the zero-failure bound is inapplicable.",
+          "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+        ]
+      },
+      "result": {
+        "verdict": "PASS",
+        "expected": "OBSERVED_INTERRUPTION",
+        "actual": "OBSERVED_INTERRUPTION",
+        "matched": true
+      }
+    },
+    {
+      "number": 12,
+      "profileId": "failure-and-unknown",
+      "basis": "JOURNEY",
+      "expected": "OBSERVED_INTERRUPTION",
+      "assessment": {
+        "schema": "S149/evidence/v1",
+        "profileId": "failure-and-unknown",
+        "evidenceClass": "negative",
+        "selected": {
+          "unit": "JOURNEY",
+          "count": 4,
+          "isJourneyDenominator": true
+        },
+        "diagnostics": [
+          {
+            "unit": "REQUEST",
+            "count": 80,
+            "role": "Diagnostic requests, not independent transition trials."
+          },
+          {
+            "unit": "USER",
+            "count": 4,
+            "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+          },
+          {
+            "unit": "EVENT",
+            "count": 1,
+            "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+          }
+        ],
+        "boundary": {
+          "unit": "JOURNEY",
+          "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+          "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+          "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+          "population": "Four fictional original journeys; interruption and missing outcome coexist."
+        },
+        "representation": "Four fixed original outcomes; a known interruption does not erase the separate uncertainty.",
+        "journeys": {
+          "started": 4,
+          "uninterrupted": 2,
+          "interrupted": 1,
+          "unknown": 1,
+          "originals": [
+            {
+              "id": "J149-1",
+              "outcome": "uninterrupted",
+              "reason": "Complete original fictional journey met all declared criteria."
+            },
+            {
+              "id": "J149-2",
+              "outcome": "interrupted",
+              "reason": "Original fictional timeout exceeded its declared journey budget."
+            },
+            {
+              "id": "J149-3",
+              "outcome": "uninterrupted",
+              "reason": "Complete original fictional journey met all declared criteria."
+            },
+            {
+              "id": "J149-4",
+              "outcome": "unknown",
+              "reason": "Original started outcome was not observed."
+            }
+          ],
+          "recoveries": [
+            {
+              "originalId": "J149-2",
+              "laterOutcome": "uninterrupted",
+              "countsAsOriginalSuccess": false
+            }
+          ],
+          "accountedOutcomes": 4,
+          "successFraction": 0.5,
+          "observedInterruptionFraction": 0.25,
+          "unknownFraction": 0.25,
+          "unknownExcluded": false,
+          "recoveryReplacesOriginal": false
+        },
+        "assumptions": {
+          "independent": false,
+          "comparable": true,
+          "completeObservation": false,
+          "provenByCounts": false,
+          "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+        },
+        "confidence": {
+          "method": "one-sided 95 percent zero-failure binomial",
+          "confidenceLevel": 0.95,
+          "alpha": 0.05,
+          "targetInterruptionProbability": 0.00001,
+          "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+          "qualifyingN": null,
+          "upperInterruptionProbability": null,
+          "thresholdMet": null,
+          "status": "OBSERVED_INTERRUPTION",
+          "conclusion": "Original interruption retained",
+          "certification": false,
+          "countsProveAssumptions": false,
+          "illustration": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "minimumN": 299572,
+            "previousN": 299571,
+            "previousUpper": 0.00001000002435092577,
+            "minimumUpper": 0.000009999990970054557,
+            "previousFails": true,
+            "minimumPasses": true,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+          }
+        },
+        "warnings": [
+          "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+          "Zero observed failures is not five-nines proof.",
+          "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+          "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+          "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+          "An original interruption remains counted after later recovery; the zero-failure bound is inapplicable.",
+          "Insufficient evidence: unknown started outcomes remain counted; complete observation is unqualified.",
+          "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+        ]
+      },
+      "result": {
+        "verdict": "PASS",
+        "expected": "OBSERVED_INTERRUPTION",
+        "actual": "OBSERVED_INTERRUPTION",
+        "matched": true
+      }
+    }
+  ],
+  "journal": [
+    {
+      "seq": 1,
+      "action": "select",
+      "profileId": "request-heavy-small",
+      "basis": "REQUEST",
+      "expected": "CONDITIONAL_BOUND_MET"
+    },
+    {
+      "seq": 2,
+      "action": "check"
+    },
+    {
+      "seq": 3,
+      "action": "reset"
+    },
+    {
+      "seq": 4,
+      "action": "select",
+      "profileId": "request-heavy-small",
+      "basis": "JOURNEY",
+      "expected": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "seq": 5,
+      "action": "check"
+    },
+    {
+      "seq": 6,
+      "action": "reset"
+    },
+    {
+      "seq": 7,
+      "action": "select",
+      "profileId": "correlated-single-event",
+      "basis": "REQUEST",
+      "expected": "WRONG_DENOMINATOR"
+    },
+    {
+      "seq": 8,
+      "action": "check"
+    },
+    {
+      "seq": 9,
+      "action": "reset"
+    },
+    {
+      "seq": 10,
+      "action": "select",
+      "profileId": "correlated-single-event",
+      "basis": "USER",
+      "expected": "WRONG_DENOMINATOR"
+    },
+    {
+      "seq": 11,
+      "action": "check"
+    },
+    {
+      "seq": 12,
+      "action": "reset"
+    },
+    {
+      "seq": 13,
+      "action": "select",
+      "profileId": "correlated-single-event",
+      "basis": "EVENT",
+      "expected": "WRONG_DENOMINATOR"
+    },
+    {
+      "seq": 14,
+      "action": "check"
+    },
+    {
+      "seq": 15,
+      "action": "reset"
+    },
+    {
+      "seq": 16,
+      "action": "select",
+      "profileId": "correlated-single-event",
+      "basis": "JOURNEY",
+      "expected": "ASSUMPTIONS_UNQUALIFIED"
+    },
+    {
+      "seq": 17,
+      "action": "check"
+    },
+    {
+      "seq": 18,
+      "action": "reset"
+    },
+    {
+      "seq": 19,
+      "action": "select",
+      "profileId": "qualified-one-short",
+      "basis": "JOURNEY",
+      "expected": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "seq": 20,
+      "action": "check"
+    },
+    {
+      "seq": 21,
+      "action": "reset"
+    },
+    {
+      "seq": 22,
+      "action": "select",
+      "profileId": "qualified-minimum",
+      "basis": "JOURNEY",
+      "expected": "CONDITIONAL_BOUND_MET"
+    },
+    {
+      "seq": 23,
+      "action": "check"
+    },
+    {
+      "seq": 24,
+      "action": "reset"
+    },
+    {
+      "seq": 25,
+      "action": "select",
+      "profileId": "incomparable-contexts",
+      "basis": "JOURNEY",
+      "expected": "ASSUMPTIONS_UNQUALIFIED"
+    },
+    {
+      "seq": 26,
+      "action": "check"
+    },
+    {
+      "seq": 27,
+      "action": "reset"
+    },
+    {
+      "seq": 28,
+      "action": "select",
+      "profileId": "unknown-recovered",
+      "basis": "JOURNEY",
+      "expected": "UNKNOWN_EVIDENCE"
+    },
+    {
+      "seq": 29,
+      "action": "check"
+    },
+    {
+      "seq": 30,
+      "action": "reset"
+    },
+    {
+      "seq": 31,
+      "action": "select",
+      "profileId": "interrupted-recovered",
+      "basis": "JOURNEY",
+      "expected": "OBSERVED_INTERRUPTION"
+    },
+    {
+      "seq": 32,
+      "action": "check"
+    },
+    {
+      "seq": 33,
+      "action": "reset"
+    },
+    {
+      "seq": 34,
+      "action": "select",
+      "profileId": "failure-and-unknown",
+      "basis": "JOURNEY",
+      "expected": "OBSERVED_INTERRUPTION"
+    },
+    {
+      "seq": 35,
+      "action": "check"
+    },
+    {
+      "seq": 36,
+      "action": "reset"
+    }
+  ],
+  "retainedSession": {
+    "schema": "S149/session/v1",
+    "revision": 36,
+    "journal": [
+      {
+        "seq": 1,
+        "action": "select",
+        "profileId": "request-heavy-small",
+        "basis": "REQUEST",
+        "expected": "CONDITIONAL_BOUND_MET"
+      },
+      {
+        "seq": 2,
+        "action": "check"
+      },
+      {
+        "seq": 3,
+        "action": "reset"
+      },
+      {
+        "seq": 4,
+        "action": "select",
+        "profileId": "request-heavy-small",
+        "basis": "JOURNEY",
+        "expected": "INSUFFICIENT_EVIDENCE"
+      },
+      {
+        "seq": 5,
+        "action": "check"
+      },
+      {
+        "seq": 6,
+        "action": "reset"
+      },
+      {
+        "seq": 7,
+        "action": "select",
+        "profileId": "correlated-single-event",
+        "basis": "REQUEST",
+        "expected": "WRONG_DENOMINATOR"
+      },
+      {
+        "seq": 8,
+        "action": "check"
+      },
+      {
+        "seq": 9,
+        "action": "reset"
+      },
+      {
+        "seq": 10,
+        "action": "select",
+        "profileId": "correlated-single-event",
+        "basis": "USER",
+        "expected": "WRONG_DENOMINATOR"
+      },
+      {
+        "seq": 11,
+        "action": "check"
+      },
+      {
+        "seq": 12,
+        "action": "reset"
+      },
+      {
+        "seq": 13,
+        "action": "select",
+        "profileId": "correlated-single-event",
+        "basis": "EVENT",
+        "expected": "WRONG_DENOMINATOR"
+      },
+      {
+        "seq": 14,
+        "action": "check"
+      },
+      {
+        "seq": 15,
+        "action": "reset"
+      },
+      {
+        "seq": 16,
+        "action": "select",
+        "profileId": "correlated-single-event",
+        "basis": "JOURNEY",
+        "expected": "ASSUMPTIONS_UNQUALIFIED"
+      },
+      {
+        "seq": 17,
+        "action": "check"
+      },
+      {
+        "seq": 18,
+        "action": "reset"
+      },
+      {
+        "seq": 19,
+        "action": "select",
+        "profileId": "qualified-one-short",
+        "basis": "JOURNEY",
+        "expected": "INSUFFICIENT_EVIDENCE"
+      },
+      {
+        "seq": 20,
+        "action": "check"
+      },
+      {
+        "seq": 21,
+        "action": "reset"
+      },
+      {
+        "seq": 22,
+        "action": "select",
+        "profileId": "qualified-minimum",
+        "basis": "JOURNEY",
+        "expected": "CONDITIONAL_BOUND_MET"
+      },
+      {
+        "seq": 23,
+        "action": "check"
+      },
+      {
+        "seq": 24,
+        "action": "reset"
+      },
+      {
+        "seq": 25,
+        "action": "select",
+        "profileId": "incomparable-contexts",
+        "basis": "JOURNEY",
+        "expected": "ASSUMPTIONS_UNQUALIFIED"
+      },
+      {
+        "seq": 26,
+        "action": "check"
+      },
+      {
+        "seq": 27,
+        "action": "reset"
+      },
+      {
+        "seq": 28,
+        "action": "select",
+        "profileId": "unknown-recovered",
+        "basis": "JOURNEY",
+        "expected": "UNKNOWN_EVIDENCE"
+      },
+      {
+        "seq": 29,
+        "action": "check"
+      },
+      {
+        "seq": 30,
+        "action": "reset"
+      },
+      {
+        "seq": 31,
+        "action": "select",
+        "profileId": "interrupted-recovered",
+        "basis": "JOURNEY",
+        "expected": "OBSERVED_INTERRUPTION"
+      },
+      {
+        "seq": 32,
+        "action": "check"
+      },
+      {
+        "seq": 33,
+        "action": "reset"
+      },
+      {
+        "seq": 34,
+        "action": "select",
+        "profileId": "failure-and-unknown",
+        "basis": "JOURNEY",
+        "expected": "OBSERVED_INTERRUPTION"
+      },
+      {
+        "seq": 35,
+        "action": "check"
+      },
+      {
+        "seq": 36,
+        "action": "reset"
+      }
+    ],
+    "activeAttempt": null,
+    "attempts": [
+      {
+        "number": 1,
+        "profileId": "request-heavy-small",
+        "basis": "REQUEST",
+        "expected": "CONDITIONAL_BOUND_MET",
+        "assessment": {
+          "schema": "S149/evidence/v1",
+          "profileId": "request-heavy-small",
+          "evidenceClass": "negative",
+          "selected": {
+            "unit": "REQUEST",
+            "count": 6000000,
+            "isJourneyDenominator": false
+          },
+          "diagnostics": [
+            {
+              "unit": "REQUEST",
+              "count": 6000000,
+              "role": "Diagnostic requests, not independent transition trials."
+            },
+            {
+              "unit": "USER",
+              "count": 1000,
+              "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+            },
+            {
+              "unit": "EVENT",
+              "count": 1000,
+              "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+            }
+          ],
+          "boundary": {
+            "unit": "JOURNEY",
+            "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+            "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+            "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+            "population": "1,000 fictional users and stipulated comparable independent journey events; many diagnostic requests."
+          },
+          "representation": "Fixed fictional count summary; request throughput is not additional journey evidence.",
+          "journeys": {
+            "started": 1000,
+            "uninterrupted": 1000,
+            "interrupted": 0,
+            "unknown": 0,
+            "originals": [],
+            "recoveries": [],
+            "accountedOutcomes": 1000,
+            "successFraction": 1,
+            "observedInterruptionFraction": 0,
+            "unknownFraction": 0,
+            "unknownExcluded": false,
+            "recoveryReplacesOriginal": false
+          },
+          "assumptions": {
+            "independent": true,
+            "comparable": true,
+            "completeObservation": true,
+            "provenByCounts": false,
+            "declaration": "Independence and comparability are stipulated for this fictional illustration, not measured or inferred from counts."
+          },
+          "confidence": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "qualifyingN": null,
+            "upperInterruptionProbability": null,
+            "thresholdMet": null,
+            "status": "WRONG_DENOMINATOR",
+            "conclusion": "Wrong counting unit for the journey denominator",
+            "certification": false,
+            "countsProveAssumptions": false,
+            "illustration": {
+              "method": "one-sided 95 percent zero-failure binomial",
+              "confidenceLevel": 0.95,
+              "alpha": 0.05,
+              "targetInterruptionProbability": 0.00001,
+              "minimumN": 299572,
+              "previousN": 299571,
+              "previousUpper": 0.00001000002435092577,
+              "minimumUpper": 0.000009999990970054557,
+              "previousFails": true,
+              "minimumPasses": true,
+              "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+              "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+            }
+          },
+          "warnings": [
+            "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+            "Zero observed failures is not five-nines proof.",
+            "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+            "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+            "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+            "Wrong denominator: the selected REQUEST count cannot replace attempted transition journeys."
+          ]
+        },
+        "result": {
+          "verdict": "FAIL",
+          "expected": "CONDITIONAL_BOUND_MET",
+          "actual": "WRONG_DENOMINATOR",
+          "matched": false
+        }
+      },
+      {
+        "number": 2,
+        "profileId": "request-heavy-small",
+        "basis": "JOURNEY",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "assessment": {
+          "schema": "S149/evidence/v1",
+          "profileId": "request-heavy-small",
+          "evidenceClass": "negative",
+          "selected": {
+            "unit": "JOURNEY",
+            "count": 1000,
+            "isJourneyDenominator": true
+          },
+          "diagnostics": [
+            {
+              "unit": "REQUEST",
+              "count": 6000000,
+              "role": "Diagnostic requests, not independent transition trials."
+            },
+            {
+              "unit": "USER",
+              "count": 1000,
+              "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+            },
+            {
+              "unit": "EVENT",
+              "count": 1000,
+              "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+            }
+          ],
+          "boundary": {
+            "unit": "JOURNEY",
+            "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+            "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+            "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+            "population": "1,000 fictional users and stipulated comparable independent journey events; many diagnostic requests."
+          },
+          "representation": "Fixed fictional count summary; request throughput is not additional journey evidence.",
+          "journeys": {
+            "started": 1000,
+            "uninterrupted": 1000,
+            "interrupted": 0,
+            "unknown": 0,
+            "originals": [],
+            "recoveries": [],
+            "accountedOutcomes": 1000,
+            "successFraction": 1,
+            "observedInterruptionFraction": 0,
+            "unknownFraction": 0,
+            "unknownExcluded": false,
+            "recoveryReplacesOriginal": false
+          },
+          "assumptions": {
+            "independent": true,
+            "comparable": true,
+            "completeObservation": true,
+            "provenByCounts": false,
+            "declaration": "Independence and comparability are stipulated for this fictional illustration, not measured or inferred from counts."
+          },
+          "confidence": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "qualifyingN": 1000,
+            "upperInterruptionProbability": 0.002991249545095296,
+            "thresholdMet": false,
+            "status": "INSUFFICIENT_EVIDENCE",
+            "conclusion": "Insufficient qualifying sample",
+            "certification": false,
+            "countsProveAssumptions": false,
+            "illustration": {
+              "method": "one-sided 95 percent zero-failure binomial",
+              "confidenceLevel": 0.95,
+              "alpha": 0.05,
+              "targetInterruptionProbability": 0.00001,
+              "minimumN": 299572,
+              "previousN": 299571,
+              "previousUpper": 0.00001000002435092577,
+              "minimumUpper": 0.000009999990970054557,
+              "previousFails": true,
+              "minimumPasses": true,
+              "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+              "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+            }
+          },
+          "warnings": [
+            "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+            "Zero observed failures is not five-nines proof.",
+            "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+            "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+            "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+            "Insufficient evidence: 1,000 qualifying fictional journeys fall short of the illustrative minimum 299,572.",
+            "This bound is conditional on explicitly stipulated independence, comparability and complete observation; none is proven by counts here."
+          ]
+        },
+        "result": {
+          "verdict": "PASS",
+          "expected": "INSUFFICIENT_EVIDENCE",
+          "actual": "INSUFFICIENT_EVIDENCE",
+          "matched": true
+        }
+      },
+      {
+        "number": 3,
+        "profileId": "correlated-single-event",
+        "basis": "REQUEST",
+        "expected": "WRONG_DENOMINATOR",
+        "assessment": {
+          "schema": "S149/evidence/v1",
+          "profileId": "correlated-single-event",
+          "evidenceClass": "unknown",
+          "selected": {
+            "unit": "REQUEST",
+            "count": 5991440,
+            "isJourneyDenominator": false
+          },
+          "diagnostics": [
+            {
+              "unit": "REQUEST",
+              "count": 5991440,
+              "role": "Diagnostic requests, not independent transition trials."
+            },
+            {
+              "unit": "USER",
+              "count": 149786,
+              "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+            },
+            {
+              "unit": "EVENT",
+              "count": 1,
+              "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+            }
+          ],
+          "boundary": {
+            "unit": "JOURNEY",
+            "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+            "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+            "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+            "population": "149,786 fictional users with two journeys each in one shared transition event."
+          },
+          "representation": "Fixed fictional count summary with explicit dependence; no effective independent n is invented.",
+          "journeys": {
+            "started": 299572,
+            "uninterrupted": 299572,
+            "interrupted": 0,
+            "unknown": 0,
+            "originals": [],
+            "recoveries": [],
+            "accountedOutcomes": 299572,
+            "successFraction": 1,
+            "observedInterruptionFraction": 0,
+            "unknownFraction": 0,
+            "unknownExcluded": false,
+            "recoveryReplacesOriginal": false
+          },
+          "assumptions": {
+            "independent": false,
+            "comparable": true,
+            "completeObservation": true,
+            "provenByCounts": false,
+            "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+          },
+          "confidence": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "qualifyingN": null,
+            "upperInterruptionProbability": null,
+            "thresholdMet": null,
+            "status": "WRONG_DENOMINATOR",
+            "conclusion": "Wrong counting unit for the journey denominator",
+            "certification": false,
+            "countsProveAssumptions": false,
+            "illustration": {
+              "method": "one-sided 95 percent zero-failure binomial",
+              "confidenceLevel": 0.95,
+              "alpha": 0.05,
+              "targetInterruptionProbability": 0.00001,
+              "minimumN": 299572,
+              "previousN": 299571,
+              "previousUpper": 0.00001000002435092577,
+              "minimumUpper": 0.000009999990970054557,
+              "previousFails": true,
+              "minimumPasses": true,
+              "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+              "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+            }
+          },
+          "warnings": [
+            "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+            "Zero observed failures is not five-nines proof.",
+            "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+            "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+            "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+            "Wrong denominator: the selected REQUEST count cannot replace attempted transition journeys.",
+            "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+          ]
+        },
+        "result": {
+          "verdict": "PASS",
+          "expected": "WRONG_DENOMINATOR",
+          "actual": "WRONG_DENOMINATOR",
+          "matched": true
+        }
+      },
+      {
+        "number": 4,
+        "profileId": "correlated-single-event",
+        "basis": "USER",
+        "expected": "WRONG_DENOMINATOR",
+        "assessment": {
+          "schema": "S149/evidence/v1",
+          "profileId": "correlated-single-event",
+          "evidenceClass": "unknown",
+          "selected": {
+            "unit": "USER",
+            "count": 149786,
+            "isJourneyDenominator": false
+          },
+          "diagnostics": [
+            {
+              "unit": "REQUEST",
+              "count": 5991440,
+              "role": "Diagnostic requests, not independent transition trials."
+            },
+            {
+              "unit": "USER",
+              "count": 149786,
+              "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+            },
+            {
+              "unit": "EVENT",
+              "count": 1,
+              "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+            }
+          ],
+          "boundary": {
+            "unit": "JOURNEY",
+            "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+            "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+            "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+            "population": "149,786 fictional users with two journeys each in one shared transition event."
+          },
+          "representation": "Fixed fictional count summary with explicit dependence; no effective independent n is invented.",
+          "journeys": {
+            "started": 299572,
+            "uninterrupted": 299572,
+            "interrupted": 0,
+            "unknown": 0,
+            "originals": [],
+            "recoveries": [],
+            "accountedOutcomes": 299572,
+            "successFraction": 1,
+            "observedInterruptionFraction": 0,
+            "unknownFraction": 0,
+            "unknownExcluded": false,
+            "recoveryReplacesOriginal": false
+          },
+          "assumptions": {
+            "independent": false,
+            "comparable": true,
+            "completeObservation": true,
+            "provenByCounts": false,
+            "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+          },
+          "confidence": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "qualifyingN": null,
+            "upperInterruptionProbability": null,
+            "thresholdMet": null,
+            "status": "WRONG_DENOMINATOR",
+            "conclusion": "Wrong counting unit for the journey denominator",
+            "certification": false,
+            "countsProveAssumptions": false,
+            "illustration": {
+              "method": "one-sided 95 percent zero-failure binomial",
+              "confidenceLevel": 0.95,
+              "alpha": 0.05,
+              "targetInterruptionProbability": 0.00001,
+              "minimumN": 299572,
+              "previousN": 299571,
+              "previousUpper": 0.00001000002435092577,
+              "minimumUpper": 0.000009999990970054557,
+              "previousFails": true,
+              "minimumPasses": true,
+              "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+              "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+            }
+          },
+          "warnings": [
+            "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+            "Zero observed failures is not five-nines proof.",
+            "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+            "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+            "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+            "Wrong denominator: the selected USER count cannot replace attempted transition journeys.",
+            "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+          ]
+        },
+        "result": {
+          "verdict": "PASS",
+          "expected": "WRONG_DENOMINATOR",
+          "actual": "WRONG_DENOMINATOR",
+          "matched": true
+        }
+      },
+      {
+        "number": 5,
+        "profileId": "correlated-single-event",
+        "basis": "EVENT",
+        "expected": "WRONG_DENOMINATOR",
+        "assessment": {
+          "schema": "S149/evidence/v1",
+          "profileId": "correlated-single-event",
+          "evidenceClass": "unknown",
+          "selected": {
+            "unit": "EVENT",
+            "count": 1,
+            "isJourneyDenominator": false
+          },
+          "diagnostics": [
+            {
+              "unit": "REQUEST",
+              "count": 5991440,
+              "role": "Diagnostic requests, not independent transition trials."
+            },
+            {
+              "unit": "USER",
+              "count": 149786,
+              "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+            },
+            {
+              "unit": "EVENT",
+              "count": 1,
+              "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+            }
+          ],
+          "boundary": {
+            "unit": "JOURNEY",
+            "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+            "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+            "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+            "population": "149,786 fictional users with two journeys each in one shared transition event."
+          },
+          "representation": "Fixed fictional count summary with explicit dependence; no effective independent n is invented.",
+          "journeys": {
+            "started": 299572,
+            "uninterrupted": 299572,
+            "interrupted": 0,
+            "unknown": 0,
+            "originals": [],
+            "recoveries": [],
+            "accountedOutcomes": 299572,
+            "successFraction": 1,
+            "observedInterruptionFraction": 0,
+            "unknownFraction": 0,
+            "unknownExcluded": false,
+            "recoveryReplacesOriginal": false
+          },
+          "assumptions": {
+            "independent": false,
+            "comparable": true,
+            "completeObservation": true,
+            "provenByCounts": false,
+            "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+          },
+          "confidence": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "qualifyingN": null,
+            "upperInterruptionProbability": null,
+            "thresholdMet": null,
+            "status": "WRONG_DENOMINATOR",
+            "conclusion": "Wrong counting unit for the journey denominator",
+            "certification": false,
+            "countsProveAssumptions": false,
+            "illustration": {
+              "method": "one-sided 95 percent zero-failure binomial",
+              "confidenceLevel": 0.95,
+              "alpha": 0.05,
+              "targetInterruptionProbability": 0.00001,
+              "minimumN": 299572,
+              "previousN": 299571,
+              "previousUpper": 0.00001000002435092577,
+              "minimumUpper": 0.000009999990970054557,
+              "previousFails": true,
+              "minimumPasses": true,
+              "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+              "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+            }
+          },
+          "warnings": [
+            "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+            "Zero observed failures is not five-nines proof.",
+            "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+            "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+            "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+            "Wrong denominator: the selected EVENT count cannot replace attempted transition journeys.",
+            "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+          ]
+        },
+        "result": {
+          "verdict": "PASS",
+          "expected": "WRONG_DENOMINATOR",
+          "actual": "WRONG_DENOMINATOR",
+          "matched": true
+        }
+      },
+      {
+        "number": 6,
+        "profileId": "correlated-single-event",
+        "basis": "JOURNEY",
+        "expected": "ASSUMPTIONS_UNQUALIFIED",
+        "assessment": {
+          "schema": "S149/evidence/v1",
+          "profileId": "correlated-single-event",
+          "evidenceClass": "unknown",
+          "selected": {
+            "unit": "JOURNEY",
+            "count": 299572,
+            "isJourneyDenominator": true
+          },
+          "diagnostics": [
+            {
+              "unit": "REQUEST",
+              "count": 5991440,
+              "role": "Diagnostic requests, not independent transition trials."
+            },
+            {
+              "unit": "USER",
+              "count": 149786,
+              "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+            },
+            {
+              "unit": "EVENT",
+              "count": 1,
+              "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+            }
+          ],
+          "boundary": {
+            "unit": "JOURNEY",
+            "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+            "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+            "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+            "population": "149,786 fictional users with two journeys each in one shared transition event."
+          },
+          "representation": "Fixed fictional count summary with explicit dependence; no effective independent n is invented.",
+          "journeys": {
+            "started": 299572,
+            "uninterrupted": 299572,
+            "interrupted": 0,
+            "unknown": 0,
+            "originals": [],
+            "recoveries": [],
+            "accountedOutcomes": 299572,
+            "successFraction": 1,
+            "observedInterruptionFraction": 0,
+            "unknownFraction": 0,
+            "unknownExcluded": false,
+            "recoveryReplacesOriginal": false
+          },
+          "assumptions": {
+            "independent": false,
+            "comparable": true,
+            "completeObservation": true,
+            "provenByCounts": false,
+            "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+          },
+          "confidence": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "qualifyingN": null,
+            "upperInterruptionProbability": null,
+            "thresholdMet": null,
+            "status": "ASSUMPTIONS_UNQUALIFIED",
+            "conclusion": "Independence or comparability unqualified",
+            "certification": false,
+            "countsProveAssumptions": false,
+            "illustration": {
+              "method": "one-sided 95 percent zero-failure binomial",
+              "confidenceLevel": 0.95,
+              "alpha": 0.05,
+              "targetInterruptionProbability": 0.00001,
+              "minimumN": 299572,
+              "previousN": 299571,
+              "previousUpper": 0.00001000002435092577,
+              "minimumUpper": 0.000009999990970054557,
+              "previousFails": true,
+              "minimumPasses": true,
+              "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+              "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+            }
+          },
+          "warnings": [
+            "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+            "Zero observed failures is not five-nines proof.",
+            "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+            "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+            "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+            "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+          ]
+        },
+        "result": {
+          "verdict": "PASS",
+          "expected": "ASSUMPTIONS_UNQUALIFIED",
+          "actual": "ASSUMPTIONS_UNQUALIFIED",
+          "matched": true
+        }
+      },
+      {
+        "number": 7,
+        "profileId": "qualified-one-short",
+        "basis": "JOURNEY",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "assessment": {
+          "schema": "S149/evidence/v1",
+          "profileId": "qualified-one-short",
+          "evidenceClass": "negative",
+          "selected": {
+            "unit": "JOURNEY",
+            "count": 299571,
+            "isJourneyDenominator": true
+          },
+          "diagnostics": [
+            {
+              "unit": "REQUEST",
+              "count": 5991420,
+              "role": "Diagnostic requests, not independent transition trials."
+            },
+            {
+              "unit": "USER",
+              "count": 299571,
+              "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+            },
+            {
+              "unit": "EVENT",
+              "count": 299571,
+              "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+            }
+          ],
+          "boundary": {
+            "unit": "JOURNEY",
+            "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+            "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+            "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+            "population": "299,571 fictional distinct users, one journey in each stipulated independent comparable event."
+          },
+          "representation": "Fixed fictional count summary only; no individual trials are generated, executed or observed.",
+          "journeys": {
+            "started": 299571,
+            "uninterrupted": 299571,
+            "interrupted": 0,
+            "unknown": 0,
+            "originals": [],
+            "recoveries": [],
+            "accountedOutcomes": 299571,
+            "successFraction": 1,
+            "observedInterruptionFraction": 0,
+            "unknownFraction": 0,
+            "unknownExcluded": false,
+            "recoveryReplacesOriginal": false
+          },
+          "assumptions": {
+            "independent": true,
+            "comparable": true,
+            "completeObservation": true,
+            "provenByCounts": false,
+            "declaration": "Independence and comparability are stipulated for this fictional illustration, not measured or inferred from counts."
+          },
+          "confidence": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "qualifyingN": 299571,
+            "upperInterruptionProbability": 0.00001000002435092577,
+            "thresholdMet": false,
+            "status": "INSUFFICIENT_EVIDENCE",
+            "conclusion": "Insufficient qualifying sample",
+            "certification": false,
+            "countsProveAssumptions": false,
+            "illustration": {
+              "method": "one-sided 95 percent zero-failure binomial",
+              "confidenceLevel": 0.95,
+              "alpha": 0.05,
+              "targetInterruptionProbability": 0.00001,
+              "minimumN": 299572,
+              "previousN": 299571,
+              "previousUpper": 0.00001000002435092577,
+              "minimumUpper": 0.000009999990970054557,
+              "previousFails": true,
+              "minimumPasses": true,
+              "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+              "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+            }
+          },
+          "warnings": [
+            "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+            "Zero observed failures is not five-nines proof.",
+            "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+            "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+            "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+            "Insufficient evidence: 299,571 qualifying fictional journeys fall short of the illustrative minimum 299,572.",
+            "This bound is conditional on explicitly stipulated independence, comparability and complete observation; none is proven by counts here."
+          ]
+        },
+        "result": {
+          "verdict": "PASS",
+          "expected": "INSUFFICIENT_EVIDENCE",
+          "actual": "INSUFFICIENT_EVIDENCE",
+          "matched": true
+        }
+      },
+      {
+        "number": 8,
+        "profileId": "qualified-minimum",
+        "basis": "JOURNEY",
+        "expected": "CONDITIONAL_BOUND_MET",
+        "assessment": {
+          "schema": "S149/evidence/v1",
+          "profileId": "qualified-minimum",
+          "evidenceClass": "positive",
+          "selected": {
+            "unit": "JOURNEY",
+            "count": 299572,
+            "isJourneyDenominator": true
+          },
+          "diagnostics": [
+            {
+              "unit": "REQUEST",
+              "count": 5991440,
+              "role": "Diagnostic requests, not independent transition trials."
+            },
+            {
+              "unit": "USER",
+              "count": 299572,
+              "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+            },
+            {
+              "unit": "EVENT",
+              "count": 299572,
+              "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+            }
+          ],
+          "boundary": {
+            "unit": "JOURNEY",
+            "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+            "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+            "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+            "population": "299,572 fictional distinct users, one journey in each stipulated independent comparable event."
+          },
+          "representation": "Fixed fictional count summary only; no individual trials are generated, executed or observed.",
+          "journeys": {
+            "started": 299572,
+            "uninterrupted": 299572,
+            "interrupted": 0,
+            "unknown": 0,
+            "originals": [],
+            "recoveries": [],
+            "accountedOutcomes": 299572,
+            "successFraction": 1,
+            "observedInterruptionFraction": 0,
+            "unknownFraction": 0,
+            "unknownExcluded": false,
+            "recoveryReplacesOriginal": false
+          },
+          "assumptions": {
+            "independent": true,
+            "comparable": true,
+            "completeObservation": true,
+            "provenByCounts": false,
+            "declaration": "Independence and comparability are stipulated for this fictional illustration, not measured or inferred from counts."
+          },
+          "confidence": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "qualifyingN": 299572,
+            "upperInterruptionProbability": 0.000009999990970054557,
+            "thresholdMet": true,
+            "status": "CONDITIONAL_BOUND_MET",
+            "conclusion": "Conditional illustrative bound met — not certification",
+            "certification": false,
+            "countsProveAssumptions": false,
+            "illustration": {
+              "method": "one-sided 95 percent zero-failure binomial",
+              "confidenceLevel": 0.95,
+              "alpha": 0.05,
+              "targetInterruptionProbability": 0.00001,
+              "minimumN": 299572,
+              "previousN": 299571,
+              "previousUpper": 0.00001000002435092577,
+              "minimumUpper": 0.000009999990970054557,
+              "previousFails": true,
+              "minimumPasses": true,
+              "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+              "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+            }
+          },
+          "warnings": [
+            "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+            "Zero observed failures is not five-nines proof.",
+            "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+            "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+            "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+            "This bound is conditional on explicitly stipulated independence, comparability and complete observation; none is proven by counts here."
+          ]
+        },
+        "result": {
+          "verdict": "PASS",
+          "expected": "CONDITIONAL_BOUND_MET",
+          "actual": "CONDITIONAL_BOUND_MET",
+          "matched": true
+        }
+      },
+      {
+        "number": 9,
+        "profileId": "incomparable-contexts",
+        "basis": "JOURNEY",
+        "expected": "ASSUMPTIONS_UNQUALIFIED",
+        "assessment": {
+          "schema": "S149/evidence/v1",
+          "profileId": "incomparable-contexts",
+          "evidenceClass": "unknown",
+          "selected": {
+            "unit": "JOURNEY",
+            "count": 299572,
+            "isJourneyDenominator": true
+          },
+          "diagnostics": [
+            {
+              "unit": "REQUEST",
+              "count": 5991440,
+              "role": "Diagnostic requests, not independent transition trials."
+            },
+            {
+              "unit": "USER",
+              "count": 299572,
+              "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+            },
+            {
+              "unit": "EVENT",
+              "count": 299572,
+              "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+            }
+          ],
+          "boundary": {
+            "unit": "JOURNEY",
+            "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+            "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+            "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+            "population": "Fictional host, protocol and cohort contexts with no established comparable observation contract."
+          },
+          "representation": "Fixed fictional count summary; distinct events alone do not prove comparable Bernoulli trials.",
+          "journeys": {
+            "started": 299572,
+            "uninterrupted": 299572,
+            "interrupted": 0,
+            "unknown": 0,
+            "originals": [],
+            "recoveries": [],
+            "accountedOutcomes": 299572,
+            "successFraction": 1,
+            "observedInterruptionFraction": 0,
+            "unknownFraction": 0,
+            "unknownExcluded": false,
+            "recoveryReplacesOriginal": false
+          },
+          "assumptions": {
+            "independent": true,
+            "comparable": false,
+            "completeObservation": true,
+            "provenByCounts": false,
+            "declaration": "Fictional host/protocol/cohort contexts differ; comparability is explicitly unqualified."
+          },
+          "confidence": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "qualifyingN": null,
+            "upperInterruptionProbability": null,
+            "thresholdMet": null,
+            "status": "ASSUMPTIONS_UNQUALIFIED",
+            "conclusion": "Independence or comparability unqualified",
+            "certification": false,
+            "countsProveAssumptions": false,
+            "illustration": {
+              "method": "one-sided 95 percent zero-failure binomial",
+              "confidenceLevel": 0.95,
+              "alpha": 0.05,
+              "targetInterruptionProbability": 0.00001,
+              "minimumN": 299572,
+              "previousN": 299571,
+              "previousUpper": 0.00001000002435092577,
+              "minimumUpper": 0.000009999990970054557,
+              "previousFails": true,
+              "minimumPasses": true,
+              "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+              "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+            }
+          },
+          "warnings": [
+            "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+            "Zero observed failures is not five-nines proof.",
+            "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+            "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+            "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+            "Insufficient evidence: contexts are not comparable; a large event count does not establish applicability."
+          ]
+        },
+        "result": {
+          "verdict": "PASS",
+          "expected": "ASSUMPTIONS_UNQUALIFIED",
+          "actual": "ASSUMPTIONS_UNQUALIFIED",
+          "matched": true
+        }
+      },
+      {
+        "number": 10,
+        "profileId": "unknown-recovered",
+        "basis": "JOURNEY",
+        "expected": "UNKNOWN_EVIDENCE",
+        "assessment": {
+          "schema": "S149/evidence/v1",
+          "profileId": "unknown-recovered",
+          "evidenceClass": "unknown",
+          "selected": {
+            "unit": "JOURNEY",
+            "count": 4,
+            "isJourneyDenominator": true
+          },
+          "diagnostics": [
+            {
+              "unit": "REQUEST",
+              "count": 80,
+              "role": "Diagnostic requests, not independent transition trials."
+            },
+            {
+              "unit": "USER",
+              "count": 4,
+              "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+            },
+            {
+              "unit": "EVENT",
+              "count": 1,
+              "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+            }
+          ],
+          "boundary": {
+            "unit": "JOURNEY",
+            "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+            "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+            "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+            "population": "Four fictional original journeys; one original outcome remains unobserved."
+          },
+          "representation": "Four fixed original outcome records; later usability cannot fill the missing original outcome.",
+          "journeys": {
+            "started": 4,
+            "uninterrupted": 3,
+            "interrupted": 0,
+            "unknown": 1,
+            "originals": [
+              {
+                "id": "J149-1",
+                "outcome": "uninterrupted",
+                "reason": "Complete original fictional journey met all declared criteria."
+              },
+              {
+                "id": "J149-2",
+                "outcome": "unknown",
+                "reason": "Original started outcome was not observed."
+              },
+              {
+                "id": "J149-3",
+                "outcome": "uninterrupted",
+                "reason": "Complete original fictional journey met all declared criteria."
+              },
+              {
+                "id": "J149-4",
+                "outcome": "uninterrupted",
+                "reason": "Complete original fictional journey met all declared criteria."
+              }
+            ],
+            "recoveries": [
+              {
+                "originalId": "J149-2",
+                "laterOutcome": "uninterrupted",
+                "countsAsOriginalSuccess": false
+              }
+            ],
+            "accountedOutcomes": 4,
+            "successFraction": 0.75,
+            "observedInterruptionFraction": 0,
+            "unknownFraction": 0.25,
+            "unknownExcluded": false,
+            "recoveryReplacesOriginal": false
+          },
+          "assumptions": {
+            "independent": false,
+            "comparable": true,
+            "completeObservation": false,
+            "provenByCounts": false,
+            "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+          },
+          "confidence": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "qualifyingN": null,
+            "upperInterruptionProbability": null,
+            "thresholdMet": null,
+            "status": "UNKNOWN_EVIDENCE",
+            "conclusion": "Unknown started outcome retained",
+            "certification": false,
+            "countsProveAssumptions": false,
+            "illustration": {
+              "method": "one-sided 95 percent zero-failure binomial",
+              "confidenceLevel": 0.95,
+              "alpha": 0.05,
+              "targetInterruptionProbability": 0.00001,
+              "minimumN": 299572,
+              "previousN": 299571,
+              "previousUpper": 0.00001000002435092577,
+              "minimumUpper": 0.000009999990970054557,
+              "previousFails": true,
+              "minimumPasses": true,
+              "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+              "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+            }
+          },
+          "warnings": [
+            "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+            "Zero observed failures is not five-nines proof.",
+            "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+            "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+            "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+            "Insufficient evidence: unknown started outcomes remain counted; complete observation is unqualified.",
+            "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+          ]
+        },
+        "result": {
+          "verdict": "PASS",
+          "expected": "UNKNOWN_EVIDENCE",
+          "actual": "UNKNOWN_EVIDENCE",
+          "matched": true
+        }
+      },
+      {
+        "number": 11,
+        "profileId": "interrupted-recovered",
+        "basis": "JOURNEY",
+        "expected": "OBSERVED_INTERRUPTION",
+        "assessment": {
+          "schema": "S149/evidence/v1",
+          "profileId": "interrupted-recovered",
+          "evidenceClass": "negative",
+          "selected": {
+            "unit": "JOURNEY",
+            "count": 4,
+            "isJourneyDenominator": true
+          },
+          "diagnostics": [
+            {
+              "unit": "REQUEST",
+              "count": 80,
+              "role": "Diagnostic requests, not independent transition trials."
+            },
+            {
+              "unit": "USER",
+              "count": 4,
+              "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+            },
+            {
+              "unit": "EVENT",
+              "count": 1,
+              "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+            }
+          ],
+          "boundary": {
+            "unit": "JOURNEY",
+            "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+            "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+            "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+            "population": "Four fictional original journeys crossing one shared event."
+          },
+          "representation": "Four fixed original outcome records and one separate later usability record.",
+          "journeys": {
+            "started": 4,
+            "uninterrupted": 3,
+            "interrupted": 1,
+            "unknown": 0,
+            "originals": [
+              {
+                "id": "J149-1",
+                "outcome": "uninterrupted",
+                "reason": "Complete original fictional journey met all declared criteria."
+              },
+              {
+                "id": "J149-2",
+                "outcome": "interrupted",
+                "reason": "Original fictional timeout exceeded its declared journey budget."
+              },
+              {
+                "id": "J149-3",
+                "outcome": "uninterrupted",
+                "reason": "Complete original fictional journey met all declared criteria."
+              },
+              {
+                "id": "J149-4",
+                "outcome": "uninterrupted",
+                "reason": "Complete original fictional journey met all declared criteria."
+              }
+            ],
+            "recoveries": [
+              {
+                "originalId": "J149-2",
+                "laterOutcome": "uninterrupted",
+                "countsAsOriginalSuccess": false
+              }
+            ],
+            "accountedOutcomes": 4,
+            "successFraction": 0.75,
+            "observedInterruptionFraction": 0.25,
+            "unknownFraction": 0,
+            "unknownExcluded": false,
+            "recoveryReplacesOriginal": false
+          },
+          "assumptions": {
+            "independent": false,
+            "comparable": true,
+            "completeObservation": true,
+            "provenByCounts": false,
+            "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+          },
+          "confidence": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "qualifyingN": null,
+            "upperInterruptionProbability": null,
+            "thresholdMet": null,
+            "status": "OBSERVED_INTERRUPTION",
+            "conclusion": "Original interruption retained",
+            "certification": false,
+            "countsProveAssumptions": false,
+            "illustration": {
+              "method": "one-sided 95 percent zero-failure binomial",
+              "confidenceLevel": 0.95,
+              "alpha": 0.05,
+              "targetInterruptionProbability": 0.00001,
+              "minimumN": 299572,
+              "previousN": 299571,
+              "previousUpper": 0.00001000002435092577,
+              "minimumUpper": 0.000009999990970054557,
+              "previousFails": true,
+              "minimumPasses": true,
+              "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+              "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+            }
+          },
+          "warnings": [
+            "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+            "Zero observed failures is not five-nines proof.",
+            "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+            "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+            "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+            "An original interruption remains counted after later recovery; the zero-failure bound is inapplicable.",
+            "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+          ]
+        },
+        "result": {
+          "verdict": "PASS",
+          "expected": "OBSERVED_INTERRUPTION",
+          "actual": "OBSERVED_INTERRUPTION",
+          "matched": true
+        }
+      },
+      {
+        "number": 12,
+        "profileId": "failure-and-unknown",
+        "basis": "JOURNEY",
+        "expected": "OBSERVED_INTERRUPTION",
+        "assessment": {
+          "schema": "S149/evidence/v1",
+          "profileId": "failure-and-unknown",
+          "evidenceClass": "negative",
+          "selected": {
+            "unit": "JOURNEY",
+            "count": 4,
+            "isJourneyDenominator": true
+          },
+          "diagnostics": [
+            {
+              "unit": "REQUEST",
+              "count": 80,
+              "role": "Diagnostic requests, not independent transition trials."
+            },
+            {
+              "unit": "USER",
+              "count": 4,
+              "role": "Distinct diagnostic users, not an interchangeable trial denominator."
+            },
+            {
+              "unit": "EVENT",
+              "count": 1,
+              "role": "Transition clusters/contexts, not assumed independent comparable user journeys."
+            }
+          ],
+          "boundary": {
+            "unit": "JOURNEY",
+            "eventBoundary": "One declared user journey crossing a deployment or capacity transition.",
+            "observationWindow": "Fixed fictional original-start to declared original-budget outcome.",
+            "attribution": "All started original outcomes count; later usability recovery is a separate observation.",
+            "population": "Four fictional original journeys; interruption and missing outcome coexist."
+          },
+          "representation": "Four fixed original outcomes; a known interruption does not erase the separate uncertainty.",
+          "journeys": {
+            "started": 4,
+            "uninterrupted": 2,
+            "interrupted": 1,
+            "unknown": 1,
+            "originals": [
+              {
+                "id": "J149-1",
+                "outcome": "uninterrupted",
+                "reason": "Complete original fictional journey met all declared criteria."
+              },
+              {
+                "id": "J149-2",
+                "outcome": "interrupted",
+                "reason": "Original fictional timeout exceeded its declared journey budget."
+              },
+              {
+                "id": "J149-3",
+                "outcome": "uninterrupted",
+                "reason": "Complete original fictional journey met all declared criteria."
+              },
+              {
+                "id": "J149-4",
+                "outcome": "unknown",
+                "reason": "Original started outcome was not observed."
+              }
+            ],
+            "recoveries": [
+              {
+                "originalId": "J149-2",
+                "laterOutcome": "uninterrupted",
+                "countsAsOriginalSuccess": false
+              }
+            ],
+            "accountedOutcomes": 4,
+            "successFraction": 0.5,
+            "observedInterruptionFraction": 0.25,
+            "unknownFraction": 0.25,
+            "unknownExcluded": false,
+            "recoveryReplacesOriginal": false
+          },
+          "assumptions": {
+            "independent": false,
+            "comparable": true,
+            "completeObservation": false,
+            "provenByCounts": false,
+            "declaration": "One shared fictional event and repeated exposure do not establish independent transition trials."
+          },
+          "confidence": {
+            "method": "one-sided 95 percent zero-failure binomial",
+            "confidenceLevel": 0.95,
+            "alpha": 0.05,
+            "targetInterruptionProbability": 0.00001,
+            "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+            "qualifyingN": null,
+            "upperInterruptionProbability": null,
+            "thresholdMet": null,
+            "status": "OBSERVED_INTERRUPTION",
+            "conclusion": "Original interruption retained",
+            "certification": false,
+            "countsProveAssumptions": false,
+            "illustration": {
+              "method": "one-sided 95 percent zero-failure binomial",
+              "confidenceLevel": 0.95,
+              "alpha": 0.05,
+              "targetInterruptionProbability": 0.00001,
+              "minimumN": 299572,
+              "previousN": 299571,
+              "previousUpper": 0.00001000002435092577,
+              "minimumUpper": 0.000009999990970054557,
+              "previousFails": true,
+              "minimumPasses": true,
+              "qualifyingUnit": "independent comparable completely observed Bernoulli transition JOURNEY",
+              "scope": "Conditional mathematical illustration only; not confidence from aggregate counts or an Azure SLA/certification."
+            }
+          },
+          "warnings": [
+            "All counts and assumptions are fixed fictional teaching DATA ONLY; no trials run.",
+            "Zero observed failures is not five-nines proof.",
+            "Conditional illustration only — not a real Azure SLA, certification or confidence inferred from aggregate counts.",
+            "REQUEST, USER and EVENT are diagnostic units; all started transition JOURNEY outcomes stay in the denominator.",
+            "Retained exercises reuse fixed records, not extra independent trials; never pool them.",
+            "An original interruption remains counted after later recovery; the zero-failure bound is inapplicable.",
+            "Insufficient evidence: unknown started outcomes remain counted; complete observation is unqualified.",
+            "Insufficient evidence: correlated requests, users and transitions sharing events are not independent comparable trials."
+          ]
+        },
+        "result": {
+          "verdict": "PASS",
+          "expected": "OBSERVED_INTERRUPTION",
+          "actual": "OBSERVED_INTERRUPTION",
+          "matched": true
+        }
+      }
+    ]
+  }
+}</pre>
+      </details>
+    </section>
+
+    <footer>
+      <p>A-S149 · S / P1 / SC-S149 / SOURCE. Standalone local lesson only.
+        B-S149 and D-S149 native evidence/source acceptance remain unverified.
+        No cloud, IaC, account, identity, credential, deployment, spend, framework or server is used.</p>
+    </footer>
+  </main>
+
+
+</body></html>

@@ -1,0 +1,10 @@
+'use strict';
+
+(function publish(root) {
+  const api = {
+    createSession: () => ({ schema: 'S149/session/v1', revision: 0, journal: [], activeAttempt: null, attempts: [] }),
+    evaluate: () => ({ schema: 'S149/evidence/v1', confidence: { status: 'UNKNOWN_EVIDENCE' } }),
+  };
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S149 = api;
+})(globalThis);

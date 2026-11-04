@@ -1,0 +1,429 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { hash, relative, inventory } = require('./record.cjs');
+
+const root = path.resolve(__dirname, '..', '..');
+const helper = path.join(root, 'testing', 'browser', 'isolated.cjs');
+const helperSha256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+assert.equal(hash(fs.readFileSync(helper)), helperSha256, 'Only the exact published helper is qualified.');
+const { openIsolatedLesson } = require(helper);
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+const inputFiles = ['browser.test.cjs', 'model.js', 'lesson.js', 'index.html', 'style.css', 'manifest.json', 'README.md'];
+const inputHashes = () => inputFiles.map((file) => ({
+  file, sha256: hash(fs.readFileSync(path.join(__dirname, file))),
+}));
+function saveCapture(report, snapshots) {
+  assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, '1');
+  const directory = path.join(__dirname, 'evidence', 'raw', `browser-dom-${crypto.randomUUID()}`);
+  fs.mkdirSync(directory);
+  report.domSnapshots = snapshots.map(({ label, html }, index) => {
+    const file = path.join(directory, `${String(index + 1).padStart(2, '0')}.dom.snapshot`);
+    const bytes = Buffer.from(html);
+    fs.writeFileSync(file, bytes, { flag: 'wx' });
+    return { label, file: relative(file), sha256: hash(bytes), byteLength: bytes.length };
+  });
+  const rawFile = path.join(directory, 'report.json');
+  const rawBytes = Buffer.from(`${JSON.stringify(report, null, 2)}\n`);
+  fs.writeFileSync(rawFile, rawBytes, { flag: 'wx' });
+  if (report.passed) {
+    fs.writeFileSync(path.join(__dirname, 'evidence', 'browser.json'),
+      `${JSON.stringify({ ...report, rawProof: relative(rawFile), rawProofSha256: hash(rawBytes) }, null, 2)}\n`);
+  }
+}
+
+test('actual isolated DOM/keyboard/error/reset, exact counts/rates/bounds, retained failure/unknown and enforced CSP',
+  { timeout: 180000 }, async () => {
+    const before = inventory();
+    const tooling = JSON.parse(fs.readFileSync(path.join(__dirname, 'evidence', 'tooling.json')));
+    assert.equal(tooling.node, process.version);
+    assert.equal(tooling.browser.signatureStatus, 'Valid');
+    assert.match(tooling.browser.signer, /Microsoft Corporation/);
+    assert.ok(tooling.packages.every((entry) => entry.version === '1.56.1'));
+    assert.equal(tooling.helper.sha256, helperSha256);
+    if (!capture) {
+      const retained = JSON.parse(fs.readFileSync(path.join(__dirname, 'evidence', 'browser.json')));
+      assert.equal(retained.passed, true, 'Normal checks require existing proof, not implicit capture.');
+      assert.deepEqual(retained.inputs, inputHashes(), 'Changed inputs require exact deliberate recapture.');
+      assert.equal(retained.cleanup.awaitedFinallyClose, true);
+    }
+    const report = {
+      cardId: 'A-S149', kanoUnit: 'A-S149', kano: 'S', priority: 'P1', packet: 'SC-S149',
+      sourceId: 'S149', parentId: 'D-S149', captureMode: capture, inputs: inputHashes(),
+      startedAtUtc: new Date().toISOString(), node: process.version, helperSha256,
+      signedBrowser: tooling.browser, packages: tooling.packages,
+      observations: [], requests: [], consoleErrors: [], pageErrors: [], cspViolations: [],
+      cleanup: { awaitedFinallyClose: false }, nativeAzureResult: 'unverified',
+      certification: false, passed: false,
+    };
+    const snapshots = [];
+    let session;
+    let failure;
+    try {
+      session = await openIsolatedLesson('learning\\S149\\index.html');
+      const page = session.page;
+      report.browserVersion = session.browserVersion;
+      assert.equal(report.browserVersion, '156.0.4314.50');
+      page.on('request', (request) => report.requests.push({ url: request.url(), method: request.method() }));
+      page.on('console', (message) => { if (message.type() === 'error') report.consoleErrors.push(message.text()); });
+      page.on('pageerror', (error) => report.pageErrors.push(error.message));
+      const text = (id) => page.locator(`#${id}`).innerText();
+      const focus = () => page.evaluate(() => document.activeElement.id);
+      async function records() {
+        const details = page.locator('#record-details');
+        if (await details.getAttribute('open') === null) await details.locator('summary').click();
+        return JSON.parse(await text('records'));
+      }
+      async function press(id, key = 'Enter') {
+        await page.locator(`#${id}`).focus();
+        await page.keyboard.press(key);
+      }
+      async function observe(label, snapshot = false) {
+        const data = await records();
+        report.observations.push({
+          label, focusedControl: await focus(), error: await text('error'),
+          selectedCount: await text('selected-count'), counts: await text('journey-counts'),
+          status: await text('confidence-status'), upper: await text('upper-bound'),
+          answer: await text('answer-status'), session: data.session, assessment: data.assessment,
+          history: data.history, journal: data.journal,
+        });
+        if (snapshot) snapshots.push({ label, html: await page.content() });
+      }
+      async function archive() {
+        const prior = await records();
+        await press('archive-reset', 'Space');
+        const next = await records();
+        assert.deepEqual(next.history, prior.history, 'Reset must retain all original records and answers.');
+        assert.equal(next.activeAttempt, null);
+        assert.equal(await page.locator('#profile-choice').inputValue(), 'request-heavy-small');
+        assert.equal(await page.locator('#count-basis').inputValue(), 'REQUEST');
+        assert.equal(await page.locator('#expected-conclusion').inputValue(), 'CONDITIONAL_BOUND_MET');
+        assert.equal(await text('error'), '');
+        assert.equal(await focus(), 'profile-choice');
+        assert.equal(await page.evaluate(() => typeof document.getElementById('controls').reset), 'function');
+      }
+      async function conduct(profileId, basis, expected) {
+        await page.locator('#profile-choice').selectOption(profileId);
+        await page.locator('#count-basis').selectOption(basis);
+        await page.locator('#expected-conclusion').selectOption(expected);
+        await press('inspect-record');
+        assert.equal(await focus(), 'check-answer');
+        await page.keyboard.press('Space');
+        assert.equal(await focus(), 'answer-status');
+        const data = await records();
+        assert.equal(data.history.at(-1).result.verdict, 'PASS');
+        assert.equal(data.history.at(-1).result.actual, expected);
+        assert.equal(data.assessment.confidence.certification, false);
+        return data.assessment;
+      }
+      assert.equal(new URL(page.url()).protocol, 'file:');
+      assert.equal(await page.title(), 'S149 — Five-nines evidence rehearsal');
+      assert.equal(await text('training-banner'), 'Training rehearsal - synthetic data - not a live Azure result');
+      assert.equal(await page.locator('label[for="profile-choice"]').innerText(), 'Fixed fictional evidence profile');
+      assert.equal(await page.locator('#profile-choice option').count(), 9);
+      assert.equal(await page.locator('#count-rows tr').count(), 4);
+      assert.equal((await records()).session.attempts, 0);
+      assert.equal((await records()).session.teachingVerdict, 'UNKNOWN');
+      assert.equal(await text('confidence-status'), 'WRONG_DENOMINATOR');
+      report.initialResourceURLs = await page.evaluate(() => performance.getEntriesByType('resource').map((entry) => entry.name));
+      assert.ok(report.initialResourceURLs.length >= 3);
+      assert.ok(report.initialResourceURLs.every((url) => new URL(url).protocol === 'file:'));
+      assert.match(await page.locator('#profile-choice').evaluate((node) => getComputedStyle(node).fontFamily), /Segoe UI/);
+      await observe('standalone-local-load-exact-banner-nine-fixed-profiles-four-counting-units', true);
+
+      await page.locator('#check-answer').evaluate((node) => { node.disabled = false; });
+      await page.locator('#check-answer').click();
+      assert.match(await text('error'), /Select and inspect a fixed record/);
+      assert.equal(await focus(), 'error');
+      assert.equal((await records()).history.length, 0);
+      await observe('guarded-check-before-select-focuses-alert-with-no-mutation');
+      await archive();
+      for (const [id, value, message] of [
+        ['profile-choice', 'forged-profile', /Invalid fixed profile/],
+        ['count-basis', 'TRIAL', /Invalid fixed counting unit/],
+        ['expected-conclusion', 'certified', /Invalid fixed expected conclusion/],
+      ]) {
+        await page.locator(`#${id}`).evaluate((node, invalid) => {
+          const option = document.createElement('option');
+          option.id = 's149-invalid-probe';
+          option.value = invalid;
+          option.textContent = 'Fixed invalid guard probe';
+          node.append(option);
+          node.value = invalid;
+        }, value);
+        await press('inspect-record');
+        assert.match(await text('error'), message);
+        assert.equal(await focus(), id);
+        assert.equal(await page.locator(`#${id}`).getAttribute('aria-invalid'), 'true');
+        assert.equal((await records()).history.length, 0);
+        await observe(`invalid-${id}-labelled-focus-no-evidence-mutation`);
+        await archive();
+        await page.locator('#s149-invalid-probe').evaluate((node) => node.remove());
+      }
+
+      await page.locator('#profile-choice').focus();
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('#profile-choice').inputValue(), 'correlated-single-event');
+      await page.keyboard.press('ArrowUp');
+      assert.equal(await page.locator('#profile-choice').inputValue(), 'request-heavy-small');
+      await page.keyboard.press('Tab');
+      assert.equal(await focus(), 'count-basis');
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('#count-basis').inputValue(), 'USER');
+      await page.keyboard.press('ArrowUp');
+      assert.equal(await page.locator('#count-basis').inputValue(), 'REQUEST');
+      await page.keyboard.press('Tab');
+      assert.equal(await focus(), 'expected-conclusion');
+      await page.keyboard.press('Shift+Tab');
+      assert.equal(await focus(), 'count-basis');
+      await page.keyboard.press('Tab');
+      await page.keyboard.press('Tab');
+      assert.equal(await focus(), 'inspect-record');
+      const outline = await page.locator('#inspect-record').evaluate((node) => ({
+        style: getComputedStyle(node).outlineStyle, width: getComputedStyle(node).outlineWidth,
+      }));
+      assert.notEqual(outline.style, 'none');
+      assert.equal(outline.width, '3px');
+      await page.keyboard.press('Enter');
+      assert.equal(await focus(), 'check-answer');
+      await page.keyboard.press('Space');
+      assert.match(await text('answer-status'), /^FAIL — teaching answer only/);
+      assert.match(await text('session-verdict'), /^FAIL/);
+      const wrong = (await records()).history[0];
+      assert.equal(wrong.result.actual, 'WRONG_DENOMINATOR');
+      assert.equal(wrong.assessment.journeys.started, 1000);
+      await page.locator('#check-answer').evaluate((node) => { node.disabled = false; });
+      await page.locator('#check-answer').click();
+      assert.match(await text('error'), /already checked/);
+      assert.equal(await focus(), 'error');
+      assert.deepEqual((await records()).history[0], wrong);
+      await observe('actual-tab-arrows-enter-space-and-retained-wrong-answer', true);
+      await archive();
+
+      const small = await conduct('request-heavy-small', 'JOURNEY', 'INSUFFICIENT_EVIDENCE');
+      assert.equal(small.journeys.successFraction, 1);
+      assert.equal(small.confidence.qualifyingN, 1000);
+      assert.equal(small.confidence.upperInterruptionProbability, 0.002991249545095296);
+      assert.equal(Number(await text('upper-bound')), 0.002991249545095296);
+      assert.match(await page.locator('#warnings').innerText(), /Zero observed failures is not five-nines proof/);
+      await observe('six-million-requests-one-thousand-journeys-remain-insufficient', true);
+      await archive();
+      for (const [unit, count] of [['REQUEST', 5991440], ['USER', 149786], ['EVENT', 1]]) {
+        const diagnostic = await conduct('correlated-single-event', unit, 'WRONG_DENOMINATOR');
+        assert.equal(diagnostic.selected.count, count);
+        assert.equal(diagnostic.journeys.started, 299572);
+        assert.equal(diagnostic.confidence.upperInterruptionProbability, null);
+        assert.deepEqual(diagnostic.diagnostics.map((row) => [row.unit, row.count]), [
+          ['REQUEST', 5991440], ['USER', 149786], ['EVENT', 1],
+        ]);
+        await observe(`exact-${unit}-diagnostic-count-is-not-the-journey-denominator`);
+        await archive();
+      }
+      const correlated = await conduct('correlated-single-event', 'JOURNEY', 'ASSUMPTIONS_UNQUALIFIED');
+      assert.equal(correlated.assumptions.independent, false);
+      assert.equal(correlated.confidence.qualifyingN, null);
+      assert.match(await page.locator('#warnings').innerText(), /correlated requests, users and transitions/);
+      await observe('one-correlated-event-large-journey-count-no-invented-effective-n', true);
+      await archive();
+      const previous = await conduct('qualified-one-short', 'JOURNEY', 'INSUFFICIENT_EVIDENCE');
+      assert.equal(previous.confidence.qualifyingN, 299571);
+      assert.equal(previous.confidence.upperInterruptionProbability, 0.00001000002435092577);
+      assert.ok(previous.confidence.upperInterruptionProbability > 1e-5);
+      assert.equal(previous.confidence.thresholdMet, false);
+      await observe('exact-n-minus-one-threshold-fails-without-epsilon-slack');
+      await archive();
+      const minimum = await conduct('qualified-minimum', 'JOURNEY', 'CONDITIONAL_BOUND_MET');
+      assert.equal(minimum.confidence.qualifyingN, 299572);
+      assert.equal(minimum.confidence.upperInterruptionProbability, 0.000009999990970054557);
+      assert.ok(minimum.confidence.upperInterruptionProbability <= 1e-5);
+      assert.equal(minimum.confidence.thresholdMet, true);
+      assert.equal(minimum.confidence.countsProveAssumptions, false);
+      assert.equal(await text('minimum-n'), '299,572');
+      assert.match(await text('previous-upper'), /> 0\.00001/);
+      assert.match(await text('minimum-upper'), /≤ 0\.00001 — conditional only/);
+      assert.match(await page.locator('#assumptions').innerText(), /not proven/);
+      assert.match(await text('certification'), /No certification/);
+      assert.deepEqual((await records()).history[0], wrong);
+      assert.match(await text('session-verdict'), /^FAIL/);
+      await observe('exact-minimal-n-passes-only-conditionally-prior-wrong-answer-remains', true);
+      await archive();
+      const incomparable = await conduct('incomparable-contexts', 'JOURNEY', 'ASSUMPTIONS_UNQUALIFIED');
+      assert.equal(incomparable.assumptions.comparable, false);
+      assert.equal(incomparable.confidence.upperInterruptionProbability, null);
+      await observe('distinct-event-total-does-not-establish-comparability');
+      await archive();
+      const unknown = await conduct('unknown-recovered', 'JOURNEY', 'UNKNOWN_EVIDENCE');
+      assert.equal(unknown.journeys.started, 4);
+      assert.equal(unknown.journeys.uninterrupted, 3);
+      assert.equal(unknown.journeys.unknown, 1);
+      assert.equal(unknown.journeys.successFraction, 0.75);
+      assert.equal(unknown.journeys.unknownFraction, 0.25);
+      assert.equal(unknown.journeys.originals[1].outcome, 'unknown');
+      assert.equal(unknown.journeys.recoveries[0].countsAsOriginalSuccess, false);
+      assert.match(await text('journey-counts'), /^4 started \/ 3 uninterrupted \/ 0 interrupted \/ 1 unknown$/);
+      assert.match(await text('success-rate'), /= 3 \/ 4$/);
+      assert.match(await text('unknown-rate'), /= 1 \/ 4$/);
+      assert.match(await text('upper-bound'), /^null/);
+      await observe('unknown-started-original-stays-counted-after-separate-usability-recovery', true);
+      const guardProbe = await page.evaluate(() => {
+        const source = JSON.parse(document.getElementById('records').textContent).retainedSession;
+        const model = globalThis.S149;
+        const failures = [];
+        const cases = [
+          () => model.dispatch(source, { action: 'reset', revision: String(source.revision) }),
+          () => model.dispatch(source, { action: 'check', revision: source.revision - 1 }),
+          () => {
+            const forged = JSON.parse(JSON.stringify(source));
+            forged.attempts.at(-1).assessment.journeys.started = 3;
+            model.validateSession(forged);
+          },
+          () => {
+            const forged = JSON.parse(JSON.stringify(source));
+            forged.attempts.at(-1).assessment.confidence.upperInterruptionProbability = 0;
+            model.validateSession(forged);
+          },
+          () => {
+            const profile = JSON.parse(JSON.stringify(model.getProfile('qualified-minimum')));
+            profile.assumptions.independent = 'true';
+            model.validateProfile(profile);
+          },
+        ];
+        for (const probe of cases) {
+          try { probe(); failures.push('NOT_REJECTED'); } catch (error) { failures.push(error.message); }
+        }
+        return failures;
+      });
+      assert.equal(guardProbe.length, 5);
+      assert.ok(guardProbe.every((message) => /Invalid|Stale/.test(message)));
+      assert.equal((await records()).assessment.journeys.started, 4);
+      report.strictGuardProbe = guardProbe;
+      await archive();
+      const interrupted = await conduct('interrupted-recovered', 'JOURNEY', 'OBSERVED_INTERRUPTION');
+      assert.equal(interrupted.journeys.started, 4);
+      assert.equal(interrupted.journeys.interrupted, 1);
+      assert.equal(interrupted.journeys.observedInterruptionFraction, 0.25);
+      assert.equal(interrupted.journeys.originals[1].outcome, 'interrupted');
+      assert.equal(interrupted.confidence.upperInterruptionProbability, null);
+      await observe('original-interruption-and-separate-recovery-cannot-be-rewritten', true);
+      await archive();
+      const mixed = await conduct('failure-and-unknown', 'JOURNEY', 'OBSERVED_INTERRUPTION');
+      assert.deepEqual([mixed.journeys.started, mixed.journeys.uninterrupted, mixed.journeys.interrupted, mixed.journeys.unknown], [4, 2, 1, 1]);
+      assert.equal(mixed.journeys.successFraction, 0.5);
+      assert.match(await page.locator('#warnings').innerText(), /unknown started outcomes remain counted/);
+      await observe('known-interruption-precedence-retains-separate-unknown-and-original-denominator', true);
+      await archive();
+      const bounded = await records();
+      assert.equal(bounded.history.length, 12);
+      assert.equal(bounded.journal.length, 36);
+      assert.deepEqual(bounded.history[0], wrong);
+      assert.equal(bounded.session.answerFailures, 1);
+      assert.equal(bounded.session.reliabilityPooling, false);
+      assert.equal(await page.locator('#inspect-record').isDisabled(), true);
+      await page.locator('#inspect-record').evaluate((node) => { node.disabled = false; });
+      await page.locator('#inspect-record').click();
+      assert.match(await text('error'), /Twelve-exercise bound/);
+      assert.equal(await focus(), 'error');
+      assert.deepEqual((await records()).retainedSession, bounded.retainedSession);
+      await observe('twelve-attempt-bound-no-history-truncation-no-pooled-trials', true);
+
+      await page.reload();
+      assert.equal((await records()).session.attempts, 0, 'Reload explicitly begins a new in-memory teaching session, not durable history.');
+      const empty = await conduct('empty-transition-sample', 'JOURNEY', 'NO_EVIDENCE');
+      assert.equal(empty.journeys.started, 0);
+      assert.equal(empty.journeys.successFraction, null);
+      assert.equal(empty.confidence.upperInterruptionProbability, null);
+      assert.match(await text('success-rate'), /^null — no attempted journey evidence/);
+      await observe('fresh-session-empty-starts-null-rates-no-invented-100-percent', true);
+      await archive();
+      await page.locator('#profile-choice').selectOption('failure-and-unknown');
+      await page.locator('#count-basis').selectOption('JOURNEY');
+      await page.locator('#expected-conclusion').selectOption('OBSERVED_INTERRUPTION');
+      await press('inspect-record');
+      assert.equal((await records()).history.at(-1).result, null);
+      await archive();
+      await conduct('qualified-minimum', 'JOURNEY', 'CONDITIONAL_BOUND_MET');
+      const partial = await records();
+      assert.equal(partial.history[1].result, null);
+      assert.equal(partial.history[1].assessment.journeys.unknown, 1);
+      assert.equal(partial.history[1].assessment.journeys.interrupted, 1);
+      assert.equal(partial.session.teachingVerdict, 'UNKNOWN');
+      await observe('unchecked-original-negative-and-unknown-record-survives-reset-and-later-correct-answer', true);
+      await page.setViewportSize({ width: 390, height: 844 });
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      const scroll = await page.locator('.table-wrap').first().evaluate((node) => ({
+        client: node.clientWidth, scroll: node.scrollWidth, overflow: getComputedStyle(node).overflowX,
+      }));
+      assert.equal(scroll.overflow, 'auto');
+      assert.ok(scroll.scroll > scroll.client);
+      await page.locator('.table-wrap').first().focus();
+      await page.keyboard.press('ArrowRight');
+      await page.waitForFunction(() => document.querySelector('.table-wrap').scrollLeft > 0);
+      assert.ok(await page.locator('.table-wrap').first().evaluate((node) => node.scrollLeft > 0));
+      await observe('narrow-viewport-keyboard-scrollable-counts-and-exact-records', true);
+
+      assert.equal(report.pageErrors.length, 0);
+      assert.equal(report.consoleErrors.length, 0, 'No runtime console errors before deliberate benign CSP probes.');
+      report.cspProbe = await page.evaluate(async () => {
+        globalThis.__s149Csp = [];
+        document.addEventListener('securitypolicyviolation', (event) => {
+          globalThis.__s149Csp.push({ effectiveDirective: event.effectiveDirective, blockedURI: event.blockedURI });
+        });
+        globalThis.__s149BlockedScript = false;
+        const oldBackground = getComputedStyle(document.body).backgroundColor;
+        const script = document.createElement('script');
+        script.textContent = 'globalThis.__s149BlockedScript = true';
+        document.body.append(script);
+        const style = document.createElement('style');
+        style.textContent = 'body { background-color: rgb(1, 2, 3) }';
+        document.head.append(style);
+        const connection = await fetch('data:text/plain,fixed-benign-csp-probe').then(() => 'UNEXPECTED_SUCCESS', (error) => error.name);
+        return {
+          scriptExecuted: globalThis.__s149BlockedScript,
+          styleApplied: getComputedStyle(document.body).backgroundColor !== oldBackground,
+          connection,
+          scope: 'Benign inline/data-URI CSP probes only; no network endpoint or live trial.',
+        };
+      });
+      await page.waitForFunction(() => globalThis.__s149Csp.some((entry) => entry.effectiveDirective.startsWith('script-src'))
+        && globalThis.__s149Csp.some((entry) => entry.effectiveDirective.startsWith('style-src'))
+        && globalThis.__s149Csp.some((entry) => entry.effectiveDirective === 'connect-src'));
+      report.cspViolations = await page.evaluate(() => globalThis.__s149Csp);
+      assert.equal(report.cspProbe.scriptExecuted, false);
+      assert.equal(report.cspProbe.styleApplied, false);
+      assert.equal(report.cspProbe.connection, 'TypeError');
+      assert.ok(report.cspViolations.length >= 3);
+      assert.equal(report.pageErrors.length, 0);
+      assert.ok(report.consoleErrors.every((message) => /Content Security Policy|violat.*directive|Refused/i.test(message)));
+      assert.ok(report.requests.every((request) => new URL(request.url).protocol === 'file:' && request.method === 'GET'));
+      assert.equal(new URL(page.url()).protocol, 'file:');
+      await observe('actual-csp-blocks-inline-script-inline-style-and-data-connection-without-network', true);
+    } catch (error) {
+      failure = error;
+      report.failure = { message: error.message, stack: error.stack };
+      if (session) {
+        try { snapshots.push({ label: 'raw-failed-browser-state', html: await session.page.content() }); }
+        catch (snapshotError) { report.failure.snapshotError = snapshotError.message; }
+      }
+    } finally {
+      if (session) {
+        try {
+          await session.close();
+          report.cleanup.awaitedFinallyClose = true;
+        } catch (error) {
+          report.cleanup.error = error.message;
+          failure ||= error;
+        }
+      }
+      report.completedAtUtc = new Date().toISOString();
+      report.passed = !failure;
+      if (capture) saveCapture(report, snapshots);
+      else assert.deepEqual(inventory(), before, 'Actual normal browser verification must leave every owned byte unchanged.');
+    }
+    if (failure) throw failure;
+    assert.equal(report.cleanup.awaitedFinallyClose, true);
+    console.log(`Actual browser observations: ${report.observations.length}; exact conditional n=299572, all counters/unknowns/history/CSP checked; no native proof.`);
+  });

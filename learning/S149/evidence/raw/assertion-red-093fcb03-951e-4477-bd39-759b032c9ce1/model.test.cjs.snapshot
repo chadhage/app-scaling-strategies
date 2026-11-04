@@ -1,0 +1,16 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('./model.js');
+
+test('loadable contract exposes an empty retained session and evidence shape', () => {
+  assert.equal(model.createSession().schema, 'S149/session/v1');
+  assert.equal(model.createSession().revision, 0);
+  assert.deepEqual(model.createSession().attempts, []);
+  assert.equal(model.evaluate('qualified-minimum', 'JOURNEY').schema, 'S149/evidence/v1');
+});
+
+test('qualifying complete independent comparable record crosses the exact minimal bound', () => {
+  assert.equal(model.evaluate('qualified-minimum', 'JOURNEY').confidence.status, 'CONDITIONAL_BOUND_MET');
+});
