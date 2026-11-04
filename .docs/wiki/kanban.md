@@ -2,7 +2,7 @@
 
 ## Purpose and current state
 
-Decompose all 171 parents in [backlog.md](backlog.md) into independently owned, testable delivery slices. The inventory below is the source contract; the [live execution ledger](flow-state.json) records admitted work, owners, empirical acceptance, published commits/tags, blockers, and actual Kano totals. Planning inventory is not implementation evidence.
+Decompose all 171 parents in [backlog.md](backlog.md) into independently owned, testable delivery slices. The inventory below is the source contract; the [live execution ledger](flow-state.json) records admitted work, owners, empirical acceptance, published commits/tags, unblock work, and actual Kano totals. Planning inventory is not implementation evidence.
 
 The inventory contains **414 cards**:
 
@@ -11,11 +11,41 @@ The inventory contains **414 cards**:
 - 150 native-proof cards, B-S001 through B-S150.
 - 6 optional delighters, X001-X006.
 
+These **414 credit-bearing cards** are the only source of Kano credit. Zero-credit [U and K cards](#zero-credit-work-cards) (unblock, slice, tooling and coverage work) sit beside them and never change these counts.
 Planned Kano mix: **28 dissatisfiers, 380 satisfiers, 6 delighters**. These inventory numbers do not earn completion credit. Done and reservations started at zero; consult the [live execution ledger](flow-state.json) for current totals.
 
 The selected policy is **cumulative completion totals**, with each delighter's satisfiers completed in the **same named delivery packet**. No calendar sprint or simultaneous wall-clock completion is required.
 
 Accepted checkpoint, 2026-11-04: **167 satisfiers Done, 7 dissatisfiers, 1 delighter**. All one hundred fifty portable lessons, twenty-four local capabilities (C001-C008, C015-C016, C018, C020-C021, C023-C025, C027, C029, C033-C034, C036, C041, C045, C048) and X003's learning-goal chooser passed independently rerun focused automated suites and recorded real-browser checks; per-card review records distinguish leaf checks, parent test groups, and repeated regressions. Their implementation commits and annotated tags are published on `main`. These are local learning, catalog, fixture, isolation, durability and control-contract deliverables, not native Azure proof, production Node.js 24 validation, or completed source-demo parents. Operational tooling and its tests earn no additional Kano credit.
+
+## Standing rules
+
+These seven rules govern every card, contributor and replenishment. A card that breaks one is not pullable, not acceptable, or must be repaired before another card is pulled. Mechanical enforcement is tracked by U009 and U011-U014 in [Zero-credit work cards](#zero-credit-work-cards); until it exists, the controller applies the rules by hand at every [replenishment](#operating-checks).
+
+1. **Atomic.** One card is one accountable owner, one behavior, one independently reviewable change set, one observable acceptance check, and one to four focused hours. Split before pulling when a card needs a research or approval decision, holds more than one independent behavior, hides a prerequisite build, or would exceed four hours. Merge or eliminate cards that duplicate another card's observable result.
+2. **Kano.** Every credit-bearing card has one frozen class (D, S or L) and obeys the ratio rules below. Unblock, slice, tooling and coverage work carries zero credit and can never fund or satisfy a quota.
+3. **No Blocked.** The board has exactly three states: To Do, In Progress, Done. There is no blocked state, flag, label, reason field or parking area. When anything stops a card (a missing approval or access, an undecided choice, a failed gate, a broken tool, a missing publication scope, an unavailable reviewer), the act of unblocking becomes a U card in the same ledger transaction and is pulled before any other work. The stopped card returns to To Do with that U card as an ordinary entry gate.
+4. **TDD, TDD, TDD.** Behavior specification first, then a genuine RED that fails for the behavioral reason and is preserved raw and immutable, then implementation to GREEN, then refactoring. Every card type follows it, including U and K cards and tooling. No archived RED, no acceptance.
+5. **85% coverage or bust.** A card's production code must reach at least 85% line, 85% branch and 85% function coverage, each measured over the full enumerated file set; a file no test loads counts as 0%. Below 85% the card is not Done. Thresholds are never lowered, waived, or met by exclusions. Coverage is N/A only when the card adds or changes no production code.
+6. **Parallel by design.** Shape cards so that as many agents as possible work side by side: one namespace per card, no shared mutable files, narrow entry gates, a To Do queue kept full, and a measured ready frontier. If the frontier is narrower than the contributor count, split the bottleneck or add independent work; never inflate WIP.
+7. **Shared memory.** Agents read the shared lessons and a card's hints before planning or pulling, and leave hints when they finish, when they stop, and when they refine the plan. See [Shared memory and hints](#shared-memory-and-hints).
+
+### Quality bar for every card
+
+These details apply to every card, U and K cards included. They extend the [Atomic card contract](#atomic-card-contract), which stays unchanged.
+
+- **Size and splitting.** A, K and U cards target one to four focused hours; C, B and X cards two to four. Split before pulling when a card needs a research or approval decision, holds several independent behaviors, hides a prerequisite build, or would exceed four hours. Decisions and missing tools become U cards; the original card keeps its single `kanoUnit` and its credit. Revalidate coverage and Kano classes; artificial splits do not manufacture extra value.
+- **TDD evidence.** Archive the raw RED (stdout, stderr, exit code, input hashes) before implementing. It must fail for the behavioral reason, an assertion about the specified behavior, not a missing module, a syntax error or an environment fault. It is immutable, reproducible from a retained stub, and cited in the acceptance review.
+- **Coverage bar.** Every first-party production file a card adds or changes reaches at least 85% line, 85% branch and 85% function coverage. Measure with the shared gate (U009) or its documented equivalent, `node --test --experimental-test-coverage --test-coverage-include=<file> --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 <tests>`. The file set is enumerated, not discovered: Node reports only files a test loads and counts no branches inside uncalled functions, so an unloaded file counts as 0%. Test tooling that only drives a card's own verification (everything under `tests/`, and root-level `verify`, `capture`, `seal`, `evidence-tool` and `*.check.cjs` scripts) is not production code; the card's manifest names those files. Only generated, vendored or evidence files may otherwise be excluded. Browser-only page code must be loadable under Node tests with DOM stubs or measured through browser coverage (U010); it is never excluded. A card that adds or changes no production code states `coverage: not-applicable` and shows the diff that proves it.
+- **Hermetic tests.** Tests never depend on ambient mutable state: the live git index or HEAD, the private publisher's current bytes, an installed browser's binary hash, wall-clock time, or another card's mutable files. They assert against archived snapshots or fixtures they build themselves. A browser test records the actual browser version and SHA and asserts only that it is Microsoft-signed and within the qualified major version (U018). A nested `node --test` is spawned with `NODE_TEST_CONTEXT` and `NODE_V8_COVERAGE` removed from its environment.
+- **Evidence record.** A card's result also carries the RED path, the coverage figures with the command that produced them, and its `hints`.
+
+### Pinned text
+
+Accepted cards pin exact spans of this document, [README.md](../../README.md) and [backlog.md](backlog.md) against the live files by searching for the first occurrence of a heading or sentence, so editing a pinned span, or quoting its opening words earlier in this file, fails about a hundred accepted integrity tests at once. Put new rules in new sections outside these spans and never quote their opening words. Protected: every A-Snnn and B-Snnn inventory row; the Atomic card contract section and the Portable A-card lesson contract section (together, from the first heading through the start of the Concurrent pull section); the implementation-order paragraph; the packet-membership sentence and everything after it up to the Parent completion section; the selected-policy line in the purpose section; the whole Parent completion section; and the Scenario cards introduction down to its first group heading.
+
+<details>
+<summary>Accepted checkpoints archive (frozen 2026-11-04; the live ledger is authoritative)</summary>
 
 Accepted trace capability: [C034 saved original-client ordering](../../capability/C034/index.html). The controller independently decoded and inspected exact saved C033 actions, versions and outcomes; missing replacement steps stay unverified. C015's real epoch context is explicitly a declared fixture association, not authenticated run/lease/user correlation.
 
@@ -93,18 +123,23 @@ The previously accepted 135-practice zero-credit refresh pins `ebd7433ac143242ab
 
 The latest independently accepted full-150 refresh pins `c8b3139f07aa60a64833a5380503b2bd794c0e0e`: 165 source units and every A-S001-A-S150 practice. The controller passed 323 focused leaves in 24 files and 12 actual unified-browser groups, visited all 150 unique lesson links and exact source-pinned banners, and verified S001 PASS/FAIL/reset/search/AND-filter return state. All 957 source/proof files remained unchanged; 953 final-manifest entries, 561 historical working proofs, eight earlier snapshots, 560 independent raw/Git historical baselines, 218 new raw Git-exact archives and 51 frozen Git-exact files were checked. Fifty-six pre-existing CRLF/LF representations are independently preserved, never mislabeled byte-identical or normalized. [Full-150 recovery evidence](../../capability/C005/evidence/op-catalog-snapshot-refresh-165-c8b3139f07aa-publication-recovery/result-final.json) records the unqualified `dfb348e004c5` precursor and narrowly appended `0454c1885f872be2d704d76c8a15269585573fe7` correction; standard publication quarantine was not bypassed. Only S148's exact original trailing-period banner is accepted for its immutable source; all other 149 require the canonical literal. Scoped raw archives total 288 text plus 208 gzip files. This refresh earns zero original, native or source-parent credit and makes no production-runtime or reliability certification.
 
-The operator subsequently approved C001 design and local implementation: portable HTML/JS lessons, a proposed Node.js 24 LTS/Express control API on App Service Linux, single-tenant Microsoft Entra ID with invited guests, Azure Storage Tables/Queues/Blob for control state, App Service code slots as the first planned native target, and Bicep as the preferred future IaC format. Node.js 22.23.4 remains test tooling. **No IaC generation, identity registration, live Azure execution, deployment, or expenditure is approved.** Exact target/SKU/region and separate scaffold/deployment approvals remain required.
+</details>
+
+Current approvals (changed only through U001 and U002 in [Zero-credit work cards](#zero-credit-work-cards)): the operator approved C001 design and local implementation: portable HTML/JS lessons, a proposed Node.js 24 LTS/Express control API on App Service Linux, single-tenant Microsoft Entra ID with invited guests, Azure Storage Tables/Queues/Blob for control state, App Service code slots as the first planned native target, and Bicep as the preferred future IaC format. Node.js 22.23.4 remains test tooling. **No IaC generation, identity registration, live Azure execution, deployment, or expenditure is approved.** Exact target/SKU/region and separate scaffold/deployment approvals remain required.
 
 ## TOC
 
+- [Standing rules](#standing-rules)
 - [Three-column board](#three-column-board)
 - [Kano value and completion policy](#kano-value-and-completion-policy)
 - [Atomic card contract](#atomic-card-contract)
 - [Concurrent pull and one-piece flow](#concurrent-pull-and-one-piece-flow)
+- [Shared memory and hints](#shared-memory-and-hints)
 - [Entry gates and independence](#entry-gates-and-independence)
 - [Capability and workflow cards](#capability-and-workflow-cards)
 - [Scenario cards](#scenario-cards)
 - [Optional delighters and tandem packets](#optional-delighters-and-tandem-packets)
+- [Zero-credit work cards](#zero-credit-work-cards)
 - [Parent completion and traceability](#parent-completion-and-traceability)
 - [Operating checks](#operating-checks)
 
@@ -118,18 +153,19 @@ The refreshed catalog exposes all 150 accepted portable lessons from the explici
 
 | To Do | In Progress | Done |
 | --- | --- | --- |
-| Ready admitted cards and blocked remainders are recorded in [live state](flow-state.json); only ready, unowned work is pullable. | Current claims, owners, dependencies, empirical review, and zero-credit operational integration are recorded in the live ledger; native work remains gated. | [C001](../../capability/C001/index.html), [C002](../../capability/C002/index.html), [C003](../../capability/C003/index.html), [C004](../../capability/C004/index.html), [C005 catalog](../../capability/C005/index.html), [C006 search](../../capability/C006/index.html), [C007 filters](../../capability/C007/index.html), [C008 preparation](../../capability/C008/index.html), [C020 fixture instructions](../../capability/C020/README.md), [C021 contract adapter](../../capability/C021/index.html), [C023 checkpoint ledger](../../capability/C023/index.html), [C024 multipart fixture](../../capability/C024/index.html), [C025 ranged-download instructions](../../capability/C025/README.md), [C027 live-SSE instructions](../../capability/C027/README.md), [C041 host instructions](../../capability/C041/README.md), [A-S001](../../learning/S001/index.html), [A-S002](../../learning/S002/index.html), [A-S003](../../learning/S003/index.html), [A-S004](../../learning/S004/index.html), [A-S005](../../learning/S005/index.html), [A-S006](../../learning/S006/index.html), [A-S007](../../learning/S007/index.html), [A-S008](../../learning/S008/index.html), [A-S009](../../learning/S009/index.html), [A-S010](../../learning/S010/index.html), [A-S011](../../learning/S011/index.html), [A-S012](../../learning/S012/index.html), [A-S013](../../learning/S013/index.html), [A-S014](../../learning/S014/index.html), [A-S015](../../learning/S015/index.html), [A-S016](../../learning/S016/index.html), [A-S017](../../learning/S017/index.html), [A-S018](../../learning/S018/index.html), [A-S019](../../learning/S019/index.html), [A-S020](../../learning/S020/index.html), [A-S021](../../learning/S021/index.html), [A-S022](../../learning/S022/index.html), [A-S023](../../learning/S023/index.html), [A-S024](../../learning/S024/index.html), [A-S025](../../learning/S025/index.html), [A-S026](../../learning/S026/index.html), [A-S027](../../learning/S027/index.html), [A-S028](../../learning/S028/index.html), [A-S029](../../learning/S029/index.html), [A-S030](../../learning/S030/index.html), [A-S031](../../learning/S031/index.html), [A-S032](../../learning/S032/index.html), [A-S033](../../learning/S033/index.html), [A-S034](../../learning/S034/index.html), [A-S035](../../learning/S035/index.html), [A-S036](../../learning/S036/index.html), [A-S037](../../learning/S037/index.html), [A-S038](../../learning/S038/index.html), [A-S039](../../learning/S039/index.html), [A-S040](../../learning/S040/index.html), [A-S041](../../learning/S041/index.html), [A-S042](../../learning/S042/index.html), [A-S043](../../learning/S043/index.html), [A-S044](../../learning/S044/index.html), [A-S045](../../learning/S045/index.html). Evidence and publication references are in the live ledger. |
+| Admitted items, ready (every entry gate Done) or waiting on ordinary gates that are themselves cards or U cards; there is no blocked variant. Only ready, unowned work is pullable, U cards first. See [live state](flow-state.json). | Claimed work with a live owner and heartbeat: building, review, tests, coverage proof, acceptance, and every unblock task. Silent claims are re-attached to a fresh agent, never parked. See the live ledger. | [C001](../../capability/C001/index.html), [C002](../../capability/C002/index.html), [C003](../../capability/C003/index.html), [C004](../../capability/C004/index.html), [C005 catalog](../../capability/C005/index.html), [C006 search](../../capability/C006/index.html), [C007 filters](../../capability/C007/index.html), [C008 preparation](../../capability/C008/index.html), [C020 fixture instructions](../../capability/C020/README.md), [C021 contract adapter](../../capability/C021/index.html), [C023 checkpoint ledger](../../capability/C023/index.html), [C024 multipart fixture](../../capability/C024/index.html), [C025 ranged-download instructions](../../capability/C025/README.md), [C027 live-SSE instructions](../../capability/C027/README.md), [C041 host instructions](../../capability/C041/README.md), and all 150 portable lessons A-S001-A-S150 through the [learner harness](../../capability/local-harness/index.html). The ledger lists every Done card with its evidence and publication references. |
 
-Let N be the number of active contributors:
+Let N be the number of active contributors (an operator setting; the ledger currently uses N = 6):
 
-- To Do limit: **2 x N** cards; admit only as many seed cards as fit.
-- In Progress limit: **N** cards, with **one active card per contributor**.
-- Review, tests, integration, and acceptance remain inside In Progress; there is no separate testing/review queue.
-- Pairing or swarming consumes the participating contributors' capacity on the same card.
+- To Do limit: **2 x N** items; admit only as many ready items as fit. U and K cards count.
+- In Progress limit: **N** items, with **one active item per contributor**. U and K cards count.
+- Review, tests, coverage proof, integration, and acceptance remain inside In Progress; there is no separate testing/review queue.
+- Pairing or swarming consumes the participating contributors' capacity on the same item.
+- In Progress means a live owner. Every In Progress item carries `heartbeatUtc`, the newest sign of life (a ledger update or a change under the owned namespace), refreshed at least every 15 minutes. After 60 minutes of silence the claim is stale. A stale claim is re-attached, not parked: the controller dispatches a fresh agent to the same worker ID with `state.ps1 -Action AgentId` and records resume hints, because card publication wrappers hard-code that ID. Only a claim with no identity-bound wrapper may return to To Do instead. Marking a claim stale is not blocking it.
 
-The tables below are an **unadmitted inventory**, not another workflow column and not a giant To Do queue. Returned remainders or approval-blocked cards may remain in the To Do bucket with `readiness=false` and a concrete blocker; they still count against its admitted queue limit. Only ready admitted cards with reserved quota/capacity are pullable, and global dispatch pauses take precedence.
+The tables below are an **unadmitted inventory**, not another workflow column and not a giant To Do queue. A To Do item is either ready (every entry gate is Done) or waiting on ordinary gates that are themselves cards or U cards; `readiness` is computed from the gates and never set by hand. Nothing is stored as blocked: no `blocker` text, no `readiness=false` parking, no blocked reasons, holds or labels. Immutable history is not rewritten: result, attempt and recovery records inside completed cards, and C019's recovery record, still use the word for past outcomes, and no new record may. Only ready, unowned admitted work with reserved quota/capacity is pullable, U cards first, and global dispatch pauses take precedence.
 
-All 150 A cards can start from the supplied source and the portable lesson contract below. Native B cards genuinely need a safe harness, fixtures, and a qualified target. Pretending those dependencies do not exist would not create independent work.
+All 150 A cards can start from the supplied source and the portable lesson contract below. Native B cards genuinely need a safe harness, fixtures, and a qualified target. Pretending those dependencies do not exist would not create independent work, so each missing decision, approval or tool is an explicit U card at the head of the queue (see [Zero-credit work cards](#zero-credit-work-cards)).
 
 Parallel file-lesson browser checks can use the verified [isolated headless helper](../../testing/browser/isolated.cjs). Its explicit offline Playwright 1.56.1 and signed installed Edge pairing passed eight independently rerun real-browser isolation checks without weakening TLS or disabling the browser sandbox. Network fixtures need separately guarded, caller-owned loopback support; do not bypass the file helper's path/network guards or steal another worker's integrated-browser foreground.
 
@@ -147,7 +183,7 @@ Ordinary S009, C002, and C003 browser verification preserves committed observati
 
 These are product hypotheses to validate with interested parties, not claims that a Kano survey has already been conducted. Kano class is not engineering priority. Freeze the class before admission; do not relabel work to bypass quotas.
 
-Tests, formatting, refactoring, build plumbing, and approval administration are part of the owning card's Done criteria, not extra satisfier credits. Each card earns at most one credit even when it fulfills several backlog parents.
+Tests, formatting, refactoring, and build plumbing are part of the owning card's Done criteria, not extra satisfier credits. Each card earns at most one credit even when it fulfills several backlog parents. Unblock, slice, tooling and coverage-uplift work is **zero credit**: it has no Kano class, is never counted in d, s or l, is never a packet companion, and can neither satisfy nor fund a ratio. Approval and access administration that gates a card is its own U card, never hidden inside the owning card's Done criteria.
 
 ### Actual Done constraints
 
@@ -217,16 +253,62 @@ Each lesson must add a worked, testable exercise rather than copying the backlog
 
 ## Concurrent pull and one-piece flow
 
-1. Replenish by parent priority, age, available capability, and customer value. Prefer a ready safety/enabling slice once its quota exists; do not finish the entire lesson lane before enabling live value. Choose ready satisfiers when quota blocks a D/L.
+1. Replenish by parent priority, age, available capability, and customer value. Prefer a ready safety/enabling slice once its quota exists; do not finish the entire lesson lane before enabling live value. Choose ready satisfiers when quota blocks a D/L. Fill To Do to 2 x N widest-first: prefer items that make the most successors ready and that live in different namespaces.
 2. Contributors pull one card; no bulk assignment or starting the next card while the previous PR awaits review.
 3. Keep registries discoverable from per-card manifests instead of concurrent edits to one central list. Version shared ports/contracts before implementation against them.
 4. Use separate namespaces: learning/Snnn, native/Snnn, capability/Cnnn, and delight/Xnnn. A/B siblings can progress concurrently when their own gates pass; B never waits merely for A's UI work.
 5. Narrow dependencies to actual consumed capabilities. Contract-conforming components can be developed with explicit fixtures; parent-level release conditions are not blanket coding dependencies.
-6. Preallocate approved leases for admitted native work. Provisioning queues, missing access, undecided stack choices, and unavailable reviewers are not hidden in To Do.
-7. Attempt bounded same-card recovery first. Return an incomplete remainder to To Do with `readiness=false` and a concrete blocker when it cannot finish; never pull it again until its gates pass. Preserve the original Kano unit and any verified partial evidence without awarding an unfulfilled unit. Do not add a fourth workflow column.
+6. **Obstacles become work.** A missing approval or access, an undecided choice, a failed gate, a broken tool, a missing publication scope or an unavailable reviewer creates a U card in the same ledger transaction. The U card goes to the head of the queue and is pulled before any non-U item; the contributor who hit the obstacle takes it unless a hand-off is faster. The stopped card returns to To Do with that U card as an ordinary entry gate. Preallocate approved leases for admitted native work.
+7. Attempt bounded same-card recovery first. If a card cannot finish, return the remainder to To Do (ready, or waiting on ordinary gates) with resume hints and verified partial evidence preserved, the original Kano unit intact, and no credit for the unfulfilled unit. If an obstacle caused the stop, item 6 applies. There is no `blocker` text, no hand-set `readiness=false`, and no fourth workflow column.
 8. For unavoidable long observations, implement a bounded, resumable collection slice and report its evidence limit. Do not promise five-nines proof merely to close a four-hour card.
 9. Review ready PRs before pulling new work. Investigate cards older than one focused working day; remove causes of waiting instead of inflating WIP.
 10. If an accepted credit is invalidated, surface the debt and stop new D/L admission until valid evidence restores the constraints. Never conceal a failed acceptance or invent compensating satisfiers.
+11. **Parallel safety.** A card edits only its own namespace. K cards add new test files only. Shared files (this document and the ledger) have one writer, the controller, under the state mutex; workers return structured results instead of editing them. No two items own the same file, and sequential work on one shared tool (for example `state.ps1`) is expressed as ordered gates, not as parallel cards.
+12. **Measured frontier.** At each replenishment compute the ready frontier (items whose gates are Done), its width by dependency level, and the critical-path depth. If the frontier is narrower than N, split the bottleneck card or add independent U/K work; never inflate WIP. Report the numbers with the replenishment.
+13. **No orphaned claims.** Heartbeat and re-attach rules are in [Three-column board](#three-column-board). A re-attached card keeps its partial evidence and gains resume hints, and the new agent works under the original worker ID.
+
+## Shared memory and hints
+
+Agents are stateless; the board is their memory. Three stores, from most specific to most general:
+
+| Store | Holds | Written by | Read by |
+| --- | --- | --- | --- |
+| Card `hints` (ledger, on every admitted card and U/K item) | Resume notes, traps, reusable fixtures, commands and expectations for this one item | Planner, worker, reviewer | Whoever pulls the item |
+| Ledger `lessons` (append-only, `L-nnnn`) | Cross-card lessons: trap, reuse, command, decision, plan, test, coverage, process | Controller, merged from every result's `hints` | Every agent, before planning or pulling |
+| Repository memory (`store_memory`, `vote_memory`) | Durable conventions that matter beyond this board; one fact per call, cited by file and line | Any agent | Every agent, shown by the platform |
+
+Protocol:
+
+1. **Read before you plan or pull.** Read the item's `hints`, then every active lesson whose `cards` or `tags` match your card, namespace, tools or host, then the repository memories the platform shows you. A hint you decide not to follow must be answered in your result.
+2. **Write when you finish, when you stop, and when you refine.** Every result carries `hints`: at least one entry, or `"hints": "none"` with a reason. A stopped card carries resume hints (state reached, next step, traps hit). A planner or refiner leaves a hint on every card it splits, narrows or re-gates.
+3. **One fact per hint.** Fields: `kind` (trap, reuse, command, decision, plan, test, coverage or process), `cards`, `tags`, `text` (at most 240 characters, concrete and checkable), `evidence` (path, commit or run), `confidence` (1-5). Never record secrets, personal data or unverified guesses.
+4. **Single writer, append only.** Workers do not edit this document or the ledger. The controller appends hints to `lessons` under the state mutex, assigns the ID, and never deletes: a correction is a new lesson with `supersedes`, and the old one becomes `superseded`.
+5. **Promote what proved itself.** At each hygiene pass the controller promotes lessons confirmed by two independent cards, or by one failed review, into the curated list below, stores durable repository-wide facts with `store_memory`, and downvotes wrong ones with `vote_memory`.
+
+Curated lessons (the ledger holds the full, current set):
+
+| ID | Kind | Lesson | Evidence |
+| --- | --- | --- | --- |
+| L-0001 | trap | Publish only through `.git\kanban-orchestrator\publish.ps1`. A manual `git add --all` commit (`dd49966d`) put five in-progress cards' unpublished files into one unscoped commit and skipped their card-scoped tags. | publish.ps1; C019, C030, C035, C037, C038 |
+| L-0002 | trap | A nested `node --test` started from inside a test inherits `NODE_TEST_CONTEXT=child-v8` and exits 0 even when its test fails. Spawn it with that variable and `NODE_V8_COVERAGE` deleted. | C030 `tests/integrity.test.cjs`, reproduced 2026-11-04 |
+| L-0003 | trap | Node coverage reports only files a test loads and counts no branches inside uncalled functions. Enumerate production files and count unloaded ones as 0% before trusting a percentage. | probe 2026-11-04 |
+| L-0004 | command | Coverage bar: `node --test --experimental-test-coverage --test-coverage-include=<file> --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 <tests>`; it exits 1 below any threshold. | C038 `tests/coverage.cjs` |
+| L-0005 | command | Staged CRLF files: `git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --cached --check`. Plain `git diff --check` reports every CRLF line as trailing whitespace. | publish.ps1 |
+| L-0006 | process | Ledger writes take mutex `Local\AppScalingStrategies_KanbanState_v1`. The ledger is CRLF; `ConvertFrom-Json -AsHashtable \| ConvertTo-Json -Depth 60` reproduces it byte for byte and Node `JSON.stringify` does not. | state.ps1; round trip 2026-11-04 |
+| L-0007 | process | A card is publishable only after its exact ID and frozen Kano class are in the publisher's closed map (A-Snnn are pattern-allowed). Admit the publication scope before admitting the card. | publish.ps1 |
+| L-0008 | process | Admin publication accepts only `.docs\wiki\flow-state.json` and `.docs\wiki\kanban.md` with a `[flow][admin]` message. Every other path needs an owned card scope. | publish.ps1 |
+| L-0009 | trap | Consumers pin accepted producer bytes and sealed evidence is hash-checked. Coverage uplift adds new test files only; editing production source or sealed files breaks pins and integrity tests. | C019 pins; C030 `evidence-index.json` |
+| L-0010 | reuse | Browser checks: `require('./testing/browser/isolated.cjs').openIsolatedLesson(relPath)` starts fresh headless Edge for files under learning/, capability/ or testing/browser/fixtures/. Always `await session.close()` in `finally`. | testing/browser/USAGE.txt |
+| L-0011 | process | Set `CAPTURE_BROWSER_EVIDENCE=1` only for an intentional evidence refresh; ordinary verification leaves every evidence byte unchanged. | C038 `tests/verify.cjs` |
+| L-0012 | command | If `git push` fails with a server error, retry with command-local `git -c http.version=HTTP/1.1 push`; never change global git or TLS settings. | C029 recovery; push 2026-11-04 |
+| L-0013 | plan | Native cards C061-C108 hide adapter plumbing (ARM auth, lease-scoped tags, idempotent operations, error mapping). Before admission, split an offline recorded-response slice from the native-run slice. | backlog P001-P007 |
+| L-0014 | plan | The dependency graph is narrow at the start: depth 11, six unstarted ready C cards, and SAFE (C056) at depth 6 gating every native and B card. Keep agents busy with independent U and K work. | board analysis 2026-11-04 |
+| L-0015 | process | All five In Progress claims show no change under their namespaces since 12:10-12:14Z (07:10-07:14 local) while the ledger still says running. Re-attach a fresh agent to the same worker ID with `state.ps1 -Action AgentId`: card publication wrappers hard-code worker IDs, so returning the card to To Do would strand its publication. | ledger workers; `capability/C030/publish.ps1` |
+| L-0016 | trap | Tests that compare an installed browser's version or SHA to a recorded value fail on every routine Edge update. 57 namespaces hard-code Edge 156.0.4314.50 and the installed Edge is now 156.0.4314.58. Assert the signature and the qualified major version, and record the actual values. | baseline 2026-11-04; U018 |
+| L-0017 | trap | Tests that read ambient mutable state fail when other agents work. C035's foreign-index test can never hold again after the unscoped commit, and C005, C015 and C034 pin an old publisher digest. Build the state in a fixture or pin an archived snapshot. | C035 `tests/source.test.cjs`; C034 `tests/surface.test.cjs` |
+| L-0018 | trap | Card publication wrappers (`capability/Cnnn/publish.ps1`) require the card In Progress under a hard-coded worker ID with status running, plus the exact frozen kanban row. Changing any of them strands publication. | `capability/C030/publish.ps1` |
+| L-0019 | trap | Accepted lessons pin exact spans of this document by the first occurrence of a heading or sentence. Editing a pinned span, or quoting its opening words earlier in the file, failed 23 lesson integrity suites during this hygiene pass. See Pinned text. | `learning/S056/tests/sources.cjs` |
+| L-0020 | trap | The `learning/S011` browser suite rewrites its committed `evidence/browser-observations.json` on every run (start time, finish time and Edge version changed); S009, S015, S112 and S123 write only under `CAPTURE_BROWSER_EVIDENCE=1`. After any local browser run, check `git status` and `git restore` evidence you did not mean to change. | `learning/S011/browser.test.cjs:327` |
 
 ## Entry gates and independence
 
@@ -235,7 +317,8 @@ Comma-separated gates mean AND. The following aliases are explicit capability co
 | Gate | Required cards or condition |
 | --- | --- |
 | SOURCE | The supplied backlog and portable lesson contract; available now. |
-| SAFE | C056, which composes the required authorization, ownership, budget, state, oracle, and cleanup guards. |
+| SAFE | C056, which composes the required authorization, ownership, budget, state, oracle, and cleanup guards, and APPROVED. |
+| APPROVED | U002 Done, and every approval the card's native action needs (target, IaC generation, scaffold, identity registration, deployment, expenditure, live execution) is literal `true` in `approvals.C001`. A card with no native action never names it. |
 | CORE | SAFE, C055, C020, C021, C023, C037, C038, C039, C040, C042, C043, C044, C045, C046, C049, C050, C051, C054, C058, C059. |
 | DATA | C083, C084, C086, C088, C023. |
 | ASANY | One approved configuration: C061 OR C062 OR C063. |
@@ -258,6 +341,8 @@ Native provider qualification uses approved private leases and SAFE before publi
 Capability cards are deliberately not gated on completion of unrelated whole epics. A source parent still retains its original backlog prerequisites and acceptance requirements when rolled up; component completion does not silently erase them.
 
 An OR gate is one qualified target, not a demand to complete every provider. Proof is configuration-specific: an ACA result is not proof on AKS, and a code deployment is not proof of a custom container.
+
+A U card ID in a gate list means that card is Done. Any card may name U cards, and that is how an obstacle is expressed: a card waits on the U card that removes the obstacle, never on a blocked flag.
 
 ## Capability and workflow cards
 
@@ -319,7 +404,7 @@ All cards in this section target one selected configuration and one observable b
 | C052 | H010, H012 | D | Expire a lease and target only owned resources; verify unrelated resources survive attempted cleanup. | C010, C011, C015 |
 | C053 | H004, H010, H012 | D | Reconcile checkpoint-aware teardown idempotently; repeated cleanup cannot destroy unresolved required work silently. | C052, C017 |
 | C054 | H010, H011 | S | Recover an orphaned owned run from the console; verify remaining resources and recovery actions are auditable. | C053, C019 |
-| C055 | H011 | D | Publish the approved HTTPS harness with source/disclaimer links and safe availability labels; verify public role boundaries. | C005, C041, C056, C059 |
+| C055 | H011 | D | Publish the approved HTTPS harness assembled from its prepared slices (U015-U017); verify on the public URL the source/disclaimer links, safe availability labels, and visitor/conductor/operator role boundaries. | C005, C041, C056, C059, APPROVED, U015, U016, U017 |
 | C056 | H011, H012 | D | Enforce a single execution admission gate; no live public action bypasses required guards, approval, or selected-provider qualification. | C001, C002, C009, C010, C011, C014, C015, C016, C017, C022, C029, C030, C031, C035, C036, C047, C048, C052, C053 |
 | C057 | H011 | S | Share one sanitized completed-run report; verify audience permissions and absence of management credentials. | C039, C055 |
 | C058 | H011 | S | Surface cost/health/cleanup alerts and acknowledgment; verify configured thresholds produce actionable notifications. | C011, C019, C053 |
@@ -799,14 +884,78 @@ The six companions may finish concurrently or sequentially. The delighter is adm
 
 ## Operating checks
 
-At every replenishment:
+At every replenishment, and at least once per working session, run the hygiene checklist:
 
 1. Reconcile source coverage, actual card state, acceptance evidence, and the Done ledger.
-2. Admit only genuinely ready cards, within queue/WIP limits and atomic Kano reservations.
-3. Confirm each card's owner, small scope, fixture/host, module boundary, reviewer, and measurable check.
-4. Prefer finishing/reviewing active work over starting more; inspect age, blocked time, and rework.
-5. Revalidate each delighter's named six companions and same-packet provenance.
-6. Publish throughput and cycle time by Kano class, not just totals; never treat planned inventory as completed value.
-7. Preserve security/cost/cleanup gates even when quotas delay admission; keep unsafe live features disabled.
+2. Re-attach stale claims (60 minutes without a heartbeat) to a fresh agent under the same worker ID, with resume hints; never leave an unattended In Progress.
+3. Turn every obstacle into a U card. Confirm no `blocker` text, hand-set `readiness=false`, blocked reason, hold, or blocked status exists in the ledger or this document.
+4. Admit only genuinely ready items, within queue/WIP limits and atomic Kano reservations, and fill To Do to 2 x N widest-first.
+5. Lint atomicity: split cards that need a decision, hide a build, hold several behaviors, or exceed four hours; merge or eliminate cards that duplicate an observable result.
+6. Confirm each item's owner, small scope, fixture/host, module boundary, reviewer, measurable check, RED plan and coverage plan.
+7. Prefer finishing/reviewing active work over starting more; inspect age, silence, and rework.
+8. Revalidate each delighter's named six companions and same-packet provenance.
+9. Publish throughput and cycle time by Kano class, plus ready-frontier width, critical-path depth and open coverage debt (K cards); never treat planned inventory as completed value.
+10. Preserve security/cost/cleanup gates even when quotas delay admission; keep unsafe live features disabled.
+11. Check that no edit changed a text span that accepted cards pin against this document (see Pinned text below), and merge new hints into `lessons`, promoting confirmed ones and superseding wrong ones.
 
 Creating this document completes no application, Azure resource, deployment, or implementation card. Current accepted learning deliverables and their limits are recorded separately in the [live execution ledger](flow-state.json); no parent or native proof is implied by an A-card result. The [source acceptance and evidence policy](backlog.md#completion-and-evidence-policy) and [Microsoft disclaimer](../../README.md#microsoft-open-source-disclaimer) continue to apply.
+
+## Zero-credit work cards
+
+Two families carry no Kano class. They exist so that every obstacle, hidden build and quality debt is an owned, test-driven, visible card instead of a blocked state or an unrecorded prerequisite.
+
+- **U cards (U001-U018 so far)** unblock, slice or tool. A U card names what it unblocks, or the credit-bearing card it is a slice of, and ends in an observable check that is true or false: the obstacle is gone, the slice's behavior passes, the tool does its job.
+- **K cards (`K-<card>`)** repay quality debt on one accepted card: its focused tests fail, a measured logic file is under the 85% bar, or it has no Node tests. There is at most one K card per accepted card, named after it (`K-C015`, `K-A-S042`). A K card adds test files and fixtures. The only permitted edit to an existing file is replacing a stale pin of ambient state (an installed browser's hash, the live publisher's bytes, the git index) with an archived-snapshot or self-built-fixture assertion. Production source, sealed evidence and retained RED are never edited, because consumers pin accepted bytes. A real behavioral defect found while measuring is a separate U card fixed test-first, and it invalidates the card's credit under rule 10 of [Concurrent pull](#concurrent-pull-and-one-piece-flow).
+
+Rules for both families:
+
+- **Zero credit.** Never counted in d, s or l, never a packet companion, never relabelled to bypass a quota. The credit-bearing card they serve earns its single unit when it is accepted.
+- **Same discipline as any card.** Atomic (one to four hours), TDD with an archived RED, the 85% bar for any production code they add, hints in the result, one owner, one namespace. A K card's RED is the failing or under-threshold run that proves the debt.
+- **They count against WIP and queue limits**, and U cards are pulled before any other item.
+- **Created with the obstacle.** A U card is created in the same ledger transaction as the obstacle it removes, with `unblocks`, an observable acceptance check and entry gates. When it is Done, the cards that waited on it are ordinary ready cards.
+- **Recorded in the ledger.** Admitted U and K cards live in `operationalWork` with `state` To Do, In Progress or Done. K cards are derived from the ledger's `coverageBaseline.debt` rather than listed here.
+- **Publication.** A U or K card publishes under a scope the private publisher already authorizes (a K card uses its original card ID and namespace). A U card that needs a new path scope names U003 as an entry gate. Normal publication never uses the admin scope.
+
+### U cards
+
+| Card | Serves | Deliver and verify | Entry gate | Hint |
+| --- | --- | --- | --- | --- |
+| U001 | APPROVED | Prepare the native-run approval packet: priced, bounded options for the first App Service code-slot target (OS, SKU, region, subscription, resource group), a cleanup and rollback plan, and the exact owner decisions; a missing price never reads as zero. | C001, C002, C004 | Return the packet in the result so no new repository path is needed. Price from current Azure pricing and state the date. |
+| U002 | APPROVED | Obtain and record the owner's literal answers to the packet for target, IaC generation, scaffold, identity registration, deployment, expenditure and live execution. Deny by default, change `approvals.C001` only with those literals, and keep the C001 tests green. | U001 | C001's contract tests and probe and the C020, C025 and C027 servers read `approvals.C001` live: write the failing test for the new state before changing a flag. A "no" is a valid Done result. |
+| U003 | Publication | Extend the private publisher's closed maps, exact IDs and frozen classes only, for the next admission batch (C009 D, C017 D, C026 S, C028 S, C031 D, C032 S) and the tooling scopes `testing/coverage` and `testing/kanban`. Historical and current authority stay separate and the guard checks stay green. | none | Run the publisher's red/green guard tests (L-0007, L-0008). It is the first pull: it unlocks every U card that publishes to a new path. |
+| U004 | Browser lifecycle | End only the process tree the browser helper owns: a marked fixture tree is terminated and look-alike processes survive, deterministically on Windows. | none | Use a marked Node child tree, not Edge. The earlier marked-tree recovery probe failed while a watchdog-only probe passed (`testing/browser/evidence/lifecycle-blocked.json`). |
+| U005 | Browser lifecycle | Bound browser startup: launch, context and page creation share one deadline; expiry ends only the owned tree and rejects with a typed error. | U004 | The 15000 ms limits bound launch and navigation only, not `newContext()`, `newPage()` or the whole startup. |
+| U006 | Browser lifecycle | Make `close()` unable to hang: context close is bounded, and browser shutdown plus owned-tree termination always follow; repeated calls share one cleanup. | U004 | `close()` awaits `context.close()` before `browser.close()`, so a stuck context blocks shutdown. |
+| U007 | Browser lifecycle | Remove owned scratch despite a transient Edge file lock: bounded retry with backoff, owned paths only, any remaining file reported. | none | Edge can keep a BITS temporary file after shutdown. Never delete a path you do not own. |
+| U008 | Browser lifecycle | Run the browser-heavy suites one at a time so two real sessions never overlap in a package run. | none | The package script overlaps two heavy files that each launch two sessions. |
+| U009 | Coverage | Provide the shared coverage gate: enumerate a card's production files, run its focused tests under Node coverage, count unloaded files as 0%, enforce 85/85/85 per file, emit JSON; it passes its own gate. | U003 | L-0002 and L-0003: delete `NODE_TEST_CONTEXT` and `NODE_V8_COVERAGE` in child environments, and never trust a percentage over an unenumerated file set. |
+| U010 | Coverage | Capture browser-executed coverage from Playwright V8 data and merge it into the gate's per-file figures, without editing any sealed browser test. | U003, U009 | Prefer a preload that wraps Playwright page creation to start JS coverage; every card's page script is unmeasured today. |
+| U011 | State tool | `state.ps1` returns incomplete work to To Do behind a U card instead of recording `blocker` text, `Pause` creates a U card, and no card holds a hand-set `readiness=false` or `blocker`. | none | `Report` writes `blocker` and `Pause` writes `blockedReasons` plus a `readiness=false` C001. Test in the `local-resume.test.ps1` style, RED first. |
+| U012 | State tool | `state.ps1` appends each result's `hints` to `lessons` and to the card, and rejects a result with neither hints nor an explained "none". | U011 | Results already carry free fields; the controller merges them under the state mutex. |
+| U013 | State tool | `state.ps1` refuses `Accept` without an archived RED and 85/85/85 coverage (or proof of no production change), and gains a `Heartbeat` action plus a stale-claim report for the 60-minute rule. | U009, U012 | `AgentId` already re-attaches a fresh agent to a worker ID. Review JSON currently needs accepted, focusedTestsPassed, browserObserved and remoteVerified; add redObserved and coverage. |
+| U014 | Board lint | Provide a read-only board lint and frontier report over this document and the ledger: atomicity, Kano ratios, gate resolution and cycles, no blocked state, hints present, stale claims, coverage debt, ready-frontier width. | U003, U009 | Reuse the alias table and parse rules from `state.ps1`; resolve OR groups to the cheapest path when computing levels. |
+| U015 | C055 slice | Add source and disclaimer links and safe availability labels to the public harness shell, offline and test-first. | C005, C041, U003 | Links must match the Microsoft Open Source Disclaimer in README.md; availability labels are a snapshot, not a live feed. |
+| U016 | C055 slice | Verify visitor, conductor and operator role boundaries on the harness API with a local server under test, fake identities and forbidden-command probes. | C009, C010, U003 | No Entra registration here; that needs APPROVED. |
+| U017 | C055 slice | Produce the harness host IaC (Bicep) and release pipeline with what-if and lint tests; no deployment. | APPROVED, U003 | C001 records Bicep and App Service Linux for the harness. Generate nothing until the IaC and scaffold approvals are literal `true`. |
+| U018 | Browser tests | Provide `testing/browser/qualify.cjs`: assert the installed Edge is validly Microsoft-signed and within the qualified major version, record its actual version and SHA in the run report, and fail closed otherwise; requalify the current Edge against the isolated helper suites. | U003 | Do not edit `isolated.cjs`; every test pins its SHA. Browser-pin K cards adopt this instead of an equality check against a historical SHA. |
+
+### Records merged, split or eliminated
+
+| Record | Disposition | Now |
+| --- | --- | --- |
+| `OP-BROWSER-BOUNDED-LIFECYCLE` (To Do, `readiness=false`, blocker text) | Split and eliminated | U004-U008 |
+| `REF-BROWSER-QUALITY` (refiner status `blocked`) and `OWNED-LOOPBACK-BROWSER` (blocker status) | Merged into one lineage; statuses no longer blocked | U004-U008 |
+| `blocker` text on C019, `blockedReasons`, `readiness=false` parking | Eliminated; C019's text preserved as resume hints | C019 hints, U011 |
+| C055 (a deploy hiding three prerequisite builds) | Split; the card keeps its single credit | U015-U017 |
+| Stale partial Done list and accepted-history narrative in this document | Pruned to the archive and a pointer | Archive above |
+
+### K cards
+
+K cards are derived, not listed. At the 2026-11-04 baseline (Node 22.23.4, focused tests only; browser suites run only where they sit in a lesson's root) 181 namespaces were measured: 31 capability and 150 lesson. Findings:
+
+- **Edge pin.** 57 namespaces hard-code Edge 156.0.4314.50, which auto-updated to 156.0.4314.58. 20 lesson browser suites were run and all fail on it; 37 more are pinned in suites this baseline did not run.
+- **Publisher pin.** C005, C015 and C034 assert the private publisher's old digest while the current publisher differs.
+- **Coverage.** 42 namespaces have a measured logic file under the 85% bar, or no Node tests.
+- **Result.** After overlaps that is **84 K cards** (17 capability, 67 lesson). C030 (nested-runner environment), C035 (live git index), C037 and C038 are In Progress and carry their own repair.
+
+Every one of the 181 namespaces also has browser-only page code that Node coverage cannot see; U010 closes that gap, and any card that then falls under the bar gets its K card.

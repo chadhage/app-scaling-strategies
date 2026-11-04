@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 1117,
+  "revision": 1118,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-04T12:09:14.3328971Z",
+  "updatedAtUtc": "2026-11-04T17:04:22.1868873Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -16,7 +16,8 @@
     },
     "path": ".docs/wiki/kanban.md",
     "unadmittedMeaning": "Source inventory is not a workflow column.",
-    "parents": 171
+    "parents": 171,
+    "zeroCredit": "U001-U018 unblock, slice and tooling cards and 84 derived K quality-debt cards are zero-credit operationalWork. They are not part of this 414-card inventory and never fund a Kano quota."
   },
   "limits": {
     "contributors": 6,
@@ -35,7 +36,8 @@
     "admitD": "s + l >= 4 * (d + rd + 1)",
     "doneD": "s + l >= 4 * d",
     "doneL": "s >= 6 * l",
-    "packet": "s_p >= 6 * (l_p + rlp + 1), with all six named distinct companions Done"
+    "packet": "s_p >= 6 * (l_p + rlp + 1), with all six named distinct companions Done",
+    "zeroCreditWork": "U (unblock, slice, tooling) and K (quality debt) work has kanoCredit 0, is never counted in s, l or d, and never funds a quota."
   },
   "kanoDone": {
     "D": 7,
@@ -48,7 +50,8 @@
   },
   "gateAliases": {
     "JAVA": "C097, C098, HOSTJAVA.",
-    "SAFE": "C056, which composes the required authorization, ownership, budget, state, oracle, and cleanup guards.",
+    "SAFE": "C056, which composes the required authorization, ownership, budget, state, oracle, and cleanup guards, and APPROVED.",
+    "APPROVED": "U002 Done, and every approval the card's native action needs (target, IaC generation, scaffold, identity registration, deployment, expenditure, live execution) is literal true in approvals.C001. A card with no native action never names it.",
     "AKS": "C073, C077.",
     "REGION": "C090, C095, C096, REPLICA, FENCE, HOST.",
     "IMAGEHOST": "ASIMAGE OR ACA OR AKS.",
@@ -39156,7 +39159,7 @@
       "state": "In Progress",
       "readiness": true,
       "owner": "worker-C019",
-      "blocker": "Runtime/browser/raw proof passed; four actual historical/current authorization failures require a bounded owned correction before parent acceptance.",
+      "blocker": null,
       "result": {
         "schemaVersion": 1,
         "cardId": "C019",
@@ -39424,6 +39427,27 @@
       "authorization": "accepted-local-C015-public-fixture-API-consumer-only",
       "localScope": "Actual read-only local run progress or typed error/recovery inspection over unchanged accepted C015 public APIs. Test setup only via current-approved C015 public persist in unique created test-UUID scratch, then explicit tracked cleanup; no retained demo or shared source edits.",
       "claimedAtUtc": "2026-11-04T06:26:05.3515951Z",
+      "heartbeatUtc": "2026-11-04T12:10:16Z",
+      "hints": [
+        {
+          "kind": "resume",
+          "text": "C019 was published once as 09a12f56863d (tag kanban/C019/09a12f56863d). Its provenance correction (historical 60AE vs current publisher authority: manifest.json, tests/authorization*.cjs, capture*.cjs, verify.cjs, publisher-*.ps1) is in main via unscoped commit dd49966d.",
+          "evidence": "git dd49966d",
+          "confidence": 5
+        },
+        {
+          "kind": "check",
+          "text": "Verify with every mode of 'node capability\\C019\\tests\\verify.cjs' (authorization, guards, focused, browser, syntax, publication). 69 focused tests pass here; Node coverage is 97.19/93.78/100. Then publish the remaining delta as [C019][S] and request parent review.",
+          "evidence": "baseline 2026-11-04",
+          "confidence": 5
+        },
+        {
+          "kind": "process",
+          "text": "The old blocker text 'four actual historical/current authorization failures require a bounded owned correction' is retired: it is this card's work, not a status. No change under capability\\C019 since 12:10Z (07:10 local), so the claim is stale: re-attach a fresh agent under worker-C019 with state.ps1 -Action AgentId (L-0015, L-0018).",
+          "evidence": "retiredWork C019.blocker",
+          "confidence": 5
+        }
+      ],
       "publicationRecovery": {
         "extraCredit": 0,
         "previousExpectedDigest": "48846487727dd2ef35f03d88d65e64121059b6867188bbf34daeaee3fda1c09d",
@@ -48810,7 +48834,28 @@
       "admittedAtUtc": "2026-11-04T11:41:37.8016476Z",
       "authorization": "local-evidence-inspection-and-classification-only",
       "localScope": "Bounded usable local original-card evaluator/inspector over unchanged accepted sources. Fictional controls, actual historical observations and real current C015 context remain distinct; no authenticated/current cross-tier linkage, native effects, routing, cancellation or pool readiness is fabricated.",
-      "claimedAtUtc": "2026-11-04T11:45:58.5758224Z"
+      "claimedAtUtc": "2026-11-04T11:45:58.5758224Z",
+      "heartbeatUtc": "2026-11-04T12:12:48Z",
+      "hints": [
+        {
+          "kind": "resume",
+          "text": "All C030 files, 169 focused tests and evidence are in main via unscoped commit dd49966d; 168 of 169 pass. Publish only the remaining delta with publish.ps1 as [C030][D] (L-0001). No change under capability\\C030 since 12:12Z (07:12 local), so the claim is stale: re-attach a fresh agent under worker-C030 (L-0015).",
+          "evidence": "git dd49966d",
+          "confidence": 5
+        },
+        {
+          "kind": "trap",
+          "text": "Failing: tests/integrity.test.cjs:60 'retained initial stub still reproduces behavior assertion failure'. A nested node --test inherits NODE_TEST_CONTEXT and exits 0 (L-0002); spawn it with that variable deleted. The worker's last integrity run (12:12Z) failed the same way.",
+          "evidence": "capability/C030/tests/integrity.test.cjs:60",
+          "confidence": 5
+        },
+        {
+          "kind": "coverage",
+          "text": "Node-measured coverage over capability/C030 is 99.67/89.53/100; record per-file 85/85/85 proof with the command in L-0004.",
+          "evidence": "baseline 2026-11-04",
+          "confidence": 5
+        }
+      ]
     },
     {
       "technicalEntryGate": "C015, C029",
@@ -48834,7 +48879,28 @@
       "admittedAtUtc": "2026-11-04T11:41:37.8081903Z",
       "authorization": "local-evidence-inspection-and-classification-only",
       "localScope": "Bounded usable local original-card evaluator/inspector over unchanged accepted sources. Fictional controls, actual historical observations and real current C015 context remain distinct; no authenticated/current cross-tier linkage, native effects, routing, cancellation or pool readiness is fabricated.",
-      "claimedAtUtc": "2026-11-04T11:46:05.5289749Z"
+      "claimedAtUtc": "2026-11-04T11:46:05.5289749Z",
+      "heartbeatUtc": "2026-11-04T12:13:52Z",
+      "hints": [
+        {
+          "kind": "resume",
+          "text": "All C035 files, 78 focused tests and evidence are in main via unscoped commit dd49966d; 77 of 78 pass. Publish the remaining delta as [C035][D]. No change under capability\\C035 since 12:13Z (07:13 local), so the claim is stale: re-attach a fresh agent under worker-C035 (L-0015).",
+          "evidence": "git dd49966d",
+          "confidence": 5
+        },
+        {
+          "kind": "trap",
+          "text": "Failing: tests/source.test.cjs:73 'ordinary foreign C048 staged content ... untouched' asserts the live git index still shows the staged C048 entry recorded in foreign-index-initial.json. dd49966d committed it, so it can never hold again. Do not restage; rewrite it against a temp-repository fixture (L-0017).",
+          "evidence": "capability/C035/tests/source.test.cjs:73",
+          "confidence": 5
+        },
+        {
+          "kind": "coverage",
+          "text": "Node-measured coverage is 98.54/91.78/100; add the 85/85/85 proof.",
+          "evidence": "baseline 2026-11-04",
+          "confidence": 5
+        }
+      ]
     },
     {
       "technicalEntryGate": "C036",
@@ -48856,7 +48922,22 @@
       "admittedAtUtc": "2026-11-04T11:41:37.8120707Z",
       "authorization": "local-evidence-inspection-and-classification-only",
       "localScope": "Bounded usable local original-card evaluator/inspector over unchanged accepted sources. Fictional controls, actual historical observations and real current C015 context remain distinct; no authenticated/current cross-tier linkage, native effects, routing, cancellation or pool readiness is fabricated.",
-      "claimedAtUtc": "2026-11-04T11:46:03.1586735Z"
+      "claimedAtUtc": "2026-11-04T11:46:03.1586735Z",
+      "heartbeatUtc": "2026-11-04T12:10:26Z",
+      "hints": [
+        {
+          "kind": "resume",
+          "text": "All C037 files and 42 focused tests are in main via unscoped commit dd49966d and pass. Run 'node capability\\C037\\tests\\verify.cjs' (read-only), then publish the remaining delta as [C037][S]. No change under capability\\C037 since 12:10Z (07:10 local), so the claim is stale: re-attach a fresh agent under worker-C037 (L-0015).",
+          "evidence": "git dd49966d",
+          "confidence": 5
+        },
+        {
+          "kind": "coverage",
+          "text": "Node-measured coverage is 95.35/91.6/95.52; add the 85/85/85 proof and cover cli.cjs if it is under the bar.",
+          "evidence": "baseline 2026-11-04",
+          "confidence": 5
+        }
+      ]
     },
     {
       "technicalEntryGate": "C036",
@@ -48878,7 +48959,22 @@
       "admittedAtUtc": "2026-11-04T11:41:37.8151612Z",
       "authorization": "local-evidence-inspection-and-classification-only",
       "localScope": "Bounded usable local original-card evaluator/inspector over unchanged accepted sources. Fictional controls, actual historical observations and real current C015 context remain distinct; no authenticated/current cross-tier linkage, native effects, routing, cancellation or pool readiness is fabricated.",
-      "claimedAtUtc": "2026-11-04T11:45:57.8967101Z"
+      "claimedAtUtc": "2026-11-04T11:45:57.8967101Z",
+      "heartbeatUtc": "2026-11-04T12:14:13Z",
+      "hints": [
+        {
+          "kind": "resume",
+          "text": "All C038 files and 116 focused tests are in main via unscoped commit dd49966d and pass. Publish the remaining delta as [C038][S]. No change under capability\\C038 since 12:14Z (07:14 local), so the claim is stale: re-attach a fresh agent under worker-C038 (L-0015).",
+          "evidence": "git dd49966d",
+          "confidence": 5
+        },
+        {
+          "kind": "coverage",
+          "text": "tests/coverage.cjs enforces 90/80/90 over readiness.js and model.js only; the bar is 85/85/85 per production file. Raise it and extend it to every production file (measured 96.39/94.31/96.77 on loaded files).",
+          "evidence": "capability/C038/tests/coverage.cjs",
+          "confidence": 5
+        }
+      ]
     }
   ],
   "workers": [
@@ -50328,16 +50424,1497 @@
   "completedParents": [],
   "admittedReadyIds": [],
   "plannedNextIds": [
-    "C016",
     "C019",
     "C030",
     "C035",
     "C037",
-    "C038"
+    "C038",
+    "U003",
+    "U001",
+    "U004",
+    "U007",
+    "K-C015",
+    "K-C008",
+    "K-C004"
   ],
   "blockedReasons": [],
   "stopNewDispatch": false,
   "evidencePolicy": "A lessons are synthetic learning deliverables only. B native proof, original parent acceptance, live Azure outcomes and reliability guarantees remain unfulfilled.",
+  "standingRules": {
+    "version": 1,
+    "adoptedAtUtc": "2026-11-04T16:54:29Z",
+    "source": ".docs/wiki/kanban.md#standing-rules",
+    "rules": [
+      {
+        "id": 1,
+        "name": "Atomic",
+        "text": "One card is one owner, one behavior, one reviewable change set, one observable check and one to four focused hours. Split decisions, hidden builds and oversize cards before pulling."
+      },
+      {
+        "id": 2,
+        "name": "Kano",
+        "text": "Every credit-bearing card has one frozen class. Unblock, slice, tooling and quality-debt work is zero credit and never funds a quota."
+      },
+      {
+        "id": 3,
+        "name": "No Blocked",
+        "text": "Only To Do, In Progress and Done exist. An obstacle becomes a U card in the same transaction and is pulled first; the stopped card returns to To Do gated on it."
+      },
+      {
+        "id": 4,
+        "name": "TDD",
+        "text": "Specification, a genuine archived RED, GREEN, refactor, for every card type."
+      },
+      {
+        "id": 5,
+        "name": "85% coverage",
+        "text": "At least 85% line, branch and function coverage per production file over the enumerated file set; unloaded files count as 0%; no waivers."
+      },
+      {
+        "id": 6,
+        "name": "Parallel by design",
+        "text": "One namespace per card, single-writer shared files, narrow gates, To Do filled widest-first, frontier measured at each replenishment."
+      },
+      {
+        "id": 7,
+        "name": "Shared memory",
+        "text": "Read lessons and hints before planning or pulling; leave hints when finishing, stopping or refining."
+      }
+    ],
+    "thresholds": {
+      "coverage": {
+        "lines": 85,
+        "branches": 85,
+        "functions": 85
+      },
+      "heartbeatMinutes": 15,
+      "staleAfterMinutes": 60
+    },
+    "retired": [
+      "blocker text",
+      "readiness=false parking",
+      "blockedReasons (kept empty)",
+      "status values containing blocked"
+    ],
+    "pinnedText": "Accepted lessons pin spans of .docs/wiki/kanban.md; see the Pinned text section before editing it."
+  },
+  "lessons": [
+    {
+      "id": "L-0001",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "trap",
+      "cards": [
+        "C019",
+        "C030",
+        "C035",
+        "C037",
+        "C038"
+      ],
+      "tags": [
+        "publisher",
+        "git"
+      ],
+      "text": "Publish only via .git\\kanban-orchestrator\\publish.ps1. A manual 'git add --all' commit (dd49966d) put five in-progress cards' unpublished files into one unscoped commit and skipped their card-scoped tags.",
+      "evidence": "publish.ps1; commit dd49966d",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0002",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "trap",
+      "cards": [
+        "C030"
+      ],
+      "tags": [
+        "test",
+        "node"
+      ],
+      "text": "A nested 'node --test' started inside a test inherits NODE_TEST_CONTEXT=child-v8 and exits 0 even when its test fails. Spawn it with NODE_TEST_CONTEXT and NODE_V8_COVERAGE deleted from the child env.",
+      "evidence": "capability/C030/tests/integrity.test.cjs:60; reproduced 2026-11-04",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0003",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "trap",
+      "cards": [],
+      "tags": [
+        "coverage",
+        "node"
+      ],
+      "text": "Node coverage reports only files a test loads and counts no branches inside uncalled functions. Enumerate production files and count unloaded ones as 0% before trusting any percentage.",
+      "evidence": "probe 2026-11-04",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0004",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "command",
+      "cards": [],
+      "tags": [
+        "coverage",
+        "node"
+      ],
+      "text": "node --test --experimental-test-coverage --test-coverage-include=<file> --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 <tests>; exits 1 below any threshold.",
+      "evidence": "capability/C038/tests/coverage.cjs",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0005",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "command",
+      "cards": [],
+      "tags": [
+        "git",
+        "windows"
+      ],
+      "text": "Staged CRLF files: git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --cached --check. Plain 'git diff --check' flags every CRLF line as trailing whitespace.",
+      "evidence": "publish.ps1",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0006",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "process",
+      "cards": [],
+      "tags": [
+        "ledger",
+        "state"
+      ],
+      "text": "Ledger writes hold mutex Local\\AppScalingStrategies_KanbanState_v1. The ledger is CRLF; ConvertFrom-Json -AsHashtable | ConvertTo-Json -Depth 60 reproduces it byte for byte, Node JSON.stringify does not.",
+      "evidence": "state.ps1; round trip 2026-11-04",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0007",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "process",
+      "cards": [],
+      "tags": [
+        "publisher"
+      ],
+      "text": "A card is publishable only after its exact ID and frozen Kano class are in publish.ps1's closed map (A-Snnn are pattern-allowed). Admit the publication scope before admitting the card.",
+      "evidence": "publish.ps1",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0008",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "process",
+      "cards": [],
+      "tags": [
+        "publisher"
+      ],
+      "text": "Admin publication (publish.ps1 -Admin) accepts only .docs\\wiki\\flow-state.json and .docs\\wiki\\kanban.md with a [flow][admin] message; any other path needs an owned card scope.",
+      "evidence": "publish.ps1",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0009",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "trap",
+      "cards": [],
+      "tags": [
+        "pins",
+        "coverage"
+      ],
+      "text": "Consumers pin accepted producer bytes and sealed evidence is hash-checked. Quality-debt work adds test files only; editing production source or sealed files breaks pins and integrity tests.",
+      "evidence": "C019 pins; C030 evidence-index.json",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0010",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "reuse",
+      "cards": [],
+      "tags": [
+        "browser",
+        "test"
+      ],
+      "text": "Browser checks: require('./testing/browser/isolated.cjs').openIsolatedLesson(relPath) starts fresh headless Edge for files under learning/, capability/ or testing/browser/fixtures/; always await session.close() in finally.",
+      "evidence": "testing/browser/USAGE.txt",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0011",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "process",
+      "cards": [],
+      "tags": [
+        "evidence"
+      ],
+      "text": "Set CAPTURE_BROWSER_EVIDENCE=1 only for an intentional evidence refresh; ordinary verification must leave every evidence byte unchanged.",
+      "evidence": "capability/C038/tests/verify.cjs",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0012",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "command",
+      "cards": [],
+      "tags": [
+        "git"
+      ],
+      "text": "If git push fails with a server error, retry with command-local 'git -c http.version=HTTP/1.1 push'; never change global git or TLS settings.",
+      "evidence": "C029 recovery; push 2026-11-04",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0013",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "plan",
+      "cards": [
+        "C061",
+        "C062",
+        "C063",
+        "C064",
+        "C065",
+        "C066",
+        "C067",
+        "C108"
+      ],
+      "tags": [
+        "native",
+        "planning"
+      ],
+      "text": "Native cards C061-C108 hide adapter plumbing (ARM auth, lease-scoped tags, idempotent operations, error mapping). Before admission, split an offline recorded-response slice from the native-run slice.",
+      "evidence": "backlog P001-P007",
+      "confidence": 4,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0014",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "plan",
+      "cards": [
+        "C056"
+      ],
+      "tags": [
+        "planning",
+        "frontier"
+      ],
+      "text": "The dependency graph is narrow at the start: depth 11, six unstarted ready C cards, and SAFE (C056) at depth 6 gating every native and B card. Keep agents busy with independent U and K work.",
+      "evidence": "board analysis 2026-11-04",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0015",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "process",
+      "cards": [
+        "C019",
+        "C030",
+        "C035",
+        "C037",
+        "C038"
+      ],
+      "tags": [
+        "process",
+        "workers"
+      ],
+      "text": "All five In Progress claims show no change under their namespaces since 12:10-12:14Z (07:10-07:14 local) while the ledger still says running. Re-attach a fresh agent to the same worker ID with state.ps1 -Action AgentId: card publication wrappers hard-code worker IDs, so returning the card to To Do would strand its publication.",
+      "evidence": "ledger workers; capability/C030/publish.ps1",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0016",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "trap",
+      "cards": [],
+      "tags": [
+        "browser",
+        "test",
+        "edge"
+      ],
+      "text": "Tests that compare an installed browser version or SHA to a recorded value fail on every routine Edge update. 57 namespaces hard-code Edge 156.0.4314.50 and the installed Edge is now 156.0.4314.58. Assert the signature and the qualified major version, and record the actual values.",
+      "evidence": "baseline 2026-11-04; U018",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0017",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "trap",
+      "cards": [
+        "C035",
+        "C005",
+        "C015",
+        "C034"
+      ],
+      "tags": [
+        "test",
+        "hermetic"
+      ],
+      "text": "Tests that read ambient mutable state fail when other agents work. C035's foreign-index test can never hold again after the unscoped commit, and C005, C015 and C034 pin an old publisher digest. Build the state in a fixture or pin an archived snapshot.",
+      "evidence": "C035 tests/source.test.cjs; C034 tests/surface.test.cjs",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0018",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "trap",
+      "cards": [
+        "C019",
+        "C030",
+        "C035",
+        "C037",
+        "C038"
+      ],
+      "tags": [
+        "publisher",
+        "workers"
+      ],
+      "text": "Card publication wrappers (capability/Cnnn/publish.ps1) require the card In Progress under a hard-coded worker ID with status running, plus the exact frozen kanban row. Changing any of them strands publication.",
+      "evidence": "capability/C030/publish.ps1",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0019",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "trap",
+      "cards": [],
+      "tags": [
+        "docs",
+        "pins",
+        "kanban"
+      ],
+      "text": "Accepted lessons pin exact spans of kanban.md by the first occurrence of a heading or sentence. Editing a pinned span, or quoting its opening words earlier in the file, failed 23 lesson integrity suites during this hygiene pass. See Pinned text.",
+      "evidence": "learning/S056/tests/sources.cjs",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    },
+    {
+      "id": "L-0020",
+      "atUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kind": "trap",
+      "cards": [],
+      "tags": [
+        "browser",
+        "evidence",
+        "git"
+      ],
+      "text": "The learning/S011 browser suite rewrites its committed evidence/browser-observations.json on every run (start time, finish time and Edge version changed); S009, S015, S112 and S123 write only under CAPTURE_BROWSER_EVIDENCE=1. After any local browser run, check git status and git restore evidence you did not mean to change.",
+      "evidence": "learning/S011/browser.test.cjs:327",
+      "confidence": 5,
+      "status": "active",
+      "supersedes": null
+    }
+  ],
+  "coverageBaseline": {
+    "measuredAtUtc": "2026-11-04T16:54:29Z",
+    "node": "v22.23.4",
+    "by": "hygiene-2026-11-04",
+    "command": "node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include=<each top-level production file> <focused test files>; browser suites run only where they sit in a lesson root",
+    "bar": {
+      "lines": 85,
+      "branches": 85,
+      "functions": 85
+    },
+    "namespaces": {
+      "measured": 181,
+      "capability": 31,
+      "lessons": 150
+    },
+    "findings": {
+      "failingFocusedTests": 25,
+      "edgePinNamespaces": 57,
+      "edgePinVerifiedFailing": 20,
+      "publisherPin": [
+        "C005",
+        "C015",
+        "C034"
+      ],
+      "logicUnderBarOrNoTests": 42,
+      "kCards": 84,
+      "inProgressOwnRepair": [
+        "C030",
+        "C035",
+        "C037",
+        "C038"
+      ],
+      "browserPageCodeUnmeasuredNamespaces": 181,
+      "subdirectoryCodeNotScanned": 22
+    },
+    "debt": [
+      {
+        "card": "C005",
+        "causes": [
+          "publisher-pin"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C015",
+        "causes": [
+          "edge-pin-static",
+          "publisher-pin",
+          "logic-under-bar"
+        ],
+        "low": [
+          "cli.cjs 65.38/33.33/50",
+          "paths.cjs 91.67/82.76/100",
+          "store.cjs 97.21/74.58/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C034",
+        "causes": [
+          "edge-pin-static",
+          "publisher-pin",
+          "logic-under-bar"
+        ],
+        "low": [
+          "cli.cjs 39.47/42.86/50",
+          "historical.cjs 87.23/68/90",
+          "pins.cjs 100/71.79/100",
+          "saved.cjs 92.86/75/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S015",
+        "causes": [
+          "edge-pin"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S076",
+        "causes": [
+          "edge-pin"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S119",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S123",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S124",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S125",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S126",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S128",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S129",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S130",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S132",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S133",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S134",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S137",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S139",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S140",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "record.cjs 23.05/82.61/47.62"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S141",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S143",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "record.cjs 26.86/60.87/40"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S145",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "record.cjs 24.16/82.61/41.67"
+        ],
+        "page": 2,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S149",
+        "causes": [
+          "edge-pin",
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "record.cjs 32.13/80/51.35"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C001",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "probe.cjs 95.74/100/75"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C004",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "plan-fixtures.js 96.67/70/100",
+          "plan-provenance.js 97.87/83.33/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C008",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "preparation.js 79.59/79.17/83.33"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C016",
+        "causes": [
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "commands.cjs 96.67/82.14/100",
+          "conduct.cjs 41.94/75/33.33",
+          "journal.js 96.86/84.68/100"
+        ],
+        "unloaded": [
+          "cli.cjs"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C018",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "consent.cjs 88.24/75/100",
+          "fresh-reader.cjs 78.95/50/100",
+          "process-reader.cjs 82.69/75/100",
+          "server.cjs 93.88/83.33/86.96"
+        ],
+        "unloaded": [
+          "cli.cjs"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C020",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "server.cjs 84.21/74.36/66.67"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C021",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "unloaded": [
+          "compatibility.stub.snapshot.js"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C023",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "unloaded": [
+          "ledger.js"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C027",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "server.cjs 91.03/83.74/75.86"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C029",
+        "causes": [
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "cli.cjs 100/40/100",
+          "source.cjs 100/68.09/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C033",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "server.cjs 95.29/88.12/75.68"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C036",
+        "causes": [
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "cli.cjs 51.52/33.33/100",
+          "current.cjs 88.57/81.82/100",
+          "pins.cjs 81.74/53.13/85.71",
+          "publisher-provenance.cjs 91.67/90.14/77.78"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C041",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "serve.cjs 88.89/88/76.47"
+        ],
+        "unloaded": [
+          "lesson-host.js"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C045",
+        "causes": [
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "clients.cjs 28.92/60/27.27",
+          "consent.cjs 100/54.55/83.33",
+          "server.cjs 85.83/91.59/78.95",
+          "source-integrity.cjs 89.09/80/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S002",
+        "causes": [
+          "no-node-tests"
+        ],
+        "page": 2,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S045",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 98.11/75/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S051",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 97.22/75/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S054",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 92.86/60/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S055",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 95.83/71.43/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S060",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 97.3/75/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S061",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 97.3/71.43/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S066",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 95.45/60/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S067",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixture.js 95.45/60/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S068",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixture.js 96.67/60/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S070",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 97.67/80/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S071",
+        "causes": [
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixture.js 96/60/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S074",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 97.14/75/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S075",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 96.77/71.43/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S080",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 96.3/66.67/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S086",
+        "causes": [
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 94.12/50/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S087",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 95/60/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S092",
+        "causes": [
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 94.44/80/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S098",
+        "causes": [
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 97.5/71.43/100"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S107",
+        "causes": [
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "serve.cjs 93.46/90.76/81.08"
+        ],
+        "page": 2,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S112",
+        "causes": [
+          "logic-under-bar"
+        ],
+        "low": [
+          "fixtures.js 98.48/80/100"
+        ],
+        "page": 2,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S142",
+        "causes": [
+          "edge-pin-static",
+          "logic-under-bar"
+        ],
+        "low": [
+          "record.cjs 56.06/76.47/90"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S022",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S026",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S027",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S029",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S030",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S035",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S036",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S038",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S042",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S047",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S062",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S064",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S077",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S078",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S089",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S096",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S100",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S102",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S105",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S108",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S120",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S131",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S135",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S147",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "A-S150",
+        "causes": [
+          "edge-pin-static"
+        ],
+        "page": 1,
+        "state": "unadmitted"
+      },
+      {
+        "card": "C030",
+        "causes": [
+          "own-repair"
+        ],
+        "state": "In Progress",
+        "low": [
+          "cli.cjs 100/33.33/100",
+          "source.cjs 100/79.63/100"
+        ]
+      },
+      {
+        "card": "C035",
+        "causes": [
+          "own-repair"
+        ],
+        "state": "In Progress",
+        "low": [
+          "cli.cjs 87.1/40/100",
+          "source.cjs 100/75.51/100"
+        ]
+      },
+      {
+        "card": "C037",
+        "causes": [
+          "own-repair"
+        ],
+        "state": "In Progress",
+        "low": [
+          "cli.cjs 44.74/50/66.67",
+          "pins.cjs 96.3/48/90"
+        ]
+      },
+      {
+        "card": "C038",
+        "causes": [
+          "own-repair"
+        ],
+        "state": "In Progress",
+        "low": [
+          "boundary.cjs 88.52/100/75",
+          "cli.cjs 69.23/42.86/100"
+        ]
+      }
+    ]
+  },
+  "frontier": {
+    "computedAtUtc": "2026-11-04T16:54:29Z",
+    "by": "hygiene-2026-11-04",
+    "basis": "kanban.md inventory (C, B, U) with the ledger Done set; K cards counted separately",
+    "openItems": 252,
+    "depth": 11,
+    "widthByLevel": [
+      17,
+      13,
+      11,
+      4,
+      3,
+      4,
+      9,
+      24,
+      135,
+      22,
+      10
+    ],
+    "readyNow": [
+      "C009",
+      "C017",
+      "C019",
+      "C026",
+      "C028",
+      "C030",
+      "C031",
+      "C032",
+      "C035",
+      "C037",
+      "C038",
+      "U001",
+      "U003",
+      "U004",
+      "U007",
+      "U008",
+      "U011"
+    ],
+    "readyKCards": 84,
+    "note": "Depth is unchanged because SAFE (C056) sits at level 6 and gates every native and B card. Level-1 width rose from 11 to 17 and the first three levels from 11/6/6 to 17/13/11. Five of the 17 are stale In Progress claims to re-attach."
+  },
+  "retiredWork": [
+    {
+      "id": "OP-BROWSER-BOUNDED-LIFECYCLE",
+      "kind": "operationalWork",
+      "disposition": "split",
+      "retiredAtUtc": "2026-11-04T16:54:29Z",
+      "replacedBy": [
+        "U004",
+        "U005",
+        "U006",
+        "U007",
+        "U008"
+      ],
+      "was": {
+        "state": "To Do",
+        "readiness": false,
+        "blocker": "Exact owned-process recovery and old/new real-browser suites must pass before any lifecycle fix can ship."
+      },
+      "evidence": "testing/browser/evidence/lifecycle-blocked.json",
+      "kanoCredit": 0
+    },
+    {
+      "id": "REF-BROWSER-QUALITY",
+      "kind": "refiner",
+      "disposition": "status-changed",
+      "retiredAtUtc": "2026-11-04T16:54:29Z",
+      "statusWas": "blocked",
+      "statusNow": "completed-no-fix",
+      "replacedBy": [
+        "U004",
+        "U005",
+        "U006",
+        "U007",
+        "U008"
+      ]
+    },
+    {
+      "id": "OWNED-LOOPBACK-BROWSER",
+      "kind": "operationalBlocker",
+      "disposition": "status-changed",
+      "retiredAtUtc": "2026-11-04T16:54:29Z",
+      "statusWas": "blocked-bounded-lifecycle-recovery",
+      "statusNow": "converted-to-work",
+      "replacedBy": [
+        "U004",
+        "U005",
+        "U006",
+        "U007",
+        "U008"
+      ]
+    },
+    {
+      "id": "C019.blocker",
+      "kind": "blocker-text",
+      "disposition": "eliminated",
+      "retiredAtUtc": "2026-11-04T16:54:29Z",
+      "was": "Runtime/browser/raw proof passed; four actual historical/current authorization failures require a bounded owned correction before parent acceptance.",
+      "preservedAs": "C019 hints"
+    },
+    {
+      "id": "C055",
+      "kind": "inventory-card",
+      "disposition": "split",
+      "retiredAtUtc": "2026-11-04T16:54:29Z",
+      "slices": [
+        "U015",
+        "U016",
+        "U017"
+      ],
+      "credit": "C055 keeps its single D unit"
+    },
+    {
+      "id": "kanban-done-list",
+      "kind": "document",
+      "disposition": "pruned",
+      "retiredAtUtc": "2026-11-04T16:54:29Z",
+      "note": "Stale partial Done list replaced by a pointer; accepted-history narrative collapsed into an archive block in kanban.md."
+    }
+  ],
   "dispatchOwner": "parent",
   "refiners": [
     {
@@ -50346,7 +51923,14 @@
       "agentId": "27b12c72-86ed-46da-9ba5-9490fe6bf6f2",
       "objective": "Add guarded caller-owned HTTP loopback browser verification for C020 and C041, preserving file-only isolation",
       "scope": "testing/browser and precise ignore only",
-      "status": "blocked",
+      "status": "completed-no-fix",
+      "convertedTo": [
+        "U004",
+        "U005",
+        "U006",
+        "U007",
+        "U008"
+      ],
       "result": "No new verified fix. Active helper/package/tests restored to published53c0c0d. Confirmed startup/context-close bounds and Windows scratch-lock gaps; exact parent stall phase unproven. Prototype inactive; consumer successes remain separate.",
       "parentVerifiedFirstDelivery": true,
       "firstDeliveryIndependentChecks": 8
@@ -50406,7 +51990,14 @@
     },
     {
       "id": "OWNED-LOOPBACK-BROWSER",
-      "status": "blocked-bounded-lifecycle-recovery",
+      "status": "converted-to-work",
+      "convertedTo": [
+        "U004",
+        "U005",
+        "U006",
+        "U007",
+        "U008"
+      ],
       "reason": "Individual fixture APIs and feature browser checks passed. Broader lifecycle bounds/recovery remain unverified; parent command was stopped with no final result. A conflicting cross-agent numeric-handle transcript is not attributable to it. Inactive prototype is archived, not shipped.",
       "agentId": "27b12c72-86ed-46da-9ba5-9490fe6bf6f2",
       "haltsLocalFeatureWork": false,
@@ -50524,6 +52115,35 @@
         "failed": 0
       },
       "kanoCredit": 0
+    },
+    {
+      "id": "HYGIENE-2026-11-04-1",
+      "timestampUtc": "2026-11-04T16:54:29Z",
+      "by": "hygiene-2026-11-04",
+      "kanoCredit": 0,
+      "cards": [
+        "C019",
+        "C030",
+        "C035",
+        "C037",
+        "C038",
+        "C055"
+      ],
+      "reason": "Standing-rules hygiene pass: no-blocked semantics, TDD and 85% coverage in the card contract, shared lessons and hints, measured frontier, C055 split into U015-U017, browser-lifecycle blocker records split into U004-U008, coverage and quality baseline with 84 K cards, stale claims flagged for re-attach.",
+      "counts": {
+        "added": {
+          "uCards": 18,
+          "kCardsDerived": 84,
+          "lessons": 20,
+          "standingRules": 7
+        },
+        "split": 2,
+        "mergedRecords": 2,
+        "eliminated": 3,
+        "pruned": 2,
+        "updatedInProgressCards": 5,
+        "regated": 1
+      }
     }
   ],
   "verificationMaintenance": [
@@ -50548,14 +52168,217 @@
   ],
   "operationalWork": [
     {
-      "readiness": false,
-      "owner": null,
+      "kind": "unblock",
       "state": "To Do",
-      "blocker": "Exact owned-process recovery and old/new real-browser suites must pass before any lifecycle fix can ship.",
+      "readiness": true,
+      "owner": null,
+      "heartbeatUtc": null,
       "kanoCredit": 0,
-      "evidence": "testing/browser/evidence/lifecycle-blocked.json",
-      "lineage": "REF-BROWSER-QUALITY",
-      "id": "OP-BROWSER-BOUNDED-LIFECYCLE"
+      "createdAtUtc": "2026-11-04T16:54:29Z",
+      "createdBy": "hygiene-2026-11-04",
+      "source": ".docs/wiki/kanban.md#zero-credit-work-cards",
+      "id": "U003",
+      "title": "Authorize publication scopes for the next admission batch and the tooling paths",
+      "entryGate": "none",
+      "unblocks": [
+        "C009",
+        "C017",
+        "C026",
+        "C028",
+        "C031",
+        "C032",
+        "U009",
+        "U010",
+        "U014",
+        "U015",
+        "U016",
+        "U017",
+        "U018"
+      ],
+      "acceptance": "The private publisher closed maps contain exactly C009 D, C017 D, C026 S, C028 S, C031 D, C032 S and the scopes testing/coverage and testing/kanban; guard checks pass; historical and current authority are recorded separately.",
+      "tdd": "RED: publisher guard tests show each new ID and path is rejected today.",
+      "coverage": "not-applicable unless production code is added",
+      "hints": [
+        {
+          "kind": "process",
+          "text": "Edit the closed maps only (L-0007, L-0008). Keep historical and current authority separate (C019, C036) and rerun the publisher red/green guard tests. It is the first pull: it unlocks every U card that publishes to a new path.",
+          "evidence": "publish.ps1",
+          "confidence": 5
+        }
+      ]
+    },
+    {
+      "kind": "unblock",
+      "state": "To Do",
+      "readiness": true,
+      "owner": null,
+      "heartbeatUtc": null,
+      "kanoCredit": 0,
+      "createdAtUtc": "2026-11-04T16:54:29Z",
+      "createdBy": "hygiene-2026-11-04",
+      "source": ".docs/wiki/kanban.md#zero-credit-work-cards",
+      "id": "U001",
+      "title": "Prepare the native-run approval packet",
+      "entryGate": "C001, C002, C004",
+      "unblocks": [
+        "U002",
+        "APPROVED"
+      ],
+      "acceptance": "A packet validator accepts the packet: priced, bounded options for the first App Service code-slot target (OS, SKU, region, subscription, resource group), a cleanup and rollback plan, and the exact owner decisions. A missing price, missing cleanup plan or zero-cost default is rejected.",
+      "tdd": "RED: validator test that a packet with a missing price, missing cleanup plan or zero-cost default is rejected.",
+      "coverage": "not-applicable unless a validator is added; then 85/85/85",
+      "hints": [
+        {
+          "kind": "plan",
+          "text": "Return the packet in the result so no new repository path is needed. Price from current Azure pricing and state the date.",
+          "evidence": "kanban.md U001",
+          "confidence": 5
+        }
+      ]
+    },
+    {
+      "kind": "unblock",
+      "state": "To Do",
+      "readiness": true,
+      "owner": null,
+      "heartbeatUtc": null,
+      "kanoCredit": 0,
+      "createdAtUtc": "2026-11-04T16:54:29Z",
+      "createdBy": "hygiene-2026-11-04",
+      "source": ".docs/wiki/kanban.md#zero-credit-work-cards",
+      "id": "U004",
+      "title": "End only the process tree the browser helper owns",
+      "entryGate": "none",
+      "unblocks": [
+        "U005",
+        "U006"
+      ],
+      "lineage": "OP-BROWSER-BOUNDED-LIFECYCLE",
+      "acceptance": "A marked fixture tree is terminated, look-alike processes survive, repeated on Windows.",
+      "tdd": "RED: test that terminates a marked Node child tree and asserts an unmarked look-alike survives.",
+      "coverage": "85/85/85 on new testing/browser modules",
+      "hints": [
+        {
+          "kind": "trap",
+          "text": "The earlier marked-tree recovery probe failed while a watchdog-only probe passed. Use a marked Node child tree, not Edge. Do not edit isolated.cjs: every test pins its SHA.",
+          "evidence": "testing/browser/evidence/lifecycle-blocked.json",
+          "confidence": 5
+        }
+      ]
+    },
+    {
+      "kind": "unblock",
+      "state": "To Do",
+      "readiness": true,
+      "owner": null,
+      "heartbeatUtc": null,
+      "kanoCredit": 0,
+      "createdAtUtc": "2026-11-04T16:54:29Z",
+      "createdBy": "hygiene-2026-11-04",
+      "source": ".docs/wiki/kanban.md#zero-credit-work-cards",
+      "id": "U007",
+      "title": "Remove owned scratch despite a transient Edge file lock",
+      "entryGate": "none",
+      "unblocks": [],
+      "lineage": "OP-BROWSER-BOUNDED-LIFECYCLE",
+      "acceptance": "Bounded retry with backoff on owned scratch only; any remaining file is reported; unknown paths are never deleted.",
+      "tdd": "RED: test that holds a file handle open in owned scratch and expects a bounded, reported outcome.",
+      "coverage": "85/85/85 on new testing/browser modules",
+      "hints": [
+        {
+          "kind": "trap",
+          "text": "Edge can keep a BITS temporary file after shutdown. Never delete a path you do not own.",
+          "evidence": "testing/browser/evidence/lifecycle-blocked.json",
+          "confidence": 5
+        }
+      ]
+    },
+    {
+      "kind": "quality-debt",
+      "state": "To Do",
+      "readiness": true,
+      "owner": null,
+      "heartbeatUtc": null,
+      "kanoCredit": 0,
+      "createdAtUtc": "2026-11-04T16:54:29Z",
+      "createdBy": "hygiene-2026-11-04",
+      "source": ".docs/wiki/kanban.md#k-cards",
+      "id": "K-C015",
+      "title": "Repay C015 quality debt: publisher pin and logic coverage",
+      "entryGate": "none",
+      "unblocks": [],
+      "serves": "C015",
+      "acceptance": "The C015 focused suite passes and cli.cjs, paths.cjs and store.cjs each reach 85/85/85; the publisher assertion pins an archived snapshot instead of the live private publisher.",
+      "tdd": "RED: the failing publisher-digest assertion in tests/surface.test.cjs:68 and the coverage run showing cli.cjs 65/33/50, paths.cjs 91.7/82.8/100, store.cjs 97.2/74.6/100.",
+      "coverage": "85/85/85 per production file with new test files only",
+      "hints": [
+        {
+          "kind": "trap",
+          "text": "tests/surface.test.cjs:68 expects publisher digest 91c8cf83dd07 but the current publisher is 2caba638 (L-0017). Pin an archived snapshot; add new test files only (L-0009).",
+          "evidence": "baseline 2026-11-04",
+          "confidence": 5
+        },
+        {
+          "kind": "coverage",
+          "text": "Node-measured: cli.cjs 65.38/33.33/50, paths.cjs 91.67/82.76/100, store.cjs 97.21/74.58/100. The page script app.js is browser-only and unmeasured until U010.",
+          "evidence": "files/coverage-baseline",
+          "confidence": 5
+        }
+      ]
+    },
+    {
+      "kind": "quality-debt",
+      "state": "To Do",
+      "readiness": true,
+      "owner": null,
+      "heartbeatUtc": null,
+      "kanoCredit": 0,
+      "createdAtUtc": "2026-11-04T16:54:29Z",
+      "createdBy": "hygiene-2026-11-04",
+      "source": ".docs/wiki/kanban.md#k-cards",
+      "id": "K-C008",
+      "title": "Repay C008 quality debt: preparation.js coverage",
+      "entryGate": "none",
+      "unblocks": [],
+      "serves": "C008",
+      "acceptance": "preparation.js reaches 85/85/85 with new test files only.",
+      "tdd": "RED: coverage run showing preparation.js 79.59/79.17/83.33.",
+      "coverage": "85/85/85 per production file with new test files only",
+      "hints": [
+        {
+          "kind": "coverage",
+          "text": "Node-measured preparation.js 79.59/79.17/83.33. preparation-page.js is browser-only and unmeasured until U010.",
+          "evidence": "baseline 2026-11-04",
+          "confidence": 5
+        }
+      ]
+    },
+    {
+      "kind": "quality-debt",
+      "state": "To Do",
+      "readiness": true,
+      "owner": null,
+      "heartbeatUtc": null,
+      "kanoCredit": 0,
+      "createdAtUtc": "2026-11-04T16:54:29Z",
+      "createdBy": "hygiene-2026-11-04",
+      "source": ".docs/wiki/kanban.md#k-cards",
+      "id": "K-C004",
+      "title": "Repay C004 quality debt: plan fixtures and provenance coverage",
+      "entryGate": "none",
+      "unblocks": [],
+      "serves": "C004",
+      "acceptance": "plan-fixtures.js and plan-provenance.js each reach 85/85/85 with new test files only.",
+      "tdd": "RED: coverage run showing plan-fixtures.js 96.67/70/100 and plan-provenance.js 97.87/83.33/100.",
+      "coverage": "85/85/85 per production file with new test files only",
+      "hints": [
+        {
+          "kind": "coverage",
+          "text": "Both files fail on branches only (70 and 83.33). plan-page.js is browser-only and unmeasured until U010.",
+          "evidence": "baseline 2026-11-04",
+          "confidence": 5
+        }
+      ]
     },
     {
       "owner": "worker-OP-CATALOG-COMPOSE",
