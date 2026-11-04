@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 1118,
+  "revision": 1120,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-04T17:04:22.1868873Z",
+  "updatedAtUtc": "2026-11-04T18:09:16.9206974Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -20,10 +20,12 @@
     "zeroCredit": "U001-U018 unblock, slice and tooling cards and 84 derived K quality-debt cards are zero-credit operationalWork. They are not part of this 414-card inventory and never fund a Kano quota."
   },
   "limits": {
-    "contributors": 6,
-    "toDo": 12,
-    "inProgress": 6,
-    "oneActiveCardPerWorker": true
+    "contributors": 8,
+    "toDo": 16,
+    "inProgress": 24,
+    "oneActiveCardPerWorker": true,
+    "maxItemsPerAgent": 3,
+    "bundleRule": "An agent holds one item, or one bundle of up to three intertwined items (shared root cause, a gate chain whose hand-off costs more than the work, or a shared single-writer file); each item keeps its own worker ID, RED, evidence, publication and Done decision; independent items get separate agents."
   },
   "workflowColumns": [
     "To Do",
@@ -40,13 +42,13 @@
     "zeroCreditWork": "U (unblock, slice, tooling) and K (quality debt) work has kanoCredit 0, is never counted in s, l or d, and never funds a quota."
   },
   "kanoDone": {
+    "S": 167,
     "D": 7,
-    "L": 1,
-    "S": 167
+    "L": 1
   },
   "reservations": {
-    "L": 0,
-    "D": 2
+    "D": 2,
+    "L": 0
   },
   "gateAliases": {
     "JAVA": "C097, C098, HOSTJAVA.",
@@ -52144,6 +52146,13 @@
         "updatedInProgressCards": 5,
         "regated": 1
       }
+    },
+    {
+      "by": "parent-controller",
+      "reason": "Operator relaxed the one-item rule for this run: up to three intertwined items per agent. Limits contributors 8, toDo 16, inProgress 24 (8 agents x 3 items), maxItemsPerAgent 3; oneActiveCardPerWorker stays true per worker ID; every bundled item keeps its own owner ID.",
+      "timestampUtc": "2026-11-04T18:09:15Z",
+      "id": "RUN-2026-11-04-LIMITS",
+      "kanoCredit": 0
     }
   ],
   "verificationMaintenance": [
@@ -56061,5 +56070,6 @@
       "restoreInitiallyAbsentEntriesByRemoval": true,
       "networkProtocolGuardsTlsAndGlobalConfigurationUnchanged": true
     }
-  }
+  },
+  "bundles": []
 }
