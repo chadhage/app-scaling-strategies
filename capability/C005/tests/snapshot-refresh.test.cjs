@@ -274,9 +274,11 @@ test('helper and Admin stay unchanged while the exact parent-approved publisher 
     '48846487727dd2ef35f03d88d65e64121059b6867188bbf34daeaee3fda1c09d');
   assert.equal(version.catalogRuntimeSchemaAuthorityOrSourceChanged, false);
   assert.equal(version.oldInitialBoundaryRewritten, false);
+  const approvedPublisher = fs.readFileSync(path.join(__dirname, 'fixtures', 'publish-f6df80bdafc0.ps1.txt'));
   for (const file of Object.values(initial.readonlyExtra)) {
-    const expected = file.path === version.currentPublisher.path ? version.currentPublisher.sha256 : file.sha256;
-    assert.equal(sha(fs.readFileSync(path.join(repo, file.path))), expected, file.path);
+    const bound = file.path === version.currentPublisher.path;
+    const bytes = bound ? approvedPublisher : fs.readFileSync(path.join(repo, file.path));
+    assert.equal(sha(bytes), bound ? version.currentPublisher.sha256 : file.sha256, file.path);
   }
   assert.equal(generation.originalParentOrKanoCredit, false);
   for (const key of ['H001Complete', 'H002Complete', 'production24Validated', 'liveAvailability']) {

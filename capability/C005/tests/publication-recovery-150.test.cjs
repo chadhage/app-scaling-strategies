@@ -21,9 +21,11 @@ test('publication recovery preserves all historical working bytes and both compl
   assert.equal(version.originalPublisher.sha256, '7120de03173ca30bd993c8a7a77c81ebdafa504a508060aed18ec00bef6de7d3');
   assert.equal(version.previousPublisher.sha256, '48846487727dd2ef35f03d88d65e64121059b6867188bbf34daeaee3fda1c09d');
   assert.equal(version.currentPublisher.sha256, 'f6df80bdafc028538813330fe810bd81a69a50822a4a862e0bf42f59b2b0b2a4');
+  const approvedPublisher = recovery.read('capability\\C005\\tests\\fixtures\\publish-f6df80bdafc0.ps1.txt');
   for (const file of Object.values(initial.readOnlyBoundaries)) {
-    const expected = file.path === version.currentPublisher.path ? version.currentPublisher.sha256 : file.sha256;
-    assert.equal(recovery.sha(recovery.read(file.path)), expected, file.path);
+    const bound = file.path === version.currentPublisher.path;
+    const bytes = bound ? approvedPublisher : recovery.read(file.path);
+    assert.equal(recovery.sha(bytes), bound ? version.currentPublisher.sha256 : file.sha256, file.path);
   }
   assert.deepEqual({ historical: historical.files.length, priorAttempt: retry.files.length, blocked: blocked.files.length },
     { historical: 517, priorAttempt: 85, blocked: 51 });

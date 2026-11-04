@@ -1,0 +1,82 @@
+param(
+    [Parameter(Mandatory=$true)][string]$CardId,
+    [Parameter(Mandatory=$true)][string]$WorkerId,
+    [Parameter(Mandatory=$true)][string[]]$Paths,
+    [Parameter(Mandatory=$true)][string]$Message,
+    [switch]$Admin
+)
+$ErrorActionPreference='Stop'
+$runtime=Join-Path (Get-Location) '.git\kanban-orchestrator'
+function Run-Git([string[]]$Arguments) {
+    $output = & git @Arguments 2>&1
+    if ($LASTEXITCODE -ne 0) {throw "git $($Arguments -join ' ') failed ($LASTEXITCODE): $($output -join [Environment]::NewLine)"}
+    return $output
+}
+function Write-PublicationJson([string]$Path,$Value) {
+    $next="$Path.$([Guid]::NewGuid().ToString('N')).new"
+    [IO.File]::WriteAllText($next,($Value|ConvertTo-Json -Depth 20)+[Environment]::NewLine,[Text.UTF8Encoding]::new($false))
+    if(Test-Path -LiteralPath $Path){[IO.File]::Replace($next,$Path,[NullString]::Value)}else{[IO.File]::Move($next,$Path)}
+}
+if ($Admin) {
+    if ($Message -notmatch '^\[flow\]\[admin\]') {throw 'Controller commits must be labeled [flow][admin].'}
+    foreach($path in $Paths){if($path -notin @('.docs\wiki\flow-state.json','.docs\wiki\kanban.md')){throw "Not a controller-owned path: $path"}}
+} else {
+    $localCapabilityClasses=@{ C001='D'; C002='D'; C003='S'; C004='S'; C005='S'; C006='S'; C007='S'; C008='S'; C015='D'; C016='D'; C018='S'; C019='S'; C020='S'; C021='S'; C023='S'; C024='S'; C025='S'; C027='S'; C029='D'; C030='D'; C033='S'; C034='S'; C035='D'; C036='D'; C037='S'; C038='S'; C041='S'; C045='S'; C048='D'; X003='L' }
+    if($CardId -match '^A-(S\d{3})$'){
+        $namespace="learning\$($Matches[1])"
+        $kanoClass='S'
+    } elseif($localCapabilityClasses.ContainsKey($CardId)){
+        $namespace="capability\$CardId"
+        $kanoClass=$localCapabilityClasses[$CardId]
+    } else {
+        throw 'Only admitted portable lessons and explicitly approved local capability IDs are authorized.'
+    }
+    $ownedRoot=[IO.Path]::GetFullPath((Join-Path (Get-Location) $namespace))
+    foreach($path in $Paths){
+        if([IO.Path]::IsPathRooted($path)){throw "Publication requires an owned relative path: $path"}
+        $resolved=[IO.Path]::GetFullPath((Join-Path (Get-Location) $path))
+        if($resolved -ne $ownedRoot -and -not $resolved.StartsWith("$ownedRoot\",[StringComparison]::OrdinalIgnoreCase)){
+            throw "Not an owned card path: $path"
+        }
+    }
+    if(-not $Message.StartsWith("[$CardId][$kanoClass]")){throw 'Message must identify card, frozen Kano class, and stage/evidence scope before commit.'}
+}
+$mutex=[Threading.Mutex]::new($false,'Local\AppScalingStrategies_KanbanPublisher_v1')
+$held=$false
+try {
+    $held=$mutex.WaitOne([TimeSpan]::FromSeconds(180))
+    if(-not $held){throw 'Publisher mutex timed out; do not remove index locks or bypass serialization.'}
+    $branch=(Run-Git @('branch','--show-current') | Out-String).Trim()
+    if($branch -ne 'main'){throw "Publication requires checked-out main, found $branch."}
+    $head=(Run-Git @('rev-parse','HEAD') | Out-String).Trim()
+    $remoteBefore=@(Run-Git @('ls-remote','origin','refs/heads/main'))
+    if($remoteBefore.Count -ne 1){throw 'Publication requires exactly one remote main reference.'}
+    $remoteBeforeCommit=("$($remoteBefore[0])" -split '\s+')[0]
+    if($head -ne $remoteBeforeCommit){throw 'Main must already equal remote before staging; resolve any unqualified local publication without reset, amend, force, or guard bypass.'}
+    Run-Git (@('add','--')+$Paths) | Out-Host
+    Run-Git (@('-c','core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol','diff','--cached','--check','--')+$Paths) | Out-Host
+    $fullMessage="$Message`n`nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+    Run-Git (@('commit','--only','-m',$fullMessage,'--')+$Paths) | Out-Host
+    $commit=(Run-Git @('rev-parse','HEAD') | Out-String).Trim()
+    $short=$commit.Substring(0,12)
+    $tag=if($Admin){"kanban/flow-admin/$short"}else{"kanban/$CardId/$short"}
+    Run-Git @('tag','-a',$tag,$commit,'-m',"$Message; verified publication marker for $commit") | Out-Host
+    Run-Git @('push','--atomic','origin','main',"refs/tags/$tag") | Out-Host
+    $refs=@(Run-Git @('ls-remote','origin','refs/heads/main',"refs/tags/$tag","refs/tags/$tag^{}"))
+    $mainLine=@($refs | Where-Object { "$_" -match '\srefs/heads/main$' })
+    $tagLine=@($refs | Where-Object { "$_" -match ([regex]::Escape("refs/tags/$tag^{}")+'$') })
+    if($mainLine.Count -ne 1 -or $tagLine.Count -ne 1){throw 'Remote main or annotated peeled tag missing.'}
+    $remoteMain=("$($mainLine[0])" -split '\s+')[0]
+    $remoteTag=("$($tagLine[0])" -split '\s+')[0]
+    if($remoteTag -ne $commit){throw 'Remote peeled tag does not identify this implementation commit.'}
+    if($remoteMain -ne $commit){Run-Git @('fetch','--no-tags','origin','main') | Out-Host}
+    Run-Git @('merge-base','--is-ancestor',$commit,$remoteMain) | Out-Host
+    $publication=[ordered]@{cardId=$CardId;workerId=$WorkerId;commit=$commit;tag=$tag;remoteMain=$remoteMain;remotePeeledTag=$remoteTag;remoteVerified=$true;publishedAtUtc=[DateTime]::UtcNow.ToString('o');paths=$Paths;message=$Message}
+    [IO.Directory]::CreateDirectory((Join-Path $runtime 'published'))|Out-Null
+    Write-PublicationJson (Join-Path $runtime "published\$CardId.json") $publication
+    Write-PublicationJson (Join-Path $runtime 'last-publication.json') $publication
+    $publication | ConvertTo-Json -Depth 20
+} finally {
+    if($held){$mutex.ReleaseMutex()}
+    $mutex.Dispose()
+}
