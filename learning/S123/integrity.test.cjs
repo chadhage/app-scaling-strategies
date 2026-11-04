@@ -42,6 +42,11 @@ test('the immutable published source bytes and raw evidence match their separate
     assert.equal(expected.gitText, !rawEvidence);
     const canonical = rawEvidence ? bytes : Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
     assert.equal(sha(canonical), expected.canonicalGitSha256, `${name}: canonical Git bytes`);
+    if (!rawEvidence) {
+      assert.equal(bytes.includes(Buffer.from('\r\n')), false, `${name}: published source must already be canonical LF`);
+      assert.equal(expected.rawSha256, expected.canonicalGitSha256, `${name}: captured source equals canonical Git bytes`);
+      assert.equal(expected.rawGitBlobSha1, expected.canonicalGitBlobSha1, `${name}: no checkout-only source identity`);
+    }
     const repoPath = path.join('learning', 'S123', name);
     assert.equal(execFileSync('git', ['hash-object', '--no-filters', repoPath], { cwd: root, encoding: 'utf8' }).trim(),
       expected.rawGitBlobSha1, `${name}: unfiltered Git object`);

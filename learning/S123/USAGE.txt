@@ -48,6 +48,14 @@ the same exact CAPTURE_BROWSER_EVIDENCE=1:
 The capture script refuses to write without that exact explicit flag.
 Clear the flag before normal read-only verification. Source and evidence
 sealing are deliberate publication preparation, not automatic test output.
+This deliberate script materializes only owned text source as canonical Git
+LF before sealing. It never normalizes raw evidence or RED snapshots.
+Consequently the captured source bytes, committed Git blobs and an LF
+checkout agree; normal verification never repairs line endings.
+The first publication's observed CRLF/source seal and publication metadata
+remain preserved in evidence\raw\pre-canonical-git-source-seal.json and
+evidence\raw\first-publication.json. Correcting this portability issue is
+part of the same original unit and contributes no additional credit.
 
 The first CSP test incorrectly evaluated eval inside DevTools, which bypasses
 that policy. Its actual failure output, exact test source and diagnosis are

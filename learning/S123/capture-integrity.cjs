@@ -24,14 +24,19 @@ function walk(directory, prefix = '') {
     }
     if (!entry.isFile()) throw new Error('Only ordinary owned lesson files may be sealed.');
     if (target === sealPath) continue;
-    const bytes = fs.readFileSync(target);
+    let bytes = fs.readFileSync(target);
     const raw = name.startsWith(path.join('evidence', 'raw') + path.sep)
       || name.startsWith(path.join('evidence', 'red-stub') + path.sep);
+    const canonical = raw ? bytes : Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+    if (!raw && !bytes.equals(canonical)) {
+      fs.writeFileSync(target, canonical);
+      bytes = canonical;
+    }
     const repoPath = path.join('learning', 'S123', name);
     files[name] = {
       gitText: !raw,
       rawSha256: sha(bytes),
-      canonicalGitSha256: sha(raw ? bytes : Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'))),
+      canonicalGitSha256: sha(canonical),
       rawGitBlobSha1: execFileSync('git', ['hash-object', '--no-filters', repoPath], { cwd: root, encoding: 'utf8' }).trim(),
       canonicalGitBlobSha1: execFileSync('git', ['hash-object', `--path=${repoPath}`, repoPath], { cwd: root, encoding: 'utf8' }).trim(),
     };
@@ -41,7 +46,7 @@ function walk(directory, prefix = '') {
 walk(__dirname);
 fs.writeFileSync(sealPath, `${JSON.stringify({
   schemaVersion: 1, cardId: 'A-S123',
-  convention: 'Raw bytes and attribute-filtered canonical Git bytes are separate; raw proof is -text.',
+  convention: 'Owned source is deliberately materialized as canonical Git LF; byte-exact raw proof remains -text/-diff. Historical CRLF/source and Git identities are preserved separately.',
   files,
 }, null, 2)}\n`);
 console.log(`Explicit integrity seal captured for ${Object.keys(files).length} owned files.`);
