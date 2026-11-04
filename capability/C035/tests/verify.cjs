@@ -15,7 +15,7 @@ const dependencies = source.checkImports();
 const toolsPath = path.join(evidence.root, 'browser-tools.json');
 const tools = JSON.parse(fs.readFileSync(toolsPath, 'utf8'));
 const toolBytes = tools.dependencies.map((pin) => ({ path: pin.path, sha256: source.hash(source.readRegular(pin.path)) }));
-const focused = ['initial-red', 'classifier', 'input', 'session', 'source', 'surface', 'authority', 'transport'];
+const focused = ['initial-red', 'classifier', 'input', 'session', 'source', 'surface', 'authority', 'transport', 'foreign-index', 'source-guards', 'cli', 'page'];
 const commands = [
   ['--test', '--test-concurrency=1', ...focused.map((name) => path.join(__dirname, `${name}.test.cjs`))],
   [path.join(__dirname, 'syntax.cjs')], [path.join(__dirname, 'browser.cjs')],

@@ -7,6 +7,8 @@ const test = require('node:test');
 const { spawnSync } = require('node:child_process');
 const source = require('..\\source.cjs');
 const { readCurrent } = require('..\\current.cjs');
+const foreignIndex = require('..\\foreign-index.cjs');
+const { withFixture, foreignPath } = require('.\\foreign-fixture.cjs');
 
 test('unchanged accepted C015 and C029 raw, LF and Git pins, underlying original history and helper verify independently', () => {
   const checked = source.checkImports();
@@ -70,12 +72,22 @@ test('actual separate Node CLI uses read-only current context and preserves a fa
   assert.equal(output.session.history[0].result.counts.fail, 2);
   assert.equal(output.session.history[1].result.decision, 'PASS');
 });
-test('ordinary foreign C048 staged content, stage entry and ordinary flags are untouched', () => {
+test('ordinary foreign C048 staged content, stage entry and ordinary flags are untouched', () => withFixture((fixture) => {
   const initial = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'foreign-index-initial.json'), 'utf8'));
-  const { execFileSync } = require('node:child_process');
-  const git = (...args) => execFileSync('git', ['--no-pager', ...args], { cwd: source.repository, windowsHide: true }).toString('utf8');
-  assert.equal(git('diff', '--cached', '--name-status', '--', initial.path), initial.stagedChange);
-  assert.equal(git('ls-files', '--stage', '--', initial.path), initial.entries);
-  assert.equal(git('ls-files', '-v', '--', initial.path), initial.flags);
-  assert.equal(git('ls-files', '--debug', '--', initial.path), initial.debug);
-});
+  const blob = fixture.stageForeign('foreign content staged by another card\n');
+  fixture.changeOwn();
+  const before = foreignIndex.snapshot(fixture.directory);
+  assert.deepEqual(before.paths, [foreignPath]);
+  assert.equal(foreignPath, initial.path.replaceAll('\\', '/'));
+  assert.equal(before.nameStatus, initial.stagedChange);
+  assert.equal(before.flags, initial.flags);
+  assert.equal(before.entries, `100644 ${blob} 0\t${foreignPath}\n`);
+  assert.match(before.debug, /^capability\/C048\/evidence\/red\/replay\.cjs\.txt\n {2}ctime: \d+:\d+\n {2}mtime: \d+:\d+\n {2}dev: \d+\tino: \d+\n {2}uid: \d+\tgid: \d+\n {2}size: 39\tflags: 0\n$/);
+  fixture.publishOwn();
+  const after = foreignIndex.snapshot(fixture.directory);
+  assert.deepEqual(after, before);
+  assert.equal(foreignIndex.verify(before, fixture.directory).preserved, true);
+  assert.equal(fixture.git('status', '--porcelain'), `M  ${foreignPath}\n`);
+  assert.equal(fixture.git('show', `HEAD:${foreignPath}`), 'foreign base\n');
+  assert.equal(fixture.git('show', 'HEAD:capability/C035/own.txt'), 'own changed\n');
+}));

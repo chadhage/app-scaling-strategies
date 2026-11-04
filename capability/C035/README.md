@@ -105,15 +105,16 @@ Counts are originals and required dimensions, never healthy response counts.
 ## Verification and retained evidence
 
 ```powershell
-node --test --test-concurrency=1 capability\C035\tests\initial-red.test.cjs capability\C035\tests\classifier.test.cjs capability\C035\tests\input.test.cjs capability\C035\tests\session.test.cjs capability\C035\tests\source.test.cjs capability\C035\tests\surface.test.cjs capability\C035\tests\authority.test.cjs capability\C035\tests\transport.test.cjs
+node --test --test-concurrency=1 capability\C035\tests\initial-red.test.cjs capability\C035\tests\classifier.test.cjs capability\C035\tests\input.test.cjs capability\C035\tests\session.test.cjs capability\C035\tests\source.test.cjs capability\C035\tests\surface.test.cjs capability\C035\tests\authority.test.cjs capability\C035\tests\transport.test.cjs capability\C035\tests\foreign-index.test.cjs capability\C035\tests\source-guards.test.cjs capability\C035\tests\cli.test.cjs capability\C035\tests\page.test.cjs
 node capability\C035\tests\syntax.cjs
 node capability\C035\tests\browser.cjs
 node --test capability\C035\tests\integrity.test.cjs
 node capability\C035\tests\verify.cjs
 ```
 
-Focused GREEN: **77 tests**, including real process-only transport restoration.
-Actual signed **Edge 156 / offline Playwright 1.56.1 / Node 22** verification has
+Focused GREEN: **116 tests**, including real process-only transport restoration,
+the hermetic foreign-index fixtures and real `pwsh` guard run, CLI process runs and
+the page script driven under DOM stubs. Actual signed **Edge 156 / offline Playwright 1.56.1 / Node 22** verification has
 **18 DOM checks**: unknown/error, original failures, partial, unsupported,
 interrupted, cancellation scope, retry, copy tampering, reset/history/focus,
 CSP and exact awaited cleanup. Only the unchanged published
@@ -160,6 +161,67 @@ imported sources, not zero owned capture writes: pin/tool capture deliberately
 created the owned pin artifacts. Those original records are preserved; the
 recorder now names that boundary explicitly.
 
+## Repair: hermetic foreign-index preservation
+
+The first focused foreign-index test pinned the **live** Git index to one staged
+C048 entry (`foreign-index-initial.json`, observed 11:53Z). The unscoped commit
+`dd49966d` committed that entry, so the pin could never hold again. It was replaced,
+not weakened. `foreign-index.cjs` snapshots every staged path **outside**
+`capability\C035` (name-status, stage-0 entry, `ls-files -v` flag and `--debug`
+stat data), compares snapshots and rejects any difference. `foreign-guard.ps1`
+runs the standard publisher between a snapshot and a verification, and
+`publish.ps1` no longer requires one live C048 entry. `foreign-index-initial.json`
+stays as the historical observation only. `foreign-index.feature` is the
+specification. Every test builds its own throwaway repository (`git init`, no system
+or global configuration, no inherited `GIT_*` variable) under `C035_FIXTURE_ROOT`
+(an existing absolute directory; default `tests\scratch`, git-ignored) and removes
+it in `finally`. No test reads the live index or HEAD. The standard publication
+sequence is reproduced exactly (`add` own paths, `diff --cached --check`,
+`commit --only`) and the fixture proves the foreign staged entry survives it.
+
+Archived order: `repair-bdd` (specification), `repair-stub` (loadable initial stub),
+`repair-red` (15 of 16 selected tests failed, all `ERR_ASSERTION`, none a missing
+module or syntax error), then GREEN (`focused`), `coverage`, `syntax`, `integrity`
+and real-browser captures. The retained stub is
+`evidence\red\foreign-index.initial.snapshot.cjs` (and
+`foreign-guard.initial.snapshot.ps1`); `repair-red` records their SHA-256.
+
+```powershell
+$env:C035_FIXTURE_ROOT = '<existing absolute scratch directory outside the repository>'
+# RED: the same behavior against the retained initial stub fails (2 assertions)
+node --test capability\C035\evidence\red\foreign-replay.cjs
+# GREEN: the rewritten source test and the foreign-index suite
+node --test --test-concurrency=1 --test-name-pattern=foreign capability\C035\tests\foreign-index.test.cjs capability\C035\tests\source.test.cjs
+# per-file 85/85/85 over every production .js/.cjs file (an unloaded file counts as 0%)
+node capability\C035\tests\coverage.cjs
+# real isolated headless Edge, 18 DOM checks
+node capability\C035\tests\browser.cjs
+```
+
+`coverage.cjs` runs, for each file, `node --test --experimental-test-coverage
+--test-coverage-include=capability/C035/<file> --test-coverage-lines=85
+--test-coverage-branches=85 --test-coverage-functions=85 <its tests>` and fails
+when any file is unloaded or below 85 in any column. `publish.ps1`,
+`foreign-guard.ps1`, `git-transport.ps1` and `read-gates.ps1` cannot be measured by
+Node coverage; real `pwsh` processes exercise them (`transport.test.cjs`,
+`foreign-index.test.cjs`, `syntax.cjs`) and their decisions live in the measured
+`foreign-index.cjs`. `page.js` is loaded under Node with DOM stubs in
+`page.test.cjs` and separately observed in real Edge.
+
+The sealed `evidence-index.json` pinned every source byte, so changing a source
+file would have broken integrity. `tests\seal-addendum.cjs` (guarded by
+`CAPTURE_BROWSER_EVIDENCE=1`) appends `evidence-index-addendum-<n>.json`, which
+chains to the sealed index and its predecessor by SHA-256, may supersede only
+non-evidence paths (never RED or raw proof) and may add new files. The sealed index
+is untouched; the previous bytes remain in `dd49966d`.
+
+The first real-Edge capture of this repair (`browser-62049fd1`, `edge-c79ac536`)
+failed with 0 DOM checks when another agent's browser session overlapped the run
+(`Only one unambiguously new published-helper session may be attributed ... 2 !== 1`;
+browser, profile and Edge cleanup observed, helper-session removal unverified). It is
+retained, counted as `laterFailedEdgeCaptures` and never relabeled. A retry in a
+quiet window passed all 18 DOM checks (`edge-0906f545`, `browser-f95f15b9`).
+
 ## Publication boundary
 
 Publication rereads **top-level current** `localPublisherAuthorization` under
@@ -175,7 +237,12 @@ The unchanged standard publisher requires actual HEAD equal actual remote
 **before stage**, commits only `capability\C035`, includes the Copilot trailer,
 creates annotated `kanban/C035/<12sha>`, atomically pushes main/tag and verifies
 peel/ancestry. No ahead carry, reset, amend, force or unowned index cleanup occurs.
-The ordinary foreign staged **C048 M** keeps its exact content entry **and flags**.
+Every staged entry outside `capability\C035` keeps its exact name-status, stage-0
+entry, **flags** and stat data: `foreign-guard.ps1` snapshots them, runs the
+standard publisher and fails closed on any difference. The historical staged
+**C048 M** was committed by `dd49966d` and is no longer required; the live index
+is never pinned. The wrapper is run with `CAPTURE_BROWSER_EVIDENCE=1` from the
+repository root: `pwsh -NoProfile -File capability\C035\publish.ps1`.
 Actual own raw and Git-canonical proof, full SHAs and counts go to State Report;
 only the parent accepts the original.
 

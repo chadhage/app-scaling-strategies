@@ -3,6 +3,7 @@ if ($args.Count -ne 0 -or $env:CAPTURE_BROWSER_EVIDENCE -cne '1') { throw 'Exact
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 if ((Get-Location).Path -cne $root) { throw 'Publication requires the actual checked-out repository root.' }
 . (Join-Path $PSScriptRoot 'git-transport.ps1')
+. (Join-Path $PSScriptRoot 'foreign-guard.ps1')
 $preflightText = & node (Join-Path $PSScriptRoot 'tests\prepublish.cjs')
 if ($LASTEXITCODE -ne 0) { throw 'Read-only original source/evidence preflight failed before staging.' }
 $snapshotText = & pwsh.exe -NoLogo -NoProfile -NonInteractive -File (Join-Path $PSScriptRoot 'read-gates.ps1')
@@ -16,15 +17,6 @@ function Read-C035Git([string[]]$Arguments) {
     $output = & git --no-pager @Arguments 2>&1
     if ($LASTEXITCODE -ne 0) { throw "Read-only Git failed: $($output -join [Environment]::NewLine)" }
     return $output
-}
-function Read-C035Foreign($Paths) {
-    return [ordered]@{
-        paths=@($Paths)
-        nameStatus=(@(Read-C035Git (@('diff','--cached','--name-status','--') + $Paths)) -join "`n") + "`n"
-        entries=(@(Read-C035Git (@('ls-files','--stage','--') + $Paths)) -join "`n") + "`n"
-        flags=(@(Read-C035Git (@('ls-files','-v','--') + $Paths)) -join "`n") + "`n"
-        debug=(@(Read-C035Git (@('ls-files','--debug','--') + $Paths)) -join "`n") + "`n"
-    }
 }
 $transport = Invoke-C035ProcessTransport {
     $publisher = Join-Path $root '.git\kanban-orchestrator\publish.ps1'
@@ -41,34 +33,26 @@ $transport = Invoke-C035ProcessTransport {
         if ($remote.Count -ne 1 -or ($remote[0] -split '\s+')[0] -cne $head) {
             throw 'Actual HEAD must equal actual remote main under Publisher before stage; no ahead carry/reset/amend/force.'
         }
-        $foreignPaths = @(Read-C035Git @('diff','--cached','--name-only') | Where-Object { $_ -notmatch '^capability/C035/' })
-        if ('capability/C048/evidence/red/replay.cjs.txt' -notin $foreignPaths) { throw 'Required ordinary foreign C048 staged M is unobserved; do not clean or fabricate it.' }
-        $foreignBefore = Read-C035Foreign $foreignPaths
-        $initial = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'foreign-index-initial.json')) | ConvertFrom-Json -AsHashtable
-        $c048 = Read-C035Foreign @($initial.path)
-        if ($c048.nameStatus -cne $initial.stagedChange -or $c048.entries -cne $initial.entries -or
-            $c048.flags -cne $initial.flags -or $c048.debug -cne $initial.debug) { throw 'Original ordinary C048 entries/flags changed; no restoration or unowned index cleanup.' }
         $immediateHash = (Get-FileHash -LiteralPath $publisher -Algorithm SHA256).Hash.ToLowerInvariant()
         if ($immediateHash -cne $authorization.currentPublisherSha256) { throw 'Actual private publisher changed immediately before standard delegation.' }
-        $message = '[C035][D] Classify local originals without incomplete/cancel-request success; BDD/TDD, retained failures, current read-only context and signed Edge proof'
-        $publishedText = & $publisher -CardId C035 -WorkerId worker-C035 -Paths @('capability\C035') -Message $message
-        $publication = ($publishedText | Out-String) | ConvertFrom-Json -AsHashtable
+        $message = '[C035][D] Classify local originals without incomplete/cancel-request success; BDD/TDD, retained failures, current read-only context, hermetic foreign-index guard, per-file 85/85/85 coverage and signed Edge proof'
+        $guarded = Invoke-C035ForeignPreserved $root {
+            $publishedText = & $publisher -CardId C035 -WorkerId worker-C035 -Paths @('capability\C035') -Message $message
+            ($publishedText | Out-String) | ConvertFrom-Json -AsHashtable
+        }
+        $publication = $guarded.result
         if ($publication.cardId -cne 'C035' -or $publication.workerId -cne 'worker-C035' -or
             $publication.remoteVerified -isnot [bool] -or $publication.remoteVerified -ne $true -or
             $publication.remotePeeledTag -cne $publication.commit) { throw 'Exact complete standard publication proof is missing.' }
         if ((Get-FileHash -LiteralPath $publisher -Algorithm SHA256).Hash.ToLowerInvariant() -cne $immediateHash) { throw 'Private publisher bytes changed during delegation.' }
-        $foreignAfter = Read-C035Foreign $foreignPaths
-        if (($foreignBefore | ConvertTo-Json -Depth 8 -Compress) -cne ($foreignAfter | ConvertTo-Json -Depth 8 -Compress)) {
-            throw 'Foreign staged entries or flags changed; report honestly without unowned cleanup.'
-        }
         $proofText = & node (Join-Path $PSScriptRoot 'tests\publication-proof.cjs') $publication.commit $publication.tag
         if ($LASTEXITCODE -ne 0) { throw 'Published own raw/canonical/remote proof failed; no success report inferred.' }
         return [ordered]@{
             publication=$publication;proof=(($proofText | Out-String) | ConvertFrom-Json -AsHashtable)
             currentAuthorizationSnapshot=$snapshot;actualPublisherAssessment=$actual
             actualHashRecheckedUnderPublisher=$true;headEqualActualRemoteBeforeStage=$true
-            noStateReadUnderPublisher=$true;foreignStagedBefore=$foreignBefore;foreignStagedAfter=$foreignAfter
-            originalOrdinaryC048EntryAndFlagsUnchanged=$true
+            noStateReadUnderPublisher=$true;foreignStagedBefore=$guarded.before;foreignStagedAfter=$guarded.after
+            foreignEntriesAndFlagsUnchanged=$true
         }
     } finally {
         if ($held) { $mutex.ReleaseMutex() }
@@ -83,7 +67,7 @@ $result = [ordered]@{
     currentAuthority=$transport.result.currentAuthorizationSnapshot
     actualPublisherAssessment=$transport.result.actualPublisherAssessment
     publisherSerialization=[ordered]@{stateReadFirstAndClosedBeforePublisher=$true;actualBytesRecheckedUnderPublisher=$true;headEqualRemoteBeforeStage=$true;noStateReadUnderPublisher=$true}
-    foreignIndex=[ordered]@{before=$transport.result.foreignStagedBefore;after=$transport.result.foreignStagedAfter;entriesAndFlagsUnchanged=$true;ordinaryC048MUnchanged=$true}
+    foreignIndex=[ordered]@{before=$transport.result.foreignStagedBefore;after=$transport.result.foreignStagedAfter;entriesAndFlagsUnchanged=$true}
     processTransport=$transport.restoration
     focusedTestsPassed=$true;browserObserved=$true;acceptancePending=$true
     originalUnit='C035';originalKano='D';maximumOriginalCredits=1;extraCredits=0
