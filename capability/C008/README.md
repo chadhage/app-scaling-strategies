@@ -16,7 +16,7 @@ needed. [Microsoft disclaimer](../../README.md#microsoft-open-source-disclaimer)
 
 ## Three different preparation modes
 
-- **Accepted synthetic practice:** 100 original lesson links from C005's
+- **Accepted synthetic practice:** 120 original lesson links from C005's
   historical snapshot. Read each lesson's own preconditions, synthetic inputs,
   controls, assertions and limitations. **Training rehearsal — synthetic data —
   not a live Azure result.**
@@ -43,20 +43,20 @@ matrix checks to C003. It verifies the unchanged C001 artifact through C001's
 existing cryptographic integrity guard. Ready views hold references to the
 shared catalog, selected entry, matrix and approval artifact, not copied metadata
 or approval tables. There is no extraction, filesystem/ledger discovery, JSON
-import or new catalog. Zero-credit `OP-CATALOG-SNAPSHOT-REFRESH-115` changes only
+import or new catalog. Zero-credit `OP-CATALOG-SNAPSHOT-REFRESH-135` changes only
 C005's generated snapshot and necessary test/proof bindings, not preparation,
 catalog schemas/APIs or the authorities.
 
 - Catalog: `capability\C005\catalog-data.js`, one immutable generated module.
-- Source/availability pin: `e8a3064f8554906216a9e0c3cf1344a3a6acf019`,
-  annotated source tag `kanban/flow-admin/e8a3064f8554`.
+- Source/availability pin: `a03ef59da5d58d74c109d2484d7730fa14500358`,
+  annotated source tag `kanban/flow-admin/a03ef59da5d5`.
   The shared commit time and ledger-update time are displayed. This is
   **historical snapshot availability, not live state**.
-  Accepted IDs are exactly S001–S099 plus S103. S100–S102 and S104+ remain
+  Accepted IDs are exactly S001–S120. S121+ remain
   unavailable even if the live board later advances. C005's `generation.json` under
-  `evidence\op-catalog-snapshot-refresh-115-e8a3064f8554` binds source, hashes and IDs.
-  Its source accepts 115 original units (113 S + 2 D); this operation adds none.
-  All five previous catalogs and all 212 earlier proof files remain byte-preserved.
+  `evidence\op-catalog-snapshot-refresh-135-a03ef59da5d5` binds source, hashes and IDs.
+  Its source accepts 135 original units (133 S + 2 D); this operation adds none.
+  All six previous catalogs and all 290 earlier proof files remain byte-preserved.
 - Capability authority: unchanged C003 matrix and constraints. All 17
   configurations, exact reasons and exact constraints can be inspected; none is
   assigned to an entry. Documented-supported is not implemented or qualified.
@@ -76,6 +76,11 @@ run/provision/deploy/approval controls. Native verification is unverified, actua
 user impact unmeasured, and cloud cleanup unobserved. Reset is neither H010
 cleanup nor evidence export; empty samples, health probes, configured routing
 and module availability prove no native result.
+
+S107's accepted CORS exercise has real **local HTTP-origin** proof in its own
+lesson evidence. This static preparation view retains the original two-origin
+requirements and all existing limits; opening its `file:` page or seeing a
+training banner does not certify HTTP-origin enforcement or native Azure proof.
 
 ## Checks and intentional evidence capture
 
@@ -102,7 +107,7 @@ This operation does not edit those documents or weaken the CLI.
 
 Ordinary browser verification **does not write or delete observations**. To
 deliberately append a fresh uniquely named
-`evidence\browser-op-catalog-snapshot-refresh-115-e8a3064f8554-*.json`:
+`evidence\browser-op-catalog-snapshot-refresh-135-a03ef59da5d5-*.json`:
 
 ```powershell
 $env:CAPTURE_BROWSER_EVIDENCE='1'

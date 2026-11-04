@@ -1,0 +1,244 @@
+$ErrorActionPreference = 'Stop'
+$operation = 'OP-CATALOG-SNAPSHOT-REFRESH-135'
+$worker = 'worker-OP-CATALOG-SNAPSHOT-REFRESH-135'
+$evidence = 'capability\C005\evidence\op-catalog-snapshot-refresh-135-a03ef59da5d5'
+$fixedSource = 'a03ef59da5d58d74c109d2484d7730fa14500358'
+$scopes = @('capability\C005', 'capability\C006', 'capability\C007', 'capability\C008', 'capability\local-harness')
+$message = '[flow][catalog-refresh][no-kano-credit] OP-CATALOG-SNAPSHOT-REFRESH-135 Refresh fixed 135-unit/120-practice snapshot'
+function Run-Git([string[]]$Arguments) {
+    $start = [Diagnostics.ProcessStartInfo]::new()
+    $start.FileName = 'git'
+    $start.WorkingDirectory = (Get-Location).Path
+    $start.UseShellExecute = $false
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    $start.ArgumentList.Add('--no-pager')
+    foreach ($argument in $Arguments) { $start.ArgumentList.Add($argument) }
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $start
+    try {
+        if (-not $process.Start()) { throw 'Could not start git.' }
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+        $process.WaitForExit()
+        $stdout = $stdoutTask.GetAwaiter().GetResult()
+        $stderr = $stderrTask.GetAwaiter().GetResult()
+        if ($process.ExitCode -ne 0) { throw "git $($Arguments -join ' ') failed ($($process.ExitCode)): $stdout$stderr" }
+        if ($stderr) { [Console]::Error.Write($stderr) }
+        if ($stdout) { return ($stdout -split '\r?\n' | Where-Object { $_ -ne '' }) }
+    } finally {
+        $process.Dispose()
+    }
+}
+function Owned-Path([string]$Path) {
+    return $Path.Replace('/', '\') -match '^capability\\(?:C005|C006|C007|C008|local-harness)\\'
+}
+function Unowned-Index {
+    return @(Run-Git @('ls-files', '--stage') | Where-Object {
+        -not (Owned-Path (($_ -split "`t", 2)[1]))
+    })
+}
+function Unowned-IndexFlags {
+    return @(Run-Git @('ls-files', '-v') | Where-Object {
+        -not (Owned-Path ("$_".Substring(2)))
+    })
+}
+function Text-Hash([string]$Text) {
+    return [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
+        [Text.Encoding]::UTF8.GetBytes($Text))).ToLowerInvariant()
+}
+function Assert-Preserved {
+    $historical = Get-Content -LiteralPath "$evidence\historical-proof-hashes.json" -Raw | ConvertFrom-Json
+    foreach ($file in $historical.files) {
+        if ((Get-FileHash -LiteralPath $file.path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $file.sha256) {
+            throw "Historical raw proof changed: $($file.path)"
+        }
+    }
+    $generation = Get-Content -LiteralPath "$evidence\generation.json" -Raw | ConvertFrom-Json
+    $expectedIds = @(1..120 | ForEach-Object { 'S{0:D3}' -f $_ })
+    if ($generation.sourceCommit -ne $fixedSource -or $generation.acceptedUnits -ne 135 -or
+        $generation.acceptedPortableLessons -ne 120 -or
+        @(Compare-Object @($expectedIds | Sort-Object) @($generation.acceptedPortableIds | Sort-Object)).Count) {
+        throw 'Immutable source or exact accepted IDs/counts changed.'
+    }
+    if ($generation.generator.gitReadMaxBufferBytes -ne 8388608 -or
+        $generation.generator.onlyFullShaPinChanged -ne $true -or
+        $generation.generator.extractorSemanticsUnchanged -ne $true -or
+        $generation.nativeRunnable -ne 0 -or $generation.nativeQualified -ne 0 -or
+        $generation.completedSourceParents -ne 0 -or $generation.H001Complete -ne $false -or
+        $generation.H002Complete -ne $false -or $generation.production24Validated -ne $false -or
+        $generation.liveAvailability -ne $false -or
+        $generation.S107StaticEntryCertifiesHttpOriginBehavior -ne $false) {
+        throw 'Existing Git bound, local-only limits or negative authority gates changed.'
+    }
+    foreach ($snapshot in @($generation.original, $generation.intermediate, $generation.prior36,
+        $generation.prior61, $generation.prior86, $generation.previous, $generation.data)) {
+        if ((Get-FileHash -LiteralPath $snapshot.path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $snapshot.sha256) {
+            throw "Catalog bytes changed: $($snapshot.path)"
+        }
+    }
+    $initial = Get-Content -LiteralPath "$evidence\initial-boundary.json" -Raw | ConvertFrom-Json
+    foreach ($file in @($initial.readonlyExtra.publishedHelper, $initial.readonlyExtra.standardPublisher,
+        $initial.readonlyExtra.adminStateBoundary)) {
+        if ((Get-FileHash -LiteralPath $file.path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $file.sha256) {
+            throw "Read-only published helper or standard/Admin publisher boundary changed: $($file.path)"
+        }
+    }
+    $manifest = Get-Content -LiteralPath "$evidence\hashes-final.json" -Raw | ConvertFrom-Json
+    foreach ($file in $manifest.files) {
+        if ((Get-FileHash -LiteralPath $file.path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $file.sha256) {
+            throw "Verified owned bytes changed before publication: $($file.path)"
+        }
+    }
+    $currentPaths = @(foreach ($scope in $scopes) {
+        Get-ChildItem -LiteralPath $scope -Recurse -File -Force | ForEach-Object {
+            [IO.Path]::GetRelativePath((Get-Location).Path, $_.FullName)
+        }
+    }) | Where-Object { $_ -ne "$evidence\hashes-final.json" } | Sort-Object
+    if (@(Compare-Object @($manifest.files.path | Sort-Object) @($currentPaths)).Count) {
+        throw 'Owned source/proof inventory changed after the final manifest.'
+    }
+}
+$mutex = [Threading.Mutex]::new($false, 'Local\AppScalingStrategies_KanbanPublisher_v1')
+$held = $false
+try {
+    $held = $mutex.WaitOne([TimeSpan]::FromSeconds(180))
+    if (-not $held) { throw 'Publisher mutex timed out; do not bypass serialization or remove any index lock.' }
+    if ((Run-Git @('branch', '--show-current') | Out-String).Trim() -ne 'main') {
+        throw 'Publication requires checked-out main.'
+    }
+    if (Test-Path -LiteralPath '.git\index.lock') {
+        throw 'An index lock already exists; do not remove, replace or bypass another transaction lock.'
+    }
+    $headBefore = (Run-Git @('rev-parse', 'HEAD') | Out-String).Trim()
+    $remoteBefore = @(Run-Git @('ls-remote', 'origin', 'refs/heads/main'))
+    if ($remoteBefore.Count -ne 1 -or ("$($remoteBefore[0])" -split '\s+')[0] -ne $headBefore) {
+        throw 'Main must already equal remote main; do not reset, stash or publish unrelated unpublished work.'
+    }
+    Run-Git @('merge-base', '--is-ancestor', $fixedSource, $headBefore) | Out-Host
+    if ((Run-Git @('cat-file', '-t', 'kanban/flow-admin/a03ef59da5d5') | Out-String).Trim() -ne 'tag' -or
+        (Run-Git @('rev-parse', 'kanban/flow-admin/a03ef59da5d5^{}') | Out-String).Trim() -ne $fixedSource) {
+        throw 'Immutable annotated source marker does not identify the required full SHA.'
+    }
+    Assert-Preserved
+    $unownedBefore = @(Unowned-Index)
+    $unownedFlagsBefore = @(Unowned-IndexFlags)
+    $paths = @(
+        @(Run-Git (@('diff', '--name-only', 'HEAD', '--') + $scopes))
+        @(Run-Git (@('ls-files', '--others', '--exclude-standard', '--') + $scopes))
+    ) | ForEach-Object { "$_".Trim().Replace('/', '\') } | Where-Object { $_ } | Sort-Object -Unique
+    if (-not $paths.Count) { throw 'No scoped operation files to publish.' }
+    $expectedPaths = (Get-Content -LiteralPath "$evidence\publication-owned-paths.json" -Raw | ConvertFrom-Json).paths
+    if (@(Compare-Object @($expectedPaths | Sort-Object) @($paths)).Count) {
+        throw 'Proposed commit differs from the explicit verified owned-only path inventory.'
+    }
+    foreach ($file in $paths) {
+        if (-not (Owned-Path $file) -or [IO.Path]::IsPathRooted($file) -or
+            $file -match '(^|\\)\.\.(\\|$)' -or -not (Test-Path -LiteralPath $file -PathType Leaf)) {
+            throw "Not an explicit owned operation file: $file"
+        }
+    }
+    $fullMessage = "$message`n`nFixed source $fixedSource; 152 unchanged IDs; exactly S001-S120 accepted portable practices, S121+ unavailable. Existing 8 MiB Git bound retained; no extraction, API or authority changes. S107 static entry is not HTTP-origin or native Azure proof. Native0; source parents, H001/H002 and production Node24 incomplete. One operation; zero S/D/L credits; parent activation, binding and acceptance only.`n`nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+    Run-Git (@('add', '--') + $paths) | Out-Host
+    Run-Git (@('diff', '--cached', '--check', '--') + $paths) | Out-Host
+    Assert-Preserved
+    Run-Git (@('commit', '--quiet', '--only', '-m', $fullMessage, '--') + $paths) | Out-Host
+    $commit = (Run-Git @('rev-parse', 'HEAD') | Out-String).Trim()
+    if ((Run-Git @('rev-parse', "$commit^") | Out-String).Trim() -ne $headBefore) {
+        throw 'Unexpected publication parent.'
+    }
+    $committedPaths = @(Run-Git @('diff-tree', '--no-commit-id', '--name-only', '-r', $commit) |
+        ForEach-Object { "$_".Replace('/', '\') })
+    if (@(Compare-Object @($paths) @($committedPaths)).Count) {
+        throw 'Commit paths differ from the explicit owned file list.'
+    }
+    $unownedAfter = @(Unowned-Index)
+    $unownedFlagsAfter = @(Unowned-IndexFlags)
+    if (@(Compare-Object @($unownedBefore) @($unownedAfter)).Count -or
+        @(Compare-Object @($unownedFlagsBefore) @($unownedFlagsAfter)).Count) {
+        throw 'Unowned staging entries or index flags changed.'
+    }
+    $textRawPaths = @($paths | Where-Object { $_ -like "$evidence\*.txt" })
+    $gzipRawPaths = @($paths | Where-Object { $_ -like "$evidence\raw\*.gz" })
+    $archivedRawPaths = @($textRawPaths) + @($gzipRawPaths)
+    foreach ($file in $archivedRawPaths) {
+        $rawObject = (Run-Git @('hash-object', '--no-filters', '--', $file) | Out-String).Trim()
+        $committedObject = (Run-Git @('rev-parse', "${commit}:$($file.Replace('\', '/'))") | Out-String).Trim()
+        if ($rawObject -ne $committedObject) {
+            throw "Archived raw bytes were normalized in the commit: $file"
+        }
+    }
+    Assert-Preserved
+    $tag = "kanban/flow-catalog-refresh/$($commit.Substring(0, 12))"
+    $resultHash = (Get-FileHash -LiteralPath "$evidence\result-final.json" -Algorithm SHA256).Hash.ToLowerInvariant()
+    $manifestHash = (Get-FileHash -LiteralPath "$evidence\hashes-final.json" -Algorithm SHA256).Hash.ToLowerInvariant()
+    $validationHash = (Get-FileHash -LiteralPath "$evidence\validation-final.json" -Algorithm SHA256).Hash.ToLowerInvariant()
+    $result = Get-Content -LiteralPath "$evidence\result-final.json" -Raw | ConvertFrom-Json
+    if ($result.publicationProcedure.rawByteArchives.total -ne $archivedRawPaths.Count -or
+        $result.publicationProcedure.rawByteArchives.textArchives -ne $textRawPaths.Count -or
+        $result.publicationProcedure.rawByteArchives.gzipCommandStreams -ne $gzipRawPaths.Count) {
+        throw 'Explicit raw text/gzip archive counts do not match the verified publication inventory.'
+    }
+    $annotation = "$message; commit $commit; fixed source $fixedSource; result $evidence\result-final.json SHA256 $resultHash; manifest SHA256 $manifestHash; focused $($result.tests.focused.total) ($($result.tests.focused.leaves) leaves/$($result.tests.focused.parents) parents); browser $($result.tests.browser.total) ($($result.tests.browser.leaves) leaves/$($result.tests.browser.parents) parents), all120 sweep/unique destinations and $($result.tests.browser.actualPracticePageNavigations) actual navigations including S001 repeats; quiet $($result.tests.quietReadonlyRerun.total) executions across two replays, not new global unique tests; all $($result.historicalProofPreserved.files) historical proofs and six snapshots preserved; raw archives $($archivedRawPaths.Count) = $($textRawPaths.Count) text + $($gzipRawPaths.Count) gzip streams; native0; zero S/D/L credit; parent-only operational binding and acceptance."
+    Run-Git @('tag', '-a', $tag, $commit, '-m', $annotation) | Out-Host
+    Run-Git @('push', '--atomic', 'origin', 'main', "refs/tags/$tag") | Out-Host
+    $refs = @(Run-Git @('ls-remote', 'origin', 'refs/heads/main', "refs/tags/$tag", "refs/tags/$tag^{}"))
+    $mainLine = @($refs | Where-Object { "$_" -match '\srefs/heads/main$' })
+    $tagLine = @($refs | Where-Object { "$_" -match ([regex]::Escape("refs/tags/$tag") + '$') })
+    $peeledLine = @($refs | Where-Object { "$_" -match ([regex]::Escape("refs/tags/$tag^{}") + '$') })
+    if ($mainLine.Count -ne 1 -or $tagLine.Count -ne 1 -or $peeledLine.Count -ne 1) {
+        throw 'Remote main, annotated tag or peeled tag is missing.'
+    }
+    $remoteMain = ("$($mainLine[0])" -split '\s+')[0]
+    $remoteTagObject = ("$($tagLine[0])" -split '\s+')[0]
+    $remotePeeled = ("$($peeledLine[0])" -split '\s+')[0]
+    if ($remotePeeled -ne $commit) { throw 'Remote peeled tag does not identify this operation commit.' }
+    if ((Run-Git @('cat-file', '-t', $tag) | Out-String).Trim() -ne 'tag' -or
+        (Run-Git @('rev-parse', $tag) | Out-String).Trim() -ne $remoteTagObject) {
+        throw 'Remote annotated tag object does not match the local annotated tag.'
+    }
+    if ($remoteMain -ne $commit) { Run-Git @('fetch', '--no-tags', 'origin', 'main') | Out-Host }
+    Run-Git @('merge-base', '--is-ancestor', $commit, $remoteMain) | Out-Host
+    Assert-Preserved
+    if (@(Run-Git (@('status', '--porcelain', '--') + $scopes)).Count) {
+        throw 'Owned operation scope is not clean after publication.'
+    }
+    [ordered]@{
+        operation = $operation
+        worker = $worker
+        commit = $commit
+        tag = $tag
+        tagObject = $remoteTagObject
+        parentCommit = $headBefore
+        remoteMain = $remoteMain
+        remotePeeledTag = $remotePeeled
+        remoteVerified = $true
+        mainEqualRemoteBeforeTransaction = $true
+        atomicMainAndAnnotatedTagPush = $true
+        mutex = 'Local\AppScalingStrategies_KanbanPublisher_v1'
+        explicitOwnedFileCount = $paths.Count
+        committedRawArchivesVerified = $archivedRawPaths.Count
+        rawArchiveCounts = @{ textArchives = $textRawPaths.Count; gzipCommandStreams = $gzipRawPaths.Count; total = $archivedRawPaths.Count }
+        rawArchiveDefinition = 'Text snapshots/scripts/publication command archives plus gzip command streams; total raw byte archives is not the compressed-file count.'
+        unownedIndexEntriesPreserved = $unownedBefore.Count
+        unownedIndexStageMetadataSha256 = Text-Hash ($unownedBefore -join "`n")
+        unownedIndexFlagsSha256 = Text-Hash ($unownedFlagsBefore -join "`n")
+        result = "$evidence\result-final.json"
+        resultSha256 = $resultHash
+        validation = "$evidence\validation-final.json"
+        validationSha256 = $validationHash
+        finalManifest = "$evidence\hashes-final.json"
+        finalManifestSha256 = $manifestHash
+        focused = $result.tests.focused
+        browserCounts = @{ total = 71; parents = 5; leaves = 66; unifiedGroups = 12; uniquePractices = 120; actualNavigations = 125 }
+        historicalProofsPreserved = $result.historicalProofPreserved.files
+        previousSnapshotsPreserved = 6
+        kanoCredits = @{ S = 0; D = 0; L = 0 }
+        parentOperationalAcceptance = 'pending-controller-only'
+        selfReferentialPublicationFieldsWritten = $false
+        publishedAtUtc = [DateTime]::UtcNow.ToString('o')
+    } | ConvertTo-Json -Depth 10
+} finally {
+    if ($held) { $mutex.ReleaseMutex() }
+    $mutex.Dispose()
+}

@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const catalog = require('../../C005/catalog-data.js');
 const matrix = require('../../C003/matrix-data.js');
 const { searchCatalog } = require('../search.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-115-e8a3064f8554/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-135-a03ef59da5d5/generation.json');
 const ids = results => results.map(entry => entry.id);
 const copy = () => structuredClone(catalog);
 const dataError = error => error instanceof TypeError && error.code === 'ERR_CATALOG_DATA'
@@ -106,7 +106,7 @@ test('results preserve the original readonly historical, native, support, risk a
     assert.equal(result.risk, 'unclassified');
     assert.equal(Object.isFrozen(result), true);
   }
-  for (const id of ['S100', 'S101', 'S102', 'S104', 'W001', 'W002']) {
+  for (const id of ['S121', 'S122', 'S123', 'S124', 'W001', 'W002']) {
     const entry = results.find(item => item.id === id);
     assert.equal(entry.learning.available, false);
     assert.equal(entry.learning.href, null);
@@ -158,7 +158,7 @@ test('shared schema and availability violations never masquerade as zero results
     ['qualification promotion', value => { value.entries[0].native.qualified = true; }],
     ['invented native proof', value => { value.entries[0].native.evidence = ['proof']; }],
     ['parent completion', value => { value.entries[0].parent.completed = true; }],
-    ['unavailable lesson promotion', value => { value.entries[99].learning.available = true; }],
+    ['unavailable lesson promotion', value => { value.entries[120].learning.available = true; }],
     ['unsafe learning link', value => { value.entries[0].learning.href = 'javascript:void(0)'; }],
     ['live snapshot claim', value => { value.acceptanceSnapshot.live = true; }],
     ['invalid provenance', value => { value.source.readme.sha256 = 'not-a-hash'; }],

@@ -1,0 +1,82 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { spawnSync, execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const vm = require('node:vm');
+
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const scopes = ['C005', 'C006', 'C007', 'C008', 'local-harness'].map(scope => path.join('capability', scope));
+const sha = value => createHash('sha256').update(value).digest('hex');
+const read = relative => fs.readFileSync(path.join(root, relative));
+const git = args => execFileSync('git', ['--no-pager', ...args], { cwd: root, maxBuffer: 8 * 1024 * 1024 });
+function walk(relative) {
+  return fs.readdirSync(path.join(root, relative), { withFileTypes: true })
+    .flatMap(entry => entry.isDirectory() ? walk(path.join(relative, entry.name)) : [path.join(relative, entry.name)]);
+}
+const inventory = () => scopes.flatMap(walk).sort().map(file => {
+  const bytes = read(file);
+  return { path: file, bytes: bytes.length, sha256: sha(bytes) };
+});
+assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, undefined);
+assert.equal(process.env.NODE_V8_COVERAGE, undefined);
+const before = inventory();
+const syntaxChecks = [];
+for (const file of before.map(item => item.path).filter(file => /\.(?:js|cjs)$/.test(file))) {
+  const checked = spawnSync(process.execPath, ['--check', file], { cwd: root, windowsHide: true });
+  syntaxChecks.push({ path: file, exitCode: checked.status, stderr: checked.stderr.toString('utf8') });
+  assert.equal(checked.status, 0, file);
+}
+const jsonFiles = before.map(item => item.path).filter(file => file.endsWith('.json'));
+for (const file of jsonFiles) JSON.parse(read(file));
+const archivalScripts = fs.readdirSync(__dirname).filter(file => /\.(?:js|cjs)\.txt$/.test(file));
+for (const file of archivalScripts) new vm.Script(fs.readFileSync(path.join(__dirname, file), 'utf8'), { filename: file });
+const initial = JSON.parse(fs.readFileSync(path.join(__dirname, 'initial-boundary.json')));
+for (const file of Object.values(initial.readonlyExtra)) assert.equal(sha(read(file.path)), file.sha256, file.path);
+const historical = JSON.parse(fs.readFileSync(path.join(__dirname, 'historical-proof-hashes.json')));
+for (const file of historical.files) {
+  assert.equal(sha(read(file.path)), file.sha256, file.path);
+  assert.equal(sha(git(['show', `${initial.sourceCommit}:${file.path.replaceAll('\\', '/')}`])),
+    file.canonicalGitSourceSha256, file.path);
+}
+const original = JSON.parse(fs.readFileSync(path.join(__dirname, 'owned-before-hashes.json')));
+const unchangedInterfaces = original.files.filter(file => /\.(?:js|cjs|ts)$/.test(file.path)
+  && !/\\(?:tests|evidence)\\/.test(file.path)
+  && !['capability\\C005\\catalog-data.js', 'capability\\C005\\catalog-source.cjs'].includes(file.path));
+for (const file of unchangedInterfaces) assert.equal(sha(read(file.path)), file.sha256, file.path);
+const source = require(path.join(root, 'capability', 'C005', 'catalog-source.cjs'));
+const catalog = require(path.join(root, 'capability', 'C005', 'catalog-data.js'));
+const generation = JSON.parse(fs.readFileSync(path.join(__dirname, 'generation.json')));
+const reproductionHashes = [source.buildCatalog(), source.buildCatalog()]
+  .map(value => sha(source.serialize(value)));
+assert.deepEqual(reproductionHashes, [generation.data.sha256, generation.data.sha256]);
+assert.equal(sha(read(generation.data.path)), generation.data.sha256);
+assert.deepEqual(source.buildCatalog(), catalog);
+const currentCheck = spawnSync(process.execPath, [path.join('capability', 'C005', 'catalog-source.cjs'), '--check'],
+  { cwd: root, windowsHide: true, maxBuffer: 8 * 1024 * 1024 });
+assert.equal(currentCheck.status, 0, currentCheck.stderr.toString('utf8'));
+const snapshots = [generation.original, generation.intermediate, generation.prior36,
+  generation.prior61, generation.prior86, generation.previous];
+for (const snapshot of snapshots) assert.equal(sha(read(snapshot.path)), snapshot.sha256, snapshot.path);
+const generator = read(generation.generator.path).toString('utf8').replaceAll('\r\n', '\n');
+assert.equal(generator, read(generation.previous.generatorPath).toString('utf8')
+  .replaceAll('\r\n', '\n').replace(generation.previous.sourceCommit, generation.sourceCommit));
+assert.match(generator, /maxBuffer: 8 \* 1024 \* 1024/);
+assert.equal(generation.generator.gitReadMaxBufferBytes, 8 * 1024 * 1024);
+const after = inventory();
+assert.deepEqual(after, before, 'Ordinary syntax, JSON, source and integrity verification must preserve every owned byte and path.');
+console.log(JSON.stringify({
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-135', recordedAtUtc: new Date().toISOString(),
+  syntaxChecks, syntaxCount: syntaxChecks.length, archivalScriptSyntaxCount: archivalScripts.length,
+  ownedJsonFilesParsed: jsonFiles.length, unchangedPublicInterfaceFiles: unchangedInterfaces.length,
+  historicalRawAndCanonicalGitProofsVerified: historical.files.length,
+  sixSnapshotHashes: snapshots.map(item => ({ count: item.acceptedPortableLessons, sha256: item.sha256 })),
+  deterministicSerializedSha256: reproductionHashes, currentCheckExitCode: currentCheck.status,
+  currentCheckStdout: currentCheck.stdout.toString('utf8'), currentCheckStderr: currentCheck.stderr.toString('utf8'),
+  acceptedLessonTargetAndAncestryChecks: generation.acceptedPortableLessons,
+  gitReadMaxBufferBytes: generation.generator.gitReadMaxBufferBytes, onlyFullShaPinChanged: true,
+  ownedFilesChecked: before.length, beforeInventorySha256: sha(JSON.stringify(before)),
+  afterInventorySha256: sha(JSON.stringify(after)), ownedBytesAndFileSetUnchanged: true
+}, null, 2));

@@ -50,15 +50,15 @@ C005 **1.0.0**, originally published at
 `219a2c0c20e095a1b8d5a8e66f19d8a3299b4329`, remains the only source-derived
 catalog. C006 imports its `catalog-data.js`, `catalog-contract.js` and readonly
 declaration, with no extraction, copied catalog or worktree-ledger discovery.
-The zero-credit `OP-CATALOG-SNAPSHOT-REFRESH-115` changes only that generated data
+The zero-credit `OP-CATALOG-SNAPSHOT-REFRESH-135` changes only that generated data
 and necessary proof bindings, not the contract or search API. The UI now uses:
 
-- Commit: `e8a3064f8554906216a9e0c3cf1344a3a6acf019`.
-- Annotated source tag: `kanban/flow-admin/e8a3064f8554`.
-- Commit time: `2026-11-03T22:47:01.000Z`.
-- Ledger update: `2026-11-03T22:47:00.6030609Z`.
-- 100 accepted portable lesson links **in that historical snapshot**, not
-  live availability: exactly S001–S099 plus S103. S100–S102 and S104+ remain
+- Commit: `a03ef59da5d58d74c109d2484d7730fa14500358`.
+- Annotated source tag: `kanban/flow-admin/a03ef59da5d5`.
+- Commit time: `2026-11-04T01:08:35.000Z`.
+- Ledger update: `2026-11-04T01:08:34.3502810Z`.
+- 120 accepted portable lesson links **in that historical snapshot**, not
+  live availability: exactly S001–S120. S121+ remain
   unavailable even when the live board advances.
 - Native runnable/qualified: **false for every entry**. Target support remains
   unknown with original reasons and the unchanged C003 capability authority.
@@ -71,9 +71,9 @@ source-demo parent. C001 approvals and the original parent gates are unchanged.
 Integrity tests still compare all original publication bytes, using C005's
 byte-preserved archive for the old generated artifact, then authenticate the new
 artifact with its fixed-generation hash and reproducible extraction. The binding
-is `capability\C005\evidence\op-catalog-snapshot-refresh-115-e8a3064f8554\generation.json`;
-it binds the source's 115 accepted units (113 S + 2 D), not a new unit-acceptance record.
-All five earlier catalogs (11/20/36/61/86 practices) and all 212
+is `capability\C005\evidence\op-catalog-snapshot-refresh-135-a03ef59da5d5\generation.json`;
+it binds the source's 135 accepted units (133 S + 2 D), not a new unit-acceptance record.
+All six earlier catalogs (11/20/36/61/86/100 practices) and all 290
 pre-existing proof files remain byte-for-byte historical.
 
 ## Original bounded handoff (historical, not current card-state authority)
@@ -108,7 +108,7 @@ finally { Remove-Item Env:\CAPTURE_BROWSER_EVIDENCE }
 
 Any other value, including `true`, `0` or an unset variable, does not capture.
 Successful refresh captures append uniquely named
-`evidence\browser-op-catalog-snapshot-refresh-115-e8a3064f8554-*.json` files with
+`evidence\browser-op-catalog-snapshot-refresh-135-a03ef59da5d5-*.json` files with
 exclusive creation, never replacing earlier observations. Existing proof remains
 byte-for-byte historical and does not attest to this generation.
 The actual browser tests use only the existing

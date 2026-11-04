@@ -9,7 +9,7 @@ const { createHash, randomUUID } = require('node:crypto');
 const { createRequire } = require('node:module');
 const { execFileSync } = require('node:child_process');
 const catalog = require('../../C005/catalog-data.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-115-e8a3064f8554/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-135-a03ef59da5d5/generation.json');
 const repo = path.resolve(__dirname, '..', '..', '..');
 const helperPath = path.join(repo, 'testing', 'browser', 'isolated.cjs');
 const helperRequire = createRequire(helperPath);
@@ -19,7 +19,7 @@ const TRAINING_BANNER = 'Training rehearsal - synthetic data - not a live Azure 
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
 const reportPath = path.join(__dirname, '..', 'evidence',
-  `browser-op-catalog-snapshot-refresh-115-e8a3064f8554-${randomUUID()}.json`);
+  `browser-op-catalog-snapshot-refresh-135-a03ef59da5d5-${randomUUID()}.json`);
 
 async function previousReport() {
   return fs.readFile(historicalPath).catch(error => {
@@ -143,7 +143,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       assert.equal(await page.locator('#catalog-error').isVisible(), false);
       assert.equal(await page.locator('#preparation').isVisible(), false);
     });
-    await check('all 100 noncontiguous accepted lessons pass through real readiness, keyboard preparation and actual practice navigation', async () => {
+    await check('all 120 accepted lessons pass through real readiness, keyboard preparation and actual practice navigation', async () => {
       await choose('readiness-filter', 'portable-available');
       assert.deepEqual(await actualIds(), generation.acceptedPortableIds);
       assert.equal(await page.locator('#matching-entries > article').count(), generation.acceptedPortableLessons);
@@ -178,8 +178,9 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       assert.deepEqual(practiceLinks, catalog.entries.filter(entry => entry.learning.available)
         .map(entry => ({ id: entry.id, href: entry.learning.href })));
       assert.deepEqual(practiceNavigations.map(item => item.id), generation.acceptedPortableIds);
-      assert.equal(new Set(practiceNavigations.map(item => item.id)).size, 100);
+      assert.equal(new Set(practiceNavigations.map(item => item.id)).size, 120);
       assert.ok(practiceNavigations.some(item => item.id === 'S103'));
+      assert.ok(practiceNavigations.some(item => item.id === 'S120'));
       await reset();
     });
     await check('keyboard skip, query plus three AND filters, exact preparation and focus form one continuous journey', async () => {
@@ -324,7 +325,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       await reset();
     });
     await check('unavailable lessons and workflow CONTAINER/BASE distinctions retain exact preparation and all unapproved limits', async () => {
-      for (const id of ['S100', 'S101', 'S102', 'S104']) {
+      for (const id of ['S121', 'S122', 'S123', 'S124']) {
         await open(id);
         assert.equal(await page.locator('.lesson-link').count(), 0, id);
         assert.equal(await page.locator('#preparation-body').getAttribute('data-learning-mode'), 'unavailable-learning', id);
@@ -455,7 +456,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
     });
     assert.equal(checks.length, 12);
     report = {
-      operation: 'OP-CATALOG-SNAPSHOT-REFRESH-115', status: 'passed', observedAtUtc: new Date().toISOString(),
+      operation: 'OP-CATALOG-SNAPSHOT-REFRESH-135', status: 'passed', observedAtUtc: new Date().toISOString(),
       mode: 'actual-isolated-headless', mockedBrowser: false, browserVersion, signature, playwrightVersion,
       nodeVersion: process.version, productionNode24Validated: false,
       helper: 'testing\\browser\\isolated.cjs', helperApi: 'openIsolatedLesson',
@@ -467,7 +468,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       generationSha256: generation.data.sha256, acceptedPracticeDestinations: practiceLinks, practiceNavigations,
       practiceNavigationCounts: { sweep: practiceNavigations.length, repeatedS001Controls: 1,
         totalActual: practiceNavigations.length + 1, uniqueDestinations: new Set(practiceNavigations.map(item => item.id)).size },
-      unavailablePracticeIdsChecked: ['S100', 'S101', 'S102', 'S104'],
+      unavailablePracticeIdsChecked: ['S121', 'S122', 'S123', 'S124'],
       historicalPortableLessons: practiceLinks.length, unknownSupport: 152, nativeRunnable: 0,
       combinedSelection: { query: '  BLUE-GREEN  ', host: 'aks', risk: 'unclassified', readiness: 'portable-available', entryId: 'S001' },
       exactPreparationSectionsSha256: Object.fromEntries(['dependencyRules', 'operatingLimits', 'sharedDefinitionOfDone', 'acceptanceAndEvidence']

@@ -1,0 +1,33 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
+const sha = value => createHash('sha256').update(value).digest('hex');
+const red = JSON.parse(fs.readFileSync(path.join(__dirname, 'red.json')));
+assert.equal(red.exitCode, 1);
+assert.deepEqual(red.summary, { tests: 23, suites: 0, pass: 1, fail: 22, cancelled: 0, skipped: 0, todo: 0 });
+assert.equal(red.oldCatalogSha256, red.oldCatalogAfterSha256);
+assert.equal(red.oldCatalogSha256, '88d21eb94d378661f878a1b143d798759b62d1e8a4d52b1bea9746b72db8499f');
+assert.match(red.stdout, /100 !== 120/);
+assert.match(red.stdout, /ok 23 - negative gates/);
+assert.doesNotMatch(red.stdout, /MODULE_NOT_FOUND|SyntaxError/);
+const data = fs.readFileSync(path.resolve(__dirname, '..', '..', 'catalog-data.js'));
+assert.equal(sha(data), red.oldCatalogSha256);
+const record = {
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-135',
+  worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-135',
+  recordedAtUtc: new Date().toISOString(), applicability: 'not-applicable',
+  reason: 'One local fixed-source catalog metadata and existing-consumer refresh. No infrastructure, cloud resources, scaffolding, identity, deployment or spend is created or changed.',
+  recordedAfter: 'actual assertion RED on unchanged 100-practice snapshot',
+  recordedBefore: 'snapshot implementation',
+  redEvidence: 'red.json', redCompletedAtUtc: red.completedAtUtc,
+  redPositiveAssertionFailures: 22, redNegativeGatePasses: 1,
+  oldCatalogSha256: red.oldCatalogSha256,
+  infrastructureChanges: 0, cloudOperations: 0, packageDownloadsOrInstalls: 0,
+  nativeProof: false, kanoCredits: { S: 0, D: 0, L: 0 }
+};
+assert.ok(Date.parse(record.recordedAtUtc) >= Date.parse(red.completedAtUtc));
+fs.writeFileSync(path.join(__dirname, 'iac-na.json'), `${JSON.stringify(record, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify(record, null, 2));

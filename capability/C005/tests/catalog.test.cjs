@@ -11,7 +11,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const source = require('../catalog-source.cjs');
 const clone = () => structuredClone(catalog);
-const generation = require('../evidence/op-catalog-snapshot-refresh-115-e8a3064f8554/generation.json');
+const generation = require('../evidence/op-catalog-snapshot-refresh-135-a03ef59da5d5/generation.json');
 const expectedAccepted = generation.acceptedPortableIds;
 
 test('C005 exposes exactly the 150 stable source scenarios and two workflows', () => {
@@ -71,8 +71,8 @@ test('all canonical row titles, objectives, acceptance and dependencies retain s
   assert.equal(catalog.entries[151].title, 'Shared-orchestrator getProfile: v1 GA to v2 private preview to v2 GA');
 });
 
-test('all 100 noncontiguous accepted Done snapshot lessons are linked; pending and absent cards are unavailable', () => {
-  assert.equal(expectedAccepted.length, 100);
+test('all 120 accepted Done snapshot lessons are linked; pending and absent cards are unavailable', () => {
+  assert.equal(expectedAccepted.length, 120);
   assert.deepEqual(catalog.entries.filter(entry => entry.learning.available).map(entry => entry.id), expectedAccepted);
   for (const entry of catalog.entries) {
     if (!expectedAccepted.includes(entry.id)) {
@@ -92,7 +92,7 @@ test('all 100 noncontiguous accepted Done snapshot lessons are linked; pending a
     assert.match(entry.support.reason, /no concrete target configuration.*C003/i);
     assert.equal(entry.risk, 'unclassified');
   }
-  for (const id of ['S100', 'S101', 'S102', 'S104']) {
+  for (const id of ['S121', 'S122', 'S123', 'S124']) {
     assert.equal(catalog.entries.find(entry => entry.id === id).learning.available, false, id);
   }
   assert.equal(catalog.entries.find(entry => entry.id === 'S103').learning.available, true);
@@ -154,8 +154,8 @@ for (const [name, mutate] of [
   ['unexplained unknown', value => { value.entries[40].support.reason = ''; }],
   ['inferred support', value => { value.entries[0].support.status = 'supported'; }],
   ['inferred risk', value => { value.entries[0].risk = 'low'; }],
-  ['available without evidence', value => { value.entries[99].learning.available = true; }],
-  ['unavailable with learning link', value => { value.entries[99].learning.href = '../../learning/S100/index.html'; }],
+  ['available without evidence', value => { value.entries[120].learning.available = true; }],
+  ['unavailable with learning link', value => { value.entries[120].learning.href = '../../learning/S121/index.html'; }],
   ['wrong learning destination', value => { value.entries[0].learning.href = '../../learning/S002/index.html'; }],
   ['workflow lesson', value => { value.entries[150].learning = structuredClone(value.entries[0].learning); }],
   ['malformed acceptance timestamp', value => { value.entries[0].learning.evidence.acceptedAtUtc = '2026-02-31T10:00:00Z'; }],

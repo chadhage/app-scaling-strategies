@@ -1,0 +1,145 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const { gzipSync } = require('node:zlib');
+
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const scopes = ['C005', 'C006', 'C007', 'C008', 'local-harness'].map(scope => path.join('capability', scope));
+const sha = value => createHash('sha256').update(value).digest('hex');
+const attempt = process.argv[2] || '01';
+assert.match(attempt, /^\d{2}$/);
+function walk(relative) {
+  return fs.readdirSync(path.join(root, relative), { withFileTypes: true })
+    .flatMap(entry => entry.isDirectory() ? walk(path.join(relative, entry.name)) : [path.join(relative, entry.name)]);
+}
+const inventory = () => scopes.flatMap(walk).sort().map(file => {
+  const bytes = fs.readFileSync(path.join(root, file));
+  return { path: file, bytes: bytes.length, sha256: sha(bytes) };
+});
+const proof = files => files.filter(file => /(?:^|\\)evidence(?:\\|\.json$)|\\result\.json$/.test(file.path));
+function parseTap(text) {
+  const summary = {};
+  for (const key of ['tests', 'suites', 'pass', 'fail', 'cancelled', 'skipped', 'todo']) {
+    summary[key] = Number(new RegExp(`^# ${key} (\\d+)\\r?$`, 'm').exec(text)?.[1] || 0);
+  }
+  const stack = [];
+  const parents = new Set();
+  let total = 0;
+  for (const line of text.split(/\r?\n/)) {
+    const match = /^(\s*)# Subtest: /.exec(line);
+    if (!match) continue;
+    const indent = match[1].length;
+    while (stack.length && stack.at(-1).indent >= indent) stack.pop();
+    if (stack.length) parents.add(stack.at(-1).id);
+    stack.push({ indent, id: total++ });
+  }
+  return { ...summary, total, parents: parents.size, leaves: total - parents.size };
+}
+assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, undefined, 'Quiet replay requires the capture variable unset.');
+assert.equal(process.env.NODE_V8_COVERAGE, undefined, 'Do not create unowned coverage files.');
+const focused = JSON.parse(fs.readFileSync(path.join(__dirname, 'focused-attempt-02.json')));
+assert.equal(focused.exitCode, 0);
+const focusedFiles = focused.command.filter(argument => argument.endsWith('.test.cjs'));
+const browserFiles = scopes.map(scope => path.join(scope, 'tests', 'browser.test.cjs'));
+const historical = JSON.parse(fs.readFileSync(path.join(__dirname, 'historical-proof-hashes.json')));
+const generation = JSON.parse(fs.readFileSync(path.join(__dirname, 'generation.json')));
+const initial = JSON.parse(fs.readFileSync(path.join(__dirname, 'initial-boundary.json')));
+const snapshots = [generation.original, generation.intermediate, generation.prior36,
+  generation.prior61, generation.prior86, generation.previous];
+function assertPreserved() {
+  for (const file of historical.files) {
+    assert.equal(sha(fs.readFileSync(path.join(root, file.path))), file.sha256, file.path);
+  }
+  for (const file of snapshots) {
+    assert.equal(sha(fs.readFileSync(path.join(root, file.path))), file.sha256, file.path);
+  }
+  for (const file of Object.values(initial.readonlyExtra)) {
+    assert.equal(sha(fs.readFileSync(path.join(root, file.path))), file.sha256, file.path);
+  }
+}
+assertPreserved();
+const startedAtUtc = new Date().toISOString();
+const before = inventory();
+const beforeProof = proof(before);
+const runs = [];
+for (const [kind, files] of [['model', focusedFiles], ['browser', browserFiles]]) {
+  const name = `quiet-${kind}-${attempt}`;
+  const started = new Date().toISOString();
+  const args = ['--test', '--test-reporter=tap', ...files];
+  const result = spawnSync(process.execPath, args, {
+    cwd: root, windowsHide: true, maxBuffer: 32 * 1024 * 1024
+  });
+  const stdout = result.stdout || Buffer.alloc(0);
+  const stderr = result.stderr || Buffer.alloc(0);
+  runs.push({ name, command: [process.execPath, ...args], startedAtUtc: started,
+    completedAtUtc: new Date().toISOString(), exitCode: result.status,
+    signal: result.signal, spawnError: result.error?.message || null,
+    tests: parseTap(stdout.toString('utf8')), stdout, stderr });
+}
+const completedAtUtc = new Date().toISOString();
+const after = inventory();
+const afterProof = proof(after);
+const pathsBefore = new Set(before.map(file => file.path));
+const pathsAfter = new Set(after.map(file => file.path));
+const appendedFiles = after.filter(file => !pathsBefore.has(file.path)).map(file => file.path);
+const deletedFiles = before.filter(file => !pathsAfter.has(file.path)).map(file => file.path);
+const beforeMap = new Map(before.map(file => [file.path, file.sha256]));
+const changedFiles = after.filter(file => beforeMap.has(file.path) && beforeMap.get(file.path) !== file.sha256)
+  .map(file => file.path);
+const unchanged = appendedFiles.length === 0 && deletedFiles.length === 0 && changedFiles.length === 0;
+const tests = runs.reduce((sum, run) => {
+  for (const key of ['total', 'parents', 'leaves', 'tests', 'pass', 'fail', 'cancelled', 'skipped', 'todo']) {
+    sum[key] = (sum[key] || 0) + run.tests[key];
+  }
+  return sum;
+}, {});
+const persistedRuns = runs.map(run => {
+  const transcripts = {};
+  for (const stream of ['stdout', 'stderr']) {
+    const bytes = run[stream];
+    const compressed = gzipSync(bytes);
+    const relative = path.join('raw', `${run.name}.${stream}.raw.gz`);
+    fs.writeFileSync(path.join(__dirname, relative), compressed, { flag: 'wx' });
+    transcripts[stream] = { path: relative, bytes: bytes.length, sha256: sha(bytes),
+      gzipBytes: compressed.length, gzipSha256: sha(compressed) };
+  }
+  const { stdout, stderr, ...metadata } = run;
+  return { ...metadata, transcripts };
+});
+const report = {
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-135', worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-135',
+  kind: 'actual-capture-unset-read-only-replay-not-acceptance', startedAtUtc, completedAtUtc,
+  captureVariableUnset: true, node: process.version, tests, runs: persistedRuns,
+  counting: 'Sum of two actual Node invocations, not a global unique-case count. Parent nodes, leaf cases and practice navigations remain distinct.',
+  ownedFilesChecked: before.length, proofFilesChecked: beforeProof.length,
+  historicalProofsVerified: historical.files.length, sixSnapshotHashesVerified: snapshots.length,
+  beforeInventorySha256: sha(JSON.stringify(before)), afterInventorySha256: sha(JSON.stringify(after)),
+  beforeProofInventorySha256: sha(JSON.stringify(beforeProof)), afterProofInventorySha256: sha(JSON.stringify(afterProof)),
+  ownedBytesUnchanged: unchanged, proofBytesUnchanged: JSON.stringify(beforeProof) === JSON.stringify(afterProof),
+  appendedFiles, deletedFiles, changedFiles, before, after,
+  recordingBoundary: 'Both inventories precede wrapper transcript/report persistence; ordinary model/browser commands append, rewrite and delete nothing.'
+};
+fs.writeFileSync(path.join(__dirname, `quiet-readonly-confirmed-${attempt}.json`),
+  `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify({
+  quietReplay: tests, runs: persistedRuns.map(run => ({ name: run.name, exitCode: run.exitCode, tests: run.tests })),
+  ownedFilesChecked: before.length, proofFilesChecked: beforeProof.length,
+  historicalProofsVerified: historical.files.length, snapshotHashesVerified: snapshots.length,
+  beforeInventorySha256: report.beforeInventorySha256, afterInventorySha256: report.afterInventorySha256,
+  appendedFiles, deletedFiles, changedFiles
+}, null, 2));
+assert.equal(unchanged, true, 'Quiet replay must preserve every owned source/proof byte and file set.');
+assertPreserved();
+for (const run of runs) {
+  if (run.exitCode !== 0) {
+    process.stdout.write(run.stdout);
+    process.stderr.write(run.stderr);
+  }
+  assert.equal(run.exitCode, 0, run.name);
+  assert.equal(run.tests.fail, 0, run.name);
+  assert.equal(run.tests.tests, run.tests.total, run.name);
+}
