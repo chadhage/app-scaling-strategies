@@ -1,0 +1,13 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('./model.js');
+
+test('starting a supplied slow-client trace retains the original journey', () => {
+  const state = model.execute(model.createState(), { type: 'start', presetId: 'within-budget' });
+  assert.equal(state.phase, 'started');
+  assert.deepEqual(state.current.original, {
+    journeyId: 'journey-amber', clientId: 'client-amber', initialVersion: 'fixture-v1',
+    startMs: 1000, budgetMs: 3000, deadlineMs: 4000,
+  });
+});

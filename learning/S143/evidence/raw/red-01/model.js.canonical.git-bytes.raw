@@ -1,0 +1,14 @@
+(function attach(root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S143Lesson = api;
+})(globalThis, function makeStub() {
+  'use strict';
+  const createState = () => Object.freeze({ phase: 'idle' });
+  return Object.freeze({
+    createState,
+    execute: (state) => state,
+    inspect: (state) => Object.freeze({ phase: state.phase }),
+  });
+});

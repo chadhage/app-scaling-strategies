@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "id": "A-S143",
+  "sourceId": "S143",
+  "parentId": "D-S143",
+  "title": "Slow client: one original journey deadline",
+  "kano": "S",
+  "kanoUnit": "A-S143",
+  "priority": "P1",
+  "packet": "SC-S143",
+  "technicalEntryGate": "SOURCE",
+  "mode": "portable-synthetic",
+  "entry": "index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Slow a client/reconnect; retries must remain inside the original journey budget.",
+  "sourceContract": {
+    "readmeRow": "| S143 | **Slow clients and network variability:** Validate latency and connection recovery under explicitly supported network conditions. |",
+    "backlogRow": "| D-S143 | P1 | Add bounded slow-client/network variability through labeled client-driver conditions. | Original journey budgets include retries/reconnects; emulated conditions and observed native effects are distinguished. | D-S042 |",
+    "acceptance": "Original journey budgets include retries/reconnects; emulated conditions and observed native effects are distinguished.",
+    "dependencies": ["D-S042"],
+    "portableRow": "| A-S143 | D-S143 | S | Slow a client/reconnect; retries must remain inside the original journey budget. | SOURCE |",
+    "nativeSiblingRow": "| B-S143 | D-S143 | S | Conduct one labeled network-variability profile; verify real client impact and emulation limits. | CORE, DATA, HOST, C090 |",
+    "nativeSibling": "B-S143",
+    "nativeSiblingGates": "CORE, DATA, HOST, C090",
+    "exactSourcesReadBeforeBehaviorDesign": true,
+    "rawAndCanonicalEvidence": "evidence\\raw\\source\\source-contract.json"
+  },
+  "preconditions": [
+    "Open the standalone index.html locally in a JavaScript-capable browser; no server, account or management access.",
+    "Choose only a supplied closed preset; no arbitrary client, clock, delay, result or user-data entry.",
+    "All profiles, clients, attempts, versions, delays, times, deadlines, budgets, results and state are fixed fictional teaching DATA ONLY."
+  ],
+  "syntheticInputs": {
+    "fixtureVersion": "original-budget-data/1",
+    "journeyId": "journey-amber",
+    "clientId": "client-amber",
+    "initialVersion": "fixture-v1",
+    "reconnectVersion": "fixture-v2",
+    "startMs": 1000,
+    "budgetMs": 3000,
+    "deadlineMs": 4000,
+    "firstClientWaitMs": 800,
+    "firstAttemptServiceMs": 700,
+    "maximumRuns": 12,
+    "maximumAcceptedActions": 72,
+    "maximumRetainedRejectedActions": 12,
+    "presets": [
+      "within-budget", "exact-deadline", "one-ms-over", "per-attempt-reset",
+      "missing-final-time", "missing-completion", "late-unknown", "reconnect-failed",
+      "incorrect-200", "unsupported-condition"
+    ]
+  },
+  "supportedConditionContract": {
+    "mode": "fictional-emulation-data-only",
+    "clientCount": 1,
+    "maximumAttempts": 2,
+    "firstClientWaitMs": 800,
+    "knownFinalClientWaitMs": 200,
+    "backoffMs": [400, 1101],
+    "reconnectMs": [300, 600],
+    "knownFinalServiceMs": [500, 600, 601, 1300],
+    "unknownFinalTiming": "null remains unobserved, not zero or a guessed completion",
+    "outsideSupportPreset": "unsupported-condition",
+    "observedNativeEffect": "unverified"
+  },
+  "actions": ["start", "slow", "reconnect", "observe", "measure", "reset"],
+  "assertions": [
+    "supported-condition", "connection-recovery", "original-deadline",
+    "final-response", "final-completion", "correct-result"
+  ],
+  "verification": {
+    "iac": "N/A evaluated after genuine assertion RED and before implementation; resource-free fixed teaching DATA only.",
+    "focusedCommand": "node --test --test-concurrency=1 learning\\S143\\model.test.cjs learning\\S143\\integrity.test.cjs learning\\S143\\browser.test.cjs",
+    "syntaxCommand": "$env:CAPTURE_BROWSER_EVIDENCE='1'; node learning\\S143\\record.cjs syntax syntax-NN",
+    "deliberateCapture": "Only exact CAPTURE_BROWSER_EVIDENCE=1 creates new exclusive raw browser evidence; normal verification is READ-ONLY.",
+    "publishedHelper": "testing\\browser\\isolated.cjs",
+    "publishedHelperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "playwright": "1.56.1",
+    "browser": "Microsoft-signed Edge 156.0.4314.50; isolated headless; awaited finally close",
+    "toolingRuntime": "Node.js 22.23.4, not production Node.js 24 validation",
+    "lifecycleLimit": "Published helper has known unqualified unattended context/page/cleanup lifecycle recovery; the inactive prototype is not used."
+  },
+  "limits": [
+    "Fictional durations are integer DATA, never real clocks, waits, timeouts, clients, network emulation, traffic or load-generator operations.",
+    "Cumulative original timing includes first wait/service, backoff, reconnect and final wait/service; new attempts, versions and HTTP 200 do not reset it.",
+    "Unknown final completion or time stays null; a known lower-bound overrun is still FAIL.",
+    "Recovery retains the original interruption; expected negative verifier success is not user-journey PASS.",
+    "Labeled emulation is fictional DATA; observed native effects are unverified and not inferred.",
+    "No cloud, IaC, scaffolding, credentials, identity, deployment, spend, packages, frameworks, downloads or unsafe browser flags.",
+    "No root/shared/catalog/local-harness edits; no native proof, source-parent completion, SLA, full accessibility certification or extra credit."
+  ],
+  "nativeProofComplete": false,
+  "sourceParentComplete": false,
+  "productionNode24Validated": false,
+  "accepted": false,
+  "extraKanoCredits": 0
+}

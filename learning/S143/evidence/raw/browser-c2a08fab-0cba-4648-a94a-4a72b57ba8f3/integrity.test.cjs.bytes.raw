@@ -1,0 +1,308 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+const proof = require('./record.cjs');
+const model = require('./model.js');
+const root = path.resolve(__dirname, '..', '..');
+const raw = path.join(__dirname, 'evidence', 'raw');
+const read = (file) => fs.readFileSync(path.join(__dirname, file), 'utf8');
+const parse = (file) => JSON.parse(read(file));
+const manifest = parse('manifest.json');
+const source = parse(path.join('evidence', 'raw', 'source', 'source-contract.json'));
+const git = (args, options = {}) => execFileSync('git', args, { cwd: root, ...options });
+const gitName = (file) => path.relative(root, file).split(path.sep).join('/');
+
+test('exact S143/README, D-S143 acceptance/dependency, original A card and inventory preserve P1/S/SC-S143/SOURCE', () => {
+  assert.equal(manifest.id, 'A-S143');
+  assert.equal(manifest.sourceId, 'S143');
+  assert.equal(manifest.parentId, 'D-S143');
+  assert.equal(manifest.kano, 'S');
+  assert.equal(manifest.kanoUnit, 'A-S143');
+  assert.equal(manifest.priority, 'P1');
+  assert.equal(manifest.packet, 'SC-S143');
+  assert.equal(manifest.technicalEntryGate, 'SOURCE');
+  assert.equal(manifest.objective, 'Slow a client/reconnect; retries must remain inside the original journey budget.');
+  assert.equal(manifest.sourceContract.acceptance, 'Original journey budgets include retries/reconnects; emulated conditions and observed native effects are distinguished.');
+  assert.deepEqual(manifest.sourceContract.dependencies, ['D-S042']);
+  assert.equal(source.exactSourcesReadBeforeBehaviorDesign, true);
+  assert.deepEqual(source.card, {
+    technicalEntryGate: 'SOURCE', kano: 'S', priority: 'P1', kanoUnit: 'A-S143',
+    deliver: manifest.objective, packet: 'SC-S143', id: 'A-S143', parents: ['D-S143'],
+  });
+  for (const [key, row] of Object.entries({
+    readme: manifest.sourceContract.readmeRow, backlog: manifest.sourceContract.backlogRow,
+    portable: manifest.sourceContract.portableRow, native: manifest.sourceContract.nativeSiblingRow,
+  })) {
+    assert.equal(source.rows[key].row, row);
+    const gitPath = source.rows[key].sourcePath.replace(/\\/g, '/');
+    const bytes = git(['show', `${source.sourceCommit}:${gitPath}`]);
+    assert.equal(bytes.toString('utf8').split(/\r?\n/).includes(row), true);
+    assert.equal(proof.sha256(bytes), source.rows[key].committedSourceSha256);
+    assert.equal(proof.blobOid(bytes), source.rows[key].committedSourceBlobOid);
+  }
+  for (const key of ['accepted', 'nativeProofComplete', 'sourceParentComplete', 'productionNode24Validated']) assert.equal(manifest[key], false);
+  assert.equal(manifest.extraKanoCredits, 0);
+});
+
+test('raw source CRLF and immutable committed canonical source rows are distinct preserved byte claims', () => {
+  assert.equal(source.rawAndCanonicalClaimsAreSeparate, true);
+  for (const row of Object.values(source.rows)) {
+    const rawBytes = fs.readFileSync(path.join(raw, 'source', row.rawFile));
+    const canonicalBytes = fs.readFileSync(path.join(raw, 'source', row.canonicalFile));
+    assert.equal(proof.sha256(rawBytes), row.rawRowSha256);
+    assert.equal(proof.sha256(canonicalBytes), row.canonicalRowSha256);
+    assert.equal(rawBytes.toString('utf8').replace(/\r?\n$/, ''), row.row);
+    assert.equal(canonicalBytes.toString('utf8').replace(/\r?\n$/, ''), row.row);
+    assert.equal(rawBytes.toString('utf8').endsWith('\r\n'), row.rawRowCrLf);
+    assert.equal(row.rawRowCrLf, true);
+    assert.equal(canonicalBytes.toString('utf8').includes('\r\n'), false);
+    assert.notEqual(row.rawRowSha256, row.canonicalRowSha256);
+    assert.equal(proof.blobOid(canonicalBytes), row.canonicalRowBlobOid);
+  }
+});
+
+test('closed fixed fictional input/output envelope, exact boundary/unknown lesson rules and honest original native remainder', () => {
+  assert.equal(manifest.mode, 'portable-synthetic');
+  assert.deepEqual(manifest.syntheticInputs.presets, Object.keys(model.PRESETS));
+  assert.equal(manifest.syntheticInputs.maximumRuns, model.MAX_RUNS);
+  assert.equal(manifest.syntheticInputs.maximumAcceptedActions, model.MAX_HISTORY);
+  assert.equal(manifest.syntheticInputs.maximumRetainedRejectedActions, model.MAX_REJECTIONS);
+  assert.deepEqual(manifest.assertions, model.inspect(model.createState()).checks.map((check) => check.id));
+  for (const key of ['startMs', 'budgetMs', 'deadlineMs']) assert.equal(manifest.syntheticInputs[key], model.ORIGINAL[key]);
+  for (const phrase of [
+    'DATA ONLY', 'P1; SC-S143', 'UNKNOWN', '4001', '3001', '-201',
+    'Parent alone accepts A-S143 once', 'readiness=false', 'original B-S143 Kano unit',
+    'D-S143 remains incomplete', 'Zero extra credits', 'Normal verification is READ-ONLY',
+    'inactive lifecycle prototype is unqualified', 'production Node 24',
+    'Microsoft Open Source Disclaimer', 'Observation time is not invented as completion time',
+    'final-attempt-within-budget flag is diagnostic only',
+  ]) assert.equal(read('README.txt').includes(phrase), true, phrase);
+  const remainder = parse('remainder.json');
+  assert.equal(remainder.nativeRemainder.kanoUnit, 'B-S143');
+  assert.equal(remainder.nativeRemainder.kano, 'S');
+  assert.equal(remainder.nativeRemainder.priority, 'P1');
+  assert.equal(remainder.nativeRemainder.packet, 'SC-S143');
+  assert.equal(remainder.nativeRemainder.state, 'To Do');
+  assert.equal(remainder.nativeRemainder.readiness, false);
+  assert.equal(remainder.nativeRemainder.technicalEntryGate, 'CORE, DATA, HOST, C090');
+  assert.equal(remainder.nativeRemainder.deliver, manifest.sourceContract.nativeSiblingRow.split('|')[4].trim());
+  assert.equal(remainder.sourceParent.complete, false);
+  assert.deepEqual(remainder.sourceParent.dependencies, ['D-S042']);
+  assert.equal(remainder.sourceParent.acceptance, manifest.sourceContract.acceptance);
+  assert.equal(remainder.extraKanoCredits, 0);
+  assert.equal(remainder.ledgerMutation, false);
+  assert.deepEqual(manifest.supportedConditionContract, {
+    mode: 'fictional-emulation-data-only', clientCount: 1, maximumAttempts: 2,
+    firstClientWaitMs: 800, knownFinalClientWaitMs: 200, backoffMs: [400, 1101],
+    reconnectMs: [300, 600], knownFinalServiceMs: [500, 600, 601, 1300],
+    unknownFinalTiming: 'null remains unobserved, not zero or a guessed completion',
+    outsideSupportPreset: 'unsupported-condition', observedNativeEffect: 'unverified',
+  });
+});
+
+test('standalone restrictive CSP has exact normalized inline hashes, self assets, semantic/keyboard UX and no live production APIs', () => {
+  const html = read('index.html').replace(/\r\n/g, '\n');
+  assert.equal(html.includes(manifest.banner), true);
+  assert.ok(html.indexOf('Content-Security-Policy') < html.indexOf('<script>'));
+  assert.ok(html.indexOf('Content-Security-Policy') < html.indexOf('<link'));
+  for (const directive of [
+    "default-src 'none'", "script-src 'self'", "style-src 'self'", "connect-src 'none'", "img-src 'none'",
+    "font-src 'none'", "object-src 'none'", "base-uri 'none'", "form-action 'none'", "frame-src 'none'",
+    "worker-src 'none'", "media-src 'none'",
+  ]) assert.equal(html.includes(directive), true, directive);
+  for (const tag of ['script', 'style']) {
+    const match = html.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`));
+    assert.ok(match);
+    const hash = require('node:crypto').createHash('sha256').update(match[1]).digest('base64');
+    assert.ok(html.includes(`'sha256-${hash}'`));
+  }
+  assert.deepEqual([...html.matchAll(/<script src="([^"]+)"/g)].map((match) => match[1]), ['model.js', 'app.js']);
+  assert.deepEqual([...html.matchAll(/<link[^>]+href="([^"]+)"/g)].map((match) => match[1]), ['lesson.css']);
+  assert.doesNotMatch(html, /unsafe-inline|unsafe-eval|\son[a-z]+\s*=|<input|<textarea|<iframe|<img|\bname="reset"|\bhttps?:/i);
+  assert.match(html, /<label for="preset">Fixed slow-client condition<\/label>/);
+  assert.match(html, /role="status"/);
+  assert.match(html, /role="alert"/);
+  assert.match(html, /<noscript>/);
+  assert.match(read('lesson.css'), /:focus-visible.*3px/);
+  assert.match(read('app.js'), /HTMLFormElement\.prototype\.reset\.call\(form\)/);
+  for (const file of ['model.js', 'app.js']) {
+    assert.doesNotMatch(read(file), /\bfetch\s*\(|XMLHttpRequest|WebSocket|EventSource|localStorage|sessionStorage|indexedDB|document\.cookie|\beval\s*\(|innerHTML|Math\.random|\bDate\b|performance\.now|\bsetTimeout\s*\(|\bsetInterval\s*\(|\brequire\s*\(/);
+  }
+  assert.doesNotMatch(read('lesson.css'), /@import|\burl\s*\(|#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i);
+  assert.equal(html.includes('new URLSearchParams(window.location.search)'), true);
+  assert.equal(html.includes('--cp-bg: #f7f4ef;'), true);
+  assert.equal(html.includes('--cp-bg: #3d3b3a;'), true);
+});
+
+test('archived loadable stub, exact assertion RED and post-RED pre-implementation IaC N/A remain outside test autodiscovery', () => {
+  const directory = path.join(raw, 'red-01');
+  const red = JSON.parse(fs.readFileSync(path.join(directory, 'red.json'), 'utf8'));
+  const stdout = fs.readFileSync(path.join(directory, red.stdoutFile));
+  const stderr = fs.readFileSync(path.join(directory, red.stderrFile));
+  assert.equal(red.childExitCode, 1);
+  assert.equal(red.genuineAssertionRed, true);
+  assert.equal(proof.sha256(stdout), red.stdoutSha256);
+  assert.equal(proof.sha256(stderr), red.stderrSha256);
+  assert.match(stdout.toString('utf8'), /not ok 1/);
+  assert.match(stdout.toString('utf8'), /ERR_ASSERTION/);
+  assert.match(stdout.toString('utf8'), /'idle' !== 'started'/);
+  assert.doesNotMatch(stdout.toString('utf8'), /MODULE_NOT_FOUND|ENOENT|SyntaxError/);
+  for (const record of Object.values(red.archived)) {
+    assert.equal(proof.sha256(fs.readFileSync(path.join(directory, record.rawFile))), record.rawSha256);
+    assert.equal(proof.sha256(fs.readFileSync(path.join(directory, record.canonicalFile))), record.canonicalSha256);
+    assert.doesNotMatch(record.rawFile, /\.test\.[cm]?js$/);
+    assert.doesNotMatch(record.canonicalFile, /\.test\.[cm]?js$/);
+  }
+  const stub = require('./evidence/raw/red-01/model.js.bytes.raw');
+  assert.equal(stub.execute(stub.createState(), { type: 'start', presetId: 'within-budget' }).phase, 'idle');
+  const browser = JSON.parse(fs.readFileSync(path.join(directory, 'stub-browser.json'), 'utf8'));
+  assert.deepEqual(browser.pageErrors, []);
+  assert.equal(browser.phaseBefore, 'idle');
+  assert.equal(browser.phaseAfterKeyboardStart, 'idle');
+  assert.equal(browser.verdict, 'UNKNOWN — not measured');
+  assert.equal(browser.awaitedFinallyClose, true);
+  assert.equal(browser.browserVersion, '156.0.4314.50');
+  const iac = parse(path.join('evidence', 'iac-na.json'));
+  assert.equal(iac.iac, manifest.verification.iac);
+  assert.equal(iac.redStdoutSha256, red.stdoutSha256);
+  assert.ok(iac.evaluatedAtUtc >= red.startedAtUtc);
+  assert.equal(iac.implementationHadNotStarted, true);
+  for (const key of [
+    'cloudResources', 'cloudSpend', 'networkOperations', 'clockOperations', 'liveClients',
+    'trafficOperations', 'loadGeneratorOperations', 'userDataOperations', 'identityOperations',
+    'downloads', 'packages', 'frameworks', 'extraKanoCredits',
+  ]) assert.equal(iac[key], 0);
+});
+
+test('narrow raw-byte attributes predate captures; every child transcript keeps its raw digest including historical failures', () => {
+  const currentCanonicalRule = proof.canonical(Buffer.from(read('.gitattributes'))).toString('utf8');
+  assert.equal(currentCanonicalRule, '* text=auto eol=lf\nevidence/raw/** -text -diff\n');
+  for (const name of fs.readdirSync(raw)) {
+    const file = path.join(raw, name, 'run.json');
+    if (!fs.existsSync(file)) continue;
+    const run = JSON.parse(fs.readFileSync(file, 'utf8'));
+    for (const child of run.records) {
+      for (const [stem, hash] of [[child.stdoutFile, child.stdoutSha256], [child.stderrFile, child.stderrSha256]]) {
+        const transcript = path.join(raw, name, stem);
+        assert.equal(proof.sha256(fs.readFileSync(transcript)), hash);
+        const attributes = git(['check-attr', 'text', 'diff', '--', gitName(transcript)], { encoding: 'utf8' });
+        assert.match(attributes, /text: unset/);
+        assert.match(attributes, /diff: unset/);
+      }
+    }
+  }
+  const red = parse(path.join('evidence', 'raw', 'red-01', 'red.json'));
+  const rawRule = fs.readFileSync(path.join(raw, 'red-01', red.archived['.gitattributes'].rawFile), 'utf8');
+  assert.equal(rawRule.replace(/\r\n/g, '\n'), currentCanonicalRule);
+});
+
+test('capture is exact opt-in and importing/verifying evidence code is READ-ONLY for every other environment value', () => {
+  const before = proof.fingerprints();
+  const original = process.env.CAPTURE_BROWSER_EVIDENCE;
+  try {
+    for (const value of [undefined, '0', 'true', '01', '', '1 ', 'TRUE']) {
+      if (value === undefined) delete process.env.CAPTURE_BROWSER_EVIDENCE;
+      else process.env.CAPTURE_BROWSER_EVIDENCE = value;
+      assert.equal(proof.captureEnabled(value), false);
+      assert.equal(proof.captureBrowser([]), null);
+      assert.throws(() => execFileSync(process.execPath, [
+        path.join('learning', 'S143', 'record.cjs'), 'model', 'model-99',
+      ], { cwd: root, env: { ...process.env }, stdio: 'pipe' }), (error) =>
+        error.status === 1 && error.stderr.toString('utf8').includes('All deliberate raw producer captures require exact CAPTURE_BROWSER_EVIDENCE=1'));
+      assert.deepEqual(proof.fingerprints(), before);
+    }
+    assert.equal(proof.captureEnabled('1'), true);
+  } finally {
+    if (original === undefined) delete process.env.CAPTURE_BROWSER_EVIDENCE;
+    else process.env.CAPTURE_BROWSER_EVIDENCE = original;
+  }
+  assert.deepEqual(proof.fingerprints(), before);
+  assert.match(read('browser.test.cjs'), /test\.after\(\(\) => \{ evidence\.captureBrowser\(groups\); \}\)/);
+  assert.match(read('record.cjs'), /if \(!captureEnabled\(process\.env\.CAPTURE_BROWSER_EVIDENCE\)\) return null/);
+  assert.match(read('record.cjs'), /assert\.deepEqual\(fingerprints\(\), before/);
+  assert.match(read('record.cjs'), /All deliberate raw producer captures require exact CAPTURE_BROWSER_EVIDENCE=1/);
+  assert.doesNotMatch(read('browser.test.cjs'), /bypassCSP:\s*true|--no-sandbox|ignoreHTTPSErrors|openIsolatedLoopback|browser_navigate/);
+});
+
+test('exact-opt-in preserved stub requalification is byte-identical and honest about its later chronology', () => {
+  const qualification = parse(path.join('evidence', 'raw', 'qualify-01', 'qualification.json'));
+  const red = parse(path.join('evidence', 'raw', 'red-01', 'red.json'));
+  assert.equal(qualification.exactCaptureEnvironment, '1');
+  assert.equal(qualification.originalRedStdoutSha256, red.stdoutSha256);
+  assert.equal(qualification.genuineAssertionRed, true);
+  assert.equal(qualification.child.childExitCode, 1);
+  assert.equal(qualification.currentLessonChanged, false);
+  assert.equal(qualification.extraKanoCredits, 0);
+  assert.match(qualification.chronology, /^Post-implementation/);
+  assert.match(qualification.originalProducerOptIn, /retained, not relabeled/);
+  for (const [file, record] of Object.entries(qualification.files)) {
+    assert.equal(proof.sha256(fs.readFileSync(path.join(raw, 'qualify-01', file))), record.rawSha256);
+    assert.equal(record.rawSha256, red.archived[record.originalSource].rawSha256);
+    assert.doesNotMatch(file, /\.test\.[cm]?js$/);
+  }
+  assert.equal(qualification.browser.phaseBefore, 'idle');
+  assert.equal(qualification.browser.phaseAfterKeyboardStart, 'idle');
+  assert.equal(qualification.browser.awaitedFinallyClose, true);
+  assert.deepEqual(qualification.browser.pageErrors, []);
+});
+
+test('published helper/offline tooling are pinned; deliberate browser captures retain independent raw/canonical identity and actual observations', () => {
+  const helper = path.join(root, 'testing', 'browser', 'isolated.cjs');
+  assert.equal(proof.sha256(fs.readFileSync(helper)), manifest.verification.publishedHelperSha256);
+  assert.equal(require(path.join(root, 'testing', 'browser', 'node_modules', 'playwright', 'package.json')).version, '1.56.1');
+  const captures = fs.readdirSync(raw).filter((name) => /^browser-[0-9a-f-]{36}$/.test(name));
+  const passed = [];
+  for (const name of captures) {
+    const directory = path.join(raw, name);
+    const capture = JSON.parse(fs.readFileSync(path.join(directory, 'observations.json'), 'utf8'));
+    assert.equal(capture.exactCaptureEnvironment, '1');
+    assert.equal(capture.helperSha256, manifest.verification.publishedHelperSha256);
+    assert.equal(capture.playwrightVersion, '1.56.1');
+    assert.equal(capture.rawAndCanonicalClaimsAreSeparate, true);
+    assert.equal(capture.productionNode24Validated, false);
+    assert.equal(capture.extraKanoCredits, 0);
+    for (const snapshot of Object.values(capture.sourceSnapshots)) {
+      const bytes = fs.readFileSync(path.join(directory, snapshot.rawFile));
+      const canonicalBytes = fs.readFileSync(path.join(directory, snapshot.canonicalFile));
+      assert.equal(proof.sha256(bytes), snapshot.rawSha256);
+      assert.equal(bytes.length, snapshot.rawByteLength);
+      assert.equal(proof.sha256(canonicalBytes), snapshot.canonicalSha256);
+      assert.equal(proof.blobOid(canonicalBytes), snapshot.canonicalGitBlobOid);
+      assert.deepEqual(proof.canonical(bytes), canonicalBytes);
+    }
+    if (capture.passed) passed.push(capture);
+    else assert.ok(capture.groups.some((group) => group.status === 'failed'));
+  }
+  if (!passed.length) {
+    assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, '1', 'Normal verification requires retained actual deliberate post-implementation browser evidence.');
+    return;
+  }
+  const matching = passed.find((capture) => Object.entries(capture.sourceSnapshots).every(([name, snapshot]) =>
+    proof.sha256(proof.canonical(fs.readFileSync(path.join(__dirname, name)))) === snapshot.canonicalSha256));
+  if (!matching) {
+    assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, '1', 'Normal verification requires a passed actual capture matching exact current canonical source; deliberately capture changed source before verification.');
+    return;
+  }
+  assert.equal(matching.groups.length, 3);
+  assert.ok(matching.groups.every((group) => group.status === 'passed' && group.awaitedFinallyClose && group.browserVersion === '156.0.4314.50'));
+  const journeys = matching.groups[0].journeys;
+  assert.equal(journeys.length, 12);
+  assert.deepEqual(journeys.slice(0, 10).map((journey) => journey.presetId), Object.keys(model.PRESETS));
+  assert.equal(journeys[1].verdict, 'PASS');
+  assert.equal(journeys[1].elapsed, '3000');
+  assert.equal(journeys[2].verdict, 'FAIL');
+  assert.equal(journeys[2].elapsed, '3001');
+  assert.equal(journeys[4].trace.cumulative.elapsedMs, null);
+  assert.equal(journeys[5].trace.trace.final.completed, null);
+  assert.equal(journeys[6].verdict, 'FAIL');
+  assert.equal(journeys[6].trace.cumulative.elapsedMs, null);
+  assert.equal(matching.groups[1].shadowedResetType, 'object');
+  assert.deepEqual(matching.groups[1].browserReplayGuards, { rejected: true, code: 'ERR_STATE', originalVerdict: 'FAIL' });
+  assert.equal(matching.groups[2].formNavigationOccurred, false);
+  assert.equal(matching.groups[2].unapprovedScriptRan, false);
+  assert.equal(matching.groups[2].unapprovedHandlerRan, false);
+  assert.equal(matching.groups[2].missingModelVerdict, 'UNKNOWN — not measured');
+});

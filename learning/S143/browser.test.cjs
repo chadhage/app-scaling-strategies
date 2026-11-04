@@ -1,0 +1,316 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const evidence = require('./record.cjs');
+
+const root = path.resolve(__dirname, '..', '..');
+const helper = path.join(root, 'testing', 'browser', 'isolated.cjs');
+assert.equal(evidence.sha256(fs.readFileSync(helper)), '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+const { openIsolatedLesson } = require(helper);
+assert.equal(require(path.join(root, 'testing', 'browser', 'node_modules', 'playwright', 'package.json')).version, '1.56.1');
+const groups = [];
+const text = (page, id) => page.locator(`#${id}`).textContent();
+const expected = {
+  'within-budget': ['PASS', '2900', '2900', '700', '100'],
+  'exact-deadline': ['PASS', '3000', '3000', '800', '0'],
+  'one-ms-over': ['FAIL', '3001', '3001', '801', '-1'],
+  'per-attempt-reset': ['FAIL', '3700', '3700', '1500', '-700'],
+  'missing-final-time': ['UNKNOWN', 'UNKNOWN', '2200', 'UNKNOWN', '800'],
+  'missing-completion': ['UNKNOWN', 'UNKNOWN', '3000', '800', '0'],
+  'late-unknown': ['FAIL', 'UNKNOWN', '3201', 'UNKNOWN', '-201'],
+  'reconnect-failed': ['FAIL', 'UNKNOWN', '2200', 'UNKNOWN', '800'],
+  'incorrect-200': ['FAIL', '2900', '2900', '700', '100'],
+  'unsupported-condition': ['FAIL', '2900', '2900', '700', '100'],
+};
+async function key(page, id, phase) {
+  await page.locator(`#${id}`).focus();
+  await page.keyboard.press('Space');
+  if (phase) assert.equal(await text(page, 'phase'), phase);
+}
+async function choose(page, presetId) {
+  const index = Object.keys(expected).indexOf(presetId);
+  await page.locator('#preset').focus();
+  await page.keyboard.press('Home');
+  for (let count = 0; count < index; count++) await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Tab');
+  assert.equal(await page.locator('#preset').inputValue(), presetId);
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'start');
+}
+async function run(page, presetId, through = 'measure') {
+  await choose(page, presetId);
+  await key(page, 'start', 'started');
+  for (const [id, phase] of [['slow', 'slowed'], ['reconnect', 'reconnected'], ['observe', 'observed'], ['measure', 'measured']]) {
+    await key(page, id, phase);
+    if (id === through) break;
+  }
+}
+async function withLesson(name, body) {
+  const record = { name, status: 'running', pageErrors: [], console: [], awaitedFinallyClose: false };
+  groups.push(record);
+  let session;
+  let failure;
+  try {
+    session = await openIsolatedLesson(path.join('learning', 'S143', 'index.html'));
+    record.browserVersion = session.browserVersion;
+    record.localFileUrl = session.page.url();
+    assert.equal(session.browserVersion, '156.0.4314.50');
+    session.page.on('pageerror', (error) => { if (record.pageErrors.length < 32) record.pageErrors.push(error.message); });
+    session.page.on('console', (message) => {
+      if (record.console.length < 64) record.console.push({ type: message.type(), text: message.text() });
+    });
+    await body(session.page, record);
+    record.status = 'passed';
+  } catch (error) {
+    failure = error;
+    record.status = 'failed';
+    record.failure = { name: error.name, code: error.code || null, message: error.message, stack: error.stack };
+    throw error;
+  } finally {
+    try {
+      if (session) await session.close();
+      record.awaitedFinallyClose = true;
+    } catch (error) {
+      record.status = 'failed';
+      record.cleanupFailure = { message: error.message, stack: error.stack };
+      if (failure) throw new AggregateError([failure, error], 'Browser assertion and awaited owned cleanup both failed.');
+      throw error;
+    }
+  }
+}
+
+test('actual DOM/native keyboard: exact ten verdicts, original boundaries, cumulative records, history and exhausted reset', async () => {
+  await withLesson('ten-fixed-traces-keyboard-boundaries-history-and-run-bound', async (page, record) => {
+    assert.equal(await page.locator('.banner').textContent(), 'Training rehearsal - synthetic data - not a live Azure result');
+    assert.equal(await page.getByLabel('Fixed slow-client condition').count(), 1);
+    assert.equal(await page.locator('#preset option').count(), 10);
+    assert.equal(await page.locator('#status').getAttribute('role'), 'status');
+    assert.equal(await page.locator('#error').getAttribute('role'), 'alert');
+    assert.ok(['light', 'dark'].includes(await page.locator('html').getAttribute('data-theme')));
+    await choose(page, 'within-budget');
+    record.focus = await page.locator('#start').evaluate((button) => ({
+      id: document.activeElement.id, width: getComputedStyle(button).outlineWidth, style: getComputedStyle(button).outlineStyle,
+    }));
+    assert.deepEqual(record.focus, { id: 'start', width: '3px', style: 'solid' });
+    record.journeys = [];
+    const ids = [...Object.keys(expected), 'within-budget', 'exact-deadline'];
+    for (const [index, presetId] of ids.entries()) {
+      const [verdict, elapsed, known, finalAttempt, remaining] = expected[presetId];
+      await choose(page, presetId);
+      await key(page, 'start', 'started');
+      assert.equal(await page.locator('#preset').isDisabled(), true);
+      assert.equal(await text(page, 'start-ms'), '1000');
+      assert.equal(await text(page, 'deadline-ms'), '4000');
+      assert.equal(await text(page, 'budget-ms'), '3000');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'slow');
+      await key(page, 'slow', 'slowed');
+      assert.equal(await text(page, 'known-ms'), '1500');
+      assert.equal(await text(page, 'interruptions'), '1');
+      assert.equal(await page.locator('#timeline tr').count(), 2);
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'reconnect');
+      await key(page, 'reconnect', 'reconnected');
+      assert.equal(await text(page, 'known-ms'), presetId === 'late-unknown' ? '3201' : '2200');
+      assert.equal(await text(page, 'deadline-ms'), '4000');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'observe');
+      assert.equal(await page.locator('#measure').isDisabled(), true);
+      await key(page, 'observe', 'observed');
+      assert.match(await text(page, 'verdict'), /not measured/);
+      assert.doesNotMatch(await text(page, 'verdict'), /^PASS/);
+      assert.equal(await text(page, 'outcome-count'), String(index));
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'measure');
+      await key(page, 'measure', 'measured');
+      const trace = JSON.parse(await text(page, 'trace'));
+      const observation = {
+        presetId, verdict: await text(page, 'verdict'), impact: await text(page, 'impact'),
+        verifier: await text(page, 'verifier'), elapsed: await text(page, 'elapsed-ms'),
+        known: await text(page, 'known-ms'), finalAttempt: await text(page, 'attempt-ms'),
+        remaining: await text(page, 'remaining-ms'), perAttempt: await text(page, 'per-attempt'),
+        httpResult: await text(page, 'http-result'), version: await text(page, 'version'),
+        nativeResult: await text(page, 'native-result'), trace,
+        checks: await page.locator('#assertions tr').evaluateAll((rows) => rows.map((row) => ({
+          id: row.dataset.check, result: row.dataset.result, cells: [...row.cells].map((cell) => cell.textContent),
+        }))),
+      };
+      record.journeys.push(observation);
+      assert.deepEqual([observation.verdict, observation.elapsed, observation.known, observation.finalAttempt, observation.remaining],
+        [verdict, elapsed, known, finalAttempt, remaining], presetId);
+      assert.equal(observation.verifier, 'MATCH');
+      assert.equal(observation.nativeResult, 'unverified — not observed');
+      assert.equal(trace.original.startMs, 1000);
+      assert.equal(trace.original.deadlineMs, 4000);
+      assert.equal(trace.original.budgetMs, 3000);
+      assert.equal(trace.trace.interruptions[0].retained, true);
+      assert.equal(trace.trace.attempts[0].completed, false);
+      assert.equal(observation.checks.length, 6);
+      if (['one-ms-over', 'per-attempt-reset'].includes(presetId)) {
+        assert.match(observation.perAttempt, /^yes/);
+        assert.equal(observation.httpResult, '200');
+        assert.equal(observation.checks.find((check) => check.id === 'original-deadline').result, 'FAIL');
+      }
+      if (['missing-final-time', 'missing-completion', 'late-unknown'].includes(presetId)) {
+        assert.equal(trace.cumulative.completedAtMs, null);
+        assert.equal(trace.cumulative.elapsedMs, null);
+      }
+      if (presetId === 'missing-completion') {
+        assert.equal(trace.trace.final.observedAtMs, 4000);
+        assert.equal(trace.trace.final.completed, null);
+      }
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'reset-button');
+      await key(page, 'reset-button', 'idle');
+      assert.equal(await text(page, 'error'), '');
+      assert.equal(await text(page, 'history-count'), String((index + 1) * 6));
+      assert.equal(await text(page, 'outcome-count'), String(index + 1));
+      assert.equal(await page.evaluate(() => document.activeElement.id), index === 11 ? 'status' : 'preset');
+      assert.equal(await page.locator('#outcomes li').count(), index + 1);
+    }
+    record.retainedOutcomes = await page.locator('#outcomes li').allTextContents();
+    assert.match(record.retainedOutcomes[2], /one-ms-over: FAIL.*known 3001.*backoff 400.*reconnect 300.*retained interruptions 1/);
+    assert.match(record.retainedOutcomes[10], /within-budget: PASS.*recovered-after-interruption/);
+    assert.equal(await page.locator('#start').isDisabled(), true);
+    assert.equal(await page.locator('#preset').isDisabled(), true);
+    assert.equal(await page.locator('#reset-button').isDisabled(), false);
+    assert.match(await text(page, 'status'), /Teaching bound reached/);
+    await key(page, 'reset-button', 'idle');
+    assert.equal(await text(page, 'history-count'), '72');
+    assert.equal(await text(page, 'outcome-count'), '12');
+    assert.deepEqual(record.pageErrors, []);
+  });
+});
+
+test('actual error/reset UX: out-of-order and invalid DATA, sanitized bounds, native reset shadow and unfinished outcomes', async () => {
+  await withLesson('typed-errors-rejection-bound-shadow-reset-and-unfinished-history', async (page, record) => {
+    await page.locator('#reconnect').evaluate((button) => { button.disabled = false; });
+    await key(page, 'reconnect', 'idle');
+    assert.match(await text(page, 'error'), /^ERR_PHASE:/);
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'error');
+    assert.equal(await text(page, 'history-count'), '0');
+    await page.locator('#preset').evaluate((select) => {
+      const option = document.createElement('option');
+      option.value = 'unowned-<script>-deadline-4700';
+      option.textContent = 'Invalid test-only selection';
+      select.append(option);
+    });
+    await page.locator('#preset').selectOption('unowned-<script>-deadline-4700');
+    await key(page, 'start', 'idle');
+    assert.match(await text(page, 'error'), /^ERR_COMMAND:/);
+    assert.equal((await text(page, 'rejections')).includes('unowned-<script>'), false);
+    assert.equal(await text(page, 'run-count'), '0');
+    await key(page, 'reset-button', 'idle');
+    assert.equal(await page.locator('#preset').inputValue(), 'within-budget');
+    assert.equal(await text(page, 'rejection-count'), '2');
+    await page.locator('#start').evaluate((button) => { button.dataset.action = 'arbitrary-<script>-reset-clock'; });
+    await key(page, 'start', 'idle');
+    assert.match(await text(page, 'error'), /^ERR_COMMAND:/);
+    assert.equal((await text(page, 'rejections')).includes('arbitrary-<script>'), false);
+    await page.locator('#start').evaluate((button) => { button.dataset.action = 'start'; });
+    for (let index = 0; index < 14; index++) {
+      await page.locator('#measure').evaluate((button) => { button.disabled = false; });
+      await key(page, 'measure', 'idle');
+    }
+    assert.equal(await text(page, 'rejection-count'), '12');
+    assert.equal(await page.locator('#rejections li').count(), 12);
+    assert.match(await page.locator('#rejections li').first().textContent(), /^1\. reconnect: ERR_PHASE/);
+    assert.match(await text(page, 'error'), /Rejected history bound reached/);
+    record.shadowedResetType = await page.locator('#controls').evaluate((form) => {
+      const button = document.createElement('button');
+      button.name = 'reset';
+      button.type = 'button';
+      button.textContent = 'Test-only named reset shadow';
+      form.append(button);
+      return typeof form.reset;
+    });
+    assert.equal(record.shadowedResetType, 'object');
+    await key(page, 'reset-button', 'idle');
+    assert.equal(await text(page, 'error'), '');
+    assert.equal(await text(page, 'rejection-count'), '12');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'preset');
+    await run(page, 'within-budget', 'observe');
+    await key(page, 'reset-button', 'idle');
+    assert.match(await page.locator('#outcomes li').first().textContent(), /within-budget: UNKNOWN — reset-before-measure/);
+    await run(page, 'late-unknown', 'reconnect');
+    await key(page, 'reset-button', 'idle');
+    assert.match(await page.locator('#outcomes li').nth(1).textContent(), /late-unknown: FAIL — reset-before-measure.*known 3201/);
+    await run(page, 'within-budget');
+    await key(page, 'reset-button', 'idle');
+    assert.match(await page.locator('#outcomes li').nth(2).textContent(), /within-budget: PASS — measured.*recovered-after-interruption/);
+    assert.equal(await text(page, 'outcome-count'), '3');
+    assert.equal(await text(page, 'history-count'), '15');
+    record.retainedOutcomes = await page.locator('#outcomes li').allTextContents();
+    record.retainedRejections = await page.locator('#rejections li').allTextContents();
+    record.browserReplayGuards = await page.evaluate(() => {
+      const api = globalThis.S143Lesson;
+      let state = api.execute(api.createState(), { type: 'start', presetId: 'one-ms-over' });
+      for (const type of ['slow', 'reconnect', 'observe', 'measure']) state = api.execute(state, { type });
+      const forged = JSON.parse(JSON.stringify(state));
+      forged.current.original.deadlineMs = 4700;
+      forged.current.verdict = 'PASS';
+      try { api.inspect(forged); return { rejected: false }; }
+      catch (error) { return { rejected: true, code: error.code, originalVerdict: api.inspect(state).verdict }; }
+    });
+    assert.deepEqual(record.browserReplayGuards, { rejected: true, code: 'ERR_STATE', originalVerdict: 'FAIL' });
+    assert.deepEqual(record.pageErrors, []);
+  });
+});
+
+test('actual CSP denies arbitrary script/style/handler and empty local form; actual missing model fails closed with usable reset', async () => {
+  await withLesson('actual-csp-denials-and-missing-local-model-safe-hold', async (page, record) => {
+    const originalUrl = page.url();
+    await page.evaluate(() => {
+      globalThis.__s143Violations = [];
+      document.addEventListener('securitypolicyviolation', (event) => {
+        globalThis.__s143Violations.push({ directive: event.effectiveDirective, blockedURI: event.blockedURI });
+      });
+      const script = document.createElement('script');
+      script.textContent = 'globalThis.__s143UnapprovedScriptRan = true;';
+      document.head.append(script);
+      const style = document.createElement('style');
+      style.textContent = '#verdict { display: none; }';
+      document.head.append(style);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.setAttribute('onclick', 'globalThis.__s143UnapprovedHandlerRan = true;');
+      document.body.append(button);
+      button.click();
+    });
+    await page.waitForFunction(() => globalThis.__s143Violations.some((item) => item.directive === 'script-src-elem')
+      && globalThis.__s143Violations.some((item) => item.directive === 'script-src-attr')
+      && globalThis.__s143Violations.some((item) => item.directive === 'style-src-elem'));
+    assert.equal(await page.evaluate(() => globalThis.__s143UnapprovedScriptRan === true), false);
+    assert.equal(await page.evaluate(() => globalThis.__s143UnapprovedHandlerRan === true), false);
+    assert.equal(await page.locator('#verdict').isVisible(), true);
+    await page.evaluate(() => {
+      const form = document.createElement('form');
+      form.method = 'get';
+      form.action = location.href;
+      document.body.append(form);
+      HTMLFormElement.prototype.submit.call(form);
+    });
+    await page.waitForFunction(() => globalThis.__s143Violations.some((item) => item.directive === 'form-action'));
+    record.cspViolations = await page.evaluate(() => globalThis.__s143Violations);
+    record.unapprovedScriptRan = await page.evaluate(() => globalThis.__s143UnapprovedScriptRan === true);
+    record.unapprovedHandlerRan = await page.evaluate(() => globalThis.__s143UnapprovedHandlerRan === true);
+    record.formNavigationOccurred = page.url() !== originalUrl;
+    assert.equal(record.formNavigationOccurred, false);
+    assert.equal(await text(page, 'history-count'), '0');
+    assert.equal(await text(page, 'outcome-count'), '0');
+    await page.route('**/model.js', (route) => route.abort('failed'));
+    await page.reload({ waitUntil: 'load' });
+    record.missingModelError = await text(page, 'error');
+    record.missingModelStatus = await text(page, 'status');
+    record.missingModelVerdict = await text(page, 'verdict');
+    assert.match(record.missingModelError, /Local model did not load/);
+    assert.match(record.missingModelStatus, /Safe hold/);
+    assert.equal(record.missingModelVerdict, 'UNKNOWN — not measured');
+    assert.equal(await page.locator('#start').isDisabled(), true);
+    assert.equal(await page.locator('#preset').isDisabled(), true);
+    assert.equal(await page.locator('#reset-button').isDisabled(), false);
+    await key(page, 'reset-button', 'idle');
+    assert.match(await text(page, 'error'), /No original journey result is certified/);
+    assert.equal(await text(page, 'history-count'), '0');
+    assert.equal(await text(page, 'outcome-count'), '0');
+    assert.deepEqual(record.pageErrors, []);
+  });
+});
+
+test.after(() => { evidence.captureBrowser(groups); });

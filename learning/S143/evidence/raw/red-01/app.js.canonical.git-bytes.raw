@@ -1,0 +1,10 @@
+'use strict';
+(() => {
+  const model = globalThis.S143Lesson;
+  let state = model.createState();
+  document.getElementById('start').addEventListener('click', () => {
+    state = model.execute(state, { type: 'start', presetId: document.getElementById('preset').value });
+    document.getElementById('phase').textContent = model.inspect(state).phase;
+  });
+  document.getElementById('controls').addEventListener('submit', (event) => event.preventDefault());
+})();

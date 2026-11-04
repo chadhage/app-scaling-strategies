@@ -1,0 +1,138 @@
+'use strict';
+(() => {
+  const model = globalThis.S143Lesson;
+  const get = (id) => document.getElementById(id);
+  const form = get('controls');
+  const preset = get('preset');
+  const buttons = [...form.querySelectorAll('button[data-action]')];
+  const number = (value) => value === null || value === undefined ? 'UNKNOWN' : String(value);
+  let state = null;
+  let held = false;
+  function text(id, value) { get(id).textContent = String(value); }
+  function safeHold(message) {
+    held = true;
+    preset.disabled = true;
+    for (const button of buttons) button.disabled = button.id !== 'reset-button';
+    text('status', 'Safe hold — no original journey result is certified.');
+    text('error', message);
+    text('verdict', 'UNKNOWN — not measured');
+    get('verdict').dataset.result = 'UNKNOWN';
+    get('error').focus();
+  }
+  function list(id, rows, formatter) {
+    const fragment = document.createDocumentFragment();
+    for (const row of rows) {
+      const item = document.createElement('li');
+      item.textContent = formatter(row);
+      fragment.append(item);
+    }
+    get(id).replaceChildren(fragment);
+  }
+  function render() {
+    const view = model.inspect(state);
+    const current = view.trace;
+    const totals = view.cumulative;
+    text('phase', view.phase);
+    text('run-count', view.runCount);
+    text('history-count', view.history.length);
+    text('outcome-count', view.outcomes.length);
+    text('rejection-count', view.rejections.length);
+    text('start-ms', number(view.original && view.original.startMs));
+    text('deadline-ms', number(view.original && view.original.deadlineMs));
+    text('budget-ms', number(view.original && view.original.budgetMs));
+    text('completion-ms', number(totals && totals.completedAtMs));
+    text('elapsed-ms', number(totals && totals.elapsedMs));
+    text('known-ms', totals ? totals.knownElapsedMs : 0);
+    text('remaining-ms', number(totals && totals.remainingAtKnownObservationMs));
+    text('attempt-ms', number(totals && totals.finalAttemptMs));
+    text('per-attempt', !totals || totals.perAttemptWithinBudget === null ? 'UNKNOWN' : totals.perAttemptWithinBudget ? 'yes — diagnostic only' : 'no — diagnostic only');
+    text('http-result', number(current && current.final && current.final.httpStatus));
+    text('version', current && current.final ? current.final.version : current && current.recovery ? 'fixture-v1 → fixture-v2 (DATA)' : current ? 'fixture-v1 (DATA)' : 'UNKNOWN');
+    text('interruptions', current ? current.interruptions.length : 0);
+    text('condition', view.profile ? `${view.profile.condition}; supported: ${view.profile.supported}; ${view.profile.mode}` : 'UNKNOWN');
+    text('native-result', 'unverified — not observed');
+    text('verdict', `${view.verdict}${view.measured ? '' : ' — not measured'}`);
+    get('verdict').dataset.result = view.verdict;
+    text('impact', current ? view.impact : 'unknown');
+    text('verifier', view.verifier);
+    text('trace', JSON.stringify({ original: view.original, cumulative: totals, trace: current }, null, 2));
+    const timeline = document.createDocumentFragment();
+    for (const record of current ? current.records : []) {
+      const row = document.createElement('tr');
+      row.dataset.kind = record.kind;
+      for (const value of [
+        record.kind, record.version,
+        [record.clientWaitMs, record.serviceMs, record.backoffMs, record.reconnectMs].map(number).join(' / '),
+        number(record.atMs),
+      ]) {
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.append(cell);
+      }
+      timeline.append(row);
+    }
+    get('timeline').replaceChildren(timeline);
+    const checks = document.createDocumentFragment();
+    for (const check of view.checks) {
+      const row = document.createElement('tr');
+      row.dataset.check = check.id;
+      row.dataset.result = check.result;
+      for (const value of [check.id, check.result, check.evidence]) {
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.append(cell);
+      }
+      checks.append(row);
+    }
+    get('assertions').replaceChildren(checks);
+    list('outcomes', view.outcomes, (row) => `${row.run}. ${row.presetId}: ${row.verdict} — ${row.reason}; ${row.impact}; original ${row.originalStartMs}→${row.originalDeadlineMs}; elapsed ${number(row.cumulative.elapsedMs)}; known ${row.cumulative.knownElapsedMs}; wait ${row.cumulative.clientWaitKnownMs} + service ${row.cumulative.serviceKnownMs} + backoff ${row.cumulative.backoffKnownMs} + reconnect ${row.cumulative.reconnectKnownMs}; retained interruptions ${row.trace.interruptions.length}; native unverified`);
+    list('history', view.history, (row) => `${row.sequence}. run ${row.run} ${row.action} → ${row.phase}; original ${row.originalStartMs}→${row.originalDeadlineMs}; budget ${row.budgetMs}; known elapsed ${row.knownElapsedMs}; measured ${number(row.measuredVerdict)}`);
+    list('rejections', view.rejections, (row) => `${row.sequence}. ${row.action}: ${row.code} — original history retained`);
+    preset.disabled = view.phase !== 'idle' || !view.allowedActions.includes('start');
+    for (const button of buttons) button.disabled = !view.allowedActions.includes(button.dataset.action);
+    text('status', view.measured
+      ? 'Original journey measured. Preset verifier, interruption history and native evidence are separate.'
+      : view.allowedActions.includes('start') ? 'Ready for one fixed fictional trace; no live operation.'
+        : view.phase === 'idle' ? 'Teaching bound reached. All original results retained; reload starts a new exercise.'
+          : `Recorded ${view.phase} DATA. Follow the next allowed action; no PASS is certified yet.`);
+    return view;
+  }
+  function conduct(action) {
+    if (action === 'reset') {
+      HTMLFormElement.prototype.reset.call(form);
+      text('error', '');
+      if (held) {
+        safeHold('Local model unavailable or invalid. No original journey result is certified.');
+        return;
+      }
+    }
+    if (held) return;
+    try {
+      state = model.execute(state, action === 'start' ? { type: action, presetId: preset.value } : { type: action });
+      text('error', '');
+      const view = render();
+      if (action === 'reset') (view.allowedActions.includes('start') ? preset : get('status')).focus();
+      else get(view.allowedActions.find((item) => item !== 'reset') || 'reset-button').focus();
+    } catch (error) {
+      if (error && error.code && error.state) {
+        state = error.state;
+        render();
+        text('error', error.message);
+        get('error').focus();
+      } else {
+        safeHold('Local state failed replay validation. No original journey result is certified.');
+      }
+    }
+  }
+  form.addEventListener('submit', (event) => event.preventDefault());
+  for (const button of buttons) button.addEventListener('click', () => conduct(button.dataset.action));
+  try {
+    if (!model || !['createState', 'execute', 'inspect'].every((key) => typeof model[key] === 'function')) {
+      throw new Error('Missing local model.');
+    }
+    state = model.createState();
+    render();
+  } catch {
+    safeHold('Local model did not load. No original journey result is certified.');
+  }
+})();

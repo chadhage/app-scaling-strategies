@@ -1,0 +1,254 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { spawnSync, execFileSync } = require('node:child_process');
+
+const root = path.resolve(__dirname, '..', '..');
+const raw = path.join(__dirname, 'evidence', 'raw');
+const helperSha256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const blobOid = (bytes) => crypto.createHash('sha1').update(Buffer.concat([
+  Buffer.from(`blob ${bytes.length}\0`), bytes,
+])).digest('hex');
+const canonical = (bytes) => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+const read = (name) => fs.readFileSync(path.join(__dirname, name));
+const git = (args, options = {}) => execFileSync('git', args, { cwd: root, ...options });
+const gitName = (file) => path.relative(root, file).split(path.sep).join('/');
+const json = (file, value) => fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
+const captureEnabled = (value) => value === '1';
+const sourceFiles = [
+  '.gitattributes', 'original-budget.feature', 'manifest.json', 'README.txt', 'remainder.json',
+  'model.js', 'app.js', 'index.html', 'lesson.css',
+  'model.test.cjs', 'integrity.test.cjs', 'browser.test.cjs', 'record.cjs',
+];
+
+function fingerprints(directory = __dirname) {
+  const entries = {};
+  function visit(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const file = path.join(dir, entry.name);
+      if (entry.isDirectory()) visit(file);
+      else if (entry.isFile()) entries[path.relative(directory, file)] = sha256(fs.readFileSync(file));
+      else throw new Error('Unexpected non-file lesson entry.');
+    }
+  }
+  visit(directory);
+  return entries;
+}
+
+function snapshots(directory, names) {
+  const records = {};
+  for (const name of names) {
+    const file = path.join(__dirname, name);
+    const bytes = fs.readFileSync(file);
+    const canonicalBytes = canonical(bytes);
+    const stem = name.replace(/^\./, '');
+    const rawFile = `${stem}.bytes.raw`;
+    const canonicalFile = `${stem}.canonical.git-bytes.raw`;
+    fs.writeFileSync(path.join(directory, rawFile), bytes, { flag: 'wx' });
+    fs.writeFileSync(path.join(directory, canonicalFile), canonicalBytes, { flag: 'wx' });
+    const canonicalGitBlobOid = git(['hash-object', `--path=${gitName(file)}`, '--stdin'], {
+      input: bytes, encoding: 'utf8',
+    }).trim();
+    assert.equal(canonicalGitBlobOid, blobOid(canonicalBytes), `Independent canonical Git identity: ${name}`);
+    records[name] = {
+      rawFile, rawByteLength: bytes.length, rawSha256: sha256(bytes),
+      canonicalFile, canonicalByteLength: canonicalBytes.length,
+      canonicalSha256: sha256(canonicalBytes), canonicalGitBlobOid,
+      rawCrLfCount: (bytes.toString('utf8').match(/\r\n/g) || []).length,
+    };
+  }
+  return records;
+}
+
+function captureSources() {
+  const directory = path.join(raw, 'source');
+  const receipt = path.join(directory, 'source-contract.json');
+  if (fs.existsSync(receipt)) return JSON.parse(fs.readFileSync(receipt, 'utf8'));
+  fs.mkdirSync(directory);
+  const manifest = JSON.parse(read('manifest.json'));
+  const head = git(['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  const inventoryBytes = fs.readFileSync(path.join(root, '.git', 'kanban-orchestrator', 'inventory.json'));
+  const inventory = JSON.parse(inventoryBytes);
+  const card = inventory.cards.find((item) => item.id === 'A-S143');
+  assert.deepEqual(card, {
+    technicalEntryGate: 'SOURCE', kano: 'S', priority: 'P1', kanoUnit: 'A-S143',
+    deliver: manifest.objective, packet: 'SC-S143', id: 'A-S143', parents: ['D-S143'],
+  });
+  const rows = {};
+  for (const [key, sourceName, row] of [
+    ['readme', 'README.md', manifest.sourceContract.readmeRow],
+    ['backlog', path.join('.docs', 'wiki', 'backlog.md'), manifest.sourceContract.backlogRow],
+    ['portable', path.join('.docs', 'wiki', 'kanban.md'), manifest.sourceContract.portableRow],
+    ['native', path.join('.docs', 'wiki', 'kanban.md'), manifest.sourceContract.nativeSiblingRow],
+  ]) {
+    const file = path.join(root, sourceName);
+    const bytes = fs.readFileSync(file);
+    const text = bytes.toString('utf8');
+    const line = text.split(/(?<=\n)/).find((item) => item.replace(/\r?\n$/, '') === row);
+    assert.equal(typeof line, 'string', `Exact working source row: ${key}`);
+    const rawRow = Buffer.from(line);
+    const gitPath = gitName(file);
+    const gitBytes = git(['show', `${head}:${gitPath}`]);
+    const canonicalLine = gitBytes.toString('utf8').split(/(?<=\n)/)
+      .find((item) => item.replace(/\r?\n$/, '') === row);
+    assert.equal(typeof canonicalLine, 'string', `Exact committed source row: ${key}`);
+    const canonicalRow = Buffer.from(canonicalLine);
+    const rawFile = `${key}.row.bytes.raw`;
+    const canonicalFile = `${key}.row.git-bytes.raw`;
+    fs.writeFileSync(path.join(directory, rawFile), rawRow, { flag: 'wx' });
+    fs.writeFileSync(path.join(directory, canonicalFile), canonicalRow, { flag: 'wx' });
+    rows[key] = {
+      sourcePath: sourceName, row, rawFile, canonicalFile,
+      rawRowSha256: sha256(rawRow), canonicalRowSha256: sha256(canonicalRow),
+      rawRowCrLf: line.endsWith('\r\n'), rawSourceSha256: sha256(bytes),
+      committedSourceSha256: sha256(gitBytes),
+      committedSourceBlobOid: git(['rev-parse', `${head}:${gitPath}`], { encoding: 'utf8' }).trim(),
+      canonicalRowBlobOid: blobOid(canonicalRow),
+    };
+  }
+  const source = {
+    schemaVersion: 1, card, sourceCommit: head,
+    exactSourcesReadBeforeBehaviorDesign: true,
+    inventorySha256: sha256(inventoryBytes), rows,
+    rawAndCanonicalClaimsAreSeparate: true,
+    scope: 'Exact original S143/D-S143/A-S143/B-S143 rows; not a later live catalog snapshot.',
+  };
+  json(receipt, source);
+  return source;
+}
+
+async function stubBrowser() {
+  const helper = path.join(root, 'testing', 'browser', 'isolated.cjs');
+  assert.equal(sha256(fs.readFileSync(helper)), helperSha256);
+  const { openIsolatedLesson } = require(helper);
+  let session;
+  const record = { pageErrors: [], awaitedFinallyClose: false };
+  try {
+    session = await openIsolatedLesson(path.join('learning', 'S143', 'index.html'));
+    record.browserVersion = session.browserVersion;
+    assert.equal(record.browserVersion, '156.0.4314.50');
+    session.page.on('pageerror', (error) => record.pageErrors.push(error.message));
+    record.phaseBefore = await session.page.locator('#phase').textContent();
+    await session.page.locator('#start').focus();
+    await session.page.keyboard.press('Space');
+    record.phaseAfterKeyboardStart = await session.page.locator('#phase').textContent();
+    record.verdict = await session.page.locator('#verdict').textContent();
+    assert.equal(record.phaseBefore, 'idle');
+    assert.equal(record.phaseAfterKeyboardStart, 'idle');
+    assert.equal(record.verdict, 'UNKNOWN — not measured');
+    assert.deepEqual(record.pageErrors, []);
+    return record;
+  } finally {
+    if (session) await session.close();
+    record.awaitedFinallyClose = true;
+  }
+}
+
+function childCapture(directory, stem, args, env = process.env) {
+  const result = spawnSync(process.execPath, args, { cwd: root, env, maxBuffer: 8 * 1024 * 1024 });
+  const stdout = result.stdout || Buffer.alloc(0);
+  const stderr = result.stderr || Buffer.alloc(0);
+  fs.writeFileSync(path.join(directory, `${stem}.stdout.tap`), stdout, { flag: 'wx' });
+  fs.writeFileSync(path.join(directory, `${stem}.stderr.txt`), stderr, { flag: 'wx' });
+  return {
+    args, childExitCode: result.status, signal: result.signal,
+    spawnError: result.error ? { code: result.error.code, message: result.error.message } : null,
+    stdoutFile: `${stem}.stdout.tap`, stderrFile: `${stem}.stderr.txt`,
+    stdoutSha256: sha256(stdout), stderrSha256: sha256(stderr),
+  };
+}
+
+function captureBrowser(groups) {
+  if (!captureEnabled(process.env.CAPTURE_BROWSER_EVIDENCE)) return null;
+  const name = `browser-${crypto.randomUUID()}`;
+  const directory = path.join(raw, name);
+  fs.mkdirSync(directory);
+  const sourceSnapshots = snapshots(directory, sourceFiles);
+  const record = {
+    schemaVersion: 1, kind: 'actual-local-browser-observations', cardId: 'A-S143',
+    exactCaptureEnvironment: '1', rawAndCanonicalClaimsAreSeparate: true,
+    nodeVersion: process.version, playwrightVersion: '1.56.1', helperSha256,
+    groups, sourceSnapshots,
+    passed: groups.length > 0 && groups.every((group) => group.status === 'passed' && group.awaitedFinallyClose),
+    nativeResult: 'unverified', productionNode24Validated: false, extraKanoCredits: 0,
+    lifecycle: 'Published helper only; inactive lifecycle recovery prototype unqualified.',
+  };
+  json(path.join(directory, 'observations.json'), record);
+  return name;
+}
+
+async function main() {
+  const [phase, name] = process.argv.slice(2);
+  if (phase === 'verify' && name === undefined) {
+    const before = fingerprints();
+    const env = { ...process.env };
+    delete env.CAPTURE_BROWSER_EVIDENCE;
+    const result = spawnSync(process.execPath, ['--test', ...[
+      'model.test.cjs', 'integrity.test.cjs', 'browser.test.cjs',
+    ].map((file) => path.join('learning', 'S143', file))], { cwd: root, env, stdio: 'inherit' });
+    assert.deepEqual(fingerprints(), before, 'Normal verification is READ-ONLY for every owned source/evidence byte.');
+    process.exitCode = result.status === 0 ? 0 : 1;
+    console.log('READ-ONLY: all owned source and persistent evidence bytes unchanged.');
+    return;
+  }
+  assert.ok(['red', 'syntax', 'green'].includes(phase), 'Use explicit red, syntax, green or read-only verify.');
+  assert.match(name || '', new RegExp(`^${phase}-[0-9]{2}$`), 'A deliberate unique phase-NN capture name is required.');
+  fs.mkdirSync(raw, { recursive: true });
+  const directory = path.join(raw, name);
+  fs.mkdirSync(directory);
+  const startedAtUtc = new Date().toISOString();
+  const records = [];
+  try {
+    if (phase === 'red') {
+      captureSources();
+      const archived = snapshots(directory, sourceFiles.filter((file) => fs.existsSync(path.join(__dirname, file))));
+      const stub = require('./model.js');
+      assert.equal(stub.execute(stub.createState(), { type: 'start', presetId: 'within-budget' }).phase, 'idle');
+      const browser = await stubBrowser();
+      json(path.join(directory, 'stub-browser.json'), browser);
+      const child = childCapture(directory, 'red', ['--test', path.join('learning', 'S143', 'model.test.cjs')]);
+      records.push(child);
+      const stdout = fs.readFileSync(path.join(directory, child.stdoutFile), 'utf8');
+      const genuineAssertionRed = child.childExitCode === 1 && /ERR_ASSERTION/.test(stdout)
+        && /idle/.test(stdout) && /started/.test(stdout) && !/MODULE_NOT_FOUND|ENOENT|SyntaxError/.test(stdout);
+      json(path.join(directory, 'red.json'), { ...child, genuineAssertionRed, archived, startedAtUtc });
+      assert.equal(genuineAssertionRed, true, 'A genuine behavioral assertion RED, not a tooling failure.');
+      json(path.join(__dirname, 'evidence', 'iac-na.json'), {
+        iac: 'N/A evaluated after genuine assertion RED and before implementation; resource-free fixed teaching DATA only.',
+        redDirectory: path.relative(__dirname, directory), redStdoutSha256: child.stdoutSha256,
+        evaluatedAtUtc: new Date().toISOString(), implementationHadNotStarted: true,
+        cloudResources: 0, cloudSpend: 0, networkOperations: 0, clockOperations: 0,
+        liveClients: 0, trafficOperations: 0, loadGeneratorOperations: 0, userDataOperations: 0,
+        identityOperations: 0, downloads: 0, packages: 0, frameworks: 0, extraKanoCredits: 0,
+      });
+    } else if (phase === 'syntax') {
+      for (const file of ['model.js', 'app.js', 'record.cjs', 'model.test.cjs', 'integrity.test.cjs', 'browser.test.cjs']) {
+        records.push(childCapture(directory, file, ['--check', path.join('learning', 'S143', file)]));
+      }
+      assert.ok(records.every((record) => record.childExitCode === 0), 'All focused syntax checks must pass.');
+    } else {
+      records.push(childCapture(directory, 'green', ['--test', ...[
+        'model.test.cjs', 'integrity.test.cjs', 'browser.test.cjs',
+      ].map((file) => path.join('learning', 'S143', file))]));
+      process.exitCode = records[0].childExitCode === 0 ? 0 : 1;
+    }
+    json(path.join(directory, 'run.json'), {
+      phase, name, startedAtUtc, completedAtUtc: new Date().toISOString(), records,
+      expectedRed: phase === 'red', passed: phase === 'red' || records.every((record) => record.childExitCode === 0),
+      nodeVersion: process.version, extraKanoCredits: 0,
+    });
+    console.log(`${name}: raw evidence retained; ${records.map((item) => item.childExitCode).join(', ')} child exit(s).`);
+  } catch (error) {
+    json(path.join(directory, 'raw-failure.json'), {
+      phase, name, startedAtUtc, failure: { code: error.code || null, message: error.message, stack: error.stack },
+      records, passed: false,
+    });
+    throw error;
+  }
+}
+
+module.exports = { sha256, blobOid, canonical, fingerprints, captureEnabled, captureBrowser, sourceFiles };
+if (require.main === module) main().catch((error) => { console.error(error); process.exitCode = 1; });
