@@ -107,6 +107,14 @@ removed. Historical evidence is not rewritten. The owned ignored
 `publication.json` supplies the exact full standard publication to
 `state.ps1 -Action Report`; only the parent accepts.
 
+The subsequent parent-approved `91c8cf83…` revision changes only command-local
+Git whitespace validation: preserved CRLF is accepted while real trailing spaces,
+tabs, space-before-tab and blank EOF remain checked. The parent's 14 fixture/raw
+checks are recorded as parent-reported evidence, not claimed as independently
+executed here. The prior approved `815a1f0c…` bytes, exact-pin rejection, prior
+boundary and full `2402a711…` publication receipt remain archived. This is a
+same-C015 zero-extra-credit correction, not new infrastructure or permission.
+
 IaC is **N/A**. This specifically approved local fixture does not replace planned
 **Node 24 / Express / App Service Linux / Azure Tables/Queues/Blob** production
 architecture. No real-user data, cloud services, credentials, provisioning,

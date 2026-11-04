@@ -79,6 +79,20 @@ test('every preserved raw capture, stdout/stderr and genuine RED source snapshot
   assert.equal(sha(readOwned(path.join('evidence', boundary.retiredOwnedAdapterSnapshot))), boundary.retiredOwnedAdapterSha256);
   assert.equal(boundary.historicalSharedBytesPreviouslyPinned, false);
   assert.equal(boundary.sharedSourceEdits, 0);
+  for (const version of boundary.approvedVersionHistory) {
+    assert.equal(sha(readOwned(path.join('evidence', version.sourceSnapshot))), version.sha256);
+  }
+  const currentPublisher = readOwned(path.join('evidence', boundary.approvedSourceSnapshot)).toString('utf8');
+  const previousPublisher = readOwned(path.join('evidence', boundary.approvedVersionHistory[0].sourceSnapshot)).toString('utf8');
+  const correctedCall = "Run-Git (@('-c','core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol','diff','--cached','--check','--')+$Paths)";
+  const priorCall = "Run-Git (@('diff','--cached','--check','--')+$Paths)";
+  assert.equal(currentPublisher.split(correctedCall).length, 2);
+  assert.equal(currentPublisher.replace(correctedCall, priorCall), previousPublisher, 'The approved publisher change must be exactly the command-local whitespace validation line.');
+  const priorBoundary = JSON.parse(readOwned(path.join('evidence', boundary.preservedPriorBoundarySnapshot)).toString('utf8'));
+  assert.equal(priorBoundary.parentApprovedSha256, boundary.supersededParentApprovedSha256);
+  const priorPublication = JSON.parse(readOwned(path.join('evidence', boundary.preservedPriorPublicationSnapshot)).toString('utf8'));
+  assert.equal(priorPublication.commit, '2402a7110e97bf2a4dfe9d3180ae6ab93e153eb1');
+  assert.equal(priorPublication.tag, 'kanban/C015/2402a7110e97');
 });
 
 test('retained actual demo files and fresh reader state exactly match observed acknowledgments and history', () => {

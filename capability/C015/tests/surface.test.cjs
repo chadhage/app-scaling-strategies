@@ -82,6 +82,11 @@ test('the exact parent-approved standard publisher preserves the mutex, remote H
   assert.ok(publisher.includes('kanban/$CardId/$short'));
   assert.match(publisher, /'push',\s*'--atomic'/);
   assert.match(publisher, /'merge-base',\s*'--is-ancestor'/);
+  assert.ok(publisher.includes("'core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol'"));
+  assert.equal(boundary.commandLocalWhitespacePolicy, 'blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol');
+  assert.equal(boundary.parentReportedValidationChecksPassed, 14);
+  assert.equal(boundary.approvedVersionHistory.length, 2);
+  assert.equal(boundary.approvedVersionHistory.at(-1).sha256, boundary.parentApprovedSha256);
   assert.doesNotMatch(publisher, /'reset'|'amend'|'--force'|'add', '\.'|Remove-Item|\.docs\\wiki\\.*Write/);
   const attributes = fs.readFileSync(path.join(root, '.gitattributes'), 'utf8');
   assert.ok(attributes.includes('evidence/*.raw -text whitespace=cr-at-eol,-blank-at-eol'));
@@ -91,4 +96,5 @@ test('the exact parent-approved standard publisher preserves the mutex, remote H
   assert.equal(fs.existsSync(path.join(root, 'publish.ps1')), false);
   assert.equal(boundary.sharedSourceEdits, 0);
   assert.equal(boundary.retiredOwnedAdapterExecutableRemoved, true);
+  assert.equal(boundary.scopeExpandedToCloudOrProduction, false);
 });
