@@ -1,0 +1,22 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const recovery = require('./recovery-lib.cjs.txt');
+
+const initial = recovery.load('initial-boundary.json');
+const value = {
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-150',
+  recordedAtUtc: new Date().toISOString(), applicability: 'not-applicable',
+  kind: 'same-operational-mission-archive-attribute-publication-recovery',
+  originalBddRedAndIacUnchanged: true, originalIac: path.join(initial.blockedEvidence, 'iac-na.json'),
+  retryIac: path.join(initial.priorEvidence, 'iac-na.json'),
+  parentApprovedExactlyTwoHistoricalJsonNoTextExceptions: true,
+  sourceCommit: recovery.sourceCommit, precursorCommit: recovery.precursorCommit,
+  newPackages: 0, downloads: 0, cloudActions: 0, authorizedCloudSpend: 0,
+  scaffoldIdentityDeploymentOrAuthorityChange: false, nativeQualified: 0,
+  productionNode24Validated: false, kanoCredits: { S: 0, D: 0, L: 0 },
+  operationalAcceptanceOwner: 'parent-controller-only'
+};
+fs.writeFileSync(path.join(__dirname, 'iac-na.json'), `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify(value));

@@ -1,0 +1,158 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { gunzipSync } = require('node:zlib');
+const recovery = require('./recovery-lib.cjs.txt');
+
+const write = (name, value) => fs.writeFileSync(path.join(__dirname, name), `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
+const initial = recovery.load('initial-boundary.json');
+const focused = recovery.load('focused-02.json');
+const integrityCommand = recovery.load('integrity-readonly-02.json');
+const integrity = JSON.parse(integrityCommand.stdout);
+const parser = recovery.load('publisher-parser-02.json');
+const parserDetails = JSON.parse(parser.stdout);
+assert.equal(focused.exitCode, 0);
+assert.deepEqual(focused.testNodes, { total: 283, parents: 3, leaves: 280 });
+assert.equal(focused.summary.fail, 0);
+assert.equal(integrityCommand.exitCode, 0);
+assert.equal(integrity.completeOwnedBytesAndFileSetUnchanged, true);
+assert.equal(parser.exitCode, 0);
+assert.equal(parserDetails.sourceSha256, recovery.sha(recovery.read(path.join(recovery.relative, 'publication-command.ps1.txt'))));
+const frozen = recovery.verifyFrozen();
+const exceptions = recovery.verifyAttributes();
+const runtime = recovery.verifyRuntime();
+const precursor = recovery.verifyPrecursor();
+const sourceFailureRaw = path.join(recovery.relative, 'publication-transaction-failure-01.raw-json.txt');
+assert.equal(recovery.sha(recovery.read(sourceFailureRaw)), '339c50ee1142eecc2371a1c9205eba8e2bb927f282219651c5933f9c23c23575');
+const commands = fs.readdirSync(__dirname).filter(name => name.endsWith('.json'))
+  .map(name => recovery.load(name)).filter(record => record.transcripts);
+let currentStreams = 0;
+for (const command of commands) {
+  for (const stream of ['stdout', 'stderr']) {
+    const descriptor = command.transcripts[stream];
+    const compressed = fs.readFileSync(path.join(__dirname, descriptor.path));
+    const raw = gunzipSync(compressed);
+    assert.equal(recovery.sha(compressed), descriptor.gzipSha256);
+    assert.equal(recovery.sha(raw), descriptor.sha256);
+    assert.equal(raw.length, descriptor.bytes);
+    assert.equal(raw.toString('utf8'), command[stream]);
+    currentStreams++;
+  }
+}
+const targets = ['validation-final.json', 'result-final.json', 'publication-owned-paths.json', 'hashes-final.json'];
+for (const name of targets) assert.equal(fs.existsSync(path.join(__dirname, name)), false, 'Never overwrite versioned recovery proof.');
+assert.equal(fs.existsSync(path.join(__dirname, 'publication-final.json')), false);
+const before = recovery.inventory();
+const proposed = [
+  ...recovery.git(['diff', '--name-only', 'HEAD', '--', ...recovery.scopes]).toString().trim().split('\n'),
+  ...recovery.git(['ls-files', '--others', '--exclude-standard', '--', ...recovery.scopes]).toString().trim().split('\n'),
+  ...exceptions.map(file => file.path),
+  ...targets.map(name => path.join(recovery.relative, name))
+].filter(Boolean).map(file => file.replaceAll('/', '\\'));
+const paths = [...new Set(proposed)].sort();
+for (const file of paths) assert.match(file, /^capability\\(?:C005|C006|C007|C008|local-harness)\\/);
+for (const file of exceptions) assert.ok(paths.includes(file.path), 'Corrective inventory must restore each exact frozen JSON blob.');
+const text = paths.filter(file => /\\evidence\\.*\.txt$/.test(file));
+const gzip = paths.filter(file => /\\evidence\\.*\\raw\\.*\.gz$/.test(file));
+const cumulative = before.filter(file => /\\evidence\\op-catalog-snapshot-refresh-150-[^\\]+\\.*\.txt$|\\evidence\\op-catalog-snapshot-refresh-150-[^\\]+\\raw\\.*\.gz$/.test(file.path));
+const cumulativeText = cumulative.filter(file => file.path.endsWith('.txt'));
+const cumulativeGzip = cumulative.filter(file => file.path.endsWith('.gz'));
+const rawArchiveCounts = {
+  correctiveCommit: { total: text.length + gzip.length, textArchives: text.length, gzipCommandStreams: gzip.length,
+    textPaths: text, gzipPaths: gzip },
+  allRetainedOp150Attempts: { total: cumulative.length, textArchives: cumulativeText.length, gzipCommandStreams: cumulativeGzip.length },
+  definition: 'Exact counted raw archive files are .txt archives plus gzip command streams. Frozen JSON restoration is separately counted as two original raw blobs.',
+  originalFrozenJsonBlobsRestored: 2
+};
+const focusedCounts = { ...focused.testNodes, files: focused.command.filter(arg => arg.endsWith('.test.cjs')).length,
+  passed: focused.summary.pass, failed: 0, record: 'focused-02.json' };
+const recordedAtUtc = new Date().toISOString();
+const finalOwnedBeforeReport = before.length + targets.length;
+const result = {
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-150',
+  kind: 'versioned-exact-byte-correction-result-not-publication-or-parent-acceptance',
+  outcome: 'verified-exact-archive-correction-ready-for-publication', recordedAtUtc,
+  source: { commit: recovery.sourceCommit, acceptedOriginalUnits: 150, sourceKanoDone: { S: 148, L: 0, D: 2 },
+    acceptedPortablePractices: 135, dataSha256: runtime.generation.data.sha256,
+    unavailableFrom: 'S136', nativeRunnable: 0, nativeQualified: 0,
+    sourceParentsComplete: 0, H001Complete: false, H002Complete: false, productionNode24Validated: false,
+    runtimeSchemaAuthorityAndSourceBindingUnchanged: true, liveAvailability: false },
+  precursor: { commit: recovery.precursorCommit, publishedAncestor: true, qualification: 'unqualified',
+    requiredAnnotatedTag: recovery.precursorTag, accepted: false, originalCreditAdded: false,
+    originalFailure: path.join(initial.priorEvidence, 'publication-transaction-failure-01.json'),
+    rawFailureArchive: { path: sourceFailureRaw, sha256: recovery.sha(recovery.read(sourceFailureRaw)) },
+    originalActualByteComparison: path.join(initial.priorEvidence, 'publication-byte-comparison-failure-01.json'),
+    rawMismatchesAtPrecursor: precursor.rawMismatchesAtPrecursor,
+    earlierFailureResultIsHistoricalAndNotRewritten: true },
+  correction: { exactlyTwoParentApprovedHistoricalJsonExceptions: true,
+    exactRawJsonRestoration: exceptions, canonicalGitLogicalPathAndNoFilterObjectEqualityVerified: true,
+    exactRestorationPathsExplicitEvenWhenGitStatCacheOmitsThem: true,
+    exactTwoPathRenormalizationOnlyInsidePublisherMutex: true,
+    priorInventoryAssertionFailureRetained: 'finalize-inventory-failure-01.json',
+    originalFrozen51CommittedBlobsMustBeByteExact: true,
+    noNormalizedTextEquivalenceSubstitution: true, noResetAmendForceOrGuardWidening: true },
+  preservation: { priorProofFiles: frozen.historical, originalHistoricalFiles: 371,
+    blocked38AttemptFiles: 51, sourceRetryAttemptFiles: 85, completePriorAttemptFileSetsUnchanged: true,
+    manifest: 'historical-proof-hashes.json',
+    manifestSha256: recovery.sha(fs.readFileSync(path.join(__dirname, 'historical-proof-hashes.json'))),
+    sevenSnapshots: runtime.snapshots, original18LeafRedRetained: true },
+  tests: { focused: focusedCounts,
+    currentReadonlyIntegrity: { record: 'integrity-readonly-02.json', syntaxChecks: integrity.syntaxChecks,
+      archivalScriptChecks: integrity.archivalScriptChecks, jsonFilesParsed: integrity.jsonFilesParsed,
+      ownedFilesVerified: integrity.ownedFilesVerified, byteAndFileSetUnchanged: true,
+      beforeInventorySha256: integrity.beforeInventorySha256, afterInventorySha256: integrity.afterInventorySha256,
+      currentSourceCheckExitCode: 0 },
+    historicalActualBrowser: { total: 71, parents: 5, leaves: 66, passed: 71, failed: 0,
+      unifiedLeafGroups: 12, uniquePracticeDestinations: 135, exhaustiveSweepNavigations: 135,
+      actualPracticeNavigations: 140, exactBanners: 140, repeatedS001Navigations: 5,
+      sourceBindingUnchanged: true, newBrowserExecutionClaimed: false,
+      report: path.join(initial.priorEvidence, 'browser-qualification-01.json'),
+      reportSha256: recovery.sha(recovery.read(path.join(initial.priorEvidence, 'browser-qualification-01.json'))),
+      acceptedS001: runtime.browser.acceptedS001, observations: runtime.browser.observations,
+      helperSourceSha256: runtime.browser.helperSha256, signedEdge: runtime.browser.signedEdge,
+      node: runtime.browser.nodeVersion, playwright: runtime.browser.playwrightVersion,
+      S107StaticEntryCertifiesNativeOrHttpOriginBehavior: false },
+    publisherParser: { record: 'publisher-parser-02.json', checks: 1, failed: 0 },
+    newRawCommandStreamsVerified: currentStreams },
+  publication: { command: 'publication-command.ps1.txt', explicitInventory: 'publication-owned-paths.json',
+    normalCorrectedTagPrefix: 'kanban/flow-catalog-refresh/', unqualifiedPrecursorTag: recovery.precursorTag,
+    mainMustEqualRemoteBeforeTransaction: true, atomicMainAndBothAnnotatedTags: true,
+    publisherMutexOnly: 'Local\\AppScalingStrategies_KanbanPublisher_v1', stateLockInside: false,
+    preserveUnownedStageAndIndexFlags: true, guardedWorkingAndCommittedRawBytesCheckedBeforeAndAfter: true,
+    standalonePublishedReport: 'publication-final.json',
+    standaloneReportWrittenOnlyAfterRemoteVerificationAndPublisherRelease: true,
+    standaloneReportNotACommittedSelfReference: true, rawArchiveCounts },
+  manifest: 'hashes-final.json', validation: 'validation-final.json',
+  ownedFilesBeforeStandaloneReport: finalOwnedBeforeReport, ownedFilesAfterStandaloneReport: finalOwnedBeforeReport + 1,
+  readOnlyBoundaries: initial.readOnlyBoundaries, parentAcceptanceClaimed: false,
+  kanoCredits: { S: 0, D: 0, L: 0 }, stopAfterSameOperation: true
+};
+write('validation-final.json', {
+  schemaVersion: 1, operation: result.operation, worker: result.worker, recordedAtUtc,
+  kind: 'current-prepublication-verified-exact-archive-recovery-not-acceptance',
+  focused: focusedCounts, integrity: result.tests.currentReadonlyIntegrity,
+  exactRestoration: exceptions, preservedProofFiles: 517, originalProofFiles: 371, blockedFiles: 51, priorAttemptFiles: 85,
+  historicalBrowserBinding: result.tests.historicalActualBrowser,
+  newRawCommandStreamsVerified: currentStreams, rawArchiveCounts, sourceRuntimeSchemaAuthorityUnchanged: true,
+  parentAcceptanceClaimed: false, kanoCredits: { S: 0, D: 0, L: 0 }
+});
+write('result-final.json', result);
+write('publication-owned-paths.json', { operation: result.operation, recordedAtUtc, scopes: recovery.scopes,
+  fileCount: paths.length, paths, restoreExactFrozenJsonPaths: exceptions.map(file => file.path) });
+const finalFiles = recovery.inventory();
+assert.equal(finalFiles.length, finalOwnedBeforeReport - 1);
+write('hashes-final.json', { operation: result.operation, recordedAtUtc, scopes: recovery.scopes,
+  kind: 'complete-owned-prepublication-raw-hash-manifest-excluding-self-and-future-standalone-report',
+  fileCount: finalFiles.length, files: finalFiles, rawArchiveCounts,
+  deliberatePostPublicationReport: path.join(recovery.relative, 'publication-final.json'),
+  expectedOwnedCountAfterStandaloneReport: finalOwnedBeforeReport + 1 });
+console.log(JSON.stringify({ result: path.join(recovery.relative, 'result-final.json'),
+  outcome: result.outcome, focused: focusedCounts, preservedProofs: 517, blocked38Files: 51, priorAttemptFiles: 85,
+  historicalBrowser: { total: 71, parents: 5, leaves: 66, uniquePractices: 135, actualVisits: 140, newExecutionClaimed: false },
+  ownedPrepublicationFiles: finalOwnedBeforeReport, ownedAfterStandaloneReport: finalOwnedBeforeReport + 1,
+  explicitCommitPaths: paths.length, rawArchiveCounts,
+  resultSha256: recovery.sha(fs.readFileSync(path.join(__dirname, 'result-final.json'))),
+  validationSha256: recovery.sha(fs.readFileSync(path.join(__dirname, 'validation-final.json'))),
+  manifestSha256: recovery.sha(fs.readFileSync(path.join(__dirname, 'hashes-final.json'))) }));

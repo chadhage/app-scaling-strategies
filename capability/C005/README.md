@@ -319,6 +319,42 @@ Historical reproducibility is distinct from exact-current-checkout parity.
 later swarm edits may truthfully make that CLI fail. The pinned builder and
 hash/ancestry checks do not infer availability from those later edits.
 
+### OP150 exact-byte publication recovery
+
+The original implemented result is **not publication acceptance**. Commit
+`86e31de6c9ebdfb5dc4d76763c94a119ee959b75` became a published linear ancestor
+while still unqualified: its two frozen CRLF JSON blobs had been normalized.
+The parent approved exactly two historical `-text -diff` exceptions, not a
+broad JSON-rule change or rewriting the raw files. Canonical logical Git
+`--path` and `--no-filters` now identify the original objects
+`d926db1c2939fffab907c107fbc8f8e513c9272a` and
+`e4db3be01d649dbb2053607dffdedab8e76046f1`.
+
+New correction evidence is scoped to
+`evidence\op-catalog-snapshot-refresh-150-ebd7433ac143-publication-recovery`.
+All **517** prior proof files, including both complete failed-attempt directories
+(51 and 85 files), are frozen; all seven snapshots and original RED remain intact.
+The prior failure JSON also has a separate byte-exact `.raw-json.txt` archive,
+distinct from its canonical Git metadata. The fixed 135-practice source/runtime
+is unchanged, so the previous actual 135-unique/140-visit browser proof remains
+historical evidence of that same binding; it is not relabeled as a new run.
+
+The normal corrected tag and explicitly **unqualified**
+`kanban/flow-catalog-refresh-unqualified/86e31de6c9eb` marker are pushed atomically
+with main under the existing strict five-scope mutex-only transaction.
+The corrected commit must contain the original 51 frozen proof blobs byte-for-byte,
+not merely normalized-equivalent text. Git's stat cache can omit unchanged-working-file attribute conversions from
+`diff --name-only`; the corrective inventory therefore includes both exact JSON
+paths explicitly. Only those two files are reprocessed with
+`git add --renormalize -- <the two exact paths>` inside the publisher mutex,
+and their staged object IDs are checked before `commit --only`.
+The actual initial inventory assertion failure and source are preserved.
+A deliberate standalone
+`publication-final.json` report is written after remote verification and mutex
+release to record the actual full corrected SHA and tags without a self-referential
+commit blob. Committed result/validation/manifest plus the tagged Git blobs remain
+the publication inputs; the parent alone records operational acceptance.
+
 The preceding twenty-lesson refresh result remains historical at
 `evidence\op-catalog-snapshot-refresh-3565746a0882\result.json`: **205 affected
 unit/integration/source/hash/ID/link checks**, **31 syntax checks**, and **71 real

@@ -1,0 +1,52 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
+const vm = require('node:vm');
+const recovery = require('./recovery-lib.cjs.txt');
+
+assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, undefined);
+assert.equal(process.env.NODE_V8_COVERAGE, undefined);
+const before = recovery.inventory();
+const frozen = recovery.verifyFrozen();
+const attributes = recovery.verifyAttributes();
+const runtime = recovery.verifyRuntime();
+const precursor = recovery.verifyPrecursor();
+const syntax = [];
+for (const file of before.filter(file => /\.(?:js|cjs)$/.test(file.path))) {
+  const result = spawnSync(process.execPath, ['--check', file.path], { cwd: recovery.root, windowsHide: true });
+  syntax.push({ path: file.path, exitCode: result.status });
+  assert.equal(result.status, 0, file.path);
+}
+const json = before.filter(file => file.path.endsWith('.json'));
+for (const file of json) JSON.parse(recovery.read(file.path));
+const scripts = fs.readdirSync(__dirname).filter(file => /\.(?:js|cjs)\.txt$/.test(file));
+for (const file of scripts) new vm.Script(fs.readFileSync(path.join(__dirname, file), 'utf8'), { filename: file });
+const checked = spawnSync(process.execPath, [path.join('capability', 'C005', 'catalog-source.cjs'), '--check'],
+  { cwd: recovery.root, windowsHide: true, maxBuffer: 8388608 });
+assert.equal(checked.status, 0, checked.stderr.toString('utf8'));
+const rawFailure = path.join(recovery.relative, 'publication-transaction-failure-01.raw-json.txt');
+assert.equal(recovery.sha(recovery.read(rawFailure)),
+  recovery.sha(recovery.read(path.join(recovery.load('initial-boundary.json').priorEvidence, 'publication-transaction-failure-01.json'))));
+const after = recovery.inventory();
+assert.deepEqual(after, before, 'Ordinary recovery verification changes no owned file or byte.');
+console.log(JSON.stringify({
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', kind: 'actual-current-integrity-recovery-readonly-verification',
+  recordedAtUtc: new Date().toISOString(), sourceCommit: recovery.sourceCommit,
+  precursorCommit: recovery.precursorCommit, precursorPublishedAncestor: true,
+  frozenProofs: frozen, exactRawJsonObjects: attributes.map(file => ({ path: file.path, sha256: file.sha256, gitObject: file.gitObject })),
+  canonicalGitLogicalPathChecked: true, exactlyTwoHistoricalJsonExceptions: true,
+  unchangedRuntimeFiles: runtime.unchangedRuntimeFiles, unchangedCatalogSha256: runtime.generation.data.sha256,
+  priorActualBrowser: { total: 71, parents: 5, leaves: 66, uniquePracticeDestinations: 135, actualPracticeNavigations: 140,
+    sourceBindingUnchanged: true, reusedAsHistoricalNotNewBrowserExecution: true },
+  sevenSnapshotHashes: runtime.snapshots.map(file => ({ count: file.acceptedPortableLessons, sha256: file.sha256 })),
+  syntaxChecks: syntax.length, archivalScriptChecks: scripts.length, jsonFilesParsed: json.length,
+  currentSourceCheckExitCode: checked.status, currentSourceCheckStdout: checked.stdout.toString('utf8'),
+  precursorVerification: precursor, ownedFilesVerified: before.length,
+  beforeInventorySha256: recovery.sha(JSON.stringify(before)), afterInventorySha256: recovery.sha(JSON.stringify(after)),
+  completeOwnedBytesAndFileSetUnchanged: true, captureVariableUnset: true,
+  nativeQualified: 0, H001Complete: false, H002Complete: false, productionNode24Validated: false,
+  sourceRuntimeSchemaAuthorityChanged: false, kanoCredits: { S: 0, D: 0, L: 0 }
+}, null, 2));

@@ -1,0 +1,30 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const recovery = require('../evidence/op-catalog-snapshot-refresh-150-ebd7433ac143-publication-recovery/recovery-lib.cjs.txt');
+
+test('publication recovery preserves all historical working bytes and both complete failed-attempt file sets', () => {
+  assert.deepEqual(recovery.verifyFrozen(), { historical: 517, priorAttempt: 85, blocked: 51 });
+});
+
+test('only the two parent-approved frozen JSON exceptions change historical archive filtering', () => {
+  assert.equal(recovery.verifyAttributes().length, 2);
+  const publisher = recovery.read(require('node:path').join(recovery.relative, 'publication-command.ps1.txt')).toString();
+  assert.ok(publisher.includes("Run-Git (@('add', '--renormalize', '--') + $exactJsonPaths)"));
+  assert.ok(publisher.includes('Exact staged CRLF blob differs before commit'));
+});
+
+test('publication repair retains the exact135 fixed source/runtime binding to the historical actual browser proof', () => {
+  const result = recovery.verifyRuntime();
+  assert.equal(result.generation.acceptedPortableLessons, 135);
+  assert.equal(result.browser.exhaustiveSweepNavigations, 135);
+  assert.equal(result.browser.exactBannersAcrossAllActualNavigations, 140);
+  assert.equal(result.snapshots.length, 7);
+});
+
+test('86e31 is a published unqualified ancestor, not a qualified catalog refresh or an accepted unit', () => {
+  const result = recovery.verifyPrecursor();
+  assert.equal(result.rawMismatchesAtPrecursor.length, 2);
+  assert.equal(result.publishedPrecursor, '86e31de6c9ebdfb5dc4d76763c94a119ee959b75');
+});

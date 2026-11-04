@@ -1,0 +1,49 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const recovery = require('./recovery-lib.cjs.txt');
+
+assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, undefined);
+assert.equal(process.env.NODE_V8_COVERAGE, undefined);
+const before = recovery.inventory();
+const manifest = recovery.load('hashes-final.json');
+const reportPath = path.join(recovery.relative, 'publication-final.json');
+const current = new Map(before.map(file => [file.path, file]));
+for (const file of manifest.files) assert.deepEqual(current.get(file.path), file, file.path);
+const reportExists = fs.existsSync(path.join(recovery.root, reportPath));
+assert.equal(current.size, manifest.fileCount + 1 + Number(reportExists));
+if (reportExists) {
+  const report = JSON.parse(recovery.read(reportPath));
+  assert.equal(report.outcome, 'published-remotely-verified');
+  assert.equal(report.sourceCommit, recovery.sourceCommit);
+  assert.equal(report.unqualifiedPrecursorCommit, recovery.precursorCommit);
+  assert.equal(report.unqualifiedPrecursorTag, recovery.precursorTag);
+  assert.equal(report.remoteVerified, true);
+  assert.equal(report.publisherMutexReleasedBeforeReport, true);
+  assert.equal(recovery.git(['rev-parse', `${report.correctedTag}^{}`]).toString().trim(), report.correctedCommit);
+  assert.equal(recovery.git(['rev-parse', `${report.unqualifiedPrecursorTag}^{}`]).toString().trim(), recovery.precursorCommit);
+  const exceptions = recovery.load('initial-boundary.json').exactRawJsonExceptions;
+  for (const file of exceptions) {
+    assert.equal(recovery.git(['rev-parse', `${report.correctedCommit}:${file.path.replaceAll('\\', '/')}`]).toString().trim(), file.gitObject);
+  }
+}
+recovery.verifyFrozen();
+recovery.verifyAttributes();
+const runtime = recovery.verifyRuntime();
+recovery.verifyPrecursor();
+const after = recovery.inventory();
+assert.deepEqual(after, before, 'Final normal manifest verification does not append or rewrite proof.');
+console.log(JSON.stringify({
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', kind: 'final-current-readonly-manifest-verification',
+  ownedFilesVerified: before.length, manifestFilesVerified: manifest.files.length,
+  priorProofFilesVerified: 517, blocked38FilesVerified: 51, priorAttemptFilesVerified: 85, sevenSnapshotsVerified: 7,
+  unchanged135DataSha256: runtime.generation.data.sha256,
+  completeBytesAndFileSetUnchanged: true, standalonePublishedReportVerified: reportExists,
+  reportIsDeclaredPostPublicationArtifact: reportExists,
+  beforeInventorySha256: recovery.sha(JSON.stringify(before)), afterInventorySha256: recovery.sha(JSON.stringify(after)),
+  resultSha256: recovery.sha(fs.readFileSync(path.join(__dirname, 'result-final.json'))),
+  manifestSha256: recovery.sha(fs.readFileSync(path.join(__dirname, 'hashes-final.json'))),
+  reportsAppended: 0, filesDeleted: 0, filesRewritten: 0
+}, null, 2));

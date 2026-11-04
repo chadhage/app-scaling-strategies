@@ -310,4 +310,16 @@ unowned index preservation and atomic annotated main/tag push. No state lock,
 shared ledger, standard/Admin guard change or original-card action is performed.
 The parent alone binds and accepts this one zero-credit operation.
 
+Final exact-byte OP150 correction evidence is versioned under
+`capability\C005\evidence\op-catalog-snapshot-refresh-150-ebd7433ac143-publication-recovery`.
+The published ancestor `86e31de6c9ebdfb5dc4d76763c94a119ee959b75` remains explicitly
+unqualified, never an accepted result. Exactly two parent-approved archive rules
+restore its frozen CRLF JSON bytes to Git without rewriting any working proof.
+All 517 prior proofs, both failed-attempt file sets and seven snapshots are retained.
+The 135-practice runtime/source binding is unchanged, so its prior actual browser
+proof is reused historically rather than recaptured or relabeled.
+The corrective main and normal/unqualified annotated tags are atomically verified;
+the standalone post-publication report records actual SHAs after publisher release.
+No reset, amend, force, broader guards, state lock, original-card action or credit.
+
 [Microsoft Open Source Disclaimer](../../README.md#microsoft-open-source-disclaimer).

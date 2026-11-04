@@ -1,0 +1,44 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const git = args => execFileSync('git', ['--no-pager', ...args], { cwd: root, maxBuffer: 8388608 });
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const commit = git(['rev-parse', 'HEAD']).toString().trim();
+const parent = git(['rev-parse', `${commit}^`]).toString().trim();
+assert.equal(commit, '86e31de6c9ebdfb5dc4d76763c94a119ee959b75');
+assert.equal(parent, '377200cf119f074248decc0fa6d10fd13a042c10');
+const frozen = JSON.parse(fs.readFileSync(path.join(__dirname, 'blocked-attempt-frozen-hashes.json')));
+const paths = JSON.parse(fs.readFileSync(path.join(__dirname, 'publication-owned-paths.json'))).paths;
+assert.deepEqual(git(['diff-tree', '--no-commit-id', '--name-only', '-r', commit]).toString().trim()
+  .split('\n').map(file => file.replaceAll('/', '\\')).sort(), paths);
+const differences = [];
+for (const file of frozen.files) {
+  const raw = fs.readFileSync(path.join(root, file.path));
+  assert.equal(sha(raw), file.sha256, 'No frozen working-tree proof byte changed.');
+  const committed = git(['show', `${commit}:${file.path.replaceAll('\\', '/')}`]);
+  if (sha(committed) !== file.sha256) differences.push({
+    path: file.path, originalRawBytes: raw.length, originalRawSha256: file.sha256,
+    committedBytes: committed.length, committedSha256: sha(committed),
+    originalRawCRLFPairs: (raw.toString('utf8').match(/\r\n/g) || []).length,
+    committedCRLFPairs: (committed.toString('utf8').match(/\r\n/g) || []).length,
+    normalizedTextEqual: raw.toString('utf8').replaceAll('\r\n', '\n') === committed.toString('utf8').replaceAll('\r\n', '\n')
+  });
+}
+console.log(JSON.stringify({
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-150',
+  kind: 'actual-readonly-unpublished-publication-byte-comparison',
+  recordedAtUtc: new Date().toISOString(), guardedUnpublishedCommit: commit, parentCommit: parent,
+  explicitOwnedPathsVerified: paths.length, frozenBlockedWorkingFilesByteExact: frozen.files.length,
+  exactCommittedFrozenByteMismatches: differences,
+  sourceCommit: 'ebd7433ac143242ab633b52aff864bb2923dac2c',
+  tagCreated: false, pushAttempted: false, centralLedgerChanged: false, originalCreditsAdded: 0,
+  requirementStillEnforced: 'Main must equal remote before a publication transaction; do not reset, amend, force, or widen the guard autonomously.',
+  possibleOwnedAttributeRepair: 'The two frozen CRLF JSON archives need no-text archival attributes, not raw-file rewriting; transaction continuation requires parent direction.'
+}, null, 2));
+assert.deepEqual(differences, [], 'Every frozen proof must be byte-identical in the commit, not merely normalized-text equivalent.');
