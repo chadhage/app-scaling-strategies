@@ -42,6 +42,14 @@ test('exact scoped seal covers every persisted lesson file without regenerating 
     assert.equal(filtered.stdout.toString('utf8').trim(), rawObject,
       `${entry.file}: sealed raw bytes must equal canonical Git bytes; verification never repairs them.`);
   }
+  const normal = seal.files.filter((entry) => !entry.file.startsWith('evidence\\raw\\'));
+  const attributes = git('check-attr', '-z', 'text', 'eol', '--', ...normal.map((entry) => `learning\\S140\\${entry.file}`))
+    .toString('utf8').split('\0');
+  for (let index = 0; index < attributes.length - 1; index += 3) {
+    assert.equal(attributes[index + 2], attributes[index + 1] === 'text' ? 'set' : 'lf',
+      `${attributes[index]}: delivered text and its attribute control file must survive checkout as LF.`);
+  }
+  assert.equal(attributes.length - 1, normal.length * 6);
 });
 
 test('exact source acceptance, portable card and packet retain separate raw CRLF and canonical Git proof', () => {

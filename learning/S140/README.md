@@ -21,7 +21,7 @@ account, credentials, framework or deployment is required.
 portable contract and SC-S140 packet rule read before design. Full working-tree
 bytes, including CRLF, and canonical Git bytes are retained **separately** as gzip
 proof. Scoped `.gitattributes` disables text conversion only for raw evidence.
-Delivered application/test text is explicitly normalized to LF before its final
+Delivered application/test text and its attribute control file use explicit LF before the final
 seal. Read-only integrity compares raw and filtered Git object hashes, preventing
 a clean checkout from silently invalidating worktree-only hashes. Earlier raw
 CRLF RED, browser and correction snapshots remain unchanged.
