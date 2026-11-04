@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S125 - Single ACA revision rehearsal</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Single revision: update ≠ ready ≠ switched ≠ uninterrupted</h1>
+    <p>A-S125 / D-S125 / SC-S125 · frozen S · one original unit</p>
+    <p>In single-revision mode the old revision stays active and receives all ingress
+      until the candidate is ready. Readiness permits replacement; observe the
+      routing transition and sessions/old work separately.</p>
+    <p><strong>DATA ONLY.</strong> All app, revision, image, readiness, traffic,
+      lifecycle, session and effect values below are fixed fictional teaching data.
+      No ACA, registry, resource, configuration, promotion or deployment is performed.</p>
+
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Conduct the fixed-data exercise</h2>
+      <form id="candidate-form" novalidate>
+        <label for="fixture">Fixed observation fixture</label>
+        <select id="fixture" name="fixture">
+          <option value="ready">Ready, observed switch, preserved sessions and work</option>
+          <option value="provision-failed">Provisioning failed</option>
+          <option value="replicas-short">Candidate replica count short</option>
+          <option value="startup-failed">One startup probe failed</option>
+          <option value="probe-failed">One readiness probe failed</option>
+          <option value="readiness-unknown">Readiness observation missing</option>
+          <option value="traffic-mismatch">Ready, but observed traffic remains old</option>
+          <option value="traffic-unknown">Ready, but traffic/lifecycle unobserved</option>
+          <option value="session-lost">Switched, but session/state lost</option>
+          <option value="work-interrupted">Switched, but old work interrupted</option>
+          <option value="work-unknown">Switched, but old-work/effect evidence missing</option>
+          <option value="journey-unknown">Switched, but one journey unobserved</option>
+          <option value="latency-breach">Switched, but journey exceeds 400 ms</option>
+        </select>
+        <label for="candidate-version">Candidate software token (exactly v2)</label>
+        <input id="candidate-version" name="version" type="text" value="v2" autocomplete="off" spellcheck="false">
+        <button id="update-button" type="submit">Record candidate update DATA</button>
+      </form>
+      <div class="actions">
+        <button id="readiness-button" type="button">Inspect readiness DATA</button>
+        <button id="traffic-button" type="button">Inspect traffic transition DATA</button>
+        <button id="continuity-button" type="button">Inspect sessions and old work DATA</button>
+        <button id="reset-button" type="button">Reset rehearsal</button>
+      </div>
+      <p id="error" role="alert" aria-live="assertive"></p>
+      <p id="status" role="status" aria-live="polite">Loading local lesson data.</p>
+    </section>
+
+    <section aria-labelledby="measurements-heading">
+      <h2 id="measurements-heading">Measured synthetic observations</h2>
+      <dl>
+        <dt>Phase</dt><dd id="phase">not-loaded</dd>
+        <dt>Candidate revision and image DATA</dt><dd id="candidate">None recorded</dd>
+        <dt>Readiness result</dt><dd id="readiness">unobserved</dd>
+        <dt>Traffic transition result</dt><dd id="traffic-result">unobserved</dd>
+        <dt>Current observed ingress DATA</dt><dd id="traffic">Unobserved</dd>
+        <dt>Last known ingress DATA</dt><dd id="last-traffic">old 100% / candidate 0%</dd>
+        <dt>Old revision lifecycle DATA</dt><dd id="old-lifecycle">active</dd>
+        <dt>Candidate lifecycle DATA</dt><dd id="candidate-lifecycle">not-recorded</dd>
+        <dt>Replica target DATA</dt><dd id="replica-target">2 before / 2 after</dd>
+        <dt>Change classification</dt><dd id="change-kind">Software revision replacement, not compute-capacity scaling</dd>
+        <dt>Session/state result</dt><dd id="sessions">unobserved</dd>
+        <dt>Old-work/effect result</dt><dd id="work">unobserved</dd>
+        <dt>Attempted user journeys</dt><dd id="attempted">0</dd>
+        <dt>Passed / failed / unknown journeys</dt><dd id="journeys">0 / 0 / 0</dd>
+        <dt>Completed synthetic continuity</dt><dd id="completed">false</dd>
+        <dt>Latest measured result</dt><dd id="outcome">unobserved</dd>
+      </dl>
+      <h3>Latest fixed DATA, not live telemetry</h3>
+      <pre id="observations">No candidate observations inspected.</pre>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained action history <span id="history-count">0 / 12</span></h2>
+      <ol id="history"></ol>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">What this cannot establish</h2>
+      <p>Provisioning success, matching replica count, and all startup/readiness probes
+        are distinct readiness requirements. Temporary old/new overlap is not a
+        sustained compute-capacity increase. A routing switch alone does not prove
+        that old in-flight work completed, sessions survived or effects occurred once.</p>
+      <p>Native ACA readiness, traffic, lifecycle, state and active work remain
+        unverified. B-S125 and D-S125 are incomplete. No IaC, cloud, credentials,
+        identity, deployment or spend. No production Node.js 24 or five-nines claim.</p>
+      <p>Use Tab, Enter and the native selector keys. Invalid input keeps history
+        unchanged. Semantic safe holds remain in history. After 12 actions, reset
+        this in-memory rehearsal; no data is stored or uploaded.</p>
+    </section>
+  </main>
+</body>
+</html>
