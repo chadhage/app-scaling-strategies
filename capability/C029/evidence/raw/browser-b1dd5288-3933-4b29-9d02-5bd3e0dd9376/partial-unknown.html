@@ -1,0 +1,286 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>C029 original journey budget evaluation</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer="" src="../C020/contract.js"></script>
+  <script defer="" src="../C020/inspector.js"></script>
+  <script defer="" src="../C023/ledger.js"></script>
+  <script defer="" src="../C033/journey.js"></script>
+  <script defer="" src="../C034/evidence/raw/trace-7d3b0b84-675e-4f9b-92a4-2ea3b89e0116/bundle.js"></script>
+  <script defer="" src="../C034/trace.js"></script>
+  <script defer="" src="evaluator.js"></script>
+  <script defer="" src="page.js"></script>
+</head>
+<body>
+  <main>
+    <p id="banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Evaluate original latency and state budgets</h1>
+    <p id="mode">OFFLINE: bundled saved actual C033 browser observations, not a live client, network or disk read. Synthetic clock controls and the C023 model are separate evidence.</p>
+    <p>PASS applies only to the stated bounded local evidence scope. It is not user journey success, native/client mutation, reliability certification, an availability target or a five-nines claim.</p>
+    <section aria-labelledby="choose-heading">
+      <h2 id="choose-heading">Choose an explicit evidence scope</h2>
+      <label for="source-id">Saved observation or closed control</label>
+      <select id="source-id">
+        <option value="">Choose a source; no default success</option>
+        <optgroup label="Actual historical C033 observations">
+          <option value="closed-history">Saved closed history: seven originals including summary-only 7</option>
+          <option value="held-snapshot">Saved held partial: one complete and one unknown original</option>
+        </optgroup>
+        <optgroup label="Closed synthetic clock controls, not historical observations">
+          <option value="control-below">999.75 ms: just below the original 1000 ms deadline</option>
+          <option value="control-at">1000 ms: at the original deadline</option>
+          <option value="control-above">1000.25 ms: just above the original deadline</option>
+          <option value="control-retry">Budget miss then positive retry; first original still FAIL</option>
+          <option value="control-unknown-retry">Interrupted unknown then positive retry; both retained</option>
+          <option value="control-held-before">Expired before-first hold: zero requests, missing terminal</option>
+          <option value="control-held-between">Expired between-read hold: one acknowledgment, no v2 terminal</option>
+        </optgroup>
+        <optgroup label="C023 pure event-log state model, no latency observation">
+          <option value="model-clean">Model complete state; latency UNKNOWN/HOLD</option>
+          <option value="model-resume">Model interrupted then resumed; original state FAIL remains</option>
+          <option value="model-unknown">Model unknown acknowledgment; no invented committed effect</option>
+          <option value="model-reconcile">Hypothetical model reconciliation; original UNKNOWN remains</option>
+        </optgroup>
+      </select>
+      <div class="controls">
+        <button id="inspect" type="button">Inspect and evaluate</button>
+        <button id="compare" type="button">Compare positive retry (synthetic)</button>
+        <button id="load-copy" type="button">Load saved JSON copy</button>
+        <button id="reset" type="button">Reset display only</button>
+      </div>
+      <label for="candidate">Optional exact saved JSON copy, inspection only</label>
+      <textarea id="candidate" rows="7" maxlength="131072" spellcheck="false" aria-describedby="candidate-help"></textarea>
+      <p id="candidate-help">Only the selected immutable saved history can bind source. Missing fields, altered IDs/times/order/state/stamps, duplicate JSON and supplied verdict/source/hash authority reject. Never adopt or execute a copy.</p>
+      <button id="inspect-copy" type="button">Evaluate saved copy</button>
+      <p id="status" role="status" aria-live="polite" data-decision="HOLD" data-valid="true">HOLD: source-pinned historical C033 local two-read latency/state evaluation, not full user journey. UI verification PASS is not user journey success.</p>
+      <p id="error" role="alert"></p>
+    </section>
+    <section aria-labelledby="outcomes-heading">
+      <h2 id="outcomes-heading">Original outcomes, not replacement health</h2>
+      <p id="counts">2 originals: 1 PASS / 0 FAIL / 1 UNKNOWN. Success fraction 1/2; not availability or an SLA.</p>
+      <p>Each original owns its start and deadline. Held time counts; at/above the original deadline is FAIL. Missing required state/timing/terminal stays UNKNOWN. A confirmed violation stays FAIL even if another dimension is unknown.</p>
+      <ol id="originals"><li data-original="synthetic-C033-attempt-1" data-verdict="PASS" data-latency="PASS" data-state="PASS" data-terminal="KNOWN"><strong>synthetic-C033-attempt-1: PASS</strong><p>Latency PASS; state PASS; required terminal KNOWN.</p><p>Original budget 6000 ms; start 547.2000000476837; deadline 6547.200000047684; end 1205.2000000476837; elapsed 658 ms; held 626.2000000476837 ms.</p><p>2 requests / 2 responses. observed-local-segment.</p><p>Exact compatible local segment within its own original deadline; not a full user journey.</p><details><summary>Inspect exact original state and observed versions</summary><pre>{
+  "attemptId": "synthetic-C033-attempt-1",
+  "verdict": "PASS",
+  "latencyVerdict": "PASS",
+  "stateVerdict": "PASS",
+  "terminalVerdict": "KNOWN",
+  "original": {
+    "profileId": "synthetic-001",
+    "draft": "synthetic-draft-A",
+    "boundary": "before-first-read",
+    "budgetMs": 6000
+  },
+  "startedAt": 547.2000000476837,
+  "deadline": 6547.200000047684,
+  "endedAt": 1205.2000000476837,
+  "elapsedMs": 658,
+  "pausedMs": 626.2000000476837,
+  "budgetMs": 6000,
+  "strictDeadline": "endedAt &lt; original deadline; at/above is FAIL",
+  "classification": "observed-local-segment",
+  "originalOutcome": "observed",
+  "originalCode": "TWO_READ_LOCAL_SEGMENT_OBSERVED",
+  "requests": 2,
+  "responses": 2,
+  "acknowledgements": [
+    {
+      "apiContract": "getProfile/1",
+      "profile": {
+        "id": "synthetic-001",
+        "displayName": "Avery Example",
+        "email": "avery@example.invalid",
+        "preferences": {
+          "locale": "en-GB",
+          "theme": "dark",
+          "topics": [
+            "scaling",
+            "versions"
+          ]
+        }
+      },
+      "stamp": {
+        "tier": "getProfile",
+        "implementation": "v1",
+        "implementationVersion": "1.0.0",
+        "deploymentStamp": "C020-loopback-v1-r1",
+        "deploymentKind": "local-fixture-label-not-cloud",
+        "fixtureRevision": "C020-r1",
+        "profileCatalogVersion": "synthetic-profiles/1",
+        "dataKind": "synthetic"
+      }
+    },
+    {
+      "apiContract": "getProfile/1",
+      "profile": {
+        "id": "synthetic-001",
+        "displayName": "Avery Example",
+        "email": "avery@example.invalid",
+        "preferences": {
+          "locale": "en-GB",
+          "theme": "dark",
+          "topics": [
+            "scaling",
+            "versions"
+          ]
+        }
+      },
+      "stamp": {
+        "tier": "getProfile",
+        "implementation": "v2",
+        "implementationVersion": "2.0.0",
+        "deploymentStamp": "C020-loopback-v2-r1",
+        "deploymentKind": "local-fixture-label-not-cloud",
+        "fixtureRevision": "C020-r1",
+        "profileCatalogVersion": "synthetic-profiles/1",
+        "dataKind": "synthetic"
+      }
+    }
+  ],
+  "observedVersions": [
+    {
+      "implementation": "v1",
+      "implementationVersion": "1.0.0",
+      "apiContract": "getProfile/1",
+      "deploymentStamp": "C020-loopback-v1-r1"
+    },
+    {
+      "implementation": "v2",
+      "implementationVersion": "2.0.0",
+      "apiContract": "getProfile/1",
+      "deploymentStamp": "C020-loopback-v2-r1"
+    }
+  ],
+  "reasonCodes": [],
+  "summaryOnly": false,
+  "includedInDenominator": true
+}</pre></details></li><li data-original="synthetic-C033-attempt-2" data-verdict="UNKNOWN" data-latency="UNKNOWN" data-state="UNKNOWN" data-terminal="UNKNOWN"><strong>synthetic-C033-attempt-2: UNKNOWN</strong><p>Latency UNKNOWN; state UNKNOWN; required terminal UNKNOWN.</p><p>Original budget 6000 ms; start 1331.5; deadline 7331.5; end NOT SAVED - UNKNOWN; elapsed 364.2000000476837 ms; held 344.2999999523163 ms.</p><p>1 requests / 1 responses. partial-unknown.</p><p>REQUIRED_STATE_OR_TERMINAL_UNKNOWN / END_TIME_NOT_SAVED</p><details><summary>Inspect exact original state and observed versions</summary><pre>{
+  "attemptId": "synthetic-C033-attempt-2",
+  "verdict": "UNKNOWN",
+  "latencyVerdict": "UNKNOWN",
+  "stateVerdict": "UNKNOWN",
+  "terminalVerdict": "UNKNOWN",
+  "original": {
+    "profileId": "synthetic-001",
+    "draft": "synthetic-draft-B",
+    "boundary": "between-reads",
+    "budgetMs": 6000
+  },
+  "startedAt": 1331.5,
+  "deadline": 7331.5,
+  "endedAt": null,
+  "elapsedMs": 364.2000000476837,
+  "pausedMs": 344.2999999523163,
+  "budgetMs": 6000,
+  "strictDeadline": "endedAt &lt; original deadline; at/above is FAIL",
+  "classification": "partial-unknown",
+  "originalOutcome": null,
+  "originalCode": null,
+  "requests": 1,
+  "responses": 1,
+  "acknowledgements": [
+    {
+      "apiContract": "getProfile/1",
+      "profile": {
+        "id": "synthetic-001",
+        "displayName": "Avery Example",
+        "email": "avery@example.invalid",
+        "preferences": {
+          "locale": "en-GB",
+          "theme": "dark",
+          "topics": [
+            "scaling",
+            "versions"
+          ]
+        }
+      },
+      "stamp": {
+        "tier": "getProfile",
+        "implementation": "v1",
+        "implementationVersion": "1.0.0",
+        "deploymentStamp": "C020-loopback-v1-r1",
+        "deploymentKind": "local-fixture-label-not-cloud",
+        "fixtureRevision": "C020-r1",
+        "profileCatalogVersion": "synthetic-profiles/1",
+        "dataKind": "synthetic"
+      }
+    }
+  ],
+  "observedVersions": [
+    {
+      "implementation": "v1",
+      "implementationVersion": "1.0.0",
+      "apiContract": "getProfile/1",
+      "deploymentStamp": "C020-loopback-v1-r1"
+    }
+  ],
+  "reasonCodes": [
+    "REQUIRED_STATE_OR_TERMINAL_UNKNOWN",
+    "END_TIME_NOT_SAVED"
+  ],
+  "summaryOnly": false,
+  "includedInDenominator": true
+}</pre></details></li></ol>
+      <p id="replacement">Later report is not this earlier snapshot. Only its two observed starts enter this snapshot denominator.</p>
+      <div id="comparison" aria-live="polite"></div>
+    </section>
+    <section aria-labelledby="order-heading">
+      <h2 id="order-heading">Exact original action and response order</h2>
+      <p>No request target is an observed response version. Historical request tokens, per-response headers, authenticated user and run/epoch correlation were not saved and are not invented.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Saved source or explicitly synthetic control actions; exact numbers, not new inspection clocks</caption>
+          <thead><tr><th scope="col">Original</th><th scope="col">Action</th><th scope="col">Time / elapsed ms</th><th scope="col">Acknowledged version / state</th></tr></thead>
+          <tbody id="events"><tr data-original="synthetic-C033-attempt-1" data-action="ORIGINAL_ATTEMPT_STARTED"><td>synthetic-C033-attempt-1</td><td>ORIGINAL_ATTEMPT_STARTED</td><td>547.2000000476837 / 0</td><td>NOT OBSERVED (action/request only)</td></tr><tr data-original="synthetic-C033-attempt-1" data-action="BOUNDARY_HELD"><td>synthetic-C033-attempt-1</td><td>BOUNDARY_HELD</td><td>547.4000000953674 / 0.20000004768371582</td><td>NOT OBSERVED (action/request only)</td></tr><tr data-original="synthetic-C033-attempt-1" data-action="RESUME_ORIGINAL_ATTEMPT"><td>synthetic-C033-attempt-1</td><td>RESUME_ORIGINAL_ATTEMPT</td><td>1173.6000001430511 / 626.4000000953674</td><td>NOT OBSERVED (action/request only)</td></tr><tr data-original="synthetic-C033-attempt-1" data-action="ACTUAL_READ_STARTED"><td>synthetic-C033-attempt-1</td><td>ACTUAL_READ_STARTED</td><td>1174.2000000476837 / 627</td><td>NOT OBSERVED (action/request only)</td></tr><tr data-original="synthetic-C033-attempt-1" data-action="ACTUAL_READ_ACKNOWLEDGED"><td>synthetic-C033-attempt-1</td><td>ACTUAL_READ_ACKNOWLEDGED</td><td>1191.7000000476837 / 644.5</td><td>1.0.0 / C020-loopback-v1-r1 / synthetic-001 / getProfile/1</td></tr><tr data-original="synthetic-C033-attempt-1" data-action="ACTUAL_READ_STARTED"><td>synthetic-C033-attempt-1</td><td>ACTUAL_READ_STARTED</td><td>1192 / 644.7999999523163</td><td>NOT OBSERVED (action/request only)</td></tr><tr data-original="synthetic-C033-attempt-1" data-action="ACTUAL_READ_ACKNOWLEDGED"><td>synthetic-C033-attempt-1</td><td>ACTUAL_READ_ACKNOWLEDGED</td><td>1204.9000000953674 / 657.7000000476837</td><td>2.0.0 / C020-loopback-v2-r1 / synthetic-001 / getProfile/1</td></tr><tr data-original="synthetic-C033-attempt-1" data-action="TWO_READ_LOCAL_SEGMENT_OBSERVED"><td>synthetic-C033-attempt-1</td><td>TWO_READ_LOCAL_SEGMENT_OBSERVED</td><td>1205.2000000476837 / 658</td><td>NOT OBSERVED (action/request only)</td></tr><tr data-original="synthetic-C033-attempt-1" data-action="RESET_VIEW_HISTORY_RETAINED"><td>synthetic-C033-attempt-1</td><td>RESET_VIEW_HISTORY_RETAINED</td><td>1205.2000000476837 / 658</td><td>NOT OBSERVED (action/request only)</td></tr><tr data-original="synthetic-C033-attempt-2" data-action="ORIGINAL_ATTEMPT_STARTED"><td>synthetic-C033-attempt-2</td><td>ORIGINAL_ATTEMPT_STARTED</td><td>1331.5 / 0</td><td>NOT OBSERVED (action/request only)</td></tr><tr data-original="synthetic-C033-attempt-2" data-action="ACTUAL_READ_STARTED"><td>synthetic-C033-attempt-2</td><td>ACTUAL_READ_STARTED</td><td>1335.9000000953674 / 4.400000095367432</td><td>NOT OBSERVED (action/request only)</td></tr><tr data-original="synthetic-C033-attempt-2" data-action="ACTUAL_READ_ACKNOWLEDGED"><td>synthetic-C033-attempt-2</td><td>ACTUAL_READ_ACKNOWLEDGED</td><td>1351 / 19.5</td><td>1.0.0 / C020-loopback-v1-r1 / synthetic-001 / getProfile/1</td></tr><tr data-original="synthetic-C033-attempt-2" data-action="BOUNDARY_HELD"><td>synthetic-C033-attempt-2</td><td>BOUNDARY_HELD</td><td>1351.4000000953674 / 19.90000009536743</td><td>NOT OBSERVED (action/request only)</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="provenance-heading">
+      <h2 id="provenance-heading">Source and model boundary</h2>
+      <p id="source-banner">HISTORICAL SOURCE: exact bundled accepted C033 actual saved observations; this is not a new client/network/disk run.</p>
+      <pre id="provenance">{
+  "kind": "exact-source-pinned-historical-C033-DOM",
+  "acceptedC033": {
+    "commit": "dd0870986cfcdd6b5069e5b1da9ff74e9ad3819c",
+    "tag": "kanban/C033/dd0870986cfc"
+  },
+  "report": {
+    "path": "capability\\C033\\evidence\\raw\\browser-0a54fabc-0ef0-4632-9241-95a196bc4461\\summary.json",
+    "rawSha256": "39c92e3ff020e09f75f19789ae1d4b9325ec34663feca7d91aa1c4a8e5e5b58d"
+  },
+  "historicalStartedAtUtc": "2026-11-04T05:05:06.759Z",
+  "historicalCompletedAtUtc": "2026-11-04T05:05:35.438Z",
+  "historicalBrowserPid": 58288,
+  "historicalBrowserVersion": "156.0.4314.50",
+  "historicalNodeVersion": "v22.23.4",
+  "helperRawSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "clock": "saved C033 performance.now; not this inspection clock",
+  "missingObservationFields": [
+    "requestToken",
+    "per-response headers",
+    "lease/user/run/epoch correlation"
+  ],
+  "newLiveRunAttested": false,
+  "authenticatedIdentityAttested": false,
+  "migrationAttested": false,
+  "savedDom": {
+    "path": "capability\\C033\\evidence\\raw\\browser-0a54fabc-0ef0-4632-9241-95a196bc4461\\between-reads.html",
+    "rawSha256": "976e3e3468053f81c420380d084f25ce8695c05873719afc617c949ca6e020a6",
+    "acceptedGitSha256": "976e3e3468053f81c420380d084f25ce8695c05873719afc617c949ca6e020a6"
+  }
+}</pre>
+      <p id="model-banner">C023 is a PURE event-log MODEL: an atomic application/deduplication pair is an ASSUMPTION; checkpoints are later events. Unknown reconciliation is hypothetical. No durable storage, queue or actual external effects, and no client/effect correlation.</p>
+      <pre id="model"></pre>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained evaluation/error history (16 operations)</h2>
+      <ol id="inspection-history"><li data-decision="HOLD">1. inspect / none: HOLD; 0 originals / UNKNOWN_SAVED_ID</li><li data-decision="FAIL">2. inspect / closed-history: FAIL; 7 originals</li><li data-decision="HOLD">3. inspect / held-snapshot: HOLD; 2 originals</li></ol>
+      <p id="history-limit"></p>
+    </section>
+    <footer>One original C029 / D / P0 / H001; parents H001/H006/H012 and native/production Node 24 remain unfulfilled. Parent acceptance only; zero extra test/repair/refinement credits. IaC N/A. No packages, cloud, identity, real users, credentials, deployment or spend.</footer>
+  </main>
+
+
+</body></html>

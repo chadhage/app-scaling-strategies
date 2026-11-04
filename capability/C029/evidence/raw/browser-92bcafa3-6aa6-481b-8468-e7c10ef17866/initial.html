@@ -1,0 +1,95 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>C029 original journey budget evaluation</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer="" src="../C020/contract.js"></script>
+  <script defer="" src="../C020/inspector.js"></script>
+  <script defer="" src="../C023/ledger.js"></script>
+  <script defer="" src="../C033/journey.js"></script>
+  <script defer="" src="../C034/evidence/raw/trace-7d3b0b84-675e-4f9b-92a4-2ea3b89e0116/bundle.js"></script>
+  <script defer="" src="../C034/trace.js"></script>
+  <script defer="" src="evaluator.js"></script>
+  <script defer="" src="page.js"></script>
+</head>
+<body>
+  <main>
+    <p id="banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Evaluate original latency and state budgets</h1>
+    <p id="mode">OFFLINE: bundled saved actual C033 browser observations, not a live client, network or disk read. Synthetic clock controls and the C023 model are separate evidence.</p>
+    <p>PASS applies only to the stated bounded local evidence scope. It is not user journey success, native/client mutation, reliability certification, an availability target or a five-nines claim.</p>
+    <section aria-labelledby="choose-heading">
+      <h2 id="choose-heading">Choose an explicit evidence scope</h2>
+      <label for="source-id">Saved observation or closed control</label>
+      <select id="source-id">
+        <option value="">Choose a source; no default success</option>
+        <optgroup label="Actual historical C033 observations">
+          <option value="closed-history">Saved closed history: seven originals including summary-only 7</option>
+          <option value="held-snapshot">Saved held partial: one complete and one unknown original</option>
+        </optgroup>
+        <optgroup label="Closed synthetic clock controls, not historical observations">
+          <option value="control-below">999.75 ms: just below the original 1000 ms deadline</option>
+          <option value="control-at">1000 ms: at the original deadline</option>
+          <option value="control-above">1000.25 ms: just above the original deadline</option>
+          <option value="control-retry">Budget miss then positive retry; first original still FAIL</option>
+          <option value="control-unknown-retry">Interrupted unknown then positive retry; both retained</option>
+          <option value="control-held-before">Expired before-first hold: zero requests, missing terminal</option>
+          <option value="control-held-between">Expired between-read hold: one acknowledgment, no v2 terminal</option>
+        </optgroup>
+        <optgroup label="C023 pure event-log state model, no latency observation">
+          <option value="model-clean">Model complete state; latency UNKNOWN/HOLD</option>
+          <option value="model-resume">Model interrupted then resumed; original state FAIL remains</option>
+          <option value="model-unknown">Model unknown acknowledgment; no invented committed effect</option>
+          <option value="model-reconcile">Hypothetical model reconciliation; original UNKNOWN remains</option>
+        </optgroup>
+      </select>
+      <div class="controls">
+        <button id="inspect" type="button">Inspect and evaluate</button>
+        <button id="compare" type="button">Compare positive retry (synthetic)</button>
+        <button id="load-copy" type="button">Load saved JSON copy</button>
+        <button id="reset" type="button">Reset display only</button>
+      </div>
+      <label for="candidate">Optional exact saved JSON copy, inspection only</label>
+      <textarea id="candidate" rows="7" maxlength="131072" spellcheck="false" aria-describedby="candidate-help"></textarea>
+      <p id="candidate-help">Only the selected immutable saved history can bind source. Missing fields, altered IDs/times/order/state/stamps, duplicate JSON and supplied verdict/source/hash authority reject. Never adopt or execute a copy.</p>
+      <button id="inspect-copy" type="button">Evaluate saved copy</button>
+      <p id="status" role="status" aria-live="polite" data-decision="UNASSESSED">Not evaluated. No live journey is active.</p>
+      <p id="error" role="alert"></p>
+    </section>
+    <section aria-labelledby="outcomes-heading">
+      <h2 id="outcomes-heading">Original outcomes, not replacement health</h2>
+      <p id="counts">No verified denominator yet.</p>
+      <p>Each original owns its start and deadline. Held time counts; at/above the original deadline is FAIL. Missing required state/timing/terminal stays UNKNOWN. A confirmed violation stays FAIL even if another dimension is unknown.</p>
+      <ol id="originals"></ol>
+      <p id="replacement"></p>
+      <div id="comparison" aria-live="polite"></div>
+    </section>
+    <section aria-labelledby="order-heading">
+      <h2 id="order-heading">Exact original action and response order</h2>
+      <p>No request target is an observed response version. Historical request tokens, per-response headers, authenticated user and run/epoch correlation were not saved and are not invented.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Saved source or explicitly synthetic control actions; exact numbers, not new inspection clocks</caption>
+          <thead><tr><th scope="col">Original</th><th scope="col">Action</th><th scope="col">Time / elapsed ms</th><th scope="col">Acknowledged version / state</th></tr></thead>
+          <tbody id="events"></tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="provenance-heading">
+      <h2 id="provenance-heading">Source and model boundary</h2>
+      <p id="source-banner">No evidence selected.</p>
+      <pre id="provenance"></pre>
+      <p id="model-banner">C023 is a PURE event-log MODEL: an atomic application/deduplication pair is an ASSUMPTION; checkpoints are later events. Unknown reconciliation is hypothetical. No durable storage, queue or actual external effects, and no client/effect correlation.</p>
+      <pre id="model"></pre>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained evaluation/error history (16 operations)</h2>
+      <ol id="inspection-history"></ol>
+      <p id="history-limit"></p>
+    </section>
+    <footer>One original C029 / D / P0 / H001; parents H001/H006/H012 and native/production Node 24 remain unfulfilled. Parent acceptance only; zero extra test/repair/refinement credits. IaC N/A. No packages, cloud, identity, real users, credentials, deployment or spend.</footer>
+  </main>
+
+
+</body></html>
