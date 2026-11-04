@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-8fgfjKu1UcJtb5Yx3M3AfftqHdNKPhfzx8FldrV2tFo='; style-src 'self' 'sha256-SFxx7JFCpxQeArEw3w5k4RcqXI5lusmROPOrhtkGfj4='; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>S118 · Global route continuity rehearsal</title>
+  <script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
+    const theme =
+      param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+  </script>
+  <style>
+:root {
+  color-scheme: light;
+  --cp-bg: #f7f4ef;
+  --cp-bg-elevated: #fcfbf8;
+  --cp-surface: #ffffff;
+  --cp-surface-soft: #f5f5f5;
+  --cp-border: #dedede;
+  --cp-border-strong: #919191;
+  --cp-text: #242424;
+  --cp-text-muted: #5c5c5c;
+  --cp-text-soft: #6f6f6f;
+  --cp-accent: #b11f4b;
+  --cp-accent-hover: #9a1a41;
+  --cp-accent-soft: rgba(177, 31, 75, 0.08);
+  --cp-accent-fg: #ffffff;
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  --cp-warning: #f59e0b;
+  --cp-link: #0078d4;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+  --cp-overlay: rgba(255, 255, 255, 0.8);
+  --cp-panel: rgba(255, 255, 255, 0.86);
+  --cp-panel-strong: rgba(255, 255, 255, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.55);
+  --cp-highlight: rgba(177, 31, 75, 0.12);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #3d3b3a;
+  --cp-bg-elevated: #343231;
+  --cp-surface: #292929;
+  --cp-surface-soft: #2e2e2e;
+  --cp-border: #474747;
+  --cp-border-strong: #5f5f5f;
+  --cp-text: #dedede;
+  --cp-text-muted: #919191;
+  --cp-text-soft: #b0b0b0;
+  --cp-accent: #fd8ea1;
+  --cp-accent-hover: #fb7b91;
+  --cp-accent-soft: rgba(253, 142, 161, 0.14);
+  --cp-accent-fg: #1a1a1a;
+  --cp-success: #4ade80;
+  --cp-danger: #f87171;
+  --cp-warning: #fbbf24;
+  --cp-link: #4da6ff;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --cp-overlay: rgba(41, 41, 41, 0.88);
+  --cp-panel: rgba(41, 41, 41, 0.72);
+  --cp-panel-strong: rgba(41, 41, 41, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.04);
+  --cp-highlight: rgba(253, 142, 161, 0.12);
+}
+  </style>
+  <link rel="stylesheet" href="styles.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main id="lesson">
+    <p id="training-banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Global route continuity</h1>
+    <p>Inspect a fictional mutating journey after rerouting. This page never changes a real route, identity, session or database.</p>
+    <form id="journey-form" novalidate>
+      <label for="fixture">Fictional observation set</label>
+      <select id="fixture"><option value="preserved">Preserved continuity</option></select>
+      <label for="budget">Fictional recovery budget (seconds)</label>
+      <input id="budget" type="text" inputmode="numeric" value="5" aria-describedby="budget-help lesson-error">
+      <p id="budget-help">Use a canonical whole number from 1 to 10. Timings are fixed data, not a live stopwatch.</p>
+      <button id="record-mutation" type="submit">1. Record mutation</button>
+    </form>
+    <section aria-label="Ordered operator actions" class="actions">
+      <button id="failover" type="button" disabled>2. Observe failover</button>
+      <button id="retry" type="button" disabled>3. Retry same operation</button>
+      <button id="measure" type="button" disabled>4. Measure continuity</button>
+      <button id="reset-lesson" type="button" disabled>Reset journey</button>
+    </section>
+    <p id="lesson-error" role="alert"></p>
+    <p id="phase">idle</p>
+    <section aria-labelledby="outcome-title">
+      <h2 id="outcome-title">Measured fictional outcome</h2>
+      <div id="outcome" role="status" aria-live="polite">Unknown - no journey measured.</div>
+      <dl id="measurements"></dl>
+    </section>
+    <section aria-labelledby="observations-title">
+      <h2 id="observations-title">Fictional observations</h2>
+      <pre id="observations">No observations yet.</pre>
+    </section>
+    <section aria-labelledby="history-title">
+      <h2 id="history-title">Retained rehearsal history</h2>
+      <p id="history-help">Up to four journeys per page load. Reset preserves history; reload starts a new rehearsal. No persistent session storage.</p>
+      <ol id="history" aria-describedby="history-help"></ol>
+    </section>
+    <footer>One A-S118 portable S unit. Native B-S118 / D-S118 and source-parent acceptance remain unverified.</footer>
+  </main>
+</body>
+</html>

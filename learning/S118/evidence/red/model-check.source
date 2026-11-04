@@ -1,0 +1,21 @@
+"use strict";
+
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { Rehearsal } = require("..\\model.js");
+
+test("A-S118: rerouting the mutating journey preserves exactly one effect and identity/state", () => {
+  const rehearsal = new Rehearsal();
+  rehearsal.recordMutation({ fixture: "preserved", budgetSeconds: 5 });
+  rehearsal.failover();
+  rehearsal.retry();
+  const result = rehearsal.measure();
+  assert.equal(result.outcome, "positive");
+  assert.equal(result.observedOrigin, "origin-B");
+  assert.equal(result.effectCount, 1);
+  assert.equal(result.identityPreserved, true);
+  assert.equal(result.sessionPreserved, true);
+  assert.equal(result.statePreserved, true);
+  assert.equal(result.recoveryMs, 3000);
+  assert.equal(result.budgetMs, 5000);
+});

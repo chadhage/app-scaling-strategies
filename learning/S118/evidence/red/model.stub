@@ -1,0 +1,16 @@
+(function (root, factory) {
+  "use strict";
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.FailoverLesson = factory();
+})(typeof globalThis === "object" ? globalThis : this, function () {
+  "use strict";
+  class Rehearsal {
+    recordMutation() {}
+    failover() {}
+    retry() {}
+    measure() { return Object.freeze({ outcome: "unknown" }); }
+    reset() {}
+    snapshot() { return Object.freeze({ phase: "idle", history: [], runCount: 0 }); }
+  }
+  return Object.freeze({ Rehearsal });
+});

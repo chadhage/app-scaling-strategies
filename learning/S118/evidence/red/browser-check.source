@@ -1,0 +1,19 @@
+"use strict";
+
+const assert = require("node:assert/strict");
+const { openIsolatedLesson } = require("..\\..\\..\\testing\\browser\\isolated.cjs");
+
+(async () => {
+  const session = await openIsolatedLesson("learning\\S118\\index.html");
+  try {
+    assert.equal(await session.page.locator("#training-banner").innerText(),
+      "Training rehearsal - synthetic data - not a live Azure result");
+    await session.page.locator("#record-mutation").click();
+    assert.equal(await session.page.locator("#phase").innerText(), "mutated");
+  } finally {
+    await session.close();
+  }
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
