@@ -16,6 +16,35 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const load = name => JSON.parse(fs.readFileSync(path.join(__dirname, name)));
 const git = args => execFileSync('git', ['--no-pager', ...args], { cwd: root, maxBuffer: 32 * 1024 * 1024 });
 const owned = file => scopes.some(scope => file.startsWith(`${scope}/`));
+function assertProofRepresentation(record, working, committed) {
+  assert.ok(record && owned(record.canonicalGitPath), 'Accounted owned proof provenance is required.');
+  assert.ok(Buffer.isBuffer(working) && Buffer.isBuffer(committed));
+  assert.ok(record.initialWorking && /^[a-f0-9]{64}$/.test(record.initialWorking.sha256));
+  assert.equal(working.length, record.initialWorking.bytes, record.canonicalGitPath);
+  assert.equal(sha(working), record.initialWorking.sha256, `${record.canonicalGitPath}: initial working raw baseline`);
+  if (record.provenance === 'inherited-fixed-source-tracked-proof') {
+    assert.equal(record.dualBaselineVerifiedAtCapture, true, 'Unaccounted historical representation is forbidden.');
+    assert.ok(record.fixedSourceGit && record.remoteParentGit && record.candidateGit);
+    assert.equal(record.fixedSourceGit.commit, 'c8b3139f07aa60a64833a5380503b2bd794c0e0e');
+    assert.equal(record.remoteParentGit.commit, '4c9db4032c08ae79eaedddfc029a8b2e2295d674');
+    assert.equal(record.candidateGit.commit, 'dfb348e004c5a63adc4e8ca14794a8c28470a92d');
+    assert.equal(record.remoteParentGit.object, record.fixedSourceGit.object);
+    assert.equal(record.candidateGit.object, record.fixedSourceGit.object);
+    assert.ok(['recorded-byte-identical', 'recorded-different-dual-baselines'].includes(record.representation));
+    assert.equal(record.representation === 'recorded-byte-identical',
+      record.initialWorking.sha256 === record.fixedSourceGit.sha256);
+    assert.equal(committed.length, record.fixedSourceGit.bytes, record.canonicalGitPath);
+    assert.equal(sha(committed), record.fixedSourceGit.sha256, `${record.canonicalGitPath}: immutable fixed-source Git baseline`);
+    if (record.requireByteExactGitAndDisk) assert.deepEqual(committed, working, record.canonicalGitPath);
+  } else {
+    assert.equal(record.provenance, 'new-byte-exact', 'Unknown representation provenance is forbidden.');
+    assert.equal(record.requireByteExactGitAndDisk, true);
+    assert.equal(committed.length, record.initialWorking.bytes, record.canonicalGitPath);
+    assert.equal(sha(committed), record.initialWorking.sha256, `${record.canonicalGitPath}: exact new raw Git bytes`);
+    assert.deepEqual(committed, working, record.canonicalGitPath);
+  }
+  return true;
+}
 function walk(directory) {
   return fs.readdirSync(path.join(root, disk(directory)), { withFileTypes: true }).flatMap(entry =>
     entry.isDirectory() ? walk(path.join(disk(directory), entry.name)) : [path.join(disk(directory), entry.name)]);
@@ -143,8 +172,8 @@ function verifyCurrent() {
   return { ownedFiles: before.length, proposedFiles: expected.length, predictions: predictions.length,
     byteExactPredictions: predictions.filter(file => file.byteExact).length, preserved: retained };
 }
-function verifyCommit(commit) {
-  const expected = load('publication-owned-paths.json').paths;
+function verifyCommit(commit, recovery = null) {
+  const expected = recovery ? recovery.expectedPaths : load('publication-owned-paths.json').paths;
   const changed = git(['diff-tree', '--no-commit-id', '--name-only', '-z', '-r', commit])
     .toString('utf8').split('\0').filter(Boolean).sort();
   assert.deepEqual(changed, expected);
@@ -155,18 +184,34 @@ function verifyCommit(commit) {
   }
   const boundary = load('initial-boundary.json');
   const frozen = JSON.parse(read(boundary.frozenBlockedManifest));
+  const historical = recovery ? recovery.historicalRecords
+    : JSON.parse(read(`${relative}-publication-recovery\\historical-representation-baselines.json`)).inheritedTrackedProofs;
+  const inherited = new Map(historical.map(file => [file.canonicalGitPath, file]));
+  const initialRaw = new Map(load('hashes-final.json').files.map(file => [file.canonicalGitPath, file]));
+  if (recovery) for (const file of recovery.initialRawBaselines) initialRaw.set(file.canonicalGitPath, file);
   const rawPaths = [...new Set([
+    ...inherited.keys(),
     ...inventory().filter(file => file.canonicalGitPath.startsWith('capability/C005/evidence/')
       && (file.path.endsWith('.txt') || file.path.endsWith('.gz'))
-      && ![`${logical(relative)}/raw/publication-transaction.stdout.raw.gz`,
-        `${logical(relative)}/raw/publication-transaction.stderr.raw.gz`].includes(file.canonicalGitPath))
+      && !(recovery ? recovery.postpublicationRawPaths
+        : [`${logical(relative)}/raw/publication-transaction.stdout.raw.gz`,
+          `${logical(relative)}/raw/publication-transaction.stderr.raw.gz`]).includes(file.canonicalGitPath))
       .map(file => file.canonicalGitPath),
     ...frozen.files.map(file => logical(file.path))
   ])].sort();
-  for (const file of rawPaths) assert.equal(sha(git(['show', `${commit}:${file}`])), sha(read(file)), file);
+  for (const file of rawPaths) {
+    const baseline = initialRaw.get(file);
+    const record = inherited.get(file) || (baseline && {
+      canonicalGitPath: file, provenance: 'new-byte-exact',
+      initialWorking: { bytes: baseline.bytes, sha256: baseline.sha256 }, requireByteExactGitAndDisk: true
+    });
+    assert.ok(record, `No accounted raw baseline: ${file}`);
+    assertProofRepresentation(record, read(file), git(['show', `${commit}:${file}`]));
+  }
   preserved();
   return { proposedCommittedFiles: expected.length, proposedObjectAndSha256Checks: predictions.length,
-    exactCommittedRawOrFrozenFiles: rawPaths.length, exactFrozenFiles: frozen.files.length };
+    committedProofRepresentationsVerified: rawPaths.length, inheritedTrackedHistoricalProofs: inherited.size,
+    newRawProofsByteExact: rawPaths.filter(file => !inherited.has(file)).length, exactFrozenFiles: frozen.files.length };
 }
 if (require.main === module) {
   const [mode, value] = process.argv.slice(2);
@@ -177,4 +222,5 @@ if (require.main === module) {
   console.log(JSON.stringify(result));
 }
 module.exports = { root, relative, scopes, excludedStandalone, disk, logical, read, sha, load, git,
-  owned, walk, inventory, proposed, indexSnapshot, preserved, predict, verifyCurrent, verifyCommit };
+  owned, walk, inventory, proposed, indexSnapshot, preserved, predict, verifyCurrent, verifyCommit,
+  assertProofRepresentation };

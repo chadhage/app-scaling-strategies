@@ -1,0 +1,37 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const lib = require('./recovery-lib.cjs.txt');
+const checker = require('../op-catalog-snapshot-refresh-165-c8b3139f07aa/publication-checks.cjs.txt');
+lib.verifyCandidateAndWorking();
+assert.equal(fs.existsSync(path.join(__dirname, 'publication-owned-paths.json')), false);
+const planned = ['publication-owned-paths.json', 'publication-pathspec.txt', 'publication-preparation-01.json',
+  'raw\\publication-preparation-01.stdout.raw.gz', 'raw\\publication-preparation-01.stderr.raw.gz',
+  'result-final.json', 'validation-final.json', 'predicted-object-storage.json', 'hashes-final.json']
+  .map(file => lib.logical(path.join(lib.relative, file)));
+const paths = [...new Set([...lib.currentProposed(), ...planned])].sort();
+assert.ok(paths.every(checker.owned));
+assert.ok(paths.includes(lib.logical(lib.mutableChecker)));
+assert.ok(paths.includes(`${lib.logical(lib.old)}/publication-failure-01.json`));
+assert.ok(paths.includes(`${lib.logical(lib.old)}/raw/publication-transaction.stdout.raw.gz`));
+assert.ok(paths.includes(`${lib.logical(lib.old)}/raw/publication-transaction.stderr.raw.gz`));
+const excluded = JSON.parse(lib.read(`${lib.old}\\publication-owned-paths.json`)).excludedExistingUntrackedHistoricalReport;
+assert.equal(lib.sha(lib.read(excluded.path)), excluded.sha256);
+fs.writeFileSync(path.join(__dirname, 'publication-pathspec.txt'),
+  Buffer.from(paths.map(file => `${file}\0`).join(''), 'utf8'), { flag: 'wx' });
+fs.writeFileSync(path.join(__dirname, 'publication-owned-paths.json'), `${JSON.stringify({
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165',
+  kind: 'explicit-parent-authorized-one-corrective-append-five-scope-inventory',
+  recordedAtUtc: new Date().toISOString(), paths, entries: paths.length, candidate: lib.candidate,
+  exactRemoteParent: lib.remoteParent, onlyExistingChangedVerifier: lib.mutableChecker,
+  publishesOriginalFailureAndTwoRawStreams: true, excludesUnownedScopes: true,
+  excludedExistingUntrackedHistoricalReport: excluded,
+  pathspec: path.join(lib.relative, 'publication-pathspec.txt'),
+  pathspecEncoding: 'canonical Git logical paths; UTF-8 NUL-separated exact TXT',
+  pathspecSha256: lib.sha(lib.read(path.join(lib.relative, 'publication-pathspec.txt'))),
+  plannedFinalAndWrapperPaths: planned, parentAcceptanceClaimed: false
+}, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+console.log(JSON.stringify({ correctivePaths: paths.length, oldFailureAndStreamsIncluded: true,
+  candidate: lib.candidate, remoteParent: lib.remoteParent, unownedScopesIncluded: false }));

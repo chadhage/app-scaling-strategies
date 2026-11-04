@@ -1,0 +1,159 @@
+$ErrorActionPreference = 'Stop'
+$oldEvidence = 'capability\C005\evidence\op-catalog-snapshot-refresh-165-c8b3139f07aa'
+$text = [IO.File]::ReadAllText((Join-Path (Get-Location).Path "$oldEvidence\publication-command.ps1.txt"))
+$boundary = $text.IndexOf('$mutex = ')
+if ($boundary -lt 0) { throw 'Immutable original publisher function boundary not found.' }
+. ([ScriptBlock]::Create($text.Substring(0, $boundary)))
+$evidence = 'capability\C005\evidence\op-catalog-snapshot-refresh-165-c8b3139f07aa-publication-recovery'
+$operation = 'OP-CATALOG-SNAPSHOT-REFRESH-165'
+$worker = 'worker-OP-CATALOG-SNAPSHOT-REFRESH-165'
+$candidate = 'dfb348e004c5a63adc4e8ca14794a8c28470a92d'
+$requiredRemote = '4c9db4032c08ae79eaedddfc029a8b2e2295d674'
+$message = '[flow][catalog-refresh][no-kano-credit] OP-CATALOG-SNAPSHOT-REFRESH-165 Verify inherited historical dual representations; retain full150 candidate'
+function Recovery-Check([string[]]$Arguments) {
+    return (Run-Tool 'node' (@("$evidence\recovery-lib.cjs.txt") + $Arguments) | ConvertFrom-Json)
+}
+function Index-Check {
+    return (Run-Tool 'node' @("$oldEvidence\publication-checks.cjs.txt", '--index') | ConvertFrom-Json)
+}
+function Require-Index($Snapshot) {
+    if ($Snapshot.entries -ne 11771 -or $Snapshot.flags -ne 11771 -or
+        $Snapshot.unownedLsFilesStageRawByteSha256 -ne '7f532a650b3308b6da2537ce324b542b3adfbfd6523003491aabe2030a05b7ac' -or
+        $Snapshot.unownedLsFilesFlagsRawByteSha256 -ne 'bee511b6fd8c7b15dbee9cf1a5b8c0ac7c34dd8a2ed15527823212f250f720b1') {
+        throw 'Exact parent-authorized unowned index bytes/flags changed.'
+    }
+}
+$mutex = [Threading.Mutex]::new($false, 'Local\AppScalingStrategies_KanbanPublisher_v1')
+$held = $false
+$commit = $null
+$tag = $null
+$failure = $null
+$receipt = $null
+try {
+    $held = $mutex.WaitOne([TimeSpan]::FromSeconds(180))
+    if (-not $held) { throw 'Publisher mutex timed out; never bypass it.' }
+    if ((Run-Git @('branch', '--show-current')).Trim() -ne 'main') { throw 'Exact main branch is required.' }
+    if (Test-Path -LiteralPath '.git\index.lock') { throw 'Existing index lock; never remove or bypass it.' }
+    if ((Run-Git @('rev-parse', 'HEAD')).Trim() -ne $candidate) { throw 'Only the exact owned dfb candidate continuation is authorized.' }
+    $remote = (Run-Git @('ls-remote', 'origin', 'refs/heads/main')).Trim() -split '\s+'
+    if ($remote.Count -ne 2 -or $remote[0] -ne $requiredRemote -or
+        (Run-Git @('rev-parse', "$candidate^")).Trim() -ne $requiredRemote) {
+        throw 'Only the exact parent-authorized dfb/4c9 pair is allowed; standard HEAD equality guard is not widened.'
+    }
+    $beforeIndex = Index-Check
+    Require-Index $beforeIndex
+    $preflight = Recovery-Check @('--verify-current')
+    $inventory = Get-Content -LiteralPath "$evidence\publication-owned-paths.json" -Raw | ConvertFrom-Json
+    $paths = @($inventory.paths)
+    $pathspec = "$evidence\publication-pathspec.txt"
+    Run-Git @('add', "--pathspec-from-file=$pathspec", '--pathspec-file-nul') | Out-Null
+    Require-Index (Index-Check)
+    for ($offset = 0; $offset -lt $paths.Count; $offset += 40) {
+        $last = [Math]::Min($offset + 39, $paths.Count - 1)
+        Run-Git (@('-c', 'core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol',
+            'diff', '--cached', '--check', '--') + $paths[$offset..$last]) | Out-Null
+    }
+    Recovery-Check @('--verify-current') | Out-Null
+    $fullMessage = "$message`n`nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+    Run-Git @('commit', '--quiet', '--only', "--pathspec-from-file=$pathspec", '--pathspec-file-nul',
+        '-m', $fullMessage) | Out-Null
+    $commit = (Run-Git @('rev-parse', 'HEAD')).Trim()
+    if ((Run-Git @('rev-parse', "$commit^")).Trim() -ne $candidate) { throw 'Corrective commit did not append directly to dfb.' }
+    Require-Index (Index-Check)
+    $postcommit = Recovery-Check @('--verify-commit', $commit)
+    $precursorTag = 'kanban/flow-catalog-refresh-unqualified/dfb348e004c5'
+    if ((Run-Git @('tag', '--list', $precursorTag)).Trim()) { throw 'Do not overwrite an existing precursor marker.' }
+    $unqualified = "OP-CATALOG-SNAPSHOT-REFRESH-165; unqualified precursor $candidate; inherited legacy canonical/raw selector failure, not new historical normalization; corrected only by owned appended $commit; zero S/D/L credits; not parent acceptance."
+    Run-Git @('tag', '-a', $precursorTag, $candidate, '-m', $unqualified) | Out-Null
+    $tag = "kanban/flow-catalog-refresh/$($commit.Substring(0, 12))"
+    if ((Run-Git @('tag', '--list', $tag)).Trim()) { throw 'Do not overwrite an existing normal refresh tag.' }
+    $resultHash = File-Hash "$evidence\result-final.json"
+    $validationHash = File-Hash "$evidence\validation-final.json"
+    $manifestHash = File-Hash "$evidence\hashes-final.json"
+    $annotation = "$message; corrected commit $commit; preserved unqualified $candidate; fixed c8b3139f07aa60a64833a5380503b2bd794c0e0e source; full150 unique URLs/155 exact ID-specific banners retained with unchanged runtime binding; 560 inherited proofs have exact initial raw and fixed-source Git baselines; frozen51 and new raw archives remain Git/disk exact; result SHA256 $resultHash; validation SHA256 $validationHash; manifest SHA256 $manifestHash; zero credits; parent-only acceptance."
+    Run-Git @('tag', '-a', $tag, $commit, '-m', $annotation) | Out-Null
+    foreach ($name in @($tag, $precursorTag)) {
+        if ((Run-Git @('cat-file', '-t', $name)).Trim() -ne 'tag') { throw 'Real annotated tags are required.' }
+    }
+    Run-Git @('push', '--atomic', 'origin', 'main', "refs/tags/$tag", "refs/tags/$precursorTag") | Out-Null
+    $refs = (Run-Git @('ls-remote', 'origin', 'refs/heads/main', "refs/tags/$tag", "refs/tags/$tag^{}",
+        "refs/tags/$precursorTag", "refs/tags/$precursorTag^{}")).Trim() -split '\r?\n'
+    function Remote-Ref([string]$Name) {
+        $rows = @($refs | Where-Object { ($_ -split '\s+')[1] -eq $Name })
+        if ($rows.Count -ne 1) { throw "Missing/duplicate remote ref: $Name" }
+        return ($rows[0] -split '\s+')[0]
+    }
+    if ((Remote-Ref 'refs/heads/main') -ne $commit -or
+        (Remote-Ref "refs/tags/$tag^{}") -ne $commit -or
+        (Remote-Ref "refs/tags/$precursorTag^{}") -ne $candidate -or
+        (Remote-Ref "refs/tags/$tag") -ne (Run-Git @('rev-parse', $tag)).Trim() -or
+        (Remote-Ref "refs/tags/$precursorTag") -ne (Run-Git @('rev-parse', $precursorTag)).Trim()) {
+        throw 'Remote main and both annotated tag objects/peeled targets must exactly match.'
+    }
+    Run-Git @('merge-base', '--is-ancestor', $candidate, $commit) | Out-Null
+    Run-Git @('merge-base', '--is-ancestor', 'c8b3139f07aa60a64833a5380503b2bd794c0e0e', $commit) | Out-Null
+    $postcommit = Recovery-Check @('--verify-commit', $commit)
+    Require-Index (Index-Check)
+    $dirty = @((Run-Git @('status', '--porcelain', '--', 'capability/C005', 'capability/C006',
+        'capability/C007', 'capability/C008', 'capability/local-harness')).Trim() -split '\r?\n' | Where-Object { $_ })
+    if ($dirty.Count -ne 1 -or $dirty[0] -ne "?? $($inventory.excludedExistingUntrackedHistoricalReport.path)") {
+        throw 'Unexpected dirty owned scope before the deliberate standalone report.'
+    }
+    $receipt = [ordered]@{
+        schemaVersion = 1; operation = $operation; worker = $worker
+        kind = 'standalone-corrective-publication-report-not-parent-acceptance'
+        outcome = 'published-remotely-verified'; correctedCommit = $commit; correctedTag = $tag
+        correctedTagObject = (Remote-Ref "refs/tags/$tag")
+        unqualifiedPrecursorCommit = $candidate; unqualifiedPrecursorTag = $precursorTag
+        unqualifiedPrecursorTagObject = (Remote-Ref "refs/tags/$precursorTag")
+        exactAuthorizedRemoteParentBeforeTransaction = $requiredRemote
+        exactCandidateHeadBeforeTransaction = $candidate; appendedNotAmended = $true
+        standardHeadEqualsRemoteGuardUnchanged = $true; publisherMutexOnly = $true
+        mainEqualsRemoteAfterFullyVerifiedPush = $true; atomicMainAndBothAnnotatedTagsPush = $true
+        explicitCorrectivePaths = $paths.Count; precommitCanonicalObjectPredictions = $preflight
+        postcommitRepresentations = $postcommit; preservedUnownedIndexBeforeAndAfter = $beforeIndex
+        sourceCommit = 'c8b3139f07aa60a64833a5380503b2bd794c0e0e'
+        originalSourceUnits = 165; portablePractices = 150; nativeQualified = 0
+        result = "$evidence\result-final.json"; resultSha256 = $resultHash
+        validation = "$evidence\validation-final.json"; validationSha256 = $validationHash
+        committedManifest = "$evidence\hashes-final.json"; committedManifestSha256 = $manifestHash
+        parentAcceptanceClaimed = $false; kanoCredits = [ordered]@{ S = 0; D = 0; L = 0 }
+        recordedAtUtc = [DateTime]::UtcNow.ToString('o')
+    }
+} catch {
+    $failure = $_.Exception.Message
+    if (-not $commit) {
+        try {
+            $observed = (Run-Git @('rev-parse', 'HEAD')).Trim()
+            if ($observed -ne $candidate) { $commit = $observed }
+        } catch { }
+    }
+} finally {
+    if ($held) { $mutex.ReleaseMutex() }
+    $mutex.Dispose()
+}
+$stdoutArchive = Save-Raw "$evidence\raw\publication-transaction.stdout.raw.gz" ($rawOut.ToArray())
+$stderrArchive = Save-Raw "$evidence\raw\publication-transaction.stderr.raw.gz" ($rawErr.ToArray())
+$rawOut.Dispose(); $rawErr.Dispose()
+if ($failure) {
+    $receipt = [ordered]@{ schemaVersion = 1; operation = $operation; kind = 'terminal-corrective-publication-failure'
+        outcome = 'publication-failed'; exactCreatedCorrectiveCommit = $commit; attemptedTag = $tag
+        error = $failure; resetAmendForceRetryOrGuardWideningPerformed = $false; parentAcceptanceClaimed = $false }
+}
+$receipt['publisherMutexReleasedBeforeReport'] = $true
+$receipt['rawCommandStreams'] = [ordered]@{ stdout = $stdoutArchive; stderr = $stderrArchive }
+$receipt['commands'] = $commands.ToArray()
+$files = @(foreach ($scope in @('capability\C005', 'capability\C006', 'capability\C007', 'capability\C008',
+    'capability\local-harness')) { Get-ChildItem -LiteralPath $scope -Recurse -File -Force })
+$receipt['ownedFilesAfterStandaloneReport'] = $files.Count + 1
+$textCount = @($files | Where-Object Extension -eq '.txt').Count
+$gzipCount = @($files | Where-Object Extension -eq '.gz').Count
+$receipt['archiveCountsAfterStandaloneReport'] = [ordered]@{ total = $textCount + $gzipCount; text = $textCount; gzip = $gzipCount }
+$receipt['reportPersistence'] = 'Untracked postpublication standalone JSON plus two raw gzip streams; committed result/validation/manifest are separate and not self-referential.'
+$name = if ($failure) { 'publication-failure-01.json' } else { 'publication-final.json' }
+$report = "$evidence\$name"
+if (Test-Path -LiteralPath $report) { throw 'Never overwrite a standalone corrective report.' }
+$json = $receipt | ConvertTo-Json -Depth 20
+[IO.File]::WriteAllText((Join-Path (Get-Location).Path $report), $json.Replace("`r`n", "`n") + "`n", [Text.UTF8Encoding]::new($false))
+$json
+if ($failure) { throw "Stopped without fallback; exact corrective commit: $commit; $failure" }

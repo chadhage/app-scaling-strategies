@@ -1,0 +1,73 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const { gzipSync } = require('node:zlib');
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const [name, expectedExit, executable, ...args] = process.argv.slice(2);
+assert.match(name || '', /^[a-z0-9-]+$/);
+assert.match(expectedExit || '', /^\d+$/);
+assert.ok(executable);
+const reportPath = path.join(__dirname, `${name}.json`);
+assert.equal(fs.existsSync(reportPath), false, 'Never overwrite a command attempt.');
+const startedAtUtc = new Date().toISOString();
+const result = spawnSync(executable, args, { cwd: root, windowsHide: true, maxBuffer: 32 * 1024 * 1024 });
+const completedAtUtc = new Date().toISOString();
+const stdout = result.stdout || Buffer.alloc(0);
+const stderr = result.stderr || Buffer.alloc(0);
+const transcripts = {};
+fs.mkdirSync(path.join(__dirname, 'raw'), { recursive: true });
+for (const [stream, bytes] of [['stdout', stdout], ['stderr', stderr]]) {
+  const file = path.join('raw', `${name}.${stream}.raw.gz`);
+  const compressed = gzipSync(bytes);
+  fs.writeFileSync(path.join(__dirname, file), compressed, { flag: 'wx' });
+  transcripts[stream] = {
+    path: file, bytes: bytes.length, sha256: sha(bytes), gzipBytes: compressed.length,
+    gzipSha256: sha(compressed), rawCRLFPairs: (bytes.toString('utf8').match(/\r\n/g) || []).length
+  };
+}
+const text = stdout.toString('utf8');
+const summary = {};
+for (const key of ['tests', 'suites', 'pass', 'fail', 'cancelled', 'skipped', 'todo']) {
+  const matches = [...text.matchAll(new RegExp(`^# ${key} (\\d+)\\r?$`, 'gm'))];
+  if (matches.length) summary[key] = matches.reduce((sum, match) => sum + Number(match[1]), 0);
+}
+const stack = [];
+const parents = new Set();
+let total = 0;
+for (const line of text.split(/\r?\n/)) {
+  const header = /^(\s*)# Subtest: /.exec(line);
+  if (!header) continue;
+  const indent = header[1].length;
+  while (stack.length && stack.at(-1).indent >= indent) stack.pop();
+  if (stack.length) parents.add(stack.at(-1).id);
+  stack.push({ indent, id: total++ });
+}
+const testNodes = total ? { total, parents: parents.size, leaves: total - parents.size } : null;
+const record = {
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165',
+  worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-165',
+  kind: 'actual-command-and-exact-raw-transcripts-not-parent-acceptance',
+  sourceCommit: 'c8b3139f07aa60a64833a5380503b2bd794c0e0e',
+  startedAtUtc, completedAtUtc, command: [executable, ...args], node: process.version,
+  captureEnabled: process.env.CAPTURE_BROWSER_EVIDENCE === '1',
+  captureValue: process.env.CAPTURE_BROWSER_EVIDENCE ?? null,
+  expectedExitCode: Number(expectedExit), exitCode: result.status, signal: result.signal,
+  spawnError: result.error ? { code: result.error.code, message: result.error.message } : null,
+  summary, testNodes, transcripts, stdout: text, stderr: stderr.toString('utf8')
+};
+fs.writeFileSync(reportPath, `${JSON.stringify(record, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+if (result.status !== Number(expectedExit) || result.error) {
+  process.stdout.write(stdout);
+  process.stderr.write(stderr);
+} else {
+  console.log(JSON.stringify({
+    name, actualExitCode: result.status, expectedExitCode: Number(expectedExit),
+    summary, testNodes, rawStreamsPreserved: 2
+  }));
+}
+process.exitCode = result.status === Number(expectedExit) && !result.error ? 0 : 1;

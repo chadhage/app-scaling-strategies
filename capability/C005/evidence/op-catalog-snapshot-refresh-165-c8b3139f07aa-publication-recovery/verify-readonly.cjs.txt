@@ -1,0 +1,39 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
+const vm = require('node:vm');
+const lib = require('./recovery-lib.cjs.txt');
+const checker = require('../op-catalog-snapshot-refresh-165-c8b3139f07aa/publication-checks.cjs.txt');
+assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, undefined);
+assert.equal(process.env.NODE_V8_COVERAGE, undefined);
+const before = checker.inventory();
+const result = spawnSync(process.execPath, ['--test', '--test-reporter=tap',
+  'capability\\C005\\tests\\historical-representation-recovery.test.cjs'],
+{ cwd: lib.root, windowsHide: true, maxBuffer: 32 * 1024 * 1024 });
+process.stdout.write(result.stdout);
+process.stderr.write(result.stderr);
+assert.equal(result.status, 0);
+const preserved = lib.verifyCandidateAndWorking();
+const syntax = before.filter(file => /\.(?:js|cjs)$/.test(file.path));
+for (const file of syntax) {
+  const run = spawnSync(process.execPath, ['--check', file.path], { cwd: lib.root, windowsHide: true });
+  assert.equal(run.status, 0, file.path);
+}
+const json = before.filter(file => file.path.endsWith('.json'));
+for (const file of json) JSON.parse(checker.read(file.path));
+const scripts = fs.readdirSync(__dirname).filter(file => /\.cjs\.txt$/.test(file));
+for (const file of scripts) new vm.Script(fs.readFileSync(path.join(__dirname, file), 'utf8'), { filename: file });
+const after = checker.inventory();
+assert.deepEqual(after, before, 'Recovery tests, syntax, JSON, source and provenance verification must be read-only.');
+console.log('RECOVERY_READONLY_META=' + JSON.stringify({
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165', kind: 'actual-complete-owned-readonly-recovery-verification',
+  recordedAtUtc: new Date().toISOString(), syntaxChecks: syntax.length, jsonFilesParsed: json.length,
+  archivalScriptSyntaxChecks: scripts.length, targetedVerifierTests: 12, targetedLeaves: 12,
+  preserved, ownedFilesVerified: before.length, beforeInventorySha256: lib.sha(JSON.stringify(before)),
+  afterInventorySha256: lib.sha(JSON.stringify(after)), byteAndFileSetUnchanged: true,
+  retainedFullBrowserProofWithUnchangedBinding: true, newBrowserExecutionClaimed: false,
+  parentAcceptanceClaimed: false
+}));

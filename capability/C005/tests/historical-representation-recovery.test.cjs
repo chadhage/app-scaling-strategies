@@ -1,0 +1,56 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const checker = require('../evidence/op-catalog-snapshot-refresh-165-c8b3139f07aa/publication-checks.cjs.txt');
+const baseline = require('../evidence/op-catalog-snapshot-refresh-165-c8b3139f07aa-publication-recovery/historical-representation-baselines.json');
+const root = path.resolve(__dirname, '..', '..', '..');
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const legacy = baseline.inheritedTrackedProofs.find(file => file.canonicalGitPath === 'capability/C005/evidence/browser-green.txt');
+const working = fs.readFileSync(path.join(root, legacy.path));
+const canonical = execFileSync('git', ['--no-pager', 'show', `${baseline.sourceCommit}:${legacy.canonicalGitPath}`],
+  { cwd: root, maxBuffer: 8388608 });
+const raw = Buffer.from('Exact newly committed raw command bytes\r\n', 'utf8');
+const rawRecord = {
+  canonicalGitPath: 'capability/C005/evidence/new-raw-fixture.txt',
+  provenance: 'new-byte-exact', initialWorking: { bytes: raw.length, sha256: sha(raw) },
+  requireByteExactGitAndDisk: true
+};
+
+test('recorded inherited legacy raw and fixed-source Git bytes independently pass without rewriting either', () => {
+  assert.equal(working.length, 1549);
+  assert.equal(canonical.length, 1527);
+  assert.equal(sha(working), '0121ac51accc1063b085afffdbf6eb8dc7ce5eb14ffb9b1f4f1814f09948ec78');
+  assert.equal(sha(canonical), '343c37730af9dc6b935596ba9bde7553cf8817b785b862e808b13529929cb2e0');
+  assert.equal(checker.assertProofRepresentation(legacy, working, canonical), true);
+});
+
+test('a recorded new raw archive requires exact original disk and Git bytes', () => {
+  assert.equal(checker.assertProofRepresentation(rawRecord, raw, raw), true);
+});
+
+test('a previously byte-exact frozen file independently retains exact raw and source Git bytes', () => {
+  const record = baseline.inheritedTrackedProofs.find(file => file.requireByteExactGitAndDisk);
+  const bytes = fs.readFileSync(path.join(root, record.path));
+  assert.equal(checker.assertProofRepresentation(record, bytes, bytes), true);
+});
+
+for (const [name, record, current, committed] of [
+  ['changed legacy working bytes', legacy, Buffer.concat([working, Buffer.from(' ')]), canonical],
+  ['changed legacy Git baseline', legacy, working, Buffer.concat([canonical, Buffer.from('changed')])],
+  ['legacy working and Git changed together', legacy, Buffer.from('same forged bytes'), Buffer.from('same forged bytes')],
+  ['new raw Git normalization', rawRecord, raw, Buffer.from(raw.toString().replaceAll('\r\n', '\n'))],
+  ['new raw working and Git changed together', rawRecord, Buffer.from('same changed raw'), Buffer.from('same changed raw')],
+  ['unknown provenance', { ...rawRecord, provenance: 'unaccounted-representation' }, raw, raw],
+  ['unverified inherited dual baseline', { ...legacy, dualBaselineVerifiedAtCapture: false }, canonical, canonical],
+  ['an unrecorded inherited representation', { ...legacy, representation: 'waive-any-difference' }, canonical, canonical],
+  ['missing inherited Git baseline', { ...legacy, fixedSourceGit: null }, canonical, canonical]
+]) {
+  test(`provenance guard rejects ${name}`, () => {
+    assert.throws(() => checker.assertProofRepresentation(record, current, committed), assert.AssertionError);
+  });
+}

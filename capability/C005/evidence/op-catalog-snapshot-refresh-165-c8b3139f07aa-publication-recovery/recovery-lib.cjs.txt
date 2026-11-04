@@ -1,0 +1,159 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const checker = require('../op-catalog-snapshot-refresh-165-c8b3139f07aa/publication-checks.cjs.txt');
+const root = checker.root;
+const relative = path.relative(root, __dirname);
+const old = 'capability\\C005\\evidence\\op-catalog-snapshot-refresh-165-c8b3139f07aa';
+const candidate = 'dfb348e004c5a63adc4e8ca14794a8c28470a92d';
+const remoteParent = '4c9db4032c08ae79eaedddfc029a8b2e2295d674';
+const source = 'c8b3139f07aa60a64833a5380503b2bd794c0e0e';
+const mutableChecker = `${old}\\publication-checks.cjs.txt`;
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const read = checker.read;
+const git = checker.git;
+const load = name => JSON.parse(fs.readFileSync(path.join(__dirname, name)));
+const logical = checker.logical;
+const postpublicationRawPaths = ['stdout', 'stderr'].map(stream =>
+  `${logical(relative)}/raw/publication-transaction.${stream}.raw.gz`);
+function tree(commit) {
+  return new Map(git(['ls-tree', '-r', '-z', commit, '--', ...checker.scopes]).toString('utf8')
+    .split('\0').filter(Boolean).map(row => {
+      const [header, file] = row.split('\t');
+      return [file, header.split(' ')[2]];
+    }));
+}
+function blobs(objects) {
+  const unique = [...new Set(objects)];
+  const bytes = execFileSync('git', ['--no-pager', 'cat-file', '--batch'], {
+    cwd: root, input: Buffer.from(unique.map(object => `${object}\n`).join(''), 'utf8'),
+    maxBuffer: 64 * 1024 * 1024
+  });
+  const result = new Map();
+  let offset = 0;
+  for (const object of unique) {
+    const end = bytes.indexOf(10, offset);
+    const [actual, type, sizeText] = bytes.subarray(offset, end).toString('ascii').split(' ');
+    assert.equal(actual, object);
+    assert.equal(type, 'blob');
+    const size = Number(sizeText);
+    result.set(object, bytes.subarray(end + 1, end + 1 + size));
+    assert.equal(bytes[end + 1 + size], 10);
+    offset = end + 2 + size;
+  }
+  assert.equal(offset, bytes.length);
+  return result;
+}
+function currentProposed() {
+  return checker.proposed();
+}
+function verifyCandidateAndWorking() {
+  const initial = load('initial-owned-hashes.json');
+  assert.equal(initial.entries, 906);
+  for (const file of initial.files) {
+    const current = file.path === mutableChecker
+      ? read(path.join(relative, 'publication-checks.dfb348e004c5.cjs.txt')) : read(file.path);
+    assert.equal(sha(current), file.sha256, file.path);
+  }
+  const sourceTree = tree(source);
+  const parentTree = tree(remoteParent);
+  const candidateTree = tree(candidate);
+  const records = load('historical-representation-baselines.json').inheritedTrackedProofs;
+  assert.equal(records.length, 560);
+  const sourceBytes = blobs(records.map(file => file.fixedSourceGit.object));
+  for (const record of records) {
+    const file = record.canonicalGitPath;
+    assert.equal(sourceTree.get(file), record.fixedSourceGit.object, file);
+    assert.equal(parentTree.get(file), record.fixedSourceGit.object, file);
+    assert.equal(candidateTree.get(file), record.fixedSourceGit.object, file);
+    const bytes = sourceBytes.get(record.fixedSourceGit.object);
+    assert.equal(sha(bytes), record.fixedSourceGit.sha256, file);
+    checker.assertProofRepresentation(record, read(file), bytes);
+  }
+  const oldPaths = JSON.parse(read(`${old}\\publication-owned-paths.json`)).paths;
+  assert.equal(oldPaths.length, 293);
+  assert.ok(oldPaths.every(checker.owned));
+  const actualPaths = git(['diff-tree', '--no-commit-id', '--name-only', '-z', '-r', candidate])
+    .toString('utf8').split('\0').filter(Boolean).sort();
+  assert.deepEqual(actualPaths, oldPaths);
+  assert.equal(git(['rev-parse', `${candidate}^`]).toString().trim(), remoteParent);
+  const predictions = new Map(JSON.parse(read(`${old}\\predicted-object-storage.json`)).files
+    .map(file => [file.canonicalGitPath, file]));
+  const initialMap = new Map(initial.files.map(file => [file.canonicalGitPath, file]));
+  const candidateBytes = blobs(oldPaths.map(file => candidateTree.get(file)));
+  for (const file of oldPaths) {
+    const expected = predictions.get(file)?.expectedGitSha256 || initialMap.get(file).sha256;
+    assert.equal(sha(candidateBytes.get(candidateTree.get(file))), expected, file);
+  }
+  const preservedRuntime = initial.files.filter(file => /\.(?:js|cjs|ts|css|html)$/.test(file.path)
+    && (!/\\(?:tests|evidence)\\/.test(file.path)
+      || /\\tests\\(?:browser\.test|banner-expectations(?:\.test)?)\.cjs$/.test(file.path)));
+  for (const file of preservedRuntime) assert.equal(sha(read(file.path)), file.sha256, file.path);
+  const browser = JSON.parse(read(`${old}\\browser-qualification-02.json`));
+  assert.equal(browser.sourceCommit, source);
+  assert.equal(browser.sourceGenerationSha256, '193cc3dd536b2202f5b941366c151d11d4e01ad2d3bbb2d179ce94cf16ff76f6');
+  assert.equal(browser.uniquePracticeDestinations, 150);
+  assert.equal(browser.exactBannersAcrossAllActualNavigations, 155);
+  for (const report of browser.observations) assert.equal(sha(read(report.path)), report.sha256, report.path);
+  checker.preserved();
+  return { initialWorkingFiles: 906, inheritedTrackedProofs: 560,
+    recordedRepresentationDifferences: records.filter(file => file.representation !== 'recorded-byte-identical').length,
+    frozenByteExactFiles: 51, candidatePathsAndGitSha256Verified: 293,
+    unchangedRuntimeAndBrowserInputs: preservedRuntime.length, retainedFull150BrowserBinding: true };
+}
+function verifyCurrent() {
+  const before = checker.inventory();
+  const manifest = load('hashes-final.json');
+  assert.deepEqual(before.filter(file => file.path !== path.join(relative, 'hashes-final.json')), manifest.files);
+  const paths = load('publication-owned-paths.json').paths;
+  assert.deepEqual(currentProposed(), paths);
+  assert.deepEqual(read(path.join(relative, 'publication-pathspec.txt')).toString('utf8').split('\0').filter(Boolean), paths);
+  const retained = verifyCandidateAndWorking();
+  const recorded = new Map(load('predicted-object-storage.json').files.map(file => [file.canonicalGitPath, file]));
+  const predicted = paths.map(checker.predict);
+  for (const file of predicted) if (recorded.has(file.canonicalGitPath)) assert.deepEqual(file, recorded.get(file.canonicalGitPath));
+  assert.deepEqual(checker.inventory(), before);
+  return { ownedFiles: before.length, correctivePaths: paths.length, canonicalObjectPredictions: predicted.length,
+    preserved: retained, index: checker.indexSnapshot() };
+}
+function verifyCorrectiveCommit(commit) {
+  assert.equal(git(['rev-parse', `${commit}^`]).toString().trim(), candidate);
+  const paths = load('publication-owned-paths.json').paths;
+  const candidatePreservation = verifyCandidateAndWorking();
+  const initialRawBaselines = [
+    ...load('initial-owned-hashes.json').files,
+    ...load('hashes-final.json').files
+  ];
+  const representations = checker.verifyCommit(commit, {
+    expectedPaths: paths,
+    historicalRecords: load('historical-representation-baselines.json').inheritedTrackedProofs,
+    initialRawBaselines, postpublicationRawPaths
+  });
+  const targetTree = tree(commit);
+  const precursorTree = tree(candidate);
+  const oldPaths = JSON.parse(read(`${old}\\publication-owned-paths.json`)).paths;
+  for (const file of oldPaths) {
+    if (file === logical(mutableChecker)) continue;
+    assert.equal(targetTree.get(file), precursorTree.get(file), file);
+  }
+  const frozen = JSON.parse(read('capability\\C005\\evidence\\op-catalog-snapshot-refresh-150-ebd7433ac143\\blocked-attempt-frozen-hashes.json'));
+  const committed = blobs(frozen.files.map(file => targetTree.get(logical(file.path))));
+  for (const file of frozen.files) assert.equal(sha(committed.get(targetTree.get(logical(file.path)))), file.sha256, file.path);
+  return { ...representations, candidatePreservation, preservedCandidateObjectsExceptOwnedVerifier: oldPaths.length - 1,
+    all51FrozenCommittedBytesVerified: true, index: checker.indexSnapshot() };
+}
+if (require.main === module) {
+  const [mode, commit] = process.argv.slice(2);
+  const result = mode === '--verify-current' ? verifyCurrent()
+    : mode === '--verify-commit' ? verifyCorrectiveCommit(commit)
+      : mode === '--verify-candidate' ? verifyCandidateAndWorking() : null;
+  assert.ok(result);
+  console.log(JSON.stringify(result));
+}
+module.exports = { root, relative, old, candidate, remoteParent, source, mutableChecker, sha, read, git,
+  load, logical, tree, blobs, currentProposed, postpublicationRawPaths,
+  verifyCandidateAndWorking, verifyCurrent, verifyCorrectiveCommit };

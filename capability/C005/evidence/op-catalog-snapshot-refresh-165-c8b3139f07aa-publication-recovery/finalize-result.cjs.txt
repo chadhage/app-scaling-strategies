@@ -1,0 +1,118 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const lib = require('./recovery-lib.cjs.txt');
+const checker = require('../op-catalog-snapshot-refresh-165-c8b3139f07aa/publication-checks.cjs.txt');
+const save = (name, value) => fs.writeFileSync(path.join(__dirname, name),
+  `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+const red = lib.load('representation-red-01.json');
+const green = lib.load('representation-green-01.json');
+const readonly = lib.load('readonly-verification-01.json');
+const line = readonly.stdout.split(/\r?\n/).find(value => value.startsWith('RECOVERY_READONLY_META='));
+const integrity = JSON.parse(line.slice('RECOVERY_READONLY_META='.length));
+assert.deepEqual(red.summary, { tests: 12, suites: 0, pass: 5, fail: 7, cancelled: 0, skipped: 0, todo: 0 });
+assert.deepEqual(green.summary, { tests: 12, suites: 0, pass: 12, fail: 0, cancelled: 0, skipped: 0, todo: 0 });
+assert.equal(readonly.exitCode, 0);
+assert.equal(integrity.byteAndFileSetUnchanged, true);
+assert.equal(lib.load('publisher-dispatch-02.json').exitCode, 0);
+assert.equal(lib.load('publication-preparation-01.json').exitCode, 0);
+const preserved = lib.verifyCandidateAndWorking();
+const historical = lib.load('historical-representation-baselines.json');
+const oldResult = JSON.parse(lib.read(`${lib.old}\\result-final.json`));
+const failure = JSON.parse(lib.read(`${lib.old}\\publication-failure-01.json`));
+assert.equal(failure.exactCreatedCommit, lib.candidate);
+const before = checker.inventory();
+const finalOwnedFiles = before.length + 4;
+const archives = before.filter(file => /\.(?:txt|gz)$/.test(file.path));
+const archiveCounts = { total: archives.length, text: archives.filter(file => file.path.endsWith('.txt')).length,
+  gzip: archives.filter(file => file.path.endsWith('.gz')).length,
+  priorOp150: { total: 111, text: 45, gzip: 66 }, textArchivesAreNotGzip: true };
+const validation = {
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165',
+  kind: 'current-parent-directed-canonical-historical-representation-correction-not-acceptance',
+  recordedAtUtc: new Date().toISOString(), exactCandidate: lib.candidate, exactRemoteParent: lib.remoteParent,
+  unchangedSourceCommit: lib.source, unchangedDataSha256: oldResult.source.dataSha256,
+  genuineTargetedRed: { record: 'representation-red-01.json', total: 12, passed: 5, failed: 7,
+    loadableExistingPredicate: true, missingModuleSyntaxOrEnvironmentFailure: false },
+  targetedGreen: { record: 'representation-green-01.json', total: 12, parents: 0, leaves: 12, passed: 12, failed: 0 },
+  currentReadonly: { record: 'readonly-verification-01.json', ...integrity },
+  retainedFull150BrowserProof: { ...oldResult.actualBrowser, sourceBindingAndAllObservationBytesUnchanged: true,
+    newBrowserExecutionClaimed: false, runtimeAndBrowserInputsUnchanged: preserved.unchangedRuntimeAndBrowserInputs },
+  retainedFocused314Baseline: oldResult.focused, newVerifierGuards: 12,
+  inheritedTrackedHistoricalProofs: 560, independentlyVerifiedRepresentations: 1120,
+  alreadyDifferentRecordedRepresentations: historical.representationDifferences,
+  allHistoricalWorkingBytesPreserved: 561, allInitialOwnedBytesPreserved: 635,
+  originalFailedAttemptWorkingBytesPreserved: 906, frozenExactGitDiskFiles: 51, precedingSnapshots: 8,
+  original293CandidateObjectsAndSha256Verified: true, noHistoricalFileOrOldAttributeRewritten: true,
+  newRawAndNewlyCommittedHistoricalAndFrozen51RemainByteExact: true,
+  oldFailureRecord: `${lib.old}\\publication-failure-01.json`, archiveCounts,
+  fullOwnedFilesBeforeStandaloneReport: finalOwnedFiles, finalManifestEntries: finalOwnedFiles - 1,
+  normalVerificationWasReadOnly: true, parentAcceptanceClaimed: false, kanoCredits: { S: 0, D: 0, L: 0 }
+};
+save('validation-final.json', validation);
+const result = {
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165', worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-165',
+  kind: 'versioned-owned-corrective-append-result-ready-for-publication-not-parent-acceptance',
+  outcome: 'verified-explicit-historical-dual-baseline-correction-ready-for-owned-continuation',
+  recordedAtUtc: new Date().toISOString(), source: oldResult.source,
+  preservedCandidate: lib.candidate, exactAuthorizedRemoteParent: lib.remoteParent,
+  precursorMustRemainUnqualified: true, correctiveAppendNotAmend: true,
+  originalFailureAndCheckerAndTranscriptsPreserved: true,
+  reason: 'Inherited tracked proof raw and canonical Git bytes were already different; validate both actual recorded baselines independently, never normalize or waive new changes.',
+  proofClassification: { inheritedTracked: 560, independentlyVerifiedRawAndGitBaselines: 1120,
+    recordedDifferentCRLFAndLFRepresentations: historical.representationDifferences,
+    frozen51AndNewRawMustMatchDiskAndGitExactly: true, unknownOrUnaccountedRepresentationsRejected: true },
+  genuineRed: validation.genuineTargetedRed, targetedGreen: validation.targetedGreen,
+  currentReadonly: validation.currentReadonly, focusedBaseline: oldResult.focused,
+  retainedActualFull150Browser: validation.retainedFull150BrowserProof,
+  preservedWorkingBytes: { initial: 635, originalHistorical: 561, failedCandidateState: 906,
+    original293CandidateGitObjectsVerified: true, precedingSnapshots: 8, originalSourceBundle: 74 },
+  archiveCounts, rootStandardPublisherHeadGuardUnchanged: true,
+  originalLessonSourceSchemaRuntimeInterfacesAuthorityAndS148ExactVariantUnchanged: true,
+  publication: { exactHeadRequired: lib.candidate, exactRemoteRequired: lib.remoteParent,
+    candidateParentMustEqualRemote: true, requiredUnownedIndexEntriesAndFlags: 11771,
+    requiredPublisherMutexOnly: 'Local\\AppScalingStrategies_KanbanPublisher_v1',
+    oneCorrectiveCommitOnly: true, precursorTag: 'kanban/flow-catalog-refresh-unqualified/dfb348e004c5',
+    normalTagUsesRealCorrectiveCommitSha: true, atomicMainAndBothAnnotatedTagsPush: true,
+    precommitRepresentationValidationAndPostcommitValidationRequired: true,
+    noResetAmendForceUnownedUnstageOrGeneralAheadException: true },
+  validation: path.join(lib.relative, 'validation-final.json'),
+  validationSha256: lib.sha(lib.read(path.join(lib.relative, 'validation-final.json'))),
+  hashManifest: path.join(lib.relative, 'hashes-final.json'),
+  fullOwnedFilesBeforeStandaloneReport: finalOwnedFiles, finalManifestEntries: finalOwnedFiles - 1,
+  plannedOwnedFilesAfterStandaloneAndTwoRawGzipStreams: finalOwnedFiles + 3,
+  plannedArchiveCountsAfterStandalone: { total: archiveCounts.total + 2, text: archiveCounts.text, gzip: archiveCounts.gzip + 2 },
+  standalonePostpublicationReport: path.join(lib.relative, 'publication-final.json'),
+  parentAcceptanceClaimed: false, kanoCredits: { S: 0, D: 0, L: 0 }, originalCredits: 0,
+  stopAfterOneSameOperationFullyVerifiedPushOrNewMeaningfulFailure: true
+};
+save('result-final.json', result);
+const expected = lib.load('publication-owned-paths.json').paths;
+const exclusions = new Set(['predicted-object-storage.json', 'hashes-final.json'].map(file => lib.logical(path.join(lib.relative, file))));
+const predictions = expected.filter(file => !exclusions.has(file)).map(checker.predict);
+save('predicted-object-storage.json', {
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165',
+  kind: 'actual-corrective-canonical-Git-object-predictions-before-staging',
+  recordedAtUtc: new Date().toISOString(), files: predictions, entries: predictions.length,
+  explicitSelfAndFinalManifestExclusions: [...exclusions], exclusionsStillCheckedDynamicallyBeforeCommit: true,
+  inheritedGitBaselinesAreIndependentOfInitialRawWorkingBaselines: true, noHistoricalNormalizationPerformed: true
+});
+const files = checker.inventory();
+assert.equal(files.length, finalOwnedFiles - 1);
+save('hashes-final.json', {
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-165',
+  kind: 'full-current-working-byte-manifest-for-one-owned-corrective-append',
+  recordedAtUtc: new Date().toISOString(), files, entries: files.length, fullOwnedFilesIncludingThisManifest: finalOwnedFiles,
+  exclusion: path.join(lib.relative, 'hashes-final.json'), inventorySha256: lib.sha(JSON.stringify(files)),
+  resultSha256: lib.sha(lib.read(path.join(lib.relative, 'result-final.json'))), validationSha256: result.validationSha256,
+  sourceGitHistoricalBaselines: 'historical-representation-baselines.json',
+  oldUntrackedStandaloneReceiptStillPreservedOutsideCommit: checker.excludedStandalone
+});
+const verified = lib.verifyCurrent();
+console.log(JSON.stringify({ outcome: result.outcome, verified, fullOwnedFiles: finalOwnedFiles,
+  manifestEntries: files.length, archiveCounts,
+  resultSha256: lib.sha(lib.read(path.join(lib.relative, 'result-final.json'))),
+  validationSha256: result.validationSha256,
+  manifestSha256: lib.sha(lib.read(path.join(lib.relative, 'hashes-final.json'))) }));

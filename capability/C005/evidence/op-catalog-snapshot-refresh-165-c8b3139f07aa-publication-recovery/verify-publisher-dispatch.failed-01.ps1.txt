@@ -1,0 +1,19 @@
+$ErrorActionPreference = 'Stop'
+$path = 'capability\C005\evidence\op-catalog-snapshot-refresh-165-c8b3139f07aa-publication-recovery\publication-command.ps1.txt'
+$text = [IO.File]::ReadAllText((Join-Path (Get-Location).Path $path))
+$tokens = $null
+$errors = $null
+$ast = [Management.Automation.Language.Parser]::ParseInput($text, [ref]$tokens, [ref]$errors)
+if ($errors.Count) { throw ($errors | ForEach-Object Message | Out-String) }
+$stop = $text.IndexOf('$mutex = ')
+if ($stop -lt 0) { throw 'Exact owned transaction boundary was not found.' }
+. ([ScriptBlock]::Create($text.Substring(0, $stop)))
+$snapshot = Index-Check
+Require-Index $snapshot
+$branch = (Run-Git @('branch', '--show-current')).Trim()
+if ($branch -ne 'main') { throw 'Wrong readonly branch dispatch.' }
+$rawOut.Dispose()
+$rawErr.Dispose()
+[ordered]@{ parserErrors = 0; readonlyBranch = $branch; readonlyIndex = $snapshot
+    exactOwnerContinuationPrefixOnly = $true; publisherMutexAcquired = $false
+    stagingCommitTagPushAttempted = $false } | ConvertTo-Json -Depth 5
