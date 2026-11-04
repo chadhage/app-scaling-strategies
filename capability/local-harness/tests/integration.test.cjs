@@ -11,7 +11,7 @@ const vm = require('node:vm');
 const searchApi = require('../../C006/search.js');
 const filterApi = require('../../C007/catalog-filters.js');
 const preparationApi = require('../../C008/preparation.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-135-a03ef59da5d5/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-150-ebd7433ac143/generation.json');
 const ids = items => items.map(item => item.entry.id);
 
 function assertClosed(result) {
@@ -30,7 +30,9 @@ test('one actual query AND host/risk/readiness selection opens the exact shared 
     entryId: 'S001'
   });
   assert.equal(result.valid, true);
-  assert.deepEqual(result.items.map(item => item.entry.id), ['S001']);
+  assert.deepEqual(result.items.map(item => item.entry.id), ['S001', 'S128']);
+  assert.deepEqual(result.incompatible.map(item => item.entry.id), ['S124']);
+  assert.match(result.incompatible[0].hostAssessment.reason, /P001/);
   assert.equal(result.items[0].entry, catalog.entries[0]);
   assert.equal(result.items[0].hostAssessment.status, 'unknown');
   assert.equal(result.preparation.state, 'ready');
@@ -132,14 +134,14 @@ test('workflows and later lessons retain unsupported / unavailable modes, CONTAI
   assert.equal(result.preparation.entry.prerequisites.inheritsBase, false);
   assert.match(result.preparation.entry.prerequisites.additional, /^CONTAINER,/);
   assert.match(result.preparation.catalog.common.dependencyRules.text, /P002 OR P003/);
-  for (const id of ['S121', 'S122', 'S123', 'S124']) {
+  for (const id of ['S136', 'S137', 'S138', 'S139']) {
     const later = await compose(catalog, matrix, { entryId: id });
     assert.equal(later.preparation.learningMode, 'unavailable-learning', id);
     assert.equal(later.preparation.entry.learning.href, null, id);
   }
-  const latest = await compose(catalog, matrix, { entryId: 'S120' });
+  const latest = await compose(catalog, matrix, { entryId: 'S135' });
   assert.equal(latest.preparation.learningMode, 'synthetic-learning');
-  assert.equal(latest.preparation.entry.learning.href, '../../learning/S120/index.html');
+  assert.equal(latest.preparation.entry.learning.href, '../../learning/S135/index.html');
 });
 
 test('no match and classified/native/parent readiness empties are successes, not provider failures', async () => {

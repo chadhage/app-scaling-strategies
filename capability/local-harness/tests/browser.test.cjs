@@ -9,7 +9,7 @@ const { createHash, randomUUID } = require('node:crypto');
 const { createRequire } = require('node:module');
 const { execFileSync } = require('node:child_process');
 const catalog = require('../../C005/catalog-data.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-135-a03ef59da5d5/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-150-ebd7433ac143/generation.json');
 const repo = path.resolve(__dirname, '..', '..', '..');
 const helperPath = path.join(repo, 'testing', 'browser', 'isolated.cjs');
 const helperRequire = createRequire(helperPath);
@@ -19,7 +19,7 @@ const TRAINING_BANNER = 'Training rehearsal - synthetic data - not a live Azure 
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
 const reportPath = path.join(__dirname, '..', 'evidence',
-  `browser-op-catalog-snapshot-refresh-135-a03ef59da5d5-${randomUUID()}.json`);
+  `browser-op-catalog-snapshot-refresh-150-ebd7433ac143-${randomUUID()}.json`);
 
 async function previousReport() {
   return fs.readFile(historicalPath).catch(error => {
@@ -143,7 +143,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       assert.equal(await page.locator('#catalog-error').isVisible(), false);
       assert.equal(await page.locator('#preparation').isVisible(), false);
     });
-    await check('all 120 accepted lessons pass through real readiness, keyboard preparation and actual practice navigation', async () => {
+    await check('all 135 accepted lessons pass through real readiness, keyboard preparation and actual practice navigation', async () => {
       await choose('readiness-filter', 'portable-available');
       assert.deepEqual(await actualIds(), generation.acceptedPortableIds);
       assert.equal(await page.locator('#matching-entries > article').count(), generation.acceptedPortableLessons);
@@ -178,9 +178,9 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       assert.deepEqual(practiceLinks, catalog.entries.filter(entry => entry.learning.available)
         .map(entry => ({ id: entry.id, href: entry.learning.href })));
       assert.deepEqual(practiceNavigations.map(item => item.id), generation.acceptedPortableIds);
-      assert.equal(new Set(practiceNavigations.map(item => item.id)).size, 120);
+      assert.equal(new Set(practiceNavigations.map(item => item.id)).size, 135);
       assert.ok(practiceNavigations.some(item => item.id === 'S103'));
-      assert.ok(practiceNavigations.some(item => item.id === 'S120'));
+      assert.ok(practiceNavigations.some(item => item.id === 'S135'));
       await reset();
     });
     await check('keyboard skip, query plus three AND filters, exact preparation and focus form one continuous journey', async () => {
@@ -195,8 +195,9 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       await choose('host-filter', 'aks');
       await choose('risk-filter', 'unclassified');
       await choose('readiness-filter', 'portable-available');
-      assert.deepEqual(await actualIds(), ['S001']);
-      assert.deepEqual(await actualIds('#excluded-entries > article'), []);
+      assert.deepEqual(await actualIds(), ['S001', 'S128']);
+      assert.deepEqual(await actualIds('#excluded-entries > article'), ['S124']);
+      assert.match(await page.locator('#S124 .host-status').textContent(), /P001/);
       assert.match(await page.locator('#S001 .host-status').textContent(), /Unknown target support for AKS/);
       await open('S001');
       const text = await page.locator('#preparation-body').textContent();
@@ -275,7 +276,8 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       await page.keyboard.press('Enter');
       assert.equal(await page.locator('#preparation').isVisible(), false);
       assert.equal(await page.evaluate(() => document.activeElement.id), 'prepare-S001');
-      assert.deepEqual(await actualIds(), ['S001']);
+      assert.deepEqual(await actualIds(), ['S001', 'S128']);
+      assert.deepEqual(await actualIds('#excluded-entries > article'), ['S124']);
       assert.equal(await page.locator('#host-filter').inputValue(), 'aks');
       assert.equal(await page.locator('#risk-filter').inputValue(), 'unclassified');
       assert.equal(await page.locator('#readiness-filter').inputValue(), 'portable-available');
@@ -285,7 +287,8 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
         risk: await page.locator('#risk-filter').inputValue(),
         readiness: await page.locator('#readiness-filter').inputValue(),
         focusedId: await page.evaluate(() => document.activeElement.id),
-        preparationHidden: !(await page.locator('#preparation').isVisible())
+        preparationHidden: !(await page.locator('#preparation').isVisible()),
+        matchingIds: await actualIds(), excludedIds: await actualIds('#excluded-entries > article')
       };
     });
     await check('no-result, literal query, classified risk and native readiness states clear old preparation and reset with focus', async () => {
@@ -325,7 +328,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       await reset();
     });
     await check('unavailable lessons and workflow CONTAINER/BASE distinctions retain exact preparation and all unapproved limits', async () => {
-      for (const id of ['S121', 'S122', 'S123', 'S124']) {
+      for (const id of ['S136', 'S137', 'S138', 'S139']) {
         await open(id);
         assert.equal(await page.locator('.lesson-link').count(), 0, id);
         assert.equal(await page.locator('#preparation-body').getAttribute('data-learning-mode'), 'unavailable-learning', id);
@@ -456,7 +459,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
     });
     assert.equal(checks.length, 12);
     report = {
-      operation: 'OP-CATALOG-SNAPSHOT-REFRESH-135', status: 'passed', observedAtUtc: new Date().toISOString(),
+      operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', status: 'passed', observedAtUtc: new Date().toISOString(),
       mode: 'actual-isolated-headless', mockedBrowser: false, browserVersion, signature, playwrightVersion,
       nodeVersion: process.version, productionNode24Validated: false,
       helper: 'testing\\browser\\isolated.cjs', helperApi: 'openIsolatedLesson',
@@ -468,7 +471,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
       generationSha256: generation.data.sha256, acceptedPracticeDestinations: practiceLinks, practiceNavigations,
       practiceNavigationCounts: { sweep: practiceNavigations.length, repeatedS001Controls: 1,
         totalActual: practiceNavigations.length + 1, uniqueDestinations: new Set(practiceNavigations.map(item => item.id)).size },
-      unavailablePracticeIdsChecked: ['S121', 'S122', 'S123', 'S124'],
+      unavailablePracticeIdsChecked: ['S136', 'S137', 'S138', 'S139'],
       historicalPortableLessons: practiceLinks.length, unknownSupport: 152, nativeRunnable: 0,
       combinedSelection: { query: '  BLUE-GREEN  ', host: 'aks', risk: 'unclassified', readiness: 'portable-available', entryId: 'S001' },
       exactPreparationSectionsSha256: Object.fromEntries(['dependencyRules', 'operatingLimits', 'sharedDefinitionOfDone', 'acceptanceAndEvidence']
@@ -496,6 +499,7 @@ test('real local learner composition, accepted lesson controls, errors, keyboard
   assert.equal(Object.hasOwn(require.cache, lifecyclePath), false);
   assert.deepEqual(await previousReport(), previous, 'historical browser proof stays byte-for-byte unchanged');
   if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') {
+    assert.equal(t.signal.aborted, false, 'A timed-out or cancelled suite cannot append a success observation.');
     await fs.writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
     console.log('Explicit CAPTURE_BROWSER_EVIDENCE=1: successful browser observation captured after awaited cleanup.');
   } else {

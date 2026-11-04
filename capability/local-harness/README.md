@@ -22,13 +22,21 @@ first 100. All five preceding catalogs, their generators/metadata, and all
 **212** dynamically inventoried earlier proof files remain byte-exact.
 All **278** pre-existing owned files were fingerprinted before existing-file edits.
 This one operation has zero S/D/L credit and parent-only acceptance.
-**OP-CATALOG-SNAPSHOT-REFRESH-135** now refreshes exactly one immutable
+**OP-CATALOG-SNAPSHOT-REFRESH-135** previously refreshed exactly one immutable
 135-unit/120-practice snapshot: **S001–S120**. All six preceding catalogs,
 their generators/metadata and **290** dynamically inventoried historical proof
 files remain byte-exact. All **358** pre-existing owned files were fingerprinted
 before existing-file edits. The existing 8 MiB Git read bound is retained;
 only the deterministic generator's full-SHA pin changes. No original card or
 parent is accepted here, and the operation has zero S/D/L credit.
+**OP-CATALOG-SNAPSHOT-REFRESH-150** now exposes exactly one immutable
+150-unit/135-practice snapshot: **S001–S135**. All seven preceding catalogs,
+all **371** original proof files and the entire **51-file** blocked OP150 attempt
+are byte-exact. The retry inventories **422** historical proofs and **494**
+pre-existing owned files. The parent approved existing published `ebd7433ac143`
+instead of the chronology-invalid `38ecc22ba606`; this remains the same mission
+with zero S/D/L credit, not a new unit. Exact timestamps, validator, API,
+authorities, 8 MiB Git transport and published helper are unchanged.
 
 Open `capability\local-harness\index.html` directly in a browser with JavaScript.
 No install, server, framework, dependency, account, credential or cloud access is
@@ -38,7 +46,9 @@ required.
 
 1. Search for **blue-green**.
 2. Select **AKS**, **UNCLASSIFIED**, and **Portable accepted (historical snapshot)**.
-   The controls combine with **AND**; S001 matches with **unknown** native-host support.
+   The controls combine with **AND**; S001 and S128 match with **unknown**
+   native-host support. S124 is separately excluded by its unchanged P001 host
+   prerequisite. Choose S001 for the continuous conductible rehearsal.
 3. Open **Read S001 preparation**. Read its exact source objective, implementation,
    acceptance, additional prerequisites and inherited BASE. Expand the original
    dependency, operating-limit, Done and evidence excerpts and inspect C001/C003
@@ -73,20 +83,20 @@ The original `evidence\provider-integrity.json` records **13 original consumed
 interfaces**, accepted publication commits and exact fingerprints. Twelve remain
 unchanged. Tests still verify the thirteenth's old accepted data baseline against
 C005's byte-preserved snapshot archive, then verify the active data against
-`capability\C005\evidence\op-catalog-snapshot-refresh-135-a03ef59da5d5\generation.json`
+`capability\C005\evidence\op-catalog-snapshot-refresh-150-ebd7433ac143\generation.json`
 and deterministic extraction. No original fingerprint check is dropped; the new
 generation binding is not self-acceptance. All APIs, declarations and authorities
 remain unchanged.
 
 Availability remains the C005 historical source/acceptance pin
-**`a03ef59da5d58d74c109d2484d7730fa14500358`**, annotated source tag
-**`kanban/flow-admin/a03ef59da5d5`**, commit time
-**`2026-11-04T01:08:35.000Z`**, ledger update
-**`2026-11-04T01:08:34.3502810Z`**. The UI displays those values and pinned source
-links. It is **not live availability**. Exactly 120 accepted snapshot lessons are
-available: S001–S120. S121+ remain unavailable even
+**`ebd7433ac143242ab633b52aff864bb2923dac2c`**, annotated source tag
+**`kanban/flow-admin/ebd7433ac143`**, commit time
+**`2026-11-04T02:53:48.000Z`**, ledger update
+**`2026-11-04T02:53:47.0882168Z`**. The UI displays those values and pinned source
+links. It is **not live availability**. Exactly 135 accepted snapshot lessons are
+available: S001–S135. S136+ remain unavailable even
 if their live board state advances.
-The source's 135 accepted units (133 S + 2 D) are not reclassified or credited here.
+The source's 150 accepted units (148 S + 2 D) are not reclassified or credited here.
 
 - Portable practice is distinct from native runnable/qualified and source-parent
   completion. Native flags and all source-parent completion flags remain false.
@@ -157,7 +167,7 @@ finally { Remove-Item Env:\CAPTURE_BROWSER_EVIDENCE }
 
 Capture happens only after successful checks and awaited child/helper cleanup,
 using exclusive creation of a uniquely named
-`evidence\browser-op-catalog-snapshot-refresh-135-a03ef59da5d5-*.json`. All old proof
+`evidence\browser-op-catalog-snapshot-refresh-150-ebd7433ac143-*.json`. All old proof
 stays byte-for-byte unchanged and is not relabeled as a current browser run.
 The browser suite verifies the published helper's exact bytes **before import**
 and after cleanup:
@@ -273,19 +283,24 @@ mutex, not a state lock or broadened standard/Admin publisher. No central
 ledger, original card, parent gate or credit is mutated by this worker.
 
 Current evidence is under
-`capability\C005\evidence\op-catalog-snapshot-refresh-135-a03ef59da5d5`.
-Actual unchanged-100 RED records **22 positive assertion failures** (source,
-count and S100/S101/S102/S104–S120) plus **one passing negative gate** before
-IaC N/A and the pin-only generation refresh. The unchanged public APIs and
-authorities consume all 120 practices; S121+ remain unavailable regardless of
+`capability\C005\evidence\op-catalog-snapshot-refresh-150-ebd7433ac143`.
+Original unchanged120 RED records **17 positive assertion failures** (source,
+count and S121–S135) plus **one passing negative gate** before IaC N/A. That RED
+and the entire chronology-blocked `op-catalog-snapshot-refresh-150-38ecc22ba606`
+attempt remain frozen, not relabeled green. The parent approved an existing
+published chronologically valid source for the same pin-only mission; regression
+uses original Git JSON and Node `JSON.parse`/`Date.parse` with the unchanged exact
+validator. The unchanged public APIs and authorities consume all 135 practices;
+S136+ remain unavailable regardless of
 later live-board acceptance.
-The existing twelve unified browser groups sweep all 120 unique original
+The existing twelve unified browser groups sweep all 135 unique original
 practice pages and exact banners, with a separate S001 PASS/negative FAIL/reset
 and query/AND-filter-preserving return. Four standalone S001 visits plus one
 unified S001 control repeat add five actual navigations, not five unique lessons.
 Parent nodes, leaf cases and navigations are separate counts. Quiet capture-unset
-model/browser replay verifies the full owned path set and raw bytes, all 290
-historical proofs and six snapshot hashes. The new public result, validation and
+model/browser replay verifies the full owned path set and raw bytes, all 422
+historical proofs (including the 51-file blocked attempt) and seven snapshot hashes.
+The new public result, validation and
 manifest report actual evidence, not self-acceptance or a fabricated own commit.
 The previous OP115 raw archive count is explicitly **45 files = 17 text
 archives + 28 gzip command streams**, not 45 compressed files. New raw archive

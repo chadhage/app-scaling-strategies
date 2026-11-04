@@ -1,0 +1,43 @@
+{
+  "operation": "OP-CATALOG-SNAPSHOT-REFRESH-150",
+  "worker": "worker-OP-CATALOG-SNAPSHOT-REFRESH-150",
+  "kind": "actual-command-and-raw-transcript-not-acceptance",
+  "startedAtUtc": "2026-11-04T03:03:44.510Z",
+  "completedAtUtc": "2026-11-04T03:03:44.641Z",
+  "command": [
+    "node",
+    "-e",
+    "const path = require('node:path');\nconst load = (...parts) => require(path.resolve(...parts));\nconst c = load('capability','C005','catalog-data.js');\nconst m = load('capability','C003','matrix-data.js');\nconst contract = load('capability','C005','catalog-contract.js');\nconst result = contract.validateCatalog(c,m);\nconsole.log(JSON.stringify(result,null,2));\nrequire('node:assert/strict').deepEqual(result,{valid:true,errors:[]});"
+  ],
+  "node": "v22.23.4",
+  "captureEnabled": false,
+  "captureValue": null,
+  "expectedExitCode": 0,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "summary": {},
+  "runSummaries": [],
+  "summaryKind": "node-runner-summary",
+  "testNodes": null,
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\catalog-validation-attempt-01.stdout.raw.gz",
+      "bytes": 124,
+      "sha256": "9b43ca4e1109fc2e36feda91b20f8db68ac1bc30b42ce0309f051d8c4b0eb796",
+      "gzipBytes": 122,
+      "gzipSha256": "69e74bafcc7b3bf5d4522254d6746aab87d6563994cf990c6a8aa10e2a44405a",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\catalog-validation-attempt-01.stderr.raw.gz",
+      "bytes": 1037,
+      "sha256": "9e97f52707acd9233ccf45fd9c21eb1b961694c146f414bd6c58829f54f2d6f1",
+      "gzipBytes": 490,
+      "gzipSha256": "d75a8bc2fd529a75dbea8ca5e0eda90f6d88259508f206405ce525b59d2ca104",
+      "rawCRLFPairs": 38
+    }
+  },
+  "stdout": "{\n  \"valid\": false,\n  \"errors\": [\n    \"acceptanceSnapshot.ledgerUpdatedAtUtc: cannot postdate the committed snapshot\"\n  ]\n}\n",
+  "stderr": "node:assert:150\r\n  throw new AssertionError(obj);\r\n  ^\r\n\r\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\r\n+ actual - expected\r\n\r\n  {\r\n+   errors: [\r\n+     'acceptanceSnapshot.ledgerUpdatedAtUtc: cannot postdate the committed snapshot'\r\n+   ],\r\n+   valid: false\r\n-   errors: [],\r\n-   valid: true\r\n  }\r\n\r\n    at [eval]:8:31\r\n    at runScriptInThisContext (node:internal/vm:209:10)\r\n    at node:internal/process/execution:446:12\r\n    at [eval]-wrapper:6:24\r\n    at runScriptInContext (node:internal/process/execution:444:60)\r\n    at evalFunction (node:internal/process/execution:279:30)\r\n    at evalTypeScript (node:internal/process/execution:291:3)\r\n    at node:internal/main/eval_string:74:3 {\r\n  generatedMessage: true,\r\n  code: 'ERR_ASSERTION',\r\n  actual: {\r\n    valid: false,\r\n    errors: [\r\n      'acceptanceSnapshot.ledgerUpdatedAtUtc: cannot postdate the committed snapshot'\r\n    ]\r\n  },\r\n  expected: { valid: true, errors: [] },\r\n  operator: 'deepStrictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v22.23.4\r\n"
+}

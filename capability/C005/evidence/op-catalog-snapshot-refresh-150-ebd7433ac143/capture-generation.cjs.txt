@@ -1,0 +1,101 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const relative = path.relative(root, __dirname);
+const sha = value => createHash('sha256').update(value).digest('hex');
+const read = file => fs.readFileSync(path.join(root, file));
+const load = name => JSON.parse(fs.readFileSync(path.join(__dirname, name)));
+const normalize = bytes => bytes.toString('utf8').replaceAll('\r\n', '\n');
+const source = require(path.join(root, 'capability', 'C005', 'catalog-source.cjs'));
+const catalog = require(path.join(root, 'capability', 'C005', 'catalog-data.js'));
+const matrix = require(path.join(root, 'capability', 'C003', 'matrix-data.js'));
+const contract = require(path.join(root, 'capability', 'C005', 'catalog-contract.js'));
+const accounting = load('source-accounting.json');
+const blockedRelative = path.join('capability', 'C005', 'evidence', 'op-catalog-snapshot-refresh-150-38ecc22ba606');
+const old = JSON.parse(read(path.join(blockedRelative, 'generation.json')));
+const historical = load('historical-proof-hashes.json');
+const frozen = load('blocked-attempt-frozen-hashes.json');
+for (const file of historical.files) assert.equal(sha(read(file.path)), file.sha256, file.path);
+const sourceBytes = execFileSync('git', ['--no-pager', 'show', `${accounting.sourceCommit}:.docs/wiki/flow-state.json`],
+  { cwd: root, maxBuffer: 8 * 1024 * 1024 });
+const ledger = JSON.parse(sourceBytes);
+assert.equal(ledger.updatedAtUtc, '2026-11-04T02:53:47.0882168Z');
+assert.ok(Date.parse(ledger.updatedAtUtc) < Date.parse(catalog.source.commitTimeUtc));
+assert.equal(catalog.acceptanceSnapshot.ledgerUpdatedAtUtc, ledger.updatedAtUtc);
+assert.equal(sha(sourceBytes), catalog.acceptanceSnapshot.ledgerSha256);
+assert.deepEqual(contract.validateCatalog(catalog, matrix), { valid: true, errors: [] });
+assert.deepEqual(catalog, source.buildCatalog());
+assert.deepEqual(catalog.entries.filter(entry => entry.learning.available).map(entry => entry.id), accounting.acceptedPortableIds);
+const dataPath = path.join('capability', 'C005', 'catalog-data.js');
+const generatorPath = path.join('capability', 'C005', 'catalog-source.cjs');
+const data = read(dataPath);
+const generator = read(generatorPath);
+assert.equal(normalize(data), source.serialize(catalog));
+assert.equal(normalize(generator), normalize(read(old.previous.generatorPath))
+  .replace(old.previous.sourceCommit, accounting.sourceCommit), 'Only the full source pin changes from the accepted generator.');
+const failedDataPath = path.join(relative, 'catalog-data.failed-source-38ecc22ba606.js.txt');
+const failedGeneratorPath = path.join(relative, 'catalog-source.failed-source-38ecc22ba606.cjs.txt');
+assert.equal(sha(read(failedDataPath)), old.data.sha256);
+assert.equal(normalize(generator), normalize(read(failedGeneratorPath)).replace(old.sourceCommit, accounting.sourceCommit));
+const oldCatalog = require(path.join(root, old.previous.path));
+const identity = entry => { const { learning, ...rest } = entry; return rest; };
+assert.deepEqual(catalog.entries.map(identity), oldCatalog.entries.map(identity));
+const iac = load('iac-na.json');
+const write = load('source-write-attempt-01.json');
+assert.equal(write.exitCode, 0);
+assert.ok(Date.parse(write.startedAtUtc) >= Date.parse(iac.recordedAtUtc));
+const generation = {
+  operation: accounting.operation, kind: 'fixed-historical-generation-binding-not-unit-acceptance',
+  generatedAtUtc: new Date().toISOString(), sourceTag: accounting.sourceTag,
+  sourceCommit: accounting.sourceCommit, sourceTagObject: accounting.sourceTagObject,
+  source: catalog.source, acceptanceSnapshot: catalog.acceptanceSnapshot,
+  acceptedUnits: 150, acceptedPortableLessons: 135, acceptedPortableIds: accounting.acceptedPortableIds,
+  newlyAcceptedPortableIds: accounting.newlyAcceptedPortableIds, acceptedNonPortableUnits: 15,
+  sourceKanoDone: accounting.sourceKanoDone, sourceScenarios: 150, guidedWorkflows: 2,
+  nativeRunnable: 0, nativeQualified: 0, completedSourceParents: 0,
+  H001Complete: false, H002Complete: false, production24Validated: false,
+  unavailableGaps: [], unavailableFrom: 'S136',
+  data: { path: dataPath, bytes: data.length, sha256: sha(data),
+    canonicalSerializedSha256: sha(source.serialize(catalog)), normalizedSha256: sha(normalize(data)) },
+  generator: { path: generatorPath, rawSha256: sha(generator), normalizedSha256: sha(normalize(generator)),
+    gitReadMaxBufferBytes: 8388608, extractorSemanticsUnchanged: true, onlyFullShaPinChanged: true,
+    requiredTransportRepair: false, successfulWrite: 'source-write-attempt-01.json',
+    priorOversizedLedgerFailurePreserved: 'capability\\C005\\evidence\\op-catalog-snapshot-refresh-115-e8a3064f8554\\source-write-attempt-01.json' },
+  previous: old.previous, prior100: old.prior100, prior86: old.prior86, prior61: old.prior61,
+  prior36: old.prior36, intermediate: old.intermediate, original: old.original,
+  preservation: { manifest: path.join(relative, 'historical-proof-hashes.json'), files: historical.files.length,
+    manifestSha256: sha(fs.readFileSync(path.join(__dirname, 'historical-proof-hashes.json'))), byteForByte: true,
+    originalManifest: path.join(blockedRelative, 'historical-proof-hashes.json'), originalHistoricalFiles: 371,
+    frozenBlockedManifest: path.join(relative, 'blocked-attempt-frozen-hashes.json'), frozenBlockedFiles: frozen.files.length,
+    originalRawCRLFPreservedSeparatelyFromCanonicalGitSource: true,
+    rawSha256IsPreservationAuthority: true, canonicalGitSourceSha256IsSeparateIntegrityAuthority: true },
+  recovery: { sameOperationAndCredit: true, parentApprovedExistingSourcePinRecovery: true,
+    supersededSource: old.sourceCommit, blockedAttempt: blockedRelative,
+    blockedResult: path.join(blockedRelative, 'result-final.json'),
+    blockedManifest: path.join(blockedRelative, 'hashes-blocked.json'),
+    failedGeneratedData: { path: failedDataPath, sha256: sha(read(failedDataPath)), bytes: read(failedDataPath).length },
+    failedGenerator: { path: failedGeneratorPath, sha256: sha(read(failedGeneratorPath)) },
+    originalBehavioralRed: { path: path.join(blockedRelative, 'red.json'), total: 18, parents: 0,
+      failedPositiveLeaves: 17, passedNegativeLeaves: 1,
+      assertionsPath: path.join(blockedRelative, 'red-snapshot-refresh-150.cjs.txt'),
+      bddPath: path.join(blockedRelative, 'red-snapshot-refresh-150.feature.txt') },
+    originalChronologyFailureMilliseconds: 18,
+    chronologyValidatedUsingOriginalGitJsonAndNodeDateParse: true,
+    exactSourceLedgerUpdatedAtUtc: ledger.updatedAtUtc, exactSourceCommitTimeUtc: catalog.source.commitTimeUtc,
+    timestampFalsification: false, validatorSchemaAuthorityOrChronologyRelaxation: false,
+    failedAttemptsRewrittenOrRelabeled: false },
+  sourceIdentityRecordsUnchanged: 152, originalParentOrKanoCredit: false,
+  S107StaticEntryCertifiesHttpOriginBehavior: false, S107NativeAzureProof: false,
+  liveAvailability: false, stopAfterOneRefresh: true
+};
+fs.writeFileSync(path.join(__dirname, 'generation.json'), `${JSON.stringify(generation, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify({ sourceCommit: generation.sourceCommit, acceptedUnits: 150, acceptedPortableLessons: 135,
+  generatedCatalogSha256: generation.data.sha256, unchangedValidatorPassed: true, historicalProofFiles: historical.files.length,
+  originalHistoricalFiles: 371, frozenBlockedFiles: frozen.files.length, sevenSnapshotCounts: [11, 20, 36, 61, 86, 100, 120],
+  exactLedgerUpdatedAtUtc: ledger.updatedAtUtc, exactGitCommitTimeUtc: catalog.source.commitTimeUtc }));

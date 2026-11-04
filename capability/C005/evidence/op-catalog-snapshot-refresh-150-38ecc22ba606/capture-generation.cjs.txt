@@ -1,0 +1,120 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const relative = path.relative(root, __dirname);
+const sha = value => createHash('sha256').update(value).digest('hex');
+const read = file => fs.readFileSync(path.join(root, file));
+const normalize = value => value.toString('utf8').replaceAll('\r\n', '\n');
+const git = args => execFileSync('git', ['--no-pager', ...args], { cwd: root, maxBuffer: 8 * 1024 * 1024 });
+const write = (name, value) => fs.writeFileSync(path.join(__dirname, name),
+  `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
+const source = require(path.join(root, 'capability', 'C005', 'catalog-source.cjs'));
+const catalog = require(path.join(root, 'capability', 'C005', 'catalog-data.js'));
+const accounting = JSON.parse(read(path.join(relative, 'source-accounting.json')));
+const originalGeneration = path.join('capability', 'C005', 'evidence', 'op-catalog-snapshot-refresh-135-a03ef59da5d5', 'generation.json');
+const old = JSON.parse(read(originalGeneration));
+const historicalManifest = path.join(relative, 'historical-proof-hashes.json');
+const historical = JSON.parse(read(historicalManifest));
+for (const file of historical.files) assert.equal(sha(read(file.path)), file.sha256, file.path);
+const ledger = JSON.parse(git(['show', `${accounting.sourceCommit}:.docs/wiki/flow-state.json`]));
+const priorOperation = ledger.operationalWork.find(item => item.id === 'OP-CATALOG-SNAPSHOT-REFRESH-135');
+assert.equal(priorOperation.state, 'Done');
+assert.equal(priorOperation.result.accepted, true);
+assert.equal(priorOperation.result.remoteVerified, true);
+const previousPublication = priorOperation.result.commit;
+assert.equal(previousPublication, accounting.previousPublication);
+const dataPath = path.join('capability', 'C005', 'catalog-data.js');
+const generatorPath = path.join('capability', 'C005', 'catalog-source.cjs');
+const data = read(dataPath);
+const generator = read(generatorPath);
+assert.deepEqual(catalog, source.buildCatalog());
+assert.equal(normalize(data), source.serialize(catalog));
+assert.deepEqual(catalog.entries.filter(entry => entry.learning.available).map(entry => entry.id), accounting.acceptedPortableIds);
+const oldGeneratorPath = path.join(relative, 'catalog-source.a03ef59da5d5.cjs.txt');
+assert.equal(normalize(generator), normalize(read(oldGeneratorPath)).replace(old.sourceCommit, accounting.sourceCommit),
+  'Only the full immutable pin changes; preserve the existing 8 MiB transport and extractor semantics.');
+const previous = {
+  path: path.join(relative, 'catalog-data.a03ef59da5d5.js.txt'),
+  sourceCommit: old.sourceCommit, acceptedPublication: previousPublication,
+  acceptedPublicationTag: priorOperation.result.tag, parentAcceptedAtUtc: priorOperation.acceptedAtUtc,
+  sha256: old.data.sha256, acceptedPortableLessons: old.acceptedPortableLessons,
+  generationPath: path.join(relative, 'generation.a03ef59da5d5.json'),
+  originalGenerationPath: originalGeneration, generationSha256: sha(read(originalGeneration)),
+  generatorPath: oldGeneratorPath, generatorRawSha256: sha(read(oldGeneratorPath)),
+  canonicalGitDataPath: path.join(relative, 'catalog-data.a03ef59da5d5.git-source.js.txt'),
+  canonicalGitDataSha256: sha(read(path.join(relative, 'catalog-data.a03ef59da5d5.git-source.js.txt'))),
+  canonicalGitGeneratorPath: path.join(relative, 'catalog-source.a03ef59da5d5.git-source.cjs.txt'),
+  canonicalGitGeneratorSha256: sha(read(path.join(relative, 'catalog-source.a03ef59da5d5.git-source.cjs.txt')))
+};
+assert.equal(sha(read(previous.path)), '549fba2019ea40d0cc6cdd8b23ad87be31fa30dcbf1cf4f22c843f0cd12e9334');
+assert.deepEqual(read(previous.generationPath), read(previous.originalGenerationPath));
+for (const [file, gitPath] of [
+  [previous.path, 'capability/C005/catalog-data.js'],
+  [previous.generatorPath, 'capability/C005/catalog-source.cjs']
+]) assert.equal(normalize(read(file)), normalize(git(['show', `${previousPublication}:${gitPath}`])));
+const previousCatalog = require(path.join(root, previous.path));
+const identity = entry => { const { learning, ...unchanged } = entry; return unchanged; };
+assert.deepEqual(catalog.entries.map(identity), previousCatalog.entries.map(identity));
+const iac = JSON.parse(read(path.join(relative, 'iac-na.json')));
+const successfulWrite = JSON.parse(read(path.join(relative, 'source-write-attempt-01.json')));
+assert.equal(successfulWrite.exitCode, 0);
+assert.ok(Date.parse(successfulWrite.startedAtUtc) >= Date.parse(iac.recordedAtUtc));
+const baseline = JSON.parse(read(path.join(relative, 'owned-before-hashes.json')));
+const priorRelative = path.dirname(originalGeneration);
+const priorText = baseline.files.filter(file => file.path.startsWith(`${priorRelative}${path.sep}`) && file.path.endsWith('.txt'));
+const priorGzip = baseline.files.filter(file => file.path.startsWith(`${priorRelative}${path.sep}raw${path.sep}`) && file.path.endsWith('.gz'));
+write('prior-publication-provenance.json', {
+  operation: accounting.operation, recordedAtUtc: new Date().toISOString(),
+  fixedLedger: accounting.sourceCommit, priorOperation: priorOperation.id,
+  priorState: priorOperation.state, parentAcceptedAtUtc: priorOperation.acceptedAtUtc,
+  accepted: priorOperation.result.accepted, remoteVerified: priorOperation.result.remoteVerified,
+  commit: previousPublication, tag: priorOperation.result.tag,
+  previousRawByteArchives: {
+    total: priorText.length + priorGzip.length, textSnapshotsScriptsAndCommands: priorText.length,
+    gzipCommandStreams: priorGzip.length,
+    definition: 'Total raw-byte-preserved files = text archives + gzip streams; not the compressed-file count.'
+  }, ownPublicationOrAcceptanceBinding: false
+});
+const generation = {
+  operation: accounting.operation, kind: 'fixed-historical-generation-binding-not-unit-acceptance',
+  generatedAtUtc: new Date().toISOString(), sourceTag: accounting.sourceTag,
+  sourceCommit: accounting.sourceCommit, sourceTagObject: accounting.sourceTagObject,
+  source: catalog.source, acceptanceSnapshot: catalog.acceptanceSnapshot,
+  acceptedUnits: accounting.acceptedUnits, acceptedPortableLessons: accounting.acceptedPortableLessons,
+  acceptedPortableIds: accounting.acceptedPortableIds, newlyAcceptedPortableIds: accounting.newlyAcceptedPortableIds,
+  acceptedNonPortableUnits: accounting.acceptedNonPortableUnits, sourceKanoDone: accounting.sourceKanoDone,
+  sourceScenarios: 150, guidedWorkflows: 2, nativeRunnable: 0, nativeQualified: 0,
+  completedSourceParents: 0, H001Complete: false, H002Complete: false, production24Validated: false,
+  unavailableGaps: accounting.unavailableGaps, unavailableFrom: accounting.unavailableFrom,
+  data: { path: dataPath, sha256: sha(data), bytes: data.length,
+    canonicalSerializedSha256: sha(source.serialize(catalog)), normalizedSha256: sha(normalize(data)) },
+  generator: { path: generatorPath, rawSha256: sha(generator), normalizedSha256: sha(normalize(generator)),
+    gitReadMaxBufferBytes: 8 * 1024 * 1024, extractorSemanticsUnchanged: true,
+    onlyFullShaPinChanged: true, requiredTransportRepair: false,
+    priorOversizedLedgerFailurePreserved: 'capability\\C005\\evidence\\op-catalog-snapshot-refresh-115-e8a3064f8554\\source-write-attempt-01.json',
+    successfulWrite: 'source-write-attempt-01.json' },
+  previous, prior100: old.previous, prior86: old.prior86, prior61: old.prior61, prior36: old.prior36,
+  intermediate: old.intermediate, original: old.original,
+  preservation: { manifest: historicalManifest, files: historical.files.length,
+    manifestSha256: sha(read(historicalManifest)), byteForByte: true,
+    originalRawCRLFPreservedSeparatelyFromCanonicalGitSource: true,
+    rawSha256IsPreservationAuthority: true, canonicalGitSourceSha256IsSeparateIntegrityAuthority: true },
+  sourceIdentityRecordsUnchanged: 152, originalParentOrKanoCredit: false,
+  S107StaticEntryCertifiesHttpOriginBehavior: false, S107NativeAzureProof: false,
+  liveAvailability: false, stopAfterOneRefresh: true
+};
+write('generation.json', generation);
+console.log(JSON.stringify({
+  fixedSource: generation.sourceCommit, acceptedUnits: generation.acceptedUnits,
+  acceptedPortableLessons: generation.acceptedPortableLessons, generatedCatalogSha256: generation.data.sha256,
+  previousPublication, sevenArchivedSnapshots: [generation.original, generation.intermediate, generation.prior36,
+    generation.prior61, generation.prior86, generation.prior100, generation.previous]
+    .map(item => ({ count: item.acceptedPortableLessons, sha256: item.sha256 })),
+  historicalRawProofFiles: historical.files.length, originalCredit: false
+}));

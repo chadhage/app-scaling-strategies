@@ -1,0 +1,93 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
+
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const relative = path.relative(root, __dirname);
+const scopes = ['C005', 'C006', 'C007', 'C008', 'local-harness'].map(scope => path.join('capability', scope));
+const sha = value => createHash('sha256').update(value).digest('hex');
+const load = name => JSON.parse(fs.readFileSync(path.join(__dirname, name)));
+const write = (name, value) => fs.writeFileSync(path.join(__dirname, name), `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
+const validationCommand = load('blocker-readonly-verification-01.json');
+assert.equal(validationCommand.exitCode, 0);
+const validation = JSON.parse(validationCommand.stdout);
+const red = load('red.json');
+assert.deepEqual(red.summary, { tests: 18, suites: 0, pass: 1, fail: 17, cancelled: 0, skipped: 0, todo: 0 });
+const failed = load('catalog-validation-attempt-01.json');
+assert.equal(failed.exitCode, 1);
+const generation = load('generation.json');
+const historical = load('historical-proof-hashes.json');
+write('validation-final.json', {
+  ...validation, verificationCommand: 'blocker-readonly-verification-01.json',
+  successful135ConsumerOrBrowserAcceptanceClaimed: false,
+  sourcePrecisionConflictMakesUnchangedContractFailClosed: true
+});
+write('result-final.json', {
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-150',
+  kind: 'one-shot-zero-credit-operational-refinement', outcome: 'blocked-immutable-source-timestamp-invariant',
+  recordedAtUtc: new Date().toISOString(), sourceCommit: generation.sourceCommit,
+  sourceAcceptedOriginalUnits: 150, sourceKanoDone: { S: 148, L: 0, D: 2 },
+  sourceAcceptedPortablePractices: 135, unavailableFrom: 'S136', nativeRunnable: 0, nativeQualified: 0,
+  completedSourceParents: 0, H001Complete: false, H002Complete: false, productionNode24Validated: false,
+  blocker: {
+    sourceCommitTimeUtc: validation.sourceCommitTimeUtc,
+    exactImmutableLedgerUpdatedAtUtc: validation.exactImmutableLedgerUpdatedAtUtc,
+    parsedDifferenceMilliseconds: validation.javascriptParsedDifferenceMilliseconds,
+    error: validation.generated135CatalogValidation.errors[0],
+    prior120ValidationPassed: true, generated135ValidationPassed: false,
+    actualAssertionFailure: 'catalog-validation-attempt-01.json',
+    readOnlySourcePrecisionVerification: 'blocker-readonly-verification-01.json',
+    noAuthorizedPinOnlySolutionUnderUnchangedExactTimestampInvariant: true,
+    authorityOrSchemaRelaxationPerformed: false, immutableTimestampFalsified: false
+  },
+  sequence: {
+    bdd: 'capability\\C005\\snapshot-refresh-150.feature',
+    redBddArchive: 'red-snapshot-refresh-150.feature.txt',
+    genuineRed: 'red.json', redAssertions: 'red-snapshot-refresh-150.cjs.txt',
+    redTotal: 18, redFailedPositiveLeaves: 17, redPassedNegativeLeaves: 1,
+    redParents: 0, unchanged120RawSha256: red.oldCatalogSha256,
+    iacNotApplicable: 'iac-na.json', pinOnlySourceWrite: 'source-write-attempt-01.json',
+    attemptedGenerationBinding: 'generation.json', generated135RawSha256: generation.data.sha256,
+    actualConsumerFailClosedInspection: 'consumer-count-inspection-01.json',
+    partialMetadataEditDiagnostic: 'test-binding-edit-attempt-01.json',
+    sourceValidationFailurePreserved: 'catalog-validation-attempt-01.json',
+    successfulFocusedSuite: null, actualBrowserAcceptance: null, browserSweep: null
+  },
+  historicalProofPreserved: { files: historical.files.length, manifest: 'historical-proof-hashes.json', byteForByte: true },
+  previousSnapshotsPreserved: [generation.original, generation.intermediate, generation.prior36,
+    generation.prior61, generation.prior86, generation.prior100, generation.previous],
+  finalVerification: 'validation-final.json', finalManifest: 'hashes-blocked.json',
+  proposedImplementationLeftUnpublishedForParentDecision: true,
+  unownedFilesOrIndexChangedByWorker: false, gitCommitOrTagCreated: false, remotePublishAttempted: false,
+  publisherMutexTaken: false, stateLockTaken: false, centralLedgerWritten: false,
+  originalCreditAdded: false, kanoCredits: { S: 0, D: 0, L: 0 },
+  operationalBindingAndAcceptanceOwner: 'parent-controller-only',
+  S107StaticEntryCertifiesHttpOriginBehavior: false, S107NativeAzureProof: false,
+  noNewPackagesDownloadsCloudIacIdentityScaffoldDeploymentOrSpend: true
+});
+function walk(directory) {
+  return fs.readdirSync(path.join(root, directory), { withFileTypes: true }).flatMap(entry =>
+    entry.isDirectory() ? walk(path.join(directory, entry.name)) : [path.join(directory, entry.name)]);
+}
+const files = scopes.flatMap(walk).sort().map(file => {
+  const bytes = fs.readFileSync(path.join(root, file));
+  return { path: file, bytes: bytes.length, sha256: sha(bytes) };
+});
+const textArchives = files.filter(file => file.path.startsWith(`${relative}${path.sep}`) && file.path.endsWith('.txt'));
+const compressedStreams = files.filter(file => file.path.startsWith(`${relative}${path.sep}raw${path.sep}`) && file.path.endsWith('.gz'));
+write('hashes-blocked.json', {
+  schemaVersion: 1, operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', outcome: 'blocked-not-publication-manifest',
+  recordedAtUtc: new Date().toISOString(), filesExcludingSelf: files.length, files,
+  rawArchiveCounts: { textArchives: textArchives.length, gzipCommandStreams: compressedStreams.length,
+    totalRawArchives: textArchives.length + compressedStreams.length, notAllCompressed: true },
+  successfulFocusedOrBrowserOrPublicationCountsClaimed: false
+});
+console.log(JSON.stringify({ outcome: 'blocked-immutable-source-timestamp-invariant',
+  result: path.join(relative, 'result-final.json'), historicalProofFiles: historical.files.length,
+  snapshotCounts: [11, 20, 36, 61, 86, 100, 120], proposed135Hash: generation.data.sha256,
+  red: { total: 18, parents: 0, leaves: 18, positiveFailures: 17, negativePasses: 1 },
+  textArchives: textArchives.length, gzipCommandStreams: compressedStreams.length,
+  commit: null, tag: null, noPublish: true }));

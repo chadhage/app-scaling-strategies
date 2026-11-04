@@ -1,0 +1,55 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
+
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const failedBytes = fs.readFileSync(path.join(__dirname, 'browser-capture-attempt-01.json'));
+const failed = JSON.parse(failedBytes);
+assert.equal(failed.exitCode, 1);
+assert.deepEqual(failed.summary, { tests: 71, suites: 0, pass: 60, fail: 9, cancelled: 2, skipped: 0, todo: 0 });
+assert.match(failed.stdout, /test timed out after 180000ms/);
+const sweep = /ok \d+ - all 135 accepted lessons[^\n]*\r?\n\s*---\r?\n\s*duration_ms: ([\d.]+)/.exec(failed.stdout);
+assert.ok(sweep);
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const observations = [];
+for (const scope of ['C005', 'C006', 'C007', 'C008', 'local-harness']) {
+  const relative = path.join('capability', scope, 'evidence');
+  for (const file of fs.readdirSync(path.join(root, relative)).filter(file =>
+    file.startsWith('browser-op-catalog-snapshot-refresh-150-ebd7433ac143-') && file.endsWith('.json'))) {
+    const bytes = fs.readFileSync(path.join(root, relative, file));
+    const report = JSON.parse(bytes);
+    if (Date.parse(report.observedAtUtc) < Date.parse(failed.startedAtUtc)
+      || Date.parse(report.observedAtUtc) > Date.parse(failed.completedAtUtc)) continue;
+    observations.push({ path: path.join(relative, file), bytes: bytes.length, sha256: sha(bytes),
+      status: report.status, scope });
+  }
+}
+assert.equal(observations.length, 5);
+const standalone = observations.filter(report => report.scope !== 'local-harness');
+const unqualifiedUnified = observations.filter(report => report.scope === 'local-harness');
+assert.equal(standalone.length, 4);
+assert.equal(unqualifiedUnified.length, 1);
+const report = {
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-150',
+  recordedAtUtc: new Date().toISOString(), kind: 'actual-bounded-browser-runtime-retry-provenance',
+  actualFailedCommand: 'browser-capture-attempt-01.json', failedCommandSha256: sha(failedBytes),
+  actualFailedSummary: failed.summary, elapsedCommandMilliseconds:
+    Date.parse(failed.completedAtUtc) - Date.parse(failed.startedAtUtc),
+  actual135SweepLeafPassedBeforeParentTimeout: true, actualSweepLeafMilliseconds: Number(sweep[1]),
+  unifiedParentTimeoutMilliseconds: 180000, unifiedConductAndReturnNotQualifiedByFailedRun: true,
+  successfulStandaloneCapturesRetained: standalone,
+  failedCommandUnifiedCaptureRetainedButUnqualified: unqualifiedUnified[0],
+  unifiedCaptureStatusIsNotWholeCommandQualification: true,
+  failedRecorderAttemptRetained: 'browser-retry-reason-command-01.json',
+  cancelledSuiteCaptureGuardRepair: 'Existing browser tests assert t.signal.aborted is false immediately before append; no helper/API/authority change.',
+  retry: 'Same five existing files with built-in Node --test-concurrency=1 to reduce shared-host contention.',
+  existingTestAndHelperTimeoutsUnchanged: true, helperChanged: false, schemaOrAuthorityChanged: false,
+  unsafeBrowserFlagsAdded: false, newPackagesOrDownloads: 0, failedRunRewrittenOrRelabeled: false,
+  qualificationRequiresFreshSuccessfulAllFiveSuiteCapture: true, kanoCredits: { S: 0, D: 0, L: 0 }
+};
+fs.writeFileSync(path.join(__dirname, 'browser-retry-reason-01.json'), `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify({ failed: failed.summary, retainedStandaloneCaptures: 4, retainedUnqualifiedUnifiedCapture: 1,
+  actual135SweepLeafMilliseconds: Number(sweep[1]), boundedSerializedRetry: true, helperChanged: false }));

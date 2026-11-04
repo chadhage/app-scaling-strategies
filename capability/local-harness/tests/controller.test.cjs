@@ -41,7 +41,8 @@ test('the actual query plus three filters flows into exact preparation and a pre
     doc.getElementById(id).value = value;
   }
   assert.equal(await controller.refresh(), true);
-  assert.deepEqual(doc.getElementById('matching-entries').children.map(node => node.id), ['S001']);
+  assert.deepEqual(doc.getElementById('matching-entries').children.map(node => node.id), ['S001', 'S128']);
+  assert.deepEqual(doc.getElementById('excluded-entries').children.map(node => node.id), ['S124']);
   assert.equal(await controller.open('S001'), true);
   assert.equal(doc.activeElement.id, 'preparation-heading');
   const body = doc.getElementById('preparation-body');

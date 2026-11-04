@@ -1,0 +1,36 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
+
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const originalEvidence = path.join('capability', 'C005', 'evidence', 'op-catalog-snapshot-refresh-150-38ecc22ba606');
+const redPath = path.join(originalEvidence, 'red.json');
+const redBytes = fs.readFileSync(path.join(root, redPath));
+const red = JSON.parse(redBytes);
+assert.deepEqual(red.summary, { tests: 18, suites: 0, pass: 1, fail: 17, cancelled: 0, skipped: 0, todo: 0 });
+assert.equal(red.exitCode, 1);
+assert.equal(red.oldCatalogSha256, '549fba2019ea40d0cc6cdd8b23ad87be31fa30dcbf1cf4f22c843f0cd12e9334');
+assert.equal(red.oldCatalogAfterSha256, red.oldCatalogSha256);
+assert.match(red.stdout, /120 !== 135/);
+assert.doesNotMatch(red.stdout, /MODULE_NOT_FOUND|SyntaxError/);
+const record = {
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-150',
+  recordedAtUtc: new Date().toISOString(), applicability: 'not-applicable',
+  recordedAfter: 'original genuine18-leaf assertion RED against loadable unchanged120 snapshot',
+  red: { path: redPath, sha256: createHash('sha256').update(redBytes).digest('hex'),
+    completedAtUtc: red.completedAtUtc, failedPositiveLeaves: 17, passedNegativeLeaves: 1 },
+  recordedBefore: 'approved source-pin retry catalog write',
+  sourceCommit: 'ebd7433ac143242ab633b52aff864bb2923dac2c',
+  supersededSource: '38ecc22ba606304d3fd5357d614f1e513e794f54',
+  originalIacNotApplicable: path.join(originalEvidence, 'iac-na.json'),
+  reason: 'Same zero-credit local deterministic metadata/test/evidence mission. Parent approved an already-published source with valid unchanged chronology; no infrastructure or resource operation.',
+  originalRedReplacedOrRelabeled: false, timestampSchemaOrAuthorityRelaxed: false,
+  newPackages: 0, downloads: 0, cloudOperations: 0, authorizedSpend: 0,
+  nativeQualified: 0, H001Complete: false, H002Complete: false, productionNode24Validated: false,
+  kanoCredits: { S: 0, D: 0, L: 0 }, operationalAcceptanceOwner: 'parent-controller-only'
+};
+fs.writeFileSync(path.join(__dirname, 'iac-na.json'), `${JSON.stringify(record, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify(record));

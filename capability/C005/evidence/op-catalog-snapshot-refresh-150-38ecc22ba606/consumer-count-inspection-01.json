@@ -1,0 +1,43 @@
+{
+  "operation": "OP-CATALOG-SNAPSHOT-REFRESH-150",
+  "worker": "worker-OP-CATALOG-SNAPSHOT-REFRESH-150",
+  "kind": "actual-command-and-raw-transcript-not-acceptance",
+  "startedAtUtc": "2026-11-04T03:03:27.434Z",
+  "completedAtUtc": "2026-11-04T03:03:27.677Z",
+  "command": [
+    "node",
+    "-e",
+    "const path = require('node:path');\nconst load = (...parts) => require(path.resolve(...parts));\nconst c = load('capability', 'C005', 'catalog-data.js');\nconst m = load('capability', 'C003', 'matrix-data.js');\nconst f = load('capability', 'C007', 'catalog-filters.js');\nconst results = Object.fromEntries(['aks', 'app-service', 'container-apps'].map(host => {\n  const r = f.filterCatalog(c, m, {host, risk:'unclassified', readiness:'portable-available'});\n  return [host, {valid:r.valid, matching:r.items.length, excluded:r.incompatible.map(item=>item.entry.id)}];\n}));\nconsole.log(JSON.stringify({fixedSource:c.source.commit, available:c.entries.filter(e=>e.learning.available).length, unavailable:c.entries.filter(e=>!e.learning.available).map(e=>e.id), results},null,2));"
+  ],
+  "node": "v22.23.4",
+  "captureEnabled": false,
+  "captureValue": null,
+  "expectedExitCode": 0,
+  "exitCode": 0,
+  "signal": null,
+  "spawnError": null,
+  "summary": {},
+  "runSummaries": [],
+  "summaryKind": "node-runner-summary",
+  "testNodes": null,
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\consumer-count-inspection-01.stdout.raw.gz",
+      "bytes": 601,
+      "sha256": "80ad77de046c4a5aaa10198a99329cb114d14516e3c40cc2e826878c2f35e5d4",
+      "gzipBytes": 243,
+      "gzipSha256": "e9b865cc8e77b9cd25528ac6c92d81670c8c861342d3b8c74d892daff569457d",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\consumer-count-inspection-01.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "9e72928e7a01615b4cf090daa617b4ca9d68531748f887f323f695eb4ca3ef63",
+      "rawCRLFPairs": 0
+    }
+  },
+  "stdout": "{\n  \"fixedSource\": \"38ecc22ba606304d3fd5357d614f1e513e794f54\",\n  \"available\": 135,\n  \"unavailable\": [\n    \"S136\",\n    \"S137\",\n    \"S138\",\n    \"S139\",\n    \"S140\",\n    \"S141\",\n    \"S142\",\n    \"S143\",\n    \"S144\",\n    \"S145\",\n    \"S146\",\n    \"S147\",\n    \"S148\",\n    \"S149\",\n    \"S150\",\n    \"W001\",\n    \"W002\"\n  ],\n  \"results\": {\n    \"aks\": {\n      \"valid\": false,\n      \"matching\": 0,\n      \"excluded\": []\n    },\n    \"app-service\": {\n      \"valid\": false,\n      \"matching\": 0,\n      \"excluded\": []\n    },\n    \"container-apps\": {\n      \"valid\": false,\n      \"matching\": 0,\n      \"excluded\": []\n    }\n  }\n}\n",
+  "stderr": ""
+}

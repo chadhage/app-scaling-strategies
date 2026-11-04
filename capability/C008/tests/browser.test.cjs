@@ -9,7 +9,7 @@ const { createHash, randomUUID } = require('node:crypto');
 const { createRequire } = require('node:module');
 const { execFileSync } = require('node:child_process');
 const catalog = require('../../C005/catalog-data.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-135-a03ef59da5d5/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-150-ebd7433ac143/generation.json');
 const helperPath = path.resolve(__dirname, '..', '..', '..', 'testing', 'browser', 'isolated.cjs');
 const helperRequire = createRequire(helperPath);
 const helperSourceSha256 = createHash('sha256').update(readFileSync(helperPath)).digest('hex');
@@ -40,7 +40,7 @@ test('C008 real isolated browser preparation, keyboard, reset, errors, CSP and a
   const lifecyclePath = path.join(path.dirname(helperPath), 'lifecycle.cjs');
   assert.equal(Object.hasOwn(require.cache, lifecyclePath), false, 'The abandoned lifecycle prototype must not be imported.');
   const reportPath = path.join(__dirname, '..', 'evidence',
-    `browser-op-catalog-snapshot-refresh-135-a03ef59da5d5-${randomUUID()}.json`);
+    `browser-op-catalog-snapshot-refresh-150-ebd7433ac143-${randomUUID()}.json`);
   const publishedHistoricalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.published-helper.json');
   const historicalPath = path.join(__dirname, '..', 'evidence', 'browser-observations.json');
   const historicalPrevious = await fs.readFile(historicalPath);
@@ -150,12 +150,12 @@ test('C008 real isolated browser preparation, keyboard, reset, errors, CSP and a
       await open('S103');
       assert.equal(await page.locator('#learning-preparation').getAttribute('data-learning-mode'), 'synthetic-learning');
       assert.equal(await page.locator('.lesson-link').getAttribute('href'), '../../learning/S103/index.html');
-      await open('S120');
+      await open('S135');
       assert.equal(await page.locator('#learning-preparation').getAttribute('data-learning-mode'), 'synthetic-learning');
-      assert.equal(await page.locator('.lesson-link').getAttribute('href'), '../../learning/S120/index.html');
+      assert.equal(await page.locator('.lesson-link').getAttribute('href'), '../../learning/S135/index.html');
     });
     await check('unaccepted files and workflow-only entries stay unavailable rather than becoming native or completed parents', async () => {
-      for (const id of ['S121', 'S122', 'S123', 'S124', 'W001', 'W002']) {
+      for (const id of ['S136', 'S137', 'S138', 'S139', 'W001', 'W002']) {
         await open(id);
         assert.equal(await page.locator('.lesson-link').count(), 0);
         assert.equal(await page.locator('#learning-preparation').getAttribute('data-learning-mode'),
@@ -362,7 +362,7 @@ test('C008 real isolated browser preparation, keyboard, reset, errors, CSP and a
     });
     assert.equal(checks.length, 12);
     report = {
-      schemaVersion: 1, cardId: 'C008', operation: 'OP-CATALOG-SNAPSHOT-REFRESH-135', status: 'passed',
+      schemaVersion: 1, cardId: 'C008', operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', status: 'passed',
       observedAtUtc: new Date().toISOString(), mode: 'actual-isolated-headless',
       engine: 'Microsoft Edge (Chromium)', browserVersion, signature, playwrightVersion,
       nodeVersion: process.version, productionNode24Validated: false,
@@ -385,7 +385,7 @@ test('C008 real isolated browser preparation, keyboard, reset, errors, CSP and a
       historicalPortableLessons: generation.acceptedPortableLessons, unknownSupport: 152,
       coverage, checks, cspObservation, pageErrors, remoteRequests,
       practiceNavigations: [acceptedPracticeNavigation], actualPracticeNavigationCount: 1,
-      unavailablePracticeIdsChecked: ['S121', 'S122', 'S123', 'S124'],
+      unavailablePracticeIdsChecked: ['S136', 'S137', 'S138', 'S139'],
       maximumLiveAzureRuns: 0, authorizedCloudSpend: 0,
       nativeAzureObserved: false, nativeQualified: false, sourceParentsCompleted: 0,
       accessibilityLimit: 'Observed keyboard, labels, focus, live/error/empty states, reset, 320px reflow and all-entry preparation. Not a full WCAG or assistive-technology certification.'
@@ -400,6 +400,7 @@ test('C008 real isolated browser preparation, keyboard, reset, errors, CSP and a
   assert.deepEqual(await fs.readFile(publishedHistoricalPath), previous, 'earlier published-helper proof stays byte-for-byte unchanged');
   report.historicalObservations.preservedByteForByte = true;
   if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') {
+    assert.equal(t.signal.aborted, false, 'A timed-out or cancelled suite cannot append a success observation.');
     await fs.writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
     console.log('C008 explicit published-helper observation capture requested with CAPTURE_BROWSER_EVIDENCE=1; historical proof preserved.');
   } else {

@@ -1,0 +1,43 @@
+{
+  "operation": "OP-CATALOG-SNAPSHOT-REFRESH-150",
+  "worker": "worker-OP-CATALOG-SNAPSHOT-REFRESH-150",
+  "kind": "actual-command-and-raw-transcripts-not-operational-acceptance",
+  "sourceCommit": "ebd7433ac143242ab633b52aff864bb2923dac2c",
+  "supersededSource": "38ecc22ba606304d3fd5357d614f1e513e794f54",
+  "startedAtUtc": "2026-11-04T03:19:03.290Z",
+  "completedAtUtc": "2026-11-04T03:19:03.558Z",
+  "command": [
+    "node",
+    "-e",
+    "const path=require('node:path'); const load=(...parts)=>require(path.resolve(...parts)); const c=load('capability','C005','catalog-data.js'); const m=load('capability','C003','matrix-data.js'); const f=load('capability','C007','catalog-filters.js'); const results=Object.fromEntries(['aks','app-service','container-apps'].map(host=>{const r=f.filterCatalog(c,m,{host,risk:'unclassified',readiness:'portable-available'});require('node:assert/strict').equal(r.valid,true,r.errors.join('; '));return [host,{matching:r.items.length,excluded:r.incompatible.map(i=>i.entry.id)}];}));console.log(JSON.stringify({source:c.source.commit,available:c.entries.filter(e=>e.learning.available).length,results},null,2));"
+  ],
+  "node": "v22.23.4",
+  "captureEnabled": false,
+  "captureValue": null,
+  "expectedExitCode": 0,
+  "exitCode": 0,
+  "signal": null,
+  "spawnError": null,
+  "summary": {},
+  "testNodes": null,
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\consumer-count-inspection-01.stdout.raw.gz",
+      "bytes": 1111,
+      "sha256": "466d7bc7366f8d2ab66d7f52f0d743ad88ce4154140c61cee483f960c2db2e38",
+      "gzipBytes": 270,
+      "gzipSha256": "ee913634b7562f86463c8eb827df71f8073da504da0cc2a933f01ffb684f0819",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\consumer-count-inspection-01.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "9e72928e7a01615b4cf090daa617b4ca9d68531748f887f323f695eb4ca3ef63",
+      "rawCRLFPairs": 0
+    }
+  },
+  "stdout": "{\n  \"source\": \"ebd7433ac143242ab633b52aff864bb2923dac2c\",\n  \"available\": 135,\n  \"results\": {\n    \"aks\": {\n      \"matching\": 117,\n      \"excluded\": [\n        \"S002\",\n        \"S012\",\n        \"S014\",\n        \"S017\",\n        \"S024\",\n        \"S032\",\n        \"S033\",\n        \"S058\",\n        \"S096\",\n        \"S105\",\n        \"S121\",\n        \"S122\",\n        \"S123\",\n        \"S124\",\n        \"S125\",\n        \"S126\",\n        \"S129\",\n        \"S130\"\n      ]\n    },\n    \"app-service\": {\n      \"matching\": 125,\n      \"excluded\": [\n        \"S047\",\n        \"S058\",\n        \"S111\",\n        \"S112\",\n        \"S125\",\n        \"S126\",\n        \"S127\",\n        \"S128\",\n        \"S129\",\n        \"S130\"\n      ]\n    },\n    \"container-apps\": {\n      \"matching\": 114,\n      \"excluded\": [\n        \"S002\",\n        \"S012\",\n        \"S014\",\n        \"S017\",\n        \"S024\",\n        \"S032\",\n        \"S033\",\n        \"S047\",\n        \"S058\",\n        \"S096\",\n        \"S105\",\n        \"S111\",\n        \"S112\",\n        \"S121\",\n        \"S122\",\n        \"S123\",\n        \"S124\",\n        \"S127\",\n        \"S128\",\n        \"S129\",\n        \"S130\"\n      ]\n    }\n  }\n}\n",
+  "stderr": ""
+}

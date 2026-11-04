@@ -1,0 +1,89 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
+const { execFileSync } = require('node:child_process');
+
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const scopes = ['C005', 'C006', 'C007', 'C008', 'local-harness'].map(scope => path.join('capability', scope));
+const sha = value => createHash('sha256').update(value).digest('hex');
+const read = file => fs.readFileSync(path.join(root, file));
+const load = name => JSON.parse(fs.readFileSync(path.join(__dirname, name)));
+function walk(directory) {
+  return fs.readdirSync(path.join(root, directory), { withFileTypes: true }).flatMap(entry =>
+    entry.isDirectory() ? walk(path.join(directory, entry.name)) : [path.join(directory, entry.name)]);
+}
+const inventory = () => scopes.flatMap(walk).sort().map(file => ({
+  path: file, bytes: read(file).length, sha256: sha(read(file))
+}));
+assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, undefined);
+assert.equal(process.env.NODE_V8_COVERAGE, undefined);
+const before = inventory();
+const generation = load('generation.json');
+const initial = load('initial-boundary.json');
+const historical = load('historical-proof-hashes.json');
+const catalog = require(path.join(root, generation.data.path));
+const priorCatalog = require(path.join(root, generation.previous.path));
+const matrix = require(path.join(root, 'capability', 'C003', 'matrix-data.js'));
+const contract = require(path.join(root, 'capability', 'C005', 'catalog-contract.js'));
+const source = require(path.join(root, generation.generator.path));
+const rejected = contract.validateCatalog(catalog, matrix);
+const oldAccepted = contract.validateCatalog(priorCatalog, matrix);
+assert.deepEqual(oldAccepted, { valid: true, errors: [] });
+assert.deepEqual(rejected, { valid: false, errors: [
+  'acceptanceSnapshot.ledgerUpdatedAtUtc: cannot postdate the committed snapshot'
+] });
+assert.deepEqual(source.buildCatalog(), catalog);
+assert.equal(sha(read(generation.data.path)), generation.data.sha256);
+assert.equal(catalog.entries.filter(entry => entry.learning.available).length, 135);
+assert.deepEqual(catalog.entries.filter(entry => entry.learning.available).map(entry => entry.id),
+  Array.from({ length: 135 }, (_, index) => `S${String(index + 1).padStart(3, '0')}`));
+assert.deepEqual(catalog.entries.filter(entry => !entry.learning.available).map(entry => entry.id),
+  [...Array.from({ length: 15 }, (_, index) => `S${String(index + 136).padStart(3, '0')}`), 'W001', 'W002']);
+const commitTime = catalog.source.commitTimeUtc;
+const ledgerTime = catalog.acceptanceSnapshot.ledgerUpdatedAtUtc;
+assert.equal(commitTime, '2026-11-04T02:52:27.000Z');
+assert.equal(ledgerTime, '2026-11-04T02:52:27.0181908Z');
+assert.ok(Date.parse(ledgerTime) > Date.parse(commitTime));
+assert.equal(ledgerTime.slice(0, 19), commitTime.slice(0, 19));
+const generatorBefore = read(generation.previous.generatorPath).toString('utf8').replaceAll('\r\n', '\n');
+assert.equal(read(generation.generator.path).toString('utf8').replaceAll('\r\n', '\n'),
+  generatorBefore.replace(generation.previous.sourceCommit, generation.sourceCommit));
+for (const file of historical.files) assert.equal(sha(read(file.path)), file.sha256, file.path);
+for (const file of Object.values(initial.readonlyExtra)) assert.equal(sha(read(file.path)), file.sha256, file.path);
+const baseline = load('owned-before-hashes.json');
+const interfaces = baseline.files.filter(file => /\.(?:js|cjs|ts)$/.test(file.path)
+  && !/\\(?:tests|evidence)\\/.test(file.path)
+  && !['capability\\C005\\catalog-data.js', 'capability\\C005\\catalog-source.cjs'].includes(file.path));
+for (const file of interfaces) assert.equal(sha(read(file.path)), file.sha256, file.path);
+const snapshots = [generation.original, generation.intermediate, generation.prior36,
+  generation.prior61, generation.prior86, generation.prior100, generation.previous];
+for (const file of snapshots) assert.equal(sha(read(file.path)), file.sha256, file.path);
+const after = inventory();
+assert.deepEqual(after, before, 'Blocker verification changes no owned path or byte.');
+const git = args => execFileSync('git', ['--no-pager', ...args], { cwd: root, maxBuffer: 8 * 1024 * 1024 }).toString().trim();
+console.log(JSON.stringify({
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-150',
+  kind: 'actual-readonly-source-precision-blocker-verification-not-acceptance',
+  recordedAtUtc: new Date().toISOString(), fixedSource: generation.sourceCommit,
+  sourceCommitTimeUtc: commitTime, exactImmutableLedgerUpdatedAtUtc: ledgerTime,
+  gitCommitTimePrecision: 'whole seconds', sourceLedgerTimePrecision: 'seven fractional decimal places',
+  javascriptParsedDifferenceMilliseconds: Date.parse(ledgerTime) - Date.parse(commitTime),
+  sameGitCommitSecond: true, prior120CatalogValidation: oldAccepted, generated135CatalogValidation: rejected,
+  fullShaPinOnlyDeterministicRegenerationVerified: true,
+  generated135RawSha256: generation.data.sha256, initial120RawSha256: generation.previous.sha256,
+  acceptedOriginalSourceUnits: 150, acceptedOriginalKanoDone: { S: 148, L: 0, D: 2 },
+  extractedPortablePractices: 135, consumerAvailabilityIsBlocked: true,
+  historicalProofFilesByteExact: historical.files.length, archivedSnapshotCounts: snapshots.map(item => item.acceptedPortableLessons),
+  archivedSnapshotHashes: snapshots.map(item => item.sha256), unchangedPublicInterfaceFiles: interfaces.length,
+  publishedHelperAndStandardAdminBoundaryUnchanged: true,
+  ownedFilesChecked: before.length, beforeInventorySha256: sha(JSON.stringify(before)),
+  afterInventorySha256: sha(JSON.stringify(after)), ownedPathSetAndRawBytesUnchangedByVerification: true,
+  branch: git(['branch', '--show-current']), currentMain: git(['rev-parse', 'HEAD']),
+  originalSourceParentsCompleted: 0, nativeRunnable: 0, nativeQualified: 0,
+  H001Complete: false, H002Complete: false, productionNode24Validated: false,
+  schemaOrAuthorityRelaxationPerformed: false, sourceTimestampFalsificationPerformed: false,
+  cloudOperations: 0, newPackages: 0, downloads: 0, kanoCredits: { S: 0, D: 0, L: 0 }
+}, null, 2));

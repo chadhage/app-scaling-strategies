@@ -1,0 +1,95 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const load = name => JSON.parse(fs.readFileSync(path.join(__dirname, name)));
+const manifest = load('hashes-final.json');
+const generation = load('generation.json');
+const historical = load('historical-proof-hashes.json');
+const initial = load('initial-boundary.json');
+const frozen = load('blocked-attempt-frozen-hashes.json');
+const focused = load('focused-attempt-02.json');
+function walk(relative) {
+  return fs.readdirSync(path.join(root, relative), { withFileTypes: true }).flatMap(entry =>
+    entry.isDirectory() ? walk(path.join(relative, entry.name)) : [path.join(relative, entry.name)]);
+}
+const inventory = () => manifest.scopes.flatMap(walk).sort().map(file => {
+  const bytes = fs.readFileSync(path.join(root, file));
+  return { path: file, bytes: bytes.length, sha256: sha(bytes) };
+});
+function preserved(files) {
+  const current = new Map(files.map(file => [file.path, file]));
+  for (const file of manifest.files) assert.deepEqual(current.get(file.path), file, file.path);
+  assert.equal(current.size, manifest.fileCount + 1);
+  assert.ok(current.has(path.relative(root, path.join(__dirname, 'hashes-final.json'))));
+  for (const file of historical.files) assert.equal(current.get(file.path).sha256, file.sha256, file.path);
+  const snapshots = [generation.original, generation.intermediate, generation.prior36,
+    generation.prior61, generation.prior86, generation.prior100, generation.previous];
+  for (const file of snapshots) assert.equal(current.get(file.path).sha256, file.sha256, file.path);
+  for (const file of Object.values(initial.readonlyExtra)) {
+    assert.equal(sha(fs.readFileSync(path.join(root, file.path))), file.sha256, file.path);
+  }
+  assert.deepEqual(walk(frozen.path).sort(), frozen.files.map(file => file.path).sort());
+}
+assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, undefined);
+assert.equal(process.env.NODE_V8_COVERAGE, undefined);
+const before = inventory();
+preserved(before);
+const modelFiles = focused.command.filter(argument => argument.endsWith('.test.cjs'));
+const browserFiles = manifest.scopes.map(scope => path.join(scope, 'tests', 'browser.test.cjs'));
+const runs = [];
+for (const [name, files, expected, expectedParents] of [['model', modelFiles, 279, 3], ['browser', browserFiles, 71, 5]]) {
+  const args = ['--test', '--test-reporter=tap', ...(name === 'browser' ? ['--test-concurrency=1'] : []), ...files];
+  const result = spawnSync(process.execPath, args, { cwd: root, windowsHide: true, maxBuffer: 32 * 1024 * 1024 });
+  const stdout = result.stdout || Buffer.alloc(0);
+  const stderr = result.stderr || Buffer.alloc(0);
+  const text = stdout.toString('utf8');
+  const tests = Number(/^# tests (\d+)\r?$/m.exec(text)?.[1]);
+  const passed = Number(/^# pass (\d+)\r?$/m.exec(text)?.[1]);
+  const failed = Number(/^# fail (\d+)\r?$/m.exec(text)?.[1]);
+  const stack = [];
+  const parents = new Set();
+  let total = 0;
+  for (const line of text.split(/\r?\n/)) {
+    const match = /^(\s*)# Subtest: /.exec(line);
+    if (!match) continue;
+    const indent = match[1].length;
+    while (stack.length && stack.at(-1).indent >= indent) stack.pop();
+    if (stack.length) parents.add(stack.at(-1).id);
+    stack.push({ indent, id: total++ });
+  }
+  runs.push({ name, exitCode: result.status, tests, total, parents: parents.size, leaves: total - parents.size,
+    passed, failed, stdoutSha256: sha(stdout), stderrSha256: sha(stderr) });
+  if (result.status !== 0) {
+    process.stdout.write(stdout);
+    process.stderr.write(stderr);
+  }
+  assert.equal(result.status, 0, name);
+  assert.equal(tests, expected, name);
+  assert.equal(total, tests, name);
+  assert.equal(parents.size, expectedParents, name);
+  assert.equal(passed, expected, name);
+  assert.equal(failed, 0, name);
+}
+const after = inventory();
+assert.deepEqual(after, before, 'Final ordinary replay preserves the complete deliverable, including result/validation/manifest.');
+preserved(after);
+console.log(JSON.stringify({
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', kind: 'final-manifest-complete-capture-unset-read-only-replay',
+  runs, counting: 'Two repeated Node executions, not additional global unique tests or lessons.',
+  ownedFilesVerified: before.length, manifestFilesVerified: manifest.files.length,
+  historicalProofsVerified: historical.files.length, originalHistoricalProofsVerified: 371,
+  frozenBlockedAttemptFilesVerified: 51, sevenSnapshotsVerified: 7,
+  beforeInventorySha256: sha(JSON.stringify(before)), afterInventorySha256: sha(JSON.stringify(after)),
+  completeOwnedBytesAndFileSetUnchanged: true, captureVariableUnset: true,
+  reportsAppended: 0, filesDeleted: 0, filesRewritten: 0,
+  resultSha256: sha(fs.readFileSync(path.join(__dirname, 'result-final.json'))),
+  validationSha256: sha(fs.readFileSync(path.join(__dirname, 'validation-final.json'))),
+  manifestSha256: sha(fs.readFileSync(path.join(__dirname, 'hashes-final.json')))
+}, null, 2));

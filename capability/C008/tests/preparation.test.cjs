@@ -9,7 +9,7 @@ const catalog = require('../../C005/catalog-data.js');
 const matrix = require('../../C003/matrix-data.js');
 const approved = require('../../C001/approved-contract.js');
 const { prepare } = require('../preparation.js');
-const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-135-a03ef59da5d5/generation.json');
+const generation = require('../../C005/evidence/op-catalog-snapshot-refresh-150-ebd7433ac143/generation.json');
 
 test('all 150 scenarios and both workflows have preparation from the shared objects', async () => {
   const views = await Promise.all(catalog.entries.map(entry => prepare(catalog, matrix, entry.id)));
@@ -43,7 +43,7 @@ test('synthetic learning and unavailable practice never become native or parent 
 });
 
 test('learning availability is exactly the accepted historical snapshot, not current files', async () => {
-  const views = await Promise.all(['S001', 'S008', 'S009', 'S010', 'S018', 'S019', 'S103', 'S121', 'S122', 'S123', 'S124', 'W001', 'W002']
+  const views = await Promise.all(['S001', 'S008', 'S009', 'S010', 'S018', 'S019', 'S103', 'S136', 'S137', 'S138', 'S139', 'W001', 'W002']
     .map(id => prepare(catalog, matrix, id)));
   assert.deepEqual(views.map(view => view.learningMode), [
     'synthetic-learning', 'synthetic-learning', 'synthetic-learning', 'synthetic-learning',
@@ -112,7 +112,7 @@ const invalidCatalogCases = [
   ['native qualification promotion', value => { value.entries[0].native.qualified = true; return value; }],
   ['source-parent completion', value => { value.entries[0].parent.completed = true; return value; }],
   ['invented risk classification', value => { value.entries[0].risk = 'low'; return value; }],
-  ['invented learning link', value => { value.entries[120].learning.href = '../../learning/S121/index.html'; return value; }],
+  ['invented learning link', value => { value.entries[135].learning.href = '../../learning/S136/index.html'; return value; }],
   ['rewritten dependency expression', value => { value.entries[0].prerequisites.additional = 'HOST AND P001'; return value; }]
 ];
 for (const [name, change] of invalidCatalogCases) {

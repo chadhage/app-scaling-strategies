@@ -1,0 +1,27 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+
+const red = JSON.parse(fs.readFileSync(path.join(__dirname, 'red.json')));
+assert.equal(red.exitCode, 1);
+assert.deepEqual(red.summary, { tests: 18, suites: 0, pass: 1, fail: 17, cancelled: 0, skipped: 0, todo: 0 });
+assert.equal(red.oldCatalogSha256, '549fba2019ea40d0cc6cdd8b23ad87be31fa30dcbf1cf4f22c843f0cd12e9334');
+assert.equal(red.oldCatalogAfterSha256, red.oldCatalogSha256);
+assert.match(red.stdout, /120 !== 135/);
+assert.match(red.stdout, /ERR_ASSERTION/);
+assert.doesNotMatch(red.stdout, /MODULE_NOT_FOUND|SyntaxError/);
+const report = {
+  operation: 'OP-CATALOG-SNAPSHOT-REFRESH-150', worker: 'worker-OP-CATALOG-SNAPSHOT-REFRESH-150',
+  recordedAtUtc: new Date().toISOString(), applicability: 'not-applicable',
+  recordedAfter: 'actual genuine new-snapshot assertion RED on loadable unchanged120 data',
+  redCompletedAtUtc: red.completedAtUtc, recordedBefore: 'snapshot implementation',
+  reason: 'Deterministic local metadata/test/evidence refresh only. No infrastructure or cloud resource is created or changed.',
+  sourceCommit: '38ecc22ba606304d3fd5357d614f1e513e794f54',
+  newPackages: 0, downloads: 0, cloudOperations: 0, authorizedSpend: 0,
+  nativeQualified: 0, H001Complete: false, H002Complete: false, productionNode24Validated: false,
+  kanoCredits: { S: 0, D: 0, L: 0 }, operationalAcceptanceOwner: 'parent-controller-only'
+};
+fs.writeFileSync(path.join(__dirname, 'iac-na.json'), `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify(report));

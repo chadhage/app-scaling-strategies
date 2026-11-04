@@ -1,0 +1,172 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const { createRequire } = require('node:module');
+
+const root = path.resolve(__dirname, '..', '..', '..', '..');
+const operation = 'OP-CATALOG-SNAPSHOT-REFRESH-150';
+const worker = `worker-${operation}`;
+const sourceCommit = '38ecc22ba606304d3fd5357d614f1e513e794f54';
+const previousSource = 'a03ef59da5d58d74c109d2484d7730fa14500358';
+const sourceTag = 'kanban/flow-admin/38ecc22ba606';
+const scopes = ['C005', 'C006', 'C007', 'C008', 'local-harness'].map(scope => path.join('capability', scope));
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const normalize = bytes => bytes.toString('utf8').replaceAll('\r\n', '\n');
+const git = args => execFileSync('git', ['--no-pager', ...args], { cwd: root, maxBuffer: 8 * 1024 * 1024 });
+const load = name => JSON.parse(fs.readFileSync(path.join(__dirname, name)));
+const write = (name, value, exclusive = true) => fs.writeFileSync(path.join(__dirname, name),
+  `${JSON.stringify(value, null, 2)}\n`, { flag: exclusive ? 'wx' : 'w' });
+const initial = load('initial-boundary.json');
+const rawBaseline = load('initial-owned-hashes.json');
+const committedPaths = git(['ls-tree', '-r', '--name-only', sourceCommit, '--', ...scopes])
+  .toString().trim().split('\n').map(file => file.replaceAll('/', '\\')).sort();
+assert.deepEqual(rawBaseline.files.map(file => file.path).sort(), committedPaths);
+assert.equal(git(['diff', '--name-only', sourceCommit, '--', ...scopes]).toString().trim(), '');
+function fingerprint(file, canonical = true) {
+  const raw = fs.readFileSync(path.join(root, file));
+  const result = { path: file, bytes: raw.length, sha256: sha(raw) };
+  if (/\.(?:js|cjs|ts|txt|json|feature|css|html|md)$/.test(file) || file.endsWith('.gitattributes')) {
+    result.normalizedSha256 = sha(normalize(raw));
+    result.rawCRLFPairs = (raw.toString('utf8').match(/\r\n/g) || []).length;
+  }
+  if (canonical) {
+    const committed = git(['show', `${sourceCommit}:${file.replaceAll('\\', '/')}`]);
+    result.canonicalGitSourceSha256 = sha(committed);
+    if (result.normalizedSha256) result.canonicalGitNormalizedSha256 = sha(normalize(committed));
+  }
+  return result;
+}
+const ownedFiles = rawBaseline.files.map(file => {
+  const current = fingerprint(file.path);
+  assert.equal(current.sha256, file.sha256, 'Initial raw manifest precedes all source/test edits.');
+  assert.equal(current.bytes, file.bytes, file.path);
+  return current;
+});
+const historicalFiles = ownedFiles.filter(file =>
+  /(?:^|\\)evidence(?:\\|\.json$)|\\result\.json$/.test(file.path));
+const sourcePaths = { readme: 'README.md', backlog: '.docs\\wiki\\backlog.md', ledger: '.docs\\wiki\\flow-state.json' };
+const canonicalSources = {};
+for (const [name, file] of Object.entries(sourcePaths)) {
+  const canonical = git(['show', `${sourceCommit}:${file.replaceAll('\\', '/')}`]);
+  const working = fs.readFileSync(path.join(root, file));
+  canonicalSources[name] = {
+    path: file, committedBytes: canonical.length, committedSha256: sha(canonical),
+    workingTreeRawSha256: sha(working), workingTreeNormalizedSha256: sha(normalize(working)),
+    normalizedEqualsFixedSource: normalize(working) === normalize(canonical),
+    liveWorkingTreeIsNotAcceptanceAuthority: true
+  };
+}
+const ledger = JSON.parse(git(['show', `${sourceCommit}:.docs/wiki/flow-state.json`]));
+const extractor = require(path.join(root, 'capability', 'C005', 'catalog-source.cjs'));
+const accepted = ledger.cards.filter(extractor.acceptedLesson);
+const acceptedPortableIds = accepted.filter(card => /^A-S\d{3}$/.test(card.id))
+  .map(card => card.id.slice(2)).sort();
+assert.equal(accepted.length, 150);
+assert.deepEqual(ledger.kanoDone, { S: 148, L: 0, D: 2 });
+assert.deepEqual(acceptedPortableIds, Array.from({ length: 135 }, (_, index) =>
+  `S${String(index + 1).padStart(3, '0')}`));
+assert.deepEqual(ledger.completedParents, []);
+const prior = ledger.operationalWork.find(item => item.id === 'OP-CATALOG-SNAPSHOT-REFRESH-135');
+assert.equal(prior.state, 'Done');
+assert.equal(prior.result.accepted, true);
+assert.equal(prior.result.remoteVerified, true);
+const previousPublication = prior.result.commit;
+assert.match(previousPublication, /^[a-f0-9]{40}$/);
+assert.equal(git(['cat-file', '-t', prior.result.tag]).toString().trim(), 'tag');
+assert.equal(git(['rev-parse', `${prior.result.tag}^{}`]).toString().trim(), previousPublication);
+git(['merge-base', '--is-ancestor', previousPublication, sourceCommit]);
+const oldData = fingerprint('capability\\C005\\catalog-data.js');
+assert.equal(oldData.sha256, '549fba2019ea40d0cc6cdd8b23ad87be31fa30dcbf1cf4f22c843f0cd12e9334');
+assert.equal(require(path.join(root, oldData.path)).entries.filter(entry => entry.learning.available).length, 120);
+assert.equal(extractor.PINNED_COMMIT, previousSource);
+const priorEvidence = path.join('capability', 'C005', 'evidence', 'op-catalog-snapshot-refresh-135-a03ef59da5d5');
+const previousGeneration = JSON.parse(fs.readFileSync(path.join(root, priorEvidence, 'generation.json')));
+const priorSnapshots = [previousGeneration.original, previousGeneration.intermediate,
+  previousGeneration.prior36, previousGeneration.prior61, previousGeneration.prior86, previousGeneration.previous];
+for (const snapshot of priorSnapshots) {
+  assert.equal(sha(fs.readFileSync(path.join(root, snapshot.path))), snapshot.sha256, snapshot.path);
+}
+const readonlyExtra = {
+  publishedHelper: fingerprint('testing\\browser\\isolated.cjs', false),
+  standardPublisher: fingerprint('.git\\kanban-orchestrator\\publish.ps1', false),
+  adminStateBoundary: fingerprint('.git\\kanban-orchestrator\\state.ps1', false)
+};
+assert.equal(readonlyExtra.publishedHelper.sha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+const helperRequire = createRequire(path.join(root, 'testing', 'browser', 'isolated.cjs'));
+assert.equal(helperRequire('playwright/package.json').version, '1.56.1');
+assert.match(process.version, /^v22\./);
+const sourceTagObject = git(['rev-parse', sourceTag]).toString().trim();
+assert.equal(git(['cat-file', '-t', sourceTag]).toString().trim(), 'tag');
+assert.equal(git(['rev-parse', `${sourceTag}^{}`]).toString().trim(), sourceCommit);
+const remoteRefs = git(['ls-remote', 'origin', 'refs/heads/main', `refs/tags/${sourceTag}*`,
+  `refs/tags/${prior.result.tag}*`]).toString().trim().split('\n');
+assert.ok(remoteRefs.includes(`${previousPublication}\trefs/tags/${prior.result.tag}^{}`));
+const newlyAcceptedPortableIds = acceptedPortableIds.filter(id => !previousGeneration.acceptedPortableIds.includes(id));
+assert.deepEqual(newlyAcceptedPortableIds, Array.from({ length: 15 }, (_, index) =>
+  `S${String(index + 121).padStart(3, '0')}`));
+const recordedAtUtc = new Date().toISOString();
+write('historical-proof-hashes.json', {
+  operation, worker, recordedAtUtc: initial.recordedAtUtc, baselineHead: initial.head, sourceCommit,
+  kind: 'all-pre-existing-historical-proof-raw-and-separate-canonical-inventory',
+  capturedBeforeSourceOrTestEdits: true, fileCount: historicalFiles.length, files: historicalFiles
+}, false);
+write('owned-before-hashes.json', {
+  operation, worker, recordedAtUtc: initial.recordedAtUtc, baselineHead: initial.head, sourceCommit,
+  capturedBeforeSourceOrTestEdits: true, files: ownedFiles
+});
+const assignment = JSON.parse(fs.readFileSync(path.join(root, sourcePaths.ledger)))
+  .operationalWork.find(item => item.id === operation);
+write('initial-boundary.json', {
+  ...initial, baselineHead: initial.head, sourceCommit, sourceTag, sourceTagObject, remoteRefsAtInspection: remoteRefs,
+  preExistingOwnedFiles: ownedFiles.length, historicalFiles: historicalFiles.length,
+  historicalManifestSha256: sha(fs.readFileSync(path.join(__dirname, 'historical-proof-hashes.json'))),
+  ownedBeforeManifestSha256: sha(fs.readFileSync(path.join(__dirname, 'owned-before-hashes.json'))),
+  previousData: oldData, previousSource, previousAcceptedPortableLessons: 120, previousPublication,
+  readonlyExtra, canonicalSources,
+  tooling: { node: process.version, executable: process.execPath,
+    playwrightVersion: helperRequire('playwright/package.json').version, downloadsOrInstalls: 0 },
+  assignmentObservedReadOnly: assignment ? {
+    state: assignment.state, owner: assignment.owner, sourceCommit: assignment.sourceCommit,
+    activationAndAcceptanceOwner: 'parent-controller-only'
+  } : { activationAndAcceptanceOwner: 'parent-controller-only', boundAtInspection: false },
+  preCaptureDiagnosticFailures: [
+    { probe: 'top-level local-harness inventory', outcome: 'Absent; established fifth scope is capability\\local-harness.', filesChanged: 0 },
+    { probe: 'first inline baseline PowerShell parse', outcome: 'Parser rejected incomplete braces before execution; no files changed.', filesChanged: 0 }
+  ],
+  priorSnapshotHashesVerified: [...priorSnapshots, oldData].map(file => ({ path: file.path, sha256: file.sha256 })),
+  kanoCredits: { S: 0, D: 0, L: 0 }, operationalActivationAndAcceptanceOwner: 'parent-controller-only',
+  newRuntimeApiRegistrySchemaFrameworkOrCloudWork: false
+}, false);
+write('source-accounting.json', {
+  operation, worker, recordedAtUtc, sourceCommit, sourceTag, sourceTagObject,
+  commitTimeUtc: new Date(git(['show', '-s', '--format=%cI', sourceCommit]).toString().trim()).toISOString(),
+  ledgerUpdatedAtUtc: ledger.updatedAtUtc, acceptedUnits: accepted.length,
+  acceptedPortableLessons: acceptedPortableIds.length, acceptedPortableIds, newlyAcceptedPortableIds,
+  acceptedNonPortableUnits: accepted.length - acceptedPortableIds.length, sourceKanoDone: ledger.kanoDone,
+  completedSourceParents: 0, H001Complete: false, H002Complete: false, production24Validated: false,
+  unavailableGaps: [], unavailableFrom: 'S136', previousPublication, canonicalSources,
+  nativeRunnable: 0, nativeQualified: 0, historicalOnly: true, liveAvailability: false,
+  S107StaticEntryCertifiesHttpOriginBehavior: false, S107NativeAzureProof: false,
+  kanoCredits: { S: 0, D: 0, L: 0 }
+});
+for (const [original, archived] of [
+  ['capability\\C005\\catalog-data.js', 'catalog-data.a03ef59da5d5.js.txt'],
+  ['capability\\C005\\catalog-source.cjs', 'catalog-source.a03ef59da5d5.cjs.txt'],
+  [path.join(priorEvidence, 'generation.json'), 'generation.a03ef59da5d5.json'],
+  ['capability\\C005\\tests\\snapshot-refresh.test.cjs', 'snapshot-refresh.a03ef59da5d5.test.cjs.txt'],
+  ['capability\\C005\\tests\\snapshot-refresh-135.test.cjs', 'snapshot-refresh-135.a03ef59da5d5.test.cjs.txt']
+]) fs.writeFileSync(path.join(__dirname, archived), fs.readFileSync(path.join(root, original)), { flag: 'wx' });
+for (const [original, archived] of [
+  ['capability/C005/catalog-data.js', 'catalog-data.a03ef59da5d5.git-source.js.txt'],
+  ['capability/C005/catalog-source.cjs', 'catalog-source.a03ef59da5d5.git-source.cjs.txt']
+]) fs.writeFileSync(path.join(__dirname, archived), git(['show', `${previousPublication}:${original}`]), { flag: 'wx' });
+console.log(JSON.stringify({
+  fixedSource: sourceCommit, acceptedOriginalUnits: accepted.length, acceptedPortableLessons: acceptedPortableIds.length,
+  historicalProofsCapturedBeforeEdits: historicalFiles.length, ownedBaseline: ownedFiles.length,
+  previousPublication, sevenSnapshotHashesVerified: [...priorSnapshots, oldData].map(file => file.sha256),
+  publishedHelperSha256: readonlyExtra.publishedHelper.sha256, tooling: process.version, kanoCredits: { S: 0, D: 0, L: 0 }
+}));
