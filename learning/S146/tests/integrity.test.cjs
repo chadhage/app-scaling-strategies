@@ -155,3 +155,26 @@ test('published helper and browser capture contract stay exact, offline and read
   assert.match(browserTest, /randomUUID/);
   assert.doesNotMatch(browserTest, /chromium\.launch|bypassCSP:\s*true|--no-sandbox|disable-web-security|route\s*\(/);
 });
+
+test('release raw Git blobs and filtered canonical objects are independently verified with Git virtual paths', () => {
+  const manifest = json(path.join('evidence', 'integrity-manifest.json'));
+  assert.equal(manifest.cardId, 'A-S146');
+  assert.equal(manifest.fileCount, manifest.files.length);
+  assert.equal(new Set(manifest.files.map((file) => file.relativePath)).size, manifest.files.length);
+  for (const file of manifest.files) {
+    const fullPath = path.resolve(root, file.relativePath);
+    assert.ok(fullPath.startsWith(`${root}${path.sep}`));
+    const bytes = fs.readFileSync(fullPath);
+    const rawRequired = ['raw', 'source'].some((folder) => file.relativePath.startsWith(path.join('evidence', folder) + path.sep));
+    assert.equal(file.rawBytesMustMatch, rawRequired);
+    if (rawRequired) {
+      assert.equal(bytes.length, file.rawBytes, file.relativePath);
+      assert.equal(sha(bytes), file.rawSha256, file.relativePath);
+      const independentRawBlob = createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+      assert.equal(independentRawBlob, file.canonicalGitBlob, file.relativePath);
+    }
+    const virtualGitPath = ['learning', 'S146', ...file.relativePath.split(path.sep)].join('/');
+    const canonical = execFileSync('git', ['hash-object', `--path=${virtualGitPath}`, fullPath], { cwd: repo, encoding: 'utf8' }).trim();
+    assert.equal(canonical, file.canonicalGitBlob, file.relativePath);
+  }
+});
