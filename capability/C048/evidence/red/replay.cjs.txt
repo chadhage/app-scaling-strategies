@@ -1,0 +1,33 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const zlib = require('node:zlib');
+const crypto = require('node:crypto');
+const Module = require('node:module');
+const root = path.resolve(__dirname, '..', '..');
+const directory = path.join(root, 'evidence', 'raw',
+  '2026-11-04T04-40-42-852Z-bd1c6062-61de-4fdc-a26d-0c858f181de0-behavioral-red');
+const record = JSON.parse(fs.readFileSync(path.join(directory, 'record.json')));
+const repository = path.resolve(root, '..', '..');
+const source = (suffix) => {
+  const item = record.snapshots.find((snapshot) => snapshot.path.endsWith(suffix));
+  assert.ok(item);
+  const bytes = zlib.gunzipSync(fs.readFileSync(path.join(repository, item.snapshot)));
+  assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), item.rawSha256);
+  return bytes.toString('utf8');
+};
+const modelFile = path.join(root, 'admission.js');
+const stub = new Module(modelFile, module);
+stub.filename = modelFile;
+stub.paths = Module._nodeModulePaths(root);
+stub._compile(source('C048\\admission.js'), modelFile);
+const testFile = path.join(root, 'tests', 'admission.test.cjs');
+const tests = new Module(testFile, module);
+tests.filename = testFile;
+tests.paths = Module._nodeModulePaths(path.dirname(testFile));
+const requireOriginal = tests.require.bind(tests);
+tests.require = (name) => name === '../admission.js' ? stub.exports : requireOriginal(name);
+console.log('Historical original RED replay only; current admission.js is not changed or replaced.');
+tests._compile(source('C048\\tests\\admission.test.cjs'), testFile);

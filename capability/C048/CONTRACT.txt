@@ -1,0 +1,130 @@
+C048 ORIGINAL LOCAL ADMISSION GUARD
+
+One frozen D unit; priority P0; original parent H009; accepted gates C021 and C023.
+Acceptance: Gate tier/schema compatibility before admission; verify incompatible
+data/event consumers block expansion. The parent alone accepts the original once.
+
+Open index.html directly. No server, package, framework, listener or cloud service
+is required. The page loads unchanged C020/C021/C023 browser factories. Node checks
+also compare the actual C020 getProfileV1/getProfileV2 providers. The browser is
+bundled-catalog/model replay, not a new service observation.
+
+ACTUAL TRANSITION, NOT A PAINTED DECISION
+admission.js exports createSession({sessionId}), parseCandidate(text),
+assessCandidate(text), rules and the unchanged oldConsumer by identity.
+createSession returns only read() and dispatch(command). It exposes no restore,
+adopt, caller state, verdict or inspection permit. Every admit/expand command
+reparses its complete current candidate and invokes the private validated DATA
+and EVENT eligibility functions before it can change admission state. A public
+assessment cannot replace those private functions or grant authority.
+
+Command: exactly schema=C048/command/1, type=inspect|admit|expand|reset,
+requestId=request-<1..24 lowercase suffix characters>, expectedRevision=integer.
+Every non-reset command additionally requires candidateJSON, a bounded string.
+Reset forbids a candidate/verdict and is a separate history-preserving operation.
+
+Candidate: exactly schema=C048/candidate/1, releaseId, implementation, profileId,
+data, event. releaseId is release-<1..20 lowercase suffix characters>.
+DATA fields: apiContract, consumerId, consumerSchema, adapterId, evidence.
+EVENT fields: stateSchema, workVersion, consumerId, consumerStateSchema,
+consumerWorkVersion, evidence. Every selector is an explicit nonempty string.
+
+DATA closed consumers:
+  old-profile/1 declares getProfile/1 and invokes actual unchanged oldConsumer.
+  new-profile/2 declares getProfile/2 and invokes unchanged C021 newConsumer.
+Both C020 implementations preserve getProfile/1. Implementation 2.0.0 is NOT an
+incompatible API. Only C021 creates the synthetic getProfile/2 fixture.
+adapterId=none means none. Only explicit C021/getProfile-2-to-1/r1 may adapt raw
+getProfile/2 to the old consumer, through unchanged validated adaptToOld.
+No version default, automatic/repeated adaptation or consumer-schema rewriting.
+DATA evidence=bundled-catalog is a local immutable fixture selector, not a receipt.
+
+EVENT closed consumer:
+  profile-effects-consumer/1 declares exact C023/1 and profile-effects/1.
+  Evidence=modeled-plan constructs/inspects unchanged C023's unapplied plan.
+  Every effect field, kind, key and value matches the explicit closed declaration.
+  Only after both gates pass does initial admission call unchanged C023 run.
+  Its three modeled committed event records are also checked exactly.
+An incompatible/undeclared/unknown/malformed source or consumer blocks the entire
+transition. EVENT fixture acceptance is a local modeled contract, NOT actual
+queue/protocol proof. There is no new event SDK, queue, DB or Storage integration.
+
+STATE AND HISTORY
+An eligible initial admission records one active admitted release and three
+C023 modeled applications. An expansion revalidates both tiers for that same
+release/profile, changes its stage once, and preserves the original complete job
+without applying effects again. Candidate source stamps describe the fresh
+compatibility check; the retained job keeps its original execution lineage.
+Rejected transitions retain the original active job and all admission/effect
+counts; rejection history grows instead of rewriting an earlier attempt.
+Inspections add no admission/effect. Stale expectedRevision and reused request
+identities refuse transitions. Reset archives the active job and preserves all
+operation history, inspections, rejections and lifetime effect counts. A retained
+release/work identity cannot be reused after reset.
+
+The private, frozen operation journal is replayed and compared with the private
+projection before reads/dispatch and after append. Replay regenerates only pure
+local model values; it does not perform external business effects. Returned
+snapshots are detached, recursively frozen, inspection/export only. They are NOT
+authentication or trusted receipts and can never be adopted as current state.
+This is private in-memory session integrity, not an authorization boundary
+against hostile scripts or proxies controlling the same JavaScript realm.
+
+Bounds: 16,384 candidate characters, 128 characters per selector, 64 operations,
+bounded own-data input shape and depth. Accessors are rejected without invocation,
+as are custom prototypes, symbols, cycles, sparse arrays, nonfinite/coercive
+values, extra/missing fields and duplicate JSON keys. One separate immutable
+terminal HISTORY_LIMIT refusal is retained after operation 64; further commands,
+including reset, cannot truncate or bypass the history bound.
+
+BROWSER CONDUCT
+Visible starter selections are explicit UI inputs, not model defaults. Control
+edits copy those exact selections into JSON and invalidate the current inspection
+display. Direct JSON edits are submitted as-is. Consumer schemas and adapters
+are never silently changed. Tab/Enter uses native labeled controls and visible
+focus. Archive and reset is native type=reset with a reset-event guard; it never
+calls a shadowed form.reset method. Its successful default action restores the
+declared form starters while the private model archives rather than erases.
+Reload/close loses the memory-only session; select/copy the complete JSON first.
+
+VERIFY FROM REPOSITORY ROOT WITH EXISTING NODE 22
+All scoped tests/syntax/full signed browser, with child capture unset and byte-
+exact before/after checks of the entire owned namespace:
+node capability\C048\tests\verify.cjs
+Equivalent focused commands:
+node --test --test-reporter=dot capability\C048\tests\admission.test.cjs capability\C048\tests\schema.test.cjs capability\C048\tests\guards.test.cjs capability\C048\tests\lineage.test.cjs capability\C048\tests\surface.test.cjs capability\C048\tests\integrity.test.cjs
+node capability\C048\tests\syntax.cjs
+node capability\C048\tests\browser.cjs
+Focused CSP-only verification uses the same signed Edge/helper/awaited cleanup:
+node capability\C048\tests\browser.cjs --csp-only
+It is not full DOM/admission acceptance. Native worker refusal may occur through
+an asynchronous error event; proof requires that refusal, no message, and the
+actual worker-src CSP violation rather than assuming a constructor must throw.
+
+Ordinary checks are read-only to proof. Only the exact environment value
+CAPTURE_BROWSER_EVIDENCE=1 deliberately creates unique raw evidence. The explicit
+tests\capture.cjs <label> <Node arguments...> recorder requires that same value.
+Raw stdout/stderr and then-current source snapshots are lossless gzip, not
+trimmed/re-recorded text. SHA-256 of raw CRLF and Git-canonical LF is separately
+recorded and verified. Original assertion RED stays outside autodiscovery.
+Authored Windows worktree CRLF is not silently conflated with committed LF:
+.gitattributes defines Git-canonical LF for source, while raw proof is binary.
+Both source byte forms are checked; captured raw source is never rewritten.
+
+Browser checks use only published testing\browser\isolated.cjs openIsolatedLesson,
+SHA256 86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055,
+offline Playwright 1.56.1 and installed signed Edge 156. Awaited finally closes the
+exact session. No foreground lease, unsafe flags, download or lifecycle prototype.
+The shared helper's unattended lifecycle limitations remain unqualified.
+
+HONEST REMAINING SCOPE
+Compatibility is separate from runtime health, HTTP200, capacity, authorization,
+and known/unknown business outcomes; none is accepted as compatibility evidence.
+C023's atomic effect/ledger pair is an explicit pure-model assumption, not durable
+recovery, native transactions, cross-browser/global deduplication or exactly-once
+cloud delivery. Fixture stamps/hashes are reproducibility labels, not identity.
+H009 stable routing, preview authorization, cohorts, promotion and fresh external
+evidence, its H003/H005/H008 source parents, actual Azure capacity/control API,
+native event/DB/storage integration and production Node24 are NOT completed here.
+IaC N/A. No credentials, identity, deployment, resources or cloud spending.
+Tests, repairs, proof and refinement add zero units. STOP after this C048 mission.

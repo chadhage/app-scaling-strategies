@@ -1,0 +1,34 @@
+{
+  "schema": "C048/publication-attempt/1",
+  "cardId": "C048",
+  "workerId": "worker-C048",
+  "kano": "D",
+  "startedAtUtc": "2026-11-04T05:48:40.283Z",
+  "finishedAtUtc": "2026-11-04T05:48:43.653Z",
+  "runtime": "v22.23.4",
+  "captureRequested": true,
+  "status": 1,
+  "signal": null,
+  "spawnError": null,
+  "standardPublisher": ".git\\kanban-orchestrator\\publish.ps1",
+  "ownedScope": "capability\\C048",
+  "message": "[C048][D] Gate local DATA/EVENT admission with retained RED and actual signed-browser proof",
+  "script": "\n$ErrorActionPreference = 'Stop'\nfunction Read-Git([string[]]$Arguments) {\n    $output = & git @Arguments 2>&1\n    if ($LASTEXITCODE -ne 0) { throw \"Read-only Git check failed: $($Arguments -join ' '): $($output -join [Environment]::NewLine)\" }\n    return ($output | Out-String).Trim()\n}\n$mutex = [Threading.Mutex]::new($false, 'Local\\AppScalingStrategies_KanbanPublisher_v1')\n$held = $false\ntry {\n    $held = $mutex.WaitOne([TimeSpan]::FromSeconds(180))\n    if (-not $held) { throw 'Publisher mutex timeout; no lock removal or serialization bypass.' }\n    $branch = Read-Git @('branch', '--show-current')\n    $head = Read-Git @('rev-parse', 'HEAD')\n    $main = Read-Git @('rev-parse', 'refs/heads/main')\n    $tracking = Read-Git @('rev-parse', 'refs/remotes/origin/main')\n    $remoteLine = Read-Git @('ls-remote', 'origin', 'refs/heads/main')\n    if ($remoteLine -notmatch '^([a-f0-9]{40})\\s+refs/heads/main$') { throw 'Remote main must have one exact reference.' }\n    $remote = $Matches[1]\n    [ordered]@{branch=$branch;head=$head;main=$main;trackingMain=$tracking;remoteMain=$remote;underPublisherMutex=$true} | ConvertTo-Json -Compress | Write-Output\n    if ($branch -ne 'main' -or $head -ne $main -or $head -ne $tracking -or $head -ne $remote) {\n        throw 'HEAD_MAIN_MISMATCH: stop/report; no staging or publication may carry an unpublished foreign commit.'\n    }\n    $approvedPublisherSha256 = '815a1f0c7b17a63b53f4ff3aed169bf81ba3cec3b6a1b088ea337591fdd9e65b'\n    $observedPublisherSha256 = (Get-FileHash -LiteralPath .git\\kanban-orchestrator\\publish.ps1 -Algorithm SHA256).Hash.ToLowerInvariant()\n    if ($observedPublisherSha256 -ne $approvedPublisherSha256) {\n        throw 'PUBLISHER_BOUNDARY_MISMATCH: stop/report; no silent shared version update or guard bypass.'\n    }\n    [ordered]@{approvedPublisherSha256=$approvedPublisherSha256;observedPublisherSha256=$observedPublisherSha256;underPublisherMutex=$true} | ConvertTo-Json -Compress | Write-Output\n    & .git\\kanban-orchestrator\\publish.ps1 -CardId C048 -WorkerId worker-C048 -Paths @('capability\\C048') -Message '[C048][D] Gate local DATA/EVENT admission with retained RED and actual signed-browser proof'\n} finally {\n    if ($held) { $mutex.ReleaseMutex() }\n    $mutex.Dispose()\n}\n",
+  "scriptSha256": "2c312a612bc66590775d1504693d804e276469287692dc8b4315175c2fd25ce3",
+  "streams": {
+    "stdout": {
+      "path": "capability\\C048\\evidence\\publication-2026-11-04T05-48-43-646Z-d94087dd-8693-451e-894a-bce4330cf6f8-stdout.raw.gz",
+      "sha256": "a614d7a11801d2bb6e94b1a1c9b649cefe1f1910957b94422b17a2dc56abf50a",
+      "bytes": 1026,
+      "rawCRLF": 6
+    },
+    "stderr": {
+      "path": "capability\\C048\\evidence\\publication-2026-11-04T05-48-43-646Z-d94087dd-8693-451e-894a-bce4330cf6f8-stderr.raw.gz",
+      "sha256": "44c7d2610a0cc1ce92660f80f48ac707e6885adac01f57e3ff9890e940e625be",
+      "bytes": 20117,
+      "rawCRLF": 46
+    }
+  },
+  "qualification": "Failed attempt only; no publication or parent acceptance is inferred. Standard publisher is never patched/bypassed.",
+  "writesDeferredUntilChildExit": true
+}

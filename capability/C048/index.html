@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' file:; style-src 'self' file:; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>C048 — local tier/schema admission guard</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="../C020/contract.js"></script>
+  <script defer src="../C020/inspector.js"></script>
+  <script defer src="../C021/compatibility.js"></script>
+  <script defer src="../C023/ledger.js"></script>
+  <script defer src="admission.js"></script>
+  <script defer src="page.js"></script>
+</head>
+<body>
+<main>
+  <p id="training-banner">Training rehearsal - synthetic data - not a live Azure result</p>
+  <h1>C048: compatibility before local admission</h1>
+  <p>This private in-memory model actually refuses incompatible or unknown DATA/EVENT consumers before its admit/expand transition. Inspection is not a permit. No Azure capacity, routing, identity, storage, deployment or external effect is implemented.</p>
+  <p>Both C020 implementations preserve <code>getProfile/1</code>. Raw C021 <code>getProfile/2</code> breaks the unchanged old consumer; only the explicitly validated one-way adapter permits that consumer. EVENT acceptance is a local modeled C023 contract, <strong>not real queue or protocol proof</strong>.</p>
+
+  <form id="admission-form" novalidate>
+    <fieldset>
+      <legend>Explicit candidate identity</legend>
+      <label for="release-id">Synthetic release ID</label>
+      <input id="release-id" type="text" value="release-001" spellcheck="false" aria-describedby="release-help">
+      <p id="release-help">release- plus 1–20 lowercase letters, digits or hyphens. Retained release/work identities cannot be reused after reset.</p>
+      <label for="implementation">C020 source implementation</label>
+      <select id="implementation">
+        <option value="v1" selected>v1 — implementation 1.0.0, getProfile/1 preserved</option>
+        <option value="v2">v2 — implementation 2.0.0, getProfile/1 preserved</option>
+        <option value="v3">v3 — unknown; must block</option>
+      </select>
+      <label for="profile-id">C020 synthetic profile</label>
+      <select id="profile-id"><option value="" selected>Catalog not loaded; no default authority</option></select>
+    </fieldset>
+
+    <fieldset>
+      <legend>DATA: exact source and declared consumer</legend>
+      <label for="data-api">DATA source API contract</label>
+      <select id="data-api">
+        <option value="getProfile/1" selected>getProfile/1 — unchanged C020 contract</option>
+        <option value="getProfile/2">getProfile/2 — explicit C021 breaking fixture</option>
+        <option value="unknown">unknown — must block</option>
+      </select>
+      <label for="data-consumer">Declared DATA consumer</label>
+      <select id="data-consumer">
+        <option value="old-profile/1" selected>old-profile/1 — actual unchanged oldConsumer</option>
+        <option value="new-profile/2">new-profile/2 — explicit C021 newConsumer</option>
+        <option value="unknown">undeclared consumer — must block</option>
+      </select>
+      <label for="data-consumer-schema">DATA consumer's declared schema</label>
+      <input id="data-consumer-schema" type="text" value="getProfile/1" spellcheck="false">
+      <label for="data-adapter">Explicit DATA adapter</label>
+      <select id="data-adapter"><option value="none" selected>none — no automatic adaptation</option></select>
+      <label for="data-evidence">DATA evidence kind</label>
+      <select id="data-evidence">
+        <option value="bundled-catalog" selected>Bundled immutable C020/C021 model</option>
+        <option value="unknown">unknown — not compatible evidence</option>
+      </select>
+    </fieldset>
+
+    <fieldset>
+      <legend>EVENT: closed modeled schema and work consumer</legend>
+      <label for="event-state">EVENT source state schema</label>
+      <input id="event-state" type="text" value="C023/1" spellcheck="false">
+      <label for="event-work">EVENT source work version</label>
+      <input id="event-work" type="text" value="profile-effects/1" spellcheck="false">
+      <label for="event-consumer">Declared EVENT consumer</label>
+      <select id="event-consumer">
+        <option value="profile-effects-consumer/1" selected>profile-effects-consumer/1 — exact local C023 plan</option>
+        <option value="unknown">undeclared consumer — must block</option>
+      </select>
+      <label for="event-consumer-state">EVENT consumer's declared state schema</label>
+      <input id="event-consumer-state" type="text" value="C023/1" spellcheck="false">
+      <label for="event-consumer-work">EVENT consumer's declared work version</label>
+      <input id="event-consumer-work" type="text" value="profile-effects/1" spellcheck="false">
+      <label for="event-evidence">EVENT evidence kind</label>
+      <select id="event-evidence">
+        <option value="modeled-plan" selected>Exact local modeled C023 plan — not native event proof</option>
+        <option value="unknown">unknown — must block</option>
+      </select>
+    </fieldset>
+
+    <p>Control edits reflect exactly in the candidate below; they never pick a consumer schema or adapter for you. Direct JSON edits are used as-is on every inspection/admit/expand.</p>
+    <button id="build-candidate" type="button" disabled>Build candidate from visible controls</button>
+    <label for="candidate-json">Complete candidate JSON</label>
+    <textarea id="candidate-json" rows="18" spellcheck="false" aria-describedby="candidate-help"></textarea>
+    <p id="candidate-help">Exact C048/candidate/1 only; 16,384 characters maximum. No supplied verdict, provenance, health, HTTP200, capacity, authorization or business acknowledgment is accepted as compatibility input.</p>
+    <div class="actions">
+      <button id="inspect-candidate" type="submit" disabled>Inspect candidate only</button>
+      <button id="admit-candidate" type="button" disabled>Admit locally</button>
+      <button id="expand-candidate" type="button" disabled>Expand locally</button>
+      <button id="archive-reset" type="reset" disabled>Archive and reset</button>
+    </div>
+  </form>
+
+  <section aria-labelledby="outcome-title">
+    <h2 id="outcome-title">Actual local state</h2>
+    <p id="status" role="status" aria-live="polite" aria-atomic="true">NOT RUN — no admission or modeled effects.</p>
+    <p id="error" role="alert" hidden></p>
+    <p id="inspection" aria-live="polite">NOT INSPECTED — no admission authority.</p>
+    <dl class="counts">
+      <div><dt>Revision</dt><dd id="revision">0</dd></div>
+      <div><dt>Active stage</dt><dd id="active-stage">none</dd></div>
+      <div><dt>Lifetime admissions</dt><dd id="admission-count">0</dd></div>
+      <div><dt>Lifetime expansions</dt><dd id="expansion-count">0</dd></div>
+      <div><dt>Modeled effect applications</dt><dd id="effect-count">0</dd></div>
+      <div><dt>Retained rejections</dt><dd id="rejection-count">0</dd></div>
+      <div><dt>Eligible inspections</dt><dd id="inspection-count">0</dd></div>
+      <div><dt>Archived admissions</dt><dd id="archive-count">0</dd></div>
+    </dl>
+    <table>
+      <caption>Fresh consumer checks for the last submitted candidate — never a permit</caption>
+      <thead><tr><th scope="col">Tier</th><th scope="col">Result</th><th scope="col">Code and local evidence</th></tr></thead>
+      <tbody id="consumer-results"></tbody>
+    </table>
+    <details><summary>Actual retained C023 job, checkpoints and effects</summary><pre id="job-detail">No active job.</pre></details>
+  </section>
+
+  <section aria-labelledby="history-title">
+    <h2 id="history-title">Retained operation history</h2>
+    <p>Reset archives the current admission and native form values; it does not erase original rejections, inspections, jobs or lifetime effect counts. Reload/close discards this memory-only page. At 64 operations, one terminal refusal prevents admission/reset bypass without truncating history.</p>
+    <table>
+      <thead><tr><th scope="col">Revision</th><th scope="col">Operation</th><th scope="col">Outcome</th><th scope="col">Code</th></tr></thead>
+      <tbody id="history-rows"></tbody>
+    </table>
+    <label for="session-export">Read-only complete session JSON</label>
+    <textarea id="session-export" readonly rows="12" spellcheck="false"></textarea>
+    <button id="select-export" type="button" disabled>Select session JSON</button>
+  </section>
+
+  <section id="scope-notes" aria-labelledby="scope-title">
+    <h2 id="scope-title">Honest remaining scope</h2>
+    <p>C023's atomic local effect/ledger pair is a model assumption, not durable transactions or exactly-once delivery. Catalog stamps and SHA-256 lineage are reproducibility labels, not identity or authenticated receipts.</p>
+    <p>Compatibility stays separate from runtime health, HTTP200, available capacity, authorization, and known/unknown business outcomes. No service connection, queue, event SDK, DB, Storage, deployment, credentials or cloud spending occurs.</p>
+    <p>H009 stable routing, preview authorization, deterministic cohorts, promotion policy and fresh external evidence, source parents H003/H005/H008, native integration and production Node24 qualification remain incomplete. Original C048 is one D mission; proof and repairs add no units. Only the parent accepts it.</p>
+  </section>
+</main>
+</body>
+</html>

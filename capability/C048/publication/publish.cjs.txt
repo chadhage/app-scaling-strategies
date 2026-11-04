@@ -1,0 +1,105 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const zlib = require('node:zlib');
+const { spawnSync } = require('node:child_process');
+const root = path.resolve(__dirname, '..');
+const repository = path.resolve(root, '..', '..');
+assert.equal(process.argv.length, 2, 'C048 publication has one fixed worker, scope and message; no override arguments.');
+assert.equal(process.env.NODE_TEST_CONTEXT, undefined, 'Publication cannot execute inside a test-runner context.');
+const approvedPublisherSha256 = '91c8cf83dd07e34a467eae35445e2337783ce28aaf9c4d3d2d4932b17fb59244';
+const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json')));
+assert.equal(manifest.publicationAuthority.approvedRawSha256, approvedPublisherSha256);
+const qualification = JSON.parse(fs.readFileSync(path.join(root, 'evidence.json'))).browserAuthority;
+assert.equal(qualification.current, true, 'Full source proof must be refreshed after an approved boundary/source change.');
+const proofFile = path.resolve(repository, qualification.record);
+assert.ok(path.relative(root, proofFile).startsWith(`evidence${path.sep}`));
+const proof = JSON.parse(fs.readFileSync(proofFile));
+assert.equal(proof.outcome, 'passed');
+assert.equal(proof.requestedScope, 'full');
+assert.equal(proof.checks.length, 24);
+assert.equal(proof.cleanup.awaitedFinallyClose, true);
+for (const [file, expected] of Object.entries(proof.sourceHashes)) {
+  const sourceFile = path.resolve(repository, file);
+  const owned = path.relative(root, sourceFile);
+  assert.ok(owned && owned !== '..' && !owned.startsWith(`..${path.sep}`) && !path.isAbsolute(owned));
+  assert.equal(crypto.createHash('sha256').update(fs.readFileSync(sourceFile)).digest('hex'), expected);
+}
+const script = String.raw`
+$ErrorActionPreference = 'Stop'
+function Read-Git([string[]]$Arguments) {
+    $output = & git @Arguments 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "Read-only Git check failed: $($Arguments -join ' '): $($output -join [Environment]::NewLine)" }
+    return ($output | Out-String).Trim()
+}
+$mutex = [Threading.Mutex]::new($false, 'Local\AppScalingStrategies_KanbanPublisher_v1')
+$held = $false
+try {
+    $held = $mutex.WaitOne([TimeSpan]::FromSeconds(180))
+    if (-not $held) { throw 'Publisher mutex timeout; no lock removal or serialization bypass.' }
+    $branch = Read-Git @('branch', '--show-current')
+    $head = Read-Git @('rev-parse', 'HEAD')
+    $main = Read-Git @('rev-parse', 'refs/heads/main')
+    $tracking = Read-Git @('rev-parse', 'refs/remotes/origin/main')
+    $remoteLine = Read-Git @('ls-remote', 'origin', 'refs/heads/main')
+    if ($remoteLine -notmatch '^([a-f0-9]{40})\s+refs/heads/main$') { throw 'Remote main must have one exact reference.' }
+    $remote = $Matches[1]
+    [ordered]@{branch=$branch;head=$head;main=$main;trackingMain=$tracking;remoteMain=$remote;underPublisherMutex=$true} | ConvertTo-Json -Compress | Write-Output
+    if ($branch -ne 'main' -or $head -ne $main -or $head -ne $tracking -or $head -ne $remote) {
+        throw 'HEAD_MAIN_MISMATCH: stop/report; no staging or publication may carry an unpublished foreign commit.'
+    }
+    $approvedPublisherSha256 = '91c8cf83dd07e34a467eae35445e2337783ce28aaf9c4d3d2d4932b17fb59244'
+    $observedPublisherSha256 = (Get-FileHash -LiteralPath .git\kanban-orchestrator\publish.ps1 -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($observedPublisherSha256 -ne $approvedPublisherSha256) {
+        throw 'PUBLISHER_BOUNDARY_MISMATCH: stop/report; no silent shared version update or guard bypass.'
+    }
+    [ordered]@{approvedPublisherSha256=$approvedPublisherSha256;observedPublisherSha256=$observedPublisherSha256;underPublisherMutex=$true} | ConvertTo-Json -Compress | Write-Output
+    & .git\kanban-orchestrator\publish.ps1 -CardId C048 -WorkerId worker-C048 -Paths @('capability\C048') -Message '[C048][D] Gate local DATA/EVENT admission with retained RED and actual signed-browser proof'
+} finally {
+    if ($held) { $mutex.ReleaseMutex() }
+    $mutex.Dispose()
+}
+`;
+const startedAtUtc = new Date().toISOString();
+const result = spawnSync('C:\\Program Files\\PowerShell\\7\\pwsh.exe',
+  ['-NoProfile', '-NonInteractive', '-Command', script], {
+    cwd: repository, encoding: 'buffer', maxBuffer: 16 * 1024 * 1024,
+    env: { ...process.env, NODE_DISABLE_COLORS: '1' }
+  });
+process.stdout.write(result.stdout || Buffer.alloc(0));
+process.stderr.write(result.stderr || Buffer.alloc(0));
+if ((result.status !== 0 || result.error) && process.env.CAPTURE_BROWSER_EVIDENCE === '1') {
+  const unique = `${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto.randomUUID()}`;
+  const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+  const streams = {};
+  for (const name of ['stdout', 'stderr']) {
+    const bytes = result[name] || Buffer.alloc(0);
+    const file = path.join(root, 'evidence', `publication-${unique}-${name}.raw.gz`);
+    const gzip = zlib.gzipSync(bytes);
+    assert.deepEqual(zlib.gunzipSync(gzip), bytes);
+    fs.writeFileSync(file, gzip, { flag: 'wx' });
+    streams[name] = {
+      path: path.relative(repository, file), sha256: sha256(bytes), bytes: bytes.length,
+      rawCRLF: (bytes.toString('utf8').match(/\r\n/g) || []).length
+    };
+  }
+  const recordPath = path.join(root, 'evidence', `publication-${unique}.json`);
+  const record = {
+    schema: 'C048/publication-attempt/1', cardId: 'C048', workerId: 'worker-C048', kano: 'D',
+    startedAtUtc, finishedAtUtc: new Date().toISOString(), runtime: process.version, captureRequested: true,
+    status: result.status, signal: result.signal,
+    spawnError: result.error ? { code: result.error.code, message: result.error.message } : null,
+    standardPublisher: '.git\\kanban-orchestrator\\publish.ps1',
+    ownedScope: 'capability\\C048', message: '[C048][D] Gate local DATA/EVENT admission with retained RED and actual signed-browser proof',
+    script, scriptSha256: sha256(Buffer.from(script)), streams,
+    qualification: 'Failed attempt only; no publication or parent acceptance is inferred. Standard publisher is never patched/bypassed.',
+    writesDeferredUntilChildExit: true
+  };
+  fs.writeFileSync(recordPath, `${JSON.stringify(record, null, 2)}\n`, { flag: 'wx' });
+  console.log(`PUBLICATION_FAILURE_RECORD ${path.relative(repository, recordPath)}`);
+}
+if (result.status === 0) console.log('PUBLISHED — read the exact standard .git\\kanban-orchestrator\\published\\C048.json receipt before State Report; parent alone accepts.');
+process.exitCode = result.status === null ? 1 : result.status;
