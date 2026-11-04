@@ -3,139 +3,129 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const types = require('..\\errors.js');
+const { gunzipSync } = require('node:zlib');
+const { parseJsonInput } = require('..\\..\\C002\\json-input.js');
 const manifest = require('..\\manifest.json');
 const { root, repo, sha } = require('./provenance.cjs');
+const scope = 'Actual read-only local run progress or typed error/recovery inspection over unchanged accepted C015 public APIs. Test setup only via current-approved C015 public persist in unique created test-UUID scratch, then explicit tracked cleanup; no retained demo or shared source edits.';
 
-const revisions = Object.freeze({
-  'localPublisherAuthorization.savedTraceRevision': {
-    keys: ['approvedBy', 'acceptedDependencies', 'cloudIdentityOrInfrastructureAuthorityExpanded',
-      'approvedAtUtc', 'publisherSha256', 'previousPublisherSha256', 'exactAddedClasses',
-      'namespaceFrozenClassAdminHeadAndWhitespaceRulesUnchanged', 'focusedGuardChecksPassed', 'extraCredits'],
-    guard: 'namespaceFrozenClassAdminHeadAndWhitespaceRulesUnchanged', count: 40,
-    credits: 'extraCredits', classes: { C034: 'S' },
-  },
-  'localPublisherAuthorization.correlationGuardRevision': {
-    keys: ['exactAddedClasses', 'previousPublisherSha256', 'acceptedPrerequisites', 'publisherSha256',
-      'extraCredit', 'focusedGuardChecksPassed', 'namespaceFrozenClassAdminHeadWhitespaceAndCloudPermissionsUnchanged',
-      'approvedBy', 'approvedAtUtc'],
-    guard: 'namespaceFrozenClassAdminHeadWhitespaceAndCloudPermissionsUnchanged', count: 41,
-    credits: 'extraCredit', classes: { C036: 'D' },
-  },
-  'localPublisherAuthorization.budgetAndGoalRevision': {
-    keys: ['focusedGuardChecksPassed', 'namespaceFrozenClassAdminHeadAndWhitespaceRulesRetained',
-      'cloudIdentityOrInfrastructureAuthorityExpanded', 'allSixDesignatedSatisfiersAlreadyAccepted',
-      'ownedNamespaces', 'onlyTwoExactClassTokensChanged', 'approvedBy', 'exactAddedClasses',
-      'previousPublisherSha256', 'publisherSha256', 'extraCredits', 'approvedAtUtc', 'namedDelighterPacket'],
-    guard: 'namespaceFrozenClassAdminHeadAndWhitespaceRulesRetained', count: 51,
-    credits: 'extraCredits', classes: { C029: 'D', X003: 'L' },
-  },
-});
+function hold(code) {
+  return Object.freeze({ approved: false, code, authorizedSha256: null, delegationReady: false,
+    normalVerificationAuthorizesPublication: false, publicationPerformed: false, originalUnitCredits: 0 });
+}
 
 function validateCurrent(value) {
-  const item = types.record(value, ['schemaVersion', 'sourceSelector', 'controllerId', 'central', 'delegation']);
-  if (!item || item.schemaVersion !== 1 || typeof item.sourceSelector !== 'string' ||
-      !Object.hasOwn(revisions, item.sourceSelector) || item.controllerId !== manifest.publisherControllerId) return null;
-  const central = types.record(item.central, ['id', 'approvedBy', 'publisherSha256', 'c019Class',
-    'mainMustEqualRemoteBeforeStaging', 'namespaceAndFrozenClassGuardsUnchanged',
-    'cloudAuthorityExpanded', 'originalKanoCredit', 'gitWritesDuringGuardTests', 'approvedRevision']);
-  if (!central || central.id !== 'local-publisher-authorizations-19' ||
-      central.approvedBy !== 'parent-controller' || central.c019Class !== 'S' ||
-      central.mainMustEqualRemoteBeforeStaging !== true ||
-      central.namespaceAndFrozenClassGuardsUnchanged !== true || central.cloudAuthorityExpanded !== false ||
-      central.originalKanoCredit !== 0 || central.gitWritesDuringGuardTests !== 0) return null;
-  const policy = revisions[item.sourceSelector];
-  const revision = types.record(central.approvedRevision, policy.keys);
-  if (!revision || revision.approvedBy !== 'parent-controller' || revision[policy.guard] !== true ||
-      revision.focusedGuardChecksPassed !== policy.count || revision[policy.credits] !== 0 ||
-      typeof revision.approvedAtUtc !== 'string' ||
-      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{1,7}Z$/.test(revision.approvedAtUtc) ||
-      typeof revision.publisherSha256 !== 'string' || !/^[a-f0-9]{64}$/.test(revision.publisherSha256) ||
-      typeof revision.previousPublisherSha256 !== 'string' || !/^[a-f0-9]{64}$/.test(revision.previousPublisherSha256) ||
-      central.publisherSha256 !== revision.publisherSha256) return null;
   try {
-    if (types.canonical(revision.exactAddedClasses) !== types.canonical(policy.classes)) return null;
-    if (Object.hasOwn(revision, 'cloudIdentityOrInfrastructureAuthorityExpanded') &&
-        revision.cloudIdentityOrInfrastructureAuthorityExpanded !== false) return null;
-    if (item.sourceSelector.endsWith('.savedTraceRevision') &&
-        types.canonical(revision.acceptedDependencies) !== '["C020","C015","C033"]') return null;
-    if (item.sourceSelector.endsWith('.correlationGuardRevision') &&
-        types.canonical(revision.acceptedPrerequisites) !== '["C015","C034"]') return null;
-    if (item.sourceSelector.endsWith('.budgetAndGoalRevision') &&
-        (revision.onlyTwoExactClassTokensChanged !== true || revision.namedDelighterPacket !== 'LP-LEARN' ||
-         types.canonical(revision.ownedNamespaces) !== '["capability\\\\C029","capability\\\\X003"]' ||
-         types.canonical(revision.allSixDesignatedSatisfiersAlreadyAccepted) !== '["C005","C006","C007","C008","A-S001","A-S010"]')) return null;
+    const approval = value?.authorization;
+    const card = value?.card;
+    const worker = value?.worker;
+    if (value?.schemaVersion !== 2 || value.sourceSelector !== 'localPublisherAuthorization' ||
+        value.controllerId !== manifest.publisherControllerId || value.stateMutexReleasedBeforeReturn !== true ||
+        approval?.approvedBy !== 'parent-controller' || approval.id !== 'local-publisher-authorizations-19' ||
+        typeof approval.publisherSha256 !== 'string' || !/^[a-f0-9]{64}$/.test(approval.publisherSha256) ||
+        approval.exactAddedClasses?.C019 !== 'S' || approval.mainMustEqualRemoteBeforeStaging !== true ||
+        approval.namespaceAndFrozenClassGuardsUnchanged !== true || approval.cloudAuthorityExpanded !== false ||
+        approval.originalKanoCredit !== 0 || approval.gitWritesDuringGuardTests !== 0 ||
+        card?.id !== 'C019' || card.kano !== 'S' || card.kanoUnit !== 'C019' || card.priority !== 'P0' ||
+        card.packet !== 'H004' || card.technicalEntryGate !== 'C015' ||
+        card.authorization !== 'accepted-local-C015-public-fixture-API-consumer-only' || card.localScope !== scope ||
+        worker?.id !== 'worker-C019' || worker.cardId !== 'C019' ||
+        value.prerequisite?.id !== 'C015' || value.prerequisite.state !== 'Done') return null;
+    return value;
   } catch { return null; }
-  const delegation = types.record(item.delegation, ['cardId', 'kano', 'priority', 'packet', 'gate',
-    'state', 'owner', 'workerId', 'workerCardId', 'workerStatus', 'prerequisiteState']);
-  if (!delegation || delegation.cardId !== 'C019' || delegation.kano !== 'S' || delegation.priority !== 'P0' ||
-      delegation.packet !== 'H004' || delegation.gate !== 'C015' || delegation.workerId !== 'worker-C019' ||
-      delegation.workerCardId !== 'C019' || delegation.prerequisiteState !== 'Done' ||
-      !['To Do', 'In Progress', 'Done'].includes(delegation.state) || ![null, 'worker-C019'].includes(delegation.owner) ||
-      !['dispatched', 'running', 'result_received', 'accepted'].includes(delegation.workerStatus)) return null;
-  return types.freeze(JSON.parse(types.canonical(item)));
+}
+
+function assessAuthority(value) {
+  const current = validateCurrent(value);
+  if (!current) return hold('PUBLISHER_AUTHORIZATION_INVALID');
+  return Object.freeze({
+    approved: true, code: 'CANONICAL_PARENT_AUTHORITY',
+    authorizedSha256: current.authorization.publisherSha256,
+    sourceSelector: 'localPublisherAuthorization', controllerId: current.controllerId,
+    authorityId: current.authorization.id,
+    delegationReady: current.card.state === 'In Progress' && current.card.owner === 'worker-C019' &&
+      current.card.readiness === true && current.worker.status === 'running',
+    normalVerificationAuthorizesPublication: false, historicalSnapshotIsCurrentAuthority: false,
+    stateReadBeforePublisher: true, publicationPerformed: false, originalUnitCredits: 0,
+  });
+}
+
+function inspectCurrent(value, actualSha256) {
+  const authority = assessAuthority(value);
+  if (!authority.approved) return { ...authority, observedSha256: actualSha256 || null, exactAuthorizedBytes: false };
+  const exact = typeof actualSha256 === 'string' && actualSha256 === authority.authorizedSha256;
+  return { ...authority, observedSha256: actualSha256 || null, exactAuthorizedBytes: exact,
+    approved: exact, code: exact ? 'PUBLISHER_AUTHORIZED' : 'PUBLISHER_SCRIPT_MISMATCH' };
 }
 
 function readCurrent() {
-  const result = spawnSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-File',
+  const observed = spawnSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-File',
     path.join(__dirname, 'publisher-current.ps1')],
-  { encoding: 'utf8', timeout: 45000, maxBuffer: 65536, windowsHide: true });
-  if (result.error || result.status !== 0 || result.signal) {
-    throw Object.assign(new Error('Controller publisher authorization unavailable; no historical fallback.'),
+  { encoding: 'utf8', timeout: 45000, maxBuffer: 262144, windowsHide: true });
+  if (observed.error || observed.status !== 0 || observed.signal) {
+    throw Object.assign(new Error('Current canonical controller authority unavailable; no fallback.'),
       { code: 'PUBLISHER_AUTHORIZATION_UNAVAILABLE' });
   }
-  let value;
-  try { value = JSON.parse(result.stdout); } catch {
-    throw Object.assign(new Error('Controller publisher authorization is not valid JSON.'),
+  const parsed = parseJsonInput(observed.stdout, 'current-controller-publisher');
+  if (parsed.errors.length || !validateCurrent(parsed.value)) {
+    throw Object.assign(new Error('Current canonical controller authority invalid; no fallback.'),
       { code: 'PUBLISHER_AUTHORIZATION_INVALID' });
   }
-  const approved = validateCurrent(value);
-  if (!approved) throw Object.assign(new Error('Explicit controller authorization did not validate.'),
-    { code: 'PUBLISHER_AUTHORIZATION_INVALID' });
-  return approved;
+  return parsed.value;
+}
+
+function readCurrentAuthority() {
+  try {
+    const snapshot = readCurrent();
+    return { snapshot, assessment: assessAuthority(snapshot) };
+  } catch (error) {
+    return { snapshot: null, assessment: hold(error.code === 'PUBLISHER_AUTHORIZATION_UNAVAILABLE'
+      ? error.code : 'PUBLISHER_AUTHORIZATION_INVALID') };
+  }
 }
 
 function loadSnapshot() {
-  const relative = manifest.publisherAuthorizationSnapshot;
-  if (typeof relative !== 'string' || !/^evidence\\authorization-[a-f0-9-]{36}\\authorization\.raw\.json$/.test(relative)) {
-    throw Object.assign(new Error('Approved controller authorization snapshot required.'),
-      { code: 'PUBLISHER_AUTHORIZATION_SNAPSHOT_MISSING' });
-  }
-  return JSON.parse(fs.readFileSync(path.join(root, relative), 'utf8'));
+  return JSON.parse(fs.readFileSync(path.join(root, manifest.historical60AEAuthorizationSnapshot), 'utf8'));
 }
 
-function assess(current, snapshot, observedSha256) {
-  const approved = validateCurrent(current);
-  const captured = snapshot && validateCurrent(snapshot.authorization);
-  if (!approved || !captured) return { approved: false, code: 'PUBLISHER_AUTHORIZATION_INVALID', authorizedSha256: null };
-  if (types.canonical(approved.central) !== types.canonical(captured.central) ||
-      approved.controllerId !== captured.controllerId || approved.sourceSelector !== captured.sourceSelector) {
-    return { approved: false, code: 'PUBLISHER_AUTHORIZATION_CHANGED', authorizedSha256: null };
+function historicalPublisher() {
+  const relative = manifest.historical60AEAuthorizationSnapshot;
+  const directory = path.dirname(path.join(root, relative));
+  const snapshot = loadSnapshot();
+  const capture = JSON.parse(fs.readFileSync(path.join(directory, 'capture.raw.json'), 'utf8'));
+  const archived = capture.snapshots.find((item) => item.path === '.git\\kanban-orchestrator\\publish.ps1');
+  if (!archived) throw new Error('Actual immutable 60AE publisher snapshot is required.');
+  const bytes = gunzipSync(fs.readFileSync(path.join(directory, archived.working.file)));
+  if (sha(bytes) !== snapshot.actualPublisherSha256 || sha(bytes) !== manifest.historical60AEPublisherSha256) {
+    throw new Error('Historical 09a publisher bytes differ from their immutable receipt.');
   }
-  const authorizedSha256 = approved.central.approvedRevision.publisherSha256;
-  if (manifest.publisherSha256 !== authorizedSha256 || observedSha256 !== authorizedSha256) {
-    return { approved: false, code: 'PUBLISHER_SCRIPT_MISMATCH', authorizedSha256 };
+  return { snapshot, capture, bytes, sha256: sha(bytes), actuallyUsedByCommit: manifest.historicalPublicationCommit,
+    currentAuthority: false };
+}
+
+function assessHistorical(snapshot, bytes) {
+  const approval = snapshot?.authorization?.central;
+  const revision = approval?.approvedRevision;
+  const historicalSha = manifest.historical60AEPublisherSha256;
+  if (snapshot?.actualPublisherSha256 !== historicalSha || sha(bytes) !== historicalSha ||
+      snapshot.authorization.sourceSelector !== 'localPublisherAuthorization.budgetAndGoalRevision' ||
+      approval.approvedBy !== 'parent-controller' || approval.c019Class !== 'S' ||
+      approval.publisherSha256 !== historicalSha || revision?.publisherSha256 !== historicalSha ||
+      revision.approvedBy !== 'parent-controller' || revision.focusedGuardChecksPassed !== 51 ||
+      revision.namespaceFrozenClassAdminHeadAndWhitespaceRulesRetained !== true ||
+      revision.cloudIdentityOrInfrastructureAuthorityExpanded !== false || revision.extraCredits !== 0 ||
+      revision.exactAddedClasses?.C029 !== 'D' || revision.exactAddedClasses?.X003 !== 'L') {
+    return hold('HISTORICAL_PUBLICATION_SOURCE_MISMATCH');
   }
-  return { approved: true, code: 'PUBLISHER_AUTHORIZED', authorizedSha256,
-    sourceSelector: approved.sourceSelector, controllerId: approved.controllerId,
-    approvedAtUtc: approved.central.approvedRevision.approvedAtUtc,
-    historicalPublisherSha256: manifest.historicalPublisherSha256, historicalSnapshotIsCurrentAuthority: false,
-    parentReportedGuardChecks: approved.central.approvedRevision.focusedGuardChecksPassed,
-    delegationReady: approved.delegation.state === 'In Progress' &&
-      approved.delegation.owner === 'worker-C019' && approved.delegation.workerStatus === 'running',
-    originalUnitCredits: 0 };
+  return { approved: true, code: 'IMMUTABLE_ACTUAL_09A_60AE_HISTORY', historicalSha256: historicalSha,
+    actuallyUsedByCommit: manifest.historicalPublicationCommit, currentAuthority: false, originalUnitCredits: 0 };
 }
 
 function assessCurrent() {
-  try {
-    const current = readCurrent();
-    const observedSha256 = sha(fs.readFileSync(path.join(repo, '.git', 'kanban-orchestrator', 'publish.ps1')));
-    return { ...assess(current, loadSnapshot(), observedSha256), observedSha256 };
-  } catch (error) {
-    return { approved: false, code: ['PUBLISHER_AUTHORIZATION_UNAVAILABLE', 'PUBLISHER_AUTHORIZATION_INVALID',
-      'PUBLISHER_AUTHORIZATION_SNAPSHOT_MISSING'].includes(error.code) ? error.code : 'PUBLISHER_AUTHORIZATION_INVALID',
-      authorizedSha256: null, observedSha256: null, originalUnitCredits: 0 };
-  }
+  const current = readCurrentAuthority();
+  if (!current.snapshot) return current.assessment;
+  return inspectCurrent(current.snapshot, sha(fs.readFileSync(path.join(repo, '.git', 'kanban-orchestrator', 'publish.ps1'))));
 }
 
-module.exports = Object.freeze({ validateCurrent, readCurrent, loadSnapshot, assess, assessCurrent });
+module.exports = Object.freeze({ validateCurrent, assessAuthority, inspectCurrent, readCurrent, readCurrentAuthority,
+  loadSnapshot, historicalPublisher, assessHistorical, assessCurrent });

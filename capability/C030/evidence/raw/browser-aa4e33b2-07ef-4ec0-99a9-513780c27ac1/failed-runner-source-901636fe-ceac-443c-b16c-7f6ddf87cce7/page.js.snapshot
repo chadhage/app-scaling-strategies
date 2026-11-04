@@ -1,0 +1,134 @@
+(function () {
+  'use strict';
+  const detector = globalThis.C030EffectDetector;
+  const byId = (id) => document.getElementById(id);
+  const operations = ['inspect', 'compare', 'load-copy', 'inspect-copy'];
+  const history = [];
+  let last = null;
+  const text = (tag, value) => {
+    const node = document.createElement(tag);
+    node.textContent = String(value);
+    return node;
+  };
+  function clear(message = 'Not inspected. No business effect is being executed.') {
+    last = null;
+    byId('status').textContent = message;
+    byId('status').dataset.decision = 'UNASSESSED';
+    byId('status').dataset.valid = 'false';
+    byId('error').textContent = '';
+    byId('counts').textContent = 'No verified denominator yet.';
+    byId('current').textContent = 'No associated effect counts selected.';
+    byId('scope').textContent = 'No evidence selected.';
+    byId('comparison').textContent = '';
+    byId('output').value = '';
+    byId('originals').replaceChildren();
+    byId('copy-result').disabled = true;
+  }
+  function retain(action, report) {
+    if (history.length >= 16) return false;
+    history.push(Object.freeze({ operation: history.length + 1, action, sourceId: byId('source-id').value,
+      valid: report.valid, decision: report.decision, code: report.code || null }));
+    byId('inspection-history').replaceChildren(...history.map((item) =>
+      text('li', `${item.operation}. ${item.action}: ${item.sourceId || '(no source)'} — ${item.decision}${item.code ? ` / ${item.code}` : ''}`)));
+    if (history.length === 16) {
+      operations.forEach((id) => { byId(id).disabled = true; });
+      byId('history-limit').textContent = '16 operations retained. Additional inspections are refused, not dropped. Reset cannot erase failures or restore capacity.';
+    }
+    return true;
+  }
+  function counts(value) {
+    return `${value.originals} originals: ${value.pass} PASS / ${value.fail} FAIL / ${value.unknown} UNKNOWN / ${value.unsupported} UNSUPPORTED`;
+  }
+  function effectCounts(value) {
+    if (!value || value.intendedEffects === null) return 'No associated effect plan or required application receipts; counts UNOBSERVED, not confirmed zero.';
+    return `${value.intendedEffects} intended effects; ${value.confirmedApplications} confirmed applications (scoped lower bound); ` +
+      `${value.hypotheticalApplications} hypothetical; ${value.deliveryAttempts} delivery attempts; ` +
+      `${value.extraApplications} extra applications; ${value.confirmedAbsences} confirmed absences; ` +
+      `${value.missingObservations} missing observations; ${value.unknownAcknowledgements} unknown acknowledgments; ` +
+      `checkpoint ${value.checkpointPosition} (${value.checkpointRecords} records).`;
+  }
+  function originalNode(original) {
+    const item = text('li', '');
+    item.dataset.original = original.originalId;
+    item.dataset.verdict = original.verdict;
+    item.append(text('h3', `${original.originalId} — ${original.verdict}`), text('p', effectCounts(original.effectCounts)),
+      text('p', original.reasonCodes.join('; ') || 'Exactly one scoped application observed per intended effect.'));
+    if (original.sourceBudget) {
+      item.append(text('p', `Unchanged C029 budget verdict: ${original.sourceBudget.verdict}; state ${original.sourceBudget.stateVerdict}; latency ${original.sourceBudget.latencyVerdict}. This is separate from effect counts.`));
+    }
+    if (original.effects.length) {
+      const wrap = text('div', '');
+      wrap.className = 'table-wrap';
+      const table = text('table', '');
+      table.append(text('caption', 'Exact effect identities and scoped observations, not actual external receipts'));
+      const head = text('tr', '');
+      ['Effect key', 'Application lower / upper bound', 'Deliveries', 'Observation'].forEach((value) => {
+        const cell = text('th', value); cell.scope = 'col'; head.append(cell);
+      });
+      const thead = text('thead', ''); thead.append(head); table.append(thead);
+      const body = text('tbody', '');
+      original.effects.forEach((effect) => {
+        const row = text('tr', '');
+        row.dataset.effect = effect.kind;
+        row.dataset.observation = effect.status;
+        [effect.effectKey, `${effect.confirmedApplicationsLowerBound} / ${effect.confirmedApplicationsUpperBound ?? 'unknown'}`,
+          effect.deliveryAttempts, effect.status].forEach((value) => row.append(text('td', value)));
+        body.append(row);
+      });
+      table.append(body); wrap.append(table); item.append(wrap);
+    }
+    return item;
+  }
+  function display(report) {
+    last = report;
+    const evaluated = report.after || report;
+    byId('status').textContent = `${evaluated.decision}: ${evaluated.valid ? 'bounded local inspection only' : 'rejected; no source adopted'}. Never a live Azure or external exactly-once result.`;
+    byId('status').dataset.decision = evaluated.decision;
+    byId('status').dataset.valid = String(evaluated.valid);
+    byId('error').textContent = evaluated.code || '';
+    byId('counts').textContent = counts(evaluated.counts);
+    byId('current').textContent = effectCounts(evaluated.currentCounts);
+    byId('scope').textContent = `${evaluated.evaluationScope} ${evaluated.applicationScope || ''}`;
+    byId('originals').replaceChildren(...evaluated.originals.map(originalNode));
+    byId('comparison').textContent = report.before ?
+      `Before: ${counts(report.before.counts)}. After: ${counts(report.after.counts)}. Original failures and unknowns retained, not repaired by retry.` : '';
+    byId('output').value = JSON.stringify(report, null, 2);
+    byId('copy-result').disabled = false;
+  }
+  function run(action, operation) {
+    if (history.length >= 16) return;
+    let report;
+    try { report = operation(); }
+    catch (error) { report = detector.inspectCandidate('', byId('source-id').value); }
+    if (retain(action, report.after || report)) display(report);
+  }
+  byId('inspect').addEventListener('click', () => run('inspect', () => detector.inspectSource(byId('source-id').value)));
+  byId('compare').addEventListener('click', () => run('compare', () => detector.compare(byId('source-id').value)));
+  byId('inspect-copy').addEventListener('click', () => run('inspect-copy', () =>
+    detector.inspectCandidate(byId('candidate').value, byId('source-id').value)));
+  byId('load-copy').addEventListener('click', () => {
+    if (history.length >= 16) return;
+    try {
+      byId('candidate').value = detector.sourceJson(byId('source-id').value);
+      clear('Exact immutable source copy loaded; not yet inspected or adopted.');
+      byId('candidate').focus();
+    } catch { run('load-copy-rejected', () => detector.inspectSource(byId('source-id').value)); }
+  });
+  byId('copy-result').addEventListener('click', () => {
+    if (!last) return;
+    byId('output').focus();
+    byId('output').select();
+  });
+  byId('source-id').addEventListener('change', () => {
+    byId('candidate').value = '';
+    clear();
+  });
+  byId('candidate').addEventListener('input', () => clear('Copy changed; previous inspection cleared. No source adopted.'));
+  byId('reset').addEventListener('click', () => {
+    byId('source-id').value = '';
+    byId('candidate').value = '';
+    clear('Display reset only. Original/error history retained; no work executed, retried or repaired.');
+    byId('source-id').focus();
+  });
+  clear();
+}());

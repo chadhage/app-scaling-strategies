@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>C035 honest local result classifier</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="../C015/observed-snapshot.js"></script>
+  <script defer src="../C020/contract.js"></script>
+  <script defer src="../C020/inspector.js"></script>
+  <script defer src="../C023/ledger.js"></script>
+  <script defer src="../C033/journey.js"></script>
+  <script defer src="../C034/evidence/raw/trace-7d3b0b84-675e-4f9b-92a4-2ea3b89e0116/bundle.js"></script>
+  <script defer src="../C034/trace.js"></script>
+  <script defer src="../C029/evaluator.js"></script>
+  <script defer src="classifier.js"></script>
+  <script defer src="page.js"></script>
+</head>
+<body>
+  <main>
+    <p id="banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Honest local result classifier</h1>
+    <p id="mode">BROWSER: bundled HISTORICAL C015 and C029 observations only. No current disk read, live journey, actual cancellation or user mutation. The Node CLI separately rereads actual current C015 context through its unchanged public restore API.</p>
+    <p>PASS means only complete evidence within the named local segment or fictional control. FAIL has precedence; missing required dimensions stay UNKNOWN/HOLD. HTTP 200, a cancel request, process absence, retry or recovery is not completion, cancellation, cleanup or undo.</p>
+
+    <section aria-labelledby="input-heading">
+      <h2 id="input-heading">Choose an explicit source</h2>
+      <label for="source-id">Closed evidence identifier</label>
+      <select id="source-id">
+        <option value="">Choose a source; no default success</option>
+        <optgroup label="Pinned HISTORICAL C029 original local segments">
+          <option value="closed-history">Closed history: seven originals, two FAIL and three unverified</option>
+          <option value="held-snapshot">Earlier held partial: two originals, missing terminal stays unknown</option>
+        </optgroup>
+        <optgroup label="C029 synthetic clock controls, not measured journeys">
+          <option value="control-below">Below original deadline</option>
+          <option value="control-at">At original deadline: FAIL</option>
+          <option value="control-above">Above original deadline: FAIL</option>
+          <option value="control-retry">Budget miss then new attempt: original FAIL retained</option>
+          <option value="control-unknown-retry">Interrupted unknown then new attempt: unknown retained</option>
+          <option value="control-held-before">Expired held-before: no terminal</option>
+          <option value="control-held-between">Expired held-between: partial state, no terminal</option>
+        </optgroup>
+        <optgroup label="C023 mathematical event-log MODEL, no actual effects or latency">
+          <option value="model-clean">Model complete state; timing UNKNOWN</option>
+          <option value="model-resume">Model interrupted then resumed; original FAIL</option>
+          <option value="model-unknown">Model unknown effect acknowledgment</option>
+          <option value="model-reconcile">Hypothetical reconciliation; original UNKNOWN</option>
+        </optgroup>
+        <optgroup label="MODELED fictional controls: no execution or C015 cancellation">
+          <option value="modeled-complete">MODELED complete evidence only</option>
+          <option value="modeled-unsupported">UNSUPPORTED</option>
+          <option value="modeled-unknown">UNKNOWN</option>
+          <option value="modeled-interrupted">INTERRUPTED, not cancelled</option>
+          <option value="modeled-cancel-request">Cancel REQUEST only: UNKNOWN/HOLD</option>
+          <option value="modeled-cancelled">MODELED cancel terminal ack: not no-effect or undo proof</option>
+          <option value="modeled-cancelled-no-effect">MODELED separate zero-effect receipt: still no external undo</option>
+          <option value="modeled-failed-unsupported">Known budget FAIL with unsupported label</option>
+          <option value="modeled-failed-unknown">Known budget FAIL with unknown terminal</option>
+          <option value="modeled-failed-cancel">Known budget FAIL with MODELED cancel acknowledgment</option>
+          <option value="modeled-missing-context">Missing original context</option>
+          <option value="modeled-missing-schema">Missing original schema</option>
+          <option value="modeled-missing-timing">Missing original timing</option>
+          <option value="modeled-missing-state">Missing original state</option>
+          <option value="modeled-missing-terminal">Missing original terminal</option>
+          <option value="modeled-missing-provenance">Missing terminal provenance</option>
+        </optgroup>
+      </select>
+      <div class="controls">
+        <button id="inspect" type="button">Inspect originals</button>
+        <button id="load-copy" type="button">Load exact JSON copy</button>
+        <button id="reset" type="button">Reset presentation only</button>
+      </div>
+      <label for="comparison-id">Closed comparison</label>
+      <select id="comparison-id">
+        <option value="">Choose a comparison</option>
+        <option value="retry">Original budget failure versus positive new attempt</option>
+        <option value="cancellation">Independent MODELED request versus terminal ack controls</option>
+        <option value="model-reconciliation">Model unknown versus hypothetical reconciliation</option>
+      </select>
+      <button id="compare" type="button">Compare without repairing originals</button>
+      <label for="candidate">Optional exact selected-source JSON copy (inspection only)</label>
+      <textarea id="candidate" rows="6" maxlength="131072" spellcheck="false" aria-describedby="copy-help"></textarea>
+      <p id="copy-help">Duplicate fields, wrong types, malformed or oversized JSON, changed original history, and forged eligibility/context/authority reject. Rejected copies never replace known source failures with unknowns.</p>
+      <button id="inspect-copy" type="button">Inspect copy without adopting it</button>
+      <p id="status" role="status" aria-live="polite" data-outcome="unassessed">Not inspected. No work is running.</p>
+      <p id="error" role="alert"></p>
+    </section>
+
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading" tabindex="-1">Scoped original classifications</h2>
+      <p id="counts">No verified original denominator.</p>
+      <p id="dimension-counts">Six required dimensions per original: context, schema, timing, state, terminal and provenance.</p>
+      <p id="scope">No evidence selected.</p>
+      <p id="cancel-scope">C015 supports only prepared/running/completed records. It has no cancel terminal acknowledgment. C017 is NOT DONE. CANCELLED controls below are explicitly MODELED fiction, not stored/native cancellation. Cancelled work, no effects and external undo are separate claims.</p>
+      <ol id="originals"></ol>
+      <pre id="comparison"></pre>
+      <details><summary>Exact classification result</summary><pre id="result"></pre></details>
+    </section>
+
+    <section aria-labelledby="context-heading">
+      <h2 id="context-heading">Bundled HISTORICAL C015 context, not a current read</h2>
+      <p id="context-boundary">The original captured public-restore receipts contain the unchanged closed record and C002 envelope. A current Node restore is a separate observation, not authenticated association to a historical client or fictional original.</p>
+      <pre id="context"></pre>
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained classification and error history (maximum 16)</h2>
+      <p id="retained">Retained decision: HOLD (no inspected originals).</p>
+      <ol id="inspection-history"></ol>
+      <p id="history-limit"></p>
+      <details><summary>Retained session data</summary><pre id="state"></pre></details>
+    </section>
+    <footer>One ORIGINAL C035 / D / P0 / H001. Parent acceptance only; zero extra tests/repair credit. H001/H007/H012, native cancellation/auth/leases/worker queues and production Node 24 remain incomplete. IaC N/A. No packages, cloud, new storage, credentials, real users, deployment or spending.</footer>
+  </main>
+</body>
+</html>

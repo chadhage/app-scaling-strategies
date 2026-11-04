@@ -5,7 +5,7 @@ const path = require('node:path');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const { root, repo, sha, inventory, dependencies } = require('./provenance.cjs');
-const { assessCurrent, loadSnapshot } = require('./authorization.cjs');
+const { assessCurrent } = require('./authorization.cjs');
 const manifest = require('..\\manifest.json');
 const [mode, ...extra] = process.argv.slice(2);
 assert.equal(extra.length, 0);
@@ -41,13 +41,13 @@ try {
       syntaxFiles++;
     }
     const parsed = spawnSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command',
-      "foreach($file in @('capability\\C019\\tests\\publisher-current.ps1','capability\\C019\\tests\\publisher-wrapper.ps1','.git\\kanban-orchestrator\\publish.ps1')){$tokens=$null;$errors=$null;[System.Management.Automation.Language.Parser]::ParseFile((Join-Path (Get-Location) $file),[ref]$tokens,[ref]$errors)|Out-Null;if($errors.Count){exit 1}}"],
+      "foreach($file in @('capability\\C019\\tests\\publisher-current.ps1','capability\\C019\\tests\\publisher-wrapper.ps1','capability\\C019\\tests\\transport.ps1','capability\\C019\\tests\\transport-probe.ps1','.git\\kanban-orchestrator\\publish.ps1')){$tokens=$null;$errors=$null;[System.Management.Automation.Language.Parser]::ParseFile((Join-Path (Get-Location) $file),[ref]$tokens,[ref]$errors)|Out-Null;if($errors.Count){exit 1}}"],
     { env, timeout: 30000, windowsHide: true });
     assert.ifError(parsed.error);
     assert.equal(parsed.status, 0);
   } else {
     const files = mode === 'browser' ? ['browser.test.cjs'] : mode === 'authorization'
-      ? ['authorization.test.cjs', 'integrity.test.cjs'] :
+      ? ['authorization.test.cjs', 'transport.test.cjs', 'integrity.test.cjs'] :
       ['red.test.cjs', 'core.test.cjs', 'fixture.test.cjs', 'surface.test.cjs', 'integrity.test.cjs']
         .filter((file) => mode !== 'guards' || file !== 'fixture.test.cjs');
     const result = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...files.map((file) => path.join(__dirname, file))], {

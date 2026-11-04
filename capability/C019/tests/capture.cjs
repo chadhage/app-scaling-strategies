@@ -12,7 +12,7 @@ const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const [mode, ...extra] = process.argv.slice(2);
 assert.equal(process.env.CAPTURE_BROWSER_EVIDENCE, '1', 'Capture requires exact deliberate opt-in.');
 assert.equal(extra.length, 0);
-assert.ok(['red', 'guards', 'focused', 'syntax', 'browser', 'fixtures', 'prerequisites', 'publication', 'boundary', 'authorization', 'metadata'].includes(mode));
+assert.ok(['red', 'guards', 'focused', 'syntax', 'browser', 'fixtures', 'prerequisites', 'publication', 'boundary', 'authorization', 'metadata', 'separation'].includes(mode));
 const evidence = path.join(root, 'evidence');
 fs.mkdirSync(evidence, { recursive: true });
 const capture = path.join(evidence, `${mode}-${randomUUID()}`);
@@ -74,7 +74,7 @@ if (mode === 'prerequisites') {
   }
   const publisher = fs.readFileSync(path.resolve('.git\\kanban-orchestrator\\publish.ps1'));
   const current = require('./authorization.cjs').readCurrent();
-  assert.equal(sha(publisher), current.central.approvedRevision.publisherSha256);
+  assert.equal(sha(publisher), current.authorization.publisherSha256);
   save('controller-authorization.raw.json', Buffer.from(JSON.stringify(current, null, 2) + '\r\n'));
   snapshots.push({ path: '.git\\kanban-orchestrator\\publish.ps1', working: archive('publisher.raw', publisher) });
   result = { status: 0, stdout: Buffer.from('Exact prerequisites and approved publisher recorded.\r\n'), stderr: Buffer.alloc(0) };
@@ -82,9 +82,9 @@ if (mode === 'prerequisites') {
   const entry = mode === 'red' ? path.join(__dirname, 'red.test.cjs')
     : mode === 'fixtures' ? path.join(__dirname, 'capture-fixtures.cjs')
       : mode === 'boundary' ? path.join(__dirname, 'boundary.cjs')
-        : mode === 'authorization' ? path.join(__dirname, 'capture-authorization.cjs')
+        : ['authorization', 'separation'].includes(mode) ? path.join(__dirname, 'capture-authorization.cjs')
       : path.join(__dirname, 'verify.cjs');
-  const args = mode === 'red' ? ['--test', entry] : ['fixtures', 'boundary', 'authorization'].includes(mode) ? [entry]
+  const args = mode === 'red' ? ['--test', entry] : ['fixtures', 'boundary', 'authorization', 'separation'].includes(mode) ? [entry]
     : [entry, mode === 'metadata' ? 'authorization' : mode];
   result = spawnSync(process.execPath, args, {
     timeout: 600000, maxBuffer: 16 * 1024 * 1024, windowsHide: true,
@@ -98,11 +98,15 @@ if (mode === 'prerequisites') {
   } else if (mode === 'publication') {
     snapshots.push({ path: '.git\\kanban-orchestrator\\publish.ps1',
       working: archive('publisher-observed.raw', fs.readFileSync(path.resolve('.git\\kanban-orchestrator\\publish.ps1'))) });
-  } else if (mode === 'authorization') {
+  } else if (['authorization', 'separation'].includes(mode)) {
     snapshots.push({ path: 'publication.json',
       working: archive('prior-blocked-report.raw', fs.readFileSync(path.join(root, 'publication.json'))) });
     snapshots.push({ path: '.git\\kanban-orchestrator\\publish.ps1',
       working: archive('current-approved-publisher.raw', fs.readFileSync(path.resolve('.git\\kanban-orchestrator\\publish.ps1'))) });
+    if (mode === 'separation') {
+      snapshots.push({ path: '.git\\kanban-orchestrator\\reviews\\C019-parent-historical-authorization-09a12f.tap',
+        working: archive('parent-four-failure-review.raw', fs.readFileSync(path.resolve('.git\\kanban-orchestrator\\reviews\\C019-parent-historical-authorization-09a12f.tap'))) });
+    }
   }
 }
 const stdout = archive('stdout.raw', result.stdout || Buffer.alloc(0));
@@ -127,7 +131,7 @@ const ordinaryPassed = result.status === 0 &&
   (!['metadata', 'guards', 'focused', 'browser', 'syntax', 'publication'].includes(mode) || (verifierRecord !== null && verifierRecord.exitCode === 0)) &&
   (mode !== 'browser' || (browserRecord !== null && browserRecord.passed === true && browserRecord.closed === true)) &&
   (mode !== 'boundary' || boundaryRecord !== null) &&
-  (mode !== 'authorization' || authorizationRecord !== null);
+  (!['authorization', 'separation'].includes(mode) || authorizationRecord !== null);
 const record = {
   schemaVersion: 1, cardId: 'C019', workerId: 'worker-C019', mode,
   capturedAtUtc: new Date().toISOString(), node: process.version,

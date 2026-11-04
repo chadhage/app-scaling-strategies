@@ -1,0 +1,333 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { promisify } = require('node:util');
+const { execFile } = require('node:child_process');
+const { randomUUID } = require('node:crypto');
+const execute = promisify(execFile);
+const root = path.resolve(__dirname, '..');
+const repository = path.resolve(root, '..', '..');
+const source = require('..\\source.cjs');
+const detector = require('..\\detector.js');
+const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+const record = {
+  schema: 'C030-browser-proof/1', cardId: 'C030', startedAtUtc: new Date().toISOString(), outcome: 'not-run',
+  meaning: 'Actual static DOM/keyboard effect-detector verification, not actual external business effects or a live Azure result.',
+  testRuntime: process.version, productionNode24Validated: false, actualExternalEffectsObserved: false,
+  actualClientEffectAssociation: false, externalExactlyOnce: false, nativeProof: false,
+  foregroundLeaseUsed: false, helperPatched: false, lifecyclePrototypeUsed: false, unsafeFlagsUsed: false,
+  packagesDownloaded: 0, cloudRuns: 0, spend: 0, checks: [],
+  cleanup: { browserClosed: false, exactHelperSessionRemoved: false, exactOwnedProfileRemoved: false, exactOwnedEdgeGone: false }
+};
+let directory;
+if (capture) {
+  directory = process.env.C030_BROWSER_CAPTURE_DIR ? path.resolve(process.env.C030_BROWSER_CAPTURE_DIR) :
+    path.join(root, 'evidence', 'raw', `browser-${randomUUID()}`, 'browser');
+  assert.equal(path.dirname(path.dirname(directory)), path.join(root, 'evidence', 'raw'));
+  assert.match(path.basename(path.dirname(directory)), /^browser-[0-9a-f-]{36}$/);
+  assert.equal(path.basename(directory), 'browser');
+  fs.mkdirSync(directory, { recursive: true });
+  assert.equal(fs.realpathSync(directory), directory);
+  assert.deepEqual(fs.readdirSync(directory), []);
+}
+function write(name, bytes) {
+  if (!capture) return;
+  assert.ok(['summary.json', 'initial.html', 'model-resume.html', 'duplicate.html', 'unknown.html', 'historical.html',
+    'rejected-copy.html', 'reset.html', 'limit.html', 'model-reconciled.dom-result.json', 'history.dom-result.json',
+    'negative.dom-result.json'].includes(name));
+  fs.writeFileSync(path.join(directory, name), bytes, { flag: 'wx' });
+}
+function checked(name, observed) {
+  record.checks.push({ name, passed: true, observed });
+  console.log(`PASS ${name}`);
+}
+async function signature(pid) {
+  const args = ['-NoLogo', '-NoProfile', '-NonInteractive', '-File',
+    path.join(repository, 'capability', 'C033', 'tests', 'signed-edge.ps1')];
+  if (pid) args.push('-CallerNodePid', String(pid));
+  return JSON.parse((await execute('pwsh.exe', args, { timeout: 20000, windowsHide: true, maxBuffer: 32768 })).stdout);
+}
+async function ownedBrowser(pid, action = 'profile') {
+  return JSON.parse((await execute('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-File',
+    path.join(repository, 'capability', 'C029', 'tests', 'owned-browser.ps1'),
+    '-CallerNodePid', String(process.pid), '-BrowserPid', String(pid), '-Action', action],
+  { timeout: 20000, windowsHide: true, maxBuffer: 32768 })).stdout);
+}
+async function main() {
+  let session;
+  let profile;
+  const failures = [];
+  try {
+    assert.match(process.version, /^v22\./);
+    record.playwrightVersion = require(path.join(repository, 'testing', 'browser', 'node_modules', 'playwright', 'package.json')).version;
+    assert.equal(record.playwrightVersion, '1.56.1');
+    const helper = path.join(repository, 'testing', 'browser', 'isolated.cjs');
+    record.helperRawSha256 = source.hash(fs.readFileSync(helper));
+    assert.equal(record.helperRawSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+    record.installedSignature = await signature();
+    const preflight = source.preflight();
+    record.separateNodePreflight = {
+      pinnedFiles: preflight.imports.length, gateReaderPid: preflight.gates.readerPid,
+      literalLocalConsent: preflight.gates.literalLocalConsent, independentGates: preflight.gates.cards.map((card) => card.id),
+      interpretation: 'Separate Node read-only preflight; not browser disk reads or live effect observations.'
+    };
+    const { openIsolatedLesson } = require(helper);
+    const runtime = path.join(repository, '.git', 'kanban-orchestrator', 'browser-runtime');
+    const before = new Set(fs.readdirSync(runtime).filter((name) => /^session-[0-9a-f-]{36}$/.test(name)));
+    session = await openIsolatedLesson(path.join('capability', 'C030', 'index.html'));
+    const created = fs.readdirSync(runtime).filter((name) => /^session-[0-9a-f-]{36}$/.test(name) && !before.has(name));
+    assert.equal(created.length, 1, 'Only the exact newly created helper session is attributable; no sibling cleanup.');
+    record.actualHelperSession = path.join(runtime, created[0]);
+    record.browserVersion = session.browserVersion;
+    assert.match(record.browserVersion, /^156\./);
+    record.actualSignedEdge = await signature(process.pid);
+    assert.equal(record.actualSignedEdge.authenticodeStatus, 'Valid');
+    assert.equal(record.actualSignedEdge.fileVersion, record.browserVersion);
+    profile = await ownedBrowser(record.actualSignedEdge.actualOwnedBrowserPid);
+    checked('actual Microsoft-signed Edge 156 / Node 22 / offline Playwright 1.56.1 and unchanged isolated helper', {
+      actualBrowserPid: profile.actualBrowserPid, browserVersion: record.browserVersion,
+      authenticodeStatus: record.actualSignedEdge.authenticodeStatus, actualNodePid: process.pid
+    });
+    const { page } = session;
+    page.setDefaultTimeout(5000);
+    const requests = [];
+    const errors = [];
+    page.on('request', (request) => requests.push({ url: request.url(), method: request.method() }));
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.reload({ waitUntil: 'load', timeout: 10000 });
+    assert.equal(await page.locator('#banner').textContent(), detector.banner);
+    assert.match(await page.locator('#mode').textContent(), /PURE event-log.*separate C029.*fictional\/unbound/);
+    assert.equal(await page.locator('#status').getAttribute('data-decision'), 'UNASSESSED');
+    assert.equal(await page.locator('#originals > li').count(), 0);
+    checked('actual initial static DOM has exact training banner, source boundaries and no default success', detector.banner);
+    write('initial.html', await page.content());
+    const press = async (id, key = 'Enter') => {
+      await page.locator(`#${id}`).focus();
+      assert.equal(await page.evaluate(() => document.activeElement.id), id);
+      await page.keyboard.press(key);
+    };
+    const result = async (decision) => {
+      await page.waitForFunction((expected) => document.getElementById('status').dataset.decision === expected, decision);
+      return JSON.parse(await page.locator('#output').inputValue());
+    };
+    const choose = async (id) => page.locator('#source-id').selectOption(id);
+    await press('inspect');
+    const noSelection = await result('HOLD');
+    assert.equal(noSelection.code, 'UNKNOWN_SOURCE_ID');
+    checked('actual Enter with no selected source rejects and records HOLD, not a default PASS', noSelection.code);
+    await page.locator('#source-id').focus();
+    await page.keyboard.press('ArrowDown');
+    assert.equal(await page.locator('#source-id').inputValue(), 'model-clean');
+    await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'inspect');
+    const focus = await page.locator('#inspect').evaluate((element) => ({
+      focusVisible: element.matches(':focus-visible'), outline: getComputedStyle(element).outlineWidth
+    }));
+    assert.equal(focus.focusVisible, true);
+    assert.equal(focus.outline, '4px');
+    await page.keyboard.press('Enter');
+    assert.equal((await result('PASS')).currentCounts.confirmedApplications, 3);
+    checked('actual ArrowDown/Tab/Enter chooses clean modeled work and displays visible keyboard focus', focus);
+    await choose('model-resume'); await press('inspect', 'Space');
+    const resumed = await result('HOLD');
+    assert.deepEqual(resumed.counts, { originals: 2, pass: 1, fail: 0, unknown: 1, unsupported: 0 });
+    assert.equal(resumed.currentCounts.confirmedApplications, 3);
+    assert.equal(resumed.currentCounts.deliveryAttempts, 4);
+    assert.equal(resumed.currentCounts.duplicateSuppressions, 1);
+    assert.match(await page.locator('#current').textContent(), /3 intended effects; 3 confirmed applications.*4 delivery attempts/);
+    assert.equal(await page.locator('#originals > li').count(), 2);
+    assert.equal(await page.locator('#originals [data-original="attempt-001"]').getAttribute('data-verdict'), 'UNKNOWN');
+    checked('actual Space inspection distinguishes 3 modeled applications from 4 deliveries and retains first original', resumed.currentCounts);
+    write('model-resume.html', await page.content());
+    await choose('model-before-checkpoint'); await press('inspect');
+    const beforeCheckpoint = await result('HOLD');
+    await choose('model-checkpoint'); await press('inspect');
+    const checkpoint = await result('HOLD');
+    assert.equal(beforeCheckpoint.currentCounts.confirmedApplications, 1);
+    assert.equal(checkpoint.currentCounts.confirmedApplications, 1);
+    assert.equal(beforeCheckpoint.currentCounts.checkpointPosition, 0);
+    assert.equal(checkpoint.currentCounts.checkpointPosition, 1);
+    checked('actual DOM keeps checkpoint 0/1 independent from the same one modeled application', {
+      applications: 1, beforeCheckpoint: 0, afterCheckpoint: 1
+    });
+    await choose('control-duplicate-application'); await press('inspect');
+    const duplicate = await result('FAIL');
+    assert.equal(duplicate.currentCounts.confirmedApplications, 4);
+    assert.equal(duplicate.currentCounts.extraApplications, 1);
+    assert.equal(duplicate.originals[0].effects[0].status, 'DUPLICATE_APPLICATION');
+    assert.match(await page.locator('#scope').textContent(), /fictional\/unbound.*NOT C023 source\/native\/external receipts/);
+    assert.equal(await page.locator('#originals tr[data-observation="DUPLICATE_APPLICATION"]').count(), 1);
+    checked('actual negative control detects a duplicate application and explicitly denies C023/native receipt provenance', duplicate.currentCounts);
+    write('duplicate.html', await page.content());
+    write('negative.dom-result.json', await page.locator('#output').inputValue());
+    await choose('control-missing-observation'); await press('inspect');
+    const missing = await result('HOLD');
+    assert.equal(missing.currentCounts.confirmedAbsences, 0);
+    assert.equal(missing.currentCounts.missingObservations, 1);
+    checked('actual missing receipt is UNKNOWN/HOLD, not confirmed absence', missing.currentCounts);
+    await choose('control-absence-retry'); await press('compare', 'Space');
+    const absence = await result('FAIL');
+    assert.equal(absence.before.currentCounts.confirmedAbsences, 1);
+    assert.equal(absence.after.counts.fail, 1);
+    assert.equal(absence.after.counts.pass, 1);
+    assert.equal(absence.after.counts.originals, 2);
+    assert.match(await page.locator('#comparison').textContent(), /Original failures and unknowns retained, not repaired/);
+    checked('actual fictional confirmed absence remains a failed original after a positive retry', absence.after.counts);
+    await choose('model-unknown'); await press('inspect');
+    const unknown = await result('HOLD');
+    assert.equal(unknown.currentCounts.confirmedApplications, 0);
+    assert.equal(unknown.originals[0].effects[0].confirmedApplicationsUpperBound, null);
+    checked('actual unknown acknowledgment shows zero confirmed lower bound and unknown upper bound', unknown.originals[0].effects[0]);
+    await choose('model-reconciled'); await press('compare');
+    const reconciled = await result('HOLD');
+    assert.equal(reconciled.after.currentCounts.confirmedApplications, 2);
+    assert.equal(reconciled.after.currentCounts.hypotheticalApplications, 1);
+    assert.equal(reconciled.after.currentCounts.modeledApplications, 3);
+    assert.equal(reconciled.after.currentCounts.unknownAcknowledgements, 1);
+    assert.equal(reconciled.after.counts.unknown, 2);
+    assert.equal(await page.locator('#originals tr[data-observation="UNKNOWN_ACK"]').count(), 2);
+    assert.match(await page.locator('#originals > li').last().textContent(), /0 \/ unknown/);
+    checked('actual positive hypothetical reconciliation keeps both originals UNKNOWN and separates 2 confirmed / 1 hypothetical', reconciled.after.currentCounts);
+    write('unknown.html', await page.content());
+    write('model-reconciled.dom-result.json', await page.locator('#output').inputValue());
+    await choose('history-closed'); await press('inspect');
+    const historical = await result('HOLD');
+    assert.deepEqual(historical.counts, { originals: 7, pass: 0, fail: 0, unknown: 7, unsupported: 0 });
+    assert.deepEqual(historical.sourceBudgetCounts, { originals: 7, pass: 2, fail: 2, unknown: 3 });
+    assert.equal(historical.expectedPlan, null);
+    assert.equal(historical.currentCounts.confirmedApplications, null);
+    assert.equal(await page.locator('#originals > li').count(), 7);
+    assert.equal(await page.locator('#originals table').count(), 0);
+    assert.match(await page.locator('#current').textContent(), /UNOBSERVED, not confirmed zero/);
+    checked('actual seven historical clients retain C029 failures/unknowns without any invented effect receipt or association', historical.sourceBudgetCounts);
+    write('historical.html', await page.content());
+    write('history.dom-result.json', await page.locator('#output').inputValue());
+    await press('load-copy');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'candidate');
+    assert.equal(await page.locator('#status').getAttribute('data-decision'), 'UNASSESSED');
+    await press('inspect-copy');
+    assert.equal((await result('HOLD')).valid, true);
+    checked('actual exact-copy inspection agrees without adopting source or inventing effect receipts', 7);
+    const candidate = JSON.parse(await page.locator('#candidate').inputValue());
+    candidate.provenance = 'external-exactly-once';
+    await page.locator('#candidate').fill(JSON.stringify(candidate));
+    assert.equal(await page.locator('#status').getAttribute('data-decision'), 'UNASSESSED');
+    assert.equal(await page.locator('#originals > li').count(), 0);
+    await press('inspect-copy');
+    const rejected = await result('HOLD');
+    assert.equal(rejected.valid, false);
+    assert.equal(rejected.code, 'SOURCE_COPY_MISMATCH');
+    assert.equal(rejected.counts.originals, 7);
+    assert.equal(rejected.counts.pass, 0);
+    checked('actual tampered source/provenance rejects, clears stale results and retains denominator seven', rejected.code);
+    write('rejected-copy.html', await page.content());
+    await page.locator('#candidate').fill('{"id":"history-closed","id":"healthy"}');
+    await press('inspect-copy');
+    assert.equal((await result('HOLD')).code, 'DUPLICATE_FIELD');
+    checked('actual duplicate JSON is rejected rather than promoting a supplied success', 'DUPLICATE_FIELD');
+    await press('copy-result', 'Space');
+    const selection = await page.locator('#output').evaluate((element) => ({
+      focused: document.activeElement === element, selectedCharacters: element.selectionEnd - element.selectionStart, characters: element.value.length
+    }));
+    assert.equal(selection.focused, true);
+    assert.equal(selection.selectedCharacters, selection.characters);
+    assert.ok(selection.characters > 0);
+    checked('actual keyboard Copy/select focuses and selects the complete result JSON without clipboard permissions', selection);
+    const retained = await page.locator('#inspection-history > li').count();
+    await press('reset', 'Space');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'source-id');
+    assert.equal(await page.locator('#candidate').inputValue(), '');
+    assert.equal(await page.locator('#output').inputValue(), '');
+    assert.equal(await page.locator('#originals > li').count(), 0);
+    assert.equal(await page.locator('#inspection-history > li').count(), retained);
+    assert.match(await page.locator('#inspection-history').textContent(), /FAIL.*SOURCE_COPY_MISMATCH.*DUPLICATE_FIELD/s);
+    checked('actual Space reset returns source focus and retains failed originals, unknowns and errors', retained);
+    write('reset.html', await page.content());
+    await press('copy-history', 'Space');
+    const exported = JSON.parse(await page.locator('#output').inputValue());
+    assert.equal(exported.schema, 'C030-display-history/1');
+    assert.equal(exported.operations.length, retained);
+    const retainedDuplicate = exported.operations.find((entry) => entry.sourceId === 'control-duplicate-application');
+    assert.equal(retainedDuplicate.report.originals[0].effects[0].status, 'DUPLICATE_APPLICATION');
+    assert.equal(exported.operations.at(-1).report.code, 'DUPLICATE_FIELD');
+    const retainedUnknown = exported.operations.find((entry) => entry.sourceId === 'model-reconciled');
+    assert.equal(retainedUnknown.report.after.originals[0].effects[0].confirmedApplicationsUpperBound, null);
+    checked('actual keyboard history export after reset retains full duplicate, unknown and rejected reports, not just counters', retained);
+    await choose('control-duplicate-application'); await press('inspect');
+    assert.equal((await result('FAIL')).currentCounts.extraApplications, 1);
+    checked('actual reinspection after reset cannot repair a known duplicate application', 1);
+    while (await page.locator('#inspection-history > li').count() < 16) await press('inspect');
+    for (const id of ['inspect', 'compare', 'load-copy', 'inspect-copy']) assert.equal(await page.locator(`#${id}`).isDisabled(), true);
+    assert.match(await page.locator('#history-limit').textContent(), /refused, not dropped/);
+    assert.equal(await page.locator('#originals > li').first().getAttribute('data-verdict'), 'FAIL');
+    assert.equal(await page.locator('#inspection-history > li').count(), 16);
+    checked('actual sixteen-operation bound refuses overflow without evicting any failure or error', 16);
+    write('limit.html', await page.content());
+    const csp = await page.evaluate(async () => {
+      async function violation(operation) {
+        const event = new Promise((resolve) => {
+          const listener = (value) => {
+            clearTimeout(timer);
+            document.removeEventListener('securitypolicyviolation', listener);
+            resolve({ effectiveDirective: value.effectiveDirective, blockedURI: value.blockedURI });
+          };
+          const timer = setTimeout(() => { document.removeEventListener('securitypolicyviolation', listener); resolve({ effectiveDirective: null }); }, 1500);
+          document.addEventListener('securitypolicyviolation', listener);
+        });
+        await operation();
+        return event;
+      }
+      const script = document.createElement('script');
+      script.textContent = 'globalThis.__c030InlineRan = true;';
+      const inline = await violation(async () => document.head.appendChild(script));
+      script.remove();
+      let connected = false;
+      const connection = await violation(async () => { try { await fetch(location.href); connected = true; } catch {} });
+      const form = document.createElement('form');
+      form.action = location.href; form.method = 'get';
+      document.body.appendChild(form);
+      const submission = await violation(async () => form.requestSubmit());
+      form.remove();
+      return { inline, connection, submission, connected, inlineRan: Boolean(globalThis.__c030InlineRan) };
+    });
+    assert.match(csp.inline.effectiveDirective, /^script-src/);
+    assert.equal(csp.inline.blockedURI, 'inline');
+    assert.equal(csp.inlineRan, false);
+    assert.equal(csp.connection.effectiveDirective, 'connect-src');
+    assert.equal(csp.connected, false);
+    assert.equal(csp.submission.effectiveDirective, 'form-action');
+    checked('actual enforced CSP blocks inline code, connections and forms', csp);
+    assert.deepEqual(errors, []);
+    assert.ok(requests.length > 0);
+    assert.ok(requests.every((request) => request.method === 'GET' && request.url.startsWith('file:')));
+    record.pageErrors = errors;
+    record.actualBrowserResourceRequests = requests;
+    record.outcome = 'passed';
+  } catch (error) {
+    failures.push(error);
+    record.outcome = 'failed';
+    record.error = { name: error.name, message: error.message, stack: error.stack };
+  } finally {
+    if (session) {
+      try { await session.close(); record.cleanup.browserClosed = true; }
+      catch (error) { failures.push(error); }
+    }
+    if (profile) {
+      record.cleanup.exactHelperSessionRemoved = !fs.existsSync(record.actualHelperSession);
+      record.cleanup.exactOwnedProfileRemoved = !fs.existsSync(profile.actualIsolatedProfile);
+      try { record.cleanup.exactOwnedEdgeGone = (await ownedBrowser(profile.actualBrowserPid, 'closed')).processGone; }
+      catch (error) { failures.push(error); }
+    }
+    if (!Object.values(record.cleanup).every((value) => value === true)) failures.push(new Error('Actual exact owned cleanup is incomplete or unobserved.'));
+    if (failures.length) record.outcome = 'failed';
+    record.completedAtUtc = new Date().toISOString();
+    record.captureMode = capture ? 'Exact deliberate CAPTURE_BROWSER_EVIDENCE=1, unique owned append.' : 'Normal source/evidence/dependency READONLY; unchanged helper owns transient cleanup.';
+    write('summary.json', JSON.stringify(record, null, 2) + '\n');
+    console.log(JSON.stringify({ cardId: 'C030', outcome: record.outcome, actualBrowserVersion: record.browserVersion,
+      checks: record.checks.length, cleanup: record.cleanup, capture: capture ? path.relative(repository, directory) : false }));
+  }
+  if (failures.length) throw new AggregateError(failures, 'C030 actual browser verification failed; original raw failure is retained.');
+}
+main().catch((error) => { console.error(error); process.exitCode = 1; });

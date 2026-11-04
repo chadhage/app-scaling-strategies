@@ -195,7 +195,7 @@ test('same-C019 publisher metadata repair preserves every runtime and historical
   }
   assert.equal(snapshot.runtimeErrorsActionsC015AndHistoricalProofChanged, false);
   assert.equal(snapshot.authorizationNotInferredFromDigest, true);
-  assert.equal(snapshot.authorization.sourceSelector, manifest.publisherAuthorizationSelector);
-  assert.equal(snapshot.actualPublisherSha256, manifest.publisherSha256);
+  assert.equal(snapshot.authorization.sourceSelector, 'localPublisherAuthorization.budgetAndGoalRevision');
+  assert.equal(snapshot.actualPublisherSha256, manifest.historical60AEPublisherSha256);
   assert.equal(snapshot.originalHistoricalPublisherSha256, manifest.historicalPublisherSha256);
 });

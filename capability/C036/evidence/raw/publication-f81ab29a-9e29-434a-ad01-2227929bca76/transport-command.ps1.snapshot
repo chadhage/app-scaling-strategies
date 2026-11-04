@@ -1,0 +1,43 @@
+
+$ErrorActionPreference='Stop'
+$env:CAPTURE_BROWSER_EVIDENCE='1'
+$env:C036_CAPTURE_DIR='C:\Users\chhage\repos\app-scaling-strategies\capability\C036\evidence\raw\publication-f81ab29a-9e29-434a-ad01-2227929bca76'
+$oldCount=[Environment]::GetEnvironmentVariable('GIT_CONFIG_COUNT','Process')
+$count=0
+if($null -ne $oldCount){
+ if($oldCount -notmatch '^(0|[1-9][0-9]*)$' -or -not [int]::TryParse($oldCount,[ref]$count) -or $count -gt 4096){throw 'Invalid existing Git process configuration count; no silent default'}
+}
+for($i=0;$i -lt $count;$i++){
+ $key=[Environment]::GetEnvironmentVariable("GIT_CONFIG_KEY_$i",'Process')
+ $value=[Environment]::GetEnvironmentVariable("GIT_CONFIG_VALUE_$i",'Process')
+ if([string]::IsNullOrWhiteSpace($key) -or $null -eq $value){throw 'Incomplete existing Git process configuration entries; no changes'}
+}
+$keyName="GIT_CONFIG_KEY_$count";$valueName="GIT_CONFIG_VALUE_$count"
+$oldKey=[Environment]::GetEnvironmentVariable($keyName,'Process')
+$oldValue=[Environment]::GetEnvironmentVariable($valueName,'Process')
+$status=1;$effective=$null;$restored=$false;$invoked=$false
+try{
+ [Environment]::SetEnvironmentVariable($keyName,'http.version','Process')
+ [Environment]::SetEnvironmentVariable($valueName,'HTTP/1.1','Process')
+ [Environment]::SetEnvironmentVariable('GIT_CONFIG_COUNT',([string]($count+1)),'Process')
+ $effective=(& git config --get http.version | Out-String).Trim()
+ if($LASTEXITCODE -ne 0 -or $effective -cne 'HTTP/1.1'){throw 'Safe effective publisher-process-local HTTP version check failed'}
+ [Console]::WriteLine('Verified publisher-process-local http.version=HTTP/1.1; no global/TLS/proxy/auth configuration changes.')
+ $invoked=$true
+ & '.\capability\C036\tests\publish-owned.ps1'
+ $status=0
+}catch{
+ [Console]::Error.WriteLine($_.Exception.Message)
+ $status=1
+}finally{
+ [Environment]::SetEnvironmentVariable($keyName,$oldKey,'Process')
+ [Environment]::SetEnvironmentVariable($valueName,$oldValue,'Process')
+ [Environment]::SetEnvironmentVariable('GIT_CONFIG_COUNT',$oldCount,'Process')
+ $restored=([Environment]::GetEnvironmentVariable($keyName,'Process') -ceq $oldKey) -and ([Environment]::GetEnvironmentVariable($valueName,'Process') -ceq $oldValue) -and ([Environment]::GetEnvironmentVariable('GIT_CONFIG_COUNT','Process') -ceq $oldCount)
+ if(-not $restored){$status=1;[Console]::Error.WriteLine('Exact prior Git process environment restoration failed')}
+ $proof=[ordered]@{cardId='C036';scope='publisher-process-local';httpVersion=$effective;priorCountValidated=$true;priorEntriesPreserved=$true;environmentRestoredInFinally=$restored;unchangedStandardPublisherInvoked=$invoked;privateHelperBytesChanged=$false;globalConfigChanged=$false;tlsProxyOrAuthConfigurationChanged=$false;notProvenRootCause=$true;exitCode=$status;observedAtUtc=[DateTime]::UtcNow.ToString('o')}
+ $target=Join-Path $env:C036_CAPTURE_DIR 'transport.json'
+ $stream=[IO.File]::Open($target,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+ try{$bytes=[Text.UTF8Encoding]::new($false).GetBytes(($proof|ConvertTo-Json -Depth 8)+[Environment]::NewLine);$stream.Write($bytes,0,$bytes.Length);$stream.Flush($true)}finally{$stream.Dispose()}
+}
+exit $status

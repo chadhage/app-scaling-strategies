@@ -6,7 +6,7 @@ const { root, repo, inventory, dependencies, sha } = require('./provenance.cjs')
 const { readCurrent } = require('./authorization.cjs');
 const current = readCurrent();
 const publisher = fs.readFileSync(path.join(repo, '.git', 'kanban-orchestrator', 'publish.ps1'));
-if (sha(publisher) !== current.central.approvedRevision.publisherSha256) {
+if (sha(publisher) !== current.authorization.publisherSha256) {
   throw new Error('Actual publisher differs from the explicit approved controller trace; no capture of permission.');
 }
 const files = inventory();
@@ -23,11 +23,11 @@ process.stdout.write('C019_AUTHORIZATION_RECORD=' + JSON.stringify({
   authorization: current,
   actualPublisherSha256: sha(publisher),
   authorizationNotInferredFromDigest: true,
-  historicalPublisherSha256: current.central.approvedRevision.previousPublisherSha256,
+  historicalPublisherSha256: require('..\\manifest.json').historical60AEPublisherSha256,
   originalHistoricalPublisherSha256: require('..\\manifest.json').historicalPublisherSha256,
   preservation: { runtime, historicalEvidence, dependencies: dependencies() },
   runtimeErrorsActionsC015AndHistoricalProofChanged: false,
-  parentReportedGuardChecks: current.central.approvedRevision.focusedGuardChecksPassed,
+  parentReportedGuardChecks: current.authorization.focusedGuardChecksPassed,
   independentlyRerunParentGuardChecks: false,
   publicationAttempted: false, originalUnitCredits: 0,
 }) + '\n');

@@ -1,0 +1,90 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>C030 local effect detector</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer="" src="../C020/contract.js"></script>
+  <script defer="" src="../C020/inspector.js"></script>
+  <script defer="" src="../C023/ledger.js"></script>
+  <script defer="" src="../C033/journey.js"></script>
+  <script defer="" src="../C034/evidence/raw/trace-7d3b0b84-675e-4f9b-92a4-2ea3b89e0116/bundle.js"></script>
+  <script defer="" src="../C034/trace.js"></script>
+  <script defer="" src="../C029/evaluator.js"></script>
+  <script defer="" src="detector.js"></script>
+  <script defer="" src="page.js"></script>
+</head>
+<body>
+  <main>
+    <p id="banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>One intended effect is not one delivery attempt</h1>
+    <p id="mode">OFFLINE: unchanged C023 PURE event-log model, separate C029 historical clients, and explicit fictional/unbound controls. No live business effect, receipt, client association, queue or database is observed.</p>
+    <p>C023 assumes an atomic application/deduplication pair. Its valid deduplication is not external exactly-once. A missing observation is not confirmed absence. An unknown acknowledgment stays unknown after hypothetical reconciliation.</p>
+    <section aria-labelledby="choose-heading">
+      <h2 id="choose-heading">Inspect one explicit scope</h2>
+      <label for="source-id">Source or closed fictional control</label>
+      <select id="source-id">
+        <option value="">Choose a source; no default success</option>
+        <optgroup label="C023 PURE event-log model; no actual external effects">
+          <option value="model-clean">Complete modeled work: 3 applications / 3 deliveries</option>
+          <option value="model-resume">After commit, then resume: 3 applications / 4 deliveries</option>
+          <option value="model-incomplete">Before commit: missing observations, not confirmed absence</option>
+          <option value="model-before-checkpoint">Before checkpoint: 1 known application / checkpoint 0</option>
+          <option value="model-checkpoint">After checkpoint: 1 known application / checkpoint 1</option>
+          <option value="model-unknown">Unknown acknowledgment: lower bound only</option>
+          <option value="model-reconciled">Hypothetical committed reconciliation: original still unknown</option>
+          <option value="model-absent-retry">Hypothetical absent, then retry: original still unknown</option>
+        </optgroup>
+        <optgroup label="Separate historical C029 clients: NO effect receipts or association">
+          <option value="history-closed">Seven historical originals: all effect outcomes UNKNOWN</option>
+          <option value="history-held">Two historical starts: both effect outcomes UNKNOWN</option>
+        </optgroup>
+        <optgroup label="Explicit fictional/unbound controls; NOT C023 source/native receipts">
+          <option value="control-one">Three intended effects, one application each</option>
+          <option value="control-deliveries-only">Three deliveries without application observations: HOLD</option>
+          <option value="control-retry">Incomplete original then positive retry: original retained</option>
+          <option value="control-missing-observation">Missing observation: HOLD, not confirmed absence</option>
+          <option value="control-absence">Confirmed fictional absence: FAIL</option>
+          <option value="control-absence-retry">Absence then retry: first FAIL retained</option>
+          <option value="control-duplicate-application">Two distinct application IDs for one effect: FAIL</option>
+          <option value="control-duplicate-retry">Duplicate application then retry: both FAIL retained</option>
+          <option value="control-repeated-receipt">Same application ID observed twice: not two applications</option>
+          <option value="control-unknown-retry">Unknown acknowledgment then positive retry: still unknown</option>
+          <option value="control-unsupported">Unsupported observation: never PASS</option>
+        </optgroup>
+      </select>
+      <div class="controls">
+        <button id="inspect" type="button">Inspect effects</button>
+        <button id="compare" type="button">Compare selected retry</button>
+        <button id="load-copy" type="button">Load exact source JSON copy</button>
+        <button id="reset" type="button">Reset display only</button>
+      </div>
+      <label for="candidate">Optional exact selected source copy (inspection only, never adoption)</label>
+      <textarea id="candidate" rows="6" maxlength="131072" spellcheck="false" aria-describedby="copy-help"></textarea>
+      <p id="copy-help">Changed plans, identities, missing fields, duplicate JSON and supplied verdict/provenance/eligibility reject. Source selection fixes authority; input never replaces it.</p>
+      <button id="inspect-copy" type="button">Inspect exact copy</button>
+      <p id="status" role="status" aria-live="polite" data-decision="HOLD" data-valid="false">HOLD: rejected; no source adopted. Never a live Azure or external exactly-once result.</p>
+      <p id="error" role="alert">SOURCE_COPY_MISMATCH</p>
+    </section>
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Counts at each original terminal</h2>
+      <p id="counts">7 originals: 0 PASS / 0 FAIL / 7 UNKNOWN / 0 UNSUPPORTED</p>
+      <p id="current">No associated effect plan or required application receipts; counts UNOBSERVED, not confirmed zero.</p>
+      <p id="scope">Rejected inspection; no input is adopted, no source is changed. </p>
+      <p>Counts below are cumulative per original, not summed across retries. Checkpoint position is a separate observation, not an application count. Null upper bounds mean unknown, not zero. Historical client requests are not effect deliveries.</p>
+      <ol id="originals"><li data-original="synthetic-C033-attempt-1" data-verdict="UNKNOWN"><h3>synthetic-C033-attempt-1 — UNKNOWN</h3><p>No associated effect plan or required application receipts; counts UNOBSERVED, not confirmed zero.</p><p>REJECTED_COPY_NOT_ADOPTED; SOURCE_COPY_MISMATCH</p></li><li data-original="synthetic-C033-attempt-2" data-verdict="UNKNOWN"><h3>synthetic-C033-attempt-2 — UNKNOWN</h3><p>No associated effect plan or required application receipts; counts UNOBSERVED, not confirmed zero.</p><p>REJECTED_COPY_NOT_ADOPTED; SOURCE_COPY_MISMATCH</p></li><li data-original="synthetic-C033-attempt-3" data-verdict="UNKNOWN"><h3>synthetic-C033-attempt-3 — UNKNOWN</h3><p>No associated effect plan or required application receipts; counts UNOBSERVED, not confirmed zero.</p><p>REJECTED_COPY_NOT_ADOPTED; SOURCE_COPY_MISMATCH</p></li><li data-original="synthetic-C033-attempt-4" data-verdict="UNKNOWN"><h3>synthetic-C033-attempt-4 — UNKNOWN</h3><p>No associated effect plan or required application receipts; counts UNOBSERVED, not confirmed zero.</p><p>REJECTED_COPY_NOT_ADOPTED; SOURCE_COPY_MISMATCH</p></li><li data-original="synthetic-C033-attempt-5" data-verdict="UNKNOWN"><h3>synthetic-C033-attempt-5 — UNKNOWN</h3><p>No associated effect plan or required application receipts; counts UNOBSERVED, not confirmed zero.</p><p>REJECTED_COPY_NOT_ADOPTED; SOURCE_COPY_MISMATCH</p></li><li data-original="synthetic-C033-attempt-6" data-verdict="UNKNOWN"><h3>synthetic-C033-attempt-6 — UNKNOWN</h3><p>No associated effect plan or required application receipts; counts UNOBSERVED, not confirmed zero.</p><p>REJECTED_COPY_NOT_ADOPTED; SOURCE_COPY_MISMATCH</p></li><li data-original="synthetic-C033-attempt-7" data-verdict="UNKNOWN"><h3>synthetic-C033-attempt-7 — UNKNOWN</h3><p>No associated effect plan or required application receipts; counts UNOBSERVED, not confirmed zero.</p><p>REJECTED_COPY_NOT_ADOPTED; SOURCE_COPY_MISMATCH</p></li></ol>
+      <p id="comparison" aria-live="polite"></p>
+      <label for="output">Full result JSON; Copy / select focuses this field, then use Ctrl+C</label>
+      <textarea id="output" rows="10" readonly="" spellcheck="false"></textarea>
+      <button id="copy-result" type="button">Copy / select result JSON</button>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained inspection and error history (16 operations)</h2>
+      <ol id="inspection-history"><li>1. inspect: (no source) — HOLD / UNKNOWN_SOURCE_ID</li><li>2. inspect: model-clean — PASS</li><li>3. inspect: model-resume — HOLD</li><li>4. inspect: model-before-checkpoint — HOLD</li><li>5. inspect: model-checkpoint — HOLD</li><li>6. inspect: control-duplicate-application — FAIL</li><li>7. inspect: control-missing-observation — HOLD</li><li>8. compare: control-absence-retry — FAIL</li><li>9. inspect: model-unknown — HOLD</li><li>10. compare: model-reconciled — HOLD</li><li>11. inspect: history-closed — HOLD</li><li>12. inspect-copy: history-closed — HOLD</li><li>13. inspect-copy: history-closed — HOLD / SOURCE_COPY_MISMATCH</li></ol>
+      <p id="history-limit"></p>
+    </section>
+    <footer>One original C030 / D / P0 / H006; parents H006/H012 remain incomplete. Native and production Node 24 proof are incomplete. Parent acceptance only; zero extra repair/test credits. IaC N/A; no packages, framework, cloud, identity, user data, credentials, deployment or spend.</footer>
+  </main>
+
+
+</body></html>

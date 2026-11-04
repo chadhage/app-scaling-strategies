@@ -1,0 +1,272 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>C037 requested versus observed routing</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer="" src="../C020/contract.js"></script>
+  <script defer="" src="../C020/inspector.js"></script>
+  <script defer="" src="../C033/journey.js"></script>
+  <script defer="" src="../C034/evidence/raw/trace-7d3b0b84-675e-4f9b-92a4-2ea3b89e0116/bundle.js"></script>
+  <script defer="" src="../C034/trace.js"></script>
+  <script defer="" src="../C036/captured.js"></script>
+  <script defer="" src="../C036/attribution.js"></script>
+  <script defer="" src="routing.js"></script>
+  <script defer="" src="page.js"></script>
+</head>
+<body>
+  <main>
+    <p id="banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Requested ≠ observed routing</h1>
+    <p id="mode">OFFLINE: unchanged pinned historical actual HTTP observations and a bundled historical C015 context. Only the Node CLI rereads the current public C015 context through unchanged C036.</p>
+    <p>Nominal weights are <strong>declared policy, never measured destinations</strong>. C034 has no authenticated client/run/user/lease/cohort correlation and no observed requested policy. Do not invent 50/50 or attach historical requests to this run.</p>
+    <section aria-labelledby="sample-heading">
+      <h2 id="sample-heading">1. Choose and inspect a closed sample</h2>
+      <label for="sample">Evidence sample (choose explicitly)</label>
+      <select id="sample">
+        <option value="">Choose evidence explicitly</option>
+        <option value="historical-closed">Actual historical HTTP: closed originals, unlinked / HOLD</option>
+        <option value="historical-held">Actual historical HTTP: held partial, unlinked / HOLD</option>
+        <option value="fictional-match">Fictional measured control: matching shares</option>
+        <option value="fictional-skew">Fictional measured control: known share mismatch</option>
+        <option value="fictional-unknown">Fictional interrupted unknown original</option>
+        <option value="fictional-in-flight">Fictional in-flight original</option>
+        <option value="fictional-missing-destination">Fictional HTTP 200 without destination</option>
+        <option value="fictional-duplicates">Fictional duplicate delivery, not extra original</option>
+        <option value="fictional-no-policy">Fictional observations, policy UNOBSERVED</option>
+        <option value="fictional-zero">Declared policy only, zero measured requests / HOLD</option>
+        <option value="fictional-threshold">Fictional inclusive threshold boundary</option>
+        <option value="fictional-errors">Fictional routing match with HTTP 503 failures</option>
+        <option value="wrong-run">Wrong run</option>
+        <option value="wrong-user">Wrong fictional user</option>
+        <option value="wrong-lease">Wrong fictional lease</option>
+        <option value="wrong-context">Wrong fictional context</option>
+        <option value="old-epoch">Other / stale epoch</option>
+        <option value="stale">Stale fictional observation</option>
+        <option value="wrong-tier">Wrong tier</option>
+        <option value="wrong-stamp">Wrong observed stamp</option>
+        <option value="missing-attribution">Missing attribution / HOLD</option>
+      </select>
+      <button id="load" type="button">Load JSON copy</button>
+      <label for="candidate">Closed inspection JSON (no authority, paths, URLs or user data)</label>
+      <textarea id="candidate" rows="9" maxlength="65536" spellcheck="false" aria-describedby="json-help"></textarea>
+      <p id="json-help">Edit this copy to inspect exact weight sums, thresholds, missing destinations and identity errors. Actual historical source bytes must still match their pinned source. All fictional controls are explicitly fictional measurements and declared associations, not actual lease proof.</p>
+      <div class="controls">
+        <button id="inspect" type="button">Inspect only</button>
+        <button id="compare" type="button">Compare routing</button>
+        <button id="json" type="button">Show result JSON</button>
+        <button id="reset" type="button">Reset display only</button>
+      </div>
+      <p id="status" role="status" aria-live="polite" data-outcome="held">HOLD: REQUESTED_POLICY_UNOBSERVED</p>
+      <p id="error" role="alert"></p>
+      <p id="missing">HOLD: REQUESTED_POLICY_UNOBSERVED</p>
+    </section>
+    <section aria-labelledby="comparison-heading">
+      <h2 id="comparison-heading">2. Compare policy with measured destinations</h2>
+      <p id="classification">Source: explicit-fictional-measured-control-observations. Requested policy: UNOBSERVED.</p>
+      <p id="policy">Requested policy: UNOBSERVED / HOLD. No inferred 50/50 default.</p>
+      <table>
+        <caption>Shares use every distinct started original, including unknowns. Declared expected counts are not observations.</caption>
+        <thead><tr><th scope="col">Destination</th><th scope="col">Requested weight</th><th scope="col">Declared expected count</th><th scope="col">Observed count</th><th scope="col">Observed share</th><th scope="col">Delta / threshold</th></tr></thead>
+        <tbody id="destinations"><tr><td>v1</td><td>UNOBSERVED</td><td>UNOBSERVED</td><td>2</td><td>50.00%</td><td>HOLD</td></tr><tr><td>v2</td><td>UNOBSERVED</td><td>UNOBSERVED</td><td>2</td><td>50.00%</td><td>HOLD</td></tr></tbody>
+      </table>
+      <dl id="counts"><dt>started</dt><dd>4</dd><dt>known</dt><dd>4</dd><dt>unknown</dt><dd>0</dd><dt>inFlight</dt><dd>0</dd><dt>missingDestination</dt><dd>0</dd><dt>interrupted</dt><dd>0</dd><dt>duplicateDeliveries</dt><dd>0</dd><dt>failedResponses</dt><dd>0</dd></dl>
+      <p id="qualification">HTTP 200, versions, readiness and throughput do not establish migration or journey success. Actual requested policy, authenticated identity, native transport, full journey and production Node 24 remain UNVERIFIED.</p>
+    </section>
+    <section aria-labelledby="guard-heading">
+      <h2 id="guard-heading">3. Unchanged C036 guard and bounded current fictional metrics</h2>
+      <p id="association">C036 positive lease/user/context/tiers are FICTIONAL controls; association is declared, not actual lease or authenticated identity proof.</p>
+      <p>Guarded fictional started originals: <output id="current-started">4</output>.
+        Known: <output id="current-known">4</output>; unknown: <output id="current-unknown">0</output>;
+        in-flight: <output id="current-in-flight">0</output>; missing destination: <output id="current-missing">0</output>.
+        Actual current attributed requests: <output id="actual-current">0</output>.</p>
+      <p id="session">Session: HOLD_RETAINED. Retained failures 0; retained HOLDs 1.</p>
+      <details><summary>Last owner context (browser: historical, never live authority)</summary><pre id="context">{
+  "fixtureScope": "C036-closed-fictional-attribution/1",
+  "fixtureNamespace": "synthetic-restart-v1",
+  "contextId": "fictional-C036-context-001",
+  "leaseId": "fictional-C036-lease-001",
+  "userId": "fictional-C036-user-001",
+  "runId": "synthetic-run-001",
+  "epoch": 3,
+  "epochVersion": 1,
+  "stateSha256": "66f2593752364d65b37d145cf9b784e09dc86867643766bd9f14f8c7d0f1f135",
+  "attemptId": "fictional-C036-attempt-001",
+  "requestId": "fictional-C036-request-001",
+  "record": {
+    "acknowledgedUnits": 3,
+    "completedStep": "finish",
+    "pendingStep": "none",
+    "status": "completed"
+  },
+  "contextOrigin": "bundled-historical-C015-observation-only",
+  "readStartedAtUtc": "2026-11-04T09:01:08.941Z",
+  "readCompletedAtUtc": "2026-11-04T09:01:09.942Z",
+  "association": "explicit fictional scope; declared C015 association, not authenticated/native correlation",
+  "fictionalObservationClock": {
+    "earliestTick": 101,
+    "currentTick": 107
+  },
+  "tiers": [
+    {
+      "tier": "frontend",
+      "stamp": {
+        "implementation": "fictional-frontend",
+        "implementationVersion": "1.0.0",
+        "apiContract": "C036-fictional/1",
+        "deploymentStamp": "fictional-C036-static-r1"
+      }
+    },
+    {
+      "tier": "getProfile-v1",
+      "stamp": {
+        "implementation": "v1",
+        "implementationVersion": "1.0.0",
+        "apiContract": "getProfile/1",
+        "deploymentStamp": "C020-loopback-v1-r1"
+      }
+    },
+    {
+      "tier": "getProfile-v2",
+      "stamp": {
+        "implementation": "v2",
+        "implementationVersion": "2.0.0",
+        "apiContract": "getProfile/1",
+        "deploymentStamp": "C020-loopback-v2-r1"
+      }
+    }
+  ],
+  "source": {
+    "kind": "explicit-C036-closed-fictional-control",
+    "association": "declared-C015-fixture-association-only",
+    "c034HistoricalSavedDomSha256": "bf7087745c0769a400620257513eb26fd1c80debf8277f1e6469a78f2a5671de",
+    "nativeCorrelationVerified": false,
+    "authenticatedIdentityVerified": false,
+    "leaseAuthority": false
+  }
+}</pre></details>
+      <details><summary>Original historical attempts (replacement summary is not a repaired original)</summary><pre id="originals">No historical originals selected. Summary-only replacement 7 never repairs an original or enters current metrics.</pre></details>
+      <details id="result-details"><summary>Result JSON</summary><pre id="result-json">{
+  "operation": "compare",
+  "outcome": "held",
+  "disposition": "HOLD",
+  "sampleDisposition": "HOLD",
+  "code": "REQUESTED_POLICY_UNOBSERVED",
+  "sampleId": "fictional-no-policy",
+  "requested": null,
+  "observed": {
+    "started": 4,
+    "known": 4,
+    "unknown": 0,
+    "inFlight": 0,
+    "missingDestination": 0,
+    "interrupted": 0,
+    "duplicateDeliveries": 0,
+    "failedResponses": 0,
+    "http200Responses": 4,
+    "denominator": "all distinct started originals; unknowns, failures and in-flight requests are retained",
+    "complete": true,
+    "destinations": [
+      {
+        "destination": "v1",
+        "count": 2,
+        "share": 0.5
+      },
+      {
+        "destination": "v2",
+        "count": 2,
+        "share": 0.5
+      }
+    ]
+  },
+  "differences": [
+    {
+      "destination": "v1",
+      "requestedWeightBps": null,
+      "declaredExpectedCount": null,
+      "observedCount": 2,
+      "observedShare": 0.5,
+      "deltaBps": null,
+      "withinThreshold": null
+    },
+    {
+      "destination": "v2",
+      "requestedWeightBps": null,
+      "declaredExpectedCount": null,
+      "observedCount": 2,
+      "observedShare": 0.5,
+      "deltaBps": null,
+      "withinThreshold": null
+    }
+  ],
+  "missing": [
+    "REQUESTED_POLICY_UNOBSERVED"
+  ],
+  "knownMismatch": false,
+  "sourceClassification": "explicit-fictional-measured-control-observations",
+  "policyClassification": "UNOBSERVED",
+  "currentMetricTransition": true,
+  "guard": {
+    "outcome": "fixture-verified",
+    "code": "CLOSED_FICTIONAL_SCOPE_VERIFIED",
+    "fixtureScopeVerified": true,
+    "nativeCorrelationVerified": false,
+    "authenticatedIdentityVerified": false,
+    "leaseAuthority": false,
+    "liveRunAdopted": false,
+    "productionRuntimeValidated": false,
+    "attributedRecords": 0,
+    "interpretation": "local closed fictional attribution only; no native/authenticated identity or lease authority",
+    "blockedTransition": true
+  },
+  "originals": null,
+  "contextOrigin": "bundled-historical-C015-observation-only",
+  "zeroDenominator": false,
+  "interpretation": "Declared fictional policy versus separately recorded fictional destinations, guarded by unchanged C036; no actual routing proof.",
+  "currentMetrics": {
+    "started": 4,
+    "known": 4,
+    "unknown": 0,
+    "inFlight": 0,
+    "missingDestination": 0,
+    "interrupted": 0,
+    "duplicateDeliveries": 0,
+    "failedResponses": 0,
+    "http200Responses": 4,
+    "denominator": "all distinct started originals; unknowns, failures and in-flight requests are retained",
+    "complete": true,
+    "destinations": [
+      {
+        "destination": "v1",
+        "count": 2,
+        "share": 0.5
+      },
+      {
+        "destination": "v2",
+        "count": 2,
+        "share": 0.5
+      }
+    ]
+  },
+  "sessionDisposition": "HOLD_RETAINED",
+  "actualCurrentAttributedRequests": 0,
+  "authenticatedIdentityVerified": false,
+  "leaseAuthority": false,
+  "observedRequestedPolicyVerified": false,
+  "nativeTransportQualified": false,
+  "migrationQualified": false,
+  "fullJourneyQualified": false,
+  "productionRuntimeValidated": false,
+  "association": "explicit declared fictional association only; not authenticated run/user/lease/cohort proof"
+}</pre></details>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained operations / failures (maximum 16)</h2>
+      <ol id="history"><li>1. compare: HOLD — REQUESTED_POLICY_UNOBSERVED; guarded fictional starts 4</li></ol>
+      <p id="history-note">At the bound, operations refuse rather than drop old failures. Inspect does not commit metrics. Compare commits only guarded fictional originals. A healthy aggregate, retry or display reset cannot erase a known mismatch.</p>
+    </section>
+    <footer>Original C037 / S / P0 / LP-REPLAY / parent H007. Accepted C036 is an entry gate, not H007 completion. Local-only rehearsal; IaC N/A. No Azure traffic, authentication, deployment, packages, credentials, user data or spending. Native/authenticated/full-journey/production Node 24 work remains incomplete.</footer>
+  </main>
+
+
+</body></html>
