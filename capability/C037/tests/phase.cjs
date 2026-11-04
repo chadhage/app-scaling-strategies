@@ -15,4 +15,10 @@ if (phase === 'bdd') {
   console.log('Loadable routing stub: public open function exists.');
 } else if (phase === 'iac') {
   console.log('IaC N/A: existing local Node CLI and static UI only; no infrastructure/cloud/auth/deployment/spend.');
+} else if (phase === 'coverbdd') {
+  const text = fs.readFileSync(path.join(__dirname, '..', 'C037.coverage.feature'), 'utf8');
+  for (const phrase of ['enumerated production file', 'counts as 0 percent', 'DOM stubs', 'never excluded',
+    'documented exit code', 'fails closed', 'Proof is appended, never rewritten', 'IaC is N/A',
+    'changes no production code']) assert.ok(text.includes(phrase), phrase);
+  console.log('Coverage BDD: per-file 85/85/85 over an enumerated set; page, CLI and pin reader behaviors; append-only proof; no production change.');
 } else throw new Error('Unknown phase.');

@@ -15,15 +15,21 @@ const commands = Object.freeze({
   iac: [own('tests', 'phase.cjs'), 'iac'],
   pins: [own('tests', 'pin-source.cjs')],
   authority: [own('tests', 'capture-authority.cjs')],
-  focused: ['--test', '--test-concurrency=1', own('tests', 'routing.test.cjs'), own('tests', 'surface.test.cjs'), own('tests', 'authority.test.cjs')],
+  focused: ['--test', '--test-concurrency=1', own('tests', 'routing.test.cjs'), own('tests', 'surface.test.cjs'), own('tests', 'authority.test.cjs'),
+    own('tests', 'page.test.cjs'), own('tests', 'cli.test.cjs'), own('tests', 'pins.test.cjs')],
   syntax: [own('tests', 'syntax.cjs')],
   browser: [own('tests', 'browser.cjs')],
   seal: [own('tests', 'seal.cjs')],
+  coverbdd: [own('tests', 'phase.cjs'), 'coverbdd'],
+  coverred: ['--test', own('evidence', 'red', 'coverage-bar.initial.test.cjs')],
+  coverage: [own('tests', 'coverage.cjs')],
+  addendum: [own('tests', 'seal-addendum.cjs')],
   verify: [own('tests', 'verify.cjs')],
   publication: [own('tests', 'publish.cjs')],
   report: [own('tests', 'report.cjs')]
 });
 const stage = process.argv[2];
+const timeouts = Object.freeze({ focused: 600000, coverred: 900000, coverage: 900000 });
 if (process.argv.length !== 3 || !Object.hasOwn(commands, stage) || process.env.CAPTURE_BROWSER_EVIDENCE !== '1') {
   throw new Error('Exact CAPTURE_BROWSER_EVIDENCE=1 and one closed own capture stage are required.');
 }
@@ -47,12 +53,15 @@ fs.mkdirSync(directory);
 const sourceHashes = sources(root);
 const env = { ...process.env };
 delete env.C037_CAPTURE_DIR;
-if (['pins', 'authority', 'browser', 'seal', 'publication', 'report'].includes(stage)) env.C037_CAPTURE_DIR = directory;
+if (['pins', 'authority', 'browser', 'seal', 'addendum', 'publication', 'report'].includes(stage)) env.C037_CAPTURE_DIR = directory;
 else delete env.CAPTURE_BROWSER_EVIDENCE;
+delete env.NODE_TEST_CONTEXT;
+delete env.NODE_V8_COVERAGE;
 const startedAtUtc = new Date().toISOString();
 const started = performance.now();
 const run = spawnSync(process.execPath, commands[stage], {
-  cwd: repository, env, encoding: null, windowsHide: true, timeout: 240000, maxBuffer: 8 * 1024 * 1024
+  cwd: repository, env, encoding: null, windowsHide: true, timeout: timeouts[stage] ?? 240000,
+  maxBuffer: 8 * 1024 * 1024
 });
 const stdout = run.stdout || Buffer.alloc(0);
 const stderr = run.stderr || Buffer.alloc(0);
