@@ -1,0 +1,60 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const model = require('./model.js');
+
+function prepared() {
+  const rehearsal = model.createRehearsal();
+  rehearsal.act({ type: 'sample-offline' });
+  rehearsal.act({ type: 'queue-changes' });
+  rehearsal.act({ type: 'sample-online' });
+  return rehearsal;
+}
+
+test('only the fictional sample client goes offline', () => {
+  const rehearsal = model.createRehearsal();
+  const state = rehearsal.act({ type: 'sample-offline' });
+  assert.equal(state.sampleClientOnline, false);
+  assert.equal(state.consoleAvailable, true);
+  assert.equal(state.otherWorkersAvailable, true);
+  assert.equal(state.phase, 'offline');
+  assert.deepEqual(state.history.map((entry) => entry.action), ['sample-offline']);
+});
+
+test('clean synchronization confirms exactly two owned v2 effects', () => {
+  const rehearsal = prepared();
+  const state = rehearsal.act({
+    type: 'synchronize', fixture: 'clean', timing: 'within-budget',
+  });
+  assert.equal(state.result.verdict, 'positive');
+  assert.equal(state.result.verifier, 'PASS');
+  assert.equal(state.result.userImpact, 'completed');
+  assert.equal(state.result.metrics.totalEffects, 2);
+  assert.equal(state.result.metrics.confirmedChanges, 2);
+  assert.equal(state.pending.length, 0);
+});
+
+test('missing acknowledgment is unknown and retry does not duplicate the effect', () => {
+  const rehearsal = prepared();
+  const unresolved = rehearsal.act({
+    type: 'synchronize', fixture: 'missing-ack', timing: 'within-budget',
+  });
+  assert.equal(unresolved.result.verdict, 'unknown');
+  assert.equal(unresolved.pending.length, 1);
+  const confirmed = rehearsal.act({ type: 'retry-ack' });
+  assert.equal(confirmed.result.verdict, 'positive');
+  assert.equal(confirmed.result.metrics.totalEffects, 2);
+  assert.equal(confirmed.observation.operations[0].attempts, 2);
+  assert.equal(confirmed.pending.length, 0);
+  assert.equal(confirmed.history.at(-2).result.verdict, 'unknown');
+});
+
+test('premature synchronization is rejected without state changes', () => {
+  const rehearsal = model.createRehearsal();
+  const before = rehearsal.snapshot();
+  assert.throws(() => rehearsal.act({
+    type: 'synchronize', fixture: 'clean', timing: 'within-budget',
+  }), { code: 'ERR_STATE_GUARD' });
+  assert.deepEqual(rehearsal.snapshot(), before);
+});

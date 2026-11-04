@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "cardId": "A-S136",
+  "sourceId": "S136",
+  "parentIds": ["D-S136"],
+  "kano": "S",
+  "kanoUnit": "A-S136",
+  "packet": "SC-S136",
+  "owner": "worker-A-S136",
+  "mode": "local-synthetic-only",
+  "entry": "index.html",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Take only the sample client offline; synchronize pending changes without losing the harness console.",
+  "sourceBehavior": "Reconcile queued operations against the new deployment without losing or duplicating changes.",
+  "backlogAcceptance": "Queued authenticated operations synchronize with v2 without missing/duplicate changes; offline/recovery budgets and protocol assumptions are explicit.",
+  "preconditions": [
+    "Directly open the local HTML lesson; no server, framework or subscription is required.",
+    "Two separate fictional registers start at revision 7 for fictional-user-136.",
+    "Console and other fictional workers remain available; only sample connectivity is modeled."
+  ],
+  "actions": ["sample-offline", "queue-changes", "sample-online", "synchronize", "retry-ack", "inspect-console", "reset"],
+  "fixtures": ["clean", "conflict", "missing-ack", "missing-effect", "duplicate-effect", "identity-rejected"],
+  "timings": ["within-budget", "offline-over-budget", "recovery-over-budget"],
+  "syntheticBudgetsMs": {"offline": 5000, "recovery": 200},
+  "protocol": {
+    "name": "fictional-queued-ops/v1",
+    "destination": "v2",
+    "stableOperationIds": ["change-136-1", "change-136-2"],
+    "confirmation": "Authenticated owner, intended value, revision 8, exactly one effect, and a matching accepted v2 acknowledgment.",
+    "retry": "Only the fixed missing-acknowledgment trace retries the same first operation ID once; effect count remains one.",
+    "conflict": "Retain the pending ID; do not merge or invent a successful acknowledgment."
+  },
+  "expectedAssertions": {
+    "positive": "Two correct effects, two accepted owned v2 receipts, no pending IDs, within both budgets.",
+    "negative": "Conflict, missing/duplicate effect, rejected identity or exceeded budget is interrupted.",
+    "unknown": "Missing acknowledgment or explicit incomplete evidence is unresolved, never success.",
+    "isolation": "Offline action does not disable operator controls or alter other worker connectivity."
+  },
+  "bounds": {"pendingChanges": 2, "maximumAttemptsPerId": 2, "retainedJournalEntries": 32, "omissions": "Visible count; reset retains recent history; reload clears memory."},
+  "safety": "All sample-client, connectivity, identity, pending-state, sync, conflict, acknowledgment, effect and timing data are fixed fictional teaching DATA ONLY. No actual machine/context network shutdown, persistent storage, user data or cloud operation.",
+  "iac": "N/A: resource-free browser lesson. No IaC, scaffold, identity, credentials, deployment, spending or package installation.",
+  "tooling": {
+    "node": "22.23.4 test tooling only; not production Node 24 validation",
+    "playwright": "Existing offline 1.56.1",
+    "browser": "Existing Microsoft-signed Edge 156",
+    "helper": "testing\\browser\\isolated.cjs",
+    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+    "helperPublishedCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+    "limit": "Individual observed runs only. Inactive lifecycle recovery prototype remains unqualified."
+  },
+  "sourceEvidence": "evidence\\source.json",
+  "verification": ["model.test.cjs", "integrity.test.cjs", "browser.test.cjs"],
+  "browserEvidence": "evidence\\browser.json",
+  "normalVerification": "READ-ONLY. Only exact CAPTURE_BROWSER_EVIDENCE=1 deliberately replaces the lesson browser observation.",
+  "limits": [
+    "No native B-S136 evidence or completed D-S136/source parent.",
+    "D-S040 and D-S077 dependencies and native CORE/DATA/HOST/C032 gates remain outstanding.",
+    "No real mobile synchronization, authorization, persistence, external effects or network isolation is established.",
+    "No Node 24 production support, arbitrary browser compatibility, Azure result or reliability guarantee.",
+    "Parent alone empirically accepts this original unit once; tests, repairs, proof and refinement earn zero extra credit."
+  ]
+}

@@ -1,0 +1,37 @@
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.S136 = factory();
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+
+  const BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
+  const FIXTURE_IDS = ['clean', 'conflict', 'missing-ack', 'duplicate-effect', 'identity-rejected'];
+  const TIMING_IDS = ['within-budget', 'offline-over-budget', 'recovery-over-budget'];
+
+  function createRehearsal() {
+    const state = {
+      phase: 'ready',
+      sampleClientOnline: true,
+      consoleAvailable: true,
+      otherWorkersAvailable: true,
+      consoleInspections: 0,
+      pending: [],
+      observation: null,
+      result: null,
+      history: [],
+      omittedEntries: 0,
+      allowedActions: ['sample-offline', 'inspect-console', 'reset'],
+    };
+    return {
+      snapshot() { return structuredClone(state); },
+      act() { return structuredClone(state); },
+    };
+  }
+
+  function makeObservation() { return null; }
+  function evaluate() {
+    return { verdict: 'unknown', verifier: 'INCONCLUSIVE', userImpact: 'unresolved' };
+  }
+
+  return { BANNER, FIXTURE_IDS, TIMING_IDS, createRehearsal, makeObservation, evaluate };
+}));

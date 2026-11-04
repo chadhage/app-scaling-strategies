@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S136 — Offline sample-client synchronization</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="model.js" defer></script>
+  <script src="lesson.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S136: Offline sample-client synchronization</h1>
+    <p>A-S136 · D-S136 · SC-S136 · one satisfier. Take <strong>only the fictional sample client</strong>
+      offline, queue two fixed changes, reconnect and inspect v2 receipts.</p>
+    <p id="assumptions">All connectivity, identity, pending state, receipts, effects and elapsed times below
+      are fixed fictional teaching DATA ONLY. No real device or browser context is taken offline.
+      No account, user data, persistent storage, service worker, cloud or network operation is performed.</p>
+    <details>
+      <summary>Protocol assumptions and explicit budgets</summary>
+      <p>The fictional queue retains change-136-1 and change-136-2 for fictional-user-136:
+        two separate fictional registers (accent and layout), each at base revision 7.
+        v2 checks authenticated ownership and revision, deduplicates the stable operation ID, and returns
+        an accepted receipt identifying that ID, owner and v2. Exactly one correct effect at revision 8
+        plus that receipt confirms a change. Conflicts require a separate decision; no automatic merge exists.</p>
+      <p>The synthetic offline budget is ≤ 5000 ms and recovery budget is ≤ 200 ms.
+        The normal fixed trace is 4000 ms / 120 ms; late traces are 6000 ms / 120 ms and 4000 ms / 250 ms.
+        These are fixture measurements, not wall-clock, latency or production guarantees.</p>
+    </details>
+
+    <p id="fatal-error" class="error" role="alert" hidden></p>
+    <button id="reload-lesson" type="button" hidden>Reload the local lesson</button>
+    <p id="action-error" class="error" role="alert" hidden></p>
+    <fieldset id="sample-controls" aria-describedby="assumptions">
+      <legend>Sample-client rehearsal actions — perform in order</legend>
+      <div class="selectors">
+        <label for="fixture">Fictional v2 receipt fixture</label>
+        <select id="fixture">
+          <option value="clean">Clean: two correct effects and acknowledgments</option>
+          <option value="conflict">Revision conflict: second change remains pending</option>
+          <option value="missing-ack">Missing acknowledgment: first change unresolved</option>
+          <option value="missing-effect">Missing effect despite an accepted receipt</option>
+          <option value="duplicate-effect">Duplicate effect despite accepted receipts</option>
+          <option value="identity-rejected">Queued identity is rejected for the second change</option>
+        </select>
+        <label for="timing">Synthetic elapsed-time trace</label>
+        <select id="timing">
+          <option value="within-budget">Within budgets: 4000 ms / 120 ms</option>
+          <option value="offline-over-budget">Offline budget breached: 6000 ms / 120 ms</option>
+          <option value="recovery-over-budget">Recovery budget breached: 4000 ms / 250 ms</option>
+        </select>
+      </div>
+      <div class="buttons">
+        <button id="sample-offline" type="button">1. Take only sample client offline</button>
+        <button id="queue-changes" type="button" disabled>2. Queue two fixed changes</button>
+        <button id="sample-online" type="button" disabled>3. Reconnect sample client</button>
+        <button id="synchronize" type="button" disabled>4. Synchronize with v2</button>
+        <button id="retry-ack" type="button" disabled>Retry the same pending ID for its acknowledgment</button>
+      </div>
+    </fieldset>
+    <fieldset id="operator-controls">
+      <legend>Operator console — never disconnected by the sample action</legend>
+      <button id="inspect-console" type="button">Inspect operator console</button>
+      <button id="restart" type="button">Reset active rehearsal; retain journal</button>
+      <p id="operator-message" role="status">Operator controls available.</p>
+    </fieldset>
+
+    <section id="outcome" aria-live="polite" aria-atomic="true">
+      <h2>Measured fictional result</h2>
+      <dl>
+        <dt>Sample connectivity</dt><dd id="sample-connection">Online (fictional)</dd>
+        <dt>Operator console</dt><dd id="console-connection">Available; never disconnected</dd>
+        <dt>Other fictional workers</dt><dd id="worker-connection">Two available; unaffected</dd>
+        <dt>Console inspections</dt><dd id="console-inspections">0</dd>
+        <dt>Pending changes</dt><dd id="pending-count">0</dd>
+        <dt>Observed total effects</dt><dd id="effect-count">Not observed</dd>
+        <dt>Accepted acknowledgments</dt><dd id="ack-count">Not observed</dd>
+        <dt>Confirmed correct changes</dt><dd id="confirmed-count">Not observed</dd>
+        <dt>Offline / recovery time</dt><dd id="elapsed">Not observed</dd>
+        <dt>Journey verdict</dt><dd id="verdict">Unknown — not yet measured</dd>
+        <dt>User impact</dt><dd id="impact">Not run</dd>
+      </dl>
+      <ul id="reasons"></ul>
+    </section>
+
+    <section>
+      <h2>Pending queue and v2 evidence</h2>
+      <p id="queue-summary">No changes queued yet.</p>
+      <table>
+        <caption>Fixed fictional operations; an effect alone is not a client acknowledgment</caption>
+        <thead><tr><th scope="col">Operation / intended value</th><th scope="col">Pending</th>
+          <th scope="col">Authenticated</th><th scope="col">Effect / result / revision</th>
+          <th scope="col">v2 acknowledgment</th><th scope="col">Attempts</th></tr></thead>
+        <tbody id="operation-rows"></tbody>
+      </table>
+    </section>
+    <section>
+      <h2>Retained in-memory action journal</h2>
+      <p id="journal-limit">Latest 32 actions retained; 0 older entries omitted. Reload clears this local in-memory journal.</p>
+      <ol id="history" aria-label="Retained operator action history"></ol>
+    </section>
+    <footer>
+      <p>Use Tab, Enter and Space. Errors leave state unchanged; reset restores controls, fixtures and active counts
+        while retaining previous results. Retry is offered only for the bounded missing-acknowledgment trace.</p>
+      <p>A successful rehearsal is not native B-S136 proof, source-parent completion, real authentication,
+        production Node.js 24 validation, Azure support or a five-nines result.
+        Native D-S136 still requires D-S040/D-S077, a qualified target and its original gates.</p>
+      <p><a href="README.md">Lesson scope, verification and evidence</a></p>
+    </footer>
+  </main>
+</body>
+</html>

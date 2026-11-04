@@ -1,0 +1,3260 @@
+learning/S136/.gitattributes:1: trailing whitespace.
++/.gitattributes -text
+learning/S136/.gitattributes:2: trailing whitespace.
++/model.js -text
+learning/S136/.gitattributes:3: trailing whitespace.
++/lesson.js -text
+learning/S136/.gitattributes:4: trailing whitespace.
++/index.html -text
+learning/S136/.gitattributes:5: trailing whitespace.
++/style.css -text
+learning/S136/.gitattributes:6: trailing whitespace.
++/offline-sync.feature -text
+learning/S136/.gitattributes:7: trailing whitespace.
++/manifest.json -text
+learning/S136/.gitattributes:8: trailing whitespace.
++/model.test.cjs -text
+learning/S136/.gitattributes:9: trailing whitespace.
++/browser.test.cjs -text
+learning/S136/.gitattributes:10: trailing whitespace.
++/integrity.test.cjs -text
+learning/S136/.gitattributes:11: trailing whitespace.
++/README.md -text
+learning/S136/.gitattributes:12: trailing whitespace.
++/remainder.json -text
+learning/S136/.gitattributes:13: trailing whitespace.
++/evidence/** -text
+learning/S136/.gitattributes:14: trailing whitespace.
++/evidence/raw/** -diff
+learning/S136/README.md:1: trailing whitespace.
++# S136 — Offline sample-client synchronization
+learning/S136/README.md:2: trailing whitespace.
++
+learning/S136/README.md:3: trailing whitespace.
++**Training rehearsal - synthetic data - not a live Azure result**
+learning/S136/README.md:4: trailing whitespace.
++
+learning/S136/README.md:5: trailing whitespace.
++A-S136 / D-S136 / SC-S136, frozen S, one original Kano unit. Open `index.html`
+learning/S136/README.md:6: trailing whitespace.
++directly in a browser. This is a standalone, deterministic lesson, not native
+learning/S136/README.md:7: trailing whitespace.
++mobile synchronization or a cloud demonstration.
+learning/S136/README.md:8: trailing whitespace.
++
+learning/S136/README.md:9: trailing whitespace.
++## Conduct the bounded rehearsal
+learning/S136/README.md:10: trailing whitespace.
++
+learning/S136/README.md:11: trailing whitespace.
++1. Choose a fixed fictional v2 receipt fixture and synthetic elapsed-time trace.
+learning/S136/README.md:12: trailing whitespace.
++2. Take **only the sample client** offline. Inspect the operator console while
+learning/S136/README.md:13: trailing whitespace.
++   offline: its controls and the two other fictional workers remain available.
+learning/S136/README.md:14: trailing whitespace.
++3. Queue the two fixed changes, reconnect the sample, then synchronize with v2.
+learning/S136/README.md:15: trailing whitespace.
++4. Inspect each effect, acknowledgment, pending ID, measured verdict and user impact.
+learning/S136/README.md:16: trailing whitespace.
++5. For missing acknowledgment only, retry the same pending ID once. Its observed
+learning/S136/README.md:17: trailing whitespace.
++   effect count stays one; the original unknown result remains in the journal.
+learning/S136/README.md:18: trailing whitespace.
++6. Use Tab/Enter/Space or the buttons. Reset restores fixtures, active counts and
+learning/S136/README.md:19: trailing whitespace.
++   errors, retaining recent results. The latest 32 actions remain in memory;
+learning/S136/README.md:20: trailing whitespace.
++   omitted older entries are explicitly counted. Reload clears this journal.
+learning/S136/README.md:21: trailing whitespace.
++
+learning/S136/README.md:22: trailing whitespace.
++| Fixed condition | Observed result |
+learning/S136/README.md:23: trailing whitespace.
++| --- | --- |
+learning/S136/README.md:24: trailing whitespace.
++| Clean, 4000 ms offline / 120 ms recovery | Positive: two owned, correct v2 effects and acknowledgments; no pending IDs. |
+learning/S136/README.md:25: trailing whitespace.
++| Revision conflict | Negative/interrupted: second ID retained; no automatic merge or successful retry. |
+learning/S136/README.md:26: trailing whitespace.
++| Missing acknowledgment | Unknown/unresolved: two observed effects are not two client confirmations. Same-ID receipt retry can confirm without duplicating. |
+learning/S136/README.md:27: trailing whitespace.
++| Missing or duplicate effect | Negative/interrupted despite accepted receipts; inconsistent ID remains pending. |
+learning/S136/README.md:28: trailing whitespace.
++| Rejected identity | Negative/interrupted; second change is unconfirmed. |
+learning/S136/README.md:29: trailing whitespace.
++| 6000 ms offline or 250 ms recovery | Negative/interrupted even if both changes were confirmed. |
+learning/S136/README.md:30: trailing whitespace.
++
+learning/S136/README.md:31: trailing whitespace.
++The fictional offline budget is **≤ 5000 ms**, recovery **≤ 200 ms**. Times are
+learning/S136/README.md:32: trailing whitespace.
++fixed fixture measurements, not wall-clock timings. The two separate fictional
+learning/S136/README.md:33: trailing whitespace.
++registers (accent/blue, layout/compact) start at revision 7 for fictional-user-136.
+learning/S136/README.md:34: trailing whitespace.
++The stated protocol requires stable operation IDs, authenticated ownership,
+learning/S136/README.md:35: trailing whitespace.
++revision checking, deduplicated effects and matching accepted v2 receipts at
+learning/S136/README.md:36: trailing whitespace.
++revision 8. Missing evidence stays unknown; known conflicts are never merged.
+learning/S136/README.md:37: trailing whitespace.
++
+learning/S136/README.md:38: trailing whitespace.
++All sample-client/connectivity/identity/pending/sync/conflict/ack/effect/time data
+learning/S136/README.md:39: trailing whitespace.
++are **fixed fictional teaching DATA ONLY**. Runtime state is in memory. The lesson
+learning/S136/README.md:40: trailing whitespace.
++does not use actual network-offline APIs, management calls, service workers,
+learning/S136/README.md:41: trailing whitespace.
++persistent storage, user data, credentials, identities, cloud services or effects.
+learning/S136/README.md:42: trailing whitespace.
++CSP denies connections, inline code, workers and form submission; scripts/styles
+learning/S136/README.md:43: trailing whitespace.
++are local external files. IaC is **N/A**, recorded after genuine behavioral RED.
+learning/S136/README.md:44: trailing whitespace.
++
+learning/S136/README.md:45: trailing whitespace.
++## Focused, read-only verification
+learning/S136/README.md:46: trailing whitespace.
++
+learning/S136/README.md:47: trailing whitespace.
++From the repository root, in PowerShell:
+learning/S136/README.md:48: trailing whitespace.
++
+learning/S136/README.md:49: trailing whitespace.
++```powershell
+learning/S136/README.md:50: trailing whitespace.
++node --test .\learning\S136\model.test.cjs .\learning\S136\integrity.test.cjs .\learning\S136\browser.test.cjs
+learning/S136/README.md:51: trailing whitespace.
++node --check .\learning\S136\model.js
+learning/S136/README.md:52: trailing whitespace.
++node --check .\learning\S136\lesson.js
+learning/S136/README.md:53: trailing whitespace.
++git --no-pager diff --check -- learning\S136
+learning/S136/README.md:54: trailing whitespace.
++```
+learning/S136/README.md:55: trailing whitespace.
++
+learning/S136/README.md:56: trailing whitespace.
++Normal verification does not replace committed evidence. Only an intentional
+learning/S136/README.md:57: trailing whitespace.
++browser capture uses the **exact** value below; values such as `true` do not capture.
+learning/S136/README.md:58: trailing whitespace.
++An intentional new capture makes the byte-integrity index historical, so preserve
+learning/S136/README.md:59: trailing whitespace.
++the resulting proof separately or deliberately regenerate this owned index.
+learning/S136/README.md:60: trailing whitespace.
++
+learning/S136/README.md:61: trailing whitespace.
++```powershell
+learning/S136/README.md:62: trailing whitespace.
++$env:CAPTURE_BROWSER_EVIDENCE = '1'
+learning/S136/README.md:63: trailing whitespace.
++node --test .\learning\S136\browser.test.cjs
+learning/S136/README.md:64: trailing whitespace.
++Remove-Item Env:CAPTURE_BROWSER_EVIDENCE
+learning/S136/README.md:65: trailing whitespace.
++```
+learning/S136/README.md:66: trailing whitespace.
++
+learning/S136/README.md:67: trailing whitespace.
++`evidence\raw\red` contains the loadable no-op stub, original BDD/test snapshots,
+learning/S136/README.md:68: trailing whitespace.
++raw failing TAP and exit metadata, outside normal test autodiscovery. The failing
+learning/S136/README.md:69: trailing whitespace.
++assertion was `sampleClientOnline: true !== false`, not an import/tooling failure.
+learning/S136/README.md:70: trailing whitespace.
++`evidence\source.json` identifies exact S136/README, D-S136/backlog, portable A/card
+learning/S136/README.md:71: trailing whitespace.
++and packet inputs. Full gzip snapshots preserve **working bytes (including CRLF)**
+learning/S136/README.md:72: trailing whitespace.
++separately from **canonical Git bytes**; selected excerpts are normalized only for
+learning/S136/README.md:73: trailing whitespace.
++reading and are never used as substitutes for raw-byte hashes. Lesson-scoped
+learning/S136/README.md:74: trailing whitespace.
++`.gitattributes` prevents newline rewriting of byte-addressed assets and raw proof;
+learning/S136/README.md:75: trailing whitespace.
++immutable raw TAP/snapshots are binary-diff data rather than format-repaired code.
+learning/S136/README.md:76: trailing whitespace.
++These narrow attributes do not alter parent sources or shared Git configuration.
+learning/S136/README.md:77: trailing whitespace.
++
+learning/S136/README.md:78: trailing whitespace.
++Actual DOM/keyboard/error/reset/failure/CSP observations are in `evidence\browser.json`.
+learning/S136/README.md:79: trailing whitespace.
++They use the published `openIsolatedLesson` helper at SHA-256
+learning/S136/README.md:80: trailing whitespace.
++`86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055`,
+learning/S136/README.md:81: trailing whitespace.
++and await `close()` in `finally`. Existing offline Playwright 1.56.1, signed Edge
+learning/S136/README.md:82: trailing whitespace.
++156 and Node 22.23.4 are test tooling only. No packages, downloads, unsafe flags,
+learning/S136/README.md:83: trailing whitespace.
++foreground leases or inactive recovery prototype were used; the helper's broader
+learning/S136/README.md:84: trailing whitespace.
++unattended-lifecycle qualification remains incomplete.
+learning/S136/README.md:85: trailing whitespace.
++
+learning/S136/README.md:86: trailing whitespace.
++## Honest remainder
+learning/S136/README.md:87: trailing whitespace.
++
+learning/S136/README.md:88: trailing whitespace.
++Native B-S136 remains blocked on CORE, DATA, HOST, C032, a qualified and explicitly
+learning/S136/README.md:89: trailing whitespace.
++approved target, network assumptions, durable authenticated queuing, measured
+learning/S136/README.md:90: trailing whitespace.
++budgets and native reconciliation evidence. D-S136 also retains D-S040/D-S077 and
+learning/S136/README.md:91: trailing whitespace.
++both children. No native/source-parent completion, production Node 24 validation,
+learning/S136/README.md:92: trailing whitespace.
++live Azure result or five-nines claim is made. The parent alone accepts A-S136 once.
+learning/S136/README.md:93: trailing whitespace.
++Tests, repairs, proof and this refinement earn **zero additional credits**.
+learning/S136/browser.test.cjs:1: trailing whitespace.
++'use strict';
+learning/S136/browser.test.cjs:2: trailing whitespace.
++
+learning/S136/browser.test.cjs:3: trailing whitespace.
++const test = require('node:test');
+learning/S136/browser.test.cjs:4: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S136/browser.test.cjs:5: trailing whitespace.
++const fs = require('node:fs');
+learning/S136/browser.test.cjs:6: trailing whitespace.
++const path = require('node:path');
+learning/S136/browser.test.cjs:7: trailing whitespace.
++const crypto = require('node:crypto');
+learning/S136/browser.test.cjs:8: trailing whitespace.
++const helperPath = path.resolve(__dirname, '..', '..', 'testing', 'browser', 'isolated.cjs');
+learning/S136/browser.test.cjs:9: trailing whitespace.
++const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+learning/S136/browser.test.cjs:10: trailing whitespace.
++const expectedHelperSha = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+learning/S136/browser.test.cjs:11: trailing whitespace.
++assert.equal(sha256(fs.readFileSync(helperPath)), expectedHelperSha);
+learning/S136/browser.test.cjs:12: trailing whitespace.
++const { openIsolatedLesson } = require(helperPath);
+learning/S136/browser.test.cjs:13: trailing whitespace.
++const lessonPath = path.join('learning', 'S136', 'index.html');
+learning/S136/browser.test.cjs:14: trailing whitespace.
++const evidencePath = path.join(__dirname, 'evidence', 'browser.json');
+learning/S136/browser.test.cjs:15: trailing whitespace.
++const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
+learning/S136/browser.test.cjs:16: trailing whitespace.
++
+learning/S136/browser.test.cjs:17: trailing whitespace.
++function existingEvidence() {
+learning/S136/browser.test.cjs:18: trailing whitespace.
++  return fs.existsSync(evidencePath) ? sha256(fs.readFileSync(evidencePath)) : null;
+learning/S136/browser.test.cjs:19: trailing whitespace.
++}
+learning/S136/browser.test.cjs:20: trailing whitespace.
++
+learning/S136/browser.test.cjs:21: trailing whitespace.
++async function readOutcome(page) {
+learning/S136/browser.test.cjs:22: trailing whitespace.
++  return page.evaluate(() => {
+learning/S136/browser.test.cjs:23: trailing whitespace.
++    const text = (id) => document.getElementById(id).textContent;
+learning/S136/browser.test.cjs:24: trailing whitespace.
++    return {
+learning/S136/browser.test.cjs:25: trailing whitespace.
++      sample: text('sample-connection'), console: text('console-connection'),
+learning/S136/browser.test.cjs:26: trailing whitespace.
++      otherWorkers: text('worker-connection'), pending: text('pending-count'),
+learning/S136/browser.test.cjs:27: trailing whitespace.
++      effects: text('effect-count'), acknowledgments: text('ack-count'),
+learning/S136/browser.test.cjs:28: trailing whitespace.
++      confirmed: text('confirmed-count'), elapsed: text('elapsed'),
+learning/S136/browser.test.cjs:29: trailing whitespace.
++      verdict: text('verdict'), impact: text('impact'), reasons: text('reasons'),
+learning/S136/browser.test.cjs:30: trailing whitespace.
++      queue: text('queue-summary'), rows: text('operation-rows'),
+learning/S136/browser.test.cjs:31: trailing whitespace.
++      journalLimit: text('journal-limit'), history: text('history'),
+learning/S136/browser.test.cjs:32: trailing whitespace.
++      focus: document.activeElement.id,
+learning/S136/browser.test.cjs:33: trailing whitespace.
++    };
+learning/S136/browser.test.cjs:34: trailing whitespace.
++  });
+learning/S136/browser.test.cjs:35: trailing whitespace.
++}
+learning/S136/browser.test.cjs:36: trailing whitespace.
++
+learning/S136/browser.test.cjs:37: trailing whitespace.
++async function prepare(page, fixture = 'clean', timing = 'within-budget') {
+learning/S136/browser.test.cjs:38: trailing whitespace.
++  await page.locator('#restart').click();
+learning/S136/browser.test.cjs:39: trailing whitespace.
++  await page.locator('#fixture').selectOption(fixture);
+learning/S136/browser.test.cjs:40: trailing whitespace.
++  await page.locator('#timing').selectOption(timing);
+learning/S136/browser.test.cjs:41: trailing whitespace.
++  for (const action of ['sample-offline', 'queue-changes', 'sample-online']) {
+learning/S136/browser.test.cjs:42: trailing whitespace.
++    await page.locator(`#${action}`).click();
+learning/S136/browser.test.cjs:43: trailing whitespace.
++  }
+learning/S136/browser.test.cjs:44: trailing whitespace.
++}
+learning/S136/browser.test.cjs:45: trailing whitespace.
++
+learning/S136/browser.test.cjs:46: trailing whitespace.
++test('actual isolated S136 DOM, keyboard, failure and CSP observations', { timeout: 120000 }, async (t) => {
+learning/S136/browser.test.cjs:47: trailing whitespace.
++  const originalDigest = existingEvidence();
+learning/S136/browser.test.cjs:48: trailing whitespace.
++  const report = {
+learning/S136/browser.test.cjs:49: trailing whitespace.
++    cardId: 'A-S136', workerId: 'worker-A-S136', mode: 'local-synthetic-only',
+learning/S136/browser.test.cjs:50: trailing whitespace.
++    banner: 'Training rehearsal - synthetic data - not a live Azure result',
+learning/S136/browser.test.cjs:51: trailing whitespace.
++    startedAt: new Date().toISOString(), nodeVersion: process.version,
+learning/S136/browser.test.cjs:52: trailing whitespace.
++    playwrightVersion: require(path.join(path.dirname(helperPath), 'node_modules', 'playwright', 'package.json')).version,
+learning/S136/browser.test.cjs:53: trailing whitespace.
++    helperSha256: expectedHelperSha, helperPublishedCommit: '53c0c0d82cc1db6780a87ac2b1085734af6d5c60',
+learning/S136/browser.test.cjs:54: trailing whitespace.
++    lessonPath, captureRequestedExactly: capture, checks: [], closedSessions: 0,
+learning/S136/browser.test.cjs:55: trailing whitespace.
++    qualificationLimit: 'Individual observed file-lesson run only; inactive recovery prototype and broader unattended lifecycle remain unqualified. Not Node 24/native/source-parent proof.',
+learning/S136/browser.test.cjs:56: trailing whitespace.
++    files: Object.fromEntries(['index.html', 'model.js', 'lesson.js', 'style.css'].map((name) => [name, sha256(fs.readFileSync(path.join(__dirname, name)))])),
+learning/S136/browser.test.cjs:57: trailing whitespace.
++  };
+learning/S136/browser.test.cjs:58: trailing whitespace.
++  async function check(name, body) {
+learning/S136/browser.test.cjs:59: trailing whitespace.
++    await t.test(name, async () => {
+learning/S136/browser.test.cjs:60: trailing whitespace.
++      try {
+learning/S136/browser.test.cjs:61: trailing whitespace.
++        const observation = await body();
+learning/S136/browser.test.cjs:62: trailing whitespace.
++        report.checks.push({ name, status: 'passed', observation });
+learning/S136/browser.test.cjs:63: trailing whitespace.
++      } catch (error) {
+learning/S136/browser.test.cjs:64: trailing whitespace.
++        report.checks.push({ name, status: 'failed', error: error.message });
+learning/S136/browser.test.cjs:65: trailing whitespace.
++        throw error;
+learning/S136/browser.test.cjs:66: trailing whitespace.
++      }
+learning/S136/browser.test.cjs:67: trailing whitespace.
++    });
+learning/S136/browser.test.cjs:68: trailing whitespace.
++  }
+learning/S136/browser.test.cjs:69: trailing whitespace.
++  let primary;
+learning/S136/browser.test.cjs:70: trailing whitespace.
++  try {
+learning/S136/browser.test.cjs:71: trailing whitespace.
++    try {
+learning/S136/browser.test.cjs:72: trailing whitespace.
++      primary = await openIsolatedLesson(lessonPath);
+learning/S136/browser.test.cjs:73: trailing whitespace.
++      report.browserVersion = primary.browserVersion;
+learning/S136/browser.test.cjs:74: trailing whitespace.
++      const page = primary.page;
+learning/S136/browser.test.cjs:75: trailing whitespace.
++      const pageErrors = [];
+learning/S136/browser.test.cjs:76: trailing whitespace.
++      const requests = [];
+learning/S136/browser.test.cjs:77: trailing whitespace.
++      page.on('pageerror', (error) => pageErrors.push(error.message));
+learning/S136/browser.test.cjs:78: trailing whitespace.
++      page.on('request', (request) => requests.push(request.url()));
+learning/S136/browser.test.cjs:79: trailing whitespace.
++      await page.reload({ waitUntil: 'load' });
+learning/S136/browser.test.cjs:80: trailing whitespace.
++
+learning/S136/browser.test.cjs:81: trailing whitespace.
++      await check('initial DOM, exact training banner and keyboard tab order', async () => {
+learning/S136/browser.test.cjs:82: trailing whitespace.
++        assert.equal(await page.locator('.banner').textContent(), report.banner);
+learning/S136/browser.test.cjs:83: trailing whitespace.
++        assert.match(await page.title(), /S136/);
+learning/S136/browser.test.cjs:84: trailing whitespace.
++        assert.equal(await page.locator('#action-error').isVisible(), false);
+learning/S136/browser.test.cjs:85: trailing whitespace.
++        assert.equal(await page.locator('#fatal-error').isVisible(), false);
+learning/S136/browser.test.cjs:86: trailing whitespace.
++        await page.locator('#fixture').focus();
+learning/S136/browser.test.cjs:87: trailing whitespace.
++        await page.keyboard.press('Tab');
+learning/S136/browser.test.cjs:88: trailing whitespace.
++        assert.equal(await page.evaluate(() => document.activeElement.id), 'timing');
+learning/S136/browser.test.cjs:89: trailing whitespace.
++        await page.keyboard.press('Tab');
+learning/S136/browser.test.cjs:90: trailing whitespace.
++        assert.equal(await page.evaluate(() => document.activeElement.id), 'sample-offline');
+learning/S136/browser.test.cjs:91: trailing whitespace.
++        assert.equal(await page.locator('#inspect-console').isEnabled(), true);
+learning/S136/browser.test.cjs:92: trailing whitespace.
++        assert.equal(await page.locator('#restart').isEnabled(), true);
+learning/S136/browser.test.cjs:93: trailing whitespace.
++        const outcome = await readOutcome(page);
+learning/S136/browser.test.cjs:94: trailing whitespace.
++        assert.equal(outcome.effects, 'Not observed');
+learning/S136/browser.test.cjs:95: trailing whitespace.
++        assert.match(outcome.verdict, /Unknown/);
+learning/S136/browser.test.cjs:96: trailing whitespace.
++        return outcome;
+learning/S136/browser.test.cjs:97: trailing whitespace.
++      });
+learning/S136/browser.test.cjs:98: trailing whitespace.
++
+learning/S136/browser.test.cjs:99: trailing whitespace.
++      await check('keyboard offline action preserves console; clean synchronization is measured', async () => {
+learning/S136/browser.test.cjs:100: trailing whitespace.
++        await page.keyboard.press('Enter');
+learning/S136/browser.test.cjs:101: trailing whitespace.
++        assert.match(await page.locator('#sample-connection').textContent(), /^Offline/);
+learning/S136/browser.test.cjs:102: trailing whitespace.
++        assert.equal(await page.locator('#inspect-console').isEnabled(), true);
+learning/S136/browser.test.cjs:103: trailing whitespace.
++        assert.equal(await page.locator('#restart').isEnabled(), true);
+learning/S136/browser.test.cjs:104: trailing whitespace.
++        await page.locator('#inspect-console').focus();
+learning/S136/browser.test.cjs:105: trailing whitespace.
++        await page.keyboard.press('Space');
+learning/S136/browser.test.cjs:106: trailing whitespace.
++        assert.equal(await page.locator('#console-inspections').textContent(), '1');
+learning/S136/browser.test.cjs:107: trailing whitespace.
++        const offline = await readOutcome(page);
+learning/S136/browser.test.cjs:108: trailing whitespace.
++        assert.match(offline.sample, /^Offline/);
+learning/S136/browser.test.cjs:109: trailing whitespace.
++        assert.match(offline.console, /Available; never disconnected/);
+learning/S136/browser.test.cjs:110: trailing whitespace.
++        assert.match(offline.otherWorkers, /Two available; unaffected/);
+learning/S136/browser.test.cjs:111: trailing whitespace.
++        for (const [action, key] of [['queue-changes', 'Enter'], ['sample-online', 'Space'], ['synchronize', 'Enter']]) {
+learning/S136/browser.test.cjs:112: trailing whitespace.
++          await page.locator(`#${action}`).focus();
+learning/S136/browser.test.cjs:113: trailing whitespace.
++          await page.keyboard.press(key);
+learning/S136/browser.test.cjs:114: trailing whitespace.
++        }
+learning/S136/browser.test.cjs:115: trailing whitespace.
++        const completed = await readOutcome(page);
+learning/S136/browser.test.cjs:116: trailing whitespace.
++        assert.match(completed.verdict, /^positive — PASS/);
+learning/S136/browser.test.cjs:117: trailing whitespace.
++        assert.equal(completed.impact, 'completed');
+learning/S136/browser.test.cjs:118: trailing whitespace.
++        assert.equal(completed.pending, '0');
+learning/S136/browser.test.cjs:119: trailing whitespace.
++        assert.equal(completed.effects, '2');
+learning/S136/browser.test.cjs:120: trailing whitespace.
++        assert.equal(completed.acknowledgments, '2');
+learning/S136/browser.test.cjs:121: trailing whitespace.
++        assert.equal(completed.confirmed, '2');
+learning/S136/browser.test.cjs:122: trailing whitespace.
++        assert.match(completed.rows, /fictional-user-136; v2/);
+learning/S136/browser.test.cjs:123: trailing whitespace.
++        return { offline, completed };
+learning/S136/browser.test.cjs:124: trailing whitespace.
++      });
+learning/S136/browser.test.cjs:125: trailing whitespace.
++
+learning/S136/browser.test.cjs:126: trailing whitespace.
++      await check('missing acknowledgment is unknown; same-ID retry retains history and one effect', async () => {
+learning/S136/browser.test.cjs:127: trailing whitespace.
++        await prepare(page, 'missing-ack');
+learning/S136/browser.test.cjs:128: trailing whitespace.
++        await page.locator('#synchronize').click();
+learning/S136/browser.test.cjs:129: trailing whitespace.
++        const unresolved = await readOutcome(page);
+learning/S136/browser.test.cjs:130: trailing whitespace.
++        assert.match(unresolved.verdict, /^unknown — INCONCLUSIVE/);
+learning/S136/browser.test.cjs:131: trailing whitespace.
++        assert.equal(unresolved.impact, 'unresolved');
+learning/S136/browser.test.cjs:132: trailing whitespace.
++        assert.equal(unresolved.pending, '1');
+learning/S136/browser.test.cjs:133: trailing whitespace.
++        assert.equal(unresolved.effects, '2');
+learning/S136/browser.test.cjs:134: trailing whitespace.
++        assert.equal(unresolved.acknowledgments, '1');
+learning/S136/browser.test.cjs:135: trailing whitespace.
++        assert.match(unresolved.queue, /change-136-1/);
+learning/S136/browser.test.cjs:136: trailing whitespace.
++        assert.equal(await page.locator('#retry-ack').isEnabled(), true);
+learning/S136/browser.test.cjs:137: trailing whitespace.
++        await page.locator('#retry-ack').focus();
+learning/S136/browser.test.cjs:138: trailing whitespace.
++        await page.keyboard.press('Space');
+learning/S136/browser.test.cjs:139: trailing whitespace.
++        const retried = await readOutcome(page);
+learning/S136/browser.test.cjs:140: trailing whitespace.
++        assert.match(retried.verdict, /^positive/);
+learning/S136/browser.test.cjs:141: trailing whitespace.
++        assert.equal(retried.effects, '2');
+learning/S136/browser.test.cjs:142: trailing whitespace.
++        assert.equal(retried.pending, '0');
+learning/S136/browser.test.cjs:143: trailing whitespace.
++        assert.equal(await page.locator('#operation-rows tr').first().locator('td').last().textContent(), '2');
+learning/S136/browser.test.cjs:144: trailing whitespace.
++        assert.match(retried.history, /unknown \/ unresolved/);
+learning/S136/browser.test.cjs:145: trailing whitespace.
++        assert.equal(await page.locator('#retry-ack').isEnabled(), false);
+learning/S136/browser.test.cjs:146: trailing whitespace.
++        return { unresolved, retried };
+learning/S136/browser.test.cjs:147: trailing whitespace.
++      });
+learning/S136/browser.test.cjs:148: trailing whitespace.
++
+learning/S136/browser.test.cjs:149: trailing whitespace.
++      await check('actual conflict is negative, remains pending and offers no invented merge', async () => {
+learning/S136/browser.test.cjs:150: trailing whitespace.
++        await prepare(page, 'conflict');
+learning/S136/browser.test.cjs:151: trailing whitespace.
++        await page.locator('#synchronize').click();
+learning/S136/browser.test.cjs:152: trailing whitespace.
++        const outcome = await readOutcome(page);
+learning/S136/browser.test.cjs:153: trailing whitespace.
++        assert.match(outcome.verdict, /^negative — FAIL/);
+learning/S136/browser.test.cjs:154: trailing whitespace.
++        assert.equal(outcome.impact, 'interrupted');
+learning/S136/browser.test.cjs:155: trailing whitespace.
++        assert.equal(outcome.pending, '1');
+learning/S136/browser.test.cjs:156: trailing whitespace.
++        assert.equal(outcome.effects, '1');
+learning/S136/browser.test.cjs:157: trailing whitespace.
++        assert.match(outcome.queue, /change-136-2/);
+learning/S136/browser.test.cjs:158: trailing whitespace.
++        assert.match(outcome.reasons, /conflict; no merge or success inferred/);
+learning/S136/browser.test.cjs:159: trailing whitespace.
++        assert.equal(await page.locator('#retry-ack').isEnabled(), false);
+learning/S136/browser.test.cjs:160: trailing whitespace.
++        return outcome;
+learning/S136/browser.test.cjs:161: trailing whitespace.
++      });
+learning/S136/browser.test.cjs:162: trailing whitespace.
++
+learning/S136/browser.test.cjs:163: trailing whitespace.
++      await check('actual missing, duplicate, identity and budget failures do not masquerade as success', async () => {
+learning/S136/browser.test.cjs:164: trailing whitespace.
++        const outcomes = [];
+learning/S136/browser.test.cjs:165: trailing whitespace.
++        for (const [fixture, timing, effects, pending] of [
+learning/S136/browser.test.cjs:166: trailing whitespace.
++          ['missing-effect', 'within-budget', '1', '1'],
+learning/S136/browser.test.cjs:167: trailing whitespace.
++          ['duplicate-effect', 'within-budget', '3', '1'],
+learning/S136/browser.test.cjs:168: trailing whitespace.
++          ['identity-rejected', 'within-budget', '1', '1'],
+learning/S136/browser.test.cjs:169: trailing whitespace.
++          ['clean', 'offline-over-budget', '2', '0'],
+learning/S136/browser.test.cjs:170: trailing whitespace.
++          ['clean', 'recovery-over-budget', '2', '0'],
+learning/S136/browser.test.cjs:171: trailing whitespace.
++        ]) {
+learning/S136/browser.test.cjs:172: trailing whitespace.
++          await prepare(page, fixture, timing);
+learning/S136/browser.test.cjs:173: trailing whitespace.
++          await page.locator('#synchronize').click();
+learning/S136/browser.test.cjs:174: trailing whitespace.
++          const outcome = await readOutcome(page);
+learning/S136/browser.test.cjs:175: trailing whitespace.
++          assert.match(outcome.verdict, /^negative — FAIL/);
+learning/S136/browser.test.cjs:176: trailing whitespace.
++          assert.equal(outcome.impact, 'interrupted');
+learning/S136/browser.test.cjs:177: trailing whitespace.
++          assert.equal(outcome.effects, effects);
+learning/S136/browser.test.cjs:178: trailing whitespace.
++          assert.equal(outcome.pending, pending);
+learning/S136/browser.test.cjs:179: trailing whitespace.
++          assert.equal(await page.locator('#inspect-console').isEnabled(), true);
+learning/S136/browser.test.cjs:180: trailing whitespace.
++          outcomes.push({ fixture, timing, ...outcome });
+learning/S136/browser.test.cjs:181: trailing whitespace.
++        }
+learning/S136/browser.test.cjs:182: trailing whitespace.
++        return outcomes;
+learning/S136/browser.test.cjs:183: trailing whitespace.
++      });
+learning/S136/browser.test.cjs:184: trailing whitespace.
++
+learning/S136/browser.test.cjs:185: trailing whitespace.
++      await check('invalid fixture and timing produce focused DOM errors with unchanged state', async () => {
+learning/S136/browser.test.cjs:186: trailing whitespace.
++        await prepare(page);
+learning/S136/browser.test.cjs:187: trailing whitespace.
++        const before = await readOutcome(page);
+learning/S136/browser.test.cjs:188: trailing whitespace.
++        await page.evaluate(() => {
+learning/S136/browser.test.cjs:189: trailing whitespace.
++          const select = document.getElementById('fixture');
+learning/S136/browser.test.cjs:190: trailing whitespace.
++          select.add(new Option('Deliberately invalid teaching input', 'unlisted'));
+learning/S136/browser.test.cjs:191: trailing whitespace.
++          select.value = 'unlisted';
+learning/S136/browser.test.cjs:192: trailing whitespace.
++        });
+learning/S136/browser.test.cjs:193: trailing whitespace.
++        await page.locator('#synchronize').click();
+learning/S136/browser.test.cjs:194: trailing whitespace.
++        assert.equal(await page.locator('#action-error').isVisible(), true);
+learning/S136/browser.test.cjs:195: trailing whitespace.
++        assert.match(await page.locator('#action-error').textContent(), /ERR_ACTION_INPUT.*listed fictional/);
+learning/S136/browser.test.cjs:196: trailing whitespace.
++        assert.equal(await page.evaluate(() => document.activeElement.id), 'fixture');
+learning/S136/browser.test.cjs:197: trailing whitespace.
++        const after = await readOutcome(page);
+learning/S136/browser.test.cjs:198: trailing whitespace.
++        for (const key of ['pending', 'effects', 'acknowledgments', 'history', 'verdict']) assert.equal(after[key], before[key]);
+learning/S136/browser.test.cjs:199: trailing whitespace.
++        const fixtureError = await page.locator('#action-error').textContent();
+learning/S136/browser.test.cjs:200: trailing whitespace.
++        await page.evaluate(() => {
+learning/S136/browser.test.cjs:201: trailing whitespace.
++          const fixture = document.getElementById('fixture');
+learning/S136/browser.test.cjs:202: trailing whitespace.
++          fixture.querySelector('option[value="unlisted"]').remove();
+learning/S136/browser.test.cjs:203: trailing whitespace.
++          fixture.value = 'clean';
+learning/S136/browser.test.cjs:204: trailing whitespace.
++          const timing = document.getElementById('timing');
+learning/S136/browser.test.cjs:205: trailing whitespace.
++          timing.add(new Option('Deliberately invalid timing input', 'NaN'));
+learning/S136/browser.test.cjs:206: trailing whitespace.
++          timing.value = 'NaN';
+learning/S136/browser.test.cjs:207: trailing whitespace.
++        });
+learning/S136/browser.test.cjs:208: trailing whitespace.
++        await page.locator('#synchronize').click();
+learning/S136/browser.test.cjs:209: trailing whitespace.
++        const timingError = await page.locator('#action-error').textContent();
+learning/S136/browser.test.cjs:210: trailing whitespace.
++        assert.match(timingError, /ERR_ACTION_INPUT.*listed synthetic/);
+learning/S136/browser.test.cjs:211: trailing whitespace.
++        assert.equal(await page.evaluate(() => document.activeElement.id), 'timing');
+learning/S136/browser.test.cjs:212: trailing whitespace.
++        assert.equal((await readOutcome(page)).history, before.history);
+learning/S136/browser.test.cjs:213: trailing whitespace.
++        await page.evaluate(() => document.querySelector('#timing option[value="NaN"]').remove());
+learning/S136/browser.test.cjs:214: trailing whitespace.
++        return { fixtureError, timingError, before, after };
+learning/S136/browser.test.cjs:215: trailing whitespace.
++      });
+learning/S136/browser.test.cjs:216: trailing whitespace.
++
+learning/S136/browser.test.cjs:217: trailing whitespace.
++      await check('keyboard reset clears errors and active counts, retaining prior measured results', async () => {
+learning/S136/browser.test.cjs:218: trailing whitespace.
++        await page.locator('#restart').focus();
+learning/S136/browser.test.cjs:219: trailing whitespace.
++        await page.keyboard.press('Enter');
+learning/S136/browser.test.cjs:220: trailing whitespace.
++        assert.equal(await page.locator('#action-error').isVisible(), false);
+learning/S136/browser.test.cjs:221: trailing whitespace.
++        assert.equal(await page.locator('#action-error').textContent(), '');
+learning/S136/browser.test.cjs:222: trailing whitespace.
++        assert.equal(await page.locator('#fixture').inputValue(), 'clean');
+learning/S136/browser.test.cjs:223: trailing whitespace.
++        assert.equal(await page.locator('#timing').inputValue(), 'within-budget');
+learning/S136/browser.test.cjs:224: trailing whitespace.
++        const reset = await readOutcome(page);
+learning/S136/browser.test.cjs:225: trailing whitespace.
++        assert.equal(reset.pending, '0');
+learning/S136/browser.test.cjs:226: trailing whitespace.
++        assert.equal(reset.effects, 'Not observed');
+learning/S136/browser.test.cjs:227: trailing whitespace.
++        assert.equal(reset.impact, 'Not run');
+learning/S136/browser.test.cjs:228: trailing whitespace.
++        assert.match(reset.sample, /^Online/);
+learning/S136/browser.test.cjs:229: trailing whitespace.
++        assert.match(reset.history, /negative \/ interrupted/);
+learning/S136/browser.test.cjs:230: trailing whitespace.
++        assert.match(reset.journalLimit, /older entries omitted/);
+learning/S136/browser.test.cjs:231: trailing whitespace.
++        assert.equal(await page.locator('#sample-offline').isEnabled(), true);
+learning/S136/browser.test.cjs:232: trailing whitespace.
++        return reset;
+learning/S136/browser.test.cjs:233: trailing whitespace.
++      });
+learning/S136/browser.test.cjs:234: trailing whitespace.
++
+learning/S136/browser.test.cjs:235: trailing whitespace.
++      await check('premature action bypass attempt is rejected and reset remains keyboard reachable', async () => {
+learning/S136/browser.test.cjs:236: trailing whitespace.
++        const before = await readOutcome(page);
+learning/S136/browser.test.cjs:237: trailing whitespace.
++        await page.evaluate(() => { document.getElementById('synchronize').disabled = false; });
+learning/S136/browser.test.cjs:238: trailing whitespace.
++        await page.locator('#synchronize').click();
+learning/S136/browser.test.cjs:239: trailing whitespace.
++        const error = await page.locator('#action-error').textContent();
+learning/S136/browser.test.cjs:240: trailing whitespace.
++        assert.match(error, /ERR_STATE_GUARD.*out of order/);
+learning/S136/browser.test.cjs:241: trailing whitespace.
++        assert.equal(await page.evaluate(() => document.activeElement.id), 'restart');
+learning/S136/browser.test.cjs:242: trailing whitespace.
++        const after = await readOutcome(page);
+learning/S136/browser.test.cjs:243: trailing whitespace.
++        for (const key of ['pending', 'effects', 'history', 'verdict']) assert.equal(after[key], before[key]);
+learning/S136/browser.test.cjs:244: trailing whitespace.
++        await page.keyboard.press('Space');
+learning/S136/browser.test.cjs:245: trailing whitespace.
++        assert.equal(await page.locator('#action-error').isVisible(), false);
+learning/S136/browser.test.cjs:246: trailing whitespace.
++        return { error, before, after };
+learning/S136/browser.test.cjs:247: trailing whitespace.
++      });
+learning/S136/browser.test.cjs:248: trailing whitespace.
++
+learning/S136/browser.test.cjs:249: trailing whitespace.
++      await check('actual CSP denies inline code and a non-network data-URI connection probe', async () => {
+learning/S136/browser.test.cjs:250: trailing whitespace.
++        await page.evaluate(() => {
+learning/S136/browser.test.cjs:251: trailing whitespace.
++          window.__s136Violations = [];
+learning/S136/browser.test.cjs:252: trailing whitespace.
++          document.addEventListener('securitypolicyviolation', (event) => {
+learning/S136/browser.test.cjs:253: trailing whitespace.
++            window.__s136Violations.push({ directive: event.effectiveDirective, blocked: event.blockedURI });
+learning/S136/browser.test.cjs:254: trailing whitespace.
++          });
+learning/S136/browser.test.cjs:255: trailing whitespace.
++          const script = document.createElement('script');
+learning/S136/browser.test.cjs:256: trailing whitespace.
++          script.textContent = 'window.__s136ForbiddenInline = true;';
+learning/S136/browser.test.cjs:257: trailing whitespace.
++          document.body.append(script);
+learning/S136/browser.test.cjs:258: trailing whitespace.
++        });
+learning/S136/browser.test.cjs:259: trailing whitespace.
++        const denied = await page.evaluate(async () => {
+learning/S136/browser.test.cjs:260: trailing whitespace.
++          try {
+learning/S136/browser.test.cjs:261: trailing whitespace.
++            await fetch('data:application/json,%7B%22fictional%22%3Atrue%7D');
+learning/S136/browser.test.cjs:262: trailing whitespace.
++            return false;
+learning/S136/browser.test.cjs:263: trailing whitespace.
++          } catch {
+learning/S136/browser.test.cjs:264: trailing whitespace.
++            return true;
+learning/S136/browser.test.cjs:265: trailing whitespace.
++          }
+learning/S136/browser.test.cjs:266: trailing whitespace.
++        });
+learning/S136/browser.test.cjs:267: trailing whitespace.
++        assert.equal(denied, true);
+learning/S136/browser.test.cjs:268: trailing whitespace.
++        await page.waitForFunction(() => window.__s136Violations.some((event) => event.directive === 'connect-src')
+learning/S136/browser.test.cjs:269: trailing whitespace.
++          && window.__s136Violations.some((event) => event.directive.startsWith('script-src')));
+learning/S136/browser.test.cjs:270: trailing whitespace.
++        assert.equal(await page.evaluate(() => window.__s136ForbiddenInline), undefined);
+learning/S136/browser.test.cjs:271: trailing whitespace.
++        assert.deepEqual(pageErrors, []);
+learning/S136/browser.test.cjs:272: trailing whitespace.
++        assert.ok(requests.every((url) => url.startsWith('file:')), 'No actual network request may leave this file lesson');
+learning/S136/browser.test.cjs:273: trailing whitespace.
++        await page.locator('#inspect-console').click();
+learning/S136/browser.test.cjs:274: trailing whitespace.
++        return {
+learning/S136/browser.test.cjs:275: trailing whitespace.
++          violations: await page.evaluate(() => window.__s136Violations),
+learning/S136/browser.test.cjs:276: trailing whitespace.
++          inlineExecuted: false, dataUriConnectionDenied: denied,
+learning/S136/browser.test.cjs:277: trailing whitespace.
++          requestSchemes: [...new Set(requests.map((url) => new URL(url).protocol))],
+learning/S136/browser.test.cjs:278: trailing whitespace.
++          pageErrors, consoleStillAvailable: await page.locator('#inspect-console').isEnabled(),
+learning/S136/browser.test.cjs:279: trailing whitespace.
++        };
+learning/S136/browser.test.cjs:280: trailing whitespace.
++      });
+learning/S136/browser.test.cjs:281: trailing whitespace.
++    } finally {
+learning/S136/browser.test.cjs:282: trailing whitespace.
++      if (primary) {
+learning/S136/browser.test.cjs:283: trailing whitespace.
++        await primary.close();
+learning/S136/browser.test.cjs:284: trailing whitespace.
++        report.closedSessions += 1;
+learning/S136/browser.test.cjs:285: trailing whitespace.
++      }
+learning/S136/browser.test.cjs:286: trailing whitespace.
++    }
+learning/S136/browser.test.cjs:287: trailing whitespace.
++
+learning/S136/browser.test.cjs:288: trailing whitespace.
++    await check('real browser model-export fault shows startup failure, never a successful result', async () => {
+learning/S136/browser.test.cjs:289: trailing whitespace.
++      let failed;
+learning/S136/browser.test.cjs:290: trailing whitespace.
++      try {
+learning/S136/browser.test.cjs:291: trailing whitespace.
++        failed = await openIsolatedLesson(lessonPath);
+learning/S136/browser.test.cjs:292: trailing whitespace.
++        await failed.page.addInitScript(() => {
+learning/S136/browser.test.cjs:293: trailing whitespace.
++          Object.defineProperty(window, 'S136', { get() { return undefined; }, set() {}, configurable: true });
+learning/S136/browser.test.cjs:294: trailing whitespace.
++        });
+learning/S136/browser.test.cjs:295: trailing whitespace.
++        await failed.page.reload({ waitUntil: 'load' });
+learning/S136/browser.test.cjs:296: trailing whitespace.
++        assert.equal(await failed.page.locator('#fatal-error').isVisible(), true);
+learning/S136/browser.test.cjs:297: trailing whitespace.
++        assert.match(await failed.page.locator('#fatal-error').textContent(), /Lesson unavailable.*No synchronization result was observed/);
+learning/S136/browser.test.cjs:298: trailing whitespace.
++        const disabledFieldsets = await failed.page.evaluate(() => ({
+learning/S136/browser.test.cjs:299: trailing whitespace.
++          sample: document.getElementById('sample-controls').disabled,
+learning/S136/browser.test.cjs:300: trailing whitespace.
++          operator: document.getElementById('operator-controls').disabled,
+learning/S136/browser.test.cjs:301: trailing whitespace.
++        }));
+learning/S136/browser.test.cjs:302: trailing whitespace.
++        assert.deepEqual(disabledFieldsets, { sample: true, operator: true });
+learning/S136/browser.test.cjs:303: trailing whitespace.
++        for (const id of ['sample-offline', 'inspect-console', 'restart']) {
+learning/S136/browser.test.cjs:304: trailing whitespace.
++          assert.equal(await failed.page.locator(`#${id}`).isEnabled(), false);
+learning/S136/browser.test.cjs:305: trailing whitespace.
++        }
+learning/S136/browser.test.cjs:306: trailing whitespace.
++        assert.equal(await failed.page.locator('#reload-lesson').isEnabled(), true);
+learning/S136/browser.test.cjs:307: trailing whitespace.
++        assert.match(await failed.page.locator('#verdict').textContent(), /^Unknown — lesson unavailable/);
+learning/S136/browser.test.cjs:308: trailing whitespace.
++        return {
+learning/S136/browser.test.cjs:309: trailing whitespace.
++          fault: 'Suppress local model export before a file reload; no lesson file or network state changed.',
+learning/S136/browser.test.cjs:310: trailing whitespace.
++          error: await failed.page.locator('#fatal-error').textContent(),
+learning/S136/browser.test.cjs:311: trailing whitespace.
++          verdict: await failed.page.locator('#verdict').textContent(),
+learning/S136/browser.test.cjs:312: trailing whitespace.
++          disabledFieldsets,
+learning/S136/browser.test.cjs:313: trailing whitespace.
++          reloadAvailable: true,
+learning/S136/browser.test.cjs:314: trailing whitespace.
++        };
+learning/S136/browser.test.cjs:315: trailing whitespace.
++      } finally {
+learning/S136/browser.test.cjs:316: trailing whitespace.
++        if (failed) {
+learning/S136/browser.test.cjs:317: trailing whitespace.
++          await failed.close();
+learning/S136/browser.test.cjs:318: trailing whitespace.
++          report.closedSessions += 1;
+learning/S136/browser.test.cjs:319: trailing whitespace.
++        }
+learning/S136/browser.test.cjs:320: trailing whitespace.
++      }
+learning/S136/browser.test.cjs:321: trailing whitespace.
++    });
+learning/S136/browser.test.cjs:322: trailing whitespace.
++  } catch (error) {
+learning/S136/browser.test.cjs:323: trailing whitespace.
++    report.runError = error.message;
+learning/S136/browser.test.cjs:324: trailing whitespace.
++    throw error;
+learning/S136/browser.test.cjs:325: trailing whitespace.
++  } finally {
+learning/S136/browser.test.cjs:326: trailing whitespace.
++    report.finishedAt = new Date().toISOString();
+learning/S136/browser.test.cjs:327: trailing whitespace.
++    report.allPassed = report.checks.length === 10
+learning/S136/browser.test.cjs:328: trailing whitespace.
++      && report.checks.every((check) => check.status === 'passed')
+learning/S136/browser.test.cjs:329: trailing whitespace.
++      && report.closedSessions === 2 && !report.runError;
+learning/S136/browser.test.cjs:330: trailing whitespace.
++    if (capture) fs.writeFileSync(evidencePath, JSON.stringify(report, null, 2) + '\n');
+learning/S136/browser.test.cjs:331: trailing whitespace.
++    else assert.equal(existingEvidence(), originalDigest, 'Ordinary verification must preserve historical browser evidence bytes');
+learning/S136/browser.test.cjs:332: trailing whitespace.
++  }
+learning/S136/browser.test.cjs:333: trailing whitespace.
++});
+learning/S136/index.html:1: trailing whitespace.
++<!doctype html>
+learning/S136/index.html:2: trailing whitespace.
++<html lang="en">
+learning/S136/index.html:3: trailing whitespace.
++<head>
+learning/S136/index.html:4: trailing whitespace.
++  <meta charset="utf-8">
+learning/S136/index.html:5: trailing whitespace.
++  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+learning/S136/index.html:6: trailing whitespace.
++  <meta name="viewport" content="width=device-width, initial-scale=1">
+learning/S136/index.html:7: trailing whitespace.
++  <title>S136 — Offline sample-client synchronization</title>
+learning/S136/index.html:8: trailing whitespace.
++  <link rel="stylesheet" href="style.css">
+learning/S136/index.html:9: trailing whitespace.
++  <script src="model.js" defer></script>
+learning/S136/index.html:10: trailing whitespace.
++  <script src="lesson.js" defer></script>
+learning/S136/index.html:11: trailing whitespace.
++</head>
+learning/S136/index.html:12: trailing whitespace.
++<body>
+learning/S136/index.html:13: trailing whitespace.
++  <main>
+learning/S136/index.html:14: trailing whitespace.
++    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+learning/S136/index.html:15: trailing whitespace.
++    <h1>S136: Offline sample-client synchronization</h1>
+learning/S136/index.html:16: trailing whitespace.
++    <p>A-S136 · D-S136 · SC-S136 · one satisfier. Take <strong>only the fictional sample client</strong>
+learning/S136/index.html:17: trailing whitespace.
++      offline, queue two fixed changes, reconnect and inspect v2 receipts.</p>
+learning/S136/index.html:18: trailing whitespace.
++    <p id="assumptions">All connectivity, identity, pending state, receipts, effects and elapsed times below
+learning/S136/index.html:19: trailing whitespace.
++      are fixed fictional teaching DATA ONLY. No real device or browser context is taken offline.
+learning/S136/index.html:20: trailing whitespace.
++      No account, user data, persistent storage, service worker, cloud or network operation is performed.</p>
+learning/S136/index.html:21: trailing whitespace.
++    <details>
+learning/S136/index.html:22: trailing whitespace.
++      <summary>Protocol assumptions and explicit budgets</summary>
+learning/S136/index.html:23: trailing whitespace.
++      <p>The fictional queue retains change-136-1 and change-136-2 for fictional-user-136:
+learning/S136/index.html:24: trailing whitespace.
++        two separate fictional registers (accent and layout), each at base revision 7.
+learning/S136/index.html:25: trailing whitespace.
++        v2 checks authenticated ownership and revision, deduplicates the stable operation ID, and returns
+learning/S136/index.html:26: trailing whitespace.
++        an accepted receipt identifying that ID, owner and v2. Exactly one correct effect at revision 8
+learning/S136/index.html:27: trailing whitespace.
++        plus that receipt confirms a change. Conflicts require a separate decision; no automatic merge exists.</p>
+learning/S136/index.html:28: trailing whitespace.
++      <p>The synthetic offline budget is ≤ 5000 ms and recovery budget is ≤ 200 ms.
+learning/S136/index.html:29: trailing whitespace.
++        The normal fixed trace is 4000 ms / 120 ms; late traces are 6000 ms / 120 ms and 4000 ms / 250 ms.
+learning/S136/index.html:30: trailing whitespace.
++        These are fixture measurements, not wall-clock, latency or production guarantees.</p>
+learning/S136/index.html:31: trailing whitespace.
++    </details>
+learning/S136/index.html:32: trailing whitespace.
++
+learning/S136/index.html:33: trailing whitespace.
++    <p id="fatal-error" class="error" role="alert" hidden></p>
+learning/S136/index.html:34: trailing whitespace.
++    <button id="reload-lesson" type="button" hidden>Reload the local lesson</button>
+learning/S136/index.html:35: trailing whitespace.
++    <p id="action-error" class="error" role="alert" hidden></p>
+learning/S136/index.html:36: trailing whitespace.
++    <fieldset id="sample-controls" aria-describedby="assumptions">
+learning/S136/index.html:37: trailing whitespace.
++      <legend>Sample-client rehearsal actions — perform in order</legend>
+learning/S136/index.html:38: trailing whitespace.
++      <div class="selectors">
+learning/S136/index.html:39: trailing whitespace.
++        <label for="fixture">Fictional v2 receipt fixture</label>
+learning/S136/index.html:40: trailing whitespace.
++        <select id="fixture">
+learning/S136/index.html:41: trailing whitespace.
++          <option value="clean">Clean: two correct effects and acknowledgments</option>
+learning/S136/index.html:42: trailing whitespace.
++          <option value="conflict">Revision conflict: second change remains pending</option>
+learning/S136/index.html:43: trailing whitespace.
++          <option value="missing-ack">Missing acknowledgment: first change unresolved</option>
+learning/S136/index.html:44: trailing whitespace.
++          <option value="missing-effect">Missing effect despite an accepted receipt</option>
+learning/S136/index.html:45: trailing whitespace.
++          <option value="duplicate-effect">Duplicate effect despite accepted receipts</option>
+learning/S136/index.html:46: trailing whitespace.
++          <option value="identity-rejected">Queued identity is rejected for the second change</option>
+learning/S136/index.html:47: trailing whitespace.
++        </select>
+learning/S136/index.html:48: trailing whitespace.
++        <label for="timing">Synthetic elapsed-time trace</label>
+learning/S136/index.html:49: trailing whitespace.
++        <select id="timing">
+learning/S136/index.html:50: trailing whitespace.
++          <option value="within-budget">Within budgets: 4000 ms / 120 ms</option>
+learning/S136/index.html:51: trailing whitespace.
++          <option value="offline-over-budget">Offline budget breached: 6000 ms / 120 ms</option>
+learning/S136/index.html:52: trailing whitespace.
++          <option value="recovery-over-budget">Recovery budget breached: 4000 ms / 250 ms</option>
+learning/S136/index.html:53: trailing whitespace.
++        </select>
+learning/S136/index.html:54: trailing whitespace.
++      </div>
+learning/S136/index.html:55: trailing whitespace.
++      <div class="buttons">
+learning/S136/index.html:56: trailing whitespace.
++        <button id="sample-offline" type="button">1. Take only sample client offline</button>
+learning/S136/index.html:57: trailing whitespace.
++        <button id="queue-changes" type="button" disabled>2. Queue two fixed changes</button>
+learning/S136/index.html:58: trailing whitespace.
++        <button id="sample-online" type="button" disabled>3. Reconnect sample client</button>
+learning/S136/index.html:59: trailing whitespace.
++        <button id="synchronize" type="button" disabled>4. Synchronize with v2</button>
+learning/S136/index.html:60: trailing whitespace.
++        <button id="retry-ack" type="button" disabled>Retry the same pending ID for its acknowledgment</button>
+learning/S136/index.html:61: trailing whitespace.
++      </div>
+learning/S136/index.html:62: trailing whitespace.
++    </fieldset>
+learning/S136/index.html:63: trailing whitespace.
++    <fieldset id="operator-controls">
+learning/S136/index.html:64: trailing whitespace.
++      <legend>Operator console — never disconnected by the sample action</legend>
+learning/S136/index.html:65: trailing whitespace.
++      <button id="inspect-console" type="button">Inspect operator console</button>
+learning/S136/index.html:66: trailing whitespace.
++      <button id="restart" type="button">Reset active rehearsal; retain journal</button>
+learning/S136/index.html:67: trailing whitespace.
++      <p id="operator-message" role="status">Operator controls available.</p>
+learning/S136/index.html:68: trailing whitespace.
++    </fieldset>
+learning/S136/index.html:69: trailing whitespace.
++
+learning/S136/index.html:70: trailing whitespace.
++    <section id="outcome" aria-live="polite" aria-atomic="true">
+learning/S136/index.html:71: trailing whitespace.
++      <h2>Measured fictional result</h2>
+learning/S136/index.html:72: trailing whitespace.
++      <dl>
+learning/S136/index.html:73: trailing whitespace.
++        <dt>Sample connectivity</dt><dd id="sample-connection">Online (fictional)</dd>
+learning/S136/index.html:74: trailing whitespace.
++        <dt>Operator console</dt><dd id="console-connection">Available; never disconnected</dd>
+learning/S136/index.html:75: trailing whitespace.
++        <dt>Other fictional workers</dt><dd id="worker-connection">Two available; unaffected</dd>
+learning/S136/index.html:76: trailing whitespace.
++        <dt>Console inspections</dt><dd id="console-inspections">0</dd>
+learning/S136/index.html:77: trailing whitespace.
++        <dt>Pending changes</dt><dd id="pending-count">0</dd>
+learning/S136/index.html:78: trailing whitespace.
++        <dt>Observed total effects</dt><dd id="effect-count">Not observed</dd>
+learning/S136/index.html:79: trailing whitespace.
++        <dt>Accepted acknowledgments</dt><dd id="ack-count">Not observed</dd>
+learning/S136/index.html:80: trailing whitespace.
++        <dt>Confirmed correct changes</dt><dd id="confirmed-count">Not observed</dd>
+learning/S136/index.html:81: trailing whitespace.
++        <dt>Offline / recovery time</dt><dd id="elapsed">Not observed</dd>
+learning/S136/index.html:82: trailing whitespace.
++        <dt>Journey verdict</dt><dd id="verdict">Unknown — not yet measured</dd>
+learning/S136/index.html:83: trailing whitespace.
++        <dt>User impact</dt><dd id="impact">Not run</dd>
+learning/S136/index.html:84: trailing whitespace.
++      </dl>
+learning/S136/index.html:85: trailing whitespace.
++      <ul id="reasons"></ul>
+learning/S136/index.html:86: trailing whitespace.
++    </section>
+learning/S136/index.html:87: trailing whitespace.
++
+learning/S136/index.html:88: trailing whitespace.
++    <section>
+learning/S136/index.html:89: trailing whitespace.
++      <h2>Pending queue and v2 evidence</h2>
+learning/S136/index.html:90: trailing whitespace.
++      <p id="queue-summary">No changes queued yet.</p>
+learning/S136/index.html:91: trailing whitespace.
++      <table>
+learning/S136/index.html:92: trailing whitespace.
++        <caption>Fixed fictional operations; an effect alone is not a client acknowledgment</caption>
+learning/S136/index.html:93: trailing whitespace.
++        <thead><tr><th scope="col">Operation / intended value</th><th scope="col">Pending</th>
+learning/S136/index.html:94: trailing whitespace.
++          <th scope="col">Authenticated</th><th scope="col">Effect / result / revision</th>
+learning/S136/index.html:95: trailing whitespace.
++          <th scope="col">v2 acknowledgment</th><th scope="col">Attempts</th></tr></thead>
+learning/S136/index.html:96: trailing whitespace.
++        <tbody id="operation-rows"></tbody>
+learning/S136/index.html:97: trailing whitespace.
++      </table>
+learning/S136/index.html:98: trailing whitespace.
++    </section>
+learning/S136/index.html:99: trailing whitespace.
++    <section>
+learning/S136/index.html:100: trailing whitespace.
++      <h2>Retained in-memory action journal</h2>
+learning/S136/index.html:101: trailing whitespace.
++      <p id="journal-limit">Latest 32 actions retained; 0 older entries omitted. Reload clears this local in-memory journal.</p>
+learning/S136/index.html:102: trailing whitespace.
++      <ol id="history" aria-label="Retained operator action history"></ol>
+learning/S136/index.html:103: trailing whitespace.
++    </section>
+learning/S136/index.html:104: trailing whitespace.
++    <footer>
+learning/S136/index.html:105: trailing whitespace.
++      <p>Use Tab, Enter and Space. Errors leave state unchanged; reset restores controls, fixtures and active counts
+learning/S136/index.html:106: trailing whitespace.
++        while retaining previous results. Retry is offered only for the bounded missing-acknowledgment trace.</p>
+learning/S136/index.html:107: trailing whitespace.
++      <p>A successful rehearsal is not native B-S136 proof, source-parent completion, real authentication,
+learning/S136/index.html:108: trailing whitespace.
++        production Node.js 24 validation, Azure support or a five-nines result.
+learning/S136/index.html:109: trailing whitespace.
++        Native D-S136 still requires D-S040/D-S077, a qualified target and its original gates.</p>
+learning/S136/index.html:110: trailing whitespace.
++      <p><a href="README.md">Lesson scope, verification and evidence</a></p>
+learning/S136/index.html:111: trailing whitespace.
++    </footer>
+learning/S136/index.html:112: trailing whitespace.
++  </main>
+learning/S136/index.html:113: trailing whitespace.
++</body>
+learning/S136/index.html:114: trailing whitespace.
++</html>
+learning/S136/integrity.test.cjs:1: trailing whitespace.
++'use strict';
+learning/S136/integrity.test.cjs:2: trailing whitespace.
++
+learning/S136/integrity.test.cjs:3: trailing whitespace.
++const test = require('node:test');
+learning/S136/integrity.test.cjs:4: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S136/integrity.test.cjs:5: trailing whitespace.
++const fs = require('node:fs');
+learning/S136/integrity.test.cjs:6: trailing whitespace.
++const path = require('node:path');
+learning/S136/integrity.test.cjs:7: trailing whitespace.
++const crypto = require('node:crypto');
+learning/S136/integrity.test.cjs:8: trailing whitespace.
++const zlib = require('node:zlib');
+learning/S136/integrity.test.cjs:9: trailing whitespace.
++const model = require('./model.js');
+learning/S136/integrity.test.cjs:10: trailing whitespace.
++const read = (name) => fs.readFileSync(path.join(__dirname, name));
+learning/S136/integrity.test.cjs:11: trailing whitespace.
++const text = (name) => read(name).toString('utf8');
+learning/S136/integrity.test.cjs:12: trailing whitespace.
++const json = (name) => JSON.parse(text(name));
+learning/S136/integrity.test.cjs:13: trailing whitespace.
++const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+learning/S136/integrity.test.cjs:14: trailing whitespace.
++
+learning/S136/integrity.test.cjs:15: trailing whitespace.
++test('manifest maps exactly one frozen original unit and source acceptance', () => {
+learning/S136/integrity.test.cjs:16: trailing whitespace.
++  const manifest = json('manifest.json');
+learning/S136/integrity.test.cjs:17: trailing whitespace.
++  assert.equal(manifest.cardId, 'A-S136');
+learning/S136/integrity.test.cjs:18: trailing whitespace.
++  assert.deepEqual(manifest.parentIds, ['D-S136']);
+learning/S136/integrity.test.cjs:19: trailing whitespace.
++  assert.equal(manifest.kano, 'S');
+learning/S136/integrity.test.cjs:20: trailing whitespace.
++  assert.equal(manifest.kanoUnit, 'A-S136');
+learning/S136/integrity.test.cjs:21: trailing whitespace.
++  assert.equal(manifest.packet, 'SC-S136');
+learning/S136/integrity.test.cjs:22: trailing whitespace.
++  assert.equal(manifest.mode, 'local-synthetic-only');
+learning/S136/integrity.test.cjs:23: trailing whitespace.
++  assert.equal(manifest.banner, model.BANNER);
+learning/S136/integrity.test.cjs:24: trailing whitespace.
++  assert.equal(manifest.objective, 'Take only the sample client offline; synchronize pending changes without losing the harness console.');
+learning/S136/integrity.test.cjs:25: trailing whitespace.
++  assert.equal(manifest.sourceBehavior, 'Reconcile queued operations against the new deployment without losing or duplicating changes.');
+learning/S136/integrity.test.cjs:26: trailing whitespace.
++  assert.equal(manifest.backlogAcceptance, 'Queued authenticated operations synchronize with v2 without missing/duplicate changes; offline/recovery budgets and protocol assumptions are explicit.');
+learning/S136/integrity.test.cjs:27: trailing whitespace.
++  assert.deepEqual(manifest.fixtures, model.FIXTURE_IDS);
+learning/S136/integrity.test.cjs:28: trailing whitespace.
++  assert.deepEqual(manifest.timings, model.TIMING_IDS);
+learning/S136/integrity.test.cjs:29: trailing whitespace.
++  assert.equal(manifest.bounds.retainedJournalEntries, model.MAX_HISTORY);
+learning/S136/integrity.test.cjs:30: trailing whitespace.
++  assert.deepEqual(manifest.syntheticBudgetsMs, { offline: model.BUDGETS.offlineMs, recovery: model.BUDGETS.recoveryMs });
+learning/S136/integrity.test.cjs:31: trailing whitespace.
++});
+learning/S136/integrity.test.cjs:32: trailing whitespace.
++
+learning/S136/integrity.test.cjs:33: trailing whitespace.
++test('browser assets are standalone, labeled, local-only and deny unsafe capabilities', () => {
+learning/S136/integrity.test.cjs:34: trailing whitespace.
++  const html = text('index.html');
+learning/S136/integrity.test.cjs:35: trailing whitespace.
++  assert.ok(html.includes(model.BANNER));
+learning/S136/integrity.test.cjs:36: trailing whitespace.
++  assert.ok(text('offline-sync.feature').includes(model.BANNER));
+learning/S136/integrity.test.cjs:37: trailing whitespace.
++  assert.match(html, /<html lang="en">/);
+learning/S136/integrity.test.cjs:38: trailing whitespace.
++  for (const directive of [
+learning/S136/integrity.test.cjs:39: trailing whitespace.
++    "default-src 'none'", "script-src 'self'", "style-src 'self'", "connect-src 'none'",
+learning/S136/integrity.test.cjs:40: trailing whitespace.
++    "object-src 'none'", "worker-src 'none'", "frame-src 'none'", "base-uri 'none'", "form-action 'none'",
+learning/S136/integrity.test.cjs:41: trailing whitespace.
++  ]) assert.ok(html.includes(directive), directive);
+learning/S136/integrity.test.cjs:42: trailing whitespace.
++  assert.doesNotMatch(html, /unsafe-inline|unsafe-eval|<script(?![^>]*\bsrc=)|\son\w+\s*=|<form\b|id=["']reset["']|name=["']reset["']/i);
+learning/S136/integrity.test.cjs:43: trailing whitespace.
++  assert.deepEqual([...html.matchAll(/<script src="([^"]+)"/g)].map((match) => match[1]), ['model.js', 'lesson.js']);
+learning/S136/integrity.test.cjs:44: trailing whitespace.
++  assert.deepEqual([...html.matchAll(/<(?:link|a)\b[^>]*(?:href)="([^"]+)"/g)].map((match) => match[1]), ['style.css', 'README.md']);
+learning/S136/integrity.test.cjs:45: trailing whitespace.
++  for (const name of ['model.js', 'lesson.js']) {
+learning/S136/integrity.test.cjs:46: trailing whitespace.
++    assert.doesNotMatch(text(name), /fetch\s*\(|XMLHttpRequest|WebSocket|navigator\.|localStorage|sessionStorage|indexedDB|serviceWorker|setOffline|child_process|require\s*\(|innerHTML|\.reset\s*\(/);
+learning/S136/integrity.test.cjs:47: trailing whitespace.
++  }
+learning/S136/integrity.test.cjs:48: trailing whitespace.
++  for (const fixture of model.FIXTURE_IDS) assert.ok(html.includes(`value="${fixture}"`));
+learning/S136/integrity.test.cjs:49: trailing whitespace.
++  for (const timing of model.TIMING_IDS) assert.ok(html.includes(`value="${timing}"`));
+learning/S136/integrity.test.cjs:50: trailing whitespace.
++});
+learning/S136/integrity.test.cjs:51: trailing whitespace.
++
+learning/S136/integrity.test.cjs:52: trailing whitespace.
++test('narrow lesson attributes preserve raw-byte proof and asset hashes across Git publication', () => {
+learning/S136/integrity.test.cjs:53: trailing whitespace.
++  const attributes = text('.gitattributes').split(/\r?\n/).filter(Boolean);
+learning/S136/integrity.test.cjs:54: trailing whitespace.
++  assert.deepEqual(attributes, [
+learning/S136/integrity.test.cjs:55: trailing whitespace.
++    '/.gitattributes -text', '/model.js -text', '/lesson.js -text',
+learning/S136/integrity.test.cjs:56: trailing whitespace.
++    '/index.html -text', '/style.css -text', '/offline-sync.feature -text',
+learning/S136/integrity.test.cjs:57: trailing whitespace.
++    '/manifest.json -text', '/model.test.cjs -text', '/browser.test.cjs -text',
+learning/S136/integrity.test.cjs:58: trailing whitespace.
++    '/integrity.test.cjs -text', '/README.md -text', '/remainder.json -text',
+learning/S136/integrity.test.cjs:59: trailing whitespace.
++    '/evidence/** -text', '/evidence/raw/** -diff',
+learning/S136/integrity.test.cjs:60: trailing whitespace.
++  ]);
+learning/S136/integrity.test.cjs:61: trailing whitespace.
++});
+learning/S136/integrity.test.cjs:62: trailing whitespace.
++
+learning/S136/integrity.test.cjs:63: trailing whitespace.
++test('source working and canonical bytes have separate verified hashes and line-ending counts', () => {
+learning/S136/integrity.test.cjs:64: trailing whitespace.
++  const source = json(path.join('evidence', 'source.json'));
+learning/S136/integrity.test.cjs:65: trailing whitespace.
++  assert.equal(source.cardId, 'A-S136');
+learning/S136/integrity.test.cjs:66: trailing whitespace.
++  assert.equal(source.packet, 'SC-S136');
+learning/S136/integrity.test.cjs:67: trailing whitespace.
++  assert.equal(source.sources.length, 3);
+learning/S136/integrity.test.cjs:68: trailing whitespace.
++  for (const input of source.sources) {
+learning/S136/integrity.test.cjs:69: trailing whitespace.
++    for (const kind of ['working', 'canonical']) {
+learning/S136/integrity.test.cjs:70: trailing whitespace.
++      const snapshot = input.snapshots[kind];
+learning/S136/integrity.test.cjs:71: trailing whitespace.
++      const compressed = read(snapshot.file);
+learning/S136/integrity.test.cjs:72: trailing whitespace.
++      const bytes = zlib.gunzipSync(compressed);
+learning/S136/integrity.test.cjs:73: trailing whitespace.
++      const decoded = bytes.toString('utf8');
+learning/S136/integrity.test.cjs:74: trailing whitespace.
++      assert.equal(sha256(compressed), snapshot.compressedSha256);
+learning/S136/integrity.test.cjs:75: trailing whitespace.
++      assert.equal(sha256(bytes), snapshot.rawSha256);
+learning/S136/integrity.test.cjs:76: trailing whitespace.
++      assert.equal(bytes.length, snapshot.byteLength);
+learning/S136/integrity.test.cjs:77: trailing whitespace.
++      assert.equal((decoded.match(/\r\n/g) || []).length, snapshot.crlfCount);
+learning/S136/integrity.test.cjs:78: trailing whitespace.
++      assert.equal((decoded.match(/(?<!\r)\n/g) || []).length, snapshot.bareLfCount);
+learning/S136/integrity.test.cjs:79: trailing whitespace.
++      const selected = read(path.join('evidence', 'raw', 'source', `${input.label}.${kind}.selected.snapshot`));
+learning/S136/integrity.test.cjs:80: trailing whitespace.
++      assert.equal(sha256(selected), snapshot.selectedSha256);
+learning/S136/integrity.test.cjs:81: trailing whitespace.
++      if (input.label === 'README') assert.match(selected.toString(), /\| S136 \| \*\*Offline mobile synchronization:\*\* Reconcile queued operations against the new deployment without losing or duplicating changes\./);
+learning/S136/integrity.test.cjs:82: trailing whitespace.
++      if (input.label === 'backlog') assert.match(selected.toString(), /Queued authenticated operations synchronize with v2 without missing\/duplicate changes; offline\/recovery budgets and protocol assumptions are explicit\./);
+learning/S136/integrity.test.cjs:83: trailing whitespace.
++      if (input.label === 'kanban') {
+learning/S136/integrity.test.cjs:84: trailing whitespace.
++        assert.match(selected.toString(), /\| A-S136 \| D-S136 \| S \| Take only the sample client offline/);
+learning/S136/integrity.test.cjs:85: trailing whitespace.
++        assert.match(selected.toString(), /every other A\/B card belongs to SC-Snnn/);
+learning/S136/integrity.test.cjs:86: trailing whitespace.
++        assert.match(selected.toString(), /An A card delivers a standalone, browser-openable lesson bundle/);
+learning/S136/integrity.test.cjs:87: trailing whitespace.
++      }
+learning/S136/integrity.test.cjs:88: trailing whitespace.
++    }
+learning/S136/integrity.test.cjs:89: trailing whitespace.
++  }
+learning/S136/integrity.test.cjs:90: trailing whitespace.
++});
+learning/S136/integrity.test.cjs:91: trailing whitespace.
++
+learning/S136/integrity.test.cjs:92: trailing whitespace.
++test('preserved behavioral RED is a strict assertion failure from a loadable stub, not tooling', () => {
+learning/S136/integrity.test.cjs:93: trailing whitespace.
++  const red = path.join('evidence', 'raw', 'red');
+learning/S136/integrity.test.cjs:94: trailing whitespace.
++  const run = json(path.join(red, 'run.json'));
+learning/S136/integrity.test.cjs:95: trailing whitespace.
++  const workflow = json(path.join('evidence', 'workflow.json'));
+learning/S136/integrity.test.cjs:96: trailing whitespace.
++  const stdout = read(path.join(red, 'stdout.tap'));
+learning/S136/integrity.test.cjs:97: trailing whitespace.
++  const stderr = read(path.join(red, 'stderr.txt'));
+learning/S136/integrity.test.cjs:98: trailing whitespace.
++  assert.equal(run.exitCode, 1);
+learning/S136/integrity.test.cjs:99: trailing whitespace.
++  assert.equal(sha256(stdout), run.stdoutSha256);
+learning/S136/integrity.test.cjs:100: trailing whitespace.
++  assert.equal(sha256(stderr), run.stderrSha256);
+learning/S136/integrity.test.cjs:101: trailing whitespace.
++  assert.match(stdout.toString(), /not ok 1 - only the fictional sample client goes offline/);
+learning/S136/integrity.test.cjs:102: trailing whitespace.
++  assert.match(stdout.toString(), /ERR_ASSERTION[\s\S]*expected: false[\s\S]*actual: true/);
+learning/S136/integrity.test.cjs:103: trailing whitespace.
++  assert.match(stdout.toString(), /true !== false/);
+learning/S136/integrity.test.cjs:104: trailing whitespace.
++  assert.doesNotMatch(stdout.toString(), /MODULE_NOT_FOUND|SyntaxError/);
+learning/S136/integrity.test.cjs:105: trailing whitespace.
++  assert.equal(sha256(read(path.join(red, 'model.js.snapshot'))), workflow.stubSha256);
+learning/S136/integrity.test.cjs:106: trailing whitespace.
++  assert.equal(sha256(read(path.join(red, 'offline-sync.feature.snapshot'))), workflow.bddSha256);
+learning/S136/integrity.test.cjs:107: trailing whitespace.
++  assert.equal(workflow.iac.applicable, false);
+learning/S136/integrity.test.cjs:108: trailing whitespace.
++  assert.ok(Date.parse(workflow.iac.recordedAfterRedAt) >= Date.parse(run.finishedAt));
+learning/S136/integrity.test.cjs:109: trailing whitespace.
++  assert.ok(fs.readdirSync(path.join(__dirname, red)).every((name) => !/\.(?:test|spec)\.[cm]?js$/.test(name)));
+learning/S136/integrity.test.cjs:110: trailing whitespace.
++});
+learning/S136/integrity.test.cjs:111: trailing whitespace.
++
+learning/S136/integrity.test.cjs:112: trailing whitespace.
++test('committed actual-browser proof observes all gates with the exact published helper', () => {
+learning/S136/integrity.test.cjs:113: trailing whitespace.
++  const browser = json(path.join('evidence', 'browser.json'));
+learning/S136/integrity.test.cjs:114: trailing whitespace.
++  assert.equal(browser.cardId, 'A-S136');
+learning/S136/integrity.test.cjs:115: trailing whitespace.
++  assert.equal(browser.allPassed, true);
+learning/S136/integrity.test.cjs:116: trailing whitespace.
++  assert.equal(browser.captureRequestedExactly, true);
+learning/S136/integrity.test.cjs:117: trailing whitespace.
++  assert.equal(browser.closedSessions, 2);
+learning/S136/integrity.test.cjs:118: trailing whitespace.
++  assert.equal(browser.checks.length, 10);
+learning/S136/integrity.test.cjs:119: trailing whitespace.
++  assert.ok(browser.checks.every((check) => check.status === 'passed'));
+learning/S136/integrity.test.cjs:120: trailing whitespace.
++  assert.equal(browser.helperSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+learning/S136/integrity.test.cjs:121: trailing whitespace.
++  assert.equal(browser.playwrightVersion, '1.56.1');
+learning/S136/integrity.test.cjs:122: trailing whitespace.
++  assert.match(browser.browserVersion, /^156\./);
+learning/S136/integrity.test.cjs:123: trailing whitespace.
++  assert.match(browser.nodeVersion, /^v22\./);
+learning/S136/integrity.test.cjs:124: trailing whitespace.
++  for (const [name, digest] of Object.entries(browser.files)) assert.equal(sha256(read(name)), digest);
+learning/S136/integrity.test.cjs:125: trailing whitespace.
++  assert.match(text('browser.test.cjs'), /process\.env\.CAPTURE_BROWSER_EVIDENCE === '1'/);
+learning/S136/integrity.test.cjs:126: trailing whitespace.
++  assert.match(text('browser.test.cjs'), /finally \{\s*if \(primary\) \{\s*await primary\.close\(\)/);
+learning/S136/integrity.test.cjs:127: trailing whitespace.
++  assert.match(text('browser.test.cjs'), /finally \{\s*if \(failed\) \{\s*await failed\.close\(\)/);
+learning/S136/integrity.test.cjs:128: trailing whitespace.
++  const helper = fs.readFileSync(path.resolve(__dirname, '..', '..', 'testing', 'browser', 'isolated.cjs'));
+learning/S136/integrity.test.cjs:129: trailing whitespace.
++  assert.equal(sha256(helper), browser.helperSha256);
+learning/S136/integrity.test.cjs:130: trailing whitespace.
++});
+learning/S136/integrity.test.cjs:131: trailing whitespace.
++
+learning/S136/integrity.test.cjs:132: trailing whitespace.
++test('owned byte-integrity index validates assets, specs and retained proof without rewriting', () => {
+learning/S136/integrity.test.cjs:133: trailing whitespace.
++  const index = json(path.join('evidence', 'integrity.json'));
+learning/S136/integrity.test.cjs:134: trailing whitespace.
++  assert.equal(index.cardId, 'A-S136');
+learning/S136/integrity.test.cjs:135: trailing whitespace.
++  assert.equal(index.algorithm, 'SHA-256');
+learning/S136/integrity.test.cjs:136: trailing whitespace.
++  for (const file of index.files) {
+learning/S136/integrity.test.cjs:137: trailing whitespace.
++    const resolved = path.resolve(__dirname, file.path);
+learning/S136/integrity.test.cjs:138: trailing whitespace.
++    assert.ok(resolved.startsWith(`${__dirname}${path.sep}`), 'Integrity entries stay within this lesson');
+learning/S136/integrity.test.cjs:139: trailing whitespace.
++    assert.equal(sha256(fs.readFileSync(resolved)), file.sha256, file.path);
+learning/S136/integrity.test.cjs:140: trailing whitespace.
++    assert.equal(fs.statSync(resolved).size, file.byteLength, file.path);
+learning/S136/integrity.test.cjs:141: trailing whitespace.
++  }
+learning/S136/integrity.test.cjs:142: trailing whitespace.
++  for (const required of ['model.js', 'lesson.js', 'index.html', 'offline-sync.feature', 'manifest.json', 'README.md',
+learning/S136/integrity.test.cjs:143: trailing whitespace.
++    path.join('evidence', 'browser.json'), path.join('evidence', 'raw', 'red', 'stdout.tap')]) {
+learning/S136/integrity.test.cjs:144: trailing whitespace.
++    assert.ok(index.files.some((file) => file.path === required), required);
+learning/S136/integrity.test.cjs:145: trailing whitespace.
++  }
+learning/S136/integrity.test.cjs:146: trailing whitespace.
++});
+learning/S136/lesson.js:1: trailing whitespace.
++(function () {
+learning/S136/lesson.js:2: trailing whitespace.
++  'use strict';
+learning/S136/lesson.js:3: trailing whitespace.
++
+learning/S136/lesson.js:4: trailing whitespace.
++  const byId = (id) => document.getElementById(id);
+learning/S136/lesson.js:5: trailing whitespace.
++  const sampleControls = byId('sample-controls');
+learning/S136/lesson.js:6: trailing whitespace.
++  const operatorControls = byId('operator-controls');
+learning/S136/lesson.js:7: trailing whitespace.
++  const fixture = byId('fixture');
+learning/S136/lesson.js:8: trailing whitespace.
++  const timing = byId('timing');
+learning/S136/lesson.js:9: trailing whitespace.
++  const actionError = byId('action-error');
+learning/S136/lesson.js:10: trailing whitespace.
++  const reload = byId('reload-lesson');
+learning/S136/lesson.js:11: trailing whitespace.
++  reload.addEventListener('click', () => window.location.reload());
+learning/S136/lesson.js:12: trailing whitespace.
++
+learning/S136/lesson.js:13: trailing whitespace.
++  function startupFailure() {
+learning/S136/lesson.js:14: trailing whitespace.
++    byId('fatal-error').textContent = 'Lesson unavailable: the local rehearsal model could not start. No synchronization result was observed. Reload the local lesson after restoring its files.';
+learning/S136/lesson.js:15: trailing whitespace.
++    byId('fatal-error').hidden = false;
+learning/S136/lesson.js:16: trailing whitespace.
++    sampleControls.disabled = true;
+learning/S136/lesson.js:17: trailing whitespace.
++    operatorControls.disabled = true;
+learning/S136/lesson.js:18: trailing whitespace.
++    byId('verdict').textContent = 'Unknown — lesson unavailable';
+learning/S136/lesson.js:19: trailing whitespace.
++    reload.hidden = false;
+learning/S136/lesson.js:20: trailing whitespace.
++  }
+learning/S136/lesson.js:21: trailing whitespace.
++
+learning/S136/lesson.js:22: trailing whitespace.
++  if (!window.S136 || typeof window.S136.createRehearsal !== 'function') {
+learning/S136/lesson.js:23: trailing whitespace.
++    startupFailure();
+learning/S136/lesson.js:24: trailing whitespace.
++    return;
+learning/S136/lesson.js:25: trailing whitespace.
++  }
+learning/S136/lesson.js:26: trailing whitespace.
++  let rehearsal;
+learning/S136/lesson.js:27: trailing whitespace.
++  try {
+learning/S136/lesson.js:28: trailing whitespace.
++    rehearsal = window.S136.createRehearsal();
+learning/S136/lesson.js:29: trailing whitespace.
++    rehearsal.snapshot();
+learning/S136/lesson.js:30: trailing whitespace.
++  } catch {
+learning/S136/lesson.js:31: trailing whitespace.
++    startupFailure();
+learning/S136/lesson.js:32: trailing whitespace.
++    return;
+learning/S136/lesson.js:33: trailing whitespace.
++  }
+learning/S136/lesson.js:34: trailing whitespace.
++
+learning/S136/lesson.js:35: trailing whitespace.
++  function text(id, value) { byId(id).textContent = String(value); }
+learning/S136/lesson.js:36: trailing whitespace.
++  function visible(value) { return value === null ? 'unknown' : String(value); }
+learning/S136/lesson.js:37: trailing whitespace.
++  function render() {
+learning/S136/lesson.js:38: trailing whitespace.
++    const state = rehearsal.snapshot();
+learning/S136/lesson.js:39: trailing whitespace.
++    const observed = state.observation;
+learning/S136/lesson.js:40: trailing whitespace.
++    const measured = state.result;
+learning/S136/lesson.js:41: trailing whitespace.
++    text('sample-connection', `${state.sampleClientOnline ? 'Online' : 'Offline'} (fictional sample only)`);
+learning/S136/lesson.js:42: trailing whitespace.
++    text('console-connection', 'Available; never disconnected');
+learning/S136/lesson.js:43: trailing whitespace.
++    text('worker-connection', 'Two available; unaffected');
+learning/S136/lesson.js:44: trailing whitespace.
++    text('console-inspections', state.consoleInspections);
+learning/S136/lesson.js:45: trailing whitespace.
++    text('pending-count', state.pending.length);
+learning/S136/lesson.js:46: trailing whitespace.
++    text('effect-count', measured ? visible(measured.metrics.totalEffects) : 'Not observed');
+learning/S136/lesson.js:47: trailing whitespace.
++    text('ack-count', measured ? measured.metrics.acknowledgments : 'Not observed');
+learning/S136/lesson.js:48: trailing whitespace.
++    text('confirmed-count', measured ? measured.metrics.confirmedChanges : 'Not observed');
+learning/S136/lesson.js:49: trailing whitespace.
++    text('elapsed', observed ? `${visible(observed.timing.offlineMs)} ms / ${visible(observed.timing.recoveryMs)} ms (synthetic)` : 'Not observed');
+learning/S136/lesson.js:50: trailing whitespace.
++    text('verdict', measured ? `${measured.verdict} — ${measured.verifier} (synthetic journey)` : 'Unknown — not yet measured');
+learning/S136/lesson.js:51: trailing whitespace.
++    text('impact', measured ? measured.userImpact : 'Not run');
+learning/S136/lesson.js:52: trailing whitespace.
++    byId('reasons').replaceChildren(...(measured?.reasons ?? []).map((reason) => {
+learning/S136/lesson.js:53: trailing whitespace.
++      const item = document.createElement('li');
+learning/S136/lesson.js:54: trailing whitespace.
++      item.textContent = reason;
+learning/S136/lesson.js:55: trailing whitespace.
++      return item;
+learning/S136/lesson.js:56: trailing whitespace.
++    }));
+learning/S136/lesson.js:57: trailing whitespace.
++    text('queue-summary', state.pending.length
+learning/S136/lesson.js:58: trailing whitespace.
++      ? `Retained pending IDs: ${state.pending.map((change) => change.id).join(', ')}. No merge or successful receipt is inferred.`
+learning/S136/lesson.js:59: trailing whitespace.
++      : measured ? 'No pending IDs remain. Inspect the verdict too: budget failure is still an interrupted journey.' : 'No changes queued yet.');
+learning/S136/lesson.js:60: trailing whitespace.
++    byId('operation-rows').replaceChildren(...window.S136.CHANGES.map((change, index) => {
+learning/S136/lesson.js:61: trailing whitespace.
++      const operation = observed?.operations[index];
+learning/S136/lesson.js:62: trailing whitespace.
++      const row = document.createElement('tr');
+learning/S136/lesson.js:63: trailing whitespace.
++      const cells = [
+learning/S136/lesson.js:64: trailing whitespace.
++        `${change.id}: ${change.expectedValue}`,
+learning/S136/lesson.js:65: trailing whitespace.
++        state.pending.some((pending) => pending.id === change.id) ? 'retained' : measured ? 'confirmed' : 'not queued',
+learning/S136/lesson.js:66: trailing whitespace.
++        operation ? visible(operation.authenticated) : 'not observed',
+learning/S136/lesson.js:67: trailing whitespace.
++        operation ? `${visible(operation.effectCount)} / ${visible(operation.observedValue)} / ${visible(operation.revision)}` : 'not observed',
+learning/S136/lesson.js:68: trailing whitespace.
++        operation?.ack ? `${operation.ack.status}; ${operation.ack.id}; ${visible(operation.ack.identity)}; ${visible(operation.ack.deployment)}` : 'not observed',
+learning/S136/lesson.js:69: trailing whitespace.
++        operation ? operation.attempts : 'not observed',
+learning/S136/lesson.js:70: trailing whitespace.
++      ];
+learning/S136/lesson.js:71: trailing whitespace.
++      for (const value of cells) {
+learning/S136/lesson.js:72: trailing whitespace.
++        const cell = document.createElement('td');
+learning/S136/lesson.js:73: trailing whitespace.
++        cell.textContent = String(value);
+learning/S136/lesson.js:74: trailing whitespace.
++        row.append(cell);
+learning/S136/lesson.js:75: trailing whitespace.
++      }
+learning/S136/lesson.js:76: trailing whitespace.
++      return row;
+learning/S136/lesson.js:77: trailing whitespace.
++    }));
+learning/S136/lesson.js:78: trailing whitespace.
++    byId('history').replaceChildren(...state.history.map((entry) => {
+learning/S136/lesson.js:79: trailing whitespace.
++      const item = document.createElement('li');
+learning/S136/lesson.js:80: trailing whitespace.
++      const result = entry.result ? `; ${entry.result.verdict} / ${entry.result.userImpact}` : '';
+learning/S136/lesson.js:81: trailing whitespace.
++      const previous = entry.previousResult ? `; previous result retained: ${entry.previousResult.verdict} / ${entry.previousResult.userImpact}` : '';
+learning/S136/lesson.js:82: trailing whitespace.
++      item.textContent = `#${entry.sequence} ${entry.action}; sample ${entry.sampleClientOnline ? 'online' : 'offline'}; pending ${entry.pendingIds.join(', ') || 'none'}${result}${previous}; console and other workers available`;
+learning/S136/lesson.js:83: trailing whitespace.
++      return item;
+learning/S136/lesson.js:84: trailing whitespace.
++    }));
+learning/S136/lesson.js:85: trailing whitespace.
++    text('journal-limit', `Latest ${window.S136.MAX_HISTORY} actions retained; ${state.omittedEntries} older entries omitted. Reload clears this local in-memory journal.`);
+learning/S136/lesson.js:86: trailing whitespace.
++    for (const action of ['sample-offline', 'queue-changes', 'sample-online', 'synchronize', 'retry-ack']) {
+learning/S136/lesson.js:87: trailing whitespace.
++      byId(action).disabled = !state.allowedActions.includes(action);
+learning/S136/lesson.js:88: trailing whitespace.
++    }
+learning/S136/lesson.js:89: trailing whitespace.
++    fixture.disabled = state.phase === 'observed';
+learning/S136/lesson.js:90: trailing whitespace.
++    timing.disabled = state.phase === 'observed';
+learning/S136/lesson.js:91: trailing whitespace.
++  }
+learning/S136/lesson.js:92: trailing whitespace.
++
+learning/S136/lesson.js:93: trailing whitespace.
++  function perform(type, button) {
+learning/S136/lesson.js:94: trailing whitespace.
++    try {
+learning/S136/lesson.js:95: trailing whitespace.
++      const action = type === 'synchronize'
+learning/S136/lesson.js:96: trailing whitespace.
++        ? { type, fixture: fixture.value, timing: timing.value } : { type };
+learning/S136/lesson.js:97: trailing whitespace.
++      rehearsal.act(action);
+learning/S136/lesson.js:98: trailing whitespace.
++      actionError.hidden = true;
+learning/S136/lesson.js:99: trailing whitespace.
++      actionError.textContent = '';
+learning/S136/lesson.js:100: trailing whitespace.
++      if (type === 'reset') {
+learning/S136/lesson.js:101: trailing whitespace.
++        fixture.value = 'clean';
+learning/S136/lesson.js:102: trailing whitespace.
++        timing.value = 'within-budget';
+learning/S136/lesson.js:103: trailing whitespace.
++      }
+learning/S136/lesson.js:104: trailing whitespace.
++      render();
+learning/S136/lesson.js:105: trailing whitespace.
++      text('operator-message', type === 'inspect-console'
+learning/S136/lesson.js:106: trailing whitespace.
++        ? 'Operator inspection completed; only the sample connectivity can change.'
+learning/S136/lesson.js:107: trailing whitespace.
++        : type === 'reset' ? 'Active rehearsal reset; prior results remain in the journal.' : 'Operator controls available.');
+learning/S136/lesson.js:108: trailing whitespace.
++    } catch (error) {
+learning/S136/lesson.js:109: trailing whitespace.
++      actionError.textContent = `${error.code || 'ERR_LESSON'}: ${error.message || 'Rehearsal failed; no successful result inferred.'}`;
+learning/S136/lesson.js:110: trailing whitespace.
++      actionError.hidden = false;
+learning/S136/lesson.js:111: trailing whitespace.
++      render();
+learning/S136/lesson.js:112: trailing whitespace.
++      const target = type === 'synchronize' && !window.S136.FIXTURE_IDS.includes(fixture.value)
+learning/S136/lesson.js:113: trailing whitespace.
++        ? fixture : type === 'synchronize' && !window.S136.TIMING_IDS.includes(timing.value) ? timing : button;
+learning/S136/lesson.js:114: trailing whitespace.
++      (target.disabled ? byId('restart') : target).focus();
+learning/S136/lesson.js:115: trailing whitespace.
++    }
+learning/S136/lesson.js:116: trailing whitespace.
++  }
+learning/S136/lesson.js:117: trailing whitespace.
++
+learning/S136/lesson.js:118: trailing whitespace.
++  for (const action of ['sample-offline', 'queue-changes', 'sample-online', 'synchronize', 'retry-ack', 'inspect-console']) {
+learning/S136/lesson.js:119: trailing whitespace.
++    const button = byId(action);
+learning/S136/lesson.js:120: trailing whitespace.
++    button.addEventListener('click', () => perform(action, button));
+learning/S136/lesson.js:121: trailing whitespace.
++  }
+learning/S136/lesson.js:122: trailing whitespace.
++  byId('restart').addEventListener('click', () => perform('reset', byId('restart')));
+learning/S136/lesson.js:123: trailing whitespace.
++  render();
+learning/S136/lesson.js:124: trailing whitespace.
++}());
+learning/S136/manifest.json:1: trailing whitespace.
++{
+learning/S136/manifest.json:2: trailing whitespace.
++  "schemaVersion": 1,
+learning/S136/manifest.json:3: trailing whitespace.
++  "cardId": "A-S136",
+learning/S136/manifest.json:4: trailing whitespace.
++  "sourceId": "S136",
+learning/S136/manifest.json:5: trailing whitespace.
++  "parentIds": ["D-S136"],
+learning/S136/manifest.json:6: trailing whitespace.
++  "kano": "S",
+learning/S136/manifest.json:7: trailing whitespace.
++  "kanoUnit": "A-S136",
+learning/S136/manifest.json:8: trailing whitespace.
++  "packet": "SC-S136",
+learning/S136/manifest.json:9: trailing whitespace.
++  "owner": "worker-A-S136",
+learning/S136/manifest.json:10: trailing whitespace.
++  "mode": "local-synthetic-only",
+learning/S136/manifest.json:11: trailing whitespace.
++  "entry": "index.html",
+learning/S136/manifest.json:12: trailing whitespace.
++  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+learning/S136/manifest.json:13: trailing whitespace.
++  "objective": "Take only the sample client offline; synchronize pending changes without losing the harness console.",
+learning/S136/manifest.json:14: trailing whitespace.
++  "sourceBehavior": "Reconcile queued operations against the new deployment without losing or duplicating changes.",
+learning/S136/manifest.json:15: trailing whitespace.
++  "backlogAcceptance": "Queued authenticated operations synchronize with v2 without missing/duplicate changes; offline/recovery budgets and protocol assumptions are explicit.",
+learning/S136/manifest.json:16: trailing whitespace.
++  "preconditions": [
+learning/S136/manifest.json:17: trailing whitespace.
++    "Directly open the local HTML lesson; no server, framework or subscription is required.",
+learning/S136/manifest.json:18: trailing whitespace.
++    "Two separate fictional registers start at revision 7 for fictional-user-136.",
+learning/S136/manifest.json:19: trailing whitespace.
++    "Console and other fictional workers remain available; only sample connectivity is modeled."
+learning/S136/manifest.json:20: trailing whitespace.
++  ],
+learning/S136/manifest.json:21: trailing whitespace.
++  "actions": ["sample-offline", "queue-changes", "sample-online", "synchronize", "retry-ack", "inspect-console", "reset"],
+learning/S136/manifest.json:22: trailing whitespace.
++  "fixtures": ["clean", "conflict", "missing-ack", "missing-effect", "duplicate-effect", "identity-rejected"],
+learning/S136/manifest.json:23: trailing whitespace.
++  "timings": ["within-budget", "offline-over-budget", "recovery-over-budget"],
+learning/S136/manifest.json:24: trailing whitespace.
++  "syntheticBudgetsMs": {"offline": 5000, "recovery": 200},
+learning/S136/manifest.json:25: trailing whitespace.
++  "protocol": {
+learning/S136/manifest.json:26: trailing whitespace.
++    "name": "fictional-queued-ops/v1",
+learning/S136/manifest.json:27: trailing whitespace.
++    "destination": "v2",
+learning/S136/manifest.json:28: trailing whitespace.
++    "stableOperationIds": ["change-136-1", "change-136-2"],
+learning/S136/manifest.json:29: trailing whitespace.
++    "confirmation": "Authenticated owner, intended value, revision 8, exactly one effect, and a matching accepted v2 acknowledgment.",
+learning/S136/manifest.json:30: trailing whitespace.
++    "retry": "Only the fixed missing-acknowledgment trace retries the same first operation ID once; effect count remains one.",
+learning/S136/manifest.json:31: trailing whitespace.
++    "conflict": "Retain the pending ID; do not merge or invent a successful acknowledgment."
+learning/S136/manifest.json:32: trailing whitespace.
++  },
+learning/S136/manifest.json:33: trailing whitespace.
++  "expectedAssertions": {
+learning/S136/manifest.json:34: trailing whitespace.
++    "positive": "Two correct effects, two accepted owned v2 receipts, no pending IDs, within both budgets.",
+learning/S136/manifest.json:35: trailing whitespace.
++    "negative": "Conflict, missing/duplicate effect, rejected identity or exceeded budget is interrupted.",
+learning/S136/manifest.json:36: trailing whitespace.
++    "unknown": "Missing acknowledgment or explicit incomplete evidence is unresolved, never success.",
+learning/S136/manifest.json:37: trailing whitespace.
++    "isolation": "Offline action does not disable operator controls or alter other worker connectivity."
+learning/S136/manifest.json:38: trailing whitespace.
++  },
+learning/S136/manifest.json:39: trailing whitespace.
++  "bounds": {"pendingChanges": 2, "maximumAttemptsPerId": 2, "retainedJournalEntries": 32, "omissions": "Visible count; reset retains recent history; reload clears memory."},
+learning/S136/manifest.json:40: trailing whitespace.
++  "safety": "All sample-client, connectivity, identity, pending-state, sync, conflict, acknowledgment, effect and timing data are fixed fictional teaching DATA ONLY. No actual machine/context network shutdown, persistent storage, user data or cloud operation.",
+learning/S136/manifest.json:41: trailing whitespace.
++  "iac": "N/A: resource-free browser lesson. No IaC, scaffold, identity, credentials, deployment, spending or package installation.",
+learning/S136/manifest.json:42: trailing whitespace.
++  "tooling": {
+learning/S136/manifest.json:43: trailing whitespace.
++    "node": "22.23.4 test tooling only; not production Node 24 validation",
+learning/S136/manifest.json:44: trailing whitespace.
++    "playwright": "Existing offline 1.56.1",
+learning/S136/manifest.json:45: trailing whitespace.
++    "browser": "Existing Microsoft-signed Edge 156",
+learning/S136/manifest.json:46: trailing whitespace.
++    "helper": "testing\\browser\\isolated.cjs",
+learning/S136/manifest.json:47: trailing whitespace.
++    "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+learning/S136/manifest.json:48: trailing whitespace.
++    "helperPublishedCommit": "53c0c0d82cc1db6780a87ac2b1085734af6d5c60",
+learning/S136/manifest.json:49: trailing whitespace.
++    "limit": "Individual observed runs only. Inactive lifecycle recovery prototype remains unqualified."
+learning/S136/manifest.json:50: trailing whitespace.
++  },
+learning/S136/manifest.json:51: trailing whitespace.
++  "sourceEvidence": "evidence\\source.json",
+learning/S136/manifest.json:52: trailing whitespace.
++  "verification": ["model.test.cjs", "integrity.test.cjs", "browser.test.cjs"],
+learning/S136/manifest.json:53: trailing whitespace.
++  "browserEvidence": "evidence\\browser.json",
+learning/S136/manifest.json:54: trailing whitespace.
++  "normalVerification": "READ-ONLY. Only exact CAPTURE_BROWSER_EVIDENCE=1 deliberately replaces the lesson browser observation.",
+learning/S136/manifest.json:55: trailing whitespace.
++  "limits": [
+learning/S136/manifest.json:56: trailing whitespace.
++    "No native B-S136 evidence or completed D-S136/source parent.",
+learning/S136/manifest.json:57: trailing whitespace.
++    "D-S040 and D-S077 dependencies and native CORE/DATA/HOST/C032 gates remain outstanding.",
+learning/S136/manifest.json:58: trailing whitespace.
++    "No real mobile synchronization, authorization, persistence, external effects or network isolation is established.",
+learning/S136/manifest.json:59: trailing whitespace.
++    "No Node 24 production support, arbitrary browser compatibility, Azure result or reliability guarantee.",
+learning/S136/manifest.json:60: trailing whitespace.
++    "Parent alone empirically accepts this original unit once; tests, repairs, proof and refinement earn zero extra credit."
+learning/S136/manifest.json:61: trailing whitespace.
++  ]
+learning/S136/manifest.json:62: trailing whitespace.
++}
+learning/S136/model.js:1: trailing whitespace.
++(function (root, factory) {
+learning/S136/model.js:2: trailing whitespace.
++  if (typeof module === 'object' && module.exports) module.exports = factory();
+learning/S136/model.js:3: trailing whitespace.
++  else root.S136 = factory();
+learning/S136/model.js:4: trailing whitespace.
++}(typeof globalThis === 'object' ? globalThis : this, function () {
+learning/S136/model.js:5: trailing whitespace.
++  'use strict';
+learning/S136/model.js:6: trailing whitespace.
++
+learning/S136/model.js:7: trailing whitespace.
++  const BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
+learning/S136/model.js:8: trailing whitespace.
++  const CLIENT_ID = 'sample-client-136';
+learning/S136/model.js:9: trailing whitespace.
++  const IDENTITY = 'fictional-user-136';
+learning/S136/model.js:10: trailing whitespace.
++  const PROTOCOL = 'fictional-queued-ops/v1';
+learning/S136/model.js:11: trailing whitespace.
++  const FIXTURE_IDS = ['clean', 'conflict', 'missing-ack', 'missing-effect', 'duplicate-effect', 'identity-rejected'];
+learning/S136/model.js:12: trailing whitespace.
++  const TIMING_IDS = ['within-budget', 'offline-over-budget', 'recovery-over-budget'];
+learning/S136/model.js:13: trailing whitespace.
++  const BUDGETS = { offlineMs: 5000, recoveryMs: 200 };
+learning/S136/model.js:14: trailing whitespace.
++  const MAX_HISTORY = 32;
+learning/S136/model.js:15: trailing whitespace.
++  const CHANGES = [
+learning/S136/model.js:16: trailing whitespace.
++    { id: 'change-136-1', identity: IDENTITY, baseRevision: 7, expectedValue: 'blue' },
+learning/S136/model.js:17: trailing whitespace.
++    { id: 'change-136-2', identity: IDENTITY, baseRevision: 7, expectedValue: 'compact' },
+learning/S136/model.js:18: trailing whitespace.
++  ];
+learning/S136/model.js:19: trailing whitespace.
++  const TIMINGS = {
+learning/S136/model.js:20: trailing whitespace.
++    'within-budget': { offlineMs: 4000, recoveryMs: 120 },
+learning/S136/model.js:21: trailing whitespace.
++    'offline-over-budget': { offlineMs: 6000, recoveryMs: 120 },
+learning/S136/model.js:22: trailing whitespace.
++    'recovery-over-budget': { offlineMs: 4000, recoveryMs: 250 },
+learning/S136/model.js:23: trailing whitespace.
++  };
+learning/S136/model.js:24: trailing whitespace.
++  const ACTIONS = ['sample-offline', 'queue-changes', 'sample-online', 'synchronize', 'retry-ack', 'inspect-console', 'reset'];
+learning/S136/model.js:25: trailing whitespace.
++
+learning/S136/model.js:26: trailing whitespace.
++  function reject(code, message) {
+learning/S136/model.js:27: trailing whitespace.
++    const error = new Error(message);
+learning/S136/model.js:28: trailing whitespace.
++    error.name = 'RehearsalError';
+learning/S136/model.js:29: trailing whitespace.
++    error.code = code;
+learning/S136/model.js:30: trailing whitespace.
++    throw error;
+learning/S136/model.js:31: trailing whitespace.
++  }
+learning/S136/model.js:32: trailing whitespace.
++
+learning/S136/model.js:33: trailing whitespace.
++  function requireValue(condition, code, message) {
+learning/S136/model.js:34: trailing whitespace.
++    if (!condition) reject(code, message);
+learning/S136/model.js:35: trailing whitespace.
++  }
+learning/S136/model.js:36: trailing whitespace.
++
+learning/S136/model.js:37: trailing whitespace.
++  function plainData(value) {
+learning/S136/model.js:38: trailing whitespace.
++    return value !== null && typeof value === 'object'
+learning/S136/model.js:39: trailing whitespace.
++      && Object.getPrototypeOf(value) === Object.prototype
+learning/S136/model.js:40: trailing whitespace.
++      && Reflect.ownKeys(value).every((key) => typeof key === 'string'
+learning/S136/model.js:41: trailing whitespace.
++        && Object.hasOwn(Object.getOwnPropertyDescriptor(value, key), 'value'));
+learning/S136/model.js:42: trailing whitespace.
++  }
+learning/S136/model.js:43: trailing whitespace.
++
+learning/S136/model.js:44: trailing whitespace.
++  function record(value, keys, code, label) {
+learning/S136/model.js:45: trailing whitespace.
++    requireValue(plainData(value), code, `${label} must be a plain typed data object.`);
+learning/S136/model.js:46: trailing whitespace.
++    requireValue(Reflect.ownKeys(value).length === keys.length
+learning/S136/model.js:47: trailing whitespace.
++      && keys.every((key) => Object.hasOwn(value, key)), code, `${label} has missing or extra fields.`);
+learning/S136/model.js:48: trailing whitespace.
++  }
+learning/S136/model.js:49: trailing whitespace.
++
+learning/S136/model.js:50: trailing whitespace.
++  function integerOrUnknown(value, min, max) {
+learning/S136/model.js:51: trailing whitespace.
++    return value === null || (Number.isSafeInteger(value) && !Object.is(value, -0)
+learning/S136/model.js:52: trailing whitespace.
++      && value >= min && value <= max);
+learning/S136/model.js:53: trailing whitespace.
++  }
+learning/S136/model.js:54: trailing whitespace.
++
+learning/S136/model.js:55: trailing whitespace.
++  function enumOrUnknown(value, options) {
+learning/S136/model.js:56: trailing whitespace.
++    return value === null || options.includes(value);
+learning/S136/model.js:57: trailing whitespace.
++  }
+learning/S136/model.js:58: trailing whitespace.
++
+learning/S136/model.js:59: trailing whitespace.
++  function freeze(value) {
+learning/S136/model.js:60: trailing whitespace.
++    if (value && typeof value === 'object') {
+learning/S136/model.js:61: trailing whitespace.
++      for (const child of Object.values(value)) freeze(child);
+learning/S136/model.js:62: trailing whitespace.
++      Object.freeze(value);
+learning/S136/model.js:63: trailing whitespace.
++    }
+learning/S136/model.js:64: trailing whitespace.
++    return value;
+learning/S136/model.js:65: trailing whitespace.
++  }
+learning/S136/model.js:66: trailing whitespace.
++
+learning/S136/model.js:67: trailing whitespace.
++  function copy(value) { return structuredClone(value); }
+learning/S136/model.js:68: trailing whitespace.
++
+learning/S136/model.js:69: trailing whitespace.
++  function makeObservation(fixture, timing) {
+learning/S136/model.js:70: trailing whitespace.
++    requireValue(typeof fixture === 'string' && FIXTURE_IDS.includes(fixture),
+learning/S136/model.js:71: trailing whitespace.
++      'ERR_ACTION_INPUT', 'Choose a listed fictional receipt fixture.');
+learning/S136/model.js:72: trailing whitespace.
++    requireValue(typeof timing === 'string' && TIMING_IDS.includes(timing),
+learning/S136/model.js:73: trailing whitespace.
++      'ERR_ACTION_INPUT', 'Choose a listed synthetic timing trace.');
+learning/S136/model.js:74: trailing whitespace.
++    const observation = {
+learning/S136/model.js:75: trailing whitespace.
++      protocol: PROTOCOL, deployment: 'v2', clientId: CLIENT_ID, identity: IDENTITY,
+learning/S136/model.js:76: trailing whitespace.
++      timing: copy(TIMINGS[timing]),
+learning/S136/model.js:77: trailing whitespace.
++      operations: CHANGES.map((change) => ({
+learning/S136/model.js:78: trailing whitespace.
++        ...change, authenticated: true, observedValue: change.expectedValue,
+learning/S136/model.js:79: trailing whitespace.
++        effectCount: 1, revision: 8, attempts: 1,
+learning/S136/model.js:80: trailing whitespace.
++        ack: { id: change.id, status: 'accepted', identity: IDENTITY, deployment: 'v2' },
+learning/S136/model.js:81: trailing whitespace.
++      })),
+learning/S136/model.js:82: trailing whitespace.
++    };
+learning/S136/model.js:83: trailing whitespace.
++    const [first, second] = observation.operations;
+learning/S136/model.js:84: trailing whitespace.
++    if (fixture === 'conflict') {
+learning/S136/model.js:85: trailing whitespace.
++      second.effectCount = 0;
+learning/S136/model.js:86: trailing whitespace.
++      second.observedValue = 'remote-red';
+learning/S136/model.js:87: trailing whitespace.
++      second.revision = 9;
+learning/S136/model.js:88: trailing whitespace.
++      second.ack.status = 'conflict';
+learning/S136/model.js:89: trailing whitespace.
++    } else if (fixture === 'missing-ack') {
+learning/S136/model.js:90: trailing whitespace.
++      first.ack = null;
+learning/S136/model.js:91: trailing whitespace.
++    } else if (fixture === 'missing-effect') {
+learning/S136/model.js:92: trailing whitespace.
++      second.effectCount = 0;
+learning/S136/model.js:93: trailing whitespace.
++      second.observedValue = null;
+learning/S136/model.js:94: trailing whitespace.
++    } else if (fixture === 'duplicate-effect') {
+learning/S136/model.js:95: trailing whitespace.
++      first.effectCount = 2;
+learning/S136/model.js:96: trailing whitespace.
++    } else if (fixture === 'identity-rejected') {
+learning/S136/model.js:97: trailing whitespace.
++      second.authenticated = false;
+learning/S136/model.js:98: trailing whitespace.
++      second.effectCount = 0;
+learning/S136/model.js:99: trailing whitespace.
++      second.observedValue = null;
+learning/S136/model.js:100: trailing whitespace.
++      second.revision = null;
+learning/S136/model.js:101: trailing whitespace.
++      second.ack.status = 'rejected';
+learning/S136/model.js:102: trailing whitespace.
++    }
+learning/S136/model.js:103: trailing whitespace.
++    return freeze(observation);
+learning/S136/model.js:104: trailing whitespace.
++  }
+learning/S136/model.js:105: trailing whitespace.
++
+learning/S136/model.js:106: trailing whitespace.
++  function validateObservation(observation) {
+learning/S136/model.js:107: trailing whitespace.
++    const code = 'ERR_OBSERVATION_INPUT';
+learning/S136/model.js:108: trailing whitespace.
++    record(observation, ['protocol', 'deployment', 'clientId', 'identity', 'timing', 'operations'], code, 'Observation');
+learning/S136/model.js:109: trailing whitespace.
++    requireValue(enumOrUnknown(observation.protocol, [PROTOCOL, 'unsupported/v0'])
+learning/S136/model.js:110: trailing whitespace.
++      && enumOrUnknown(observation.deployment, ['v1', 'v2'])
+learning/S136/model.js:111: trailing whitespace.
++      && observation.clientId === CLIENT_ID
+learning/S136/model.js:112: trailing whitespace.
++      && enumOrUnknown(observation.identity, [IDENTITY, 'fictional-other-user-136']),
+learning/S136/model.js:113: trailing whitespace.
++    code, 'Observation identifiers must be fixed fictional typed values.');
+learning/S136/model.js:114: trailing whitespace.
++    record(observation.timing, ['offlineMs', 'recoveryMs'], code, 'Timing');
+learning/S136/model.js:115: trailing whitespace.
++    requireValue(Object.values(observation.timing).every((value) => integerOrUnknown(value, 0, 10000)),
+learning/S136/model.js:116: trailing whitespace.
++      code, 'Synthetic elapsed times must be integer milliseconds or explicit unknown.');
+learning/S136/model.js:117: trailing whitespace.
++    requireValue(Array.isArray(observation.operations) && observation.operations.length === 2
+learning/S136/model.js:118: trailing whitespace.
++      && Reflect.ownKeys(observation.operations).length === 3
+learning/S136/model.js:119: trailing whitespace.
++      && ['0', '1'].every((key) => Object.hasOwn(observation.operations, key)
+learning/S136/model.js:120: trailing whitespace.
++        && Object.hasOwn(Object.getOwnPropertyDescriptor(observation.operations, key), 'value')),
+learning/S136/model.js:121: trailing whitespace.
++      code, 'Both fixed queued operations must have evidence; omissions are not success.');
+learning/S136/model.js:122: trailing whitespace.
++    observation.operations.forEach((operation, index) => {
+learning/S136/model.js:123: trailing whitespace.
++      record(operation, ['id', 'identity', 'baseRevision', 'expectedValue', 'authenticated',
+learning/S136/model.js:124: trailing whitespace.
++        'observedValue', 'effectCount', 'revision', 'attempts', 'ack'], code, 'Operation');
+learning/S136/model.js:125: trailing whitespace.
++      requireValue(operation.id === CHANGES[index].id
+learning/S136/model.js:126: trailing whitespace.
++        && operation.expectedValue === CHANGES[index].expectedValue
+learning/S136/model.js:127: trailing whitespace.
++        && enumOrUnknown(operation.identity, [IDENTITY, 'fictional-other-user-136'])
+learning/S136/model.js:128: trailing whitespace.
++        && [true, false, null].includes(operation.authenticated)
+learning/S136/model.js:129: trailing whitespace.
++        && integerOrUnknown(operation.baseRevision, 0, 20)
+learning/S136/model.js:130: trailing whitespace.
++        && enumOrUnknown(operation.observedValue, ['blue', 'compact', 'remote-red'])
+learning/S136/model.js:131: trailing whitespace.
++        && integerOrUnknown(operation.effectCount, 0, 2)
+learning/S136/model.js:132: trailing whitespace.
++        && integerOrUnknown(operation.revision, 0, 20)
+learning/S136/model.js:133: trailing whitespace.
++        && Number.isSafeInteger(operation.attempts) && operation.attempts >= 1 && operation.attempts <= 2,
+learning/S136/model.js:134: trailing whitespace.
++      code, 'Operation evidence has an invalid type, fixed ID, value or bound.');
+learning/S136/model.js:135: trailing whitespace.
++      if (operation.ack !== null) {
+learning/S136/model.js:136: trailing whitespace.
++        record(operation.ack, ['id', 'status', 'identity', 'deployment'], code, 'Acknowledgment');
+learning/S136/model.js:137: trailing whitespace.
++        requireValue(CHANGES.some((change) => change.id === operation.ack.id)
+learning/S136/model.js:138: trailing whitespace.
++          && ['accepted', 'conflict', 'rejected'].includes(operation.ack.status)
+learning/S136/model.js:139: trailing whitespace.
++          && enumOrUnknown(operation.ack.identity, [IDENTITY, 'fictional-other-user-136'])
+learning/S136/model.js:140: trailing whitespace.
++          && enumOrUnknown(operation.ack.deployment, ['v1', 'v2']),
+learning/S136/model.js:141: trailing whitespace.
++        code, 'Acknowledgment evidence must use fixed typed receipt fields.');
+learning/S136/model.js:142: trailing whitespace.
++      }
+learning/S136/model.js:143: trailing whitespace.
++    });
+learning/S136/model.js:144: trailing whitespace.
++  }
+learning/S136/model.js:145: trailing whitespace.
++
+learning/S136/model.js:146: trailing whitespace.
++  function evaluate(observation) {
+learning/S136/model.js:147: trailing whitespace.
++    validateObservation(observation);
+learning/S136/model.js:148: trailing whitespace.
++    const negative = [];
+learning/S136/model.js:149: trailing whitespace.
++    const unknown = [];
+learning/S136/model.js:150: trailing whitespace.
++    const confirmedIds = [];
+learning/S136/model.js:151: trailing whitespace.
++    function match(value, expected, label) {
+learning/S136/model.js:152: trailing whitespace.
++      if (value === null) unknown.push(`${label} not observed.`);
+learning/S136/model.js:153: trailing whitespace.
++      else if (value !== expected) negative.push(`${label} mismatch.`);
+learning/S136/model.js:154: trailing whitespace.
++    }
+learning/S136/model.js:155: trailing whitespace.
++    match(observation.protocol, PROTOCOL, 'Queue protocol');
+learning/S136/model.js:156: trailing whitespace.
++    match(observation.deployment, 'v2', 'Destination deployment');
+learning/S136/model.js:157: trailing whitespace.
++    match(observation.identity, IDENTITY, 'Queued identity');
+learning/S136/model.js:158: trailing whitespace.
++    for (const [key, budget] of Object.entries(BUDGETS)) {
+learning/S136/model.js:159: trailing whitespace.
++      const elapsed = observation.timing[key];
+learning/S136/model.js:160: trailing whitespace.
++      if (elapsed === null) unknown.push(`${key} not observed.`);
+learning/S136/model.js:161: trailing whitespace.
++      else if (elapsed > budget) negative.push(`${key} ${elapsed} ms exceeds ${budget} ms budget.`);
+learning/S136/model.js:162: trailing whitespace.
++    }
+learning/S136/model.js:163: trailing whitespace.
++    for (const operation of observation.operations) {
+learning/S136/model.js:164: trailing whitespace.
++      const label = operation.id;
+learning/S136/model.js:165: trailing whitespace.
++      match(operation.identity, IDENTITY, `${label} identity`);
+learning/S136/model.js:166: trailing whitespace.
++      match(operation.authenticated, true, `${label} authenticated ownership`);
+learning/S136/model.js:167: trailing whitespace.
++      match(operation.baseRevision, 7, `${label} queued base revision`);
+learning/S136/model.js:168: trailing whitespace.
++      match(operation.revision, 8, `${label} applied revision`);
+learning/S136/model.js:169: trailing whitespace.
++      if (operation.effectCount === null) unknown.push(`${label} effect count not observed.`);
+learning/S136/model.js:170: trailing whitespace.
++      else if (operation.effectCount === 0) negative.push(`${label} has no confirmed effect.`);
+learning/S136/model.js:171: trailing whitespace.
++      else if (operation.effectCount > 1) negative.push(`${label} has duplicate effects (${operation.effectCount}).`);
+learning/S136/model.js:172: trailing whitespace.
++      match(operation.observedValue, operation.expectedValue, `${label} resulting value`);
+learning/S136/model.js:173: trailing whitespace.
++      if (operation.ack === null) unknown.push(`${label} acknowledgment not observed; retain pending ID.`);
+learning/S136/model.js:174: trailing whitespace.
++      else {
+learning/S136/model.js:175: trailing whitespace.
++        match(operation.ack.id, operation.id, `${label} receipt operation ID`);
+learning/S136/model.js:176: trailing whitespace.
++        match(operation.ack.identity, IDENTITY, `${label} receipt identity`);
+learning/S136/model.js:177: trailing whitespace.
++        match(operation.ack.deployment, 'v2', `${label} receipt deployment`);
+learning/S136/model.js:178: trailing whitespace.
++        if (operation.ack.status !== 'accepted') negative.push(`${label} receipt is ${operation.ack.status}; no merge or success inferred.`);
+learning/S136/model.js:179: trailing whitespace.
++      }
+learning/S136/model.js:180: trailing whitespace.
++      if (observation.protocol === PROTOCOL && observation.deployment === 'v2'
+learning/S136/model.js:181: trailing whitespace.
++        && observation.identity === IDENTITY && operation.identity === IDENTITY
+learning/S136/model.js:182: trailing whitespace.
++        && operation.authenticated === true && operation.baseRevision === 7
+learning/S136/model.js:183: trailing whitespace.
++        && operation.revision === 8 && operation.effectCount === 1
+learning/S136/model.js:184: trailing whitespace.
++        && operation.observedValue === operation.expectedValue && operation.ack
+learning/S136/model.js:185: trailing whitespace.
++        && operation.ack.id === operation.id && operation.ack.status === 'accepted'
+learning/S136/model.js:186: trailing whitespace.
++        && operation.ack.identity === IDENTITY && operation.ack.deployment === 'v2') {
+learning/S136/model.js:187: trailing whitespace.
++        confirmedIds.push(operation.id);
+learning/S136/model.js:188: trailing whitespace.
++      }
+learning/S136/model.js:189: trailing whitespace.
++    }
+learning/S136/model.js:190: trailing whitespace.
++    const verdict = negative.length ? 'negative' : unknown.length ? 'unknown' : 'positive';
+learning/S136/model.js:191: trailing whitespace.
++    const knownEffects = observation.operations.reduce((sum, operation) => sum + (operation.effectCount ?? 0), 0);
+learning/S136/model.js:192: trailing whitespace.
++    const unknownEffectCounts = observation.operations.filter((operation) => operation.effectCount === null).length;
+learning/S136/model.js:193: trailing whitespace.
++    return freeze({
+learning/S136/model.js:194: trailing whitespace.
++      verdict,
+learning/S136/model.js:195: trailing whitespace.
++      verifier: verdict === 'positive' ? 'PASS' : verdict === 'negative' ? 'FAIL' : 'INCONCLUSIVE',
+learning/S136/model.js:196: trailing whitespace.
++      userImpact: verdict === 'positive' ? 'completed' : verdict === 'negative' ? 'interrupted' : 'unresolved',
+learning/S136/model.js:197: trailing whitespace.
++      reasons: [...negative, ...unknown],
+learning/S136/model.js:198: trailing whitespace.
++      confirmedIds,
+learning/S136/model.js:199: trailing whitespace.
++      metrics: {
+learning/S136/model.js:200: trailing whitespace.
++        queuedChanges: 2, confirmedChanges: confirmedIds.length,
+learning/S136/model.js:201: trailing whitespace.
++        totalEffects: unknownEffectCounts ? null : knownEffects, knownEffects, unknownEffectCounts,
+learning/S136/model.js:202: trailing whitespace.
++        acknowledgments: observation.operations.filter((operation) => operation.ack?.status === 'accepted').length,
+learning/S136/model.js:203: trailing whitespace.
++        conflicts: observation.operations.filter((operation) => operation.ack?.status === 'conflict').length,
+learning/S136/model.js:204: trailing whitespace.
++        rejected: observation.operations.filter((operation) => operation.ack?.status === 'rejected').length,
+learning/S136/model.js:205: trailing whitespace.
++        duplicateEffects: observation.operations.reduce((sum, operation) => sum + Math.max(0, (operation.effectCount ?? 0) - 1), 0),
+learning/S136/model.js:206: trailing whitespace.
++      },
+learning/S136/model.js:207: trailing whitespace.
++    });
+learning/S136/model.js:208: trailing whitespace.
++  }
+learning/S136/model.js:209: trailing whitespace.
++
+learning/S136/model.js:210: trailing whitespace.
++  function initialState() {
+learning/S136/model.js:211: trailing whitespace.
++    return {
+learning/S136/model.js:212: trailing whitespace.
++      phase: 'ready',
+learning/S136/model.js:213: trailing whitespace.
++      sampleClientOnline: true,
+learning/S136/model.js:214: trailing whitespace.
++      consoleAvailable: true,
+learning/S136/model.js:215: trailing whitespace.
++      otherWorkersAvailable: true,
+learning/S136/model.js:216: trailing whitespace.
++      consoleInspections: 0,
+learning/S136/model.js:217: trailing whitespace.
++      pending: [],
+learning/S136/model.js:218: trailing whitespace.
++      observation: null,
+learning/S136/model.js:219: trailing whitespace.
++      result: null,
+learning/S136/model.js:220: trailing whitespace.
++      history: [],
+learning/S136/model.js:221: trailing whitespace.
++      omittedEntries: 0,
+learning/S136/model.js:222: trailing whitespace.
++      sequence: 0,
+learning/S136/model.js:223: trailing whitespace.
++      fixture: null,
+learning/S136/model.js:224: trailing whitespace.
++      timing: null,
+learning/S136/model.js:225: trailing whitespace.
++    };
+learning/S136/model.js:226: trailing whitespace.
++  }
+learning/S136/model.js:227: trailing whitespace.
++
+learning/S136/model.js:228: trailing whitespace.
++  function allowedActions(state) {
+learning/S136/model.js:229: trailing whitespace.
++    const stage = {
+learning/S136/model.js:230: trailing whitespace.
++      ready: 'sample-offline', offline: 'queue-changes',
+learning/S136/model.js:231: trailing whitespace.
++      queued: 'sample-online', reconnected: 'synchronize',
+learning/S136/model.js:232: trailing whitespace.
++    };
+learning/S136/model.js:233: trailing whitespace.
++    const allowed = ['inspect-console', 'reset'];
+learning/S136/model.js:234: trailing whitespace.
++    if (stage[state.phase]) allowed.unshift(stage[state.phase]);
+learning/S136/model.js:235: trailing whitespace.
++    if (state.phase === 'observed' && state.fixture === 'missing-ack'
+learning/S136/model.js:236: trailing whitespace.
++      && state.timing === 'within-budget' && state.result.verdict === 'unknown') allowed.unshift('retry-ack');
+learning/S136/model.js:237: trailing whitespace.
++    return allowed;
+learning/S136/model.js:238: trailing whitespace.
++  }
+learning/S136/model.js:239: trailing whitespace.
++
+learning/S136/model.js:240: trailing whitespace.
++  function validateAction(action) {
+learning/S136/model.js:241: trailing whitespace.
++    requireValue(plainData(action) && typeof action.type === 'string' && ACTIONS.includes(action.type),
+learning/S136/model.js:242: trailing whitespace.
++      'ERR_ACTION_INPUT', 'Choose one listed operator action with a typed action object.');
+learning/S136/model.js:243: trailing whitespace.
++    record(action, action.type === 'synchronize' ? ['type', 'fixture', 'timing'] : ['type'],
+learning/S136/model.js:244: trailing whitespace.
++      'ERR_ACTION_INPUT', 'Action');
+learning/S136/model.js:245: trailing whitespace.
++    if (action.type === 'synchronize') {
+learning/S136/model.js:246: trailing whitespace.
++      requireValue(typeof action.fixture === 'string' && FIXTURE_IDS.includes(action.fixture),
+learning/S136/model.js:247: trailing whitespace.
++        'ERR_ACTION_INPUT', 'Choose a listed fictional receipt fixture.');
+learning/S136/model.js:248: trailing whitespace.
++      requireValue(typeof action.timing === 'string' && TIMING_IDS.includes(action.timing),
+learning/S136/model.js:249: trailing whitespace.
++        'ERR_ACTION_INPUT', 'Choose a listed synthetic timing trace.');
+learning/S136/model.js:250: trailing whitespace.
++    }
+learning/S136/model.js:251: trailing whitespace.
++  }
+learning/S136/model.js:252: trailing whitespace.
++
+learning/S136/model.js:253: trailing whitespace.
++  function createRehearsal() {
+learning/S136/model.js:254: trailing whitespace.
++    let state = initialState();
+learning/S136/model.js:255: trailing whitespace.
++    function snapshot() { return freeze({ ...copy(state), allowedActions: allowedActions(state) }); }
+learning/S136/model.js:256: trailing whitespace.
++    function applyObservation(next, observation) {
+learning/S136/model.js:257: trailing whitespace.
++      next.observation = copy(observation);
+learning/S136/model.js:258: trailing whitespace.
++      next.result = copy(evaluate(observation));
+learning/S136/model.js:259: trailing whitespace.
++      next.pending = CHANGES.filter((change) => !next.result.confirmedIds.includes(change.id))
+learning/S136/model.js:260: trailing whitespace.
++        .map((change) => ({ ...copy(change), status: 'unconfirmed' }));
+learning/S136/model.js:261: trailing whitespace.
++      next.phase = 'observed';
+learning/S136/model.js:262: trailing whitespace.
++    }
+learning/S136/model.js:263: trailing whitespace.
++    function act(action) {
+learning/S136/model.js:264: trailing whitespace.
++      validateAction(action);
+learning/S136/model.js:265: trailing whitespace.
++      requireValue(allowedActions(state).includes(action.type), 'ERR_STATE_GUARD',
+learning/S136/model.js:266: trailing whitespace.
++        'Action is out of order. Take the sample offline, queue changes, reconnect, then synchronize. Retry only an unresolved missing acknowledgment.');
+learning/S136/model.js:267: trailing whitespace.
++      const previousResult = copy(state.result);
+learning/S136/model.js:268: trailing whitespace.
++      let next = copy(state);
+learning/S136/model.js:269: trailing whitespace.
++      if (action.type === 'sample-offline') {
+learning/S136/model.js:270: trailing whitespace.
++        next.sampleClientOnline = false;
+learning/S136/model.js:271: trailing whitespace.
++        next.phase = 'offline';
+learning/S136/model.js:272: trailing whitespace.
++      } else if (action.type === 'queue-changes') {
+learning/S136/model.js:273: trailing whitespace.
++        next.pending = CHANGES.map((change) => ({ ...copy(change), status: 'queued' }));
+learning/S136/model.js:274: trailing whitespace.
++        next.phase = 'queued';
+learning/S136/model.js:275: trailing whitespace.
++      } else if (action.type === 'sample-online') {
+learning/S136/model.js:276: trailing whitespace.
++        next.sampleClientOnline = true;
+learning/S136/model.js:277: trailing whitespace.
++        next.phase = 'reconnected';
+learning/S136/model.js:278: trailing whitespace.
++      } else if (action.type === 'synchronize') {
+learning/S136/model.js:279: trailing whitespace.
++        applyObservation(next, makeObservation(action.fixture, action.timing));
+learning/S136/model.js:280: trailing whitespace.
++        next.fixture = action.fixture;
+learning/S136/model.js:281: trailing whitespace.
++        next.timing = action.timing;
+learning/S136/model.js:282: trailing whitespace.
++      } else if (action.type === 'retry-ack') {
+learning/S136/model.js:283: trailing whitespace.
++        const observation = copy(state.observation);
+learning/S136/model.js:284: trailing whitespace.
++        observation.operations[0].ack = {
+learning/S136/model.js:285: trailing whitespace.
++          id: CHANGES[0].id, status: 'accepted', identity: IDENTITY, deployment: 'v2',
+learning/S136/model.js:286: trailing whitespace.
++        };
+learning/S136/model.js:287: trailing whitespace.
++        observation.operations[0].attempts = 2;
+learning/S136/model.js:288: trailing whitespace.
++        applyObservation(next, observation);
+learning/S136/model.js:289: trailing whitespace.
++      } else if (action.type === 'inspect-console') {
+learning/S136/model.js:290: trailing whitespace.
++        next.consoleInspections += 1;
+learning/S136/model.js:291: trailing whitespace.
++      } else if (action.type === 'reset') {
+learning/S136/model.js:292: trailing whitespace.
++        next = { ...initialState(), history: copy(state.history), omittedEntries: state.omittedEntries, sequence: state.sequence };
+learning/S136/model.js:293: trailing whitespace.
++      }
+learning/S136/model.js:294: trailing whitespace.
++      next.sequence += 1;
+learning/S136/model.js:295: trailing whitespace.
++      next.history.push({
+learning/S136/model.js:296: trailing whitespace.
++        sequence: next.sequence, action: action.type, phase: next.phase,
+learning/S136/model.js:297: trailing whitespace.
++        sampleClientOnline: next.sampleClientOnline, pendingIds: next.pending.map((change) => change.id),
+learning/S136/model.js:298: trailing whitespace.
++        result: copy(next.result), previousResult: action.type === 'reset' ? previousResult : null,
+learning/S136/model.js:299: trailing whitespace.
++      });
+learning/S136/model.js:300: trailing whitespace.
++      if (next.history.length > MAX_HISTORY) {
+learning/S136/model.js:301: trailing whitespace.
++        next.history.shift();
+learning/S136/model.js:302: trailing whitespace.
++        next.omittedEntries += 1;
+learning/S136/model.js:303: trailing whitespace.
++      }
+learning/S136/model.js:304: trailing whitespace.
++      state = next;
+learning/S136/model.js:305: trailing whitespace.
++      return snapshot();
+learning/S136/model.js:306: trailing whitespace.
++    }
+learning/S136/model.js:307: trailing whitespace.
++    return Object.freeze({ snapshot, act });
+learning/S136/model.js:308: trailing whitespace.
++  }
+learning/S136/model.js:309: trailing whitespace.
++
+learning/S136/model.js:310: trailing whitespace.
++  freeze(CHANGES);
+learning/S136/model.js:311: trailing whitespace.
++  freeze(TIMINGS);
+learning/S136/model.js:312: trailing whitespace.
++  return freeze({ BANNER, CLIENT_ID, IDENTITY, PROTOCOL, FIXTURE_IDS, TIMING_IDS,
+learning/S136/model.js:313: trailing whitespace.
++    BUDGETS, MAX_HISTORY, CHANGES, createRehearsal, makeObservation, evaluate });
+learning/S136/model.js:314: trailing whitespace.
++}));
+learning/S136/model.test.cjs:1: trailing whitespace.
++'use strict';
+learning/S136/model.test.cjs:2: trailing whitespace.
++
+learning/S136/model.test.cjs:3: trailing whitespace.
++const test = require('node:test');
+learning/S136/model.test.cjs:4: trailing whitespace.
++const assert = require('node:assert/strict');
+learning/S136/model.test.cjs:5: trailing whitespace.
++const model = require('./model.js');
+learning/S136/model.test.cjs:6: trailing whitespace.
++
+learning/S136/model.test.cjs:7: trailing whitespace.
++function prepared() {
+learning/S136/model.test.cjs:8: trailing whitespace.
++  const rehearsal = model.createRehearsal();
+learning/S136/model.test.cjs:9: trailing whitespace.
++  rehearsal.act({ type: 'sample-offline' });
+learning/S136/model.test.cjs:10: trailing whitespace.
++  rehearsal.act({ type: 'queue-changes' });
+learning/S136/model.test.cjs:11: trailing whitespace.
++  rehearsal.act({ type: 'sample-online' });
+learning/S136/model.test.cjs:12: trailing whitespace.
++  return rehearsal;
+learning/S136/model.test.cjs:13: trailing whitespace.
++}
+learning/S136/model.test.cjs:14: trailing whitespace.
++
+learning/S136/model.test.cjs:15: trailing whitespace.
++test('only the fictional sample client goes offline', () => {
+learning/S136/model.test.cjs:16: trailing whitespace.
++  const rehearsal = model.createRehearsal();
+learning/S136/model.test.cjs:17: trailing whitespace.
++  const state = rehearsal.act({ type: 'sample-offline' });
+learning/S136/model.test.cjs:18: trailing whitespace.
++  assert.equal(state.sampleClientOnline, false);
+learning/S136/model.test.cjs:19: trailing whitespace.
++  assert.equal(state.consoleAvailable, true);
+learning/S136/model.test.cjs:20: trailing whitespace.
++  assert.equal(state.otherWorkersAvailable, true);
+learning/S136/model.test.cjs:21: trailing whitespace.
++  assert.equal(state.phase, 'offline');
+learning/S136/model.test.cjs:22: trailing whitespace.
++  assert.deepEqual(state.history.map((entry) => entry.action), ['sample-offline']);
+learning/S136/model.test.cjs:23: trailing whitespace.
++});
+learning/S136/model.test.cjs:24: trailing whitespace.
++
+learning/S136/model.test.cjs:25: trailing whitespace.
++test('clean synchronization confirms exactly two owned v2 effects', () => {
+learning/S136/model.test.cjs:26: trailing whitespace.
++  const rehearsal = prepared();
+learning/S136/model.test.cjs:27: trailing whitespace.
++  const state = rehearsal.act({
+learning/S136/model.test.cjs:28: trailing whitespace.
++    type: 'synchronize', fixture: 'clean', timing: 'within-budget',
+learning/S136/model.test.cjs:29: trailing whitespace.
++  });
+learning/S136/model.test.cjs:30: trailing whitespace.
++  assert.equal(state.result.verdict, 'positive');
+learning/S136/model.test.cjs:31: trailing whitespace.
++  assert.equal(state.result.verifier, 'PASS');
+learning/S136/model.test.cjs:32: trailing whitespace.
++  assert.equal(state.result.userImpact, 'completed');
+learning/S136/model.test.cjs:33: trailing whitespace.
++  assert.equal(state.result.metrics.totalEffects, 2);
+learning/S136/model.test.cjs:34: trailing whitespace.
++  assert.equal(state.result.metrics.confirmedChanges, 2);
+learning/S136/model.test.cjs:35: trailing whitespace.
++  assert.equal(state.pending.length, 0);
+learning/S136/model.test.cjs:36: trailing whitespace.
++});
+learning/S136/model.test.cjs:37: trailing whitespace.
++
+learning/S136/model.test.cjs:38: trailing whitespace.
++test('missing acknowledgment is unknown and retry does not duplicate the effect', () => {
+learning/S136/model.test.cjs:39: trailing whitespace.
++  const rehearsal = prepared();
+learning/S136/model.test.cjs:40: trailing whitespace.
++  const unresolved = rehearsal.act({
+learning/S136/model.test.cjs:41: trailing whitespace.
++    type: 'synchronize', fixture: 'missing-ack', timing: 'within-budget',
+learning/S136/model.test.cjs:42: trailing whitespace.
++  });
+learning/S136/model.test.cjs:43: trailing whitespace.
++  assert.equal(unresolved.result.verdict, 'unknown');
+learning/S136/model.test.cjs:44: trailing whitespace.
++  assert.equal(unresolved.pending.length, 1);
+learning/S136/model.test.cjs:45: trailing whitespace.
++  const confirmed = rehearsal.act({ type: 'retry-ack' });
+learning/S136/model.test.cjs:46: trailing whitespace.
++  assert.equal(confirmed.result.verdict, 'positive');
+learning/S136/model.test.cjs:47: trailing whitespace.
++  assert.equal(confirmed.result.metrics.totalEffects, 2);
+learning/S136/model.test.cjs:48: trailing whitespace.
++  assert.equal(confirmed.observation.operations[0].attempts, 2);
+learning/S136/model.test.cjs:49: trailing whitespace.
++  assert.equal(confirmed.pending.length, 0);
+learning/S136/model.test.cjs:50: trailing whitespace.
++  assert.equal(confirmed.history.at(-2).result.verdict, 'unknown');
+learning/S136/model.test.cjs:51: trailing whitespace.
++});
+learning/S136/model.test.cjs:52: trailing whitespace.
++
+learning/S136/model.test.cjs:53: trailing whitespace.
++test('premature synchronization is rejected without state changes', () => {
+learning/S136/model.test.cjs:54: trailing whitespace.
++  const rehearsal = model.createRehearsal();
+learning/S136/model.test.cjs:55: trailing whitespace.
++  const before = rehearsal.snapshot();
+learning/S136/model.test.cjs:56: trailing whitespace.
++  assert.throws(() => rehearsal.act({
+learning/S136/model.test.cjs:57: trailing whitespace.
++    type: 'synchronize', fixture: 'clean', timing: 'within-budget',
+learning/S136/model.test.cjs:58: trailing whitespace.
++  }), { code: 'ERR_STATE_GUARD' });
+learning/S136/model.test.cjs:59: trailing whitespace.
++  assert.deepEqual(rehearsal.snapshot(), before);
+learning/S136/model.test.cjs:60: trailing whitespace.
++});
+learning/S136/model.test.cjs:61: trailing whitespace.
++
+learning/S136/model.test.cjs:62: trailing whitespace.
++test('operator inspection works offline without reconnecting or touching queued data', () => {
+learning/S136/model.test.cjs:63: trailing whitespace.
++  const rehearsal = model.createRehearsal();
+learning/S136/model.test.cjs:64: trailing whitespace.
++  rehearsal.act({ type: 'sample-offline' });
+learning/S136/model.test.cjs:65: trailing whitespace.
++  const queued = rehearsal.act({ type: 'queue-changes' });
+learning/S136/model.test.cjs:66: trailing whitespace.
++  const inspected = rehearsal.act({ type: 'inspect-console' });
+learning/S136/model.test.cjs:67: trailing whitespace.
++  assert.equal(inspected.sampleClientOnline, false);
+learning/S136/model.test.cjs:68: trailing whitespace.
++  assert.equal(inspected.consoleAvailable, true);
+learning/S136/model.test.cjs:69: trailing whitespace.
++  assert.equal(inspected.otherWorkersAvailable, true);
+learning/S136/model.test.cjs:70: trailing whitespace.
++  assert.equal(inspected.consoleInspections, 1);
+learning/S136/model.test.cjs:71: trailing whitespace.
++  assert.deepEqual(inspected.pending, queued.pending);
+learning/S136/model.test.cjs:72: trailing whitespace.
++  assert.deepEqual(inspected.observation, queued.observation);
+learning/S136/model.test.cjs:73: trailing whitespace.
++  assert.equal(inspected.history.at(-1).action, 'inspect-console');
+learning/S136/model.test.cjs:74: trailing whitespace.
++});
+learning/S136/model.test.cjs:75: trailing whitespace.
++
+learning/S136/model.test.cjs:76: trailing whitespace.
++for (const [fixture, effects, pending, reason] of [
+learning/S136/model.test.cjs:77: trailing whitespace.
++  ['conflict', 1, 'change-136-2', /conflict; no merge or success inferred/],
+learning/S136/model.test.cjs:78: trailing whitespace.
++  ['missing-effect', 1, 'change-136-2', /no confirmed effect/],
+learning/S136/model.test.cjs:79: trailing whitespace.
++  ['duplicate-effect', 3, 'change-136-1', /duplicate effects/],
+learning/S136/model.test.cjs:80: trailing whitespace.
++  ['identity-rejected', 1, 'change-136-2', /authenticated ownership mismatch/],
+learning/S136/model.test.cjs:81: trailing whitespace.
++]) {
+learning/S136/model.test.cjs:82: trailing whitespace.
++  test(`${fixture} is negative and retains the actual unresolved change`, () => {
+learning/S136/model.test.cjs:83: trailing whitespace.
++    const rehearsal = prepared();
+learning/S136/model.test.cjs:84: trailing whitespace.
++    const state = rehearsal.act({ type: 'synchronize', fixture, timing: 'within-budget' });
+learning/S136/model.test.cjs:85: trailing whitespace.
++    assert.equal(state.result.verdict, 'negative');
+learning/S136/model.test.cjs:86: trailing whitespace.
++    assert.equal(state.result.verifier, 'FAIL');
+learning/S136/model.test.cjs:87: trailing whitespace.
++    assert.equal(state.result.userImpact, 'interrupted');
+learning/S136/model.test.cjs:88: trailing whitespace.
++    assert.equal(state.result.metrics.totalEffects, effects);
+learning/S136/model.test.cjs:89: trailing whitespace.
++    assert.equal(state.result.metrics.confirmedChanges, 1);
+learning/S136/model.test.cjs:90: trailing whitespace.
++    assert.deepEqual(state.pending.map((change) => change.id), [pending]);
+learning/S136/model.test.cjs:91: trailing whitespace.
++    assert.match(state.result.reasons.join(' '), reason);
+learning/S136/model.test.cjs:92: trailing whitespace.
++    const before = rehearsal.snapshot();
+learning/S136/model.test.cjs:93: trailing whitespace.
++    assert.throws(() => rehearsal.act({ type: 'retry-ack' }), { code: 'ERR_STATE_GUARD' });
+learning/S136/model.test.cjs:94: trailing whitespace.
++    assert.deepEqual(rehearsal.snapshot(), before);
+learning/S136/model.test.cjs:95: trailing whitespace.
++  });
+learning/S136/model.test.cjs:96: trailing whitespace.
++}
+learning/S136/model.test.cjs:97: trailing whitespace.
++
+learning/S136/model.test.cjs:98: trailing whitespace.
++for (const [timing, reason] of [
+learning/S136/model.test.cjs:99: trailing whitespace.
++  ['offline-over-budget', /offlineMs 6000 ms exceeds 5000 ms/],
+learning/S136/model.test.cjs:100: trailing whitespace.
++  ['recovery-over-budget', /recoveryMs 250 ms exceeds 200 ms/],
+learning/S136/model.test.cjs:101: trailing whitespace.
++]) {
+learning/S136/model.test.cjs:102: trailing whitespace.
++  test(`${timing} is interrupted even with two correct effects and receipts`, () => {
+learning/S136/model.test.cjs:103: trailing whitespace.
++    const state = prepared().act({ type: 'synchronize', fixture: 'clean', timing });
+learning/S136/model.test.cjs:104: trailing whitespace.
++    assert.equal(state.result.verdict, 'negative');
+learning/S136/model.test.cjs:105: trailing whitespace.
++    assert.equal(state.result.userImpact, 'interrupted');
+learning/S136/model.test.cjs:106: trailing whitespace.
++    assert.equal(state.result.metrics.totalEffects, 2);
+learning/S136/model.test.cjs:107: trailing whitespace.
++    assert.equal(state.result.metrics.confirmedChanges, 2);
+learning/S136/model.test.cjs:108: trailing whitespace.
++    assert.equal(state.pending.length, 0);
+learning/S136/model.test.cjs:109: trailing whitespace.
++    assert.match(state.result.reasons.join(' '), reason);
+learning/S136/model.test.cjs:110: trailing whitespace.
++  });
+learning/S136/model.test.cjs:111: trailing whitespace.
++}
+learning/S136/model.test.cjs:112: trailing whitespace.
++
+learning/S136/model.test.cjs:113: trailing whitespace.
++test('explicit budget equality passes, but exceeding either boundary fails', () => {
+learning/S136/model.test.cjs:114: trailing whitespace.
++  const observation = structuredClone(model.makeObservation('clean', 'within-budget'));
+learning/S136/model.test.cjs:115: trailing whitespace.
++  observation.timing = { offlineMs: 5000, recoveryMs: 200 };
+learning/S136/model.test.cjs:116: trailing whitespace.
++  assert.equal(model.evaluate(observation).verdict, 'positive');
+learning/S136/model.test.cjs:117: trailing whitespace.
++  observation.timing.offlineMs = 5001;
+learning/S136/model.test.cjs:118: trailing whitespace.
++  assert.equal(model.evaluate(observation).verdict, 'negative');
+learning/S136/model.test.cjs:119: trailing whitespace.
++  observation.timing = { offlineMs: 5000, recoveryMs: 201 };
+learning/S136/model.test.cjs:120: trailing whitespace.
++  assert.equal(model.evaluate(observation).verdict, 'negative');
+learning/S136/model.test.cjs:121: trailing whitespace.
++});
+learning/S136/model.test.cjs:122: trailing whitespace.
++
+learning/S136/model.test.cjs:123: trailing whitespace.
++for (const [name, alter] of [
+learning/S136/model.test.cjs:124: trailing whitespace.
++  ['destination v1', (o) => { o.deployment = 'v1'; }],
+learning/S136/model.test.cjs:125: trailing whitespace.
++  ['incompatible protocol', (o) => { o.protocol = 'unsupported/v0'; }],
+learning/S136/model.test.cjs:126: trailing whitespace.
++  ['different queued identity', (o) => { o.identity = 'fictional-other-user-136'; }],
+learning/S136/model.test.cjs:127: trailing whitespace.
++  ['different receipt owner', (o) => { o.operations[0].ack.identity = 'fictional-other-user-136'; }],
+learning/S136/model.test.cjs:128: trailing whitespace.
++  ['cross-operation receipt', (o) => { o.operations[0].ack.id = 'change-136-2'; }],
+learning/S136/model.test.cjs:129: trailing whitespace.
++  ['v1 acknowledgment', (o) => { o.operations[0].ack.deployment = 'v1'; }],
+learning/S136/model.test.cjs:130: trailing whitespace.
++  ['wrong resulting value', (o) => { o.operations[0].observedValue = 'remote-red'; }],
+learning/S136/model.test.cjs:131: trailing whitespace.
++  ['wrong queued revision', (o) => { o.operations[0].baseRevision = 6; }],
+learning/S136/model.test.cjs:132: trailing whitespace.
++]) {
+learning/S136/model.test.cjs:133: trailing whitespace.
++  test(`known ${name} cannot be called successful synchronization`, () => {
+learning/S136/model.test.cjs:134: trailing whitespace.
++    const observation = structuredClone(model.makeObservation('clean', 'within-budget'));
+learning/S136/model.test.cjs:135: trailing whitespace.
++    alter(observation);
+learning/S136/model.test.cjs:136: trailing whitespace.
++    const result = model.evaluate(observation);
+learning/S136/model.test.cjs:137: trailing whitespace.
++    assert.equal(result.verdict, 'negative');
+learning/S136/model.test.cjs:138: trailing whitespace.
++    assert.equal(result.userImpact, 'interrupted');
+learning/S136/model.test.cjs:139: trailing whitespace.
++    assert.ok(result.confirmedIds.length < 2);
+learning/S136/model.test.cjs:140: trailing whitespace.
++  });
+learning/S136/model.test.cjs:141: trailing whitespace.
++}
+learning/S136/model.test.cjs:142: trailing whitespace.
++
+learning/S136/model.test.cjs:143: trailing whitespace.
++for (const [name, alter] of [
+learning/S136/model.test.cjs:144: trailing whitespace.
++  ['elapsed time', (o) => { o.timing.recoveryMs = null; }],
+learning/S136/model.test.cjs:145: trailing whitespace.
++  ['protocol', (o) => { o.protocol = null; }],
+learning/S136/model.test.cjs:146: trailing whitespace.
++  ['destination', (o) => { o.deployment = null; }],
+learning/S136/model.test.cjs:147: trailing whitespace.
++  ['identity', (o) => { o.identity = null; }],
+learning/S136/model.test.cjs:148: trailing whitespace.
++  ['authentication', (o) => { o.operations[0].authenticated = null; }],
+learning/S136/model.test.cjs:149: trailing whitespace.
++  ['effect count', (o) => { o.operations[0].effectCount = null; }],
+learning/S136/model.test.cjs:150: trailing whitespace.
++  ['resulting value', (o) => { o.operations[0].observedValue = null; }],
+learning/S136/model.test.cjs:151: trailing whitespace.
++  ['revision', (o) => { o.operations[0].revision = null; }],
+learning/S136/model.test.cjs:152: trailing whitespace.
++  ['receipt owner', (o) => { o.operations[0].ack.identity = null; }],
+learning/S136/model.test.cjs:153: trailing whitespace.
++]) {
+learning/S136/model.test.cjs:154: trailing whitespace.
++  test(`unobserved ${name} remains unknown, not invented success`, () => {
+learning/S136/model.test.cjs:155: trailing whitespace.
++    const observation = structuredClone(model.makeObservation('clean', 'within-budget'));
+learning/S136/model.test.cjs:156: trailing whitespace.
++    alter(observation);
+learning/S136/model.test.cjs:157: trailing whitespace.
++    const result = model.evaluate(observation);
+learning/S136/model.test.cjs:158: trailing whitespace.
++    assert.equal(result.verdict, 'unknown');
+learning/S136/model.test.cjs:159: trailing whitespace.
++    assert.equal(result.verifier, 'INCONCLUSIVE');
+learning/S136/model.test.cjs:160: trailing whitespace.
++    assert.equal(result.userImpact, 'unresolved');
+learning/S136/model.test.cjs:161: trailing whitespace.
++    assert.match(result.reasons.join(' '), /not observed/);
+learning/S136/model.test.cjs:162: trailing whitespace.
++    if (name === 'effect count') {
+learning/S136/model.test.cjs:163: trailing whitespace.
++      assert.equal(result.metrics.totalEffects, null);
+learning/S136/model.test.cjs:164: trailing whitespace.
++      assert.equal(result.metrics.knownEffects, 1);
+learning/S136/model.test.cjs:165: trailing whitespace.
++      assert.equal(result.metrics.unknownEffectCounts, 1);
+learning/S136/model.test.cjs:166: trailing whitespace.
++    }
+learning/S136/model.test.cjs:167: trailing whitespace.
++  });
+learning/S136/model.test.cjs:168: trailing whitespace.
++}
+learning/S136/model.test.cjs:169: trailing whitespace.
++
+learning/S136/model.test.cjs:170: trailing whitespace.
++for (const [name, alter] of [
+learning/S136/model.test.cjs:171: trailing whitespace.
++  ['string effect count', (o) => { o.operations[0].effectCount = '1'; }],
+learning/S136/model.test.cjs:172: trailing whitespace.
++  ['string authentication', (o) => { o.operations[0].authenticated = 'true'; }],
+learning/S136/model.test.cjs:173: trailing whitespace.
++  ['fractional time', (o) => { o.timing.offlineMs = 1.5; }],
+learning/S136/model.test.cjs:174: trailing whitespace.
++  ['negative time', (o) => { o.timing.offlineMs = -1; }],
+learning/S136/model.test.cjs:175: trailing whitespace.
++  ['negative zero time', (o) => { o.timing.offlineMs = -0; }],
+learning/S136/model.test.cjs:176: trailing whitespace.
++  ['infinite time', (o) => { o.timing.offlineMs = Infinity; }],
+learning/S136/model.test.cjs:177: trailing whitespace.
++  ['NaN time', (o) => { o.timing.offlineMs = NaN; }],
+learning/S136/model.test.cjs:178: trailing whitespace.
++  ['oversized time', (o) => { o.timing.offlineMs = 10001; }],
+learning/S136/model.test.cjs:179: trailing whitespace.
++  ['missing operation', (o) => { o.operations.pop(); }],
+learning/S136/model.test.cjs:180: trailing whitespace.
++  ['duplicate queued ID', (o) => { o.operations[1].id = 'change-136-1'; }],
+learning/S136/model.test.cjs:181: trailing whitespace.
++  ['sparse evidence', (o) => { delete o.operations[0]; }],
+learning/S136/model.test.cjs:182: trailing whitespace.
++  ['extra array field', (o) => { o.operations.extra = true; }],
+learning/S136/model.test.cjs:183: trailing whitespace.
++  ['extra observation field', (o) => { o.unapprovedData = true; }],
+learning/S136/model.test.cjs:184: trailing whitespace.
++  ['extra receipt field', (o) => { o.operations[0].ack.success = true; }],
+learning/S136/model.test.cjs:185: trailing whitespace.
++  ['changed intended value', (o) => { o.operations[0].expectedValue = 'remote-red'; }],
+learning/S136/model.test.cjs:186: trailing whitespace.
++  ['string attempt count', (o) => { o.operations[0].attempts = '1'; }],
+learning/S136/model.test.cjs:187: trailing whitespace.
++]) {
+learning/S136/model.test.cjs:188: trailing whitespace.
++  test(`strict observation guard rejects ${name}`, () => {
+learning/S136/model.test.cjs:189: trailing whitespace.
++    const observation = structuredClone(model.makeObservation('clean', 'within-budget'));
+learning/S136/model.test.cjs:190: trailing whitespace.
++    alter(observation);
+learning/S136/model.test.cjs:191: trailing whitespace.
++    assert.throws(() => model.evaluate(observation), { code: 'ERR_OBSERVATION_INPUT' });
+learning/S136/model.test.cjs:192: trailing whitespace.
++  });
+learning/S136/model.test.cjs:193: trailing whitespace.
++}
+learning/S136/model.test.cjs:194: trailing whitespace.
++
+learning/S136/model.test.cjs:195: trailing whitespace.
++test('accessor-backed evidence is rejected without executing the accessor', () => {
+learning/S136/model.test.cjs:196: trailing whitespace.
++  const observation = structuredClone(model.makeObservation('clean', 'within-budget'));
+learning/S136/model.test.cjs:197: trailing whitespace.
++  let called = false;
+learning/S136/model.test.cjs:198: trailing whitespace.
++  Object.defineProperty(observation.operations, '0', { get() { called = true; return {}; }, configurable: true });
+learning/S136/model.test.cjs:199: trailing whitespace.
++  assert.throws(() => model.evaluate(observation), { code: 'ERR_OBSERVATION_INPUT' });
+learning/S136/model.test.cjs:200: trailing whitespace.
++  assert.equal(called, false);
+learning/S136/model.test.cjs:201: trailing whitespace.
++});
+learning/S136/model.test.cjs:202: trailing whitespace.
++
+learning/S136/model.test.cjs:203: trailing whitespace.
++for (const [name, action] of [
+learning/S136/model.test.cjs:204: trailing whitespace.
++  ['null', null], ['missing', undefined], ['boolean', true], ['number', 1],
+learning/S136/model.test.cjs:205: trailing whitespace.
++  ['string', 'sample-offline'], ['array', []], ['empty object', {}],
+learning/S136/model.test.cjs:206: trailing whitespace.
++  ['unknown action', { type: 'disconnect-machine' }],
+learning/S136/model.test.cjs:207: trailing whitespace.
++  ['extra fields', { type: 'sample-offline', allWorkers: true }],
+learning/S136/model.test.cjs:208: trailing whitespace.
++  ['typed fixture boolean', { type: 'synchronize', fixture: true, timing: 'within-budget' }],
+learning/S136/model.test.cjs:209: trailing whitespace.
++  ['unknown fixture', { type: 'synchronize', fixture: 'merge-anything', timing: 'within-budget' }],
+learning/S136/model.test.cjs:210: trailing whitespace.
++  ['missing timing', { type: 'synchronize', fixture: 'clean' }],
+learning/S136/model.test.cjs:211: trailing whitespace.
++  ['unknown timing', { type: 'synchronize', fixture: 'clean', timing: 'Infinity' }],
+learning/S136/model.test.cjs:212: trailing whitespace.
++  ['null prototype', Object.assign(Object.create(null), { type: 'sample-offline' })],
+learning/S136/model.test.cjs:213: trailing whitespace.
++]) {
+learning/S136/model.test.cjs:214: trailing whitespace.
++  test(`strict action guard rejects ${name} atomically`, () => {
+learning/S136/model.test.cjs:215: trailing whitespace.
++    const rehearsal = model.createRehearsal();
+learning/S136/model.test.cjs:216: trailing whitespace.
++    const before = rehearsal.snapshot();
+learning/S136/model.test.cjs:217: trailing whitespace.
++    assert.throws(() => rehearsal.act(action), { code: 'ERR_ACTION_INPUT' });
+learning/S136/model.test.cjs:218: trailing whitespace.
++    assert.deepEqual(rehearsal.snapshot(), before);
+learning/S136/model.test.cjs:219: trailing whitespace.
++  });
+learning/S136/model.test.cjs:220: trailing whitespace.
++}
+learning/S136/model.test.cjs:221: trailing whitespace.
++
+learning/S136/model.test.cjs:222: trailing whitespace.
++test('accessor and symbol action fields cannot bypass the typed input guard', () => {
+learning/S136/model.test.cjs:223: trailing whitespace.
++  const rehearsal = model.createRehearsal();
+learning/S136/model.test.cjs:224: trailing whitespace.
++  let called = false;
+learning/S136/model.test.cjs:225: trailing whitespace.
++  const getter = { get type() { called = true; return 'sample-offline'; } };
+learning/S136/model.test.cjs:226: trailing whitespace.
++  assert.throws(() => rehearsal.act(getter), { code: 'ERR_ACTION_INPUT' });
+learning/S136/model.test.cjs:227: trailing whitespace.
++  assert.equal(called, false);
+learning/S136/model.test.cjs:228: trailing whitespace.
++  assert.throws(() => rehearsal.act({ type: 'sample-offline', [Symbol('extra')]: true }), { code: 'ERR_ACTION_INPUT' });
+learning/S136/model.test.cjs:229: trailing whitespace.
++  assert.equal(rehearsal.snapshot().history.length, 0);
+learning/S136/model.test.cjs:230: trailing whitespace.
++});
+learning/S136/model.test.cjs:231: trailing whitespace.
++
+learning/S136/model.test.cjs:232: trailing whitespace.
++test('all phase guards reject unsafe ordering and repeated actions atomically', () => {
+learning/S136/model.test.cjs:233: trailing whitespace.
++  const rehearsal = model.createRehearsal();
+learning/S136/model.test.cjs:234: trailing whitespace.
++  function denied(type) {
+learning/S136/model.test.cjs:235: trailing whitespace.
++    const before = rehearsal.snapshot();
+learning/S136/model.test.cjs:236: trailing whitespace.
++    const action = type === 'synchronize' ? { type, fixture: 'clean', timing: 'within-budget' } : { type };
+learning/S136/model.test.cjs:237: trailing whitespace.
++    assert.throws(() => rehearsal.act(action), { code: 'ERR_STATE_GUARD' });
+learning/S136/model.test.cjs:238: trailing whitespace.
++    assert.deepEqual(rehearsal.snapshot(), before);
+learning/S136/model.test.cjs:239: trailing whitespace.
++  }
+learning/S136/model.test.cjs:240: trailing whitespace.
++  for (const type of ['queue-changes', 'sample-online', 'retry-ack']) denied(type);
+learning/S136/model.test.cjs:241: trailing whitespace.
++  rehearsal.act({ type: 'sample-offline' });
+learning/S136/model.test.cjs:242: trailing whitespace.
++  for (const type of ['sample-offline', 'sample-online', 'synchronize']) denied(type);
+learning/S136/model.test.cjs:243: trailing whitespace.
++  rehearsal.act({ type: 'queue-changes' });
+learning/S136/model.test.cjs:244: trailing whitespace.
++  for (const type of ['queue-changes', 'sample-offline', 'synchronize']) denied(type);
+learning/S136/model.test.cjs:245: trailing whitespace.
++  rehearsal.act({ type: 'sample-online' });
+learning/S136/model.test.cjs:246: trailing whitespace.
++  for (const type of ['sample-online', 'queue-changes']) denied(type);
+learning/S136/model.test.cjs:247: trailing whitespace.
++  rehearsal.act({ type: 'synchronize', fixture: 'clean', timing: 'within-budget' });
+learning/S136/model.test.cjs:248: trailing whitespace.
++  for (const type of ['synchronize', 'retry-ack', 'sample-offline']) denied(type);
+learning/S136/model.test.cjs:249: trailing whitespace.
++});
+learning/S136/model.test.cjs:250: trailing whitespace.
++
+learning/S136/model.test.cjs:251: trailing whitespace.
++test('deduplicated acknowledgment retry is bounded to one attempt and original timing', () => {
+learning/S136/model.test.cjs:252: trailing whitespace.
++  const rehearsal = prepared();
+learning/S136/model.test.cjs:253: trailing whitespace.
++  const unresolved = rehearsal.act({ type: 'synchronize', fixture: 'missing-ack', timing: 'within-budget' });
+learning/S136/model.test.cjs:254: trailing whitespace.
++  const confirmed = rehearsal.act({ type: 'retry-ack' });
+learning/S136/model.test.cjs:255: trailing whitespace.
++  assert.deepEqual(confirmed.observation.timing, unresolved.observation.timing);
+learning/S136/model.test.cjs:256: trailing whitespace.
++  assert.deepEqual(confirmed.observation.operations.map((op) => op.id), unresolved.observation.operations.map((op) => op.id));
+learning/S136/model.test.cjs:257: trailing whitespace.
++  assert.deepEqual(confirmed.observation.operations.map((op) => op.effectCount), [1, 1]);
+learning/S136/model.test.cjs:258: trailing whitespace.
++  assert.throws(() => rehearsal.act({ type: 'retry-ack' }), { code: 'ERR_STATE_GUARD' });
+learning/S136/model.test.cjs:259: trailing whitespace.
++  const late = prepared();
+learning/S136/model.test.cjs:260: trailing whitespace.
++  late.act({ type: 'synchronize', fixture: 'missing-ack', timing: 'recovery-over-budget' });
+learning/S136/model.test.cjs:261: trailing whitespace.
++  assert.throws(() => late.act({ type: 'retry-ack' }), { code: 'ERR_STATE_GUARD' });
+learning/S136/model.test.cjs:262: trailing whitespace.
++});
+learning/S136/model.test.cjs:263: trailing whitespace.
++
+learning/S136/model.test.cjs:264: trailing whitespace.
++test('snapshots, fixture data and public methods cannot be mutated into false success', () => {
+learning/S136/model.test.cjs:265: trailing whitespace.
++  const rehearsal = prepared();
+learning/S136/model.test.cjs:266: trailing whitespace.
++  const state = rehearsal.snapshot();
+learning/S136/model.test.cjs:267: trailing whitespace.
++  assert.throws(() => { state.sampleClientOnline = false; }, TypeError);
+learning/S136/model.test.cjs:268: trailing whitespace.
++  assert.throws(() => { state.pending[0].expectedValue = 'remote-red'; }, TypeError);
+learning/S136/model.test.cjs:269: trailing whitespace.
++  assert.throws(() => { state.history.push({}); }, TypeError);
+learning/S136/model.test.cjs:270: trailing whitespace.
++  assert.throws(() => { rehearsal.act = () => ({ result: { verdict: 'positive' } }); }, TypeError);
+learning/S136/model.test.cjs:271: trailing whitespace.
++  assert.throws(() => { model.CHANGES[0].id = 'other'; }, TypeError);
+learning/S136/model.test.cjs:272: trailing whitespace.
++  const observation = model.makeObservation('clean', 'within-budget');
+learning/S136/model.test.cjs:273: trailing whitespace.
++  const before = structuredClone(observation);
+learning/S136/model.test.cjs:274: trailing whitespace.
++  model.evaluate(observation);
+learning/S136/model.test.cjs:275: trailing whitespace.
++  assert.deepEqual(observation, before);
+learning/S136/model.test.cjs:276: trailing whitespace.
++});
+learning/S136/model.test.cjs:277: trailing whitespace.
++
+learning/S136/model.test.cjs:278: trailing whitespace.
++test('reset clears active state, retains unknown history and permits a new clean run', () => {
+learning/S136/model.test.cjs:279: trailing whitespace.
++  const rehearsal = prepared();
+learning/S136/model.test.cjs:280: trailing whitespace.
++  rehearsal.act({ type: 'synchronize', fixture: 'missing-ack', timing: 'within-budget' });
+learning/S136/model.test.cjs:281: trailing whitespace.
++  const reset = rehearsal.act({ type: 'reset' });
+learning/S136/model.test.cjs:282: trailing whitespace.
++  assert.equal(reset.phase, 'ready');
+learning/S136/model.test.cjs:283: trailing whitespace.
++  assert.equal(reset.sampleClientOnline, true);
+learning/S136/model.test.cjs:284: trailing whitespace.
++  assert.equal(reset.consoleAvailable, true);
+learning/S136/model.test.cjs:285: trailing whitespace.
++  assert.equal(reset.otherWorkersAvailable, true);
+learning/S136/model.test.cjs:286: trailing whitespace.
++  assert.equal(reset.consoleInspections, 0);
+learning/S136/model.test.cjs:287: trailing whitespace.
++  assert.deepEqual(reset.pending, []);
+learning/S136/model.test.cjs:288: trailing whitespace.
++  assert.equal(reset.observation, null);
+learning/S136/model.test.cjs:289: trailing whitespace.
++  assert.equal(reset.result, null);
+learning/S136/model.test.cjs:290: trailing whitespace.
++  assert.equal(reset.fixture, null);
+learning/S136/model.test.cjs:291: trailing whitespace.
++  assert.equal(reset.timing, null);
+learning/S136/model.test.cjs:292: trailing whitespace.
++  assert.equal(reset.history.at(-2).result.verdict, 'unknown');
+learning/S136/model.test.cjs:293: trailing whitespace.
++  assert.equal(reset.history.at(-1).previousResult.verdict, 'unknown');
+learning/S136/model.test.cjs:294: trailing whitespace.
++  rehearsal.act({ type: 'sample-offline' });
+learning/S136/model.test.cjs:295: trailing whitespace.
++  rehearsal.act({ type: 'queue-changes' });
+learning/S136/model.test.cjs:296: trailing whitespace.
++  rehearsal.act({ type: 'sample-online' });
+learning/S136/model.test.cjs:297: trailing whitespace.
++  assert.equal(rehearsal.act({ type: 'synchronize', fixture: 'clean', timing: 'within-budget' }).result.verdict, 'positive');
+learning/S136/model.test.cjs:298: trailing whitespace.
++});
+learning/S136/model.test.cjs:299: trailing whitespace.
++
+learning/S136/model.test.cjs:300: trailing whitespace.
++test('bounded journal reports omissions explicitly and reset remains usable at its bound', () => {
+learning/S136/model.test.cjs:301: trailing whitespace.
++  const rehearsal = model.createRehearsal();
+learning/S136/model.test.cjs:302: trailing whitespace.
++  for (let i = 0; i < 40; i += 1) rehearsal.act({ type: 'inspect-console' });
+learning/S136/model.test.cjs:303: trailing whitespace.
++  const inspected = rehearsal.snapshot();
+learning/S136/model.test.cjs:304: trailing whitespace.
++  assert.equal(inspected.history.length, model.MAX_HISTORY);
+learning/S136/model.test.cjs:305: trailing whitespace.
++  assert.equal(inspected.omittedEntries, 8);
+learning/S136/model.test.cjs:306: trailing whitespace.
++  assert.equal(inspected.history[0].sequence, 9);
+learning/S136/model.test.cjs:307: trailing whitespace.
++  assert.equal(inspected.consoleInspections, 40);
+learning/S136/model.test.cjs:308: trailing whitespace.
++  const reset = rehearsal.act({ type: 'reset' });
+learning/S136/model.test.cjs:309: trailing whitespace.
++  assert.equal(reset.history.length, 32);
+learning/S136/model.test.cjs:310: trailing whitespace.
++  assert.equal(reset.omittedEntries, 9);
+learning/S136/model.test.cjs:311: trailing whitespace.
++  assert.equal(reset.history.at(-1).action, 'reset');
+learning/S136/model.test.cjs:312: trailing whitespace.
++  assert.equal(reset.consoleInspections, 0);
+learning/S136/model.test.cjs:313: trailing whitespace.
++  assert.ok(reset.allowedActions.includes('sample-offline'));
+learning/S136/model.test.cjs:314: trailing whitespace.
++});
+learning/S136/offline-sync.feature:1: trailing whitespace.
++Feature: Reconcile only a fictional offline sample client with v2
+learning/S136/offline-sync.feature:2: trailing whitespace.
++  A-S136 / D-S136 / SC-S136 is one frozen satisfier unit.
+learning/S136/offline-sync.feature:3: trailing whitespace.
++  Training rehearsal - synthetic data - not a live Azure result
+learning/S136/offline-sync.feature:4: trailing whitespace.
++  Connectivity, identity, pending changes, receipts, effects and elapsed times are
+learning/S136/offline-sync.feature:5: trailing whitespace.
++  fixed fictional teaching data, not a device, network, authentication or storage operation.
+learning/S136/offline-sync.feature:6: trailing whitespace.
++
+learning/S136/offline-sync.feature:7: trailing whitespace.
++  Background:
+learning/S136/offline-sync.feature:8: trailing whitespace.
++    Given sample-client-136, fictional-user-136 and two fixed queued changes
+learning/S136/offline-sync.feature:9: trailing whitespace.
++    And the operator console and two other fictional workers remain available
+learning/S136/offline-sync.feature:10: trailing whitespace.
++    And the protocol uses stable operation IDs, authenticated ownership, revision checks
+learning/S136/offline-sync.feature:11: trailing whitespace.
++    And an accepted v2 receipt and exactly one correct effect are required per change
+learning/S136/offline-sync.feature:12: trailing whitespace.
++    And the synthetic offline budget is 5000 ms and recovery budget is 200 ms
+learning/S136/offline-sync.feature:13: trailing whitespace.
++
+learning/S136/offline-sync.feature:14: trailing whitespace.
++  Scenario: Disconnect only the sample, queue, reconnect and reconcile with v2
+learning/S136/offline-sync.feature:15: trailing whitespace.
++    When the operator takes only the sample client offline
+learning/S136/offline-sync.feature:16: trailing whitespace.
++    And inspects the operator console while the sample remains offline
+learning/S136/offline-sync.feature:17: trailing whitespace.
++    And queues the two fixed changes and reconnects the sample
+learning/S136/offline-sync.feature:18: trailing whitespace.
++    And synchronizes with the clean receipt fixture within both budgets
+learning/S136/offline-sync.feature:19: trailing whitespace.
++    Then both correct effects have count one and matching authenticated v2 receipts
+learning/S136/offline-sync.feature:20: trailing whitespace.
++    And no pending change remains and the measured result is positive
+learning/S136/offline-sync.feature:21: trailing whitespace.
++    And the console and other workers remain available throughout the retained history
+learning/S136/offline-sync.feature:22: trailing whitespace.
++
+learning/S136/offline-sync.feature:23: trailing whitespace.
++  Scenario: A conflict is observed, never silently merged
+learning/S136/offline-sync.feature:24: trailing whitespace.
++    Given the sample reconnects with both changes pending
+learning/S136/offline-sync.feature:25: trailing whitespace.
++    When synchronization observes a revision conflict on the second change
+learning/S136/offline-sync.feature:26: trailing whitespace.
++    Then one effect is confirmed and the conflicting change remains pending
+learning/S136/offline-sync.feature:27: trailing whitespace.
++    And the result is negative with interrupted user impact
+learning/S136/offline-sync.feature:28: trailing whitespace.
++    And no merge, acknowledgment, successful retry or second effect is invented
+learning/S136/offline-sync.feature:29: trailing whitespace.
++
+learning/S136/offline-sync.feature:30: trailing whitespace.
++  Scenario: A missing acknowledgment is unresolved until the same ID is confirmed
+learning/S136/offline-sync.feature:31: trailing whitespace.
++    Given the sample reconnects with both changes pending
+learning/S136/offline-sync.feature:32: trailing whitespace.
++    When synchronization observes both effects but no first-change acknowledgment
+learning/S136/offline-sync.feature:33: trailing whitespace.
++    Then the first change remains pending and the result is unknown
+learning/S136/offline-sync.feature:34: trailing whitespace.
++    When the operator retries that same pending ID against the fixed deduplication receipt
+learning/S136/offline-sync.feature:35: trailing whitespace.
++    Then the effect count remains one, its attempt count becomes two and pending clears
+learning/S136/offline-sync.feature:36: trailing whitespace.
++    And the positive result does not erase the earlier unknown observation
+learning/S136/offline-sync.feature:37: trailing whitespace.
++
+learning/S136/offline-sync.feature:38: trailing whitespace.
++  Scenario Outline: Known incorrect or over-budget observations cannot pass
+learning/S136/offline-sync.feature:39: trailing whitespace.
++    Given the sample reconnects with both changes pending
+learning/S136/offline-sync.feature:40: trailing whitespace.
++    When synchronization uses <fixture> with <timing>
+learning/S136/offline-sync.feature:41: trailing whitespace.
++    Then the result is negative and reports the actual synthetic reason
+learning/S136/offline-sync.feature:42: trailing whitespace.
++    And confirmed receipts are not invented for any unresolved change
+learning/S136/offline-sync.feature:43: trailing whitespace.
++    Examples:
+learning/S136/offline-sync.feature:44: trailing whitespace.
++      | fixture          | timing               |
+learning/S136/offline-sync.feature:45: trailing whitespace.
++      | missing-effect   | within-budget        |
+learning/S136/offline-sync.feature:46: trailing whitespace.
++      | duplicate-effect | within-budget        |
+learning/S136/offline-sync.feature:47: trailing whitespace.
++      | identity-rejected| within-budget        |
+learning/S136/offline-sync.feature:48: trailing whitespace.
++      | clean            | offline-over-budget  |
+learning/S136/offline-sync.feature:49: trailing whitespace.
++      | clean            | recovery-over-budget |
+learning/S136/offline-sync.feature:50: trailing whitespace.
++
+learning/S136/offline-sync.feature:51: trailing whitespace.
++  Scenario: Strict typed inputs and state ordering reject invalid actions atomically
+learning/S136/offline-sync.feature:52: trailing whitespace.
++    When an action is missing, malformed, includes extra data or uses an unknown fixture
+learning/S136/offline-sync.feature:53: trailing whitespace.
++    Or synchronization is attempted before offline queuing and reconnection
+learning/S136/offline-sync.feature:54: trailing whitespace.
++    Then a specific error is exposed without altering pending changes, effects or history
+learning/S136/offline-sync.feature:55: trailing whitespace.
++    And the operator controls still work
+learning/S136/offline-sync.feature:56: trailing whitespace.
++    And incomplete observation evidence cannot be presented as success
+learning/S136/offline-sync.feature:57: trailing whitespace.
++
+learning/S136/offline-sync.feature:58: trailing whitespace.
++  Scenario: Keyboard, error and reset affordances remain usable
+learning/S136/offline-sync.feature:59: trailing whitespace.
++    When the operator conducts the lesson using Tab, Enter and Space
+learning/S136/offline-sync.feature:60: trailing whitespace.
++    And a malformed control value or premature action is rejected in the actual DOM
+learning/S136/offline-sync.feature:61: trailing whitespace.
++    And the operator resets the rehearsal
+learning/S136/offline-sync.feature:62: trailing whitespace.
++    Then active fixtures, counters and errors return to their initial values
+learning/S136/offline-sync.feature:63: trailing whitespace.
++    And previous results remain visible in a bounded in-memory journal
+learning/S136/offline-sync.feature:64: trailing whitespace.
++    And any omitted old journal entries are explicitly counted
+learning/S136/offline-sync.feature:65: trailing whitespace.
++
+learning/S136/offline-sync.feature:66: trailing whitespace.
++  Scenario: Actual browser safety and failure observations
+learning/S136/offline-sync.feature:67: trailing whitespace.
++    Given a directly opened local lesson with external local scripts and styles
+learning/S136/offline-sync.feature:68: trailing whitespace.
++    Then CSP blocks inline script execution and connection attempts
+learning/S136/offline-sync.feature:69: trailing whitespace.
++    And no management, cloud, credentials, persistent storage or machine-offline API is used
+learning/S136/offline-sync.feature:70: trailing whitespace.
++    And an unavailable model produces an explicit startup error, not a successful result
+learning/S136/offline-sync.feature:71: trailing whitespace.
++    And the published isolated helper is closed in an awaited finally block
+learning/S136/remainder.json:1: trailing whitespace.
++{
+learning/S136/remainder.json:2: trailing whitespace.
++  "sourceParent": "D-S136",
+learning/S136/remainder.json:3: trailing whitespace.
++  "originalLearningUnit": "A-S136",
+learning/S136/remainder.json:4: trailing whitespace.
++  "nativeRemainder": "B-S136",
+learning/S136/remainder.json:5: trailing whitespace.
++  "recommendedDisposition": "Parent-controlled To Do/inventory; readiness=false until concrete native gates pass.",
+learning/S136/remainder.json:6: trailing whitespace.
++  "readiness": false,
+learning/S136/remainder.json:7: trailing whitespace.
++  "blocker": "This resource-free fictional lesson cannot supply native CORE/DATA/HOST/C032 qualification, approved target/network envelope, durable authenticated queueing, real v2 effects and receipts, or measured offline/recovery budgets. No cloud, IaC, identity, deployment or spending approval is inferred.",
+learning/S136/remainder.json:8: trailing whitespace.
++  "requiredEvidence": [
+learning/S136/remainder.json:9: trailing whitespace.
++    "Named qualified host/configuration and explicit sample-only connectivity isolation; operator controls and other workers unaffected.",
+learning/S136/remainder.json:10: trailing whitespace.
++    "Real queued authenticated stable-ID operations against v2, durable pending state, observed effect and acknowledgment counts, and explicit conflicts/missing acknowledgments.",
+learning/S136/remainder.json:11: trailing whitespace.
++    "Declared protocol/offline/recovery assumptions and measured budgets; demonstrate no missing or duplicate changes.",
+learning/S136/remainder.json:12: trailing whitespace.
++    "D-S040/D-S077 original source-parent dependencies and both original A/B acceptance slices."
+learning/S136/remainder.json:13: trailing whitespace.
++  ],
+learning/S136/remainder.json:14: trailing whitespace.
++  "limits": "A-S136 contributes at most one original satisfier after independent parent acceptance. Native B-S136 and D-S136 remain incomplete. This honest remainder creates no replacement or additional card credit.",
+learning/S136/remainder.json:15: trailing whitespace.
++  "additionalCredits": 0,
+learning/S136/remainder.json:16: trailing whitespace.
++  "integrationScopes": "C005-C008 and capability/local-harness are parent-owned; not modified."
+learning/S136/remainder.json:17: trailing whitespace.
++}
+learning/S136/style.css:1: trailing whitespace.
++:root { color-scheme: light; font: 1rem/1.55 system-ui, sans-serif; color: #14273d; background: #f4f6fa; }
+learning/S136/style.css:2: trailing whitespace.
++body { margin: 0; }
+learning/S136/style.css:3: trailing whitespace.
++main { max-width: 72rem; margin: auto; padding: 1.2rem; }
+learning/S136/style.css:4: trailing whitespace.
++h1, h2 { line-height: 1.25; }
+learning/S136/style.css:5: trailing whitespace.
++.banner { padding: 1rem; font-weight: 700; color: #14273d; background: #ffe7a1; border: 2px solid #765806; }
+learning/S136/style.css:6: trailing whitespace.
++fieldset, section, details { margin: 1rem 0; padding: 1rem; border: 1px solid #64748b; background: #fff; }
+learning/S136/style.css:7: trailing whitespace.
++legend, summary { font-weight: 700; }
+learning/S136/style.css:8: trailing whitespace.
++button, select { font: inherit; padding: .55rem; margin: .3rem; max-width: 100%; }
+learning/S136/style.css:9: trailing whitespace.
++button { color: #fff; background: #164f86; border: 2px solid #164f86; cursor: pointer; }
+learning/S136/style.css:10: trailing whitespace.
++button:disabled { color: #46576b; background: #e0e5ed; border-color: #a3adba; cursor: default; }
+learning/S136/style.css:11: trailing whitespace.
++.selectors { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(15rem, 2fr); gap: .4rem; align-items: center; }
+learning/S136/style.css:12: trailing whitespace.
++.buttons { display: flex; flex-wrap: wrap; }
+learning/S136/style.css:13: trailing whitespace.
++:focus-visible { outline: 3px solid #972a00; outline-offset: 3px; }
+learning/S136/style.css:14: trailing whitespace.
++dl { display: grid; grid-template-columns: minmax(12rem, 1fr) 2fr; gap: .4rem 1rem; }
+learning/S136/style.css:15: trailing whitespace.
++dt { font-weight: 600; }
+learning/S136/style.css:16: trailing whitespace.
++dd { margin: 0; overflow-wrap: anywhere; }
+learning/S136/style.css:17: trailing whitespace.
++table { width: 100%; border-collapse: collapse; }
+learning/S136/style.css:18: trailing whitespace.
++caption { text-align: left; padding-bottom: .7rem; }
+learning/S136/style.css:19: trailing whitespace.
++th, td { border: 1px solid #718198; padding: .45rem; text-align: left; overflow-wrap: anywhere; }
+learning/S136/style.css:20: trailing whitespace.
++.error { color: #7d150c; background: #ffede8; padding: .8rem; border: 2px solid #a5291b; }
+learning/S136/style.css:21: trailing whitespace.
++li { margin-bottom: .5rem; overflow-wrap: anywhere; }
+learning/S136/style.css:22: trailing whitespace.
++a { color: #124a85; }
+learning/S136/style.css:23: trailing whitespace.
++[hidden] { display: none !important; }
+learning/S136/style.css:24: trailing whitespace.
++@media (max-width: 44rem) {
+learning/S136/style.css:25: trailing whitespace.
++  main { padding: .6rem; }
+learning/S136/style.css:26: trailing whitespace.
++  .selectors, dl { grid-template-columns: 1fr; }
+learning/S136/style.css:27: trailing whitespace.
++  table { display: block; overflow-x: auto; }
+learning/S136/style.css:28: trailing whitespace.
++}

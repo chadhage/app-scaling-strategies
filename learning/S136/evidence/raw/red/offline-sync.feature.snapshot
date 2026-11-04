@@ -1,0 +1,70 @@
+Feature: Reconcile only a fictional offline sample client with v2
+  A-S136 / D-S136 / SC-S136 is one frozen satisfier unit.
+  Training rehearsal - synthetic data - not a live Azure result
+  Connectivity, identity, pending changes, receipts, effects and elapsed times are
+  fixed fictional teaching data, not a device, network, authentication or storage operation.
+
+  Background:
+    Given sample-client-136, fictional-user-136 and two fixed queued changes
+    And the operator console and two other fictional workers remain available
+    And the protocol uses stable operation IDs, authenticated ownership, revision checks
+    And an accepted v2 receipt and exactly one correct effect are required per change
+    And the synthetic offline budget is 5000 ms and recovery budget is 200 ms
+
+  Scenario: Disconnect only the sample, queue, reconnect and reconcile with v2
+    When the operator takes only the sample client offline
+    And inspects the operator console while the sample remains offline
+    And queues the two fixed changes and reconnects the sample
+    And synchronizes with the clean receipt fixture within both budgets
+    Then both correct effects have count one and matching authenticated v2 receipts
+    And no pending change remains and the measured result is positive
+    And the console and other workers remain available throughout the retained history
+
+  Scenario: A conflict is observed, never silently merged
+    Given the sample reconnects with both changes pending
+    When synchronization observes a revision conflict on the second change
+    Then one effect is confirmed and the conflicting change remains pending
+    And the result is negative with interrupted user impact
+    And no merge, acknowledgment, successful retry or second effect is invented
+
+  Scenario: A missing acknowledgment is unresolved until the same ID is confirmed
+    Given the sample reconnects with both changes pending
+    When synchronization observes both effects but no first-change acknowledgment
+    Then the first change remains pending and the result is unknown
+    When the operator retries that same pending ID against the fixed deduplication receipt
+    Then the effect count remains one, its attempt count becomes two and pending clears
+    And the positive result does not erase the earlier unknown observation
+
+  Scenario Outline: Known incorrect or over-budget observations cannot pass
+    Given the sample reconnects with both changes pending
+    When synchronization uses <fixture> with <timing>
+    Then the result is negative and reports the actual synthetic reason
+    And confirmed receipts are not invented for any unresolved change
+    Examples:
+      | fixture          | timing               |
+      | duplicate-effect | within-budget        |
+      | identity-rejected| within-budget        |
+      | clean            | offline-over-budget  |
+      | clean            | recovery-over-budget |
+
+  Scenario: Strict typed inputs and state ordering reject invalid actions atomically
+    When an action is missing, malformed, includes extra data or uses an unknown fixture
+    Or synchronization is attempted before offline queuing and reconnection
+    Then a specific error is exposed without altering pending changes, effects or history
+    And the operator controls still work
+    And incomplete observation evidence cannot be presented as success
+
+  Scenario: Keyboard, error and reset affordances remain usable
+    When the operator conducts the lesson using Tab, Enter and Space
+    And a malformed control value or premature action is rejected in the actual DOM
+    And the operator resets the rehearsal
+    Then active fixtures, counters and errors return to their initial values
+    And previous results remain visible in a bounded in-memory journal
+    And any omitted old journal entries are explicitly counted
+
+  Scenario: Actual browser safety and failure observations
+    Given a directly opened local lesson with external local scripts and styles
+    Then CSP blocks inline script execution and connection attempts
+    And no management, cloud, credentials, persistent storage or machine-offline API is used
+    And an unavailable model produces an explicit startup error, not a successful result
+    And the published isolated helper is closed in an awaited finally block

@@ -1,0 +1,124 @@
+(function () {
+  'use strict';
+
+  const byId = (id) => document.getElementById(id);
+  const sampleControls = byId('sample-controls');
+  const operatorControls = byId('operator-controls');
+  const fixture = byId('fixture');
+  const timing = byId('timing');
+  const actionError = byId('action-error');
+  const reload = byId('reload-lesson');
+  reload.addEventListener('click', () => window.location.reload());
+
+  function startupFailure() {
+    byId('fatal-error').textContent = 'Lesson unavailable: the local rehearsal model could not start. No synchronization result was observed. Reload the local lesson after restoring its files.';
+    byId('fatal-error').hidden = false;
+    sampleControls.disabled = true;
+    operatorControls.disabled = true;
+    byId('verdict').textContent = 'Unknown — lesson unavailable';
+    reload.hidden = false;
+  }
+
+  if (!window.S136 || typeof window.S136.createRehearsal !== 'function') {
+    startupFailure();
+    return;
+  }
+  let rehearsal;
+  try {
+    rehearsal = window.S136.createRehearsal();
+    rehearsal.snapshot();
+  } catch {
+    startupFailure();
+    return;
+  }
+
+  function text(id, value) { byId(id).textContent = String(value); }
+  function visible(value) { return value === null ? 'unknown' : String(value); }
+  function render() {
+    const state = rehearsal.snapshot();
+    const observed = state.observation;
+    const measured = state.result;
+    text('sample-connection', `${state.sampleClientOnline ? 'Online' : 'Offline'} (fictional sample only)`);
+    text('console-connection', 'Available; never disconnected');
+    text('worker-connection', 'Two available; unaffected');
+    text('console-inspections', state.consoleInspections);
+    text('pending-count', state.pending.length);
+    text('effect-count', measured ? visible(measured.metrics.totalEffects) : 'Not observed');
+    text('ack-count', measured ? measured.metrics.acknowledgments : 'Not observed');
+    text('confirmed-count', measured ? measured.metrics.confirmedChanges : 'Not observed');
+    text('elapsed', observed ? `${visible(observed.timing.offlineMs)} ms / ${visible(observed.timing.recoveryMs)} ms (synthetic)` : 'Not observed');
+    text('verdict', measured ? `${measured.verdict} — ${measured.verifier} (synthetic journey)` : 'Unknown — not yet measured');
+    text('impact', measured ? measured.userImpact : 'Not run');
+    byId('reasons').replaceChildren(...(measured?.reasons ?? []).map((reason) => {
+      const item = document.createElement('li');
+      item.textContent = reason;
+      return item;
+    }));
+    text('queue-summary', state.pending.length
+      ? `Retained pending IDs: ${state.pending.map((change) => change.id).join(', ')}. No merge or successful receipt is inferred.`
+      : measured ? 'No pending IDs remain. Inspect the verdict too: budget failure is still an interrupted journey.' : 'No changes queued yet.');
+    byId('operation-rows').replaceChildren(...window.S136.CHANGES.map((change, index) => {
+      const operation = observed?.operations[index];
+      const row = document.createElement('tr');
+      const cells = [
+        `${change.id}: ${change.expectedValue}`,
+        state.pending.some((pending) => pending.id === change.id) ? 'retained' : measured ? 'confirmed' : 'not queued',
+        operation ? visible(operation.authenticated) : 'not observed',
+        operation ? `${visible(operation.effectCount)} / ${visible(operation.observedValue)} / ${visible(operation.revision)}` : 'not observed',
+        operation?.ack ? `${operation.ack.status}; ${operation.ack.id}; ${visible(operation.ack.identity)}; ${visible(operation.ack.deployment)}` : 'not observed',
+        operation ? operation.attempts : 'not observed',
+      ];
+      for (const value of cells) {
+        const cell = document.createElement('td');
+        cell.textContent = String(value);
+        row.append(cell);
+      }
+      return row;
+    }));
+    byId('history').replaceChildren(...state.history.map((entry) => {
+      const item = document.createElement('li');
+      const result = entry.result ? `; ${entry.result.verdict} / ${entry.result.userImpact}` : '';
+      const previous = entry.previousResult ? `; previous result retained: ${entry.previousResult.verdict} / ${entry.previousResult.userImpact}` : '';
+      item.textContent = `#${entry.sequence} ${entry.action}; sample ${entry.sampleClientOnline ? 'online' : 'offline'}; pending ${entry.pendingIds.join(', ') || 'none'}${result}${previous}; console and other workers available`;
+      return item;
+    }));
+    text('journal-limit', `Latest ${window.S136.MAX_HISTORY} actions retained; ${state.omittedEntries} older entries omitted. Reload clears this local in-memory journal.`);
+    for (const action of ['sample-offline', 'queue-changes', 'sample-online', 'synchronize', 'retry-ack']) {
+      byId(action).disabled = !state.allowedActions.includes(action);
+    }
+    fixture.disabled = state.phase === 'observed';
+    timing.disabled = state.phase === 'observed';
+  }
+
+  function perform(type, button) {
+    try {
+      const action = type === 'synchronize'
+        ? { type, fixture: fixture.value, timing: timing.value } : { type };
+      rehearsal.act(action);
+      actionError.hidden = true;
+      actionError.textContent = '';
+      if (type === 'reset') {
+        fixture.value = 'clean';
+        timing.value = 'within-budget';
+      }
+      render();
+      text('operator-message', type === 'inspect-console'
+        ? 'Operator inspection completed; only the sample connectivity can change.'
+        : type === 'reset' ? 'Active rehearsal reset; prior results remain in the journal.' : 'Operator controls available.');
+    } catch (error) {
+      actionError.textContent = `${error.code || 'ERR_LESSON'}: ${error.message || 'Rehearsal failed; no successful result inferred.'}`;
+      actionError.hidden = false;
+      render();
+      const target = type === 'synchronize' && !window.S136.FIXTURE_IDS.includes(fixture.value)
+        ? fixture : type === 'synchronize' && !window.S136.TIMING_IDS.includes(timing.value) ? timing : button;
+      (target.disabled ? byId('restart') : target).focus();
+    }
+  }
+
+  for (const action of ['sample-offline', 'queue-changes', 'sample-online', 'synchronize', 'retry-ack', 'inspect-console']) {
+    const button = byId(action);
+    button.addEventListener('click', () => perform(action, button));
+  }
+  byId('restart').addEventListener('click', () => perform('reset', byId('restart')));
+  render();
+}));
