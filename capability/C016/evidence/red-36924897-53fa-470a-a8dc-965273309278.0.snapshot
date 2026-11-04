@@ -1,0 +1,20 @@
+'use strict';
+
+const { makeState, digest } = require('..\\C015\\contract.cjs');
+
+function makeCommand(runId, expectedEpoch) {
+  const candidate = makeState(runId, expectedEpoch + 1);
+  return {
+    schemaVersion: 1, kind: ['submit', 'advance', 'finish'][expectedEpoch],
+    runId, expectedEpoch, candidate,
+  };
+}
+
+async function execute(namespace, command) {
+  return {
+    schemaVersion: 1, cardId: 'C016', outcome: 'unknown', disposition: 'unimplemented',
+    commandId: digest(command), publicationPerformed: false, acknowledgment: null,
+  };
+}
+
+module.exports = Object.freeze({ makeCommand, execute });
