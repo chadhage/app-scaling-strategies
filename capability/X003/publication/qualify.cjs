@@ -9,7 +9,9 @@ const { execFileSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
-const git = args => execFileSync('git', ['--no-pager', ...args], { cwd: repository, encoding: 'buffer' });
+const git = args => execFileSync('git', ['--no-pager', ...args], {
+  cwd: repository, encoding: 'buffer', maxBuffer: 32 * 1024 * 1024
+});
 const text = args => git(args).toString('utf8').trim();
 
 function qualify(resultPath) {

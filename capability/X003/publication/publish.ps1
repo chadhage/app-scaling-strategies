@@ -127,7 +127,8 @@ try {
         foreignIndexPreserved=$indexPreservation.preserved;foreignIndexEntryCount=$indexPreservation.foreignEntryCount
         foreignIndexMetadataSha256=$indexPreservation.foreignMetadataSha256;unmergedEntries=0
         gitTransport='publisher-process-local HTTP/1.1';safeHttpVersionBeforeStandard='HTTP/1.1'
-        priorGitProcessEnvironmentRestored=$true;privatePublisherBytesUnchanged=$true;globalGitConfigurationChanged=$false
+        priorGitProcessEnvironmentRestored=$true;freshSafeGitConfigAfterRestoreValidated=$true
+        privatePublisherBytesUnchanged=$true;globalGitConfigurationChanged=$false
         delegatedToUnchangedStandardPublisher=$true;stateThenPublisherLockOrder=$true
         stateReportAfterBothLocksReleased=$true;additionalCompanionCredit=0;parentAcceptancePending=$true
     }

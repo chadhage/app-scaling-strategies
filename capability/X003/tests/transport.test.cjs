@@ -21,7 +21,8 @@ function check(body) {
 test('missing count appends exact HTTP1.1 in the same process and restores missing entries finally', () => {
   check("$r=Enable-GitHttp11 $a ('0'*64);try{Assert ($env:GIT_CONFIG_COUNT -eq '1');Assert ((git config --get http.version) -eq 'HTTP/1.1')}"
     + "finally{Restore-GitHttp11 $r};Assert (-not (Get-GitProcessEntry 'GIT_CONFIG_COUNT').present);"
-    + "Assert (-not (Get-GitProcessEntry 'GIT_CONFIG_KEY_0').present);Assert (-not (Get-GitProcessEntry 'GIT_CONFIG_VALUE_0').present);");
+    + "Assert (-not (Get-GitProcessEntry 'GIT_CONFIG_KEY_0').present);Assert (-not (Get-GitProcessEntry 'GIT_CONFIG_VALUE_0').present);"
+    + "$null=git config --get http.version;Assert ($LASTEXITCODE -in @(0,1));");
 });
 
 test('prior entries and ignored next-slot values survive append and an exception without global config changes', () => {

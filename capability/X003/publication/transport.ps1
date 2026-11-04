@@ -19,6 +19,10 @@ function Restore-GitHttp11($Restore) {
             throw 'Git process environment did not restore exactly; no success claim.'
         }
     }
+    $null=& git config --get http.version 2>$null
+    if ($LASTEXITCODE -notin @(0,1)) {
+        throw 'Fresh safe Git configuration inspection failed after restoration; no caller success claim.'
+    }
 }
 function Enable-GitHttp11($Approval,[string]$ActualPublisherSha256) {
     if ($Approval.approvedBy -ne 'parent-controller' -or $Approval.mode -ne 'publisher-process-local HTTP/1.1' -or
