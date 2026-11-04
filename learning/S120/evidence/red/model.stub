@@ -1,0 +1,34 @@
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.S120 = api;
+}(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const BANNER = 'Training rehearsal - synthetic data - not a live Azure result';
+  const VERSION = 'S120-fixed-v1';
+  const LIMITS = Object.freeze({ actions: 12, archives: 5, demandUnits: 2, budgetMs: 100 });
+  function create() {
+    return Object.freeze({
+      fixtureId: VERSION, runNumber: 1, step: 0, history: Object.freeze([]),
+      destinations: Object.freeze([
+        Object.freeze({ id: 'origin-a', region: 'fictional-region-a', capacityUnits: 2, stateRevision: 7, writerEpoch: 3, available: true }),
+        Object.freeze({ id: 'origin-b', region: 'fictional-region-b', capacityUnits: 2, stateRevision: 7, writerEpoch: 3, available: true })
+      ]),
+      attempts: Object.freeze([]), effects: Object.freeze([]), events: Object.freeze([]),
+      observedTopologies: Object.freeze([]), lossObserved: false,
+      recoveredIds: Object.freeze([]), pendingEffect: 'not-observed', claim: null
+    });
+  }
+  function act(state) { return state; }
+  function summarize() {
+    return Object.freeze({
+      viableDestinations: Object.freeze(['origin-a', 'origin-b']),
+      attempted: 0, succeeded: 0, interrupted: 0, unknown: 0, affectedAttempts: 0,
+      successfulMigrations: 0, verification: 'unverified', userImpact: 'unverified',
+      envelope: 'supported control only', consistency: 'authoritative fixture state reachable',
+      cleanup: 'not required', reason: 'No total-loss observations yet.'
+    });
+  }
+  return Object.freeze({ BANNER, VERSION, LIMITS, create, act, summarize });
+}));

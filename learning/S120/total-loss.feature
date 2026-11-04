@@ -1,0 +1,79 @@
+Feature: Recognize the availability and consistency limit after total destination loss
+  As an operator rehearsing A-S120, packet SC-S120, parent D-S120
+  I remove only the two fixed fictional destinations in the lesson
+  So that a correct negative verification never becomes zero-downtime migration success
+
+  Background:
+    Given the banner is "Training rehearsal - synthetic data - not a live Azure result"
+    And all destinations, regions, capacity, state, requests, effects and durations are fixed teaching data
+    And fictional paths origin-a and origin-b each have capacity 2, state revision 7 and writer epoch 3
+    And the supported envelope requires at least one reachable consistent path for demand 2
+    And the synthetic request budget is 100 milliseconds, not an Azure threshold
+    And no resource, process, network, cloud or shared harness is changed by a lesson action
+
+  Scenario: A surviving viable destination is a positive control, not total-loss success
+    When I observe the supported fixture
+    And confirm removal of origin-a
+    And observe the remaining path
+    Then four control requests succeed within their fixed budgets with compatible state
+    And origin-b alone is viable
+    And no uninterrupted migration is counted
+    And the total-loss verification is unverified
+
+  Scenario: All viable destinations disappear
+    When I confirm removal of origin-a and origin-b
+    And observe synthetic journeys
+    Then the read and new write are interrupted with fixed 503 results
+    And the in-flight write has a missing acknowledgment and an unknown outcome
+    And no new write effect is admitted without authoritative state
+    And the unsupported envelope and unavoidable interruption are explicit
+    And verification of expected interruption passes the educational check
+    And user impact remains interrupted with zero successful migrations
+    And all three affected attempts remain in the denominator
+
+  Scenario: A success-shaped claim must fail
+    Given the total-loss observations include two interruptions and one unknown
+    When I claim zero downtime
+    Then the educational verifier fails
+    And the result still reports interrupted users and an unsupported envelope
+    And an unknown acknowledgment never counts as success
+
+  Scenario: Recovery cannot erase the outage
+    Given the total-loss observations include two interruptions and one unknown
+    When I request recovery without reconciling authoritative fixture state
+    Then recovery is rejected without changing the state
+    When I reconcile the fixed snapshot and recover origin-a
+    And observe recovered control requests
+    Then only the owned fictional path origin-a is restored
+    And the pending effect is reconciled exactly once
+    And the original unknown request remains unknown
+    And both earlier interruptions remain in the record
+    And cleanup and educational verification are separate from migration success
+
+  Scenario: Blind retry cannot resolve missing acknowledgment
+    Given the in-flight write outcome is unknown
+    When I request a new mutation as a blind retry
+    Then the action is rejected with a consistency explanation
+    And no duplicate effect or successful migration is invented
+
+  Scenario: Strict commands and issued immutable states
+    When a destination is foreign, a confirmation is not boolean true, or a command has extra fields
+    Or a caller supplies forged state, repeats an observation, removes an unavailable path, or exceeds the action bound
+    Then the action is rejected explicitly without mutation
+    And malformed strings are displayed as text, never HTML
+
+  Scenario: Bounded reset retains original results
+    Given a run recorded interruptions, an unknown result and owned fixture recovery
+    When I reset
+    Then a fresh fixed fixture is shown
+    And the prior run, attempts, events, effects and verdict remain in history
+    And reset focuses the first operator control
+    And a sixth archive is rejected instead of silently deleting history
+
+  Scenario: Real browser behavior and failure are observed
+    Then native forms and buttons work by keyboard
+    And rejected actions have an accessible alert and focused correction control
+    And unavailable lesson scripts leave disabled controls and an unverified failure message
+    And the browser actually blocks inline scripts, evaluation, connections and native form submission under CSP
+    And normal verification does not change retained evidence
+    And browser proof is captured only when CAPTURE_BROWSER_EVIDENCE equals exactly "1"

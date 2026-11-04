@@ -1,0 +1,85 @@
+{
+  "cardId": "A-S120",
+  "workerId": "worker-A-S120",
+  "kano": "S",
+  "kanoUnit": "A-S120",
+  "parents": ["D-S120"],
+  "packet": "SC-S120",
+  "technicalEntryGate": "SOURCE",
+  "authorization": "local-synthetic-only",
+  "banner": "Training rehearsal - synthetic data - not a live Azure result",
+  "objective": "Remove all viable destinations; recognize unavoidable interruption rather than inventing zero-downtime success.",
+  "sourceCommit": "81c9ccad587c0d2cf64fad42d85f6d048ce3611c",
+  "sourceRows": {
+    "README.md": "| S120 | **Total partition or loss of viable destinations:** Document the availability/consistency limit; do not claim an achievable zero-interruption result. |",
+    ".docs/wiki/backlog.md": "| D-S120 | P2 | Add a bounded all-destinations-unavailable experiment within a dedicated lease. | The UI demonstrates unavoidable interruption/consistency limits and labels the unsupported envelope; recovery restores only owned resources. | P006 |",
+    ".docs/wiki/kanban.md": "| A-S120 | D-S120 | S | Remove all viable destinations; recognize unavoidable interruption rather than inventing zero-downtime success. | SOURCE |"
+  },
+  "mode": "standalone fixed fictional teaching data",
+  "entry": "learning/S120/index.html",
+  "fixtureId": "S120-fixed-v1",
+  "preconditions": {
+    "ownedFictionalDestinations": ["origin-a", "origin-b"],
+    "fictionalRegions": ["fictional-region-a", "fictional-region-b"],
+    "capacityUnitsPerPath": 2,
+    "demandUnits": 2,
+    "authoritativeStateRevision": 7,
+    "writerEpoch": 3,
+    "budgetMs": 100,
+    "requiredViablePaths": 1,
+    "maxAcceptedActionsPerRun": 12,
+    "maxArchivedRuns": 5
+  },
+  "actions": ["observe", "remove", "verify", "retry (rejected)", "recover", "reset"],
+  "expectedTotalLoss": {
+    "attempted": 3,
+    "succeeded": 0,
+    "interrupted": 2,
+    "unknown": 1,
+    "affectedAttempts": 3,
+    "successfulMigrations": 0,
+    "newWritesAdmitted": 0,
+    "correctNegativeVerification": "pass",
+    "incorrectZeroDowntimeVerification": "fail",
+    "userImpact": "interrupted",
+    "envelope": "unsupported",
+    "httpStatusForKnownInterruptions": 503,
+    "knownInterruptionLatencyMs": 250,
+    "unknownLatencyMs": null
+  },
+  "expectedRecovery": {
+    "onlyOneOwnedFictionalDestinationRestored": true,
+    "otherFictionalDestinationRemainsUnavailable": true,
+    "pendingEffectReconciledExactlyOnce": true,
+    "originalUnknownReceiptPreserved": true,
+    "earlierInterruptionsPreserved": true,
+    "zeroDowntimeClaimStillFails": true
+  },
+  "rawProof": {
+    "focusedRed": "red/focused.json",
+    "browserRed": "red/browser.json",
+    "frozenStub": "red/model.stub",
+    "iacApplicability": "iac-na.json",
+    "browserCaptureGate": "CAPTURE_BROWSER_EVIDENCE=1 exactly",
+    "canonicalGitBytesAreSeparateFromRawArchives": true
+  },
+  "limits": {
+    "allAvailabilityRemovalRegionsCapacityStateRequestsEffectsOutcomesAreFixedDataOnly": true,
+    "actualResourceProcessNetworkChangesByLesson": false,
+    "actualCloudCalls": false,
+    "credentials": false,
+    "nativeAzureProof": false,
+    "productionNode24Validated": false,
+    "fiveNinesQualified": false,
+    "sourceParentComplete": false,
+    "unattendedBrowserLifecycleQualified": false
+  },
+  "nativeRemainder": {
+    "cardId": "B-S120",
+    "readiness": false,
+    "gates": ["CORE", "DATA", "REGION", "dedicated approved lease", "explicit native fault and recovery approval"],
+    "unfinished": "Native bounded all-destinations experiment, actual interruption/consistency attribution, and only lease-owned resource recovery.",
+    "parent": "D-S120 remains incomplete"
+  },
+  "acceptanceAuthority": "Parent only; one original unit; no extra test, repair, proof or refinement credit"
+}
