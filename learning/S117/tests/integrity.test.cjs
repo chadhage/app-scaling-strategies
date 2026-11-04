@@ -10,6 +10,8 @@ const base = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(base, file));
 const json = file => JSON.parse(read(file));
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+const rawProof = file => file.startsWith('evidence\\raw\\') || file.startsWith('evidence\\red\\');
+const canonicalBytes = (file, bytes) => rawProof(file) ? bytes : Buffer.from(bytes.toString('utf8').replaceAll('\r\n', '\n'), 'utf8');
 const manifest = json('manifest.json');
 const source = json('evidence\\source.json');
 
@@ -73,7 +75,7 @@ test('BDD and loadable original stub preserve a real behavioral ERR_ASSERTION RE
   assert.equal(sha(read('evidence\\red\\assertion-red.stdout.snapshot')), red.stdoutSha256);
   assert.equal(sha(read('evidence\\red\\assertion-red.stderr.snapshot')), red.stderrSha256);
   assert.match(read('evidence\\red\\assertion-red.stdout.snapshot').toString(), /not ok[\s\S]*ERR_ASSERTION/);
-  assert.ok(read('evidence\\red\\bdd.snapshot').equals(read('partial-failure.feature')));
+  assert.equal(read('evidence\\red\\bdd.snapshot').toString().replaceAll('\r\n', '\n'), read('partial-failure.feature').toString().replaceAll('\r\n', '\n'));
   const context = { module: { exports: {} } };
   vm.runInNewContext(read('evidence\\red\\model.stub.snapshot').toString(), context);
   const stub = context.module.exports;
@@ -122,12 +124,15 @@ test('source and immutable raw proof files match their scoped SHA-256 integrity 
   const seal = json('evidence\\integrity.json');
   assert.equal(seal.scope, 'learning\\S117');
   assert.equal(seal.algorithm, 'sha256');
+  assert.equal(seal.hashPolicy, 'Raw proof bytes remain exact; ordinary text has separate working-raw and canonical-Git-LF hashes.');
   assert.ok(Object.keys(seal.files).length >= 20);
   for (const [file, expected] of Object.entries(seal.files)) {
     const absolute = path.resolve(base, file);
     assert.ok(absolute.startsWith(base + path.sep));
     assert.equal(fs.lstatSync(absolute).isFile(), true);
-    assert.equal(sha(fs.readFileSync(absolute)), expected, file);
+    const actual = fs.readFileSync(absolute);
+    assert.equal(sha(canonicalBytes(file, actual)), expected, file);
+    assert.ok(sha(actual) === seal.workingRawSha256[file] || (!rawProof(file) && sha(actual) === expected), `${file}: unknown working-byte representation`);
   }
   for (const file of ['.gitattributes', 'index.html', 'model.js', 'app.js', 'styles.css', 'manifest.json', 'lesson.txt', 'partial-failure.feature', 'tests\\model.test.cjs', 'tests\\integrity.test.cjs', 'tests\\browser.test.cjs', 'tests\\browser-evidence.test.cjs', 'evidence\\source.json', 'evidence\\iac.json', 'evidence\\refinement.json', 'evidence\\red\\model.stub.snapshot', 'evidence\\red\\assertion-red.stdout.snapshot']) assert.ok(Object.hasOwn(seal.files, file), file);
 });

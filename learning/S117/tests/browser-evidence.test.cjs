@@ -30,5 +30,11 @@ test('captured browser evidence binds actual DOM, keyboard, error, reset, failur
   assert.equal(proof.nativeEvidence, false);
   assert.equal(proof.sourceParentCompleted, false);
   assert.equal(proof.additionalKanoCredits, 0);
-  for (const [file, expected] of Object.entries(proof.sourceSha256)) assert.equal(sha(read(file)), expected, file);
+  assert.match(proof.sourceHashPolicy, /canonical Git LF text/);
+  assert.deepEqual(Object.keys(proof.sourceWorkingRawSha256), Object.keys(proof.sourceSha256));
+  for (const [file, expected] of Object.entries(proof.sourceSha256)) {
+    const actual = read(file);
+    assert.equal(sha(Buffer.from(actual.toString('utf8').replaceAll('\r\n', '\n'), 'utf8')), expected, file);
+    assert.ok(sha(actual) === proof.sourceWorkingRawSha256[file] || sha(actual) === expected, `${file}: unknown working-byte representation`);
+  }
 });

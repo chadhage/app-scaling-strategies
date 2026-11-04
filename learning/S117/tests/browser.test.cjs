@@ -12,6 +12,7 @@ const base = path.resolve(__dirname, '..');
 const evidencePath = path.join(base, 'evidence\\browser.json');
 const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+const canonicalText = bytes => Buffer.from(bytes.toString('utf8').replaceAll('\r\n', '\n'), 'utf8');
 const helperSha = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
 const helperGitSha = '2ccb4ee2e708d4e3131b73acb5efcf0a2ee6f0e73966388a846e0d22f07571b0';
 const helperCommit = '53c0c0d82cc1db6780a87ac2b1085734af6d5c60';
@@ -93,7 +94,9 @@ test('S117 actual isolated DOM, keyboard, failures, reset and CSP; ordinary veri
     helperCanonicalGitSha256: helperGitSha, helperPublishedCommit: helperCommit,
     command: 'node --test learning\\S117\\tests\\browser.test.cjs',
     evidenceCapture: capture, capturedAtUtc: new Date().toISOString(),
-    sourceSha256: Object.fromEntries(sourceFiles.map(file => [file, sha(fs.readFileSync(path.join(base, file)))])),
+    sourceHashPolicy: 'sourceSha256 binds canonical Git LF text; sourceWorkingRawSha256 separately records the actual working bytes observed.',
+    sourceSha256: Object.fromEntries(sourceFiles.map(file => [file, sha(canonicalText(fs.readFileSync(path.join(base, file))))])),
+    sourceWorkingRawSha256: Object.fromEntries(sourceFiles.map(file => [file, sha(fs.readFileSync(path.join(base, file)))])),
     observations: [], cleanup: null,
     limits: 'Only fixed fictional DATA and local DOM are tested. No actual resource/network/fault operation, native Azure proof, production Node 24 or unattended lifecycle qualification.'
   };
