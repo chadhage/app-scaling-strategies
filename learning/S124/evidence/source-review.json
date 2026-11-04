@@ -1,0 +1,59 @@
+{
+  "cardId": "A-S124",
+  "readBeforeDesign": true,
+  "sources": {
+    "readme": {
+      "path": "README.md",
+      "row": "S124 | App Service, separate plans: Compare externally routed blue-green deployments with shared-plan slots for capacity isolation and lifecycle control."
+    },
+    "backlog": {
+      "path": ".docs/wiki/backlog.md",
+      "row": "D-S124 | Add shared-plan slots versus separate-plan externally routed blue-green comparison.",
+      "acceptance": "Real capacity isolation, cost, routing, drain control, and user outcomes are compared without claiming independent fault domains for shared slots.",
+      "dependencies": ["P001", "D-S001", "D-S096"]
+    },
+    "portableCard": {
+      "path": ".docs/wiki/kanban.md",
+      "row": "A-S124 | D-S124 | S | Compare slots and separate plans; identify true isolation and lifecycle-control differences. | SOURCE",
+      "packet": "SC-S124",
+      "kanoUnit": "A-S124",
+      "nativeSibling": "B-S124 | Conduct one plan-placement comparison; verify native capacity, cost assumptions, and handoff/drain evidence."
+    },
+    "hostingContract": "capability/C003/README.md and README.md key findings / hosting-model qualifications"
+  },
+  "documentation": [
+    {
+      "url": "https://learn.microsoft.com/en-us/azure/app-service/overview-hosting-plans",
+      "method": "Official documentation search followed by bounded page reads",
+      "adopted": [
+        "Apps and deployment slots within the same plan share plan compute.",
+        "Per-app placement does not create extra plan capacity or independent compute.",
+        "Separate plans isolate compute pools and have their own plan-level billing.",
+        "Available slots and capabilities depend on a supporting plan."
+      ],
+      "notInferred": ["Native capacity qualification", "Current prices", "Independent dependency, regional or platform fault domains"]
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots",
+      "method": "Official documentation search followed by bounded swap-lifecycle page read",
+      "adopted": [
+        "Native swaps can restart source instances and recycle former-production workers.",
+        "Old slot content retention does not prevent abandonment of in-flight work during recycling.",
+        "HTTP success alone does not establish meaningful readiness.",
+        "Routing allocations and pinned clients require actual journey observations.",
+        "Native auto-swap is unsupported for Linux code and Web App for Containers."
+      ],
+      "notInferred": ["A live slot", "Application-controlled native-swap drain", "A zero-interruption guarantee"]
+    }
+  ],
+  "hostingLimits": [
+    "This lesson selects no actual OS, SKU, region, subscription, resource group, host or deployment target.",
+    "Production Node.js 24 / Express / App Service Linux remains a proposed design, not validation.",
+    "External routing permits separate admission, drain and retirement decisions; it cannot eliminate platform restarts.",
+    "Both fictional placements deliberately share dependency DATA; separate plans do not certify independent dependencies or fault domains."
+  ],
+  "nativeSourceAcceptanceMet": false,
+  "sourceParentComplete": false,
+  "catalogIntegrationOwner": "parent: C005-C008 and capability/local-harness",
+  "additionalCredits": 0
+}

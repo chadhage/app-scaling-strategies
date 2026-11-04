@@ -1,0 +1,28 @@
+{
+  "cardId": "A-S124",
+  "additionalCredits": 0,
+  "preservedFailures": [
+    {
+      "proof": "raw/pre-browser-proof.json",
+      "actualResult": "25 checks passed; the browser-observation-dependent integrity gate failed because actual capture did not yet exist.",
+      "cause": "The attempted negative name selector also matched full Node test names.",
+      "boundedCorrection": "An explicit positive selector passed the four pre-browser integrity gates; see raw/pre-browser-integrity-proof.json.",
+      "classification": "Verification-selector error, not behavioral implementation RED or a pass."
+    },
+    {
+      "proof": "raw/browser-command-2026-11-04T01-01-22-042Z.json",
+      "failedObservationRecord": "raw/browser-2026-11-04T01-01-21-976Z.json",
+      "actualResult": "Initial actual browser CSP assertion found evalBlocked=false in DevTools-evaluated code. Raw run output and failed observation record remain unchanged.",
+      "originalAssertionSnapshot": "csp-first-observation/assertions.cjs",
+      "originalAssertionSha256": "433ae1c05f9d846f383cb218290aef2b39711057e46fe65e269de66536ef656c",
+      "firstSourceHashes": "raw/source-hashes-before-csp-refinement.json",
+      "cause": "Browser protocol evaluation is not an ordinary page-script execution context for CSP eval testing.",
+      "boundedCorrection": "A test-only same-origin script executes new Function in the normal page world; require EvalError, unchanged sentinel and a blockedURI=eval CSP violation.",
+      "productionProbeLoaded": false,
+      "securityFlagsWeakened": false,
+      "classification": "Test-context limitation, not evidence that page eval was allowed or CSP qualification passed."
+    }
+  ],
+  "normalVerification": "READ-ONLY",
+  "scope": "One original A-S124 unit; no extra test, repair, proof or refinement credit."
+}

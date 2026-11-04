@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>S124 - Slots versus separate plans rehearsal</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S124: Slots versus separate plans</h1>
+    <p><strong>DATA ONLY:</strong> fixed fictional teaching observations. Every plan, slot, compute, cost, warm-up,
+      drain, retirement, session and endpoint field is teaching DATA, not an actual App Service resource,
+      configuration, identity or deployment.</p>
+    <p>Compare capacity isolation and lifecycle control. More content or slots do not add compute.
+      Separate plans isolate compute pools, but do not automatically certify independent dependencies or fault domains.</p>
+    <details>
+      <summary>Source, hosting constraints and limits</summary>
+      <p>A-S124 / D-S124 / SC-S124 · one original Kano S unit. D-S124 requires real capacity, cost, routing,
+        drain and user-outcome evidence; this portable lesson does not complete that native acceptance.</p>
+      <p>Supporting App Service plans are required for native slots. Slots share plan instances; per-app
+        placement adds no plan capacity. Native swaps can recycle former-production workers and abandon old work.
+        Retaining old slot content does not prevent that recycling. Slot cookies can pin clients despite traffic weights.</p>
+      <p>Native auto-swap is unsupported for Linux code and Web App for Containers. This lesson selects no actual
+        OS, SKU, region or hosting target and offers no native auto-swap, cloud or management interface.</p>
+      <p>External routing separates new-admission, drain, rollback-retention and retirement decisions;
+        it cannot eliminate host restarts or qualify wider failure domains. B-S124 native proof and D-S124 remain incomplete.
+        No production Node.js 24, native Azure or five-nines result is claimed.</p>
+      <p>This fixed comparison uses a native shared-slot swap versus an externally routed separate-plan path.
+        External routing is not exclusive to separate plans: independently routable shared-plan slots can also use
+        controlled admission and draining, while still sharing compute. Plan placement and routing mechanism are separate axes.</p>
+      <p>The fictional separate-plan example assumes distinct dedicated compute pools.
+        Actual target capacity, isolation and supported mechanisms require native qualification.</p>
+    </details>
+    <h2>Fixed comparison, not a quote</h2>
+    <table>
+      <caption>Fictional placement DATA: 24 compute units per two-worker plan</caption>
+      <thead><tr><th scope="col">Placement</th><th scope="col">Plans / workers</th><th scope="col">Compute units</th><th scope="col">Cost units</th><th scope="col">Lifecycle</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Shared-plan slots</th><td>1 / 2</td><td>24 shared</td><td>2</td><td>Native swap recycling risk</td></tr>
+        <tr><th scope="row">Separate-plan blue-green</th><td>2 / 4</td><td>24 + 24</td><td>4</td><td>Externally observed admission, drain and retirement</td></tr>
+      </tbody>
+    </table>
+    <p>Cost is <strong>fictional worker units per rehearsal interval</strong>, not currency, a SKU price,
+      free-resource approval or a complete estimate. Router, dependency and other service costs are excluded.
+      Both placements deliberately share DATA-DEPENDENCY-COMMON; wider fault-domain independence is unverified.</p>
+    <h2>Conduct the bounded rehearsal</h2>
+    <ol>
+      <li>Compare a fixed placement and condition. Optionally add fixed content within an existing plan.</li>
+      <li>Warm the candidate. HTTP 200 alone is not readiness; overlap must fit the appropriate compute pools.</li>
+      <li>Request exactly 100% new admissions. Inspect actual fixed endpoint, session, effect and latency receipts.</li>
+      <li>For separate plans, observe old-work drain, then the fixed rollback-window receipt, then retirement.</li>
+      <li>Contrast shared slots or a failure fixture. Failures and unknowns remain until an explicit reset.</li>
+    </ol>
+    <p id="startup-error" role="alert">Lesson controls did not initialize. Check that model.js and app.js are available beside this page.</p>
+    <form id="comparison-form" novalidate>
+      <div><label for="strategy-select">Fixed placement strategy</label>
+        <select id="strategy-select" disabled>
+          <option value="shared-slots">Shared plan slots via native swap (DATA)</option>
+          <option value="separate-plans">Separate plans and external routing (DATA)</option>
+        </select>
+      </div>
+      <div><label for="fixture-select">Fixed observation fixture</label>
+        <select id="fixture-select" disabled>
+          <option value="healthy">Healthy overlap with two in-flight journeys</option>
+          <option value="overlap">Overlap exceeds one shared compute pool</option>
+          <option value="warmup-only">HTTP 200 without meaningful initialization</option>
+          <option value="session-loss">Green HTTP 200 loses one session</option>
+          <option value="missing-receipt">One actual destination receipt is missing</option>
+          <option value="pinned-client">One successful client remains pinned to blue</option>
+          <option value="dependency-outage">Both plans share a failed dependency</option>
+          <option value="platform-restart">A host restart abandons existing blue work</option>
+          <option value="drain-pending">Old work has no completed drain receipt</option>
+        </select>
+      </div>
+      <button id="compare-button" type="submit" disabled>Compare fixed DATA</button>
+      <button id="reset-button" type="button" disabled>Reset rehearsal</button>
+    </form>
+    <div class="actions">
+      <button id="add-button" type="button" disabled>Add fixed slot/content DATA</button>
+      <button id="warm-button" type="button" disabled>Observe warm-up DATA</button>
+    </div>
+    <form id="routing-form" novalidate>
+      <div><label for="admission-percent">New-admission percent</label>
+        <input id="admission-percent" type="text" inputmode="numeric" value="100" maxlength="12" aria-describedby="percent-help error" disabled>
+        <p id="percent-help">Only exact 100 is supported. This is an operator choice over fixed DATA, not routing configuration.</p>
+      </div>
+      <button id="route-button" type="submit" disabled>Observe new admissions DATA</button>
+    </form>
+    <div class="actions">
+      <button id="drain-button" type="button" disabled>Observe old-work drain DATA</button>
+      <button id="retain-button" type="button" disabled>Observe rollback-window DATA</button>
+      <button id="retire-button" type="button" disabled>Rehearse retirement DATA</button>
+    </div>
+    <p id="guard">Compare fixed DATA first. Maximum 24 retained actions; reset explicitly clears in-memory history.</p>
+    <p id="error" role="alert" aria-live="assertive" tabindex="-1"></p>
+    <h2>Observed synthetic result</h2>
+    <dl aria-label="Synthetic result counters">
+      <dt>Phase</dt><dd id="phase">awaiting-compare</dd>
+      <dt>Fictional compute units</dt><dd id="compute">0</dd>
+      <dt>Plan labels (DATA, not resource IDs)</dt><dd id="plans">Not compared</dd>
+      <dt>Slot/content labels (DATA)</dt><dd id="slots">Not compared</dd>
+      <dt>Workers / placements (DATA)</dt><dd id="placements">0 / 0</dd>
+      <dt>Fictional plan cost units</dt><dd id="cost">0</dd>
+      <dt>Compute isolation</dt><dd id="isolation">Not compared</dd>
+      <dt>Dependency / fault independence</dt><dd id="fault-domains">Shared dependency; wider domains unverified</dd>
+      <dt>Lifecycle control</dt><dd id="lifecycle">Compare fixed DATA first</dd>
+      <dt>Warm-up</dt><dd id="warm-up">unobserved</dd>
+      <dt>Requested / observed new admissions</dt><dd id="routing">0% / 0%</dd>
+      <dt>Outstanding old work / pinned sessions</dt><dd id="remaining">2 / 0</dd>
+      <dt>Rollback-window receipt</dt><dd id="retention">Unobserved</dd>
+      <dt>Attempted / passed / failed / unknown journeys</dt><dd id="counts">0 / 0 / 0 / 0</dd>
+      <dt>Safe aborts before exposure</dt><dd id="safe-aborts">0</dd>
+      <dt>User-transition outcome</dt><dd id="user-outcome">Not started</dd>
+    </dl>
+    <p id="outcome" role="status" aria-live="polite" data-outcome="neutral">No transition attempted.</p>
+    <h3>Latest fixed observation DATA</h3>
+    <pre id="observations">{}</pre>
+    <h3>Complete synthetic journey receipts</h3>
+    <pre id="receipts">[]</pre>
+    <h3>Retained history</h3>
+    <ol id="history" aria-label="Retained synthetic action history"></ol>
+    <footer>
+      <p>Portable local rehearsal only. No server, network calls, credentials, packages, frameworks, IaC,
+        scaffold, identity registration, deployment or spend. Observed Node.js 22 test tooling is not production Node.js 24 validation.</p>
+      <p>Microsoft educational disclaimer: provided AS IS for learning, without warranties or endorsement.
+        Product names belong to their respective owners. Demonstration goals are not Microsoft SLAs;
+        this lesson grants no additional license or native-platform guarantee.</p>
+    </footer>
+  </main>
+</body>
+</html>

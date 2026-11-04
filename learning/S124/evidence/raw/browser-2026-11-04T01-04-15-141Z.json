@@ -1,0 +1,618 @@
+{
+  "cardId": "A-S124",
+  "observedAtUtc": "2026-11-04T01:04:15.143Z",
+  "mode": "actual-isolated-headless-browser",
+  "browserVersion": "156.0.4314.50",
+  "playwrightVersion": "1.56.1",
+  "nodeVersion": "v22.23.4",
+  "helperSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "checksPassed": true,
+  "observations": [
+    {
+      "name": "load-and-keyboard",
+      "fields": {
+        "phase": "awaiting-compare",
+        "compute": "0",
+        "plans": "Not compared",
+        "slots": "Not compared",
+        "placements": "0 workers / 0 placements",
+        "cost": "0",
+        "isolation": "Not compared",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "Compare fixed DATA before conducting the lifecycle.",
+        "warm-up": "unobserved",
+        "routing": "0% / 0%",
+        "remaining": "2 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "0 / 0 / 0 / 0",
+        "safe-aborts": "0",
+        "user-outcome": "Not started",
+        "outcome": "Choose one fixed placement and condition. No actual resource or configuration exists.",
+        "error": ""
+      },
+      "classification": "neutral",
+      "history": [],
+      "fixedData": "{}",
+      "receipts": "[]",
+      "focusOutline": "3px"
+    },
+    {
+      "name": "positive-separate-lifecycle-with-runtime-retirement-guards",
+      "fields": {
+        "phase": "retired",
+        "compute": "48",
+        "plans": "DATA-PLAN-BLUE, DATA-PLAN-GREEN",
+        "slots": "Separate app content, not a shared-slot swap",
+        "placements": "4 workers / 3 placements",
+        "cost": "4",
+        "isolation": "Separate plan compute pools",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "External routing: stop new admissions, observe drain, retain, then retire separately. Host restarts remain possible.",
+        "warm-up": "passed",
+        "routing": "100% / 100%",
+        "remaining": "0 work / 0 pinned sessions",
+        "retention": "Fixed DATA receipt at tick 1; no real timer",
+        "counts": "4 / 4 / 0 / 0",
+        "safe-aborts": "0",
+        "user-outcome": "Uninterrupted synthetic transition",
+        "outcome": "4/4 complete synthetic journeys passed. Compute isolation and lifecycle control do not certify native or independent fault-domain behavior.",
+        "error": ""
+      },
+      "classification": "positive",
+      "history": [
+        "1. compare: neutral — Two independent compute pools; shared dependency and wider fault domains are not independently qualified. [attempted 0; passed 0; failed 0; unknown 0]",
+        "2. add-placement: positive — Extra slot/content stays in an existing plan: placements increased, but compute, workers and plan cost did not. [attempted 0; passed 0; failed 0; unknown 0]",
+        "3. warm: positive — Fixed meaningful warm-up and overlap checks passed. Subsequent client outcomes still require receipts. [attempted 0; passed 0; failed 0; unknown 0]",
+        "4. route: positive — Two actual fixed green receipts passed. Two existing blue journeys continue; do not retire them yet. [attempted 2; passed 2; failed 0; unknown 0]",
+        "5. drain: positive — Four complete synthetic journeys passed. Retain the old deployment until its fixed rollback-window receipt is observed. [attempted 4; passed 4; failed 0; unknown 0]",
+        "6. retain: positive — The fixed rollback-retention receipt passed. No real timer, resource retention or platform action occurred. [attempted 4; passed 4; failed 0; unknown 0]",
+        "7. retire: positive — 4/4 complete synthetic journeys passed. Compute isolation and lifecycle control do not certify native or independent fault-domain behavior. [attempted 4; passed 4; failed 0; unknown 0]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed retirement DATA ONLY\",\n  \"outstandingWork\": 0,\n  \"pinnedSessions\": 0,\n  \"oldNewAdmissions\": 0\n}",
+      "receipts": "[\n  {\n    \"id\": \"DATA-NEW-1\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 180,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"positive\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  },\n  {\n    \"id\": \"DATA-NEW-2\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 220,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"positive\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  },\n  {\n    \"id\": \"DATA-OLD-1\",\n    \"kind\": \"existing-work\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 350,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"positive\",\n    \"reason\": \"Existing blue work completed within the original 500 ms fictional journey budget.\"\n  },\n  {\n    \"id\": \"DATA-OLD-2\",\n    \"kind\": \"existing-work\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 420,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"positive\",\n    \"reason\": \"Existing blue work completed within the original 500 ms fictional journey budget.\"\n  }\n]"
+    },
+    {
+      "name": "typed-errors-preserve-ready-state",
+      "fields": {
+        "phase": "ready",
+        "compute": "48",
+        "plans": "DATA-PLAN-BLUE, DATA-PLAN-GREEN",
+        "slots": "Separate app content, not a shared-slot swap",
+        "placements": "4 workers / 2 placements",
+        "cost": "4",
+        "isolation": "Separate plan compute pools",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "External routing: stop new admissions, observe drain, retain, then retire separately. Host restarts remain possible.",
+        "warm-up": "passed",
+        "routing": "0% / 0%",
+        "remaining": "2 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "0 / 0 / 0 / 0",
+        "safe-aborts": "0",
+        "user-outcome": "Ready, no transition attempted",
+        "outcome": "Fixed meaningful warm-up and overlap checks passed. Subsequent client outcomes still require receipts.",
+        "error": "State/input rejected: Enter exactly 100; spaces, fractions, signs and other values are not supported."
+      },
+      "classification": "positive",
+      "history": [
+        "1. compare: neutral — Two independent compute pools; shared dependency and wider fault domains are not independently qualified. [attempted 0; passed 0; failed 0; unknown 0]",
+        "2. warm: positive — Fixed meaningful warm-up and overlap checks passed. Subsequent client outcomes still require receipts. [attempted 0; passed 0; failed 0; unknown 0]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed warm-up DATA ONLY\",\n  \"httpStatus\": 200,\n  \"initialized\": true,\n  \"compatibleSessionProbe\": true,\n  \"dependencyProbe\": true,\n  \"blueDemandUnits\": 12,\n  \"candidateWarmDemandUnits\": 8,\n  \"unitsPerPool\": 24,\n  \"separatePools\": true\n}",
+      "receipts": "[]"
+    },
+    {
+      "name": "keyboard-reset-with-shadowed-native-method",
+      "fields": {
+        "phase": "awaiting-compare",
+        "compute": "0",
+        "plans": "Not compared",
+        "slots": "Not compared",
+        "placements": "0 workers / 0 placements",
+        "cost": "0",
+        "isolation": "Not compared",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "Compare fixed DATA before conducting the lifecycle.",
+        "warm-up": "unobserved",
+        "routing": "0% / 0%",
+        "remaining": "2 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "0 / 0 / 0 / 0",
+        "safe-aborts": "0",
+        "user-outcome": "Not started",
+        "outcome": "Choose one fixed placement and condition. No actual resource or configuration exists.",
+        "error": ""
+      },
+      "classification": "neutral",
+      "history": [],
+      "fixedData": "{}",
+      "receipts": "[]",
+      "shadowTypes": [
+        "object",
+        "object"
+      ]
+    },
+    {
+      "name": "shared-swap-interruptions-not-erased",
+      "fields": {
+        "phase": "exposed-held",
+        "compute": "24",
+        "plans": "DATA-PLAN-SHARED",
+        "slots": "DATA-SLOT-BLUE, DATA-SLOT-GREEN",
+        "placements": "2 workers / 2 placements",
+        "cost": "2",
+        "isolation": "No: shared plan compute",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "Native slot swap: former-production workers can recycle. Keeping old slot content does not control their drain.",
+        "warm-up": "passed",
+        "routing": "100% / 100%",
+        "remaining": "0 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "4 / 2 / 2 / 0",
+        "safe-aborts": "0",
+        "user-outcome": "Interrupted synthetic transition",
+        "outcome": "2 interrupted journeys retained. Native recycling is not application-controlled drain; retaining old slots cannot repair lost work.",
+        "error": "State/input rejected: Native swap recycling is not an application-controlled drain. Retaining a slot does not prevent recycling."
+      },
+      "classification": "negative",
+      "history": [
+        "1. compare: neutral — Both slots share the same compute pool. Additional slot content is not capacity scaling. [attempted 0; passed 0; failed 0; unknown 0]",
+        "2. warm: positive — Fixed meaningful warm-up and overlap checks passed. Subsequent client outcomes still require receipts. [attempted 0; passed 0; failed 0; unknown 0]",
+        "3. route: negative — 2 interrupted journeys retained. Native recycling is not application-controlled drain; retaining old slots cannot repair lost work. [attempted 4; passed 2; failed 2; unknown 0]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed routing and client DATA ONLY\",\n  \"requestedNewAdmissions\": 100,\n  \"observedNewAdmissions\": 100,\n  \"pinnedBlueSessions\": 0,\n  \"nativeSwapRecycling\": true,\n  \"platformRestart\": false,\n  \"sharedDependencyOutage\": false,\n  \"journeyBudgetMs\": 500,\n  \"newReceipts\": [\n    {\n      \"id\": \"DATA-NEW-1\",\n      \"kind\": \"new-admission\",\n      \"observed\": true,\n      \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"httpStatus\": 200,\n      \"latencyMs\": 180,\n      \"sessionPreserved\": true,\n      \"businessState\": \"DATA-PROFILE-7\",\n      \"effectCount\": 1,\n      \"completed\": true,\n      \"dependencyAvailable\": true\n    },\n    {\n      \"id\": \"DATA-NEW-2\",\n      \"kind\": \"new-admission\",\n      \"observed\": true,\n      \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"httpStatus\": 200,\n      \"latencyMs\": 220,\n      \"sessionPreserved\": true,\n      \"businessState\": \"DATA-PROFILE-7\",\n      \"effectCount\": 1,\n      \"completed\": true,\n      \"dependencyAvailable\": true\n    }\n  ]\n}",
+      "receipts": "[\n  {\n    \"id\": \"DATA-NEW-1\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 180,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"positive\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  },\n  {\n    \"id\": \"DATA-NEW-2\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 220,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"positive\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  },\n  {\n    \"id\": \"DATA-OLD-1\",\n    \"kind\": \"existing-work\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"httpStatus\": 503,\n    \"latencyMs\": 350,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 0,\n    \"completed\": false,\n    \"dependencyAvailable\": true,\n    \"classification\": \"negative\",\n    \"reason\": \"Native swap recycling abandoned existing work despite retained slot content.\"\n  },\n  {\n    \"id\": \"DATA-OLD-2\",\n    \"kind\": \"existing-work\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"httpStatus\": 503,\n    \"latencyMs\": 420,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 0,\n    \"completed\": false,\n    \"dependencyAvailable\": true,\n    \"classification\": \"negative\",\n    \"reason\": \"Native swap recycling abandoned existing work despite retained slot content.\"\n  }\n]"
+    },
+    {
+      "name": "shared-overlap-negative-safe-abort",
+      "fields": {
+        "phase": "held",
+        "compute": "24",
+        "plans": "DATA-PLAN-SHARED",
+        "slots": "DATA-SLOT-BLUE, DATA-SLOT-GREEN, DATA-EXTRA-SLOT-OR-CONTENT",
+        "placements": "2 workers / 3 placements",
+        "cost": "2",
+        "isolation": "No: shared plan compute",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "Native slot swap: former-production workers can recycle. Keeping old slot content does not control their drain.",
+        "warm-up": "failed",
+        "routing": "0% / 0%",
+        "remaining": "2 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "0 / 0 / 0 / 0",
+        "safe-aborts": "1",
+        "user-outcome": "Safe abort before exposure",
+        "outcome": "Shared overlap demand 28 exceeds 24 compute units. Extra slots/content add no compute.",
+        "error": ""
+      },
+      "classification": "negative",
+      "history": [
+        "1. compare: neutral — Both slots share the same compute pool. Additional slot content is not capacity scaling. [attempted 0; passed 0; failed 0; unknown 0]",
+        "2. add-placement: positive — Extra slot/content stays in an existing plan: placements increased, but compute, workers and plan cost did not. [attempted 0; passed 0; failed 0; unknown 0]",
+        "3. warm: negative — Shared overlap demand 28 exceeds 24 compute units. Extra slots/content add no compute. [attempted 0; passed 0; failed 0; unknown 0]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed warm-up DATA ONLY\",\n  \"httpStatus\": 200,\n  \"initialized\": true,\n  \"compatibleSessionProbe\": true,\n  \"dependencyProbe\": true,\n  \"blueDemandUnits\": 18,\n  \"candidateWarmDemandUnits\": 10,\n  \"unitsPerPool\": 24,\n  \"separatePools\": false\n}",
+      "receipts": "[]"
+    },
+    {
+      "name": "separate-overlap-positive-capacity-not-fault-certification",
+      "fields": {
+        "phase": "ready",
+        "compute": "48",
+        "plans": "DATA-PLAN-BLUE, DATA-PLAN-GREEN",
+        "slots": "Separate app content, not a shared-slot swap",
+        "placements": "4 workers / 2 placements",
+        "cost": "4",
+        "isolation": "Separate plan compute pools",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "External routing: stop new admissions, observe drain, retain, then retire separately. Host restarts remain possible.",
+        "warm-up": "passed",
+        "routing": "0% / 0%",
+        "remaining": "2 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "0 / 0 / 0 / 0",
+        "safe-aborts": "0",
+        "user-outcome": "Ready, no transition attempted",
+        "outcome": "Fixed meaningful warm-up and overlap checks passed. Subsequent client outcomes still require receipts.",
+        "error": ""
+      },
+      "classification": "positive",
+      "history": [
+        "1. compare: neutral — Two independent compute pools; shared dependency and wider fault domains are not independently qualified. [attempted 0; passed 0; failed 0; unknown 0]",
+        "2. warm: positive — Fixed meaningful warm-up and overlap checks passed. Subsequent client outcomes still require receipts. [attempted 0; passed 0; failed 0; unknown 0]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed warm-up DATA ONLY\",\n  \"httpStatus\": 200,\n  \"initialized\": true,\n  \"compatibleSessionProbe\": true,\n  \"dependencyProbe\": true,\n  \"blueDemandUnits\": 18,\n  \"candidateWarmDemandUnits\": 10,\n  \"unitsPerPool\": 24,\n  \"separatePools\": true\n}",
+      "receipts": "[]"
+    },
+    {
+      "name": "shared-slots-200-is-not-readiness",
+      "fields": {
+        "phase": "held",
+        "compute": "24",
+        "plans": "DATA-PLAN-SHARED",
+        "slots": "DATA-SLOT-BLUE, DATA-SLOT-GREEN",
+        "placements": "2 workers / 2 placements",
+        "cost": "2",
+        "isolation": "No: shared plan compute",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "Native slot swap: former-production workers can recycle. Keeping old slot content does not control their drain.",
+        "warm-up": "failed",
+        "routing": "0% / 0%",
+        "remaining": "2 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "0 / 0 / 0 / 0",
+        "safe-aborts": "1",
+        "user-outcome": "Safe abort before exposure",
+        "outcome": "HTTP 200 did not prove completed initialization. Ordinary user admissions remain blue.",
+        "error": ""
+      },
+      "classification": "negative",
+      "history": [
+        "1. compare: neutral — Both slots share the same compute pool. Additional slot content is not capacity scaling. [attempted 0; passed 0; failed 0; unknown 0]",
+        "2. warm: negative — HTTP 200 did not prove completed initialization. Ordinary user admissions remain blue. [attempted 0; passed 0; failed 0; unknown 0]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed warm-up DATA ONLY\",\n  \"httpStatus\": 200,\n  \"initialized\": false,\n  \"compatibleSessionProbe\": true,\n  \"dependencyProbe\": true,\n  \"blueDemandUnits\": 12,\n  \"candidateWarmDemandUnits\": 8,\n  \"unitsPerPool\": 24,\n  \"separatePools\": false\n}",
+      "receipts": "[]"
+    },
+    {
+      "name": "separate-plans-200-is-not-readiness",
+      "fields": {
+        "phase": "held",
+        "compute": "48",
+        "plans": "DATA-PLAN-BLUE, DATA-PLAN-GREEN",
+        "slots": "Separate app content, not a shared-slot swap",
+        "placements": "4 workers / 2 placements",
+        "cost": "4",
+        "isolation": "Separate plan compute pools",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "External routing: stop new admissions, observe drain, retain, then retire separately. Host restarts remain possible.",
+        "warm-up": "failed",
+        "routing": "0% / 0%",
+        "remaining": "2 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "0 / 0 / 0 / 0",
+        "safe-aborts": "1",
+        "user-outcome": "Safe abort before exposure",
+        "outcome": "HTTP 200 did not prove completed initialization. Ordinary user admissions remain blue.",
+        "error": ""
+      },
+      "classification": "negative",
+      "history": [
+        "1. compare: neutral — Two independent compute pools; shared dependency and wider fault domains are not independently qualified. [attempted 0; passed 0; failed 0; unknown 0]",
+        "2. warm: negative — HTTP 200 did not prove completed initialization. Ordinary user admissions remain blue. [attempted 0; passed 0; failed 0; unknown 0]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed warm-up DATA ONLY\",\n  \"httpStatus\": 200,\n  \"initialized\": false,\n  \"compatibleSessionProbe\": true,\n  \"dependencyProbe\": true,\n  \"blueDemandUnits\": 12,\n  \"candidateWarmDemandUnits\": 8,\n  \"unitsPerPool\": 24,\n  \"separatePools\": true\n}",
+      "receipts": "[]"
+    },
+    {
+      "name": "measured-session-loss",
+      "fields": {
+        "phase": "exposed-held",
+        "compute": "48",
+        "plans": "DATA-PLAN-BLUE, DATA-PLAN-GREEN",
+        "slots": "Separate app content, not a shared-slot swap",
+        "placements": "4 workers / 2 placements",
+        "cost": "4",
+        "isolation": "Separate plan compute pools",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "External routing: stop new admissions, observe drain, retain, then retire separately. Host restarts remain possible.",
+        "warm-up": "passed",
+        "routing": "100% / 100%",
+        "remaining": "2 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "2 / 1 / 1 / 0",
+        "safe-aborts": "0",
+        "user-outcome": "Interrupted synthetic transition",
+        "outcome": "1 interrupted journeys retained. HTTP 200 did not preserve a required session.",
+        "error": ""
+      },
+      "classification": "negative",
+      "history": [
+        "1. compare: neutral — Two independent compute pools; shared dependency and wider fault domains are not independently qualified. [attempted 0; passed 0; failed 0; unknown 0]",
+        "2. warm: positive — Fixed meaningful warm-up and overlap checks passed. Subsequent client outcomes still require receipts. [attempted 0; passed 0; failed 0; unknown 0]",
+        "3. route: negative — 1 interrupted journeys retained. HTTP 200 did not preserve a required session. [attempted 2; passed 1; failed 1; unknown 0]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed routing and client DATA ONLY\",\n  \"requestedNewAdmissions\": 100,\n  \"observedNewAdmissions\": 100,\n  \"pinnedBlueSessions\": 0,\n  \"nativeSwapRecycling\": false,\n  \"platformRestart\": false,\n  \"sharedDependencyOutage\": false,\n  \"journeyBudgetMs\": 500,\n  \"newReceipts\": [\n    {\n      \"id\": \"DATA-NEW-1\",\n      \"kind\": \"new-admission\",\n      \"observed\": true,\n      \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"httpStatus\": 200,\n      \"latencyMs\": 180,\n      \"sessionPreserved\": true,\n      \"businessState\": \"DATA-PROFILE-7\",\n      \"effectCount\": 1,\n      \"completed\": true,\n      \"dependencyAvailable\": true\n    },\n    {\n      \"id\": \"DATA-NEW-2\",\n      \"kind\": \"new-admission\",\n      \"observed\": true,\n      \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"httpStatus\": 200,\n      \"latencyMs\": 220,\n      \"sessionPreserved\": false,\n      \"businessState\": \"DATA-PROFILE-7\",\n      \"effectCount\": 1,\n      \"completed\": true,\n      \"dependencyAvailable\": true\n    }\n  ]\n}",
+      "receipts": "[\n  {\n    \"id\": \"DATA-NEW-1\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 180,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"positive\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  },\n  {\n    \"id\": \"DATA-NEW-2\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 220,\n    \"sessionPreserved\": false,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"negative\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  }\n]"
+    },
+    {
+      "name": "measured-missing-receipt",
+      "fields": {
+        "phase": "exposed-held",
+        "compute": "48",
+        "plans": "DATA-PLAN-BLUE, DATA-PLAN-GREEN",
+        "slots": "Separate app content, not a shared-slot swap",
+        "placements": "4 workers / 2 placements",
+        "cost": "4",
+        "isolation": "Separate plan compute pools",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "External routing: stop new admissions, observe drain, retain, then retire separately. Host restarts remain possible.",
+        "warm-up": "passed",
+        "routing": "100% / unknown",
+        "remaining": "2 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "2 / 1 / 0 / 1",
+        "safe-aborts": "0",
+        "user-outcome": "Unverified synthetic transition",
+        "outcome": "One destination receipt is missing. Requested 100% is not observed migration; retirement is blocked.",
+        "error": ""
+      },
+      "classification": "unknown",
+      "history": [
+        "1. compare: neutral — Two independent compute pools; shared dependency and wider fault domains are not independently qualified. [attempted 0; passed 0; failed 0; unknown 0]",
+        "2. warm: positive — Fixed meaningful warm-up and overlap checks passed. Subsequent client outcomes still require receipts. [attempted 0; passed 0; failed 0; unknown 0]",
+        "3. route: unknown — One destination receipt is missing. Requested 100% is not observed migration; retirement is blocked. [attempted 2; passed 1; failed 0; unknown 1]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed routing and client DATA ONLY\",\n  \"requestedNewAdmissions\": 100,\n  \"observedNewAdmissions\": null,\n  \"pinnedBlueSessions\": 0,\n  \"nativeSwapRecycling\": false,\n  \"platformRestart\": false,\n  \"sharedDependencyOutage\": false,\n  \"journeyBudgetMs\": 500,\n  \"newReceipts\": [\n    {\n      \"id\": \"DATA-NEW-1\",\n      \"kind\": \"new-admission\",\n      \"observed\": true,\n      \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"httpStatus\": 200,\n      \"latencyMs\": 180,\n      \"sessionPreserved\": true,\n      \"businessState\": \"DATA-PROFILE-7\",\n      \"effectCount\": 1,\n      \"completed\": true,\n      \"dependencyAvailable\": true\n    },\n    {\n      \"id\": \"DATA-NEW-2\",\n      \"kind\": \"new-admission\",\n      \"observed\": false,\n      \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"observedEndpoint\": null,\n      \"httpStatus\": null,\n      \"latencyMs\": null,\n      \"sessionPreserved\": null,\n      \"businessState\": null,\n      \"effectCount\": null,\n      \"completed\": null,\n      \"dependencyAvailable\": null\n    }\n  ]\n}",
+      "receipts": "[\n  {\n    \"id\": \"DATA-NEW-1\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 180,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"positive\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  },\n  {\n    \"id\": \"DATA-NEW-2\",\n    \"kind\": \"new-admission\",\n    \"observed\": false,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": null,\n    \"httpStatus\": null,\n    \"latencyMs\": null,\n    \"sessionPreserved\": null,\n    \"businessState\": null,\n    \"effectCount\": null,\n    \"completed\": null,\n    \"dependencyAvailable\": null,\n    \"classification\": \"unknown\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  }\n]"
+    },
+    {
+      "name": "measured-pinned-client",
+      "fields": {
+        "phase": "exposed-held",
+        "compute": "48",
+        "plans": "DATA-PLAN-BLUE, DATA-PLAN-GREEN",
+        "slots": "Separate app content, not a shared-slot swap",
+        "placements": "4 workers / 2 placements",
+        "cost": "4",
+        "isolation": "Separate plan compute pools",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "External routing: stop new admissions, observe drain, retain, then retire separately. Host restarts remain possible.",
+        "warm-up": "passed",
+        "routing": "100% / 100%",
+        "remaining": "2 work / 1 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "2 / 1 / 0 / 1",
+        "safe-aborts": "0",
+        "user-outcome": "Unverified synthetic transition",
+        "outcome": "A blue success is not green migration evidence. A pinned session remains; retirement is blocked.",
+        "error": ""
+      },
+      "classification": "unknown",
+      "history": [
+        "1. compare: neutral — Two independent compute pools; shared dependency and wider fault domains are not independently qualified. [attempted 0; passed 0; failed 0; unknown 0]",
+        "2. warm: positive — Fixed meaningful warm-up and overlap checks passed. Subsequent client outcomes still require receipts. [attempted 0; passed 0; failed 0; unknown 0]",
+        "3. route: unknown — A blue success is not green migration evidence. A pinned session remains; retirement is blocked. [attempted 2; passed 1; failed 0; unknown 1]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed routing and client DATA ONLY\",\n  \"requestedNewAdmissions\": 100,\n  \"observedNewAdmissions\": 100,\n  \"pinnedBlueSessions\": 1,\n  \"nativeSwapRecycling\": false,\n  \"platformRestart\": false,\n  \"sharedDependencyOutage\": false,\n  \"journeyBudgetMs\": 500,\n  \"newReceipts\": [\n    {\n      \"id\": \"DATA-NEW-1\",\n      \"kind\": \"new-admission\",\n      \"observed\": true,\n      \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"httpStatus\": 200,\n      \"latencyMs\": 180,\n      \"sessionPreserved\": true,\n      \"businessState\": \"DATA-PROFILE-7\",\n      \"effectCount\": 1,\n      \"completed\": true,\n      \"dependencyAvailable\": true\n    },\n    {\n      \"id\": \"DATA-NEW-2\",\n      \"kind\": \"new-admission\",\n      \"observed\": true,\n      \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"observedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n      \"httpStatus\": 200,\n      \"latencyMs\": 220,\n      \"sessionPreserved\": true,\n      \"businessState\": \"DATA-PROFILE-7\",\n      \"effectCount\": 1,\n      \"completed\": true,\n      \"dependencyAvailable\": true\n    }\n  ]\n}",
+      "receipts": "[\n  {\n    \"id\": \"DATA-NEW-1\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 180,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"positive\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  },\n  {\n    \"id\": \"DATA-NEW-2\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 220,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"unknown\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  }\n]"
+    },
+    {
+      "name": "measured-dependency-outage",
+      "fields": {
+        "phase": "exposed-held",
+        "compute": "48",
+        "plans": "DATA-PLAN-BLUE, DATA-PLAN-GREEN",
+        "slots": "Separate app content, not a shared-slot swap",
+        "placements": "4 workers / 2 placements",
+        "cost": "4",
+        "isolation": "Separate plan compute pools",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "External routing: stop new admissions, observe drain, retain, then retire separately. Host restarts remain possible.",
+        "warm-up": "passed",
+        "routing": "100% / 100%",
+        "remaining": "0 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "4 / 0 / 4 / 0",
+        "safe-aborts": "0",
+        "user-outcome": "Interrupted synthetic transition",
+        "outcome": "4 interrupted journeys retained. Shared dependency failure defeats both compute pools.",
+        "error": ""
+      },
+      "classification": "negative",
+      "history": [
+        "1. compare: neutral — Two independent compute pools; shared dependency and wider fault domains are not independently qualified. [attempted 0; passed 0; failed 0; unknown 0]",
+        "2. warm: positive — Fixed meaningful warm-up and overlap checks passed. Subsequent client outcomes still require receipts. [attempted 0; passed 0; failed 0; unknown 0]",
+        "3. route: negative — 4 interrupted journeys retained. Shared dependency failure defeats both compute pools. [attempted 4; passed 0; failed 4; unknown 0]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed routing and client DATA ONLY\",\n  \"requestedNewAdmissions\": 100,\n  \"observedNewAdmissions\": 100,\n  \"pinnedBlueSessions\": 0,\n  \"nativeSwapRecycling\": false,\n  \"platformRestart\": false,\n  \"sharedDependencyOutage\": true,\n  \"journeyBudgetMs\": 500,\n  \"newReceipts\": [\n    {\n      \"id\": \"DATA-NEW-1\",\n      \"kind\": \"new-admission\",\n      \"observed\": true,\n      \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"httpStatus\": 503,\n      \"latencyMs\": 180,\n      \"sessionPreserved\": true,\n      \"businessState\": \"DATA-PROFILE-7\",\n      \"effectCount\": 0,\n      \"completed\": true,\n      \"dependencyAvailable\": false\n    },\n    {\n      \"id\": \"DATA-NEW-2\",\n      \"kind\": \"new-admission\",\n      \"observed\": true,\n      \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"httpStatus\": 503,\n      \"latencyMs\": 220,\n      \"sessionPreserved\": true,\n      \"businessState\": \"DATA-PROFILE-7\",\n      \"effectCount\": 0,\n      \"completed\": true,\n      \"dependencyAvailable\": false\n    }\n  ]\n}",
+      "receipts": "[\n  {\n    \"id\": \"DATA-NEW-1\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 503,\n    \"latencyMs\": 180,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 0,\n    \"completed\": true,\n    \"dependencyAvailable\": false,\n    \"classification\": \"negative\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  },\n  {\n    \"id\": \"DATA-NEW-2\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 503,\n    \"latencyMs\": 220,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 0,\n    \"completed\": true,\n    \"dependencyAvailable\": false,\n    \"classification\": \"negative\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  },\n  {\n    \"id\": \"DATA-OLD-1\",\n    \"kind\": \"existing-work\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"httpStatus\": 503,\n    \"latencyMs\": 350,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 0,\n    \"completed\": false,\n    \"dependencyAvailable\": false,\n    \"classification\": \"negative\",\n    \"reason\": \"Both placements depend on the same failed DATA dependency.\"\n  },\n  {\n    \"id\": \"DATA-OLD-2\",\n    \"kind\": \"existing-work\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"httpStatus\": 503,\n    \"latencyMs\": 420,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 0,\n    \"completed\": false,\n    \"dependencyAvailable\": false,\n    \"classification\": \"negative\",\n    \"reason\": \"Both placements depend on the same failed DATA dependency.\"\n  }\n]"
+    },
+    {
+      "name": "measured-platform-restart",
+      "fields": {
+        "phase": "exposed-held",
+        "compute": "48",
+        "plans": "DATA-PLAN-BLUE, DATA-PLAN-GREEN",
+        "slots": "Separate app content, not a shared-slot swap",
+        "placements": "4 workers / 2 placements",
+        "cost": "4",
+        "isolation": "Separate plan compute pools",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "External routing: stop new admissions, observe drain, retain, then retire separately. Host restarts remain possible.",
+        "warm-up": "passed",
+        "routing": "100% / 100%",
+        "remaining": "0 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "4 / 2 / 2 / 0",
+        "safe-aborts": "0",
+        "user-outcome": "Interrupted synthetic transition",
+        "outcome": "2 interrupted journeys retained. External routing cannot prevent a platform restart.",
+        "error": ""
+      },
+      "classification": "negative",
+      "history": [
+        "1. compare: neutral — Two independent compute pools; shared dependency and wider fault domains are not independently qualified. [attempted 0; passed 0; failed 0; unknown 0]",
+        "2. warm: positive — Fixed meaningful warm-up and overlap checks passed. Subsequent client outcomes still require receipts. [attempted 0; passed 0; failed 0; unknown 0]",
+        "3. route: negative — 2 interrupted journeys retained. External routing cannot prevent a platform restart. [attempted 4; passed 2; failed 2; unknown 0]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed routing and client DATA ONLY\",\n  \"requestedNewAdmissions\": 100,\n  \"observedNewAdmissions\": 100,\n  \"pinnedBlueSessions\": 0,\n  \"nativeSwapRecycling\": false,\n  \"platformRestart\": true,\n  \"sharedDependencyOutage\": false,\n  \"journeyBudgetMs\": 500,\n  \"newReceipts\": [\n    {\n      \"id\": \"DATA-NEW-1\",\n      \"kind\": \"new-admission\",\n      \"observed\": true,\n      \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"httpStatus\": 200,\n      \"latencyMs\": 180,\n      \"sessionPreserved\": true,\n      \"businessState\": \"DATA-PROFILE-7\",\n      \"effectCount\": 1,\n      \"completed\": true,\n      \"dependencyAvailable\": true\n    },\n    {\n      \"id\": \"DATA-NEW-2\",\n      \"kind\": \"new-admission\",\n      \"observed\": true,\n      \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n      \"httpStatus\": 200,\n      \"latencyMs\": 220,\n      \"sessionPreserved\": true,\n      \"businessState\": \"DATA-PROFILE-7\",\n      \"effectCount\": 1,\n      \"completed\": true,\n      \"dependencyAvailable\": true\n    }\n  ]\n}",
+      "receipts": "[\n  {\n    \"id\": \"DATA-NEW-1\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 180,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"positive\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  },\n  {\n    \"id\": \"DATA-NEW-2\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 220,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"positive\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  },\n  {\n    \"id\": \"DATA-OLD-1\",\n    \"kind\": \"existing-work\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"httpStatus\": 503,\n    \"latencyMs\": 350,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 0,\n    \"completed\": false,\n    \"dependencyAvailable\": true,\n    \"classification\": \"negative\",\n    \"reason\": \"A platform restart abandoned old work despite separate external routing.\"\n  },\n  {\n    \"id\": \"DATA-OLD-2\",\n    \"kind\": \"existing-work\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-BLUE\",\n    \"httpStatus\": 503,\n    \"latencyMs\": 420,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 0,\n    \"completed\": false,\n    \"dependencyAvailable\": true,\n    \"classification\": \"negative\",\n    \"reason\": \"A platform restart abandoned old work despite separate external routing.\"\n  }\n]"
+    },
+    {
+      "name": "incomplete-drain-24-actions-no-fabricated-retirement",
+      "fields": {
+        "phase": "exposed",
+        "compute": "48",
+        "plans": "DATA-PLAN-BLUE, DATA-PLAN-GREEN",
+        "slots": "Separate app content, not a shared-slot swap",
+        "placements": "4 workers / 2 placements",
+        "cost": "4",
+        "isolation": "Separate plan compute pools",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "External routing: stop new admissions, observe drain, retain, then retire separately. Host restarts remain possible.",
+        "warm-up": "passed",
+        "routing": "100% / 100%",
+        "remaining": "2 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "2 / 2 / 0 / 0",
+        "safe-aborts": "0",
+        "user-outcome": "Incomplete synthetic drain",
+        "outcome": "Two old journeys remain without completion receipts. Retention and retirement are blocked.",
+        "error": ""
+      },
+      "classification": "unknown",
+      "history": [
+        "1. compare: neutral — Two independent compute pools; shared dependency and wider fault domains are not independently qualified. [attempted 0; passed 0; failed 0; unknown 0]",
+        "2. warm: positive — Fixed meaningful warm-up and overlap checks passed. Subsequent client outcomes still require receipts. [attempted 0; passed 0; failed 0; unknown 0]",
+        "3. route: positive — Two actual fixed green receipts passed. Two existing blue journeys continue; do not retire them yet. [attempted 2; passed 2; failed 0; unknown 0]",
+        "4. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "5. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "6. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "7. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "8. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "9. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "10. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "11. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "12. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "13. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "14. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "15. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "16. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "17. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "18. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "19. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "20. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "21. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "22. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "23. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]",
+        "24. drain: unknown — Two old journeys remain without completion receipts. Retention and retirement are blocked. [attempted 2; passed 2; failed 0; unknown 0]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed drain DATA ONLY\",\n  \"oldNewAdmissions\": 0,\n  \"remainingWork\": 2,\n  \"remainingPinnedSessions\": 0,\n  \"completionObserved\": false\n}",
+      "receipts": "[\n  {\n    \"id\": \"DATA-NEW-1\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 180,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"positive\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  },\n  {\n    \"id\": \"DATA-NEW-2\",\n    \"kind\": \"new-admission\",\n    \"observed\": true,\n    \"expectedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"observedEndpoint\": \"DATA-ENDPOINT-GREEN\",\n    \"httpStatus\": 200,\n    \"latencyMs\": 220,\n    \"sessionPreserved\": true,\n    \"businessState\": \"DATA-PROFILE-7\",\n    \"effectCount\": 1,\n    \"completed\": true,\n    \"dependencyAvailable\": true,\n    \"classification\": \"positive\",\n    \"reason\": \"Fixed client transition observation, not a traffic-weight guarantee.\"\n  }\n]"
+    },
+    {
+      "name": "invalid-and-locked-fixture-runtime-guards",
+      "fields": {
+        "phase": "compared",
+        "compute": "48",
+        "plans": "DATA-PLAN-BLUE, DATA-PLAN-GREEN",
+        "slots": "Separate app content, not a shared-slot swap",
+        "placements": "4 workers / 2 placements",
+        "cost": "4",
+        "isolation": "Separate plan compute pools",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "External routing: stop new admissions, observe drain, retain, then retire separately. Host restarts remain possible.",
+        "warm-up": "unobserved",
+        "routing": "0% / 0%",
+        "remaining": "2 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "0 / 0 / 0 / 0",
+        "safe-aborts": "0",
+        "user-outcome": "No transition attempted",
+        "outcome": "Two independent compute pools; shared dependency and wider fault domains are not independently qualified.",
+        "error": "State/input rejected: Reset before changing the fixed strategy or condition."
+      },
+      "classification": "neutral",
+      "history": [
+        "1. compare: neutral — Two independent compute pools; shared dependency and wider fault domains are not independently qualified. [attempted 0; passed 0; failed 0; unknown 0]"
+      ],
+      "fixedData": "{\n  \"source\": \"Fixed placement DATA ONLY\",\n  \"planLabels\": [\n    \"DATA-PLAN-BLUE\",\n    \"DATA-PLAN-GREEN\"\n  ],\n  \"unitsPerPlan\": 24,\n  \"workersPerPlan\": 2,\n  \"costBasis\": \"1 fictional cost unit per worker per rehearsal interval; not a price; router/dependency costs excluded\",\n  \"dependency\": \"DATA-DEPENDENCY-COMMON\",\n  \"independentFaultDomains\": \"unverified\"\n}",
+      "receipts": "[]"
+    },
+    {
+      "name": "actual-CSP-enforcement",
+      "fields": {
+        "phase": "awaiting-compare",
+        "compute": "0",
+        "plans": "Not compared",
+        "slots": "Not compared",
+        "placements": "0 workers / 0 placements",
+        "cost": "0",
+        "isolation": "Not compared",
+        "fault-domains": "Shared DATA-DEPENDENCY-COMMON; wider fault domains unverified",
+        "lifecycle": "Compare fixed DATA before conducting the lifecycle.",
+        "warm-up": "unobserved",
+        "routing": "0% / 0%",
+        "remaining": "2 work / 0 pinned sessions",
+        "retention": "Unobserved",
+        "counts": "0 / 0 / 0 / 0",
+        "safe-aborts": "0",
+        "user-outcome": "Not started",
+        "outcome": "Choose one fixed placement and condition. No actual resource or configuration exists.",
+        "error": ""
+      },
+      "classification": "neutral",
+      "history": [],
+      "fixedData": "{}",
+      "receipts": "[]",
+      "probes": {
+        "connectionBlocked": true
+      },
+      "policy": {
+        "inlineRan": 0,
+        "evalRan": false,
+        "evalProbe": {
+          "evalBlocked": true,
+          "errorName": "EvalError"
+        },
+        "violations": [
+          {
+            "directive": "script-src-elem",
+            "blockedURI": "inline"
+          },
+          {
+            "directive": "script-src-attr",
+            "blockedURI": "inline"
+          },
+          {
+            "directive": "connect-src",
+            "blockedURI": "data"
+          },
+          {
+            "directive": "script-src",
+            "blockedURI": "eval"
+          },
+          {
+            "directive": "form-action",
+            "blockedURI": "file"
+          }
+        ]
+      },
+      "evalMethod": "Normal page-loaded test script; not DevTools-evaluated code"
+    },
+    {
+      "name": "actual-resource-failure-startup-UX",
+      "fields": {
+        "phase": "awaiting-compare",
+        "compute": "0",
+        "plans": "Not compared",
+        "slots": "Not compared",
+        "placements": "0 / 0",
+        "cost": "0",
+        "isolation": "Not compared",
+        "fault-domains": "Shared dependency; wider domains unverified",
+        "lifecycle": "Compare fixed DATA first",
+        "warm-up": "unobserved",
+        "routing": "0% / 0%",
+        "remaining": "2 / 0",
+        "retention": "Unobserved",
+        "counts": "0 / 0 / 0 / 0",
+        "safe-aborts": "0",
+        "user-outcome": "Not started",
+        "outcome": "No transition attempted.",
+        "error": ""
+      },
+      "classification": "neutral",
+      "history": [],
+      "fixedData": "{}",
+      "receipts": "[]"
+    }
+  ],
+  "pageErrors": [],
+  "remoteRequests": [],
+  "existingOwnedBytesUnchanged": true,
+  "cleanup": "awaited session.close completed in finally",
+  "qualification": "Bounded observed run only; no native Azure, Node 24 or general unattended helper qualification",
+  "additionalCredits": 0
+}
