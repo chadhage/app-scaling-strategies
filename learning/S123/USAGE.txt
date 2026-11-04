@@ -56,6 +56,16 @@ The first publication's observed CRLF/source seal and publication metadata
 remain preserved in evidence\raw\pre-canonical-git-source-seal.json and
 evidence\raw\first-publication.json. Correcting this portability issue is
 part of the same original unit and contributes no additional credit.
+Git object IDs are computed from explicit canonical bytes over unfiltered
+stdin. A Windows --path alias unexpectedly normalized raw evidence while
+hashing despite its -text attribute. The post-publication check caught the
+wrong object-ID metadata while confirming the stored raw bytes were intact.
+That actual diagnosis and prior seal/publication are preserved in
+evidence\raw\git-object-path-diagnostic.json,
+evidence\raw\pre-stdin-git-object-source-seal.json and
+evidence\raw\second-publication-before-git-object-fix.json.
+The final committed-tree check must match every stored blob to its exact
+verified working bytes and canonical seal. This correction earns no credit.
 
 The first CSP test incorrectly evaluated eval inside DevTools, which bypasses
 that policy. Its actual failure output, exact test source and diagnosis are

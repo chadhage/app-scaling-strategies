@@ -99,6 +99,15 @@
       "correction": "The exact deliberate capture step materializes only owned text source as canonical LF before sealing and browser capture. Raw evidence and RED remain byte-exact.",
       "assertions": "Source raw SHA256 and Git blob identity equal their canonical identities; raw Windows assertion output retains CRLF.",
       "credits": 0
+    },
+    {
+      "stage": "actual committed-tree object check and same-unit metadata correction",
+      "diagnosis": "evidence\\raw\\git-object-path-diagnostic.json",
+      "preservedSeal": "evidence\\raw\\pre-stdin-git-object-source-seal.json",
+      "preservedPublication": "evidence\\raw\\second-publication-before-git-object-fix.json",
+      "cause": "Git hash-object --path with a Windows attribute-path alias normalized a raw snapshot during hashing, producing wrong canonical object-ID metadata even though the published raw bytes were intact.",
+      "correction": "Hash explicit canonical bytes through unfiltered stdin. Raw -text evidence retains the unfiltered blob ID. Verify every blob in the actual implementation commit against its sealed canonical ID and exact current bytes.",
+      "credits": 0
     }
   ],
   "normalVerificationCommand": "node --test learning\\S123\\model.test.cjs learning\\S123\\integrity.test.cjs learning\\S123\\browser.test.cjs",

@@ -38,7 +38,9 @@ function walk(directory, prefix = '') {
       rawSha256: sha(bytes),
       canonicalGitSha256: sha(canonical),
       rawGitBlobSha1: execFileSync('git', ['hash-object', '--no-filters', repoPath], { cwd: root, encoding: 'utf8' }).trim(),
-      canonicalGitBlobSha1: execFileSync('git', ['hash-object', `--path=${repoPath}`, repoPath], { cwd: root, encoding: 'utf8' }).trim(),
+      canonicalGitBlobSha1: execFileSync('git', ['hash-object', '--no-filters', '--stdin'], {
+        cwd: root, input: canonical, encoding: 'utf8',
+      }).trim(),
     };
   }
 }

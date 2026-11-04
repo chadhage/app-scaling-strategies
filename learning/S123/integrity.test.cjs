@@ -46,12 +46,16 @@ test('the immutable published source bytes and raw evidence match their separate
       assert.equal(bytes.includes(Buffer.from('\r\n')), false, `${name}: published source must already be canonical LF`);
       assert.equal(expected.rawSha256, expected.canonicalGitSha256, `${name}: captured source equals canonical Git bytes`);
       assert.equal(expected.rawGitBlobSha1, expected.canonicalGitBlobSha1, `${name}: no checkout-only source identity`);
+    } else {
+      assert.equal(expected.rawSha256, expected.canonicalGitSha256, `${name}: raw evidence is never normalized`);
+      assert.equal(expected.rawGitBlobSha1, expected.canonicalGitBlobSha1, `${name}: raw evidence blob stays byte-exact`);
     }
     const repoPath = path.join('learning', 'S123', name);
     assert.equal(execFileSync('git', ['hash-object', '--no-filters', repoPath], { cwd: root, encoding: 'utf8' }).trim(),
       expected.rawGitBlobSha1, `${name}: unfiltered Git object`);
-    assert.equal(execFileSync('git', ['hash-object', `--path=${repoPath}`, repoPath], { cwd: root, encoding: 'utf8' }).trim(),
-      expected.canonicalGitBlobSha1, `${name}: attribute-filtered Git object`);
+    assert.equal(execFileSync('git', ['hash-object', '--no-filters', '--stdin'], {
+      cwd: root, input: canonical, encoding: 'utf8',
+    }).trim(), expected.canonicalGitBlobSha1, `${name}: explicit canonical-byte Git object`);
   }
 });
 
