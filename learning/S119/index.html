@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S119 - Controlled regional failback rehearsal</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>S119 - Controlled regional failback</h1>
+    <p>A-S119 / D-S119 / SC-S119 / one original S unit. Restore a fictional region, check synchronized capacity and sole-writer ownership, then progressively return users.</p>
+    <p><strong>DATA ONLY:</strong> Amber, Cobalt, restore, capacity, state, synchronization, writer epochs, fences, identity, routing and journeys are fixed fictional teaching observations. These controls never operate a resource, network, data store, writer, identity or Azure service.</p>
+    <section aria-labelledby="envelope-heading">
+      <h2 id="envelope-heading">Declared exercise envelope</h2>
+      <p>Precondition: fictional Cobalt has served users and committed sequence 240. Recovered Amber must show the same contract-v4 state and sequence, sole writer epoch 8, and the old Cobalt writer fenced. A shallow restore observation alone cannot authorize return.</p>
+      <p>Return cohorts are strictly 25 → 50 → 100%. Required recovered capacity is 5 → 10 → 20 units. Each cohort has two fixed journeys with a 400 ms original budget, unchanged identity/session/cart, visible prior commits, and exactly one business effect. No unlimited retry, invented migration, automatic rollback, or unknown-as-success fallback is allowed.</p>
+    </section>
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Operator actions on fictional DATA</h2>
+      <div class="field">
+        <label for="fixture-select">Fixed observation fixture</label>
+        <select id="fixture-select" aria-describedby="fixture-help"></select>
+        <p id="fixture-help">Choose once per exercise. To change observations, reset; this does not repair or synchronize anything.</p>
+      </div>
+      <div class="actions">
+        <button id="restore-button" type="button">Rehearse restore</button>
+        <button id="sync-button" type="button">Inspect synchronization DATA</button>
+        <button id="ownership-button" type="button">Inspect ownership DATA</button>
+      </div>
+      <form id="cohort-form" novalidate>
+        <label for="cohort-percent">Return cohort percent</label>
+        <input id="cohort-percent" name="percent" type="text" inputmode="numeric" value="25" maxlength="8" autocomplete="off" aria-describedby="percent-help error">
+        <button id="return-button" type="submit">Rehearse return</button>
+        <p id="percent-help">Exactly 25, 50 or 100, in order. Enter submits. Fractions, signs, padding, coercion and skipped cohorts are rejected.</p>
+      </form>
+      <button id="reset-button" type="button">Reset exercise</button>
+      <p id="error" role="alert" aria-live="assertive"></p>
+      <p id="status" role="status" aria-live="polite">Choose a fixture and rehearse restore. No journey has returned.</p>
+    </section>
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Measured fictional result</h2>
+      <dl class="measurements">
+        <div><dt>Phase</dt><dd id="phase">awaiting-restore</dd></div>
+        <div><dt>Restore check</dt><dd id="restoration">unchecked</dd></div>
+        <div><dt>Synchronization check</dt><dd id="synchronization">unchecked</dd></div>
+        <div><dt>Ownership / fence check</dt><dd id="ownership">unchecked</dd></div>
+        <div><dt>Requested return</dt><dd id="requested">0%</dd></div>
+        <div><dt>Observed effective return</dt><dd id="effective">0%</dd></div>
+        <div><dt>Attempted journeys</dt><dd id="attempted">0</dd></div>
+        <div><dt>Passed journeys</dt><dd id="passed">0</dd></div>
+        <div><dt>Failed journeys</dt><dd id="failed">0</dd></div>
+        <div><dt>Unknown journeys</dt><dd id="unknown">0</dd></div>
+        <div><dt>Safe aborts before exposure</dt><dd id="safe-aborts">0</dd></div>
+        <div><dt>Completed synthetic return</dt><dd id="completed">No</dd></div>
+      </dl>
+      <p id="outcome">No measured return yet.</p>
+      <pre id="observations" aria-label="Latest fixed observations">No observations selected.</pre>
+      <p>A positive gate is not a user migration. An attempted failed or unverified return stays in the denominator. The six fixture journeys are not independent live trials or statistical evidence of five-nines reliability.</p>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Retained exercise history</h2>
+      <p>Every valid action, including negative and unknown results, is retained in order. The 24-action bound stops further actions without pruning evidence. Invalid typed input preserves the state and trace.</p>
+      <ol id="history" aria-label="Retained action results"></ol>
+    </section>
+    <footer>
+      <p>Standalone, in-memory and resource-free. Reload or reset starts a new exercise; nothing is persisted outside the page. IaC is N/A. B-S119 native proof, production Node.js 24 validation and D-S119 original acceptance remain unfulfilled. No cloud, scaffold, credentials, deployment or expenditure is authorized.</p>
+      <noscript>This interactive rehearsal requires JavaScript. No successful failback is claimed while it is unavailable.</noscript>
+    </footer>
+  </main>
+</body>
+</html>
