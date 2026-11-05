@@ -1,0 +1,34 @@
+'use strict';
+
+// Stub for the U020 RED: loadable, with the real edit and builder, but no amendment behavior at all.
+const { createHash } = require('node:crypto');
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const normalize = (bytes) => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+const AMENDABLE = Object.freeze([]);
+const SURFACE_EDIT = Object.freeze({
+  before: "  const bytes = fs.readFileSync(path.join(repository, '.git', 'kanban-orchestrator', 'publish.ps1'));",
+  after: "  const bytes = fs.readFileSync(path.join(__dirname, 'fixtures', 'publish-f6df80bdafc0.ps1.txt'));"
+});
+function applySurfaceEdit(bytes) {
+  const text = bytes.toString('utf8');
+  const anchor = `${SURFACE_EDIT.before}\r\n`;
+  if (text.split(anchor).length !== 2) throw Object.assign(new Error('SURFACE_EDIT_ANCHOR'), { code: 'SURFACE_EDIT_ANCHOR' });
+  return Buffer.from(text.replace(anchor, `${SURFACE_EDIT.after}\r\n`));
+}
+const addendumName = (sequence) => `evidence-index-addendum-${sequence}.json`;
+const buildAddendum = (fields) => Buffer.from(`${JSON.stringify({ schema: 'C034-evidence-index-addendum/1', cardId: 'C034', ...fields }, null, 2)}\n`);
+const listAddenda = () => [];
+const resolveChain = () => ({ count: 0, tip: null, history: new Map(), evidence: new Map() });
+const workingAccepted = (chain, entry) => [entry.rawSha256];
+const publishedAccepted = (chain, entry) => [entry.rawSha256];
+function checkSealed({ entries, read }) {
+  for (const entry of entries) {
+    if (hash(read(entry.path)) !== entry.rawSha256) throw Object.assign(new Error(`SEALED_BYTES_CHANGED: ${entry.path}`), { code: 'SEALED_BYTES_CHANGED' });
+  }
+  return entries.length;
+}
+const checkPublished = ({ entries }) => ({ published: 0, total: entries.length });
+const checkEvidence = () => 0;
+const checkAddendaAgainstHead = () => undefined;
+module.exports = Object.freeze({ SCHEMA: 'C034-evidence-index-addendum/1', AMENDABLE, SURFACE_EDIT, hash, normalize, applySurfaceEdit, addendumName,
+  buildAddendum, listAddenda, resolveChain, workingAccepted, publishedAccepted, checkSealed, checkPublished, checkEvidence, checkAddendaAgainstHead });

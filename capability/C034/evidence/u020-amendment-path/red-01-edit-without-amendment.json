@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "itemId": "U020",
+  "serves": "C034",
+  "stage": "red-01-edit-without-amendment",
+  "workerId": "worker-U020",
+  "node": "v22.23.4",
+  "replay": "node capability\\C034\\tests\\amendment-replay.cjs red <new-scratch-directory>",
+  "inputs": [
+    {
+      "name": "tests/integrity.test.v1",
+      "rawSha256": "a664b86fe0991471e38ae4951bd4a63b35474c0f0b40a82c2a318fffe68025ba",
+      "bytes": 9093
+    },
+    {
+      "name": "tests/surface.test.v1",
+      "rawSha256": "d74cd7bf4dc60c86be626f9089e439fd8d1e19cee7002533c493d3ca9746e152",
+      "bytes": 3904
+    },
+    {
+      "name": "tests/surface.test.k-c034-edit",
+      "rawSha256": "038518050ecaa9d4ea8a5a86ae39c1f2cc97f0c661579b5d9481fe15e1c32514",
+      "bytes": 3901
+    }
+  ],
+  "runs": [
+    {
+      "label": "control-unedited",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=one original C034 S",
+        "capability\\C034\\tests\\integrity.test.cjs"
+      ],
+      "startedAtUtc": "2026-11-05T19:46:36.216Z",
+      "completedAtUtc": "2026-11-05T19:46:36.924Z",
+      "exitCode": 0,
+      "stdout": {
+        "file": "capability\\C034\\evidence\\u020-amendment-path\\raw\\red-01-edit-without-amendment.control-unedited.stdout.raw.gz",
+        "rawSha256": "44654e264e909f4ad2b0415671ed957be2296ab9d131dbd6899989507b690169",
+        "bytes": 374
+      },
+      "stderr": {
+        "file": "capability\\C034\\evidence\\u020-amendment-path\\raw\\red-01-edit-without-amendment.control-unedited.stderr.raw.gz",
+        "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "label": "edited",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=one original C034 S",
+        "capability\\C034\\tests\\integrity.test.cjs"
+      ],
+      "startedAtUtc": "2026-11-05T19:46:36.928Z",
+      "completedAtUtc": "2026-11-05T19:46:37.492Z",
+      "exitCode": 1,
+      "stdout": {
+        "file": "capability\\C034\\evidence\\u020-amendment-path\\raw\\red-01-edit-without-amendment.edited.stdout.raw.gz",
+        "rawSha256": "14b791f8cdfbf99ba84f57ee634be555118ef23f19c48fd8ada25e4606c30c12",
+        "bytes": 1515
+      },
+      "stderr": {
+        "file": "capability\\C034\\evidence\\u020-amendment-path\\raw\\red-01-edit-without-amendment.edited.stderr.raw.gz",
+        "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    }
+  ]
+}

@@ -4,10 +4,11 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
+const { execFileSync, spawnSync } = require('node:child_process');
 const { gunzipSync } = require('node:zlib');
 const trace = require('..\\trace.js');
-const { hash, normalize, pins } = require('..\\pins.cjs');
+const { hash, pins } = require('..\\pins.cjs');
+const amendments = require('.\\amendments.cjs');
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const manifest = require('..\\evidence-index.json');
@@ -22,6 +23,12 @@ function own(relative) {
 }
 const json = (relative) => JSON.parse(own(relative).toString('utf8'));
 const seal = json(manifest.seal.path);
+// The seal is never rewritten. The sealed bytes of this test and of tests\surface.test.cjs are superseded only through the chained,
+// append-only evidence-index-addendum-N.json files (U020), and the amendment logic they rely on is pinned here like any sealed source.
+const AMENDMENTS_RAW_SHA256 = '109a86d4b8c8068c3bd237c8217f4f0bc1c31601f264d17eb240761cb4a5a337';
+const sealedEntries = () => [...seal.sourceHashes, ...seal.evidenceHashes];
+const chain = () => amendments.resolveChain({ sealed: sealedEntries(), addenda: amendments.listAddenda(root),
+  base: { path: manifest.seal.path, rawSha256: manifest.seal.rawSha256 } });
 test('one original C034 S and all source, raw evidence and seal bytes remain exact, not regenerated', () => {
   assert.equal(manifest.cardId, 'C034');
   assert.equal(manifest.frozenKanoClass, 'S');
@@ -33,11 +40,7 @@ test('one original C034 S and all source, raw evidence and seal bytes remain exa
   assert.equal(manifest.H007Complete, false);
   assert.deepEqual(manifest.acceptedReadOnlyPrerequisites, pins.accepted);
   assert.equal(hash(own(manifest.seal.path)), manifest.seal.rawSha256);
-  for (const entry of [...seal.sourceHashes, ...seal.evidenceHashes]) {
-    const raw = own(entry.path);
-    assert.equal(hash(raw), entry.rawSha256, entry.path);
-    if (entry.crlfToLfSha256) assert.equal(hash(normalize(raw)), entry.crlfToLfSha256, `Separate LF bytes: ${entry.path}`);
-  }
+  assert.equal(amendments.checkSealed({ entries: sealedEntries(), chain: chain(), read: own }), sealedEntries().length);
 });
 
 test('BDD, loadable stub, authentic wrong-order assertion RED and IaC N/A precede actual implementation proof', () => {
@@ -125,28 +128,54 @@ test('new signed Edge proof observes actual DOM/keyboard/order/error/partial/res
 });
 
 test('Git raw-byte gate is explicit pending before publication and verified for every sealed file after publication', () => {
-  const entries = [...seal.sourceHashes, ...seal.evidenceHashes,
+  const entries = [...sealedEntries(),
     { path: manifest.seal.path, rawSha256: manifest.seal.rawSha256 },
     { path: path.join('capability', 'C034', 'evidence-index.json'), rawSha256: hash(fs.readFileSync(path.join(root, 'evidence-index.json'))) }];
-  const input = entries.map((entry) => `HEAD:${entry.path.replaceAll('\\', '/')}`).join('\n') + '\n';
+  const { published, total } = amendments.checkPublished({ entries, chain: chain(), blobs: headBlobs(entries.map((entry) => entry.path)) });
+  console.log(JSON.stringify({ ownRawGitChecks: published, sealedOwnedFiles: total, publicationByteGate: published ? 'verified exact HEAD raw blobs' : 'pending; own sealed working bytes only, not publication' }));
+});
+
+function headBlobs(relatives) {
+  const input = relatives.map((relative) => `HEAD:${relative.replaceAll('\\', '/')}`).join('\n') + '\n';
   const bytes = execFileSync('git', ['--no-pager', 'cat-file', '--batch'], {
     cwd: repository, input, timeout: 10000, windowsHide: true, maxBuffer: 8 * 1024 * 1024, stdio: ['pipe', 'pipe', 'pipe']
   });
+  const blobs = new Map();
   let offset = 0;
-  let published = 0;
-  for (const entry of entries) {
+  for (const relative of relatives) {
     const end = bytes.indexOf(10, offset);
     const line = bytes.subarray(offset, end).toString('utf8');
     offset = end + 1;
-    if (line.endsWith(' missing')) continue;
+    if (line.endsWith(' missing')) { blobs.set(relative, null); continue; }
     const match = /^[0-9a-f]{40} blob (\d+)$/.exec(line);
     assert.ok(match, 'Exact owned Git blob required, not inferred publication.');
     const size = Number(match[1]);
-    assert.equal(hash(bytes.subarray(offset, offset + size)), entry.rawSha256, `Published raw bytes: ${entry.path}`);
+    blobs.set(relative, bytes.subarray(offset, offset + size));
     offset += size + 1;
-    published++;
   }
   assert.equal(offset, bytes.length);
-  if (published) assert.equal(published, entries.length, 'Partial own publication is not qualification.');
-  console.log(JSON.stringify({ ownRawGitChecks: published, sealedOwnedFiles: entries.length, publicationByteGate: published ? 'verified exact HEAD raw blobs' : 'pending; own sealed working bytes only, not publication' }));
+  return blobs;
+}
+
+function committedAddenda() {
+  if (spawnSync('git', ['--no-pager', 'rev-parse', '--verify', '--quiet', 'HEAD'], { cwd: repository, windowsHide: true }).status !== 0) return [];
+  const listing = execFileSync('git', ['--no-pager', 'ls-tree', '--name-only', 'HEAD', 'capability/C034/'],
+    { cwd: repository, encoding: 'utf8', timeout: 10000, windowsHide: true });
+  const names = listing.split('\n').map((line) => path.posix.basename(line.trim())).filter((name) => /^evidence-index-addendum-[1-9][0-9]*\.json$/.test(name));
+  if (!names.length) return [];
+  const blobs = headBlobs(names.map((name) => path.join('capability', 'C034', name)));
+  return names.map((name) => ({ name, bytes: blobs.get(path.join('capability', 'C034', name)) }));
+}
+
+test('the amendment chain is consecutive, chained to the seal, names only closed test files and keeps committed addenda exact', () => {
+  const resolved = chain();
+  assert.ok(resolved.count >= 1, 'This integrity test supersedes the sealed v1 integrity test, so its addendum is required.');
+  assert.deepEqual([...amendments.AMENDABLE], [path.join('capability', 'C034', 'tests', 'integrity.test.cjs'), path.join('capability', 'C034', 'tests', 'surface.test.cjs')]);
+  assert.ok(resolved.history.has(amendments.AMENDABLE[0]));
+  amendments.checkEvidence({ chain: resolved, read: own });
+  amendments.checkAddendaAgainstHead({ working: amendments.listAddenda(root), head: committedAddenda() });
+});
+
+test('the amendment helper keeps the bytes this integrity test pins', () => {
+  assert.equal(hash(fs.readFileSync(path.join(__dirname, 'amendments.cjs'))), AMENDMENTS_RAW_SHA256);
 });
