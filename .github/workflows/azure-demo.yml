@@ -1,0 +1,163 @@
+name: Demonstrate Azure scaling strategies
+run-name: Azure demo - ${{ inputs.experiment }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      experiment:
+        description: Native experiment (catalog-only scenarios cannot execute)
+        type: choice
+        options: [blue-green, native-swap, canary, ab, scale, readiness-abort, rollback, all-implemented]
+        default: blue-green
+      users:
+        description: Even number of cross-transition synthetic users (4-40)
+        type: number
+        default: 10
+      observation_seconds:
+        description: Observation window per stage (2-60 seconds)
+        type: number
+        default: 5
+      journeys_per_second:
+        description: Continuous diagnostic journeys per second (1-5, four requests each)
+        type: number
+        default: 1
+      estimated_cost_usd:
+        description: Reviewed estimate per experiment in USD; NOT a real-time spending cap
+        type: number
+        default: 0
+      confirm_cost_and_teardown:
+        description: Approve the reviewed cost and deletion of each isolated demo resource group
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: azure-native-demo-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+  MAX_ESTIMATED_COST_USD: ${{ vars.AZURE_DEMO_MAX_ESTIMATED_COST_USD }}
+  ESTIMATED_COST_USD: ${{ inputs.estimated_cost_usd }}
+  CONFIRM_COST: ${{ inputs.confirm_cost_and_teardown }}
+  USERS: ${{ inputs.users }}
+  OBSERVATION_SECONDS: ${{ inputs.observation_seconds }}
+  JOURNEYS_PER_SECOND: ${{ inputs.journeys_per_second }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Validate explicit inputs and configuration, without Azure access
+        id: plan
+        run: node demo/pipeline.cjs plan
+        env:
+          EXPERIMENT: ${{ inputs.experiment }}
+
+  demonstrate:
+    needs: plan
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: azure-demo
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      EXPERIMENT: ${{ matrix.experiment }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: demo/package-lock.json
+      - run: npm ci
+        working-directory: demo
+      - run: npm test
+        working-directory: demo
+      - name: Compile before authentication or expenditure
+        run: |
+          az bicep build --file infra/main.bicep --outfile "$RUNNER_TEMP/main.json"
+          az bicep build --file infra/scale.bicep --outfile "$RUNNER_TEMP/scale.json"
+      - name: Sign in with the approved OIDC identity
+        id: login
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Ensure the quota command is available
+        run: |
+          if ! az extension show --name quota >/dev/null 2>&1; then
+            az extension add --name quota --only-show-errors
+          fi
+      - name: Check quota, what-if, deploy Bicep, and measure the experiment
+        run: node demo/pipeline.cjs execute
+      - name: Always delete and verify this demo resource group
+        if: ${{ always() && steps.login.outcome == 'success' }}
+        timeout-minutes: 18
+        run: node demo/pipeline.cjs cleanup
+      - name: Preserve measurements and teardown evidence, including failures
+        if: ${{ always() }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: azure-demo-${{ matrix.experiment }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: demo-output/evidence/
+          if-no-files-found: warn
+          retention-days: 30
+
+  cleanup-fallback:
+    needs: [plan, demonstrate]
+    if: ${{ always() && needs.plan.result == 'success' && needs.demonstrate.result != 'skipped' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: azure-demo-cleanup
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      EXPERIMENT: ${{ matrix.experiment }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
+        with:
+          client-id: ${{ vars.AZURE_CLEANUP_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - run: node demo/pipeline.cjs cleanup
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: azure-demo-teardown-${{ matrix.experiment }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: demo-output/evidence/cleanup.json
+          if-no-files-found: error
+          retention-days: 30

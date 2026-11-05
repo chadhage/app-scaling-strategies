@@ -7,6 +7,7 @@ Implementation work is tracked in the [web demonstration harness backlog](.docs/
 ## TOC
 
 - [Try the local demonstrations](#try-the-local-demonstrations)
+- [Run native Azure demonstrations](#run-native-azure-demonstrations)
 - [Problem Statement](#problem-statement)
 - [Scope](#scope)
 - [Goal Statement](#goal-statement)
@@ -59,7 +60,13 @@ The [versioned getProfile fixture](capability/C020/README.md) and [isolated less
 
 Local lessons and fixtures use synthetic data. A successful rehearsal, a documented platform capability, and a qualified native Azure result are different evidence levels. These local runs do not establish native support, production Node.js 24 validation, completed source-demo parents, or the five-nines transition goal.
 
-The approved scope is design and local implementation only. **IaC generation, identity registration, live Azure execution, deployment, and expenditure remain unapproved.** Node.js 22.23.4 is the validated test-tooling runtime; Node.js 24 LTS with Express on App Service Linux remains the proposed production design.
+The accepted local capabilities retain their original design/local-only approvals. Their snapshots do not authorize IaC, identity registration, Azure execution, deployment, or expenditure. Node.js 22.23.4 is their validated test-tooling runtime; local lesson acceptance is not production-runtime or native Azure qualification.
+
+## Run native Azure demonstrations
+
+The separate [native demonstration pipeline](demo/README.md) implements the first phase of a multi-platform program using GitHub Actions and Bicep. It includes App Service Linux blue-green, prepared native swaps, progressive canary, stable A/B routing, actual plan scale-out/in, readiness rejection, and latency-triggered rollback, with client-observed state/correctness evidence and verified teardown.
+
+The pipeline accounts for all 150 scenarios but explicitly marks remaining platforms and scenarios as planned or partially covered. It does not claim that every strategy is implemented or qualified. Live runs require provider-validated quota, separately configured OIDC identities, protected GitHub environments, a reviewed cost estimate, and explicit cost/teardown approval. The [deployment guide](demo/README.md#current-live-run-blocker) records the current Azure quota blocker. Existing local evidence and the Pages deployment workflow remain independent.
 
 ## Problem Statement
 

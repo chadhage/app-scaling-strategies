@@ -1,0 +1,53 @@
+name: Validate Azure scaling demonstrations
+
+on:
+  pull_request:
+    paths:
+      - 'demo/**'
+      - 'infra/**'
+      - '.azure/deployment-plan.md'
+      - '.github/workflows/azure-demo*.yml'
+      - 'README.md'
+  push:
+    paths:
+      - 'demo/**'
+      - 'infra/**'
+      - '.azure/deployment-plan.md'
+      - '.github/workflows/azure-demo*.yml'
+      - 'README.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: demo/package-lock.json
+      - run: npm ci
+        working-directory: demo
+      - run: npm test
+        working-directory: demo
+      - name: Compile Bicep without Azure authentication
+        run: |
+          az bicep build --file infra/main.bicep --outfile "$RUNNER_TEMP/main.json"
+          az bicep build --file infra/scale.bicep --outfile "$RUNNER_TEMP/scale.json"
+          az bicep build --file infra/github-identity.bicep --outfile "$RUNNER_TEMP/github-identity.json"
+      - name: Lint Actions workflows
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -color .github/workflows/azure-demo-ci.yml .github/workflows/azure-demo.yml .github/workflows/azure-demo-cleanup.yml
+      - name: Generate the complete, honest coverage report
+        run: node demo/pipeline.cjs catalog
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: azure-demo-catalog
+          path: demo-output/evidence/coverage.json
+          if-no-files-found: error
