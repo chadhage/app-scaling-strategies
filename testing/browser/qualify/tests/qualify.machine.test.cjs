@@ -8,6 +8,7 @@ const path = require('node:path');
 const test = require('node:test');
 const { qualifyEdge } = require('../qualify.cjs');
 const { scratchDir, removeDir } = require('./harness.cjs');
+const { chain } = require('./chain.cjs');
 
 const LONG = { timeout: 240000 };
 
@@ -21,6 +22,24 @@ test('the real installed Edge is Microsoft-signed and inside the qualified major
   assert.match(report.version, /^\d+\.\d+\.\d+\.\d+$/);
   assert.match(report.sha256, /^[0-9a-f]{64}$/);
   assert.ok(path.win32.isAbsolute(report.path) && report.path.toLowerCase().endsWith('msedge.exe'));
+});
+
+test('a major that is listed ONLY in the append-only addendum qualifies the real installed Edge (the sealed list names another major)', LONG, async (t) => {
+  const installed = await qualifyEdge();
+  assert.ok(Number.isInteger(installed.major) && installed.version !== null, `the installed Edge has no version: ${installed.reasons.join(' | ')}`);
+  const dir = scratchDir();
+  try {
+    const sealed = `${JSON.stringify({ schemaVersion: 1, qualifiedMajors: [installed.major - 1] }, null, 2)}\n`;
+    fs.writeFileSync(path.join(dir, 'qualified.json'), sealed);
+    fs.writeFileSync(path.join(dir, 'qualified.addendum.jsonl'), chain(sealed, [{ major: installed.major, version: installed.version, binarySha256: installed.sha256 }]).text);
+    const report = await qualifyEdge({ qualifiedPath: path.join(dir, 'qualified.json') });
+    t.diagnostic(`Edge ${report.version}: qualified via ${report.qualifiedVia}; list ${JSON.stringify(report.qualifiedMajors)}`);
+    assert.equal(report.ok, true, report.reasons.join(' | '));
+    assert.equal(report.qualifiedVia, 'addendum');
+    assert.deepEqual(report.qualifiedMajors, [installed.major - 1, installed.major]);
+  } finally {
+    removeDir(dir);
+  }
 });
 
 test('a real file that is not a signed Microsoft binary named msedge.exe fails closed on the real PowerShell', LONG, async (t) => {

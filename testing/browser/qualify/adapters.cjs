@@ -1,15 +1,17 @@
 'use strict';
 
-// Real I/O for qualifyEdge(): candidate lookup, stat, SHA-256, qualified.json and the PowerShell queries.
+// Real I/O for qualifyEdge(): candidate lookup, stat, SHA-256, qualified.json plus its append-only addendum, and the PowerShell queries.
 // Every function can be replaced through options.adapters, so every branch of the checker runs hermetically.
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const childProcess = require('node:child_process');
+const { anchorOf, addendumFileFor, readAddendum } = require('./addendum.cjs');
+const { validateQualifiedMajors } = require('./version.cjs');
 
 const QUALIFIED_FILE = path.join(__dirname, 'qualified.json');
 const EDGE_RELATIVE = ['Microsoft', 'Edge', 'Application', 'msedge.exe'];
-const SHELL_TIMEOUT_MS = 60000;
+const SHELL_TIMEOUT_MS = 180000;
 const MAX_SHELL_OUTPUT = 65536;
 const TARGET_VARIABLE = 'QUALIFY_TARGET';
 
@@ -84,7 +86,14 @@ function sha256File(file, fsApi = fs) {
 }
 
 function readQualified(file = QUALIFIED_FILE, fsApi = fs) {
-  return JSON.parse(fsApi.readFileSync(file, 'utf8'));
+  const sealed = Buffer.from(fsApi.readFileSync(file));
+  const data = JSON.parse(sealed.toString('utf8'));
+  const majors = validateQualifiedMajors(data);
+  // An invalid sealed list is returned as it is: qualifyEdge() reports it as QUALIFIED_MAJORS_INVALID.
+  if (!majors.ok) return data;
+  const found = readAddendum(addendumFileFor(file), { anchor: anchorOf(sealed), sealedMajors: majors.majors, fsApi });
+  if (!found.ok) throw Object.assign(new Error(found.error), { code: 'QUALIFIED_ADDENDUM_INVALID' });
+  return { ...data, qualifiedMajors: [...majors.majors, ...found.majors], sealedMajors: majors.majors };
 }
 
 function shellError(code, message) {
@@ -194,7 +203,7 @@ function defaultAdapters(options = {}) {
 }
 
 module.exports = {
-  QUALIFIED_FILE, TARGET_VARIABLE, INSPECT_SCRIPT,
+  QUALIFIED_FILE, SHELL_TIMEOUT_MS, TARGET_VARIABLE, INSPECT_SCRIPT,
   edgeCandidates, statFile, sha256File, readQualified, runShell, decodeInspection, powerShellAdapters, defaultAdapters,
   withoutKeys, windowsPowerShellPath, defaultShellArgs,
 };

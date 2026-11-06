@@ -13,15 +13,19 @@ const { MUTANTS } = require('./mutants.cjs');
 const NAMESPACE = path.resolve(__dirname, '..', '..');
 const BROWSER_DIR = path.dirname(NAMESPACE);
 const ORDER = ['version', 'subject', 'subject-lookalike', 'adapters', 'qualify', 'qualify-recheck', 'fail-closed', 'cli-line', 'cli-target', 'cli-write', 'cli',
-  'shell', 'requalify-counts', 'requalify-verdict', 'requalify-flow', 'requalify', 'requalify-tree'];
+  'shell', 'requalify-counts', 'requalify-verdict', 'requalify-flow', 'requalify', 'requalify-tree',
+  'survivors', 'survivors-r3', 'addendum-anomalies', 'addendum', 'addendum-cli', 'qualify-addendum', 'timeouts', 'cli-catch', 'outer-timeout', 'n4-guards'];
 // The test files that name the mutated source run first, so a killed mutant costs seconds; a survivor runs them all.
+// outer-timeout runs first for qualify.cjs so that a missing outer bound (mutant M10) fails an assertion that names the adapter
+// instead of hanging a file until the external timeout.
 const PRIORITY = {
-  'qualify.cjs': ['qualify-recheck', 'fail-closed', 'qualify', 'subject-lookalike'],
+  'qualify.cjs': ['outer-timeout', 'survivors', 'qualify-recheck', 'fail-closed', 'qualify', 'subject-lookalike', 'timeouts', 'qualify-addendum', 'n4-guards'],
   'subject.cjs': ['subject-lookalike', 'subject'],
   'version.cjs': ['version'],
-  'adapters.cjs': ['adapters', 'shell'],
-  'requalify.cjs': ['requalify-counts', 'requalify-verdict', 'requalify-flow', 'requalify', 'requalify-tree'],
-  'cli.cjs': ['cli-line', 'cli-target', 'cli-write', 'cli'],
+  'adapters.cjs': ['adapters', 'survivors', 'shell', 'qualify-addendum', 'addendum-anomalies'],
+  'requalify.cjs': ['requalify-counts', 'survivors', 'requalify-verdict', 'requalify-flow', 'requalify', 'requalify-tree', 'n4-guards'],
+  'cli.cjs': ['cli-line', 'survivors', 'cli-target', 'cli-write', 'cli', 'cli-catch', 'timeouts'],
+  'addendum.cjs': ['addendum-anomalies', 'addendum', 'addendum-cli', 'qualify-addendum', 'survivors-r3'],
 };
 const orderFor = (file) => [...PRIORITY[file], ...ORDER.filter((name) => !PRIORITY[file].includes(name))];
 

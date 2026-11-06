@@ -1,0 +1,54 @@
+
+=== 0 sealed list says [155]; the installed Edge is 156 (05:54:02)
+"qualifiedMajors": [155],
+156.0.4314.58
+exit code: 
+
+=== 1 the installed major is not listed yet (05:54:02)
+}
+exit code: 1
+
+=== 2 requalify under a heavy slot (the tool takes and releases its own slot) (05:54:04)
+}
+exit code: 1
+
+=== 3 dry run (06:02:56)
+{"major":156,"version":"156.0.4314.58","binarySha256":"d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b","reportSha256":"228ff1a8d1fbcde6a241ed470faaa0d1bbc35388c77ae342aef582817c5e753d","previous":"7499edf710b167f7ac675b6ea3d01aed725764dc913f759bf2db0af09d704cd0","atUtc":"2026-11-06T11:02:58.372Z"}
+DRY RUN would append major 156 (156.0.4314.58) to qualified.addendum.jsonl
+exit code: 0
+
+=== 4 append (06:02:58)
+{"major":156,"version":"156.0.4314.58","binarySha256":"d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b","reportSha256":"228ff1a8d1fbcde6a241ed470faaa0d1bbc35388c77ae342aef582817c5e753d","previous":"7499edf710b167f7ac675b6ea3d01aed725764dc913f759bf2db0af09d704cd0","atUtc":"2026-11-06T11:03:01.056Z"}
+APPENDED major 156 (156.0.4314.58) to qualified.addendum.jsonl
+exit code: 0
+
+=== 4b a second append of the same major is refused (06:03:01)
+FAIL closed: major 156 is already listed
+exit code: 1
+
+=== 5a check (06:03:01)
+[31;1mOK qualified list: sealed [155] and addendum [156] (1 line)[0m
+exit code: 0
+
+=== 5b qualify (06:03:02)
+[31;1mPASS Edge 156.0.4314.58 at C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe: signed by Microsoft Corporation, major 156 qualified, sha256 d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b[0m
+exit code: 0
+
+=== 5c the report says how the major qualified (06:03:05)
+{"ok":true,"qualifiedVia":"addendum","qualifiedMajors":[155,156]}
+exit code: 0
+
+--- the addendum file
+{"major":156,"version":"156.0.4314.58","binarySha256":"d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b","reportSha256":"228ff1a8d1fbcde6a241ed470faaa0d1bbc35388c77ae342aef582817c5e753d","previous":"7499edf710b167f7ac675b6ea3d01aed725764dc913f759bf2db0af09d704cd0","atUtc":"2026-11-06T11:03:01.056Z"}
+
+--- sealed list untouched: "qualifiedMajors": [155],
+
+=== 6 tamper: the anchor of the only line is changed by one digit (06:03:07)
+[31;1mFAIL closed: QUALIFIED_ADDENDUM_INVALID: line 1: previous does not match qualified.json[0m
+exit code: 1
+
+=== 6b the tampered file also fails the qualification closed (06:03:08)
+[31;1mFAIL closed: QUALIFIED_ADDENDUM_INVALID: qualified.addendum.jsonl cannot be used: line 1: previous does not match qualified.json[0m
+exit code: 1
+
+done 06:03:10

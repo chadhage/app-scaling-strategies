@@ -1,17 +1,19 @@
 'use strict';
 
-// Command line of the Edge qualification: node testing\browser\qualify\qualify.cjs [--json <out>] [--requalify]
+// Command line of the Edge qualification: node testing\browser\qualify\qualify.cjs [--json <out>] [--timeout-ms <n>] [--requalify]
 // Exit 0 when Edge is qualified (and, with --requalify, the isolated suites passed), 1 when it fails closed, 2 for a usage error
 // or a --json target that is refused (checked before anything runs). A check prints its verdict as ONE stderr line.
 const fs = require('node:fs');
 const path = require('node:path');
-const { qualifyEdge } = require('./qualify.cjs');
+const { qualifyEdge, MAX_TIMEOUT_MS, DEFAULT_TIMEOUT_MS, TIMEOUT_ENV } = require('./qualify.cjs');
 const { requalifyEdge, createSlot } = require('./requalify.cjs');
 
 const USAGE = [
-  'Usage: node testing\\browser\\qualify\\qualify.cjs [--json <out>] [--requalify [--slot-script <heavy-slot.ps1> --slot-owner <name>]]',
+  'Usage: node testing\\browser\\qualify\\qualify.cjs [--json <out>] [--timeout-ms <n>] [--requalify [--slot-script <heavy-slot.ps1> --slot-owner <name>]]',
   '  --json <out>     also write the JSON report to <out>; checked before anything runs: never overwrites, no reserved device name,',
   '                   trailing dot or space, colon after the drive letter or UNC path, and the folder must exist',
+  `  --timeout-ms <n> every adapter call may take n ms (1 to ${MAX_TIMEOUT_MS}; default ${DEFAULT_TIMEOUT_MS}); the one PowerShell start is ended at 75 percent of it;`,
+  `                   the environment variable ${TIMEOUT_ENV} sets the same value, the flag wins; a timeout fails the check, it never passes it`,
   '  --requalify      run testing\\browser\\isolated.test.cjs and loopback.test.cjs on the installed Edge and record the counts',
   '  --slot-script    with --requalify: take a heavy-run slot through this PowerShell script (-Action Acquire|Release -Owner <name>)',
   '  stdout is the JSON report, stderr one verdict line (usage errors print this text); exit 0 qualified, 1 fails closed, 2 usage',
@@ -55,9 +57,13 @@ function checkJsonTarget(target, fsApi = fs) {
   return null;
 }
 
+function parseTimeoutFlag(value) {
+  return /^[1-9]\d*$/.test(value) && Number(value) <= MAX_TIMEOUT_MS ? Number(value) : null;
+}
+
 function parseArgs(argv) {
-  const options = { json: null, requalify: false, help: false, slotScript: null, slotOwner: null };
-  const valued = { '--json': 'json', '--slot-script': 'slotScript', '--slot-owner': 'slotOwner' };
+  const options = { json: null, requalify: false, help: false, slotScript: null, slotOwner: null, timeoutMs: null };
+  const valued = { '--json': 'json', '--slot-script': 'slotScript', '--slot-owner': 'slotOwner', '--timeout-ms': 'timeoutMs' };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--help' || arg === '-h') {
@@ -68,7 +74,13 @@ function parseArgs(argv) {
       const value = argv[i + 1];
       if (value === undefined || value.startsWith('--')) return { error: `${arg} needs a value` };
       if (options[valued[arg]] !== null) return { error: `${arg} was given twice` };
-      options[valued[arg]] = value;
+      if (arg === '--timeout-ms') {
+        const milliseconds = parseTimeoutFlag(value);
+        if (milliseconds === null) return { error: `--timeout-ms must be an integer number of milliseconds from 1 to ${MAX_TIMEOUT_MS} (got ${JSON.stringify(value)})` };
+        options.timeoutMs = milliseconds;
+      } else {
+        options[valued[arg]] = value;
+      }
       i += 1;
     } else {
       return { error: `unknown argument ${JSON.stringify(arg)}` };
@@ -109,7 +121,7 @@ function verdict(report) {
   return `FAIL closed: ${joinReasons(report.reasons)}${suffix}`;
 }
 
-async function main(argv, io = {}) {
+async function run(argv, io) {
   const out = io.stdout || process.stdout;
   const err = io.stderr || process.stderr;
   const write = io.writeFile || ((file, data) => fs.writeFileSync(file, data, { flag: 'wx' }));
@@ -130,18 +142,13 @@ async function main(argv, io = {}) {
       return 2;
     }
   }
-  let report;
-  try {
-    report = options.requalify
-      ? await (io.requalify || requalifyEdge)({
-        qualifyOptions: io.qualifyOptions,
-        slot: options.slotScript ? createSlot({ script: options.slotScript, owner: options.slotOwner }) : undefined,
-      })
-      : await (io.qualify || qualifyEdge)(io.qualifyOptions);
-  } catch (error) {
-    err.write(`FAIL closed: the check itself failed: ${oneLine(error.message)}\n`);
-    return 1;
-  }
+  const qualifyOptions = options.timeoutMs === null ? io.qualifyOptions : { ...io.qualifyOptions, timeoutMs: options.timeoutMs };
+  const report = options.requalify
+    ? await (io.requalify || requalifyEdge)({
+      qualifyOptions,
+      slot: options.slotScript ? createSlot({ script: options.slotScript, owner: options.slotOwner }) : undefined,
+    })
+    : await (io.qualify || qualifyEdge)(qualifyOptions);
   const json = `${JSON.stringify(report, null, 2)}\n`;
   out.write(json);
   let line = verdict(report);
@@ -156,6 +163,21 @@ async function main(argv, io = {}) {
   }
   err.write(`${line}\n`);
   return code;
+}
+
+// L-0141: whatever goes wrong (the check, a broken stdout, a throwing hook) is ONE typed line and exit 1, never a stack trace or an
+// unhandled rejection whose exit code depends on NODE_OPTIONS=--unhandled-rejections.
+async function main(argv, io = {}) {
+  try {
+    return await run(argv, io);
+  } catch (error) {
+    try {
+      (io.stderr || process.stderr).write(`FAIL closed: the check itself failed: ${oneLine(error && error.message !== undefined ? error.message : error)}\n`);
+    } catch {
+      // stderr is broken as well: the exit code still says failure
+    }
+    return 1;
+  }
 }
 
 module.exports = { USAGE, parseArgs, verdict, main };

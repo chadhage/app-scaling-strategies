@@ -13,7 +13,7 @@ const sink = () => ({ text: '', write(chunk) { this.text += chunk; } });
 const qualifyOptions = (overrides) => ({ adapters: fixtureAdapters(overrides) });
 
 test('arguments are parsed strictly and every misuse is a named usage error', () => {
-  assert.deepEqual(cli.parseArgs([]).options, { json: null, requalify: false, help: false, slotScript: null, slotOwner: null });
+  assert.deepEqual(cli.parseArgs([]).options, { json: null, requalify: false, help: false, slotScript: null, slotOwner: null, timeoutMs: null });
   assert.equal(cli.parseArgs(['--json', 'out.json', '--requalify']).options.json, 'out.json');
   assert.equal(cli.parseArgs(['-h']).options.help, true);
   const slot = cli.parseArgs(['--requalify', '--slot-script', 'S.ps1', '--slot-owner', 'U018']).options;
