@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "name": "red-05-exchange-old-helper",
+  "purpose": "U040 RED for the test-helper flake that loop-01-64x8 found (run 36 of 64 failed u040-pipelining.test.cjs:94, closedByServer false). The deterministic regression test tests\\u040-exchange.test.cjs against the helper tests\\u040-support.cjs AS IT WAS (sha256 db75221111f09c69bc9f9964f9e664aa25bc51559400cc9b131ec2e3faab8184, byte-exact copy under evidence\\u040\\superseded\\u040-support.s1.cjs.txt): exchange() ends an exchange after a 400 ms quiet window even when the answer said Connection: close and the server has not closed yet, so the clock decides whether the server closed. Tiny TCP servers answer and close on their own schedule (600 ms later, or never); three of the five tests fail on assertions about which ending the helper reports (a close by the server, or the hang guard), two controls pass. No server.cjs is involved.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "capability\\C026\\tests\\u040-exchange.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "startedAtUtc": "2026-11-06T14:46:31.793Z",
+  "completedAtUtc": "2026-11-06T14:46:36.694Z",
+  "elapsedMs": 4901,
+  "timeoutMs": 300000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C026\\framing.cjs",
+      "bytes": 9354,
+      "rawSha256": "ce238fad9962f9cfde14782b91d4361e8eb85406d7c66d3da088a122eb1e3ce4",
+      "crlfToLfSha256": "3d87b7ad1389f9395b270c1a6ad2b5da9f721302fdeb5d9c9eef48bfcbed2c34"
+    },
+    {
+      "path": "capability\\C026\\tests\\u040-support.cjs",
+      "bytes": 5057,
+      "rawSha256": "db75221111f09c69bc9f9964f9e664aa25bc51559400cc9b131ec2e3faab8184",
+      "crlfToLfSha256": "b36964a2bfcd64641c0626be27eb9bec8c3a38eabf40e88440ff0ef037b5b49a"
+    },
+    {
+      "path": "capability\\C026\\tests\\u040-exchange.test.cjs",
+      "bytes": 4098,
+      "rawSha256": "f194cc8cf222020a310be52c315bf32cdb5d77d57525f350cda1ef9618c23a7b",
+      "crlfToLfSha256": "f5ad5c52a2b8f34aa42f66b8ecf545fd416b73d0841bba76968f831056eafa04"
+    }
+  ],
+  "summary": {
+    "tests": 5,
+    "suites": 0,
+    "pass": 2,
+    "fail": 3,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "an answer that says Connection: close, followed by a close long after the quiet window, is a close by the server",
+      "the last answer decides: a keep-alive answer followed by a refusal that says Connection: close waits for the close",
+      "a server that promised Connection: close and never closes ends at the hang guard, and that is not a close"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red-05-exchange-old-helper.stdout.raw.gz",
+      "bytes": 4906,
+      "sha256": "32b1adb615cb4754bdc563ad7d02860b64bd41c8c6e65341e621c522fc896e8d",
+      "gzipBytes": 1046,
+      "gzipSha256": "252a294872a27bc147a6d4950aed22504d5df95d73fd5cf73e787e9638a4fd71",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red-05-exchange-old-helper.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

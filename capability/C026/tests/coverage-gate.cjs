@@ -12,7 +12,8 @@ const FILE_ROW = new RegExp(`^#\\s+(\\S+\\.[cm]?js)\\s+\\|\\s+${NUMBER}\\s+\\|\\
 const NOT_NODE_MEASURABLE = /\.(?:html|css|ps1)$/;
 // A nested `node --test` that inherits NODE_TEST_CONTEXT exits 0 even when its test fails (L-0002).
 const NESTED_REMOVED = Object.freeze(['CAPTURE_BROWSER_EVIDENCE', 'NODE_V8_COVERAGE', 'NODE_TEST_CONTEXT']);
-const TESTS = Object.freeze(['framing', 'stream', 'server', 'conversation', 'page', 'surface', 'limits', 'hardening', 'heap-limit', 'refusal-close', 'recovery', 'evidence']
+const TESTS = Object.freeze(['framing', 'stream', 'server', 'conversation', 'page', 'surface', 'limits', 'hardening', 'heap-limit', 'refusal-close', 'recovery', 'evidence',
+  'u040-pipelining', 'u040-node-own']
   .map((name) => `${name}.test.cjs`));
 
 function nestedEnvironment(env) {

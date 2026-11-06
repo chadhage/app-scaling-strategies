@@ -1,0 +1,134 @@
+'use strict';
+
+// U040: Node answers some requests itself and never calls the request handler (an unknown Expect header, a request without Host,
+// bytes it cannot parse). Those answers must be the same typed refusal as every other one: Connection: close, the connection
+// closed, and nothing pipelined behind them allowed to upgrade. Rows run in this process and in a separate node process.
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const { createLocalServer } = require('../server.cjs');
+const { MODES, startFixture } = require('./u040-fixtures.cjs');
+const { wire, upgradeWithHello, exchange } = require('./u040-support.cjs');
+
+// Node's own answers have no JSON body: that is reported as a failed comparison, never as a parse error.
+const codeOf = (response) => {
+  try {
+    return JSON.parse(response.body).error.code;
+  } catch {
+    return `(not a typed refusal: ${JSON.stringify(response.body.slice(0, 40))})`;
+  }
+};
+
+for (const mode of MODES) {
+  test(`${mode}: an unknown Expect header is the typed 417 refusal, with Connection: close, and an upgrade behind it creates no session`, { timeout: 60000 }, async () => {
+    const fixture = await startFixture(mode, 'none');
+    try {
+      const request = wire({ target: '/scope.json', host: fixture.host, headers: ['Expect: nonsense'] });
+      const result = await exchange(fixture.port, [{ data: Buffer.concat([request, upgradeWithHello(fixture.host)]) }]);
+      assert.deepEqual(result.statuses, [417]);
+      assert.equal(codeOf(result.responses[0]), 'EXPECTATION_FAILED');
+      assert.equal(result.responses[0].headers.connection, 'close');
+      assert.equal(result.closedByServer, true);
+      assert.equal((await fixture.state()).sessions, 0);
+    } finally {
+      await fixture.close();
+    }
+  });
+
+  test(`${mode}: Expect: 100-continue is decided by the handler: a refused request gets no 100 Continue, a valid read is answered without one`, { timeout: 60000 }, async () => {
+    const fixture = await startFixture(mode, 'none');
+    try {
+      const refused = wire({ target: '/nope', host: fixture.host, headers: ['Expect: 100-continue'] });
+      const first = await exchange(fixture.port, [{ data: Buffer.concat([refused, upgradeWithHello(fixture.host)]) }]);
+      assert.deepEqual(first.statuses, [404], 'no 100 Continue before the refusal, no 101 after it');
+      assert.equal(codeOf(first.responses[0]), 'NOT_FOUND');
+      assert.equal(first.closedByServer, true);
+      const valid = wire({ target: '/scope.json', host: fixture.host, headers: ['Expect: 100-continue'] });
+      const second = await exchange(fixture.port, [{ data: valid }]);
+      assert.deepEqual(second.statuses, [200], 'a request without content needs no 100 Continue');
+      assert.equal((await fixture.state()).sessions, 0);
+    } finally {
+      await fixture.close();
+    }
+  });
+
+  test(`${mode}: a request without Host is the typed 421 refusal in both framings, and an upgrade behind it creates no session`, { timeout: 60000 }, async () => {
+    const fixture = await startFixture(mode, 'none');
+    try {
+      for (const framing of ['1.1', '1.0k']) {
+        const request = wire({ target: '/scope.json', host: null, framing });
+        const result = await exchange(fixture.port, [{ data: Buffer.concat([request, upgradeWithHello(fixture.host)]) }]);
+        assert.deepEqual(result.statuses, [421], framing);
+        assert.equal(codeOf(result.responses[0]), 'LOCAL_HOST_REQUIRED', framing);
+        assert.equal(result.responses[0].headers.connection, 'close', framing);
+        assert.equal(result.closedByServer, true, framing);
+      }
+      assert.equal((await fixture.state()).sessions, 0);
+    } finally {
+      await fixture.close();
+    }
+  });
+
+  test(`${mode}: bytes Node cannot parse get the typed 400 refusal that closes the connection; nothing behind them upgrades`, { timeout: 60000 }, async () => {
+    const fixture = await startFixture(mode, 'none');
+    try {
+      const garbage = Buffer.from(`GET / HTTP/1.1\r\nHost: ${fixture.host}\r\nBad Header\r\n\r\n`, 'latin1');
+      const result = await exchange(fixture.port, [{ data: Buffer.concat([garbage, upgradeWithHello(fixture.host)]) }]);
+      assert.deepEqual(result.statuses, [400]);
+      assert.equal(codeOf(result.responses[0]), 'MALFORMED_REQUEST');
+      assert.equal(result.responses[0].headers.connection, 'close');
+      assert.equal(result.closedByServer, true);
+      assert.equal((await fixture.state()).sessions, 0);
+    } finally {
+      await fixture.close();
+    }
+  });
+
+  test(`${mode}: an h2c upgrade attempt is refused and closed: only a WebSocket upgrade on /stream is ever accepted`, { timeout: 60000 }, async () => {
+    const fixture = await startFixture(mode, 'none');
+    try {
+      const headers = ['Upgrade: h2c', 'Connection: Upgrade, HTTP2-Settings', 'HTTP2-Settings: AAMAAABkAARAAAAAAAIAAAAA'];
+      for (const [target, status, code] of [['/stream', 400, 'UPGRADE_HEADERS_REQUIRED'], ['/scope.json', 404, 'NOT_FOUND']]) {
+        const request = wire({ target, host: fixture.host, headers });
+        const result = await exchange(fixture.port, [{ data: Buffer.concat([request, upgradeWithHello(fixture.host)]) }]);
+        assert.deepEqual(result.statuses, [status], target);
+        assert.equal(codeOf(result.responses[0]), code, target);
+        assert.equal(result.closedByServer, true, target);
+      }
+      assert.equal((await fixture.state()).sessions, 0);
+    } finally {
+      await fixture.close();
+    }
+  });
+}
+
+// The parse-error listener, driven directly so that the timeout and header-overflow answers need no 5 s timer and no flood.
+function fakeSocket(overrides = {}) {
+  const socket = { writable: true, bytesWritten: 0, written: [], soon: 0, destroyed: 0, ...overrides };
+  socket.write = (text) => { socket.written.push(text); };
+  socket.destroySoon = () => { socket.soon += 1; };
+  socket.destroy = () => { socket.destroyed += 1; };
+  return socket;
+}
+
+test('a parse error is answered with the typed refusal that its cause maps to, then the connection is ended after the flush', () => {
+  const server = createLocalServer({ transcript: null });
+  const cases = [['HPE_HEADER_OVERFLOW', 431, 'HEADERS_TOO_LARGE'], ['ERR_HTTP_REQUEST_TIMEOUT', 408, 'REQUEST_TIMEOUT'], ['HPE_INVALID_METHOD', 400, 'MALFORMED_REQUEST'], [undefined, 400, 'MALFORMED_REQUEST']];
+  for (const [cause, status, code] of cases) {
+    const socket = fakeSocket();
+    assert.equal(server.emit('clientError', Object.assign(new Error('parse'), { code: cause }), socket), true, `${cause}: a listener must handle it`);
+    assert.equal(socket.written.length, 1, cause);
+    assert.match(socket.written[0], new RegExp(`^HTTP/1\\.1 ${status} `), cause);
+    assert.match(socket.written[0], /\r\nConnection: close\r\n/, cause);
+    assert.equal(JSON.parse(socket.written[0].split('\r\n\r\n')[1]).error.code, code, cause);
+    assert.deepEqual([socket.soon, socket.destroyed], [1, 0], `${cause}: ended after the flush, not destroyed unflushed`);
+  }
+});
+
+test('a parse error on a socket that is gone, or that has already been answered, writes nothing and just destroys it', () => {
+  const server = createLocalServer({ transcript: null });
+  for (const overrides of [{ writable: false }, { bytesWritten: 120 }]) {
+    const socket = fakeSocket(overrides);
+    assert.equal(server.emit('clientError', Object.assign(new Error('parse'), { code: 'HPE_INVALID_METHOD' }), socket), true);
+    assert.deepEqual([socket.written.length, socket.soon, socket.destroyed], [0, 0, 1], JSON.stringify(overrides));
+  }
+});

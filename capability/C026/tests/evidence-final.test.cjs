@@ -3,13 +3,26 @@
 // Run after the final archives are indexed in evidence.json (it cannot be part of the runs it verifies): the final runs
 // passed, hashed the production files that ship, the replay passes every RED assertion unchanged, and the archived
 // browser run scanned the rendered table for repeated event ids.
+// U040 amendment (evidence-index-addendum-1.json): a production file whose bytes were replaced by an addendum is accepted when the
+// archived run hashed exactly the bytes the addendum supersedes and the live file is exactly the bytes it names; the chain is read
+// through tests\u040-chain.cjs, pinned below by its raw SHA-256. The replaced version of this test is archived under
+// evidence\u040\superseded and its hash is in the addendum.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
-const { root, index, sha, PRODUCTION, manifestOf, stdoutOf, inputHash } = require('./evidence-support.cjs');
+const chain = require('./u040-chain.cjs');
+const { root, index, sha, resolve, PRODUCTION, manifestOf, stdoutOf, inputHash } = require('./evidence-support.cjs');
+
+const CHAIN_SHA256 = '937fe67978f005dff2a12440999a0e75f5171fe7cf8900ea0de65b174a3fa0e2';
+const readRelative = (relative) => {
+  try { return fs.readFileSync(resolve(relative)); } catch { return null; }
+};
 
 test('the final runs passed, hashed the production files that ship, and the replay passes every RED assertion unchanged', () => {
+  assert.equal(sha(fs.readFileSync(path.join(__dirname, 'u040-chain.cjs'))), CHAIN_SHA256, 'u040-chain.cjs is not the pinned helper');
+  const amended = chain.verifyChain(readRelative);
+  assert.deepEqual(amended.errors, [], 'the addendum chain must verify');
   const finals = index.fixRuns.filter((run) => run.kind !== 'red');
   const kinds = new Set(finals.map((run) => run.kind));
   for (const kind of ['green', 'replay', 'syntax', 'coverage', 'browser']) assert.equal(kinds.has(kind), true, `no ${kind} run is indexed`);
@@ -20,7 +33,12 @@ test('the final runs passed, hashed the production files that ship, and the repl
     const manifest = manifestOf(run);
     const stdout = stdoutOf(run, manifest);
     assert.deepEqual([manifest.exitCode, manifest.expectedExitCode, manifest.timedOut], [0, 0, false], run.name);
-    for (const name of PRODUCTION) assert.equal(inputHash(manifest, name), sha(fs.readFileSync(path.join(root, name))), `${run.name}: ${name} is not the shipped file`);
+    for (const name of PRODUCTION) {
+      const shipped = sha(fs.readFileSync(path.join(root, name)));
+      const recorded = inputHash(manifest, name);
+      const replaced = chain.supersedes(amended.hashes, `capability\\C026\\${name}`, recorded, shipped);
+      assert.equal(recorded === shipped || replaced, true, `${run.name}: ${name} is not the shipped file`);
+    }
     if (run.kind === 'green' || run.kind === 'replay') assert.deepEqual([manifest.summary.fail, manifest.summary.pass], [0, manifest.summary.tests], run.name);
     if (run.kind === 'green') assert.equal(manifest.summary.tests >= 96, true, `the whole suite without this file is 96 tests, ran ${manifest.summary.tests}`);
     if (run.kind === 'replay') {

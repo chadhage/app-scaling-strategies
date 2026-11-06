@@ -40,13 +40,23 @@ const SECURITY_HEADERS = Object.freeze({
   'X-C026-Scope': 'synthetic-loopback-only'
 });
 const openSockets = new WeakMap();
+// A connection on which a refusal was decided. Node parses every request the peer pipelined in one read and emits each of them
+// (an upgrade included) before the first answer has finished, so nothing behind a refusal may run. The mark is made at decision time
+// with request.socket: response.socket is null for an answer that is queued behind another one.
+const closing = new WeakSet();
+// Parse errors that Node reports through 'clientError' (it would write its own bare 400, 408 or 431): the typed refusal for each.
+const MALFORMED_REQUEST = Object.freeze([400, 'MALFORMED_REQUEST', 'The request could not be parsed.']);
+const CLIENT_ERRORS = new Map([
+  ['HPE_HEADER_OVERFLOW', [431, 'HEADERS_TOO_LARGE', 'The request head is larger than this fixture accepts.']],
+  ['ERR_HTTP_REQUEST_TIMEOUT', [408, 'REQUEST_TIMEOUT', 'The request was not completed in time.']]
+]);
 
 function errorBody(code, message) {
   return JSON.stringify({ error: { code, message }, businessData: 'synthetic', localOnly: true });
 }
 
 // Every refusal closes the connection once the answer is flushed: the peer may still be streaming a body nobody reads.
-function refuseUpgrade(socket, status, code, message, extra = {}) {
+function refuseSocket(socket, status, code, message, extra = {}) {
   const body = errorBody(code, message);
   const headers = {
     ...SECURITY_HEADERS, Connection: 'close', ...extra,
@@ -182,7 +192,12 @@ async function produceLocalTranscript() {
 }
 
 function createLocalServer({ hub = createHub(), transcript = produceLocalTranscript } = {}) {
-  const server = http.createServer((request, response) => {
+  // The one request path. Node calls it for every request, and for the two it would otherwise answer itself: Expect: 100-continue
+  // and an unknown Expect header (expectationFailed), so that every refusal of the plain routes is decided, marked and closed here.
+  function handle(request, response, expectationFailed = false) {
+    // Whatever was pipelined behind a refusal is dropped without effect and without an answer. Nothing is destroyed here: the
+    // refusal said Connection: close, so Node ends the connection once that answer (queued behind earlier ones) has been flushed.
+    if (closing.has(request.socket)) return;
     function send(status, value, type = 'application/json; charset=utf-8', extra = {}) {
       const body = Buffer.isBuffer(value) ? value : Buffer.from(JSON.stringify(value));
       response.writeHead(status, { ...SECURITY_HEADERS, 'Content-Type': type, 'Content-Length': body.length, ...extra });
@@ -191,9 +206,11 @@ function createLocalServer({ hub = createHub(), transcript = produceLocalTranscr
     // Every refusal says Connection: close, so Node closes the socket once the answer is flushed and stops parsing a body
     // the fixture refused to read (an endless chunked body would otherwise be read for as long as the peer sends it).
     function fail(status, code, message, extra = {}) {
+      closing.add(request.socket);
       send(status, { error: { code, message }, businessData: 'synthetic', localOnly: true }, undefined, { Connection: 'close', ...extra });
     }
     try {
+      if (expectationFailed) return fail(417, 'EXPECTATION_FAILED', 'This fixture supports no Expect header.');
       const host = `127.0.0.1:${server.address().port}`;
       const origin = `http://${host}`;
       if (request.socket.remoteAddress !== '127.0.0.1' || request.headers.host !== host) {
@@ -215,7 +232,10 @@ function createLocalServer({ hub = createHub(), transcript = produceLocalTranscr
       if (url.pathname === '/scope.json') return send(200, scope);
       if (url.pathname === '/transcript.json') {
         if (transcript === null) return fail(404, 'NOT_FOUND', 'This instance does not produce transcripts.');
-        transcript().then((value) => send(200, value), () => {
+        // The answer comes after an await, so nothing pipelined behind it can be ordered against it: the connection is marked now
+        // and closed after the answer, whether it succeeds or fails.
+        closing.add(request.socket);
+        transcript().then((value) => send(200, value, undefined, { Connection: 'close' }), () => {
           fail(500, 'TRANSCRIPT_UNAVAILABLE', 'The local conversation failed; no successful observation was made.');
         });
         return undefined;
@@ -229,6 +249,18 @@ function createLocalServer({ hub = createHub(), transcript = produceLocalTranscr
       if (error instanceof TypeError && error.code === 'ERR_INVALID_URL') return fail(400, 'INVALID_URL', 'The local URL is malformed.');
       return fail(500, 'FIXTURE_UNAVAILABLE', 'The local fixture is unavailable; no successful observation was made.');
     }
+  }
+  // Node answers a request without Host with its own bare 400 and never calls the handler; with requireHostHeader off the handler
+  // refuses it (421) like every other foreign Host.
+  const server = http.createServer({ requireHostHeader: false }, (request, response) => handle(request, response));
+  // Node also answers these itself: it writes 100 Continue before the handler (checkContinue), answers an unknown Expect header with
+  // its own 417 and no handler (checkExpectation), and answers a parse error with a bare 400, 408 or 431 (clientError).
+  server.on('checkContinue', (request, response) => handle(request, response));
+  server.on('checkExpectation', (request, response) => handle(request, response, true));
+  server.on('clientError', (error, socket) => {
+    // A socket that is gone, or that already carried an answer, gets none: a second answer would corrupt the first.
+    if (!socket.writable || socket.bytesWritten > 0) { socket.destroy(); return; }
+    refuseSocket(socket, ...(CLIENT_ERRORS.get(error.code) ?? MALFORMED_REQUEST));
   });
   server.requestTimeout = 5000;
   server.headersTimeout = 5000;
@@ -245,9 +277,12 @@ function createLocalServer({ hub = createHub(), transcript = produceLocalTranscr
   server.on('upgrade', (request, socket, head) => {
     // An upgraded socket leaves the http server's own error handling, so every path needs this one.
     socket.on('error', () => socket.destroy());
+    // Node emits upgrade for an upgrade request pipelined behind a refusal: the refusal said Connection: close, so the upgrade is
+    // dropped here and Node ends the connection once that answer is flushed (destroying now could cut the refusal off).
+    if (closing.has(socket)) return;
     const verdict = inspectUpgrade(request, server.address().port);
     if (verdict.accept === undefined) {
-      refuseUpgrade(socket, verdict.status, verdict.code, verdict.message, verdict.extra);
+      refuseSocket(socket, verdict.status, verdict.code, verdict.message, verdict.extra);
       return;
     }
     serveSocket(socket, head, hub, verdict.accept, (event) => server.emit('limit', event));

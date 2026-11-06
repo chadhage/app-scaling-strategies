@@ -1,0 +1,64 @@
+# U040: nothing pipelined behind a refused request may upgrade, create a hub session or run (amendment of the accepted card C026)
+
+Zero-credit defect fix (audit U038, lowest severity: no HTTP route mutates anything, the effect was a hub session) published under C026 / S. Everything here is **synthetic, local, offline** (loopback port 0, Node built-ins, no package, no Azure). The card is accepted and sealed: this item adds new files, changes four existing ones and supersedes their old bytes through `evidence-index-addendum-1.json`. `evidence.json` and every archive of the first publication and of the review fix stay byte-identical.
+
+## What changed
+
+| File | Change |
+| --- | --- |
+| `server.cjs` | `closing` WeakSet marked inside `fail` with `request.socket`; checked at the top of the request handler and in the `upgrade` listener (drop, never destroy: destroying cut off a refusal queued behind an earlier answer); `checkExpectation`, `checkContinue`, `requireHostHeader: false` and `clientError` routed through the same refusal path; `/transcript.json` (the only answer after an await) marks its connection at dispatch and answers `Connection: close`; `refuseUpgrade` renamed `refuseSocket` (internal) |
+| `README.md` | the routes sentence and the last section (what was probed and what was not) |
+| `tests\evidence-final.test.cjs` | accepts a production file whose bytes an addendum replaced (the archived runs hashed the old bytes), reads the chain through the pinned `tests\u040-chain.cjs`; every original assertion is kept |
+| `tests\coverage-gate.cjs` | the two U040 behaviour suites join the suites of `tests\coverage.cjs` |
+| new | `U040.feature`, `U040.md`, `evidence-index-addendum-1.json`, `tests\u040-support.cjs`, `u040-fixtures.cjs`, `u040-child.cjs`, `u040-pipelining.test.cjs`, `u040-node-own.test.cjs`, `u040-chain.cjs`, `u040-amendment.test.cjs`, `u040-evidence.test.cjs`, `u040-mutants.cjs`, `evidence\u040\**` |
+
+Observable behaviour changes (all follow from the rule "after a refusal nothing on that connection runs"): requests and upgrades behind a refusal get no answer and are never run; a refused request with `Expect: 100-continue` gets no `100 Continue`, and a read without content is answered without one; an unknown `Expect` header, a request without `Host` and unparsable bytes get the typed JSON refusal (417 `EXPECTATION_FAILED`, 421 `LOCAL_HOST_REQUIRED`, 400 `MALFORMED_REQUEST`, 408, 431) instead of Node's bare answer; `/transcript.json` answers `Connection: close`. Unchanged: a valid upgrade alone, a valid GET followed by a valid upgrade, keep-alive after an answered read, every refusal status and code.
+
+## Commands (PowerShell 7, repository root; nothing needs a package, a network, a credential or a fixed port)
+
+RED against the HEAD bytes (commit `a52f05e2`, `server.cjs` sha256 `22f6db29782e489a5f0c90427f6a970d959802be29d01843fbfd3681c988b5c7`): extract them into an empty scratch folder OUTSIDE the repository, copy the U040 tests over them and run the two behaviour suites there; expect failures on assertions only and exit 1 (the archived runs are `evidence\u040\red\red-01-*` (first tests) and `red-02-*` (final tests), run in place with the HEAD bytes restored):
+
+```powershell
+$scratch = '<an empty folder outside the repository>'
+git archive a52f05e23febf1ab3b53702f5bff836a845180b7 capability/C026 capability/C001 | tar -x -C $scratch
+Copy-Item capability\C026\tests\u040-*.cjs $scratch\capability\C026\tests\ -Force
+node --test --test-concurrency=1 $scratch\capability\C026\tests\u040-pipelining.test.cjs $scratch\capability\C026\tests\u040-node-own.test.cjs
+```
+
+Amendment RED (`red-03-*`): the sealed verifier fails against the fixed server without the addendum: copy `evidence\u040\superseded\evidence-final.test.cjs.txt` over `tests\evidence-final.test.cjs` in a scratch copy of the namespace that has the fixed `server.cjs`, and run it: it fails at `server.cjs is not the shipped file`.
+
+GREEN, the replay (the same command and the same test bytes as `red-02`, now passing), and the whole non-browser suite:
+
+```powershell
+node --test --test-concurrency=1 capability\C026\tests\u040-pipelining.test.cjs capability\C026\tests\u040-node-own.test.cjs
+node --test --test-concurrency=1 capability\C026\tests\u040-amendment.test.cjs capability\C026\tests\u040-evidence.test.cjs capability\C026\tests\evidence-final.test.cjs
+node --test --test-concurrency=1 "capability\C026\tests\*.test.cjs"
+```
+
+Per-file coverage, one L-0004 command per production file over every suite (the README loop above does the same; `node capability\C026\tests\coverage.cjs` is the card's own gate and now includes the U040 suites):
+
+```powershell
+$suites = Get-ChildItem capability\C026\tests\*.test.cjs | ForEach-Object { "capability\C026\tests\$($_.Name)" }
+foreach ($file in 'framing.cjs', 'stream.cjs', 'server.cjs', 'conversation.cjs', 'page.js') {
+  node --test --test-concurrency=1 --experimental-test-coverage "--test-coverage-include=capability/C026/$file" --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 $suites
+}
+```
+
+Mutants (every added guard line, hand-chosen, not a generator over every statement; 21 mutants in the tool, each must fail a named U040 test; the scratch folder must be empty and outside the repository, the report is written with flag `wx`). The archived report `evidence\u040\mutants\mutants-01.report.json` is the run of M01 to M20 (all killed, control passed; 24 minutes on a loaded machine, before the two-instance tests existed). M21 (one module-wide flag instead of the per-connection mark) was added afterwards for the two-instance tests; it runs only those tests because it makes every later exchange wait for its bound, and it is NOT archived: two attempts timed out under machine load, so its kill is unproven here. Run `u040-mutants.cjs` with the id `M21` to try it:
+
+```powershell
+node capability\C026\tests\u040-mutants.cjs <empty scratch folder> <new report.json>
+```
+
+Syntax and the real isolated headless Edge observation of the unchanged page (take a heavy slot first when other agents are active; `qualifyEdge()` may time out under load, retry once):
+
+```powershell
+node capability\C026\tests\syntax.cjs
+node capability\C026\tests\browser.cjs
+```
+
+## The amendment mechanism and what it cannot do
+
+`evidence-index-addendum-1.json` (schema `C026-evidence-index-addendum/1`) is chained to the sealed `evidence.json` by its SHA-256 and lists, for a CLOSED list of four paths (`server.cjs`, `README.md`, `tests\evidence-final.test.cjs`, `tests\coverage-gate.cjs`), the SHA-256 of the replaced bytes, a byte-exact copy of them under `evidence\u040\superseded\` and the SHA-256 of the bytes that replace them; it also lists every manifest of `evidence\u040`. `tests\u040-chain.cjs` verifies the chain (a path outside the closed list, a changed sealed index, a tampered superseded copy, evidence or live file, a gap or a broken link are each rejected by name; `tests\u040-amendment.test.cjs` proves it with in-memory fixtures). `tests\evidence-final.test.cjs` and `tests\u040-evidence.test.cjs` pin that helper by raw SHA-256 (acyclic: a later helper edit needs addendum 2). `tests\u040-evidence.test.cjs` recomputes every archived run of this item (gzip hash, raw hash, byte count, input hashes), checks that the REDs ran against the superseded bytes and failed on assertions only, that the replay is the RED command and tests unchanged, the per-file coverage rows and the mutation report. A second change to any of the four files needs addendum 2 (`previous` = the hash of addendum 1, `previousRawSha256` = the bytes addendum 1 made live).
+
+Limits, stated plainly: the namespace's own tests cannot detect a CONSISTENT rewrite of the verifier, the helper, its pin and the addendum together (the same limit as the C034, C016 and C021 amendment paths); the anchors outside the namespace are git history, commit `a52f05e2` (the bytes superseded) and the commit and tag of this item. The superseded copies and `README.md.txt` are evidence, not code (`.txt`). The archived runs of the first publication and of the fix keep hashing the old `server.cjs`; they are accepted only through the addendum. The browser observation covers the transcript page, not a browser WebSocket (inherited limit).
