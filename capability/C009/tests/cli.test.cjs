@@ -3,7 +3,7 @@
 const assert = require('node:assert/strict');
 const net = require('node:net');
 const path = require('node:path');
-const { spawn, spawnSync } = require('node:child_process');
+const { spawn } = require('node:child_process');
 const { test } = require('node:test');
 const { load } = require('./helpers.cjs');
 
@@ -74,10 +74,22 @@ test('the listener closes itself after its bounded lifetime and rejects unbounde
   assert.equal(reads, 1);
 });
 
-test('the CLI refuses every override before any consent check or listener', () => {
-  for (const extra of [['--port=80'], ['--host=0.0.0.0'], ['operator'], ['--role=operator', '--lifetime=1']]) {
-    const run = spawnSync(process.execPath, [cliPath, ...extra], { encoding: 'utf8', timeout: 20000, windowsHide: true });
-    assert.equal(run.status, 1, extra.join(' '));
+// The four runs are independent processes and start together: a process start costs seconds on a loaded machine, so one after the other
+// they would not fit the 60 s of the runner (review F9c).
+test('the CLI refuses every override before any consent check or listener', async () => {
+  const runs = [['--port=80'], ['--host=0.0.0.0'], ['operator'], ['--role=operator', '--lifetime=1']].map((extra) => new Promise((resolve) => {
+    const child = spawn(process.execPath, [cliPath, ...extra], { windowsHide: true });
+    const output = { extra, stdout: '', stderr: '' };
+    child.stdout.on('data', (chunk) => { output.stdout += chunk; });
+    child.stderr.on('data', (chunk) => { output.stderr += chunk; });
+    const hard = setTimeout(() => child.kill(), 40000);
+    child.once('close', (status) => {
+      clearTimeout(hard);
+      resolve({ ...output, status });
+    });
+  }));
+  for (const run of await Promise.all(runs)) {
+    assert.equal(run.status, 1, run.extra.join(' '));
     assert.match(run.stderr, /accepts no host, port, identity, role, token, lifetime or permission overrides/);
     assert.doesNotMatch(run.stdout, /listening/);
   }

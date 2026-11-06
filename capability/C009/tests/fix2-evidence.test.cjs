@@ -14,7 +14,23 @@ const { checkInputs, checkTranscripts } = require('./evidence-check.cjs');
 // removed) stay retained and are marked superseded.
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
-const read = (relative) => fs.readFileSync(path.join(repository, relative));
+// Every pinned file is read once per test file (a file open costs about a millisecond on a loaded Windows machine, and the manifests pin
+// the same 65 files over and over: review F9c). The tamper tests pass their own readers and never see the cache.
+const cache = new Map();
+const read = (relative) => {
+  if (!cache.has(relative)) cache.set(relative, fs.readFileSync(path.join(repository, relative)));
+  return cache.get(relative);
+};
+// The fix of order R11 changed some files after the captures of this cycle pinned them (the README, the flood, the matrix, the process
+// and the resource tests, the mutation runner and the two evidence tests). Their bytes of the second fix are retained in
+// evidence/red/snapshot-fix2 and every pin of this cycle is recomputed against those bytes; every other pinned file must still equal the
+// live file (a silent change is detected).
+const snapshotRoot = path.join(root, 'evidence', 'red', 'snapshot-fix2');
+const snapshotFiles = fs.readdirSync(snapshotRoot, { recursive: true }).map((name) => name.replaceAll('\\', '/')).filter((name) => fs.statSync(path.join(snapshotRoot, name)).isFile());
+const readFix2 = (relative) => {
+  const name = path.relative(root, path.join(repository, relative)).replaceAll('\\', '/');
+  return snapshotFiles.includes(name) ? fs.readFileSync(path.join(snapshotRoot, name)) : read(relative);
+};
 const inNamespace = (...parts) => path.relative(repository, path.join(root, ...parts));
 const redRoot = path.join(root, 'evidence', 'red');
 const finalRoot = path.join(root, 'evidence', 'green-fix2');
@@ -63,7 +79,7 @@ test('the second-fix RED archives are intact, failed for the specified behavior,
       assert.ok(seen.includes(pin.rawSha256) || seen.includes(pin.crlfToLfSha256), `${run}: ${input.path} is not the first-fix production file`);
     }
     const stable = (input) => /\\tests\\/.test(input.path) || input.path.endsWith('.gitattributes');
-    assert.deepEqual(checkInputs({ manifest, read, pinned: stable }), [], `${run}: a test changed after its RED was archived`);
+    assert.deepEqual(checkInputs({ manifest, read: readFix2, pinned: stable }), [], `${run}: a test changed after its RED was archived`);
   }
 });
 
@@ -83,7 +99,7 @@ test('tampering with a retained stream, a gzip stream or a pinned test of a seco
   const forged = { ...manifest, transcripts: { ...manifest.transcripts, stdout: { ...manifest.transcripts.stdout, sha256: '0'.repeat(64) } } };
   assert.match(checkTranscripts({ directory, manifest: forged, read }).join(' '), /raw bytes differ/, 'a forged manifest hash');
   const test = manifest.inputs.find((input) => /\\tests\\[a-z-]+\.test\.cjs$/.test(input.path));
-  const edited = (relative) => (relative === test.path ? Buffer.concat([read(relative), Buffer.from('// edited\n')]) : read(relative));
+  const edited = (relative) => (relative === test.path ? Buffer.concat([readFix2(relative), Buffer.from('// edited\n')]) : readFix2(relative));
   assert.match(checkInputs({ manifest, read: edited, pinned: (input) => input.path === test.path }).join(' '), /differs from the bytes the run saw/, 'a test edited after its RED');
 });
 
@@ -93,7 +109,7 @@ test('the final GREEN, coverage, replay, flake-loop, mutation and browser archiv
   for (const [name, manifest] of Object.entries(manifests)) {
     const directory = inNamespace('evidence', 'green-fix2');
     assert.deepEqual(checkTranscripts({ directory, manifest, read }), [], name);
-    assert.deepEqual(checkInputs({ manifest, read }), [], `${name}: a file changed after the run was captured`);
+    assert.deepEqual(checkInputs({ manifest, read: readFix2 }), [], `${name}: a file changed after the run was captured`);
     assert.equal(manifest.exitCode, manifest.expectedExitCode, `${name} exit code`);
   }
   assert.equal(manifests.suite.summary.fail, 0);

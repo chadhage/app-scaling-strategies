@@ -60,21 +60,28 @@ The file opens with the four rules (a comment of about 30 lines); the API, all f
   response queued behind an unfinished pipelined one), sends `Connection: close` and stops reading after the answer. `proceed()` writes the
   100 Continue of an HTTP/1.1 request that asked for it, call it right before the body is read.
 - `createLanes({ depth })` returns `admit(request, response, task)`: the tasks of one connection run one at a time, in order; a marked
-  socket admits nothing and drops its queue; more than `depth` running or queued cuts the connection. `admit.refuse(socket, code,
-  { immediate })` is the same ending for what Node decides itself (typed answer written on the socket, behind the requests before it).
+  socket admits nothing and drops its queue; more than `depth` running or queued cuts the connection. `admit.refuse(socket, code)` is
+  the same ending for what Node decides itself (typed answer written on the socket, behind the requests before it).
 - `isFinished(socket)` (test it after EVERY await and right before an effect), `endConnection(socket)` (a refusal decided outside a
   responder), `canStopReading(owner)` (the fail-closed self-check), `clientErrorCode(error)`, `localGuard`, `hasBody`, `readBody`.
 - A server wires it exactly like `server.cjs`: `http.createServer({ requireHostHeader: false, ... }, (q, r) => admit(q, r, route))`,
   listeners for `checkContinue`, `checkExpectation`, `clientError` and `connect` routed through `admit`/`admit.refuse`, a `connection`
   listener that destroys every socket when `canStopReading` is false (first connection) and a startup check on `listening`. Never rely on
-  `maxRequestsPerSocket` for ordering. Copy the proof too: `tests\pipeline-rows.cjs` (shapes and framings), `pipeline-refusal.test.cjs`
-  and `pipeline-process.test.cjs` (every refusal row in six shapes and three framings, in process and against a server process),
+  `maxRequestsPerSocket` for ordering. A refusal that Node decides at PARSE time (an unknown Expect, `checkExpectation`) belongs in the
+  SAME lane as every request, behind the requests before it: answering it at once, outside the lane, drops the queued requests before it
+  and leaves the connection open after two legitimate requests and the refusal (the third pipelining hole, rev-C059 N1);
+  `pipeline-node-own.test.cjs` fails a server that does. Copy the proof too: `tests\pipeline-rows.cjs` and `tests\pipeline-matrix.cjs`
+  (shapes, framings and the cell checker), `pipeline-refusal.test.cjs`, `pipeline-refusal-http10.test.cjs` and
+  `pipeline-refusal-mixed.test.cjs` (every refusal row in six shapes, one file per framing, in process), `pipeline-process.test.cjs`
+  (against a server process), `pipeline-node-own.test.cjs` (two or three legitimate requests before every refusal Node decides itself),
   `lanes.test.cjs`, `guards.test.cjs`, `node-own.test.cjs`, `refusal-flood.test.cjs` and the mutants of `tests\mutants.cjs`.
+  `readme-contract.test.cjs` checks this very section against the module: a name, parameter, option, listener or file that is documented
+  and does not exist fails the suite.
 
 ## Commands (repository root, PowerShell 7; run test files one at a time under a timeout when in doubt)
 
-GREEN, every non-browser test (the file and test counts are in the suite manifest of `evidence\green-fix2`; 1 to 6 minutes depending on
-the load of the machine):
+GREEN, every non-browser test (the file and test counts are in the suite manifest of `evidence\green-fix3`; 1 to 6 minutes depending on
+the load of the machine, every file fits the 60 s of the runner under load, see the cycle of order R11):
 
     node --test --test-timeout=60000 --test-concurrency=1 "capability/C009/tests/*.test.cjs"
 
@@ -155,10 +162,12 @@ pin is recomputed against them by `fix-evidence.test.cjs`) and `fix2-evidence.te
   and the pipelined mutation behind the refusal ran (67 of the reviewer's 124 matrix cells). Now the mark is made from
   `response.req.socket` synchronously inside the one central refusal, the requests of one connection run one at a time (`createLanes`,
   `http-io.cjs`), a marked socket admits nothing and drops its queue, and `commands.cjs` tests the mark after its one await and right before
-  `ledger.commit`. Proof: `pipeline-refusal.test.cjs` sends EVERY row of `refusal-rows.cjs` (34 rows) in six shapes (`R M7`, `G R M7`,
+  `ledger.commit`. Proof: the three files `pipeline-refusal.test.cjs`, `pipeline-refusal-http10.test.cjs` and `pipeline-refusal-mixed.test.cjs`
+  (one per framing since order R11) send EVERY row of `refusal-rows.cjs` (34 rows) in six shapes (`R M7`, `G R M7`,
   `M6 R M7`, `G G R M7`, and two shapes cut into two TCP writes) and three framings (HTTP/1.1, HTTP/1.0 keep-alive, an HTTP/1.0 mutation
-  behind an HTTP/1.1 refusal) with a permitted `pool.resize` behind the refusal and asserts the answers, the revision, the pool size and
-  the audit log; `pipeline-process.test.cjs` does the same against a server in a SEPARATE process (state read back from it);
+  behind an HTTP/1.1 refusal) with a permitted `pool.resize` behind the refusal and assert the answers, the revision, the pool size and
+  the audit log; `pipeline-process.test.cjs` does the same against a server in a SEPARATE process (state read back from it; since order R11
+  the cells that differ in what the server process sees, not all 600);
   `refusal-flood.test.cjs` floods a refusal queued behind a GET; `lanes.test.cjs` and `guards.test.cjs` test the lanes and the two guards
   without a socket. A reset can discard answers
   the client has not read yet (Windows closes with a reset a connection that still has unread data in flight): for the two-write shapes,
@@ -166,9 +175,9 @@ pin is recomputed against them by `fix-evidence.test.cjs`) and `fix2-evidence.te
   only required to be a subsequence of the expected ones (nothing extra, nothing out of order); the state, the revision and
   the audit log decide (they are read from the server). A timer cuts a stalled request at once, so for the REQUEST_TIMEOUT row the
   number of earlier mutations a loaded server commits before its 300 ms timer fires is not asserted (at most the earlier ones, the audit log
-  must match, nothing behind the refusal runs). Limit: `pipeline-refusal.test.cjs` is a 605-cell in-process matrix (tens of CPU seconds):
-  it passes alone and with a few neighbours, but 8 copies at once on a busy machine exceed the 60 s test timeout, so only the process
-  matrix (one shared server child) is in the 8-way flake loops.
+  must match, nothing behind the refusal runs). Cost (review F9c, fixed by order R11): this matrix was one 605-cell file with an app and a
+  subtest per cell (24 s) and 8 copies at once did not fit the 60 s of the runner under load; it is now three files, one app per row with
+  the six shapes in turn, the cells unchanged, and all three are in the 8-way flake loops under 8 burners (see the cycle of order R11).
 - Node answers some requests by itself (rev-C017 F11): see "What the server enforces". Rows REQUEST_MALFORMED, HEADERS_TOO_LARGE and
   REQUEST_TIMEOUT joined the refusal table (`refusal-close.test.cjs` and both matrices pick them up); `node-own.test.cjs` covers a request
   without Host (HTTP/1.1 and HTTP/1.0), `Expect: 100-continue` (never invited when refused, answered 100 then 200 when permitted, no 100
@@ -188,14 +197,16 @@ pin is recomputed against them by `fix-evidence.test.cjs`) and `fix2-evidence.te
   1 MB per socket and stays connected; the server child reports its own account: every attacking socket closed by the server, at most
   256 KB READ from each (a refused connection costs one read; the offered flood is four times that), its CPU time (`process.cpuUsage`)
   against a NAIVE control server run in the same test (no close, no read stop: it reads everything, the assertions must reject it), and a
-  normal client served after the attack. Waiting is event driven (the server's close, the control's reads), with 150 s deadlines that only end a
-  wait that cannot succeed.
-- Mutation (`tests\mutants.cjs`, 40 one-line mutants on scratch copies, each needs a NAMED failing test): the mark, the Connection: close header,
+  normal client served after the attack. Waiting is event driven (the server's close, the control's reads), with deadlines that only end a
+  wait that cannot succeed (150 s in the R9 test, 30 s since order R11: the runner stops a file at 60 s).
+- Mutation (`tests\mutants.cjs`, 42 one-line mutants on scratch copies, each needs a NAMED failing test; 40 in order R9, the two of the
+  third pipelining hole joined in order R11): the mark, the Connection: close header,
   the read stop and its fail-closed branch, the lanes (serialization, drop after a mark, depth, release on finish and on close, release
   once), the answer at once for the request that was still being received, the destroy after the flush, every listener for what Node
   answers itself, `requireHostHeader`, the two guards of `commands.cjs`, the first-connection and startup self-checks, the per-subject
-  audit ring and the quotas: 39 are killed and ONE is a documented equivalent (M10: `admit()`'s early return for a marked socket is
-  redundant with `pump()`, which drops the request before any effect). M04 (the socket from `response.socket`) is killed only by the
+  audit ring and the quotas: 41 are killed and ONE is a documented equivalent (M10: `admit()`'s early return for a marked socket is
+  redundant with `pump()`, which drops the request before any effect; a reachability argument, not a proof: it is not observable on a
+  loopback client, review F17). A mutant whose run hits the hard timer is UNDECIDED and fails the run, never counted as killed. M04 (the socket from `response.socket`) is killed only by the
   unit test of a queued response: under the lanes a task starts after the earlier response has finished, so its response has a socket,
   which is why the reviewer's one-line remedy alone is not enough for the asynchronous refusals.
 - F10: `canStopReading()` is checked on the FIRST connection and at startup (`app.health()`, `READ_STOP_UNAVAILABLE`, the socket is
@@ -205,7 +216,8 @@ pin is recomputed against them by `fix-evidence.test.cjs`) and `fix2-evidence.te
   bounded drain was added (it would reopen F1). F13: `tests\browser-retry.cjs` retries `qualifyEdge()` ONCE after a typed timeout and
   reports the load (`browser-retry.test.cjs`); C009 browser verification needs a quiet slot.
 
-Commands of this cycle (repository root; take a heavy slot for the loops, the coverage and the browser):
+Commands of this cycle (repository root; take a heavy slot for the loops, the coverage and the browser; the test files below are the
+R9 files, three of which order R11 replaced: the R9 archives pin the bytes of that cycle, retained in `evidence\red\snapshot-fix2`):
 
     git archive --format=tar -o <scratch>\p.tar 244f771ba72d5bb2fd36e044ba465ff5d2c5ad0e capability/C009 capability/C001
     tar -xf <scratch>\p.tar -C <scratch>\pristine
@@ -218,6 +230,65 @@ Commands of this cycle (repository root; take a heavy slot for the loops, the co
     Remove-Item Env:C009_SUBJECT_DIR                                 # on the final code the same files exit 0
     node capability\C009\tests\flake-loop.cjs . resources.test.cjs 8 8     # also refusal-flood, pipeline-process, timeouts, connections, node-own
     node capability\C009\tests\mutants.cjs <scratch directory outside the repository>   # every guard line of the refusal path, one mutant at a time
+
+### Fix cycle after the third independent review (order R11)
+
+The third review (of commit f95cc52a) verified F1b with a raw-socket matrix of its own (2,285 cells in process and against a server process)
+and rejected on ONE major, F9c, plus minors F14 to F18. This cycle changes tests, the README and evidence only: the 11 production files
+are byte-identical to the second fix (three other cards import them and pin them by commit), which `fix3-evidence.test.cjs` recomputes
+against the pins of `evidence\green-fix2\suite.json`.
+
+- F9c (the suite was not green under load: under 8 CPU burners `refusal-flood.test.cjs` was cancelled at the 60 s the runner gives a FILE,
+  8 copies of it and of `pipeline-process.test.cjs` timed out in every run, `resources.test.cjs` 8 x 8 failed 32 of 64 on a busy machine).
+  On the saturated machine of this cycle a bare `node -e 0` took 2 to 4 seconds: what a file costs is its number of PROCESS STARTS and of
+  sequential steps, not its assertions. Every assertion and every named guard test stays; each file starts fewer processes and waits for
+  fewer things one after the other. `refusal-flood.test.cjs`: ONE server child (`flood-servers.cjs`: the real server and the naive
+  control on two ports) and ONE persistent attacker (`flood-attacks.cjs`) serve every attack of the file instead of a server and an
+  attacker per attack, one attack per refusal code path (every kind first on its connection, the 401 and the Node-own 417 also queued
+  behind a GET), no wait longer than 30 s. The 605-cell matrix is three files by framing, one app per row with the six shapes in turn,
+  the cells unchanged (`pipeline-matrix.cjs` checks them). `pipeline-process.test.cjs` runs the cells that differ in what the server
+  process sees. `resources.test.cjs` runs ONE child for every attack at once and then ONE settled reading, the state check, the negative
+  control and the shutdown with the attackers still connected. `cli.test.cjs` starts its four override runs together, and the evidence
+  tests read each pinned file once. The cost of the heavy files is EVIDENCE, not an assertion (a time bound on a shared machine is not a
+  test): the TAP output of `evidence\green-fix3\suite.json` gives the `duration_ms` of every file in a plain run, that of
+  `suite-under-load.json` under 8 burners, and the loop transcripts the slowest run of every round. The criterion is the LOOP
+  under load: `load-loop.cjs` starts 8 CPU burners (normal priority, PIDs printed, stopped by PID) and runs `flake-loop.cjs`, 8 runs at
+  once for 8 rounds of each of six files (the flood, process, resource files and the three parts of the matrix), and the whole suite once,
+  under them (`evidence\green-fix3\loop-*.json`, `suite-under-load.json`, as far as the seal lists them).
+- F14 and F15: the false option `{ immediate }` is gone from the importer section (it was not implemented and is not now), and
+  `readme-contract.test.cjs` checks every function, parameter, option, listener, Node property and file that section names against the
+  real module and tree (positive: a documented name that does not exist fails; the check has teeth against seven spoiled variants). The
+  test file and test counts of the README are recomputed from the suite manifest it names and the tests directory.
+- The third pipelining hole (controller note of 6 Nov, rev-C059 N1): a refusal that Node decides at PARSE time and a design answers
+  outside the lane drops the queued requests before it and leaves the connection open after two legitimate requests and the refusal.
+  `pipeline-node-own.test.cjs` sends `[G][G][X]`, `[G][G][G][X]`, `[G][G][X][G]` and `[POST][G][X]` for every refusal Node decides itself (an
+  unknown Expect on a GET and on a permitted POST with a body, a parse error, an oversized header, a request without Host, CONNECT, a
+  request timeout; HTTP/1.1, HTTP/1.0 keep-alive and the mixed framing), in this process and against a server process, and sends 128 sockets
+  `[G][G][X]` at a 128-connection cap (every socket closed by the server, no connection held, a legitimate GET answered; counts, no time
+  bound, the idle timeout set to ten minutes so that the server's own idle drop cannot hide an open connection). C009 passes all of it with
+  no production change (its `checkExpectation` goes through the lane); the RED is a specimen with the hole (`fix3-node-own-hole-*`), and the
+  mutants S13 and M24 join the 40 of order R9.
+- Mutation: `mutants.cjs` marks a mutant whose run hits the hard timer UNDECIDED and fails the run (it was never to count as killed).
+- Not done here (listed as follow-ups, not claimed): a mutation generator over every statement and condition of `http-io.cjs`, `server.cjs` and
+  `commands.cjs` (self-review line 4, review F17), a walker test over the returns of `ledger.cjs`, a seeded fuzz of the validators.
+
+Commands of this cycle (repository root; take a heavy slot for everything that loads the machine; ONE heavy window at a time):
+
+    # the whole suite, the 60 s of the runner per file:
+    node --test --test-timeout=60000 --test-concurrency=1 "capability/C009/tests/*.test.cjs"
+    # under 8 CPU burners (the burners are started and stopped by PID by the script; they run at normal priority):
+    node capability\C009\tests\load-loop.cjs 8 --test --test-timeout=60000 --test-concurrency=1 "capability/C009/tests/*.test.cjs"
+    # the 8-way loop of ONE file under 8 burners, 8 rounds (prints FLAKE HUNT <file>: <bad> bad of 64):
+    node capability\C009\tests\load-loop.cjs 8 capability\C009\tests\flake-loop.cjs . refusal-flood.test.cjs 8 8
+    # the RED sets against the second-fix bytes (a pristine git archive of f95cc52a): each exits 1 by assertion
+    $env:C009_SUBJECT_DIR = '<scratch>\pristine\capability\C009'
+    node --test --test-concurrency=1 capability\C009\tests\readme-contract.test.cjs
+    Remove-Item Env:C009_SUBJECT_DIR                    # on the final tree the same file exits 0
+    # the third-hole matrix against the specimen (evidence\red\specimen-fix3\server.cjs in place of server.cjs of that archive):
+    $env:C009_SUBJECT_DIR = '<scratch>\hole\capability\C009'
+    node --test --test-concurrency=1 --test-timeout=170000 capability\C009\tests\pipeline-node-own.test.cjs
+    Remove-Item Env:C009_SUBJECT_DIR
+    node capability\C009\tests\mutants.cjs <scratch directory outside the repository>   # 42 mutants, one at a time
 
 ## Hostile probes (own, extending the specification)
 
@@ -239,9 +310,10 @@ Commands of this cycle (repository root; take a heavy slot for the loops, the co
 - After the independent review (F1 to F5): `refusal-close` sends one request per typed refusal code (the keys of `codes.cjs`; a code
   without a row fails the table) with a follow-up request pipelined behind it and demands one answer, `Connection: close`, a connection
   the server ends, no state change, and that a permitted command pipelined behind a refusal never runs; `refusal-flood` runs the attacker
-  in its OWN process against a small-heap server child that measures its own event-loop delay (`perf_hooks`): one client streaming endless
-  1-byte chunks at a refusal (401, 403, GET with a body 400, unknown `Expect` 417) must neither stall the loop (limit 1.2 s; a stalled
-  server measured 3 to 10 s) nor starve a concurrent GET nor stay connected, and the authorized control (413) must be cut off;
+  in its OWN process against a small-heap server child: one client streaming endless 1-byte chunks at a refusal (401, 403, GET with a body
+  400, unknown `Expect` 417) must be cut off (the first test of order R8 also bounded the event-loop lag of the child at 1.2 s, which a
+  loaded machine broke, and a stalled server measured 3 to 10 s in the review: since order R9 only structural facts are asserted, see the
+  second fix cycle), and the authorized control (413) must be cut off too;
   `quota` covers the per-owner quota and the anonymous audit ring; `timeouts` trickles a header and a body one byte at a time;
   `resources` now measures the retained heap by polling forced-GC readings until the whole attack was accepted and one is below the limit
   (L-0144) and keeps a negative control that retained memory is still seen; `fix-evidence` recomputes the new archives.
@@ -257,7 +329,7 @@ kills a 48 MB server process, no idle drop, no cap, no `app.close`), run-06 (a r
 run-07 (first attempt at the entry bound failed by a TypeError instead of an assertion) and run-08 (corrected: no `STATE_FULL`).
 `evidence\green` holds the archived GREEN run, one coverage run per production file and the real-Edge transcript
 (`node RUN\scripts\archive-run.cjs` manifests plus raw gzip streams). `evidence\.gitattributes` keeps every evidence byte exact (`* -text -diff`).
-The first publication had 16 `*.test.cjs` files and 139 tests (the result file said 17); the fixed namespace has 21 files and 195 tests.
+The first publication had 16 `*.test.cjs` files and 139 tests (the result file said 17); the final namespace has 37 test files and 423 tests (suite manifest `evidence\green-fix3\suite.json`, recomputed by `readme-contract.test.cjs` and `fix3-evidence.test.cjs`).
 
 Fix cycle (order R8): `evidence\red\fix-refusal-close-*` (33 of 35 fail), `fix-refusal-flood-dfe818f3-*` (the final test bytes against the
 first-publication production files, 6 of 6 fail: the event loop is blocked 2.7 to 3.2 s), `fix-quota-ring-*` (6 of 6),
@@ -279,8 +351,27 @@ coverage run per production file, the replay of every new RED on the final code,
 flood, process, timeouts, connections and Node-own files), the mutation check of every guard line of the refusal path, and the real-Edge
 transcript. `fix2-evidence.test.cjs` recomputes all of it; captures were taken last.
 
+Third fix cycle (order R11): `evidence\red\fix3-readme-contract-*` (F14 and F15: `readme-contract.test.cjs` against the second-fix bytes) and
+`fix3-node-own-hole-*` (the third pipelining hole: `pipeline-node-own.test.cjs` against a specimen whose `checkExpectation` answers outside the
+lane, the one changed line retained as `evidence\red\specimen-fix3\server.cjs`); `evidence\red\snapshot-fix2` holds the second-fix bytes of
+every file this cycle changed (the R8 and R9 pins are recomputed against them); `evidence\green-fix3` holds the captures of the FINAL
+bytes that were taken. PLANNED: three whole-suite runs (one under 8 CPU burners), one coverage run per production file (one L-0004 command
+each over the 24 non-browser test files that add coverage: the matrix, process, flood, resource, evidence and import files are left out,
+so every figure is a lower bound), the replay of seven RED sets on the final code (the five of order R9 as their R11 successors, and the
+two of this cycle), the 8-way flake loops under 8 burners of six heavy files (the slowest run of every round is their cost under load),
+the 42 mutants, and the real-Edge transcript. `COMPLETE.json` (written last) lists every manifest that exists with its SHA-256, and
+`fix3-evidence.test.cjs` recomputes every one of them, strictly, once the capture is sealed; the result file of the cycle says which of the
+planned captures were not taken and why (nothing in this README claims a capture that is not in the seal). Failed attempts are retained in
+`evidence\green-fix3-attempts` with a NOTE.txt: two loops of `resources.test.cjs` under 8 burners failed (5 bad runs of 64: two defects of the
+test, fixed; then 19 bad runs of 64 in a period in which the shared machine was starved, see the note), and every capture of the final
+bytes was taken after them.
+
 ## Decisions and limits
 
+- Limits of the load proof (order R11): the loops and the suite under load ran with the 8 burners the script started AND with whatever else
+  the shared machine ran (it was at 100% CPU before they started, and a bare `node -e 0` took 2 to 4 s): the load is at least the order's and
+  cannot be reproduced exactly; a faster or quieter machine was not tried, and the durations in the transcripts are what this machine did at that moment. A
+  loop that shows no failure in 64 runs does not exclude a rarer one.
 - The CLI prints the four synthetic tokens on one JSON line so a person can paste them into the page; they live only in that process
   and end with the listener (10 minutes at most or SIGINT/SIGTERM). The CLI reads the live ledger once to recheck the C001 consent;
   tests inject the committed approval instead.

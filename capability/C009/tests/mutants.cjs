@@ -55,7 +55,10 @@ const MUTANTS = [
   ['C03-body-invited-before-the-checks', 'commands.cjs', 'out.proceed();', '', ['node-own']],
   ['L01-shared-audit-ring', 'ledger.cjs', 'rings.set(stored.subject, [...(rings.get(stored.subject) || []), stored]', "rings.set('shared', [...(rings.get('shared') || []), stored]", ['audit-ring']],
   ['L02-no-owner-quota', 'ledger.cjs', "if (ownedBy(draft, context.actor.subject) > ownerLimit) throw new CommandError(409, 'OWNER_QUOTA_FULL');", '', ['quota']],
-  ['L03-anonymous-ring-merged', 'ledger.cjs', 'if (stored.subject === null) anonymous', 'if (false) anonymous', ['quota']]
+  ['L03-anonymous-ring-merged', 'ledger.cjs', 'if (stored.subject === null) anonymous', 'if (false) anonymous', ['quota']],
+  // The third pipelining hole (rev-C059 N1): a Node-own refusal decided at PARSE time must wait in the lane behind the requests before it.
+  ['S13-checkExpectation-answers-outside-the-lane', 'server.cjs', "server.on('checkExpectation', (request, response) => admit(request, response, (_request, answer) => createResponder(answer).fail('EXPECTATION_FAILED')));", "server.on('checkExpectation', (request, response) => createResponder(response).fail('EXPECTATION_FAILED'));", ['pipeline-node-own']],
+  ['M24-refuse-answers-before-the-earlier-requests', 'http-io.cjs', 'if (stalled || (!lane.busy && lane.waiting.length === 0)) {', 'if (true) {', ['pipeline-node-own']]
 ];
 
 function copyBase(dir) {
@@ -97,11 +100,12 @@ function runOnce(dir, names, { pattern, cells } = {}) {
     let out = '';
     child.stdout.on('data', (chunk) => { out += chunk; });
     child.stderr.on('data', () => {});
-    const hard = setTimeout(() => child.kill('SIGKILL'), 400000);
+    let timedOut = false;
+    const hard = setTimeout(() => { timedOut = true; child.kill('SIGKILL'); }, 900000);
     child.on('close', (code) => {
       clearTimeout(hard);
       const named = [...out.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((match) => match[1]).filter((name) => !/\.test\.cjs$/.test(name));
-      resolve({ code, named });
+      resolve({ code, named, timedOut });
     });
   });
 }
@@ -114,7 +118,8 @@ async function run(dir, names) {
   ].filter(([files]) => files.length > 0);
   const results = [];
   for (const [files, options] of groups) results.push(await runOnce(dir, files, options));
-  return { code: results.some((result) => result.code !== 0) ? 1 : 0, named: results.flatMap((result) => result.named) };
+  // A run that hit the hard timer is UNDECIDED: whatever it printed before it was stopped, it is never a kill (controller note, 6 Nov 10:40).
+  return { code: results.some((result) => result.code !== 0) ? 1 : 0, named: results.flatMap((result) => result.named), timedOut: results.some((result) => result.timedOut) };
 }
 
 (async () => {
@@ -123,15 +128,16 @@ async function run(dir, names) {
   const results = [];
   for (const mutant of chosen) {
     const dir = mutate(mutant);
-    const { code, named } = await run(dir, mutant[4]);
+    const { code, named, timedOut } = await run(dir, mutant[4]);
     fs.rmSync(dir, { recursive: true, force: true });
-    const killed = code !== 0 && named.length > 0;
-    const equivalent = !killed && typeof mutant[5] === 'string';
-    results.push({ id: mutant[0], killed, equivalent, failing: named.slice(0, 2).map((name) => name.slice(0, 110)) });
-    console.log(`${killed ? 'KILLED  ' : equivalent ? 'EQUIVALENT' : 'SURVIVED'} ${mutant[0]} by ${named.length} test(s), first: ${JSON.stringify(named.slice(0, 1)).slice(0, 150)}${equivalent ? ` (${mutant[5]})` : ''}`);
+    const killed = !timedOut && code !== 0 && named.length > 0;
+    const equivalent = !timedOut && !killed && typeof mutant[5] === 'string';
+    results.push({ id: mutant[0], killed, equivalent, undecided: timedOut, failing: named.slice(0, 2).map((name) => name.slice(0, 110)) });
+    console.log(`${timedOut ? 'UNDECIDED' : killed ? 'KILLED  ' : equivalent ? 'EQUIVALENT' : 'SURVIVED'} ${mutant[0]} by ${named.length} test(s), first: ${JSON.stringify(named.slice(0, 1)).slice(0, 150)}${equivalent ? ` (${mutant[5]})` : ''}`);
   }
-  const survived = results.filter((result) => !result.killed && !result.equivalent);
+  const survived = results.filter((result) => !result.killed && !result.equivalent && !result.undecided);
+  const undecided = results.filter((result) => result.undecided);
   const equivalent = results.filter((result) => result.equivalent);
-  console.log(JSON.stringify({ mutants: results.length, killed: results.filter((result) => result.killed).length, equivalent: equivalent.map((result) => result.id), survived: survived.map((result) => result.id) }));
-  process.exitCode = survived.length === 0 ? 0 : 1;
+  console.log(JSON.stringify({ mutants: results.length, killed: results.filter((result) => result.killed).length, equivalent: equivalent.map((result) => result.id), survived: survived.map((result) => result.id), undecided: undecided.map((result) => result.id) }));
+  process.exitCode = survived.length === 0 && undecided.length === 0 ? 0 : 1;
 })();
