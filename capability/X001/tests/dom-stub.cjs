@@ -58,8 +58,9 @@ function createDocument() {
   return document;
 }
 
-// Loads the real page: hash is location.hash at load; saved optionally replaces the X001Saved global (tests with tiny or hostile sets).
-function loadPage({ hash = '', saved = null } = {}) {
+// Loads the real page: hash is location.hash at load; saved optionally replaces the X001Saved global (tests with tiny or hostile sets);
+// patch optionally maps a script file name to a function that rewrites its source before it runs (a test that injects a failing verify).
+function loadPage({ hash = '', saved = null, patch = null } = {}) {
   const document = createDocument();
   const calls = [];
   const listeners = new Map();
@@ -74,6 +75,10 @@ function loadPage({ hash = '', saved = null } = {}) {
   const context = vm.createContext(sandbox);
   for (const file of scripts) {
     if (saved && path.basename(file) === 'saved.js') { vm.runInContext(`Object.defineProperty(globalThis, 'X001Saved', { value: ${JSON.stringify(saved)} });`, context); continue; }
+    if (patch && patch[path.basename(file)]) {
+      new vm.Script(patch[path.basename(file)](fs.readFileSync(file, 'utf8')), { filename: pathToFileURL(file).href }).runInContext(context);
+      continue;
+    }
     script(file).runInContext(context);
   }
   const $ = (id) => document.getElementById(id);

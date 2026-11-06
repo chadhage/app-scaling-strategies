@@ -16,7 +16,7 @@ const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
-const sources = ['index.html', 'page.js', 'timeline.js', 'describe.js', 'saved.js', 'style.css', 'tests\\browser.cjs', 'tests\\browser-dom.cjs'];
+const sources = ['index.html', 'page.js', 'timeline.js', 'describe.js', 'saved.js', 'style.css', 'tests\\browser.cjs', 'tests\\browser-dom.cjs', 'tests\\invariants.cjs', 'tests\\oracle.cjs'];
 const valid = saved.runs.filter((run) => !run.source.hostile || run.kind === 'console');
 const sizeOf = (run) => (run.kind === 'console' ? run.entries.length : run.snapshot.events.length);
 const record = { schema: 'X001-browser-proof/1', cardId: 'X001', startedAtUtc: new Date().toISOString(), outcome: 'not-run', testRuntime: process.version,
@@ -207,12 +207,12 @@ async function main() {
     record.outcome = 'passed';
     record.finishedAtUtc = new Date().toISOString();
     if (capture) {
-      const directory = path.join(root, 'evidence', 'browser', `browser-${randomUUID()}`);
+      const directory = path.join(root, 'evidence', 'fix', 'browser', `browser-${randomUUID()}`);
       fs.mkdirSync(directory, { recursive: true });
       fs.writeFileSync(path.join(directory, 'dom-restart-gap-position-17.html'), snapshot, { flag: 'wx' });
       record.snapshotSha256 = sha(Buffer.from(snapshot));
       fs.writeFileSync(path.join(directory, 'summary.json'), `${JSON.stringify(record, null, 2)}\n`, { flag: 'wx' });
-      console.log(`evidence written to ${path.relative(repository, directory)}`);
+      console.log(`evidence written to ${path.relative(repository, directory)} summarySha256=${sha(fs.readFileSync(path.join(directory, 'summary.json')))} snapshotSha256=${record.snapshotSha256}`);
     }
     console.log(`PASS all ${record.checks.length} browser checks (${record.counts.positionsChecked} positions, ${record.counts.actions} key actions) on Edge ${record.browserVersion}`);
   } finally {

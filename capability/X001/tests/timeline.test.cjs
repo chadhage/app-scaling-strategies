@@ -28,7 +28,9 @@ test('every position of every console run is the C044 reducer fold, deeply froze
     for (let i = 0; i < timeline.length; i++) {
       const answer = timeline.stateAt(i);
       assert.deepStrictEqual(answer.state, fold(entry.entries, i));
-      assert.equal(answer.entry, entry.entries[i]);
+      assert.deepStrictEqual(answer.entry, entry.entries[i]);
+      assert.notEqual(answer.entry, entry.entries[i], 'the answer holds a private copy of the recorded entry, never the caller object');
+      assert.equal(Object.isFrozen(answer.entry), true);
       assert.equal(Object.isFrozen(answer.state.counts), true);
       assert.equal(Object.isFrozen(answer), true);
     }

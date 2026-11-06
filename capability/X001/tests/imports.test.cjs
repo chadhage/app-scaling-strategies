@@ -6,13 +6,11 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { createHash } = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const pins = require('..\\imports.json');
+const { sha, lf, problems: pinProblems } = require('.\\pins-check.cjs');
 
 const repository = path.resolve(__dirname, '..', '..', '..');
-const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
-const lf = (bytes) => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
 const git = (...args) => execFileSync('git', ['--no-pager', ...args], { cwd: repository, maxBuffer: 8 * 1024 * 1024, windowsHide: true });
 
 const keyOf = (entry) => `${entry.commit}:${entry.path.replaceAll('\\', '/')}`;
@@ -34,20 +32,8 @@ function batch() {
   return batchCache;
 }
 
-// Returns the list of problems of a pins document; `read` and `blob` are injectable so a tampered pin or file can be tested in memory.
-function problems(document, read = (file) => fs.readFileSync(path.join(repository, file)), blob = (entry) => batch().get(keyOf(entry))) {
-  const found = [];
-  for (const entry of document.dependencies) {
-    const bytes = read(entry.path);
-    if (sha(bytes) !== entry.rawSha256) found.push(`${entry.path}: raw bytes differ from the pin`);
-    if (sha(lf(bytes)) !== entry.crlfToLfSha256) found.push(`${entry.path}: LF form differs from the pin`);
-    const accepted = sha(blob(entry));
-    if (accepted !== entry.acceptedGitSha256) found.push(`${entry.path}: pin does not match the accepted git blob`);
-    if (![entry.rawSha256, entry.crlfToLfSha256].includes(accepted)) found.push(`${entry.path}: bytes agree with neither the blob nor its LF form`);
-  }
-  for (const entry of document.own) if (sha(read(entry.path)) !== entry.rawSha256) found.push(`${entry.path}: own pin differs`);
-  return found;
-}
+// Returns the list of problems of a pins document (raw OR LF-normalized working bytes are accepted for other namespaces, see pins-check.cjs).
+const problems = (document, read = (file) => fs.readFileSync(path.join(repository, file)), blob = (entry) => batch().get(keyOf(entry))) => pinProblems(document, read, blob);
 
 test('every imported file is byte-identical to the accepted git blob of its card tag', () => {
   assert.equal(pins.schema, 'X001-source-pins/1');
@@ -80,7 +66,7 @@ test('a forged pin, a changed file and a bundle that disagrees with the accepted
   const clone = () => JSON.parse(JSON.stringify(pins));
   const forged = clone();
   forged.dependencies[3].rawSha256 = '0'.repeat(64);
-  assert.match(problems(forged).join('\n'), /raw bytes differ from the pin/);
+  assert.match(problems(forged).join('\n'), /bytes differ from the pin|the raw pin is neither/);
   const resigned = clone();
   const target = resigned.dependencies[10];
   const evil = Buffer.from('module.exports = "evil";');

@@ -1,109 +1,38 @@
 'use strict';
 
-// The mutants of tests\mutants.cjs: each changes ONE limit, cap or guard line of a production file (find occurs exactly once; replace is the mutant).
-// A mutant that no focused suite kills would mean a guard nobody tests (L-0147).
+// The catalog of the systematic mutation self-check (tests\mutants.cjs): which suites exercise which production file (pass 1, fastest first), every suite
+// that survivors still run (pass 2), the six single-line mutants the independent reviewer found alive after the first publication (they are mutated by
+// name as well as by the generator) and the EQUIVALENT mutants with a one-line PROOF of equivalence (a reachability argument is not a proof).
 const suites = Object.freeze({
-  'timeline.js': ['timeline.test.cjs', 'describe.test.cjs', 'guards.test.cjs'],
-  'describe.js': ['describe.test.cjs', 'guards.test.cjs'],
-  'page.js': ['page.test.cjs', 'guards.test.cjs'],
+  'timeline.js': ['timeline.test.cjs', 'totality.test.cjs', 'aliasing.test.cjs', 'guards.test.cjs', 'describe.test.cjs', 'killers.test.cjs'],
+  'describe.js': ['describe.test.cjs', 'killers.test.cjs', 'page.test.cjs', 'guards.test.cjs'],
+  'page.js': ['page.test.cjs', 'killers.test.cjs', 'guards.test.cjs'],
 });
-const m = (name, file, find, replace, equivalent = '') => ({ name, file, find, replace, equivalent });
+const pass2 = ['timeline.test.cjs', 'totality.test.cjs', 'aliasing.test.cjs', 'describe.test.cjs', 'killers.test.cjs', 'guards.test.cjs', 'page.test.cjs', 'surface.test.cjs', 'exhaustive.test.cjs', 'properties.test.cjs'];
 
-const timeline = [
-  m('cap 500 raised to 5000', 'timeline.js', 'const MAX_ENTRIES = 500;', 'const MAX_ENTRIES = 5000;'),
-  m('cap compare >= instead of >', 'timeline.js', 'saved.entries.length > MAX_ENTRIES', 'saved.entries.length >= MAX_ENTRIES'),
-  m('trace cap removed', 'timeline.js', 'snapshot.events.length > MAX_ENTRIES', 'snapshot.events.length > MAX_ENTRIES * 100'),
-  m('id length cap raised', 'timeline.js', '{0,39}$/;', '{0,59}$/;'),
-  m('id length cap lowered', 'timeline.js', '{0,39}$/;', '{0,38}$/;'),
-  m('position digits raised', 'timeline.js', 'const POSITION = /^[1-9][0-9]{0,5}$/;', 'const POSITION = /^[1-9][0-9]{0,6}$/;'),
-  m('position digits lowered', 'timeline.js', 'const POSITION = /^[1-9][0-9]{0,5}$/;', 'const POSITION = /^[1-9][0-9]{0,4}$/;'),
-  m('position allows leading zero', 'timeline.js', 'const POSITION = /^[1-9][0-9]{0,5}$/;', 'const POSITION = /^[0-9]{1,6}$/;'),
-  m('fragment length cap raised', 'timeline.js', "if (text.length > 100) return refuse('FRAGMENT_TOO_LONG');", "if (text.length > 100000) return refuse('FRAGMENT_TOO_LONG');"),
-  m('fragment duplicate key allowed', 'timeline.js', "if (Object.hasOwn(found, key)) return refuse('FRAGMENT_DUPLICATE_KEY');", ''),
-  m('fragment unknown key allowed', 'timeline.js', "if (key !== 'run' && key !== 'pos') return refuse('FRAGMENT_UNKNOWN_KEY');", ''),
-  m('fragment run list ignored', 'timeline.js', "!ids.includes(found.run)", 'false'),
-  m('deep freeze removed', 'timeline.js', "if (value && typeof value === 'object' && !seen.has(value)) {", 'if (false) {'),
-  m('timeline limits and hits unfrozen', 'timeline.js', 'limits: deepFreeze(limits), hits: deepFreeze(hits), stateAt, locate,', 'limits, hits, stateAt, locate,'),
-  m('stateAt accepts the length', 'timeline.js', '|| index < 0 || index >= length)', '|| index < 0)'),
-  m('stateAt accepts negatives', 'timeline.js', '|| index < 0 || index >= length)', '|| index >= length)'),
-  m('stateAt accepts non-integers', 'timeline.js', '!Number.isSafeInteger(index) || index < 0', 'index < 0'),
-  m('jump direction unchecked', 'timeline.js', '(direction !== 1 && direction !== -1) || ', ''),
-  m('jump from unchecked', 'timeline.js', ' || !Number.isSafeInteger(from)) return null;', ') return null;'),
-  m('jump next includes the current', 'timeline.js', 'list.find((index) => index > from)', 'list.find((index) => index >= from)'),
-  m('jump previous includes the current', 'timeline.js', 'list.findLast((index) => index < from)', 'list.findLast((index) => index <= from)'),
-  m('locate gap lower bound exclusive', 'timeline.js', 'seq >= item.from && seq <= item.to', 'seq > item.from && seq <= item.to'),
-  m('locate gap upper bound exclusive', 'timeline.js', 'seq >= item.from && seq <= item.to', 'seq >= item.from && seq < item.to'),
-  m('locate after includes the last', 'timeline.js', 'if (seq > window.lastSeq)', 'if (seq >= window.lastSeq)'),
-  m('locate before includes the first', 'timeline.js', 'if (seq < window.firstSeq)', 'if (seq <= window.firstSeq)'),
-  m('locate sequence below 1 allowed', 'timeline.js', '|| seq < 1) return notRecorded', ') return notRecorded'),
-  m('status ignores missing ranges', 'timeline.js', "status: finished && notRecordedRanges.length === 0 ? 'COMPLETE' : 'INCOMPLETE',", "status: finished ? 'COMPLETE' : 'INCOMPLETE',"),
-  m('epoch complete ignores gaps', 'timeline.js', ' && window.recorded === total }', ' }'),
-  m('epoch complete ignores a late start', 'timeline.js', 'window.firstSeq === 1 && window.lastSeq === total', 'window.lastSeq === total',
-    'equivalent: recorded === total already implies firstSeq === 1, because the recorded events of an epoch are distinct sequences inside firstSeq..lastSeq'),
-  m('after-last range for a complete epoch', 'timeline.js', 'window.lastSeq < total ?', 'window.lastSeq <= total ?'),
-  m('before-first range for a first sequence', 'timeline.js', 'window.firstSeq > 1 ?', 'window.firstSeq >= 1 ?'),
-  m('title not clipped', 'timeline.js', 'saved.title.slice(0, 200)', 'saved.title.slice(0, 20000)'),
-  m('producer total may be zero', 'timeline.js', 'Number.isSafeInteger(value) && value >= 1', 'Number.isSafeInteger(value) && value >= 0'),
-  m('unknown event treated as plain rejection', 'timeline.js', "mark === 'rejected' && dropped.reason === 'unknown-event'", 'false'),
-  m('rejected not failed', 'timeline.js', "const FAILED = new Set(['rejected', 'failure', 'failed']);", "const FAILED = new Set(['failure', 'failed']);"),
-  m('typed failure not failed', 'timeline.js', "const FAILED = new Set(['rejected', 'failure', 'failed']);", "const FAILED = new Set(['rejected', 'failed']);"),
-  m('trace failure not failed', 'timeline.js', "const FAILED = new Set(['rejected', 'failure', 'failed']);", "const FAILED = new Set(['rejected', 'failure']);"),
-  m('unknown outcome not unknown', 'timeline.js', "'unknown-entry', 'unknown-outcome', 'unknown-code']);", "'unknown-entry', 'unknown-code']);"),
-  m('unknown event not unknown', 'timeline.js', "new Set(['unknown-event', 'failure-unrecognized',", "new Set(['failure-unrecognized',"),
-  m('unrecognised failure not unknown', 'timeline.js', "'unknown-event', 'failure-unrecognized', 'unknown-entry'", "'unknown-event', 'unknown-entry'"),
-  m('verify ignores the length', 'timeline.js', 'target.length !== events.length', 'false'),
-  m('verify ignores the state', 'timeline.js', 'canonical(shown.state) !== canonical(steps[index].state)', 'false'),
-  m('verify ignores the mark', 'timeline.js', 'shown.mark !== steps[index].mark', 'false'),
-  m('verify ignores the tallies', 'timeline.js', 'canonical(shown.tallies) !== canonical(fresh[index])', 'false'),
-  m('trace code looked up through the prototype', 'timeline.js', 'Object.hasOwn(TRACE_MARKS, code)', '(code in TRACE_MARKS)'),
-  m('decoder attempt id unchecked', 'timeline.js', 'decoded.attemptId === attempt.attemptId', 'true'),
-  m('decoder request count unchecked', 'timeline.js', 'decoded.requests === attempt.requests', 'true'),
-  m('decoder response count unchecked', 'timeline.js', 'decoded.responses === attempt.responses', 'true'),
-  m('decoder classification unchecked', 'timeline.js', '&& DECODER_CLASSES[attempt.phase].includes(decoded.classification)', ''),
-  m('trace with no attempt is COMPLETE', 'timeline.js', 'attempts.length > 0 && attempts.every(', 'attempts.every('),
-  m('producer metadata unchecked', 'timeline.js', 'if (producer !== null && !(isObject(producer)', 'if (false && !(isObject(producer)'),
-  m('unknown entry type accepted', 'timeline.js', '!ACTIONS.includes(entry.type)', 'false'),
-  m('arrays accepted as saved runs', 'timeline.js', " && typeof value === 'object' && !Array.isArray(value);", " && typeof value === 'object';"),
-  m('unknown epoch unchecked', 'timeline.js', "if (!window) return notRecorded('unknown-epoch');", ''),
-  m('trace snapshot shape unchecked', 'timeline.js', 'if (!isObject(snapshot) || !Array.isArray(snapshot.events) || snapshot.events.length === 0)', 'if (false)'),
+const named = [
+  { name: 'B12-gap-position-off-by-one', file: 'timeline.js', find: 'position: index + 1, epoch: step.flags.gap.epoch', replace: 'position: index, epoch: step.flags.gap.epoch' },
+  { name: 'D1-reconnects-shows-disconnects', file: 'describe.js', find: "['reconnects', 'Reconnects', counts.reconnects]", replace: "['reconnects', 'Reconnects', counts.disconnects]" },
+  { name: 'D2-resyncs-shows-reconnects', file: 'describe.js', find: "['resyncs', 'Resyncs', counts.resyncs]", replace: "['resyncs', 'Resyncs', counts.reconnects]" },
+  { name: 'D6-epoch-changes-shows-gaps', file: 'describe.js', find: "['epoch-changes', 'Epoch changes', state.epochChanges.length]", replace: "['epoch-changes', 'Epoch changes', state.gaps.length]" },
+  { name: 'D7-connection-constant', file: 'describe.js', find: "['connection', 'Connection', state.connection]", replace: "['connection', 'Connection', 'open']" },
+  { name: 'P12-verification-failure-shown-as-verified', file: 'page.js', find: "$('verified').textContent = check.ok", replace: "$('verified').textContent = true" },
 ];
 
-const describe = [
-  m('primitive entry text not clipped', 'describe.js', "'undefined', 80)", "'undefined', 80000)"),
-  m('clip default raised', 'describe.js', 'const clip = (value, limit = 60)', 'const clip = (value, limit = 6000)'),
-  m('announce always shows unknown', 'describe.js', 'unknown > 0 ?', 'unknown >= 0 ?'),
-  m('plural of one', 'describe.js', "count === 1 ? '' : 's'", "count === 0 ? '' : 's'"),
-  m('single sequence range', 'describe.js', 'from === to ?', 'false ?'),
-  m('unknown mark labelled as success', 'describe.js', "(Object.hasOwn(LABELS, mark) ? LABELS[mark] : 'UNKNOWN')", "(Object.hasOwn(LABELS, mark) ? LABELS[mark] : 'APPLIED')"),
-];
+// id -> proof. Filled from the report of the campaign: only mutants that no behavior can distinguish.
+const equivalents = {
+  'page.js:string-changed:96b72c3a97': 'the initial text of the third span of a row is rewritten by render() for every row (current position or empty) and loadRun calls moveTo, which renders, right after listEntries, so the initial text is never observed',
+  'timeline.js:operand-&&-true:ba49949ddd': 'onPath holds only objects accepted by enter(), so Set.has(null) and Set.has(a primitive) are false: the operand value !== null excludes nothing the set could contain',
+  'timeline.js:operand-&&-true:fb677c686a': 'onPath holds only objects, so Set.has of anything that is not an object is false: the operand typeof value === object excludes nothing the set could contain',
+  'timeline.js:ternary-false:5e9c3906dc': 'for an array the variable named is read nowhere (size takes source.length and keys takes the index list); Object.keys(array) only costs time',
+  'timeline.js:operand-&&-true:69eefe1232': 'for a plain object keys are its own enumerable names, so Object.hasOwn(source, key) is true for every key, keys.every is true and the sparse guard cannot fire',
+  'timeline.js:boolean-flipped:e15eb2c24f': 'Object.freeze(frame.copy) runs after the last property of every copy is defined and sets writable and configurable to false on every own property',
+  'timeline.js:boolean-flipped:f5acff33c4': 'Object.freeze(frame.copy) runs after the last property of every copy is defined and sets writable and configurable to false on every own property',
+  'timeline.js:boolean-flipped:649fde569e': 'the states of the verification pass are local to verify, are only read by canonical() and are never returned, so freezing them changes no output',
+  'describe.js:operand-||-true:e7c0d1ba55': 'in `answer.entry.data || {}` the operand is only used to destructure step and of: destructuring true reads (true).step and (true).of, both undefined, exactly what {} gives',
+  'describe.js:operand-||-false:82d50ca781': 'in `answer.entry.data || {}` the operand is only used to destructure step and of: destructuring false reads (false).step and (false).of, both undefined, exactly what {} gives',
+  'describe.js:operator-??:89518c6bd3': 'JSON.stringify returns undefined or a non-empty string (the shortest JSON text has one character), never an empty string or another falsy value, so `x ?? y` and `x || y` choose the same side',
+  'describe.js:operand-&&-true:a26e753750': 'in a CommonJS module `module.exports` is an object, hence truthy, whenever `module` is an object: the operand excludes nothing that `typeof module === "object"` lets through',
+};
 
-const page = [
-  m('alt key taken over', 'page.js', 'event.altKey || ', ''),
-  m('ctrl key taken over', 'page.js', ' || event.ctrlKey', ''),
-  m('meta key taken over', 'page.js', ' || event.metaKey', ''),
-  m('page down moves by nine', 'page.js', 'PageDown: -10', 'PageDown: -9'),
-  m('page up moves by eleven', 'page.js', 'PageUp: 10', 'PageUp: 11'),
-  m('buttons work while unloaded', 'page.js', 'const whenLoaded = (action) => () => { if (view.timeline) action(); };', 'const whenLoaded = (action) => () => { action(); };'),
-  m('hostile fragment stays in the address', 'page.js', '      restoreFragment();', ''),
-  m('refused run leaves the old address', 'page.js', "history.replaceState(null, '', T.formatFragment(id, position));", ''),
-  m('scrub bar width wrong', 'page.js', '(answer.index * 100) / Math.max(1, answer.of - 1)', 'answer.index * 10'),
-  m('shown state not marked', 'page.js', "$('status').dataset.state = 'SHOWN';", "$('status').dataset.state = 'UNLOADED';"),
-  m('sequence digits raised', 'page.js', 'const WHOLE = /^[1-9][0-9]{0,5}$/;', 'const WHOLE = /^[1-9][0-9]{0,6}$/;'),
-  m('sequence allows leading zero', 'page.js', 'const WHOLE = /^[1-9][0-9]{0,5}$/;', 'const WHOLE = /^[0-9]{1,6}$/;'),
-  m('space key finds a sequence', 'page.js', "if (event.key === 'Enter') whenLoaded", "if (event.key === 'Enter' || event.key === ' ') whenLoaded"),
-  m('slider minimum is zero', 'page.js', "[['aria-valuemin', '1']", "[['aria-valuemin', '0']"),
-  m('move off the recording clamps', 'page.js', 'fail(outside(index + 1, view.timeline.length));', 'return moveTo(Math.max(0, Math.min(index, view.timeline.length - 1)));'),
-  m('failed row looks fine', 'page.js', "failed.has(index) ? 'failed' : unknown.has(index) ? 'unknown' : 'ok'", "unknown.has(index) ? 'unknown' : 'ok'"),
-  m('unknown row looks fine', 'page.js', "failed.has(index) ? 'failed' : unknown.has(index) ? 'unknown' : 'ok'", "failed.has(index) ? 'failed' : 'ok'"),
-  m('key looked up through the prototype', 'page.js', 'Object.hasOwn(KEYS, event.key)', '(event.key in KEYS)'),
-  m('empty fragment reported as an error', 'page.js', "if (parsed.code !== 'FRAGMENT_EMPTY') fail(", 'if (true) fail('),
-  m('load without a chosen run', 'page.js', "ids.includes($('saved-run').value) ?", 'true ?'),
-  m('address restored without a timeline', 'page.js', "if (view.timeline) history.replaceState(null, '', T.formatFragment(view.runId, view.index + 1));",
-    "history.replaceState(null, '', T.formatFragment(view.runId, view.index + 1));"),
-  m('a valid move keeps the refusal', 'page.js', "fail('');", ''),
-  m('unload keeps the sequence answer', 'page.js', "$('seq-result').textContent = '';", ''),
-  m('verification failure not shown', 'page.js', "$('verified').textContent = check.ok", "$('verified').textContent = true",
-    'unreachable from saved data: verify can only disagree with build when the model itself is wrong; this is the uncovered branch of page.js'),
-];
-
-module.exports = Object.freeze({ catalog: Object.freeze({ suites, mutants: Object.freeze([...timeline, ...describe, ...page]) }) });
+module.exports = Object.freeze({ catalog: Object.freeze({ suites, pass2, named, equivalents }) });

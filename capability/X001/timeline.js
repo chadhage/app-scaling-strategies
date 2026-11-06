@@ -19,7 +19,7 @@
   const COUNTER_MARKS = Object.freeze({ applied: 'applied', duplicates: 'duplicate', outOfOrder: 'out-of-order', rejected: 'rejected' });
 
   const refuse = (code, detail = null) => Object.freeze({ ok: false, code, detail });
-  const notRecorded = (reason, range = null) => Object.freeze({ ok: false, code: NOT_RECORDED, reason, range });
+  const notRecorded = (reason, range = null) => Object.freeze({ ok: false, code: NOT_RECORDED, reason, range: range === null ? null : Object.freeze({ ...range }) });
   const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
   const seen = new WeakSet();
 
@@ -30,6 +30,66 @@
       Object.freeze(value);
     }
     return value;
+  }
+
+  // A refusal that build() turns into its typed answer; anything else that throws while a saved run is read becomes SAVED_RUN_UNREADABLE.
+  class Refusal extends Error {
+    constructor(code) {
+      super(code);
+      this.code = code;
+    }
+  }
+
+  // The model never aliases the caller's data: the recorded entries, the source and the producer are copied into private, deeply frozen objects
+  // (iteratively, so a hostile nesting depth cannot overflow the stack, and within a budget of nodes counted per occurrence, so shared structure that
+  // expands exponentially is refused at once). A cycle, a hole in an array, a function or any object that is not plain data is a typed refusal.
+  // The caller's objects are only read, never frozen.
+  const MAX_NODES = 200000;
+  const plain = (source) => {
+    if (Array.isArray(source)) return true;
+    const prototype = Object.getPrototypeOf(source);
+    return prototype === Object.prototype || prototype === null;
+  };
+
+  function own(root) {
+    const onPath = new Set();
+    const frames = [];
+    let nodes = 0;
+    const enter = (source) => {
+      if (!plain(source)) throw new Refusal('SAVED_RUN_NOT_DATA');
+      const array = Array.isArray(source);
+      const named = array ? null : Object.keys(source);
+      const size = array ? source.length : named.length;
+      nodes += size + 1;
+      if (nodes > MAX_NODES) throw new Refusal('SAVED_RUN_TOO_LARGE');
+      const keys = array ? Array.from({ length: size }, (_, index) => String(index)) : named;
+      if (array && !keys.every((key) => Object.hasOwn(source, key))) throw new Refusal('SAVED_RUN_SPARSE');
+      const copy = array ? new Array(size) : {};
+      onPath.add(source);
+      frames.push({ source, copy, keys, at: 0 });
+      return copy;
+    };
+    const leaf = (value) => {
+      if (typeof value === 'function' || typeof value === 'symbol') throw new Refusal('SAVED_RUN_NOT_DATA');
+      return value;
+    };
+    const first = enter(root);
+    while (frames.length > 0) {
+      const frame = frames[frames.length - 1];
+      if (frame.at === frame.keys.length) {
+        frames.pop();
+        onPath.delete(frame.source);
+        Object.freeze(frame.copy);
+        continue;
+      }
+      const key = frame.keys[frame.at];
+      frame.at += 1;
+      const value = frame.source[key];
+      if (value !== null && typeof value === 'object' && onPath.has(value)) throw new Refusal('SAVED_RUN_CYCLIC');
+      const child = value === null || typeof value !== 'object' ? leaf(value) : enter(value);
+      Object.defineProperty(frame.copy, key, { value: child, enumerable: true, writable: true, configurable: true });
+    }
+    return first;
   }
 
   function canonical(value) {
@@ -67,7 +127,8 @@
     return entries.map((entry) => {
       const before = state;
       state = reducer.reduce(state, entry);
-      return { state: freeze ? deepFreeze(state) : state, ...classifyConsole(before, state, entry) };
+      const step = classifyConsole(before, state, entry);
+      return { state: freeze ? deepFreeze(state) : state, ...step, flags: Object.freeze(step.flags) };
     });
   }
 
@@ -120,7 +181,7 @@
     return events.map((entry) => {
       const step = stepTrace(state, entry);
       state = step.state;
-      return { ...step, state: freeze ? deepFreeze(step.state) : step.state };
+      return { ...step, state: freeze ? deepFreeze(step.state) : step.state, flags: Object.freeze(step.flags) };
     });
   }
 
@@ -186,12 +247,13 @@
   function prepareConsole(saved) {
     if (!Array.isArray(saved.entries) || saved.entries.length === 0) return refuse('ENTRIES_REQUIRED');
     if (saved.entries.length > MAX_ENTRIES) return refuse('TOO_MANY_ENTRIES');
-    const producer = saved.producer === undefined ? null : saved.producer;
+    const { entries, producer, source } = own({ entries: saved.entries, producer: saved.producer === undefined ? null : saved.producer, source: isObject(saved.source) ? saved.source : null });
     if (producer !== null && !(isObject(producer) && [producer.lastSeq, producer.totalSteps, producer.replayWindow].every((value) => Number.isSafeInteger(value) && value >= 1))) {
       return refuse('PRODUCER_INVALID');
     }
-    const steps = foldConsole(saved.entries);
-    return { ok: true, entries: saved.entries, steps, limits: consoleLimits(producer, steps) };
+    const steps = foldConsole(entries);
+    if (producer !== null && steps.some((step) => step.mark === 'applied' && step.state.lastSeq > producer.lastSeq)) return refuse('PRODUCER_INCONSISTENT');
+    return { ok: true, entries, source, steps, limits: consoleLimits(producer, steps) };
   }
 
   function prepareTrace(saved) {
@@ -200,11 +262,12 @@
     if (snapshot.events.length > MAX_ENTRIES) return refuse('TOO_MANY_ENTRIES');
     const decoder = loadTrace();
     if (!decoder || typeof decoder.validateSnapshot !== 'function') return refuse('DECODER_UNAVAILABLE');
-    const verdict = decoder.validateSnapshot(snapshot);
+    const mine = own({ snapshot, source: isObject(saved.source) ? saved.source : null });
+    const verdict = decoder.validateSnapshot(mine.snapshot);
     if (!verdict.valid) return refuse('DECODER_REFUSED', verdict.code);
-    const steps = foldTrace(snapshot.events);
+    const steps = foldTrace(mine.snapshot.events);
     if (!agrees(steps[steps.length - 1].state, verdict)) return refuse('DECODER_DISAGREES');
-    return { ok: true, entries: snapshot.events, steps, limits: traceLimits(steps, verdict) };
+    return { ok: true, entries: mine.snapshot.events, source: mine.source, steps, limits: traceLimits(steps, verdict) };
   }
 
   const isHit = {
@@ -212,7 +275,7 @@
     epoch: (step) => step.flags.epochChange !== null,
   };
 
-  function assemble(saved, { entries, steps, limits }) {
+  function assemble(meta, { entries, source, steps, limits }) {
     const { length } = steps;
     const tallies = runningTallies(steps);
     const hits = Object.fromEntries(JUMPS.map((kind) => [kind, steps.flatMap((step, index) => (isHit[kind](step) ? [index] : []))]));
@@ -236,19 +299,24 @@
       return Object.freeze({ ok: true, index: applied.get(`${epoch}:${seq}`) });
     };
     return Object.freeze({
-      ok: true, id: saved.id, title: typeof saved.title === 'string' ? saved.title.slice(0, 200) : saved.id, kind: saved.kind,
-      source: isObject(saved.source) ? saved.source : null, length, entries, marks: steps.map((step) => step.mark),
+      ok: true, id: meta.id, title: typeof meta.title === 'string' ? meta.title.slice(0, 200) : meta.id, kind: meta.kind,
+      source, length, entries, marks: Object.freeze(steps.map((step) => step.mark)),
       limits: deepFreeze(limits), hits: deepFreeze(hits), stateAt, locate,
     });
   }
 
   function build(saved) {
-    if (!isObject(saved)) return refuse('SAVED_RUN_REQUIRED');
-    if (saved.format !== FORMAT) return refuse('FORMAT_UNSUPPORTED');
-    if (typeof saved.id !== 'string' || !ID.test(saved.id)) return refuse('ID_INVALID');
-    if (saved.kind !== 'console' && saved.kind !== 'trace') return refuse('KIND_UNSUPPORTED');
-    const prepared = saved.kind === 'console' ? prepareConsole(saved) : prepareTrace(saved);
-    return prepared.ok ? assemble(saved, prepared) : prepared;
+    try {
+      if (!isObject(saved)) return refuse('SAVED_RUN_REQUIRED');
+      const { format, id, kind, title } = saved;
+      if (format !== FORMAT) return refuse('FORMAT_UNSUPPORTED');
+      if (typeof id !== 'string' || !ID.test(id)) return refuse('ID_INVALID');
+      if (kind !== 'console' && kind !== 'trace') return refuse('KIND_UNSUPPORTED');
+      const prepared = kind === 'console' ? prepareConsole(saved) : prepareTrace(saved);
+      return prepared.ok ? assemble({ id, kind, title }, prepared) : prepared;
+    } catch (error) {
+      return refuse(error instanceof Refusal ? error.code : 'SAVED_RUN_UNREADABLE');
+    }
   }
   const stateAt = (timeline, index) => (isObject(timeline) && timeline.ok === true && typeof timeline.stateAt === 'function'
     ? timeline.stateAt(index) : refuse('TIMELINE_REQUIRED'));
@@ -263,27 +331,35 @@
   }
 
   // An independent forward pass over the raw entries (own states, nothing shared with the cached scan of build()): position i of the
-  // pass is the prefix 0..i folded from the initial state.
+  // pass is the prefix 0..i folded from the initial state. Total: whatever it is given it answers, and a failure to read is the typed VERIFY_FAILED.
+  const unverified = (code) => deepFreeze({ ok: false, checked: 0, mismatches: [], code });
   function verify(saved, timeline) {
-    if (!isObject(saved)) return { ok: false, checked: 0, mismatches: [], code: 'SAVED_RUN_REQUIRED' };
-    const target = timeline === undefined ? build(saved) : timeline;
-    if (!target || target.ok !== true) return { ok: false, checked: 0, mismatches: [], code: (target && target.code) || 'TIMELINE_REQUIRED' };
-    const mismatches = [];
-    const console_ = saved.kind === 'console';
-    const events = console_ ? saved.entries : saved.snapshot.events;
-    const steps = (console_ ? foldConsole : foldTrace)(events, false);
-    const fresh = runningTallies(steps);
-    if (target.length !== events.length) mismatches.push({ index: -1, what: 'length' });
-    for (let index = 0; index < Math.min(target.length, events.length); index++) {
-      const shown = target.stateAt(index);
-      let what = null;
-      if (!shown.ok) what = 'missing';
-      else if (canonical(shown.state) !== canonical(steps[index].state)) what = 'state';
-      else if (shown.mark !== steps[index].mark) what = 'mark';
-      else if (canonical(shown.tallies) !== canonical(fresh[index])) what = 'tallies';
-      if (what) mismatches.push({ index, what });
+    try {
+      if (!isObject(saved)) return unverified('SAVED_RUN_REQUIRED');
+      const target = timeline === undefined ? build(saved) : timeline;
+      if (!target || target.ok !== true) return unverified((target && target.code) || 'TIMELINE_REQUIRED');
+      const consoleRun = saved.kind === 'console';
+      const events = consoleRun ? saved.entries : saved.snapshot.events;
+      if (!Array.isArray(events) || events.length > MAX_ENTRIES) return unverified('ENTRIES_REQUIRED');
+      const mismatches = [];
+      const steps = (consoleRun ? foldConsole : foldTrace)(events, false);
+      const fresh = runningTallies(steps);
+      if (target.length !== events.length) mismatches.push({ index: -1, what: 'length' });
+      for (let index = 0; index < Math.min(target.length, events.length); index++) {
+        const shown = target.stateAt(index);
+        let what = null;
+        if (!shown.ok) what = 'missing';
+        else if (canonical(shown.state) !== canonical(steps[index].state)) what = 'state';
+        else if (shown.mark !== steps[index].mark) what = 'mark';
+        else if (canonical(shown.tallies) !== canonical(fresh[index])) what = 'tallies';
+        else if (canonical(shown.flags) !== canonical(steps[index].flags)) what = 'flags';
+        else if (target.marks[index] !== steps[index].mark) what = 'marks';
+        if (what) mismatches.push({ index, what });
+      }
+      return deepFreeze({ ok: mismatches.length === 0, checked: events.length, mismatches });
+    } catch {
+      return unverified('VERIFY_FAILED');
     }
-    return { ok: mismatches.length === 0, checked: events.length, mismatches };
   }
 
   const POSITION = /^[1-9][0-9]{0,5}$/;

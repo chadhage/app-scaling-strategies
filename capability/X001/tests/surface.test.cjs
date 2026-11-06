@@ -66,3 +66,13 @@ test('X001.feature names every promise the tests below check', () => {
   assert.equal(fs.readFileSync(path.join(root, '.gitattributes'), 'utf8').trim(), '* -text');
   assert.equal(fs.readFileSync(path.join(root, 'evidence', '.gitattributes'), 'utf8').trim(), '* -text -diff');
 });
+
+test('X001-fix.feature has one scenario per finding of the review (F1 to F9) and each names a test that exists', () => {
+  const feature = read('X001-fix.feature');
+  assert.deepEqual([...feature.matchAll(/^ {2}Scenario: (F\d) /gm)].map((match) => match[1]), ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9']);
+  const checks = [['F1', 'pins-form.test.cjs', /LF form and the CRLF form/], ['F2', 'aliasing.test.cjs', /a generic walk over every reachable object/],
+    ['F3', 'page.test.cjs', /every position of every valid run satisfies the full page invariants/], ['F4', 'totality.test.cjs', /F4: limits\.gaps/], ['F5', 'page.test.cjs', /F5: a verification that fails/],
+    ['F6', 'totality.test.cjs', /seeded fuzz over hostile JavaScript values/], ['F7', 'totality.test.cjs', /F7: a producer total/], ['F8', 'evidence-figures.test.cjs', /suite figures/],
+    ['F9', 'page.test.cjs', /F9: a hostile fragment on a fresh load/]];
+  for (const [finding, file, title] of checks) assert.match(fs.readFileSync(path.join(__dirname, file), 'utf8'), title, `${file} has the test of ${finding}`);
+});

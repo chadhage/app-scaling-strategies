@@ -4,7 +4,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPage } = require('.\\dom-stub.cjs');
-const { assertShown } = require('.\\invariants.cjs');
+const { assertShown, assertUnloaded } = require('.\\invariants.cjs');
 const T = require('..\\timeline.js');
 const saved = require('..\\saved.js');
 
@@ -55,6 +55,7 @@ test('a refused saved run shows its typed code, no timeline and no stale state f
     assert.equal(page.$('prev').disabled && page.$('next').disabled, true);
     assert.equal(page.text('position'), 'Position: none');
     assert.equal(page.$('status').dataset.state, 'UNLOADED');
+    assertUnloaded(page, `${id} refused after a shown run`);
     page.key('ArrowRight');
     assert.equal(page.text('position'), 'Position: none');
   }
@@ -276,4 +277,105 @@ test('a one-entry recording has no previous or next position and its scrub bar i
   page.key('ArrowRight');
   assert.match(page.text('error'), /requested position 2 /);
   assert.match(page.text('provenance'), /Source: unknown unknown\.$/);
+});
+
+test('every position of every valid run satisfies the full page invariants: all 16 console lines or all 7 trace lines equal the independent fold, rows equal stateAt(i).mark', () => {
+  let checked = 0;
+  let total = 0;
+  for (const run of saved.runs.filter((item) => !item.source.hostile || item.kind === 'console')) {
+    const page = loadPage({ hash: `#run=${run.id}&pos=1` });
+    const n = run.kind === 'console' ? run.entries.length : run.snapshot.events.length;
+    total += n;
+    for (let index = 0; index < n; index++) {
+      page.changeHash(`#run=${run.id}&pos=${index + 1}`);
+      assertShown(page, run.id, index, `${run.id}@${index + 1}`);
+      checked += 1;
+    }
+  }
+  assert.equal(checked, total);
+  assert.ok(checked > 100, `${checked} positions were compared`);
+});
+
+test('F5: a verification that fails is shown as VERIFICATION FAILED with its count, the page keeps scrubbing, and an honest verification is never worded as a failure', () => {
+  const anchor = 'jump, verify,';
+  const failing = (source) => {
+    assert.equal(source.split(anchor).length, 2, 'the export list of timeline.js names verify exactly once');
+    return source.replace(anchor, "jump, verify: () => ({ ok: false, checked: 2, mismatches: [{ index: 0, what: 'state' }, { index: 1, what: 'flags' }] }),");
+  };
+  const page = loadPage({ hash: '#run=c044-complete&pos=3', patch: { 'timeline.js': failing } });
+  assert.equal(page.text('verified'), 'VERIFICATION FAILED at 2 positions: do not trust this display.');
+  assert.equal(page.position(), 3);
+  page.key('ArrowRight');
+  assert.equal(page.position(), 4);
+  assert.equal(page.text('verified'), 'VERIFICATION FAILED at 2 positions: do not trust this display.');
+  const honest = loadPage({ hash: '#run=c044-complete&pos=3' });
+  const entries = saved.runs.find((run) => run.id === 'c044-complete').entries.length;
+  assert.equal(honest.text('verified'), `Verified: ${entries} of ${entries} positions recomputed from the recorded entries match the displayed states.`);
+});
+
+test('a row is listed from the model marks: a failed or unknown entry is never listed as APPLIED, and every row equals the mark of its position', () => {
+  for (const id of consoleIds) {
+    const page = loadPage({ hash: `#run=${id}&pos=1` });
+    const timeline = T.build(saved.runs.find((run) => run.id === id));
+    page.$('entries').children.forEach((row, index) => {
+      const answer = timeline.stateAt(index);
+      assert.equal(row.children[0].textContent, require('..\\describe.js').label(answer.mark), `${id} row ${index + 1}`);
+      assert.equal(row.dataset.class === 'ok', !['rejected', 'failure', 'failed', 'unknown-event', 'failure-unrecognized', 'unknown-entry', 'unknown-outcome', 'unknown-code'].includes(answer.mark));
+      if (row.dataset.class !== 'ok') assert.notEqual(row.children[0].textContent, 'APPLIED');
+    });
+  }
+});
+
+test('F9: a hostile fragment on a fresh load stays in the address (nothing is displayed to restore it to) and is never echoed by the page; once a position is shown the address is restored', () => {
+  const hostile = '#run=<script>window.__x=1</script>&pos=1';
+  const fresh = loadPage({ hash: hostile });
+  assert.equal(fresh.location.hash, hostile, 'with nothing displayed there is nothing to restore the address to');
+  assert.deepEqual(fresh.history.calls, []);
+  assert.match(fresh.text('error'), /^FRAGMENT_MALFORMED: the address fragment was refused and nothing from it is shown; the display is unchanged\.$/);
+  assert.equal(fresh.text('status'), 'No saved run is loaded. Nothing is assumed to have succeeded.');
+  const everything = [...fresh.document.elements.values()].map((element) => element.textContent).join('\n');
+  assert.doesNotMatch(everything, /<script|__x|alert/);
+  const shown = loadPage({ hash: '#run=c044-complete&pos=3' });
+  shown.changeHash(hostile);
+  assert.equal(shown.location.hash, '#run=c044-complete&pos=3', 'a displayed position restores the address');
+  assert.doesNotMatch([...shown.document.elements.values()].map((element) => element.textContent).join('\n'), /<script|__x|alert/);
+});
+
+test('every element id of the page is classified: compared by the oracle, a static label, or the lookup result; and the oracle really notices a change of each compared one', () => {
+  const jumps = T.JUMPS.flatMap((kind) => [`prev-${kind}`, `next-${kind}`]);
+  const compared = ['saved-run', 'status', 'error', 'provenance', 'scrub', 'scrub-fill', 'position', 'prev', 'next', ...jumps, 'seq-epoch', 'seq-number', 'seq-find', 'producing', 'state', 'limits', 'verified', 'entries'];
+  const classified = new Set([...compared, 'seq-result', 'banner', 'mode', 'choose-heading', 'load', 'scrub-heading', 'scrub-label', 'state-heading', 'limits-heading', 'entries-heading']);
+  const page = loadPage({ hash: '#run=c044-restart-gap&pos=17' });
+  const staticIds = [...page.document.elements.keys()];
+  assert.deepEqual(staticIds.filter((id) => !classified.has(id)), [], 'a new element id must be classified here and compared by assertShown');
+  assert.deepEqual([...classified].filter((id) => !staticIds.includes(id)), [], 'no stale classification');
+  assert.deepEqual(page.ids().filter((id) => !staticIds.includes(id) && !/^entry-\d+$/.test(id) && !/^st-[a-z-]+$/.test(id)), [], 'every dynamic id is an entry row or a state line');
+  const perturb = {
+    'saved-run': () => { const before = page.$('saved-run').value; page.$('saved-run').value = 'c044-complete'; return () => { page.$('saved-run').value = before; }; },
+    scrub: () => { page.$('scrub').setAttribute('aria-valuenow', '1'); return () => page.$('scrub').setAttribute('aria-valuenow', '17'); },
+    'scrub-fill': () => { const before = page.$('scrub-fill').style.width; page.$('scrub-fill').style.width = '1%'; return () => { page.$('scrub-fill').style.width = before; }; },
+    state: () => { const node = page.$('state').descendants().find((item) => item.id); const before = node.textContent; node.textContent = 'x'; return () => { node.textContent = before; }; },
+    limits: () => { const node = page.$('limits').children[0]; const before = node.textContent; node.textContent = 'x'; return () => { node.textContent = before; }; },
+    entries: () => { const node = page.$('entries').children[3].children[3]; const before = node.textContent; node.textContent = 'x'; return () => { node.textContent = before; }; },
+  };
+  for (const id of ['status', 'error', 'provenance', 'position', 'producing', 'verified']) {
+    perturb[id] = () => { const before = page.text(id); page.$(id).textContent = `${before}x`; return () => { page.$(id).textContent = before; }; };
+  }
+  for (const id of ['prev', 'next', ...jumps, 'seq-epoch', 'seq-number', 'seq-find']) perturb[id] = () => { const before = page.$(id).disabled; page.$(id).disabled = !before; return () => { page.$(id).disabled = before; }; };
+  assert.deepEqual(Object.keys(perturb).sort(), [...compared].sort());
+  assertShown(page, 'c044-restart-gap', 16, 'unperturbed');
+  for (const id of compared) {
+    const undo = perturb[id]();
+    assert.throws(() => assertShown(page, 'c044-restart-gap', 16, id), assert.AssertionError, `a changed ${id} is noticed by the oracle`);
+    undo();
+    assertShown(page, 'c044-restart-gap', 16, `${id} restored`);
+  }
+});
+
+test('the scrub bar is the position as a share of the last position, also for a two-entry recording', () => {
+  const two = { format: 'X001-saved-run/1', id: 'two', kind: 'console', title: 'two', source: null, producer: null, entries: [{ type: 'open' }, { type: 'stop' }] };
+  const page = loadPage({ saved: { schema: 'X001-saved/1', runs: [two] }, hash: '#run=two&pos=1' });
+  assert.equal(page.$('scrub-fill').style.width, '0%');
+  page.key('ArrowRight');
+  assert.equal(page.$('scrub-fill').style.width, '100%');
 });

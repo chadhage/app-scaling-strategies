@@ -1,11 +1,32 @@
 # X001: scrub a saved run timeline backward and forward without re-execution
 
+> **Status.** This is the FIX commit of X001 on top of the rejected first publication. The figures block at the end is machine-checked against the captures in `evidence\fix`; what is NOT recorded (page.js and most of timeline.js in the
+> mutation campaign) is stated under "Honest limits", not hidden. The work state of the run is in `results\X001.json` of the run folder.
+
 **Training rehearsal - synthetic data - not a live Azure result**
 
 Original **X001 / L (the Delighter of packet LP-REPLAY)**, parents H007 and H008, gates C034 and C044 (Done), companions C018, C034,
 C037, C038, C040 and C044. This is one local, synthetic, offline fixture. It does not validate production **Node 24 / Express / Entra**,
 registers no identity, uses no cloud service, no real data and no spend. Nothing is run again: no producer, server, timer or network is
 started while scrubbing. IaC is **N/A**. Parent acceptance alone awards the credit; tests and evidence earn nothing extra.
+
+This README describes the FIX commit on top of the first publication (`368332e2a881`, tag `kanban/X001/368332e2a881`), which an independent
+review rejected on three majors (F1 to F3) and six minors (F4 to F9). The first publication's archive is untouched and still verified
+(`tests\evidence.test.cjs`); everything new lives in `evidence\fix`, `X001-fix.feature` and the files named below.
+
+## The review findings and what answers each one
+
+| finding | fix | test that fails on the old bytes | RED archive (old bytes fail) |
+| --- | --- | --- | --- |
+| F1 fresh checkout: 2 of 70 tests failed because five other-namespace pins were raw CRLF bytes | `tests\pins-check.cjs`: a foreign file is accepted in its raw or its LF-normalized form and the raw pin must be the LF or CRLF form of the same text; `tests\evidence-check.cjs` compares foreign inputs by LF hash | `tests\pins-form.test.cjs`, `tests\fresh-tree.cjs` (ten suites in an LF scratch tree and in a CRLF one) | `evidence\fix\red\run-1`: the first-publication suites in an LF tree, 70 tests, 2 fail |
+| F2 returned objects were mutable and aliased the caller | `timeline.js`: `own()` copies entries, source and producer into private frozen data, flags, marks and every answer are frozen, `verify` compares flags and marks | `tests\aliasing.test.cjs` (a generic walker over every reachable object of every public return value, frozen and unfrozen runs, strict mode) | `evidence\fix\red\run-2` (7 tests, 7 fail) |
+| F3 the display oracle compared 8 of 16 state lines | `tests\oracle.cjs` (independent fold) and `tests\invariants.cjs` compare all 16 console lines or all 7 trace lines, the announcement, the producing entry, every row, every button, the scrub bar, the limits panel and the provenance; the rendered ids are enumerated | `tests\page.test.cjs` (every position of every valid run; every element id classified and perturbed), `evidence\fix\red\display.red.test.cjs` | `evidence\fix\red\run-3`: the reviewer mutants D1, D2, D6, D7, P12 on the first-publication bytes, 5 named tests fail |
+| F4 `limits.gaps[].position` never read | tested against the 1-based entry position | `tests\totality.test.cjs` F4 | run-2 (reviewer mutant B12) |
+| F5 `VERIFICATION FAILED` branch untested and called equivalent | injected failing verify in the DOM stub | `tests\page.test.cjs` F5 | run-3 (reviewer mutant P12) |
+| F6 `build` not total for sparse arrays | `build` and `verify` are total: typed refusal, never a throw | `tests\totality.test.cjs` (typed code per hostile kind, seeded fuzz, capped heap) | run-2 |
+| F7 producer total not cross-checked | `PRODUCER_INCONSISTENT` | `tests\totality.test.cjs` F7 | run-2 |
+| F8 integrity tests did not recompute figures | `tests\evidence-figures.cjs` recomputes suite, coverage, mutation and browser figures from the stored transcripts and the DOM snapshot and compares the figures block at the end of this README (a figure without a capture, or a capture whose figure differs, fails); the README is an input of the final capture | `tests\evidence-figures.test.cjs` (one tamper test per figure, failing by name) and `tests\evidence.test.cjs` (a changed input byte, README included once a capture pins it) | no archived RED: the old verifier has no such check to replay (see limits) |
+| F9 README wording and browser summary | the README states what the page does with a refused fragment; the browser summary pins `tests\invariants.cjs` and `tests\oracle.cjs` | `tests\claims.test.cjs` checks both claims on the git blobs of the first publication (it reports the omitted source and the false sentence there) and on the final files (it reports nothing); the behaviour is `tests\page.test.cjs` F9 | no archived RED: a differential test in the suite, not a recorded run (see limits) |
 
 ## What it is
 
@@ -16,19 +37,21 @@ let you scrub a SAVED run timeline backward and forward and check that every dis
   (the reducer the live console uses; imported read-only and pinned) folded over recorded entries 0..i**: never a second formula. A
   position is an entry of the recording (a delivery, a typed failure or a session action), so duplicates, drops and refusals are positions too.
 - Scrubbing is **path independent**: states are one immutable forward scan, so any walk of forward, backward and jump moves shows the
-  same state object for the same position. `verify(saved)` recomputes every position in an independent forward pass over the raw entries and
-  compares state, mark and tallies; the page shows "Verified: N of N positions" and the tests compare the rendered DOM with an independent fold.
+  same state object for the same position (`tests\exhaustive.test.cjs`). `verify(saved)` recomputes every position in an independent forward
+  pass and compares state, mark, tallies, flags and marks; the page shows "Verified: N of N positions" and `VERIFICATION FAILED at N positions` otherwise.
+- **Nothing it returns can be changed and nothing the caller holds is aliased.** `build` copies the entries, the source and the producer into private,
+  deeply frozen objects (iteratively, within a budget of 200,000 nodes), never freezes or touches the caller's objects, and every answer, flag set, mark list,
+  limit and hit list is frozen (`tests\aliasing.test.cjs`). Data that is not plain (a function, a Date, a Map), a cycle, a hole in an array or an oversized
+  structure is a typed refusal (`SAVED_RUN_NOT_DATA`, `SAVED_RUN_CYCLIC`, `SAVED_RUN_SPARSE`, `SAVED_RUN_TOO_LARGE`), anything else that throws while the data is read is
+  `SAVED_RUN_UNREADABLE`, and producer metadata that the recording exceeds is `PRODUCER_INCONSISTENT` (`tests\totality.test.cjs`).
 - A position outside the recording (`-1`, the length, `NaN`, `1.5`, a string, `null`) is a typed `{ ok: false, code: 'NOT_RECORDED' }`
   with no state. A run sequence number is looked up with `locate(epoch, seq)`: recorded ones give their position, a sequence inside a gap, before
-  the first or after the last recorded one is `NOT_RECORDED` with its exact range (`reason` gap, before-recorded, after-recorded, unknown-epoch).
-  The page never shows the nearest state instead; a move off the recording is refused, not clamped (decision below).
-- LIMITS are shown, never interpolated: the recorded window per epoch (first and last recorded sequence, recorded of the producer total),
-  what is NOT recorded (exact ranges: gap, before-first, after-last), epoch changes (restarts), dropped duplicates and out-of-order deliveries
-  (counted and marked, never shown as new events: the C044 F1 lesson), failed entries (FAILED), unknown events, entry types and failure codes
+  the first or after the last recorded one is `NOT_RECORDED` with its exact range. The page never shows the nearest state instead.
+- LIMITS are shown, never interpolated: the recorded window per epoch, what is NOT recorded (exact ranges), epoch changes, dropped duplicates and
+  out-of-order deliveries (counted and marked, never shown as new events), failed entries (FAILED), unknown events, entry types and failure codes
   (UNKNOWN), a truncated recording (INCOMPLETE with the known total) and, for a C034 trace, each attempt's decoder classification.
-  The gap range and the epoch change are also written into the entry list right where they occur.
 
-## The ten saved runs (inputs, read-only; `saved.js` is generated by `tests\build-saved.cjs`)
+## The ten saved runs (inputs, read-only; `saved.js` is generated by `tests\build-saved.cjs` and unchanged)
 
 | id | kind | what it shows |
 | --- | --- | --- |
@@ -38,12 +61,7 @@ let you scrub a SAVED run timeline backward and forward and check that every dis
 | `c044-hostile-mix` | console | fictional hostile set: tampered data, unknown event type, out-of-order and reordered deliveries, a duplicate, a malformed id, a foreign run, an unknown entry type and an unrecognised failure code |
 | `c034-closed-history` | trace | the accepted C034 saved trace: six attempts, 3 observed, 1 failed (HTTP 404), 2 unknown (stop, reset) |
 | `c034-held-snapshot` | trace | the accepted C034 held attempt that never finished (INCOMPLETE) |
-| `c034-reordered`, `c034-truncated`, `c034-tampered`, `c034-unknown-code` | trace | fictional hostile copies the accepted C034 decoder REFUSES (`BOUNDARY_ACTION_ORDER`, `MISSING_OR_DUPLICATE_ORIGINAL`, `ORIGINAL_ELAPSED_MISMATCH`, `UNKNOWN_ACTION`): the page shows the typed code and no timeline |
-
-The console sessions were recorded at BUILD time from the ACCEPTED C044 producer (`createRun` with a manual scheduler, so no timer runs;
-`produce()`, `resolveCursor()` and `attach()` called by `tests\scenarios-console.cjs`); the traces come from the accepted C034 evidence bundle.
-`saved.js` is a generated file: `tests\imports.test.cjs` regenerates it from the accepted producers and compares the bytes (a fixture provenance
-check; the model and the page never load `run.cjs`, `store.cjs` or any server, which `tests\surface.test.cjs` and the RED prove).
+| `c034-reordered`, `c034-truncated`, `c034-tampered`, `c034-unknown-code` | trace | fictional hostile copies the accepted C034 decoder REFUSES: the page shows the typed code and no timeline |
 
 ## The page
 
@@ -56,102 +74,131 @@ example `Position 18 of 44: step 12 of 20 completed; 1 failed event so far`.
 | Previous event, Next event | one position |
 | Previous or Next gap, failure, unknown, epoch change | the exact previous or next position of that kind, or a message that there is none |
 | Epoch, Sequence, Find sequence | a recorded sequence moves there; any other is `NOT_RECORDED` with its exact range |
-| state panel, producing entry | the reducer state at this position and the entry that produced it, with a text label (APPLIED, DUPLICATE, FAILED, UNKNOWN...) |
-| limits panel, entry list | every limit of the recording; every entry is listed once, failed and unknown ones carry a text label (not colour alone) and can never disappear |
+| state panel, producing entry | the reducer state at this position (16 lines for a console run, 7 for a trace) and the entry that produced it, with a text label (APPLIED, DUPLICATE, FAILED, UNKNOWN...) |
+| limits panel, entry list | every limit of the recording; every entry is listed once from the model's marks, failed and unknown ones carry a text label (not colour alone) and can never disappear |
 
-The address always names the displayed position (`history.replaceState`). A malformed, unknown, repeated, oversized or script-like fragment shows a
-typed refusal (`FRAGMENT_*`, `RUN_UNKNOWN`, `POSITION_INVALID`), echoes nothing, never throws and is replaced in the address by the displayed
-position; a position outside a recording is `NOT_RECORDED`; a refused run unloads the display. `prefers-reduced-motion` removes the bar transition.
-Recorded text is clipped to printable ASCII and shown with `textContent` only.
-
-## Commands (repository root, PowerShell 7, Node 22; give every command a hard timeout)
+Every malformed, unknown, repeated, oversized or script-like fragment the tests try (`tests\page.test.cjs`, `properties.test.cjs`, eight more in real Edge) shows a typed refusal (`FRAGMENT_*`, `RUN_UNKNOWN`, `POSITION_INVALID`), is not echoed by the page
+and does not throw; that is a tested set, not a proof for every possible string. While a position is displayed the address is restored to it (`history.replaceState`); with nothing displayed (a fresh load of a hostile fragment)
+there is nothing to restore it to, so the fragment stays in the address, still never echoed (`tests\page.test.cjs` F9). A position outside a recording is `NOT_RECORDED`;
+a refused run unloads the display (`assertUnloaded`). `prefers-reduced-motion` removes the bar transition. Recorded text is clipped to printable ASCII and shown with `textContent` only.
+## Commands (repository root, PowerShell 7, Node 22; give every command a hard timeout; every `<scratch>` is a directory that does not exist yet, outside the repository, with a short path)
 
 ```powershell
-# RED: the archived behavioral RED against the naive first attempt (exit 1: 14 tests, 13 fail)
+# F1 RED: the FIRST publication's ten suites in a scratch tree whose other-namespace files are the accepted LF blobs (exit 1: 70 tests, 2 fail)
+node capability\X001\tests\fresh-tree.cjs <scratch> lf --own-from 368332e2a881b54db780404d86635539317450bd
+# F1 GREEN: the working tree in the LF tree and in the CRLF (owner tree) form; every test passes in both
+node capability\X001\tests\fresh-tree.cjs <scratch> lf
+node capability\X001\tests\fresh-tree.cjs <scratch> crlf
+# F2, F4, F6, F7 RED: the frozen model RED on the first-publication bytes with the reviewer mutant B12 (exit 1: 7 tests, 7 fail), from a scratch working directory
+$env:X001_BASE_MUTANTS = 'B12'
+node capability\X001\tests\run-in-scratch.cjs <scratch> --require .\capability\X001\tests\base-shim.cjs --test --test-concurrency=1 capability\X001\evidence\fix\red\model.red.test.cjs
+# F3, F5 RED: the frozen display RED with the reviewer mutants D1 D2 D6 D7 P12 (exit 1: 26 tests, 5 fail)
+$env:X001_BASE_MUTANTS = 'D1,D2,D6,D7,P12'
+node capability\X001\tests\run-in-scratch.cjs <scratch> --require .\capability\X001\tests\base-shim.cjs --test --test-concurrency=1 capability\X001\evidence\fix\red\display.red.test.cjs
+Remove-Item Env:X001_BASE_MUTANTS
+# the same two RED files unchanged against the final code (exit 0, 33 of 33; also replayed by tests\red-replay-fix.test.cjs)
+node --test --test-concurrency=1 capability\X001\evidence\fix\red\model.red.test.cjs capability\X001\evidence\fix\red\display.red.test.cjs
+# the first-publication RED and its replay through the shim (unchanged: exit 1 with 14 tests of which 13 fail, then exit 0 with 14 of 14; L-0121)
 node --test --test-concurrency=1 capability\X001\evidence\red\timeline.red.test.cjs
-# the SAME file, byte for byte, against the final code through the preload (exit 0: 14 of 14; L-0121)
 node --require .\capability\X001\tests\green-shim.cjs --test --test-concurrency=1 capability\X001\evidence\red\timeline.red.test.cjs
-# GREEN: the whole non-browser suite (70 tests in 10 files; archived: evidence\green\suite\green-suite-2.json; green-suite-1.json is the earlier capture of the first nine files, 62 of 62)
+# GREEN: the whole non-browser suite (the figures block below states the number of tests)
 $f = Get-ChildItem capability\X001\tests -Filter *.test.cjs | ForEach-Object { "capability\X001\tests\$($_.Name)" }
 node --test --test-concurrency=1 @f
-# per-file 85/85/85: ONE L-0004 command per production file (heavy slot; about 90 s); run it directly, never under node --test
+# per-file 85/85/85: ONE L-0004 command per production file (heavy slot); run it directly, never under node --test
 node capability\X001\tests\coverage.cjs
-node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include=capability/X001/timeline.js `
-  --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 `
-  capability\X001\tests\timeline.test.cjs capability\X001\tests\describe.test.cjs capability\X001\tests\page.test.cjs
-# real isolated headless Edge (heavy slot; about 3 minutes); CAPTURE_BROWSER_EVIDENCE=1 appends one evidence directory
+# systematic mutation self-check, one run per file (see the limits for the scope): the recorded capture mutants-1 used exactly the first command with 4 workers
+# (and --live <file> to follow survivors while the recorder was still running); needs the acorn of the Node binary, the tool restarts itself with --expose-internals
+node capability\X001\tests\mutants.cjs <scratch> --workers 4 --timeout 900 --files describe.js --skip string,template,initializer,arrow,not,number --lines describe.js:1-9999 --literal-lines describe.js:40-87
+# the same for page.js (the UNRECORDED exploratory run: 265 mutants, 18 alive, exit 1)
+node capability\X001\tests\mutants.cjs <scratch> --workers 4 --timeout 900 --files page.js --skip string,template,initializer,arrow,not,number --lines page.js:1-9999
+# the baseline alone (the ten suites unmutated, under the same minimal runner; zero mutants): every suite must say passed (mutants-1 does this first)
+node capability\X001\tests\mutants.cjs <scratch> --workers 3 --files describe.js --skip string,template,initializer,arrow,not,number --limit 0
+# every mutant the generator knows (2,584 for the three files without a scope), without running anything
+node capability\X001\tests\mutants.cjs --list
+# real isolated headless Edge (heavy slot); CAPTURE_BROWSER_EVIDENCE=1 appends one evidence directory
 node capability\X001\tests\browser.cjs
-# mutation self-check (about 8 minutes): 85 mutants of limit, cap and guard lines in a PRIVATE COPY; the scratch directory must not exist and is removed at the end
-node capability\X001\tests\mutants.cjs C:\short\new\scratch\dir
-# the fixtures and the pins from the accepted producers (read-only toward C015, C020, C033, C034, C044)
-node capability\X001\tests\build-saved.cjs --check
 ```
-
-Per-file coverage at the final capture (lines, branches, functions; `evidence\coverage\coverage-1.json`, rows in its stdout transcript): `describe.js` 100 / 99.07 / 100,
-`page.js` 100 / 98.10 / 100, `saved.js` 100 / 100 / 100, `timeline.js` 100 / 99.68 / 100. `tests\coverage.cjs` enumerates every first-party production script, counts an
-unloaded file as 0% and fails when a root script is not listed. The coverage set is the three unit and page suites; the exhaustive and the
-property suites are extra proof and are not needed for the numbers.
 
 ## What the tests prove
 
-- `evidence\red\timeline.red.test.cjs` (14 tests) is the specification as an executable; `timeline.stub.cjs` is the naive first attempt: it RE-RUNS the
-  producer, folds with its own formula, clamps a position to the nearest state, interpolates a gap, shows duplicates as new events, calls every
-  recording COMPLETE and refuses nothing. It fails 13 of 14 with `ERR_ASSERTION` (archived in `evidence\red\run-1`, immutable); `tests\red-replay.test.cjs` replays it both ways.
-- `tests\timeline.test.cjs`, `describe.test.cjs`: every refusal, mark, limit and wording; the decoder cross-check; injected reducers and decoders for the defensive branches.
-- `tests\exhaustive.test.cjs`: EVERY saved run x EVERY position x EVERY move (8 keys, Previous and Next, 8 jump buttons) at the model (21,180 checks including every
-  two-move path: the same state object by every path and the fold from scratch) and in the rendered DOM (2,988 actions, 1,179 of them refused or without target,
-  each checked against an independent C044 fold), plus every position by fragment and 38 fresh page loads.
-- `tests\properties.test.cjs`: 2,800 steps (4 seeds) of a random walk against a model with the operations key, button, fragment change, switch run by fragment and by
-  chooser, hostile fragment, empty fragment, back or forward, reload and sequence lookup, with the global invariants after EVERY step (unique ids, every entry once, one current
-  entry, counts reconcile: delivered = applied + dropped + rejected, the address names the displayed position, the refusal is shown exactly when the model says so, zero network).
-  It found a real defect during development: a refused run chosen from the chooser left the previous run's fragment in the address.
-- `tests\page.test.cjs`, `surface.test.cjs`: the real `index.html` ids and script list under a DOM stub in a vm context (fetch, XHR, EventSource, WebSocket and timer stubs throw if called),
-  strict CSP, no inline script, no HTML sink, hostile recorded text.
-- `tests\imports.test.cjs`: `imports.json` pins (raw, LF-normalized and git-blob SHA-256 with commit and tag) of the 16 accepted files this namespace loads, recomputed against the accepted
-  git blobs in one `git cat-file --batch`; the closure is measured, so an unpinned import fails; a re-signed pin is caught by the git anchor (L-0116).
-- `tests\evidence.test.cjs`: recomputes every archived transcript hash, declared input hash and exit code; tampering with a transcript, an input, the exit code or the file is detected.
-- `tests\mutants.cjs` with `tests\mutant-list.cjs` and `tests\guards.test.cjs` (8 tests): every limit, cap and guard line of `timeline.js`, `describe.js` and `page.js` is changed in a private copy (85 mutants: entry cap,
-  id and digit limits, fragment checks, freezing, jump directions, locate bounds, completeness, the decoder cross-check, verify, clip limits, modifier keys, the address after a refusal, the scrub bar, the sequence keys)
-  and a named suite must fail. The first pass killed 59 of 75: the 16 survivors (for example the cap compared with `>=`, deep freezing removed, a finished run with a gap called COMPLETE, a refused run leaving the old
-  address) are why `guards.test.cjs` exists. The final pass killed 83 of 85 (`evidence\mutants\mutants-1.json`, 474 s); the two others are documented in the list: `epoch complete ignores a late start` is equivalent
-  (recorded === total already implies firstSeq === 1) and `verification failure not shown` cannot be reached from saved data (it is the uncovered branch of `page.js`).
+- `evidence\red\timeline.red.test.cjs` (first publication, 14 tests, 13 fail against the naive stub) and `evidence\fix\red\model.red.test.cjs` and `display.red.test.cjs` are the specifications as executables; the fix REDs are
+  replayed both ways by `tests\red-replay-fix.test.cjs` (they fail on the frozen first-publication bytes served by `tests\base-shim.cjs`, byte-identical to commit `368332e2a881`, and pass unchanged on the final code).
+  The display RED passes on the unmutated first publication (its display was right, the oracle was weak), so it is a mutation RED and says so.
+- `tests\timeline.test.cjs`, `describe.test.cjs`, `guards.test.cjs`: every refusal, mark, limit and wording; the decoder cross-check; injected reducers and decoders; the caps and bounds.
+- `tests\aliasing.test.cjs` (F2), `tests\totality.test.cjs` (F4, F6, F7 and counters: the work is linear and counted, never timed; a 64 MB heap is enough for every hostile size).
+- `tests\exhaustive.test.cjs`: every saved run x every position x every move at the model and in the rendered DOM; `tests\properties.test.cjs`: 2,800 random steps (4 seeds) with the recovery operations and the global invariants after every step.
+- `tests\page.test.cjs`, `surface.test.cjs`: the real `index.html` ids and script list under a DOM stub in a vm context (network and timer stubs throw), strict CSP, no inline script, every element id classified and perturbed
+  (the oracle notices a change of each compared one), the F5 injected failing verify, the F9 fresh hostile fragment, `X001-fix.feature` with one scenario per finding.
+- `tests\imports.test.cjs`, `pins-form.test.cjs`: `imports.json` pins of the 16 accepted files recomputed against git, accepted raw or LF-normalized; one changed byte, mixed endings and a forged pin are refused.
+- `tests\browser-cleanup.test.cjs`: the REAL `tests\browser.cjs` runs in a child node whose two collaborators (`qualifyEdge`, `openIsolatedLesson`) are fakes; a rejected page call and a failing assertion after the session opened each close the session
+  exactly once and still fail the run, a failing qualification closes nothing (no session exists), and a copy of the harness without its `finally` cleanup leaves the session open (the negative control that makes the check discriminate). No browser starts in this test.
+- `tests\claims.test.cjs` (F9): the browser summary pins every source the harness loads and the README says what the page does with a refused fragment, each checked on the git blobs of the first publication (where it reports the defect) and on the final files.
+- `tests\evidence.test.cjs`, `evidence-figures.test.cjs`: see Evidence.
+- `tests\mutants.cjs` (see the limits for its scope): every statement and every single condition mutated, one source range at a time, in a worker thread with its own module graph; `tests\killers.test.cjs` names the 7 describe.js mutants the campaign found alive (wording tables frozen, limit lines only when such deliveries exist, step and of both needed) and `tests\mutant-list.cjs` proves 4 equivalent.
 
 ## Real Edge observation
 
-`tests\browser.cjs` calls `testing\browser\qualify` `qualifyEdge()` once (valid Microsoft signature, qualified major 156; the actual version, path and SHA-256 are recorded, nothing is pinned
-by equality), opens `index.html` through the unchanged helper `openIsolatedLesson` (fresh headless Edge, closed in `finally`) and, for every run, reads the REAL DOM after every action and asserts
-the same invariants as the stub tests through `tests\browser-dom.cjs` and `tests\invariants.cjs`. The captured run (`evidence\browser\browser-<uuid>\summary.json` plus a DOM snapshot) is 12 checks:
-351 positions checked after 334 key actions on Edge 156.0.4314.58, all valid runs forward and backward by keyboard and every jump target in order, a keyboard-only jump and sequence lookup,
-eight hostile fragments (nothing executed, no dialog, no page error, the address restored), a refused run that survives a reload, zero fetch/XHR/EventSource/WebSocket calls (instrumented before the
-page scripts) with only `file:` requests, CSP probes (fetch, XHR, EventSource and WebSocket blocked by `connect-src 'none'`, one `connect-src` violation each; an injected inline script and an inline
-style attribute blocked) and the reduced-motion media query (transition `0.2s` becomes `0s`).
+`tests\browser.cjs` calls `testing\browser\qualify` `qualifyEdge()` once (valid Microsoft signature, qualified major; the actual version, path and SHA-256 are recorded, nothing is pinned by equality), opens `index.html` through the unchanged helper
+`openIsolatedLesson` (fresh headless Edge, closed in `finally`) and reads the REAL DOM after every action through `tests\browser-dom.cjs`: `assertShown` runs unchanged on it, so all 16 or 7 state lines, the rows, the buttons, the scrub bar, the limits
+panel and the provenance are compared with the independent fold in Edge too. The checks (their number, the positions and key actions are in the figures block): every position of every valid run forward and backward by keyboard and every jump target, a keyboard-only jump and sequence lookup, eight hostile fragments
+(nothing executed, no dialog, no page error), a refused run that survives a reload, zero fetch/XHR/EventSource/WebSocket calls with only `file:` requests, CSP probes and the reduced-motion media query.
+The capture is `evidence\fix\browser` (a summary that pins the ten sources the harness loads, a DOM snapshot and the run's transcript, which prints the digests of both). `tests\browser-cleanup.test.cjs` proves that the session is closed in `finally` when an assertion or a page call fails.
 
-## Evidence
+## Evidence and integrity
 
-`evidence\red\run-1\red-timeline.json` (the RED: 14 tests, 13 fail, exit 1), `evidence\green\red-replay\green-red-replay-1.json` (the same RED file unchanged against the final code: 14 of 14),
-`evidence\green\suite\green-suite-1.json` (62 of 62, nine test files) and `evidence\green\suite\green-suite-2.json` (70 of 70, ten files with `guards.test.cjs`; no production file differs between the two captures), `evidence\mutants\mutants-1.json`
-(the mutation self-check), `evidence\coverage\coverage-1.json` (per-file 85/85/85, all four files PASS) and `evidence\browser\browser-<uuid>` (the real Edge summary and DOM snapshot): each run has a
-manifest (command, exit code, input SHA-256, parsed counts) plus gzip transcripts written with flag `wx` by the shared recorder; `.gitattributes` is `* -text -diff`. Captures were made last, after the final
-source and test files; every manifest pins the SHA-256 of the files it ran (this README is documentation and is not a pinned input) and `tests\evidence.test.cjs` fails when one differs.
-A consistent rewrite of a manifest together with its transcripts is detectable only against the published git commit (L-0096).
+- `evidence\red`, `evidence\green`, `evidence\coverage`, `evidence\mutants`, `evidence\browser` are the first publication's archive: never rewritten (`tests\evidence.test.cjs` compares every one of its 23 files with the git blob of `368332e2a881`) and
+  its manifests are checked against the blobs of that commit, not against the working tree that the fix changed.
+- `evidence\fix` holds the new archive: `base` (the three first-publication production files, frozen), `red\run-1` to `run-3` with the frozen RED files, then the captures of the final bytes made by the shared recorder
+  (`archive-run.cjs`: command, exit code, input SHA-256, raw gzip transcripts), one manifest each: `mutants\mutants-1` (see the limits for its scope; the baseline of the unmutated suites is part of it), `coverage\coverage-1`, `browser\browser-run-1` (with its evidence
+  directory), `green\green-suite-1` to `-3`, `green-suite-load`, `fresh-tree-lf`, `fresh-tree-crlf` and, made LAST, `green\green-suite-final`. Each manifest pins what its run loads: the mutation, coverage and browser captures pin the production files, the suites
+  and helpers they load and the accepted files (a narrower list, so that later work on the evidence checks and the README does not invalidate them); the green and fresh-tree captures pin every non-evidence file of the namespace except this README; `green-suite-final`
+  pins every non-evidence file including this README. Files of other namespaces are pinned by their LF-normalized hash, own files by raw bytes; a foreign file that a scratch tree does not hold is checked against the blob of the commit its namespace was accepted at (`acceptedBlob`).
+- `tests\evidence-figures.test.cjs` RECOMPUTES every figure from the stored transcripts and the DOM snapshot (test counts from the TAP footer, coverage from the Node rows, mutation counts from the list of mutants, `positionsChecked`, actions and
+  `edge.version` from the printed line and the summary, the 44 rows and 16 state lines of the snapshot) and compares the README block below; a tamper test per figure fails by name.
+- A CONSISTENT rewrite of a verifier together with its manifests and pins is detected only by the published commit and tag (L-0096); no test in this namespace can detect it.
 
 ## Honest limits
 
-- The recordings are synthetic. The C044 sessions are scenarios scripted at build time on the accepted producer (the session actions connect, disconnect, reconnect, resync are
-  chosen by the scenario, not captured from a browser); they show the reducer's behavior on realistic sequences, not a measured network.
-- For a C034 trace the position state is a small counting fold of the recorded action codes, cross-checked against the accepted decoder's per-attempt answer (requests, responses,
-  classification). The decoder validates whole snapshots only, so there is no decoder state for a prefix; a trace position is not "the decoder at position i".
-- The model refuses more than 500 entries; the page lists every entry (no virtual list). `verify` is one independent forward pass (the exhaustive tests do the from-scratch fold for every position).
-- The page loads the accepted scripts of C020, C033, C034 and C044 by relative paths (`../C044/reducer.js`); CSP `script-src 'self'` allows them for `file:` pages in Edge. If those
-  namespaces move, the page breaks; the pins detect changed bytes, not a moved file.
-- `history.replaceState` keeps one history entry per page; browser back and forward matter only after a manual address edit. Keyboard moves off the recording are refused, not clamped.
-- Real Edge observation: one machine, headless, the qualified major only (`qualifyEdge()`: valid Microsoft signature, actual version and SHA recorded, no equality pin); no screen reader, other browser or production runtime was tested.
-- The hostile sets are fictional constructions, not a complete fuzz of the C044 reducer; the enumeration covers the ten saved runs.
-- The states, tallies, limits and hits a timeline hands out are deeply frozen, but the `flags` object of an answer and the `marks` array are NOT frozen and are shared by every answer: a consumer that mutates them
-  would corrupt later answers (the page never does). Found while reviewing the mutation results; not changed in this card because the archived evidence pins `timeline.js`; it is recorded as an obstacle (one-line fix: freeze both in `assemble`).
-- The page text `VERIFICATION FAILED` cannot be reached from saved data, so it is the one uncovered branch of `page.js` (98.10% branches); `verify` itself is tested with forged timelines.
+- MUTATION SCOPE (recorded). The generator knows 2,584 mutants for describe.js, page.js and timeline.js (`--list`). The one recorded campaign is `mutants-1`: describe.js, every statement and every single condition of the whole file plus every string, template, initializer, arrow-body, negation
+  and number mutant of the displayed-state code (lines 40 to 87): 351 mutants, 347 killed by a named test (298 by `describe.test.cjs`, 42 by `page.test.cjs`, 7 by `killers.test.cjs`), 4 equivalent with a one-line proof in `tests\mutant-list.cjs`, 0 survived, 0 timed out, with the nine
+  suites checked unmutated first (the baseline). The reviewer mutants D1, D2, D6 and D7 are in it and killed. A run that exceeds `--timeout` (900 s here) is reported as TIMEOUT, which is undecided and fails the campaign.
+- MUTATION NOT RECORDED. page.js: an UNRECORDED exploratory run of the same tool (265 statement and condition mutants, 505 s) killed 247 and left 18 alive, none fixed in this commit: lines 11 (freeze of the key table), 95, 107, 110, 121, 123, 127, 134 (two operands of `|| {}`, probably equivalent
+  like describe.js line 34), 152, 154 (three operands and the whole condition), 156 and 192 (`<` to `<=`); the reviewer mutant P12 is killed by `tests\page.test.cjs` F5 and by the archived RED run-3, but page.js has no recorded systematic campaign. timeline.js (1,008 statement and condition mutants and 438 others)
+  has none either: `own()` and `verify()` were run once, unrecorded, before the final tests (456 mutants of describe.js 63 to 87, page.js 42 to 87 and timeline.js 54 to 93 and 336 to 364, 35 survivors, all killed or proven equivalent then) and the reviewer mutant B12 is killed by `tests\totality.test.cjs` F4 on the
+  first-publication bytes (RED run-2). Also not run: the string, template, initializer, arrow-body, negation and number mutants outside describe.js 40 to 87 (about 1,180) and saved.js (generated data, protected byte for byte by the provenance test). The first publication's chosen list (85 mutants) stays archived.
+- HOW THE CAMPAIGN WAS RUN. A first run of `mutants-1` at BelowNormal priority (the run's rule for background CPU use) was starved to 2 to 4 percent of a core on the saturated machine (8 mutants per minute, 62 minutes) and its old rule "a run that exceeds 120 s is killed" counted 28 UNDECIDED mutants as killed;
+  a recheck at normal priority showed 11 of them alive. That run was discarded (not evidence), the 11 are killed by `tests\killers.test.cjs` or proven equivalent, the tool reports TIMEOUT as undecided, and the recorded `mutants-1` ran at normal priority with 4 workers (389 s) inside this agent's own heavy-slot window.
+- The campaign needs the acorn inside the Node binary (`node --expose-internals`, 8.16 here) and replaces `node:test` by a minimal runner (`test(name, fn)` and `t.diagnostic`, which is all the suites use); suites that need git
+  (`evidence`, `imports`, `red-replay`, `red-replay-fix`, `pins-form`-style tamper checks) are not in the campaign.
+- FRESH TREES are built from the accepted blobs of the pinned commits. `git archive HEAD` on a machine with `core.autocrlf=true` gives CRLF for the files without a text attribute and LF for the five `eol=lf` files (checked once: 8 of
+  the 16 differ from the LF blobs); that mixed tree is covered by accepting either form per file (`pins-form.test.cjs`) but was not run as a third tree.
+- The first publication's `Honest limits` that still hold: synthetic recordings scripted at build time, a counting fold for C034 traces cross-checked against the accepted decoder (a trace position is not "the decoder at position i"), at most 500 entries
+  per run, the page loads the accepted scripts of C020, C033, C034 and C044 by relative paths (the pins detect changed bytes, not a moved file), `history.replaceState` keeps one history entry, one machine and one headless Edge (qualified major only,
+  no screen reader, no other browser), the hostile sets are fictional constructions and not a complete fuzz of the C044 reducer.
+- F8 and F9 have no archived RED: the first publication had no figure check to run a tamper test through (F8: `evidence-figures.test.cjs` and the README-byte case of `evidence.test.cjs` are the proof), and F9 is a differential test in the suite (`tests\claims.test.cjs` reports both defects on the first-publication blobs), not a recorded run.
+- Not run: three consecutive runs in a 64-run, 8-way loop of the resource tests (the totality suite with its 64 MB heap ran in every green capture and in two more unrecorded whole-suite runs), the mixed `git archive` tree, and the reviewer's real-Edge probe p10 and tamper battery p9 against the final tree.
+- `own()` accepts plain data only (objects with the standard or no prototype, arrays, primitives); a saved run that carries a Date or a Map is refused, not converted.
 
 ## Decisions (recorded as hints)
 
-A position is an entry of the recording, so drops and refusals are visible positions. A move that leaves the recording is a typed refusal rather than a clamp, because "never the nearest state"
-applies to a request outside the recording. The URL fragment is `#run=<id>&pos=<n>` with `pos` 1-based as shown; `stateAt(i)` is 0-based. A refused saved run unloads the display and rewrites the address to the request.
+A position is an entry of the recording, so drops and refusals are visible positions. A move that leaves the recording is a typed refusal rather than a clamp. The URL fragment is `#run=<id>&pos=<n>` with `pos` 1-based as shown; `stateAt(i)` is 0-based.
+The returned `entries` are private frozen copies, so `timeline.entries[i]` is deep-equal to, never the same object as, the caller's entry. Shared structure in a saved run is copied per occurrence, so a structure that expands exponentially is refused by the node budget.
+
+<!-- figures:begin -->
+status: figures are recomputed by tests\evidence-figures.test.cjs from the captures of evidence\fix; a figure without its capture, or a capture whose figure differs, fails that test
+suite.tests: 124
+fresh-tree-lf.tests: 124
+fresh-tree-crlf.tests: 124
+coverage.describe.js: 100 / 99.07 / 100
+coverage.page.js: 100 / 99.06 / 100
+coverage.saved.js: 100 / 100 / 100
+coverage.timeline.js: 99.74 / 100 / 98.88
+mutants-1.files: describe.js
+mutants-1.generated: 351
+mutants-1.killed: 347
+mutants-1.equivalent: 4
+browser.checks: 12
+browser.positionsChecked: 351
+browser.actions: 334
+browser.edge: 156.0.4314.58
+<!-- figures:end -->

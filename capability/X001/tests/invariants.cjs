@@ -1,139 +1,103 @@
 'use strict';
 
-// Global invariants of the rendered page, read back from the DOM after EVERY action (L-0118, L-0119). The oracle is independent of the
-// model's answers: a console position is folded here with the C044 reducer and its marks are re-derived from counter changes.
+// Global invariants of the rendered page, read back from the DOM after EVERY action (L-0118, L-0119, L-0190). Everything shown is compared with the
+// independent oracle (tests\oracle.cjs, a fold with the C044 reducer): all sixteen console state lines or all seven trace lines, the announcement, the
+// producing entry, every row (label, text, class, note), every button, the scrub bar, the limits panel and the provenance. The state ids are ENUMERATED
+// from the DOM and must equal the set the oracle compares, so a new displayed line fails until it is compared. The page lists its rows from the marks of
+// the model, so each row must also equal stateAt(i).mark of the model (a failed row is never listed as APPLIED).
 const assert = require('node:assert/strict');
-const Reducer = require('..\\..\\C044\\reducer.js');
+const T = require('..\\timeline.js');
 const D = require('..\\describe.js');
 const saved = require('..\\saved.js');
+const oracle = require('.\\oracle.cjs');
 
-const FAILED = ['rejected', 'failure', 'failed'];
-const UNKNOWN = ['unknown-event', 'failure-unrecognized', 'unknown-entry', 'unknown-outcome', 'unknown-code'];
-const TRACE = { ORIGINAL_ATTEMPT_STARTED: 'started', TWO_READ_LOCAL_SEGMENT_OBSERVED: 'observed', FAILED_HTTP_REPLY_404: 'failed', INTERRUPTED_BY_STOP: 'unknown-outcome',
-  INTERRUPTED_BY_RESET: 'unknown-outcome' };
+const modelCache = new Map();
+const modelOf = (run) => {
+  if (!modelCache.has(run.id)) modelCache.set(run.id, T.build(run));
+  return modelCache.get(run.id);
+};
+const word = (value) => (typeof value === 'string' ? value.replace(/[^\x20-\x7e]/g, '?').slice(0, 60) : 'unknown');
 
-// Marks of a console run, derived here from counters (no model code involved).
-function consoleOracle(entries) {
-  let state = Reducer.initial();
-  return entries.map((entry, index) => {
-    const before = state;
-    state = Reducer.reduce(state, entry);
-    const delta = (key) => state.counts[key] - before.counts[key];
-    let mark = 'control';
-    if (entry === null || typeof entry !== 'object' || !['connect', 'open', 'disconnect', 'reconnect', 'event', 'failure', 'resync', 'notice', 'stop', 'counters'].includes(entry.type)) mark = 'unknown-entry';
-    else if (entry.type === 'event') {
-      mark = delta('applied') ? 'applied' : delta('duplicates') ? 'duplicate' : delta('outOfOrder') ? 'out-of-order'
-        : state.dropped[state.dropped.length - 1].reason === 'unknown-event' ? 'unknown-event' : 'rejected';
-    } else if (entry.type === 'failure') mark = state.failure.error.code === 'UNRECOGNIZED_ERROR' ? 'failure-unrecognized' : 'failure';
-    else if (state === before) mark = 'no-effect';
-    return { index, state, mark };
-  });
-}
-
-function traceOracle(events) {
-  return events.map((event, index) => ({ index, mark: TRACE[event.code] || 'other' }));
-}
-
-const oracleCache = new Map();
-function expectedFor(run, index) {
-  if (run.kind === 'console') {
-    if (!oracleCache.has(run.id)) oracleCache.set(run.id, consoleOracle(run.entries));
-    const steps = oracleCache.get(run.id);
-    const upto = steps.slice(0, index + 1);
-    return { steps, state: upto[index].state, failed: upto.filter((s) => FAILED.includes(s.mark)).length, unknown: upto.filter((s) => UNKNOWN.includes(s.mark)).length,
-      marks: steps.map((s) => s.mark), n: run.entries.length };
-  }
-  const upto = traceOracle(run.snapshot.events).slice(0, index + 1);
-  return { failed: upto.filter((s) => s.mark === 'failed').length, unknown: upto.filter((s) => s.mark === 'unknown-outcome').length,
-    started: upto.filter((s) => s.mark === 'started').length, observed: upto.filter((s) => s.mark === 'observed').length, n: run.snapshot.events.length };
-}
-
-// Asserts everything the page promises for run `id` shown at 0-based `index`. options.skipError / options.skipStatus leave the error and
-// announcement checks to a caller that models refusals (the property test).
+// Asserts everything the page promises for run `id` shown at 0-based `index`. options.skipError / options.skipStatus leave the error and the
+// announcement text to a caller that models refusals (the property test); the slider text always equals the announcement of the shown position.
 function assertShown(page, id, index, label = '', options = {}) {
   const run = saved.runs.find((item) => item.id === id);
-  const expected = expectedFor(run, index);
+  const expected = oracle.expectedFor(run, index);
+  const model = modelOf(run);
+  const hits = oracle.hitsFor(run);
   const ids = page.ids();
   assert.equal(new Set(ids).size, ids.length, `${label} ids are unique`);
   const items = page.$('entries').children;
   assert.equal(items.length, expected.n, `${label} every recorded entry is listed once`);
-  assert.deepEqual(['seq-find', 'seq-epoch', 'seq-number'].map((id) => page.$(id).disabled), [false, false, false], `${label} the sequence lookup is available while a run is shown`);
-  if (run.kind === 'console') {
-    const steps = oracleCache.get(run.id);
-    steps.forEach((step, i) => {
-      const parts = [];
-      const before = i ? steps[i - 1].state : { gaps: [], epochChanges: [] };
-      if (step.state.gaps.length > before.gaps.length) {
-        const gap = step.state.gaps[step.state.gaps.length - 1];
-        parts.push(`GAP BEFORE: epoch ${gap.epoch} ${gap.skippedFrom === gap.skippedTo ? `sequence ${gap.skippedFrom}` : `sequences ${gap.skippedFrom} to ${gap.skippedTo}`} NOT RECORDED`);
-      }
-      if (step.state.epochChanges.length > before.epochChanges.length) {
-        const change = step.state.epochChanges[step.state.epochChanges.length - 1];
-        parts.push(`EPOCH CHANGE ${change.fromEpoch} to ${change.toEpoch}`);
-      }
-      assert.equal(items[i].children[3].textContent, parts.join('; '), `${label} the limits show right where they occur (entry ${i + 1})`);
-    });
-  }
+  assert.deepEqual(['seq-find', 'seq-epoch', 'seq-number'].map((name) => page.$(name).disabled), [false, false, false], `${label} the sequence lookup is available while a run is shown`);
   items.forEach((item, i) => {
-    assert.equal(item.id, `entry-${i + 1}`);
+    const row = expected.rows[i];
     const here = i === index;
+    assert.equal(item.id, `entry-${i + 1}`);
     assert.equal(item.getAttribute('aria-current'), here ? 'step' : null, `${label} one current entry`);
-    assert.equal(item.children[2].textContent, here ? 'current position' : '');
-    assert.equal(item.className, here ? 'current' : '');
+    assert.equal(item.children[0].textContent, oracle.LABEL[row.mark], `${label} text label of entry ${i + 1}`);
+    assert.deepEqual(item.children.map((child) => child.className), ['mark', '', 'here', 'note'], `${label} the four spans of entry ${i + 1} keep their style hooks`);
+    assert.equal(item.children[0].textContent, D.label(model.stateAt(i).mark), `${label} entry ${i + 1} is the row the model marks (stateAt(i).mark)`);
+    assert.equal(item.children[1].textContent, oracle.entryText(row.entry), `${label} recorded text of entry ${i + 1}`);
+    assert.equal(item.children[2].textContent, here ? 'current position' : '', `${label} current marker of entry ${i + 1}`);
+    assert.equal(item.children[3].textContent, row.note, `${label} the limits show right where they occur (entry ${i + 1})`);
+    assert.equal(item.className, here ? 'current' : '', `${label} class of entry ${i + 1}`);
+    assert.equal(item.dataset.class, expected.rowClass(i), `${label} failed/unknown never look ok (entry ${i + 1})`);
   });
-  if (run.kind === 'console') {
-    items.forEach((item, i) => {
-      assert.equal(item.children[0].textContent, D.label(expected.marks[i]), `${label} text label of entry ${i + 1}`);
-      assert.equal(item.dataset.class, FAILED.includes(expected.marks[i]) ? 'failed' : UNKNOWN.includes(expected.marks[i]) ? 'unknown' : 'ok', `${label} failed/unknown never look ok`);
-    });
-  }
   assert.equal(page.$('saved-run').value, id, `${label} the chooser names the displayed run`);
   assert.equal(page.position(), index + 1);
   assert.equal(page.text('position'), `Position ${index + 1} of ${expected.n}`);
+  assert.equal(page.$('position').dataset.of, String(expected.n));
   const slider = page.$('scrub');
   assert.deepEqual(['aria-valuemin', 'aria-valuemax', 'aria-valuenow', 'aria-disabled', 'tabindex'].map((name) => slider.getAttribute(name)), ['1', String(expected.n), String(index + 1), 'false', '0']);
-  assert.equal(slider.getAttribute('aria-valuetext') === page.text('status') || options.skipStatus === true, true, `${label} announcement equals the slider text`);
-  if (!options.skipStatus) assert.match(page.text('status'), new RegExp(`^Position ${index + 1} of ${expected.n}: .*; ${expected.failed} failed events? so far`));
+  assert.equal(slider.getAttribute('aria-valuetext'), expected.announcement, `${label} the slider text is the announcement of the shown position`);
+  if (!options.skipStatus) assert.equal(page.text('status'), expected.announcement, `${label} announcement`);
+  assert.equal(page.$('status').dataset.state, 'SHOWN');
+  assert.equal(page.text('producing'), expected.producing, `${label} producing entry`);
+  assert.equal(page.$('producing').dataset.mark, expected.row.mark);
   assert.equal(page.location.hash, `#run=${id}&pos=${index + 1}`, `${label} the URL names the displayed position`);
   if (!options.skipError) assert.equal(page.text('error'), '', `${label} no error while a valid position is shown`);
-  const line = Object.fromEntries(page.$('state').descendants().filter((node) => node.id).map((node) => [node.id, node.textContent]));
-  assert.equal(line['st-failed'], String(expected.failed));
-  assert.equal(line['st-unknown'], String(expected.unknown));
+  const fill = page.$('scrub-fill').style.width;
+  assert.ok(/^[0-9.]+%$/.test(fill) && Math.abs(Number.parseFloat(fill) - (index * 100) / Math.max(1, expected.n - 1)) < 0.001, `${label} scrub bar ${fill}`);
+  const lines = page.$('state').descendants().filter((node) => node.id);
+  assert.deepEqual(lines.map((node) => node.id), expected.ids, `${label} the state panel lists exactly the lines the oracle compares, in order`);
+  for (const node of lines) assert.equal(node.textContent, expected.lines[node.id], `${label} ${node.id}`);
+  assert.deepEqual(page.$('state').children.filter((_, position) => position % 2 === 0).map((node) => node.textContent), oracle.LINE_LABELS[run.kind], `${label} the label of every state line`);
   if (run.kind === 'console') {
-    const { counts } = expected.state;
-    assert.deepEqual([line['st-applied'], line['st-duplicates'], line['st-out-of-order'], line['st-rejected']].map(Number),
-      [counts.applied, counts.duplicates, counts.outOfOrder, counts.rejected]);
+    const counts = expected.row.state.counts;
     const delivered = run.entries.slice(0, index + 1).filter((entry) => entry && entry.type === 'event').length;
     assert.equal(delivered, counts.applied + counts.duplicates + counts.outOfOrder + counts.rejected, `${label} delivered = applied + dropped + rejected`);
-    for (const gap of expected.state.gaps) {
-      assert.ok(line['st-gaps'].includes(gap.skippedFrom === gap.skippedTo ? `sequence ${gap.skippedFrom} ` : `sequences ${gap.skippedFrom} to ${gap.skippedTo} `), `${label} the gap names its exact range`);
-    }
-    assert.equal(line['st-gaps'] === 'none', expected.state.gaps.length === 0);
-    assert.equal(line['st-last'], expected.state.lastId === null ? 'none yet' : expected.state.lastId);
-  } else {
-    assert.deepEqual([line['st-attempts'], line['st-observed']].map(Number), [expected.started, expected.observed]);
   }
-  assert.match(page.text('verified'), new RegExp(`^Verified: ${expected.n} of ${expected.n} positions`));
+  assert.equal(page.text('verified'), expected.verified, `${label} verification text`);
+  const source = run.source || {};
+  assert.equal(page.text('provenance'), `${typeof run.title === 'string' ? run.title.slice(0, 200) : run.id} Source: ${word(source.producer)} ${word(source.accepted)}${source.hostile ? ' (FICTIONAL HOSTILE SET)' : ''}.`);
+  assert.deepEqual(page.$('limits').children.map((item) => item.textContent), D.limitLines(model.limits), `${label} limits panel`);
+  assert.equal(page.$('prev').disabled, index === 0, `${label} Previous is off only at the first position`);
+  assert.equal(page.$('next').disabled, index === expected.n - 1, `${label} Next is off only at the last position`);
+  for (const kind of T.JUMPS) {
+    assert.equal(page.$(`prev-${kind}`).disabled, !hits[kind].some((hit) => hit < index), `${label} previous ${kind} availability`);
+    assert.equal(page.$(`next-${kind}`).disabled, !hits[kind].some((hit) => hit > index), `${label} next ${kind} availability`);
+  }
   assert.deepEqual(page.calls, [], `${label} nothing was fetched, timed or opened`);
   return expected;
 }
 
-function hitsFor(run) {
-  if (run.kind === 'trace') {
-    const at = (codes) => run.snapshot.events.flatMap((event, i) => (codes.includes(event.code) ? [i] : []));
-    return { gap: [], failure: at(['FAILED_HTTP_REPLY_404']), unknown: at(['INTERRUPTED_BY_STOP', 'INTERRUPTED_BY_RESET']), epoch: [] };
-  }
-  expectedFor(run, 0);
-  const steps = oracleCache.get(run.id);
-  const grew = (key) => steps.flatMap((step, i) => (step.state[key].length > (i ? steps[i - 1].state[key].length : 0) ? [i] : []));
-  const marked = (list) => steps.flatMap((step, i) => (list.includes(step.mark) ? [i] : []));
-  return { gap: grew('gaps'), failure: marked(FAILED), unknown: marked(UNKNOWN), epoch: grew('epochChanges') };
+// What an unloaded page (nothing chosen, or a refused saved run) shows: no timeline, no state, no provenance, every control off (the whole of unload()).
+function assertUnloaded(page, label = '') {
+  for (const id of ['entries', 'state', 'limits']) assert.equal(page.$(id).children.length, 0, `${label} ${id} is empty`);
+  assert.equal(page.$('status').dataset.state, 'UNLOADED', label);
+  assert.equal(page.text('provenance'), '', label);
+  assert.equal(page.text('verified'), 'Nothing is verified yet.', label);
+  assert.equal(page.text('producing'), 'No position is shown.', label);
+  assert.equal(page.$('producing').dataset.mark, 'none', label);
+  assert.equal(page.text('position'), 'Position: none', label);
+  assert.deepEqual([page.$('position').dataset.position, page.$('position').dataset.of], ['0', '0'], label);
+  assert.deepEqual(['aria-valuemin', 'aria-valuemax', 'aria-valuenow', 'aria-valuetext', 'aria-disabled', 'tabindex'].map((name) => page.$('scrub').getAttribute(name)),
+    ['0', '0', '0', 'No saved run is loaded', 'true', '-1'], label);
+  assert.equal(page.$('scrub-fill').style.width, '0%', label);
+  assert.equal(page.text('seq-result'), '', label);
+  const buttons = ['prev', 'next', 'seq-find', 'seq-epoch', 'seq-number', ...T.JUMPS.flatMap((kind) => [`prev-${kind}`, `next-${kind}`])];
+  assert.deepEqual(buttons.filter((id) => page.$(id).disabled !== true), [], `${label} every control is off`);
 }
 
-function appliedIndex(run) {
-  if (run.kind !== 'console') return new Map();
-  expectedFor(run, 0);
-  return new Map(oracleCache.get(run.id).flatMap((step) => (step.mark === 'applied' ? [[`${step.state.epoch}:${step.state.lastSeq}`, step.index]] : [])));
-}
-
-module.exports = Object.freeze({ assertShown, consoleOracle, expectedFor, hitsFor, appliedIndex, FAILED, UNKNOWN });
+module.exports = Object.freeze({ assertShown, assertUnloaded, expectedFor: oracle.expectedFor, hitsFor: oracle.hitsFor, appliedIndex: oracle.appliedIndex, FAILED: oracle.FAILED, UNKNOWN: oracle.UNKNOWN });

@@ -16,12 +16,12 @@ const production = ['describe.js', 'page.js', 'saved.js', 'timeline.js'];
 assert.equal(process.argv.length, 2);
 assert.deepEqual(fs.readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isFile() && /\.(?:js|cjs)$/.test(entry.name)).map((entry) => entry.name).sort(), production,
   'Enumerate every production script; a file no test loads counts as 0%.');
-const tests = ['timeline.test.cjs', 'describe.test.cjs', 'page.test.cjs'].map((name) => path.join('capability', 'X001', 'tests', name));
+const tests = ['timeline.test.cjs', 'describe.test.cjs', 'page.test.cjs', 'totality.test.cjs', 'aliasing.test.cjs'].map((name) => path.join('capability', 'X001', 'tests', name));
 
 function measure(file) {
   const args = ['--test', '--test-concurrency=1', '--test-timeout=250000', '--test-reporter=tap', '--experimental-test-coverage', `--test-coverage-include=capability/X001/${file}`,
     `--test-coverage-lines=${threshold}`, `--test-coverage-branches=${threshold}`, `--test-coverage-functions=${threshold}`, ...tests];
-  const run = spawnSync(process.execPath, args, { cwd: repository, env: coverageEnvironment(), encoding: 'utf8', windowsHide: true, timeout: 280000, maxBuffer: 32 * 1024 * 1024 });
+  const run = spawnSync(process.execPath, args, { cwd: repository, env: coverageEnvironment(), encoding: 'utf8', windowsHide: true, timeout: 900000, maxBuffer: 32 * 1024 * 1024 });
   const row = new RegExp(`^#\\s+${file.replace('.', '\\.')}\\s*\\|\\s*([\\d.]+)\\s*\\|\\s*([\\d.]+)\\s*\\|\\s*([\\d.]+)\\s*\\|.*$`, 'm').exec(run.stdout);
   const [lines, branches, functions] = row ? row.slice(1, 4).map(Number) : [0, 0, 0];
   const failedTests = Number(/^# fail (\d+)/m.exec(run.stdout)?.[1]);

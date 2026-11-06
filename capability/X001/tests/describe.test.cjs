@@ -134,3 +134,10 @@ test('the limit lines state the status, what is not recorded, every failure and 
   assert.ok(single.includes('Epoch 1: sequence 1 recorded (1 event of an unknown total).'));
   assert.ok(D.limitLines({ ...timelines['c044-truncated'].limits, notRecorded: [{ epoch: 1, from: 16, to: null, why: 'after-last' }] }).includes('NOT RECORDED (after-last): epoch 1, sequences 16 to the end of the run.'));
 });
+
+test('two gaps are listed in order with their epochs and exact ranges, separated by a semicolon', () => {
+  const shown = answer('c044-restart-gap', 43);
+  const gaps = [{ epoch: 1, skippedFrom: 10, skippedTo: 12 }, { epoch: 2, skippedFrom: 5, skippedTo: 5 }];
+  const line = D.stateLines({ ...shown, state: { ...shown.state, gaps } }).find((item) => item.id === 'st-gaps');
+  assert.equal(line.value, '2 (epoch 1: sequences 10 to 12 not recorded; epoch 2: sequence 5 not recorded)');
+});

@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "name": "red-2-model",
+  "purpose": "RED of the fix for F2 (mutable and aliased returns), F4 (gap position never read: reviewer mutant B12 applied to the first-publication bytes), F6 (build not total) and F7 (producer metadata not cross-checked): the frozen model.red.test.cjs run against the FIRST-PUBLICATION timeline.js, describe.js and page.js (frozen snapshots served by base-shim.cjs, byte-identical to commit 368332e2a881) from a scratch working directory. Expected: exit 1, 7 tests, 7 fail with ERR_ASSERTION.",
+  "command": [
+    "node.exe",
+    "capability\\X001\\tests\\run-in-scratch.cjs",
+    "C:\\Users\\chhage\\.copilot\\session-state\\210238f0-8473-4dfc-9876-83e34cbd2624\\files\\run-2026-11-04\\scratch\\X001\\r2",
+    "--require",
+    ".\\capability\\X001\\tests\\base-shim.cjs",
+    "--test",
+    "--test-concurrency=1",
+    "--test-reporter=tap",
+    "capability\\X001\\evidence\\fix\\red\\model.red.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "X001_BASE_MUTANTS"
+  ],
+  "startedAtUtc": "2026-11-06T10:56:40.844Z",
+  "completedAtUtc": "2026-11-06T10:56:42.868Z",
+  "elapsedMs": 2024,
+  "timeoutMs": 300000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\X001\\tests\\run-in-scratch.cjs",
+      "bytes": 1601,
+      "rawSha256": "37fd6172c4f1f9755251e31e585ca6c687a1be59401c11a595ded8be474486c9",
+      "crlfToLfSha256": "172dffebd2c6fc0555b46a3dea8f44b6efa03383fe5e4ba491b3fd8f4258eb3e"
+    },
+    {
+      "path": "capability\\X001\\tests\\base-shim.cjs",
+      "bytes": 3474,
+      "rawSha256": "96d15b2a0fbc67cdff566a90adc3c2796def21ff91ba66f13f61357c451245ea",
+      "crlfToLfSha256": "3bf4bc49f4c0c7bd608ff1217151ded7bca340ae7e5d3b67a9e35e10bc6ac4b4"
+    },
+    {
+      "path": "capability\\X001\\tests\\nested-runner.cjs",
+      "bytes": 1381,
+      "rawSha256": "036de1e38e79b879234114ca92665642045289d2b522bbb4d94d13fc67282c63",
+      "crlfToLfSha256": "031e115beea1290dcecba79277695e2a8ae62afe9a1ef7ab494845741e7e4c94"
+    },
+    {
+      "path": "capability\\X001\\evidence\\fix\\base\\timeline.first.js",
+      "bytes": 19463,
+      "rawSha256": "1352d0f33af89379dfbfba04b93a7699fc0caf9e9162111121e6699ab3264e22",
+      "crlfToLfSha256": "37265cf5e471605eb037e9a6c1b4296111d579b432db884275d41d7a2aafc81f"
+    },
+    {
+      "path": "capability\\X001\\evidence\\fix\\base\\describe.first.js",
+      "bytes": 9382,
+      "rawSha256": "292c358d743b92769f488d921316ea2a53e40c46cb911c4f3dc4a5897561bc9d",
+      "crlfToLfSha256": "86c475f7dc64d9c0141ad72acc9bccde334c58eb2bb5644a81bf0f13d51651be"
+    },
+    {
+      "path": "capability\\X001\\evidence\\fix\\base\\page.first.js",
+      "bytes": 10627,
+      "rawSha256": "c87b61def9e09aaae4f8e58b149ad80fe7315950e604f000865001953cd784f2",
+      "crlfToLfSha256": "66d99b8c253b90a8a6d2f90d24a51d3f24a9af908c0e490efb77ac2c78980302"
+    },
+    {
+      "path": "capability\\X001\\evidence\\fix\\red\\model.red.test.cjs",
+      "bytes": 9688,
+      "rawSha256": "8689af31d399a029b2dba26439e0afbe0ddb5ed54cb42d7a8a2876b3beb485e4",
+      "crlfToLfSha256": "479524d2485bc88288200b3110a9b7fc2d159097a17fe455bb38427ce3d75018"
+    },
+    {
+      "path": "capability\\X001\\saved.js",
+      "bytes": 121433,
+      "rawSha256": "8911f38da6e99049580e694748faa3c286b12398d68ce628f78241afe81172ff",
+      "crlfToLfSha256": "8911f38da6e99049580e694748faa3c286b12398d68ce628f78241afe81172ff"
+    }
+  ],
+  "summary": {
+    "tests": 7,
+    "suites": 0,
+    "pass": 0,
+    "fail": 7,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "F2: no attempt to change a returned object changes a later answer (a FROZEN saved run (what the page passes))",
+      "F2: no attempt to change a returned object changes a later answer (an UNFROZEN saved run (any other consumer))",
+      "F2: nothing the caller does to its saved run after build() changes a later answer, and build never freezes or touches the caller data",
+      "F2: a generic walk over every reachable object of every public return value finds nothing mutable on the model side and no later answer ever changes",
+      "F4: limits.gaps[].position and limits.epochChanges[].position are the 1-based position of the entry where the gap or the restart shows",
+      "F6: build is total: sparse arrays and hostile values give a typed refusal and never a throw or a half-built timeline",
+      "F7: producer metadata is cross-checked against the recording: a recorded sequence beyond the producer total is refused with PRODUCER_INCONSISTENT"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red-2-model.stdout.raw.gz",
+      "bytes": 93219,
+      "sha256": "032aeb03ae94ef73db1d872890fef968de89d3581101b3a77bc8551e42d45636",
+      "gzipBytes": 4223,
+      "gzipSha256": "8074e1754fda4dda939727c7dd1141bcda7595f20533813006897990cc401067",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red-2-model.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}
