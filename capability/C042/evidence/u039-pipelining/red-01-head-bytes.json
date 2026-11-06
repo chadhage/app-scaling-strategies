@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "name": "red-01-head-bytes",
+  "purpose": "U039 RED, archived BEFORE the fix: the behaviour tests of U039 (raw-socket matrix of 28 refusal rows x forms x HTTP framings in this process and in a SEPARATE server process, ordering and Node-own answers, cross-process refusal flood with the same bytes as naive control) against the ARCHIVED ACCEPTED server.cjs bytes (U039_SUBJECT=v1, SHA-256 2503ad0f...b16f2, the file of commit 6e088f54 that was also the working file when this ran). Expected: exit 1, the failures are assertions about the answers, the state and the closed connection (a request pipelined behind a refusal applies; refused connections stay open).",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "capability\\C042\\tests\\u039-matrix.test.cjs",
+    "capability\\C042\\tests\\u039-ordering.test.cjs",
+    "capability\\C042\\tests\\u039-flood.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "U039_SUBJECT",
+    "U039_CLOSE_MS"
+  ],
+  "startedAtUtc": "2026-11-06T10:53:09.417Z",
+  "completedAtUtc": "2026-11-06T10:55:11.278Z",
+  "elapsedMs": 121861,
+  "timeoutMs": 900000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C042\\evidence\\u039-pipelining\\server.v1.cjs.txt",
+      "bytes": 13152,
+      "rawSha256": "2503ad0fbd1455810068c03386061d57100e4ad97a7635923bb220ea7dbb16f2",
+      "crlfToLfSha256": "3949f39bb5199ea870718cfc5518d5fc922a23a9a7c3aae799d9acf0656f824d"
+    },
+    {
+      "path": "capability\\C042\\server.cjs",
+      "bytes": 13152,
+      "rawSha256": "2503ad0fbd1455810068c03386061d57100e4ad97a7635923bb220ea7dbb16f2",
+      "crlfToLfSha256": "3949f39bb5199ea870718cfc5518d5fc922a23a9a7c3aae799d9acf0656f824d"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-lib.cjs",
+      "bytes": 12290,
+      "rawSha256": "0df731957c8a2b36789a5a51dad1c150dfd9f68f6507f187eb375a72e0032c71",
+      "crlfToLfSha256": "86c4bdc26212093e15f820bd0459fa7896dc494f54bdff9495caf8127d98e5f3"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-rows.cjs",
+      "bytes": 7640,
+      "rawSha256": "c74c466c4a0c347d4e013aeeac1fd9131bc5f95a56f021f199a691d813717b94",
+      "crlfToLfSha256": "e9281db1e449e4b2c42f1e46cb210b0b5ca460b0989e96909e2a556847fd0105"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-child.cjs",
+      "bytes": 2357,
+      "rawSha256": "51dc0ca34e5f39b14488fcd646ecde1e29a81f1b046e82a5dd156503d6d383e1",
+      "crlfToLfSha256": "5b4f7c2239156a8ff6eacc7e45b7ed473bbea32ef9c4a4e80b47c820eb72a152"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-attacker.cjs",
+      "bytes": 3271,
+      "rawSha256": "f21cd3b94116010b6454d7f4c64b6215c312dfe5bf995d72b16b8bc3b1a66ba3",
+      "crlfToLfSha256": "b9120a3fb36fb543bf69e0544b1a26b029cf999024935e366bfb40e10528f6bc"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-matrix.test.cjs",
+      "bytes": 7352,
+      "rawSha256": "49a2b5cd87daebf8bb81df7f39a3750f167de1dcaf69bcec94f3f85a32599816",
+      "crlfToLfSha256": "719d3d139dc3d8ec7a201e7ac5bdad4929956b9c7c00dbb07045401d74d0ee55"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-ordering.test.cjs",
+      "bytes": 6797,
+      "rawSha256": "a828eaa4822e25e768301f184b33fff9464768742f09ca7e0d6eecca25af5b39",
+      "crlfToLfSha256": "c06e9ac1bb4fda7214d63027f4882a96d2e1662c358ec363d600f74909ff855d"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-flood.test.cjs",
+      "bytes": 3972,
+      "rawSha256": "8a89c1580a0937ebb045f82a1dc9695bbe22a1cbd0dd18211fc79dce6eafaf84",
+      "crlfToLfSha256": "d315ec3b987048c4b80b221878b799b0755bea0038db49f83c0d48d8bfad9f84"
+    }
+  ],
+  "summary": {
+    "tests": 175,
+    "suites": 0,
+    "pass": 3,
+    "fail": 172,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "a refusal flood from another process: every refused connection is closed by the server, the keep-alive control is not",
+      "in-process h11 R404: every form (sync refusal 404 NOT_FOUND)",
+      "in-process h11 R405: every form (sync refusal 405 METHOD_NOT_ALLOWED)",
+      "in-process h11 R421: every form (sync refusal 421 LOCAL_HOST_REQUIRED)",
+      "in-process h11 R403: every form (sync refusal 403 CROSS_ORIGIN_DENIED)",
+      "in-process h11 R400key: every form (sync refusal 400 INVALID_FORMAT)",
+      "in-process h11 R400query: every form (sync refusal 400 INVALID_QUERY)",
+      "in-process h11 R414: every form (sync refusal 414 URL_TOO_LONG)",
+      "in-process h11 R400url: every form (sync refusal 400 INVALID_URL)",
+      "in-process h11 R404step: every form (sync refusal 404 STEP_NOT_FOUND)",
+      "in-process h11 R422: every form (sync refusal 422 UNSUPPORTED_ACTION)",
+      "in-process h11 R404transcript: every form (sync refusal 404 NOT_FOUND)",
+      "in-process h11 R415: every form (unread refusal 415 UNSUPPORTED_MEDIA_TYPE)",
+      "in-process h11 R413declared: every form (unread refusal 413 BODY_TOO_LARGE)",
+      "in-process h11 R400body: every form (unread refusal 400 UNEXPECTED_BODY)",
+      "in-process h11 R405body: every form (unread refusal 405 METHOD_NOT_ALLOWED)",
+      "in-process h11 R400json: every form (async refusal 400 INVALID_JSON)",
+      "in-process h11 R400field: every form (async refusal 400 UNKNOWN_FIELD)",
+      "in-process h11 R400missing: every form (async refusal 400 REQUIRED_FIELD)",
+      "in-process h11 R413chunked: every form (async refusal 413 BODY_TOO_LARGE)",
+      "in-process h11 R409conflict: every form (async refusal 409 IDEMPOTENCY_KEY_CONFLICT)",
+      "in-process h11 R409capacity: every form (async refusal 409 CAPACITY_EXHAUSTED)",
+      "in-process h11 R503steps: every form (async refusal 503 STEP_LIMIT_REACHED)",
+      "in-process h11 R500transcript: every form (async refusal 500 TRANSCRIPT_UNAVAILABLE)",
+      "in-process h11 N417expect: every form (node refusal 417 INVALID_FORMAT)",
+      "in-process h11 N421nohost: every form (node refusal 421 LOCAL_HOST_REQUIRED)",
+      "in-process h11 N405connect: every form (node refusal 405 METHOD_NOT_ALLOWED)",
+      "in-process h11 N400garbage: every form (node refusal 400 INVALID_FORMAT)",
+      "in-process h11 N431header: every form (node refusal 431 INVALID_FORMAT)",
+      "in-process h10-m R404: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R405: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R421: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R403: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R400key: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R400query: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R414: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R400url: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R404step: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R422: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R404transcript: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R415: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R413declared: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R400body: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R405body: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R400json: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R400field: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R400missing: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R413chunked: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R409conflict: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R409capacity: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R503steps: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m R500transcript: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m N417expect: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m N421nohost: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m N405connect: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m N400garbage: the pipelined mutation in HTTP/1.0 framing",
+      "in-process h10-m N431header: the pipelined mutation in HTTP/1.0 framing",
+      "separate-process h11 R404: sync refusal 404 NOT_FOUND",
+      "separate-process h11 R405: sync refusal 405 METHOD_NOT_ALLOWED",
+      "separate-process h11 R421: sync refusal 421 LOCAL_HOST_REQUIRED"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red-01-head-bytes.stdout.raw.gz",
+      "bytes": 255819,
+      "sha256": "ce70073a11c5f04f367c3ca01634995fecd180eecc6ee7fdb28891ccd49490cd",
+      "gzipBytes": 10876,
+      "gzipSha256": "ebea25dc5a99beac6fba27e087a7b46ecca25903dcd0c023285ccbba456ebb23",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red-01-head-bytes.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

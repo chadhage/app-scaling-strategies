@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "name": "red-06-lane-first-fix",
+  "purpose": "U039 RED of the THIRD pipelining hole (controller note of 10:04), archived BEFORE the fix: the lane tests (a refusal that Node decides itself: unknown Expect with and without a body, no Host, a parse error, CONNECT, behind zero to three legitimate requests, HTTP/1.1, HTTP/1.0 mixed and HTTP/1.0 framing, in this process and in a separate server process, plus the 128-socket burst) and the ordering tests against the RETAINED FIRST FIX (evidence\\u039-pipelining\\server.v2-first-fix.cjs.txt, byte-identical to the server.cjs of that moment). Expected exit 1: a parse error and CONNECT behind two or more earlier requests get [200,400] instead of [200,200,400] (48 lane tests) and the inverted ordering test fails; every failure is an assertion about the answers.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "capability\\C042\\tests\\u039-lane.test.cjs",
+    "capability\\C042\\tests\\u039-ordering.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "U039_SUBJECT",
+    "U039_CLOSE_MS"
+  ],
+  "startedAtUtc": "2026-11-06T15:46:24.012Z",
+  "completedAtUtc": "2026-11-06T15:46:51.489Z",
+  "elapsedMs": 27477,
+  "timeoutMs": 3000000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C042\\evidence\\u039-pipelining\\server.v2-first-fix.cjs.txt",
+      "bytes": 17452,
+      "rawSha256": "98c7e0d301203efa837e686c8421cf6ee475c33c17cdc03f331b87b780c146ea",
+      "crlfToLfSha256": "b4ec865c23a6bb7a631aafbb553dc78b18709cd7ba7d594ad39efe390e605e1d"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-lib.cjs",
+      "bytes": 14475,
+      "rawSha256": "9773d2ea0471eabd4c0f7cee8993bd2cdf239088aae48a5847e62d17198a3276",
+      "crlfToLfSha256": "894e1783815f27269e2fa79996f8c766fa382b9297e63fd2947e9a051ddb17c9"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-rows.cjs",
+      "bytes": 9669,
+      "rawSha256": "a2f11ae58a72ad0452d55062e8005c2a44e7511c5b9425a78ec3103cac8f7b6a",
+      "crlfToLfSha256": "8f43c644426e8c902267b18a0f17a697b72efb3e770648d99eae05a2f612f1dc"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-child.cjs",
+      "bytes": 2369,
+      "rawSha256": "e57a23196c0dc803f1d0ab2198ff1b7d88a475bb59a306a8f0ec4ac709e2b894",
+      "crlfToLfSha256": "a117a2418f7e7094bc7fb8891c42d8a96385e8bf29beef24b14dddee41380e09"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-lane.test.cjs",
+      "bytes": 5566,
+      "rawSha256": "96150fc7aaad9b4801aa9593a3fc0b8661a514a87847549ef061e2304adcf655",
+      "crlfToLfSha256": "e4fe7c0a00044cd83f612f185e6544c6fc5d9d8cd467da8ba95ff94913cfc1dc"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-ordering.test.cjs",
+      "bytes": 19936,
+      "rawSha256": "7369e5fa8eaec0362e43d0ab6935e8860f070c8eb06f2e94be42d1615420f8b3",
+      "crlfToLfSha256": "d671903f458a27fdf1a11552a1992fe695ad9767669d1e500b9640cc122e02c0"
+    }
+  ],
+  "summary": {
+    "tests": 148,
+    "suites": 0,
+    "pass": 99,
+    "fail": 49,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "lane in-process h11 [GGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h11 [GGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h11 [GGGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h11 [GGGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h11 [GGXG] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h11 [GGXG] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h11 [PGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h11 [PGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10m [GGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10m [GGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10m [GGGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10m [GGGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10m [GGXG] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10m [GGXG] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10m [PGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10m [PGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10 [GGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10 [GGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10 [GGGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10 [GGGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10 [GGXG] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10 [GGXG] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10 [PGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane in-process h10 [PGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h11 [GGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h11 [GGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h11 [GGGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h11 [GGGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h11 [GGXG] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h11 [GGXG] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h11 [PGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h11 [PGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10m [GGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10m [GGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10m [GGGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10m [GGGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10m [GGXG] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10m [GGXG] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10m [PGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10m [PGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10 [GGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10 [GGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10 [GGGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10 [GGGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10 [GGXG] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10 [GGXG] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10 [PGX] parse-error: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "lane separate-process h10 [PGX] connect: the earlier requests are answered in order, then the typed refusal, then the connection is closed",
+      "a parse error answers the requests queued before it in order, then the typed refusal, and ends the connection"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red-06-lane-first-fix.stdout.raw.gz",
+      "bytes": 92263,
+      "sha256": "b5c0c0398064b718dbf964b01b469d180b1b325384b67ba3f3c1d327d3da9469",
+      "gzipBytes": 4293,
+      "gzipSha256": "155ec041b0b922045c893720d7947278b1b0d101554e946f7f85756c9ae405a5",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red-06-lane-first-fix.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}
