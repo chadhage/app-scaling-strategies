@@ -1,92 +1,133 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const http = require('node:http');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { test } = require('node:test');
 const { startChild } = require('./resource-harness.cjs');
 
-// L-0138: the attacker runs in its OWN process, the server in a small-heap child that measures its own event-loop delay. One client
-// streaming an endless Transfer-Encoding: chunked body of 1-byte chunks (one parser callback each) at a REFUSED request used to
-// block the server for 8 to 10 s because the refusal kept the connection open and the body unread (the stall lasts about as long as the
-// flood: 2 s here). The CONTROL is the same flood at an authorized command. Bounds are loose on purpose (a healthy server stays near 0.1 s).
-// The in-process table (refusal-close.test.cjs) covers every typed code; these probe one representative per code path.
+// Review findings L-0138, F1b and F9. The attacker runs in its OWN process, the server in a small-heap child process. One client
+// streams an endless Transfer-Encoding: chunked body of 1-byte chunks (one parser callback each) at a REFUSED request, first on its
+// connection or queued behind a GET. A refusal must end the connection and stop reading at once. NOTHING here is a wall-clock bound
+// (a bare 400-and-close server shows seconds of event-loop lag when other processes use the CPU: L-0170): the facts asserted are
+// structural, and a NAIVE control server (no close, no read stop) runs in the same test under the same load.
+//   closed   the server ended every attacking connection (the test waits for the close EVENT, with a generous deadline);
+//   bytes    the server READ at most READ_BOUND bytes from each of them, while the attacker offered OFFER_BYTES (the naive control
+//            reads all of it: that proves the attack is delivered, and that the assertions fail on a naive server);
+//   cpu      the server's own CPU time (process.cpuUsage) is a fraction of the naive control's;
+//   alive    a normal client is still answered after the attack.
 const ATTACKER = path.join(__dirname, 'flood-attacker.cjs');
 const CHILD = path.join(__dirname, 'flood-child.cjs');
-const ATTACK_MS = 2200;
 const SOCKETS = 2;
-const LOOP_LIMIT_MS = 1200;
-const CONTROL_LOOP_LIMIT_MS = 5000;
-const PROBE_TIMEOUT_MS = 2500;
+const OFFER_BYTES = 1024 * 1024;
+const READ_BOUND = 256 * 1024;
+const DEADLINE_MS = 150000;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const JSON_TYPE = 'Content-Type: application/json';
-const request = (method, target, host, lines) => [`${method} ${target} HTTP/1.1`, `Host: ${host}`, ...lines, 'Transfer-Encoding: chunked', '', ''].join('\r\n');
+const head = (method, target, host, lines) => [`${method} ${target} HTTP/1.1`, `Host: ${host}`, ...lines, 'Transfer-Encoding: chunked', '', ''].join('\r\n');
+const getState = (host) => `GET /v1/state HTTP/1.1\r\nHost: ${host}\r\n\r\n`;
 
-const CLASSES = [
-  { name: 'no credential (401)', status: 401, head: ({ local }) => request('POST', '/v1/commands/run.create', local, [JSON_TYPE]) },
-  { name: 'visitor on run.create (403)', status: 403, head: ({ local, tokens }) => request('POST', '/v1/commands/run.create', local, [`Authorization: Bearer ${tokens.visitor}`, JSON_TYPE]) },
-  { name: 'GET /v1/state with a body (400)', status: 400, head: ({ local }) => request('GET', '/v1/state', local, []) },
-  { name: 'unknown Expect (417)', status: 417, head: ({ local }) => request('GET', '/v1/state', local, ['Expect: nonsense']) },
-  { name: 'CONTROL: authorized command with an oversized body (413)', status: 413, control: true, head: ({ local, tokens }) => request('POST', '/v1/commands/pool.resize', local, [`Authorization: Bearer ${tokens.operator}`, JSON_TYPE]) }
+const KINDS = [
+  { name: 'no credential (401)', status: 401, head: ({ host }) => head('POST', '/v1/commands/run.create', host, [JSON_TYPE]) },
+  { name: 'visitor on run.create (403)', status: 403, head: ({ host, tokens }) => head('POST', '/v1/commands/run.create', host, [`Authorization: Bearer ${tokens.visitor}`, JSON_TYPE]) },
+  { name: 'GET /v1/state with a body (400)', status: 400, head: ({ host }) => head('GET', '/v1/state', host, []) },
+  { name: 'unknown Expect (417)', status: 417, head: ({ host }) => head('GET', '/v1/state', host, ['Expect: nonsense']) },
+  { name: 'CONTROL: authorized command with an oversized body (413)', status: 413, control: true, head: ({ host, tokens }) => head('POST', '/v1/commands/pool.resize', host, [`Authorization: Bearer ${tokens.operator}`, JSON_TYPE]) }
+];
+const POSITIONS = [
+  { name: 'first on its connection', prefix: () => '', before: [] },
+  { name: 'queued behind a GET', prefix: getState, before: [200] }
 ];
 
-function runAttacker(port, head) {
+// The attacker (flood-attacker.cjs) tells us when it has offered everything, stays connected, and reports what its sockets saw on request.
+function runAttacker(port, spec) {
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
   delete env.NODE_V8_COVERAGE;
-  const child = spawn(process.execPath, [ATTACKER, String(port), JSON.stringify(head), String(SOCKETS), String(ATTACK_MS)], { env, stdio: ['ignore', 'pipe', 'inherit'], windowsHide: true });
-  const hard = setTimeout(() => child.kill('SIGKILL'), ATTACK_MS + 15000);
-  let output = '';
-  child.stdout.on('data', (chunk) => { output += chunk; });
-  const done = new Promise((resolve) => child.once('exit', () => { clearTimeout(hard); resolve(output); }));
-  return { child, done };
+  const child = spawn(process.execPath, [ATTACKER, String(port), JSON.stringify(spec), String(SOCKETS), String(OFFER_BYTES)], { env, stdio: ['ignore', 'inherit', 'inherit', 'ipc'], windowsHide: true });
+  const hard = setTimeout(() => child.kill('SIGKILL'), DEADLINE_MS + 20000);
+  const message = (type) => new Promise((resolve, reject) => {
+    const listener = (received) => { if (received.type === type) { child.off('message', listener); resolve(received); } };
+    child.on('message', listener);
+    child.once('exit', () => reject(new Error(`the attacker ended before it sent ${type}`)));
+  });
+  const offered = message('offered');
+  return {
+    child, offered, hard,
+    report() { const answer = message('report'); child.send('report'); return answer; }
+  };
 }
 
-// A normal client asks for the state while the attack runs; a stalled server answers late or not at all.
-async function probe(origin, untilMs) {
-  const results = [];
-  while (Date.now() < untilMs) {
-    const started = Date.now();
-    let ok = false;
-    try {
-      const response = await fetch(`${origin}/v1/state`, { signal: AbortSignal.timeout(PROBE_TIMEOUT_MS), headers: { Connection: 'close' } });
-      ok = response.status === 200;
-      await response.arrayBuffer();
-    } catch { /* timed out or reset */ }
-    results.push({ ok, ms: Date.now() - started });
+const getOnce = (port) => new Promise((resolve, reject) => {
+  http.get({ host: '127.0.0.1', port, path: '/v1/state', agent: false, timeout: DEADLINE_MS }, (response) => {
+    response.resume();
+    response.once('end', () => resolve({ status: response.statusCode }));
+  }).once('error', reject);
+});
+
+// Waits for the server's own account, never for a clock: every attacking socket closed (safe server), or most of what was offered read
+// (naive control: it never closes). The deadline only ends a wait that cannot succeed, and the assertions then fail.
+async function settle(server, offered, naive) {
+  const deadline = Date.now() + DEADLINE_MS;
+  for (;;) {
+    const report = await server.ask('report', 'report', 30000);
+    const attackers = [...report.sockets].sort((left, right) => right.bytesRead - left.bytesRead).slice(0, SOCKETS);
+    const done = naive ? attackers.reduce((sum, socket) => sum + socket.bytesRead, 0) >= 0.8 * offered : attackers.every((socket) => socket.closed);
+    if (done || Date.now() > deadline) return { ...report, attackers };
     await sleep(100);
   }
-  return results;
 }
 
-async function floodAt(kind) {
-  const server = startChild({ heapMb: 64, hardMs: 70000, script: CHILD, args: [] });
+async function flood({ kind, position, naive = false }) {
+  process.env.C009_NAIVE = naive ? '1' : '0';
+  const server = startChild({ heapMb: 64, hardMs: DEADLINE_MS + 30000, script: CHILD, args: [] });
+  delete process.env.C009_NAIVE;
   let attack = null;
   try {
-    const { port, tokens } = await server.receive('listening', 15000);
-    await server.ask('reset', 'reset', 15000);
-    attack = runAttacker(port, kind.head({ local: `127.0.0.1:${port}`, tokens }));
-    const probes = await probe(`http://127.0.0.1:${port}`, Date.now() + ATTACK_MS + 300);
-    const flood = JSON.parse(await attack.done);
-    const report = await server.ask('report', 'report', 25000);
-    // The control (an authorized body is read until its limit, so up to one 64 KB read is parsed chunk by chunk, 0.5 to 2 s on a
-    // loaded machine) only has to stay bounded and cut off; a REFUSED request must cost the server almost nothing.
-    const limit = kind.control ? CONTROL_LOOP_LIMIT_MS : LOOP_LIMIT_MS;
-    assert.ok(report.maxDelayMs < limit, `the server event loop was blocked for ${report.maxDelayMs} ms (limit ${limit})`);
-    if (!kind.control) assert.deepEqual(probes.filter((entry) => !entry.ok), [], 'a normal client is served throughout the attack');
-    assert.equal(flood.length, SOCKETS);
-    for (const socket of flood) {
-      assert.notEqual(socket.closedAfterMs, null, 'the server closed the attacking connection');
-      assert.ok(socket.status === null || socket.status === kind.status, `the attacker saw ${socket.status}, expected ${kind.status} or a reset`);
-    }
-    assert.equal(report.revision, 0, 'the attack changed nothing');
+    const { port, tokens } = await server.receive('listening', 30000);
+    const host = `127.0.0.1:${port}`;
+    attack = runAttacker(port, { prefix: position.prefix(host), head: kind.head({ host, tokens }) });
+    const { offered } = await attack.offered;
+    const report = await settle(server, offered, naive);
+    const { sockets } = await attack.report();
+    return { sockets, report, offered, kind, position, served: await getOnce(port) };
   } finally {
+    if (attack) clearTimeout(attack.hard);
     if (attack && attack.child.exitCode === null) attack.child.kill('SIGKILL');
     server.stop();
   }
 }
 
-// Three classes at a time: a healthy server is idle once it has cut the attacker, so the probes stay meaningful and the file stays short.
-test('one client flooding endless 1-byte chunks cannot stall the server or stay connected, at a refusal of any kind and at the authorized control', { concurrency: 3, timeout: 55000 }, async (t) => {
-  await Promise.all(CLASSES.map((kind) => t.test(`flood at: ${kind.name}`, () => floodAt(kind))));
+function assertRefused({ sockets, report, offered, kind, position, served }, naiveCpuMs) {
+  assert.equal(sockets.length, SOCKETS);
+  const expected = [...position.before, kind.status];
+  for (const socket of sockets) assert.deepEqual(socket.statuses, expected.slice(0, socket.statuses.length), `the attacker read only the answers it was owed (${expected}) or a reset`);
+  for (const socket of report.attackers) {
+    assert.equal(socket.closed, true, 'the server closed the attacking connection');
+    assert.ok(socket.bytesRead <= READ_BOUND, `the server read ${socket.bytesRead} bytes of a refused connection (bound ${READ_BOUND}, offered ${offered} in all)`);
+  }
+  assert.equal(report.revision, 0, 'the attack changed nothing');
+  assert.equal(served.status, 200, 'a normal client is still served after the attack');
+  // The authorized control reads its body up to the limit (every 1-byte chunk of that first read reaches the body reader, about 4 times the
+  // CPU of a refused one): it only has to cost less than the naive server, a refused request a third of it.
+  if (naiveCpuMs !== undefined) assert.ok(report.cpuMs * (kind.control ? 1 : 3) <= naiveCpuMs, `server CPU ${report.cpuMs} ms against the naive control ${naiveCpuMs} ms`);
+}
+
+const naiveControl = flood({ kind: KINDS[1], position: POSITIONS[0], naive: true });
+naiveControl.catch(() => {});
+
+test('the naive control reads the whole flood and never closes: the assertions fail on it, so the attack is delivered', { timeout: DEADLINE_MS + 30000 }, async () => {
+  const control = await naiveControl;
+  const read = control.report.attackers.reduce((sum, socket) => sum + socket.bytesRead, 0);
+  assert.ok(read >= 4 * READ_BOUND, `the naive server read ${read} bytes`);
+  assert.ok(control.report.cpuMs > 0);
+  assert.throws(() => assertRefused(control), /closed|read \d+ bytes/, 'the structural assertions reject the naive server');
+});
+
+test('one client flooding endless 1-byte chunks at a refusal of any kind, first or queued behind a GET, is cut off at once', { concurrency: 3, timeout: DEADLINE_MS + 60000 }, async (t) => {
+  const naiveCpuMs = (await naiveControl).report.cpuMs;
+  await Promise.all(KINDS.flatMap((kind) => POSITIONS.map((position) => t.test(`flood at: ${kind.name}, ${position.name}`, async () => {
+    assertRefused(await flood({ kind, position }), naiveCpuMs);
+  }))));
 });

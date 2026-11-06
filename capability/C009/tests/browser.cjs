@@ -11,6 +11,7 @@ const { openIsolatedLoopback } = require(path.join(repositoryRoot, 'testing', 'b
 const approved = require('../../C001/approved-contract.js').approval;
 const { startLocal } = require('../cli.cjs');
 const { qualifyEdge } = require(path.join(repositoryRoot, 'testing', 'browser', 'qualify', 'qualify.cjs'));
+const { qualifyWithRetry } = require('./browser-retry.cjs');
 
 const COMMANDS = ['run.create', 'scratch.create', 'pool.resize', 'experiment.approve', 'native.execute'];
 const DASH = '\u2014';
@@ -34,11 +35,12 @@ async function ask(page, token, claim = '') {
 
 async function main() {
   // Microsoft-signed and a qualified major, with no equality pin on a build or a hash: qualifyEdge checks the Authenticode signature
-  // and publisher and that the major is listed in testing\browser\qualify\qualified.json, and it fails closed (about 6 to 15 s).
-  const edge = await qualifyEdge();
-  assert.equal(edge.ok, true, edge.reasons.join(' | '));
+  // and publisher and that the major is listed in testing\browser\qualify\qualified.json, and it fails closed (about 6 to 15 s on a quiet
+  // machine; on a loaded one its PowerShell queries time out, F13): a typed timeout is retried ONCE, nothing else is. Take a quiet slot.
+  const { edge, attempts } = await qualifyWithRetry(qualifyEdge);
+  assert.equal(edge.ok, true, `${edge.reasons.join(' | ')} (${attempts} attempt(s); C009 browser verification needs a quiet slot)`);
   checked('the installed Edge is Microsoft-signed and its major is qualified', {
-    version: edge.version, major: edge.major, signature: edge.signature.status, publisher: edge.signature.publisher, sha256: edge.sha256, path: edge.path
+    version: edge.version, major: edge.major, signature: edge.signature.status, publisher: edge.signature.publisher, sha256: edge.sha256, path: edge.path, attempts
   });
   const local = await startLocal({ readApproval: () => approved, lifetimeMs: 300000 });
   let session;

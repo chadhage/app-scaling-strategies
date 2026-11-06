@@ -65,7 +65,14 @@ const ROWS = [
     code: 'INTERNAL_ERROR', status: 500, app: { validateInput: () => { throw new Error('synthetic failure'); } },
     request: ({ port, tokens }) => asConductor(port, tokens, RUN)
   },
-  { code: 'EXPECTATION_FAILED', status: 417, request: ({ port }) => bare(port, 'GET', '/v1/state', ['Expect: nonsense']) }
+  { code: 'EXPECTATION_FAILED', status: 417, request: ({ port }) => bare(port, 'GET', '/v1/state', ['Expect: nonsense']) },
+  // The three answers Node would write ITSELF through its default clientError path (rev-C017 F11): a typed answer, then the same ending.
+  { code: 'REQUEST_MALFORMED', status: 400, request: () => Buffer.from('GET\r\n\r\n') },
+  { code: 'HEADERS_TOO_LARGE', status: 431, request: ({ port }) => bare(port, 'GET', '/v1/state', [`X-Pad: ${'a'.repeat(20000)}`]) },
+  {
+    code: 'REQUEST_TIMEOUT', status: 408, app: { limits: { headerMs: 300, checkMs: 50 } },
+    request: ({ port, tokens }) => Buffer.from(`POST /v1/commands/run.create HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\n${auth(tokens['conductor-a'])}\r\nContent-Type: application/json\r\nContent-Length: 100000\r\n\r\n{"name":"`)
+  }
 ];
 
 function withBodyChunked(port) {

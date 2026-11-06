@@ -16,31 +16,70 @@ HTTP server (127.0.0.1, automatic port, Node built-ins only). No Entra, no cloud
   an entry without roles 403 for everyone, wrong role 403 `ROLE_FORBIDDEN`. Roles do not inherit.
 - The decision is repeated where the effect is committed (a token that expires while queued has no effect); commands are linearized.
 - A refused command changes nothing (state and revision are identical) and is audited with the server-derived subject and role.
-- Every error answer is final (one place: `http-io.cjs`): `Connection: close`, reading stops in the same tick that decides the refusal,
-  Node ends the connection once the answer is flushed, and a request pipelined behind it never runs. Before this, a refused request
-  left its connection open and its body unread, so one client without any credential streaming an endless `Transfer-Encoding: chunked`
-  body of 1-byte chunks (one parser callback each) blocked the server for 8 to 10 s (review finding F1, L-0120). The unsupported
-  `Expect` that Node answers with a bare 417 goes through the same path (`EXPECTATION_FAILED`). A request body is cut at the 4096-byte limit.
-- Resource bounds (`contract.js` `limits`): body 4096 B, audit log 200 identified records plus a separate ring of 50 anonymous refusals,
-  token lifetime 10 min (max 15), 5 s idle socket, 256 connections, 4 requests in flight per socket, 1000 state entries (409 `STATE_FULL`)
-  of which one identity may hold 400 (409 `OWNER_QUOTA_FULL`; two conductors plus the operator's three approvals always fit),
-  5 s header and request timeouts checked every second (`connectionsCheckingInterval`: Node checks them only every 30 s by default, so
-  a client trickling one byte every 2 s was cut after about 30 s), Node's 16 KB header limit (431). `app.close()` ends every accepted socket.
-- The pipelining guard cuts a client past 4 requests in flight for body-less requests only. Node dispatches pipelined requests that carry
-  a body one at a time, so the guard is never exercised there (50 pipelined authorized POSTs are 50 answers and 50 applied commands).
+- Every error answer is final (one place: `http-io.cjs`, the reference implementation for importers, see below): `Connection: close`, the
+  SOCKET of the request is marked and reading stops in the very tick that decides the refusal (also when the refusal is decided after
+  an await, and also when the response is queued behind an unfinished pipelined one), Node ends the connection once the answer is
+  flushed, and NOTHING behind the refusal ever runs: the requests of one connection are served one at a time, in order (per-connection
+  lanes), a refusal drops everything queued behind it and everything that arrives later on that socket, and the requests before it are
+  still answered. This holds in the same TCP write and in a later one, for HTTP/1.1 and for HTTP/1.0 (the guard is the mark of the
+  socket, never `maxRequestsPerSocket`: Node does not apply it to HTTP/1.0 and its own no-Host 400 does not advance it). Before this, a
+  refused request left its connection open and its body unread, so one client without any credential streaming an endless
+  `Transfer-Encoding: chunked` body of 1-byte chunks (one parser callback each) blocked the server for 8 to 10 s (review finding F1,
+  L-0120), and a refusal queued behind ONE pipelined GET kept the connection open and let the mutation pipelined behind it run (F1b).
+  A request body is cut at the 4096-byte limit.
+- What Node answers by ITSELF goes through the same path (rev-C017 F11): an unknown `Expect` (`checkExpectation`, 417), a request without
+  `Host` (`requireHostHeader: false`, so `localGuard` answers the typed 421 instead of Node's bare 400, also for HTTP/1.0), a parse
+  error, an oversized header and a timeout (`clientError`: typed 400 `REQUEST_MALFORMED`, 431 `HEADERS_TOO_LARGE`, 408 `REQUEST_TIMEOUT`,
+  after the answers of the requests before it, except a timeout, which cuts at once), `CONNECT` (405) and `Expect: 100-continue`
+  (`checkContinue`: the 100 is written only when the body is about to be read, so a refused request is never invited to send it).
+- The reading stop is `socket._handle.readStop()`, a Node internal. The server checks it on the FIRST connection and at startup and
+  FAILS CLOSED (the socket is destroyed, nothing is served, `app.health()` says why, the listener emits an error at startup) when it is
+  missing, instead of silently degrading to `Connection: close` alone (review F10).
+- Resource bounds (`contract.js` `limits`): body 4096 B, audit log one ring of 200 records PER identified subject (at most four rings:
+  one identity can no longer evict another identity's records, review F11) plus a separate ring of 50 anonymous refusals,
+  token lifetime 10 min (max 15), 5 s idle socket, 256 connections, 4 requests running or queued per socket, 1000 state entries
+  (409 `STATE_FULL`) of which one identity may hold 400 (409 `OWNER_QUOTA_FULL`; two conductors plus the operator's three approvals
+  always fit, 2 x 400 + 3 = 803: a THIRD owner identity would make `STATE_FULL` reachable by two others, so `ownerEntries` must be
+  lowered when identities are added), 5 s header and request timeouts checked every second (`connectionsCheckingInterval`: Node checks
+  them only every 30 s by default, so a client trickling one byte every 2 s was cut after about 30 s), Node's 16 KB header limit (431).
+  `app.close()` ends every accepted socket.
+- The depth guard of the lanes cuts a client past 4 requests running or queued on one socket (with or without a body: the lanes serve
+  them one at a time, so only the first runs and the others wait their turn, holding a request and a response object each).
 
 Files: `contract.js` (identities, command x role table, input rules), `authz.cjs` (tokens, decision), `commands.cjs` (mutation pipeline),
-`handlers.cjs`, `ledger.cjs`, `queue.cjs`, `codes.cjs`, `http-io.cjs`, `server.cjs`, `cli.cjs` (CLI, rechecks the current C001 consent
+`handlers.cjs`, `ledger.cjs`, `queue.cjs`, `codes.cjs`, `http-io.cjs` (the refusal path, lanes and read stop: reference implementation
+for importers), `server.cjs`, `cli.cjs` (CLI, rechecks the current C001 consent
 and fails closed), `index.html` + `page.js` + `style.css` (inspection page, strict CSP, no inline script), `imports.json` (pinned accepted C001 bytes).
+
+### `http-io.cjs` for importers (C010, C014 and C022 import it read-only)
+
+The file opens with the four rules (a comment of about 30 lines); the API, all frozen on the module:
+
+- `createResponder(response)` gives `json(status, value, headers)`, `file(buffer, type)`, `fail(code, body, headers)` and `proceed()`. Any
+  status of 400 or more is a refusal: it marks `response.req.socket` BEFORE the answer is written (never `response.socket`: it is null for a
+  response queued behind an unfinished pipelined one), sends `Connection: close` and stops reading after the answer. `proceed()` writes the
+  100 Continue of an HTTP/1.1 request that asked for it, call it right before the body is read.
+- `createLanes({ depth })` returns `admit(request, response, task)`: the tasks of one connection run one at a time, in order; a marked
+  socket admits nothing and drops its queue; more than `depth` running or queued cuts the connection. `admit.refuse(socket, code,
+  { immediate })` is the same ending for what Node decides itself (typed answer written on the socket, behind the requests before it).
+- `isFinished(socket)` (test it after EVERY await and right before an effect), `endConnection(socket)` (a refusal decided outside a
+  responder), `canStopReading(owner)` (the fail-closed self-check), `clientErrorCode(error)`, `localGuard`, `hasBody`, `readBody`.
+- A server wires it exactly like `server.cjs`: `http.createServer({ requireHostHeader: false, ... }, (q, r) => admit(q, r, route))`,
+  listeners for `checkContinue`, `checkExpectation`, `clientError` and `connect` routed through `admit`/`admit.refuse`, a `connection`
+  listener that destroys every socket when `canStopReading` is false (first connection) and a startup check on `listening`. Never rely on
+  `maxRequestsPerSocket` for ordering. Copy the proof too: `tests\pipeline-rows.cjs` (shapes and framings), `pipeline-refusal.test.cjs`
+  and `pipeline-process.test.cjs` (every refusal row in six shapes and three framings, in process and against a server process),
+  `lanes.test.cjs`, `guards.test.cjs`, `node-own.test.cjs`, `refusal-flood.test.cjs` and the mutants of `tests\mutants.cjs`.
 
 ## Commands (repository root, PowerShell 7; run test files one at a time under a timeout when in doubt)
 
-GREEN, every non-browser test (21 files; 1 to 3 minutes depending on the load of the machine):
+GREEN, every non-browser test (the file and test counts are in the suite manifest of `evidence\green-fix2`; 1 to 6 minutes depending on
+the load of the machine):
 
     node --test --test-timeout=60000 --test-concurrency=1 "capability/C009/tests/*.test.cjs"
 
 Per-file coverage, 85 lines / 85 branches / 85 functions for each of the 11 production files, unloaded counts as 0%
-(one L-0004 command per file, 3 at a time, about 3.5 minutes: take a heavy slot):
+(one L-0004 command per file, 3 at a time, about 10 minutes: take a heavy slot):
 
     node capability\C009\tests\coverage.cjs
 
@@ -48,7 +87,9 @@ The command it runs for one file (here `server.cjs`):
 
     node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include=**/C009/server.cjs --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 capability/C009/tests/*.test.cjs
 
-Real isolated headless Edge (heavy slot, about 60 s, writes nothing; leave CAPTURE_BROWSER_EVIDENCE unset). It first calls `qualifyEdge()` of
+Real isolated headless Edge (heavy slot, about 60 s on a quiet machine, writes nothing; leave CAPTURE_BROWSER_EVIDENCE unset; it needs a QUIET
+slot: the shared `qualifyEdge()` asks PowerShell for the signature and the version, and on a loaded machine those queries time out; the
+test retries once after a typed timeout and prints the load, review F13). It first calls `qualifyEdge()` of
 `testing\browser\qualify` (no equality pin): the installed Edge must carry a valid Microsoft Corporation Authenticode signature and a
 major listed in `testing\browser\qualify\qualified.json`, and the launched browser must have that major. It then opens the page through
 `openIsolatedLoopback`, pastes each identity, a forged, an expired and a malformed token, selects claimed roles, and compares every row the
@@ -99,6 +140,85 @@ The browser helper permits only GET and HEAD to the exact origin. The page there
 preview, and the POST behind "Send" is observed as blocked ("not sent", revision still 0). Real POST outcomes are proven over real
 loopback sockets by the Node suites (`server`, `hostile-*`, `cli`, `findings`, `connections`, `resources`).
 
+### Fix cycle after the second independent review (order R9)
+
+The second review (of commit 244f771b) reproduced the pins, the REDs and the coverage and found NO authorization bypass in more than
+6,900 hostile requests, but three majors, four minors, and the controller added two holes found in a sibling card (rev-C017 F11, F12).
+The fix is test first; the RED archives are `evidence\red\fix2-*` (two earlier generations of them are retained and marked
+superseded: the first when the controller's addition arrived and the test bytes changed, the second when load-dependent waits and
+resets that discard answers were removed from the new tests), the captures of the final bytes are
+`evidence\green-fix2\*`, the first-fix bytes of every file this cycle changed are retained in `evidence\red\snapshot-fix1` (every R8
+pin is recomputed against them by `fix-evidence.test.cjs`) and `fix2-evidence.test.cjs` recomputes every hash of this cycle.
+
+- F1b (a refusal that is not the first request of its connection, and refusals decided after an await): `send()` took the socket from
+  `response.socket`, which is null for a response queued behind an unfinished pipelined one, so nothing was marked, reading never stopped
+  and the pipelined mutation behind the refusal ran (67 of the reviewer's 124 matrix cells). Now the mark is made from
+  `response.req.socket` synchronously inside the one central refusal, the requests of one connection run one at a time (`createLanes`,
+  `http-io.cjs`), a marked socket admits nothing and drops its queue, and `commands.cjs` tests the mark after its one await and right before
+  `ledger.commit`. Proof: `pipeline-refusal.test.cjs` sends EVERY row of `refusal-rows.cjs` (34 rows) in six shapes (`R M7`, `G R M7`,
+  `M6 R M7`, `G G R M7`, and two shapes cut into two TCP writes) and three framings (HTTP/1.1, HTTP/1.0 keep-alive, an HTTP/1.0 mutation
+  behind an HTTP/1.1 refusal) with a permitted `pool.resize` behind the refusal and asserts the answers, the revision, the pool size and
+  the audit log; `pipeline-process.test.cjs` does the same against a server in a SEPARATE process (state read back from it);
+  `refusal-flood.test.cjs` floods a refusal queued behind a GET; `lanes.test.cjs` and `guards.test.cjs` test the lanes and the two guards
+  without a socket. A reset can discard answers
+  the client has not read yet (Windows closes with a reset a connection that still has unread data in flight): for the two-write shapes,
+  for the 20 KB header of HEADERS_TOO_LARGE and for REQUEST_TIMEOUT (a timer ends a request whose body is still arriving) the answers are
+  only required to be a subsequence of the expected ones (nothing extra, nothing out of order); the state, the revision and
+  the audit log decide (they are read from the server). A timer cuts a stalled request at once, so for the REQUEST_TIMEOUT row the
+  number of earlier mutations a loaded server commits before its 300 ms timer fires is not asserted (at most the earlier ones, the audit log
+  must match, nothing behind the refusal runs). Limit: `pipeline-refusal.test.cjs` is a 605-cell in-process matrix (tens of CPU seconds):
+  it passes alone and with a few neighbours, but 8 copies at once on a busy machine exceed the 60 s test timeout, so only the process
+  matrix (one shared server child) is in the 8-way flake loops.
+- Node answers some requests by itself (rev-C017 F11): see "What the server enforces". Rows REQUEST_MALFORMED, HEADERS_TOO_LARGE and
+  REQUEST_TIMEOUT joined the refusal table (`refusal-close.test.cjs` and both matrices pick them up); `node-own.test.cjs` covers a request
+  without Host (HTTP/1.1 and HTTP/1.0), `Expect: 100-continue` (never invited when refused, answered 100 then 200 when permitted, no 100
+  for HTTP/1.0), CONNECT, a parse error behind a slow request (answered in order), a malformed chunk in a running request (answered at once).
+  The HTTP/1.0 framing skips two rows (Node ignores `Expect` in HTTP/1.0 and rejects a chunked body there as a parse error, which has its own
+  row). `maxRequestsPerSocket` is not used.
+- Added for the controller's pre-publication checklist (no review finding behind them, so no RED): `two-instances.test.cjs` runs two live apps
+  in one process (tokens, ledger and refusals stay per app; closed first-in-first-out and last-in-first-out, each closed twice; an app that
+  failed closed does not fail its neighbour; a plain HTTP server with a connected client stays untouched) and `upgrade.test.cjs` pins that
+  the server has no `upgrade` listener, so a request that asks for an upgrade goes through the same refusal path (and Node drops what
+  follows such a request in the same read, which is not asserted).
+- F2b (`resources.test.cjs` failed about 6 of 96 runs at 8 in parallel): the header flood is refused by the clientError path, which now
+  writes the typed 431 and ends the connection after the flush; the client may still see an empty answer when Windows resets a connection
+  that has unread data, so the test accepts the 431 or nothing and asserts what is structural, read from the SERVER child: it closed that
+  connection and read 256 KB at most of the 1 MB offered. The retained-heap reading of R8 is unchanged.
+- F9 (`refusal-flood.test.cjs` failed 7 of 16 runs at 4 in parallel): no wall-clock bound is left. The attacker (own process, IPC) offers
+  1 MB per socket and stays connected; the server child reports its own account: every attacking socket closed by the server, at most
+  256 KB READ from each (a refused connection costs one read; the offered flood is four times that), its CPU time (`process.cpuUsage`)
+  against a NAIVE control server run in the same test (no close, no read stop: it reads everything, the assertions must reject it), and a
+  normal client served after the attack. Waiting is event driven (the server's close, the control's reads), with 150 s deadlines that only end a
+  wait that cannot succeed.
+- Mutation (`tests\mutants.cjs`, 40 one-line mutants on scratch copies, each needs a NAMED failing test): the mark, the Connection: close header,
+  the read stop and its fail-closed branch, the lanes (serialization, drop after a mark, depth, release on finish and on close, release
+  once), the answer at once for the request that was still being received, the destroy after the flush, every listener for what Node
+  answers itself, `requireHostHeader`, the two guards of `commands.cjs`, the first-connection and startup self-checks, the per-subject
+  audit ring and the quotas: 39 are killed and ONE is a documented equivalent (M10: `admit()`'s early return for a marked socket is
+  redundant with `pump()`, which drops the request before any effect). M04 (the socket from `response.socket`) is killed only by the
+  unit test of a queued response: under the lanes a task starts after the earlier response has finished, so its response has a socket,
+  which is why the reviewer's one-line remedy alone is not enough for the asynchronous refusals.
+- F10: `canStopReading()` is checked on the FIRST connection and at startup (`app.health()`, `READ_STOP_UNAVAILABLE`, the socket is
+  destroyed, nothing is served); `read-stop.test.cjs` uses a stub socket, a real socket whose handle lost `readStop`, and a listener that
+  never listened. F11: the audit log has a ring per subject (`audit-ring.test.cjs`) and the owner-count note above. F12 (a client that
+  streams a large body at a refused request, fetch/undici gets ECONNRESET instead of the answer for 1 of 8 at 1 MB): left as documented, no
+  bounded drain was added (it would reopen F1). F13: `tests\browser-retry.cjs` retries `qualifyEdge()` ONCE after a typed timeout and
+  reports the load (`browser-retry.test.cjs`); C009 browser verification needs a quiet slot.
+
+Commands of this cycle (repository root; take a heavy slot for the loops, the coverage and the browser):
+
+    git archive --format=tar -o <scratch>\p.tar 244f771ba72d5bb2fd36e044ba465ff5d2c5ad0e capability/C009 capability/C001
+    tar -xf <scratch>\p.tar -C <scratch>\pristine
+    $env:C009_SUBJECT_DIR = '<scratch>\pristine\capability\C009'    # the first-fix bytes: every new RED below exits 1
+    node --test --test-concurrency=1 capability\C009\tests\pipeline-refusal.test.cjs
+    node --test --test-concurrency=1 capability\C009\tests\pipeline-process.test.cjs
+    node --test --test-concurrency=1 capability\C009\tests\read-stop.test.cjs capability\C009\tests\audit-ring.test.cjs
+    node --test --test-concurrency=1 capability\C009\tests\refusal-flood.test.cjs
+    node --test --test-concurrency=1 capability\C009\tests\node-own.test.cjs capability\C009\tests\refusal-close.test.cjs
+    Remove-Item Env:C009_SUBJECT_DIR                                 # on the final code the same files exit 0
+    node capability\C009\tests\flake-loop.cjs . resources.test.cjs 8 8     # also refusal-flood, pipeline-process, timeouts, connections, node-own
+    node capability\C009\tests\mutants.cjs <scratch directory outside the repository>   # every guard line of the refusal path, one mutant at a time
+
 ## Hostile probes (own, extending the specification)
 
 - `hostile-credentials`: forged, truncated, huge (10 KB), unicode look-alike (Cyrillic, NBSP, hyphen variants), duplicated or wrong-scheme
@@ -147,6 +267,18 @@ are earlier attempts of the flood test (more classes, a longer attack, a control
 `evidence\green-fix` holds the captures of the FINAL bytes: the whole suite, one coverage run per production file, the replay of every new RED on the final code,
 and the real-Edge transcript with the signature and qualified-major assertion. Captures were taken last; nothing differs from its pin.
 
+Second fix cycle (order R9): `evidence\red\fix2-pipeline-refusal-*` and `fix2-pipeline-process-*` (every refusal row in six shapes and
+three framings, in process and against a server process), `fix2-read-stop-audit-ring-*` (F10, F11), `fix2-refusal-flood-*` (a refusal queued
+behind a GET, the naive control), `fix2-node-own-*` (what Node answers by itself, and the three new table rows), all run against a
+pristine `git archive` of the first-fix commit 244f771b through `C009_SUBJECT_DIR`; the archives with the ids `6d73afb4`, `870a592a`,
+`388bb2b3` and `3ddb221d` are the first attempts on earlier test bytes, and `a1c0f6d2`, `b52e7a19`, `c63f8b2a`, `d74a9c3b` and `e85b0d4c`
+the second (before the tests stopped depending on wall-clock waits), `f5a1d9c3` and `0a7b3e68` a third (before the REQUEST_TIMEOUT cells of
+the two matrices stopped asserting how many earlier mutations a loaded server commits before its timer fires), all retained and marked superseded; `evidence\red\snapshot-fix1`
+holds the first-fix bytes of every file this cycle changed. `evidence\green-fix2` holds the captures of the FINAL bytes: the whole suite, one
+coverage run per production file, the replay of every new RED on the final code, the 8-way flake loops (64 runs each of the resource,
+flood, process, timeouts, connections and Node-own files), the mutation check of every guard line of the refusal path, and the real-Edge
+transcript. `fix2-evidence.test.cjs` recomputes all of it; captures were taken last.
+
 ## Decisions and limits
 
 - The CLI prints the four synthetic tokens on one JSON line so a person can paste them into the page; they live only in that process
@@ -166,8 +298,21 @@ and the real-Edge transcript with the signature and qualified-major assertion. C
   1-byte chunk costs a JS callback each, about 50 ms per refused connection), so a client that RECONNECTS in a loop can still keep the
   event loop busy: the fixture has no per-client rate limit (every client is 127.0.0.1), and a production service needs one in front.
   An AUTHORIZED command reads its body up to the 4096-byte limit, so one authorized client can cost the server up to about one 64 KB parse
-  per connection (0.5 to 2 s on a loaded machine, bounded and cut off, the control of `refusal-flood`). A client that streams a large body
-  at a refused request may see a reset instead of the answer; small requests, whose bytes were all read, always get the answer.
+  per connection (about 0.5 to 2 s on a loaded machine in the review's measurements; no test asserts a time, `refusal-flood` asserts the
+  bytes read and the CPU ratio against a naive control). A client that streams a large body
+  at a refused request may see a reset instead of the answer; a small request whose bytes were all read before the close usually gets the
+  answer, but a later TCP write into a connection the server has already ended can still produce a reset that discards an answer the
+  client has not read: the matrices accept that for the cells it concerns (`resetMayDiscard` in `pipeline-rows.cjs`) and decide on the
+  server-side facts (state, revision, audit log).
   `socket._handle.readStop()` is a Node internal, used because every public way to stop reading (`socket.pause()`, a `Connection: close`
   alone, destroying on the flush callback) left the loop blocked for 3 to 10 s in the review's experiments; the cross-process test fails
-  if a Node update stops it from working.
+  if a Node update stops it from working, and the server fails closed (serves nothing, `app.health()`) when it is missing (review F10).
+- Limits added by the second fix (order R9): (1) a client that sends more than 4 requests in ONE write is cut off (the depth of the
+  lanes), with or without bodies; (2) the answers Node would write by itself are typed raw writes (`HTTP/1.1` status line, the security
+  headers, `Content-Length`, `Connection: close`, no `Date`), the socket is destroyed once they are flushed, so a client that has unread data in
+  flight can still see a reset instead of the answer (Windows; the structural facts are read from the server, review F2b, F12); (3) a request
+  without Host reaches `localGuard` because `requireHostHeader` is false (Node 18.6 or later; Node 22 tested); (4) the HTTP/1.0 framing of
+  the matrix skips the unknown-Expect and the chunked-body rows (Node ignores `Expect` in HTTP/1.0 and rejects chunked there as a parse error);
+  (5) `timeouts.test.cjs` still bounds the cut of a trickling client at 2.5 s for a 0.4 s limit (a bound against Node's 30 s default,
+  unchanged from R8); (6) the audit log holds at most four rings of 200 plus 50 anonymous records because subjects come from the closed
+  identity table; (7) the owner-count note above (`ownerEntries` must be lowered when identities are added).

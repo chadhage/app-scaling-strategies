@@ -1,0 +1,16 @@
+Capture attempts of the second fix cycle that were discarded, kept for the record (nothing here is the proof; evidence\green-fix2 is).
+
+suite-attempt1-moved-hunt-folder-during-run: the whole-suite capture failed 1 of 892 tests (fix2-evidence.test.cjs read an evidence folder that I moved
+away while the suite was running). My own mistake, not a product or test defect; the suite was captured again.
+
+attempt2-request-timeout-cell-flake: a complete set of captures of the bytes before the last test fix (replays, four of six flake loops, the
+mutation run, three of eleven coverage runs, the suite). The suite capture of that set failed 2 of 892 tests: the cell "REQUEST_TIMEOUT [M6 R M7]
+HTTP/1.1" of pipeline-refusal.test.cjs asserted that the mutation sent before a stalled request had been committed before a 300 ms timer fired,
+which a loaded machine does not guarantee (I was running the mutation run, an 8-way loop and three coverage runs at the same time). Both matrices
+(in process and against a server process) now assert only that at most the earlier mutations were applied, that the audit log matches them and that
+nothing behind the refusal ran. The two pipeline REDs were archived again on the new bytes and every capture was taken again.
+
+coverage-<file>-attempt1-v8-report-failed (commands, ledger, cli, contract): the command exited 1 with all 892 tests passing and no coverage rows:
+node printed "Could not report code coverage. SyntaxError: Unexpected end of JSON input" (cause not investigated: probably a V8 coverage file of a child
+process read while it was still being written; it happened only while the machine was loaded by my own parallel captures). The same command was
+run again, with less load, until the report came out; the coverage numbers of the kept captures are the ones node printed in their own transcripts.

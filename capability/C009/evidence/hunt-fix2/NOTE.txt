@@ -1,0 +1,10 @@
+F2b hunt on the FIRST-FIX tree (commit 244f771b, a pristine git archive), recorded by archive-run.cjs.
+
+What it is: the UNCHANGED first-fix resources.test.cjs, 8 in parallel for 8 rounds (64 runs), on a busy machine, under a heavy slot.
+What it found: 1 bad run of 64 - a 60 s test timeout under load. It did NOT reproduce the failure the reviewer saw (the empty answer where
+/^HTTP\/1\.1 431 / was asserted, 6 of 96 runs), so it is not a RED for F2b and it is kept here, outside evidence\red, as a record only.
+
+The deterministic behavioral RED for the server side of F2b (Node's default clientError path answering a header flood with a bare 431 and a
+reset) is evidence\red\fix2-node-own-3c6f7d90-*: the HEADERS_TOO_LARGE row and the typed 431 test fail on the first-fix server.
+The F2b fix of the TEST (accept the 431 or nothing, assert what is structural, read from the server child) is proved by the 8-way loops of
+the final bytes in evidence\green-fix2\loop-resources.json.

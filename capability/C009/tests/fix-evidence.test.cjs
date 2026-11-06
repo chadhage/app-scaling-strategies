@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { test } = require('node:test');
 const { gunzipSync } = require('node:zlib');
-const { checkInputs, checkTranscripts } = require('./evidence-check.cjs');
+const { checkInputs, checkTranscripts, sha } = require('./evidence-check.cjs');
 
 // The archives of the fix cycle after the independent review (order R8) are recomputed here, never trusted: the raw streams, the
 // manifests and the bytes of the inputs. The tamper tests edit bytes in memory and demand that the check notices (C044 F9, L-0133).
@@ -26,6 +26,14 @@ const redRuns = fs.readdirSync(redRoot).filter((name) => name.startsWith('fix-')
 const stdoutOf = (directory, manifest) => gunzipSync(fs.readFileSync(path.join(directory, manifest.transcripts.stdout.path))).toString('utf8');
 const firstPublication = JSON.parse(fs.readFileSync(path.join(root, 'evidence', 'green', 'green-suite.json'), 'utf8')).inputs;
 const pinOf = (inputPath) => firstPublication.find((entry) => path.basename(entry.path.replaceAll('\\', '/')) === path.basename(inputPath.replaceAll('\\', '/')));
+// The fix of order R9 changed some files after the R8 archives pinned them. Their R8 bytes are retained in evidence/red/snapshot-fix1 and
+// every R8 pin is recomputed against those bytes; every other pinned file must still equal the live file (a silent change is detected).
+const snapshotRoot = path.join(root, 'evidence', 'red', 'snapshot-fix1');
+const snapshotFiles = fs.readdirSync(snapshotRoot, { recursive: true }).map((name) => name.replaceAll('\\', '/')).filter((name) => fs.statSync(path.join(snapshotRoot, name)).isFile());
+const readFix1 = (relative) => {
+  const name = path.relative(root, path.join(repository, relative)).replaceAll('\\', '/');
+  return snapshotFiles.includes(name) ? fs.readFileSync(path.join(snapshotRoot, name)) : read(relative);
+};
 
 test('the NEW RED archives are intact and failed for the specified behavior, not for a missing module', () => {
   assert.ok(redRuns.length >= 5, `refusal close, refusal flood (two attempts), quota and ring, timeouts, resource heap: ${redRuns}`);
@@ -54,7 +62,7 @@ test('every NEW RED archive pins the first-publication production bytes and the 
     }
     if (!handBuilt) {
       const stable = (input) => /\\tests\\/.test(input.path) || input.path.endsWith('.gitattributes');
-      assert.deepEqual(checkInputs({ manifest, read, pinned: stable }), [], `${run}: a test changed after its RED was archived`);
+      assert.deepEqual(checkInputs({ manifest, read: readFix1, pinned: stable }), [], `${run}: a test changed after its RED was archived`);
     }
   }
 });
@@ -95,7 +103,7 @@ test('the final GREEN, coverage, replay and browser archives, once captured, are
   for (const [name, manifest] of Object.entries(manifests)) {
     const directory = inNamespace('evidence', 'green-fix');
     assert.deepEqual(checkTranscripts({ directory, manifest, read }), [], name);
-    assert.deepEqual(checkInputs({ manifest, read }), [], `${name}: a file changed after the run was captured`);
+    assert.deepEqual(checkInputs({ manifest, read: readFix1 }), [], `${name}: a file changed after the run was captured`);
     assert.equal(manifest.exitCode, manifest.expectedExitCode, `${name} exit code`);
   }
   assert.equal(manifests.suite.summary.fail, 0);
@@ -105,4 +113,14 @@ test('the final GREEN, coverage, replay and browser archives, once captured, are
     assert.ok(row && row.lines >= 85 && row.branches >= 85 && row.functions >= 85, `${file}: ${JSON.stringify(row)}`);
   }
   assert.match(stdoutOf(finalRoot, manifests['browser-edge']), /C009 BROWSER OK/);
+});
+
+test('the R8 bytes of every file the R9 fix changed are retained exactly: each snapshot equals the pin of the first fix', () => {
+  const suite = JSON.parse(fs.readFileSync(path.join(finalRoot, 'suite.json'), 'utf8'));
+  assert.ok(snapshotFiles.length >= 12, snapshotFiles.join(' '));
+  for (const name of snapshotFiles) {
+    const pin = suite.inputs.find((input) => input.path.replaceAll('\\', '/') === `capability/C009/${name}`);
+    assert.ok(pin, `${name} was pinned by the first fix`);
+    assert.equal(sha(fs.readFileSync(path.join(snapshotRoot, name))), pin.rawSha256, name);
+  }
 });

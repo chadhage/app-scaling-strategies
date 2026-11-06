@@ -32,6 +32,9 @@ const CODES = Object.freeze({
   LOCAL_HOST_REQUIRED: [421, 'Only the actual 127.0.0.1 listener is supported.'],
   CROSS_ORIGIN_DENIED: [403, 'This synthetic fixture supports only its own loopback origin.'],
   EXPECTATION_FAILED: [417, 'Only the 100-continue expectation is supported.'],
+  REQUEST_MALFORMED: [400, 'The request could not be parsed.'],
+  HEADERS_TOO_LARGE: [431, 'The request headers are too large.'],
+  REQUEST_TIMEOUT: [408, 'The request was not completed in time.'],
   INTERNAL_ERROR: [500, 'The fixture failed closed; nothing was changed.']
 });
 

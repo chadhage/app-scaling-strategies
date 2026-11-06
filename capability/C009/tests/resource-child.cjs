@@ -10,11 +10,20 @@ const { startLocal } = load('cli.cjs');
 
 startLocal({ readApproval: () => approved, lifetimeMs: 120000 }).then((local) => {
   let accepted = 0;
-  local.server.on('connection', () => { accepted += 1; });
+  const sockets = [];
+  local.server.on('connection', (socket) => {
+    accepted += 1;
+    const entry = { socket, bytesRead: 0, closed: false };
+    sockets.push(entry);
+    socket.once('close', () => { entry.bytesRead = socket.bytesRead; entry.closed = true; entry.socket = null; });
+  });
   process.on('message', (message) => {
     if (message === 'stats') {
       global.gc();
-      process.send({ type: 'stats', heapUsed: process.memoryUsage().heapUsed, accepted });
+      process.send({
+        type: 'stats', heapUsed: process.memoryUsage().heapUsed, accepted,
+        sockets: sockets.map((entry) => ({ bytesRead: entry.closed ? entry.bytesRead : entry.socket.bytesRead, closed: entry.closed }))
+      });
     } else if (message === 'retain') {
       // The negative control of the settled reading: memory the server really keeps must still be seen.
       global.retained = [];

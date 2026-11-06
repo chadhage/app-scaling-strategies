@@ -4,12 +4,14 @@ const contract = require('./contract.js');
 const { AuthError, claimedHeaders, decide, parseBearer } = require('./authz.cjs');
 const { CommandError } = require('./handlers.cjs');
 const { CODES } = require('./codes.cjs');
-const { readBody } = require('./http-io.cjs');
+const { isFinished, readBody } = require('./http-io.cjs');
 
 const JSON_TYPE = /^application\/json\s*(;.*)?$/i;
 
 // The mutation pipeline. Order is the security argument: authenticate, name, permission table (before any input is read),
-// then media type, body, validation, and finally a linearized commit that re-verifies the token and the permission.
+// then media type, body, validation, and finally a linearized commit that re-verifies the token and the permission. A request whose
+// connection was refused (http-io.cjs) while it waited is dropped without an answer, an audit record or an effect: the mark of its socket
+// is tested after the one await that reads the body and again right before the commit.
 function createCommandPipeline({ registry, table, handlers, hooks, validate, ledger, queue }) {
   return async function handleCommand(request, out, url, rawName) {
     const claims = claimedHeaders(request.rawHeaders);
@@ -45,7 +47,9 @@ function createCommandPipeline({ registry, table, handlers, hooks, validate, led
 
     if (url.search !== '') return refuse('QUERY_NOT_ALLOWED', identity, name);
     if (!JSON_TYPE.test(request.headers['content-type'] || '')) return refuse('MEDIA_TYPE_UNSUPPORTED', identity, name);
+    out.proceed();
     const body = await readBody(request, contract.limits.bodyBytes);
+    if (isFinished(request.socket)) return undefined;
     if (body.tooLarge) return refuse('BODY_TOO_LARGE', identity, name);
     let parsed;
     try { parsed = JSON.parse(body.buffer.toString('utf8')); } catch { return refuse('BODY_INVALID_JSON', identity, name); }
@@ -59,6 +63,7 @@ function createCommandPipeline({ registry, table, handlers, hooks, validate, led
         const again = decide(table, name, current.role);
         if (!again.allowed) return refuse(again.code, current, name, { requiredRoles: again.requiredRoles });
         if (!Object.hasOwn(handlers, name)) return refuse('COMMAND_NOT_IMPLEMENTED', current, name);
+        if (isFinished(request.socket)) return undefined;
         const actor = { subject: current.subject, role: current.role };
         const { revision, result } = ledger.commit(handlers[name], { actor, input: checked.value });
         const entry = ledger.record({ outcome: 'applied', code: 'ok', command: name, subject: actor.subject, role: actor.role });

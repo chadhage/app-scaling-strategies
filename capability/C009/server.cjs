@@ -9,7 +9,7 @@ const { createCommandPipeline } = require('./commands.cjs');
 const { defaultHandlers } = require('./handlers.cjs');
 const { createLedger } = require('./ledger.cjs');
 const { createQueue } = require('./queue.cjs');
-const { createResponder, hasBody, isFinished, localGuard } = require('./http-io.cjs');
+const { canStopReading, clientErrorCode, createLanes, createResponder, hasBody, localGuard } = require('./http-io.cjs');
 
 const scope = Object.freeze({
   cardId: 'C009', businessData: 'synthetic', transport: '127.0.0.1 HTTP only', testRuntime: process.version,
@@ -85,33 +85,46 @@ function createApp(options = {}) {
     }
   }
 
-  // A client may keep a few requests in flight per socket. One that pipelines further is cut off: Node parses a whole chunk at once
-  // and keeps one response object per request, so a flood of tiny pipelined requests would otherwise queue answers without bound.
-  const inFlight = new WeakMap();
+  // The requests of one connection run one at a time, in order (createLanes): Node emits every pipelined request of a TCP read before the
+  // first answer has finished, so a request pipelined behind a refusal would otherwise run. A client past the bound of requests in
+  // flight per socket is cut off.
+  const admit = createLanes({ depth: pipelined });
   // Node checks the header and request timeouts only every connectionsCheckingInterval (30 s by default): set it, or a client that
-  // trickles one byte every 2 s is cut after 30 s and 256 of them hold the whole listener.
-  const server = http.createServer({ connectionsCheckingInterval: checkMs }, (request, response) => {
-    const { socket } = request;
-    if (socket.destroyed || isFinished(socket)) return;
-    const depth = (inFlight.get(socket) || 0) + 1;
-    if (depth > pipelined) {
-      socket.destroy();
-      return;
-    }
-    inFlight.set(socket, depth);
-    response.once('close', () => inFlight.set(socket, inFlight.get(socket) - 1));
-    route(request, response).catch(() => response.destroy());
-  });
-  // An Expect other than 100-continue is refused through the same final-answer path (Node would answer 417 and keep the connection).
-  server.on('checkExpectation', (request, response) => createResponder(response).fail('EXPECTATION_FAILED'));
+  // trickles one byte every 2 s is cut after 30 s and 256 of them hold the whole listener. requireHostHeader: false lets a request
+  // without Host reach localGuard, which refuses it with a typed answer, instead of Node's own bare 400.
+  const server = http.createServer({ connectionsCheckingInterval: checkMs, requireHostHeader: false }, (request, response) => admit(request, response, route));
+  // Everything Node would answer by itself goes through the same lanes and the same final-answer path (http-io.cjs rule 4): an
+  // Expect other than 100-continue (Node would answer 417 and keep the connection), the 100 Continue of a request that is about to be
+  // read (a refused one is never invited to send its body), a parse error, an oversized header, a timeout, and CONNECT.
+  server.on('checkContinue', (request, response) => admit(request, response, route));
+  server.on('checkExpectation', (request, response) => admit(request, response, (_request, answer) => createResponder(answer).fail('EXPECTATION_FAILED')));
+  server.on('clientError', (error, socket) => admit.refuse(socket, clientErrorCode(error)));
+  server.on('connect', (request, socket) => admit.refuse(socket, 'METHOD_NOT_ALLOWED'));
   server.requestTimeout = headerMs;
   server.headersTimeout = headerMs;
   server.keepAliveTimeout = 1000;
   server.timeout = idleMs;
   server.maxConnections = connections;
+  // A refusal stops reading with a Node internal (http-io.cjs rule 3). Where it is missing the server serves nothing: it fails closed on
+  // the first connection, and at startup when its own listener lacks it, instead of degrading to Connection: close alone.
+  let broken = null;
+  const failClosed = () => {
+    if (broken === null) process.emitWarning('C009 cannot stop reading a refused connection and serves nothing.', { code: 'C009_READ_STOP_UNAVAILABLE' });
+    broken = 'READ_STOP_UNAVAILABLE';
+  };
+  server.once('listening', () => {
+    if (canStopReading(server)) return;
+    failClosed();
+    server.emit('error', new Error('READ_STOP_UNAVAILABLE: this Node cannot stop reading a refused connection'));
+  });
   // Every accepted socket is tracked here as well, so close() ends a half-open or never-read one the HTTP layer no longer owns.
   const sockets = new Set();
   server.on('connection', (socket) => {
+    if (broken === null && !canStopReading(socket)) failClosed();
+    if (broken !== null) {
+      socket.destroy();
+      return;
+    }
     sockets.add(socket);
     socket.once('close', () => sockets.delete(socket));
   });
@@ -121,7 +134,7 @@ function createApp(options = {}) {
     for (const socket of sockets) socket.destroy();
   });
   return {
-    server, close, queued: queue.size, snapshot: ledger.snapshot, auditLog: ledger.auditLog,
+    server, close, queued: queue.size, snapshot: ledger.snapshot, auditLog: ledger.auditLog, health: () => ({ ok: broken === null, reason: broken }),
     issueToken: (identity, tokenOptions) => registry.issue(identity, tokenOptions)
   };
 }
