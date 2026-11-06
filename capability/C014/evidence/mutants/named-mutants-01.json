@@ -1,0 +1,337 @@
+{
+ "schema": "C014-named-mutants/1",
+ "generatorFiles": [
+  "tests/mutants.cjs",
+  "tests/named-mutants.cjs",
+  "tests/mutate-preload.cjs"
+ ],
+ "total": 28,
+ "killed": 25,
+ "timedOut": 0,
+ "survived": [
+  "S1 an issued token is not registered by value",
+  "W6 Node answers a request without Host itself",
+  "W7 no connection cap"
+ ],
+ "results": [
+  {
+   "id": "R1 unknown fields are copied (the allow-list is dropped)",
+   "file": "redact.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "a raw error becomes failure steps next to the raw steps; the stack is never read",
+    "runs come from the committed ledger state: files become a count, a refused commit leaves n",
+    "allow-list: a field no rule names is never copied (unknown fields, nested unknown subtrees"
+   ],
+   "ranTests": 40
+  },
+  {
+   "id": "R2 nested arrays are not walked (entries pass raw)",
+   "file": "redact.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "the trace and log rings keep the newest RING records, numbered by a sequence that never re",
+    "listBody shows the newest `limit` entries and reconciles shown against total",
+    "a published item is reused until the redactor learns a new secret, then it is published ag"
+   ],
+   "ranTests": 40
+  },
+  {
+   "id": "R3 value masking is removed from free text",
+   "file": "redact.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "a published item is reused until the redactor learns a new secret, then it is published ag",
+    "a raw error becomes failure steps next to the raw steps; the stack is never read",
+    "text masking by value: a registered secret is replaced in place and the rest of the senten"
+   ],
+   "ranTests": 40
+  },
+  {
+   "id": "R4 the encoded-forms check is removed",
+   "file": "redact.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "text masking by value: every covered encoding of a registered secret masks the whole value"
+   ],
+   "ranTests": 40
+  },
+  {
+   "id": "R5 exact occurrences are not replaced",
+   "file": "redact.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "a published item is reused until the redactor learns a new secret, then it is published ag",
+    "a raw error becomes failure steps next to the raw steps; the stack is never read",
+    "text masking by value: a registered secret is replaced in place and the rest of the senten"
+   ],
+   "ranTests": 40
+  },
+  {
+   "id": "R6 the secret shapes are not replaced",
+   "file": "redact.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "secret shapes are masked although the service never held them: token, bearer, connection s"
+   ],
+   "ranTests": 40
+  },
+  {
+   "id": "R7 an item with an invalid required field is published half formed",
+   "file": "redact.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "a record that cannot be read is published as nothing: shown excludes it, total counts it, ",
+    "typed fields: a value outside its closed vocabulary or range becomes null and is counted; ",
+    "arrays: every entry is walked, invalid entries are dropped, and a long array is cut and co"
+   ],
+   "ranTests": 40
+  },
+  {
+   "id": "R8 a new secret does not change the epoch (stale published items)",
+   "file": "redact.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "a published item is reused until the redactor learns a new secret, then it is published ag",
+    "register: short and non-string values are refused, a duplicate changes nothing, a new secr"
+   ],
+   "ranTests": 40
+  },
+  {
+   "id": "R9 anyone can mint a PublicBody",
+   "file": "redact.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "a PublicBody is minted by publish alone, is frozen, and serialises through toJSON"
+   ],
+   "ranTests": 40
+  },
+  {
+   "id": "C1 double URL encoding is not decoded twice",
+   "file": "canon.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "views: the text and its URL (twice), HTML and escape decodings",
+    "leaksIn: any view of a text, folded or not, that holds any needle of any registered secret",
+    "text masking by value: every covered encoding of a registered secret masks the whole value"
+   ],
+   "ranTests": 21
+  },
+  {
+   "id": "C2 base64 alignment is ignored",
+   "file": "canon.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "needlesFor: base64 and base64url are found at all three alignments inside a longer base64 ",
+    "leaksIn: any view of a text, folded or not, that holds any needle of any registered secret"
+   ],
+   "ranTests": 21
+  },
+  {
+   "id": "C3 format characters are not stripped by fold",
+   "file": "canon.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "fold: case, compatibility forms, format characters, combining marks, dash and space look-a",
+    "leaksIn: any view of a text, folded or not, that holds any needle of any registered secret",
+    "text masking by value: every covered encoding of a registered secret masks the whole value"
+   ],
+   "ranTests": 21
+  },
+  {
+   "id": "E1 errors and their causes are skipped",
+   "file": "evidence.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "a raw error becomes failure steps next to the raw steps; the stack is never read",
+    "run.create by a conductor and config.check by the operator: typed answers, the evidence sh"
+   ],
+   "ranTests": 29
+  },
+  {
+   "id": "E2 the export is signed over the wrong text",
+   "file": "evidence.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "the bundle: every kind through the item path, counts that equal the item counts, a signatu"
+   ],
+   "ranTests": 29
+  },
+  {
+   "id": "E3 the rings are not bounded",
+   "file": "evidence.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "the trace and log rings keep the newest RING records, numbered by a sequence that never re"
+   ],
+   "ranTests": 29
+  },
+  {
+   "id": "E4 published items are never published again",
+   "file": "evidence.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "a published item is reused until the redactor learns a new secret, then it is published ag"
+   ],
+   "ranTests": 29
+  },
+  {
+   "id": "V1 the bundle is signed with another key",
+   "file": "vault.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "status is booleans and counts only; sign is an HMAC-SHA256 hex digest of the signing key"
+   ],
+   "ranTests": 17
+  },
+  {
+   "id": "V2 the host of the connection string is not registered",
+   "file": "vault.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "secrets(): every leaf and the parts a driver message or a log line would reveal, each at l"
+   ],
+   "ranTests": 17
+  },
+  {
+   "id": "S1 an issued token is not registered by value",
+   "file": "service.cjs",
+   "killed": false,
+   "timedOut": false,
+   "exit": 0,
+   "failing": [],
+   "ranTests": 19
+  },
+  {
+   "id": "S2 a failing log sink fails the request",
+   "file": "service.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "recordRequest: a raw trace and a raw log, the level from the status, the console line is t"
+   ],
+   "ranTests": 19
+  },
+  {
+   "id": "W1 no checkExpectation listener (Node answers 417 itself)",
+   "file": "server.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "the matrix: every refusal row, every position, HTTP/1.1 and HTTP/1.0: the earlier answers "
+   ],
+   "ranTests": 17
+  },
+  {
+   "id": "W2 no clientError listener",
+   "file": "server.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "the matrix: every refusal row, every position, HTTP/1.1 and HTTP/1.0: the earlier answers "
+   ],
+   "ranTests": 17
+  },
+  {
+   "id": "W3 no connect listener",
+   "file": "server.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "the matrix: every refusal row, every position, HTTP/1.1 and HTTP/1.0: the earlier answers "
+   ],
+   "ranTests": 17
+  },
+  {
+   "id": "W4 no lanes: requests run as they arrive",
+   "file": "server.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "the matrix: every refusal row, every position, HTTP/1.1 and HTTP/1.0: the earlier answers "
+   ],
+   "ranTests": 17
+  },
+  {
+   "id": "W5 JSON may be sent that is not a PublicBody",
+   "file": "server.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "createOut sends JSON only as a PublicBody: a plain object, a string or a buffer is a TypeE"
+   ],
+   "ranTests": 17
+  },
+  {
+   "id": "W6 Node answers a request without Host itself",
+   "file": "server.cjs",
+   "killed": false,
+   "timedOut": false,
+   "exit": 0,
+   "failing": [],
+   "ranTests": 17
+  },
+  {
+   "id": "W7 no connection cap",
+   "file": "server.cjs",
+   "killed": false,
+   "timedOut": false,
+   "exit": 0,
+   "failing": [],
+   "ranTests": 17
+  },
+  {
+   "id": "W8 no checkContinue listener",
+   "file": "server.cjs",
+   "killed": true,
+   "timedOut": false,
+   "exit": 1,
+   "failing": [
+    "a request with an Expect: 100-continue is invited to send its body only when it is about t"
+   ],
+   "ranTests": 17
+  }
+ ]
+}

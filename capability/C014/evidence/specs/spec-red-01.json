@@ -1,0 +1,24 @@
+{
+  "name": "red-initial",
+  "purpose": "C014 RED: the initial specification tests (initial-a: canary sweep, allow-list shape, signature, management route; initial-b: refusal table and pipelining) against the NAIVE stub (field-name blocklist per route, raw records served, refusals on a kept-alive connection). Written before any production file exists; every failing test fails on a behavioral assertion (a canary found in an answer, a field outside the allow-list, no Connection: close, a mutation that ran behind a refusal).",
+  "args": [
+    "--require", ".\\capability\\C014\\tests\\scratch-cwd.cjs",
+    "--test", "--test-concurrency=1", "--test-timeout=120000",
+    "capability\\C014\\evidence\\red\\initial-a.snapshot.cjs",
+    "capability\\C014\\evidence\\red\\initial-b.snapshot.cjs"
+  ],
+  "inputs": [
+    "capability\\C014\\C014.feature",
+    "capability\\C014\\evidence\\red\\initial-a.snapshot.cjs",
+    "capability\\C014\\evidence\\red\\initial-b.snapshot.cjs",
+    "capability\\C014\\evidence\\red\\canaries.snapshot.cjs",
+    "capability\\C014\\evidence\\red\\scanner.snapshot.cjs",
+    "capability\\C014\\evidence\\red\\harness.snapshot.cjs",
+    "capability\\C014\\evidence\\red\\stubs\\server.cjs",
+    ".\\capability\\C014\\tests\\scratch-cwd.cjs"
+  ],
+  "outDir": "capability\\C014\\evidence\\red\\red-01",
+  "expectedExitCode": 1,
+  "env": { "C014_SUBJECT": "<REPO>\\capability\\C014\\evidence\\red\\stubs" },
+  "timeoutMs": 300000
+}

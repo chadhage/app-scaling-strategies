@@ -1,0 +1,114 @@
+{
+  "schema": "C014-browser/1",
+  "edge": {
+    "version": "156.0.4314.58",
+    "major": 156,
+    "signature": "Valid",
+    "publisher": "Microsoft Corporation",
+    "sha256": "d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b"
+  },
+  "canaryIds": [
+    "token-visitor",
+    "token-conductor-a",
+    "token-conductor-b",
+    "token-operator",
+    "signing-key",
+    "connection-string",
+    "db-password",
+    "db-user",
+    "db-host",
+    "service-id",
+    "service-secret",
+    "name-visitor",
+    "surname-visitor",
+    "email-visitor",
+    "phone-visitor",
+    "name-conductor-a",
+    "surname-conductor-a",
+    "email-conductor-a",
+    "phone-conductor-a",
+    "name-conductor-b",
+    "surname-conductor-b",
+    "email-conductor-b",
+    "phone-conductor-b",
+    "name-operator",
+    "surname-operator",
+    "email-operator",
+    "phone-operator",
+    "client-header",
+    "client-url",
+    "client-query",
+    "client-body",
+    "client-cookie",
+    "client-agent"
+  ],
+  "scanned": [
+    {
+      "label": "the real service",
+      "requests": 13,
+      "responses": 16,
+      "consoleMessages": 0,
+      "domBytes": 18387
+    },
+    {
+      "label": "a forging server",
+      "requests": 12,
+      "responses": 16,
+      "consoleMessages": 1,
+      "domBytes": 2553
+    }
+  ],
+  "checks": [
+    {
+      "name": "the installed Edge is Microsoft-signed and its major is qualified",
+      "observed": {
+        "version": "156.0.4314.58",
+        "major": 156,
+        "signature": "Valid",
+        "publisher": "Microsoft Corporation",
+        "sha256": "d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b",
+        "attempts": 1
+      }
+    },
+    {
+      "name": "the real service: nothing the browser holds contains a canary",
+      "observed": {
+        "sections": [
+          50,
+          28,
+          29,
+          47
+        ],
+        "status": "Loaded 4 of 4 sections: 154 of 177 entries shown.",
+        "responses": 16,
+        "requests": 13,
+        "consoleMessages": 0,
+        "bundleBytes": 26091
+      }
+    },
+    {
+      "name": "a forging server cannot make the page print a canary: forged free text is never shown, forged fields reject the whole document",
+      "observed": {
+        "status": "Loaded 2 of 4 sections; 2 rejected. 4 of 4 entries shown from the sections that passed.",
+        "counts": [
+          "Showing 2 of 2 entries (limit 50); revision 1.",
+          "Showing 2 of 2 entries (limit 50); revision 1.",
+          "Rejected: the answer did not match the closed shape and is not shown.",
+          "Rejected: the answer did not match the closed shape and is not shown."
+        ]
+      }
+    },
+    {
+      "name": "keyboard: Tab reaches reload then the download link, the focus ring is drawn, Enter reloads, no inline script, no storage",
+      "observed": {
+        "focus": {
+          "id": "reload",
+          "outline": "solid",
+          "width": "3px"
+        },
+        "next": "download",
+        "requestsAfterEnter": 4
+      }
+    }
+  ]
+}

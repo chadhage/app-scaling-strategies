@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "name": "red-initial",
+  "purpose": "C014 RED: the initial specification tests (initial-a: canary sweep, allow-list shape, signature, management route; initial-b: refusal table and pipelining) against the NAIVE stub (field-name blocklist per route, raw records served, refusals on a kept-alive connection). Written before any production file exists; every failing test fails on a behavioral assertion (a canary found in an answer, a field outside the allow-list, no Connection: close, a mutation that ran behind a refusal).",
+  "command": [
+    "node.exe",
+    "--require",
+    ".\\capability\\C014\\tests\\scratch-cwd.cjs",
+    "--test",
+    "--test-concurrency=1",
+    "--test-timeout=120000",
+    "capability\\C014\\evidence\\red\\initial-a.snapshot.cjs",
+    "capability\\C014\\evidence\\red\\initial-b.snapshot.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C014_SUBJECT"
+  ],
+  "startedAtUtc": "2026-11-06T15:21:25.073Z",
+  "completedAtUtc": "2026-11-06T15:22:34.299Z",
+  "elapsedMs": 69226,
+  "timeoutMs": 300000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C014\\C014.feature",
+      "bytes": 4348,
+      "rawSha256": "274a269490beefff0406fe1c326156cb21cbd183bc40151abb7ed01485ce3954",
+      "crlfToLfSha256": "d9340aa1ff34d047d2b7e1f54c7d640c47705dbbe2bb657f4ad6889b3c662a00"
+    },
+    {
+      "path": "capability\\C014\\evidence\\red\\initial-a.snapshot.cjs",
+      "bytes": 10987,
+      "rawSha256": "4efc5c8fe97770940d4a2a748fb0a1b71103d57b08e5de0be5aff0b3f390250c",
+      "crlfToLfSha256": "c5bfd2efa1a717585216ba4ed2804273d546a760af1bcc0a489efbb66990d17f"
+    },
+    {
+      "path": "capability\\C014\\evidence\\red\\initial-b.snapshot.cjs",
+      "bytes": 6562,
+      "rawSha256": "87e2bfefce8cc067eef4e8b2ee7f8fe9a803b0d0a28a1aa6cd80295e89feb27b",
+      "crlfToLfSha256": "0873f24773c06f7173d5ab7a6673bc3f2d2c6197ffa90c8fb437d0f9601db42c"
+    },
+    {
+      "path": "capability\\C014\\evidence\\red\\canaries.snapshot.cjs",
+      "bytes": 3619,
+      "rawSha256": "15ec2842a6d3d7371b603c6073948765f51316ddeb825bd9e8f9a20d0500a914",
+      "crlfToLfSha256": "fa35b61a06e47c73d11c7de3b4067f5a16d410e0ea4dd9433d4f41913ce8c70f"
+    },
+    {
+      "path": "capability\\C014\\evidence\\red\\scanner.snapshot.cjs",
+      "bytes": 6601,
+      "rawSha256": "681ac0843ff0754d40a0262efe088aed7b83e252382d60759d6dac77ae934958",
+      "crlfToLfSha256": "7387722d1aebf523addf8c4e8362168e6f2532b18c051e8053417579e26cfaeb"
+    },
+    {
+      "path": "capability\\C014\\evidence\\red\\harness.snapshot.cjs",
+      "bytes": 4651,
+      "rawSha256": "3181d66b1e4ce5a23051234625faa30ac70dc3624a1f3f45b3594a58085e88ac",
+      "crlfToLfSha256": "5a75a8e42a3d090953d3b31d1fcb06bdc3e3bb48bc0e63d1a604e2a6ac82c439"
+    },
+    {
+      "path": "capability\\C014\\evidence\\red\\stubs\\server.cjs",
+      "bytes": 7339,
+      "rawSha256": "03498f90ab11d61ba7249567abcb86a2705ab6b15073fadef0a46af16e2976f4",
+      "crlfToLfSha256": "ad8dc34ff7839ae45fce4ac3e3a38d6087c7f8225e66624d7b6748577cc609df"
+    },
+    {
+      "path": ".\\capability\\C014\\tests\\scratch-cwd.cjs",
+      "bytes": 678,
+      "rawSha256": "114066b5e65a1d36d82e2e9bc184dd9e1829300b3ff4db9ec39d0a8a1ab4aba0",
+      "crlfToLfSha256": "bf2b92cd923b8400d03e9df2579ca15659c5769f4caff1248241d4e289af4722"
+    }
+  ],
+  "summary": {
+    "tests": 5,
+    "suites": 0,
+    "pass": 0,
+    "fail": 5,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "the canary sweep: no canary in any covered encoding in any byte that left the server (every route, every identity, every planting place)",
+      "secrets are used only on the server: the bundle signature is an HMAC of the public bundle bytes with the signing key, and the key is nowhere",
+      "the management route answers only the operator and never prints a secret: booleans and counts only",
+      "every refusal is a typed answer with Connection: close, and the server ends the connection",
+      "nothing runs behind a refusal, and the answers of earlier requests come first (one TCP write per case)"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red-initial.stdout.raw.gz",
+      "bytes": 59989,
+      "sha256": "fc411dbe335dca9a255bcdeed51ca841455e8d9e7dcc2974721073dbcde8dd13",
+      "gzipBytes": 5383,
+      "gzipSha256": "b0695399f14abe43251a46295405fe70703e3b23f9ffa61c32b9727e5090ebb5",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red-initial.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}
