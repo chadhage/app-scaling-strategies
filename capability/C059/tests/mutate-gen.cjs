@@ -20,15 +20,15 @@ const check = process.argv.includes('--check');
 const workers = Number(argument('--workers') ?? 2);
 if (!scratch || (!out && !check) || path.resolve(scratch).toLowerCase().startsWith(repository.toLowerCase())) throw new Error('--scratch must be outside the repository and --out a new report file');
 
-const FAST_PAGE = ['page', 'flow', 'tamper', 'page-bind', 'page-kill', 'journey'];
+const FAST_PAGE = ['page', 'flow', 'tamper', 'page-bind', 'bind-null', 'page-kill', 'journey'];
 const SLOW_PAGE = ['keyboard', 'property'];
-const FAST_CHECKER = ['checker', 'checker-reach', 'checker-kill'];
+const FAST_CHECKER = ['checker', 'checker-reach', 'checker-kill', 'checker-fp'];
 const groups = [
   ['page', require('./mutants-page.cjs').map((item) => ({ ...item, suites: FAST_PAGE, slow: item.file === 'page.js' ? SLOW_PAGE : [] }))],
   ['checker', require('./mutants-checker.cjs').map((item) => ({ ...item, suites: FAST_CHECKER, slow: [] }))],
   ['server', require('./mutants-server.cjs').map((item) => ({ ...item, slow: [] }))],
 ];
-const mutants = groups.filter(([name]) => !only || only === name).flatMap(([group, list]) => list.map((item) => ({ group, ...item }))).filter((item) => !match || item.label.includes(match));
+const mutants = groups.filter(([name]) => !only || only === name).flatMap(([group, list]) => list.map((item) => ({ group, ...item }))).filter((item) => !match || match.split('|').some((part) => item.label.includes(part)));
 
 function listFiles(directory, filter) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {

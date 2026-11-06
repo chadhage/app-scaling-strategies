@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "C059 second fix RED (N2): the answer binding (review F6) skips its key and input checks when the envelope's idempotencyKey is null, so a valid envelope of ANOTHER step (lease-002, 9 units) with idempotencyKey, validatedInput and inputSha256 set to null is accepted for a request of lease-001 x 3 and announced as success (the reviewer's p7 probe; the pinned C042 validator allows a null key on a success envelope). Every combination of the three fields (real, null, deleted) on a succeeded, a replayed, an inspected and a cancelled answer of the REAL C042 engine, the reviewer probe, a control with typed refusals that carry no key, and the REAL page.js against the forged envelope for a submit, an inspect and a retry, against journey.js AS PUBLISHED in dfdace94 (stubs-6, byte for byte). The null-key combinations are accepted (failures); the genuine answers and the refusals without a key pass as controls. Replay: C059_RED_SUBJECT=capability\\C059\\evidence\\red\\stubs-6 (old), unset (the final code).",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "--test-timeout=300000",
+    "capability\\C059\\evidence\\red\\fix-i.snapshot.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C059_RED_SUBJECT"
+  ],
+  "startedAtUtc": "2026-11-06T15:47:01.103Z",
+  "completedAtUtc": "2026-11-06T15:47:03.267Z",
+  "elapsedMs": 2164,
+  "timeoutMs": 900000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C059\\C059-review-fix2.feature",
+      "bytes": 3689,
+      "rawSha256": "4f006da4ae92bfff38f067118f21139a2e2acf7477ee52fe3e762f32794a3ee7",
+      "crlfToLfSha256": "0b69036fd6603c5765ea3c88dddf04e84b729bd6562d275316c8badcdc846c08"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\fix-i.snapshot.cjs",
+      "bytes": 8334,
+      "rawSha256": "5ea3d514ca531f5722c42ccb13b36275a7c75dbdc78236edca0d32b4ff958e0c",
+      "crlfToLfSha256": "195603d54e6d594da96b63b2854a4e8643f8c60b2e546b2deda0ba306ebdf8f9"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-8\\old-journey-loader.cjs",
+      "bytes": 794,
+      "rawSha256": "8db2d9996d43441655d6eb225b04c7e79c5a9020a579ffe81be295c9e87aab1c",
+      "crlfToLfSha256": "7faadc42c266f8532beb4cdb98578ac4b61d69246383890831f544f1d292ddec"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-3\\harness.cjs",
+      "bytes": 6513,
+      "rawSha256": "b016567b07fdc661daf149eca620a6760b159f7cebeecc6798836ea14e841357",
+      "crlfToLfSha256": "f9e530986febb9810b4b69019b8c5b7b0064f549cb7e93a4970cc6c6f774befb"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-3\\dom.cjs",
+      "bytes": 7914,
+      "rawSha256": "1573d638deb4e01c688fabb40c139f3b4c8295a5bd8495a9f3b359f26bc6f425",
+      "crlfToLfSha256": "25e69dc94892da675ce5576cfae95b564999dfde38add71784f4381801f6cb1d"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-3\\dom-nodes.cjs",
+      "bytes": 7731,
+      "rawSha256": "f25fac50b81542ca62412ec2ffe6061c1e7ea8a61c44b5a5880e16b62a0b7e43",
+      "crlfToLfSha256": "233a4146f7e5844cb7a50eb3671f2f1406ae8e4460d0b8dc0a34953540fb2b13"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-3\\engine-fetch.cjs",
+      "bytes": 1862,
+      "rawSha256": "745960cd3675cf5e8ffc49b22ce5929940f59b609f69eb0d5be1789d2ac3bcbf",
+      "crlfToLfSha256": "14ffc723a9dc59428ff68f510e6e5b035ae20db8b84fc917be06975ef32df8af"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\stubs-6\\journey.js",
+      "bytes": 10563,
+      "rawSha256": "a33301253c8f8b59f97a4852f0105ebda8de626011fe954d281b9d28a8b4524e",
+      "crlfToLfSha256": "97c74bda4fc84910ed3f99cc440a091c98cef5972a67298afc5f21e704611a0b"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\stubs-6\\page.js",
+      "bytes": 12040,
+      "rawSha256": "29d057c4074d4c97e1ce2dc96c62dcf09889ddd5f3a5c9314d351bdb978107a8",
+      "crlfToLfSha256": "59b217a18913b0860f1cab8b3411b542e33ab4cfe7c68776701c788f48761e96"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\stubs-6\\index.html",
+      "bytes": 4607,
+      "rawSha256": "9d23cbc37fafc71f0788e07c7c1aa27b76144a14c8fdf56daa88ad232d9724ba",
+      "crlfToLfSha256": "11648f1e82de44f45008e921795229b0139f3d33e62ad86bb33c9696467d3fc9"
+    }
+  ],
+  "summary": {
+    "tests": 4,
+    "suites": 0,
+    "pass": 1,
+    "fail": 3,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "N2: every combination of the key, the echoed input and its digest (real, null, deleted) on every kind of accepted answer: only the genuine answer of the request is shown",
+      "N2: a valid envelope of ANOTHER step (lease-002, 9 units) with idempotencyKey, validatedInput and inputSha256 null is refused for a request of lease-001 x 3 (the reviewer probe)",
+      "N2 in the page: the forged null-key envelope of another step answering a submit, an inspect and a retry is rejected as KEY_MISMATCH and never adopted"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 3808,
+      "sha256": "e2fdc3456656af0c0610e2b015524e085fb4c22e80136becf3e6cb70c9959324",
+      "gzipBytes": 1108,
+      "gzipSha256": "8bdc88a2e48d99f62d6dec2be191fadcdd98a63c0b87841cff8959f3ea366604",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

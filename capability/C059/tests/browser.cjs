@@ -22,6 +22,8 @@ async function main() {
     summary.browserVersion = session.browserVersion;
     assert.equal(session.browserVersion.split('.')[0], String(edge.major), 'the running browser is the qualified major');
     const { page } = session;
+    // Cleanup proof (review N5, self-review line 9): with C059_BROWSER_INJECT_FAILURE=1 this run fails right here, and tests\browser-cleanup.cjs asserts that the finally below still closed the session.
+    if (process.env.C059_BROWSER_INJECT_FAILURE === '1') assert.fail('injected failure: the real session must still be closed in finally');
     const pageErrors = [];
     const consoleErrors = [];
     const requests = [];
@@ -238,7 +240,7 @@ async function main() {
       for (const code of fixture.codes) assert.ok(found.includes(code), `${fixture.id} (${fixture.name}): ${code} missing on the real DOM in [${reported[fixture.id]}]`);
       for (const code of fixture.absent ?? []) assert.ok(!found.includes(code), `${fixture.id}: ${code} must not be reported on the real DOM`);
     }
-    checked('the named negative fixtures (K3, K5-K15, V2, V3 and the boundary fixtures X1-X19) are each reported BY NAME on the real DOM in Edge', { fixtures: NEGATIVES.length, K5: reported.K5, K6: reported.K6, V2: reported.V2 });
+    checked('the named negative fixtures (K3, K5-K15, V2, V3 and the boundary fixtures X1-X24) are each reported BY NAME on the real DOM in Edge', { fixtures: NEGATIVES.length, K5: reported.K5, K6: reported.K6, V2: reported.V2 });
     const walked = {};
     for (const fixture of NEGATIVES.filter((item) => item.unreachable)) {
       await load(fixture);
@@ -254,7 +256,7 @@ async function main() {
     const roving = [];
     for (let step = 0; step < 3; step += 1) { await press('Tab'); roving.push(await active()); }
     assert.ok(roving.includes('r1') && !roving.includes('r2'), `a roving radio group is ONE Tab stop in Edge: ${roving}`);
-    checked('real Tab presses in Edge never reach the controls that are not in the Tab order (K5-K8, X12, X13), unreachable() names them, the positives are clean and a roving radio group is one Tab stop', { walked, roving });
+    checked('real Tab presses in Edge never reach the controls that are not in the Tab order (K5-K8, X12, X13, X24), unreachable() names them, the positives (P1-P13, among them the decorative aria-hidden controls and nav role=tablist) are clean and a roving radio group is one Tab stop', { walked, roving });
 
     // Every console error is classified: the blocked POSTs (the helper aborts them: one error per POST the page attempted), the one typed 404
     // (STEP_NOT_FOUND) and the service-worker message of the sandboxed lesson frame (its own content). Anything else fails.
@@ -278,7 +280,10 @@ async function main() {
     console.log(JSON.stringify({ summary }));
     return summary;
   } finally {
-    if (session) await session.close();
+    if (session) {
+      await session.close();
+      if (process.env.C059_BROWSER_INJECT_FAILURE === '1') console.log(JSON.stringify({ cleanup: { sessionClosed: true, pageClosed: session.page.isClosed() } }));
+    }
     prepared.release();
     await closeServer(prepared.server);
   }

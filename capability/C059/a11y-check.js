@@ -27,8 +27,8 @@
   const BUTTONISH = ['button', 'link', 'checkbox', 'radio', 'switch', 'tab', 'menuitem', 'option'];
   const LISTISH = ['list', 'group', 'radiogroup', 'tablist', 'presentation', 'none'];
   const NATIVE_ROLES = new Map([['button', BUTTONISH], ['a', BUTTONISH], ['select', ['combobox']], ['textarea', ['textbox']], ['main', ['main']],
-    ['nav', ['navigation', 'presentation', 'none']], ['ul', LISTISH], ['ol', LISTISH], ['li', ['listitem', 'menuitem', 'option', 'tab', 'radio', 'presentation', 'none']],
-    ...['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].map((name) => [name, ['heading', 'tab', 'presentation', 'none']])]);
+    ['nav', ['navigation', 'presentation', 'none', 'tablist']], ['ul', LISTISH], ['ol', LISTISH], ['li', ['listitem', 'menuitem', 'option', 'tab', 'radio', 'presentation', 'none']],
+    ...['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].map((name) => [name, ['heading', 'menuitem', 'tab', 'presentation', 'none']])]);
   const INPUT_ROLES = new Map([['checkbox', ['checkbox', 'switch']], ['radio', ['radio']], ['button', BUTTONISH], ['submit', BUTTONISH], ['reset', BUTTONISH],
     ['image', BUTTONISH], ['text', ['textbox', 'combobox']]]);
 
@@ -143,8 +143,9 @@
   const inTabOrder = (element, options) => focusable(element, options) && tabIndexOf(element) >= 0;
   // The composite widget (radio group, tab list) whose roving tab stop this member shares; ROVING_TABINDEX checks that it has exactly one stop.
   const groupOf = (element) => [...ancestors(element)].find((node) => COMPOSITES.get(roleOf(node))?.item === roleOf(element)) ?? null;
-  // The controls that a Tab walk did not visit, found from the markup (tag and role) and NOT from the focusable set that the order derives from.
-  const unreachable = (document, visited, options = {}) => elementsOf(document).filter((element) => !hiddenBy(element, options) && isControl(element) &&
+  // The controls that a Tab walk did not visit, found from the markup (tag and role) and NOT from the focusable set that the order derives from. Content inside an
+  // aria-hidden ancestor is exposed to nobody and needs no Tab stop (a tabbable one is a defect of its own: ARIA_HIDDEN_FOCUSABLE).
+  const unreachable = (document, visited, options = {}) => elementsOf(document).filter((element) => !hiddenBy(element, options) && !ariaHiddenBy(element) && isControl(element) &&
     !element.hasAttribute('disabled') && !visited.includes(element) && groupOf(element) === null);
 
   function documentRules({ document, elements, add }) {
@@ -228,7 +229,7 @@
     for (const element of shown) {
       const given = Number.parseInt(element.getAttribute('tabindex'), 10);
       if (given > 0) add('TABINDEX_POSITIVE', element, 'A positive tabindex breaks the logical Tab order.');
-      if (ariaHiddenBy(element) && focusable(element, options)) add('ARIA_HIDDEN_FOCUSABLE', element, 'A focusable element is hidden from assistive technology.');
+      if (ariaHiddenBy(element) && inTabOrder(element, options)) add('ARIA_HIDDEN_FOCUSABLE', element, 'A control in the Tab order is hidden from assistive technology.');
       if (element.hasAttribute('disabled') && isControl(element) && given >= 0) add('DISABLED_FOCUSABLE', element, 'A disabled control cannot take focus: its tabindex contradicts the disabled attribute.');
       if (given >= 0 && !isControl(element) && !nativelyFocusable(element)) add('FOCUSABLE_NO_ROLE', element, 'A focusable element needs an interactive role.');
     }
@@ -243,9 +244,10 @@
     }
   }
 
-  // Every control is in the Tab order, or is a member of a composite widget with one roving tab stop (arrow keys operate it): no mouse-only control.
+  // Every control is in the Tab order, or is a member of a composite widget with one roving tab stop (arrow keys operate it): no mouse-only control. A control inside an
+  // aria-hidden subtree is exposed to nobody and is not asked to be reachable.
   function reachRules({ shown, options, add }) {
-    for (const element of shown.filter((item) => isControl(item) && !item.hasAttribute('disabled') && !inTabOrder(item, options) && groupOf(item) === null)) {
+    for (const element of shown.filter((item) => isControl(item) && !item.hasAttribute('disabled') && !inTabOrder(item, options) && groupOf(item) === null && !ariaHiddenBy(item))) {
       add('CONTROL_NOT_REACHABLE', element, 'This control is not in the Tab order, so a keyboard user cannot reach it.');
       if (nativelyFocusable(element) || Number.isInteger(Number.parseInt(element.getAttribute('tabindex'), 10))) add('TABINDEX_NEGATIVE', element, 'A negative tabindex removes this control from the Tab order.');
       else add('ROLE_NOT_FOCUSABLE', element, 'An element with an interactive role needs a tabindex to take focus.');

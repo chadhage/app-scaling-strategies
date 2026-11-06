@@ -45,9 +45,11 @@ const ACTION_NAME = /^[a-z][a-z-]{0,31}$/;
 const DATA_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$/;
 const sockets = new WeakMap();
 const silent = new WeakMap();
-// Connections on which a refusal was decided, and the per-connection lane of pipelined requests (see decide() and drain()).
+// Connections on which a refusal was decided, and the per-connection lane of pipelined requests (see decide() and drain()). A lane entry is an ordinary request, a request that
+// asked for 100-continue, or a request whose Expect header Node cannot honour: every one of them waits for its turn in the lane, and every refusal is decided when its own turn comes.
 const closing = new WeakSet();
 const lanes = new WeakMap();
+const KIND = Object.freeze({ ordinary: 'ordinary', continue: 'continue', expectation: 'unsupported-expectation' });
 // Per-connection and per-server bounds: nothing a client does can make memory or the number of sockets grow without limit.
 // connectionsCheckingInterval makes Node enforce the header and request timeouts every checkMs instead of every 30 s.
 const BOUNDS = Object.freeze({ pipelineDepth: 4, connections: 128, headerBytes: 8192, headerCount: 64, idleMs: 90000, checkMs: 1000, firstRequestMs: 5000, requestMs: 5000, headersMs: 5000, keepAliveMs: 1000 });
@@ -57,7 +59,8 @@ const EXPECTATION_REFUSED = Object.freeze({ accepted: false, error: Object.freez
 
 // The one place where a refusal is DECIDED: synchronously, before any later request of the connection is looked at. The connection is marked
 // (request.socket, never response.socket: a response queued behind another has no socket yet) and every request already waiting behind the
-// refusal is dropped, so that nothing pipelined behind a refusal runs, whether the refusal was decided at once or after an await.
+// refusal is dropped, so that nothing pipelined behind a refusal runs, whether the refusal was decided at once or after an await. A refusal is only ever decided by the request
+// whose turn it is in its lane (drain() starts the requests one at a time), so everything still queued comes AFTER the refusing request and everything before it has been answered.
 function decide(socket) {
   closing.add(socket);
   const lane = lanes.get(socket);
@@ -157,8 +160,11 @@ function createLocalServer({ engine, assets = loadAssets(), transcript = null, b
     lane.running = next !== undefined;
     if (next === undefined) return;
     next.response.once('close', () => drain(lane));
+    // The answer Node would give itself to an expectation it cannot honour is decided HERE, when the request starts, like every other refusal: the requests before it have been
+    // answered by now, and the refusal drops the requests waiting behind it. (Decided when the request is parsed, it dropped the requests BEFORE it, and Node could not flush it.)
+    if (next.kind === KIND.expectation) { writeAnswer(next.request, next.response, 417, EXPECTATION_REFUSED); return; }
     // 100 Continue invites the client to send its body: only when the request actually starts, never for a request that was dropped.
-    if (next.expectContinue) next.response.writeContinue();
+    if (next.kind === KIND.continue) next.response.writeContinue();
     handle(next.request, next.response);
   }
 
@@ -231,8 +237,8 @@ function createLocalServer({ engine, assets = loadAssets(), transcript = null, b
     }
   };
   // THE listener of every request Node hands over, whatever its HTTP version (maxRequestsPerSocket is never relied on: it is not applied to HTTP/1.0
-  // requests and not advanced by Node's own answers).
-  const admit = (request, response, expectContinue) => {
+  // requests and not advanced by Node's own answers). Every request, also one with an Expect header, takes its place in the lane of its connection.
+  const admit = (request, response, kind = KIND.ordinary) => {
     const socket = request.socket;
     clearTimeout(silent.get(socket));
     // The check at the top of every request: once a refusal was decided on this connection, no later request runs (the refusal's own answer
@@ -241,16 +247,17 @@ function createLocalServer({ engine, assets = loadAssets(), transcript = null, b
     const lane = lanes.get(socket) ?? { running: false, queue: [] };
     lanes.set(socket, lane);
     if (lane.queue.length >= limits.pipelineDepth) { decide(socket); socket.destroy(); return; }
-    lane.queue.push({ request, response, expectContinue });
+    lane.queue.push({ request, response, kind });
     if (!lane.running) drain(lane);
   };
   // requireHostHeader is off: Node would answer a request without Host with its own 400 and never call a handler; the handler refuses it (421) through the one path.
-  const server = http.createServer({ maxHeaderSize: limits.headerBytes, connectionsCheckingInterval: limits.checkMs, requireHostHeader: false }, (request, response) => admit(request, response, false));
-  // The answers Node would give ITSELF are decided here, through the same rule: Node's 417 for an expectation other than 100-continue keeps the connection
-  // open and keeps parsing the dumped body, 100-continue is sent when the request starts (never for a dropped one), and a request Node finds invalid
-  // (malformed line or header, header overflow, an invalid chunk, a timeout) gets a typed answer, Connection: close and a destroyed socket.
-  server.on('checkContinue', (request, response) => admit(request, response, true));
-  server.on('checkExpectation', (request, response) => writeAnswer(request, response, 417, EXPECTATION_REFUSED));
+  const server = http.createServer({ maxHeaderSize: limits.headerBytes, connectionsCheckingInterval: limits.checkMs, requireHostHeader: false }, (request, response) => admit(request, response));
+  // The answers Node would give ITSELF are decided through the same lane and the same rule: Node's 417 for an expectation other than 100-continue keeps the connection
+  // open and keeps parsing the dumped body, so it is answered in its turn, after the requests before it, with the typed refusal, Connection: close and a destroyed socket;
+  // 100-continue is sent when the request starts (never for a dropped one); a request Node finds invalid (malformed line or header, header overflow, an invalid chunk,
+  // a timeout) gets a typed answer, Connection: close and a destroyed socket at once.
+  server.on('checkContinue', (request, response) => admit(request, response, KIND.continue));
+  server.on('checkExpectation', (request, response) => admit(request, response, KIND.expectation));
   server.on('clientError', refuseMalformed);
   server.requestTimeout = limits.requestMs;
   server.headersTimeout = limits.headersMs;

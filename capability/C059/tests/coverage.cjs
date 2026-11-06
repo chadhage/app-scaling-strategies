@@ -12,10 +12,10 @@ const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const names = gate.listNamespaceFiles(root);
 const SUITES = Object.freeze({
-  'a11y-check.js': ['checker', 'checker-reach', 'checker-kill', 'page', 'flow', 'tamper', 'page-bind', 'page-kill', 'keyboard', 'property'],
-  'journey.js': ['journey', 'page', 'flow', 'tamper', 'page-bind', 'page-kill', 'transcript'],
+  'a11y-check.js': ['checker', 'checker-reach', 'checker-kill', 'checker-fp', 'page', 'flow', 'tamper', 'page-bind', 'page-kill', 'keyboard', 'property'],
+  'journey.js': ['journey', 'bind-null', 'page', 'flow', 'tamper', 'page-bind', 'page-kill', 'transcript'],
   'page.js': ['page', 'flow', 'tamper', 'page-bind', 'page-kill', 'keyboard', 'property'],
-  'server.cjs': ['server', 'resources', 'pipelining', 'flood', 'transcript'],
+  'server.cjs': ['server', 'resources', 'pipelining', 'lane', 'lane-flood', 'flood', 'transcript'],
   'transcript.cjs': ['transcript', 'server'],
 });
 const requested = process.argv.slice(2);
@@ -24,7 +24,7 @@ const PARALLEL = Number(process.env.C059_COVERAGE_PARALLEL ?? 2);
 
 function measure(file) {
   const tests = (SUITES[file] ?? []).map((suite) => path.join('capability', 'C059', 'tests', `${suite}.test.cjs`));
-  const args = ['--test', '--test-concurrency=1', '--test-timeout=280000', '--experimental-test-coverage', `--test-coverage-include=capability/C059/${file}`,
+  const args = ['--test', '--test-concurrency=1', '--test-timeout=900000', '--experimental-test-coverage', `--test-coverage-include=capability/C059/${file}`,
     '--test-coverage-lines=85', '--test-coverage-branches=85', '--test-coverage-functions=85', ...tests];
   return new Promise((resolve) => {
     const child = spawn(process.execPath, args, { cwd: repository, env: gate.nestedEnvironment(process.env), windowsHide: true });

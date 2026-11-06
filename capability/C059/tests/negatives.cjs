@@ -48,6 +48,12 @@ const NEGATIVES = [
   { id: 'X17', name: 'a tab list whose selected tab is not the tab stop', body: '<div id="g" role="tablist" aria-label="Views"><div id="t1" role="tab" aria-selected="false" tabindex="0">One</div><div id="t2" role="tab" aria-selected="true" tabindex="-1">Two</div></div>', codes: ['ROVING_TABINDEX'] },
   { id: 'X18', name: 'a tab without aria-selected', body: '<div id="g" role="tablist" aria-label="Views"><div id="t1" role="tab" tabindex="0">One</div></div>', codes: ['STATE_MISSING'] },
   { id: 'X19', name: 'a switch with an invalid aria-checked value', body: '<div id="s" role="switch" aria-checked="maybe" tabindex="0">Sound</div>', codes: ['STATE_MISSING'] },
+  // Second review, N3: the boundaries of the two relaxations below (P10 to P13) stay defects.
+  { id: 'X20', name: 'a button with an explicit tabindex=0 inside an aria-hidden container is tabbable', body: '<div aria-hidden="true"><button id="b" type="button" tabindex="0">Go</button></div>', codes: ['ARIA_HIDDEN_FOCUSABLE'] },
+  { id: 'X21', name: 'a link inside an aria-hidden container is tabbable', body: '<div aria-hidden="true"><a id="b" href="#top">Top</a></div>', codes: ['ARIA_HIDDEN_FOCUSABLE'] },
+  { id: 'X22', name: 'a div role=button tabindex=0 inside an aria-hidden container', body: '<div aria-hidden="true"><div id="b" role="button" tabindex="0">Go</div></div>', codes: ['ARIA_HIDDEN_FOCUSABLE'] },
+  { id: 'X23', name: 'a nav with role=button does not fit', body: '<nav id="n" aria-label="Views" role="button" tabindex="0">Go</nav>', codes: ['ROLE_MISMATCH'] },
+  { id: 'X24', name: 'a button with tabindex=-1 inside aria-hidden="false" is still a control that Tab never reaches', body: '<div aria-hidden="false"><button id="b" type="button" tabindex="-1">Go</button></div>', codes: ['CONTROL_NOT_REACHABLE', 'TABINDEX_NEGATIVE'], unreachable: 'b' },
 ];
 
 // Fixtures that must produce NO finding: composites and natives that look like defects to a naive rule.
@@ -61,6 +67,11 @@ const POSITIVES = [
   { id: 'P7', name: 'a status region with explicit aria-live=polite and a live role', status: '<div id="status" role="status" aria-live="polite" aria-atomic="true"></div>' },
   { id: 'P8', name: 'a checkbox, a radio and a switch that carry their state', body: '<div id="c" role="checkbox" aria-checked="mixed" tabindex="0">A</div><div id="s" role="switch" aria-checked="false" tabindex="0">B</div>' },
   { id: 'P9', name: 'a hidden control is not in the page', body: '<button id="b" type="button" tabindex="-1" hidden>Go</button><div style="display: none"><div id="x" role="button">Hidden</div></div>' },
+  // Second review, N3: exposed to nobody, or allowed by ARIA in HTML.
+  { id: 'P10', name: 'a decorative button with tabindex=-1 inside an aria-hidden subtree is exposed to nobody and needs no Tab stop', body: '<div aria-hidden="true"><button type="button" tabindex="-1">Decor</button></div>' },
+  { id: 'P11', name: 'a decorative link with tabindex=-1 inside an aria-hidden subtree is exposed to nobody and needs no Tab stop', body: '<div aria-hidden="true"><p><a href="#top" tabindex="-1">Decor</a></p></div>' },
+  { id: 'P12', name: 'a nav element with role=tablist (ARIA in HTML allows it) and one roving tab stop', body: '<nav id="n" role="tablist" aria-label="Views"><button id="t1" type="button" role="tab" aria-selected="true" tabindex="0">One</button><button id="t2" type="button" role="tab" aria-selected="false" tabindex="-1">Two</button></nav>' },
+  { id: 'P13', name: 'a heading with role=menuitem (ARIA in HTML allows it)', body: '<h2 id="m" role="menuitem" tabindex="0">Item</h2>' },
 ];
 
 module.exports = { NEGATIVES, POSITIVES, documentHtml };

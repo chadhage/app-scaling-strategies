@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "C059 second fix RED (N1, the MAJOR of the second review): a Node-own refusal decided at PARSE time (the 417 of server.on('checkExpectation')) runs outside the per-socket lane, so with two or more legitimate requests pipelined BEFORE it the lane queue is cleared, the earlier request is dropped, the 417 is never delivered and the connection stays open ([G][X] is fine; [G][G][X], [G][G][G][X], [G][G][X][G], [M][G][X] and [M][G][X][M] get only the earlier answers and stay open). Raw sockets, ONE write per case, one to three legitimate requests before every Node-own refusal in HTTP/1.1 and HTTP/1.0 framing, with and without a body, against the service AS PUBLISHED in dfdace94 (stubs-5/server.cjs, byte for byte) in the test process and in a SEPARATE child process, plus the structural resource test (128 sockets, each [G][G][X]: the server closes none, the cap is pinned, no time bound). The rows that were already right (a refused 100-continue, no Host, the service's own 404, the parse errors) pass as no-false-positive controls. Replay: C059_RED_SUBJECT=capability\\C059\\evidence\\red\\stubs-5 (old), unset (the final code).",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "--test-timeout=400000",
+    "capability\\C059\\evidence\\red\\fix-g.snapshot.cjs",
+    "capability\\C059\\evidence\\red\\fix-h.snapshot.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C059_RED_SUBJECT"
+  ],
+  "startedAtUtc": "2026-11-06T15:40:02.624Z",
+  "completedAtUtc": "2026-11-06T15:43:22.057Z",
+  "elapsedMs": 199433,
+  "timeoutMs": 1500000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C059\\C059-review-fix2.feature",
+      "bytes": 3689,
+      "rawSha256": "4f006da4ae92bfff38f067118f21139a2e2acf7477ee52fe3e762f32794a3ee7",
+      "crlfToLfSha256": "0b69036fd6603c5765ea3c88dddf04e84b729bd6562d275316c8badcdc846c08"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\fix-g.snapshot.cjs",
+      "bytes": 3886,
+      "rawSha256": "722fc0c895e4171e2fae2442af36de4bac99efb6e966a0682a0393f6c73e6fcb",
+      "crlfToLfSha256": "ea0fe077e851f8dffb25a8f72417d4414931484e40aa0c93119089d4027d71a0"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\fix-h.snapshot.cjs",
+      "bytes": 2699,
+      "rawSha256": "388c8854424e4416afe9ed49f7abc4a914314f047856b4c6d6d941afcf0b643e",
+      "crlfToLfSha256": "ed496c4ad6a3cc85732986afb33b9b544bca6c6fdbacb215903e6f3fc5b58333"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-7\\lane-support.cjs",
+      "bytes": 9542,
+      "rawSha256": "7ace0fce869a0b7e9ce32bd1b99e3359c3f5b83e23f3af39b456ddf316a05b9b",
+      "crlfToLfSha256": "46b88aab091d8c8b472c2c4b6aece0be68f7992a7afbef95021bb8bf9e9f6ab4"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-6\\net.cjs",
+      "bytes": 6720,
+      "rawSha256": "3d6948b825808225eacfc01cc0b9b5292e16f46690f1003595a922d1d617f482",
+      "crlfToLfSha256": "0da9572a5552161590114c59c12694abf64f1516770cb35bfecfddcaa493555d"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-4\\child-server.cjs",
+      "bytes": 1451,
+      "rawSha256": "a82cbdddaa6a18e3d0b0d2919463469251b73857d10113a91aeacb8ea22eba4b",
+      "crlfToLfSha256": "b8fa1cf8384afe9515188b9e255db9ae0c9abe4a8c8aa68095fc532acd8912d1"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-4\\old-server-loader.cjs",
+      "bytes": 798,
+      "rawSha256": "97568490eac1e0f5544bcab652c05ad5e2dabf98f4df4412a66703abbfcfdd92",
+      "crlfToLfSha256": "d6f574bf64f55f3771b0adcf7a3265ddfec94455aa83da31d3803342f2f67fa3"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\stubs-5\\server.cjs",
+      "bytes": 20702,
+      "rawSha256": "50492a4e00f55d60cb30a0ac235ae02795e02757ee0f0cb3b31ada611ad9d092",
+      "crlfToLfSha256": "1f56df10a9f3f5d564d0c0c7cca972f10d51b35bb98b9aacbc6cc8a079a6e2be"
+    }
+  ],
+  "summary": {
+    "tests": 24,
+    "suites": 0,
+    "pass": 18,
+    "fail": 6,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 4 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+      "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 4 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+      "lane [in this process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 4 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+      "lane [in this process] an unknown expectation on a POST that carries a body: 8 shapes in 4 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+      "the reviewer shapes in the open: [G][G][X] gets 200, 200, then the typed 417 with Connection: close, and the server closes (separate process)",
+      "128 sockets, each sending [G][G][Expect: nonsense]: every socket is closed by the server, the server holds no connection, a legitimate GET is answered"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 18671,
+      "sha256": "6b763e342981c7b6a90a188008c7b12e575d16edf25d1775b55f103a6aa73a77",
+      "gzipBytes": 1977,
+      "gzipSha256": "bc952a814b00c8e855fce73e1eecc64fd34c0042e53f87a5344b000b1c4af43c",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

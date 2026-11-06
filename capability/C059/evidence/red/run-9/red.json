@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "C059 second fix RED (N3): two false positives of the checker. A decorative button or link with tabindex=-1 inside an aria-hidden subtree is exposed to nobody and is not in the Tab order (axe accepts it), yet a11y-check.js AS PUBLISHED in dfdace94 (stubs-7, byte for byte) reports it three times (ARIA_HIDDEN_FOCUSABLE, CONTROL_NOT_REACHABLE, TABINDEX_NEGATIVE) and Tab walk reports it unreachable; nav role=tablist and a heading role=menuitem are ROLE_MISMATCH although ARIA in HTML allows them. The positives P10 to P13 and the explicit tests fail; the boundaries that were already right (a tabbable control inside aria-hidden X20 to X22, tabindex=-1 outside it K6 K7 X24, the closed role table X23) pass as controls. Replay: C059_RED_SUBJECT=capability\\C059\\evidence\\red\\stubs-7 (old checker), unset (the final code).",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "--test-timeout=300000",
+    "capability\\C059\\evidence\\red\\fix-j.snapshot.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C059_RED_SUBJECT"
+  ],
+  "startedAtUtc": "2026-11-06T15:47:01.016Z",
+  "completedAtUtc": "2026-11-06T15:47:03.459Z",
+  "elapsedMs": 2443,
+  "timeoutMs": 900000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C059\\C059-review-fix2.feature",
+      "bytes": 3689,
+      "rawSha256": "4f006da4ae92bfff38f067118f21139a2e2acf7477ee52fe3e762f32794a3ee7",
+      "crlfToLfSha256": "0b69036fd6603c5765ea3c88dddf04e84b729bd6562d275316c8badcdc846c08"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\fix-j.snapshot.cjs",
+      "bytes": 6202,
+      "rawSha256": "27775c13930783afdecf1ebcaa567f8defe93e1a95513768b76a74a08d7741d6",
+      "crlfToLfSha256": "3eddb3806777928ba4e981a4237508a28a7b0d14c211bb19077724bfe1c6f561"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-9\\negatives.cjs",
+      "bytes": 10965,
+      "rawSha256": "2685c034be31a437259b443c7e81de15a34e28f1efc77cd14deb119e1e9c0131",
+      "crlfToLfSha256": "4ec6bf9b72e31069a067e23d3ba5c727b54d76a1863e346f3cde43250ac74e43"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-9\\dom.cjs",
+      "bytes": 7914,
+      "rawSha256": "1573d638deb4e01c688fabb40c139f3b4c8295a5bd8495a9f3b359f26bc6f425",
+      "crlfToLfSha256": "25e69dc94892da675ce5576cfae95b564999dfde38add71784f4381801f6cb1d"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-9\\dom-nodes.cjs",
+      "bytes": 7731,
+      "rawSha256": "f25fac50b81542ca62412ec2ffe6061c1e7ea8a61c44b5a5880e16b62a0b7e43",
+      "crlfToLfSha256": "233a4146f7e5844cb7a50eb3671f2f1406ae8e4460d0b8dc0a34953540fb2b13"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\stubs-7\\a11y-check.js",
+      "bytes": 33846,
+      "rawSha256": "1582e05d718230c2f0b44adb7edf8530a4417268f5b0e3add226199bf35efdb0",
+      "crlfToLfSha256": "7f0b5f60389ef1c8e90e201aa63a37041a053de07fe59e6056de1425e32ba732"
+    }
+  ],
+  "summary": {
+    "tests": 12,
+    "suites": 0,
+    "pass": 6,
+    "fail": 6,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "N3 P10: a decorative button with tabindex=-1 inside an aria-hidden subtree is exposed to nobody and needs no Tab stop: no finding of any code, Tab never needs to reach it",
+      "N3 P11: a decorative link with tabindex=-1 inside an aria-hidden subtree is exposed to nobody and needs no Tab stop: no finding of any code, Tab never needs to reach it",
+      "N3: the three codes of the reviewer are each absent for a decorative tabindex=-1 control, however deep the aria-hidden ancestor is",
+      "N3: beside a decorative aria-hidden control a REAL tabindex=-1 control is still reported, and only that one",
+      "N3 P12: a nav element with role=tablist (ARIA in HTML allows it) and one roving tab stop: no ROLE_MISMATCH and no other finding",
+      "N3 P13: a heading with role=menuitem (ARIA in HTML allows it): no ROLE_MISMATCH and no other finding"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 12806,
+      "sha256": "0dafa232fe965e7b752d75b55660dfadfb749b00adb6a39f1c454471184018ae",
+      "gzipBytes": 1930,
+      "gzipSha256": "2cf42f595a1c047c4558dbc2337ef0adf8283d639b3e767b82f7d7f1564ddca5",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

@@ -62,7 +62,10 @@
     const key = body.idempotencyKey;
     const echoed = body.validatedInput;
     // The pinned contract already requires the envelope key to equal validatedInput.idempotencyKey (KEY_MATCH), so binding the envelope key binds the echoed key too.
-    if (expected && key !== null && key !== expected.key) return 'KEY_MISMATCH';
+    // A null key or a null echo is no exemption: only a refusal may carry neither (it confirms no step), while an answer that CONFIRMS a step (accepted: every success,
+    // an inspect of a step, a cancel) must carry the key of its request and the input it echoes.
+    if (expected && key !== expected.key && (key !== null || body.accepted)) return 'KEY_MISMATCH';
+    if (expected && body.accepted && echoed === null) return 'INPUT_MISMATCH';
     if (expected && expected.input && echoed !== null && ECHOED.some((field) => echoed[field] !== expected.input[field])) return 'INPUT_MISMATCH';
     if (body.accepted && body.effect.applied === true && echoed && (body.effect.leaseId !== echoed.leaseId || body.effect.units !== echoed.units)) return 'EFFECT_MISMATCH';
     const begun = body.trail.some((item) => item.type === 'begin');

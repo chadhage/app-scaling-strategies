@@ -1,0 +1,298 @@
+{
+  "schema": "C059-mutation-gen/1",
+  "total": 20,
+  "killed": 19,
+  "errors": 0,
+  "crashLikeKills": 2,
+  "equivalent": [
+    {
+      "label": "checkContinue: Node sends 100 Continue itself, also for a request that never runs",
+      "reason": "without the listener Node writes the interim 100 Continue itself when the response is assigned the socket (a queued response buffers it, a dropped one never sends it) and then calls the same listener: the lane already starts the requests one at a time, so no client can tell the two orders apart; the listener only makes the moment explicit",
+      "survived": true
+    },
+    {
+      "label": "decide() on a parse error: the requests waiting behind the one in flight still start",
+      "reason": "mechanism, not a proof of every state: the lane advances only when the first response closes, which after a parse error is the destroy of the socket; a handler that then starts on a destroyed socket has no remoteAddress and refuses at its first check (LOCAL_HOST_REQUIRED) without an effect and without an answer, so the queue drop only removes that dependency; no public observation tells the two apart",
+      "survived": false
+    },
+    {
+      "label": "ONLY the socket destroy after the flush",
+      "reason": "Node itself destroys the socket (destroySoon on 'finish') after a response that says Connection: close, at the same moment: the explicit destroy only makes the closing independent of that Node behaviour, and no suite (the flood test included) can tell the two apart; the pipelining guard is the mark, not the destroy",
+      "survived": false
+    }
+  ],
+  "survivors": [],
+  "results": [
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "a lane entry forgets what it was: the 417 and the 100-continue entries become ordinary requests (review N1)",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] a refused request that asks for 100-continue (checkContinue): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "an engine rejection (409) is not a refusal",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] a refused request that asks for 100-continue (checkContinue): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "an ordinary request is admitted as an unsupported expectation (review N1)",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": true,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] a refused request that asks for 100-continue (checkContinue): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "checkContinue: Node sends 100 Continue itself, also for a request that never runs",
+      "killed": false,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [],
+      "equivalent": "without the listener Node writes the interim 100 Continue itself when the response is assigned the socket (a queued response buffers it, a dropped one never sends it) and then calls the same listener: the lane already starts the requests one at a time, so no client can tell the two orders apart; the listener only makes the moment explicit"
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "Connection: close after a refusal",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] a refused request that asks for 100-continue (checkContinue): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "decide() on a parse error: the requests waiting behind the one in flight still start",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the data name is validated: device names, trailing dots and bad characters are refused before anything is created"
+      ],
+      "equivalent": "mechanism, not a proof of every state: the lane advances only when the first response closes, which after a parse error is the destroy of the socket; a handler that then starts on a destroyed socket has no remoteAddress and refuses at its first check (LOCAL_HOST_REQUIRED) without an effect and without an answer, so the queue drop only removes that dependency; no public observation tells the two apart"
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "deciding at all when a refusal is written",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] a refused request that asks for 100-continue (checkContinue): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "dropping the waiting requests inside decide()",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in this process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "a mutation pipelined BEFORE a Node-own 417 runs exactly once and is answered, the one behind it never runs ([M][M][X][M])"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "Node's own 417 for another expectation keeps the connection",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in this process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "Node's own 417 is decided at parse time, outside the lane: it drops the requests BEFORE it (review N1)",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in this process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "ONLY the socket destroy after the flush",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the connection cap holds, silent sockets are closed after the first-request limit, and the service recovers"
+      ],
+      "equivalent": "Node itself destroys the socket (destroySoon on 'finish') after a response that says Connection: close, at the same moment: the explicit destroy only makes the closing independent of that Node behaviour, and no suite (the flood test included) can tell the two apart; the pipelining guard is the mark, not the destroy"
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "response.socket instead of request.socket in the destroy after the flush",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": true,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] a refused request that asks for 100-continue (checkContinue): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the 100 Continue of a request when it starts",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] a refused request that asks for 100-continue (checkContinue): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in this process] a refused request that asks for 100-continue (checkContinue): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "pipelined [a refused request that carries Expect: 100-continue (checkContinue)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the bound on waiting pipelined requests",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined: honest requests are still answered in order, one at a time; more pipelined requests than the bound close the connection",
+        "a client that pipelines requests and never reads is cut off after a bounded queue"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the check at the top of the request handler",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] a refused request that asks for 100-continue (checkContinue): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] a refusal of the service itself (404 on an unknown route with a body): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the lane answers 417 for a 100-continue entry and never for an unsupported expectation (review N1)",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] a refused request that asks for 100-continue (checkContinue): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the lane starts the 417 entry like an ordinary request (review N1)",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in this process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the lane: every pipelined request runs at once",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] a refused request that asks for 100-continue (checkContinue): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the mark of the connection inside decide()",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] a refused request that asks for 100-continue (checkContinue): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] a refusal of the service itself (404 on an unknown route with a body): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the next pipelined request never starts",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "lane [in a SEPARATE process] an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] an unknown expectation on a POST that carries a body: 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes",
+        "lane [in a SEPARATE process] a refused request that asks for 100-continue (checkContinue): 8 shapes in 1 framings, one to three legitimate requests before it, nothing behind it runs, the server closes"
+      ],
+      "equivalent": null
+    }
+  ]
+}
