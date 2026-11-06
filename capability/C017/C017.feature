@@ -89,3 +89,15 @@ Feature: C017 Reconcile cancellation during an in-flight action and never fabric
   Scenario: An abusive request body is cut once the answer is flushed
     When a client in another process keeps streaming an endless chunked body to a refused or served request
     Then the connection is closed after a bounded drain, the event loop of the server is not starved and a polite small request still gets its typed answer
+
+  Scenario: Every answer the server can produce goes through the one refusal path
+    When Node itself would answer: an unknown Expect header, Expect 100-continue, a request without a Host header, a request it cannot parse, an oversize header
+    Then the answer is a typed failure of the closed table, the connection is closed by the server after a bounded drain, a refusal never invites an upload and the number of bytes read from the connection is bounded
+
+  Scenario: Nothing pipelined behind a refusal ever runs
+    When a valid cancel, start or reconcile is sent behind a refusal in the same TCP write, in HTTP/1.1 or HTTP/1.0 framing, however the refusal was decided
+    Then the journal and the revision are unchanged, the client receives only the answer of the first request and the connection is closed
+
+  Scenario: The journal pane is re-derived, not displayed
+    When the server answers a state view whose journal lines contradict its facts, carry no action id, belong to another action or decide a cancel for a view without an action
+    Then the page replays the journal window with the same state machine as the server, refuses the view and lists nothing, and a window that does not reach the action's start shows only lines it re-derived

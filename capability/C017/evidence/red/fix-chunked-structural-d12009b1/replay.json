@@ -1,0 +1,15 @@
+{
+  "schema": "C017-fix-red/1",
+  "group": "chunked-structural",
+  "baseline": "final",
+  "purpose": "F22 of the second independent review: the two legacy time-bound tests (chunked.test.cjs: 1.5 s close and 3 s GET bounds, chunked-process.test.cjs: 3.2 s bounds) were rewritten STRUCTURALLY: no time decides pass or fail, an attacker gives up only after a byte count, the server's own log counts the bytes it read, and a naive control is attacked in the same run. The rewritten files run against a NAIVE KEEP-ALIVE SUBJECT (the final server with the two close-after-refusal lines removed: no Connection: close, no close after the flushed answer) and must fail: the connections stay open and the server keeps reading an endless chunked body.",
+  "tests": [
+    "capability/C017/tests/chunked.test.cjs",
+    "capability/C017/tests/chunked-process.test.cjs"
+  ],
+  "overlay": {
+    "capability/C017/server.cjs": "capability/C017/evidence/red/prefix-naive-keepalive/server.snapshot.cjs"
+  },
+  "nodeOptions": "--require=./capability/C017/tests/fixtures/overlay-preload.cjs",
+  "testTimeoutMs": 400000
+}

@@ -52,7 +52,7 @@ test('a real process kill mid-action leaves a journal that tells the truth after
   assert.equal(stopped.code, 0);
 });
 
-test('a small-heap child stays bounded and responsive under floods, half-open and never-reading clients, and still stops promptly', async (t) => {
+test('a small-heap child stays bounded and responsive under floods, half-open and never-reading clients, and still stops promptly', { timeout: 300000 }, async (t) => {
   const made = s.scratch('m');
   t.after(() => made.remove());
   const memFile = path.join(made.dir, 'mem.json');
@@ -78,12 +78,24 @@ test('a small-heap child stays bounded and responsive under floods, half-open an
   const tiny = `POST /api/cancel HTTP/1.1\r\n${host}Content-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n${'1\r\na\r\n'.repeat(3000)}0\r\n\r\n`;
   const crowd = [...Array.from({ length: 40 }, () => h.raw(origin, tiny, { read: false })), ...Array.from({ length: 90 }, () => h.raw(origin, `GET /api/state HTTP/1.1\r\n${host}X-Partial: `, { read: false }))];
   await sleep(600);
-  const after = await readMem(memFile);
+  // The sampler forces a GC every 100 ms, but a starved child still holds the requests it has not finished when the sample is taken: the limits are
+  // polled until they hold (L-0144), and a real leak never converges, so the node:test timeout of this test is the only clock.
+  const within = (sample) => sample.heapUsed < before.heapUsed + 24 * 1024 * 1024 && sample.rss < before.rss + 160 * 1024 * 1024;
+  let after = await readMem(memFile);
+  while (!within(after) && !t.signal.aborted) {
+    await sleep(100);
+    after = await readMem(memFile);
+  }
   assert.ok(after.heapUsed < before.heapUsed + 24 * 1024 * 1024, `heap grew from ${before.heapUsed} to ${after.heapUsed}`);
   assert.ok(after.rss < before.rss + 160 * 1024 * 1024, `rss grew from ${before.rss} to ${after.rss}`);
   crowd.forEach((client) => client.socket.destroy());
-  await sleep(200);
-  assert.equal((await h.get(origin, '/api/state')).status, 200, 'the child stopped answering');
+  // The destroyed crowd is released when the child has processed the closes: a GET that arrives earlier may meet the connection cap and be reset, so it is retried.
+  let answered = null;
+  while (!(answered && answered.status === 200) && !t.signal.aborted) {
+    answered = await h.get(origin, '/api/state').catch(() => null);
+    if (!answered || answered.status !== 200) await sleep(100);
+  }
+  assert.equal(answered && answered.status, 200, 'the child stopped answering');
 
   const stuck = [...Array.from({ length: 30 }, () => h.raw(origin, '', { read: false })), ...Array.from({ length: 10 }, () => h.raw(origin, `GET /api/state HTTP/1.1\r\n${host}X-Partial: `))];
   const stopped = await kid.stop();

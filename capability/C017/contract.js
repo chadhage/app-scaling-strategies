@@ -30,6 +30,9 @@
     METHOD_NOT_ALLOWED: [405, 'input', 'The route does not support that method.', ['correct-closed-command']],
     NOT_FOUND: [404, 'input', 'No local route has that path.', ['reinspect']],
     FORBIDDEN_ORIGIN: [403, 'input', 'Only the actual same-origin loopback page may send commands.', ['stop']],
+    EXPECTATION_FAILED: [417, 'input', 'The Expect header is not supported; send the command without it.', ['correct-closed-command']],
+    MALFORMED_REQUEST: [400, 'input', 'The request is not valid HTTP and was not read.', ['correct-closed-command']],
+    HEADERS_TOO_LARGE: [431, 'input', 'The request headers exceed the small closed size.', ['correct-closed-command']],
     UNKNOWN_LEASE: [404, 'identity', 'The server holds no such lease.', ['reinspect']],
     UNKNOWN_RUN: [404, 'identity', 'The lease has no such run.', ['reinspect']],
     UNKNOWN_USER: [403, 'identity', 'The user is not the owner of this lease.', ['reinspect']],
@@ -117,8 +120,15 @@
     return `A cancel request raced the restart and was never decided: its outcome is UNKNOWN. ${known}; ${unknown}; ${tail}`;
   }
 
-  // The wording a cancel answer may carry, re-derived from its OWN facts (the page prints this, never the server's prose).
-  const statementOf = (body) => describe(body.outcome, body.facts.effectsStanding === null ? null : body.facts);
+  // The wording a cancel answer may carry, re-derived from its OWN facts (the page prints this, never the server's prose). Facts the wording cannot be
+  // built from yield null, which no statement equals.
+  const statementOf = (body) => {
+    try {
+      return describe(body.outcome, body.facts.effectsStanding === null ? null : body.facts);
+    } catch {
+      return null;
+    }
+  };
 
   // Consistency of a cancel answer with its own facts. The page runs it on every answer and refuses to display a claim it fails.
   function claimCheck(body) {
@@ -127,16 +137,19 @@
     const f = body.facts;
     if (body.effective !== EFFECTIVE.includes(body.outcome)) problems.push('effective contradicts the outcome');
     if (body.statement !== statementOf(body)) problems.push('the statement is not the one the facts allow');
+    const unknownOutcome = body.outcome === 'CANCEL_UNKNOWN';
+    if (body.actionStopped !== (unknownOutcome ? null : body.outcome !== 'CANCEL_TOO_LATE')) problems.push('actionStopped contradicts the outcome');
+    if (unknownOutcome ? body.actionCompleted !== false && body.actionCompleted !== null : body.actionCompleted !== (body.outcome === 'CANCEL_TOO_LATE')) problems.push('actionCompleted contradicts the outcome');
     if (body.outcome === 'CANCEL_UNKNOWN') {
       if (body.actionStopped !== null || body.nothingUndone !== null || body.effective !== false) problems.push('unknown must not claim stopped, nothing undone or effective');
       return { ok: problems.length === 0, problems };
     }
-    const steps = (name) => (Array.isArray(f[name]) ? f[name].map((e) => (typeof e === 'number' ? e : e.step)) : null);
+    const steps = (name) => (Array.isArray(f[name]) ? f[name].map((e) => (typeof e === 'number' ? e : (isPlain(e) ? e.step : NaN))) : null);
     const standing = steps('effectsStanding'); const undone = steps('undone'); const notRun = steps('stepsNotRun'); const unknown = steps('unknownSteps');
     if (!standing || !undone || !notRun || !unknown || !Number.isSafeInteger(f.totalSteps)) return { ok: false, problems: [...problems, 'facts are incomplete'] };
     const all = [...standing, ...undone, ...notRun, ...unknown].sort((a, b) => a - b);
     if (unknown.length || all.some((step, index) => step !== index + 1) || all.length !== f.totalSteps) problems.push('facts do not partition the steps');
-    if (f.standingUnits !== f.effectsStanding.reduce((sum, e) => sum + e.units, 0)) problems.push('standing units do not add up');
+    if (f.standingUnits !== f.effectsStanding.reduce((total, e) => total + (isPlain(e) ? e.units : NaN), 0)) problems.push('standing units do not add up');
     if (body.nothingUndone !== (undone.length === 0)) problems.push('nothingUndone contradicts the undone list');
     const rules = {
       CANCELLED_BEFORE_EFFECT: standing.length === 0 && undone.length === 0 && notRun.length === f.totalSteps,
@@ -204,7 +217,7 @@
     bad('a step is shown in a state its facts contradict', a.steps.some((entry, index) => !isPlain(entry) || entry.step !== index + 1 || entry.units !== a.unitsPerStep || entry.state !== stateOf(lists, live, index + 1)));
     bad('the standing units do not add up', a.standingUnits !== sum(a.effectsStanding) || a.effectsStanding.some((e) => e.units !== a.unitsPerStep));
     bad('the exactness of the standing units contradicts the unknown steps', a.standingUnitsExact !== (lists.unknown.length === 0));
-    bad('the compensation state is not closed', !COMPENSATION.includes(a.compensation) || (a.compensation === 'FAILED') !== isPlain(a.compensationFailure) || (a.compensationFailure !== null && !inRange(a.compensationFailure.step, 1, 8)));
+    bad('the compensation state is not closed', !COMPENSATION.includes(a.compensation) || (a.compensation === 'FAILED') !== isPlain(a.compensationFailure) || (a.compensationFailure !== null && !(isPlain(a.compensationFailure) && inRange(a.compensationFailure.step, 1, 8))));
     bad('the cancel summary is malformed', cancel !== null && !(isPlain(cancel) && typeof cancel.key === 'string' && typeof cancel.compensate === 'boolean' && typeof cancel.decided === 'boolean' && (outcome === null || OUTCOMES.includes(outcome))));
     bad('the status contradicts the cancel summary', !statusFits(a.status, cancel, outcome));
     bad('a completed action must show every step standing', a.status === 'COMPLETED' && lists.standing.length !== a.totalSteps);
@@ -227,6 +240,7 @@
       && (e.determination === undefined || DETERMINATIONS.includes(e.determination)) && (e.actionId === undefined || safe(e.actionId, 'actionId') !== null));
 
   // The /api/state view: identity, epoch, journal window, and an action whose steps, lists, status, cancel summary and reconciliation agree.
+  // For a readable journal the window is also REPLAYED (paneOf): the lines shown must be one consistent history that leads to this very action.
   function viewCheck(view) {
     if (!isPlain(view) || view.kind !== 'C017-state' || view.schemaVersion !== 1) return { ok: false, problems: ['the answer is not a state view of this server'] };
     const { problems, bad, verdict } = collect();
@@ -236,6 +250,7 @@
     bad('the journal window is malformed', !journalWindow(view));
     bad('an unreadable journal cannot come with an action', view.journalStatus === 'UNREADABLE' && view.action !== null);
     if (!problems.length && view.action !== null) problems.push(...actionProblems(view.action, view.journal));
+    if (!problems.length && view.journalStatus === 'READABLE') problems.push(...paneOf(view).problems);
     return verdict();
   }
 
@@ -272,6 +287,290 @@
     return verdict();
   }
 
-  return Object.freeze({ OUTCOMES, EFFECTIVE, HTTP_STATUS, DETERMINATIONS, STATUSES, JOURNAL_TYPES, identity, patterns, schemas, recovery, failures, validateCommand, failure, describe, describeDetermination, statementOf, claimCheck,
-    viewCheck, startCheck, reconcileCheck, failureCheck, isPlain });
+  // ---- The ledger: the pure derivation of every fact from the journal entries. It lives here (moved from reconcile.cjs) so that the server and the
+  // PAGE run the very same function: the page re-derives the journal pane and the action from the lines it is shown and trusts neither (F13).
+  // derive() also validates the journal grammar, so a forged or inconsistent decision makes the whole journal unreadable.
+  const ledger = (() => {
+    class JournalInconsistent extends Error {
+      constructor(index, message) {
+        super(`journal entry ${index}: ${message}`);
+        this.name = 'JournalInconsistent';
+        this.code = 'JOURNAL_INCONSISTENT';
+        this.index = index;
+      }
+    }
+    const bad = (index, message) => { throw new JournalInconsistent(index, message); };
+    const kinds = {
+      s: (v) => typeof v === 'string' && v.length <= 80, i: isInt, b: (v) => typeof v === 'boolean',
+      a: (v) => Array.isArray(v) && v.length <= 16 && v.every((e) => isInt(e) || (isPlain(e) && isInt(e.step))),
+    };
+    const FIELDS = {
+      boot: { bootId: 's' },
+      'action-accepted': { leaseId: 's', runId: 's', userId: 's', actionId: 's', epoch: 'i', totalSteps: 'i', unitsPerStep: 'i', startKey: 's', startSha256: 's' },
+      'step-intent': { actionId: 's', step: 'i' },
+      'step-effect': { actionId: 's', step: 'i', units: 'i', standingUnits: 'i' },
+      'action-completed': { actionId: 's', standingUnits: 'i' },
+      'cancel-requested': { actionId: 's', key: 's', commandSha256: 's', compensate: 'b', observedEffects: 'i', observedInFlight: 'i' },
+      'compensation-intent': { actionId: 's', step: 'i' },
+      'compensation-effect': { actionId: 's', step: 'i', units: 'i', standingUnits: 'i' },
+      'compensation-failed': { actionId: 's', step: 'i', reason: 's' },
+      'cancel-decided': { actionId: 's', key: 's', outcome: 's', effectsStanding: 'a', stepsNotRun: 'a', undone: 'a', compensation: 's' },
+      reconciled: { actionId: 's', key: 's', commandSha256: 's', determination: 's', effectsStanding: 'a', unknownSteps: 'a', stepsNotRun: 'a' },
+    };
+    const ENTRY_TYPES = Object.freeze(Object.keys(FIELDS));
+
+    function shape(entry, index) {
+      if (!isPlain(entry) || typeof entry.type !== 'string' || !Object.hasOwn(FIELDS, entry.type)) bad(index, 'unknown entry type');
+      const spec = FIELDS[entry.type];
+      const keys = Object.keys(entry).sort().join();
+      if (keys !== ['at', 'type', ...Object.keys(spec)].sort().join()) bad(index, 'fields are not exactly the closed set of the type');
+      if (typeof entry.at !== 'string' || entry.at.length > 40) bad(index, 'the timestamp is not a short string');
+      for (const [name, kind] of Object.entries(spec)) if (!kinds[kind](entry[name])) bad(index, `field ${name} has the wrong type`);
+    }
+
+    const num = (a, b) => a - b;
+    const sumOf = (map, skip) => [...map].filter(([step]) => !skip.has(step)).reduce((total, [, amount]) => total + amount, 0);
+    const same = (claimed, actual) => JSON.stringify(claimed.map((e) => (typeof e === 'number' ? e : e.step))) === JSON.stringify(actual);
+    const standingUnitsOf = (a) => sumOf(a.effects, a.comp.effects);
+
+    function newAction(e) {
+      return {
+        leaseId: e.leaseId, runId: e.runId, userId: e.userId, actionId: e.actionId, epoch: e.epoch, totalSteps: e.totalSteps, unitsPerStep: e.unitsPerStep,
+        effects: new Map(), intents: new Set(), pendingStep: 0, completed: false, cancel: null,
+        comp: { intents: new Set(), effects: new Map(), failed: null, pendingStep: 0 }, interrupted: false, reconciled: null, closed: false,
+      };
+    }
+
+    function lists(a) {
+      const unknown = [];
+      if (a.interrupted) for (const step of [a.pendingStep, a.comp.pendingStep]) if (step && !unknown.includes(step)) unknown.push(step);
+      unknown.sort(num);
+      const standing = [...a.effects.keys()].filter((s) => !a.comp.effects.has(s) && !unknown.includes(s)).sort(num);
+      const notRun = Array.from({ length: a.totalSteps }, (_, i) => i + 1).filter((s) => !a.intents.has(s));
+      return { standing, undone: [...a.comp.effects.keys()], notRun, unknown };
+    }
+
+    function compensationOf(a) {
+      if (!a.cancel || !a.cancel.compensate) return 'NOT_REQUESTED';
+      if (a.comp.failed) return 'FAILED';
+      if (a.effects.size > 0 && a.comp.effects.size === a.effects.size) return 'COMPLETE';
+      if (a.comp.intents.size > 0) return a.interrupted ? 'INTERRUPTED' : 'IN_PROGRESS';
+      return 'NOT_ATTEMPTED';
+    }
+
+    function classify(a) {
+      const l = lists(a);
+      if (a.completed) return 'CANCEL_TOO_LATE';
+      if (a.interrupted || l.unknown.length) return 'CANCEL_UNKNOWN';
+      if (a.comp.failed) return 'CANCELLED_PARTIAL';
+      if (a.cancel && a.cancel.compensate && l.undone.length > 0 && l.standing.length === 0) return 'COMPENSATED';
+      if (l.standing.length === 0 && l.undone.length === 0 && a.intents.size === 0) return 'CANCELLED_BEFORE_EFFECT';
+      return 'CANCELLED_PARTIAL';
+    }
+
+    function determinationOf(a) {
+      if (a.cancel && !a.cancel.decided && !a.completed) return 'CANCEL_UNKNOWN';
+      return lists(a).unknown.length ? 'INTERRUPTED_UNKNOWN' : 'INTERRUPTED_KNOWN';
+    }
+
+    function outcomeOf(a) {
+      if (a.cancel && a.cancel.decided) return a.cancel.outcome;
+      if (a.completed) return 'CANCEL_TOO_LATE';
+      return a.interrupted ? 'CANCEL_UNKNOWN' : null;
+    }
+
+    function apply(a, e, i, claim) {
+      const live = !a.interrupted && !a.closed && !a.completed;
+      switch (e.type) {
+        case 'step-intent':
+          if (!live || a.cancel || a.pendingStep || e.step !== a.effects.size + 1 || e.step > a.totalSteps) bad(i, 'step intent is out of order');
+          a.intents.add(e.step);
+          a.pendingStep = e.step;
+          break;
+        case 'step-effect':
+          if (a.interrupted || a.closed || a.pendingStep !== e.step || e.units !== a.unitsPerStep || e.standingUnits !== standingUnitsOf(a) + e.units) bad(i, 'step effect does not match its intent');
+          a.effects.set(e.step, e.units);
+          a.pendingStep = 0;
+          break;
+        case 'action-completed':
+          if (!live || a.pendingStep || a.effects.size !== a.totalSteps || e.standingUnits !== standingUnitsOf(a)) bad(i, 'completion does not match the effects');
+          a.completed = true;
+          break;
+        case 'cancel-requested':
+          if (a.cancel || a.closed || a.interrupted || e.observedEffects !== a.effects.size || e.observedInFlight !== a.pendingStep) bad(i, 'cancel request does not match the state it saw');
+          // The last step effect and the completion are ONE append, so no honest journal has a cancel request between them.
+          if (a.effects.size === a.totalSteps && !a.completed) bad(i, 'cancel request between the last effect and the completion');
+          claim(i, e.key, 'cancel', e.commandSha256, a.actionId);
+          a.cancel = { key: e.key, compensate: e.compensate, decided: false, outcome: null };
+          break;
+        case 'compensation-intent': {
+          const next = [...a.effects.keys()].filter((s) => !a.comp.effects.has(s)).sort(num).pop();
+          if (!a.cancel || !a.cancel.compensate || a.cancel.decided || !live || a.completed || a.pendingStep || a.comp.failed || a.comp.pendingStep || e.step !== next) bad(i, 'compensation is not allowed here');
+          a.comp.pendingStep = e.step;
+          a.comp.intents.add(e.step);
+          break;
+        }
+        case 'compensation-effect':
+          if (a.interrupted || a.comp.pendingStep !== e.step || e.units !== -a.effects.get(e.step) || e.standingUnits !== standingUnitsOf(a) + e.units) bad(i, 'compensating effect does not match its intent');
+          a.comp.effects.set(e.step, a.effects.get(e.step));
+          a.comp.pendingStep = 0;
+          break;
+        case 'compensation-failed':
+          if (a.interrupted || a.comp.pendingStep !== e.step || e.reason !== 'SYNTHETIC_FAULT') bad(i, 'compensation failure does not match its intent');
+          a.comp.failed = { step: e.step, reason: e.reason };
+          a.comp.pendingStep = 0;
+          break;
+        case 'cancel-decided': {
+          if (!a.cancel || a.cancel.key !== e.key || a.cancel.decided || a.pendingStep || a.comp.pendingStep || a.interrupted) bad(i, 'decision without a settled request');
+          if (a.cancel.compensate && !a.completed && a.effects.size > 0 && !a.comp.failed && a.comp.effects.size !== a.effects.size) bad(i, 'decision before compensation finished');
+          const l = lists(a);
+          if (e.outcome !== classify(a) || !same(e.effectsStanding, l.standing) || !same(e.stepsNotRun, l.notRun) || !same(e.undone, l.undone) || e.compensation !== compensationOf(a)) {
+            bad(i, 'the recorded decision is not what the journal proves');
+          }
+          a.cancel.decided = true;
+          a.cancel.outcome = e.outcome;
+          a.closed = true;
+          break;
+        }
+        case 'reconciled': {
+          if (!a.interrupted || a.closed) bad(i, 'only an interrupted action can be reconciled');
+          claim(i, e.key, 'reconcile', e.commandSha256, a.actionId);
+          const l = lists(a);
+          if (e.determination !== determinationOf(a) || !same(e.effectsStanding, l.standing) || !same(e.unknownSteps, l.unknown) || !same(e.stepsNotRun, l.notRun)) bad(i, 'the reconciliation is not what the journal proves');
+          a.reconciled = { key: e.key, determination: e.determination };
+          a.closed = true;
+          break;
+        }
+        default:
+          bad(i, 'unexpected entry type');
+      }
+    }
+
+    // windowed: the entries are a SUFFIX of a journal that starts at an action-accepted line (the page sees only the last lines), so the
+    // first action may carry any epoch; every later rule is the same as for a whole journal.
+    function derive(entries, { windowed = false } = {}) {
+      const keys = new Map();
+      const actions = [];
+      let cur = null;
+      let boots = 0;
+      const claim = (index, key, kind, sha256, actionId) => {
+        if (keys.has(key)) bad(index, 'a key may be journaled once');
+        keys.set(key, { kind, sha256, actionId });
+      };
+      entries.forEach((e, index) => {
+        shape(e, index);
+        if (e.type === 'boot') {
+          boots += 1;
+          if (cur && !cur.completed && !cur.closed) cur.interrupted = true;
+        } else if (e.type === 'action-accepted') {
+          if (cur && !(cur.closed || cur.completed)) bad(index, 'a new action began before the previous one settled');
+          if (e.leaseId !== identity.leaseId || e.runId !== identity.runId || e.userId !== identity.userId) bad(index, 'the action is not attributed to the lease, run and user of this server');
+          const epochOk = windowed && !cur ? e.epoch >= 1 : e.epoch === (cur ? cur.epoch + 1 : 1);
+          if (!epochOk || e.totalSteps < 1 || e.totalSteps > 8 || e.unitsPerStep < 1 || e.unitsPerStep > 1000) bad(index, 'epoch or sizing is not valid');
+          cur = newAction(e);
+          actions.push(cur);
+          claim(index, e.startKey, 'start', e.startSha256, e.actionId);
+        } else {
+          if (!cur || e.actionId !== cur.actionId) bad(index, 'entry does not belong to the current action');
+          apply(cur, e, index, claim);
+        }
+      });
+      return { keys, actions, action: cur, boots, epoch: cur ? cur.epoch : 0 };
+    }
+
+    function statusOf(a) {
+      if (a.reconciled) return 'RECONCILED';
+      if (a.cancel && a.cancel.decided) return a.cancel.outcome === 'CANCEL_TOO_LATE' ? 'COMPLETED' : 'CANCELLED';
+      if (a.completed) return 'COMPLETED';
+      if (a.interrupted) return 'INTERRUPTED';
+      if (a.cancel) return 'CANCEL_REQUESTED';
+      return a.intents.size ? 'RUNNING' : 'ACCEPTED';
+    }
+
+    function factsOf(a) {
+      const l = lists(a);
+      const unit = (step) => ({ step, units: a.effects.get(step) });
+      const standing = l.standing.map(unit);
+      return {
+        totalSteps: a.totalSteps, effectsStanding: standing, stepsNotRun: l.notRun, unknownSteps: l.unknown, undone: l.undone.map(unit),
+        standingUnits: standing.reduce((total, e) => total + e.units, 0), standingUnitsExact: l.unknown.length === 0, compensation: compensationOf(a),
+        compensationFailure: a.comp.failed ? { step: a.comp.failed.step, reason: a.comp.failed.reason } : null,
+      };
+    }
+
+    function actionView(a) {
+      const status = statusOf(a);
+      const live = ['ACCEPTED', 'RUNNING', 'CANCEL_REQUESTED'].includes(status);
+      const facts = factsOf(a);
+      const l = lists(a);
+      const stepState = (step) => {
+        if (l.unknown.includes(step)) return 'UNKNOWN';
+        if (a.comp.effects.has(step)) return 'REVERSED';
+        if (a.effects.has(step)) return 'STANDS';
+        if (a.intents.has(step)) return 'IN_FLIGHT';
+        return live ? 'PENDING' : 'NOT_RUN';
+      };
+      return {
+        leaseId: a.leaseId, runId: a.runId, userId: a.userId, actionId: a.actionId, epoch: a.epoch, status, live, totalSteps: a.totalSteps, unitsPerStep: a.unitsPerStep,
+        steps: Array.from({ length: a.totalSteps }, (_, i) => ({ step: i + 1, state: stepState(i + 1), units: a.unitsPerStep })),
+        effectsStanding: facts.effectsStanding, stepsNotRun: live ? [] : facts.stepsNotRun, stepsPending: live ? facts.stepsNotRun : [], unknownSteps: facts.unknownSteps,
+        undone: facts.undone, standingUnits: facts.standingUnits, standingUnitsExact: facts.standingUnitsExact, compensation: facts.compensation, compensationFailure: facts.compensationFailure,
+        cancel: a.cancel ? { key: a.cancel.key, compensate: a.cancel.compensate, decided: a.cancel.decided, outcome: outcomeOf(a), compensation: facts.compensation } : null,
+        reconciliation: a.reconciled ? { ...a.reconciled } : null,
+      };
+    }
+
+    return Object.freeze({ JournalInconsistent, ENTRY_TYPES, derive, lists, classify, compensationOf, determinationOf, outcomeOf, statusOf, factsOf, actionView, standingUnitsOf });
+  })();
+
+  // Structural equality of two JSON values, independent of key order (a server that merely reorders keys is not lying).
+  function sameJson(a, b) {
+    if (Array.isArray(a) || Array.isArray(b)) return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((value, index) => sameJson(value, b[index]));
+    if (isPlain(a) && isPlain(b)) {
+      const keys = Object.keys(a);
+      return keys.length === Object.keys(b).length && keys.every((name) => Object.hasOwn(b, name) && sameJson(a[name], b[name]));
+    }
+    return Object.is(a, b);
+  }
+
+  // The journal pane (F13). A window is the LAST lines of the journal, so it is replayed with the very same state machine the server uses, from
+  // the first action-accepted line of the window on: the lines before it belong to an action whose start is not shown, cannot be re-derived and
+  // are therefore NOT shown at all. What is shown is one consistent history, and the action it leads to is exactly the action the view claims.
+  function paneOf(view) {
+    const omitted = view.journalOmitted === undefined ? 0 : view.journalOmitted;
+    const lines = view.journal;
+    const first = lines.findIndex((e) => e.type === 'action-accepted');
+    // Leading boot lines need no state (only their shape is checked); any other line before the first action-accepted belongs to an action
+    // whose start is not in the window: it cannot be re-derived, so it is not shown.
+    const from = view.action === null || lines.slice(0, Math.max(first, 0)).every((e) => e.type === 'boot') ? 0 : first;
+    if (view.action !== null && first < 0) return { shown: [], first: omitted + lines.length, hidden: omitted + lines.length, problems: [] };
+    const problems = [];
+    try {
+      const derived = ledger.derive(lines.slice(from), { windowed: true });
+      if (view.action === null ? derived.action !== null : !derived.action || !sameJson(ledger.actionView(derived.action), view.action)) problems.push('the journal does not derive the action the view shows');
+      if (view.epoch !== derived.epoch) problems.push('the epoch is not the one the journal derives');
+    } catch (error) {
+      if (!(error instanceof ledger.JournalInconsistent)) throw error;
+      problems.push(`the journal window is not one consistent history of the action: ${error.message}`);
+    }
+    return { shown: lines.slice(from), first: omitted + from, hidden: omitted + from, problems };
+  }
+
+  // The lines of an ACCEPTED view that may be displayed, with their absolute numbers, and how many are not shown.
+  function journalPane(view) {
+    const pane = paneOf(view);
+    return { lines: pane.shown.map((entry, index) => ({ number: pane.first + index + 1, entry })), hidden: pane.hidden };
+  }
+
+  // A check never throws: a shape it cannot read is a refusal with a fixed sentence (F15: a delivered malformed answer was reported as "not reachable").
+  const total = (check) => (body) => {
+    try {
+      return check(body);
+    } catch {
+      return { ok: false, problems: ['the answer has a shape the check cannot read'] };
+    }
+  };
+
+  return Object.freeze({ OUTCOMES, EFFECTIVE, HTTP_STATUS, DETERMINATIONS, STATUSES, JOURNAL_TYPES, identity, patterns, schemas, recovery, failures, validateCommand, failure, describe, describeDetermination, statementOf,
+    claimCheck: total(claimCheck), viewCheck: total(viewCheck), startCheck: total(startCheck), reconcileCheck: total(reconcileCheck), failureCheck: total(failureCheck), journalPane, ledger, isPlain });
 }));

@@ -1,0 +1,433 @@
+{
+ "schema": "C017-mutants-gen/1",
+ "node": "v22.23.4",
+ "file": "server.cjs",
+ "baseSha256": "7b3aa0e4f1f42338fc51e6bb3024ffd34726577ea433ae1759c23907b3da16b2",
+ "tests": [
+  "server-guards.test.cjs",
+  "refusal-shapes.test.cjs",
+  "drain.test.cjs",
+  "two-servers.test.cjs",
+  "server.test.cjs",
+  "chunked.test.cjs",
+  "resources.test.cjs"
+ ],
+ "generated": 111,
+ "ran": 30,
+ "invalid": [],
+ "killed": 18,
+ "survived": [
+  {
+   "id": "G080-cond-true-L142",
+   "line": 142,
+   "kind": "cond-true",
+   "was": "!response.headersSent"
+  },
+  {
+   "id": "G082-cond-true-L176",
+   "line": 176,
+   "kind": "cond-true",
+   "was": "server.listening"
+  },
+  {
+   "id": "G083-delete-statement-L45",
+   "line": 45,
+   "kind": "delete-statement",
+   "was": "chunks.length = 0;"
+  },
+  {
+   "id": "G086-delete-statement-L50",
+   "line": 50,
+   "kind": "delete-statement",
+   "was": "request.on('error', () => resolve({ tooLarge: true }));"
+  },
+  {
+   "id": "G087-delete-statement-L62",
+   "line": 62,
+   "kind": "delete-statement",
+   "was": "timer.unref();"
+  },
+  {
+   "id": "G101-delete-statement-L154",
+   "line": 154,
+   "kind": "delete-statement",
+   "was": "server.keepAliveTimeout = 1000;"
+  },
+  {
+   "id": "G102-delete-statement-L155",
+   "line": 155,
+   "kind": "delete-statement",
+   "was": "server.maxHeadersCount = 32;"
+  },
+  {
+   "id": "G103-delete-statement-L156",
+   "line": 156,
+   "kind": "delete-statement",
+   "was": "server.maxConnections = maxConnections;"
+  },
+  {
+   "id": "G105-delete-statement-L159",
+   "line": 159,
+   "kind": "delete-statement",
+   "was": "sockets.add(socket);"
+  },
+  {
+   "id": "G106-delete-statement-L160",
+   "line": 160,
+   "kind": "delete-statement",
+   "was": "socket.once('close', () => sockets.delete(socket));"
+  },
+  {
+   "id": "G107-delete-statement-L162",
+   "line": 162,
+   "kind": "delete-statement",
+   "was": "tracked.set(server, sockets);"
+  },
+  {
+   "id": "G110-delete-statement-L174",
+   "line": 174,
+   "kind": "delete-statement",
+   "was": "server.closeAllConnections();"
+  }
+ ],
+ "results": [
+  {
+   "id": "G003-operand1-true-L39",
+   "line": 39,
+   "kind": "operand1-true",
+   "was": "declared !== undefined",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "a small chunked command body is read and executed, like a body with a content length"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G016-cond-true-L71",
+   "line": 71,
+   "kind": "cond-true",
+   "was": "socket.writable && socket.bytesWritten === 0",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "the clientError listener answers with a typed failure only a socket that is writable and has written nothing, and always destroys it"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G017-operand1-true-L71",
+   "line": 71,
+   "kind": "operand1-true",
+   "was": "socket.writable",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "the clientError listener answers with a typed failure only a socket that is writable and has written nothing, and always destroys it"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G019-operand2-true-L71",
+   "line": 71,
+   "kind": "operand2-true",
+   "was": "socket.bytesWritten === 0",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "the clientError listener answers with a typed failure only a socket that is writable and has written nothing, and always destroys it"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G026-operand1-false-L109",
+   "line": 109,
+   "kind": "operand1-false",
+   "was": "socket.remoteAddress !== '127.0.0.1'",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "a request from another remote address or with an empty target is refused (fake exchange: a loopback socket cannot show either)"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G035-cond-false-L112",
+   "line": 112,
+   "kind": "cond-false",
+   "was": "!request.url || request.url.length > 512",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "a request target must be our own origin without a fragment and at most 512 characters, in absolute and in origin form",
+    "a request from another remote address or with an empty target is refused (fake exchange: a loopback socket cannot show either)"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G038-operand1-false-L112",
+   "line": 112,
+   "kind": "operand1-false",
+   "was": "!request.url",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "a request from another remote address or with an empty target is refused (fake exchange: a loopback socket cannot show either)"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G044-operand1-false-L114",
+   "line": 114,
+   "kind": "operand1-false",
+   "was": "url.origin !== origin",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "a request target must be our own origin without a fragment and at most 512 characters, in absolute and in origin form"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G046-operand2-false-L114",
+   "line": 114,
+   "kind": "operand2-false",
+   "was": "url.hash",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "a request target must be our own origin without a fragment and at most 512 characters, in absolute and in origin form"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G057-operand2-true-L119",
+   "line": 119,
+   "kind": "operand2-true",
+   "was": "type !== 'application/json;charset=utf-8'",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "the media type may carry a charset in any case and with or without a space; another type is refused"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G065-cond-false-L125",
+   "line": 125,
+   "kind": "cond-false",
+   "was": "!C.isPlain(parsed.value) || parsed.value.kind !== commandRoutes[route]",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "a JSON body that is not a plain command object, or a command of another kind, is a typed 400 that starts nothing"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G068-operand1-false-L125",
+   "line": 125,
+   "kind": "operand1-false",
+   "was": "!C.isPlain(parsed.value)",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "a JSON body that is not a plain command object, or a command of another kind, is a typed 400 that starts nothing"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G070-operand2-false-L125",
+   "line": 125,
+   "kind": "operand2-false",
+   "was": "parsed.value.kind !== commandRoutes[route]",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "a JSON body that is not a plain command object, or a command of another kind, is a typed 400 that starts nothing"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G079-cond-false-L142",
+   "line": 142,
+   "kind": "cond-false",
+   "was": "!response.headersSent",
+   "killed": true,
+   "killedBy": "chunked.test.cjs",
+   "failingTests": [
+    "an internal failure (500) closes an abusive connection like every other answer"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G080-cond-true-L142",
+   "line": 142,
+   "kind": "cond-true",
+   "was": "!response.headersSent",
+   "killed": false,
+   "killedBy": null,
+   "failingTests": [],
+   "exit": 0
+  },
+  {
+   "id": "G082-cond-true-L176",
+   "line": 176,
+   "kind": "cond-true",
+   "was": "server.listening",
+   "killed": false,
+   "killedBy": null,
+   "failingTests": [],
+   "exit": 0
+  },
+  {
+   "id": "G083-delete-statement-L45",
+   "line": 45,
+   "kind": "delete-statement",
+   "was": "chunks.length = 0;",
+   "killed": false,
+   "killedBy": null,
+   "failingTests": [],
+   "exit": 0
+  },
+  {
+   "id": "G086-delete-statement-L50",
+   "line": 50,
+   "kind": "delete-statement",
+   "was": "request.on('error', () => resolve({ tooLarge: true }));",
+   "killed": false,
+   "killedBy": null,
+   "failingTests": [],
+   "exit": 0
+  },
+  {
+   "id": "G087-delete-statement-L62",
+   "line": 62,
+   "kind": "delete-statement",
+   "was": "timer.unref();",
+   "killed": false,
+   "killedBy": null,
+   "failingTests": [],
+   "exit": 0
+  },
+  {
+   "id": "G099-delete-statement-L152",
+   "line": 152,
+   "kind": "delete-statement",
+   "was": "server.requestTimeout = requestTimeoutMs;",
+   "killed": true,
+   "killedBy": "resources.test.cjs",
+   "failingTests": [
+    "slow headers and slow bodies are cut off by the request timeout"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G100-delete-statement-L153",
+   "line": 153,
+   "kind": "delete-statement",
+   "was": "server.headersTimeout = Math.min(requestTimeoutMs, 5000);",
+   "killed": true,
+   "killedBy": "resources.test.cjs",
+   "failingTests": [
+    "slow headers and slow bodies are cut off by the request timeout"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G101-delete-statement-L154",
+   "line": 154,
+   "kind": "delete-statement",
+   "was": "server.keepAliveTimeout = 1000;",
+   "killed": false,
+   "killedBy": null,
+   "failingTests": [],
+   "exit": 0
+  },
+  {
+   "id": "G102-delete-statement-L155",
+   "line": 155,
+   "kind": "delete-statement",
+   "was": "server.maxHeadersCount = 32;",
+   "killed": false,
+   "killedBy": null,
+   "failingTests": [],
+   "exit": 0
+  },
+  {
+   "id": "G103-delete-statement-L156",
+   "line": 156,
+   "kind": "delete-statement",
+   "was": "server.maxConnections = maxConnections;",
+   "killed": false,
+   "killedBy": null,
+   "failingTests": [],
+   "exit": 0
+  },
+  {
+   "id": "G104-delete-statement-L157",
+   "line": 157,
+   "kind": "delete-statement",
+   "was": "server.setTimeout(socketTimeoutMs);",
+   "killed": true,
+   "killedBy": "resources.test.cjs",
+   "failingTests": [
+    "the connection cap refuses the surplus and never-reading clients cannot stop normal service"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G105-delete-statement-L159",
+   "line": 159,
+   "kind": "delete-statement",
+   "was": "sockets.add(socket);",
+   "killed": false,
+   "killedBy": null,
+   "failingTests": [],
+   "exit": 0
+  },
+  {
+   "id": "G106-delete-statement-L160",
+   "line": 160,
+   "kind": "delete-statement",
+   "was": "socket.once('close', () => sockets.delete(socket));",
+   "killed": false,
+   "killedBy": null,
+   "failingTests": [],
+   "exit": 0
+  },
+  {
+   "id": "G107-delete-statement-L162",
+   "line": 162,
+   "kind": "delete-statement",
+   "was": "tracked.set(server, sockets);",
+   "killed": false,
+   "killedBy": null,
+   "failingTests": [],
+   "exit": 0
+  },
+  {
+   "id": "G108-delete-statement-L168",
+   "line": 168,
+   "kind": "delete-statement",
+   "was": "server.once('error', reject);",
+   "killed": true,
+   "killedBy": "server-guards.test.cjs",
+   "failingTests": [
+    "listen() rejects with the error the server reports before it listens, instead of leaving it unhandled",
+    "capability\\\\C017\\\\tests\\\\server-guards.test.cjs"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "G110-delete-statement-L174",
+   "line": 174,
+   "kind": "delete-statement",
+   "was": "server.closeAllConnections();",
+   "killed": false,
+   "killedBy": null,
+   "failingTests": [],
+   "exit": 0
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "C017-fix-red/1",
+  "group": "lanes",
+  "baseline": "final",
+  "purpose": "rev-C059 N1 (orders\\_PIPELINING.md, the THIRD pipelining hole): two or three legitimate requests pipelined BEFORE a Node-own answer decided at parse time (an unknown Expect, Expect: 100-continue, no Host, a parse error): the connection must end with the answer of the FIRST request only, no later answer, no later effect, closed by the server; and 128 such sockets must not pin the connection cap. The matrix (a server in this process and in a separate process, HTTP/1.1 and HTTP/1.0, [G][G][X], [G][G][G][X], [G][G][X][G], [POST][G][X]) and the 128-socket resource test run against the UNGUARDED NAIVE SUBJECT (the final server without its close-after-refusal lines and without the per-socket mark and guard): it answers every pipelined request and keeps the connection, so they must fail.",
+  "tests": [
+    "capability/C017/tests/pipelining-lanes.test.cjs"
+  ],
+  "overlay": {
+    "capability/C017/server.cjs": "capability/C017/evidence/red/prefix-naive-unguarded/server.snapshot.cjs"
+  },
+  "nodeOptions": "--require=./capability/C017/tests/fixtures/overlay-preload.cjs",
+  "testTimeoutMs": 400000
+}

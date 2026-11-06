@@ -16,11 +16,31 @@ const root = path.join(__dirname, '..');
 const repo = path.resolve(root, '..', '..');
 const redRoot = path.join(root, 'evidence', 'red');
 
+// A replay serves the retained PRE-FIX bytes of the files named in replay.json; every other production file must be the world as it was when
+// that RED ran, not today's: the second fix cycle moved the derivation into contract.js, so a pre-fix contract.js next to today's reconcile.cjs
+// would not even load. The files this cycle changed are retained in prefix-8e7046e9 (the published bytes of the first fix) and fill the gaps.
+function historicalOverlay() {
+  const manifest = JSON.parse(fs.readFileSync(path.join(redRoot, 'prefix-8e7046e9', 'manifest.json'), 'utf8'));
+  return Object.fromEntries(manifest.files.map((item) => [item.live, item.snapshot]));
+}
+
 const resolveDir = (name) => {
   const hits = fs.readdirSync(redRoot).filter((entry) => entry.startsWith('fix-') && (entry === name || entry.startsWith(`fix-${name}-`) || entry.startsWith(`${name}-`)));
   if (hits.length !== 1) throw new Error(`expected exactly one RED archive for ${name}, found ${hits.length}`);
   return path.join(redRoot, hits[0]);
 };
+
+// The two legacy tests of the first fix (absolute time bounds) were rewritten structurally in the second fix (F22). A RED archived on their OLD bytes
+// pins those bytes, which now live only in evidence\red\prefix-legacy-8e7046e9: such an archive replays them under the live names through the
+// overlay (also against the final code), every other archive runs the live tests. The old bytes are load-sensitive by construction, so
+// `verify-green-all` skips those archives (the rewritten tests have their own RED, fix-chunked-structural); `verify-green <name>` still runs them.
+function retainedLegacy(dir) {
+  const manifestFile = path.join(redRoot, 'prefix-legacy-8e7046e9', 'manifest.json');
+  if (!fs.existsSync(manifestFile)) return {};
+  const pinned = new Set(JSON.parse(fs.readFileSync(path.join(dir, 'red.json'), 'utf8')).inputs.map((input) => `${input.path.replaceAll('\\', '/')}:${input.rawSha256}`));
+  const kept = JSON.parse(fs.readFileSync(manifestFile, 'utf8')).files.filter((item) => pinned.has(`${item.live}:${item.sha256}`));
+  return Object.fromEntries(kept.map((item) => [item.live, item.snapshot]));
+}
 
 function run(dir, { overlay }) {
   const replay = JSON.parse(fs.readFileSync(path.join(dir, 'replay.json'), 'utf8'));
@@ -31,7 +51,10 @@ function run(dir, { overlay }) {
   env.NODE_V8_COVERAGE = '';
   delete env.C017_OVERLAY;
   delete env.NODE_OPTIONS;
-  if (overlay) Object.assign(env, { C017_OVERLAY: JSON.stringify(replay.overlay), NODE_OPTIONS: replay.nodeOptions });
+  // baseline "final": the world of this RED is the final code, only the overlay subject of replay.json is naive (fix-chunked-structural).
+  const world = replay.baseline === 'final' ? {} : historicalOverlay();
+  const legacy = retainedLegacy(dir);
+  if (overlay || Object.keys(legacy).length) Object.assign(env, { C017_OVERLAY: JSON.stringify({ ...(overlay ? { ...world, ...replay.overlay } : {}), ...legacy }), NODE_OPTIONS: replay.nodeOptions });
   const args = ['--test', '--test-reporter=tap', '--test-concurrency=1', `--test-timeout=${replay.testTimeoutMs}`, ...replay.tests.map((p) => p.replaceAll('/', '\\'))];
   const result = spawnSync(process.execPath, args, { cwd: repo, env, encoding: 'utf8', maxBuffer: 1 << 26, timeout: 900000 });
   const text = result.stdout.replace(/\r\n/g, '\n');
@@ -56,16 +79,18 @@ function verifyGreen(name) {
 }
 
 const all = () => fs.readdirSync(redRoot).filter((entry) => entry.startsWith('fix-')).sort();
+const superseded = (entry) => Object.keys(retainedLegacy(path.join(redRoot, entry))).length > 0;
 
 if (require.main === module) {
   const [mode, name] = process.argv.slice(2);
   const modes = { replay, 'verify-green': verifyGreen };
   let results;
-  if (mode === 'replay-all' || mode === 'verify-green-all') results = all().map((entry) => modes[mode.replace('-all', '')](entry));
+  if (mode === 'replay-all') results = all().map((entry) => replay(entry));
+  else if (mode === 'verify-green-all') results = all().map((entry) => (superseded(entry) ? { name: entry, superseded: true, note: 'retained legacy test bytes with absolute time bounds (F22); replaced by fix-chunked-structural; run `verify-green <name>` to run them anyway' } : verifyGreen(entry)));
   else if (modes[mode] && name) results = [modes[mode](name)];
   else { console.error('usage: fix-red.cjs replay|verify-green <fix-name> | replay-all | verify-green-all'); process.exit(2); }
   console.log(JSON.stringify(results, null, 2));
-  process.exit(results.every((r) => r.reproduced || r.unchangedRedPassesAgainstFinalCode) ? 0 : 1);
+  process.exit(results.every((r) => r.reproduced || r.unchangedRedPassesAgainstFinalCode || r.superseded) ? 0 : 1);
 }
 
-module.exports = Object.freeze({ replay, verifyGreen, run, all });
+module.exports = Object.freeze({ replay, verifyGreen, run, all, retainedLegacy });

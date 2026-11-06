@@ -16,7 +16,25 @@ const repo = path.resolve(root, '..', '..');
 const sha = (buffer) => createHash('sha256').update(buffer).digest('hex');
 const here = (rel) => path.join(repo, rel.replaceAll('\\', '/'));
 
-function verifyManifest(dir, name, { resolve = here, expectFail } = {}) {
+// The captures of the FIRST fix pin the live files of the day they were made; the second fix changed some of them, so those pins are recomputed
+// against the manifest of that commit's tree (tests\tree-manifest.cjs, anchored to git) instead of against today's files.
+const treeFile = path.join(root, 'evidence', 'tree-8e7046e9.json');
+const treePin = () => {
+  const tree = JSON.parse(fs.readFileSync(treeFile, 'utf8'));
+  return (rel) => { const hit = tree.files[rel.replaceAll('\\', '/')]; return hit ? hit.sha256 : null; };
+};
+
+// The two legacy tests of the first fix (absolute time bounds) were rewritten structurally in the second fix (F22). A RED archive that pinned their
+// OLD bytes is satisfied by the retained copy in evidence\red\prefix-legacy-8e7046e9 (itself pinned by verifyPrefix) exactly as a pin on the live file.
+const legacyFile = path.join(root, 'evidence', 'red', 'prefix-legacy-8e7046e9', 'manifest.json');
+function retainedMatches(input, { manifest = legacyFile, base = repo } = {}) {
+  if (!fs.existsSync(manifest)) return false;
+  const kept = JSON.parse(fs.readFileSync(manifest, 'utf8')).files.find((item) => item.live === input.path.replaceAll('\\', '/'));
+  const snapshot = kept ? path.join(base, kept.snapshot.replaceAll('\\', '/')) : null;
+  return Boolean(kept) && kept.sha256 === input.rawSha256 && fs.existsSync(snapshot) && sha(fs.readFileSync(snapshot)) === kept.sha256;
+}
+
+function verifyManifest(dir, name, { resolve = here, expectFail, pin } = {}) {
   const file = path.join(dir, `${name}.json`);
   if (!fs.existsSync(file)) return { ok: false, problems: [`${name}.json is missing`] };
   const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -40,9 +58,15 @@ function verifyManifest(dir, name, { resolve = here, expectFail } = {}) {
     }
   }
   for (const input of manifest.inputs) {
+    if (pin) {
+      const want = pin(input.path);
+      if (want === null) problems.push(`${input.path}: the pinned input is not in the tree of the commit it was made at`);
+      else if (want !== input.rawSha256) problems.push(`${input.path}: differs from its pin`);
+      continue;
+    }
     const target = resolve(input.path);
     if (!fs.existsSync(target)) problems.push(`${input.path}: the pinned input is missing`);
-    else if (sha(fs.readFileSync(target)) !== input.rawSha256) problems.push(`${input.path}: differs from its pin`);
+    else if (sha(fs.readFileSync(target)) !== input.rawSha256 && !(resolve === here && retainedMatches(input))) problems.push(`${input.path}: differs from its pin`);
   }
   return { ok: problems.length === 0, problems, manifest };
 }
@@ -68,34 +92,111 @@ function verifyPrefix(dir = path.join(root, 'evidence', 'red', 'prefix-ed21ef79'
   return { ok: problems.length === 0, problems, manifest };
 }
 
-function verifyCoverage(dir, fileName) {
+// The coverage table the runner printed, row "all files": the numbers the manifest claims must be the numbers of the transcript (F20).
+function transcriptTotals(dir, manifest) {
+  const entry = manifest.transcripts.stdout;
+  const text = zlib.gunzipSync(fs.readFileSync(path.join(dir, entry.path))).toString('utf8');
+  const hit = /^# all files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|/m.exec(text);
+  return hit ? { lines: Number(hit[1]), branches: Number(hit[2]), functions: Number(hit[3]) } : null;
+}
+
+function verifyCoverage(dir, fileName, options = {}) {
   const name = fileName.replace(/\.json$/, '');
-  const result = verifyManifest(dir, name, { expectFail: false });
+  const result = verifyManifest(dir, name, { ...options, expectFail: false });
   const target = name.replace(/^coverage-/, '');
   const rows = result.manifest ? result.manifest.summary.coverageRows : [];
   if (!rows.some((row) => row.file === target && row.lines >= 85 && row.branches >= 85 && row.functions >= 85)) result.problems.push(`${name}: no row of ${target} with at least 85/85/85`);
+  const totals = result.manifest ? transcriptTotals(dir, result.manifest) : null;
+  const row = rows.find((candidate) => candidate.file === target);
+  if (!totals || !row || row.lines !== totals.lines || row.branches !== totals.branches || row.functions !== totals.functions) result.problems.push(`${name}: the claimed coverage row is not the row of the transcript`);
   return { ...result, ok: result.problems.length === 0 };
 }
 
-function verifyAll() {
-  const red = path.join(root, 'evidence', 'red');
-  const out = { red: {}, prefix: verifyPrefix() };
-  for (const name of fs.readdirSync(red).filter((entry) => entry.startsWith('fix-')).sort()) out.red[name] = verifyRed(path.join(red, name));
-  for (const [dirName, files, expectFail] of [['green-02', ['green'], false], ['verify-green-02', ['verify-green'], false]]) {
-    const dir = path.join(root, 'evidence', dirName);
-    if (fs.existsSync(dir)) out[dirName] = Object.fromEntries(files.map((file) => [file, verifyManifest(dir, file, { expectFail })]));
+// Evidence pins: the SHA-256 of every manifest JSON and observation file, written once at the end (node evidence-check.cjs pin), so a one-byte edit
+// of a descriptive field in a manifest or in the browser observation is named (F20). Hashes of files that are pinned elsewhere are not repeated.
+const pinsFile = path.join(root, 'evidence', 'pins.json');
+function pinnedFiles(evidence = path.join(root, 'evidence')) {
+  const out = [];
+  for (const entry of fs.readdirSync(evidence, { withFileTypes: true })) {
+    if (entry.isFile() && /^(browser-observation.*|browser-journal.*|tree-.*|mutants-.*)\.json$/.test(entry.name)) out.push(entry.name);
+    if (entry.isDirectory() && /^loops-\d\d$/.test(entry.name)) {
+      for (const file of fs.readdirSync(path.join(evidence, entry.name)).filter((name) => name.endsWith('.json'))) out.push(`${entry.name}/${file}`);
+    }
+    if (entry.isDirectory() && /^(coverage|green|verify-green)-\d\d$/.test(entry.name)) {
+      for (const file of fs.readdirSync(path.join(evidence, entry.name)).filter((name) => name.endsWith('.json'))) out.push(`${entry.name}/${file}`);
+    }
   }
-  const coverage = path.join(root, 'evidence', 'coverage-02');
-  if (fs.existsSync(coverage)) out['coverage-02'] = Object.fromEntries(fs.readdirSync(coverage).filter((f) => f.endsWith('.json')).map((f) => [f, verifyCoverage(coverage, f)]));
+  const red = path.join(evidence, 'red');
+  if (fs.existsSync(red)) {
+    for (const dir of fs.readdirSync(red).filter((name) => name.startsWith('fix-'))) {
+      for (const file of ['red.json', 'replay.json']) out.push(`red/${dir}/${file}`);
+    }
+    for (const dir of fs.readdirSync(red).filter((name) => name.startsWith('prefix-'))) out.push(`red/${dir}/manifest.json`);
+  }
+  // The README is written after the captures (it states what they show), so it is not an input of any capture; it is pinned here instead, last.
+  if (fs.existsSync(path.join(evidence, '..', 'README.md'))) out.push('../README.md');
+  return out.sort();
+}
+
+function writePins(evidence = path.join(root, 'evidence')) {
+  const files = Object.fromEntries(pinnedFiles(evidence).map((name) => [name, sha(fs.readFileSync(path.join(evidence, name)))]));
+  fs.writeFileSync(path.join(evidence, 'pins.json'), `${JSON.stringify({ schema: 'C017-pins/1', files }, null, 1)}\n`, { flag: 'wx' });
+}
+
+function verifyPins(evidence = path.join(root, 'evidence')) {
+  const file = path.join(evidence, 'pins.json');
+  if (!fs.existsSync(file)) return { ok: false, problems: ['evidence/pins.json is missing'] };
+  const pins = JSON.parse(fs.readFileSync(file, 'utf8')).files;
+  const problems = [];
+  for (const name of pinnedFiles(evidence)) {
+    if (!pins[name]) problems.push(`${name}: not pinned in evidence/pins.json`);
+    else if (sha(fs.readFileSync(path.join(evidence, name))) !== pins[name]) problems.push(`${name}: differs from its pin in evidence/pins.json`);
+  }
+  for (const name of Object.keys(pins)) if (!fs.existsSync(path.join(evidence, name))) problems.push(`${name}: pinned but missing`);
+  return { ok: problems.length === 0, problems };
+}
+
+// The first fix's captures (tree pins) and the second fix's (live pins); each coverage directory holds one manifest per production file.
+const CAPTURES = [['green-02', ['green'], 'tree'], ['verify-green-02', ['verify-green'], 'tree'], ['green-03', ['green'], 'live'], ['verify-green-03', ['verify-green'], 'live']];
+const COVERAGE = [['coverage-02', 'tree'], ['coverage-03', 'live']];
+
+// complete: the END state (every capture of the second fix present). While a capture is still being recorded its directory exists without its
+// manifest, and the suite that is being recorded verifies the evidence too, so an unfinished capture is skipped unless `complete` is asked for.
+function verifyAll({ complete = false } = {}) {
+  const red = path.join(root, 'evidence', 'red');
+  const optionalPrefix = (name) => (fs.existsSync(path.join(red, name)) ? verifyPrefix(path.join(red, name)) : { problems: [] });
+  const out = { red: {}, prefix: verifyPrefix(), prefix2: optionalPrefix('prefix-8e7046e9'), prefix3: optionalPrefix('prefix-legacy-8e7046e9'), prefix4: optionalPrefix('prefix-naive-keepalive') };
+  for (const name of fs.readdirSync(red).filter((entry) => entry.startsWith('fix-')).sort()) out.red[name] = verifyRed(path.join(red, name));
+  for (const [dirName, files, mode] of CAPTURES) {
+    const dir = path.join(root, 'evidence', dirName);
+    if (!fs.existsSync(dir) && !(complete && mode === 'live')) continue;
+    out[dirName] = Object.fromEntries(files.filter((file) => complete || fs.existsSync(path.join(dir, `${file}.json`))).map((file) => [file, verifyManifest(dir, file, { expectFail: false, pin: mode === 'tree' ? treePin() : undefined })]));
+  }
+  for (const [dirName, mode] of COVERAGE) {
+    const dir = path.join(root, 'evidence', dirName);
+    if (fs.existsSync(dir)) out[dirName] = Object.fromEntries(fs.readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => [f, verifyCoverage(dir, f, { pin: mode === 'tree' ? treePin() : undefined })]));
+  }
+  if (complete) {
+    const missing = ['coverage-03/coverage-contract.js.json', 'coverage-03/coverage-reconcile.cjs.json', 'coverage-03/coverage-journal.cjs.json', 'coverage-03/coverage-engine.cjs.json', 'coverage-03/coverage-server.cjs.json', 'coverage-03/coverage-cli.cjs.json', 'coverage-03/coverage-page.js.json',
+      'mutants-03.json', 'browser-observation-03.json', 'browser-journal-03.json', 'pins.json',
+      ...['chunked', 'chunked-process', 'resources', 'drain', 'pipelining', 'two-servers', 'refusal-shapes', 'child'].map((name) => `loops-03/${name}.json`)].filter((name) => !fs.existsSync(path.join(root, 'evidence', name)));
+    out.complete = { complete: { problems: missing.map((name) => `${name}: a capture of the second fix is missing`) } };
+  }
+  if (fs.existsSync(path.join(root, 'evidence', 'pins.json'))) out.pins = { pins: verifyPins() };
   return out;
 }
 
 if (require.main === module) {
-  const everything = verifyAll();
-  const flat = [everything.prefix, ...Object.values(everything.red), ...['green-02', 'verify-green-02', 'coverage-02'].flatMap((key) => Object.values(everything[key] || {}))];
+  if (process.argv[2] === 'pin') {
+    writePins();
+    process.exit(0);
+  }
+  const everything = verifyAll({ complete: process.argv[2] === 'complete' });
+  const keys = ['green-02', 'verify-green-02', 'green-03', 'verify-green-03', 'coverage-02', 'coverage-03', 'pins', 'complete'];
+  const flat = [everything.prefix, everything.prefix2, everything.prefix3, everything.prefix4, ...Object.values(everything.red), ...keys.flatMap((key) => Object.values(everything[key] || {}))];
   const problems = flat.flatMap((entry) => entry.problems);
   console.log(JSON.stringify({ checked: flat.length, red: Object.keys(everything.red), problems }, null, 2));
   process.exit(problems.length ? 1 : 0);
 }
 
-module.exports = Object.freeze({ verifyManifest, verifyRed, verifyPrefix, verifyAll, sha });
+module.exports = Object.freeze({ verifyManifest, verifyRed, verifyPrefix, verifyCoverage, verifyPins, writePins, verifyAll, treePin, pinnedFiles, retainedMatches, sha });

@@ -1,0 +1,36 @@
+{
+  "schema": "C017-prefix/1",
+  "commit": null,
+  "tag": null,
+  "note": "An UNGUARDED NAIVE SUBJECT, not a published file: the final server.cjs of the second fix cycle (derivedFrom) without its two close-after-refusal lines and without the per-socket mark and guard, so it answers EVERY pipelined request and keeps the connection. The retained RED fix-lanes replays the lane tests (two or three legitimate requests before a Node-own answer, rev-C059 N1) against it through tests/fixtures/overlay-preload.cjs; every lane test must fail.",
+  "derivedFrom": {
+    "file": "capability/C017/server.cjs",
+    "sha256": "7b3aa0e4f1f42338fc51e6bb3024ffd34726577ea433ae1759c23907b3da16b2",
+    "replacements": [
+      {
+        "find": ", 'Content-Length': body.length, Connection: 'close' });",
+        "replace": ", 'Content-Length': body.length });"
+      },
+      {
+        "find": "response.end(body, () => closeAfterAnswer(socket));",
+        "replace": "response.end(body);"
+      },
+      {
+        "find": "    if (taken.has(socket)) return undefined;\n",
+        "replace": ""
+      },
+      {
+        "find": "    taken.add(socket);\n",
+        "replace": ""
+      }
+    ]
+  },
+  "files": [
+    {
+      "live": "capability/C017/server.cjs",
+      "snapshot": "capability/C017/evidence/red/prefix-naive-unguarded/server.snapshot.cjs",
+      "bytes": 10460,
+      "sha256": "9bcec887489281a472eea08fe816d63f6654994c20d22336b54c50c3c9278a47"
+    }
+  ]
+}

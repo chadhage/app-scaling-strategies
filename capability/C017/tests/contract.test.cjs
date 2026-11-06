@@ -67,7 +67,8 @@ test('every typed failure has a closed status, group and allowed recovery action
     assert.ok(entry.actions.length > 0 && entry.actions.every((a) => C.recovery.includes(a)), code);
     assert.deepEqual([body.kind, body.error.code, body.effectClaimed, body.journalWritten, body.outcome], ['C017-typed-failure', code, false, false, undefined]);
   }
-  assert.equal(Object.keys(C.failures).length, 23);
+  assert.equal(Object.keys(C.failures).length, 26);
+  assert.deepEqual(['EXPECTATION_FAILED', 'MALFORMED_REQUEST', 'HEADERS_TOO_LARGE'].map((code) => C.failures[code].status), [417, 400, 431]);
 });
 
 test('a typed failure echoes only well-formed identifiers and never the caller text', () => {

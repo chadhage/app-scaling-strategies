@@ -1,0 +1,17 @@
+{
+  "schema": "C017-fix-red/1",
+  "group": "journal",
+  "purpose": "F13 of the second independent review: the journal pane of /api/state is displayed without being re-derived (only decisions that carry the CURRENT actionId were cross-checked), so a view whose facts say CANCELLED_PARTIAL is accepted with a cancel-decided COMPENSATED line without an actionId, compensation-effect lines, an action-completed line, or a null-action view that decides a cancel. F15 and F16 on the page: the poll of a live action is not re-armed after a refused view and the sentence of a refused view outlives the next accepted view.",
+  "tests": [
+    "capability/C017/tests/journal-pane.test.cjs",
+    "capability/C017/tests/page-journal.test.cjs"
+  ],
+  "overlay": {
+    "capability/C017/server.cjs": "capability/C017/evidence/red/prefix-8e7046e9/server.snapshot.cjs",
+    "capability/C017/contract.js": "capability/C017/evidence/red/prefix-8e7046e9/contract.snapshot.js",
+    "capability/C017/page.js": "capability/C017/evidence/red/prefix-8e7046e9/page.snapshot.js",
+    "capability/C017/reconcile.cjs": "capability/C017/evidence/red/prefix-8e7046e9/reconcile.snapshot.cjs"
+  },
+  "nodeOptions": "--require=./capability/C017/tests/fixtures/overlay-preload.cjs",
+  "testTimeoutMs": 170000
+}

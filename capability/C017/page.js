@@ -16,6 +16,8 @@
   let cancelAttempt = null;
   let busy = false;
   let timer = null;
+  let lastLive = false;
+  let viewRejected = false;
 
   const say = (id, text) => { el[id].textContent = text; };
   const newKey = () => `k-${typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('')}`;
@@ -60,7 +62,12 @@
 
   function renderOutcome(view) {
     const cancel = view && view.cancel;
-    if (!cancel) return;
+    if (!cancel) {
+      // An accepted view without a cancel must not leave the sentence of an earlier REFUSED view on the screen (F16).
+      if (viewRejected) { say('outcome', ''); fill(el.facts, []); viewRejected = false; }
+      return;
+    }
+    viewRejected = false;
     if (cancel.outcome === null) { say('outcome', 'Cancel pending: the server has not decided yet. Nothing is claimed.'); return; }
     say('outcome', C.describe(cancel.outcome, factsOf(view)));
     showFacts(factsOf(view));
@@ -69,13 +76,16 @@
   function render(next, keepOutcome) {
     state = next;
     const view = next.action;
+    const pane = C.journalPane(next);
     say('lease', next.lease.leaseId);
     say('status', statusText(view));
     fill(el.steps, view ? view.steps.map((s) => `Step ${s.step}: ${stepWords[s.state]} (${s.units} synthetic units)`) : []);
     say('units', view ? `Standing synthetic units: ${view.standingUnitsExact ? '' : 'at least '}${view.standingUnits}` : '');
-    const omitted = next.journalOmitted > 0 ? [`${next.journalOmitted} earlier entries are not shown; the server keeps all of them.`] : [];
-    fill(el.journal, [...omitted, ...next.journal.map((e, i) => `#${i + 1 + (next.journalOmitted || 0)} ${e.type}${e.step ? ` step ${e.step}` : ''}${e.outcome ? ` ${e.outcome}` : ''}${e.determination ? ` ${e.determination}` : ''}`)]);
+    // Only lines the page re-derived from the journal itself are shown (contract.js journalPane); the rest is counted, never displayed.
+    const hidden = pane.hidden > 0 ? [`${pane.hidden} earlier entries are not shown; the server keeps all of them.`] : [];
+    fill(el.journal, [...hidden, ...pane.lines.map(({ number, entry: e }) => `#${number} ${e.type}${e.step ? ` step ${e.step}` : ''}${e.outcome ? ` ${e.outcome}` : ''}${e.determination ? ` ${e.determination}` : ''}`)]);
     const live = Boolean(view && view.live);
+    lastLive = live;
     el.cancel.disabled = busy || !live;
     el.compensate.disabled = busy || !live;
     el.reconcile.disabled = busy || !view || view.status !== 'INTERRUPTED';
@@ -92,6 +102,7 @@
 
   function showRejectedView(problems) {
     state = null;
+    viewRejected = true;
     clearTimeout(timer);
     const text = rejection('state view', problems);
     say('status', text);
@@ -102,16 +113,24 @@
     for (const id of ['start', 'cancel', 'compensate', 'reconcile']) el[id].disabled = true;
   }
 
+  // After a refused or failed read the poll of a live action keeps going, so the page recovers by itself when the server answers honestly again.
+  const rearm = () => { clearTimeout(timer); if (lastLive) timer = setTimeout(() => refresh(), 1000); };
+
   async function refresh(keepOutcome) {
+    let next;
     try {
       const response = await fetch('/api/state', { cache: 'no-store', credentials: 'omit', redirect: 'error' });
-      const next = await response.json();
-      const check = C.viewCheck(next);
-      if (check.ok) render(next, keepOutcome);
-      else showRejectedView(check.problems);
+      next = await response.json();
     } catch {
+      // No answer, or a body that is not JSON (indistinguishable from a transfer cut short): the shown state may be stale.
       say('status', 'The server is not reachable. What is shown may be stale; nothing new is claimed.');
+      rearm();
+      return;
     }
+    // A JSON answer that is not a readable, consistent state view is REFUSED as such (the checks never throw): it is never reported as "not reachable".
+    const check = C.viewCheck(next);
+    if (check.ok) render(next, keepOutcome);
+    else { showRejectedView(check.problems); rearm(); }
   }
 
   // Returns true only for an answer that passed its check; wording is always derived from the facts or the closed table.

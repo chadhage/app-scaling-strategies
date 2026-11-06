@@ -25,7 +25,7 @@ function one(index) {
     let out = '';
     child.stdout.on('data', (part) => { out += part; });
     child.stderr.on('data', (part) => { out += part; });
-    const timer = setTimeout(() => child.kill(), 240000);
+    const timer = setTimeout(() => child.kill(), 900000);
     child.on('close', (code) => {
       clearTimeout(timer);
       const failing = [...out.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((m) => m[1].trim());

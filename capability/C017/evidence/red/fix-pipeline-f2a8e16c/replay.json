@@ -1,0 +1,16 @@
+{
+  "schema": "C017-fix-red/1",
+  "group": "pipeline",
+  "purpose": "F12 of the second independent review: server.maxRequestsPerSocket = 1 does not count an HTTP/1.0 request nor Node's own answer to a request without Host or with an unknown Expect header, so a valid mutation (cancel, start, reconcile) pipelined behind ANY refusal still APPLIES while the client only sees the refusal. Raw-socket matrix against a server in a separate process, in HTTP/1.1 and HTTP/1.0 framing, with controls proving the mutation alone applies.",
+  "tests": [
+    "capability/C017/tests/pipelining.test.cjs"
+  ],
+  "overlay": {
+    "capability/C017/server.cjs": "capability/C017/evidence/red/prefix-8e7046e9/server.snapshot.cjs",
+    "capability/C017/contract.js": "capability/C017/evidence/red/prefix-8e7046e9/contract.snapshot.js",
+    "capability/C017/page.js": "capability/C017/evidence/red/prefix-8e7046e9/page.snapshot.js",
+    "capability/C017/reconcile.cjs": "capability/C017/evidence/red/prefix-8e7046e9/reconcile.snapshot.cjs"
+  },
+  "nodeOptions": "--require=./capability/C017/tests/fixtures/overlay-preload.cjs",
+  "testTimeoutMs": 400000
+}

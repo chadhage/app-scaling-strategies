@@ -1,0 +1,28 @@
+{
+  "schema": "C017-prefix/1",
+  "commit": null,
+  "tag": null,
+  "note": "A NAIVE KEEP-ALIVE SUBJECT, not a published file: the final server.cjs of the second fix cycle (derivedFrom) with the two close-after-refusal lines removed, so every answer keeps its connection and Node dumps an endless chunked body until its own request timeout. The retained RED fix-chunked-structural replays the rewritten structural chunked tests against it through tests/fixtures/overlay-preload.cjs; every row of both files must fail.",
+  "derivedFrom": {
+    "file": "capability/C017/server.cjs",
+    "sha256": "7b3aa0e4f1f42338fc51e6bb3024ffd34726577ea433ae1759c23907b3da16b2",
+    "replacements": [
+      {
+        "find": ", 'Content-Length': body.length, Connection: 'close' });",
+        "replace": ", 'Content-Length': body.length });"
+      },
+      {
+        "find": "response.end(body, () => closeAfterAnswer(socket));",
+        "replace": "response.end(body);"
+      }
+    ]
+  },
+  "files": [
+    {
+      "live": "capability/C017/server.cjs",
+      "snapshot": "capability/C017/evidence/red/prefix-naive-keepalive/server.snapshot.cjs",
+      "bytes": 10528,
+      "sha256": "0277868d3e99d485b65b7c025cd3d32dc026da4aa79b78fe2798a6db031e3df2"
+    }
+  ]
+}

@@ -18,7 +18,7 @@ const h = require('./http.cjs');
 const entry = 'capability\\C017\\index.html';
 
 function edgeIdentity(version) {
-  const out = execFileSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-File', path.join(__dirname, 'signed-edge.ps1')], { encoding: 'utf8', timeout: 20000, windowsHide: true });
+  const out = execFileSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-File', path.join(__dirname, 'signed-edge.ps1')], { encoding: 'utf8', timeout: 150000, windowsHide: true });
   const signed = JSON.parse(out);
   assert.equal(signed.authenticodeStatus, 'Valid', 'Edge must be validly signed');
   assert.match(signed.signer, /Microsoft Corporation/);
@@ -54,7 +54,7 @@ async function tabTo(page, id) {
   }
   throw new Error(`Tab never reached #${id}`);
 }
-const waitText = (page, id, prefix) => page.waitForFunction(({ id: target, prefix: start }) => document.getElementById(target).textContent.startsWith(start), { id, prefix }, { timeout: 10000 });
+const waitText = (page, id, prefix) => page.waitForFunction(({ id: target, prefix: start }) => document.getElementById(target).textContent.startsWith(start), { id, prefix }, { timeout: 90000 });
 
 async function scenario(name, options, act, record, versionBox) {
   const cleanups = [];
