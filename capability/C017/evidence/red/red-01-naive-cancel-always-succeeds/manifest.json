@@ -1,0 +1,85 @@
+{
+  "schema": "C017-red-run/1",
+  "id": "red-01-naive-cancel-always-succeeds",
+  "node": "v22.23.4",
+  "command": "node --test --test-reporter=tap --test-concurrency=1 --test-timeout=30000 capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\outcomes.test.cjs capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\races.test.cjs capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\interrupted.test.cjs",
+  "cwd": "repository root",
+  "environment": {
+    "C017_TEST_ENGINE": "capability/C017/evidence/red/red-01-naive-cancel-always-succeeds/naive-engine.snapshot.cjs"
+  },
+  "startedAtUtc": "2026-11-06T02:37:47.970Z",
+  "finishedAtUtc": "2026-11-06T02:37:49.194Z",
+  "exitCode": 1,
+  "signal": null,
+  "summary": {
+    "tests": 16,
+    "pass": 0,
+    "fail": 16,
+    "failingTests": [
+      "a cancel that raced the crash is CANCEL_UNKNOWN when replayed with its key, before and after reconciliation",
+      "a failed compensation is reported as such and is never COMPENSATED",
+      "a restart after a clean completion shows COMPLETED, and a cancel of it is too late (never unknown)",
+      "a second cancel with a new key is CANCEL_IN_PROGRESS while pending and ALREADY_TERMINAL afterwards",
+      "a start is refused while an action is in flight; replays are idempotent; stale and future epochs are rejected",
+      "a storm of parallel cancels racing the final step yields exactly one consistent outcome",
+      "a storm racing before step 4 yields exactly one consistent partial outcome",
+      "after a crash mid-step the action is INTERRUPTED, never cancelled or completed, and an intent without an effect is UNKNOWN",
+      "cancel after completion is CANCEL_TOO_LATE: a conflict, all effects stand, not a success",
+      "cancel before any step ran is CANCELLED_BEFORE_EFFECT with nothing to undo",
+      "cancel during step 3 is applied at the boundary: the step finishes and stands",
+      "cancel is idempotent per key; a different command under the same key conflicts and changes nothing",
+      "cancel while waiting before step 3 is CANCELLED_PARTIAL: steps 1 and 2 stand and nothing is undone",
+      "cancel with compensation is COMPENSATED only after journaled compensating steps ran in reverse order",
+      "reconciliation after a restart is an explicit, idempotent command that settles facts without claiming cancelled or completed",
+      "wrong lease, run, user, action, stale and future epochs are typed failures that claim and change nothing"
+    ],
+    "failureCodes": {
+      "ERR_ASSERTION": 16
+    }
+  },
+  "inputs": [
+    {
+      "path": "evidence/red/red-01-naive-cancel-always-succeeds/outcomes.test.snapshot.cjs",
+      "sha256": "d06e342f65358e14647bb620516e693fd69c4dcc9aff8f6e3ec1510d9ea33931",
+      "bytes": 6451
+    },
+    {
+      "path": "evidence/red/red-01-naive-cancel-always-succeeds/races.test.snapshot.cjs",
+      "sha256": "d88816c9f1b568b3793df70776f186a63d700bb1beb784e6f06d3182b8a1a904",
+      "bytes": 7614
+    },
+    {
+      "path": "evidence/red/red-01-naive-cancel-always-succeeds/interrupted.test.snapshot.cjs",
+      "sha256": "d4e9ba8369d0d672bbf767006a6134a88b1c66a5b851381df7832d86ee5fca33",
+      "bytes": 4991
+    },
+    {
+      "path": "evidence/red/red-01-naive-cancel-always-succeeds/support.snapshot.cjs",
+      "sha256": "3eae28582724d9b4afa78b241b0f431d786102ee097378d5c44c2d707f4c6e4c",
+      "bytes": 6890
+    },
+    {
+      "path": "evidence/red/red-01-naive-cancel-always-succeeds/naive-engine.snapshot.cjs",
+      "sha256": "6319295aa76989944ca3fb1255aab396437d4346ea012580d0be9b29e0f60bf0",
+      "bytes": 1880
+    }
+  ],
+  "outputs": [
+    {
+      "path": "evidence/red/red-01-naive-cancel-always-succeeds/stdout.txt",
+      "sha256": "db9985bf2e6505cbab8a9a2f3ae646f8057175b473664f85673ff9b666f2cc4a",
+      "bytes": 15586
+    },
+    {
+      "path": "evidence/red/red-01-naive-cancel-always-succeeds/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/red/red-01-naive-cancel-always-succeeds/exit-code.txt",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    }
+  ],
+  "note": "The snapshots are byte copies of tests/*.cjs at RED time and were run from a scratch workspace with their original names."
+}

@@ -1,0 +1,327 @@
+{
+  "schema": "C017-browser-observation/1",
+  "helper": "testing/browser/isolated.cjs openIsolatedLoopback",
+  "limits": "same-origin GET/HEAD only; every POST is blocked by the helper, so outcomes are produced by a Node client and observed by the page through GET",
+  "edge": {
+    "version": "156.0.4314.58",
+    "fileVersion": "156.0.4314.58",
+    "sha256": "d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b",
+    "signature": "Valid",
+    "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "thumbprint": "4028CAD637509D4744B17EC5B42AED8D7A31E6AF"
+  },
+  "scenarios": [
+    {
+      "scenario": "in-flight (blocked cancel)",
+      "final": {
+        "status": "In flight: 2 of 4 steps have taken effect.",
+        "lease": "lease-synthetic-001",
+        "steps": [
+          "Step 1: STANDS (took effect) (5 synthetic units)",
+          "Step 2: STANDS (took effect) (5 synthetic units)",
+          "Step 3: not yet run (5 synthetic units)",
+          "Step 4: not yet run (5 synthetic units)"
+        ],
+        "units": "Standing synthetic units: 10",
+        "outcome": "The request was not delivered or its answer was lost. UNKNOWN: nothing is claimed as cancelled, stopped, started or undone. Press the button again to retry with the same key, or refresh to read the journal.",
+        "facts": [],
+        "journal": [
+          "#1 boot",
+          "#2 action-accepted",
+          "#3 step-intent step 1",
+          "#4 step-effect step 1",
+          "#5 step-intent step 2",
+          "#6 step-effect step 2"
+        ],
+        "disabled": {
+          "start": true,
+          "cancel": false,
+          "reconcile": true,
+          "compensate": false
+        },
+        "ids": [
+          "lease",
+          "action-h",
+          "status",
+          "steps",
+          "units",
+          "start",
+          "compensate",
+          "cancel",
+          "reconcile",
+          "refresh",
+          "outcome-h",
+          "outcome",
+          "facts",
+          "journal-h",
+          "journal"
+        ],
+        "active": "outcome"
+      }
+    },
+    {
+      "scenario": "in-flight: the browser-sent cancel is blocked and reported as not delivered, then a server-decided partial outcome is observed",
+      "final": {
+        "status": "Stopped partway: some effects STAND. See the outcome below.",
+        "lease": "lease-synthetic-001",
+        "steps": [
+          "Step 1: STANDS (took effect) (5 synthetic units)",
+          "Step 2: STANDS (took effect) (5 synthetic units)",
+          "Step 3: NOT RUN (5 synthetic units)",
+          "Step 4: NOT RUN (5 synthetic units)"
+        ],
+        "units": "Standing synthetic units: 10",
+        "outcome": "Stopped after step 2 of 4. Step(s) 1, 2 took effect and STAND (10 synthetic units); step(s) 3, 4 were NOT run. Nothing was undone or rolled back.",
+        "facts": [
+          "Steps whose effect STANDS: 1, 2",
+          "Steps NOT RUN: 3, 4",
+          "Steps with UNKNOWN effect: none",
+          "Steps reversed by journaled compensating steps: none",
+          "Synthetic units standing: 10"
+        ],
+        "journal": [
+          "#1 boot",
+          "#2 action-accepted",
+          "#3 step-intent step 1",
+          "#4 step-effect step 1",
+          "#5 step-intent step 2",
+          "#6 step-effect step 2",
+          "#7 cancel-requested",
+          "#8 cancel-decided CANCELLED_PARTIAL"
+        ],
+        "disabled": {
+          "start": false,
+          "cancel": true,
+          "reconcile": true,
+          "compensate": true
+        },
+        "ids": [
+          "lease",
+          "action-h",
+          "status",
+          "steps",
+          "units",
+          "start",
+          "compensate",
+          "cancel",
+          "reconcile",
+          "refresh",
+          "outcome-h",
+          "outcome",
+          "facts",
+          "journal-h",
+          "journal"
+        ],
+        "active": "outcome"
+      }
+    },
+    {
+      "scenario": "compensated: the words reversed by compensating steps appear only with journaled compensating effects",
+      "final": {
+        "status": "Stopped, then reversed by journaled compensating steps.",
+        "lease": "lease-synthetic-001",
+        "steps": [
+          "Step 1: REVERSED by its own journaled compensating step (5 synthetic units)",
+          "Step 2: REVERSED by its own journaled compensating step (5 synthetic units)",
+          "Step 3: NOT RUN (5 synthetic units)",
+          "Step 4: NOT RUN (5 synthetic units)"
+        ],
+        "units": "Standing synthetic units: 0",
+        "outcome": "Stopped after step 2 and reversed by journaled compensating steps 2, 1 (reverse order, each its own journal entry). No effect remains standing (0 units). The original effects stay in the journal.",
+        "facts": [
+          "Steps whose effect STANDS: none",
+          "Steps NOT RUN: 3, 4",
+          "Steps with UNKNOWN effect: none",
+          "Steps reversed by journaled compensating steps: 2, 1",
+          "Synthetic units standing: 0"
+        ],
+        "journal": [
+          "#1 boot",
+          "#2 action-accepted",
+          "#3 step-intent step 1",
+          "#4 step-effect step 1",
+          "#5 step-intent step 2",
+          "#6 step-effect step 2",
+          "#7 cancel-requested",
+          "#8 compensation-intent step 2",
+          "#9 compensation-effect step 2",
+          "#10 compensation-intent step 1",
+          "#11 compensation-effect step 1",
+          "#12 cancel-decided COMPENSATED"
+        ],
+        "disabled": {
+          "start": false,
+          "cancel": true,
+          "reconcile": true,
+          "compensate": true
+        },
+        "ids": [
+          "lease",
+          "action-h",
+          "status",
+          "steps",
+          "units",
+          "start",
+          "compensate",
+          "cancel",
+          "reconcile",
+          "refresh",
+          "outcome-h",
+          "outcome",
+          "facts",
+          "journal-h",
+          "journal"
+        ],
+        "active": ""
+      }
+    },
+    {
+      "scenario": "too late: a completed action stays completed and the cancel is shown as not effective",
+      "final": {
+        "status": "Completed: all 4 steps took effect.",
+        "lease": "lease-synthetic-001",
+        "steps": [
+          "Step 1: STANDS (took effect) (5 synthetic units)",
+          "Step 2: STANDS (took effect) (5 synthetic units)",
+          "Step 3: STANDS (took effect) (5 synthetic units)",
+          "Step 4: STANDS (took effect) (5 synthetic units)"
+        ],
+        "units": "Standing synthetic units: 20",
+        "outcome": "Too late: the action had already completed. All 4 steps took effect and STAND (20 synthetic units). The cancel was NOT effective.",
+        "facts": [
+          "Steps whose effect STANDS: 1, 2, 3, 4",
+          "Steps NOT RUN: none",
+          "Steps with UNKNOWN effect: none",
+          "Steps reversed by journaled compensating steps: none",
+          "Synthetic units standing: 20"
+        ],
+        "journal": [
+          "#1 boot",
+          "#2 action-accepted",
+          "#3 step-intent step 1",
+          "#4 step-effect step 1",
+          "#5 step-intent step 2",
+          "#6 step-effect step 2",
+          "#7 step-intent step 3",
+          "#8 step-effect step 3",
+          "#9 step-intent step 4",
+          "#10 step-effect step 4",
+          "#11 action-completed",
+          "#12 cancel-requested",
+          "#13 cancel-decided CANCEL_TOO_LATE"
+        ],
+        "disabled": {
+          "start": false,
+          "cancel": true,
+          "reconcile": true,
+          "compensate": true
+        },
+        "ids": [
+          "lease",
+          "action-h",
+          "status",
+          "steps",
+          "units",
+          "start",
+          "compensate",
+          "cancel",
+          "reconcile",
+          "refresh",
+          "outcome-h",
+          "outcome",
+          "facts",
+          "journal-h",
+          "journal"
+        ],
+        "active": "refresh"
+      }
+    },
+    {
+      "scenario": "interrupted: after a restart the action is neither cancelled nor completed until reconciled",
+      "final": {
+        "status": "Interrupted and reconciled. The action neither completed nor was cancelled.",
+        "lease": "lease-synthetic-001",
+        "steps": [
+          "Step 1: STANDS (took effect) (5 synthetic units)",
+          "Step 2: STANDS (took effect) (5 synthetic units)",
+          "Step 3: UNKNOWN (begun, effect not recorded) (5 synthetic units)",
+          "Step 4: NOT RUN (5 synthetic units)"
+        ],
+        "units": "Standing synthetic units: at least 10",
+        "outcome": "No cancel has been answered yet.",
+        "facts": [],
+        "journal": [
+          "#1 boot",
+          "#2 action-accepted",
+          "#3 step-intent step 1",
+          "#4 step-effect step 1",
+          "#5 step-intent step 2",
+          "#6 step-effect step 2",
+          "#7 step-intent step 3",
+          "#8 boot",
+          "#9 reconciled INTERRUPTED_UNKNOWN"
+        ],
+        "disabled": {
+          "start": false,
+          "cancel": true,
+          "reconcile": true,
+          "compensate": true
+        },
+        "ids": [
+          "lease",
+          "action-h",
+          "status",
+          "steps",
+          "units",
+          "start",
+          "compensate",
+          "cancel",
+          "reconcile",
+          "refresh",
+          "outcome-h",
+          "outcome",
+          "facts",
+          "journal-h",
+          "journal"
+        ],
+        "active": "refresh"
+      }
+    },
+    {
+      "scenario": "unreadable: a damaged journal is UNKNOWN and nothing can be started or cancelled",
+      "final": {
+        "status": "The journal cannot be read. The state is UNKNOWN: nothing is claimed as cancelled, completed or undone.",
+        "lease": "lease-synthetic-001",
+        "steps": [],
+        "units": "",
+        "outcome": "No cancel has been answered yet.",
+        "facts": [],
+        "journal": [],
+        "disabled": {
+          "start": true,
+          "cancel": true,
+          "reconcile": true,
+          "compensate": true
+        },
+        "ids": [
+          "lease",
+          "action-h",
+          "status",
+          "steps",
+          "units",
+          "start",
+          "compensate",
+          "cancel",
+          "reconcile",
+          "refresh",
+          "outcome-h",
+          "outcome",
+          "facts",
+          "journal-h",
+          "journal"
+        ],
+        "active": ""
+      }
+    }
+  ]
+}

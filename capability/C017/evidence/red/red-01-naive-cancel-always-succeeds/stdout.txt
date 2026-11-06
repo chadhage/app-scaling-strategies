@@ -1,0 +1,373 @@
+TAP version 13
+# Subtest: after a crash mid-step the action is INTERRUPTED, never cancelled or completed, and an intent without an effect is UNKNOWN
+not ok 1 - after a crash mid-step the action is INTERRUPTED, never cancelled or completed, and an intent without an effect is UNKNOWN
+  ---
+  duration_ms: 12.496
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\interrupted.test.cjs:27:1'
+  failureType: 'testCodeFailure'
+  error: 'the engine must expose the persisted action'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    Object.actionOf (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\support.cjs:79:10)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\interrupted.test.cjs:29:20)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: reconciliation after a restart is an explicit, idempotent command that settles facts without claiming cancelled or completed
+not ok 2 - reconciliation after a restart is an explicit, idempotent command that settles facts without claiming cancelled or completed
+  ---
+  duration_ms: 4.4123
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\interrupted.test.cjs:46:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + undefined
+    - 'INTERRUPTED_UNKNOWN'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'INTERRUPTED_UNKNOWN'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\interrupted.test.cjs:50:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a cancel that raced the crash is CANCEL_UNKNOWN when replayed with its key, before and after reconciliation
+not ok 3 - a cancel that raced the crash is CANCEL_UNKNOWN when replayed with its key, before and after reconciliation
+  ---
+  duration_ms: 4.5622
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\interrupted.test.cjs:62:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    200 !== 503
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 503
+  actual: 200
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\interrupted.test.cjs:64:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a restart after a clean completion shows COMPLETED, and a cancel of it is too late (never unknown)
+not ok 4 - a restart after a clean completion shows COMPLETED, and a cancel of it is too late (never unknown)
+  ---
+  duration_ms: 5.251
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\interrupted.test.cjs:81:1'
+  failureType: 'testCodeFailure'
+  error: 'the engine must expose the persisted action'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    Object.actionOf (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\support.cjs:79:10)
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\interrupted.test.cjs:89:18)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: cancel before any step ran is CANCELLED_BEFORE_EFFECT with nothing to undo
+not ok 5 - cancel before any step ran is CANCELLED_BEFORE_EFFECT with nothing to undo
+  ---
+  duration_ms: 20.932
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\outcomes.test.cjs:23:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'CANCELLED'
+    - 'CANCELLED_BEFORE_EFFECT'
+                ^
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'CANCELLED_BEFORE_EFFECT'
+  actual: 'CANCELLED'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\outcomes.test.cjs:27:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: cancel while waiting before step 3 is CANCELLED_PARTIAL: steps 1 and 2 stand and nothing is undone
+not ok 6 - cancel while waiting before step 3 is CANCELLED_PARTIAL: steps 1 and 2 stand and nothing is undone
+  ---
+  duration_ms: 5.7168
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\outcomes.test.cjs:37:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'CANCELLED'
+    - 'CANCELLED_PARTIAL'
+                ^
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'CANCELLED_PARTIAL'
+  actual: 'CANCELLED'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\outcomes.test.cjs:41:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: cancel during step 3 is applied at the boundary: the step finishes and stands
+not ok 7 - cancel during step 3 is applied at the boundary: the step finishes and stands
+  ---
+  duration_ms: 16.1293
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\outcomes.test.cjs:52:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'CANCELLED'
+    - 'CANCELLED_PARTIAL'
+                ^
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'CANCELLED_PARTIAL'
+  actual: 'CANCELLED'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\outcomes.test.cjs:58:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: cancel after completion is CANCEL_TOO_LATE: a conflict, all effects stand, not a success
+not ok 8 - cancel after completion is CANCEL_TOO_LATE: a conflict, all effects stand, not a success
+  ---
+  duration_ms: 4.9205
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\outcomes.test.cjs:68:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    200 !== 409
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 409
+  actual: 200
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\outcomes.test.cjs:74:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: cancel with compensation is COMPENSATED only after journaled compensating steps ran in reverse order
+not ok 9 - cancel with compensation is COMPENSATED only after journaled compensating steps ran in reverse order
+  ---
+  duration_ms: 8.349
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\outcomes.test.cjs:83:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'CANCELLED'
+    - 'COMPENSATED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'COMPENSATED'
+  actual: 'CANCELLED'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\outcomes.test.cjs:87:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a failed compensation is reported as such and is never COMPENSATED
+not ok 10 - a failed compensation is reported as such and is never COMPENSATED
+  ---
+  duration_ms: 3.1018
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\outcomes.test.cjs:100:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'CANCELLED'
+    - 'CANCELLED_PARTIAL'
+                ^
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'CANCELLED_PARTIAL'
+  actual: 'CANCELLED'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\outcomes.test.cjs:103:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: cancel is idempotent per key; a different command under the same key conflicts and changes nothing
+not ok 11 - cancel is idempotent per key; a different command under the same key conflicts and changes nothing
+  ---
+  duration_ms: 22.9812
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\races.test.cjs:20:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + undefined
+    - true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\races.test.cjs:27:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: a second cancel with a new key is CANCEL_IN_PROGRESS while pending and ALREADY_TERMINAL afterwards
+not ok 12 - a second cancel with a new key is CANCEL_IN_PROGRESS while pending and ALREADY_TERMINAL afterwards
+  ---
+  duration_ms: 3.3692
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\races.test.cjs:40:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    200 !== 409
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 409
+  actual: 200
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\races.test.cjs:45:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: wrong lease, run, user, action, stale and future epochs are typed failures that claim and change nothing
+not ok 13 - wrong lease, run, user, action, stale and future epochs are typed failures that claim and change nothing
+  ---
+  duration_ms: 4.4298
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\races.test.cjs:56:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    UNKNOWN_LEASE
+    
+    200 !== 404
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 404
+  actual: 200
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\races.test.cjs:74:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a storm of parallel cancels racing the final step yields exactly one consistent outcome
+not ok 14 - a storm of parallel cancels racing the final step yields exactly one consistent outcome
+  ---
+  duration_ms: 10.9365
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\races.test.cjs:86:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(results.length >= 1 && refused.length >= 1)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\races.test.cjs:95:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a storm racing before step 4 yields exactly one consistent partial outcome
+not ok 15 - a storm racing before step 4 yields exactly one consistent partial outcome
+  ---
+  duration_ms: 5.5181
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\races.test.cjs:106:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    10 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 10
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\races.test.cjs:111:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: a start is refused while an action is in flight; replays are idempotent; stale and future epochs are rejected
+not ok 16 - a start is refused while an action is in flight; replays are idempotent; stale and future epochs are rejected
+  ---
+  duration_ms: 2.8766
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\capability\\C017\\test-scratch\\red-cd0ce9c3\\tests\\races.test.cjs:118:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + undefined
+    - 'ACTION_NOT_SETTLED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'ACTION_NOT_SETTLED'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\capability\C017\test-scratch\red-cd0ce9c3\tests\races.test.cjs:121:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 0
+# fail 16
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1091.3882
