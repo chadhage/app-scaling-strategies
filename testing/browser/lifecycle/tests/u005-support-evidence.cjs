@@ -64,7 +64,8 @@ function verifyRun(dir, name, { pinInputs = false, root = repoRoot, expectedExit
         problems.push(`${name}: input ${input.path} is missing`);
         continue;
       }
-      if (sha256(bytes) !== input.rawSha256 || sha256(crlfToLf(bytes)) !== input.crlfToLfSha256) problems.push(`${name}: input ${input.path} changed after the run`);
+      // the LF-normalized form decides (a git archive checkout has LF bytes, the Windows working tree CRLF); a changed byte changes both forms
+      if (sha256(crlfToLf(bytes)) !== input.crlfToLfSha256) problems.push(`${name}: input ${input.path} changed after the run`);
     }
   }
   return problems;

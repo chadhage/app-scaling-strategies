@@ -4,15 +4,15 @@
 // the sealed opener (testing\browser\isolated.cjs, never edited) is wrapped and raced. On expiry only the process tree this
 // open started is ended, by recorded identity (owned.cjs), and the call rejects with a StartupError. The sealed promise keeps
 // running after the deadline, so the module keeps watching it: a child that appears late is ended, a session that resolves late
-// is closed. Startups in one process are serialised by a lock, so "a new direct child of the caller" is never ambiguous.
+// is closed. Startups in one process are serialised by a lock and only that startup window adopts roots (OwnedTree.seal), so a session owns just its browser.
 
 const {
-  checkMs, bounded, describe, createOwnedAdapters, createOwnedTree, LifecycleError, DEFAULT_LIST_MS, DEFAULT_TERMINATE_MS,
+  checkMs, bounded, describe, sweepBoundMs, createOwnedAdapters, createOwnedTree, LifecycleError, DEFAULT_LIST_MS, DEFAULT_TERMINATE_MS,
 } = require('./owned.cjs');
 
-const DEFAULT_GRACE_MS = 60000;
 const DEFAULT_POLL_MS = 250;
 const LOCK_KEY = Symbol.for('app-scaling-strategies.U005.startupLock');
+const ABORTED = 'aborted';
 const REPORT_KEYS = ['confirmed', 'terminated', 'alreadyGone', 'refused', 'survivors', 'failed', 'unverifiable', 'unconfirmed', 'errors'];
 
 const emptyReport = (clean = false) => ({
@@ -51,19 +51,31 @@ function createLock() {
 
 const defaultLock = () => (globalThis[LOCK_KEY] ||= createLock());
 
+// The budgets of one startup, all from the options: a sweep (table read, kill passes, confirming read) takes at most listMs + terminateMs + listMs,
+// the default grace period covers one whole sweep, so by default the rejection arrives by the baseline read + deadlineMs + graceMs. Explicit
+// listMs and terminateMs are the caller's: the bound is then deadlineMs + sweepBoundMs.
+function budgetsOf(options = {}) {
+  const pick = (name, fallback) => checkMs(options[name] === undefined ? fallback : options[name], name);
+  const listMs = pick('listMs', DEFAULT_LIST_MS);
+  const terminateMs = pick('terminateMs', DEFAULT_TERMINATE_MS);
+  const deadlineMs = checkMs(options.deadlineMs, 'deadlineMs');
+  const sweepMs = sweepBoundMs({ listMs, terminateMs });
+  return { deadlineMs, listMs, terminateMs, graceMs: pick('graceMs', sweepMs), sweepBoundMs: sweepMs, rejectionBoundMs: deadlineMs + sweepMs };
+}
+
 function settingsOf(options) {
   const adapters = options.adapters || createOwnedAdapters(options.adapterOptions);
-  const pick = (name, fallback) => checkMs(options[name] === undefined ? fallback : options[name], name);
+  const budgets = budgetsOf(options);
   if (options.signal !== undefined && !(options.signal && typeof options.signal.addEventListener === 'function')) throw new LifecycleError('ERR_INVALID_ARG', 'signal must be an AbortSignal');
   return {
     adapters,
     signal: options.signal,
     clock: options.clock || adapters.clock,
-    deadlineMs: checkMs(options.deadlineMs, 'deadlineMs'),
-    graceMs: pick('graceMs', DEFAULT_GRACE_MS),
-    pollMs: pick('pollMs', DEFAULT_POLL_MS),
-    terminateMs: pick('terminateMs', DEFAULT_TERMINATE_MS),
-    listMs: pick('listMs', DEFAULT_LIST_MS),
+    deadlineMs: budgets.deadlineMs,
+    graceMs: budgets.graceMs,
+    pollMs: checkMs(options.pollMs === undefined ? DEFAULT_POLL_MS : options.pollMs, 'pollMs'),
+    terminateMs: budgets.terminateMs,
+    listMs: budgets.listMs,
     lock: options.lock || defaultLock(),
     getPhase: typeof options.getPhase === 'function' ? options.getPhase : () => 'unknown',
   };
@@ -138,6 +150,7 @@ async function adopt(settings, tree, state) {
   try {
     await tree.observe({ timeoutMs: settings.listMs });
     if (tree.roots.length === 0) throw new LifecycleError('ERR_NO_OWNED_ROOT', 'the open produced no new child process of the caller');
+    tree.seal();
     return { ...session, owned: tree };
   } catch (error) {
     const closed = await closeSession(session, settings);
@@ -153,17 +166,45 @@ async function failedOpen(settings, tree, state) {
   throw new StartupError('ERR_STARTUP_FAILED', `the open failed and left processes behind: ${describe(state.error)}`, { cause: state.error, deadlineMs: settings.deadlineMs, report });
 }
 
-async function runStartup(run, settings, release) {
-  if (settings.signal && settings.signal.aborted) {
-    throw new StartupError('ERR_STARTUP_ABORTED', 'the open was aborted before it started, nothing was launched', { deadlineMs: settings.deadlineMs, report: emptyReport(true) });
-  }
-  const tree = createOwnedTree({ adapters: settings.adapters, ownerPid: settings.adapters.selfPid });
+const abortedBeforeLaunch = (settings, when) => new StartupError('ERR_STARTUP_ABORTED', `the open was aborted ${when}, nothing was launched`, { deadlineMs: settings.deadlineMs, report: emptyReport(true) });
+
+// An abort is honoured at EVERY await of a startup: the listener is attached before the first one (startBounded), every wait races
+// `aborted` and the signal is re-checked after each of them. stop() removes the listener on every way out.
+function watchAbort(signal) {
+  let listener = null;
+  const aborted = new Promise((resolve) => {
+    if (!signal) return;
+    if (signal.aborted) {
+      resolve(ABORTED);
+      return;
+    }
+    listener = () => resolve(ABORTED);
+    signal.addEventListener('abort', listener, { once: true });
+  });
+  return {
+    aborted,
+    isAborted: () => Boolean(signal && signal.aborted),
+    stop: () => { if (listener) signal.removeEventListener('abort', listener); },
+  };
+}
+
+async function readBaseline(settings, watcher) {
   try {
-    tree.setBaseline(await settings.adapters.list({ timeoutMs: settings.listMs }));
+    const reading = Promise.resolve(settings.adapters.list({ timeoutMs: settings.listMs }));
+    reading.catch(() => {});
+    return await Promise.race([reading, watcher.aborted]);
   } catch (error) {
     const message = `the process table could not be read before the open, nothing was launched: ${describe(error)}`;
     throw new StartupError('ERR_STARTUP_BASELINE', message, { cause: error, deadlineMs: settings.deadlineMs, report: emptyReport(true) });
   }
+}
+
+async function runStartup(run, settings, release, watcher) {
+  if (watcher.isAborted()) throw abortedBeforeLaunch(settings, 'before it started');
+  const tree = createOwnedTree({ adapters: settings.adapters, ownerPid: settings.adapters.selfPid });
+  const baseline = await readBaseline(settings, watcher);
+  if (baseline === ABORTED || watcher.isAborted()) throw abortedBeforeLaunch(settings, 'while the baseline was read');
+  tree.setBaseline(baseline);
   const state = { settled: false, ok: false, value: undefined, error: undefined };
   let inner;
   try {
@@ -173,16 +214,9 @@ async function runStartup(run, settings, release) {
   }
   inner.then((value) => Object.assign(state, { settled: true, ok: true, value }), (error) => Object.assign(state, { settled: true, ok: false, error }));
   let timer;
-  let onAbort;
   const expiry = new Promise((resolve) => { timer = settings.clock.setTimeout(() => resolve('expired'), settings.deadlineMs); });
-  const abort = new Promise((resolve) => {
-    if (!settings.signal) return;
-    onAbort = () => resolve('aborted');
-    settings.signal.addEventListener('abort', onAbort, { once: true });
-  });
-  const first = await Promise.race([inner.then(() => 'settled', () => 'settled'), expiry, abort]);
+  const first = await Promise.race([inner.then(() => 'settled', () => 'settled'), expiry, watcher.aborted]);
   settings.clock.clearTimeout(timer);
-  if (onAbort) settings.signal.removeEventListener('abort', onAbort);
   if (first !== 'settled') return expire(settings, tree, state, release, inner, first);
   return state.ok ? adopt(settings, tree, state) : failedOpen(settings, tree, state);
 }
@@ -190,14 +224,24 @@ async function runStartup(run, settings, release) {
 // run() starts the sealed open. Resolves with the sealed session plus `owned` (the recorded process tree) or rejects.
 async function startBounded(run, options = {}) {
   const settings = settingsOf(options);
-  const release = await settings.lock.acquire();
+  const watcher = watchAbort(settings.signal);
   try {
-    const session = await runStartup(run, settings, release);
-    release();
-    return session;
-  } catch (error) {
-    if (!(error instanceof StartupError && error.settled !== null)) release();
-    throw error;
+    const queued = settings.lock.acquire();
+    const taken = await Promise.race([queued, watcher.aborted]);
+    if (taken === ABORTED) {
+      queued.then((handOver) => handOver());
+      throw abortedBeforeLaunch(settings, 'while it waited for another startup');
+    }
+    try {
+      const session = await runStartup(run, settings, taken, watcher);
+      taken();
+      return session;
+    } catch (error) {
+      if (!(error instanceof StartupError && error.settled !== null)) taken();
+      throw error;
+    }
+  } finally {
+    watcher.stop();
   }
 }
 
@@ -213,4 +257,4 @@ async function openLoopbackBounded(relativeOwnedIndexPath, server, options = {})
   return startBounded(() => open(relativeOwnedIndexPath, server), options);
 }
 
-module.exports = { startBounded, openLessonBounded, openLoopbackBounded, StartupError, createLock, defaultLock };
+module.exports = { startBounded, openLessonBounded, openLoopbackBounded, StartupError, createLock, defaultLock, budgetsOf };

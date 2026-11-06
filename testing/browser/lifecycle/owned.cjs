@@ -33,6 +33,12 @@ function checkMs(value, name) {
   return Math.min(value, MAX_TIMER_MS);
 }
 
+// The longest one sweep (OwnedTree.terminate) can take when every adapter hangs: the table read, the kill passes and the confirming read.
+function sweepBoundMs(options = {}) {
+  const pick = (name, fallback) => checkMs(options[name] === undefined ? fallback : options[name], name);
+  return 2 * pick('listMs', DEFAULT_LIST_MS) + pick('terminateMs', DEFAULT_TERMINATE_MS);
+}
+
 const systemClock = Object.freeze({
   now: () => Number(process.hrtime.bigint() / 1000000n),
   setTimeout: (fn, ms) => setTimeout(fn, ms),
@@ -73,8 +79,10 @@ function checkedTable(rows, selfPid, helper) {
   return rows.filter((row) => !(helper !== null && row.pid === helper && row.ppid === selfPid));
 }
 
-// Guarded adapters: { selfPid, clock, now, sleep, list, kill } around injected inner adapters or the Windows ones.
+// Guarded adapters: { selfPid, clock, now, sleep, list, kill } around injected inner adapters or the Windows ones. The owner pid is
+// always process.pid for the real adapters: selfPid can only be injected together with inner (test) adapters.
 function createOwnedAdapters(options = {}) {
+  if (options.selfPid !== undefined && !options.inner) throw invalid('selfPid can only be injected together with inner adapters: the real adapters always own as process.pid');
   const { clock = systemClock, selfPid = process.pid, listMs = DEFAULT_LIST_MS, killMs = DEFAULT_TERMINATE_MS } = options;
   let base = options.inner;
   let helperPid = () => (base && typeof base.lastHelperPid === 'function' ? base.lastHelperPid() : null);
@@ -170,7 +178,12 @@ function mergePasses(previous, next) {
 }
 
 // The processes one startup owns: recorded by identity while they live, ended by identity, confirmed by a fresh table.
+// Ownership is positive and fixed at startup: new direct children of the caller are adopted as roots ONLY while the startup window is open
+// (the per-process lock serialises it); seal() closes the window, afterwards observe() and terminate() refresh the descendants of the
+// recorded identities and never adopt a new direct child of the caller (another live session's browser, an unrelated process).
 class OwnedTree {
+  #sealed = false;
+
   constructor({ adapters, ownerPid, baseline = [] }) {
     foreignOwner(ownerPid, adapters);
     this.adapters = adapters;
@@ -178,11 +191,14 @@ class OwnedTree {
     this.entries = new Map();
     this.hidden = new Map();
     this.history = new Set();
+    this.seen = new Map();
     this.rootList = [];
     this.setBaseline(baseline);
   }
 
   get roots() { return this.rootList.map(identityOf); }
+
+  get sealed() { return this.#sealed; }
 
   get unverifiable() { return [...this.hidden.values()].map((item) => ({ ...item })); }
 
@@ -202,8 +218,13 @@ class OwnedTree {
     this.before = new Set(rows.filter((row) => row.ppid === this.ownerPid).map(keyOf));
   }
 
-  // Records the new direct children of the caller (and everything below them) from one table.
-  async adopt(table) {
+  // The startup window is over: the roots are fixed (identity = pid + creation time) for the rest of the life of the tree.
+  seal() {
+    this.#sealed = true;
+  }
+
+  // Records the new direct children of the caller (startup window only) and everything below them from one table.
+  async adoptRoots(table) {
     const isKnown = (row) => this.entries.has(row.pid) && this.entries.get(row.pid).createdAt === row.createdAt;
     for (const row of table.filter((item) => item.ppid === this.ownerPid && !this.before.has(keyOf(item)) && !isKnown(item))) {
       if (row.createdAt === null) {
@@ -218,6 +239,11 @@ class OwnedTree {
         this.hidden.set(row.pid, { pid: row.pid, ppid: row.ppid, createdAt: row.createdAt, reason: `refused: ${error.code}` });
       }
     }
+  }
+
+  // Refreshes the descendants of the recorded identities from one table; adopts new roots only while the window is open.
+  async adopt(table) {
+    if (!this.#sealed) await this.adoptRoots(table);
     if (this.entries.size > 0) {
       const refreshed = await tree.refreshTree(this.snapshot(), { ...this.adapters, list: async () => table });
       this.entries = new Map(refreshed.entries.map((entry) => [entry.pid, entry]));
@@ -273,21 +299,26 @@ class OwnedTree {
   async pass(limit) {
     const snapshot = this.snapshot();
     try {
-      return await bounded(this.adapters.clock, limit + SLACK_MS, 'terminateOwned', () => tree.terminateOwned(snapshot, { timeoutMs: limit, adapters: this.adapters }));
+      const result = await bounded(this.adapters.clock, limit + SLACK_MS, 'terminateOwned', () => tree.terminateOwned(snapshot, { timeoutMs: limit, adapters: this.adapters }));
+      for (const item of [...result.terminated, ...result.alreadyGone, ...result.survivors]) this.seen.set(keyOf(item), identityOf(item));
+      return result;
     } catch (error) {
       return { terminated: [], alreadyGone: [], survivors: snapshot.entries.map(identityOf), refused: [], errors: [failureOf(error)] };
     }
   }
 
-  // Only the fresh table decides: what the kill adapter claimed is a claim, not a result (F4).
+  // Only the fresh table decides: what the kill adapter claimed is a claim, not a result (F4). The report is cumulative over DISTINCT identities:
+  // everything this tree recorded or ended in any earlier sweep (including what the core found inside one sweep) is classified again.
   classify(result, fresh, errors) {
     const listed = (item) => fresh !== null && fresh.some((row) => row.pid === item.pid && row.createdAt === item.createdAt);
     const terminated = [];
     const alreadyGone = [];
     const survivors = [];
     const unconfirmed = [];
+    const handled = new Set();
     const put = (item, how) => {
       const identity = identityOf(item);
+      handled.add(keyOf(item));
       if (how === 'survivor') survivors.push({ ...identity, reason: fresh === null ? 'unconfirmed' : 'still-listed' });
       else if (fresh === null) unconfirmed.push(identity);
       else if (listed(item)) survivors.push({ ...identity, reason: how === 'killed' ? 'still-listed-after-kill' : 'listed-after-reported-gone' });
@@ -297,9 +328,12 @@ class OwnedTree {
     for (const item of result.terminated) put(item, 'killed');
     for (const item of result.alreadyGone) put(item, 'gone');
     for (const item of result.survivors) {
-      if (fresh !== null && !listed(item)) terminated.push(identityOf(item));
-      else put(item, 'survivor');
+      if (fresh !== null && !listed(item)) {
+        handled.add(keyOf(item));
+        terminated.push(identityOf(item));
+      } else put(item, 'survivor');
     }
+    for (const item of this.seen.values()) if (!handled.has(keyOf(item))) put(item, 'gone');
     for (const item of terminated) this.history.add(keyOf(item));
     const refused = result.refused.map((item) => ({ ...item }));
     const stillThere = (item) => fresh === null || fresh.some((row) => row.pid === item.pid);
@@ -314,6 +348,6 @@ class OwnedTree {
 const createOwnedTree = (options) => new OwnedTree(options);
 
 module.exports = {
-  MAX_TIMER_MS, DEFAULT_LIST_MS, DEFAULT_TERMINATE_MS, systemClock, checkMs, bounded, describe, failureOf, identityOf, keyOf,
+  MAX_TIMER_MS, DEFAULT_LIST_MS, DEFAULT_TERMINATE_MS, systemClock, checkMs, sweepBoundMs, bounded, describe, failureOf, identityOf, keyOf,
   createOwnedAdapters, snapshotOwned, createOwnedTree, OwnedTree, LifecycleError,
 };

@@ -98,3 +98,41 @@ Feature: Bound the browser startup so it can neither hang nor leave a browser be
     Given a real isolated headless Edge and a test that owns the deadline
     When the test fires the deadline once the first owned child exists
     Then the launched tree is gone by an independent read-only table, and a foreign process of the same image survives
+
+  # Fix after the independent review (rev-U005): ownership is positive and fixed at startup.
+
+  Scenario: A session ends only the processes it owns, whatever the order of closing
+    Given two live sessions opened one after the other, or two startups that ran concurrently
+    When the first is ended, or ended twice, or the second is ended first
+    Then only the ended session's tree is requested and ended, the other browser keeps running and answering
+    And a direct child of the caller that appears after the startup is never adopted or ended
+    And a second terminate of an ended session sends no kill request and never touches a browser opened in between
+
+  Scenario: New roots are adopted only inside the startup window
+    Given a startup that holds the per-process lock
+    Then a new direct child of the caller is a new root only until the startup returned, failed or finished watching
+    And afterwards observe() and terminate() refresh the descendants of the recorded identities only
+    And a child the caller itself starts inside that window is still adopted (the honest limit)
+
+  Scenario: An abort is honoured at every await
+    Given an AbortSignal and a startup that is reading its baseline table or queued behind another startup
+    When the signal is aborted
+    Then the call rejects at once with ERR_STARTUP_ABORTED, the opener is never called, no virtual time had to pass
+    And the lock chain survives and the listener is removed on every way out
+
+  Scenario: The report is cumulative over distinct identities
+    Given descendants that the core found and ended inside one sweep
+    Then a later report still lists them once, and no identity is listed twice or in two lists
+
+  Scenario: The budgets are one formula
+    Given the defaults
+    Then a sweep takes at most listMs + terminateMs + listMs, the default grace period covers it, and a table that never answers rejects at exactly the stated bound
+
+  Scenario: The owner pid of the real adapters cannot be injected
+    Given createOwnedAdapters without injected inner adapters
+    Then the option selfPid is refused with ERR_INVALID_ARG and the owner is process.pid
+
+  Scenario: Two real live sessions are closed in FIFO order
+    Given two real isolated headless Edge sessions opened one after the other
+    When the first is closed and ended twice
+    Then the root of the second is alive, its page still answers and every kill request named the first tree only

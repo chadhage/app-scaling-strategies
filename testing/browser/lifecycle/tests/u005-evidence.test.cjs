@@ -26,6 +26,10 @@ const FINAL_REDS = ['red-7-final-race', 'red-8-final-name', 'red-9-final-late'];
 const GREENS = ['green-4-suite', 'green-5-coverage-owned', 'green-6-coverage-startup'];
 const FINAL = [...FINAL_REDS, ...GREENS, 'mutation-3', 'real-4'];
 const ALL = [...DRAFT_REDS, ...HISTORY_REDS, ...HISTORY_OK, ...KEPT_FAILED, ...FINAL];
+// Files that the fix (a later commit) changed: the first-publication final runs recorded their FIRST-PUBLICATION bytes, so they are no longer pinned to the
+// working tree. owned.cjs and startup.cjs are instead tied to the archived snapshot of the fix evidence (first-publication.json), the others are history.
+const CHANGED_BY_FIX = ['owned.cjs', 'startup.cjs', 'U005.feature', 'u005-support-impl.cjs', 'u005-support-world.cjs', 'u005-real.test.cjs', 'u005-startup-flow.test.cjs', 'u005-owned.test.cjs'];
+const snapshotRoot = path.resolve(__dirname, '..', 'evidence', 'u005-fix', 'first-publication');
 const dirOf = (name) => path.join(evidenceRoot, name);
 
 test('the evidence folder holds exactly the archived runs, the specimen and nothing else', T, () => {
@@ -45,8 +49,18 @@ test('every archived run verifies: transcripts, hashes, exit codes and summaries
   for (const name of KEPT_FAILED) assert.deepEqual(verifyRun(dirOf(name), name, { expectedExitCode: 1 }), [], name);
 });
 
-test('the final runs pin the exact bytes of every file they ran on (an edit after the run fails)', T, () => {
-  for (const name of FINAL) assert.deepEqual(verifyRun(dirOf(name), name, { pinInputs: true }), [], name);
+test('the first-publication final runs pin the bytes they ran on; what the fix changed is tied to the archived first-publication snapshot', T, () => {
+  for (const name of FINAL) assert.deepEqual(verifyRun(dirOf(name), name, { pinInputs: true, ignoreInputs: CHANGED_BY_FIX }), [], name);
+  const snapshots = JSON.parse(fs.readFileSync(path.join(snapshotRoot, 'first-publication.json'), 'utf8')).files;
+  assert.deepEqual(snapshots.map((file) => path.basename(file.path)), ['owned.cjs', 'startup.cjs']);
+  for (const file of snapshots) {
+    const bytes = fs.readFileSync(path.join(snapshotRoot, file.snapshot));
+    assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), file.sha256, `${file.snapshot} is the archived snapshot`);
+    for (const name of FINAL) {
+      const input = readManifest(dirOf(name), name).inputs.find((item) => path.basename(item.path) === path.basename(file.path));
+      if (input) assert.equal(input.crlfToLfSha256, file.sha256, `${name} ran on the first-publication ${path.basename(file.path)}`);
+    }
+  }
 });
 
 test('the draft REDs pin the naive specimen and the accepted U004 files, which never changed', T, () => {
@@ -84,7 +98,7 @@ test('the GREEN runs pass every test and the per-file coverage rows are at least
   }
 });
 
-test('mutation evidence: the control passes and every guard mutant of the final bytes is killed by a named failing test', T, () => {
+test('mutation evidence of the first publication: the control passes and every chosen guard mutant of those bytes is killed by a named failing test', T, () => {
   const report = JSON.parse(stdoutOf(dirOf('mutation-3'), 'mutation-3'));
   const ids = [...require('./u005-mutants-owned.cjs'), ...require('./u005-mutants-startup.cjs')].map((mutant) => mutant.id);
   assert.equal(report.control.ok, true);
@@ -107,7 +121,7 @@ test('the history runs stay what they were: the first full mutation run missed o
 test('real Edge evidence: Microsoft-signed within a qualified major, tree gone, look-alike and foreign Edge untouched', T, () => {
   const lines = [...stdoutOf(dirOf('real-4'), 'real-4').matchAll(/^# U005-REAL-OBSERVATION (.+)$/gm)].map((match) => JSON.parse(match[1]));
   assert.equal(lines.length, 2);
-  const majors = JSON.parse(fs.readFileSync(path.join(repoRoot, 'testing', 'browser', 'qualify', 'qualified.json'), 'utf8')).qualifiedMajors;
+  const majors = require(path.join(repoRoot, 'testing', 'browser', 'qualify', 'adapters.cjs')).readQualified().qualifiedMajors;
   for (const line of lines) {
     assert.equal(line.edge.status, 'Valid');
     assert.match(line.edge.subject, /O=Microsoft Corporation/);
@@ -146,16 +160,18 @@ test('tampering is detected: a flipped transcript byte, an edited manifest, a mi
   withScratch((dir, copy) => { fs.rmSync(path.join(copy, 'raw', `${name}.stderr.raw.gz`)); assert.ok(verifyRun(copy, name).some((item) => /stderr transcript unreadable/.test(item))); });
   withScratch((dir, copy) => {
     const manifest = JSON.parse(fs.readFileSync(path.join(copy, `${name}.json`), 'utf8'));
-    for (const input of manifest.inputs) {
+    const stable = manifest.inputs.filter((input) => !CHANGED_BY_FIX.includes(path.basename(input.path)));
+    for (const input of stable) {
       const target = path.join(dir, 'root', input.path);
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.copyFileSync(path.join(repoRoot, input.path), target);
     }
-    assert.deepEqual(verifyRun(copy, name, { pinInputs: true, root: path.join(dir, 'root') }), []);
-    fs.appendFileSync(path.join(dir, 'root', manifest.inputs[0].path), '\n// tampered\n');
-    assert.ok(verifyRun(copy, name, { pinInputs: true, root: path.join(dir, 'root') }).some((item) => /changed after the run/.test(item)));
-    fs.rmSync(path.join(dir, 'root', manifest.inputs[1].path));
-    assert.ok(verifyRun(copy, name, { pinInputs: true, root: path.join(dir, 'root') }).some((item) => /is missing/.test(item)));
+    const options = { pinInputs: true, root: path.join(dir, 'root'), ignoreInputs: CHANGED_BY_FIX };
+    assert.deepEqual(verifyRun(copy, name, options), []);
+    fs.appendFileSync(path.join(dir, 'root', stable[0].path), '\n// tampered\n');
+    assert.ok(verifyRun(copy, name, options).some((item) => /changed after the run/.test(item)));
+    fs.rmSync(path.join(dir, 'root', stable[1].path));
+    assert.ok(verifyRun(copy, name, options).some((item) => /is missing/.test(item)));
   });
   assert.ok(verifyRun(path.join(evidenceRoot, 'no-such-run'), 'no-such-run').some((item) => /manifest unreadable/.test(item)));
 });
