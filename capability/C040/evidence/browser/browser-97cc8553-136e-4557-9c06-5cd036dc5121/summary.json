@@ -1,0 +1,619 @@
+{
+  "schema": "C040-browser-proof/1",
+  "cardId": "C040",
+  "startedAtUtc": "2026-11-06T04:04:10.861Z",
+  "outcome": "passed",
+  "meaning": "Actual static DOM and keyboard verification of local saved producer outputs, not a live Azure result, a user journey or an SLA.",
+  "testRuntime": "v22.23.4",
+  "productionNode24Validated": false,
+  "liveAzureResult": false,
+  "helperPatched": false,
+  "unsafeFlagsUsed": false,
+  "packagesDownloaded": 0,
+  "cloudRuns": 0,
+  "spend": 0,
+  "checks": [
+    {
+      "name": "actual Microsoft-signed Edge 156 / Node 22 / offline Playwright 1.56.1 and unchanged isolated helper",
+      "passed": true,
+      "observed": {
+        "actualBrowserPid": 7408,
+        "browserVersion": "156.0.4314.58",
+        "authenticodeStatus": "Valid",
+        "actualNodePid": 5912
+      }
+    },
+    {
+      "name": "actual initial static DOM has the exact training banner, no rows, no default success and a live status region",
+      "passed": true,
+      "observed": "Training rehearsal - synthetic data - not a live Azure result"
+    },
+    {
+      "name": "actual Enter on load with no saved set rejects with a code and shows nothing",
+      "passed": true,
+      "observed": "UNKNOWN_SAVED_SET"
+    },
+    {
+      "name": "actual ArrowDown/Tab/Enter loads 3 failed and 2 unknown among 40 successes: 45 of 45 rows, spelled-out status counts, visible focus, ids unique",
+      "passed": true,
+      "observed": {
+        "rows": 45,
+        "attention": 5
+      }
+    },
+    {
+      "name": "actual keyboard status filter \"success\" keeps all 5 failed and unknown rows with text labels and says what it would have hidden",
+      "passed": true,
+      "observed": {
+        "note": "The filter \"success\" alone would have hidden 3 FAILED and 2 UNKNOWN rows: failed and unknown rows are never hidden, so they stay visible. Choose \"All statuses\",",
+        "labels": [
+          "FAILED (needs attention)",
+          "FAILED (needs attention)",
+          "FAILED (needs attention)",
+          "UNKNOWN (needs attention)",
+          "UNKNOWN (needs attention)"
+        ]
+      }
+    },
+    {
+      "name": "actual keyboard sorting by every chosen column and direction never removes a failed or unknown row",
+      "passed": true,
+      "observed": [
+        "UNKNOWN",
+        "UNKNOWN",
+        "FAILED",
+        "FAILED",
+        "FAILED",
+        "ACTUAL_TRANSITION"
+      ]
+    },
+    {
+      "name": "actual typing a search that matches nothing leaves exactly the 5 failed and unknown rows and names the 40 hidden ones",
+      "passed": true,
+      "observed": {
+        "rows": 5
+      }
+    },
+    {
+      "name": "actual tablist arrow keys, Home and End wrap around, move focus and selection, and every table keeps its 5 failed and unknown rows",
+      "passed": true,
+      "observed": {
+        "tabs": [
+          "ArrowRight->effect",
+          "ArrowRight->latency",
+          "ArrowRight->cohort",
+          "ArrowLeft->latency",
+          "Home->cohort",
+          "End->latency",
+          "Home->cohort",
+          "ArrowRight->effect"
+        ],
+        "aria": "- tablist \"Result tables\":\n  - tab \"Cohort (C031)\"\n  - tab \"Effect (C030)\" [selected]\n  - tab \"Latency (C029)\""
+      }
+    },
+    {
+      "name": "actual success filter on the effect and latency tables keeps the 5 failed and unknown rows too",
+      "passed": true,
+      "observed": {
+        "effect": "The filter \"success\" alone would have hidden 3 DUPLICATE and 2 UNKNOWN rows: failed and unknown rows are never hidden, so they stay visible.",
+        "latency": "The filter \"success\" alone would have hidden 2 EXCEEDED and 1 FAILED and 2 UNKNOWN rows: failed and unknown rows are never hidden, so they s"
+      }
+    },
+    {
+      "name": "actual Space loads the saved closed history: 7 clients (3 of 7), 7 originals without effect rows all UNKNOWN, 7 journeys with the 1118.9 ms budget miss kept",
+      "passed": true,
+      "observed": {
+        "exceeded": [
+          [
+            "3",
+            "synthetic-C033-attempt-3",
+            "1000 ms",
+            "1118.9000000953674 ms",
+            "EXCEEDED (needs attention)",
+            "yes: kept in the producer denominator, a retry cannot hide it",
+            "ORIGINAL_LATENCY_BUDGET_MISS",
+            "none"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "actual keyboard loads of the empty, truncated, duplicated and unrecognised-status sets: no attempts recorded, INCOMPLETE 4 of 10, duplicates kept and flagged with unique ids, unknown status shown as UNKNOWN",
+      "passed": true,
+      "observed": {
+        "empty": "no attempts recorded in all three tables",
+        "truncated": "Cohort table: INCOMPLETE, showing 4 of 10 rows. The producer counted 10 rows but this saved set holds 4: 6 are NOT_SAVED and their status is unknown. Status counts: ACTUAL_TRANSITION 3, UNCHANGED 0, NOT_TRANSITIONED_YET 1, FAILED 0, UNKNOWN 0, NOT_SAVED 6; together 10 of 10 rows.",
+        "duplicated": {
+          "rows": 12,
+          "repeatedIds": []
+        },
+        "unrecognised": "UNKNOWN (needs attention)"
+      }
+    },
+    {
+      "name": "actual retry set: the exceeded first original stays a failed row although the retry is within budget, with the retry flag shown",
+      "passed": true,
+      "observed": "EXCEEDED, WITHIN"
+    },
+    {
+      "name": "actual recovery operations (reset, reload, switch of set, refused load) keep ids unique, counts reconciled and every failed and unknown row on screen",
+      "passed": true,
+      "observed": 32
+    },
+    {
+      "name": "actual enforced CSP blocks inline code, connections and forms",
+      "passed": true,
+      "observed": {
+        "inline": {
+          "effectiveDirective": "script-src-elem",
+          "blockedURI": "inline"
+        },
+        "connection": {
+          "effectiveDirective": "connect-src",
+          "blockedURI": "file"
+        },
+        "submission": {
+          "effectiveDirective": "form-action",
+          "blockedURI": "file"
+        },
+        "connected": false,
+        "inlineRan": false
+      }
+    }
+  ],
+  "scans": [
+    {
+      "label": "cohort 40/3/2 loaded",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "cohort",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "cohort filter success",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "cohort",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "cohort sorted by status desc",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "cohort",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "cohort sorted by reason asc",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "cohort",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "cohort sorted by id desc",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "cohort",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "cohort sorted by position asc",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "cohort",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "cohort search that matches nothing",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "cohort",
+      "rows": 5,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 33,
+      "repeatedIds": 0
+    },
+    {
+      "label": "cohort search cleared",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "cohort",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "effect after ArrowRight",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "effect",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "latency after ArrowRight",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "latency",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "cohort after ArrowRight",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "cohort",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "latency after ArrowLeft",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "latency",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "cohort after Home",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "cohort",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "latency after End",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "latency",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "cohort after Home",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "cohort",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "effect after ArrowRight",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "effect",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "effect filter success",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "effect",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "latency filter success",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "latency",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "closed-history cohort",
+      "set": "closed-history",
+      "table": "cohort",
+      "rows": 7,
+      "attention": 4,
+      "countsSum": 7,
+      "total": 7,
+      "state": "COMPLETE",
+      "idCount": 35,
+      "repeatedIds": 0
+    },
+    {
+      "label": "closed-history effect",
+      "set": "closed-history",
+      "table": "effect",
+      "rows": 7,
+      "attention": 7,
+      "countsSum": 7,
+      "total": 7,
+      "state": "COMPLETE",
+      "idCount": 35,
+      "repeatedIds": 0
+    },
+    {
+      "label": "closed-history latency",
+      "set": "closed-history",
+      "table": "latency",
+      "rows": 7,
+      "attention": 5,
+      "countsSum": 7,
+      "total": 7,
+      "state": "COMPLETE",
+      "idCount": 35,
+      "repeatedIds": 0
+    },
+    {
+      "label": "empty cohort",
+      "set": "negative-empty",
+      "table": "cohort",
+      "rows": 0,
+      "attention": 0,
+      "countsSum": 0,
+      "total": 0,
+      "state": "EMPTY",
+      "idCount": 28,
+      "repeatedIds": 0
+    },
+    {
+      "label": "empty effect",
+      "set": "negative-empty",
+      "table": "effect",
+      "rows": 0,
+      "attention": 0,
+      "countsSum": 0,
+      "total": 0,
+      "state": "EMPTY",
+      "idCount": 28,
+      "repeatedIds": 0
+    },
+    {
+      "label": "empty latency",
+      "set": "negative-empty",
+      "table": "latency",
+      "rows": 0,
+      "attention": 0,
+      "countsSum": 0,
+      "total": 0,
+      "state": "EMPTY",
+      "idCount": 28,
+      "repeatedIds": 0
+    },
+    {
+      "label": "truncated cohort",
+      "set": "negative-truncated",
+      "table": "cohort",
+      "rows": 4,
+      "attention": 0,
+      "countsSum": 10,
+      "total": 10,
+      "state": "INCOMPLETE",
+      "idCount": 32,
+      "repeatedIds": 0
+    },
+    {
+      "label": "duplicated cohort",
+      "set": "negative-duplicated-row",
+      "table": "cohort",
+      "rows": 12,
+      "attention": 3,
+      "countsSum": 12,
+      "total": 12,
+      "state": "INCONSISTENT",
+      "idCount": 40,
+      "repeatedIds": 0
+    },
+    {
+      "label": "unrecognised cohort",
+      "set": "negative-unrecognised-status",
+      "table": "cohort",
+      "rows": 10,
+      "attention": 3,
+      "countsSum": 10,
+      "total": 10,
+      "state": "INCONSISTENT",
+      "idCount": 38,
+      "repeatedIds": 0
+    },
+    {
+      "label": "retry latency",
+      "set": "fiction-failed-then-retry",
+      "table": "latency",
+      "rows": 2,
+      "attention": 1,
+      "countsSum": 2,
+      "total": 2,
+      "state": "COMPLETE",
+      "idCount": 30,
+      "repeatedIds": 0
+    },
+    {
+      "label": "after reset",
+      "set": null,
+      "table": null,
+      "rows": 0,
+      "attention": 0,
+      "countsSum": 0,
+      "total": 0,
+      "state": "UNLOADED",
+      "idCount": 28,
+      "repeatedIds": 0
+    },
+    {
+      "label": "reload after reset",
+      "set": "negative-3-failed-2-unknown-of-40",
+      "table": "latency",
+      "rows": 45,
+      "attention": 5,
+      "countsSum": 45,
+      "total": 45,
+      "state": "COMPLETE",
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    {
+      "label": "another set after reload",
+      "set": "fiction-failed-then-retry",
+      "table": "latency",
+      "rows": 2,
+      "attention": 1,
+      "countsSum": 2,
+      "total": 2,
+      "state": "COMPLETE",
+      "idCount": 30,
+      "repeatedIds": 0
+    },
+    {
+      "label": "duplicated set after recovery",
+      "set": "negative-duplicated-row",
+      "table": "cohort",
+      "rows": 12,
+      "attention": 3,
+      "countsSum": 12,
+      "total": 12,
+      "state": "INCONSISTENT",
+      "idCount": 40,
+      "repeatedIds": 0
+    }
+  ],
+  "snapshots": {
+    "cohort-forty-loaded": {
+      "sha256": "787ecf1b4d20c280e3bb091b005059128fb1ba9d60ac96509bb504f396e9522e",
+      "bytes": 29372,
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    "cohort-forty-filter-success": {
+      "sha256": "5d28c10b5b023680f07796a7e3a63de21a6fbb481bde9037e756b34bb31274c1",
+      "bytes": 29772,
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    "effect-forty": {
+      "sha256": "26cef603fe56b14ebb9bbed8917267ec880b77dd26325d624f5f480f3a9d4d80",
+      "bytes": 27006,
+      "idCount": 73,
+      "repeatedIds": 0
+    },
+    "cohort-duplicated": {
+      "sha256": "e7ff52c8f100edb6128142c167d65e5f9a92fd4c2222f06e10775d7400f08301",
+      "bytes": 13904,
+      "idCount": 40,
+      "repeatedIds": 0
+    }
+  },
+  "sourceSha256": {
+    "index.html": "59d1f7f5d78982ef69f37c300b6f3bd0aa847f5751c334752987fe6b90aa587f",
+    "page.js": "5566450f82e1cbbefe1f9af1e1c449bb209d984610cf88ebf2fdc0379e5ccd3f",
+    "tables.js": "73c3d14956ed197021112375556b455f0eb81cabb9c86b30f4e6f873f7f320c8",
+    "saved.js": "bc08cbed0f276bb32af1d1cf23f9da9d8d5a7c63eba56842affd0d7e98f8f336",
+    "style.css": "c88aa7e4a5aefb29b7108f7c1516681b34cb67ea3d3c5049f4a940c4a580fd49"
+  },
+  "cleanup": {
+    "browserClosed": true,
+    "exactHelperSessionRemoved": true,
+    "exactOwnedProfileRemoved": true,
+    "exactOwnedEdgeGone": true
+  },
+  "playwrightVersion": "1.56.1",
+  "helperRawSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "installedSignature": {
+    "executable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "authenticodeStatus": "Valid",
+    "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "thumbprint": "4028CAD637509D4744B17EC5B42AED8D7A31E6AF",
+    "fileVersion": "156.0.4314.58",
+    "actualCallerNodePid": null,
+    "actualOwnedBrowserPid": null,
+    "unsafeFlagsObserved": false,
+    "inspectedAtUtc": "2026-11-06T04:04:12.4703450Z"
+  },
+  "actualHelperSession": "C:\\Users\\chhage\\repos\\app-scaling-strategies\\.git\\kanban-orchestrator\\browser-runtime\\session-45104055-e9b6-4d5e-818a-5fe401a40299",
+  "browserVersion": "156.0.4314.58",
+  "actualSignedEdge": {
+    "executable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "authenticodeStatus": "Valid",
+    "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "thumbprint": "4028CAD637509D4744B17EC5B42AED8D7A31E6AF",
+    "fileVersion": "156.0.4314.58",
+    "actualCallerNodePid": 5912,
+    "actualOwnedBrowserPid": 7408,
+    "unsafeFlagsObserved": false,
+    "inspectedAtUtc": "2026-11-06T04:04:20.7994986Z"
+  },
+  "pageErrors": [],
+  "requestCount": 5,
+  "completedAtUtc": "2026-11-06T04:04:38.361Z",
+  "captureMode": "Exact deliberate CAPTURE_BROWSER_EVIDENCE=1, unique owned append."
+}

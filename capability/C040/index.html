@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>C040 cohort, effect and latency result tables</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="tables.js"></script>
+  <script defer src="saved.js"></script>
+  <script defer src="page.js"></script>
+</head>
+<body>
+  <main>
+    <p id="banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Cohort, effect and latency result tables</h1>
+    <p id="mode">OFFLINE: saved outputs of the accepted C031 cohort evaluator, the C030 effect detector and the C029 latency evaluator, plus fictional negatives. Nothing is fetched. This is UI verification of local data, not a live Azure result, not user journey success and not an SLA.</p>
+    <p>The rule: a failed or unknown row can never disappear. Sorting, a status filter or a search cannot hide it, nothing is paged or truncated, an empty set says so, and no summary or aggregate replaces it. A filter that hides rows says how many and which statuses.</p>
+    <section aria-labelledby="choose-heading">
+      <h2 id="choose-heading">Choose a saved set</h2>
+      <label for="saved-set">Saved set of producer outputs</label>
+      <select id="saved-set">
+        <option value="">Choose a saved set; no default success</option>
+      </select>
+      <div class="controls">
+        <button id="load" type="button">Load saved set</button>
+        <button id="reset" type="button">Reset display only</button>
+      </div>
+      <p id="status" role="status" aria-live="polite" data-state="UNLOADED">No saved set is loaded. Nothing is assumed to have passed.</p>
+      <p id="error" role="alert"></p>
+    </section>
+    <section aria-labelledby="tables-heading">
+      <h2 id="tables-heading">Result tables</h2>
+      <div id="tablist" role="tablist" aria-label="Result tables">
+        <button id="tab-cohort" role="tab" type="button" aria-selected="true" aria-controls="panel" tabindex="0">Cohort (C031)</button>
+        <button id="tab-effect" role="tab" type="button" aria-selected="false" aria-controls="panel" tabindex="-1">Effect (C030)</button>
+        <button id="tab-latency" role="tab" type="button" aria-selected="false" aria-controls="panel" tabindex="-1">Latency (C029)</button>
+      </div>
+      <div id="panel" role="tabpanel" aria-labelledby="tab-cohort" tabindex="0">
+        <h3 id="table-title">Cohort table</h3>
+        <p id="summary" data-state="UNLOADED" data-total="0" data-shown="0">No saved set is loaded: 0 of 0 rows are shown and nothing is assumed to have passed.</p>
+        <p id="producer-line"></p>
+        <ul id="status-counts" aria-label="Status counts of the whole table"></ul>
+        <div class="controls">
+          <label for="sort-column">Sort by</label>
+          <select id="sort-column" disabled></select>
+          <label for="sort-direction">Direction</label>
+          <select id="sort-direction" disabled>
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+          <label for="status-filter">Status filter</label>
+          <select id="status-filter" disabled></select>
+          <label for="search">Search (failed and unknown rows are never hidden)</label>
+          <input id="search" type="search" maxlength="200" disabled>
+        </div>
+        <p id="filter-note"></p>
+        <div class="table-wrap">
+          <table>
+            <caption id="caption">No saved set is loaded</caption>
+            <thead><tr id="head"></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <section aria-labelledby="provenance-heading">
+      <h2 id="provenance-heading">Where the saved outputs came from</h2>
+      <pre id="provenance"></pre>
+    </section>
+    <footer>One original C040 / S; gates C029, C030 and C031. Fictional data and saved fictional-service outputs only: production Node 24, Express, Entra and any real service are neither validated nor registered. IaC N/A. No packages, cloud, identity, real users, credentials, deployment or spend.</footer>
+  </main>
+</body>
+</html>

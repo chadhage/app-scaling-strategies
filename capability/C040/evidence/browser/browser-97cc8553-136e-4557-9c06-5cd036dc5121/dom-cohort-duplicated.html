@@ -1,0 +1,81 @@
+<main>
+    <p id="banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Cohort, effect and latency result tables</h1>
+    <p id="mode">OFFLINE: saved outputs of the accepted C031 cohort evaluator, the C030 effect detector and the C029 latency evaluator, plus fictional negatives. Nothing is fetched. This is UI verification of local data, not a live Azure result, not user journey success and not an SLA.</p>
+    <p>The rule: a failed or unknown row can never disappear. Sorting, a status filter or a search cannot hide it, nothing is paged or truncated, an empty set says so, and no summary or aggregate replaces it. A filter that hides rows says how many and which statuses.</p>
+    <section aria-labelledby="choose-heading">
+      <h2 id="choose-heading">Choose a saved set</h2>
+      <label for="saved-set">Saved set of producer outputs</label>
+      <select id="saved-set">
+        <option value="">Choose a saved set; no default success</option>
+      <optgroup label="Saved accepted history"><option value="closed-history">Saved closed history: seven originals, one of them summary-only</option><option value="held-snapshot">Saved held snapshot: two originals, one complete and one held</option></optgroup><optgroup label="Fictional baseline"><option value="fiction-failed-then-retry">Fictional: a failed original followed by a successful retry</option></optgroup><optgroup label="Fictional negatives"><option value="negative-3-failed-2-unknown-of-40">Negative: 3 failed and 2 unknown rows among 40 successes (45 rows per table)</option><option value="negative-unrecognised-status">Negative: a producer status the inspector does not recognise</option><option value="negative-empty">Negative: an empty saved set</option><option value="negative-truncated">Negative: a truncated saved set</option><option value="negative-duplicated-row">Negative: a duplicated row</option></optgroup></select>
+      <div class="controls">
+        <button id="load" type="button">Load saved set</button>
+        <button id="reset" type="button">Reset display only</button>
+      </div>
+      <p id="status" role="status" aria-live="polite" data-state="INCONSISTENT">Loaded saved set negative-duplicated-row. Cohort table: INCONSISTENT, showing 12 of 12 rows. This saved set disagrees with its producer: 2 extra rows beyond the producer total 10, kept and flagged; actual transitions 4 from the rows but 3 from the producer; rate numerator 4 from the rows but 3 from the producer; eligible clients 10 from the rows but 8 from the producer; rate denominator 10 from the rows but 8 from the producer; failed 2 from the rows but 1 from the producer. Status counts: ACTUAL_TRANSITION 4, UNCHANGED 2, NOT_TRANSITIONED_YET 3, FAILED 2, UNKNOWN 1, NOT_SAVED 0; together 12 of 12 rows.</p>
+      <p id="error" role="alert"></p>
+    </section>
+    <section aria-labelledby="tables-heading">
+      <h2 id="tables-heading">Result tables</h2>
+      <div id="tablist" role="tablist" aria-label="Result tables">
+        <button id="tab-cohort" role="tab" type="button" aria-selected="true" aria-controls="panel" tabindex="0">Cohort (C031)</button>
+        <button id="tab-effect" role="tab" type="button" aria-selected="false" aria-controls="panel" tabindex="-1">Effect (C030)</button>
+        <button id="tab-latency" role="tab" type="button" aria-selected="false" aria-controls="panel" tabindex="-1">Latency (C029)</button>
+      </div>
+      <div id="panel" role="tabpanel" aria-labelledby="tab-cohort" tabindex="0">
+        <h3 id="table-title">Cohort table</h3>
+        <p id="summary" data-state="INCONSISTENT" data-total="12" data-shown="12">Cohort table: INCONSISTENT, showing 12 of 12 rows. This saved set disagrees with its producer: 2 extra rows beyond the producer total 10, kept and flagged; actual transitions 4 from the rows but 3 from the producer; rate numerator 4 from the rows but 3 from the producer; eligible clients 10 from the rows but 8 from the producer; rate denominator 10 from the rows but 8 from the producer; failed 2 from the rows but 1 from the producer. Status counts: ACTUAL_TRANSITION 4, UNCHANGED 2, NOT_TRANSITIONED_YET 3, FAILED 2, UNKNOWN 1, NOT_SAVED 0; together 12 of 12 rows.</p>
+        <p id="producer-line">Producer C031 says: 3 of 8 eligible clients = 37.50%; eligible 8, actual transitions 3, clients 10.</p>
+        <ul id="status-counts" aria-label="Status counts of the whole table"><li data-status="ACTUAL_TRANSITION" data-count="4">ACTUAL_TRANSITION: 4</li><li data-status="UNCHANGED" data-count="2">UNCHANGED: 2</li><li data-status="NOT_TRANSITIONED_YET" data-count="3">NOT_TRANSITIONED_YET: 3</li><li data-status="FAILED" data-count="2">FAILED: 2</li><li data-status="UNKNOWN" data-count="1">UNKNOWN: 1</li><li data-status="NOT_SAVED" data-count="0">NOT_SAVED: 0</li></ul>
+        <div class="controls">
+          <label for="sort-column">Sort by</label>
+          <select id="sort-column"><option value="position">#</option><option value="id">Client</option><option value="status">Status</option><option value="reason">Reason code</option><option value="versions">Versions start to end</option><option value="eligible">Eligible</option><option value="counting">Counted in numerator / denominator</option><option value="notes">Notes and flags</option></select>
+          <label for="sort-direction">Direction</label>
+          <select id="sort-direction">
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+          <label for="status-filter">Status filter</label>
+          <select id="status-filter"><option value="all">All statuses (default)</option><option value="attention">Failed and unknown only</option><option value="success">Success only (failed and unknown rows always stay visible)</option><option value="ACTUAL_TRANSITION">Only ACTUAL_TRANSITION (failed and unknown rows always stay visible)</option><option value="UNCHANGED">Only UNCHANGED (failed and unknown rows always stay visible)</option><option value="NOT_TRANSITIONED_YET">Only NOT_TRANSITIONED_YET (failed and unknown rows always stay visible)</option><option value="FAILED">Only FAILED (failed and unknown rows always stay visible)</option><option value="UNKNOWN">Only UNKNOWN (failed and unknown rows always stay visible)</option></select>
+          <label for="search">Search (failed and unknown rows are never hidden)</label>
+          <input id="search" type="search" maxlength="200">
+        </div>
+        <p id="filter-note"></p>
+        <div class="table-wrap">
+          <table>
+            <caption id="caption">Cohort table of saved set negative-duplicated-row: 12 of 12 rows, INCONSISTENT</caption>
+            <thead><tr id="head"><th scope="col" aria-sort="ascending">#</th><th scope="col" aria-sort="none">Client</th><th scope="col" aria-sort="none">Status</th><th scope="col" aria-sort="none">Reason code</th><th scope="col" aria-sort="none">Versions start to end</th><th scope="col" aria-sort="none">Eligible</th><th scope="col" aria-sort="none">Counted in numerator / denominator</th><th scope="col" aria-sort="none">Notes and flags</th></tr></thead>
+            <tbody id="rows"><tr id="row-1" data-row-id="client-001" data-position="1" data-status="ACTUAL_TRANSITION" data-kind="success" data-attention="false" data-flags="DUPLICATE_ROW"><td>1</td><td>client-001</td><td>ACTUAL_TRANSITION</td><td>TRANSITION_EVIDENCE_COMPLETE: Request at the old version, then a valid server acknowledgment of the new version, then a request or state at the new version.</td><td>1.0.0 to 2.0.0</td><td>yes: STARTED_ON_OLD_VERSION</td><td>numerator yes, denominator yes</td><td>DUPLICATE_ROW</td></tr><tr id="row-2" data-row-id="client-002" data-position="2" data-status="ACTUAL_TRANSITION" data-kind="success" data-attention="false" data-flags=""><td>2</td><td>client-002</td><td>ACTUAL_TRANSITION</td><td>TRANSITION_EVIDENCE_COMPLETE: Request at the old version, then a valid server acknowledgment of the new version, then a request or state at the new version.</td><td>1.0.0 to 2.0.0</td><td>yes: STARTED_ON_OLD_VERSION</td><td>numerator yes, denominator yes</td><td>none</td></tr><tr id="row-3" data-row-id="client-003" data-position="3" data-status="ACTUAL_TRANSITION" data-kind="success" data-attention="false" data-flags=""><td>3</td><td>client-003</td><td>ACTUAL_TRANSITION</td><td>TRANSITION_EVIDENCE_COMPLETE: Request at the old version, then a valid server acknowledgment of the new version, then a request or state at the new version.</td><td>1.0.0 to 2.0.0</td><td>yes: STARTED_ON_OLD_VERSION</td><td>numerator yes, denominator yes</td><td>none</td></tr><tr id="row-4" data-row-id="client-004" data-position="4" data-status="NOT_TRANSITIONED_YET" data-kind="neutral" data-attention="false" data-flags=""><td>4</td><td>client-004</td><td>NOT_TRANSITIONED_YET</td><td>STILL_ON_OLD_VERSION: All traffic is still at the old version at the end; eligible, not transitioned yet.</td><td>1.0.0 to 1.0.0</td><td>yes: STARTED_ON_OLD_VERSION</td><td>numerator no, denominator yes</td><td>none</td></tr><tr id="row-5" data-row-id="client-005" data-position="5" data-status="NOT_TRANSITIONED_YET" data-kind="neutral" data-attention="false" data-flags=""><td>5</td><td>client-005</td><td>NOT_TRANSITIONED_YET</td><td>STILL_ON_OLD_VERSION: All traffic is still at the old version at the end; eligible, not transitioned yet.</td><td>1.0.0 to 1.0.0</td><td>yes: STARTED_ON_OLD_VERSION</td><td>numerator no, denominator yes</td><td>none</td></tr><tr id="row-6" data-row-id="client-006" data-position="6" data-status="NOT_TRANSITIONED_YET" data-kind="neutral" data-attention="false" data-flags=""><td>6</td><td>client-006</td><td>NOT_TRANSITIONED_YET</td><td>NEW_VERSION_ACKNOWLEDGED_NOT_USED: The server acknowledged the new version but no later request or state at the new version is saved yet.</td><td>1.0.0 to 2.0.0</td><td>yes: STARTED_ON_OLD_VERSION</td><td>numerator no, denominator yes</td><td>none</td></tr><tr id="row-7" data-row-id="client-007" data-position="7" data-status="FAILED" data-kind="failed" data-attention="true" data-flags="DUPLICATE_ROW"><td>7</td><td>client-007</td><td>FAILED (needs attention)</td><td>FAILED_REPLY: The saved trace ends with a failed reply; this client did not transition.</td><td>1.0.0 to 1.0.0</td><td>yes: STARTED_ON_OLD_VERSION</td><td>numerator no, denominator yes</td><td>DUPLICATE_ROW</td></tr><tr id="row-8" data-row-id="client-008" data-position="8" data-status="UNKNOWN" data-kind="unknown" data-attention="true" data-flags=""><td>8</td><td>client-008</td><td>UNKNOWN (needs attention)</td><td>INTERRUPTED_BEFORE_TERMINAL_OUTCOME: The saved trace was interrupted before a terminal outcome; unknown, never success.</td><td>1.0.0 to 1.0.0</td><td>yes: STARTED_ON_OLD_VERSION</td><td>numerator no, denominator yes</td><td>none</td></tr><tr id="row-9" data-row-id="new-001" data-position="9" data-status="UNCHANGED" data-kind="neutral" data-attention="false" data-flags=""><td>9</td><td>new-001</td><td>UNCHANGED</td><td>UNCHANGED_NEW_VERSION_ONLY: All traffic stayed at the new version from the start; the client never needed to transition and is not eligible.</td><td>2.0.0 to 2.0.0</td><td>no: STARTED_ON_NEW_VERSION_NOT_ELIGIBLE</td><td>numerator no, denominator no</td><td>none</td></tr><tr id="row-10" data-row-id="new-002" data-position="10" data-status="UNCHANGED" data-kind="neutral" data-attention="false" data-flags=""><td>10</td><td>new-002</td><td>UNCHANGED</td><td>UNCHANGED_NEW_VERSION_ONLY: All traffic stayed at the new version from the start; the client never needed to transition and is not eligible.</td><td>2.0.0 to 2.0.0</td><td>no: STARTED_ON_NEW_VERSION_NOT_ELIGIBLE</td><td>numerator no, denominator no</td><td>none</td></tr><tr id="row-11" data-row-id="client-001" data-position="11" data-status="ACTUAL_TRANSITION" data-kind="success" data-attention="false" data-flags="DUPLICATE_ROW"><td>11</td><td>client-001</td><td>ACTUAL_TRANSITION</td><td>TRANSITION_EVIDENCE_COMPLETE: Request at the old version, then a valid server acknowledgment of the new version, then a request or state at the new version.</td><td>1.0.0 to 2.0.0</td><td>yes: STARTED_ON_OLD_VERSION</td><td>numerator yes, denominator yes</td><td>DUPLICATE_ROW</td></tr><tr id="row-12" data-row-id="client-007" data-position="12" data-status="FAILED" data-kind="failed" data-attention="true" data-flags="DUPLICATE_ROW"><td>12</td><td>client-007</td><td>FAILED (needs attention)</td><td>FAILED_REPLY: The saved trace ends with a failed reply; this client did not transition.</td><td>1.0.0 to 1.0.0</td><td>yes: STARTED_ON_OLD_VERSION</td><td>numerator no, denominator yes</td><td>DUPLICATE_ROW</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <section aria-labelledby="provenance-heading">
+      <h2 id="provenance-heading">Where the saved outputs came from</h2>
+      <pre id="provenance">{
+  "id": "negative-duplicated-row",
+  "role": "negative",
+  "label": "Negative: a duplicated row",
+  "note": "Fictional edit of the retry set: rows repeated. Both copies stay and carry DUPLICATE_ROW.",
+  "origins": {
+    "cohort": {
+      "kind": "mutation",
+      "base": "fiction-failed-then-retry",
+      "mutation": "duplicated"
+    },
+    "effect": {
+      "kind": "mutation",
+      "base": "fiction-failed-then-retry",
+      "mutation": "duplicated"
+    },
+    "latency": {
+      "kind": "mutation",
+      "base": "fiction-failed-then-retry",
+      "mutation": "duplicated"
+    }
+  }
+}</pre>
+    </section>
+    <footer>One original C040 / S; gates C029, C030 and C031. Fictional data and saved fictional-service outputs only: production Node 24, Express, Entra and any real service are neither validated nor registered. IaC N/A. No packages, cloud, identity, real users, credentials, deployment or spend.</footer>
+  </main>
