@@ -1,0 +1,466 @@
+TAP version 13
+# Subtest: connect refuses anything that is not a correct 101 upgrade
+ok 1 - connect refuses anything that is not a correct 101 upgrade
+  ---
+  duration_ms: 70.1214
+  type: 'test'
+  ...
+# Subtest: connect to a port nobody listens on is an error, not a hang
+ok 2 - connect to a port nobody listens on is an error, not a hang
+  ---
+  duration_ms: 5.2411
+  type: 'test'
+  ...
+# Subtest: the client answers a ping that arrives with the handshake and delivers JSON text and close frames
+ok 3 - the client answers a ping that arrives with the handshake and delivers JSON text and close frames
+  ---
+  duration_ms: 16.9769
+  type: 'test'
+  ...
+# Subtest: a frame that is not JSON, or breaks framing, fails the reader and every later read
+ok 4 - a frame that is not JSON, or breaks framing, fails the reader and every later read
+  ---
+  duration_ms: 15.3207
+  type: 'test'
+  ...
+# Subtest: a connection that ends is reported to a waiting and to a later reader
+ok 5 - a connection that ends is reported to a waiting and to a later reader
+  ---
+  duration_ms: 15.6486
+  type: 'test'
+  ...
+# Subtest: queued frames are delivered in arrival order before any waiter is used
+ok 6 - queued frames are delivered in arrival order before any waiter is used
+  ---
+  duration_ms: 47.8585
+  type: 'test'
+  ...
+# Subtest: the scripted conversation records every step and aliases the session ids
+ok 7 - the scripted conversation records every step and aliases the session ids
+  ---
+  duration_ms: 76.2913
+  type: 'test'
+  ...
+# Subtest: a fixture that diverges from the script stops the conversation instead of producing a transcript
+ok 8 - a fixture that diverges from the script stops the conversation instead of producing a transcript
+  ---
+  duration_ms: 49.0674
+  type: 'test'
+  ...
+# Subtest: RFC 6455 examples: handshake accept key, unmasked and masked text frames
+ok 9 - RFC 6455 examples: handshake accept key, unmasked and masked text frames
+  ---
+  duration_ms: 7.2998
+  type: 'test'
+  ...
+# Subtest: RFC 6455 examples: fragmented text, ping and pong with a payload
+ok 10 - RFC 6455 examples: fragmented text, ping and pong with a payload
+  ---
+  duration_ms: 1.0373
+  type: 'test'
+  ...
+# Subtest: 16-bit and 64-bit length forms round trip and match the RFC 6455 examples
+ok 11 - 16-bit and 64-bit length forms round trip and match the RFC 6455 examples
+  ---
+  duration_ms: 0.9716
+  type: 'test'
+  ...
+# Subtest: a parser accepts frames split at every byte and several frames in one chunk
+ok 12 - a parser accepts frames split at every byte and several frames in one chunk
+  ---
+  duration_ms: 0.8685
+  type: 'test'
+  ...
+# Subtest: control frames may interleave a fragmented message; binary fragments reassemble
+ok 13 - control frames may interleave a fragmented message; binary fragments reassemble
+  ---
+  duration_ms: 0.5198
+  type: 'test'
+  ...
+# Subtest: close frames carry a valid code and a UTF-8 reason; an empty close has no status
+ok 14 - close frames carry a valid code and a UTF-8 reason; an empty close has no status
+  ---
+  duration_ms: 2.03
+  type: 'test'
+  ...
+# Subtest: encoders refuse what RFC 6455 forbids
+ok 15 - encoders refuse what RFC 6455 forbids
+  ---
+  duration_ms: 0.8918
+  type: 'test'
+  ...
+# Subtest: the parser demands an explicit role
+ok 16 - the parser demands an explicit role
+  ---
+  duration_ms: 1.5314
+  type: 'test'
+  ...
+# Subtest: protocol violations map to the RFC 6455 close codes
+ok 17 - protocol violations map to the RFC 6455 close codes
+  ---
+  duration_ms: 2.1914
+  type: 'test'
+  ...
+# Subtest: lengths must be minimal, below the 63-bit limit and within the configured maximum
+ok 18 - lengths must be minimal, below the 63-bit limit and within the configured maximum
+  ---
+  duration_ms: 0.9103
+  type: 'test'
+  ...
+# Subtest: a parser that failed keeps failing with the same error
+ok 19 - a parser that failed keeps failing with the same error
+  ---
+  duration_ms: 0.3877
+  type: 'test'
+  ...
+# Subtest: an oversized frame is refused from its header, before its payload is buffered
+ok 20 - an oversized frame is refused from its header, before its payload is buffered
+  ---
+  duration_ms: 0.3027
+  type: 'test'
+  ...
+# Subtest: a transcript produced by a real conversation verifies with exact counts
+ok 21 - a transcript produced by a real conversation verifies with exact counts
+  ---
+  duration_ms: 218.3015
+  type: 'test'
+  ...
+# Subtest: the page exposes its required failure list and nothing writable
+ok 22 - the page exposes its required failure list and nothing writable
+  ---
+  duration_ms: 14.606
+  type: 'test'
+  ...
+# Subtest: every kind of damage to the transcript is rejected with its own code
+ok 23 - every kind of damage to the transcript is rejected with its own code
+  ---
+  duration_ms: 25.0249
+  type: 'test'
+  ...
+# Subtest: a transcript that lacks required evidence is rejected, naming what is missing
+ok 24 - a transcript that lacks required evidence is rejected, naming what is missing
+  ---
+  duration_ms: 10.7397
+  type: 'test'
+  ...
+# Subtest: input that is not a transcript is rejected, never defaulted
+ok 25 - input that is not a transcript is rejected, never defaulted
+  ---
+  duration_ms: 19.0725
+  type: 'test'
+  ...
+# Subtest: the page shows a verified transcript completely and re-enables its button
+ok 26 - the page shows a verified transcript completely and re-enables its button
+  ---
+  duration_ms: 16.0491
+  type: 'test'
+  ...
+# Subtest: damaged, missing or unavailable transcripts are REJECTED and clear what was shown before
+ok 27 - damaged, missing or unavailable transcripts are REJECTED and clear what was shown before
+  ---
+  duration_ms: 33.557
+  type: 'test'
+  ...
+# Subtest: a click that arrives while a load is running is ignored
+ok 28 - a click that arrives while a load is running is ignored
+  ---
+  duration_ms: 22.835
+  type: 'test'
+  ...
+# Subtest: a real WebSocket client receives all 12 messages in order, acknowledging each, and the stream completes
+ok 29 - a real WebSocket client receives all 12 messages in order, acknowledging each, and the stream completes
+  ---
+  duration_ms: 182.5612
+  type: 'test'
+  ...
+# Subtest: eight parallel real clients each receive their own messages 1 to 12 once, in order
+ok 30 - eight parallel real clients each receive their own messages 1 to 12 once, in order
+  ---
+  duration_ms: 99.0136
+  type: 'test'
+  ...
+# Subtest: an abrupt TCP close loses nothing: resume redelivers 3 to 5 once, never 1 or 2, and the stream then completes
+ok 31 - an abrupt TCP close loses nothing: resume redelivers 3 to 5 once, never 1 or 2, and the stream then completes
+  ---
+  duration_ms: 58.9535
+  type: 'test'
+  ...
+# Subtest: a second connection takes the session over; the first is told and closed
+ok 32 - a second connection takes the session over; the first is told and closed
+  ---
+  duration_ms: 30.6675
+  type: 'test'
+  ...
+# Subtest: forged sequences and unusable cursors over real sockets are typed failures that change no state
+ok 33 - forged sequences and unusable cursors over real sockets are typed failures that change no state
+  ---
+  duration_ms: 71.8194
+  type: 'test'
+  ...
+# Subtest: framing violations close with the RFC 6455 code and never reach the stream
+ok 34 - framing violations close with the RFC 6455 code and never reach the stream
+  ---
+  duration_ms: 48.0743
+  type: 'test'
+  ...
+# Subtest: a handshake that arrives with its first frame still works; pings are answered; a close is echoed
+ok 35 - a handshake that arrives with its first frame still works; pings are answered; a close is echoed
+  ---
+  duration_ms: 13.561
+  type: 'test'
+  ...
+# Subtest: a peer that half-closes without a close frame releases its session and its socket
+ok 36 - a peer that half-closes without a close frame releases its session and its socket
+  ---
+  duration_ms: 26.5417
+  type: 'test'
+  ...
+# Subtest: a peer that resets the connection (RST) releases its session and cannot crash the server
+ok 37 - a peer that resets the connection (RST) releases its session and cannot crash the server
+  ---
+  duration_ms: 35.2621
+  type: 'test'
+  ...
+# Subtest: only a well formed local upgrade to /stream is accepted
+ok 38 - only a well formed local upgrade to /stream is accepted
+  ---
+  duration_ms: 66.4058
+  type: 'test'
+  ...
+# Subtest: plain HTTP serves the page assets with a strict policy and refuses everything else explicitly
+ok 39 - plain HTTP serves the page assets with a strict policy and refuses everything else explicitly
+  ---
+  duration_ms: 57.5304
+  type: 'test'
+  ...
+# Subtest: the transcript route runs a real server-side conversation and returns it
+ok 40 - the transcript route runs a real server-side conversation and returns it
+  ---
+  duration_ms: 52.5111
+  type: 'test'
+  ...
+# Subtest: a failing conversation and a server without transcripts are explicit, never a fabricated success
+ok 41 - a failing conversation and a server without transcripts are explicit, never a fabricated success
+  ---
+  duration_ms: 11.4679
+  type: 'test'
+  ...
+# Subtest: an unreadable asset is an explicit 500, not an empty success
+ok 42 - an unreadable asset is an explicit 500, not an empty success
+  ---
+  duration_ms: 7.3163
+  type: 'test'
+  ...
+# Subtest: an unexpected failure inside the stream model closes the socket with 1011
+ok 43 - an unexpected failure inside the stream model closes the socket with 1011
+  ---
+  duration_ms: 9.2479
+  type: 'test'
+  ...
+# Subtest: closing a server that never listened, or that holds WebSocket sockets, always finishes
+ok 44 - closing a server that never listened, or that holds WebSocket sockets, always finishes
+  ---
+  duration_ms: 7.1465
+  type: 'test'
+  ...
+# Subtest: startLocal rechecks C001 consent and binds 127.0.0.1 on an automatic port
+ok 45 - startLocal rechecks C001 consent and binds 127.0.0.1 on an automatic port
+  ---
+  duration_ms: 21.0072
+  type: 'test'
+  ...
+# Subtest: the command line accepts no overrides, prints the exact origin, and closes its server on a signal
+ok 46 - the command line accepts no overrides, prints the exact origin, and closes its server on a signal
+  ---
+  duration_ms: 15.6038
+  type: 'test'
+  ...
+# Subtest: the default signal hook registers one SIGINT and one SIGTERM handler that close the server
+ok 47 - the default signal hook registers one SIGINT and one SIGTERM handler that close the server
+  ---
+  duration_ms: 5.079
+  type: 'test'
+  ...
+# Subtest: options are validated
+ok 48 - options are validated
+  ---
+  duration_ms: 5.1387
+  type: 'test'
+  ...
+# Subtest: the window limits unacknowledged messages and each acknowledgement releases exactly one more
+ok 49 - the window limits unacknowledged messages and each acknowledgement releases exactly one more
+  ---
+  duration_ms: 2.8778
+  type: 'test'
+  ...
+# Subtest: every typed protocol failure is reported once and closes with 1008
+ok 50 - every typed protocol failure is reported once and closes with 1008
+  ---
+  duration_ms: 1.1199
+  type: 'test'
+  ...
+# Subtest: acknowledgements are validated against what the server sent and recorded
+ok 51 - acknowledgements are validated against what the server sent and recorded
+  ---
+  duration_ms: 1.0788
+  type: 'test'
+  ...
+# Subtest: a connection may establish a session once; resume and hello are not repeatable
+ok 52 - a connection may establish a session once; resume and hello are not repeatable
+  ---
+  duration_ms: 1.8951
+  type: 'test'
+  ...
+# Subtest: the number of sessions is bounded
+ok 53 - the number of sessions is bounded
+  ---
+  duration_ms: 0.4525
+  type: 'test'
+  ...
+# Subtest: every unusable cursor is a typed failure, in a fixed order, and leaves the session untouched
+ok 54 - every unusable cursor is a typed failure, in a fixed order, and leaves the session untouched
+  ---
+  duration_ms: 3.2495
+  type: 'test'
+  ...
+# Subtest: resume redelivers every unacknowledged message once per resume, never an acknowledged one, then continues
+ok 55 - resume redelivers every unacknowledged message once per resume, never an acknowledged one, then continues
+  ---
+  duration_ms: 0.8525
+  type: 'test'
+  ...
+# Subtest: with a window of one a resume redelivers exactly the one outstanding message and then continues
+ok 56 - with a window of one a resume redelivers exactly the one outstanding message and then continues
+  ---
+  duration_ms: 0.4442
+  type: 'test'
+  ...
+# Subtest: a cursor behind the server record is honoured from the server record, never rewound
+ok 57 - a cursor behind the server record is honoured from the server record, never rewound
+  ---
+  duration_ms: 0.5378
+  type: 'test'
+  ...
+# Subtest: a completed stream completes again on resume and sends no message
+ok 58 - a completed stream completes again on resume and sends no message
+  ---
+  duration_ms: 0.3839
+  type: 'test'
+  ...
+# Subtest: a second connection takes the session over and the first is told so
+ok 59 - a second connection takes the session over and the first is told so
+  ---
+  duration_ms: 0.4141
+  type: 'test'
+  ...
+# Subtest: a closed or disconnected connection ignores later input and releases its session once
+ok 60 - a closed or disconnected connection ignores later input and releases its session once
+  ---
+  duration_ms: 0.47
+  type: 'test'
+  ...
+# Subtest: inspection is a frozen copy and unknown sessions are null
+ok 61 - inspection is a frozen copy and unknown sessions are null
+  ---
+  duration_ms: 0.37
+  type: 'test'
+  ...
+# Subtest: parallel sessions are isolated even when their frames interleave
+ok 62 - parallel sessions are isolated even when their frames interleave
+  ---
+  duration_ms: 2.3327
+  type: 'test'
+  ...
+# Subtest: the specified files exist and the namespace keeps its bytes exact
+ok 63 - the specified files exist and the namespace keeps its bytes exact
+  ---
+  duration_ms: 34.9735
+  type: 'test'
+  ...
+# Subtest: the feature file specifies the behavior, including every typed failure
+ok 64 - the feature file specifies the behavior, including every typed failure
+  ---
+  duration_ms: 5.4641
+  type: 'test'
+  ...
+# Subtest: production code uses Node built-ins and the pinned C001 guard only, and nothing that leaves the machine
+ok 65 - production code uses Node built-ins and the pinned C001 guard only, and nothing that leaves the machine
+  ---
+  duration_ms: 91.3023
+  type: 'test'
+  ...
+# Subtest: every listener binds 127.0.0.1 with an automatic port
+ok 66 - every listener binds 127.0.0.1 with an automatic port
+  ---
+  duration_ms: 28.5742
+  type: 'test'
+  ...
+# Subtest: the page is clean under a strict CSP and states its limit plainly
+ok 67 - the page is clean under a strict CSP and states its limit plainly
+  ---
+  duration_ms: 6.1697
+  type: 'test'
+  ...
+# Subtest: imports of accepted producer files are pinned by their Git-canonical bytes
+ok 68 - imports of accepted producer files are pinned by their Git-canonical bytes
+  ---
+  duration_ms: 21.6917
+  type: 'test'
+  ...
+# Subtest: the retained RED is behavioral, was archived before any production file existed, and is unchanged
+ok 69 - the retained RED is behavioral, was archived before any production file existed, and is unchanged
+  ---
+  duration_ms: 17.5838
+  type: 'test'
+  ...
+# Subtest: the retained initial tests fail on the stubs and pass against the implementation
+ok 70 - the retained initial tests fail on the stubs and pass against the implementation
+  ---
+  duration_ms: 1770.8267
+  type: 'test'
+  ...
+# Subtest: the RED supplement fails on assertions only against the same stubs, was archived as a supplement, and passes against the implementation
+ok 71 - the RED supplement fails on assertions only against the same stubs, was archived as a supplement, and passes against the implementation
+  ---
+  duration_ms: 656.0976
+  type: 'test'
+  ...
+# Subtest: the README gives the exact commands and states the browser limit plainly
+ok 72 - the README gives the exact commands and states the browser limit plainly
+  ---
+  duration_ms: 1.6514
+  type: 'test'
+  ...
+1..72
+# tests 72
+# suites 0
+# pass 72
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3199.5055
+# start of coverage report
+# -------------------------------------------------------------------
+# file               | line % | branch % | funcs % | uncovered lines
+# -------------------------------------------------------------------
+# capability         |        |          |         | 
+#  C026              |        |          |         | 
+#   conversation.cjs | 100.00 |   100.00 |   96.55 | 
+#   framing.cjs      | 100.00 |    98.40 |  100.00 | 
+#   page.js          | 100.00 |   100.00 |  100.00 | 
+#   server.cjs       |  99.28 |    94.21 |   94.44 | 274-275
+#   stream.cjs       | 100.00 |    98.02 |  100.00 | 
+# -------------------------------------------------------------------
+# all files          |  99.80 |    97.90 |   97.25 | 
+# -------------------------------------------------------------------
+# end of coverage report
+C026 per-file coverage gate (floor 85/85/85 for lines, branches and functions; an unloaded file counts as 0%):
+file             | loaded | line % | branch % | funcs % | result
+conversation.cjs | yes    | 100.00 | 100.00   | 96.55   | ok
+framing.cjs      | yes    | 100.00 | 98.40    | 100.00  | ok
+page.js          | yes    | 100.00 | 100.00   | 100.00  | ok
+server.cjs       | yes    | 99.28  | 94.21    | 94.44   | ok
+stream.cjs       | yes    | 100.00 | 98.02    | 100.00  | ok
+Not measured by Node coverage, disclosed and never counted: index.html, styles.css
+C026 coverage GREEN: 5/5 enumerated production files at or above 85 lines, 85 branches and 85 functions each: conversation.cjs, framing.cjs, page.js, server.cjs, stream.cjs.

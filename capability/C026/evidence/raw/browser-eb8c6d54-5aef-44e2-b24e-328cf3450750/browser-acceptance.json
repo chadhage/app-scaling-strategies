@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C026",
+  "kind": "isolated-headless-edge-transcript-page",
+  "startedAtUtc": "2026-11-05T20:04:38.831Z",
+  "outcome": "passed",
+  "testRuntime": "v22.23.4",
+  "businessData": "synthetic",
+  "browserWebSocketObserved": false,
+  "limits": [
+    "The isolated helper blocks WebSockets, writes and foreign origins: the browser observed a server-produced transcript, not a browser WebSocket."
+  ],
+  "integratedForegroundBrowserUsed": false,
+  "checks": [
+    {
+      "name": "the installed Edge is Microsoft-signed and within the qualified major version",
+      "passed": true,
+      "observed": {
+        "version": "156.0.4314.58",
+        "sha256": "d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b"
+      }
+    },
+    {
+      "name": "initial state shows no observation and states the WebSocket limit",
+      "passed": true,
+      "observed": "Not run — no transcript observed."
+    },
+    {
+      "name": "real Tab/Enter loads the transcript; the page verified it and shows abort, resume, redelivery and typed failures",
+      "passed": true,
+      "observed": {
+        "status": "VERIFIED LOCAL TRANSCRIPT — 4 sessions, 15 first deliveries, 6 redeliveries, 5 typed failures. The browser observed this transcript, not a WebSocket.",
+        "summary": {
+          "verified": true,
+          "sessions": 4,
+          "events": 73,
+          "firstDeliveries": 15,
+          "redeliveries": 6,
+          "acknowledgements": 6,
+          "resumes": 2,
+          "aborts": 1,
+          "completes": 1,
+          "typedFailures": [
+            "ACK_OUT_OF_ORDER",
+            "ACK_UNSENT",
+            "CLIENT_SEQUENCE_FORBIDDEN",
+            "CURSOR_FOREIGN_SESSION",
+            "CURSOR_FROM_FUTURE"
+          ]
+        },
+        "rows": 73
+      }
+    },
+    {
+      "name": "a tampered transcript is REJECTED in the real browser and the earlier display is cleared",
+      "passed": true,
+      "observed": "REJECTED — SEQUENCE_GAP_OR_DUPLICATE: A first delivery is not exactly the next sequence. (event 4)"
+    },
+    {
+      "name": "a missing transcript (HTTP 500) is REJECTED, never shown as healthy",
+      "passed": true,
+      "observed": "REJECTED — HTTP_500: the server produced no transcript."
+    },
+    {
+      "name": "the page recovers to a verified transcript when the server answers again",
+      "passed": true,
+      "observed": "VERIFIED LOCAL TRANSCRIPT — 4 sessions, 15 first deliveries, 6 redeliveries, 5 typed failures. The browser observed this transcript, not a WebSocket."
+    },
+    {
+      "name": "only same-origin GET requests, no WebSocket, no page error",
+      "passed": true,
+      "observed": {
+        "requests": [
+          "GET /",
+          "GET /page.js",
+          "GET /styles.css",
+          "GET /transcript.json"
+        ],
+        "consoleErrors": [
+          "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+        ]
+      }
+    }
+  ],
+  "cleanup": {
+    "serverClosed": true,
+    "browserClosed": true
+  },
+  "signedEdge": {
+    "path": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "status": "Valid",
+    "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "fileVersion": "156.0.4314.58",
+    "sha256": "d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b"
+  },
+  "server": {
+    "pid": 37772,
+    "address": {
+      "address": "127.0.0.1",
+      "family": "IPv4",
+      "port": 58927
+    },
+    "ownership": "this process, exact returned http.Server handle"
+  },
+  "browserVersion": "156.0.4314.58",
+  "playwrightVersion": "1.56.1",
+  "screenshot": "capability\\C026\\evidence\\raw\\browser-eb8c6d54-5aef-44e2-b24e-328cf3450750\\browser-transcript.png",
+  "completedAtUtc": "2026-11-05T20:04:47.354Z"
+}
