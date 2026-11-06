@@ -67,7 +67,7 @@ test('both C001/C002 contracts are consumed read-only rather than replacing thei
 
 test('the exact parent-approved standard publisher preserves the mutex, remote HEAD gate, scoped D commit, annotation and atomic push', () => {
   const boundary = JSON.parse(fs.readFileSync(path.join(root, 'publisher-boundary.json'), 'utf8'));
-  const bytes = fs.readFileSync(path.resolve(root, '..', '..', boundary.standardPublisher));
+  const bytes = fs.readFileSync(path.join(root, 'evidence', boundary.approvedSourceSnapshot));
   const { createHash } = require('node:crypto');
   assert.equal(createHash('sha256').update(bytes).digest('hex'), boundary.parentApprovedSha256);
   const publisher = bytes.toString('utf8');
