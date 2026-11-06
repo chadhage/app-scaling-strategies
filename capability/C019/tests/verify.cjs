@@ -56,7 +56,7 @@ try {
     const files = mode === 'browser' ? ['browser-current.test.cjs'] : mode === 'authorization'
       ? ['authorization.test.cjs', 'transport.test.cjs', 'integrity.test.cjs'] :
       ['red.test.cjs', 'core.test.cjs', 'fixture.test.cjs', 'surface.test.cjs', 'app.test.cjs', 'integrity.test.cjs',
-        'current-evidence.test.cjs']
+        'current-evidence.test.cjs', 'provenance.test.cjs']
         .filter((file) => mode !== 'guards' || file !== 'fixture.test.cjs');
     const result = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...files.map((file) => path.join(__dirname, file))], {
       env, timeout: 600000, maxBuffer: 16 * 1024 * 1024, windowsHide: true,

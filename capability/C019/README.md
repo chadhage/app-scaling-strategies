@@ -184,10 +184,51 @@ Per-file result (raw output archived in `evidence\coverage-0af4848f-...`): `app.
 (lines/branches/functions, Node v22.23.4). Browser: Edge 156.0.4314.58 (Microsoft-signed), 14 groups,
 no page error, no non-file request, owned browser closed.
 
-Known trap: the dependency tripwire in `tests\provenance.cjs` hashes every file under
-`capability\C001`, `C002` and `C015`. Legitimate K work that adds test files there while a C019 verifier
-runs makes that run fail even though all 161 accepted dependency bytes are unchanged; retry when the
-other worker is idle.
+Former trap, fixed by U021 (see "Provenance scope addendum" below): the dependency tripwire in `tests\provenance.cjs`
+hashed every file under `capability\C001`, `C002` and `C015`, so legitimate K work that added test files there
+while a C019 verifier ran made that run fail even though all 161 accepted dependency bytes were unchanged.
+
+## Provenance scope addendum (zero-credit repair U021)
+
+Test tooling only; no production file changed (`app.js`, `errors.js`, `inspect.cjs`, `recovery.js` are
+byte-identical), so coverage is not-applicable: `git diff --stat` for these four files is empty. Specification:
+`C019-provenance-scope.feature`. Runtime, error codes, actions, C015, every sealed byte and every earlier capture are unchanged.
+
+1. **Scope.** `tests\provenance.cjs` `dependencies()` hashes exactly the 161 accepted dependency files (the files of
+   `capability\C001`, `C002` and `C015` plus `testing\browser\isolated.cjs`) pinned in the append-only
+   `evidence-index-addendum-1.json`, not every file under those folders. A new file next to them changes nothing;
+   one changed byte or a missing file still fails `verify.cjs` through its unchanged before/after assertion.
+2. **Chain.** The sealed `evidence-index.json` is not rewritten. Addendum 1 names it as predecessor with an
+   LF-canonical SHA-256 (the text index is CRLF in this checkout), copies the list from `preservation.dependencies` of the
+   sealed F6 snapshot after proving the bytes on disk are those bytes, and records the replaced and added tooling bytes.
+   `acceptedDependencies()` fails closed on a gap, a wrong predecessor or hash, an unknown schema, a path outside the
+   accepted roots, a traversal or a malformed digest. A later addendum may add listed files, never re-pin or remove one.
+   The accepted digests are not compared with the live bytes: a one-line K edit of a listed file needs no amendment here.
+3. **Scratch.** `inventory()` skips a root `test-scratch`, as `dependencies()` always skipped it for C015, so tests that
+   build private fixtures there cannot trip a concurrent verifier run.
+4. **Evidence.** RED `evidence\provenance-red-4dd916c8-...` (12 tests, 9 failed with assertions, among them the file added
+   in the middle of a verifier run), GREEN `evidence\provenance-green-074e8391-...` (13 of 13). Both are hash-checked by
+   `tests\integrity.test.cjs`. The verifier cases run the real `verify.cjs syntax` in a private copy; `tests\provenance-hook.cjs`
+   applies one change after the verifier's before snapshot.
+
+Reproduce (repository root, PowerShell; no browser, no coverage, no heavy-run slot needed):
+
+```powershell
+# GREEN
+node --test --test-concurrency=1 capability\C019\tests\provenance.test.cjs
+node capability\C019\tests\verify.cjs guards
+# RED replay of the final tests against the archived pre-change module (exit 1; tests 1-7 and 11 fail)
+New-Item -ItemType Directory -Force capability\C019\test-scratch | Out-Null
+node -e "const fs=require('fs'),z=require('zlib');fs.writeFileSync(process.argv[2],z.gunzipSync(fs.readFileSync(process.argv[1])))" capability\C019\evidence\provenance-red-4dd916c8-7f54-4a73-9bb3-6411595a8abb\tests-provenance.cjs.raw.gz capability\C019\test-scratch\provenance.before.cjs
+$env:C019_PROVENANCE_UNDER_TEST = (Resolve-Path capability\C019\test-scratch\provenance.before.cjs).Path
+node --test --test-concurrency=1 capability\C019\tests\provenance.test.cjs
+Remove-Item Env:C019_PROVENANCE_UNDER_TEST; Remove-Item -Recurse -Force capability\C019\test-scratch
+# Fresh captures (new unique directories; the capture variable is set for that run only)
+$env:CAPTURE_BROWSER_EVIDENCE='1'; node capability\C019\tests\capture-provenance.cjs provenance-green; Remove-Item Env:CAPTURE_BROWSER_EVIDENCE
+```
+
+Coverage and browser are unchanged by this repair: `node capability\C019\tests\coverage.cjs` and
+`node --test capability\C019\tests\browser-current.test.cjs` (isolated headless Edge, take a heavy-run slot first) still pass.
 
 ## Publication and unapproved work
 
