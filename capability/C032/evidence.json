@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C032",
+  "kano": "S",
+  "parent": "H006",
+  "entryGate": "C020",
+  "scope": "LOCAL, SYNTHETIC, OFFLINE loopback fixture on 127.0.0.1 port 0. Fictional opaque credentials, destinations and clients. Not the approved Node 24 / Express / Entra control API, no real identity, no native Azure, no spend. IaC is N/A.",
+  "workflow": [
+    { "order": 1, "stage": "bdd", "path": "C032.feature", "note": "Specification written before any test or code." },
+    { "order": 2, "stage": "loadable-stub", "path": "evidence/red/server.stub.cjs", "note": "A naive cookie-session server that trusts cookies and query parameters, invents a default identity and sets a sticky destination cookie. Loadable, so the RED is behavioral and not a missing module." },
+    {
+      "order": 3, "stage": "behavioral-red", "path": "evidence/red/behavioral-red-3bb576a8-399d-4f2e-9eb0-5beb27eddf26/run.json",
+      "specification": "evidence/red/server.initial.snapshot.cjs", "exitCode": 1, "failures": 8, "passes": 1, "failureKind": "AssertionError only",
+      "replay": "$env:C032_TEST_SUBJECT = '.\\server.stub.cjs'; node --test capability\\C032\\evidence\\red\\server.initial.snapshot.cjs"
+    },
+    { "order": 4, "stage": "iac", "status": "not-applicable", "note": "No Dockerfile, Bicep, deployment, registration or spending." },
+    { "order": 5, "stage": "implementation", "paths": ["contract.js", "fixture.cjs", "server.cjs", "client.js", "page.js", "index.html", "style.css"], "note": "The initial specification passes unchanged against server.cjs (9 of 9)." },
+    {
+      "order": 6, "stage": "green", "path": "evidence/green/focused-green-da0d24bb-a950-4db6-9fbf-a50429608f8f/run.json", "tests": 111, "failed": 0, "exitCode": 0,
+      "command": "node --test --test-concurrency=1 capability\\C032\\tests\\{fixture,server,regimes,client,page,cli,surface,red}.test.cjs"
+    },
+    {
+      "order": 7, "stage": "coverage", "path": "evidence/coverage/per-file-coverage-bb7f278c-395d-4299-9c9d-80405dee80b4/run.json", "exitCode": 0, "floor": "85/85/85 per file",
+      "command": "node capability\\C032\\tests\\coverage.cjs", "unloadedCountsAsZero": true,
+      "files": [
+        { "file": "client.js", "lines": 100, "branches": 100, "functions": 100 },
+        { "file": "contract.js", "lines": 100, "branches": 100, "functions": 100 },
+        { "file": "fixture.cjs", "lines": 100, "branches": 100, "functions": 100 },
+        { "file": "page.js", "lines": 100, "branches": 100, "functions": 100 },
+        { "file": "server.cjs", "lines": 98.82, "branches": 98.51, "functions": 94.12, "uncovered": "165-166 (the require.main entry, executed only by a real child process started with an empty NODE_V8_COVERAGE)" }
+      ],
+      "notMeasurableByNode": ["index.html", "style.css"]
+    },
+    {
+      "order": 8, "stage": "browser", "path": "evidence/browser/browser-aa6d6b8e-0f56-4d65-873b-a0143ab33590/record.json", "screenshot": "evidence/browser/browser-aa6d6b8e-0f56-4d65-873b-a0143ab33590/observation.png",
+      "edge": "156.0.4314.58, Microsoft-signed, version and SHA-256 recorded and never pinned", "checks": 9, "helper": "testing/browser/isolated.cjs openIsolatedLoopback, closed in finally",
+      "note": "setCookieResponses counts the 17 responses inspected for Set-Cookie (none had one). serverWire shows the server really received the conflicting decoy cookies on 8 of the 10 observation requests: the guarded helper forwards through Playwright route.fetch, which attached the context cookies although the browser fetch itself omitted credentials (browserCookie absent on all 10). Observations were identical either way."
+    }
+  ],
+  "sha256": {
+    "C032.feature": "9faa1f71020f206205d9fa141df5b1ce1ab055abd0fb3367d3b63125acafb9bd",
+    "contract.js": "49725929ebb1c387034f6c4e4b0e14b645949be1ab5bfee996605da0dc955e84",
+    "client.js": "c59c6fe361ebceba3ed13abf9a631e7b7c08474d22e0071a98c9f177d35312f4",
+    "fixture.cjs": "5c7347ac726f0868e93de9de7a90185bf6937aa82b5510b0643bc45d85a7662a",
+    "server.cjs": "68b180b8fa66ae78ee6bff5c76f1764a6b47e22016bcdc920ca520fbe54646d1",
+    "page.js": "4fa02f4c5df2f0a378d41560c67abf8aac26c57496e9698a74ffe93b3bcbe958",
+    "index.html": "080c03ab695fd84bcd9ca975f02ff7d35b2d69079414398362371ec493731b85",
+    "style.css": "4b8dd37d1a25590a5ef4bc6d2e13bdccb5969e0897e2a9bdf60b3307c2c0b294",
+    "imports.json": "69c872182c261f34013e30f93eeb839983eb4a54e283147f5605215b454f0728",
+    "evidence/red/server.stub.cjs": "9024ec51b69322083a94b03fe848d6c719a0f333fc7a006851bbb9314d39a72b",
+    "evidence/red/server.initial.snapshot.cjs": "44f7c8460c28663fd5b5e6f0fc3285c66e84a145f2c2eeff110567a20def9608",
+    "evidence/red/behavioral-red-3bb576a8-399d-4f2e-9eb0-5beb27eddf26/run.json": "6f3fc93d4ec07778140d9fe9361a2c72fd4c5163c08ccc3c643393e627a2152c",
+    "evidence/red/behavioral-red-3bb576a8-399d-4f2e-9eb0-5beb27eddf26/stderr.raw.gz": "9e72928e7a01615b4cf090daa617b4ca9d68531748f887f323f695eb4ca3ef63",
+    "evidence/red/behavioral-red-3bb576a8-399d-4f2e-9eb0-5beb27eddf26/stdout.raw.gz": "c9618008d24f658eda54c6c549d8031f861ff4ae96ba45a85d9a8e405f82badd",
+    "evidence/green/focused-green-da0d24bb-a950-4db6-9fbf-a50429608f8f/run.json": "4d3103c1daa08e92bebcf227643d28bc42c49baea908b7596017a1337811c6f1",
+    "evidence/green/focused-green-da0d24bb-a950-4db6-9fbf-a50429608f8f/stderr.raw.gz": "9e72928e7a01615b4cf090daa617b4ca9d68531748f887f323f695eb4ca3ef63",
+    "evidence/green/focused-green-da0d24bb-a950-4db6-9fbf-a50429608f8f/stdout.raw.gz": "eb4c15b636622a65b5d698275c56f939d8b55d8fca3db4239d4ca97cebb24f6e",
+    "evidence/coverage/per-file-coverage-bb7f278c-395d-4299-9c9d-80405dee80b4/run.json": "d92a95f67e63959df1fc9f3939ce6bd9789f67dadc757d486dc6d76bba15fba2",
+    "evidence/coverage/per-file-coverage-bb7f278c-395d-4299-9c9d-80405dee80b4/stderr.raw.gz": "9e72928e7a01615b4cf090daa617b4ca9d68531748f887f323f695eb4ca3ef63",
+    "evidence/coverage/per-file-coverage-bb7f278c-395d-4299-9c9d-80405dee80b4/stdout.raw.gz": "248a598b74d0014355095d9d06b5c1027200122b7e1331408ebde1d3e93c9629",
+    "evidence/browser/browser-aa6d6b8e-0f56-4d65-873b-a0143ab33590/observation.png": "ead3196dfe68cd7a8e8d250324f930abed86e6ad8482c9a7e2de9239689b7662",
+    "evidence/browser/browser-aa6d6b8e-0f56-4d65-873b-a0143ab33590/record.json": "70ac1caa31b32b09c914821e4fcc0273e4e225d96bc148424812c63671989f75"
+  },
+  "policy": "Raw working-tree bytes (CRLF) are hashed because .gitattributes keeps every byte exact. Archived evidence directories are immutable and never rewritten; a new capture always creates a new unique directory."
+}

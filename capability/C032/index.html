@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C032 · cookie-less authenticated client</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="contract.js"></script>
+  <script defer src="client.js"></script>
+  <script defer src="page.js"></script>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">C032 · H006 · local fixture</p>
+    <h1>The server owns the destination. A cookie cannot change it.</h1>
+    <p class="boundary"><strong>Synthetic business data · Loopback HTTP only.</strong> No real identity verification,
+      server authorization, durable store, cloud deployment, slot, or container qualification is provided.</p>
+    <p>The client sends one explicit synthetic opaque credential in an <code>Authorization</code> header and
+      <code>credentials: 'omit'</code>. The server answers with the synthetic destination that served the request and a
+      per-client served-request counter. Both are server-owned: the first two served requests of a client go to the blue
+      destination, later ones to green.</p>
+    <p id="runtime">Checking local scope; no production-runtime validation.</p>
+
+    <section aria-labelledby="client-heading">
+      <h2 id="client-heading">Authenticated cookie-less client</h2>
+      <label for="credential">Explicit synthetic credential</label>
+      <select id="credential">
+        <option value="c032-synthetic-opaque-alpha-0001">alpha: valid synthetic credential</option>
+        <option value="c032-synthetic-opaque-beta-0002">beta: valid synthetic credential</option>
+        <option value="c032-synthetic-opaque-expired-0003">expired synthetic credential</option>
+        <option value="c032-synthetic-opaque-alpha-9999">forged credential (never issued)</option>
+        <option value="">empty Bearer value</option>
+        <option value="__none__">no credential at all</option>
+      </select>
+      <button id="observe" type="button" disabled>Observe through the cookie-less client</button>
+    </section>
+    <p id="status" role="status" aria-live="polite">Not run — no observations.</p>
+
+    <section aria-labelledby="observation-heading">
+      <h2 id="observation-heading">Server-owned observation</h2>
+      <dl>
+        <dt>Client</dt><dd id="client-view">No observation.</dd>
+        <dt>Destination</dt><dd id="destination-view">No observation.</dd>
+        <dt>State counter</dt><dd id="counter-view">No observation.</dd>
+      </dl>
+      <pre id="result">No observation.</pre>
+      <h3>Request log</h3>
+      <pre id="log">No requests.</pre>
+    </section>
+
+    <section aria-labelledby="decoy-heading">
+      <h2 id="decoy-heading">Decoy browser cookies</h2>
+      <p>These cookies name a destination, an identity and an affinity. They are decoys: the cookie-less client never
+        sends them as credentials and the server never reads or sets cookies.</p>
+      <label for="decoy-destination">Decoy cookie names this destination</label>
+      <select id="decoy-destination">
+        <option value="synthetic-destination-green">synthetic-destination-green</option>
+        <option value="synthetic-destination-blue">synthetic-destination-blue</option>
+      </select>
+      <button id="set-decoy" type="button" disabled>Set conflicting decoy cookies</button>
+      <button id="clear-decoy" type="button" disabled>Clear decoy cookies</button>
+      <pre id="cookie-view">document.cookie: (none)</pre>
+    </section>
+
+    <footer>C001 design: Node.js 24 LTS / Express / App Service Linux. This Node-builtin fixture is local test tooling,
+      not that deployed control API. Credentials here are fictional opaque strings, not Entra tokens. Native OS, SKU,
+      region, tenant, subscription, and resource group remain unapproved. No IaC, registration, Azure management, or spending.</footer>
+  </main>
+</body>
+</html>

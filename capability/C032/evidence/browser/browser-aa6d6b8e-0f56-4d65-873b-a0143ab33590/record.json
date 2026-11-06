@@ -1,0 +1,283 @@
+{
+  "cardId": "C032",
+  "startedAtUtc": "2026-11-05T19:57:48.797Z",
+  "outcome": "passed",
+  "mode": "isolated-headless",
+  "engine": "Microsoft Edge (Chromium)",
+  "testRuntime": "v22.23.4",
+  "businessData": "synthetic",
+  "nativeTargetQualified": false,
+  "productionRuntimeValidated": false,
+  "integratedForegroundLeaseUsed": false,
+  "consent": "live C001 local-probe recheck through startLocal()",
+  "checks": [
+    {
+      "name": "the installed Edge is Microsoft-signed and within the qualified major version; actual version and SHA recorded",
+      "passed": true,
+      "observed": {
+        "version": "156.0.4314.58",
+        "fileVersion": "156.0.4314.58",
+        "sha256": "d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b"
+      }
+    },
+    {
+      "name": "initial state has no observation, no cookie, and labels synthetic local tooling",
+      "passed": true,
+      "observed": "Observed test tooling: v22.23.4. Not Node24/Express production validation."
+    },
+    {
+      "name": "first observation with no cookie: server-chosen alpha, blue, counter 1",
+      "passed": true,
+      "observed": {
+        "client": "synthetic-client-alpha",
+        "destination": "synthetic-destination-blue (version 1.0.0)",
+        "counter": "1",
+        "cookieView": "document.cookie: (none)"
+      }
+    },
+    {
+      "name": "with decoy cookies naming green and beta, a keyboard-activated observation is still alpha, blue, counter 2 and the cookies are untouched",
+      "passed": true,
+      "observed": {
+        "client": "synthetic-client-alpha",
+        "destination": "synthetic-destination-blue (version 1.0.0)",
+        "counter": "2",
+        "cookieView": "document.cookie: c032_destination=synthetic-destination-green; c032_client=synthetic-client-beta; ARRAffinity=synthetic-affinity-green"
+      }
+    },
+    {
+      "name": "a sticky decoy naming blue cannot hold the client after the server-owned transition: green, counter 3",
+      "passed": true,
+      "observed": {
+        "client": "synthetic-client-alpha",
+        "destination": "synthetic-destination-green (version 2.0.0)",
+        "counter": "3",
+        "cookieView": "document.cookie: c032_client=synthetic-client-beta; c032_destination=synthetic-destination-blue; ARRAffinity=synthetic-affinity-blue"
+      }
+    },
+    {
+      "name": "an expired, forged, empty or absent credential is an explicit typed failure that clears the observation even with a decoy identity cookie present",
+      "passed": true,
+      "observed": [
+        {
+          "label": "expired",
+          "status": "UNVERIFIED — CREDENTIAL_EXPIRED: HTTP 401"
+        },
+        {
+          "label": "forged",
+          "status": "UNVERIFIED — CREDENTIAL_FORGED: HTTP 401"
+        },
+        {
+          "label": "empty Bearer",
+          "status": "UNVERIFIED — CREDENTIAL_MALFORMED: HTTP 401"
+        },
+        {
+          "label": "no credential",
+          "status": "UNVERIFIED — CREDENTIAL_MISSING: HTTP 401"
+        }
+      ]
+    },
+    {
+      "name": "state is per client, survives failures and never moved backwards: beta counter 1, alpha counter 4 on green",
+      "passed": true,
+      "observed": {
+        "beta": {
+          "client": "synthetic-client-beta",
+          "destination": "synthetic-destination-blue (version 1.0.0)",
+          "counter": "1",
+          "cookieView": "document.cookie: c032_client=synthetic-client-beta; c032_destination=synthetic-destination-blue; ARRAffinity=synthetic-affinity-blue"
+        },
+        "again": {
+          "client": "synthetic-client-alpha",
+          "destination": "synthetic-destination-green (version 2.0.0)",
+          "counter": "4",
+          "cookieView": "document.cookie: c032_client=synthetic-client-beta; c032_destination=synthetic-destination-blue; ARRAffinity=synthetic-affinity-blue"
+        }
+      }
+    },
+    {
+      "name": "after the decoys are cleared the same server-owned plan continues: green, counter 5, still no cookie",
+      "passed": true,
+      "observed": {
+        "client": "synthetic-client-alpha",
+        "destination": "synthetic-destination-green (version 2.0.0)",
+        "counter": "5",
+        "cookieView": "document.cookie: (none)"
+      }
+    },
+    {
+      "name": "monitored page: 10 credentials-omit GET observation requests, no Set-Cookie response, no page error, no nonlocal request",
+      "passed": true,
+      "observed": {
+        "wire": [
+          {
+            "method": "GET",
+            "authorization": "Bearer <synthetic>",
+            "browserCookie": "absent"
+          },
+          {
+            "method": "GET",
+            "authorization": "Bearer <synthetic>",
+            "browserCookie": "absent"
+          },
+          {
+            "method": "GET",
+            "authorization": "Bearer <synthetic>",
+            "browserCookie": "absent"
+          },
+          {
+            "method": "GET",
+            "authorization": "Bearer <synthetic>",
+            "browserCookie": "absent"
+          },
+          {
+            "method": "GET",
+            "authorization": "Bearer <synthetic>",
+            "browserCookie": "absent"
+          },
+          {
+            "method": "GET",
+            "authorization": "Bearer <synthetic>",
+            "browserCookie": "absent"
+          },
+          {
+            "method": "GET",
+            "authorization": "absent",
+            "browserCookie": "absent"
+          },
+          {
+            "method": "GET",
+            "authorization": "Bearer <synthetic>",
+            "browserCookie": "absent"
+          },
+          {
+            "method": "GET",
+            "authorization": "Bearer <synthetic>",
+            "browserCookie": "absent"
+          },
+          {
+            "method": "GET",
+            "authorization": "Bearer <synthetic>",
+            "browserCookie": "absent"
+          }
+        ],
+        "setCookieResponses": 17,
+        "pageErrors": [],
+        "serverWire": [
+          {
+            "cookieHeader": "absent",
+            "authorization": "present"
+          },
+          {
+            "cookieHeader": "present",
+            "authorization": "present"
+          },
+          {
+            "cookieHeader": "present",
+            "authorization": "present"
+          },
+          {
+            "cookieHeader": "present",
+            "authorization": "present"
+          },
+          {
+            "cookieHeader": "present",
+            "authorization": "present"
+          },
+          {
+            "cookieHeader": "present",
+            "authorization": "present"
+          },
+          {
+            "cookieHeader": "present",
+            "authorization": "absent"
+          },
+          {
+            "cookieHeader": "present",
+            "authorization": "present"
+          },
+          {
+            "cookieHeader": "present",
+            "authorization": "present"
+          },
+          {
+            "cookieHeader": "absent",
+            "authorization": "present"
+          }
+        ],
+        "note": "the guarded helper forwards requests through Playwright route.fetch, so a Cookie header can reach the server even when the browser fetch omitted credentials; observations were identical either way"
+      }
+    }
+  ],
+  "cleanup": {
+    "serverClosed": true,
+    "browserClosed": true,
+    "method": "exact owned http.Server handle closed in the caller PID; no process-name termination"
+  },
+  "server": {
+    "pid": 24104,
+    "address": {
+      "address": "127.0.0.1",
+      "family": "IPv4",
+      "port": 61353
+    },
+    "ownership": "this process, exact returned http.Server handle"
+  },
+  "browserVersion": "156.0.4314.58",
+  "playwrightVersion": "1.56.1",
+  "edge": {
+    "executable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "status": "Valid",
+    "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "fileVersion": "156.0.4314.58",
+    "sha256": "d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b"
+  },
+  "serverWire": [
+    {
+      "cookieHeader": "absent",
+      "authorization": "present"
+    },
+    {
+      "cookieHeader": "present",
+      "authorization": "present"
+    },
+    {
+      "cookieHeader": "present",
+      "authorization": "present"
+    },
+    {
+      "cookieHeader": "present",
+      "authorization": "present"
+    },
+    {
+      "cookieHeader": "present",
+      "authorization": "present"
+    },
+    {
+      "cookieHeader": "present",
+      "authorization": "present"
+    },
+    {
+      "cookieHeader": "present",
+      "authorization": "absent"
+    },
+    {
+      "cookieHeader": "present",
+      "authorization": "present"
+    },
+    {
+      "cookieHeader": "present",
+      "authorization": "present"
+    },
+    {
+      "cookieHeader": "absent",
+      "authorization": "present"
+    }
+  ],
+  "evidenceDirectory": "capability\\C032\\evidence\\browser\\browser-aa6d6b8e-0f56-4d65-873b-a0143ab33590",
+  "screenshot": {
+    "file": "observation.png",
+    "sha256": "ead3196dfe68cd7a8e8d250324f930abed86e6ad8482c9a7e2de9239689b7662"
+  },
+  "completedAtUtc": "2026-11-05T19:58:27.300Z"
+}
