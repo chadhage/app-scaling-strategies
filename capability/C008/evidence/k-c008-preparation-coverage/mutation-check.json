@@ -1,0 +1,328 @@
+{
+  "schemaVersion": 1,
+  "purpose": "The K-C008 test file fails against deliberately broken in-memory copies of capability\\C008\\preparation.js (the file on disk is never modified)",
+  "testFile": "capability\\C008\\tests\\k-c008-preparation-coverage.test.cjs",
+  "testFileSha256": {
+    "raw": "19322d185340ecaf071563f64dc4d7e1df51f6649a90585bba933092cdee55a7",
+    "crlfToLf": "6d99a6f3f8b4e5eabbb1f4aee4c08dc990aa9077b881c96ca428a9fb2042098f"
+  },
+  "sourceSha256CrlfToLf": "9dd1337aac310ac9bfc65b965c7cff03127589e929583f3d53191490ec5478aa",
+  "tools": {
+    "mutation-check.cjs": "87ebd29282f26f414e45b2a36a91dfb56edb61989ff3bc97ff23788875c71fea",
+    "mutation-preload.cjs": "0912cd8d3e513c7c430e22eec527363de80d30e6148833f6cd7e3192c5869894"
+  },
+  "nodeRuntime": "v22.23.4",
+  "baseline": {
+    "exitCode": 0,
+    "pass": 20,
+    "fail": 0,
+    "failing": []
+  },
+  "mutants": 22,
+  "killed": 22,
+  "survived": [],
+  "results": [
+    {
+      "id": "global-writable",
+      "description": "The page global can be replaced",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 19,
+      "fail": 1,
+      "failing": [
+        "page composition: preparation.js attaches one frozen, read-only C008Preparation global that exposes only prepare"
+      ]
+    },
+    {
+      "id": "api-unfrozen",
+      "description": "The exported API object is not frozen",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 19,
+      "fail": 1,
+      "failing": [
+        "page composition: preparation.js attaches one frozen, read-only C008Preparation global that exposes only prepare"
+      ]
+    },
+    {
+      "id": "authority-order",
+      "description": "The approval and guard authorities are wired in swapped order",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 9,
+      "fail": 11,
+      "failing": [
+        "page composition: all 152 source entries are ready from the global catalog, matrix and approval, like the Node module",
+        "page composition: an empty selection is empty and any noncatalog selection is an exact-ID error",
+        "page composition: when the C001 approval artifact is absent, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 approval artifact is null, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard is absent, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard is null, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard has no validateApproval, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard has a non-callable validateApproval, a valid catalog and source ID are not shown without an approval",
+        "page composition: the real integrity guard without WebCrypto refuses every approval",
+        "page composition: a drifted bundled approval is refused with the real guard reason, not shown",
+        "page composition: every guard reason reaches the visitor as code, colon and message in the guard order"
+      ]
+    },
+    {
+      "id": "validator-gate-removed",
+      "description": "A missing C005 validator is no longer detected",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 16,
+      "fail": 4,
+      "failing": [
+        "page composition: a C005 validator that is absent fails closed without inferring a replacement",
+        "page composition: a C005 validator that is null fails closed without inferring a replacement",
+        "page composition: a C005 validator that is an empty object fails closed without inferring a replacement",
+        "page composition: a C005 validator that is without a callable validateCatalog fails closed without inferring a replacement"
+      ]
+    },
+    {
+      "id": "validator-callable-removed",
+      "description": "A non-callable validateCatalog is no longer detected",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 18,
+      "fail": 2,
+      "failing": [
+        "page composition: a C005 validator that is an empty object fails closed without inferring a replacement",
+        "page composition: a C005 validator that is without a callable validateCatalog fails closed without inferring a replacement"
+      ]
+    },
+    {
+      "id": "validator-message",
+      "description": "The validator-unavailable message is changed",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 16,
+      "fail": 4,
+      "failing": [
+        "page composition: a C005 validator that is absent fails closed without inferring a replacement",
+        "page composition: a C005 validator that is null fails closed without inferring a replacement",
+        "page composition: a C005 validator that is an empty object fails closed without inferring a replacement",
+        "page composition: a C005 validator that is without a callable validateCatalog fails closed without inferring a replacement"
+      ]
+    },
+    {
+      "id": "validator-rejection-hidden",
+      "description": "The validator rejection reasons are replaced by a fixed text",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 19,
+      "fail": 1,
+      "failing": [
+        "page composition: a validator rejection is reported by the validator and never shows an approval"
+      ]
+    },
+    {
+      "id": "approval-absent-ignored",
+      "description": "A missing approval artifact is no longer detected",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 18,
+      "fail": 2,
+      "failing": [
+        "page composition: when the C001 approval artifact is absent, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 approval artifact is null, a valid catalog and source ID are not shown without an approval"
+      ]
+    },
+    {
+      "id": "guard-absent-ignored",
+      "description": "A missing guard is no longer detected",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 18,
+      "fail": 2,
+      "failing": [
+        "page composition: when the C001 integrity guard is absent, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard is null, a valid catalog and source ID are not shown without an approval"
+      ]
+    },
+    {
+      "id": "guard-callable-ignored",
+      "description": "A non-callable validateApproval is no longer detected",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 18,
+      "fail": 2,
+      "failing": [
+        "page composition: when the C001 integrity guard has no validateApproval, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard has a non-callable validateApproval, a valid catalog and source ID are not shown without an approval"
+      ]
+    },
+    {
+      "id": "integrity-verdict-ignored",
+      "description": "An invalid integrity verdict no longer fails closed",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 17,
+      "fail": 3,
+      "failing": [
+        "page composition: the real integrity guard without WebCrypto refuses every approval",
+        "page composition: a drifted bundled approval is refused with the real guard reason, not shown",
+        "page composition: every guard reason reaches the visitor as code, colon and message in the guard order"
+      ]
+    },
+    {
+      "id": "reason-format",
+      "description": "Guard reasons lose their code prefix",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 17,
+      "fail": 3,
+      "failing": [
+        "page composition: the real integrity guard without WebCrypto refuses every approval",
+        "page composition: a drifted bundled approval is refused with the real guard reason, not shown",
+        "page composition: every guard reason reaches the visitor as code, colon and message in the guard order"
+      ]
+    },
+    {
+      "id": "reason-order",
+      "description": "Guard reasons are reported in reverse order",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 19,
+      "fail": 1,
+      "failing": [
+        "page composition: every guard reason reaches the visitor as code, colon and message in the guard order"
+      ]
+    },
+    {
+      "id": "failure-errors-unfrozen",
+      "description": "The error list of a failure is mutable",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 4,
+      "fail": 16,
+      "failing": [
+        "page composition: an empty selection is empty and any noncatalog selection is an exact-ID error",
+        "page composition: a C005 validator that is absent fails closed without inferring a replacement",
+        "page composition: a C005 validator that is null fails closed without inferring a replacement",
+        "page composition: a C005 validator that is an empty object fails closed without inferring a replacement",
+        "page composition: a C005 validator that is without a callable validateCatalog fails closed without inferring a replacement",
+        "page composition: a C005 validator that throws yields a bounded unverified error",
+        "page composition: a C005 validator that answers nothing yields a bounded unverified error",
+        "page composition: when the C001 approval artifact is absent, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 approval artifact is null, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard is absent, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard is null, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard has no validateApproval, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard has a non-callable validateApproval, a valid catalog and source ID are not shown without an approval",
+        "page composition: the real integrity guard without WebCrypto refuses every approval",
+        "page composition: a drifted bundled approval is refused with the real guard reason, not shown",
+        "page composition: every guard reason reaches the visitor as code, colon and message in the guard order"
+      ]
+    },
+    {
+      "id": "failure-entry-undefined",
+      "description": "A failure carries no entry property value of null",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 3,
+      "fail": 17,
+      "failing": [
+        "page composition: an empty selection is empty and any noncatalog selection is an exact-ID error",
+        "page composition: a C005 validator that is absent fails closed without inferring a replacement",
+        "page composition: a C005 validator that is null fails closed without inferring a replacement",
+        "page composition: a C005 validator that is an empty object fails closed without inferring a replacement",
+        "page composition: a C005 validator that is without a callable validateCatalog fails closed without inferring a replacement",
+        "page composition: a C005 validator that throws yields a bounded unverified error",
+        "page composition: a C005 validator that answers nothing yields a bounded unverified error",
+        "page composition: a validator rejection is reported by the validator and never shows an approval",
+        "page composition: when the C001 approval artifact is absent, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 approval artifact is null, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard is absent, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard is null, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard has no validateApproval, a valid catalog and source ID are not shown without an approval",
+        "page composition: when the C001 integrity guard has a non-callable validateApproval, a valid catalog and source ID are not shown without an approval",
+        "page composition: the real integrity guard without WebCrypto refuses every approval",
+        "page composition: a drifted bundled approval is refused with the real guard reason, not shown",
+        "page composition: every guard reason reaches the visitor as code, colon and message in the guard order"
+      ]
+    },
+    {
+      "id": "validation-missing-from-ready",
+      "description": "The integrity verdict is dropped from the shared view",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 18,
+      "fail": 2,
+      "failing": [
+        "page composition: all 152 source entries are ready from the global catalog, matrix and approval, like the Node module",
+        "page composition: an empty selection is empty and any noncatalog selection is an exact-ID error"
+      ]
+    },
+    {
+      "id": "learning-modes-swapped",
+      "description": "Unsupported and unavailable learning modes are swapped",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 18,
+      "fail": 2,
+      "failing": [
+        "page composition: all 152 source entries are ready from the global catalog, matrix and approval, like the Node module",
+        "a scenario whose portable practice is unavailable is unavailable-learning, never synthetic or unsupported"
+      ]
+    },
+    {
+      "id": "learning-flag-ignored",
+      "description": "Every entry is treated as synthetic learning",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 18,
+      "fail": 2,
+      "failing": [
+        "page composition: all 152 source entries are ready from the global catalog, matrix and approval, like the Node module",
+        "a scenario whose portable practice is unavailable is unavailable-learning, never synthetic or unsupported"
+      ]
+    },
+    {
+      "id": "catch-message",
+      "description": "The unverified-authority message is changed",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 18,
+      "fail": 2,
+      "failing": [
+        "page composition: a C005 validator that throws yields a bounded unverified error",
+        "page composition: a C005 validator that answers nothing yields a bounded unverified error"
+      ]
+    },
+    {
+      "id": "exceptions-escape",
+      "description": "Authority exceptions are no longer contained",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 18,
+      "fail": 2,
+      "failing": [
+        "page composition: a C005 validator that throws yields a bounded unverified error",
+        "page composition: a C005 validator that answers nothing yields a bounded unverified error"
+      ]
+    },
+    {
+      "id": "empty-state",
+      "description": "An empty selection is reported ready",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 19,
+      "fail": 1,
+      "failing": [
+        "page composition: an empty selection is empty and any noncatalog selection is an exact-ID error"
+      ]
+    },
+    {
+      "id": "inexact-id",
+      "description": "Source IDs are matched case-insensitively",
+      "killed": true,
+      "exitCode": 1,
+      "pass": 19,
+      "fail": 1,
+      "failing": [
+        "page composition: an empty selection is empty and any noncatalog selection is an exact-ID error"
+      ]
+    }
+  ]
+}

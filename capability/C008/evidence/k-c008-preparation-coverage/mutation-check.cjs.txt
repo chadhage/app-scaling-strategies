@@ -1,0 +1,81 @@
+'use strict';
+// K-C008 mutation check (evidence tool): runs the new K-C008 test file once against each deliberately broken in-memory copy of
+// preparation.js (served by mutation-preload.cjs) and records whether the tests fail. A mutant that still passes is "survived".
+// Usage (repository root): node mutation-check.cjs <out.json>
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
+
+const repo = process.cwd();
+const preload = path.join(__dirname, 'mutation-preload.cjs');
+const testFile = 'capability\\C008\\tests\\k-c008-preparation-coverage.test.cjs';
+const source = fs.readFileSync(path.join(repo, 'capability', 'C008', 'preparation.js'), 'utf8').replace(/\r\n/g, '\n');
+const sha = (text) => crypto.createHash('sha256').update(text).digest('hex');
+
+const CALL = 'factory(root.C005Contract, root.C001ApprovedContract, root.C001ContractGuard)';
+const APPROVAL_GATE = '!approved || !approvalGuard || typeof approvalGuard.validateApproval !== \'function\'';
+const mutants = [
+  ['global-writable', 'The page global can be replaced', `Object.defineProperty(root, 'C008Preparation', {\n      value: ${CALL}\n    });`, `root.C008Preparation = ${CALL};`],
+  ['api-unfrozen', 'The exported API object is not frozen', 'return Object.freeze({ prepare });', 'return { prepare };'],
+  ['authority-order', 'The approval and guard authorities are wired in swapped order', CALL, 'factory(root.C005Contract, root.C001ContractGuard, root.C001ApprovedContract)'],
+  ['validator-gate-removed', 'A missing C005 validator is no longer detected', 'if (!catalogContract || typeof catalogContract.validateCatalog !== \'function\') {', 'if (false) {'],
+  ['validator-callable-removed', 'A non-callable validateCatalog is no longer detected', '!catalogContract || typeof catalogContract.validateCatalog !== \'function\'', '!catalogContract'],
+  ['validator-message', 'The validator-unavailable message is changed', 'The shared C005 validator is unavailable. No replacement catalog is inferred.', 'unavailable'],
+  ['validator-rejection-hidden', 'The validator rejection reasons are replaced by a fixed text', 'if (!validation.valid) return failure(validation.errors);', 'if (!validation.valid) return failure([\'rejected\']);'],
+  ['approval-absent-ignored', 'A missing approval artifact is no longer detected', APPROVAL_GATE, '!approvalGuard || typeof approvalGuard.validateApproval !== \'function\''],
+  ['guard-absent-ignored', 'A missing guard is no longer detected', APPROVAL_GATE, '!approved || typeof approvalGuard.validateApproval !== \'function\''],
+  ['guard-callable-ignored', 'A non-callable validateApproval is no longer detected', APPROVAL_GATE, '!approved || !approvalGuard'],
+  ['integrity-verdict-ignored', 'An invalid integrity verdict no longer fails closed', 'if (!approvalValidation.valid) {', 'if (false) {'],
+  ['reason-format', 'Guard reasons lose their code prefix', '`${reason.code}: ${reason.message}`', '`${reason.message}`'],
+  ['reason-order', 'Guard reasons are reported in reverse order', 'approvalValidation.reasons.map(', '[...approvalValidation.reasons].reverse().map('],
+  ['failure-errors-unfrozen', 'The error list of a failure is mutable', 'errors: Object.freeze(errors)', 'errors'],
+  ['failure-entry-undefined', 'A failure carries no entry property value of null', 'errors: Object.freeze(errors), entry: null });', 'errors: Object.freeze(errors), entry: undefined });'],
+  ['validation-missing-from-ready', 'The integrity verdict is dropped from the shared view', 'approved, approvalValidation, errors: Object.freeze([])', 'approved, errors: Object.freeze([])'],
+  ['learning-modes-swapped', 'Unsupported and unavailable learning modes are swapped', 'entry.kind === \'workflow\' ? \'unsupported-learning\' : \'unavailable-learning\'', 'entry.kind === \'workflow\' ? \'unavailable-learning\' : \'unsupported-learning\''],
+  ['learning-flag-ignored', 'Every entry is treated as synthetic learning', 'entry.learning.available ? \'synthetic-learning\'', 'true ? \'synthetic-learning\''],
+  ['catch-message', 'The unverified-authority message is changed', 'Shared source or authority validation failed. Preparation remains unverified.', 'failed'],
+  ['exceptions-escape', 'Authority exceptions are no longer contained', '} catch {', '} catch (error) { if (error) throw error;'],
+  ['empty-state', 'An empty selection is reported ready', 'if (entryId === \'\') return Object.freeze({ ...shared, state: \'empty\', entry: null });', 'if (entryId === \'\') return Object.freeze({ ...shared, state: \'ready\', entry: null });'],
+  ['inexact-id', 'Source IDs are matched case-insensitively', 'typeof entryId === \'string\' && catalog.entries.find(candidate => candidate.id === entryId)', 'typeof entryId === \'string\' && catalog.entries.find(candidate => candidate.id.toLowerCase() === entryId.toLowerCase())']
+].map(([id, description, from, to]) => ({ id, description, from, to }));
+
+const clean = { ...process.env };
+delete clean.NODE_TEST_CONTEXT;
+delete clean.NODE_V8_COVERAGE;
+const run = (mutant) => {
+  const env = { ...clean };
+  if (mutant) env.K_C008_MUTANT = JSON.stringify({ from: mutant.from, to: mutant.to });
+  const result = spawnSync(process.execPath, ['--require', preload, '--test-reporter=tap', testFile], { cwd: repo, env, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const out = (result.stdout || '').replace(/\r\n/g, '\n');
+  const count = (key) => Number((out.match(new RegExp(`^# ${key} (\\d+)$`, 'm')) || [])[1] ?? NaN);
+  return { exitCode: result.status, pass: count('pass'), fail: count('fail'), failing: [...out.matchAll(/^not ok \d+ - (.+)$/gm)].map((match) => match[1]) };
+};
+
+const baseline = run(null);
+const results = [];
+for (const mutant of mutants) {
+  const occurrences = source.split(mutant.from).length - 1;
+  const outcome = occurrences === 1 ? run(mutant) : { exitCode: null, pass: NaN, fail: NaN, failing: [], anchorOccurrences: occurrences };
+  results.push({ id: mutant.id, description: mutant.description, killed: occurrences === 1 && outcome.exitCode !== 0 && outcome.fail > 0, ...outcome });
+  console.log(mutant.id.padEnd(30), results[results.length - 1].killed ? 'killed  ' : 'SURVIVED', 'exit', outcome.exitCode, 'fail', outcome.fail, 'pass', outcome.pass);
+}
+const report = {
+  schemaVersion: 1,
+  purpose: 'The K-C008 test file fails against deliberately broken in-memory copies of capability\\C008\\preparation.js (the file on disk is never modified)',
+  testFile,
+  testFileSha256: { raw: sha(fs.readFileSync(path.join(repo, testFile))), crlfToLf: sha(fs.readFileSync(path.join(repo, testFile), 'utf8').replace(/\r\n/g, '\n')) },
+  sourceSha256CrlfToLf: sha(source),
+  tools: {
+    'mutation-check.cjs': sha(fs.readFileSync(__filename)),
+    'mutation-preload.cjs': sha(fs.readFileSync(preload))
+  },
+  nodeRuntime: process.version,
+  baseline,
+  mutants: results.length,
+  killed: results.filter((entry) => entry.killed).length,
+  survived: results.filter((entry) => !entry.killed).map((entry) => entry.id),
+  results
+};
+fs.writeFileSync(process.argv[2], JSON.stringify(report, null, 2) + '\n');
+console.log(JSON.stringify({ baseline, mutants: report.mutants, killed: report.killed, survived: report.survived }));

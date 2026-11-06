@@ -1,0 +1,22 @@
+'use strict';
+// K-C008 mutation preload (evidence tool, never loaded by tests). Serves a deliberately broken in-memory copy of
+// capability\C008\preparation.js to any fs.readFileSync of that file; the file on disk is never modified.
+// The mutant is passed as JSON in K_C008_MUTANT: { "from": "<exact text, LF newlines>", "to": "<replacement>" }.
+const fs = require('node:fs');
+const path = require('node:path');
+
+const mutant = JSON.parse(process.env.K_C008_MUTANT || 'null');
+const target = path.resolve(process.env.K_C008_TARGET || path.join(process.cwd(), 'capability', 'C008', 'preparation.js')).toLowerCase();
+if (mutant) {
+  const original = fs.readFileSync;
+  fs.readFileSync = function readFileSync(file, options) {
+    const result = original.apply(this, arguments);
+    if (typeof file === 'string' && path.resolve(file).toLowerCase() === target) {
+      const text = (Buffer.isBuffer(result) ? result.toString('utf8') : result).replace(/\r\n/g, '\n');
+      if (text.split(mutant.from).length !== 2) throw new Error('Mutation anchor must occur exactly once: ' + mutant.from);
+      const mutated = text.replace(mutant.from, () => mutant.to);
+      return Buffer.isBuffer(result) ? Buffer.from(mutated, 'utf8') : mutated;
+    }
+    return result;
+  };
+}
