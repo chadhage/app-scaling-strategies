@@ -1,0 +1,54 @@
+{
+  "schema": "C010-imports/1",
+  "accepted": {
+    "C009": {
+      "commit": "f95cc52a29cf643fd443b80e5c0b112556feb548",
+      "tag": "kanban/C009/f95cc52a29cf",
+      "status": "SPECULATIVE: C009 was not accepted when C010 was built (its third fix changes tests, README and evidence only; every production file is frozen). Only PRODUCTION files are imported, never C009 tests or evidence. If the controller reports that a production file changed, re-pin here and in imports.test.cjs, and rerun the suites."
+    }
+  },
+  "dependencies": [
+    {
+      "card": "C009", "path": "capability\\C009\\authz.cjs", "oid": "da3d8d8dece58e8502ffaf077921b2725eb5b06b",
+      "usedBy": "server.cjs (verified identity: createTokenRegistry, parseBearer, AuthError, decide, claimedHeaders)",
+      "commit": "f95cc52a29cf643fd443b80e5c0b112556feb548", "tag": "kanban/C009/f95cc52a29cf",
+      "raw": "5cfaba37c478665f8fa20dab64db17ca606ef3315a3f0c7dd22b6ce58946724e",
+      "git": "fde03b80a393ea1f9ee5e01fc0eb8e06798c51ddbe765b81543ab1d945d34677",
+      "lf": "fde03b80a393ea1f9ee5e01fc0eb8e06798c51ddbe765b81543ab1d945d34677"
+    },
+    {
+      "card": "C009", "path": "capability\\C009\\codes.cjs", "oid": "6d391e49c897b40c73b0aabddaa60273bb736cb6",
+      "usedBy": "codes.cjs (the wording of every typed code C009 already says) and, through http-io.cjs, the answers Node gives itself",
+      "commit": "f95cc52a29cf643fd443b80e5c0b112556feb548", "tag": "kanban/C009/f95cc52a29cf",
+      "raw": "207054f990f799b06f1cb7ffd0adff8b7af80da3b10c98f9ef5a35d6356366ad",
+      "git": "488e1c0f675effc004ab41427a3d81a9ed959f5b949890c7e6f0b6de1ddded14",
+      "lf": "488e1c0f675effc004ab41427a3d81a9ed959f5b949890c7e6f0b6de1ddded14"
+    },
+    {
+      "card": "C009", "path": "capability\\C009\\contract.js", "oid": "0b0a178fd6f3b656c552492361180730a4826647",
+      "usedBy": "contract.js (the four identities, the roles, the claim fields and the connection bounds); transitive through authz.cjs",
+      "commit": "f95cc52a29cf643fd443b80e5c0b112556feb548", "tag": "kanban/C009/f95cc52a29cf",
+      "raw": "50926f3b6852489bafbc88a900f1c99c1fdf83da6993c53c2e2350de9bd69b58",
+      "git": "86f13e7e0374a91dd79582156199a1113b27705de09eb08e64e9c270562afa5a",
+      "lf": "86f13e7e0374a91dd79582156199a1113b27705de09eb08e64e9c270562afa5a"
+    },
+    {
+      "card": "C009", "path": "capability\\C009\\http-io.cjs", "oid": "9d5e8422e97c7df884247855904e54658f2960d0",
+      "usedBy": "server.cjs (the refusal path: createResponder, createLanes, isFinished, readBody, localGuard, hasBody, clientErrorCode, canStopReading)",
+      "commit": "f95cc52a29cf643fd443b80e5c0b112556feb548", "tag": "kanban/C009/f95cc52a29cf",
+      "raw": "bda5672e4d7849829145211b5dfd6ace1f117de865cfc4ed246d4f48e47f02cc",
+      "git": "cc5b7df9ea93470d7be5d19bc8e6f8f33021637a38aa193e68ad3726a0695c78",
+      "lf": "cc5b7df9ea93470d7be5d19bc8e6f8f33021637a38aa193e68ad3726a0695c78"
+    },
+    {
+      "card": "C009", "path": "capability\\C009\\queue.cjs", "oid": "2c8e35b233ea56cbe83476b4aaefe22ff074509c",
+      "usedBy": "server.cjs (the linearized commit: createQueue)",
+      "commit": "f95cc52a29cf643fd443b80e5c0b112556feb548", "tag": "kanban/C009/f95cc52a29cf",
+      "raw": "6dacc2ac1068caec109554c10b502381ba7ab8ca5571728627f4c324155e21af",
+      "git": "853db588a762a3d3e1390b6d5b85af3eb048ecf13dc2ccd84b17c9f12b356de4",
+      "lf": "853db588a762a3d3e1390b6d5b85af3eb048ecf13dc2ccd84b17c9f12b356de4"
+    }
+  ],
+  "notImported": "C009 commands.cjs, handlers.cjs, ledger.cjs, server.cjs, cli.cjs, page.js, index.html and style.css are the C009 command pipeline, its public state and its page: C010 does not import them (its state is not public, its mutations are lease-scoped, its page is its own). C009's tests and evidence are never imported. README.md section 'What C010 imports' names the exports it uses.",
+  "policy": "Read-only imports of accepted producer bytes. Raw working bytes (CRLF here), the LF-normalized bytes and the Git blob of the pinned commit are separate pins (the blob and the LF pin are the canonical ones; the raw pin is accepted OR the LF pin matches, so a fresh LF checkout verifies too). tests\\imports.test.cjs recomputes them against git objects (never the index or HEAD). C010 never edits an imported file."
+}
