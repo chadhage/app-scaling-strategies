@@ -1,0 +1,124 @@
+'use strict';
+
+// K-C020 mutation check (RED-02). One-line mutants of a PRIVATE copy of capability/C020/server.cjs must all fail the new tests.
+// The repository is never edited: the copy lives in <scratch>, and K_C020_NAMESPACE_ROOT aims the new tests at it.
+// Usage (repository root): node <this file> <scratch folder outside the repository> <new result .json> [tests folder]
+// Progress lines are also appended to <scratch folder>.progress.log, because the run takes 20 to 40 minutes under load.
+const { spawnSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const repo = process.cwd();
+const [scratch, resultFile, testsArg] = process.argv.slice(2);
+if (!scratch || !resultFile) throw new Error('Usage: node mutation-check.cjs <scratch folder> <result.json> [tests folder]');
+const testsDirectory = path.resolve(testsArg || path.join(repo, 'capability', 'C020', 'tests'));
+const tests = ['k-c020-server-refusals', 'k-c020-server-assets', 'k-c020-server-lifecycle']
+  .map((name) => path.join(testsDirectory, `${name}.test.cjs`));
+const sha = (value) => createHash('sha256').update(value).digest('hex');
+
+const CLOSE = 'const close = () => { server.closeAllConnections(); server.close(); };';
+const SCOPE_QUERY = "if (url.search) return fail(400, 'INVALID_QUERY', 'The scope record accepts no query parameters.');";
+const ASSET_QUERY = "if (url.search) return fail(400, 'INVALID_QUERY', 'The inspection assets accept no query parameters.');";
+const HOST = "request.socket.remoteAddress !== '127.0.0.1' || request.headers.host !== host";
+const TYPE = "error instanceof TypeError && error.code === 'ERR_INVALID_URL'";
+const FIXTURE = "'The local fixture is unavailable; no successful observation was made.'";
+const mutants = [
+  ['host-check-removed', HOST, "request.socket.remoteAddress !== '127.0.0.1'"],
+  ['origin-check-removed', 'if (request.headers.origin && request.headers.origin !== origin) {', 'if (false) {'],
+  ['origin-compare-loosened', 'request.headers.origin !== origin', "!String(request.headers.origin).startsWith('http://127.0.0.1')"],
+  ['head-allowed', "request.method !== 'GET'", "!['GET', 'HEAD'].includes(request.method)"],
+  ['small-body-allowed', "Number(request.headers['content-length'] || 0) > 0", "Number(request.headers['content-length'] || 0) > 10"],
+  ['chunked-body-allowed', "request.headers['transfer-encoding'] || Number(", 'Number('],
+  ['url-limit-doubled', 'request.url.length > 2048', 'request.url.length > 4096'],
+  ['url-limit-off-by-one', 'request.url.length > 2048', 'request.url.length >= 2048'],
+  ['fragment-allowed', 'url.origin !== origin || url.hash', 'url.origin !== origin'],
+  ['foreign-authority-allowed', 'url.origin !== origin || url.hash', 'url.hash'],
+  ['scope-query-allowed', SCOPE_QUERY, SCOPE_QUERY.replace('url.search', 'false')],
+  ['asset-query-allowed', ASSET_QUERY, ASSET_QUERY.replace('url.search', 'false')],
+  ['css-type-changed', "'text/css; charset=utf-8'", "'text/plain; charset=utf-8'"],
+  ['page-asset-swapped', "'/page.js': ['page.js',", "'/page.js': ['inspector.js',"],
+  ['index-asset-swapped', "'/': ['index.html',", "'/': ['page.js',"],
+  ['unknown-path-ok', "return fail(404, 'NOT_FOUND',", "return fail(200, 'NOT_FOUND',"],
+  ['any-type-error-malformed', TYPE, 'error instanceof TypeError'],
+  ['malformed-url-unhandled', TYPE, 'false'],
+  ['error-code-renamed', "return fail(500, 'FIXTURE_UNAVAILABLE'", "return fail(500, 'FIXTURE_FAILED'"],
+  ['cause-leaked', FIXTURE, 'error.message'],
+  ['request-timeout-off', 'server.requestTimeout = 5000;', 'server.requestTimeout = 0;'],
+  ['headers-timeout-longer', 'server.headersTimeout = 5000;', 'server.headersTimeout = 60000;'],
+  ['keep-alive-longer', 'server.keepAliveTimeout = 1000;', 'server.keepAliveTimeout = 5000;'],
+  ['cache-header-weakened', "'Cache-Control': 'no-store'", "'Cache-Control': 'no-cache'"],
+  ['csp-frame-ancestors-open', "frame-ancestors 'none'", "frame-ancestors 'self'"],
+  ['referrer-policy-weakened', "'Referrer-Policy': 'no-referrer'", "'Referrer-Policy': 'origin'"],
+  ['scope-header-changed', "'X-C020-Scope': 'synthetic-loopback-only'", "'X-C020-Scope': 'open'"],
+  ['envelope-not-local', 'localOnly: true', 'localOnly: false'],
+  ['consent-wrong-record', '.approvals?.C001', '.approvals?.C002'],
+  ['denial-ignored', 'if (!permission.allowed) {', 'if (false) {'],
+  ['unreadable-consent-ignored', "throw new Error('C001 current consent is unavailable; the local listener was not started.');", 'approval = undefined;'],
+  ['all-interfaces', "server.listen(0, '127.0.0.1', resolve);", 'server.listen(0, resolve);'],
+  ['listen-error-unhandled', "server.once('error', reject);", ';'],
+  ['extra-argument-allowed', 'process.argv.length !== 2', 'process.argv.length > 3'],
+  ['override-refusal-exits-0', 'process.exitCode = 1;', 'process.exitCode = 0;', 0],
+  ['startup-failure-exits-0', 'process.exitCode = 1;', 'process.exitCode = 0;', 1],
+  ['failure-reason-hidden', 'console.error(error.message);', "console.error('failed');"],
+  ['record-event-renamed', "event: 'C020-local-listening'", "event: 'listening'"],
+  ['record-pid-wrong', 'pid: process.pid,', 'pid: 0,'],
+  ['record-origin-not-loopback-ip', 'origin: `http://127.0.0.1:', 'origin: `http://localhost:'],
+  ['shutdown-keeps-connections', CLOSE, 'const close = () => { server.close(); };'],
+  ['shutdown-keeps-listener', CLOSE, 'const close = () => { server.closeAllConnections(); };'],
+  ['sigint-unregistered', "process.once('SIGINT', close);", ';'],
+  ['sigterm-unregistered', "process.once('SIGTERM', close);", ';']
+];
+
+// A mutant names its target by text; without an explicit occurrence the target must be unique, so no mutant is ambiguous.
+function apply(source, [, find, replacement, nth]) {
+  const parts = source.split(find);
+  const occurrences = parts.length - 1;
+  if (nth === undefined ? occurrences !== 1 : nth >= occurrences) throw new Error(`The mutation target matches ${occurrences} time(s): ${find}`);
+  const at = nth ?? 0;
+  return parts.slice(0, at + 1).join(find) + replacement + parts.slice(at + 1).join(find);
+}
+
+function runSuite(root) {
+  const env = { ...process.env, K_C020_NAMESPACE_ROOT: root };
+  delete env.NODE_TEST_CONTEXT;
+  delete env.NODE_V8_COVERAGE;
+  const run = spawnSync(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=60000', '--test-reporter=tap', ...tests],
+    { cwd: repo, env, encoding: 'utf8', timeout: 300000, maxBuffer: 32 * 1024 * 1024 });
+  const count = (name) => Number((new RegExp(`^# ${name} (\\d+)`, 'm').exec(run.stdout) || [])[1]);
+  return { exit: run.status, signal: run.signal, tests: count('tests'), pass: count('pass'), fail: count('fail'),
+    failing: [...run.stdout.matchAll(/^not ok \d+ - (.*)$/gm)].map((match) => match[1]).slice(0, 3) };
+}
+
+const namespace = path.join(scratch, 'capability', 'C020');
+fs.rmSync(scratch, { recursive: true, force: true });
+fs.mkdirSync(path.join(namespace, 'tests'), { recursive: true });
+fs.mkdirSync(path.join(namespace, 'evidence'), { recursive: true });
+fs.mkdirSync(path.join(scratch, 'capability', 'C001'), { recursive: true });
+for (const name of ['server.cjs', 'profiles.cjs', 'contract.js', 'inspector.js', 'page.js', 'index.html', 'styles.css', 'README.md', 'evidence.json']) {
+  fs.copyFileSync(path.join(repo, 'capability', 'C020', name), path.join(namespace, name));
+}
+for (const name of ['contract-guard.js', 'approved-contract.js']) {
+  fs.copyFileSync(path.join(repo, 'capability', 'C001', name), path.join(scratch, 'capability', 'C001', name));
+}
+const original = fs.readFileSync(path.join(namespace, 'server.cjs'), 'utf8');
+for (const mutant of mutants) apply(original, mutant);
+const baseline = runSuite(namespace);
+const results = [];
+if (baseline.exit === 0) {
+  for (const mutant of mutants) {
+    fs.writeFileSync(path.join(namespace, 'server.cjs'), apply(original, mutant));
+    const outcome = runSuite(namespace);
+    results.push({ id: mutant[0], killed: outcome.exit !== 0, ...outcome });
+    const line = `${outcome.exit !== 0 ? 'KILLED  ' : 'SURVIVED'} ${mutant[0]} (${outcome.failing[0] || `exit ${outcome.exit}`})`;
+    console.log(line);
+    fs.appendFileSync(`${scratch}.progress.log`, `${line}\n`);
+  }
+}
+fs.rmSync(scratch, { recursive: true, force: true });
+const summary = { total: results.length, killed: results.filter((item) => item.killed).length, survived: results.filter((item) => !item.killed).length };
+const record = { schemaVersion: 1, tool: 'k-c020-mutation-check', node: process.version, serverSha256: sha(original),
+  testFiles: tests.map((file) => path.basename(file)), baseline, summary, mutants: results };
+fs.writeFileSync(resultFile, `${JSON.stringify(record, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify({ baseline: baseline.exit, ...summary }));
+process.exitCode = baseline.exit === 0 && summary.survived === 0 ? 0 : 1;

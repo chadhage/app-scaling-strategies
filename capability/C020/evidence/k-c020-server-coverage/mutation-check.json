@@ -1,0 +1,590 @@
+{
+  "schemaVersion": 1,
+  "tool": "k-c020-mutation-check",
+  "node": "v22.23.4",
+  "serverSha256": "f0375fe11f109ef0cfa7e81ef37fe9c53f2d4fd7383cfa48b3ac40a4ea7cd50d",
+  "testFiles": [
+    "k-c020-server-refusals.test.cjs",
+    "k-c020-server-assets.test.cjs",
+    "k-c020-server-lifecycle.test.cjs"
+  ],
+  "baseline": {
+    "exit": 0,
+    "signal": null,
+    "tests": 26,
+    "pass": 26,
+    "fail": 0,
+    "failing": []
+  },
+  "summary": {
+    "total": 44,
+    "killed": 44,
+    "survived": 0
+  },
+  "mutants": [
+    {
+      "id": "host-check-removed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 24,
+      "fail": 2,
+      "failing": [
+        "the guards run in a fixed order: host, origin, method, body, URL length, URL shape",
+        "only the exact listener host and origin are served"
+      ]
+    },
+    {
+      "id": "origin-check-removed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 24,
+      "fail": 2,
+      "failing": [
+        "the guards run in a fixed order: host, origin, method, body, URL length, URL shape",
+        "only the exact listener host and origin are served"
+      ]
+    },
+    {
+      "id": "origin-compare-loosened",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 24,
+      "fail": 1,
+      "failing": [
+        "C:\\\\Users\\\\chhage\\\\repos\\\\app-scaling-strategies\\\\capability\\\\C020\\\\tests\\\\k-c020-server-lifecycle.test.cjs",
+        "only the exact listener host and origin are served"
+      ]
+    },
+    {
+      "id": "head-allowed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "every method except GET is METHOD_NOT_ALLOWED, including HEAD and OPTIONS"
+      ]
+    },
+    {
+      "id": "small-body-allowed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 23,
+      "fail": 2,
+      "failing": [
+        "C:\\\\Users\\\\chhage\\\\repos\\\\app-scaling-strategies\\\\capability\\\\C020\\\\tests\\\\k-c020-server-lifecycle.test.cjs",
+        "a GET that declares a body is refused before routing, however the body is framed",
+        "the guards run in a fixed order: host, origin, method, body, URL length, URL shape"
+      ]
+    },
+    {
+      "id": "chunked-body-allowed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 24,
+      "fail": 1,
+      "failing": [
+        "C:\\\\Users\\\\chhage\\\\repos\\\\app-scaling-strategies\\\\capability\\\\C020\\\\tests\\\\k-c020-server-lifecycle.test.cjs",
+        "a GET that declares a body is refused before routing, however the body is framed"
+      ]
+    },
+    {
+      "id": "url-limit-doubled",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 24,
+      "fail": 2,
+      "failing": [
+        "request targets above 2048 characters are 414 and exactly 2048 characters still reach routing",
+        "the guards run in a fixed order: host, origin, method, body, URL length, URL shape"
+      ]
+    },
+    {
+      "id": "url-limit-off-by-one",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "request targets above 2048 characters are 414 and exactly 2048 characters still reach routing"
+      ]
+    },
+    {
+      "id": "fragment-allowed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 27,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "C:\\\\Users\\\\chhage\\\\repos\\\\app-scaling-strategies\\\\capability\\\\C020\\\\tests\\\\k-c020-server-lifecycle.test.cjs",
+        "fragments and foreign or malformed targets are INVALID_URL while the own absolute form is accepted"
+      ]
+    },
+    {
+      "id": "foreign-authority-allowed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "fragments and foreign or malformed targets are INVALID_URL while the own absolute form is accepted"
+      ]
+    },
+    {
+      "id": "scope-query-allowed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "the scope record and every inspection asset refuse query parameters"
+      ]
+    },
+    {
+      "id": "asset-query-allowed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "the scope record and every inspection asset refuse query parameters"
+      ]
+    },
+    {
+      "id": "css-type-changed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "each allowlisted asset is served byte-exact with its exact type and the local security headers"
+      ]
+    },
+    {
+      "id": "page-asset-swapped",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "each allowlisted asset is served byte-exact with its exact type and the local security headers"
+      ]
+    },
+    {
+      "id": "index-asset-swapped",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "each allowlisted asset is served byte-exact with its exact type and the local security headers"
+      ]
+    },
+    {
+      "id": "unknown-path-ok",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 24,
+      "fail": 2,
+      "failing": [
+        "nothing else is served: every other namespace entry and every traversal form is NOT_FOUND",
+        "request targets above 2048 characters are 414 and exactly 2048 characters still reach routing"
+      ]
+    },
+    {
+      "id": "any-type-error-malformed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "an unreadable asset is FIXTURE_UNAVAILABLE without leaking the cause, and the server recovers"
+      ]
+    },
+    {
+      "id": "malformed-url-unhandled",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "fragments and foreign or malformed targets are INVALID_URL while the own absolute form is accepted"
+      ]
+    },
+    {
+      "id": "error-code-renamed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "an unreadable asset is FIXTURE_UNAVAILABLE without leaking the cause, and the server recovers"
+      ]
+    },
+    {
+      "id": "cause-leaked",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "an unreadable asset is FIXTURE_UNAVAILABLE without leaking the cause, and the server recovers"
+      ]
+    },
+    {
+      "id": "request-timeout-off",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "createLocalServer returns independent unbound http.Server objects with bounded timeouts"
+      ]
+    },
+    {
+      "id": "headers-timeout-longer",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "createLocalServer returns independent unbound http.Server objects with bounded timeouts"
+      ]
+    },
+    {
+      "id": "keep-alive-longer",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "createLocalServer returns independent unbound http.Server objects with bounded timeouts"
+      ]
+    },
+    {
+      "id": "cache-header-weakened",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 18,
+      "fail": 8,
+      "failing": [
+        "each allowlisted asset is served byte-exact with its exact type and the local security headers",
+        "an unreadable asset is FIXTURE_UNAVAILABLE without leaking the cause, and the server recovers",
+        "a GET that declares a body is refused before routing, however the body is framed"
+      ]
+    },
+    {
+      "id": "csp-frame-ancestors-open",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 20,
+      "fail": 6,
+      "failing": [
+        "a GET that declares a body is refused before routing, however the body is framed",
+        "request targets above 2048 characters are 414 and exactly 2048 characters still reach routing",
+        "fragments and foreign or malformed targets are INVALID_URL while the own absolute form is accepted"
+      ]
+    },
+    {
+      "id": "referrer-policy-weakened",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 19,
+      "fail": 7,
+      "failing": [
+        "each allowlisted asset is served byte-exact with its exact type and the local security headers",
+        "a GET that declares a body is refused before routing, however the body is framed",
+        "request targets above 2048 characters are 414 and exactly 2048 characters still reach routing"
+      ]
+    },
+    {
+      "id": "scope-header-changed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 19,
+      "fail": 7,
+      "failing": [
+        "each allowlisted asset is served byte-exact with its exact type and the local security headers",
+        "a GET that declares a body is refused before routing, however the body is framed",
+        "request targets above 2048 characters are 414 and exactly 2048 characters still reach routing"
+      ]
+    },
+    {
+      "id": "envelope-not-local",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 19,
+      "fail": 7,
+      "failing": [
+        "an unreadable asset is FIXTURE_UNAVAILABLE without leaking the cause, and the server recovers",
+        "a GET that declares a body is refused before routing, however the body is framed",
+        "request targets above 2048 characters are 414 and exactly 2048 characters still reach routing"
+      ]
+    },
+    {
+      "id": "consent-wrong-record",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 18,
+      "fail": 8,
+      "failing": [
+        "startLocal refuses to listen with a hollow approval and creates no server",
+        "startLocal refuses to listen with a drifted approval and creates no server",
+        "startLocal refuses to listen with an unresolved approved choice and creates no server"
+      ]
+    },
+    {
+      "id": "denial-ignored",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 18,
+      "fail": 7,
+      "failing": [
+        "startLocal refuses to listen with a ledger without approvals and creates no server",
+        "startLocal refuses to listen with an approval that is not a record and creates no server",
+        "startLocal refuses to listen with a hollow approval and creates no server"
+      ]
+    },
+    {
+      "id": "unreadable-consent-ignored",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 23,
+      "fail": 3,
+      "failing": [
+        "startLocal refuses to listen with an unreadable ledger and creates no server",
+        "startLocal refuses to listen with a malformed ledger and creates no server",
+        "the CLI exits 1 with the reason on stderr and no listening record for an unreadable ledger"
+      ]
+    },
+    {
+      "id": "all-interfaces",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 23,
+      "fail": 3,
+      "failing": [
+        "startLocal binds only 127.0.0.1 on an ephemeral port after a valid approval and serves the scope",
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGINT",
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGTERM"
+      ]
+    },
+    {
+      "id": "listen-error-unhandled",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "a listen failure rejects startLocal with that very error"
+      ]
+    },
+    {
+      "id": "extra-argument-allowed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "the CLI refuses every extra argument before it reads consent or listens"
+      ]
+    },
+    {
+      "id": "override-refusal-exits-0",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "the CLI refuses every extra argument before it reads consent or listens"
+      ]
+    },
+    {
+      "id": "startup-failure-exits-0",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 23,
+      "fail": 3,
+      "failing": [
+        "the CLI exits 1 with the reason on stderr and no listening record for an unreadable ledger",
+        "the CLI exits 1 with the reason on stderr and no listening record for a missing approval",
+        "the CLI exits 1 with the reason on stderr and no listening record for a drifted approval"
+      ]
+    },
+    {
+      "id": "failure-reason-hidden",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 22,
+      "fail": 3,
+      "failing": [
+        "the CLI exits 1 with the reason on stderr and no listening record for an unreadable ledger",
+        "the CLI exits 1 with the reason on stderr and no listening record for a missing approval",
+        "the CLI exits 1 with the reason on stderr and no listening record for a drifted approval"
+      ]
+    },
+    {
+      "id": "record-event-renamed",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 24,
+      "fail": 2,
+      "failing": [
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGINT",
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGTERM"
+      ]
+    },
+    {
+      "id": "record-pid-wrong",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 24,
+      "fail": 2,
+      "failing": [
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGINT",
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGTERM"
+      ]
+    },
+    {
+      "id": "record-origin-not-loopback-ip",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 24,
+      "fail": 2,
+      "failing": [
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGINT",
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGTERM"
+      ]
+    },
+    {
+      "id": "shutdown-keeps-connections",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 24,
+      "fail": 2,
+      "failing": [
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGINT",
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGTERM"
+      ]
+    },
+    {
+      "id": "shutdown-keeps-listener",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 24,
+      "fail": 2,
+      "failing": [
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGINT",
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGTERM"
+      ]
+    },
+    {
+      "id": "sigint-unregistered",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGINT"
+      ]
+    },
+    {
+      "id": "sigterm-unregistered",
+      "killed": true,
+      "exit": 1,
+      "signal": null,
+      "tests": 26,
+      "pass": 25,
+      "fail": 1,
+      "failing": [
+        "the CLI prints one listening record, serves, and drops every connection and the listener on SIGTERM"
+      ]
+    }
+  ]
+}
