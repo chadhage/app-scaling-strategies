@@ -10,7 +10,8 @@ const { createHash, randomUUID } = require('node:crypto');
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const owned = (...parts) => path.join('capability', 'C026', ...parts);
-const GREEN_TESTS = ['framing', 'stream', 'server', 'conversation', 'page', 'surface'].map((name) => owned('tests', `${name}.test.cjs`));
+const GREEN_TESTS = ['framing', 'stream', 'server', 'conversation', 'page', 'surface', 'limits', 'hardening', 'heap-limit', 'refusal-close', 'recovery', 'evidence']
+  .map((name) => owned('tests', `${name}.test.cjs`));
 const stages = Object.freeze({
   red: { args: ['--test', owned('evidence', 'red', 'behavior.initial.snapshot.cjs')], env: { C026_RED_SUBJECT: owned('evidence', 'red', 'stubs') } },
   supplement: { args: ['--test', owned('evidence', 'red', 'behavior.assertions.snapshot.cjs')], env: { C026_RED_SUBJECT: owned('evidence', 'red', 'stubs') } },

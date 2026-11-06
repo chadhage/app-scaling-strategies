@@ -8,11 +8,12 @@ const path = require('node:path');
 const METRICS = Object.freeze(['lines', 'branches', 'functions']);
 const FLOORS = Object.freeze({ lines: 85, branches: 85, functions: 85 });
 const NUMBER = '(\\d+(?:\\.\\d+)?)';
-const FILE_ROW = new RegExp(`^#\\s+(\\S+\\.c?js)\\s+\\|\\s+${NUMBER}\\s+\\|\\s+${NUMBER}\\s+\\|\\s+${NUMBER}\\s+\\|`);
+const FILE_ROW = new RegExp(`^#\\s+(\\S+\\.[cm]?js)\\s+\\|\\s+${NUMBER}\\s+\\|\\s+${NUMBER}\\s+\\|\\s+${NUMBER}\\s+\\|`);
 const NOT_NODE_MEASURABLE = /\.(?:html|css|ps1)$/;
 // A nested `node --test` that inherits NODE_TEST_CONTEXT exits 0 even when its test fails (L-0002).
 const NESTED_REMOVED = Object.freeze(['CAPTURE_BROWSER_EVIDENCE', 'NODE_V8_COVERAGE', 'NODE_TEST_CONTEXT']);
-const TESTS = Object.freeze(['framing', 'stream', 'server', 'conversation', 'page', 'surface'].map((name) => `${name}.test.cjs`));
+const TESTS = Object.freeze(['framing', 'stream', 'server', 'conversation', 'page', 'surface', 'limits', 'hardening', 'heap-limit', 'refusal-close', 'recovery', 'evidence']
+  .map((name) => `${name}.test.cjs`));
 
 function nestedEnvironment(env) {
   const copy = { ...env };
@@ -37,7 +38,7 @@ function listNamespaceFiles(root) {
 }
 
 function enumerate(paths) {
-  const production = paths.filter((raw) => /\.c?js$/.test(raw));
+  const production = paths.filter((raw) => /\.[cm]?js$/.test(raw));
   const nested = production.filter((raw) => raw.includes('/'));
   if (nested.length > 0) throw new Error(`NESTED_PRODUCTION_FILE ${nested.join(', ')}`);
   return production.sort();

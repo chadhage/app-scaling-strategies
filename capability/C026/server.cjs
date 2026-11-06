@@ -9,6 +9,17 @@ const { runScript } = require('./conversation.cjs');
 const { createHub } = require('./stream.cjs');
 
 const MAX_CLIENT_MESSAGE_BYTES = 4096;
+const MAX_OUTBOUND_BYTES = 64 * 1024;
+const MAX_CONNECTIONS = 128;
+// Every resource a client can make this fixture hold is bounded here: the largest message and its fragments, the output
+// a client may leave unread, and the connections. Sessions are bounded by the stream hub and are never released.
+const limits = Object.freeze({
+  maxClientMessageBytes: MAX_CLIENT_MESSAGE_BYTES, maxFragmentsPerMessage: framing.DEFAULT_MAX_FRAGMENTS,
+  maxOutboundBytes: MAX_OUTBOUND_BYTES, maxConnections: MAX_CONNECTIONS
+});
+// A 426 must name the protocol it asks for (RFC 9110 15.5.22). Every refusal also says Connection: close, so the upgrade
+// connection option is not added: nothing may keep this connection or forward the header.
+const UPGRADE_REQUIRED_HEADERS = Object.freeze({ Upgrade: 'websocket' });
 const scope = Object.freeze({
   cardId: 'C026', businessData: 'synthetic', transport: '127.0.0.1 HTTP and RFC 6455 WebSocket only',
   testRuntime: process.version, approvedProductionTarget: 'Node.js 24 LTS / Express / App Service Linux',
@@ -34,14 +45,16 @@ function errorBody(code, message) {
   return JSON.stringify({ error: { code, message }, businessData: 'synthetic', localOnly: true });
 }
 
+// Every refusal closes the connection once the answer is flushed: the peer may still be streaming a body nobody reads.
 function refuseUpgrade(socket, status, code, message, extra = {}) {
   const body = errorBody(code, message);
   const headers = {
-    ...SECURITY_HEADERS, ...extra, Connection: 'close',
+    ...SECURITY_HEADERS, Connection: 'close', ...extra,
     'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body)
   };
   const lines = Object.entries(headers).map(([name, value]) => `${name}: ${value}`);
-  socket.end(`HTTP/1.1 ${status} ${http.STATUS_CODES[status]}\r\n${lines.join('\r\n')}\r\n\r\n${body}`);
+  socket.write(`HTTP/1.1 ${status} ${http.STATUS_CODES[status]}\r\n${lines.join('\r\n')}\r\n\r\n${body}`);
+  socket.destroySoon();
 }
 
 function inspectUpgrade(request, port) {
@@ -59,9 +72,13 @@ function inspectUpgrade(request, port) {
   } catch {
     return { status: 400, code: 'INVALID_URL', message: 'The local URL is malformed.' };
   }
+  if (url.origin !== origin) return { status: 400, code: 'INVALID_URL', message: 'An explicit local URL is required.' };
   if (url.pathname !== '/stream') return { status: 404, code: 'NOT_FOUND', message: 'The only WebSocket route is /stream.' };
-  if (url.search || url.hash) return { status: 400, code: 'INVALID_QUERY', message: 'The stream route accepts no query or fragment.' };
+  if (url.search || url.hash || /[?#]/.test(request.url)) return { status: 400, code: 'INVALID_QUERY', message: 'The stream route accepts no query or fragment.' };
   if (request.method !== 'GET') return { status: 405, code: 'METHOD_NOT_ALLOWED', message: 'A WebSocket upgrade is a GET.' };
+  if (request.headers['transfer-encoding'] || Number(request.headers['content-length'] || 0) > 0) {
+    return { status: 400, code: 'UNEXPECTED_BODY', message: 'A WebSocket upgrade must not contain a body.' };
+  }
   const connection = String(request.headers.connection ?? '').toLowerCase().split(',').map((token) => token.trim());
   if (String(request.headers.upgrade ?? '').toLowerCase() !== 'websocket' || !connection.includes('upgrade')) {
     return { status: 400, code: 'UPGRADE_HEADERS_REQUIRED', message: 'Upgrade: websocket and Connection: Upgrade are required.' };
@@ -69,7 +86,7 @@ function inspectUpgrade(request, port) {
   if (request.headers['sec-websocket-version'] !== '13') {
     return {
       status: 426, code: 'UNSUPPORTED_VERSION', message: 'Only WebSocket version 13 is supported.',
-      extra: { 'Sec-WebSocket-Version': '13' }
+      extra: { 'Sec-WebSocket-Version': '13', ...UPGRADE_REQUIRED_HEADERS }
     };
   }
   try {
@@ -79,15 +96,27 @@ function inspectUpgrade(request, port) {
   }
 }
 
-function serveSocket(socket, head, hub, accept) {
+function serveSocket(socket, head, hub, accept, onLimit) {
   socket.write([
     'HTTP/1.1 101 Switching Protocols', 'Upgrade: websocket', 'Connection: Upgrade',
     `Sec-WebSocket-Accept: ${accept}`, 'X-C026-Scope: synthetic-loopback-only', '', ''
   ].join('\r\n'));
   socket.setNoDelay(true);
-  const parser = framing.createParser({ requireMask: true, maxMessageBytes: MAX_CLIENT_MESSAGE_BYTES });
+  const parser = framing.createParser({ requireMask: true, maxMessageBytes: MAX_CLIENT_MESSAGE_BYTES, maxFragments: framing.DEFAULT_MAX_FRAGMENTS });
   let closing = false;
-  const write = (bytes) => { if (!socket.destroyed && socket.writable) socket.write(bytes); };
+  // A client that stops reading must not make the server queue its replies forever: past the bound it is dropped (its
+  // session stays resumable) and the limit is announced as a typed event. A close frame could not reach it anyway.
+  const write = (bytes) => {
+    if (socket.destroyed || !socket.writable) return;
+    if (socket.writableLength + bytes.length > MAX_OUTBOUND_BYTES) {
+      closing = true;
+      connection.disconnected();
+      onLimit({ code: 'OUTBOUND_BACKLOG', limit: MAX_OUTBOUND_BYTES });
+      socket.destroy();
+      return;
+    }
+    socket.write(bytes);
+  };
   const connection = hub.connect({
     send: (message) => write(framing.encodeFrame({ opcode: framing.OPCODES.text, payload: JSON.stringify(message) })),
     close: (code, reason) => {
@@ -159,8 +188,10 @@ function createLocalServer({ hub = createHub(), transcript = produceLocalTranscr
       response.writeHead(status, { ...SECURITY_HEADERS, 'Content-Type': type, 'Content-Length': body.length, ...extra });
       response.end(body);
     }
-    function fail(status, code, message) {
-      send(status, { error: { code, message }, businessData: 'synthetic', localOnly: true });
+    // Every refusal says Connection: close, so Node closes the socket once the answer is flushed and stops parsing a body
+    // the fixture refused to read (an endless chunked body would otherwise be read for as long as the peer sends it).
+    function fail(status, code, message, extra = {}) {
+      send(status, { error: { code, message }, businessData: 'synthetic', localOnly: true }, undefined, { Connection: 'close', ...extra });
     }
     try {
       const host = `127.0.0.1:${server.address().port}`;
@@ -177,7 +208,7 @@ function createLocalServer({ hub = createHub(), transcript = produceLocalTranscr
       }
       const url = new URL(request.url, origin);
       if (url.origin !== origin || url.hash) return fail(400, 'INVALID_URL', 'An explicit local URL without a fragment is required.');
-      if (url.pathname === '/stream') return fail(426, 'UPGRADE_REQUIRED', 'Open /stream with a WebSocket upgrade (RFC 6455).');
+      if (url.pathname === '/stream') return fail(426, 'UPGRADE_REQUIRED', 'Open /stream with a WebSocket upgrade (RFC 6455).', UPGRADE_REQUIRED_HEADERS);
       if (url.pathname === '/scope.json' || url.pathname === '/transcript.json' || Object.hasOwn(assets, url.pathname)) {
         if (url.search) return fail(400, 'INVALID_QUERY', 'This route accepts no query parameters.');
       }
@@ -202,8 +233,14 @@ function createLocalServer({ hub = createHub(), transcript = produceLocalTranscr
   server.requestTimeout = 5000;
   server.headersTimeout = 5000;
   server.keepAliveTimeout = 1000;
+  server.maxConnections = MAX_CONNECTIONS;
+  // Every accepted socket is tracked from the first byte, including those the http server detaches (upgrades, refusals).
   const sockets = new Set();
   openSockets.set(server, sockets);
+  server.on('connection', (socket) => {
+    sockets.add(socket);
+    socket.once('close', () => sockets.delete(socket));
+  });
   Object.defineProperty(server, 'hub', { value: hub });
   server.on('upgrade', (request, socket, head) => {
     // An upgraded socket leaves the http server's own error handling, so every path needs this one.
@@ -213,9 +250,7 @@ function createLocalServer({ hub = createHub(), transcript = produceLocalTranscr
       refuseUpgrade(socket, verdict.status, verdict.code, verdict.message, verdict.extra);
       return;
     }
-    sockets.add(socket);
-    socket.once('close', () => sockets.delete(socket));
-    serveSocket(socket, head, hub, verdict.accept);
+    serveSocket(socket, head, hub, verdict.accept, (event) => server.emit('limit', event));
   });
   return server;
 }
@@ -274,4 +309,4 @@ if (require.main === module) {
   runCli(process.argv.slice(2)).then((code) => { process.exitCode = code; });
 }
 
-module.exports = Object.freeze({ scope, createLocalServer, closeServer, startLocal, runCli, produceLocalTranscript });
+module.exports = Object.freeze({ scope, limits, createLocalServer, closeServer, startLocal, runCli, produceLocalTranscript });

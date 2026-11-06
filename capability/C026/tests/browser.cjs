@@ -51,6 +51,20 @@ async function main() {
     assert.equal(session.browserVersion.split('.')[0], QUALIFIED_MAJOR);
     record.playwrightVersion = require(path.join(repositoryRoot, 'testing', 'browser', 'node_modules', 'playwright', 'package.json')).version;
     const { page } = session;
+    record.domSnapshots = [];
+    // After every load the rendered event ids must be unique and 1..N, and the message rows must reconcile with the verified counts.
+    const scanDom = async (label) => {
+      const rows = await page.$$eval('#events tr', (trs) => trs.map((tr) => ({ id: Number(tr.children[0].textContent), who: tr.children[2].textContent, frame: tr.children[3].textContent })));
+      const ids = rows.map((row) => row.id);
+      assert.equal(new Set(ids).size, ids.length, `${label}: an event id is rendered twice`);
+      assert.deepEqual(ids, ids.map((_, position) => position + 1), `${label}: the ids are not 1..N`);
+      const shown = JSON.parse(await page.locator('#summary').textContent());
+      assert.equal(ids.length, shown.events, `${label}: the rows do not match the verified event count`);
+      const messages = rows.filter((row) => row.who === 'server sends' && row.frame.startsWith('{"type":"message"')).length;
+      assert.equal(messages, shown.firstDeliveries + shown.redeliveries, `${label}: message rows do not reconcile with first deliveries plus redeliveries`);
+      record.domSnapshots.push({ label, ids });
+      console.log(`DOM_EVENT_IDS ${JSON.stringify({ label, ids })}`);
+    };
     const pageErrors = [];
     const consoleErrors = [];
     const requests = [];
@@ -88,6 +102,7 @@ async function main() {
     assert.equal(await page.locator('#events tr.dir-abort').count(), 1);
     assert.equal(await page.locator('#load').isEnabled(), true);
     checked('real Tab/Enter loads the transcript; the page verified it and shows abort, resume, redelivery and typed failures', { status, summary, rows });
+    await scanDom('after first load');
     if (capture) {
       record.screenshot = path.join('capability', 'C026', 'evidence', 'raw', 'browser-transcript.png');
       record.pendingScreenshot = await page.screenshot({ fullPage: true });
@@ -119,6 +134,12 @@ async function main() {
     await press();
     await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('VERIFIED LOCAL TRANSCRIPT'));
     checked('the page recovers to a verified transcript when the server answers again', await page.locator('#status').textContent());
+    await scanDom('after recovery');
+    await press();
+    await page.waitForFunction(() => !document.getElementById('load').disabled);
+    assert.match(await page.locator('#status').textContent(), /^VERIFIED LOCAL TRANSCRIPT/);
+    await scanDom('after retry');
+    checked('after the recovery and a retry the rendered event ids are unique, 1..N, and reconcile with the verified counts', record.domSnapshots.map((item) => `${item.label}: ${item.ids.length} ids`));
 
     assert.deepEqual(pageErrors, []);
     assert.equal(consoleErrors.every((text) => /status of 500/.test(text)), true, JSON.stringify(consoleErrors));

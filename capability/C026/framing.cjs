@@ -7,6 +7,9 @@ const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const OPCODES = Object.freeze({ continuation: 0x0, text: 0x1, binary: 0x2, close: 0x8, ping: 0x9, pong: 0xa });
 const KNOWN_OPCODES = new Set(Object.values(OPCODES));
 const DEFAULT_MAX_MESSAGE_BYTES = 64 * 1024;
+// Every frame of a fragmented message counts, empty ones too: a zero-length continuation costs the receiver memory
+// but no payload bytes, so the byte limit alone cannot bound a message.
+const DEFAULT_MAX_FRAGMENTS = 64;
 const KEY_PATTERN = /^[A-Za-z0-9+/]{22}==$/;
 const utf8 = new TextDecoder('utf-8', { fatal: true });
 
@@ -85,13 +88,14 @@ function parseClosePayload(payload) {
   }
 }
 
-function createParser({ requireMask, maxMessageBytes = DEFAULT_MAX_MESSAGE_BYTES } = {}) {
+function createParser({ requireMask, maxMessageBytes = DEFAULT_MAX_MESSAGE_BYTES, maxFragments = DEFAULT_MAX_FRAGMENTS } = {}) {
   if (typeof requireMask !== 'boolean') throw new TypeError('requireMask must be stated: true for a server, false for a client.');
+  if (!Number.isSafeInteger(maxFragments) || maxFragments < 1) throw new TypeError('maxFragments must be a positive integer.');
   let buffer = Buffer.alloc(0);
   let partial = null;
   let failure = null;
 
-  function readLength(second, masked) {
+  function readLength(second, masked, control) {
     let length = second & 0x7f;
     let offset = 2;
     if (length === 126) {
@@ -104,6 +108,7 @@ function createParser({ requireMask, maxMessageBytes = DEFAULT_MAX_MESSAGE_BYTES
       const wide = buffer.readBigUInt64BE(2);
       if (wide >> 63n) throw new FramingError('INVALID_LENGTH', 1002, 'The most significant length bit must be zero.');
       if (wide <= 0xffffn) throw new FramingError('NON_MINIMAL_LENGTH', 1002, 'The shortest length encoding must be used.');
+      if (control) throw new FramingError('INVALID_CONTROL_FRAME', 1002, 'Control frames must be final and carry at most 125 bytes.');
       if (wide > BigInt(maxMessageBytes)) throw new FramingError('MESSAGE_TOO_BIG', 1009, `A frame may carry at most ${maxMessageBytes} bytes.`);
       length = Number(wide);
       offset = 10;
@@ -122,7 +127,7 @@ function createParser({ requireMask, maxMessageBytes = DEFAULT_MAX_MESSAGE_BYTES
     if (!KNOWN_OPCODES.has(opcode)) throw new FramingError('UNKNOWN_OPCODE', 1002, `Opcode ${opcode} is reserved.`);
     if (requireMask && !masked) throw new FramingError('UNMASKED_CLIENT_FRAME', 1002, 'Every client frame must be masked.');
     if (!requireMask && masked) throw new FramingError('MASKED_SERVER_FRAME', 1002, 'A server frame must not be masked.');
-    const header = readLength(second, masked);
+    const header = readLength(second, masked, opcode >= OPCODES.close);
     if (header === null) return null;
     if (opcode >= OPCODES.close && (!fin || header.length > 125)) {
       throw new FramingError('INVALID_CONTROL_FRAME', 1002, 'Control frames must be final and carry at most 125 bytes.');
@@ -146,11 +151,13 @@ function createParser({ requireMask, maxMessageBytes = DEFAULT_MAX_MESSAGE_BYTES
     if (opcode === OPCODES.continuation) {
       if (partial === null) throw new FramingError('UNEXPECTED_CONTINUATION', 1002, 'A continuation needs an unfinished message.');
       partial.size += payload.length;
+      partial.fragments += 1;
       if (partial.size > maxMessageBytes) throw new FramingError('MESSAGE_TOO_BIG', 1009, `A message may carry at most ${maxMessageBytes} bytes.`);
+      if (partial.fragments > maxFragments) throw new FramingError('TOO_MANY_FRAGMENTS', 1009, `A message may arrive in at most ${maxFragments} frames.`);
       partial.chunks.push(payload);
     } else {
       if (partial !== null) throw new FramingError('FRAGMENT_INTERLEAVED', 1002, 'A new data frame arrived inside a fragmented message.');
-      partial = { opcode, chunks: [payload], size: payload.length };
+      partial = { opcode, chunks: [payload], size: payload.length, fragments: 1 };
     }
     if (!fin) return null;
     const done = partial;
@@ -184,5 +191,5 @@ function createParser({ requireMask, maxMessageBytes = DEFAULT_MAX_MESSAGE_BYTES
 }
 
 module.exports = Object.freeze({
-  GUID, OPCODES, DEFAULT_MAX_MESSAGE_BYTES, FramingError, acceptKey, encodeFrame, encodeClose, parseClosePayload, createParser
+  GUID, OPCODES, DEFAULT_MAX_MESSAGE_BYTES, DEFAULT_MAX_FRAGMENTS, FramingError, acceptKey, encodeFrame, encodeClose, parseClosePayload, createParser
 });

@@ -43,6 +43,7 @@
       if (!isRecord(frame) || typeof frame.type !== 'string') return rejected('FRAME_MALFORMED', 'A received frame is not a typed object.', event.n);
       const session = sessions.get(frame.session);
       if (frame.type === 'welcome') {
+        if (session) return rejected('WELCOME_DUPLICATE', 'A session was welcomed twice; a second welcome would reset what was verified so far.', event.n);
         sessions.set(frame.session, { delivered: 0, acked: 0 });
       } else if (frame.type === 'resumed') {
         if (!session || frame.ackedThrough !== session.acked || frame.lastSent !== session.delivered) {

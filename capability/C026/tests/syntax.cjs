@@ -10,7 +10,7 @@ function files(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const file = path.join(directory, entry.name);
     if (entry.isDirectory()) return entry.name === 'raw' ? [] : files(file);
-    return /\.c?js$/.test(entry.name) ? [file] : [];
+    return /\.[cm]?js$/.test(entry.name) ? [file] : [];
   });
 }
 
