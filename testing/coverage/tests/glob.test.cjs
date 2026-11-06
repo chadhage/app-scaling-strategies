@@ -71,12 +71,15 @@ test('the **/ group matches nothing or any folders that end with a separator, **
   assert.equal(compileGlob('1?').test(12), true, 'the input is read as text');
 });
 
-test('the work is bounded: a pattern has a length limit and a long name with many stars is matched in time', () => {
+test('the work is bounded: a pattern has a length limit and the steps for a long name with many stars stay within tokens times characters', () => {
   assert.equal(MAX_PATTERN_LENGTH, 1024);
   assert.doesNotThrow(() => compileGlob('a'.repeat(MAX_PATTERN_LENGTH)));
   assert.throws(() => compileGlob('a'.repeat(MAX_PATTERN_LENGTH + 1)), (error) => error instanceof UsageError && /at most 1024 characters/.test(error.message));
-  const started = process.hrtime.bigint();
-  assert.equal(compileGlob(`${'*a'.repeat(10)}*b.cjs`).test(`${'a'.repeat(20000)}.cjs`), false);
-  assert.equal(compileGlob(`${'**/'.repeat(20)}x.cjs`).test(`${'a/'.repeat(5000)}q.cjs`), false);
-  assert.equal(Number(process.hrtime.bigint() - started) / 1e6 < 5000, true, 'linear in pattern times name, never exponential');
+  const longName = 'a'.repeat(20000);
+  const stars = compileGlob(`${'*a'.repeat(10)}*b.cjs`).measure(`${longName}.cjs`);
+  assert.deepEqual([stars.matched, stars.tokens, stars.steps <= stars.tokens * (1 + 2 * 20004)], [false, 26, true]);
+  const folders = compileGlob(`${'**/'.repeat(20)}x.cjs`).measure(`${'a/'.repeat(5000)}q.cjs`);
+  assert.deepEqual([folders.matched, folders.steps <= folders.tokens * (1 + 2 * 10005)], [false, true]);
+  const longest = compileGlob('*a'.repeat(MAX_PATTERN_LENGTH / 2)).measure('a'.repeat(1000));
+  assert.deepEqual([longest.matched, longest.tokens, longest.steps <= longest.tokens * (1 + 2 * 1000)], [true, MAX_PATTERN_LENGTH, true], 'a pattern of the longest allowed size is bounded too');
 });

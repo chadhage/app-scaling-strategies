@@ -8,7 +8,7 @@ const { buildEnvironment, buildCommand } = require('./command.cjs');
 const { parseLcov, selectRecord, parseTapSummary, parseTapFailures, parseTapTable, tableRowFor } = require('./report.cjs');
 const { evaluateFile, unrunFile, buildReport, formatSummary } = require('./evaluate.cjs');
 const { runProcess } = require('./runner.cjs');
-const { checkReportTarget, writeReportFile, startedReport, failureReport, scanJsonTargets } = require('./output.cjs');
+const { checkReportTarget, writeReportFile, startedReport, notRunReport, failureReport, scanJsonTargets } = require('./output.cjs');
 
 const REPOSITORY = path.resolve(__dirname, '..', '..');
 const SCALAR_FLAGS = Object.freeze({
@@ -23,8 +23,9 @@ const USAGE = [
   '  --root     namespace directory to measure (required); its coverage.manifest.json, when present, classifies files explicitly',
   '  --tests    focused test files or globs, relative to the current directory (default: the non-browser tests\\*.test.cjs of the root)',
   '  --min      minimum percent for lines, branches and functions of every file, an integer from 0 to 100 (default 85)',
-  '  --json     also write the JSON report to this path: a new file or a previous gate report only (anything else is refused, exit 2); the path never',
-  '             keeps an older result: a "started" marker is written first and a failure report on every error',
+  '  --json     also write the JSON report to this path (--json <out> or --json=<out>): a new file or a previous gate report only (anything else is',
+  '             refused, exit 2). A "started" marker is written first and a failure or not-run report on every error and for --help, so an older result',
+  '             does not survive at that path; a file the gate can neither replace nor remove keeps its bytes (the exit code and stdout still say so)',
   '  --include  measure only the production files that match these globs (relative to the root; * ** ?)',
   '  --exclude  leave out files that match these globs; the report records every exclusion',
   '  --timeout  hard limit in seconds for one per-file run (default 900); the child process tree is ended',
@@ -158,9 +159,10 @@ function isEmptyFile(file, fsApi) {
 async function runGate(options, deps) {
   const { fsApi, cwd, repoRoot } = deps;
   const reportTarget = options.json === null ? null : path.resolve(cwd, options.json);
+  let marker = null;
   if (reportTarget !== null) {
     checkReportTarget(reportTarget, { fsApi });
-    writeReportFile(reportTarget, startedReport(), { fsApi });
+    marker = writeReportFile(reportTarget, startedReport(), { fsApi });
   }
   const root = path.resolve(cwd, options.root);
   if (!fsApi.existsSync(root) || !fsApi.statSync(root).isDirectory()) throw new UsageError(`--root is not a directory: ${options.root}`);
@@ -216,8 +218,22 @@ async function runGate(options, deps) {
     excluded: enumeration.excluded, skippedDirectories: enumeration.skippedDirectories, warnings, notConsidered: enumeration.notConsidered,
     tests: problems.length > 0 ? [] : tests.map((test) => displayPath(repoRoot, test)), filters, timeoutMs
   });
-  if (reportTarget !== null) writeReportFile(reportTarget, report, { fsApi });
+  if (reportTarget !== null) writeReportFile(reportTarget, report, { fsApi, expected: marker });
   return { report, exitCode: report.pass ? 0 : 1 };
+}
+
+// Puts `document` at every --json path of the command line (both spellings) that is a new file or a previous gate report: a path that is refused or cannot
+// be written keeps what it has, and the reason is in the report on stdout.
+function replaceReports(argv, document, deps) {
+  for (const value of scanJsonTargets(argv)) {
+    try {
+      const target = path.resolve(deps.cwd, value);
+      checkReportTarget(target, { fsApi: deps.fsApi });
+      writeReportFile(target, document, { fsApi: deps.fsApi });
+    } catch {
+      // a refused or unwritable path keeps what it has
+    }
+  }
 }
 
 // Every failure becomes a typed report on stdout, at every --json path named on the command line, and an exit code: 2 for a usage error and 1 for
@@ -232,6 +248,7 @@ async function main(argv, io = {}) {
   try {
     const options = parseArgs(argv);
     if (options.help) {
+      replaceReports(argv, notRunReport('--help was given: nothing was measured, so this file is not a result'), deps);
       deps.stdout(`${USAGE}\n`);
       return 0;
     }
@@ -241,15 +258,7 @@ async function main(argv, io = {}) {
     return exitCode;
   } catch (error) {
     const failure = failureReport(error);
-    for (const value of scanJsonTargets(argv)) {
-      try {
-        const target = path.resolve(deps.cwd, value);
-        checkReportTarget(target, { fsApi: deps.fsApi });
-        writeReportFile(target, failure, { fsApi: deps.fsApi });
-      } catch {
-        // a refused or unwritable path keeps what it has; the reason is in the report on stdout
-      }
-    }
+    replaceReports(argv, failure, deps);
     deps.stdout(`${JSON.stringify(failure, null, 2)}\n`);
     if (failure.error.type === 'usage') {
       deps.stderr(`${error.message}\n\n${USAGE}\n`);

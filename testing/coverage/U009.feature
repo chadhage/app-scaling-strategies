@@ -94,3 +94,26 @@ Feature: One command that enforces the 85/85/85 per-file coverage bar on a names
     Given runs with --min below 85, with --include or --exclude, or with a repeated scalar flag
     Then fullBar is false with its reasons, and a repeated scalar flag is a usage error
     And the report lists the extensions that were seen but never considered, and an empty production file fails with its own reason
+
+  # The scenarios below were added by the fix run R3-U009 after the second independent review (N1 to N11).
+
+  Scenario: N1 The linearity of the glob matcher is observable and needs no clock
+    Given the matcher reports its steps and a naive backtracking matcher counts its calls
+    When hostile patterns (ten stars, eight ** groups, 20,000 character names) are matched in the same test
+    Then the steps stay within tokens x (1 + 2 x characters) while the naive control exhausts its budget, and no test measures a duration
+
+  Scenario: N2 The evidence test reads only what lives inside the namespace
+    Given a copy of testing\coverage without capability\C031 and without .git
+    Then the evidence test passes, and a separately named strict mode re-verifies the external inputs against the blobs of the accepted commit
+
+  Scenario: N3 Every spelling of --json leaves no older pass behind
+    Given a previous pass:true report at the path and --json=<path>, --help next to --json, or a read-only previous report
+    Then the path holds a failure or a not-run report afterwards and the exit codes are unchanged
+
+  Scenario: N4 The report is replaced by name, never written through a link
+    Given the started marker is replaced by a hard link or another file while the gate runs
+    Then the final write is refused with a typed failure, the other file keeps its bytes and no temporary file is left
+
+  Scenario: N5 A missing archive fails the suite
+    Given the self-gate archive, a replay, a RED or a whole generation of the evidence is deleted from a copy
+    Then the evidence test fails, it does not skip

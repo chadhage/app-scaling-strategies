@@ -94,3 +94,14 @@ test('every value after a --json flag is found even when the rest of the command
   assert.deepEqual(scanJsonTargets(['--json', '']), []);
   assert.deepEqual(scanJsonTargets([]), []);
 });
+
+test('the temporary file is created exclusively: a name that exists is never overwritten or removed', (t) => {
+  const base = makeScratch('output-exclusive');
+  t.after(() => dispose(base));
+  const target = path.join(base, 'report.json');
+  const temp = `${target}.${process.pid}-fixed.tmp`;
+  fs.writeFileSync(temp, 'someone else\n');
+  assert.throws(() => writeReportFile(target, { schema: SCHEMA, pass: false }, { suffix: () => 'fixed' }), (error) => error.code === 'EEXIST');
+  assert.equal(fs.readFileSync(temp, 'utf8'), 'someone else\n');
+  assert.equal(fs.existsSync(target), false);
+});

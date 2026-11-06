@@ -9,8 +9,8 @@ const repository = path.resolve(__dirname, '..', '..', '..');
 const gatePath = path.join(__dirname, '..', 'gate.cjs');
 
 // Runs the real CLI as a child with a hard external timeout; only the tree this call started is ended, by its pid.
-// `env` entries replace a variable of any letter case; a value of undefined removes it.
-function runGateCli(args, { env = {}, timeout = 120000 } = {}) {
+// `env` entries replace a variable of any letter case; a value of undefined removes it. The deadline is a hang detector, not a speed limit.
+function runGateCli(args, { env = {}, timeout = 240000 } = {}) {
   return new Promise((resolve) => {
     const environment = { ...process.env };
     for (const [name, value] of Object.entries(env)) {

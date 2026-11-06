@@ -57,6 +57,7 @@ function tokenize(text) {
 }
 
 // Adds every state that can be reached without consuming a character. The edges only go forward, so one ascending pass is the whole closure.
+// It returns what the pass cost: one step per state of the token table.
 function close(marks, kinds) {
   for (let state = 0; state < kinds.length; state += 1) {
     if (marks[state] === 1) {
@@ -69,19 +70,24 @@ function close(marks, kinds) {
       }
     }
   }
+  return kinds.length;
 }
 
 // Simulates the pattern as a non-deterministic automaton over the path: one pass over the characters, at most one step per token and character.
 // The work is bounded by the length of the pattern times the length of the path; nothing backtracks, so no input can make it explode.
+// It also reports its STEPS, so that the bound can be checked without a clock (N1 of the second review): one closure of the token table before the first
+// character, then one scan and one closure per character that is read. A name that leaves no live state stops the loop at once.
 function run({ kinds, characters }, input) {
   const count = kinds.length;
   let active = new Uint8Array(count + 1);
   let following = new Uint8Array(count + 1);
+  let consumed = 0;
   active[0] = 1;
-  close(active, kinds);
+  let steps = close(active, kinds);
   for (let position = 0; position < input.length; position += 1) {
     const character = input[position];
     const separator = character === '/';
+    consumed += 1;
     following.fill(0);
     let alive = false;
     for (let state = 0; state < count; state += 1) {
@@ -108,21 +114,27 @@ function run({ kinds, characters }, input) {
         }
       }
     }
-    if (!alive) return false;
-    close(following, kinds);
+    steps += count;
+    if (!alive) return { matched: false, steps, consumed };
+    steps += close(following, kinds);
     [active, following] = [following, active];
   }
-  return active[count] === 1;
+  return { matched: active[count] === 1, steps, consumed };
 }
 
-// A matcher with .test(path); the pattern is checked once here.
+// A matcher with .test(path) and .measure(path) (the answer with the steps, the tokens and the characters read); the pattern is checked once here.
 function compileGlob(pattern) {
   const text = normalizePattern(pattern);
   if (text === '') throw new UsageError('A glob must not be empty.');
   if (text.length > MAX_PATTERN_LENGTH) throw new UsageError(`A glob may have at most ${MAX_PATTERN_LENGTH} characters, "${text.slice(0, 40)}..." has ${text.length}.`);
   if (REFUSED.test(text)) throw new UsageError(`Unsupported glob syntax in "${pattern}": only *, ** and ? are supported.`);
   const compiled = tokenize(text);
-  return Object.freeze({ pattern: text, test: (input) => run(compiled, String(input)) });
+  const tokens = compiled.kinds.length;
+  return Object.freeze({
+    pattern: text,
+    test: (input) => run(compiled, String(input)).matched,
+    measure: (input) => ({ ...run(compiled, String(input)), tokens })
+  });
 }
 
 function matchesGlob(relativePath, pattern) {
@@ -130,5 +142,5 @@ function matchesGlob(relativePath, pattern) {
 }
 
 // The old name: it returned a backtracking RegExp, which a long file name against several stars could freeze for hours (F4 of the U009 review).
-// It now returns the linear matcher; only .test(path) is offered, not the rest of the RegExp API.
+// It now returns the linear matcher; only .test(path) and .measure(path) are offered, not the rest of the RegExp API.
 module.exports = Object.freeze({ MAX_PATTERN_LENGTH, normalizePattern, hasMagic, compileGlob, globToRegExp: compileGlob, matchesGlob });

@@ -4,7 +4,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { repository, fixtureRoot, makeScratch, dispose, writeTree, runCli } = require('./support.cjs');
+const { repository, fixtureRoot, makeScratch, dispose, writeTree } = require('./support.cjs');
+const { runGateCli } = require('./clisupport.cjs');
 
 const relative = (file) => path.relative(repository, file).replace(/\\/g, '/');
 const lines = (items) => `${items.join('\n')}\n`;
@@ -65,7 +66,7 @@ test.before(async () => {
     exact: ['--root', relative(roots.exact), ...scratchArgs]
   };
   const env = (name) => (name === 'failing' ? { env: poison } : {});
-  const entries = await Promise.all(Object.entries(jobs).map(async ([name, args]) => [name, await runCli(args, env(name))]));
+  const entries = await Promise.all(Object.entries(jobs).map(async ([name, args]) => [name, await runGateCli(args, env(name))]));
   state.runs = Object.fromEntries(entries);
   state.jsonOut = jsonOut;
 });

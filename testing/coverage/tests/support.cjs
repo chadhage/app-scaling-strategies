@@ -2,7 +2,6 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawn } = require('node:child_process');
 
 const repository = path.resolve(__dirname, '..', '..', '..');
 const gatePath = path.join(__dirname, '..', 'gate.cjs');
@@ -42,31 +41,6 @@ function writeTree(root, files) {
   return root;
 }
 
-// Runs the real CLI as a child process. NODE_V8_COVERAGE stays inherited on purpose so that the outer coverage run measures gate.cjs itself;
-// the gate keeps it (and NODE_TEST_CONTEXT) out of everything it starts (command.cjs buildEnvironment; proven in fix-f1-env.test.cjs).
-function runCli(args, { env = {}, timeout = 240000 } = {}) {
-  return new Promise((resolve) => {
-    const environment = { ...process.env, ...env };
-    const child = spawn(process.execPath, [gatePath, ...args], { cwd: repository, env: environment, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
-    const out = [];
-    const err = [];
-    child.stdout.on('data', (chunk) => out.push(chunk));
-    child.stderr.on('data', (chunk) => err.push(chunk));
-    const timer = setTimeout(() => child.kill(), timeout);
-    child.on('close', (status) => {
-      clearTimeout(timer);
-      const stdout = Buffer.concat(out).toString('utf8');
-      let report = null;
-      try {
-        report = JSON.parse(stdout);
-      } catch {
-        report = null;
-      }
-      resolve({ status, stdout, stderr: Buffer.concat(err).toString('utf8'), report });
-    });
-  });
-}
-
 // A fake per-file runner for in-process tests: it answers with canned TAP text and writes the canned lcov to the destination in the arguments.
 function fakeRunner(handler) {
   const calls = [];
@@ -92,5 +66,5 @@ const lcovRecord = (file, { lines = [10, 10], branches = [2, 2], functions = [1,
   `TN:\nSF:${file}\nFNF:${functions[1]}\nFNH:${functions[0]}\nBRF:${branches[1]}\nBRH:${branches[0]}\nDA:1,1\nLH:${lines[0]}\nLF:${lines[1]}\nend_of_record\n`;
 
 module.exports = Object.freeze({
-  repository, gatePath, fixtureRoot, scratchBase, makeScratch, dispose, writeTree, runCli, fakeRunner, tapSummary, lcovRecord
+  repository, gatePath, fixtureRoot, scratchBase, makeScratch, dispose, writeTree, fakeRunner, tapSummary, lcovRecord
 });
