@@ -1,0 +1,735 @@
+{
+  "tool": "tests/mutation/mutate.cjs",
+  "mutants": 70,
+  "killed": 63,
+  "notKilled": [
+    "M20-base64-check-dropped:SURVIVED",
+    "F4c-digest-comparison-case-sensitive:SURVIVED",
+    "F6a-empty-target-accepted:SURVIVED",
+    "F6b-control-characters-accepted:SURVIVED",
+    "F6c-unc-paths-accepted:SURVIVED",
+    "F6f-trailing-dot-or-space-accepted:SURVIVED",
+    "F6g-reserved-names-accepted:SURVIVED"
+  ],
+  "order": [
+    "version",
+    "subject",
+    "subject-lookalike",
+    "adapters",
+    "qualify",
+    "qualify-recheck",
+    "fail-closed",
+    "cli-line",
+    "cli-target",
+    "cli-write",
+    "cli",
+    "shell",
+    "requalify-counts",
+    "requalify-verdict",
+    "requalify-flow",
+    "requalify",
+    "requalify-tree"
+  ],
+  "results": [
+    {
+      "id": "M01-publisher-substring",
+      "file": "qualify.cjs",
+      "find": "if (!organization.ok || organization.organization !== REQUIRED_ORGANIZATION) {",
+      "replace": "if (!organization.ok || !organization.organization.includes('Microsoft')) {",
+      "result": "KILLED",
+      "killedBy": "fail-closed",
+      "killer": "a validly signed binary of another publisher or a look-alike name fails closed",
+      "seconds": 14
+    },
+    {
+      "id": "M03-major-relaxed-to-gte",
+      "file": "qualify.cjs",
+      "find": "if (majors.ok && !majors.majors.includes(parsed.major)) {",
+      "replace": "if (majors.ok && !majors.majors.some((major) => parsed.major >= major)) {",
+      "result": "KILLED",
+      "killedBy": "fail-closed",
+      "killer": "majors 155 and 157, a wildcard-like 1560 and a zero major fail closed with MAJOR_NOT_QUALIFIED",
+      "seconds": 13
+    },
+    {
+      "id": "M02-valid-status-check-dropped",
+      "file": "qualify.cjs",
+      "find": "if (found.status !== 'Valid') add('SIGNATURE_NOT_VALID', `the Authenticode status is ${found.status}, not Valid`);",
+      "replace": "if (false) add('SIGNATURE_NOT_VALID', 'x');",
+      "result": "KILLED",
+      "killedBy": "fail-closed",
+      "killer": "anything but a Valid signature fails closed with SIGNATURE_NOT_VALID || an invalid signature of a foreign publisher reports both problems",
+      "seconds": 15
+    },
+    {
+      "id": "M04-unparsable-version-not-a-failure",
+      "file": "qualify.cjs",
+      "find": "add('VERSION_UNPARSABLE', `${JSON.stringify(answer.value)}: ${parsed.error}`);",
+      "replace": "void 0;",
+      "result": "KILLED",
+      "killedBy": "fail-closed",
+      "killer": "an unparsable file version fails closed with VERSION_UNPARSABLE and is not recorded as the version",
+      "seconds": 14
+    },
+    {
+      "id": "M07-equality-pin-on-version",
+      "file": "qualify.cjs",
+      "find": "report.ok = findings.length === 0 && report.signature.status === 'Valid'",
+      "replace": "report.ok = findings.length === 0 && report.version === '156.0.4314.50' && report.signature.status === 'Valid'",
+      "result": "KILLED",
+      "killedBy": "qualify-recheck",
+      "killer": "the digest is read a second time after the signature and the version answered || equal digests pass whatever their letter case, and the recorded digest is lower case",
+      "seconds": 4
+    },
+    {
+      "id": "M06-mtime-recheck-dropped",
+      "file": "qualify.cjs",
+      "find": " && last.size === looks[chosen].size && last.mtimeMs === looks[chosen].mtimeMs)) {",
+      "replace": " && last.size === looks[chosen].size)) {",
+      "result": "KILLED",
+      "killedBy": "fail-closed",
+      "killer": "a binary that changes while it is checked fails closed with EDGE_CHANGED_DURING_CHECK",
+      "seconds": 18
+    },
+    {
+      "id": "M08-hash-equality-pin",
+      "file": "qualify.cjs",
+      "find": "report.sha256 = answer.value.toLowerCase();",
+      "replace": "report.sha256 = answer.value.toLowerCase(); if (report.sha256 !== 'd35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b') add('SHA256_MISMATCH', 'pin');",
+      "result": "KILLED",
+      "killedBy": "qualify-recheck",
+      "killer": "the digest is read a second time after the signature and the version answered || a swap that restores size and modification time is caught: the two digests differ",
+      "seconds": 6
+    },
+    {
+      "id": "M05-last-existing-candidate",
+      "file": "qualify.cjs",
+      "find": "const chosen = looks.findIndex((look) => look.exists);",
+      "replace": "const chosen = looks.map((look) => look.exists).lastIndexOf(true);",
+      "result": "KILLED",
+      "killedBy": "qualify",
+      "killer": "the first existing candidate is the one that is qualified, later ones are only listed",
+      "seconds": 23
+    },
+    {
+      "id": "M09-status-case-insensitive",
+      "file": "qualify.cjs",
+      "find": "if (found.status !== 'Valid') add(",
+      "replace": "if (found.status.toLowerCase() !== 'valid') add(",
+      "result": "KILLED",
+      "killedBy": "fail-closed",
+      "killer": "anything but a Valid signature fails closed with SIGNATURE_NOT_VALID",
+      "seconds": 17
+    },
+    {
+      "id": "M11-multivalued-rdn-allowed",
+      "file": "subject.cjs",
+      "find": "} else if (!quoted && ch === '+') {",
+      "replace": "} else if (false) {",
+      "result": "KILLED",
+      "killedBy": "subject",
+      "killer": "malformed names are errors with a named reason",
+      "seconds": 20
+    },
+    {
+      "id": "M13-leading-zeros-allowed",
+      "file": "version.cjs",
+      "find": "const PART = '(0|[1-9]\\\\d{0,4})';",
+      "replace": "const PART = '(\\\\d{1,5})';",
+      "result": "KILLED",
+      "killedBy": "version",
+      "killer": "anything that is not exactly four plain decimal parts of at most 16 bits is refused",
+      "seconds": 6
+    },
+    {
+      "id": "M12-several-O-allowed",
+      "file": "subject.cjs",
+      "find": "if (organizations.length > 1) return { ok: false, error: 'more than one organization (O) attribute' };",
+      "replace": "",
+      "result": "KILLED",
+      "killedBy": "subject",
+      "killer": "a missing or repeated organization is an error, never a guess",
+      "seconds": 15
+    },
+    {
+      "id": "M15-qualified-strings-allowed",
+      "file": "version.cjs",
+      "find": "Number.isInteger(major) && major >= 1 && major <= MAX_PART",
+      "replace": "!Number.isNaN(Number(major))",
+      "result": "KILLED",
+      "killedBy": "version",
+      "killer": "qualified majors must be a non-empty list of distinct integers from 1 to 65535",
+      "seconds": 4
+    },
+    {
+      "id": "M14-version-anchor-dropped",
+      "file": "version.cjs",
+      "find": "const VERSION = new RegExp(`^${PART}\\\\.${PART}\\\\.${PART}\\\\.${PART}$`);",
+      "replace": "const VERSION = new RegExp(`^${PART}\\\\.${PART}\\\\.${PART}\\\\.${PART}`);",
+      "result": "KILLED",
+      "killedBy": "version",
+      "killer": "anything that is not exactly four plain decimal parts of at most 16 bits is refused",
+      "seconds": 8
+    },
+    {
+      "id": "M16-PSModulePath-not-dropped",
+      "file": "adapters.cjs",
+      "find": "const childEnv = { ...withoutKeys(env, /^PSModulePath$/i), [TARGET_VARIABLE]: target };",
+      "replace": "const childEnv = { ...env, [TARGET_VARIABLE]: target };",
+      "result": "KILLED",
+      "killedBy": "shell",
+      "killer": "the path travels in QUALIFY_TARGET only and the inherited PowerShell 7 module path is dropped",
+      "seconds": 44
+    },
+    {
+      "id": "M17-path-interpolated-into-script",
+      "file": "adapters.cjs",
+      "find": "answers.set(target, runShell({ shell, args: buildArgs(encoded), env: childEnv, timeoutMs }).then(decodeInspection));",
+      "replace": "answers.set(target, runShell({ shell, args: buildArgs(Buffer.from((config.script || INSPECT_SCRIPT).replace('$env:QUALIFY_TARGET', `'${target}'`), 'utf16le').toString('base64')), env: childEnv, timeoutMs }).then(decodeInspection));",
+      "result": "KILLED",
+      "killedBy": "shell",
+      "killer": "the script reaches the shell as one encoded argument that decodes to INSPECT_SCRIPT",
+      "seconds": 45
+    },
+    {
+      "id": "M10-outer-timeout-never-fires",
+      "file": "qualify.cjs",
+      "find": "    }, timeoutMs);",
+      "replace": "    }, 2147483647);",
+      "result": "KILLED",
+      "killedBy": "qualify-recheck",
+      "killer": "HANG (external timeout)",
+      "seconds": 93
+    },
+    {
+      "id": "M18-shell-timeout-removed",
+      "file": "adapters.cjs",
+      "find": "      finish(reject, shellError('SHELL_TIMEOUT', `the shell did not answer within ${timeoutMs} ms and was ended`));",
+      "replace": "      void 0;",
+      "result": "KILLED",
+      "killedBy": "shell",
+      "killer": "a shell that hangs past the timeout is ended and fails with SHELL_TIMEOUT || a shell that is missing, fails or answers garbage makes both adapters reject, and a hang times out",
+      "seconds": 40
+    },
+    {
+      "id": "M19-shell-output-cap-removed",
+      "file": "adapters.cjs",
+      "find": "if (stdout.length > MAX_SHELL_OUTPUT) {",
+      "replace": "if (false) {",
+      "result": "KILLED",
+      "killedBy": "shell",
+      "killer": "a shell that writes more than 64 KiB is ended with SHELL_OUTPUT_TOO_LARGE",
+      "seconds": 51
+    },
+    {
+      "id": "M21-nonzero-shell-exit-accepted",
+      "file": "adapters.cjs",
+      "find": "if (code === 0) finish(resolve, stdout);",
+      "replace": "if (true) finish(resolve, stdout);",
+      "result": "KILLED",
+      "killedBy": "shell",
+      "killer": "a shell that exits non-zero fails with SHELL_FAILED and the tail of stderr",
+      "seconds": 31
+    },
+    {
+      "id": "M23-version-mismatch-ignored",
+      "file": "requalify.cjs",
+      "find": "const passed = allSuitesPassed && !changed && mismatched.length === 0;",
+      "replace": "const passed = allSuitesPassed && !changed;",
+      "result": "KILLED",
+      "killedBy": "requalify-verdict",
+      "killer": "a suite that ran another Chromium than the qualified msedge.exe still fails closed",
+      "seconds": 71
+    },
+    {
+      "id": "M22-requalify-launches-on-any-blocker",
+      "file": "requalify.cjs",
+      "find": "if (blockers.length > 0) {",
+      "replace": "if (blockers.length > 99) {",
+      "result": "KILLED",
+      "killedBy": "requalify-flow",
+      "killer": "an unsigned, foreign or missing binary is never launched: no slot, no suites",
+      "seconds": 123
+    },
+    {
+      "id": "M25-nested-env-not-scrubbed",
+      "file": "requalify.cjs",
+      "find": "return { ...withoutKeys(env, /^(NODE_TEST_CONTEXT|NODE_V8_COVERAGE)$/i), NODE_V8_COVERAGE: '' };",
+      "replace": "return { ...env };",
+      "result": "KILLED",
+      "killedBy": "requalify-counts",
+      "killer": "a block without any test reports zero tests and exit 0 and still does not pass",
+      "seconds": 9
+    },
+    {
+      "id": "M26-zero-tests-counts-as-passed",
+      "file": "requalify.cjs",
+      "find": "facts.pass > 0 && ",
+      "replace": "",
+      "result": "KILLED",
+      "killedBy": "requalify-counts",
+      "killer": "countsPassed accepts a clean run and refuses every run that violates one condition || a block without any test reports zero tests and exit 0 and still does not pass",
+      "seconds": 9
+    },
+    {
+      "id": "M27-json-overwrites",
+      "file": "cli.cjs",
+      "find": "fs.writeFileSync(file, data, { flag: 'wx' })",
+      "replace": "fs.writeFileSync(file, data, { flag: 'w' })",
+      "result": "KILLED",
+      "killedBy": "cli-write",
+      "killer": "a file that appears after the early check is never overwritten: the real writer creates exclusively",
+      "seconds": 19
+    },
+    {
+      "id": "M28-exit-0-on-failure",
+      "file": "cli.cjs",
+      "find": "let code = report.ok ? 0 : 1;",
+      "replace": "let code = 0;",
+      "result": "KILLED",
+      "killedBy": "cli-line",
+      "killer": "a PowerShell failure with several lines and two reasons is one stderr line with the shared text once",
+      "seconds": 11
+    },
+    {
+      "id": "F1a-ignoreBOM-dropped",
+      "file": "subject.cjs",
+      "find": "{ fatal: true, ignoreBOM: true }",
+      "replace": "{ fatal: true }",
+      "result": "KILLED",
+      "killedBy": "subject-lookalike",
+      "killer": "a leading BOM stays part of the organization in the plain, hex-escaped and quoted forms || a Valid signature whose organization starts with a BOM is not Microsoft Corporation",
+      "seconds": 10
+    },
+    {
+      "id": "F1b-type-trimmed-with-unicode-whitespace",
+      "file": "subject.cjs",
+      "find": "part.slice(0, equals).replace(/^[ \\t]+|[ \\t]+$/g, '')",
+      "replace": "part.slice(0, equals).trim()",
+      "result": "KILLED",
+      "killedBy": "subject-lookalike",
+      "killer": "Unicode whitespace and format characters around an attribute type are refused, never stripped",
+      "seconds": 10
+    },
+    {
+      "id": "F1c-value-normalized-NFKC",
+      "file": "subject.cjs",
+      "find": "ignoreBOM: true }).decode(Buffer.from(bytes)) };",
+      "replace": "ignoreBOM: true }).decode(Buffer.from(bytes)).normalize('NFKC') };",
+      "result": "KILLED",
+      "killedBy": "subject-lookalike",
+      "killer": "no invisible character is stripped or normalized at the start, in the middle or at the end of the organization || nothing is case-folded, composed or compatibility-mapped on the way: look-alikes keep their own code points",
+      "seconds": 11
+    },
+    {
+      "id": "F1d-format-characters-stripped",
+      "file": "subject.cjs",
+      "find": "ignoreBOM: true }).decode(Buffer.from(bytes)) };",
+      "replace": "ignoreBOM: true }).decode(Buffer.from(bytes)).replace(/\\p{Cf}/gu, '') };",
+      "result": "KILLED",
+      "killedBy": "subject-lookalike",
+      "killer": "a leading BOM stays part of the organization in the plain, hex-escaped and quoted forms || a Valid signature whose organization starts with a BOM is not Microsoft Corporation",
+      "seconds": 9
+    },
+    {
+      "id": "F1e-value-lowercased",
+      "file": "subject.cjs",
+      "find": "ignoreBOM: true }).decode(Buffer.from(bytes)) };",
+      "replace": "ignoreBOM: true }).decode(Buffer.from(bytes)).toLowerCase() };",
+      "result": "KILLED",
+      "killedBy": "subject-lookalike",
+      "killer": "a leading BOM stays part of the organization in the plain, hex-escaped and quoted forms || a Valid signature whose organization starts with a BOM is not Microsoft Corporation",
+      "seconds": 11
+    },
+    {
+      "id": "F2a-timeout-ignored",
+      "file": "requalify.cjs",
+      "find": "!facts.timedOut && ",
+      "replace": "",
+      "result": "KILLED",
+      "killedBy": "requalify-counts",
+      "killer": "countsPassed accepts a clean run and refuses every run that violates one condition",
+      "seconds": 8
+    },
+    {
+      "id": "F2b-spawn-error-ignored",
+      "file": "requalify.cjs",
+      "find": "facts.spawnError === null && ",
+      "replace": "",
+      "result": "KILLED",
+      "killedBy": "requalify-counts",
+      "killer": "countsPassed accepts a clean run and refuses every run that violates one condition",
+      "seconds": 7
+    },
+    {
+      "id": "F2c-exit-code-ignored",
+      "file": "requalify.cjs",
+      "find": "facts.exitCode === 0 && ",
+      "replace": "",
+      "result": "KILLED",
+      "killedBy": "requalify-counts",
+      "killer": "countsPassed accepts a clean run and refuses every run that violates one condition",
+      "seconds": 5
+    },
+    {
+      "id": "F2d-missing-summary-ignored",
+      "file": "requalify.cjs",
+      "find": " && facts.summaryFound",
+      "replace": "",
+      "result": "KILLED",
+      "killedBy": "requalify-counts",
+      "killer": "countsPassed accepts a clean run and refuses every run that violates one condition",
+      "seconds": 8
+    },
+    {
+      "id": "F2e-pass-equals-tests-dropped",
+      "file": "requalify.cjs",
+      "find": " && facts.pass === facts.tests",
+      "replace": "",
+      "result": "KILLED",
+      "killedBy": "requalify-counts",
+      "killer": "countsPassed accepts a clean run and refuses every run that violates one condition",
+      "seconds": 10
+    },
+    {
+      "id": "M20-base64-check-dropped",
+      "file": "adapters.cjs",
+      "find": "if (!/^[A-Za-z0-9+/]+={0,2}$/.test(text)) throw shellError('INSPECT_OUTPUT_INVALID', 'the shell answer is not base64');",
+      "replace": "",
+      "result": "SURVIVED",
+      "killedBy": null,
+      "killer": "",
+      "seconds": 307
+    },
+    {
+      "id": "F2f-fail-ignored",
+      "file": "requalify.cjs",
+      "find": "facts.fail === 0 && ",
+      "replace": "",
+      "result": "KILLED",
+      "killedBy": "requalify-counts",
+      "killer": "countsPassed accepts a clean run and refuses every run that violates one condition",
+      "seconds": 11
+    },
+    {
+      "id": "F2g-cancelled-ignored",
+      "file": "requalify.cjs",
+      "find": "facts.cancelled === 0 && ",
+      "replace": "",
+      "result": "KILLED",
+      "killedBy": "requalify-counts",
+      "killer": "countsPassed accepts a clean run and refuses every run that violates one condition",
+      "seconds": 7
+    },
+    {
+      "id": "F2h-skipped-ignored",
+      "file": "requalify.cjs",
+      "find": "facts.skipped === 0 && ",
+      "replace": "",
+      "result": "KILLED",
+      "killedBy": "requalify-counts",
+      "killer": "countsPassed accepts a clean run and refuses every run that violates one condition",
+      "seconds": 6
+    },
+    {
+      "id": "F2i-todo-ignored",
+      "file": "requalify.cjs",
+      "find": " && facts.todo === 0",
+      "replace": "",
+      "result": "KILLED",
+      "killedBy": "requalify-counts",
+      "killer": "countsPassed accepts a clean run and refuses every run that violates one condition",
+      "seconds": 10
+    },
+    {
+      "id": "M24-taskkill-tree-removed",
+      "file": "requalify.cjs",
+      "find": "childProcess.spawnSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, timeout: 15000, stdio: 'ignore' });",
+      "replace": "void 0;",
+      "result": "KILLED",
+      "killedBy": "requalify-tree",
+      "killer": "a hung suite is ended together with a detached grandchild",
+      "seconds": 197
+    },
+    {
+      "id": "F2j-browser-line-not-needed-for-pass",
+      "file": "requalify.cjs",
+      "find": "passed: testsPassed && browserVersionsSeen.length > 0,",
+      "replace": "passed: testsPassed,",
+      "result": "KILLED",
+      "killedBy": "requalify-verdict",
+      "killer": "an empty file counts as one passing test for node and must still fail: no browser line, nothing ran || a suite that passes but prints no browser version line fails with its own code",
+      "seconds": 72
+    },
+    {
+      "id": "F2k-missing-line-code-dropped",
+      "file": "requalify.cjs",
+      "find": "if (silentSuites.length > 0) {",
+      "replace": "if (false) {",
+      "result": "KILLED",
+      "killedBy": "requalify-verdict",
+      "killer": "an empty file counts as one passing test for node and must still fail: no browser line, nothing ran || a suite that passes but prints no browser version line fails with its own code",
+      "seconds": 72
+    },
+    {
+      "id": "F2m-no-suite-is-a-pass",
+      "file": "requalify.cjs",
+      "find": "if (suites.length === 0) extra.push(['REQUALIFICATION_FAILED', 'no suite was run']);",
+      "replace": "if (false) extra.push([]);",
+      "result": "KILLED",
+      "killedBy": "requalify-verdict",
+      "killer": "a failing suite names its counts, and a run without any suite never passes",
+      "seconds": 67
+    },
+    {
+      "id": "F2o-summary-needs-only-three-counters",
+      "file": "requalify.cjs",
+      "find": "const SUMMARY_COUNTERS = ['tests', 'pass', 'fail', 'cancelled', 'skipped', 'todo'];",
+      "replace": "const SUMMARY_COUNTERS = ['tests', 'pass', 'fail'];",
+      "result": "KILLED",
+      "killedBy": "requalify-counts",
+      "killer": "a summary that lacks one of its counters is incomplete, and suites is informational",
+      "seconds": 6
+    },
+    {
+      "id": "F3a-whitespace-not-collapsed",
+      "file": "cli.cjs",
+      "find": "const oneLine = (text) => String(text).replace(/\\s+/g, ' ').trim();",
+      "replace": "const oneLine = (text) => String(text);",
+      "result": "KILLED",
+      "killedBy": "cli-line",
+      "killer": "a PowerShell failure with several lines and two reasons is one stderr line with the shared text once || reasons with line breaks, tabs and runs of blanks are collapsed and identical reasons are listed once",
+      "seconds": 7
+    },
+    {
+      "id": "F3b-same-text-not-grouped",
+      "file": "cli.cjs",
+      "find": "const codes = groups.get(message) || [];",
+      "replace": "const codes = [];",
+      "result": "KILLED",
+      "killedBy": "cli-line",
+      "killer": "a PowerShell failure with several lines and two reasons is one stderr line with the shared text once || reasons with line breaks, tabs and runs of blanks are collapsed and identical reasons are listed once",
+      "seconds": 7
+    },
+    {
+      "id": "F3c-duplicate-codes-kept",
+      "file": "cli.cjs",
+      "find": "if (code !== '' && !codes.includes(code)) codes.push(code);",
+      "replace": "if (code !== '') codes.push(code);",
+      "result": "KILLED",
+      "killedBy": "cli-line",
+      "killer": "reasons with line breaks, tabs and runs of blanks are collapsed and identical reasons are listed once",
+      "seconds": 8
+    },
+    {
+      "id": "F3d-write-error-second-line",
+      "file": "cli.cjs",
+      "find": "line = `${line} | cannot write ${options.json}: ${oneLine(error.message)}`;",
+      "replace": "err.write(`cannot write ${options.json}: ${error.message}\\n`);",
+      "result": "KILLED",
+      "killedBy": "cli-line",
+      "killer": "a report that cannot be written is still one stderr line: the verdict followed by the write error",
+      "seconds": 7
+    },
+    {
+      "id": "F3e-write-failure-exit-code",
+      "file": "cli.cjs",
+      "find": "      code = 2;",
+      "replace": "      code = 1;",
+      "result": "KILLED",
+      "killedBy": "cli-line",
+      "killer": "a report that cannot be written is still one stderr line: the verdict followed by the write error",
+      "seconds": 3
+    },
+    {
+      "id": "F4a-second-read-dropped",
+      "file": "qualify.cjs",
+      "find": "if (report.sha256 !== null) {",
+      "replace": "if (false) {",
+      "result": "KILLED",
+      "killedBy": "qualify-recheck",
+      "killer": "the digest is read a second time after the signature and the version answered || a swap that restores size and modification time is caught: the two digests differ",
+      "seconds": 3
+    },
+    {
+      "id": "F4b-digest-comparison-dropped",
+      "file": "qualify.cjs",
+      "find": "} else if (again.value.toLowerCase() !== first) {",
+      "replace": "} else if (false) {",
+      "result": "KILLED",
+      "killedBy": "qualify-recheck",
+      "killer": "a swap that restores size and modification time is caught: the two digests differ",
+      "seconds": 2
+    },
+    {
+      "id": "F2l-title-counts-as-sighting",
+      "file": "requalify.cjs",
+      "find": "/^\\s*# Real Chromium (\\d+(?:\\.\\d+)+)/gm",
+      "replace": "/Real Chromium (\\d+(?:\\.\\d+)+)/g",
+      "result": "KILLED",
+      "killedBy": "requalify-tree",
+      "killer": "a test title that mentions Real Chromium is not a browser sighting, only the diagnostic line is",
+      "seconds": 178
+    },
+    {
+      "id": "F4d-second-read-error-ignored",
+      "file": "qualify.cjs",
+      "find": "if (again.error) {",
+      "replace": "if (false) {",
+      "result": "KILLED",
+      "killedBy": "qualify-recheck",
+      "killer": "a second read that fails, answers garbage or never answers fails closed with its own code",
+      "seconds": 3
+    },
+    {
+      "id": "F4e-second-read-garbage-accepted",
+      "file": "qualify.cjs",
+      "find": "} else if (typeof again.value !== 'string' || !DIGEST.test(again.value)) {",
+      "replace": "} else if (false) {",
+      "result": "KILLED",
+      "killedBy": "qualify-recheck",
+      "killer": "a second read that fails, answers garbage or never answers fails closed with its own code",
+      "seconds": 4
+    },
+    {
+      "id": "F4f-changed-finding-not-deduplicated",
+      "file": "qualify.cjs",
+      "find": "if (!changed) add('EDGE_CHANGED_DURING_CHECK',",
+      "replace": "add('EDGE_CHANGED_DURING_CHECK',",
+      "result": "KILLED",
+      "killedBy": "qualify-recheck",
+      "killer": "a changed size or time and a changed digest are one finding, not two",
+      "seconds": 3
+    },
+    {
+      "id": "F2n-coverage-key-deleted-not-emptied",
+      "file": "requalify.cjs",
+      "find": "return { ...withoutKeys(env, /^(NODE_TEST_CONTEXT|NODE_V8_COVERAGE)$/i), NODE_V8_COVERAGE: '' };",
+      "replace": "return withoutKeys(env, /^(NODE_TEST_CONTEXT|NODE_V8_COVERAGE)$/i);",
+      "result": "KILLED",
+      "killedBy": "requalify",
+      "killer": "childEnvironment drops NODE_TEST_CONTEXT in any case and keeps NODE_V8_COVERAGE as an own, empty key",
+      "seconds": 140
+    },
+    {
+      "id": "F4c-digest-comparison-case-sensitive",
+      "file": "qualify.cjs",
+      "find": "} else if (again.value.toLowerCase() !== first) {",
+      "replace": "} else if (again.value !== first) {",
+      "result": "SURVIVED",
+      "killedBy": null,
+      "killer": "",
+      "seconds": 192
+    },
+    {
+      "id": "F6a-empty-target-accepted",
+      "file": "cli.cjs",
+      "find": "if (target === '') return 'it is empty';",
+      "replace": "",
+      "result": "SURVIVED",
+      "killedBy": null,
+      "killer": "",
+      "seconds": 193
+    },
+    {
+      "id": "F6b-control-characters-accepted",
+      "file": "cli.cjs",
+      "find": "if (/[\\u0000-\\u001F<>\"|?*]/.test(target)) return 'it contains a control or wildcard character';",
+      "replace": "",
+      "result": "SURVIVED",
+      "killedBy": null,
+      "killer": "",
+      "seconds": 175
+    },
+    {
+      "id": "F6d-colon-accepted",
+      "file": "cli.cjs",
+      "find": "if (rest.includes(':')) return 'a colon after the drive letter would address an alternate data stream';",
+      "replace": "",
+      "result": "KILLED",
+      "killedBy": "cli-target",
+      "killer": "an alternate data stream is never attached to an existing file",
+      "seconds": 6
+    },
+    {
+      "id": "F6e-drive-letter-not-recognized",
+      "file": "cli.cjs",
+      "find": "const rest = /^[A-Za-z]:/.test(target) ? target.slice(2) : target;",
+      "replace": "const rest = target;",
+      "result": "KILLED",
+      "killedBy": "cli-target",
+      "killer": "ordinary relative and absolute targets are accepted, including navigation segments and look-alike names || an existing target, a missing folder and a folder in place of the file fail early with exit 2 and nothing started",
+      "seconds": 10
+    },
+    {
+      "id": "F6c-unc-paths-accepted",
+      "file": "cli.cjs",
+      "find": "if (/^[\\\\/]{2}/.test(target)) return 'UNC and device paths are not allowed';",
+      "replace": "",
+      "result": "SURVIVED",
+      "killedBy": null,
+      "killer": "",
+      "seconds": 205
+    },
+    {
+      "id": "F6h-navigation-segments-refused",
+      "file": "cli.cjs",
+      "find": "if (segment === '' || segment === '.' || segment === '..') continue;",
+      "replace": "",
+      "result": "KILLED",
+      "killedBy": "cli-target",
+      "killer": "ordinary relative and absolute targets are accepted, including navigation segments and look-alike names",
+      "seconds": 18
+    },
+    {
+      "id": "F6i-existing-target-accepted",
+      "file": "cli.cjs",
+      "find": "return `cannot write ${quoted}: the file already exists, --json never overwrites`;",
+      "replace": "return null;",
+      "result": "KILLED",
+      "killedBy": "cli-target",
+      "killer": "an existing target, a missing folder and a folder in place of the file fail early with exit 2 and nothing started || a real run still writes the report once, and a second run with the same target fails early",
+      "seconds": 15
+    },
+    {
+      "id": "F6j-missing-folder-accepted",
+      "file": "cli.cjs",
+      "find": "return `invalid --json target ${quoted}: the folder does not exist`;",
+      "replace": "return null;",
+      "result": "KILLED",
+      "killedBy": "cli-target",
+      "killer": "an existing target, a missing folder and a folder in place of the file fail early with exit 2 and nothing started",
+      "seconds": 9
+    },
+    {
+      "id": "F6f-trailing-dot-or-space-accepted",
+      "file": "cli.cjs",
+      "find": "if (/[. ]$/.test(segment)) return `the name ${JSON.stringify(segment)} ends with a dot or a space`;",
+      "replace": "",
+      "result": "SURVIVED",
+      "killedBy": null,
+      "killer": "",
+      "seconds": 229
+    },
+    {
+      "id": "F6g-reserved-names-accepted",
+      "file": "cli.cjs",
+      "find": "if (RESERVED_NAME.test(segment.split('.')[0].replace(/ +$/, ''))) return",
+      "replace": "if (false) return",
+      "result": "SURVIVED",
+      "killedBy": null,
+      "killer": "",
+      "seconds": 225
+    },
+    {
+      "id": "F6k-check-after-the-run",
+      "file": "cli.cjs",
+      "find": "const problem = checkJsonTarget(options.json, io.fs || fs);",
+      "replace": "const problem = options.requalify ? null : checkJsonTarget(options.json, io.fs || fs);",
+      "result": "KILLED",
+      "killedBy": "cli-target",
+      "killer": "a --json target that Windows tools cannot handle is refused before anything runs, with one stderr line and exit 2 || an existing target, a missing folder and a folder in place of the file fail early with exit 2 and nothing started",
+      "seconds": 10
+    }
+  ]
+}

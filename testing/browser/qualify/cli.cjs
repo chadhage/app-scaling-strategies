@@ -1,19 +1,59 @@
 'use strict';
 
 // Command line of the Edge qualification: node testing\browser\qualify\qualify.cjs [--json <out>] [--requalify]
-// Exit 0 when Edge is qualified (and, with --requalify, the isolated suites passed), 1 when it fails closed, 2 for a usage error.
+// Exit 0 when Edge is qualified (and, with --requalify, the isolated suites passed), 1 when it fails closed, 2 for a usage error
+// or a --json target that is refused (checked before anything runs). A check prints its verdict as ONE stderr line.
 const fs = require('node:fs');
+const path = require('node:path');
 const { qualifyEdge } = require('./qualify.cjs');
 const { requalifyEdge, createSlot } = require('./requalify.cjs');
 
 const USAGE = [
   'Usage: node testing\\browser\\qualify\\qualify.cjs [--json <out>] [--requalify [--slot-script <heavy-slot.ps1> --slot-owner <name>]]',
-  '  --json <out>     also write the JSON report to <out> (never overwrites an existing file)',
+  '  --json <out>     also write the JSON report to <out>; checked before anything runs: never overwrites, no reserved device name,',
+  '                   trailing dot or space, colon after the drive letter or UNC path, and the folder must exist',
   '  --requalify      run testing\\browser\\isolated.test.cjs and loopback.test.cjs on the installed Edge and record the counts',
   '  --slot-script    with --requalify: take a heavy-run slot through this PowerShell script (-Action Acquire|Release -Owner <name>)',
-  '  stdout is the JSON report, stderr one verdict line; exit 0 qualified, 1 fails closed, 2 usage',
+  '  stdout is the JSON report, stderr one verdict line (usage errors print this text); exit 0 qualified, 1 fails closed, 2 usage',
   '',
 ].join('\n');
+
+const RESERVED_NAME = /^(?:CON|PRN|AUX|NUL|COM[0-9\u00B9\u00B2\u00B3]|LPT[0-9\u00B9\u00B2\u00B3]|CONIN\$|CONOUT\$)$/i;
+const oneLine = (text) => String(text).replace(/\s+/g, ' ').trim();
+
+// Windows accepts names that its own tools cannot delete (device names, trailing dots and spaces) and "file:stream"
+// attaches an alternate data stream to an existing file, so such targets are refused before a long run starts.
+function nameProblem(target) {
+  if (target === '') return 'it is empty';
+  if (/[\u0000-\u001F<>"|?*]/.test(target)) return 'it contains a control or wildcard character';
+  if (/^[\\/]{2}/.test(target)) return 'UNC and device paths are not allowed';
+  const rest = /^[A-Za-z]:/.test(target) ? target.slice(2) : target;
+  if (rest.includes(':')) return 'a colon after the drive letter would address an alternate data stream';
+  for (const segment of rest.split(/[\\/]+/)) {
+    if (segment === '' || segment === '.' || segment === '..') continue;
+    if (/[. ]$/.test(segment)) return `the name ${JSON.stringify(segment)} ends with a dot or a space`;
+    if (RESERVED_NAME.test(segment.split('.')[0].replace(/ +$/, ''))) return `${JSON.stringify(segment)} is a reserved device name`;
+  }
+  return null;
+}
+
+function checkJsonTarget(target, fsApi = fs) {
+  const quoted = JSON.stringify(target);
+  const problem = nameProblem(target);
+  if (problem) return `invalid --json target ${quoted}: ${problem}`;
+  try {
+    fsApi.lstatSync(target);
+    return `cannot write ${quoted}: the file already exists, --json never overwrites`;
+  } catch (error) {
+    if (error.code !== 'ENOENT') return `invalid --json target ${quoted}: it cannot be inspected (${error.code || oneLine(error.message)})`;
+  }
+  try {
+    if (!fsApi.statSync(path.dirname(target)).isDirectory()) return `invalid --json target ${quoted}: its parent is not a folder`;
+  } catch {
+    return `invalid --json target ${quoted}: the folder does not exist`;
+  }
+  return null;
+}
 
 function parseArgs(argv) {
   const options = { json: null, requalify: false, help: false, slotScript: null, slotOwner: null };
@@ -41,15 +81,32 @@ function parseArgs(argv) {
   return { options };
 }
 
+// Reasons that carry the same text (SIGNATURE_UNAVAILABLE and VERSION_UNAVAILABLE repeat the shell's message) are
+// listed once under all their codes; the full text stays in the JSON report.
+function joinReasons(reasons) {
+  const groups = new Map();
+  for (const reason of reasons) {
+    const parts = /^([A-Z][A-Z0-9_]*): (.*)$/.exec(oneLine(reason));
+    const [code, message] = parts ? [parts[1], parts[2]] : ['', oneLine(reason)];
+    const codes = groups.get(message) || [];
+    if (code !== '' && !codes.includes(code)) codes.push(code);
+    groups.set(message, codes);
+  }
+  return [...groups].map(([message, codes]) => (codes.length > 0 ? `${codes.join(', ')}: ${message}` : message)).join(' | ');
+}
+
 function verdict(report) {
   const requalification = report.requalification;
+  const ran = Boolean(requalification && requalification.ran);
+  const counts = ran ? `isolated suites ${requalification.totals.pass}/${requalification.totals.tests} passed` : '';
+  const suites = ran && Array.isArray(requalification.suites) ? requalification.suites.map((suite) => `${suite.file} ${suite.pass}/${suite.tests}`) : [];
   if (report.ok) {
-    const suites = requalification && requalification.ran ? `, isolated suites ${requalification.totals.pass}/${requalification.totals.tests} passed` : '';
-    return `PASS Edge ${report.version} at ${report.path}: signed by ${report.signature.publisher}, major ${report.major} qualified, sha256 ${report.sha256}${suites}`;
+    const detail = suites.length > 0 ? ` (${suites.join(', ')})` : '';
+    const tail = ran ? `, ${counts}${detail}` : '';
+    return oneLine(`PASS Edge ${report.version} at ${report.path}: signed by ${report.signature.publisher}, major ${report.major} qualified, sha256 ${report.sha256}${tail}`);
   }
-  const suffix = requalification && requalification.ran
-    ? ` (isolated suites ${requalification.totals.pass}/${requalification.totals.tests} passed)` : '';
-  return `FAIL closed: ${report.reasons.join(' | ')}${suffix}`;
+  const suffix = ran ? ` (${counts}${suites.length > 0 ? `: ${suites.join(', ')}` : ''})` : '';
+  return `FAIL closed: ${joinReasons(report.reasons)}${suffix}`;
 }
 
 async function main(argv, io = {}) {
@@ -66,6 +123,13 @@ async function main(argv, io = {}) {
     out.write(USAGE);
     return 0;
   }
+  if (options.json !== null) {
+    const problem = checkJsonTarget(options.json, io.fs || fs);
+    if (problem) {
+      err.write(`${problem}\n`);
+      return 2;
+    }
+  }
   let report;
   try {
     report = options.requalify
@@ -75,21 +139,23 @@ async function main(argv, io = {}) {
       })
       : await (io.qualify || qualifyEdge)(io.qualifyOptions);
   } catch (error) {
-    err.write(`FAIL closed: the check itself failed: ${error.message}\n`);
+    err.write(`FAIL closed: the check itself failed: ${oneLine(error.message)}\n`);
     return 1;
   }
   const json = `${JSON.stringify(report, null, 2)}\n`;
   out.write(json);
-  err.write(`${verdict(report)}\n`);
+  let line = verdict(report);
+  let code = report.ok ? 0 : 1;
   if (options.json !== null) {
     try {
       write(options.json, json);
     } catch (error) {
-      err.write(`cannot write ${options.json}: ${error.message}\n`);
-      return 2;
+      line = `${line} | cannot write ${options.json}: ${oneLine(error.message)}`;
+      code = 2;
     }
   }
-  return report.ok ? 0 : 1;
+  err.write(`${line}\n`);
+  return code;
 }
 
 module.exports = { USAGE, parseArgs, verdict, main };

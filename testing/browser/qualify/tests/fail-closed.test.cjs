@@ -109,7 +109,7 @@ test('a missing, null, non-string or throwing version read fails closed with VER
   }
 });
 
-test('a signature, version or hash query that never answers fails closed with a timeout code and returns', async () => {
+test('a signature, version or hash query that never answers fails closed with a timeout code and returns', { timeout: 30000 }, async () => {
   assert.deepEqual(await codes({ signature: never }, { timeoutMs: 40 }), ['SIGNATURE_TIMEOUT']);
   assert.deepEqual(await codes({ fileVersion: never }, { timeoutMs: 40 }), ['VERSION_TIMEOUT']);
   assert.deepEqual(await codes({ sha256: never }, { timeoutMs: 40 }), ['SHA256_TIMEOUT']);

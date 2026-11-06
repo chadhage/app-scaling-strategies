@@ -159,11 +159,33 @@ async function qualifyEdge(options = {}) {
   judgeSignature(signature, report, add);
   judgeVersion(version, majors, report, add);
 
+  let changed = false;
+  const markChanged = (detail) => {
+    if (!changed) add('EDGE_CHANGED_DURING_CHECK', `${target} changed while it was being checked${detail}`);
+    changed = true;
+  };
+  // The digest, the signature and the version come from separate opens of the file. Reading the digest again after the
+  // shell answered and requiring equal digests catches a swap that restores size and modification time.
+  if (report.sha256 !== null) {
+    const first = report.sha256;
+    const again = await ask('sha256', () => adapters.sha256(target));
+    if (again.error) {
+      add(isTimeout(again.error) ? 'SHA256_TIMEOUT' : 'SHA256_UNAVAILABLE', `the second read of the binary failed: ${again.error.message}`);
+      report.sha256 = null;
+    } else if (typeof again.value !== 'string' || !DIGEST.test(again.value)) {
+      add('SHA256_UNAVAILABLE', 'the second read of the binary did not return a SHA-256 digest');
+      report.sha256 = null;
+    } else if (again.value.toLowerCase() !== first) {
+      markChanged(`: the SHA-256 differs between the first read and the read after the signature check (${first} then ${again.value.toLowerCase()})`);
+      report.sha256 = null;
+    }
+  }
+
   const after = await ask('stat', () => adapters.statFile(target));
   const last = after.value;
   if (!(last && last.exists === true && last.isFile === true
       && last.size === looks[chosen].size && last.mtimeMs === looks[chosen].mtimeMs)) {
-    add('EDGE_CHANGED_DURING_CHECK', `${target} changed while it was being checked`);
+    markChanged('');
   }
   return conclude();
 }

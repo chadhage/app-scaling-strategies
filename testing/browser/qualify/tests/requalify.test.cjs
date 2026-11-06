@@ -25,23 +25,34 @@ test('parseTap reads the node:test summary and the names of failed tests', () =>
   assert.deepEqual(requalify.parseTap('no summary here').counts.tests, null);
 });
 
-test('childEnvironment removes NODE_TEST_CONTEXT and NODE_V8_COVERAGE in any case and keeps the rest', () => {
-  const env = { NODE_TEST_CONTEXT: 'child-v8', node_v8_coverage: 'x', Keep: '1' };
-  assert.deepEqual(requalify.childEnvironment(env), { Keep: '1' });
+test('childEnvironment drops NODE_TEST_CONTEXT in any case and keeps NODE_V8_COVERAGE as an own, empty key', () => {
+  const env = { NODE_TEST_CONTEXT: 'child-v8', node_test_context: 'x', node_v8_coverage: 'x', Keep: '1' };
+  assert.deepEqual(requalify.childEnvironment(env), { Keep: '1', NODE_V8_COVERAGE: '' });
   assert.equal('NODE_TEST_CONTEXT' in requalify.childEnvironment(), false);
+  assert.equal(requalify.childEnvironment({}).NODE_V8_COVERAGE, '');
 });
 
 test('a passing suite is recorded with its counts, command, duration and output hash', async () => {
-  const result = await runFixture('pass-suite.cjs');
+  const env = { ...process.env, FIXTURE_BROWSER_VERSION: '156.0.4314.58' };
+  const result = await runFixture('pass-suite.cjs', { env });
   assert.equal(result.passed, true);
+  assert.equal(result.testsPassed, true);
   assert.equal(result.exitCode, 0);
   assert.equal(result.timedOut, false);
   assert.equal(result.spawnError, null);
   assert.equal(result.summaryFound, true);
-  assert.deepEqual([result.tests, result.pass, result.fail, result.cancelled, result.skipped], [2, 2, 0, 0, 0]);
+  assert.deepEqual([result.tests, result.pass, result.fail, result.cancelled, result.skipped, result.todo], [2, 2, 0, 0, 0, 0]);
+  assert.deepEqual(result.browserVersionsSeen, ['156.0.4314.58']);
   assert.deepEqual(result.command, ['node.exe', '--test', '--test-concurrency=1', '--test-reporter=tap', 'pass-suite.cjs']);
   assert.match(result.stdoutSha256, /^[0-9a-f]{64}$/);
   assert.ok(result.stdoutBytes > 0 && result.elapsedMs >= 0 && result.startedAtUtc.endsWith('Z'));
+});
+
+test('a suite whose tests pass but that prints no browser version line has passed its tests and not the suite', async () => {
+  const result = await runFixture('pass-suite.cjs');
+  assert.equal(result.testsPassed, true);
+  assert.equal(result.passed, false);
+  assert.deepEqual(result.browserVersionsSeen, []);
 });
 
 test('a nested run never inherits NODE_TEST_CONTEXT or NODE_V8_COVERAGE, so a failing suite is seen as failing', async () => {

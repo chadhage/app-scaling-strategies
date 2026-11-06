@@ -7,11 +7,15 @@ const { requalifyEdge } = require('../requalify.cjs');
 const { fixtureAdapters, SHA } = require('./support.cjs');
 
 const fixtures = path.join(__dirname, 'fixtures');
+const VERSION = '156.0.4314.58';
 const okReport = (extra = {}) => ({
-  ok: true, reasons: [], reasonCodes: [], path: 'C:\\e\\msedge.exe', version: '156.0.4314.58', major: 156,
+  ok: true, reasons: [], reasonCodes: [], path: 'C:\\e\\msedge.exe', version: VERSION, major: 156,
   signature: { status: 'Valid', publisher: 'Microsoft Corporation' }, sha256: SHA, qualifiedMajors: [156], candidates: [], ...extra,
 });
-const base = (qualify, extra = {}) => ({ qualify, cwd: fixtures, suiteTimeoutMs: 90000, suites: ['pass-suite.cjs'], ...extra });
+// The fixture suites print "Real Chromium <FIXTURE_BROWSER_VERSION>" like the isolated helper suites; a suite without it fails.
+const base = (qualify, extra = {}) => ({
+  qualify, cwd: fixtures, suiteTimeoutMs: 90000, suites: ['pass-suite.cjs'], env: { ...process.env, FIXTURE_BROWSER_VERSION: VERSION }, ...extra,
+});
 
 function recordingSlot() {
   const calls = [];
@@ -38,7 +42,7 @@ test('a qualified Edge and passing suites give ok, the counts, the slot and the 
 
 test('a new major that is signed still gets its suites run: that is what a requalification is for', async () => {
   const before = okReport({ ok: false, major: 157, version: '157.0.4400.2', reasonCodes: ['MAJOR_NOT_QUALIFIED'], reasons: ['MAJOR_NOT_QUALIFIED: major 157 is not in the qualified majors [156]'] });
-  const report = await requalifyEdge(base(async () => before));
+  const report = await requalifyEdge(base(async () => before, { env: { ...process.env, FIXTURE_BROWSER_VERSION: '157.0.4400.2' } }));
   assert.equal(report.ok, false);
   assert.deepEqual(report.reasonCodes, ['MAJOR_NOT_QUALIFIED']);
   assert.equal(report.requalification.ran, true);
@@ -65,7 +69,7 @@ test('a failing suite fails the requalification and the remaining suites still r
   assert.equal(report.ok, false);
   assert.equal(report.requalification.passed, false);
   assert.deepEqual(report.reasonCodes, ['REQUALIFICATION_FAILED']);
-  assert.match(report.reasons[0], /^REQUALIFICATION_FAILED: 1 failed, 0 cancelled, 0 timed out$/);
+  assert.equal(report.reasons[0], 'REQUALIFICATION_FAILED: fail-suite.cjs passed 1 of 2 tests (1 failed)');
   assert.deepEqual([report.requalification.totals.tests, report.requalification.totals.pass, report.requalification.totals.fail], [4, 3, 1]);
   assert.deepEqual(report.requalification.suites.map((suite) => suite.passed), [true, false]);
 });
@@ -98,6 +102,7 @@ test('the suites must have run the very Edge that was qualified: the version the
 test('by default requalifyEdge uses qualifyEdge with the given adapters', async () => {
   const report = await requalifyEdge({
     qualifyOptions: { adapters: fixtureAdapters() }, cwd: fixtures, suiteTimeoutMs: 90000, suites: ['pass-suite.cjs'],
+    env: { ...process.env, FIXTURE_BROWSER_VERSION: VERSION },
   });
   assert.equal(report.ok, true);
   assert.equal(report.requalification.passed, true);

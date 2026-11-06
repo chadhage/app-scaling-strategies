@@ -80,7 +80,8 @@ test('--json writes the same report without ever overwriting an existing file', 
     assert.equal(fs.readFileSync(target, 'utf8'), out.text);
     const [out2, err2] = [sink(), sink()];
     assert.equal(await cli.main(['--json', target], { stdout: out2, stderr: err2, qualifyOptions: qualifyOptions() }), 2);
-    assert.match(err2.text, /cannot write .*EEXIST/);
+    assert.match(err2.text, /cannot write .*already exists, --json never overwrites/);
+    assert.equal(out2.text, '');
     assert.equal(fs.readFileSync(target, 'utf8'), out.text);
     const injected = [];
     assert.equal(await cli.main(['--json', 'x.json'], { stdout: sink(), stderr: sink(), qualifyOptions: qualifyOptions(), writeFile: (file, data) => injected.push(file, data.length > 0) }), 0);

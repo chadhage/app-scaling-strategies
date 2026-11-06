@@ -2,7 +2,9 @@
 
 // --requalify: run the isolated helper suites (isolated.test.cjs, loopback.test.cjs) on the installed Edge, one
 // node --test process per suite with a hard timeout, and record the counts together with the Edge version and
-// SHA-256 seen before and after the run. A change of Edge during the run, a failing suite or a timeout fails closed.
+// SHA-256 seen before and after the run. A suite passes only when every test passed (none skipped, todo or cancelled)
+// and it printed the "Real Chromium <version>" line of the Edge under test. A change of Edge during the run, a failing
+// or silent suite or a timeout fails closed.
 const path = require('node:path');
 const crypto = require('node:crypto');
 const childProcess = require('node:child_process');
@@ -15,10 +17,16 @@ const SUITE_TIMEOUT_MS = 600000;
 const SLOT_TIMEOUT_MS = 26 * 60 * 1000;
 const MAX_OUTPUT = 16 * 1024 * 1024;
 const COUNTERS = ['tests', 'suites', 'pass', 'fail', 'cancelled', 'skipped', 'todo'];
+const SUMMARY_COUNTERS = ['tests', 'pass', 'fail', 'cancelled', 'skipped', 'todo'];
 
-// A nested node --test that inherits these exits 0 even when its tests fail (lesson L-0002).
+// A summary that lacks a counter proves nothing about that counter (suites is informational).
+const summaryComplete = (counts) => SUMMARY_COUNTERS.every((name) => counts[name] !== null);
+
+// A nested node --test that inherits these exits 0 even when its tests fail (lesson L-0002). spawn() copies
+// process.env.NODE_V8_COVERAGE into any child environment that has no OWN key of that name (lesson L-0140), so deleting the
+// key is not enough: it stays, empty, and the nested run writes no coverage into the caller's directory.
 function childEnvironment(env = process.env) {
-  return withoutKeys(env, /^(NODE_TEST_CONTEXT|NODE_V8_COVERAGE)$/i);
+  return { ...withoutKeys(env, /^(NODE_TEST_CONTEXT|NODE_V8_COVERAGE)$/i), NODE_V8_COVERAGE: '' };
 }
 
 function parseTap(output) {
@@ -29,6 +37,15 @@ function parseTap(output) {
   }
   const failedTests = [...output.matchAll(/^not ok \d+ - (.+)$/gm)].map((match) => match[1].trim()).slice(0, 20);
   return { counts, failedTests };
+}
+
+// Every test must have passed: node exits 0 for skipped and todo tests and counts an empty file as one passing test, so the
+// verdict never rests on the exit code alone. Each guard is listed on purpose, although tests = pass + fail + cancelled +
+// skipped + todo makes some of them redundant today.
+function countsPassed(facts) {
+  return !facts.timedOut && facts.spawnError === null && facts.exitCode === 0 && facts.summaryFound
+    && facts.pass > 0 && facts.pass === facts.tests
+    && facts.fail === 0 && facts.cancelled === 0 && facts.skipped === 0 && facts.todo === 0;
 }
 
 function endProcessTree(child) {
@@ -55,7 +72,10 @@ function runSuite(file, options = {}) {
       const stdout = Buffer.concat(out);
       const text = stdout.toString('utf8');
       const { counts, failedTests } = parseTap(text);
-      const summaryFound = counts.tests !== null && counts.pass !== null && counts.fail !== null;
+      const summaryFound = summaryComplete(counts);
+      const testsPassed = countsPassed({ timedOut, spawnError, exitCode: status, summaryFound, ...counts });
+      // Positive evidence that a browser ran: the diagnostic line "Real Chromium <version>" of the isolated helper suites.
+      const browserVersionsSeen = [...new Set([...text.matchAll(/^\s*# Real Chromium (\d+(?:\.\d+)+)/gm)].map((match) => match[1]))];
       resolve({
         file,
         command: ['node.exe', ...args],
@@ -69,9 +89,9 @@ function runSuite(file, options = {}) {
         ...counts,
         summaryFound,
         failedTests,
-        browserVersionsSeen: [...new Set([...text.matchAll(/Real Chromium (\d+(?:\.\d+)+)/g)].map((match) => match[1]))],
-        passed: !timedOut && spawnError === null && status === 0 && summaryFound
-          && counts.tests > 0 && counts.fail === 0 && !counts.cancelled,
+        browserVersionsSeen,
+        testsPassed,
+        passed: testsPassed && browserVersionsSeen.length > 0,
         stdoutBytes: stdout.length,
         stdoutSha256: crypto.createHash('sha256').update(stdout).digest('hex'),
         stderrTail: Buffer.concat(err).toString('utf8').slice(-400),
@@ -118,6 +138,19 @@ function summarize(suites) {
   return { totals, allSuitesPassed: suites.length > 0 && suites.every((suite) => suite.passed) };
 }
 
+function describeSuite(suite) {
+  const problems = [];
+  if (suite.spawnError !== null) problems.push(`could not start: ${suite.spawnError}`);
+  if (suite.timedOut) problems.push('timed out');
+  if (!suite.summaryFound) problems.push('no TAP summary');
+  else if (suite.tests === 0) problems.push('no test ran');
+  for (const [name, label] of [['fail', 'failed'], ['cancelled', 'cancelled'], ['skipped', 'skipped'], ['todo', 'todo']]) {
+    if (suite[name] > 0) problems.push(`${suite[name]} ${label}`);
+  }
+  if (problems.length === 0) problems.push(suite.exitCode === 0 ? 'the counts do not add up' : `exit code ${suite.exitCode}`);
+  return `${suite.file} passed ${suite.pass ?? 0} of ${suite.tests ?? 0} tests (${problems.join(', ')})`;
+}
+
 async function requalifyEdge(options = {}) {
   const qualify = options.qualify || qualifyEdge;
   const before = await qualify(options.qualifyOptions);
@@ -143,9 +176,15 @@ async function requalifyEdge(options = {}) {
   const { totals, allSuitesPassed } = summarize(suites);
   const seen = [...new Set(suites.flatMap((suite) => suite.browserVersionsSeen))];
   const mismatched = seen.filter((version) => version !== before.version);
+  const failedSuites = suites.filter((suite) => !suite.testsPassed);
+  const silentSuites = suites.filter((suite) => suite.browserVersionsSeen.length === 0);
   const passed = allSuitesPassed && !changed && mismatched.length === 0;
   const extra = [];
-  if (!allSuitesPassed) extra.push(['REQUALIFICATION_FAILED', `${totals.fail} failed, ${totals.cancelled} cancelled, ${suites.filter((suite) => suite.timedOut).length} timed out`]);
+  if (suites.length === 0) extra.push(['REQUALIFICATION_FAILED', 'no suite was run']);
+  else if (failedSuites.length > 0) extra.push(['REQUALIFICATION_FAILED', failedSuites.map(describeSuite).join('; ')]);
+  if (silentSuites.length > 0) {
+    extra.push(['BROWSER_VERSION_MISSING', `${silentSuites.map((suite) => suite.file).join(', ')} printed no "Real Chromium <version>" line, so the run did not show that a browser ran`]);
+  }
   if (changed) extra.push(['EDGE_CHANGED_DURING_REQUALIFICATION', `before ${before.version} ${before.sha256}, after ${after.version} ${after.sha256}`]);
   if (mismatched.length > 0) extra.push(['BROWSER_VERSION_MISMATCH', `the suites ran Chromium ${mismatched.join(', ')} but the qualified msedge.exe is ${before.version}`]);
   report.requalification = {
@@ -166,4 +205,6 @@ async function requalifyEdge(options = {}) {
   return report;
 }
 
-module.exports = { BROWSER_DIR, SUITES, childEnvironment, parseTap, endProcessTree, runSuite, createSlot, summarize, requalifyEdge };
+module.exports = {
+  BROWSER_DIR, SUITES, childEnvironment, parseTap, summaryComplete, countsPassed, describeSuite, endProcessTree, runSuite, createSlot, summarize, requalifyEdge,
+};

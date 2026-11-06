@@ -5,6 +5,8 @@
 // A substring match on "Microsoft" is unsafe ("Not Microsoft Corp", O="Evil, O=Microsoft Corporation"),
 // so the name is split into attributes first: separators inside quotes or after a backslash do not split.
 // Multi-valued components (+) are refused as ambiguous; nothing Microsoft signs with uses them.
+// Nothing is normalized, case-folded or stripped on the way except the ASCII space and tab around a component: every
+// other code point (BOM, format characters, joiners, no-break spaces, look-alike letters) stays part of the value or type.
 
 const SPECIAL = new Set([',', '+', '"', '\\', '<', '>', ';', '=', '#', ' ']);
 const TYPE_NAME = /^[A-Za-z][A-Za-z0-9-]*$/;
@@ -59,7 +61,8 @@ function unescapeValue(text) {
     }
   }
   try {
-    return { value: new TextDecoder('utf-8', { fatal: true }).decode(Buffer.from(bytes)) };
+    // ignoreBOM keeps a leading U+FEFF in the value: the default would strip it and turn a look-alike into an exact match.
+    return { value: new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(Buffer.from(bytes)) };
   } catch {
     return { error: 'value is not valid UTF-8' };
   }
@@ -89,7 +92,7 @@ function parseSubject(subject) {
   for (const part of split.parts) {
     const equals = part.indexOf('=');
     if (equals < 1) return { ok: false, error: 'component without type=value' };
-    const type = normalizeType(part.slice(0, equals).trim());
+    const type = normalizeType(part.slice(0, equals).replace(/^[ \t]+|[ \t]+$/g, ''));
     if (type === null) return { ok: false, error: 'invalid attribute type' };
     const decoded = decodeValue(part.slice(equals + 1));
     if (decoded.error) return { ok: false, error: decoded.error };

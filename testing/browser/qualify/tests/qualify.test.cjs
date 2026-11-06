@@ -72,7 +72,7 @@ test('the first existing candidate is the one that is qualified, later ones are 
   const report = await qualifyEdge({ adapters });
   assert.equal(report.ok, true);
   assert.equal(report.path, second);
-  assert.deepEqual(hashed, [second]);
+  assert.deepEqual(hashed, [second, second]);
   assert.deepEqual(report.candidates.map((c) => c.exists), [false, true, true]);
 });
 

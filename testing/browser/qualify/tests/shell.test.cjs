@@ -29,11 +29,11 @@ test('a shell that is missing or cannot be started fails with SHELL_SPAWN', asyn
   await assert.rejects(adapters.runShell({ ...base, shell: 'a\u0000b' }), { code: 'SHELL_SPAWN' });
 });
 
-test('a shell that writes more than 64 KiB is ended with SHELL_OUTPUT_TOO_LARGE', async () => {
+test('a shell that writes more than 64 KiB is ended with SHELL_OUTPUT_TOO_LARGE', { timeout: 60000 }, async () => {
   await assert.rejects(run("process.stdout.write('x'.repeat(200000)); setInterval(() => {}, 1000)"), { code: 'SHELL_OUTPUT_TOO_LARGE' });
 });
 
-test('a shell that hangs past the timeout is ended and fails with SHELL_TIMEOUT', async () => {
+test('a shell that hangs past the timeout is ended and fails with SHELL_TIMEOUT', { timeout: 60000 }, async () => {
   const dir = scratchDir();
   const pidFile = path.join(dir, 'pid.txt');
   const code = "require('node:fs').writeFileSync(process.argv[1], String(process.pid)); setInterval(() => {}, 1000)";
@@ -83,7 +83,7 @@ test('the script reaches the shell as one encoded argument that decodes to INSPE
   assert.equal(await set.fileVersion('C:\\x.exe'), 'one-argument');
 });
 
-test('a shell that is missing, fails or answers garbage makes both adapters reject, and a hang times out', async () => {
+test('a shell that is missing, fails or answers garbage makes both adapters reject, and a hang times out', { timeout: 60000 }, async () => {
   const missing = adapters.powerShellAdapters({ env: { SystemRoot: path.join(__dirname, 'no-such-windows') } });
   await assert.rejects(missing.signature('C:\\x.exe'), (error) => error.code === 'SHELL_SPAWN' && /powershell\.exe/.test(error.message));
   const garbage = adapters.powerShellAdapters(fakeShell("process.stdout.write('garbage!')"));
