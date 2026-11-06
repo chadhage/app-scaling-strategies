@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C028",
+  "kind": "isolated-headless-edge-grpc-transcript-page",
+  "startedAtUtc": "2026-11-06T02:37:52.074Z",
+  "outcome": "passed",
+  "testRuntime": "v22.23.4",
+  "businessData": "synthetic",
+  "browserNativeGrpcObserved": false,
+  "limits": [
+    "Browsers cannot speak native gRPC and the isolated helper allows only same-origin read-only GET: the browser observed a server-produced transcript, not gRPC."
+  ],
+  "integratedForegroundBrowserUsed": false,
+  "checks": [
+    {
+      "name": "the installed Edge is Microsoft-signed and within the qualified major version",
+      "passed": true,
+      "observed": {
+        "version": "156.0.4314.58",
+        "sha256": "d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b"
+      }
+    },
+    {
+      "name": "initial state shows no observation and states that browsers cannot speak native gRPC",
+      "passed": true,
+      "observed": "Not run — no transcript observed."
+    },
+    {
+      "name": "real Tab/Enter loads the transcript; the page verified it and shows order, status, trailers, a cancelled and a deadline-exceeded call",
+      "passed": true,
+      "observed": {
+        "status": "VERIFIED LOCAL TRANSCRIPT — 7 calls, 14 messages, 3 refused probes. The browser observed this transcript, not native gRPC.",
+        "summary": [
+          "watch-ok: ok / OK",
+          "chat-ok: ok / OK",
+          "watch-cancelled: cancelled / CANCELLED",
+          "watch-deadline: deadline-exceeded / DEADLINE_EXCEEDED",
+          "unknown-method: server-error / UNIMPLEMENTED",
+          "invalid-argument: server-error / INVALID_ARGUMENT",
+          "message-too-large: protocol-violation / RESOURCE_EXHAUSTED"
+        ]
+      }
+    },
+    {
+      "name": "the isolated browser cannot reach the gRPC listener at all: a native gRPC call from the page is blocked",
+      "passed": true,
+      "observed": "blocked"
+    },
+    {
+      "name": "the page REJECTS a forged sequence number and clears the display",
+      "passed": true,
+      "observed": "REJECTED — MESSAGE_ORDER: Messages must arrive in order with server-owned sequence numbers 1, 2, 3 and so on. (watch-ok)"
+    },
+    {
+      "name": "the page REJECTS trailers removed from an ok call and clears the display",
+      "passed": true,
+      "observed": "REJECTED — OK_WITHOUT_TRAILERS: A call is reported ok without trailers that carry grpc-status 0. (watch-ok)"
+    },
+    {
+      "name": "the page REJECTS a cancel the server did not observe and clears the display",
+      "passed": true,
+      "observed": "REJECTED — CANCEL_NOT_OBSERVED: A client cancel must be observed by the server, which then writes nothing more. (watch-cancelled)"
+    },
+    {
+      "name": "the page REJECTS a missing deadline call and clears the display",
+      "passed": true,
+      "observed": "REJECTED — EXPECTED_EVIDENCE_MISSING: The transcript lacks the call watch-deadline. (watch-deadline)"
+    },
+    {
+      "name": "an HTTP 500 is REJECTED and the untouched transcript verifies again afterwards",
+      "passed": true,
+      "observed": "HTTP_500 then VERIFIED"
+    },
+    {
+      "name": "the strict CSP blocks an injected inline script",
+      "passed": true,
+      "observed": "undefined"
+    },
+    {
+      "name": "no uncaught page errors, no WebSocket and every successful request is a same-origin GET",
+      "passed": true,
+      "observed": {
+        "pageErrors": [],
+        "requests": 11
+      }
+    }
+  ],
+  "cleanup": {
+    "listenersClosed": true,
+    "browserClosed": true
+  },
+  "signedEdge": {
+    "path": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "status": "Valid",
+    "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "fileVersion": "156.0.4314.58",
+    "sha256": "d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b"
+  },
+  "listeners": {
+    "pid": 40604,
+    "page": "http://127.0.0.1:59266",
+    "grpc": "http://127.0.0.1:59267",
+    "ownership": "this process, exact returned servers"
+  },
+  "browserVersion": "156.0.4314.58",
+  "playwrightVersion": "1.56.1",
+  "evidenceFolder": "capability\\C028\\evidence\\raw\\browser-e0c28423-3ee5-4c35-82ac-6e5c27377b74",
+  "completedAtUtc": "2026-11-06T02:38:09.406Z"
+}

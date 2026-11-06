@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C028",
+  "class": "S",
+  "parents": ["H005", "H006"],
+  "scope": "Synthetic, local, offline native gRPC stream fixture (HTTP/2, own protobuf codec and message framing, Node built-ins only) plus a driver port on node:http2. Not the approved Node 24 Express control API; no cloud, identity, spend or registration.",
+  "order": [
+    { "step": 1, "what": "C028.feature written first", "path": "capability/C028/C028.feature", "sha256": "65a42a3a998647dbf6b07ae31a9bbe69b6b8116f8617ae099d05765cceddde0b" },
+    { "step": 2, "what": "RED subject: an ordinary HTTP/2 substitute (200 JSON, no trailers) and a driver that reports ok when a stream closes", "path": "capability/C028/evidence/red/stubs" },
+    {
+      "step": 3, "what": "initial behavioral tests written before any implementation (retained snapshots)",
+      "paths": [
+        "capability/C028/evidence/red/primitives.initial.snapshot.cjs", "capability/C028/evidence/red/wire.initial.snapshot.cjs",
+        "capability/C028/evidence/red/lifecycle.initial.snapshot.cjs", "capability/C028/evidence/red/driver.initial.snapshot.cjs",
+        "capability/C028/evidence/red/faults.initial.snapshot.cjs"
+      ]
+    },
+    {
+      "step": 4, "what": "RED: 36 of 36 initial tests fail against the stubs, every failure an AssertionError about specified behavior",
+      "archive": "capability/C028/evidence/red/red-0af99cd2-d204-417c-b34e-bc9c1ed37c2a",
+      "command": "$env:C028_RED_SUBJECT='capability\\C028\\evidence\\red\\stubs'; node --test --test-concurrency=1 <the five initial snapshots>",
+      "exit": 1, "tests": 36, "pass": 0, "fail": 36, "stdoutSha256": "1c0f546fc47a5534b1fc2c3c58fe84da25ec856c3bd18fbb1f4b662996d0e007"
+    },
+    { "step": 5, "what": "implementation: protobuf.cjs, grpc.cjs, service.cjs, front.cjs, call.cjs, grpc-server.cjs, report.cjs, driver-call.cjs, driver.cjs; then timers.cjs, transcript.cjs, server.cjs, driver-cli.cjs, index.html, page.js, styles.css" },
+    {
+      "step": 6, "what": "first implementation run of the retained initial tests: 33 of 36 passed. Two tests were mis-specified (superseded, skipped by exact name), one exposed a real gap in the message reader (fixed, original test unchanged)",
+      "supplement": "capability/C028/evidence/red/faults.supplement.snapshot.cjs"
+    },
+    {
+      "step": 7, "what": "supplement replayed against the unchanged stubs after the implementation: 4 of 4 fail with AssertionError",
+      "archive": "capability/C028/evidence/red/supplement-red-ef22ace5-4d5c-487f-957d-f0b797deec20",
+      "exit": 1, "tests": 4, "pass": 0, "fail": 4, "stdoutSha256": "d8aa6283c4fedb83d5f02c2f48145044c66a436db73571b19400b70a5b7628d7"
+    },
+    {
+      "step": 8, "what": "retained initial tests plus supplement against the implementation (two superseded tests skipped by exact name)",
+      "archive": "capability/C028/evidence/raw/initial-316e9845-43b3-412e-bcfa-6ac70b37ce25",
+      "exit": 0, "tests": 38, "pass": 38, "fail": 0, "stdoutSha256": "59d58a02002dbf67c94189260a639413a08ffe1e0c7f90ac1e2fac2496a0005a"
+    },
+    {
+      "step": 9, "what": "GREEN: every suite and the retained initial tests (real HTTP/2 sockets, hostile raw servers, manual time)",
+      "archive": "capability/C028/evidence/raw/green-2fda0725-b5e1-4c61-ae77-f0337c013652",
+      "exit": 0, "tests": 204, "pass": 204, "fail": 0, "stdoutSha256": "f75a3d5b2fc705666791f09935cd1fda64477a70970dd3c09f6bc5b79289c58c"
+    },
+    {
+      "step": 10, "what": "syntax check of every JavaScript file, no execution",
+      "archive": "capability/C028/evidence/raw/syntax-59862acf-2201-48de-9f03-0da51ecad33a",
+      "exit": 0, "stdoutSha256": "789e0c135ae5bddc5166a66f511f056797a1fa31b6c4bec39a505e5bfb4699fe"
+    },
+    {
+      "step": 11, "what": "per-file coverage, one L-0004 command per file, 85/85/85 enforced on each row (unloaded counts as 0%)",
+      "archive": "capability/C028/evidence/raw/coverage-f02b8478-278f-4827-8cb5-86124cb8cf6b",
+      "perFileRaw": "capability/C028/evidence/raw/coverage-f02b8478-278f-4827-8cb5-86124cb8cf6b/per-file",
+      "exit": 0, "stdoutSha256": "74a86babe7d9a842abf6cc2b6b56396cd161cd1acc7668042d91fe757d131cfd",
+      "files": {
+        "call.cjs": [100.00, 97.48, 97.06], "driver-call.cjs": [100.00, 94.90, 100.00], "driver-cli.cjs": [100.00, 100.00, 100.00],
+        "driver.cjs": [100.00, 100.00, 90.00], "front.cjs": [100.00, 100.00, 100.00], "grpc-server.cjs": [100.00, 97.01, 100.00],
+        "grpc.cjs": [100.00, 100.00, 100.00], "page.js": [100.00, 99.34, 100.00], "protobuf.cjs": [100.00, 100.00, 100.00],
+        "report.cjs": [100.00, 100.00, 100.00], "server.cjs": [100.00, 100.00, 100.00], "service.cjs": [100.00, 100.00, 100.00],
+        "timers.cjs": [100.00, 100.00, 100.00], "transcript.cjs": [100.00, 100.00, 94.44]
+      },
+      "columns": ["lines", "branches", "functions"],
+      "notMeasured": ["index.html", "styles.css"]
+    },
+    {
+      "step": 12, "what": "real isolated headless Edge observation of the transcript page (11 checks); stdout archived without evidence capture",
+      "archive": "capability/C028/evidence/raw/browser-284cedfc-61b4-4a57-b2ad-abe11f6887c3",
+      "exit": 0, "stdoutSha256": "20694b3c0ec8b6699973bee0e4c497a3da1bc59c10704c0ab6665c2c59aaab48"
+    },
+    {
+      "step": 13, "what": "browser record and screenshot captured on purpose with CAPTURE_BROWSER_EVIDENCE=1 (Edge 156.0.4314.58, Microsoft-signed, qualified major 156)",
+      "archive": "capability/C028/evidence/raw/browser-e0c28423-3ee5-4c35-82ac-6e5c27377b74",
+      "files": ["browser-acceptance.json", "browser-transcript.png"]
+    }
+  ],
+  "limits": [
+    "The browser observed a server-produced transcript, not native gRPC: browsers cannot speak gRPC and the isolated helper allows only same-origin read-only GET.",
+    "Node built-ins on the observed test runtime are not the approved Node 24 Express service; no production runtime, identity, durable store, native target or cloud is validated or registered.",
+    "Retained RED files and archived runs are immutable; supplement and superseded tests are documented in README.md."
+  ]
+}
