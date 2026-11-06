@@ -175,3 +175,113 @@ Express / App Service Linux / Azure Tables/Queues/Blob architecture is unchanged
 No cloud/IaC/scaffold/identity/deployment/packages/downloads, real-user data,
 credentials or spending. Educational AS-IS use does not imply a Microsoft SLA
 or endorsement.
+
+## U019: an owned amendment path for the pinned C015 test bytes (zero credit, publishes under C016 / D)
+
+**Training rehearsal - synthetic data - not a live Azure result**
+
+U019 unblocks K-C015. `dependency-pins.json` pins the raw CRLF and the Git canonical bytes of the 160 accepted C001, C002 and C015 files, so the one
+permitted K-C015 edit of C015 `tests\surface.test.cjs` (line 70, 6034 bytes become 6036) fails this namespace's integrity test (expected 6034 bytes, found 6036).
+`dependency-pins.json` is never rewritten: it stays the immutable history. A chained, append-only addendum `dependency-pins-addendum-N.json` is the current
+authority. U019 adds tests, tooling, evidence and this section only: no production source, sealed evidence or retained RED changes. Coverage is
+not-applicable for the card (test-only change); the two new helpers are measured anyway (see Coverage).
+
+| Path (under `capability\C016`) | Kind | Purpose |
+| --- | --- | --- |
+| `C016-pin-amendment.feature` | new | Behavior specification, written before the RED |
+| `dependency-pins-addendum-1.json` | new | Addendum 1, written once with flag `wx` by `tests\seal-pin-addendum.cjs`: authorizes the exact K-C015 replacement of `surface.test.cjs` |
+| `tests\pin-authority.cjs` | new test tooling | Pure checker with injected pins, addenda and bytes: `listAddenda`, `resolveChain`, `acceptedRecords`, `checkRaw` |
+| `tests\surface-edit.cjs` | new test tooling | The one-line K-C015 edit as exact CRLF bytes (`applySurfaceEdit`) |
+| `tests\pin-amendment.test.cjs` | new test | 16 specification tests: 13 on synthetic pins, 2 on the real pins and Git history, 1 guard of the integrity test source |
+| `tests\pin-amendment-replay.cjs` | new test tooling | Replays the RED, the stub RED and the K-C015 simulation in a scratch copy outside the repository |
+| `tests\seal-pin-addendum.cjs` | new test tooling | One-shot writer of addendum 1 (refuses to overwrite) |
+| `tests\integrity.test.cjs` | edited | Only the first test: its raw byte check calls the checker, and `TRUSTED_ADDENDA` pins addendum 1 by LF hash. The 160 records, the Git canonical proof at `observedHead` and the other eleven tests are unchanged |
+| `tests\verify.cjs` | edited | `focused` also runs `pin-amendment.test.cjs` |
+| `evidence\u019-pin-amendment\` | new evidence | Retained v1 integrity test, the loadable stub, RED-01 and RED-02 manifests with raw gzip streams, `* -text` attributes |
+
+### Rules the checker enforces
+
+- Addenda are `dependency-pins-addendum-<n>.json` in the namespace root, numbered consecutively from 1, closed key sets, schema `C016-dependency-pins-addendum/1`.
+  Addendum 1 names `base` (`dependency-pins.json` and its LF hash); every later addendum names `previous` (name and LF hash of the addendum before it).
+  Links use the LF-canonical hash, so the chain also holds in a CRLF checkout. Near-miss file names, gaps and directories named like an addendum are rejected.
+- Only a pinned C015 test file (`capability\C015\tests\<name>`, the 13 pinned files) can be superseded. A C015 production file, any C001 or C002 file, an unpinned
+  file or any other path is rejected with `AMENDMENT_PATH_NOT_ALLOWED`, with or without an addendum.
+- Each step names the exact record it supersedes (raw size, SHA-256, CRLF count: it must equal the current head of that file, so sealed bytes cannot be superseded
+  twice) and the exact replacing record (raw size, SHA-256, CRLF count, Git canonical size and SHA-256). No-op and duplicate steps are rejected.
+- `authorized`: the file may hold the superseded bytes or exactly the replaced bytes (the edit is made after the addendum is published). `applied`: only the
+  replaced bytes. Once a later addendum supersedes a state it is no longer accepted. An authorized step stays open until a later addendum supersedes its bytes
+  (a replacement equal to the superseded bytes is a rejected no-op, so there is no promotion step).
+- Any other byte change is rejected naming the path, the accepted hashes and the actual hash. A replaced record must describe its bytes: size, CRLF count and an LF
+  form equal to the recorded Git canonical size and SHA-256.
+- The integrity test pins the published addenda in `TRUSTED_ADDENDA` by LF hash (a later edit of addendum 1 is rejected; addendum 2 only has to link to it) and still
+  compares the canonical bytes at `observedHead` for all 160 sealed records.
+
+### The pre-authorized K-C015 edit (addendum 1, `authorized`)
+
+Line 70 of C015 `tests\surface.test.cjs` (6034 bytes, `89834f62ff4ba274de01d95d8b470818482e5cfb4896b339dbd1916907d0c480`; `K-C015.md` says line 68, which is the test
+title) keeps its CRLF ending and its indent and replaces `path.resolve(root, '..', '..', boundary.standardPublisher)` by `path.join(root, 'evidence', boundary.approvedSourceSnapshot)`
+(6036 bytes, `a8deb9cc0e252974c4c46b2bbe09edf3491523521b2ff931427cc174c79cab9e`, 100 CRLF; Git canonical 5936 bytes `b0c38e824a67946a7b8c2bbc1e81fd9d06500c64e0633d29138a08222afb4c3f`):
+
+```js
+  const bytes = fs.readFileSync(path.join(root, 'evidence', boundary.approvedSourceSnapshot));
+```
+
+`applySurfaceEdit` in `tests\surface-edit.cjs` produces exactly these bytes, and `pin-amendment.test.cjs` rebuilds them from `git show dcf698aa876bcea99a981480f0e688f44197a66f:capability/C015/tests/surface.test.cjs`
+(LF), the one-line replacement and the CRLF conversion; exactly line 70 differs. Any other layout, an LF ending or any other edit of any of the 13 files is rejected.
+
+### Commands (repository root, PowerShell 7, Node 22)
+
+RED replays. Each takes a NEW scratch directory outside the repository, builds a copy of C001, C002, C015 and C016 there, reads Git history through `GIT_DIR` and removes the copy.
+Use a SHORT path (at most 122 characters): Windows `git show <rev>:<path>` stats `<cwd>\<rev>:<path>` and the longest pinned name is 136 characters; the script refuses longer paths.
+Exit 0 means the RED reproduced. Archives written once with `--archive`: `evidence\u019-pin-amendment\red-01-edit-without-amendment.json` (control exit 0, edited exit 1,
+`expected: 6034`, `actual: 6036`) and `red-02-spec-against-stub.json` (exit 1: 15 of the 16 specification tests fail by assertion, 1 passes).
+
+```powershell
+node capability\C016\tests\pin-amendment-replay.cjs red <short-fresh-dir>\r     # retained v1 integrity test + the K-C015 edit: fails at the raw byte check
+node capability\C016\tests\pin-amendment-replay.cjs stub <short-fresh-dir>\s    # the specification tests against the retained loadable stub
+```
+
+GREEN.
+
+```powershell
+node --test --test-concurrency=1 capability\C016\tests\pin-amendment.test.cjs capability\C016\tests\integrity.test.cjs   # 28 tests
+node capability\C016\tests\pin-amendment-replay.cjs green <short-fresh-dir>\g   # K-C015 edit applied in a scratch copy: integrity, specification and the C015 surface test (33 tests)
+node capability\C016\tests\verify.cjs focused      # whole non-browser suite: 41 tests
+node capability\C016\tests\verify.cjs integrity    # 12 tests
+node capability\C016\tests\verify.cjs syntax       # 26 script files and 2 PowerShell files
+```
+
+Coverage: not-applicable for the card (test-only: every added or changed file is under `tests\`, `evidence\` or a document; `git status --porcelain -- capability/C016` shows the new files
+above plus `README.md`, `tests\integrity.test.cjs` and `tests\verify.cjs` as the only modified paths). The helpers are measured anyway, per file, exit 0 (heavy slot):
+
+```powershell
+foreach ($f in 'pin-authority','surface-edit') { node --test --test-concurrency=1 --experimental-test-coverage "--test-coverage-include=capability/C016/tests/$f.cjs" --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 capability\C016\tests\pin-amendment.test.cjs capability\C016\tests\integrity.test.cjs }
+```
+
+Measured (lines / branches / functions): `pin-authority.cjs` 100 / 100 / 100, `surface-edit.cjs` 100 / 100 / 100.
+
+Consumers (after this change, real tree, all green): C018 `verify.cjs focused` 21/21, C019 `verify.cjs focused` 100/100. After the K-C015 edit, in a scratch copy of C001, C002, C015, C016, C018 and C019
+(edit applied there only, real C015 untouched): C016 `verify.cjs focused` 41/41, C018 21/21, C019 100/100, C015 own focused suite 32/32. No other namespace compares live C015 test bytes
+(C018 pins only top-level C015 files; C019 hashes before and after a run).
+
+Browser: this item changes no page, runtime or production file. The unchanged C016 real-browser suite (`node capability\C016\tests\verify.cjs browser`, heavy slot, no capture) still fails before it opens
+the page, for a reason that predates U019: its sealed `tests\browser.acceptance.cjs:26` pins Edge `156.0.4314.50` and the installed Microsoft-signed Edge auto-updated to `156.0.4314.58` (`expected` versus `actual`
+in the TAP). It left no evidence rewrite (`ownedFilesUnchanged` 171). A fresh isolated headless Edge observation of the unchanged page through the approved helper (heavy slot, closed in `finally`) succeeded:
+Edge `156.0.4314.58`, title `C016 — conditional local command retries`, the training banner and the H004/H012 incomplete statement present, 4 buttons:
+
+```powershell
+node -e "const { openIsolatedLesson } = require('.\\testing\\browser\\isolated.cjs'); openIsolatedLesson('capability\\C016\\index.html').then(async (s) => { try { console.log(s.browserVersion, await s.page.title()); } finally { await s.close(); } }).catch((e) => { console.error(e); process.exitCode = 1; })"
+```
+
+Whitespace (quote the whole `core.whitespace` argument):
+
+```powershell
+git -c "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol" diff --check -- capability/C016
+```
+
+### Traps
+
+- Never rewrite `dependency-pins.json` or a committed addendum; append `dependency-pins-addendum-<n+1>.json` that names the bytes the previous one produced. Never edit C015 from here: K-C015 applies its own edit.
+- The K-C015 agent restores or edits `surface.test.cjs` with exact byte copies only (`Copy-Item`), never `git restore` (`eol=lf` writes LF and the pinned raw bytes are CRLF).
+- `verify.cjs` hashes the whole C001, C002 and C015 trees before and after a run and C016 itself: do not add files there while a C016 verifier runs.
+- This namespace's `.gitattributes` makes `*.cjs`, `*.md` and `*.json` `eol=lf`; working `.cjs` and `.md` files are CRLF (create and edit tools), scripts write JSON with LF, and the evidence copies under `u019-pin-amendment` are `-text` raw bytes.

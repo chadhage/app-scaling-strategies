@@ -1,0 +1,23 @@
+'use strict';
+
+// Loadable stub of tests\pin-authority.cjs as it behaves before U019: the pins have no amendment path, so only the sealed record is
+// accepted and no addendum is ever read. Retained as RED evidence; never required by the repository tests.
+const { createHash } = require('node:crypto');
+
+const SCHEMA = 'C016-dependency-pins-addendum/1';
+const AMENDABLE = /^capability\\C015\\tests\\[^\\]+$/;
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const lfHash = (bytes) => hash(Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n')));
+const crlfCount = (bytes) => (bytes.toString('utf8').match(/\r\n/g) || []).length;
+const addendumName = (sequence) => `dependency-pins-addendum-${sequence}.json`;
+const listAddenda = () => [];
+const buildAddendum = () => Buffer.alloc(0);
+const resolveChain = () => ({ count: 0, tip: null, history: new Map() });
+const acceptedRecords = (chain, entry) => [{ source: 'sealed', record: entry }];
+
+function checkRaw(chain, entry, raw) {
+  if (hash(raw) !== entry.rawSha256) throw Object.assign(new Error(`PIN_BYTES_CHANGED: ${entry.file}`), { code: 'PIN_BYTES_CHANGED' });
+  return { source: 'sealed', record: entry };
+}
+
+module.exports = Object.freeze({ SCHEMA, AMENDABLE, hash, lfHash, crlfCount, addendumName, listAddenda, buildAddendum, resolveChain, acceptedRecords, checkRaw });

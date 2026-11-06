@@ -9,18 +9,22 @@ const { root, repo, sha } = require('./provenance.cjs');
 const authorization = require('./authorization.cjs');
 const observed = require('..\\observations.js');
 const read = (file) => fs.readFileSync(path.join(root, file));
+const authority = require('./pin-authority.cjs');
+// Published addenda of dependency-pins.json are pinned by LF hash: a later edit of one is rejected. A new addendum is appended after them.
+const TRUSTED_ADDENDA = Object.freeze([
+  { name: 'dependency-pins-addendum-1.json', lfSha256: '6067ba275c30191d1dfe33f38bc7bd7e65c40723ea4a78aecb29e7f1a68a960c' },
+]);
 
 test('accepted C001 C002 C015 bytes and raw CRLF versus Git canonical bytes remain pinned separately', () => {
-  const pins = JSON.parse(read('dependency-pins.json'));
+  const pinsBytes = read('dependency-pins.json');
+  const pins = JSON.parse(pinsBytes);
   assert.equal(pins.independentlyAcceptedC015Commit, '78341b3370d7764b7f9c3eacc1796892dbc4f40f');
   assert.equal(pins.records.length, 160);
+  const chain = authority.resolveChain({ pins, pinsBytes, addenda: authority.listAddenda(root), trusted: TRUSTED_ADDENDA });
   let differingLineEndings = 0;
   for (const entry of pins.records) {
     assert.match(entry.file, /^capability\\C0(?:01|02|15)\\/);
-    const raw = fs.readFileSync(path.join(repo, entry.file));
-    assert.equal(raw.length, entry.rawBytes, entry.file);
-    assert.equal(sha(raw), entry.rawSha256, entry.file);
-    assert.equal((raw.toString('utf8').match(/\r\n/g) || []).length, entry.rawCRLF, entry.file);
+    authority.checkRaw(chain, entry, fs.readFileSync(path.join(repo, entry.file)));
     const canonical = execFileSync('git', ['--no-pager', 'show', `${pins.observedHead}:${entry.file.split(path.sep).join('/')}`],
       { cwd: repo, maxBuffer: 8 * 1024 * 1024 });
     assert.equal(canonical.length, entry.gitCanonicalBytes, entry.file);

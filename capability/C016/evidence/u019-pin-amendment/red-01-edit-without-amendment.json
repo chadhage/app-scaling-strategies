@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "itemId": "U019",
+  "serves": "C016",
+  "workerId": "worker-U019",
+  "stage": "red-01-edit-without-amendment",
+  "node": "v22.23.4",
+  "replay": "node capability\\C016\\tests\\pin-amendment-replay.cjs red <new-scratch-directory>",
+  "environment": {
+    "removed": [
+      "NODE_TEST_CONTEXT",
+      "NODE_V8_COVERAGE",
+      "CAPTURE_BROWSER_EVIDENCE"
+    ],
+    "gitDir": "the real repository .git, read for objects only"
+  },
+  "inputs": [
+    {
+      "name": "tests/integrity.test.v1.cjs",
+      "bytes": 15324,
+      "rawSha256": "840cd00c6984b7cd3a2520e376fd34975e19f1e75804c6ac909b2ddd2a380706",
+      "crlfToLfSha256": "cd592868fc2696448c1c6ce7a62f7a69eeead4e38ffc6bd41d899232d2c24e23"
+    },
+    {
+      "name": "C015/tests/surface.test.cjs (accepted)",
+      "bytes": 6034,
+      "rawSha256": "89834f62ff4ba274de01d95d8b470818482e5cfb4896b339dbd1916907d0c480",
+      "crlfToLfSha256": "506cd59a362e838f3f3154cc56b860b40d28f914dd54e5cc7459255978e5ff6a"
+    },
+    {
+      "name": "C015/tests/surface.test.cjs (K-C015 edit)",
+      "bytes": 6036,
+      "rawSha256": "a8deb9cc0e252974c4c46b2bbe09edf3491523521b2ff931427cc174c79cab9e",
+      "crlfToLfSha256": "b0c38e824a67946a7b8c2bbc1e81fd9d06500c64e0633d29138a08222afb4c3f"
+    }
+  ],
+  "runs": [
+    {
+      "label": "control-unedited",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=accepted C001 C002 C015 bytes",
+        "capability\\C016\\tests\\integrity.test.cjs"
+      ],
+      "startedAtUtc": "2026-11-06T00:13:29.314Z",
+      "completedAtUtc": "2026-11-06T00:13:42.226Z",
+      "exitCode": 0,
+      "stdout": {
+        "file": "capability\\C016\\evidence\\u019-pin-amendment\\raw\\red-01-edit-without-amendment.control-unedited.stdout.raw.gz",
+        "bytes": 380,
+        "rawSha256": "39620d92056bdaf8af081265108a8dc7b33a13a7d916ac882f4632621da393f8"
+      },
+      "stderr": {
+        "file": "capability\\C016\\evidence\\u019-pin-amendment\\raw\\red-01-edit-without-amendment.control-unedited.stderr.raw.gz",
+        "bytes": 0,
+        "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "edited",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=accepted C001 C002 C015 bytes",
+        "capability\\C016\\tests\\integrity.test.cjs"
+      ],
+      "startedAtUtc": "2026-11-06T00:13:42.230Z",
+      "completedAtUtc": "2026-11-06T00:13:52.470Z",
+      "exitCode": 1,
+      "stdout": {
+        "file": "capability\\C016\\evidence\\u019-pin-amendment\\raw\\red-01-edit-without-amendment.edited.stdout.raw.gz",
+        "bytes": 1250,
+        "rawSha256": "b214cb0f7c06af8322dd2868fa45c2e3da33a2d3804704eb89537b3aed3e3072"
+      },
+      "stderr": {
+        "file": "capability\\C016\\evidence\\u019-pin-amendment\\raw\\red-01-edit-without-amendment.edited.stderr.raw.gz",
+        "bytes": 0,
+        "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ]
+}
