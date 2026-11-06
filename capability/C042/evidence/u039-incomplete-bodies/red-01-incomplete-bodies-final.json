@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "name": "red-01-incomplete-bodies-final",
+  "purpose": "U039 fix 4, RED on the FINAL tests against the retained bytes of the committed server.cjs of commit 146d8f0 (SHA-256 1f7b61fc...; U039_SUBJECT=file:...): the incomplete-body rows (a bad chunk size, a Content-Length body cut by the request timeout, the same then the client's FIN, a missing CRLF after chunk data, a chunk cut by a FIN; behind 0 to 2 complete earlier requests; with and without Expect: 100-continue; HTTP/1.1 and HTTP/1.0; in this process and in a separate server process), the burst of 128 sockets, 8 clients that leave in the middle of a body, the ordering rows with a request in flight and a seeded fuzz. Expected exit 1, every failure an assertion about answers and closed connections (no typed answer, the connection stays open); the five rows that must not change pass. The first RED archive of this item (written at 15:28 local, before server.cjs was edited, against the same retained bytes and the same rows: 99 of 103 tests failed, every one an assertion) is NOT in the repository: its transcripts embed the local user name in every stack trace (controller rule 15). The same command was archived again from a neutral drive letter (S: , a subst of the repository root) with an unchanged copy of the shared recorder that differs in one constant (the repository path), so the paths in the transcripts start with S:/capability; the tests gained one row since (a queued request whose body arrives after its turn began) and the ordering helpers a liveness guard.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "capability\\C042\\tests\\u039-body.test.cjs",
+    "capability\\C042\\tests\\u039-body-order.test.cjs",
+    "capability\\C042\\tests\\u039-body-fuzz.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "U039_SUBJECT",
+    "U039_CLOSE_MS"
+  ],
+  "startedAtUtc": "2026-11-06T21:11:29.293Z",
+  "completedAtUtc": "2026-11-06T21:21:50.372Z",
+  "elapsedMs": 621079,
+  "timeoutMs": 3000000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C042\\evidence\\u039-incomplete-bodies\\server.v3-published-146d8f0.cjs.txt",
+      "bytes": 17715,
+      "rawSha256": "1f7b61fc34d183d9e13d53d2c9e9614059676d29005a1b8a790751960e55ae8f",
+      "crlfToLfSha256": "1f7d382c11f26f64f91bf8255ac93376ee69a39295cbc3b78422205003d7154e"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-lib.cjs",
+      "bytes": 14475,
+      "rawSha256": "9773d2ea0471eabd4c0f7cee8993bd2cdf239088aae48a5847e62d17198a3276",
+      "crlfToLfSha256": "894e1783815f27269e2fa79996f8c766fa382b9297e63fd2947e9a051ddb17c9"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-rows.cjs",
+      "bytes": 9669,
+      "rawSha256": "a2f11ae58a72ad0452d55062e8005c2a44e7511c5b9425a78ec3103cac8f7b6a",
+      "crlfToLfSha256": "8f43c644426e8c902267b18a0f17a697b72efb3e770648d99eae05a2f612f1dc"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-child.cjs",
+      "bytes": 2369,
+      "rawSha256": "e57a23196c0dc803f1d0ab2198ff1b7d88a475bb59a306a8f0ec4ac709e2b894",
+      "crlfToLfSha256": "a117a2418f7e7094bc7fb8891c42d8a96385e8bf29beef24b14dddee41380e09"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-body-rows.cjs",
+      "bytes": 6329,
+      "rawSha256": "24f3ffccba20c18b53f63c716810274ad64ba7788db475ec37c4cb2db22a2762",
+      "crlfToLfSha256": "ce24a85fa43a5d62a9cd5185671cfaa31e19d1d098577778f03bad18c509dc75"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-body.test.cjs",
+      "bytes": 7633,
+      "rawSha256": "7ca991cd877dd1489a591ca712df4d6859ae237a1d49980829b35756711347bb",
+      "crlfToLfSha256": "e620adc605b65d800ffca386a657c9843fd3822ec11e9327475a7206a56c6a94"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-body-order.test.cjs",
+      "bytes": 10060,
+      "rawSha256": "4c77caf7022625f008a6e614b427bf69bb7a0e312bc68cdcfdb0156deb5d0bad",
+      "crlfToLfSha256": "f7c48bc04888063cadc3d2e11e30d95fd56feb74de7a4ef4abca8603914536cb"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-body-fuzz.test.cjs",
+      "bytes": 8024,
+      "rawSha256": "03e7278387a9b7b103c19f0d096215a35c6a9642b91b8e6505fd535e5773563f",
+      "crlfToLfSha256": "a7544f790da72abfaaf3a91ed754d51f866ba53c57de7038403b6e008858b293"
+    }
+  ],
+  "summary": {
+    "tests": 104,
+    "suites": 0,
+    "pass": 5,
+    "fail": 99,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "a seeded fuzz of hostile incomplete requests (this process): the earlier reads, at most one typed refusal, a closed connection, nothing applied",
+      "the same fuzz against a SEPARATE server process: the process survives, answers afterwards and holds no connection",
+      "an incomplete request queued behind a request in flight is dropped after its turn: its handler never runs (no 100 Continue), and the client gets ONE typed refusal",
+      "a GET with a broken chunked body queued behind a request in flight answers once, not twice (the handler of the dropped request would refuse the unexpected body again)",
+      "the refusal for an incomplete request waits only for the requests before it: [submit in flight][read][incomplete] answers the submit, the read, then the refusal",
+      "incomplete in-process h11 [X] bad-chunk-size: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [X] short-body-silence: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [X] short-body-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [X] missing-crlf-after-chunk: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [X] chunk-cut-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [X] bad-chunk-size after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [X] short-body-silence after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [X] short-body-fin after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [X] missing-crlf-after-chunk after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [X] chunk-cut-fin after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GX] bad-chunk-size: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GX] short-body-silence: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GX] short-body-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GX] missing-crlf-after-chunk: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GX] chunk-cut-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GX] bad-chunk-size after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GX] short-body-silence after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GX] short-body-fin after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GX] missing-crlf-after-chunk after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GX] chunk-cut-fin after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GGX] bad-chunk-size: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GGX] short-body-silence: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GGX] short-body-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GGX] missing-crlf-after-chunk: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GGX] chunk-cut-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GGX] bad-chunk-size after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GGX] short-body-silence after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GGX] short-body-fin after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GGX] missing-crlf-after-chunk after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h11 [GGX] chunk-cut-fin after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [X] bad-chunk-size: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [X] short-body-silence: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [X] short-body-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [X] missing-crlf-after-chunk: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [X] chunk-cut-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [GX] bad-chunk-size: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [GX] short-body-silence: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [GX] short-body-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [GX] missing-crlf-after-chunk: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [GX] chunk-cut-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [GGX] bad-chunk-size: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [GGX] short-body-silence: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [GGX] short-body-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [GGX] missing-crlf-after-chunk: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete in-process h10 [GGX] chunk-cut-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete separate-process h11 [X] bad-chunk-size: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete separate-process h11 [X] short-body-silence: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete separate-process h11 [X] short-body-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete separate-process h11 [X] missing-crlf-after-chunk: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete separate-process h11 [X] chunk-cut-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete separate-process h11 [X] bad-chunk-size after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete separate-process h11 [X] short-body-silence after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete separate-process h11 [X] short-body-fin after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete separate-process h11 [X] missing-crlf-after-chunk after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+      "incomplete separate-process h11 [X] chunk-cut-fin after Expect: 100-continue: typed refusal after the earlier answers, then the connection is closed and no slot is kept"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red-01-incomplete-bodies-final.stdout.raw.gz",
+      "bytes": 109567,
+      "sha256": "c488b6ec93c2f2236d59556c2432cd6298800e7c212236d7af8062436bf2010f",
+      "gzipBytes": 4335,
+      "gzipSha256": "74cd1317d96d0ac65fbcb229ab527f3ed5c39a8151d8ea52b4b383c3c9000242",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red-01-incomplete-bodies-final.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

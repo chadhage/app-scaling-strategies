@@ -3,8 +3,10 @@
 // U039: the amendment chain of the sealed card C042 and the evidence archived for it, verified WITHOUT git (the accepted tree is
 // pinned inside evidence-addendum-1.json). `verify` is a pure function over an injected file system, so the tamper tests run the
 // same check on an in-memory copy: any change to a pinned byte, an unlisted addition, a broken chain or a doctored transcript
-// must produce a named problem. Not detectable by any in-tree test: a CONSISTENT rewrite of an archive, its manifest and the
-// addendum together; the accepted commit 6e088f54 and its tag are the only anchor for that (README U039.md says so).
+// must produce a named problem. The pin in force for a path is the one of the LAST addendum that names it: addendum 3 supersedes the bytes it
+// replaces BY NAME (previous hashes, a retained copy of the replaced bytes, the new hashes) and pins addendum 2 byte for byte. Not detectable by any
+// in-tree test: a CONSISTENT rewrite of an archive, its manifest and the addendum together; the accepted commit 6e088f54 and its tag are the only anchor
+// for that (README U039.md says so).
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -31,6 +33,8 @@ const same = (bytes, rawDigest, lfDigest) => {
 };
 const ACCEPTED_LF = { [`${NS}/server.cjs`]: '3949f39bb5199ea870718cfc5518d5fc922a23a9a7c3aae799d9acf0656f824d', [`${NS}/README.md`]: '6dbbd833d131b38dff1718d4af4b238d73b47a30680d13e72695facecd0af297' };
 const IGNORED = (name) => name.startsWith(`${NS}/tests/scratch/`) || name.startsWith(`${NS}/data/`);
+// The evidence directories of this item: u039-pipelining (the first fixes) and u039-incomplete-bodies (the fourth fix, addendum 3).
+const isEvidence = (name) => name.startsWith(`${NS}/evidence/u039-`);
 
 function walk(directory, prefix = NS) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -70,6 +74,11 @@ function verify({ files, read }) {
   const listed = new Set([...Object.keys(first.base?.files ?? {})]);
   if (first.base?.commit !== '6e088f54beed052bba20e0910f49aca1d583d293' || first.base?.tag !== 'kanban/C042/6e088f54beed') add('the accepted commit or tag changed');
   if (JSON.stringify(first.amendable) !== JSON.stringify(AMENDABLE)) add('the amendable list is not exactly server.cjs and README.md');
+  // The pin in force for a path is the one of the LAST addendum that names it: an amendment or an index entry of addendum 1, an index entry of a later
+  // addendum, or a SUPERSESSION of a later addendum (it names the replaced bytes by their hashes, keeps them as a retained copy and pins the new bytes).
+  // `superseded` collects every replaced hash, so that the inputs of older captures stay explained.
+  const inForce = new Map();
+  const superseded = new Set();
   const amended = new Map();
   for (const item of first.amendments ?? []) {
     amended.set(item.path, item);
@@ -77,8 +86,9 @@ function verify({ files, read }) {
     if (item.previousRawSha256 !== ACCEPTED[item.path] || item.previousRawSha256 !== first.base.files[item.path] || item.previousCanonicalLfSha256 !== ACCEPTED_LF[item.path]) add(`${item.path}: previous bytes are not the accepted bytes`);
     const retained = read(item.retained);
     if (retained === null || !same(retained, item.previousRawSha256, item.previousCanonicalLfSha256)) add(`${item.path}: the retained accepted bytes changed`);
-    const current = read(item.path);
-    if (current === null || !same(current, item.rawSha256, item.canonicalLfSha256)) add(`${item.path}: the amended bytes changed after the addendum`);
+    superseded.add(item.previousRawSha256);
+    superseded.add(item.previousCanonicalLfSha256);
+    inForce.set(item.path, { raw: item.rawSha256, lf: item.canonicalLfSha256, kind: 'amended' });
   }
   if ([...amended.keys()].sort().join() !== AMENDABLE.join()) add('the amendments do not cover exactly the amendable files');
   for (const [name, digest] of Object.entries(first.base?.files ?? {})) {
@@ -87,28 +97,47 @@ function verify({ files, read }) {
     if (bytes === null) add(`${name}: a sealed file is missing`);
     else if (!same(bytes, digest, first.base.canonicalLfFiles?.[name])) add(`${name}: a sealed file changed`);
   }
-  const pinned = new Map();
-  for (const { json } of addenda) for (const item of [...(json.evidence ?? []), ...(json.added ?? [])]) {
-    if (pinned.has(item.path)) add(`${item.path} is indexed twice`);
-    pinned.set(item.path, item.rawSha256);
-    const bytes = read(item.path);
-    if (bytes === null) add(`${item.path}: an indexed file is missing`);
-    else if (!same(bytes, item.rawSha256, item.canonicalLfSha256)) add(`${item.path}: an indexed file changed`);
+  for (const { json } of addenda) {
+    for (const item of json.supersedes ?? []) {
+      const now = inForce.get(item.path);
+      if (!now || now.raw !== item.previousRawSha256 || now.lf !== item.previousCanonicalLfSha256) add(`${item.path}: the supersession does not continue the chain`);
+      const kept = read(item.retained);
+      if (kept === null || !same(kept, item.previousRawSha256, item.previousCanonicalLfSha256)) add(`${item.path}: the retained superseded bytes changed`);
+      superseded.add(item.previousRawSha256);
+      superseded.add(item.previousCanonicalLfSha256);
+      inForce.set(item.path, { raw: item.rawSha256, lf: item.canonicalLfSha256, kind: now?.kind ?? 'indexed' });
+    }
+    for (const item of [...(json.evidence ?? []), ...(json.added ?? [])]) {
+      if (inForce.has(item.path)) add(`${item.path} is indexed twice`);
+      inForce.set(item.path, { raw: item.rawSha256, lf: item.canonicalLfSha256, kind: 'indexed' });
+    }
   }
+  for (const [name, pin] of inForce) {
+    const bytes = read(name);
+    const how = pin.kind === 'amended' ? 'the amended bytes changed after the addendum' : null;
+    if (bytes === null) add(how === null ? `${name}: an indexed file is missing` : `${name}: ${how}`);
+    else if (!same(bytes, pin.raw, pin.lf)) add(`${name}: ${how ?? 'an indexed file changed'}`);
+  }
+  const pinned = new Set(inForce.keys());
   const addendumNames = new Set(addenda.map((_, index) => `${NS}/evidence-addendum-${index + 1}.json`));
-  // Evidence archived after the newest addendum is pinned by the NEXT one; U039.md (numbers and results) is pinned by addendum 2.
-  for (const name of files) if (!name.startsWith(`${EVIDENCE}/`) && name !== `${NS}/U039.md` && !listed.has(name) && !pinned.has(name) && !addendumNames.has(name)) add(`${name}: an unlisted addition`);
-  if (addenda.length >= 2 && !pinned.has(`${NS}/U039.md`)) add('U039.md is not pinned by the newest addendum');
-  const retained = new Set(addenda.flatMap(({ json }) => json.retainedAttempts ?? []));
-  const superseded = new Set([...amended.values()].flatMap((item) => [item.previousRawSha256, item.previousCanonicalLfSha256]));
-  for (const name of files.filter((file) => file.startsWith(`${EVIDENCE}/`) && /\/[^/]+\.json$/.test(file) && !file.includes('/raw/'))) {
+  // Evidence archived after the newest addendum is pinned by the NEXT one (or by this one once it is rewritten, before publication): inside the evidence
+  // directories it is tolerated here, and refused by the strict run (U039_STRICT_EVIDENCE=1, the check of the final tree). U039.md is pinned by the newest addendum.
+  const strict = process.env.U039_STRICT_EVIDENCE === '1';
+  for (const name of files) if (!(isEvidence(name) && !strict) && name !== `${NS}/U039.md` && !listed.has(name) && !pinned.has(name) && !addendumNames.has(name)) add(`${name}: an unlisted addition`);
+  const newest = addenda.at(-1).json;
+  const newestNames = new Set([...(newest.evidence ?? []), ...(newest.added ?? []), ...(newest.supersedes ?? [])].map((item) => item.path));
+  if (addenda.length >= 2 && !newestNames.has(`${NS}/U039.md`)) add('U039.md is not pinned by the newest addendum');
+  // A retained name only counts in the directory its addendum indexes: the names repeat between the evidence directories of different fixes (green-03-whole-suite, browser-01-edge).
+  const retainedIn = (folder, name) => addenda.some(({ json }) => (json.retainedAttempts ?? []).includes(name) && (json.evidence ?? []).some((item) => item.path.startsWith(`${folder}/`)));
+  for (const name of files.filter((file) => isEvidence(file) && /\/[^/]+\.json$/.test(file) && !file.includes('/raw/'))) {
     let manifest;
     try { manifest = JSON.parse(read(name).toString('utf8')); } catch { add(`${name}: a manifest is not JSON`); continue; }
+    const folder = name.slice(0, name.lastIndexOf('/'));
     for (const stream of ['stdout', 'stderr']) {
-      const gz = read(`${EVIDENCE}/${manifest.transcripts[stream].path.replaceAll('\\', '/')}`);
+      const gz = read(`${folder}/${manifest.transcripts[stream].path.replaceAll('\\', '/')}`);
       if (gz === null || sha(gz) !== manifest.transcripts[stream].gzipSha256 || sha(zlib.gunzipSync(gz)) !== manifest.transcripts[stream].sha256) add(`${manifest.name}: the ${stream} transcript changed`);
     }
-    if (retained.has(manifest.name)) continue;
+    if (retainedIn(folder, manifest.name)) continue;
     for (const input of manifest.inputs) {
       const current = read(input.path.replaceAll('\\', '/'));
       if (current === null || (!same(current, input.rawSha256, input.crlfToLfSha256) && !superseded.has(input.rawSha256))) add(`${manifest.name}: input ${input.path} differs from its pin`);
@@ -173,6 +202,42 @@ tamper('one byte of U039.feature', (files) => flip(files, `${NS}/U039.feature`),
 withSecond('one byte of U039.md (pinned by the newest addendum)', (files) => flip(files, `${NS}/U039.md`), /U039\.md: an indexed file changed/);
 tamper('one byte of an archived manifest', (files) => flip(files, `${EVIDENCE}/red-01-head-bytes.json`), /an indexed file changed|a manifest is not JSON|transcript changed/);
 tamper('a deleted evidence .gitattributes', (files) => files.delete(`${EVIDENCE}/.gitattributes`), /\.gitattributes: an indexed file is missing/);
+// These need addendum 3 (it supersedes the bytes it replaces by name and pins addendum 2); before it exists there is nothing to tamper with.
+const withThird = (name, change, expected) => test(`tamper: ${name} is detected once addendum 3 exists`, () => {
+  const files = snapshot();
+  if (!files.has(`${NS}/evidence-addendum-3.json`)) { assert.deepEqual(verify(memoryFs(files)), [], 'addendum 3 is not written yet: nothing to tamper with'); return; }
+  change(files);
+  assert.equal(verify(memoryFs(files)).some((problem) => expected.test(problem)), true, `${expected} not reported`);
+});
+const third = (files) => JSON.parse(files.get(`${NS}/evidence-addendum-3.json`).toString('utf8'));
+const putThird = (files, json) => files.set(`${NS}/evidence-addendum-3.json`, Buffer.from(`${JSON.stringify(json, null, 2)}\n`));
+withThird('an addendum 2 edited without re-pinning addendum 3', (files) => files.set(`${NS}/evidence-addendum-2.json`, Buffer.concat([files.get(`${NS}/evidence-addendum-2.json`), Buffer.from(' ')])), /addendum 3 does not chain to its predecessor/);
+withThird('one byte of a file addendum 3 superseded (server.cjs)', (files) => flip(files, `${NS}/server.cjs`), /server\.cjs: the amended bytes changed/);
+withThird('one byte of the retained bytes it replaced (the server of fix 3)', (files) => flip(files, first(files, /server\.v3-published-146d8f0\.cjs\.txt$/)), /the retained superseded bytes changed|an indexed file changed/);
+withThird('a doctored previous hash in a supersession', (files) => { const json = third(files); json.supersedes[0].previousRawSha256 = '0'.repeat(64); putThird(files, json); }, /does not continue the chain/);
+withThird('a supersession of a path the chain never pinned', (files) => { const json = third(files); json.supersedes.push({ ...json.supersedes[0], path: `${NS}/contract.js` }); putThird(files, json); }, /contract\.js: the supersession does not continue the chain/);
+withThird('a superseded test that is also indexed as new', (files) => {
+  const json = third(files);
+  json.added.push({ path: json.supersedes.find((item) => item.path.endsWith('u039-mutants.cjs')).path, rawSha256: '0'.repeat(64), canonicalLfSha256: '0'.repeat(64) });
+  putThird(files, json);
+}, /is indexed twice/);
+withThird('an addendum 3 that does not pin U039.md', (files) => { const json = third(files); json.supersedes = json.supersedes.filter((item) => !item.path.endsWith('/U039.md')); putThird(files, json); }, /U039\.md is not pinned by the newest addendum/);
+
+test('the strict run refuses evidence that no addendum pins; the plain run tolerates it until the addendum is rewritten', () => {
+  const files = snapshot();
+  files.set(`${NS}/evidence/u039-incomplete-bodies/stray-archive.txt`, Buffer.from('x'));
+  const saved = process.env.U039_STRICT_EVIDENCE;
+  const stray = (problem) => /stray-archive\.txt: an unlisted addition/.test(problem);
+  try {
+    delete process.env.U039_STRICT_EVIDENCE;
+    assert.equal(verify(memoryFs(files)).some(stray), false, 'tolerated by the plain run');
+    process.env.U039_STRICT_EVIDENCE = '1';
+    assert.equal(verify(memoryFs(files)).some(stray), true, 'refused by the strict run');
+  } finally {
+    if (saved === undefined) delete process.env.U039_STRICT_EVIDENCE;
+    else process.env.U039_STRICT_EVIDENCE = saved;
+  }
+});
 
 const TEXT = /\.(?:c?js|json|md|feature|txt|html|css)$|\.git(?:attributes|ignore)$/;
 const converted = (convert) => { const files = snapshot(); for (const [name, bytes] of files) if (TEXT.test(name) && !name.includes('/raw/')) files.set(name, convert(bytes)); return files; };

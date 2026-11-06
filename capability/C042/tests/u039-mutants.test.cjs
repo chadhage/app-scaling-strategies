@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const { mutants } = require('./u039-mutants.cjs');
+const { BODY_FRAMINGS, BODY_KINDS, BODY_SHAPES, bodyName, burstName, leaversName } = require('./u039-body-rows.cjs');
 const { FRAMINGS, LANE_FRAMINGS, LANE_REFUSALS, LANE_SHAPES, ROWS, laneApplies, laneName } = require('./u039-rows.cjs');
 
 const root = path.resolve(__dirname, '..');
@@ -14,8 +15,16 @@ const source = read('server.cjs').replace(/\r\n/g, '\n');
 
 function titles() {
   const found = [];
-  for (const file of ['u039-ordering.test.cjs', 'u039-flood.test.cjs', 'resources.test.cjs']) {
+  for (const file of ['u039-ordering.test.cjs', 'u039-flood.test.cjs', 'u039-body-order.test.cjs', 'resources.test.cjs']) {
     for (const match of read('tests', file).matchAll(/^test\('((?:[^'\\]|\\.)+)'/gm)) found.push(match[1].replace(/\\'/g, "'"));
+  }
+  for (const target of ['in-process', 'separate-process']) {
+    found.push(burstName(target), leaversName(target));
+    for (const framing of BODY_FRAMINGS) {
+      for (const shape of Object.keys(BODY_SHAPES)) {
+        for (const expect of framing.expects) for (const kind of Object.keys(BODY_KINDS)) found.push(bodyName(target, framing.id, shape, kind, expect));
+      }
+    }
   }
   for (const row of ROWS) {
     found.push(`in-process h11 ${row.id}: every form`, `in-process h10-m ${row.id}: the pipelined mutation`);
@@ -56,6 +65,7 @@ test('every mutant names tests that exist, and an equivalent mutant says why', (
 test('the guards of the fix are all mutated: the mark, the top check, the queue, the listeners, request.socket, the close rule and the destroy', () => {
   const ids = mutants.map((mutant) => mutant.id.slice(4));
   for (const part of ['no-mark', 'no-check-at-top', 'no-queue', 'response-socket-instead-of-request-socket', 'close-only-for-unread-bodies', 'no-destroy-after-flush', 'no-checkExpectation-listener',
-    'no-checkContinue-listener', 'no-clientError-listener', 'no-connect-listener', 'host-header-required-by-node', 'drop-does-not-release', 'unparsed-no-dedupe', 'unparsed-marks-closing']) assert.equal(ids.includes(part), true, part);
-  assert.equal(mutants.filter((mutant) => !mutant.equivalent).length >= 27, true);
+    'no-checkContinue-listener', 'no-clientError-listener', 'no-connect-listener', 'host-header-required-by-node', 'drop-does-not-release', 'unparsed-no-dedupe', 'unparsed-marks-closing',
+    'wait-for-the-latest-entry-even-when-incomplete', 'incomplete-request-not-dropped', 'complete-request-not-waited-for', 'latest-request-not-stored', 'every-incomplete-request-dropped', 'error-before-any-request-not-handled']) assert.equal(ids.includes(part), true, part);
+  assert.equal(mutants.filter((mutant) => !mutant.equivalent).length >= 33, true);
 });

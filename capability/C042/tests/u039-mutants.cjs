@@ -6,16 +6,23 @@
 // can distinguish. tests\u039-mutate.cjs runs them; tests\u039-mutants.test.cjs keeps this list tied to the source. A text that spans
 // lines uses LF: both consumers compare it with the source converted to LF, so a tree in either line ending verifies.
 const { laneName } = require('./u039-rows.cjs');
+const { bodyName, burstName } = require('./u039-body-rows.cjs');
 
 const MATRIX = 'u039-matrix.test.cjs';
 const ORDERING = 'u039-ordering.test.cjs';
 const FLOOD = 'u039-flood.test.cjs';
 const LANE = 'u039-lane.test.cjs';
+const BODY = 'u039-body.test.cjs';
+const BODY_ORDER = 'u039-body-order.test.cjs';
 const PIPE = 'a legitimate pipeline of successful requests is served in order';
+// The rows of the fourth fix that need a request Node was still receiving to be RUNNING (not queued) when the client error arrives: they are the ones a refusal that
+// waits for the wrong lane entry fails (a queued incomplete request is dropped after its turn and releases its entry, so a wrong wait on it ends anyway).
+const RUNNING = [bodyName('in-process', 'h11', 'X', 'bad-chunk-size', false), bodyName('separate-process', 'h10', 'X', 'short-body-fin', false), bodyName('in-process', 'h11', 'GX', 'short-body-silence', false), burstName('in-process')];
+const COMPLETE = ['a request whose message is complete (a Content-Length body)', 'a request whose message is complete (a chunked body)'];
 
 const mutants = [
   { id: 'M01-no-mark', find: '        closing.add(socket);', replace: '        void socket;', files: [MATRIX, ORDERING], fails: ['in-process h11 R404:', 'in-process h11 R400json:', 'separate-process h11 R404:'], passes: [PIPE] },
-  { id: 'M02-no-check-at-top', find: '    if (closing.has(socket)) {', replace: '    if (false) {', files: [MATRIX, ORDERING], fails: ['in-process h11 R404:', 'a queued request whose client has gone never runs'], passes: [PIPE] },
+  { id: 'M02-no-check-at-top', find: '    if (closing.has(socket) || (unparsed.has(socket) && !request.complete)) {', replace: '    if (unparsed.has(socket) && !request.complete) {', files: [MATRIX, ORDERING], fails: ['in-process h11 R404:', 'a queued request whose client has gone never runs'], passes: [PIPE] },
   { id: 'M03-gone-connection-not-marked', find: 'clearTimeout(timer); closing.add(socket); });', replace: 'clearTimeout(timer); });', files: [ORDERING], fails: ['a queued request whose client has gone never runs'], passes: [PIPE] },
   { id: 'M04-no-queue', find: '    if (earlier !== null) await earlier;', replace: '    void earlier;', files: [MATRIX, ORDERING], fails: ['in-process h11 R400json:', 'in-process h11 R409conflict:', 'in-process h11 R503steps:', 'a request pipelined behind a slow request waits'], passes: [PIPE] },
   { id: 'M05-lane-not-stored', find: '    lanes.set(socket, new Promise((done) => { release = done; }));', replace: '    new Promise((done) => { release = done; });', files: [MATRIX, ORDERING], fails: ['in-process h11 R400json:', 'a request pipelined behind a slow request waits'], passes: [PIPE] },
@@ -24,14 +31,14 @@ const mutants = [
   { id: 'M08-depth-never-decremented-correctly', find: 'pipelined.set(socket, pipelined.get(socket) - 1);', replace: 'pipelined.set(socket, pipelined.get(socket) + 1);', files: [ORDERING], fails: ['a long kept-alive connection adds no listener per request'], passes: ['Expect: 100-continue is answered only'] },
   { id: 'M09-response-socket-instead-of-request-socket', find: '    const { socket } = request;', replace: '    const { socket } = response;', files: [ORDERING, MATRIX], fails: [PIPE, 'in-process h11 R404:'], passes: [] },
   { id: 'M10-close-only-for-unread-bodies', find: '      const close = status >= 300 || !consumed;', replace: '      const close = !consumed;', files: [MATRIX, FLOOD, ORDERING], fails: ['in-process h11 R404:', 'in-process h11 R400json:', 'a refusal flood from another process'], passes: [PIPE] },
-  { id: 'M11-no-destroy-after-flush', find: "        response.once('finish', () => socket.destroy());", replace: '        void response;', files: [FLOOD, ORDERING], fails: ['a refusal flood from another process'], passes: ['the server closes its side after a parse error'] },
+  { id: 'M11-no-destroy-after-flush', find: "        response.once('finish', () => socket.destroy());", replace: '        void response;', files: [BODY_ORDER, ORDERING], fails: ['a refused connection is destroyed at the flush of the refusal, not left to Node'], passes: ['the server closes its side after a parse error'] },
   { id: 'M12-no-connection-close-header', find: "...(close ? { Connection: 'close' } : {})", replace: '...({})', files: [MATRIX], fails: ['in-process h11 R404:', 'in-process h11 R415:'], passes: [] },
   { id: 'M13-no-checkExpectation-listener', find: "  server.on('checkExpectation', (request, response) => handle(request, response, 'unsupported'));", replace: '  void server;', files: [MATRIX], fails: ['in-process h11 N417expect:', 'separate-process h11 N417expect:'], passes: ['in-process h11 R404:'] },
   { id: 'M14-no-checkContinue-listener', find: "  server.on('checkContinue', (request, response) => handle(request, response, 'continue'));", replace: '  void server;', files: [ORDERING], fails: ['Expect: 100-continue is answered only for a request that will be read'], passes: [PIPE] },
   { id: 'M15-no-clientError-listener', find: "  server.on('clientError', (error, socket) => refuseUnparsed(socket, UNPARSED[error?.code] ?? 400, 'INVALID_FORMAT', detail('request')));", replace: '  void server;', files: [MATRIX, ORDERING], fails: ['in-process h11 N400garbage:', 'in-process h11 N431header:', 'a parse error behind a request in flight'], passes: ['in-process h11 R404:'] },
   { id: 'M16-no-connect-listener', find: "  server.on('connect', (request, socket) => refuseUnparsed(socket, 405, 'METHOD_NOT_ALLOWED'));", replace: '  void server;', files: [MATRIX], fails: ['in-process h11 N405connect:'], passes: ['in-process h11 R404:'] },
   { id: 'M17-host-header-required-by-node', find: 'connectionsCheckingInterval: limits.checkMs, requireHostHeader: false }', replace: 'connectionsCheckingInterval: limits.checkMs }', files: [MATRIX], fails: ['in-process h11 N421nohost:', 'separate-process h11 N421nohost:'], passes: ['in-process h11 R404:'] },
-  { id: 'M18-unparsed-answer-not-ordered', find: '    (lanes.get(socket) ?? Promise.resolve()).then(() => {', replace: '    Promise.resolve().then(() => {', files: [ORDERING, MATRIX], fails: ['a parse error behind a request in flight', 'in-process h11 N400garbage:'], passes: ['in-process h11 R404:'] },
+  { id: 'M18-unparsed-answer-not-ordered', find: '    (behind ?? Promise.resolve()).then(() => {', replace: '    Promise.resolve().then(() => {', files: [ORDERING, MATRIX], fails: ['a parse error behind a request in flight', 'in-process h11 N400garbage:'], passes: ['in-process h11 R404:'] },
   { id: 'M19-unparsed-reading-not-stopped', find: '    socket.pause();', replace: '    void socket;', files: [ORDERING], fails: ['after a parse error the server stops reading the connection'], passes: ['a parse error behind a request in flight'] },
   { id: 'M20-unparsed-socket-not-closed', find: "      else socket.end(rawAnswer(status, body), () => socket.destroy());", replace: '      else socket.end(rawAnswer(status, body));', files: [ORDERING], fails: ['the server closes its side after a parse error'], passes: ['a parse error behind a request in flight'] },
   { id: 'M21-unparsed-no-dedupe', find: '    unparsed.add(socket);\n    socket.pause();', replace: '    socket.pause();', files: [ORDERING], fails: ['a parse error reported again while the first one waits is answered once'], passes: ['a parse error behind a request in flight'] },
@@ -42,6 +49,13 @@ const mutants = [
   { id: 'M26-drop-does-not-release', find: '      release();\n      return undefined;', replace: '      return undefined;', files: [ORDERING], fails: ['a request queued behind a refusal is dropped, and so is every request queued behind that one'], passes: ['a parse error behind a request in flight'] },
   { id: 'M27-unparsed-marks-closing', find: '    unparsed.add(socket);', replace: '    closing.add(socket);', files: [ORDERING, LANE], fails: ['a parse error answers the requests queued before it in order', laneName('in-process', 'h11', 'GGX', 'parse-error'), laneName('separate-process', 'h10', 'GGGX', 'connect')], passes: ['a parse error behind a request in flight', laneName('in-process', 'h11', 'GX', 'parse-error'), laneName('in-process', 'h11', 'GGX', 'expect-get')] },
   { id: 'M28-unparsed-guard-ignores-the-set', find: '    if (closing.has(socket) || unparsed.has(socket)) return;', replace: '    if (closing.has(socket)) return;', files: [ORDERING], fails: ['a parse error reported again while the first one waits is answered once'], passes: ['a parse error behind a request in flight'] },
+  // The fourth fix (a client error for the request that is still reading its body). M29, M30 and M31 are the three named mutants of its order.
+  { id: 'M29-wait-for-the-latest-entry-even-when-incomplete', find: '    const behind = last !== undefined && !last.request.complete ? last.earlier : lanes.get(socket);', replace: '    const behind = lanes.get(socket);', files: [BODY, BODY_ORDER, ORDERING], fails: RUNNING, passes: [...COMPLETE, PIPE] },
+  { id: 'M30-incomplete-request-not-dropped', find: '    if (closing.has(socket) || (unparsed.has(socket) && !request.complete)) {', replace: '    if (closing.has(socket)) {', files: [BODY, BODY_ORDER], fails: ['an incomplete request queued behind a request in flight is dropped after its turn', 'a GET with a broken chunked body queued behind a request in flight answers once'], passes: [...COMPLETE, bodyName('in-process', 'h11', 'GX', 'bad-chunk-size', false)] },
+  { id: 'M31-complete-request-not-waited-for', find: '    const behind = last !== undefined && !last.request.complete ? last.earlier : lanes.get(socket);', replace: '    const behind = last !== undefined ? last.earlier : lanes.get(socket);', files: [BODY, BODY_ORDER, ORDERING], fails: [...COMPLETE, 'a parse error behind a request in flight'], passes: [RUNNING[0]] },
+  { id: 'M32-latest-request-not-stored', find: '    latest.set(socket, { request, earlier });', replace: '    void latest;', files: [BODY, BODY_ORDER, ORDERING], fails: RUNNING, passes: [...COMPLETE, PIPE] },
+  { id: 'M33-every-incomplete-request-dropped', find: '    if (closing.has(socket) || (unparsed.has(socket) && !request.complete)) {', replace: '    if (closing.has(socket) || !request.complete) {', files: [BODY_ORDER], fails: ['a queued request whose body is still arriving when its turn comes is served, not dropped'], passes: [] },
+  { id: 'M34-error-before-any-request-not-handled', find: '    const behind = last !== undefined && !last.request.complete ? last.earlier : lanes.get(socket);', replace: '    const behind = !last.request.complete ? last.earlier : lanes.get(socket);', files: [MATRIX], fails: ['in-process h11 N400garbage:', 'separate-process h11 N400garbage:'], passes: ['in-process h11 R404:'] },
 ];
 
 module.exports = { mutants };

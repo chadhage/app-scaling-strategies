@@ -7,7 +7,7 @@
 // raised by one. Each mutant is the SUBJECT (U039_SUBJECT=file:...) of a fast set of named tests (the ordering tests, nine
 // matrix rows, the flood). A mutant is KILLED by any failing test; a survivor must be listed in EQUIVALENT below with a one-line
 // proof (an argument about reachability is not a proof), otherwise the run fails. A control run on the unmutated file must pass.
-// Usage (repository root): node capability\C042\tests\u039-mutate-gen.cjs [--jobs 3] [--dir <scratch directory>] [--list]
+// Usage (repository root): node capability\C042\tests\u039-mutate-gen.cjs [--jobs 3] [--only-new] [--dir <scratch directory>] [--list]
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
@@ -22,6 +22,8 @@ const original = fs.readFileSync(path.join(root, 'server.cjs'), 'utf8');
 const eol = original.includes('\r\n') ? '\r\n' : '\n';
 const lines = original.split(eol);
 const accepted = new Set(fs.readFileSync(path.join(root, 'evidence', 'u039-pipelining', 'server.v1.cjs.txt'), 'utf8').split(/\r?\n/).map((line) => line.trim()));
+// The lines of the FOURTH fix are the ones whose text is not in the bytes published by the third (commit 146d8f0, retained): they get the extended operators too.
+const published = new Set(fs.readFileSync(path.join(root, 'evidence', 'u039-incomplete-bodies', 'server.v3-published-146d8f0.cjs.txt'), 'utf8').split(/\r?\n/).map((line) => line.trim()));
 
 // Survivors that no test can tell apart, each with its proof. Keyed by `<line text trimmed> => <mutated text trimmed>`.
 const PROOF = "no status from 300 to 399 is ever sent (test 'every status the server can answer is 2xx or 4xx/5xx' enumerates them), so these thresholds select the same answers";
@@ -57,21 +59,35 @@ function* operators(line) {
   for (const match of line.matchAll(/\b([345]\d\d)\b/g)) yield ['raise-status', `${line.slice(0, match.index)}${Number(match[1]) + 1}${line.slice(match.index + 3)}`];
 }
 
+// Three more operators for the lines of the fourth fix: the condition of `const x = cond ? a : b;` negated, the default of `(x ?? y)` dropped, and a whole-line call
+// statement that holds an object literal or an arrow function (the base operators skip braces) deleted.
+function* extended(line) {
+  const indent = /^\s*/.exec(line)[0];
+  const assign = /^(\s*(?:const|let) \w+ = )(.+?) \? (.+) : (.+);\s*$/.exec(line);
+  if (assign) yield ['negate-ternary-expr', `${assign[1]}!(${assign[2]}) ? ${assign[3]} : ${assign[4]};`];
+  for (const match of line.matchAll(/\((\w+) \?\? [^()]*(?:\([^()]*\))?\)/g)) yield ['drop-nullish-default', `${line.slice(0, match.index)}${match[1]}${line.slice(match.index + match[0].length)}`];
+  if (/^\s+[A-Za-z_.$][^;]*;\s*$/.test(line) && !/^\s*(?:const|let|return|throw|break|continue|if|else|for|while)\b/.test(line) && /[{}]/.test(line)) yield ['delete-call-statement', `${indent}void 0;`];
+}
+
 function generate() {
   const out = [];
+  // --only-new: only the lines of the FOURTH fix (the text is not in the retained published bytes); without it every line U039 added or changed.
+  const onlyNew = process.argv.includes('--only-new');
   lines.forEach((line, index) => {
     const text = line.trim();
     if (text === '' || accepted.has(text) || text.startsWith('//') || /^[}\])]+[;,)]*$/.test(text)) return;
-    for (const [operator, mutated] of operators(line)) if (mutated !== line) out.push({ id: `G${String(out.length + 1).padStart(3, '0')}-${operator}`, line: index + 1, before: text, after: mutated.trim(), source: [...lines.slice(0, index), mutated, ...lines.slice(index + 1)].join(eol) });
+    if (onlyNew && published.has(text)) return;
+    const all = published.has(text) ? operators(line) : [...operators(line), ...extended(line)];
+    for (const [operator, mutated] of all) if (mutated !== line) out.push({ id: `G${String(out.length + 1).padStart(3, '0')}-${operator}`, line: index + 1, before: text, after: mutated.trim(), source: [...lines.slice(0, index), mutated, ...lines.slice(index + 1)].join(eol) });
   });
   return out;
 }
 
-const NAMES = '^(a (legitimate|request|queued|parse|long|failing|refusal flood|connection)|at most|Expect|after |the server|an h2c|two services|every status|in-process h11 (R404|R415|R400json|R409conflict|N417expect|N421nohost|N405connect|N400garbage|N431header):|separate-process h11 R404:)';
+const NAMES = '^(a (legitimate|request|queued|parse|long|failing|refusal flood|refused connection|connection|body that|GET with|burst of 128 sockets that each send a bad chunk size \\(in-process)|an (incomplete|h2c)|8 clients that send a partial body and then close their side \\(in-process|at most|Expect|after |the server|the refusal for an incomplete|two services|every status|incomplete (in-process|separate-process) h11 \\[(X|GX)\\] (bad-chunk-size|short-body-fin|missing-crlf-after-chunk):|in-process h11 (R404|R415|R400json|R409conflict|N417expect|N421nohost|N405connect|N400garbage|N431header):|separate-process h11 R404:)';
 function run(subject) {
   return new Promise((resolve) => {
     const env = lib.childEnv({ U039_SUBJECT: subject, U039_CLOSE_MS: '2000' });
-    const files = ['u039-ordering', 'u039-nodeown', 'u039-matrix', 'u039-flood'].map((name) => path.join('capability', 'C042', 'tests', `${name}.test.cjs`));
+    const files = ['u039-ordering', 'u039-nodeown', 'u039-matrix', 'u039-flood', 'u039-body', 'u039-body-order'].map((name) => path.join('capability', 'C042', 'tests', `${name}.test.cjs`));
     const child = spawn(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=120000', `--test-name-pattern=${NAMES}`, ...files], { cwd: repository, env, windowsHide: true });
     const chunks = [];
     child.stdout.on('data', (chunk) => chunks.push(chunk));

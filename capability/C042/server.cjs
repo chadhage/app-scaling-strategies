@@ -43,6 +43,10 @@ const closing = new WeakSet();
 const unparsed = new WeakSet();
 // Per connection: settles when the latest request has been answered, so that the requests of one connection run strictly in order.
 const lanes = new WeakMap();
+// Per connection: the latest request handed to `handle` and the lane entry that was pending when it arrived (what it waits for). A client error that Node
+// reports while that request is still being received (`request.complete` is false: a bad chunk size, a body cut by the request timeout, the client's FIN in
+// the middle of the body) belongs to it. Its handler waits for a body that can never end, so a refusal that waited for its entry would wait for itself.
+const latest = new WeakMap();
 // Per-connection and per-server bounds: nothing a client does can make memory or the number of sockets grow without limit.
 const BOUNDS = Object.freeze({ pipelineDepth: 4, connections: 128, headerBytes: 8192, headerCount: 64, idleMs: 90000, checkMs: 1000, firstRequestMs: 5000, requestMs: 5000, headersMs: 5000, keepAliveMs: 1000 });
 // The statuses Node itself would choose for a request it refuses before any handler runs; the body is typed, the status is kept.
@@ -99,14 +103,18 @@ function createLocalServer({ engine, transcript = null, bounds = {} } = {}) {
     }
     pipelined.set(socket, depth);
     const earlier = lanes.get(socket) ?? null;
+    latest.set(socket, { request, earlier });
     let release;
     lanes.set(socket, new Promise((done) => { release = done; }));
     response.once('close', () => { pipelined.set(socket, pipelined.get(socket) - 1); release(); });
+    // WAIT 1: the lane entry of the request BEFORE this one, released when that request's response has closed or when it was dropped. It is never this
+    // request's own entry (read above, before it was stored), and the request before it is a complete message, so its handler can finish without the parser.
     // Node hands every pipelined request over at once; this one starts only after the request before it has been answered.
     if (earlier !== null) await earlier;
-    // After a refusal on this connection (decided at once or after an await) or the client leaving, nothing queued behind it may run.
-    // The refusal closes the connection after its flush.
-    if (closing.has(socket)) {
+    // After a refusal on this connection (decided at once or after an await) or the client leaving, nothing queued behind it may run. The refusal closes the
+    // connection after its flush. The same holds for a request whose message Node never finished receiving once a client error has ended the connection
+    // (`unparsed`): it can never be answered, `refuseUnparsed` writes the one typed refusal, and answering it here too would answer twice.
+    if (closing.has(socket) || (unparsed.has(socket) && !request.complete)) {
       release();
       return undefined;
     }
@@ -165,11 +173,14 @@ function createLocalServer({ engine, transcript = null, bounds = {} } = {}) {
         if (!JSON_TYPE.test(request.headers['content-type'] ?? '')) return refuse('UNSUPPORTED_MEDIA_TYPE', { action: 'submit' });
         if (Number(request.headers['content-length'] || 0) > contract.LIMITS.bodyBytes) return refuse('BODY_TOO_LARGE', { action: 'submit' });
         if (expectation === 'continue') response.writeContinue();
+        // WAIT 3: the end of THIS request's body (`end`, the request's `close` when its socket is destroyed, or the size bound). A body that cannot end is a client
+        // error that Node reports (`clientError`); `refuseUnparsed` answers it at once, without waiting for this request, and destroys the socket, which wakes this wait.
         const bytes = await readBody(request, contract.LIMITS.bodyBytes);
         if (bytes === undefined) return undefined;
         if (bytes === null) return refuse('BODY_TOO_LARGE', { action: 'submit', details: [{ path: '$', code: 'BODY_TOO_LARGE', message: contract.ERRORS.BODY_TOO_LARGE.message }] });
         consumed = true;
         const parsed = input.parseBody(bytes);
+        // WAIT 4: the local engine (the step settles by its executor; `closeServer` halts it). It reads nothing from the socket, so it cannot wait for a refusal.
         if (parsed.ok) return reply(await engine.submit(parsed.input));
         if (parsed.unsupported) return refuse(parsed.unsupported, { action: 'submit' });
         return refuse(parsed.problems[0].code, { action: 'submit', details: parsed.problems });
@@ -205,7 +216,13 @@ function createLocalServer({ engine, transcript = null, bounds = {} } = {}) {
     unparsed.add(socket);
     socket.pause();
     const body = Buffer.from(JSON.stringify(result.refusal(code, { details }).body));
-    (lanes.get(socket) ?? Promise.resolve()).then(() => {
+    // WAIT 2: the answers that must go out before the refusal. The request Node was still receiving when it gave up (`complete` is false) is the one that
+    // failed: its handler waits for a body that cannot end, so the refusal waits only for the requests BEFORE it (`earlier`) and never for that request's
+    // own entry. Any other error (a request line, a header, a connection that ends between requests) comes after the latest request, a complete message
+    // whose handler can still answer: the refusal waits for that request's own entry, so the answers go out in order and the refusal is last.
+    const last = latest.get(socket);
+    const behind = last !== undefined && !last.request.complete ? last.earlier : lanes.get(socket);
+    (behind ?? Promise.resolve()).then(() => {
       if (socket.destroyed || !socket.writable) socket.destroy();
       else socket.end(rawAnswer(status, body), () => socket.destroy());
     });

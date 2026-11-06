@@ -1,0 +1,393 @@
+{
+  "schema": "C042-evidence-addendum/1",
+  "cardId": "C042",
+  "sequence": 3,
+  "item": "U039",
+  "reason": "Addendum 3 of U039 (the fourth fix: a client error for a request that is still reading its body is answered at once after the requests before it): supersedes by name the files the fix changed, pins addendum 2 and the new evidence.",
+  "retainedAttempts": [
+    "green-01-whole-suite",
+    "green-02-whole-suite"
+  ],
+  "base": {
+    "commit": "6e088f54beed052bba20e0910f49aca1d583d293",
+    "tag": "kanban/C042/6e088f54beed"
+  },
+  "previous": {
+    "path": "capability/C042/evidence-addendum-2.json",
+    "rawSha256": "ddb1d9a8727b39f53f08a90929fe4654665883b203da3d117f602b3f95884b69",
+    "canonicalLfSha256": "ddb1d9a8727b39f53f08a90929fe4654665883b203da3d117f602b3f95884b69"
+  },
+  "supersedes": [
+    {
+      "path": "capability/C042/server.cjs",
+      "previousRawSha256": "1f7b61fc34d183d9e13d53d2c9e9614059676d29005a1b8a790751960e55ae8f",
+      "previousCanonicalLfSha256": "1f7d382c11f26f64f91bf8255ac93376ee69a39295cbc3b78422205003d7154e",
+      "retained": "capability/C042/evidence/u039-incomplete-bodies/server.v3-published-146d8f0.cjs.txt",
+      "rawSha256": "da14c3e0f9b9670dac6a4fa32d7fe889ca4bb673b29c2c028e624fcdfd181b63",
+      "canonicalLfSha256": "6d99e53954325cab60f39e07fd3855da90086d0b2ba932a4d8207122100ba682",
+      "edit": "A client error Node reports for the request it is still receiving (request.complete is false: a bad chunk size, a body cut by the request timeout or by the client FIN) is answered at once after the requests BEFORE it; the refusal no longer waits for that request own lane entry (a body that cannot end). A request that Node never finished receiving is dropped after its own turn, so it never answers twice. A complete request still waits for its own answer."
+    },
+    {
+      "path": "capability/C042/README.md",
+      "previousRawSha256": "5e084304f63d1f96657ce48968271563426b634a117028ecf8fe6076c033e766",
+      "previousCanonicalLfSha256": "13eb47073515e7716a3ec8eca8b2a7c93c860cf9353d50ef0ca6ec460a5db415",
+      "retained": "capability/C042/evidence/u039-incomplete-bodies/README.v3-published-146d8f0.md.txt",
+      "rawSha256": "e58bbae8d6c99be0bcca28aee1759a356e01aaf267936e51e1412f1c52455d83",
+      "canonicalLfSha256": "d8b98f04e104acb3659ab3c9a120258624c9eb573065cf508db8a5cf8ac3993a",
+      "edit": "The Responses and Connections bullets state what is true for incomplete bodies (typed 400 or 408 and a closed connection), and one line per wait says what it waits for, what finishes it and why it can never wait for the request being refused; the limits of U039.md are named."
+    },
+    {
+      "path": "capability/C042/U039.md",
+      "previousRawSha256": "937c4bdeee3d21950f83962698c18bc64ffbae22f65dd44aef22bb3a81f3e73f",
+      "previousCanonicalLfSha256": "a88a071bcdad65d8faf5baaccaeaa62e5b062004706b3d1fa8df9753d643d308",
+      "retained": "capability/C042/evidence/u039-incomplete-bodies/U039.v2-published-146d8f0.md.txt",
+      "rawSha256": "7437a325863ca505c5bff9f7b6f984ffb36b14e6e35916252a0004ce64f0ae33",
+      "canonicalLfSha256": "e20969b362d3e0db07797551444438aa636ed3c826baf9f3a4c5a87147807397",
+      "edit": "The fourth fix, its evidence and its limits (an Upgrade-flagged request drops what follows it, strict per-connection order, a refusal lost to a reset, the fifth pipelined request)."
+    },
+    {
+      "path": "capability/C042/tests/u039-mutants.cjs",
+      "previousRawSha256": "6599f49f46088e0759d8b9a688df36970e01a4f7dbd6982241374f42a621d535",
+      "previousCanonicalLfSha256": "b3af79a3139ed1bfaaa24da7f2ef541dc2c68a90df87dfd58e9676574a47f24f",
+      "retained": "capability/C042/evidence/u039-incomplete-bodies/u039-mutants.v2-published-146d8f0.cjs.txt",
+      "rawSha256": "f1678b636d5030158e6d7c11a187faf64758dfc1d3bc3ce60db6afc8ce3d2aad",
+      "canonicalLfSha256": "dd1a3bbc584221d56bd33971c17dcb0a717fcc63d1e4b35d0ae295e63e6c745a",
+      "edit": "The mutants follow the changed lines; M29 to M31 (the three named mutants of the fourth fix) are added and M11 is killed by a deterministic test."
+    },
+    {
+      "path": "capability/C042/tests/u039-mutants.test.cjs",
+      "previousRawSha256": "ab6a5c7dddf82640a9cea232819f05ba250a3f2d093b64457b00d423a26f4395",
+      "previousCanonicalLfSha256": "0bfde46e3a59d9cda021551f3d688f65af1df415ac1556612ec8cbc26781d17d",
+      "retained": "capability/C042/evidence/u039-incomplete-bodies/u039-mutants.test.v2-published-146d8f0.cjs.txt",
+      "rawSha256": "586ed7b19668fb783cb6fb59e351f8a5c13593e5b64bf5897604c864262f7d4c",
+      "canonicalLfSha256": "9b99c9ab42db346bc6b20ddd66d281517ab6ffe5944b2da52a94f8f805edb894",
+      "edit": "The mutant list is tied to the titles of the new tests."
+    },
+    {
+      "path": "capability/C042/tests/u039-mutate-gen.cjs",
+      "previousRawSha256": "e055f3bc692b09c3c2e177f4a3f73aaa44b698a386217e6c7f3c4d77aebc6b1b",
+      "previousCanonicalLfSha256": "b869caf901f0ba0752a4aff3943e4d03030da26b8e411f5d0e8ad4f9bdf52079",
+      "retained": "capability/C042/evidence/u039-incomplete-bodies/u039-mutate-gen.v2-published-146d8f0.cjs.txt",
+      "rawSha256": "031333bdc7c31c4e616858bb5696ab1134c87651315fdce03bf5e1e195d2ebac",
+      "canonicalLfSha256": "7e734c8a60ea9a4db9c942dcb5b880b66dfe7ab7c62d99fd705d622bfe400c3c",
+      "edit": "The systematic generator also mutates the lines of the fourth fix (with two more operators) and judges them with the new tests."
+    },
+    {
+      "path": "capability/C042/tests/u039-evidence.test.cjs",
+      "previousRawSha256": "1c21a9e1baf64da31ce8c85c89e2776c361be153d74450545629760d5419f96b",
+      "previousCanonicalLfSha256": "97f31d564f40788e55408d84d690452f099c7f0209825a7d94b15d614672ecd8",
+      "retained": "capability/C042/evidence/u039-incomplete-bodies/u039-evidence.test.v2-published-146d8f0.cjs.txt",
+      "rawSha256": "4bcdad7a6cb9efc40e6bcccc405764318454cceddf09ac441cbf8d960ea685f0",
+      "canonicalLfSha256": "067cdef71c9b201fc0e411b56eea53a9cccd83d51105b45662c1b5429afa8d85",
+      "edit": "The chain check knows supersessions: the pin in force is the one of the last addendum that names a path."
+    },
+    {
+      "path": "capability/C042/tests/u039-addendum.cjs",
+      "previousRawSha256": "fc3ff588bcbb10a7d9d871b2507fb28f7774878499cafcea8815d0c93b13a47c",
+      "previousCanonicalLfSha256": "64989147aa5b8b4c9e69dfde0e64ae900fdac36a161c27ad740d27b67fbb52f8",
+      "retained": "capability/C042/evidence/u039-incomplete-bodies/u039-addendum.v2-published-146d8f0.cjs.txt",
+      "rawSha256": "842d99c2158403006f3d6f74a07caeb88debad7ca3fdc7761b3076753cfeff21",
+      "canonicalLfSha256": "25f229c9378a3cf890fa03bc34c5bb60ae29d48a5743659c8df3a2ca814992ee",
+      "edit": "Writes addendum 3."
+    }
+  ],
+  "evidence": [
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/.gitattributes",
+      "rawSha256": "50b8945a29c1090ea744b8f1b761eb4af6136f91203cf5850bc9a915270532eb",
+      "canonicalLfSha256": "85e48d232edc7b02f6cecf8fbbf905f3b126c467b594d8dd16c4f8fa283a8320"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/README.v3-published-146d8f0.md.txt",
+      "rawSha256": "5e084304f63d1f96657ce48968271563426b634a117028ecf8fe6076c033e766",
+      "canonicalLfSha256": "13eb47073515e7716a3ec8eca8b2a7c93c860cf9353d50ef0ca6ec460a5db415"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/U039.v2-published-146d8f0.md.txt",
+      "rawSha256": "937c4bdeee3d21950f83962698c18bc64ffbae22f65dd44aef22bb3a81f3e73f",
+      "canonicalLfSha256": "a88a071bcdad65d8faf5baaccaeaa62e5b062004706b3d1fa8df9753d643d308"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/browser-01-edge.json",
+      "rawSha256": "4cc4afd37a2461ac43ec896cf60269676a04e78a44de8c4666757618050276dd",
+      "canonicalLfSha256": "4cc4afd37a2461ac43ec896cf60269676a04e78a44de8c4666757618050276dd"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/coverage-01-final-server.json",
+      "rawSha256": "d4d939b047932c99d5d00a0ca53e0f6f88783cd51cd2c3f0e9535efacf5b9dca",
+      "canonicalLfSha256": "d4d939b047932c99d5d00a0ca53e0f6f88783cd51cd2c3f0e9535efacf5b9dca"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/coverage-02-final-journal.json",
+      "rawSha256": "065dcf4a90b2463ede920242907fc3d776e78c027738812b60e31c56ce112643",
+      "canonicalLfSha256": "065dcf4a90b2463ede920242907fc3d776e78c027738812b60e31c56ce112643"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/coverage-02-final-page.json",
+      "rawSha256": "a5209c1f8befb0d6f71d2ce8ea3e7ca9ca80319e2fcc59d26005ac361f210b00",
+      "canonicalLfSha256": "a5209c1f8befb0d6f71d2ce8ea3e7ca9ca80319e2fcc59d26005ac361f210b00"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/green-01-whole-suite.json",
+      "rawSha256": "946f3d399ef257f628d32cd89c7536a74a8b3cbfadc50a9519287ee65f2d65ba",
+      "canonicalLfSha256": "946f3d399ef257f628d32cd89c7536a74a8b3cbfadc50a9519287ee65f2d65ba"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/green-02-whole-suite.json",
+      "rawSha256": "29d60ca69944e8ac1859e4acd00be38fe02d91fe2dcac811dded46936e6253b9",
+      "canonicalLfSha256": "29d60ca69944e8ac1859e4acd00be38fe02d91fe2dcac811dded46936e6253b9"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/green-03-whole-suite.json",
+      "rawSha256": "8ea4f28315c6b8b4ddcc208a6b2148e06a80ad49794191429d443407a93549d9",
+      "canonicalLfSha256": "8ea4f28315c6b8b4ddcc208a6b2148e06a80ad49794191429d443407a93549d9"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/loop-01-incomplete-bodies-20x4.json",
+      "rawSha256": "4ce2a94da3e42f0e3d6fc578ca93db65ef62def158cb4193e974cc15a26b6931",
+      "canonicalLfSha256": "4ce2a94da3e42f0e3d6fc578ca93db65ef62def158cb4193e974cc15a26b6931"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/mutants-01-guards-fix4.json",
+      "rawSha256": "11aab332667f0c362f869c6643cc92495b9316985e08658c85c893f082b83c3f",
+      "canonicalLfSha256": "11aab332667f0c362f869c6643cc92495b9316985e08658c85c893f082b83c3f"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/mutants-gen-01-fix4-lines.json",
+      "rawSha256": "49a5692152c85b50db0d56f23837eee3a2037b5ec43294d52202c92739297060",
+      "canonicalLfSha256": "49a5692152c85b50db0d56f23837eee3a2037b5ec43294d52202c92739297060"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/probe-01-pending-flood-fix4.json",
+      "rawSha256": "6fa9c05d76ece3bba30fc37a85c6e2b20b2eec44007a9ff53235928aee201f3f",
+      "canonicalLfSha256": "6fa9c05d76ece3bba30fc37a85c6e2b20b2eec44007a9ff53235928aee201f3f"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/browser-01-edge.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/browser-01-edge.stdout.raw.gz",
+      "rawSha256": "62d03cd62e840eb748da4cd3789848a9b127d213960e937a82cbd8e2103dd126",
+      "canonicalLfSha256": "62d03cd62e840eb748da4cd3789848a9b127d213960e937a82cbd8e2103dd126"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/coverage-01-final-server.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/coverage-01-final-server.stdout.raw.gz",
+      "rawSha256": "0d3f0caa3e26b4a5524d36c4e5194127eddc9676187d0f69ad604fe11f1bd191",
+      "canonicalLfSha256": "f6afe7c73ec17d49bf6b2da4c52ee8a5570540f39b7362c3263a46d489e96c12"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/coverage-02-final-journal.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/coverage-02-final-journal.stdout.raw.gz",
+      "rawSha256": "0d499c1f5d73847606b1e49eb92b4597c13eeebec2ff9cc794dbcec6f6218abd",
+      "canonicalLfSha256": "0d499c1f5d73847606b1e49eb92b4597c13eeebec2ff9cc794dbcec6f6218abd"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/coverage-02-final-page.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/coverage-02-final-page.stdout.raw.gz",
+      "rawSha256": "6068401c21b5fdf8dd4239d7bb96c888c2ae47360c4bfe852bbbbf29c7e00e2a",
+      "canonicalLfSha256": "a1032810d29391c7e9641bc8b9f09c92a852efa9aa4addbe7dcb6b4da313f41d"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/green-01-whole-suite.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/green-01-whole-suite.stdout.raw.gz",
+      "rawSha256": "b1a396e904a29006399755f8ec8bfa489f1d94100af174bc99c6b8bb7cb93c0b",
+      "canonicalLfSha256": "b1a396e904a29006399755f8ec8bfa489f1d94100af174bc99c6b8bb7cb93c0b"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/green-02-whole-suite.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/green-02-whole-suite.stdout.raw.gz",
+      "rawSha256": "399e80619bdefbe74df12f0a2b71df9cf190fc5fc143b7065cc06598ade91502",
+      "canonicalLfSha256": "399e80619bdefbe74df12f0a2b71df9cf190fc5fc143b7065cc06598ade91502"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/green-03-whole-suite.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/green-03-whole-suite.stdout.raw.gz",
+      "rawSha256": "cc32c63ab92e0c2001342e44fbc6784f2a6e7f5ba7963aff385e5da9dd91f6bb",
+      "canonicalLfSha256": "cc32c63ab92e0c2001342e44fbc6784f2a6e7f5ba7963aff385e5da9dd91f6bb"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/loop-01-incomplete-bodies-20x4.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/loop-01-incomplete-bodies-20x4.stdout.raw.gz",
+      "rawSha256": "a649dc32189bb25403c41b9cf07cc03ea0fa022cadc4a5df105ea0938560bc32",
+      "canonicalLfSha256": "a649dc32189bb25403c41b9cf07cc03ea0fa022cadc4a5df105ea0938560bc32"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/mutants-01-guards-fix4.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/mutants-01-guards-fix4.stdout.raw.gz",
+      "rawSha256": "b5756126a02c5211c01724116d4ef631083f8788f582d40fa10aceee96653757",
+      "canonicalLfSha256": "b5756126a02c5211c01724116d4ef631083f8788f582d40fa10aceee96653757"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/mutants-gen-01-fix4-lines.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/mutants-gen-01-fix4-lines.stdout.raw.gz",
+      "rawSha256": "7600d5b6f1947d0a3f0a252eacfe7e7a41f22777f25d9ba50e76f410b14e679a",
+      "canonicalLfSha256": "7600d5b6f1947d0a3f0a252eacfe7e7a41f22777f25d9ba50e76f410b14e679a"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/probe-01-pending-flood-fix4.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/probe-01-pending-flood-fix4.stdout.raw.gz",
+      "rawSha256": "6d18096771c42a0259f26e05f6070d8599b2515c5dbdd3c4dcaeb2f21d2881d8",
+      "canonicalLfSha256": "6d18096771c42a0259f26e05f6070d8599b2515c5dbdd3c4dcaeb2f21d2881d8"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/red-01-incomplete-bodies-final.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/red-01-incomplete-bodies-final.stdout.raw.gz",
+      "rawSha256": "74cd1317d96d0ac65fbcb229ab527f3ed5c39a8151d8ea52b4b383c3c9000242",
+      "canonicalLfSha256": "74cd1317d96d0ac65fbcb229ab527f3ed5c39a8151d8ea52b4b383c3c9000242"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/tree-01-lf-whole-suite.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/tree-01-lf-whole-suite.stdout.raw.gz",
+      "rawSha256": "ce9df091e805046eff515297b6f9c8a4cecdbdf75830f6081d9dce40280b451f",
+      "canonicalLfSha256": "ce9df091e805046eff515297b6f9c8a4cecdbdf75830f6081d9dce40280b451f"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/tree-02-crlf-whole-suite.stderr.raw.gz",
+      "rawSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "canonicalLfSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/raw/tree-02-crlf-whole-suite.stdout.raw.gz",
+      "rawSha256": "68ded1b180d45d0c5876fdea7478604a631097c87a9129d043583ea75dde23f8",
+      "canonicalLfSha256": "1260642d5bfcfc8e41554fd465bd47a81ec96b7246249dbd9ff1dbe84440955f"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/red-01-incomplete-bodies-final.json",
+      "rawSha256": "bfb13c5c3cbe0eb56dce52fc65247695c8abe34ece80f63690237e2c03e1f1c0",
+      "canonicalLfSha256": "bfb13c5c3cbe0eb56dce52fc65247695c8abe34ece80f63690237e2c03e1f1c0"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/server.v3-published-146d8f0.cjs.txt",
+      "rawSha256": "1f7b61fc34d183d9e13d53d2c9e9614059676d29005a1b8a790751960e55ae8f",
+      "canonicalLfSha256": "1f7d382c11f26f64f91bf8255ac93376ee69a39295cbc3b78422205003d7154e"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/tree-01-lf-whole-suite.json",
+      "rawSha256": "cbc64ea8c76b885ecb22a7a03b67d68c493df68beddd7461e1707a1bbadb400b",
+      "canonicalLfSha256": "cbc64ea8c76b885ecb22a7a03b67d68c493df68beddd7461e1707a1bbadb400b"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/tree-02-crlf-whole-suite.json",
+      "rawSha256": "8553e2651e5782e6a9bcc8396e82658ceeee817d9bcf6e519c9bdc4a2156ebaf",
+      "canonicalLfSha256": "8553e2651e5782e6a9bcc8396e82658ceeee817d9bcf6e519c9bdc4a2156ebaf"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/u039-addendum.v2-published-146d8f0.cjs.txt",
+      "rawSha256": "fc3ff588bcbb10a7d9d871b2507fb28f7774878499cafcea8815d0c93b13a47c",
+      "canonicalLfSha256": "64989147aa5b8b4c9e69dfde0e64ae900fdac36a161c27ad740d27b67fbb52f8"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/u039-evidence.test.v2-published-146d8f0.cjs.txt",
+      "rawSha256": "1c21a9e1baf64da31ce8c85c89e2776c361be153d74450545629760d5419f96b",
+      "canonicalLfSha256": "97f31d564f40788e55408d84d690452f099c7f0209825a7d94b15d614672ecd8"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/u039-mutants.test.v2-published-146d8f0.cjs.txt",
+      "rawSha256": "ab6a5c7dddf82640a9cea232819f05ba250a3f2d093b64457b00d423a26f4395",
+      "canonicalLfSha256": "0bfde46e3a59d9cda021551f3d688f65af1df415ac1556612ec8cbc26781d17d"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/u039-mutants.v2-published-146d8f0.cjs.txt",
+      "rawSha256": "6599f49f46088e0759d8b9a688df36970e01a4f7dbd6982241374f42a621d535",
+      "canonicalLfSha256": "b3af79a3139ed1bfaaa24da7f2ef541dc2c68a90df87dfd58e9676574a47f24f"
+    },
+    {
+      "path": "capability/C042/evidence/u039-incomplete-bodies/u039-mutate-gen.v2-published-146d8f0.cjs.txt",
+      "rawSha256": "e055f3bc692b09c3c2e177f4a3f73aaa44b698a386217e6c7f3c4d77aebc6b1b",
+      "canonicalLfSha256": "b869caf901f0ba0752a4aff3943e4d03030da26b8e411f5d0e8ad4f9bdf52079"
+    }
+  ],
+  "added": [
+    {
+      "path": "capability/C042/U039-incomplete.feature",
+      "rawSha256": "37c67344a37786d62c3d0e192d089521909b7261bdfdcc69cf35b9f3b842a7f1",
+      "canonicalLfSha256": "a0b467cb1ad326ea8b33be7c2af3b9b33c5de9b9d90bf653a763c41e695a8d41"
+    },
+    {
+      "path": "capability/C042/tests/u039-body-fuzz.test.cjs",
+      "rawSha256": "03e7278387a9b7b103c19f0d096215a35c6a9642b91b8e6505fd535e5773563f",
+      "canonicalLfSha256": "a7544f790da72abfaaf3a91ed754d51f866ba53c57de7038403b6e008858b293"
+    },
+    {
+      "path": "capability/C042/tests/u039-body-order.test.cjs",
+      "rawSha256": "4c77caf7022625f008a6e614b427bf69bb7a0e312bc68cdcfdb0156deb5d0bad",
+      "canonicalLfSha256": "f7c48bc04888063cadc3d2e11e30d95fd56feb74de7a4ef4abca8603914536cb"
+    },
+    {
+      "path": "capability/C042/tests/u039-body-rows.cjs",
+      "rawSha256": "24f3ffccba20c18b53f63c716810274ad64ba7788db475ec37c4cb2db22a2762",
+      "canonicalLfSha256": "ce24a85fa43a5d62a9cd5185671cfaa31e19d1d098577778f03bad18c509dc75"
+    },
+    {
+      "path": "capability/C042/tests/u039-body.test.cjs",
+      "rawSha256": "7ca991cd877dd1489a591ca712df4d6859ae237a1d49980829b35756711347bb",
+      "canonicalLfSha256": "e620adc605b65d800ffca386a657c9843fd3822ec11e9327475a7206a56c6a94"
+    },
+    {
+      "path": "capability/C042/tests/u039-incomplete-evidence.test.cjs",
+      "rawSha256": "4c4018a8d67792a461401439e03730942864d4191f4c6d9b735b944128ff33cd",
+      "canonicalLfSha256": "733491276d4320fbfbc45b5f1408ffd8ee2035de5a08d20201098d5712e17775"
+    },
+    {
+      "path": "capability/C042/tests/u039-loop-body.cjs",
+      "rawSha256": "19fb83e6b30234331528274999c30206b6d1cd1592564d0ad6f4214dfc42d021",
+      "canonicalLfSha256": "cbe1a44a7954d822d40f7fc2ed9f9c4d30ec357ebc64fe48c2d841359f101040"
+    },
+    {
+      "path": "capability/C042/tests/u039-suite.cjs",
+      "rawSha256": "fdbe92c92309d2be4fe213eaabc64164ea47fb94049c160232d56cf9118f4f65",
+      "canonicalLfSha256": "1c36df112352a5f12282689083567ded53a1b705bcabbaa567fc0e2a4ade1fce"
+    }
+  ]
+}

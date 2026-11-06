@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "name": "probe-01-pending-flood-fix4",
+  "purpose": "U039 fix 4, the OPPOSITE-failure probe (lessons L-0209, L-0210; controller note F24) re-run on the FINAL server.cjs: the service in a SEPARATE process with --max-old-space-size=48, one submit held PENDING on each of three sockets, 64 KB blocks of GET requests written behind it (up to 50000 requests per socket); the real server must keep its child alive, close every socket, hold no connection afterwards and answer a legitimate GET, while the control with the depth limit removed (the naive design) must fail the same checks. The fourth fix drops a request that Node never finished receiving after its own turn and writes the typed refusal once; this probe shows the memory behaviour of a pending first request is unchanged. The probe is a tool of the first fix (evidence/u039-pipelining/probe-pending-flood.cjs), not part of the whole suite.",
+  "command": [
+    "node.exe",
+    "capability\\C042\\evidence\\u039-pipelining\\probe-pending-flood.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "startedAtUtc": "2026-11-06T22:03:39.540Z",
+  "completedAtUtc": "2026-11-06T22:03:42.667Z",
+  "elapsedMs": 3127,
+  "timeoutMs": 900000,
+  "timedOut": false,
+  "expectedExitCode": 0,
+  "exitCode": 0,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C042\\evidence\\u039-pipelining\\probe-pending-flood.cjs",
+      "bytes": 6297,
+      "rawSha256": "fd78d80a2affb616558756908db653b29c4536acf16c785886bd66d1b51927f7",
+      "crlfToLfSha256": "7bdd41cf87bde46f8704038dc85f36c53331180d87a264c5f22ba77b088e37af"
+    },
+    {
+      "path": "capability\\C042\\server.cjs",
+      "bytes": 20119,
+      "rawSha256": "da14c3e0f9b9670dac6a4fa32d7fe889ca4bb673b29c2c028e624fcdfd181b63",
+      "crlfToLfSha256": "6d99e53954325cab60f39e07fd3855da90086d0b2ba932a4d8207122100ba682"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-lib.cjs",
+      "bytes": 14475,
+      "rawSha256": "9773d2ea0471eabd4c0f7cee8993bd2cdf239088aae48a5847e62d17198a3276",
+      "crlfToLfSha256": "894e1783815f27269e2fa79996f8c766fa382b9297e63fd2947e9a051ddb17c9"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-rows.cjs",
+      "bytes": 9669,
+      "rawSha256": "a2f11ae58a72ad0452d55062e8005c2a44e7511c5b9425a78ec3103cac8f7b6a",
+      "crlfToLfSha256": "8f43c644426e8c902267b18a0f17a697b72efb3e770648d99eae05a2f612f1dc"
+    },
+    {
+      "path": "capability\\C042\\tests\\u039-child.cjs",
+      "bytes": 2369,
+      "rawSha256": "e57a23196c0dc803f1d0ab2198ff1b7d88a475bb59a306a8f0ec4ac709e2b894",
+      "crlfToLfSha256": "a117a2418f7e7094bc7fb8891c42d8a96385e8bf29beef24b14dddee41380e09"
+    }
+  ],
+  "summary": {
+    "thresholdErrors": [],
+    "coverageRows": []
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\probe-01-pending-flood-fix4.stdout.raw.gz",
+      "bytes": 491,
+      "sha256": "7552d927c755c1b27301f94923b9a4829383aae6e3c585dabe945863d95d947a",
+      "gzipBytes": 265,
+      "gzipSha256": "6d18096771c42a0259f26e05f6070d8599b2515c5dbdd3c4dcaeb2f21d2881d8",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\probe-01-pending-flood-fix4.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}
