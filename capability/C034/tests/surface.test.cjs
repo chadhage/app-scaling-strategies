@@ -38,7 +38,7 @@ test('browser script uses the saved evidence file and unchanged read-only C020/C
 });
 
 test('exact approved publisher still retains C034 S, closed paths/Admin and remote-before-stage CRLF-aware guards', () => {
-  const bytes = fs.readFileSync(path.join(repository, '.git', 'kanban-orchestrator', 'publish.ps1'));
+  const bytes = fs.readFileSync(path.join(__dirname, 'fixtures', 'publish-f6df80bdafc0.ps1.txt'));
   assert.equal(hash(bytes), pins.publisherRawSha256);
   const source = bytes.toString('utf8');
   assert.match(source, /C034='S'/);
