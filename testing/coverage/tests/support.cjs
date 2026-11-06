@@ -1,0 +1,82 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawn } = require('node:child_process');
+
+const repository = path.resolve(__dirname, '..', '..', '..');
+const gatePath = path.join(__dirname, '..', 'gate.cjs');
+const fixtureRoot = (name) => path.join(__dirname, '..', 'fixtures', name);
+const scratchBase = path.join(__dirname, '..', '.scratch', 'work');
+
+// Hermetic scratch folders live below the namespace (never in the system temp folder) and are removed by dispose().
+function makeScratch(label) {
+  fs.mkdirSync(scratchBase, { recursive: true });
+  return fs.mkdtempSync(path.join(scratchBase, `${label}-`));
+}
+
+function dispose(directory) {
+  fs.rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+}
+
+function writeTree(root, files) {
+  for (const [relative, content] of Object.entries(files)) {
+    const target = path.join(root, ...relative.split('/'));
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, content);
+  }
+  return root;
+}
+
+// Runs the real CLI as a child process. NODE_V8_COVERAGE stays inherited on purpose so that the outer coverage run measures gate.cjs itself;
+// the gate removes it (and NODE_TEST_CONTEXT) from everything it starts.
+function runCli(args, { env = {}, timeout = 240000 } = {}) {
+  return new Promise((resolve) => {
+    const environment = { ...process.env, ...env };
+    const child = spawn(process.execPath, [gatePath, ...args], { cwd: repository, env: environment, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    const out = [];
+    const err = [];
+    child.stdout.on('data', (chunk) => out.push(chunk));
+    child.stderr.on('data', (chunk) => err.push(chunk));
+    const timer = setTimeout(() => child.kill(), timeout);
+    child.on('close', (status) => {
+      clearTimeout(timer);
+      const stdout = Buffer.concat(out).toString('utf8');
+      let report = null;
+      try {
+        report = JSON.parse(stdout);
+      } catch {
+        report = null;
+      }
+      resolve({ status, stdout, stderr: Buffer.concat(err).toString('utf8'), report });
+    });
+  });
+}
+
+// A fake per-file runner for in-process tests: it answers with canned TAP text and writes the canned lcov to the destination in the arguments.
+function fakeRunner(handler) {
+  const calls = [];
+  const run = async (options) => {
+    const lcovArgument = options.args.filter((argument) => argument.startsWith('--test-reporter-destination=')).pop();
+    const lcovPath = lcovArgument.slice('--test-reporter-destination='.length);
+    const include = options.args.find((argument) => argument.startsWith('--test-coverage-include=')).slice('--test-coverage-include='.length);
+    calls.push({ options, include, lcovPath });
+    const answer = await handler({ include, lcovPath, options });
+    if (answer.lcov !== undefined) fs.writeFileSync(lcovPath, answer.lcov);
+    return { status: 0, signal: null, spawnError: null, timedOut: false, stdout: '', stderr: '', truncated: false, ...answer.run };
+  };
+  run.calls = calls;
+  return run;
+}
+
+const tapSummary = (counts = {}) => {
+  const { tests = 1, pass = 1, fail = 0, cancelled = 0 } = counts;
+  return `TAP version 13\n1..${tests}\n# tests ${tests}\n# suites 0\n# pass ${pass}\n# fail ${fail}\n# cancelled ${cancelled}\n# skipped 0\n# todo 0\n# duration_ms 5\n`;
+};
+
+const lcovRecord = (file, { lines = [10, 10], branches = [2, 2], functions = [1, 1] } = {}) =>
+  `TN:\nSF:${file}\nFNF:${functions[1]}\nFNH:${functions[0]}\nBRF:${branches[1]}\nBRH:${branches[0]}\nDA:1,1\nLH:${lines[0]}\nLF:${lines[1]}\nend_of_record\n`;
+
+module.exports = Object.freeze({
+  repository, gatePath, fixtureRoot, scratchBase, makeScratch, dispose, writeTree, runCli, fakeRunner, tapSummary, lcovRecord
+});

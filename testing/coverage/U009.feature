@@ -1,0 +1,64 @@
+Feature: One command that enforces the 85/85/85 per-file coverage bar on a namespace
+  Tooling item U009 (zero credit, kind unblock, entry gate U003 Done); it unblocks U010, U013 and U014
+  Local, synthetic, offline: Node built-ins only, no browser, no network, no packages
+
+  Scenario: Enumerate the production files and print the list a reviewer can compare with their own
+    Given a namespace root with production scripts, a tests folder, evidence, fixtures, hidden folders and generated pins
+    When I run node testing\coverage\gate.cjs --root <root>
+    Then the enumerated production files are exactly the .js, .cjs and .mjs files that are not tests, evidence, fixtures, dependencies, hidden or generated pins
+    And the JSON report and the readable summary both list every enumerated file, so the list can be compared with a hand-made one
+    And every excluded file is listed with the rule or the manifest reason that excluded it
+
+  Scenario: A production file that no test loads counts as 0 percent
+    Given a production file that no test requires
+    When Node runs the focused tests with coverage for that file
+    Then Node prints no row for it and exits 0 (L-0003, L-0028, L-0043)
+    But the gate reports it loaded false with lines 0, branches 0 and functions 0 and fails
+
+  Scenario: Every file must reach the minimum in lines, branches and functions, with exact decimals
+    Given a production file with 45 of 53 lines covered, which is 84.9057 percent
+    When I run the gate with the default minimum of 85
+    Then that file fails and the report keeps the exact decimals
+    And a file with 861 of 1013 lines covered is 84.9951 percent, which Node prints as 85.00 but which is still below 85 and fails
+    And a file at exactly the minimum passes
+
+  Scenario: A nested failing test cannot pass because it inherited a test context
+    Given the gate is started with NODE_TEST_CONTEXT=child-v8 in its environment (L-0002)
+    When the focused tests of a fixture contain a failing test
+    Then the child environment has NODE_TEST_CONTEXT and NODE_V8_COVERAGE removed, the failing test is seen and the gate fails
+    And a run that prints no test summary at all is a failure too, never a pass
+
+  Scenario: A run that fails, times out or finds no tests fails every file it covers
+    Given high coverage and a failing test, a missing test file, no test files at all, or a hung test run
+    When the gate runs
+    Then each enumerated file is a failure with the reason named, even when its coverage is 100 percent
+    And a hung run is ended with the process tree that this gate started, never by name and never any other process
+
+  Scenario: A candidate that no rule and no manifest classifies fails as UNCLASSIFIED
+    Given verification tooling such as verify.cjs, a script type that Node coverage cannot measure, or a link
+    When the namespace has no coverage.manifest.json entry for it
+    Then the gate fails, lists it under unclassified and never skips it silently
+    And an exclude entry with a reason in coverage.manifest.json classifies it, while an entry without a reason is a usage error
+
+  Scenario: One L-0004 command per production file, measured through lcov
+    Given the production files of a namespace
+    When the gate measures them
+    Then it runs one node --test --experimental-test-coverage command per file with that file as the only include and the minimum on all three thresholds
+    And it reads the lcov report for exact counts and proves it agrees with the table that Node prints in the same run
+    And it never combines several include values in one command, which would hide a weak file behind the aggregate row
+
+  Scenario: The JSON report and the exit code carry the verdict
+    Given any namespace
+    When the gate finishes
+    Then stdout is one JSON document with schema, root, node, min, files, unclassified and pass, and --json writes the same document to a path
+    And the exit code is 0 only on pass, 1 on any miss and 2 on a usage error
+
+  Scenario: The gate passes its own gate and reproduces the reviewer figures for C031
+    Given node testing\coverage\gate.cjs --root testing\coverage
+    Then every production file of this namespace reaches 85 percent lines, branches and functions, and the fixtures are classified by the manifest
+    And on capability\C031 the figures are cli.cjs 100/100/100, evaluator.js 100/99.76/100, page.js 100/97.1/100, saved.js 100/100/100 and source.cjs 100/100/100, read-only
+
+  Scenario: The documented limits stay visible
+    Given the README
+    Then it states that browser-only scripts are measured only when a Node test loads them through a DOM stub or vm, that real browser V8 coverage is U010
+    And it states Node's own semantics for uncalled functions, vacuous 100 percent for a metric with nothing to cover, and that PowerShell is not measured here
