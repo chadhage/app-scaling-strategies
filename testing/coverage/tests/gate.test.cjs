@@ -84,7 +84,7 @@ test('a passing fixture runs one sanitized command and the report carries everyt
   assert.equal(call.cwd, repository);
   assert.equal(call.timeoutMs, 900000);
   assert.equal('NODE_TEST_CONTEXT' in call.env, false, 'L-0002');
-  assert.equal('NODE_V8_COVERAGE' in call.env, false, 'L-0002');
+  assert.equal(Object.hasOwn(call.env, 'NODE_V8_COVERAGE') && call.env.NODE_V8_COVERAGE === undefined, true, 'an own undefined value keeps the caller coverage directory out of the child (F1)');
   assert.equal(path.dirname(call.env.TEMP), path.dirname(call.env.TMP));
   assert.equal(call.env.TEMP.startsWith(scratch), true, 'Node coverage temp files stay inside the gate scratch');
   assert.equal(call.env.TEMP, call.env.TMPDIR);
@@ -228,7 +228,7 @@ test('a scratch directory that cannot be removed is reported as a warning, not h
   assert.match(report.warnings[0], /could not remove the scratch directory .*u009-.*: EBUSY/);
 });
 
-test('--scratch names the parent of the per-run scratch directory: created when missing, used by the run, emptied afterwards', async (t) => {
+test('--scratch names the parent of the per-run scratch directory: created when missing, used by the run, removed again when the run created it', async (t) => {
   const scratch = makeScratch('gate-parent');
   t.after(() => dispose(scratch));
   const parent = path.join(scratch, 'new', 'parent');
@@ -241,7 +241,7 @@ test('--scratch names the parent of the per-run scratch directory: created when 
   assert.equal(report.pass, true);
   assert.equal(temps.length, 1);
   assert.equal(temps[0].startsWith(parent + path.sep), true, 'Node coverage temp files land below the requested scratch parent');
-  assert.deepEqual(fs.readdirSync(parent), [], 'the per-run directory is gone and the parent stays, empty');
+  assert.deepEqual(fs.existsSync(path.join(scratch, 'new')), false, 'the folders this run created for the scratch parent are removed again, deepest first');
   assert.equal(fs.existsSync(path.join(scratch, 'unused')), false, 'the default scratch is not touched when --scratch is given');
 });
 
@@ -274,7 +274,7 @@ test('main turns a usage error into exit code 2 with a JSON error document, and 
   const err = [];
   const io = { ...dependencies(fakeRunner(passing), scratch), stdout: (text) => out.push(text), stderr: (text) => err.push(text) };
   assert.equal(await main(['--min', '85'], io), 2);
-  assert.deepEqual(JSON.parse(out.join('')), { schema: 'U009-coverage-gate/1', pass: false, error: { code: 'USAGE', message: '--root <dir> is required.' } });
+  assert.deepEqual(JSON.parse(out.join('')), { schema: 'U009-coverage-gate/1', pass: false, error: { code: 'USAGE', type: 'usage', message: '--root <dir> is required.' } });
   assert.match(err.join(''), /--root <dir> is required\.[\s\S]*Usage: node testing\\coverage\\gate\.cjs/);
   out.length = 0;
   assert.equal(await main(['--help'], io), 0);
@@ -284,9 +284,16 @@ test('main turns a usage error into exit code 2 with a JSON error document, and 
   assert.equal(JSON.parse(out.join('')).error.code, 'USAGE');
 });
 
-test('an unexpected error is not disguised as a usage error', async (t) => {
+test('an unexpected error is a typed internal failure with exit 1: never a usage error and never a rejection', async (t) => {
   const scratch = makeScratch('gate-crash');
   t.after(() => dispose(scratch));
+  const out = [];
+  const err = [];
   const broken = { ...fs, statSync: () => { throw new Error('disk exploded'); } };
-  await assert.rejects(main(['--root', relative(fixtureRoot('pass'))], { ...dependencies(fakeRunner(passing), scratch, { fsApi: broken }), stdout: () => {}, stderr: () => {} }), /disk exploded/);
+  const io = { ...dependencies(fakeRunner(passing), scratch, { fsApi: broken }), stdout: (text) => out.push(text), stderr: (text) => err.push(text) };
+  assert.equal(await main(['--root', relative(fixtureRoot('pass'))], io), 1);
+  const report = JSON.parse(out.join(''));
+  assert.deepEqual([report.schema, report.pass, report.error.type, report.error.code], ['U009-coverage-gate/1', false, 'internal', 'INTERNAL']);
+  assert.match(report.error.message, /disk exploded/);
+  assert.match(err.join(''), /internal error: Error: disk exploded/);
 });

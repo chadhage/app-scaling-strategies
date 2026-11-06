@@ -75,7 +75,7 @@ test('output beyond the buffer limit is dropped and flagged instead of growing w
   assert.equal(result.status, 0);
 });
 
-test('a hung run is ended with the whole tree this call started and no other process is touched', async () => {
+test('a hung run is ended with the whole tree this call started and no other process is touched', { timeout: 60000 }, async () => {
   const scratch = makeScratch('runner');
   const bystander = spawn(process.execPath, ['-e', sleeper], { stdio: 'ignore', windowsHide: true });
   try {
@@ -96,18 +96,24 @@ test('a hung run is ended with the whole tree this call started and no other pro
   }
 });
 
-test('a child that never closes after being killed is abandoned after the grace period', async () => {
+test('a child that never closes after being killed is abandoned after the grace period', { timeout: 30000 }, async () => {
   const killed = [];
   const fake = new EventEmitter();
   fake.pid = 31337;
   fake.stdout = new EventEmitter();
   fake.stderr = new EventEmitter();
-  const result = await runProcess({
-    command: 'x', args: [], cwd: '.', env: {}, timeoutMs: 20, graceMs: 20, start: () => fake, kill: (pid) => killed.push(pid)
+  let guard;
+  const hung = new Promise((resolve) => {
+    guard = setTimeout(() => resolve('hung'), 5000);
   });
+  const outcome = await Promise.race([runProcess({
+    command: 'x', args: [], cwd: '.', env: {}, timeoutMs: 20, graceMs: 20, start: () => fake, kill: (pid) => killed.push(pid)
+  }), hung]);
+  clearTimeout(guard);
+  assert.notEqual(outcome, 'hung', 'runProcess must give up on a child that never closes once the grace period is over');
   assert.deepEqual(killed, [31337]);
-  assert.equal(result.timedOut, true);
-  assert.equal(result.status, null);
+  assert.equal(outcome.timedOut, true);
+  assert.equal(outcome.status, null);
 });
 
 test('the child leads its own process group everywhere but on Windows', async () => {

@@ -9,14 +9,28 @@ const gatePath = path.join(__dirname, '..', 'gate.cjs');
 const fixtureRoot = (name) => path.join(__dirname, '..', 'fixtures', name);
 const scratchBase = path.join(__dirname, '..', '.scratch', 'work');
 
-// Hermetic scratch folders live below the namespace (never in the system temp folder) and are removed by dispose().
+// Hermetic scratch folders live below the namespace (never in the system temp folder) and are removed by dispose(), which also removes the
+// empty base folders again. Another test process may remove an empty base between the two calls, so a missing base is created again.
 function makeScratch(label) {
-  fs.mkdirSync(scratchBase, { recursive: true });
-  return fs.mkdtempSync(path.join(scratchBase, `${label}-`));
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      fs.mkdirSync(scratchBase, { recursive: true });
+      return fs.mkdtempSync(path.join(scratchBase, `${label}-`));
+    } catch (error) {
+      if (error.code !== 'ENOENT' || attempt >= 3) throw error;
+    }
+  }
 }
 
 function dispose(directory) {
   fs.rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  for (const folder of [scratchBase, path.dirname(scratchBase)]) {
+    try {
+      fs.rmdirSync(folder);
+    } catch {
+      return;
+    }
+  }
 }
 
 function writeTree(root, files) {
@@ -29,7 +43,7 @@ function writeTree(root, files) {
 }
 
 // Runs the real CLI as a child process. NODE_V8_COVERAGE stays inherited on purpose so that the outer coverage run measures gate.cjs itself;
-// the gate removes it (and NODE_TEST_CONTEXT) from everything it starts.
+// the gate keeps it (and NODE_TEST_CONTEXT) out of everything it starts (command.cjs buildEnvironment; proven in fix-f1-env.test.cjs).
 function runCli(args, { env = {}, timeout = 240000 } = {}) {
   return new Promise((resolve) => {
     const environment = { ...process.env, ...env };

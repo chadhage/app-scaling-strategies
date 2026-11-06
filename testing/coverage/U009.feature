@@ -25,7 +25,7 @@ Feature: One command that enforces the 85/85/85 per-file coverage bar on a names
   Scenario: A nested failing test cannot pass because it inherited a test context
     Given the gate is started with NODE_TEST_CONTEXT=child-v8 in its environment (L-0002)
     When the focused tests of a fixture contain a failing test
-    Then the child environment has NODE_TEST_CONTEXT and NODE_V8_COVERAGE removed, the failing test is seen and the gate fails
+    Then the child environment has NODE_TEST_CONTEXT removed and NODE_V8_COVERAGE set as an own undefined property, the failing test is seen and the gate fails
     And a run that prints no test summary at all is a failure too, never a pass
 
   Scenario: A run that fails, times out or finds no tests fails every file it covers
@@ -62,3 +62,35 @@ Feature: One command that enforces the 85/85/85 per-file coverage bar on a names
     Given the README
     Then it states that browser-only scripts are measured only when a Node test loads them through a DOM stub or vm, that real browser V8 coverage is U010
     And it states Node's own semantics for uncalled functions, vacuous 100 percent for a metric with nothing to cover, and that PowerShell is not measured here
+
+  # The scenarios below were added by the fix run R2-U009 after the independent review of the first publication (F1 to F5, minors m1 to m8).
+
+  Scenario: F1 The nested run never writes into the coverage directory of the caller
+    Given the gate is started under an outer NODE_V8_COVERAGE=<dir>
+    When it measures a namespace
+    Then the only V8 coverage file in <dir> belongs to the gate process itself, never to the node --test runner or its test files
+
+  Scenario: F2 An internal error is a typed failure and never exit 0
+    Given NODE_OPTIONS holds --unhandled-rejections=warn or none, and --scratch names a file
+    When the gate runs
+    Then stdout is a JSON failure report with error.type internal, stderr says internal error and the exit code is 1
+
+  Scenario: F3 The --json path never keeps an older pass
+    Given one --json path reused by a passing run, a usage error and a crash
+    Then after each of them the path holds the report of that invocation: a pass, a failure with error.type usage, a failure with error.type internal
+    And a run that never finishes leaves a started marker with pass false
+
+  Scenario: F4 Matching a glob takes milliseconds whatever the pattern and the name
+    Given a pattern with ten stars and a 60 character name, or eight ** groups and 44 folders
+    When the enumeration matches them through --exclude, --include, --tests or coverage.manifest.json
+    Then it finishes in milliseconds and ordinary patterns keep the semantics of the old translation
+
+  Scenario: F5 --json replaces only a new file or a previous gate report
+    Given --json names a production source file, a foreign text or JSON file, a directory, a device name, a link or a script name
+    When the gate runs
+    Then it exits 2 before anything is written and the existing file keeps its bytes
+
+  Scenario: The report says what it is relative to and what it did not look at
+    Given runs with --min below 85, with --include or --exclude, or with a repeated scalar flag
+    Then fullBar is false with its reasons, and a repeated scalar flag is a usage error
+    And the report lists the extensions that were seen but never considered, and an empty production file fails with its own reason

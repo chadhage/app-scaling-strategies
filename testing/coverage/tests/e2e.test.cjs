@@ -163,7 +163,7 @@ test('without --scratch the gate uses its own scratch folder, and --tests accept
 test('a usage error exits 2 and still prints a JSON document', () => {
   const { status, report, stderr } = state.runs.usage;
   assert.equal(status, 2);
-  assert.deepEqual(report, { schema: 'U009-coverage-gate/1', pass: false, error: { code: 'USAGE', message: '--root <dir> is required.' } });
+  assert.deepEqual(report, { schema: 'U009-coverage-gate/1', pass: false, error: { code: 'USAGE', type: 'usage', message: '--root <dir> is required.' } });
   assert.match(stderr, /Usage: node testing\\coverage\\gate\.cjs/);
 });
 

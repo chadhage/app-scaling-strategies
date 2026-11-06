@@ -5,6 +5,9 @@ const { COVERAGE_METRICS, percentOf, meetsMinimum } = require('./report.cjs');
 const SCHEMA = 'U009-coverage-gate/1';
 // The table that Node prints rounds to two decimals; a difference beyond that rounding means one of the two readings is wrong.
 const TABLE_TOLERANCE = 0.0051;
+const EMPTY_FILE_REASON = 'empty file (0 bytes): Node writes no coverage record for an empty file, so it cannot be told from a file that no test loaded and counts as 0 percent; give it code or remove it';
+// The kanban Coverage bar: this report is the full bar only at or above it and without --include or --exclude.
+const FULL_BAR = 85;
 
 function formatPercent(counts) {
   return percentOf(counts).toFixed(4).replace(/\.?0+$/, '');
@@ -38,13 +41,14 @@ function disagreements(counts, table) {
 
 // One verdict for one production file: `record` is the lcov record (undefined when no test loaded the file) and `table` the matching row of the
 // table that Node printed in the same run (null when absent).
-function evaluateFile({ file, min, command, timeoutMs, run, summary, failedTests = [], record, table = null, lcovError = null }) {
+function evaluateFile({ file, min, command, timeoutMs, run, summary, failedTests = [], record, table = null, lcovError = null, empty = false }) {
   const loaded = record !== undefined;
   const counts = loaded ? { lines: record.lines, branches: record.branches, functions: record.functions } : null;
   const problems = [];
   const runProblem = judgeRun({ run, summary, timeoutMs });
   if (runProblem !== null) problems.push(runProblem);
   if (runProblem === null && lcovError !== null) problems.push(`the lcov report is unusable: ${lcovError}`);
+  else if (runProblem === null && !loaded && empty) problems.push(EMPTY_FILE_REASON);
   else if (runProblem === null && !loaded) problems.push('not loaded by any test: Node prints no row for it, so it counts as 0 percent (L-0003)');
   if (loaded) {
     for (const metric of COVERAGE_METRICS) {
@@ -87,9 +91,18 @@ function unrunFile({ file, reasons }) {
   };
 }
 
-function buildReport({ root, node, min, files, unclassified, excluded, skippedDirectories, warnings, tests, filters, timeoutMs }) {
+function fullBarReasons(min, filters) {
+  const reasons = [];
+  if (min < FULL_BAR) reasons.push(`--min ${min} is below the ${FULL_BAR} bar`);
+  if ((filters.include || []).length > 0) reasons.push('--include narrows the run to a subset of the files');
+  if ((filters.exclude || []).length > 0) reasons.push('--exclude removes files from the namespace');
+  return reasons;
+}
+
+function buildReport({ root, node, min, files, unclassified, excluded, skippedDirectories, warnings, tests, filters = {}, timeoutMs, notConsidered = [] }) {
   const errors = [];
   if (files.length === 0) errors.push('no production files were enumerated, so nothing was measured: a gate over nothing is not a pass');
+  const reasons = fullBarReasons(min, filters);
   return {
     schema: SCHEMA,
     root,
@@ -99,11 +112,14 @@ function buildReport({ root, node, min, files, unclassified, excluded, skippedDi
     unclassified,
     excluded,
     skippedDirectories,
+    notConsidered,
     tests,
     filters,
     timeoutMs,
     warnings,
     errors,
+    fullBar: reasons.length === 0,
+    fullBarReasons: reasons,
     pass: errors.length === 0 && unclassified.length === 0 && files.every((entry) => entry.ok)
   };
 }
@@ -116,6 +132,9 @@ function formatSummary(report) {
     for (const entry of report.excluded) counts.set(entry.by, (counts.get(entry.by) || 0) + 1);
     lines.push(`excluded (${report.excluded.length}): ${[...counts].map(([by, count]) => `${count} by ${by}`).join(', ')}`);
   }
+  if (report.notConsidered.length > 0) {
+    lines.push(`not considered, never measured (${report.notConsidered.length} extensions): ${report.notConsidered.map((entry) => `${entry.extension || 'no extension'} x${entry.count}${entry.scriptLike ? ' (script-like)' : ''}`).join(', ')}`);
+  }
   for (const entry of report.files) {
     const figure = (value) => value.toFixed(2).padStart(6);
     lines.push(`  ${entry.ok ? 'PASS' : 'FAIL'}  ${entry.file}  lines ${figure(entry.lines)}  branches ${figure(entry.branches)}  functions ${figure(entry.functions)}` +
@@ -123,6 +142,7 @@ function formatSummary(report) {
   }
   for (const entry of report.unclassified) lines.push(`  UNCLASSIFIED  ${entry.file}  <- ${entry.reason}`);
   for (const message of [...report.warnings, ...report.errors]) lines.push(`  note: ${message}`);
+  if (!report.fullBar) lines.push(`  note: NOT the full ${FULL_BAR} bar over the full namespace: ${report.fullBarReasons.join('; ')}`);
   lines.push(report.pass ? 'RESULT: PASS' : 'RESULT: FAIL');
   return lines;
 }

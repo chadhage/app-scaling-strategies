@@ -4,22 +4,36 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { UsageError } = require('../errors.cjs');
-const { INHERITED, buildEnvironment, argumentPath, includePattern, buildCommand } = require('../command.cjs');
+const { INHERITED, buildEnvironment, visibleEnvironment, argumentPath, includePattern, buildCommand } = require('../command.cjs');
 
 const drive = path.parse(process.cwd()).root;
 const cwd = path.join(drive, 'repo');
 
 test('the child environment drops NODE_TEST_CONTEXT and NODE_V8_COVERAGE in any letter case and keeps everything else', () => {
   const source = { NODE_TEST_CONTEXT: 'child-v8', node_v8_coverage: 'C:\\cov', Node_Test_Context: 'x', PATH: 'p', Keep: '1' };
-  assert.deepEqual(buildEnvironment(source), { PATH: 'p', Keep: '1' });
+  const environment = buildEnvironment(source);
+  assert.deepEqual(visibleEnvironment(environment), { PATH: 'p', Keep: '1' });
   assert.equal(source.NODE_TEST_CONTEXT, 'child-v8', 'the source environment is never mutated');
   assert.deepEqual([...INHERITED], ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE']);
   assert.equal(Object.isFrozen(INHERITED), true);
 });
 
+test('NODE_V8_COVERAGE is an OWN property set to undefined, because spawn re-injects the parent value into an object without it (F1)', () => {
+  const environment = buildEnvironment({ PATH: 'p', NODE_V8_COVERAGE: 'C:\\outer' });
+  assert.equal(Object.hasOwn(environment, 'NODE_V8_COVERAGE'), true);
+  assert.equal(environment.NODE_V8_COVERAGE, undefined);
+  assert.equal('NODE_V8_COVERAGE' in visibleEnvironment(environment), false);
+  assert.equal(Object.hasOwn(buildEnvironment({}), 'NODE_V8_COVERAGE'), true, 'also when the source never had one');
+});
+
+test('an explicit override of NODE_V8_COVERAGE is the caller\'s choice and replaces the undefined marker', () => {
+  const environment = buildEnvironment({ node_v8_coverage: 'C:\\outer' }, { NODE_V8_COVERAGE: 'C:\\own' });
+  assert.deepEqual(visibleEnvironment(environment), { NODE_V8_COVERAGE: 'C:\\own' });
+});
+
 test('overrides replace a variable of any letter case instead of duplicating it', () => {
   const environment = buildEnvironment({ Temp: 'a', TMP: 'b', X: '1' }, { TEMP: 'c', TMP: 'c', TMPDIR: 'c' });
-  assert.deepEqual(environment, { X: '1', TEMP: 'c', TMP: 'c', TMPDIR: 'c' });
+  assert.deepEqual(visibleEnvironment(environment), { X: '1', TEMP: 'c', TMP: 'c', TMPDIR: 'c' });
 });
 
 test('argument paths are relative with / inside the cwd and absolute with / elsewhere', () => {

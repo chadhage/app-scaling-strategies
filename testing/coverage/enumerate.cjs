@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { UsageError } = require('./errors.cjs');
-const { globToRegExp, hasMagic, normalizePattern } = require('./glob.cjs');
+const { compileGlob, hasMagic, normalizePattern } = require('./glob.cjs');
 
 const MANIFEST_NAME = 'coverage.manifest.json';
 const MANIFEST_SCHEMA = 'U009-coverage-manifest/1';
@@ -32,7 +32,7 @@ function compilePattern(value, label) {
   if (pattern.startsWith('/') || /^[A-Za-z]:/.test(pattern) || pattern.split('/').includes('..')) {
     throw new UsageError(`${MANIFEST_NAME}: ${label} must be a relative path below the root without "..": ${value}`);
   }
-  return { pattern, matcher: globToRegExp(pattern) };
+  return { pattern, matcher: compileGlob(pattern) };
 }
 
 function parseManifest(text) {
@@ -91,7 +91,7 @@ function walkTree(root, fsApi = fs) {
       if (entry.isSymbolicLink()) {
         links.push(relative);
       } else if (entry.isDirectory()) {
-        if (entry.name === 'node_modules') skipped.push({ directory: relative, rule: 'dependencies' });
+        if (entry.name.toLowerCase() === 'node_modules') skipped.push({ directory: relative, rule: 'dependencies' });
         else if (entry.name.startsWith('.')) skipped.push({ directory: relative, rule: 'hidden' });
         else visit(path.join(directory, entry.name), relative);
       } else if (entry.isFile()) {
@@ -121,6 +121,25 @@ function ruleFor(relativePath) {
 }
 
 const isCandidate = (relativePath) => [...MEASURABLE, ...UNMEASURABLE].includes(extensionOf(relativePath));
+
+// Script-like types that no rule reads: they are only listed (never classified), so a reviewer sees what the gate did not look at.
+const SCRIPT_LIKE = Object.freeze(['.vbs', '.wsf', '.rb', '.pl', '.pm', '.php', '.psd1', '.html', '.htm', '.xhtml', '.svg', '.lua', '.go', '.java', '.c', '.cpp', '.cs', '.rs', '.sql']);
+const EXAMPLES_PER_EXTENSION = 5;
+
+// The extensions of the files that were seen and are no candidate, with a count and a few examples each (m2 of the U009 review).
+function notConsideredOf(files) {
+  const groups = new Map();
+  for (const file of files) {
+    if (!isCandidate(file)) {
+      const extension = extensionOf(file);
+      if (!groups.has(extension)) groups.set(extension, { extension, count: 0, files: [], scriptLike: SCRIPT_LIKE.includes(extension) });
+      const group = groups.get(extension);
+      group.count += 1;
+      if (group.files.length < EXAMPLES_PER_EXTENSION) group.files.push(file);
+    }
+  }
+  return [...groups.values()].sort((left, right) => byOrdinal(left.extension, right.extension));
+}
 
 // One verdict per candidate: production, excluded (with the rule or the manifest reason) or unclassified.
 // The manifest is explicit and wins over the built-in rules; two manifest entries that disagree about one file are a usage error.
@@ -163,8 +182,8 @@ function unmatchedEntries(manifest, candidates) {
 
 // Pure: classifies a listing of root-relative paths. filters.exclude and filters.include are explicit command-line decisions and are recorded as such.
 function enumerate(listing, manifest = emptyManifest(), filters = {}) {
-  const exclude = (filters.exclude || []).map((pattern) => ({ pattern, matcher: globToRegExp(pattern) }));
-  const include = (filters.include || []).map((pattern) => ({ pattern, matcher: globToRegExp(pattern) }));
+  const exclude = (filters.exclude || []).map((pattern) => ({ pattern, matcher: compileGlob(pattern) }));
+  const include = (filters.include || []).map((pattern) => ({ pattern, matcher: compileGlob(pattern) }));
   const production = [];
   const excluded = [];
   const unclassified = [];
@@ -194,6 +213,7 @@ function enumerate(listing, manifest = emptyManifest(), filters = {}) {
     excluded: excluded.sort(order),
     unclassified: unclassified.sort(order),
     skippedDirectories: [...listing.skipped].sort((left, right) => byOrdinal(left.directory, right.directory)),
+    notConsidered: notConsideredOf(listing.files),
     warnings: unmatchedEntries(manifest, candidates)
   };
 }
@@ -219,7 +239,7 @@ function expandGlob(pattern, cwd, fsApi = fs) {
   const segments = normalizePattern(pattern).split('/');
   const firstMagic = segments.findIndex((segment) => hasMagic(segment));
   const base = path.resolve(cwd, ...segments.slice(0, firstMagic));
-  const matcher = globToRegExp(segments.slice(firstMagic).join('/'));
+  const matcher = compileGlob(segments.slice(firstMagic).join('/'));
   if (!fsApi.existsSync(base)) return [];
   const { files } = walkTree(base, fsApi);
   return files.filter((file) => matcher.test(file)).map((file) => path.join(base, ...file.split('/'))).sort(byOrdinal);

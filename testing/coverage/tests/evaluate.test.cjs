@@ -101,6 +101,17 @@ test('Node exiting non-zero while the exact counts meet the minimum is a disagre
   assert.match(entry.reason, /node exited 1 although the exact counts meet 85/);
 });
 
+test('m1: the lcov-versus-table cross-check allows exactly the two-decimal rounding of the table and nothing more', () => {
+  const third = (table) => evaluateFile({ ...base, min: 30, record: record([1, 3], [2, 2], [1, 1]), table: { lines: table, branches: 100, functions: 100 } });
+  assert.equal(third(33.33).ok, true, '33.3333 prints as 33.33');
+  assert.equal(third(33.34).ok, false, 'one hundredth more than the rounding allows');
+  assert.match(third(33.34).reason, /lines 33\.3333% in lcov but 33\.34 in the table/);
+  assert.equal(third(33.32).ok, false, 'one hundredth less than the rounding allows');
+  const half = (table) => evaluateFile({ ...base, min: 50, record: record([1, 2]), table: { lines: table, branches: 100, functions: 100 } });
+  assert.equal(half(50).ok, true);
+  assert.equal(half(50.01).ok, false);
+});
+
 test('unrunFile fails a file whose tests could not be started, with every reason and no figures', () => {
   const entry = unrunFile({ file: 'a.cjs', reasons: ['test file not found: x', 'no tests found: y'] });
   assert.equal(entry.ok, false);
@@ -144,4 +155,12 @@ test('the readable summary lists the enumerated files, the exclusions by origin,
   assert.match(text, /RESULT: FAIL$/);
   assert.match(formatSummary(buildReport(reportInput())).join('\n'), /RESULT: PASS$/);
   assert.match(formatSummary(buildReport(reportInput({ files: [] }))).join('\n'), /enumerated production files \(0\): none[\s\S]*note: no production files/);
+});
+
+test('the summary lists the extensions that were not considered and says when the run is not the full bar', () => {
+  const notConsidered = [{ extension: '.vbs', count: 2, files: ['a.vbs'], scriptLike: true }, { extension: '', count: 1, files: ['LICENSE'], scriptLike: false }];
+  const text = formatSummary(buildReport(reportInput({ min: 70, notConsidered }))).join('\n');
+  assert.match(text, /not considered, never measured \(2 extensions\): \.vbs x2 \(script-like\), no extension x1/);
+  assert.match(text, /note: NOT the full 85 bar over the full namespace: --min 70 is below the 85 bar/);
+  assert.doesNotMatch(formatSummary(buildReport(reportInput())).join('\n'), /not considered|NOT the full/);
 });

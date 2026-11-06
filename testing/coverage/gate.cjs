@@ -6,8 +6,9 @@ const { UsageError } = require('./errors.cjs');
 const { walkTree, loadManifest, enumerate, resolveTests } = require('./enumerate.cjs');
 const { buildEnvironment, buildCommand } = require('./command.cjs');
 const { parseLcov, selectRecord, parseTapSummary, parseTapFailures, parseTapTable, tableRowFor } = require('./report.cjs');
-const { SCHEMA, evaluateFile, unrunFile, buildReport, formatSummary } = require('./evaluate.cjs');
+const { evaluateFile, unrunFile, buildReport, formatSummary } = require('./evaluate.cjs');
 const { runProcess } = require('./runner.cjs');
+const { checkReportTarget, writeReportFile, startedReport, failureReport, scanJsonTargets } = require('./output.cjs');
 
 const REPOSITORY = path.resolve(__dirname, '..', '..');
 const SCALAR_FLAGS = Object.freeze({
@@ -22,7 +23,8 @@ const USAGE = [
   '  --root     namespace directory to measure (required); its coverage.manifest.json, when present, classifies files explicitly',
   '  --tests    focused test files or globs, relative to the current directory (default: the non-browser tests\\*.test.cjs of the root)',
   '  --min      minimum percent for lines, branches and functions of every file, an integer from 0 to 100 (default 85)',
-  '  --json     also write the JSON report to this path',
+  '  --json     also write the JSON report to this path: a new file or a previous gate report only (anything else is refused, exit 2); the path never',
+  '             keeps an older result: a "started" marker is written first and a failure report on every error',
   '  --include  measure only the production files that match these globs (relative to the root; * ** ?)',
   '  --exclude  leave out files that match these globs; the report records every exclusion',
   '  --timeout  hard limit in seconds for one per-file run (default 900); the child process tree is ended',
@@ -30,7 +32,7 @@ const USAGE = [
   '  --scratch  folder for the per-run scratch directories (default testing\\coverage\\.scratch)',
   '  --manifest classify with this manifest file instead of <root>\\coverage.manifest.json (a namespace that cannot take a new file)',
   '',
-  'stdout is one JSON document; a readable summary goes to stderr. Exit codes: 0 pass, 1 any miss, 2 usage error.'
+  'stdout is one JSON document; a readable summary goes to stderr. Exit codes: 0 pass, 1 any miss or internal error, 2 usage error.'
 ].join('\n');
 
 function integerFlag(value, flag, low, high) {
@@ -56,6 +58,7 @@ function parseArgs(argv) {
       if (values.length === 0) throw new UsageError(`${flag} needs a value.`);
       if (SCALAR_FLAGS[flag]) {
         if (values.length !== 1) throw new UsageError(`${flag} takes exactly one value.`);
+        if (raw[SCALAR_FLAGS[flag]] !== undefined) throw new UsageError(`${flag} was given more than once: say which value you mean.`);
         raw[SCALAR_FLAGS[flag]] = values[0];
       } else {
         options[LIST_FLAGS[flag]].push(...values);
@@ -110,8 +113,55 @@ function removeScratch(directory, fsApi, warnings) {
   }
 }
 
+// Another run may remove an empty parent between the two calls, so a missing parent is created again (at most twice).
+function makeRunDirectory(fsApi, parent) {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      fsApi.mkdirSync(parent, { recursive: true });
+      return fsApi.mkdtempSync(path.join(parent, 'u009-'));
+    } catch (error) {
+      if (error.code !== 'ENOENT' || attempt >= 3) throw error;
+    }
+  }
+}
+
+// The folders of `directory` that do not exist yet, deepest first: this run creates them and removes them again when nothing else uses them.
+function missingFolders(directory, fsApi) {
+  const missing = [];
+  for (let current = directory; !fsApi.existsSync(current); current = path.dirname(current)) {
+    missing.push(current);
+    if (path.dirname(current) === current) break;
+  }
+  return missing;
+}
+
+// rmdir refuses a folder that holds anything, so a folder another run or a person put something into stays.
+function removeCreatedFolders(folders, fsApi) {
+  for (const folder of folders) {
+    try {
+      fsApi.rmdirSync(folder);
+    } catch {
+      return;
+    }
+  }
+}
+
+// Node writes no lcov record for an empty file, so "no record" for a zero-byte file gets its own reason.
+function isEmptyFile(file, fsApi) {
+  try {
+    return fsApi.statSync(file).size === 0;
+  } catch {
+    return false;
+  }
+}
+
 async function runGate(options, deps) {
   const { fsApi, cwd, repoRoot } = deps;
+  const reportTarget = options.json === null ? null : path.resolve(cwd, options.json);
+  if (reportTarget !== null) {
+    checkReportTarget(reportTarget, { fsApi });
+    writeReportFile(reportTarget, startedReport(), { fsApi });
+  }
   const root = path.resolve(cwd, options.root);
   if (!fsApi.existsSync(root) || !fsApi.statSync(root).isDirectory()) throw new UsageError(`--root is not a directory: ${options.root}`);
   const filters = { include: options.include, exclude: options.exclude };
@@ -122,8 +172,8 @@ async function runGate(options, deps) {
   const timeoutMs = Math.round(options.timeout * 1000);
   const warnings = [...enumeration.warnings];
   const scratchParent = path.resolve(cwd, options.scratch ?? deps.defaultScratch);
-  fsApi.mkdirSync(scratchParent, { recursive: true });
-  const scratch = fsApi.mkdtempSync(path.join(scratchParent, 'u009-'));
+  const createdFolders = missingFolders(scratchParent, fsApi);
+  const scratch = makeRunDirectory(fsApi, scratchParent);
   let files;
   try {
     files = await mapPool(enumeration.production, options.jobs, async (entry, index) => {
@@ -153,25 +203,25 @@ async function runGate(options, deps) {
       }
       return evaluateFile({
         file: entry.file, min: options.min, command: command.canonical, timeoutMs, run, summary: parseTapSummary(run.stdout),
-        failedTests: parseTapFailures(run.stdout), record, table: tableRowFor(parseTapTable(run.stdout), file), lcovError
+        failedTests: parseTapFailures(run.stdout), record, table: tableRowFor(parseTapTable(run.stdout), file), lcovError,
+        empty: record === undefined && isEmptyFile(file, fsApi)
       });
     });
   } finally {
     removeScratch(scratch, fsApi, warnings);
+    removeCreatedFolders(createdFolders, fsApi);
   }
   const report = buildReport({
     root: displayPath(repoRoot, root), node: deps.nodeVersion, min: options.min, files, unclassified: enumeration.unclassified,
-    excluded: enumeration.excluded, skippedDirectories: enumeration.skippedDirectories, warnings,
+    excluded: enumeration.excluded, skippedDirectories: enumeration.skippedDirectories, warnings, notConsidered: enumeration.notConsidered,
     tests: problems.length > 0 ? [] : tests.map((test) => displayPath(repoRoot, test)), filters, timeoutMs
   });
-  if (options.json !== null) {
-    const target = path.resolve(cwd, options.json);
-    fsApi.mkdirSync(path.dirname(target), { recursive: true });
-    fsApi.writeFileSync(target, `${JSON.stringify(report, null, 2)}\n`);
-  }
+  if (reportTarget !== null) writeReportFile(reportTarget, report, { fsApi });
   return { report, exitCode: report.pass ? 0 : 1 };
 }
 
+// Every failure becomes a typed report on stdout, at every --json path named on the command line, and an exit code: 2 for a usage error and 1 for
+// anything else, an error of the gate itself included. Nothing is rethrown, so NODE_OPTIONS=--unhandled-rejections=warn can never turn one into exit 0 (F2).
 async function main(argv, io = {}) {
   const deps = {
     cwd: process.cwd(), env: process.env, repoRoot: REPOSITORY, fsApi: fs, run: runProcess, nodeExecutable: process.execPath,
@@ -190,17 +240,36 @@ async function main(argv, io = {}) {
     for (const line of formatSummary(report)) deps.stderr(`${line}\n`);
     return exitCode;
   } catch (error) {
-    if (!(error instanceof UsageError)) throw error;
-    deps.stdout(`${JSON.stringify({ schema: SCHEMA, pass: false, error: { code: error.code, message: error.message } }, null, 2)}\n`);
-    deps.stderr(`${error.message}\n\n${USAGE}\n`);
-    return 2;
+    const failure = failureReport(error);
+    for (const value of scanJsonTargets(argv)) {
+      try {
+        const target = path.resolve(deps.cwd, value);
+        checkReportTarget(target, { fsApi: deps.fsApi });
+        writeReportFile(target, failure, { fsApi: deps.fsApi });
+      } catch {
+        // a refused or unwritable path keeps what it has; the reason is in the report on stdout
+      }
+    }
+    deps.stdout(`${JSON.stringify(failure, null, 2)}\n`);
+    if (failure.error.type === 'usage') {
+      deps.stderr(`${error.message}\n\n${USAGE}\n`);
+      return 2;
+    }
+    deps.stderr(`internal error: ${(error && error.stack) || error}\n`);
+    return 1;
   }
 }
 
-if (require.main === module) {
-  main(process.argv.slice(2)).then((code) => {
-    process.exitCode = code;
-  });
+// The command line entry: main never rejects, and if it ever does the process still ends with exit 1 and a message.
+async function entry(argv, { run = main, stderr = (text) => process.stderr.write(text), exit = (code) => { process.exitCode = code; } } = {}) {
+  try {
+    exit(await run(argv));
+  } catch (error) {
+    stderr(`internal error: ${(error && error.stack) || error}\n`);
+    exit(1);
+  }
 }
 
-module.exports = Object.freeze({ USAGE, parseArgs, displayPath, mapPool, runGate, main });
+if (require.main === module) entry(process.argv.slice(2));
+
+module.exports = Object.freeze({ USAGE, parseArgs, displayPath, mapPool, makeRunDirectory, missingFolders, removeCreatedFolders, isEmptyFile, runGate, main, entry });

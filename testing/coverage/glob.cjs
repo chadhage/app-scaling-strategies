@@ -5,6 +5,8 @@ const { UsageError } = require('./errors.cjs');
 // Only * (inside one path segment), ** (across segments) and ? (one character) are glob syntax here; patterns always use / separators.
 // Every other glob character is refused instead of being guessed, so a pattern never silently means something else.
 const REFUSED = /[[\]{}()!]/;
+// The matcher is linear in the pattern times the path, so a bounded pattern bounds the work of every match.
+const MAX_PATTERN_LENGTH = 1024;
 
 function normalizePattern(pattern) {
   return String(pattern).replace(/\\/g, '/');
@@ -14,36 +16,119 @@ function hasMagic(pattern) {
   return /[*?]/.test(pattern);
 }
 
-function globToRegExp(pattern) {
-  const text = normalizePattern(pattern);
-  if (text === '') throw new UsageError('A glob must not be empty.');
-  if (REFUSED.test(text)) throw new UsageError(`Unsupported glob syntax in "${pattern}": only *, ** and ? are supported.`);
-  let source = '';
+const LITERAL = 0;
+const ONE_CHARACTER = 1;
+const SEGMENT_RUN = 2;
+const ANY_RUN = 3;
+const GROUP_ENTRY = 4;
+
+// * is SEGMENT_RUN (any run inside one path segment), ** is ANY_RUN (any run, separators included), ? is ONE_CHARACTER (one character but a separator) and
+// everything else is a literal. **/ is the optional group "any run, then a separator": GROUP_ENTRY, ANY_RUN and the literal /; GROUP_ENTRY can jump over all three.
+function tokenize(text) {
+  const kinds = [];
+  const characters = [];
+  const push = (kind, character = '') => {
+    kinds.push(kind);
+    characters.push(character);
+  };
   for (let index = 0; index < text.length; index += 1) {
     const character = text[index];
     if (character === '*') {
       if (text[index + 1] === '*') {
         if (text[index + 2] === '/') {
-          source += '(?:.*/)?';
+          push(GROUP_ENTRY);
+          push(ANY_RUN);
+          push(LITERAL, '/');
           index += 2;
         } else {
-          source += '.*';
+          push(ANY_RUN);
           index += 1;
         }
       } else {
-        source += '[^/]*';
+        push(SEGMENT_RUN);
       }
     } else if (character === '?') {
-      source += '[^/]';
+      push(ONE_CHARACTER);
     } else {
-      source += character.replace(/[.+^$|]/g, '\\$&');
+      push(LITERAL, character);
     }
   }
-  return new RegExp(`^${source}$`);
+  return { kinds, characters };
+}
+
+// Adds every state that can be reached without consuming a character. The edges only go forward, so one ascending pass is the whole closure.
+function close(marks, kinds) {
+  for (let state = 0; state < kinds.length; state += 1) {
+    if (marks[state] === 1) {
+      const kind = kinds[state];
+      if (kind === SEGMENT_RUN || kind === ANY_RUN) {
+        marks[state + 1] = 1;
+      } else if (kind === GROUP_ENTRY) {
+        marks[state + 1] = 1;
+        marks[state + 3] = 1;
+      }
+    }
+  }
+}
+
+// Simulates the pattern as a non-deterministic automaton over the path: one pass over the characters, at most one step per token and character.
+// The work is bounded by the length of the pattern times the length of the path; nothing backtracks, so no input can make it explode.
+function run({ kinds, characters }, input) {
+  const count = kinds.length;
+  let active = new Uint8Array(count + 1);
+  let following = new Uint8Array(count + 1);
+  active[0] = 1;
+  close(active, kinds);
+  for (let position = 0; position < input.length; position += 1) {
+    const character = input[position];
+    const separator = character === '/';
+    following.fill(0);
+    let alive = false;
+    for (let state = 0; state < count; state += 1) {
+      if (active[state] === 1) {
+        const kind = kinds[state];
+        if (kind === LITERAL) {
+          if (characters[state] === character) {
+            following[state + 1] = 1;
+            alive = true;
+          }
+        } else if (kind === ONE_CHARACTER) {
+          if (!separator) {
+            following[state + 1] = 1;
+            alive = true;
+          }
+        } else if (kind === SEGMENT_RUN) {
+          if (!separator) {
+            following[state] = 1;
+            alive = true;
+          }
+        } else if (kind === ANY_RUN) {
+          following[state] = 1;
+          alive = true;
+        }
+      }
+    }
+    if (!alive) return false;
+    close(following, kinds);
+    [active, following] = [following, active];
+  }
+  return active[count] === 1;
+}
+
+// A matcher with .test(path); the pattern is checked once here.
+function compileGlob(pattern) {
+  const text = normalizePattern(pattern);
+  if (text === '') throw new UsageError('A glob must not be empty.');
+  if (text.length > MAX_PATTERN_LENGTH) throw new UsageError(`A glob may have at most ${MAX_PATTERN_LENGTH} characters, "${text.slice(0, 40)}..." has ${text.length}.`);
+  if (REFUSED.test(text)) throw new UsageError(`Unsupported glob syntax in "${pattern}": only *, ** and ? are supported.`);
+  const compiled = tokenize(text);
+  return Object.freeze({ pattern: text, test: (input) => run(compiled, String(input)) });
 }
 
 function matchesGlob(relativePath, pattern) {
-  return globToRegExp(pattern).test(normalizePattern(relativePath));
+  return compileGlob(pattern).test(normalizePattern(relativePath));
 }
 
-module.exports = Object.freeze({ normalizePattern, hasMagic, globToRegExp, matchesGlob });
+// The old name: it returned a backtracking RegExp, which a long file name against several stars could freeze for hours (F4 of the U009 review).
+// It now returns the linear matcher; only .test(path) is offered, not the rest of the RegExp API.
+module.exports = Object.freeze({ MAX_PATTERN_LENGTH, normalizePattern, hasMagic, compileGlob, globToRegExp: compileGlob, matchesGlob });
