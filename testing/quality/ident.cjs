@@ -4,18 +4,23 @@
 const { fold, squash, words, latin } = require('./text.cjs');
 
 // A GUID as 32 hex digits, with or without separators; layout characters were squashed away, so line breaks, emphasis, spaces and
-// underscores do not hide it, and it needs no word boundary (glued to letters, 0x prefix, 13 digits in the last group).
-const GUID = /[0-9a-f]{8}[-.]{0,3}[0-9a-f]{4}[-.]{0,3}[0-9a-f]{4}[-.]{0,3}[0-9a-f]{4}[-.]{0,3}[0-9a-f]{12}/i;
-const hasGuid = (text) => GUID.test(squash(text));
+// underscores do not hide it, and it needs no word boundary (glued to letters, 0x prefix, 13 digits in the last group). Between the groups up
+// to three of - . : / , + ' " are skipped; combining marks, look-alike letters, <br> tags and dash entities were removed first (N11).
+const SEP = '[-.:/,+\'"]{0,3}';
+const GUID = new RegExp(`[0-9a-f]{8}${SEP}[0-9a-f]{4}${SEP}[0-9a-f]{4}${SEP}[0-9a-f]{4}${SEP}[0-9a-f]{12}`, 'i');
+const DASH_CODES = /&#0*45;|&#x0*2d;|&hyphen;|&ndash;|&minus;|%2d/gi;
+const hasGuid = (text) => GUID.test(squash(text).replace(DASH_CODES, '-'));
 
 const LOCAL = /[\p{L}\p{N}._%+#-]/u;
 const DOMAIN = /[\p{L}\p{N}-]/u;
 const isLocal = (c) => c !== undefined && LOCAL.test(c);
 const isDomain = (c) => c !== undefined && DOMAIN.test(c);
+const TLDS = new Set(['com', 'org', 'net', 'io', 'dev', 'edu', 'gov', 'co', 'uk', 'de', 'fr', 'us', 'me']);
 
 function deobfuscate(text) {
   return fold(text)
     .replace(/%40|&#0*64;|&#x0*40;|&commat;/gi, '@')
+    .replace(/@@+/g, '@')
     .replace(/[*`~\\]/g, '')
     .replace(/\s+/g, ' ')
     .replace(/ ?[[({<] ?at ?[\])}>] ?/gi, '@')
@@ -23,10 +28,20 @@ function deobfuscate(text) {
     .replace(/([\p{L}\p{N}._%+-]) at ([\p{L}\p{N}-]+) dot (?=\p{L})/giu, '$1@$2.');
 }
 
+// "owner at example com": checked token by token (linear) with a short list of top-level domains, so ordinary sentences stay clean.
+function wordsAddress(text) {
+  const tokens = text.split(' ');
+  for (let i = 1; i + 2 < tokens.length; i += 1) {
+    if (tokens[i].toLowerCase() === 'at' && TLDS.has(tokens[i + 2].toLowerCase()) && /^[\p{L}\p{N}-]+$/u.test(tokens[i + 1]) && /^[\p{L}\p{N}._%+-]+$/u.test(tokens[i - 1])) return true;
+  }
+  return false;
+}
+
 // An at sign with a local-part character before it and a domain character after it, allowing quotes, a domain literal and spaces on
 // both sides or after the at sign. A splat such as --parameters @file.json has a space before the at sign only and is not an address.
 function hasEmail(text) {
   const t = deobfuscate(text);
+  if (wordsAddress(t)) return true;
   for (let i = t.indexOf('@'); i >= 0; i = t.indexOf('@', i + 1)) {
     const before = t[i - 1];
     const after = t[i + 1];
@@ -86,8 +101,8 @@ function secretIn(text) {
 }
 
 const HARD = /\bhard(?![a-z])|\bhard(?:cap|limit|ceiling|stop|bound)|\bh[-_. *]{1,2}a[-_. *]{1,2}r[-_. *]{1,2}d\b/;
-const ENFORCED = /\b(?:enforced|guaranteed) (?:limit|maximum|cap|ceiling|bound)\b|(?<!not )\benforced by azure\b/;
-const UNRESOLVED = /to be (?:confirmed|determined|decided|agreed)|\btbc\b|\btbd\b|\btodo\b|\bfixme\b|\bxxx\b|\?{3}|confirm before use|command name to be|<fill in>/;
+const ENFORCED = /\b(?:enforced|guaranteed) (?:limit|maximum|cap|ceiling|bound)\b|(?<!not )\benforced by azure\b|\bazure (?:enforces|will stop|will cap|stops)\b|\bcannot be exceeded\b|\bcan not be exceeded\b|\bfirm (?:cap|limit|ceiling)\b|\bcapped by azure\b/;
+const UNRESOLVED = /to be (?:confirmed|determined|decided|agreed)|\btbc\b|\btbd\b|\btodo\b|\bfixme\b|\bxxx\b|\?{3}|confirm before use|command name to be|<fill in>|pending confirmation|\bset later\b|\bdecide later\b|\bconfirm later\b/;
 
 // The planning-bound phrase may carry the word "enforced"; everything else about enforcement is a claim the packet may not make.
 const PHRASE = 'planning bound, not enforced by Azure';

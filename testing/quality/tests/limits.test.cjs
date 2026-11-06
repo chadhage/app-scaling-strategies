@@ -5,6 +5,13 @@ const { inventory, LIMITS } = require('../limits.cjs');
 const { validatePacket } = require('../packet-validator.cjs');
 const { main } = require('../validate-packet.cjs');
 
+// The caps as literals, not read back from LIMITS: a raised cap must make these inputs pass (and the test fail fast), not make the test build a larger input.
+const CAPS = { maxDepth: 64, maxNodes: 100000, maxStringLength: 20000, maxMarkdownLength: 1000000, maxJsonBytes: 2000000 };
+
+test('the limits are exactly the caps these tests build their inputs from', () => {
+  assert.deepEqual({ ...LIMITS }, { ...CAPS, maxTotalChars: 1000000, maxBlockDepth: 32, maxStatements: 2000, maxMarkRun: 32 });
+});
+
 test('the inventory lists keys, strings, numbers and the joined text of arrays of strings, iteratively', () => {
   const inv = inventory({ a: 'x', b: ['p', 'q'], c: { d: 7, e: [1, 2] }, f: null, g: true });
   assert.equal(inv.error, null);
@@ -15,7 +22,7 @@ test('the inventory lists keys, strings, numbers and the joined text of arrays o
 });
 
 test('an array of strings that is too long to join is still scanned element by element', () => {
-  const half = 'x'.repeat(LIMITS.maxStringLength - 10);
+  const half = 'x'.repeat(CAPS.maxStringLength - 10);
   const inv = inventory({ list: [half, half] });
   assert.equal(inv.error, null);
   assert.deepEqual(inv.joins, []);
@@ -24,7 +31,7 @@ test('an array of strings that is too long to join is still scanned element by e
 
 test('depth beyond the limit is INPUT_TOO_DEEP, at the limit it is fine, and nothing recurses', () => {
   let a = [];
-  for (let i = 0; i < LIMITS.maxDepth; i += 1) a = [a];
+  for (let i = 0; i < CAPS.maxDepth; i += 1) a = [a];
   assert.equal(inventory(a).error, null);
   assert.equal(inventory([a]).error.code, 'INPUT_TOO_DEEP');
   let deep = {};
@@ -33,21 +40,21 @@ test('depth beyond the limit is INPUT_TOO_DEEP, at the limit it is fine, and not
 });
 
 test('too many values, too long a string, key, array or object are INPUT_TOO_LARGE', () => {
-  assert.equal(inventory(new Array(LIMITS.maxNodes + 5).fill(0)).error.code, 'INPUT_TOO_LARGE');
-  assert.equal(inventory({ s: 'y'.repeat(LIMITS.maxStringLength + 1) }).error.code, 'INPUT_TOO_LARGE');
-  assert.equal(inventory({ ['k'.repeat(LIMITS.maxStringLength + 1)]: 1 }).error.code, 'INPUT_TOO_LARGE');
+  assert.equal(inventory(new Array(CAPS.maxNodes + 5).fill(0)).error.code, 'INPUT_TOO_LARGE');
+  assert.equal(inventory({ s: 'y'.repeat(CAPS.maxStringLength + 1) }).error.code, 'INPUT_TOO_LARGE');
+  assert.equal(inventory({ ['k'.repeat(CAPS.maxStringLength + 1)]: 1 }).error.code, 'INPUT_TOO_LARGE');
   const many = {};
-  for (let i = 0; i < LIMITS.maxNodes + 5; i += 1) many[`k${i}`] = 0;
+  for (let i = 0; i < CAPS.maxNodes + 5; i += 1) many[`k${i}`] = 0;
   assert.equal(inventory(many).error.code, 'INPUT_TOO_LARGE');
   const nested = [];
-  for (let i = 0; i < 4; i += 1) nested.push(new Array(LIMITS.maxNodes / 2).fill(0));
+  for (let i = 0; i < 4; i += 1) nested.push(new Array(CAPS.maxNodes / 2).fill(0));
   assert.equal(inventory(nested).error.code, 'INPUT_TOO_LARGE');
 });
 
 test('PACKET_NOT_OBJECT, INPUT_TOO_LARGE and INPUT_TOO_DEEP come back as findings, never as an exception', () => {
   assert.equal(validatePacket([]).findings[0].code, 'PACKET_NOT_OBJECT');
   const p = load();
-  p.title = 'z'.repeat(LIMITS.maxStringLength + 1);
+  p.title = 'z'.repeat(CAPS.maxStringLength + 1);
   const large = validatePacket(p, {});
   assert.deepEqual(large.findings.map((f) => f.code), ['INPUT_TOO_LARGE']);
   let a = [];
@@ -64,7 +71,7 @@ test('VALIDATOR_ERROR: a packet that throws while it is read is rejected with on
 });
 
 test('a markdown copy beyond the limit is INPUT_TOO_LARGE and is not scanned', () => {
-  const result = run(load(), { markdown: 'a'.repeat(LIMITS.maxMarkdownLength + 1) });
+  const result = run(load(), { markdown: 'a'.repeat(CAPS.maxMarkdownLength + 1) });
   assert.ok(result.findings.some((f) => f.code === 'INPUT_TOO_LARGE' && f.path === 'markdown'));
 });
 
@@ -75,7 +82,7 @@ function io(files, extra = {}) {
 }
 
 test('the CLI answers an oversize input, a too deeply nested one and a failing reader in one line each', () => {
-  const big = io({ 'p.json': `{"title":"${'7'.repeat(LIMITS.maxJsonBytes)}"}` });
+  const big = io({ 'p.json': `{"title":"${'7'.repeat(CAPS.maxJsonBytes)}"}` });
   assert.equal(main(['p.json'], big), 1);
   assert.match(big.out.join('\n'), /^INPUT_TOO_LARGE p\.json: /);
   const deep = io({ 'p.json': '{}' }, { read: () => { throw new RangeError('Maximum call stack size exceeded'); } });

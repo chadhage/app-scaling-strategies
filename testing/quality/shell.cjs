@@ -2,7 +2,10 @@
 // A small quote-aware parser for the az and PowerShell texts of the plan (V4, V10). It reads text the way a shell does: quotes, escapes,
 // here-strings, comments, continuation lines, statement separators (newline ; && || |) and blocks ({ } and parentheses, with the keyword
 // that opened them), so a command hidden by formatting is still a command and a command inside a string or a comment is not.
+// Bounded (N7): at most 32 nested blocks and 2000 statements or blocks; every block keeps one parent pointer, a statement keeps only its innermost
+// block, so memory is linear in the number of statements (the second version copied the whole block stack into every statement).
 const { fold } = require('./text.cjs');
+const { LIMITS } = require('./limits.cjs');
 
 const KEYWORDS = new Set(['try', 'catch', 'finally', 'if', 'else', 'elseif', 'foreach', 'for', 'while', 'do', 'switch', 'function']);
 
@@ -10,7 +13,9 @@ function parse(input) {
   const src = fold(Array.isArray(input) ? input.join('\n') : String(input)).replace(/[`\\][ \t]*\r?\n[ \t]*/g, ' ').replace(/\r/g, '');
   const statements = [];
   const blocks = [{ id: 0, kind: 'root', parent: -1, statements: 0 }];
-  const stack = [0];
+  let current = 0;
+  let depth = 1;
+  let failure = null;
   let words = [];
   let cur = null;
   let start = -1;
@@ -22,19 +27,27 @@ function parse(input) {
   function endStatement(at) {
     pushWord();
     if (words.length > 0) {
-      statements.push({ words, blocks: [...stack], line, raw: src.slice(start, at).trim(), orElse });
+      if (statements.length >= LIMITS.maxStatements) { failure = { code: 'INPUT_TOO_LARGE', message: `a container holds more than ${LIMITS.maxStatements} statements` }; words = []; return; }
+      statements.push({ words, block: current, line, raw: src.slice(start, at).trim(), orElse });
       orElse = false;
-      blocks[stack[stack.length - 1]].statements += 1;
+      blocks[current].statements += 1;
       const first = words[0].quoted ? '' : words[0].text.toLowerCase();
-      if (KEYWORDS.has(first)) kw = { name: first === 'function' ? `function:${words[1] ? words[1].text : ''}` : first, depth: stack.length };
-      else if (kw && kw.depth === stack.length) kw = null;
+      if (KEYWORDS.has(first)) kw = { name: first === 'function' ? `function:${words[1] ? words[1].text : ''}` : first, depth };
+      else if (kw && kw.depth === depth) kw = null;
     }
     words = [];
     start = -1;
   }
-  const open = (kind) => { blocks.push({ id: blocks.length, kind, parent: stack[stack.length - 1], statements: 0 }); stack.push(blocks.length - 1); };
+  const open = (kind) => {
+    if (depth - 1 >= LIMITS.maxBlockDepth) { failure = { code: 'INPUT_TOO_DEEP', message: `blocks are nested deeper than ${LIMITS.maxBlockDepth} levels` }; return; }
+    if (blocks.length >= LIMITS.maxStatements) { failure = { code: 'INPUT_TOO_LARGE', message: `a container holds more than ${LIMITS.maxStatements} blocks` }; return; }
+    blocks.push({ id: blocks.length, kind, parent: current, statements: 0 });
+    current = blocks.length - 1;
+    depth += 1;
+  };
+  const closeBlock = () => { if (depth > 1) { current = blocks[current].parent; depth -= 1; } };
   let i = 0;
-  while (i < src.length) {
+  while (i < src.length && failure === null) {
     const ch = src[i];
     if (ch === '\n') { endStatement(i); line += 1; i += 1; } else if (ch === ' ' || ch === '\t') { pushWord(); i += 1; } else if (ch === ';') { endStatement(i); i += 1; } else if (ch === '#' && cur === null) {
       while (i < src.length && src[i] !== '\n') i += 1;
@@ -48,11 +61,11 @@ function parse(input) {
     } else if (ch === '{' || ch === '(') {
       if (cur !== null && (cur.text === '$' || cur.text === '@') && !cur.quoted) cur = null;
       endStatement(i);
-      const kind = ch === '(' ? 'paren' : (kw && kw.depth === stack.length ? kw.name : 'script');
+      const kind = ch === '(' ? 'paren' : (kw && kw.depth === depth ? kw.name : 'script');
       if (ch === '{') kw = null;
       open(kind);
       i += 1;
-    } else if (ch === '}' || ch === ')') { endStatement(i); if (stack.length > 1) stack.pop(); i += 1; } else if (ch === '@' && (src[i + 1] === "'" || src[i + 1] === '"') && /^[ \t]*\n/.test(src.slice(i + 2))) {
+    } else if (ch === '}' || ch === ')') { endStatement(i); closeBlock(); i += 1; } else if (ch === '@' && (src[i + 1] === "'" || src[i + 1] === '"') && /^[ \t]*\n/.test(src.slice(i + 2))) {
       const q = src[i + 1];
       const close = src.indexOf(`\n${q}@`, i + 2);
       const end = close < 0 ? src.length : close;
@@ -78,8 +91,14 @@ function parse(input) {
     } else { word().text += ch; i += 1; }
   }
   endStatement(src.length);
-  return { statements, blocks };
+  return failure === null ? { statements, blocks, error: null } : { statements: [], blocks: [blocks[0]], error: failure };
 }
+
+// Block helpers over the parent pointers: the blocks from the root down to one block, whether a block lies inside another (or is it), and
+// whether any enclosing block (the block itself included) satisfies a test.
+const chain = (parsed, id) => { const out = []; for (let b = id; b >= 0; b = parsed.blocks[b].parent) out.push(b); return out.reverse(); };
+const isWithin = (parsed, id, ancestor) => { for (let b = id; b >= 0; b = parsed.blocks[b].parent) if (b === ancestor) return true; return false; };
+const anyWithin = (parsed, id, test) => { for (let b = id; b >= 0; b = parsed.blocks[b].parent) if (test(parsed.blocks[b])) return true; return false; };
 
 // The command of a statement: the first word after call operators and "$x = " assignments, as a lower-case name without path or extension.
 function commandOf(st) {
@@ -113,4 +132,4 @@ function azParts(rest) {
 
 const optValue = (opts, ...names) => { const o = opts.find((x) => names.includes(x.name)); return o ? o.values.join(' ') : undefined; };
 
-module.exports = { parse, commandOf, azParts, optValue };
+module.exports = { parse, commandOf, azParts, optValue, chain, isWithin, anyWithin };

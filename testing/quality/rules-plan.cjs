@@ -4,16 +4,16 @@
 // sequence is ordered, culture-invariant and checks its own trigger time; the unattended script wraps every delete, never stops at the
 // first failure, always ends with the guarded group delete and raises a persistent alarm.
 const { isObj, isArr } = require('./util.cjs');
-const { fold } = require('./text.cjs');
 const { optValue } = require('./shell.cjs');
-const { analyze, describe, PIN, lower } = require('./rules-commands.cjs');
+const { analyze, describe, destructiveMention, PIN, lower } = require('./rules-commands.cjs');
 
 const CODES = ['PLAN_MISSING', 'PLAN_SHAPE', 'GUARD_G1_MISSING', 'GUARD_G2_MISSING', 'GUARD_G3_MISSING', 'GUARD_G4_MISSING', 'ARMING_MISSING', 'ARMING_NO_EXISTS_GATE',
   'ARMING_NO_PIN', 'ARMING_NO_QUOTA_GATE', 'ARMING_QUOTA_PARAMETERS', 'ARMING_NO_JOB', 'ARMING_ORDER', 'ARMING_TAGS', 'ARMING_TRIGGER_NOT_CHECKED', 'TIME_NOT_INVARIANT',
   'AZ_NO_SUBSCRIPTION', 'AZ_COMMAND_NOT_ALLOWED', 'COMMAND_FORBIDDEN', 'COMMAND_DYNAMIC', 'DELETE_TARGET', 'DELETE_OUTSIDE_COMMANDS', 'DELETION_MISSING', 'DELETE_UNGUARDED',
   'SCRIPT_MISSING', 'SCRIPT_NO_PIN', 'SCRIPT_NO_OWNERSHIP_CHECK', 'SCRIPT_GUARD_FUNCTION', 'SCRIPT_NO_STOP', 'SCRIPT_CATCH_SILENT', 'SCRIPT_DELETE_NOT_WRAPPED',
   'SCRIPT_NO_FINAL_GROUP_DELETE', 'SCRIPT_NO_FAILURE_EXIT', 'SCRIPT_NO_ALARM_FILE', 'SCRIPT_DELETE_UNGUARDED', 'TEARDOWN_LIMITS_MISSING', 'BACKSTOP_NOT_DELETE_FIRST',
-  'VERIFY_MISSING', 'VERIFY_UNGUARDED', 'ROLLBACK_NO_SWAP', 'ROLLBACK_NO_PREVIEW', 'LEASE_TAGS'];
+  'VERIFY_MISSING', 'VERIFY_UNGUARDED', 'ROLLBACK_NO_SWAP', 'ROLLBACK_NO_PREVIEW', 'LEASE_TAGS', 'DUPLICATE_OPTION', 'GUARD_REDEFINED', 'LEASE_VARIABLE_REASSIGNED', 'INDIRECTION',
+  'UNKNOWN_STATEMENT_SHAPE', 'SECTION_SHAPE_SEQUENCE', 'DISARM_UNGUARDED', 'DISARM_MISPLACED', 'DISARM_DUPLICATE', 'DISARM_MISSING', 'SCRIPT_ALARM_PATH'];
 
 const BASE = 'cleanupAndRollback';
 // The documented keys of a step; anything else (cmds, command, how) could hide a command from the analysis, so it fails closed.
@@ -22,9 +22,6 @@ const STEP_KEYS = {
   deletionOrder: ['n', 'step', 'commands', 'guards', 'label', 'why'], verification: ['n', 'check', 'guards', 'commands', 'expect', 'label', 'portal'], rollback: ['id', 'when', 'commands', 'label', 'action']
 };
 const COMMAND_PATH = /^cleanupAndRollback\.(?:(?:guards|armingSequence|deletionOrder|verification|rollback)\[\d+\]\.commands\[\d+\]|guardFunctions\[\d+\]|teardown\.job\.script\[\d+\])$/;
-// A destructive command written anywhere but in a command container: in prose, in another field, in the markdown.
-const DESTRUCTIVE = /\baz(?:\.cmd|\.exe)?\s[\s\S]{0,120}?\b(?:delete|remove|purge)\b|\bremove-az\w*|\bremove-azurerm\w*|-method\s+delete\b|--mode\s+complete\b|\bazd\s+(?:down|up|deploy|provision)\b|\bterraform\s+(?:destroy|apply)\b/i;
-const destructiveMention = (text) => DESTRUCTIVE.test(fold(text).replace(/\s+/g, ' '));
 
 const stepsOf = (plan, section) => (isArr(plan[section]) ? plan[section] : []);
 const linesOf = (plan, section) => stepsOf(plan, section).flatMap((s) => (isObj(s) && isArr(s.commands) ? s.commands.filter((c) => typeof c === 'string') : []));

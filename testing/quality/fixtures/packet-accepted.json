@@ -1,13 +1,13 @@
 {
  "schemaVersion": 2,
  "itemId": "U001",
- "title": "U001 native-run approval packet, revision 3: first App Service code-slot target (Linux)",
+ "title": "U001 native-run approval packet, revision 4: first App Service code-slot target (Linux)",
  "servesItems": [
   "U002",
   "APPROVED"
  ],
- "preparedBy": "worker-U001 (w3-U001)",
- "preparedAtUtc": "2026-11-06T07:33:42Z",
+ "preparedBy": "worker-U001 (w4-U001)",
+ "preparedAtUtc": "2026-11-06T11:53:58Z",
  "status": "proposal only: nothing in this packet is an approval and every owner decision defaults to no; the owner artifacts at HEAD (demo/, infra/, the azure-demo workflows, .azure/deployment-plan.md) are not approvals either",
  "authority": {
   "source": ".docs/wiki/flow-state.json approvals.C001 (read-only) and capability/C001/contract-guard.js",
@@ -40,7 +40,7 @@
   "preferredIacFormat": "Bicep",
   "pinnedSnapshotSha256": "d88600582af0d499bb0bd26a727e8f0840e724e133bda6284592bc2b4e346909",
   "reading": "authorizedCloudSpend 0 means spending is forbidden, not a price. Nothing in this packet changes it; only U002 can, from the owner literal answers.",
-  "observedAtUtc": "2026-11-06T05:11:32Z",
+  "observedAtUtc": "2026-11-06T11:53:58Z",
   "unitStatement": "C001 and C002 define no unit for authorizedCloudSpend (a bare integer today). USD minor units (cents) are a PROPOSAL of this packet, following C004.",
   "c002Pins": {
    "source": "capability/C002/run-envelope-contract.js (lines 41 and 55-57) and validator.js (lines 121-127)",
@@ -2974,10 +2974,11 @@
      "param(",
      "  [Parameter(Mandatory)][string]$Subscription, [Parameter(Mandatory)][string]$Group, [Parameter(Mandatory)][string]$Lease,",
      "  [Parameter(Mandatory)][string]$App, [Parameter(Mandatory)][string]$Plan, [string]$Workspace = '',",
-     "  [string]$AlarmDir = (Join-Path $env:USERPROFILE 'Desktop')",
+     "  [string]$AlarmDir = [Environment]::GetFolderPath('Desktop')",
      ")",
      "$ErrorActionPreference = 'Stop'; $PSNativeCommandUseErrorActionPreference = $true",
      "$failures = [System.Collections.Generic.List[string]]::new()",
+     "foreach ($candidate in @($AlarmDir, $env:TEMP, $PSScriptRoot)) { if ($candidate -and (Test-Path -LiteralPath $candidate -PathType Container)) { $AlarmDir = $candidate; break } }",
      "function Assert-Subscription {",
      "  if ((az account show --query id -o tsv) -ne $Subscription) { throw 'G2: the az session selects another subscription than the approved one' }",
      "}",
@@ -2994,14 +2995,15 @@
      "try { Assert-Subscription; if ((az group exists --name $Group --subscription $Subscription) -ne 'false') { $failures.Add('the group still exists after its delete') } } catch { $failures.Add(\"final check: $($_.Exception.Message)\") }",
      "if ($failures.Count -gt 0) {",
      "  $m = \"TEARDOWN FAILED for lease ${Lease} ($($failures.Count) problems): $($failures -join ' | '). The meter may still run: delete the lease by hand now (deletion order of the packet).\"",
-     "  try { Set-Content -Path (Join-Path $AlarmDir \"AZURE-LEASE-TEARDOWN-FAILED-${Lease}.txt\") -Value $m } catch { $m += ' (the alarm file could not be written)' }",
+     "  $alarmFile = Join-Path $AlarmDir \"AZURE-LEASE-TEARDOWN-FAILED-${Lease}.txt\"",
+     "  try { Set-Content -Path $alarmFile -Value $m; $m += \" The same text is in the file $alarmFile.\" } catch { $m += ' (the alarm file could not be written: this dialog is the only alarm)' }",
      "  Add-Type -AssemblyName PresentationFramework",
      "  [void][System.Windows.MessageBox]::Show($m, 'Azure lease teardown FAILED')",
      "  exit 1",
      "}",
      "exit 0"
     ],
-    "onGuardFailure": "Each delete is wrapped: a failing guard or delete is recorded, the script continues, always finishes with the guarded group delete (it removes everything) when the group guard still passes, verifies that the group is gone, and on any problem writes a persistent alarm file on the owner Desktop, shows a dialog and exits 1."
+    "onGuardFailure": "Each delete is wrapped: a failing guard or delete is recorded, the script continues, always finishes with the guarded group delete (it removes everything) when the group guard still passes, verifies that the group is gone, and on any problem writes a persistent alarm file in the Desktop folder reported by Windows (it may be redirected: when that folder does not exist the script uses the temp folder, then the script folder), shows a dialog that names the file or says that it could not be written, and exits 1."
    },
    "backstops": [
     "Cost Management budget on the lease resource group at 50, 80 and 100 percent of the spend ceiling (planning bound, not enforced by Azure) with email; alert only, evaluated every 24 hours on data that lags 8 to 24 hours (documented, BUDGET-ALERTONLY and BUDGET-LAG), so it cannot enforce a short-run ceiling.",
@@ -3012,7 +3014,7 @@
    "limits": [
     "The job runs only while the owner machine is on (WakeToRun and StartWhenAvailable help only if the operating system allows wake timers), the owner is logged on (the task runs as the interactive user) and the az session is still valid at the deadline.",
     "If the machine stays off or the session is invalid, nothing is deleted and no alarm is raised at all: the owner check at deadline plus 1 hour (verification checks 1 and 2) is then the only control, and the manual deletion block below is the fallback.",
-    "The alarm file and the dialog appear only when the script runs; the file stays until the owner removes it, the dialog is closed by the 2-hour execution limit."
+    "The alarm file and the dialog appear only when the script runs; the file stays until the owner removes it. It is written to the Desktop folder reported by Windows (it may be redirected), else to the temp folder, else to the script folder; the dialog names the file or says that it could not be written. The dialog is closed by the 2-hour execution limit."
    ]
   },
   "deletionOrder": [
@@ -3104,13 +3106,11 @@
    },
    {
     "n": 6,
-    "step": "Disarm the scheduled teardown job only after every verification below passes",
-    "commands": [
-     "Unregister-ScheduledTask -TaskName 'ass-teardown-<lease-id>' -Confirm:$false"
-    ],
+    "step": "Disarm the scheduled teardown job: NOT part of the pasted block; run it by hand as the first command of verification check 6 in section 4.5, only after checks 1 to 4 passed",
+    "commands": [],
     "guards": [],
     "label": "documented",
-    "why": "A disarmed job with a failed verification would leave nothing watching the lease."
+    "why": "A disarmed job with a failed verification would leave nothing watching the lease, and a pasted block that ended with the disarm would remove the only automatic backstop when a host keeps running after a failed line. The disarm line of check 6 also refuses to run while az group exists does not answer false."
    }
   ],
   "verification": [
@@ -3181,12 +3181,15 @@
    },
    {
     "n": 6,
-    "check": "The lease record is closed and the job is disarmed",
-    "guards": [],
+    "check": "The job is disarmed (only after checks 1 to 4 passed) and the lease record is closed",
+    "guards": [
+     "az group exists"
+    ],
     "commands": [
+     "if ((az group exists --name $Group --subscription $Subscription) -eq 'false') { Unregister-ScheduledTask -TaskName 'ass-teardown-<lease-id>' -Confirm:$false } else { throw 'the group still exists: the backstop stays armed' }",
      "Get-ScheduledTask -TaskName 'ass-teardown-<lease-id>' -ErrorAction SilentlyContinue"
     ],
-    "expect": "prints nothing after step 6 of the deletion order; the record holds lease id, option, start and end UTC, every verification output and the evidence hash",
+    "expect": "The first command disarms the job only when az group exists answers false and throws (the backstop stays armed) otherwise; run it in the PowerShell session of the deletion block, where $Group and $Subscription are set. Get-ScheduledTask then prints nothing; the record holds lease id, option, start and end UTC, every verification output and the evidence hash",
     "label": "estimated"
    }
   ],
@@ -3764,105 +3767,86 @@
   }
  ],
  "integrity": {
-  "packetSha256": "de0298744cd520b19a3d425a34ee49680a55a096ecc5a35913ddbc196db7844e",
+  "packetSha256": "ecd542a9d0e78dd7cebc68e1903e4c5a4427f1a9a2c9c620539da14475e5da16",
   "canonicalization": "SHA-256 of JSON.stringify of this packet without the integrity and validation fields, keys in construction order"
  },
  "validation": {
   "kind": "repository validator, kept from the independent review checks",
-  "command": "node testing\\quality\\validate-packet.cjs <packet.json>",
-  "note": "The validator (testing\\quality\\packet-validator.cjs) was published with revision 2 and is replaced by a hardened version with revision 3; its commit and tag are in results\\U001.json. It checks structure, recomputed arithmetic, the guards and the markdown copy; prices and Learn facts still need an independent lookup (see its README)."
+  "command": "node testing\\quality\\validate-packet.cjs <packet.json> --markdown <packet.md>",
+  "note": "The validator (testing\\quality\\packet-validator.cjs) was published with revision 2, hardened with revision 3 and hardened again with revision 4; its commit and tag are in results\\U001.json. It is a tripwire for accidental edits and for the shapes its README lists, not a proof: it checks structure, recomputed arithmetic, the guards, a closed list of statement shapes in the plan and the markdown copy; prices and Learn facts still need an independent lookup (see its README)."
  },
  "revision": {
-  "number": 3,
+  "number": 4,
   "supersedes": {
    "schemaVersion": 2,
-   "packetSha256": "4d9a9ed1199f05a9440d7a7b0da11146e99d3de5b5b401b4651352fcff645563",
-   "preparedAtUtc": "2026-11-06T05:11:32Z"
+   "packetSha256": "d32d76154763c67695779601b998354f553af2645b84868a6450b9d49b7ece10",
+   "preparedAtUtc": "2026-11-06T07:33:42Z"
   },
-  "reason": "The independent review of 2026-11-06 found revision 2 sound (prices, arithmetic and guards re-verified) and listed seven minor packet findings, A1 to A7, about money safety and precision. Revision 3 fixes all of them. No price, ceiling, decision or approval changed.",
+  "supersededNote": "found factually sound (10 independent price lookups, 96 rows, no difference; ceilings 5, 15 and 75 recomputed) with two owner-facing major findings (N1 and N2) and one wording finding (N3)",
+  "reason": "The independent review of 2026-11-06 (third round) found revision 3 factually sound and listed two owner-facing major findings: N1 (the persistent alarm file was never written when the Desktop folder is redirected) and N2 (the pasted deletion block ended with an unguarded disarm of the only automatic backstop), plus the wording finding N3. Revision 4 fixes all three. No price, ceiling, decision or approval changed.",
   "pricesKept": "All 116 unit prices stay unchanged (re-confirmed by independent lookups on 2026-11-06, no difference since 2026-11-04) and stay usable until 2026-11-11 by the 7-day rule (R11).",
   "changes": [
    {
-    "finding": "A1",
-    "change": "Arming step 3 sets the template parameters for the region AND the SKU (--location only stores the deployment metadata), tells the owner to read the resolved location and SKU in the what-if output, names the owner defaults that failed on 5 Nov, decides who creates the group and warns about a running subscription-scope deployment."
+    "finding": "N1",
+    "change": "The teardown script resolves the alarm folder with [Environment]::GetFolderPath('Desktop') (the Desktop folder reported by Windows, which may be redirected), falls back to the temp folder and then to the script folder when that folder does not exist, and its dialog names the alarm file or says that it could not be written. Revision 3 built the path by hand and wrote no file on a machine whose Desktop is redirected."
    },
    {
-    "finding": "A2",
-    "change": "Every timestamp is built and parsed with InvariantCulture (the former text broke under fi-FI and da-DK and set the year 2569 or 1448 under th-TH and ar-SA)."
+    "finding": "N2",
+    "change": "The disarm of the scheduled job (Unregister-ScheduledTask) is no longer the last line of the pasted deletion block: it is the first command of verification check 6 in section 4.5, after the four verifications, and it runs only when az group exists answers false (otherwise it throws and the backstop stays armed)."
    },
    {
-    "finding": "A3",
-    "change": "The registration check prints the registered trigger time and compares it with the deadline; the last command throws on a difference of more than 2 minutes."
-   },
-   {
-    "finding": "A4",
-    "change": "The unattended teardown wraps every delete, never stops at the first failure, always finishes with the guarded group delete and a check that the group is gone, records every failure, exits 1 and raises a persistent alarm file on the Desktop plus the dialog; what it cannot guarantee when the machine is off is stated."
-   },
-   {
-    "finding": "A5",
-    "change": "The manual deletion block carries the guard functions and every delete line calls Assert-Subscription (G2) and Assert-Lease (G3) itself, so copying only the code block stays guarded."
-   },
-   {
-    "finding": "A6",
-    "change": "The list and create-container meter sentence names the regions where the meter IDs are equal and where only the price is equal; the deadline rule says the time arming step 4 computes."
-   },
-   {
-    "finding": "A7",
-    "change": "The ceiling headroom (B about 1.9 and C about 3.85 at-cap hours before the next step) is stated next to the ceilings and recomputed by the validator."
-   },
-   {
-    "finding": "V13/V14",
-    "change": "Appendix D no longer claims that any GUID, e-mail or secret is rejected: it names the validator README for the covered and the uncovered spellings."
+    "finding": "N3",
+    "change": "Appendix D says that the validator refuses the listed shapes, is a tripwire for accidental edits and not a proof, and points to its README for the covered and the uncovered spellings."
    }
   ],
   "earlier": {
-   "number": 2,
-   "reason": "rev-U001 rejected revision 1 on 2026-11-06 (major F1: stale against HEAD; major F2: unguarded teardown; minors F3 to F8). Revision 2 refreshes it against HEAD, guards every destructive step and keeps the review checks as a repository validator.",
+   "number": 3,
+   "reason": "The independent review of 2026-11-06 found revision 2 sound (prices, arithmetic and guards re-verified) and listed seven minor packet findings, A1 to A7, about money safety and precision. Revision 3 fixes all of them. No price, ceiling, decision or approval changed.",
    "changes": [
     {
-     "finding": "F1",
-     "change": "Section 0a states the repository at HEAD and defers to the owner plan; the two false statements (scaffold decision, R17) are replaced; the 5 Nov quota failure is stated; section 0b and section 2 give a quota status for every option and region; the default region is eastus (untested, not a failed combination); arming step 3 is the quota gate; the USD 10,000 allowance is related to the planning bounds."
+     "finding": "A1",
+     "change": "Arming step 3 sets the template parameters for the region AND the SKU (--location only stores the deployment metadata), tells the owner to read the resolved location and SKU in the what-if output, names the owner defaults that failed on 5 Nov, decides who creates the group and warns about a running subscription-scope deployment."
     },
     {
-     "finding": "F2",
-     "change": "Guards G1 to G4 (pre-creation gate, subscription pin, ownership check before each delete, same guards in checks 1 and 2); every az command carries --subscription; the unattended job is a listed script with the guards."
+     "finding": "A2",
+     "change": "Every timestamp is built and parsed with InvariantCulture (the former text broke under fi-FI and da-DK and set the year 2569 or 1448 under th-TH and ar-SA)."
     },
     {
-     "finding": "F3",
-     "change": "One teardown-latency hour at the instance cap in every worst case; ceilings A $5, B $15, C $75 (C raised); blob list and create-container operations are priced like writes; the phrase planning bound, not enforced by Azure replaces every earlier wording that overstated what Azure does with the bound; deletion is the first action of the automatic backstop."
+     "finding": "A3",
+     "change": "The registration check prints the registered trigger time and compares it with the deadline; the last command throws on a difference of more than 2 minutes."
     },
     {
-     "finding": "F4",
-     "change": "The resource-group row reads price unavailable (no meter) with the lookup that shows it."
+     "finding": "A4",
+     "change": "The unattended teardown wraps every delete, never stops at the first failure, always finishes with the guarded group delete and a check that the group is gone, records every failure, exits 1 and raises a persistent alarm file plus the dialog (revision 3 built the Desktop path by hand and wrote no file on a machine whose Desktop is redirected: corrected in revision 4, N1); what it cannot guarantee when the machine is off is stated."
     },
     {
-     "finding": "F5",
-     "change": "Exact commands for arming (Task Scheduler), rollback RB2 and RB3 (slot swap with --action), checks 3 and 4 and the identity deletion; no unconfirmed command remains."
+     "finding": "A5",
+     "change": "The manual deletion block carries the guard functions and every delete line calls Assert-Subscription (G2) and Assert-Lease (G3) itself, so copying only the code block stays guarded."
     },
     {
-     "finding": "F6",
-     "change": "The cents unit is called a PROPOSAL everywhere; C002 pins scope.liveAzureRuns and limits.budget.cloudSpend to 0 so a non-zero envelope needs a C002 revision too."
+     "finding": "A6",
+     "change": "The list and create-container meter sentence names the regions where the meter IDs are equal and where only the price is equal; the deadline rule says the time arming step 4 computes."
     },
     {
-     "finding": "F7",
-     "change": "The expected-plan-cost formula is stated, including the scale step."
+     "finding": "A7",
+     "change": "The ceiling headroom (B about 1.9 and C about 3.85 at-cap hours before the next step) is stated next to the ceilings and recomputed by the validator."
     },
     {
-     "finding": "F8",
-     "change": "The checks of the review are kept as the repository validator testing\\quality\\packet-validator.cjs with a negative test per rule."
+     "finding": "V13/V14",
+     "change": "Appendix D no longer claims that any GUID, e-mail or secret is rejected: it names the validator README for the covered and the uncovered spellings."
     }
    ],
    "supersedes": {
-    "schemaVersion": 1,
-    "packetSha256": "36b2d81655a64d61d8817dae55014188d46cbe453f5b67b782bcbda0c5313548",
-    "preparedAtUtc": "2026-11-04T18:57:28Z"
+    "schemaVersion": 2,
+    "packetSha256": "4d9a9ed1199f05a9440d7a7b0da11146e99d3de5b5b401b4651352fcff645563",
+    "preparedAtUtc": "2026-11-06T05:11:32Z"
    }
   }
  },
  "repositoryState": {
   "title": "State of the repository at HEAD",
-  "describesHead": "14cefdeac385",
-  "checkedAtUtc": "2026-11-06T05:11:32Z",
+  "describesHead": "a52f05e23feb",
+  "checkedAtUtc": "2026-11-06T11:53:58Z",
   "checkedBy": "git log and read-only reads of the files named below; the checks are listed at the end of this section; no Azure call",
   "ownerCommit": {
    "id": "f42f4e03",
@@ -3978,5 +3962,5 @@
   "region": "eastus",
   "quotaStatus": "untested"
  },
- "fixtureNote": "Trimmed copy of the U001 revision 3 packet for the validator tests: placeholders only; meter IDs replaced by fixture-meter-N; unneeded price lines and queries removed; hash recomputed."
+ "fixtureNote": "Trimmed copy of the U001 revision 4 packet for the validator tests: placeholders only; meter IDs replaced by fixture-meter-N; unneeded price lines and queries removed; hash recomputed."
 }

@@ -17,9 +17,15 @@ const POOL = 2;
 
 function cleanEnv() { const env = { ...process.env }; delete env.NODE_TEST_CONTEXT; delete env.NODE_V8_COVERAGE; return env; }
 
+// Windows keeps a folder busy for a moment after the processes that used it end (EBUSY): retry a bounded number of times, then say so instead of ending the run.
+const REMOVE = { recursive: true, force: true, maxRetries: 40, retryDelay: 250 };
+function clean(dir) {
+  try { fs.rmSync(dir, REMOVE); return ''; } catch (error) { return `the scratch folder could not be removed (${error.code || error.message})`; }
+}
+
 function prepare(m) {
   const dir = path.join(scratch, m.id);
-  fs.rmSync(dir, { recursive: true, force: true });
+  fs.rmSync(dir, REMOVE);
   fs.cpSync(ROOT, dir, { recursive: true, filter: (src) => !src.includes(`${path.sep}evidence`) });
   const file = path.join(dir, m.file);
   const text = fs.readFileSync(file, 'utf8');
@@ -42,8 +48,8 @@ function run(m) {
     child.on('close', (code, signal) => {
       clearTimeout(timer);
       const failed = [...out.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((x) => x[1]).slice(0, 2);
-      fs.rmSync(dir, { recursive: true, force: true });
-      resolve({ ...m, status: signal ? 'TIMEOUT' : code === 0 ? 'SURVIVED' : 'KILLED', failed });
+      const note = clean(dir);
+      resolve({ ...m, status: signal ? 'TIMEOUT' : code === 0 ? 'SURVIVED' : 'KILLED', failed, note });
     });
   });
 }

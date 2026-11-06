@@ -36,7 +36,8 @@ reject('V4 order', 'a continuation that splits the delete over two elements', (p
 reject('V4 order', 'the guards placed after the delete', (p) => { del(p, 5).commands = [GROUP_DELETE, 'Assert-Subscription; Assert-Lease']; }, ['DELETE_UNGUARDED']);
 reject('V4 order', 'one guard line for two deletes', (p) => { del(p, 1).commands = ['Assert-Subscription; Assert-Lease', ...del(p, 1).commands.map((c) => c.replace('Assert-Subscription; Assert-Lease; ', ''))]; }, ['DELETE_UNGUARDED']);
 reject('V4 order', 'a delete behind || (it would run when the guard fails)', (p) => { del(p, 5).commands = [`Assert-Subscription; Assert-Lease || ${GROUP_DELETE}`]; }, ['DELETE_UNGUARDED']);
-accept('V4 order', 'a delete chained after && behind its guards', (p) => { del(p, 5).commands = [`Assert-Subscription && Assert-Lease && ${GROUP_DELETE}`]; });
+// The closed list of shapes refuses every statement that is not one of the reviewed ones, also a correct one (README, limits): a chain with && is no longer accepted.
+reject('V4 order', 'a delete chained after && behind its guards (a correct form, but not a reviewed shape)', (p) => { del(p, 5).commands = [`Assert-Subscription && Assert-Lease && ${GROUP_DELETE}`]; }, ['UNKNOWN_STATEMENT_SHAPE', 'SECTION_SHAPE_SEQUENCE']);
 reject('V4 manual', 'the manual block without inline guards (A5)', (p) => { for (const n of [1, 2, 3, 4, 5]) del(p, n).commands = edit(del(p, n).commands, 'Assert-Subscription; Assert-Lease; ', ''); }, ['DELETE_UNGUARDED']);
 reject('V4 manual', 'the manual block without the guard functions (A5)', (p) => { del(p, 0).commands = del(p, 0).commands.filter((c) => !/^function|^\s|^}/.test(c)); }, ['DELETE_UNGUARDED', 'SCRIPT_GUARD_FUNCTION']);
 reject('V4 manual', 'a manual block that guards only the group delete', (p) => { del(p, 1).commands = edit(del(p, 1).commands, 'Assert-Lease; ', ''); }, ['DELETE_UNGUARDED']);
@@ -47,7 +48,8 @@ for (const [name, line] of Object.entries({
   'empty value': 'az group show --name <rg> --subscription ""', 'empty equals': 'az group show --name <rg> --subscription=', 'other value': 'az group show --name <rg> --subscription other-subscription', 'bare flag': 'az group show --name <rg> --subscription',
   'account set': 'az account set --subscription <subscription-id>', 'az login': 'az login', 'az.exe chain': 'az.exe group list; az.exe group show --name <rg>'
 })) reject('V10 pin', name, (p) => { cr(p).verification[0].commands.push(line); }, ['AZ_NO_SUBSCRIPTION', 'AZ_COMMAND_NOT_ALLOWED']);
-accept('V10 pin', 'the flag in another case and with =', (p) => { cr(p).verification[0].commands.push('az group show --name <rg> --SUBSCRIPTION=<subscription-id>'); });
+// The same closed list refuses an extra az line, also a correct one: only the reviewed lines run in a verification step.
+reject('V10 pin', 'the flag in another case and with = (a correct form, but not a reviewed shape)', (p) => { cr(p).verification[0].commands.push('az group show --name <rg> --SUBSCRIPTION=<subscription-id>'); }, ['UNKNOWN_STATEMENT_SHAPE', 'SECTION_SHAPE_SEQUENCE']);
 
 // ---- A1 to A3: arming
 reject('A1 quota gate', 'validate and what-if with --location only', (p) => { cr(p).armingSequence[2].commands = cr(p).armingSequence[2].commands.map((c) => c.replace(/ --parameters \S+ \S+ \S+/, '')); }, ['ARMING_QUOTA_PARAMETERS']);

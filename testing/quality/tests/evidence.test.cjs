@@ -1,6 +1,8 @@
 'use strict';
-// Evidence integrity (V12): every manifest of the final evidence (evidence\r3\*) recomputes against the committed files, every transcript matches its hash,
-// and a tampered manifest is detected. The historical RED (evidence\r3\red-01) records the pre-fix tests: only its transcripts are checked.
+// Evidence integrity (V12, N15): every ACTIVE manifest (evidence\r4: the latest attempt of each run, except the historical RED red-01) recomputes its inputs
+// against the working files, every transcript matches its hash, and a tampered manifest, input or transcript is detected. The earlier archives (evidence\r3,
+// red, green, coverage, old-packet) and the historical RED describe the files of their own commit: they are pinned by a SHA-256 index (historical-files.json)
+// and may never change, appear or disappear. The README figures about the archived RED runs are recomputed from the manifests.
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
@@ -9,8 +11,10 @@ const { assert, test } = require('./support.cjs');
 
 const ROOT = path.join(__dirname, '..');
 const REPO = path.join(ROOT, '..', '..');
-const EVIDENCE = path.join(ROOT, 'evidence', 'r3');
+const EVIDENCE = path.join(ROOT, 'evidence', 'r4');
+const HISTORIC_DIRS = ['r3', 'red', 'green', 'coverage', 'old-packet'];
 const HISTORICAL = new Set(['red-01']);
+const INDEX = path.join(EVIDENCE, 'historical-files.json');
 const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
 const crlfToLf = (bytes) => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
 
@@ -32,6 +36,23 @@ function problems(manifest, io, { inputs = true } = {}) {
   }
   return out;
 }
+
+// The historical files against their index: a changed, a missing and an added file are each named.
+function historicalProblems(index, listing, read) {
+  const out = [];
+  for (const [rel, hash] of Object.entries(index.files || {})) {
+    if (!listing.includes(rel)) out.push(`${rel}: missing`);
+    else if (sha(read(rel)) !== hash) out.push(`${rel}: changed`);
+  }
+  for (const rel of listing) if (!(rel in (index.files || {}))) out.push(`${rel}: added`);
+  return out;
+}
+
+const walk = (dir) => (fs.existsSync(dir) ? fs.readdirSync(dir, { withFileTypes: true }).flatMap((d) => (d.isDirectory() ? walk(path.join(dir, d.name)) : [path.join(dir, d.name)])) : []);
+const historicalListing = () => [
+  ...HISTORIC_DIRS.flatMap((d) => walk(path.join(ROOT, 'evidence', d))),
+  ...walk(path.join(EVIDENCE, 'red-01'))
+].map((f) => path.relative(path.join(ROOT, 'evidence'), f).split(path.sep).join('/')).sort();
 
 const files = () => (fs.existsSync(EVIDENCE) ? fs.readdirSync(EVIDENCE, { withFileTypes: true }).filter((d) => d.isDirectory()) : [])
   .flatMap((d) => fs.readdirSync(path.join(EVIDENCE, d.name)).filter((f) => f.endsWith('.json')).map((f) => ({ dir: d.name, file: path.join(EVIDENCE, d.name, f) })));
@@ -82,4 +103,35 @@ test('a tampered manifest, input or transcript is detected', () => {
   assert.equal(problems(good, { ...io, readTranscript: () => { throw new Error('missing'); } }).length, 1);
   assert.deepEqual(problems({ ...good, inputs: [{ path: 'absent', rawSha256: 'x', crlfToLfSha256: 'y' }] }, io, { inputs: false }), []);
   assert.deepEqual(problems({}, io), []);
+});
+
+test('the earlier archives and the historical RED never change: they match the SHA-256 index', () => {
+  const index = JSON.parse(fs.readFileSync(INDEX, 'utf8'));
+  assert.ok(Object.keys(index.files).length > 100, 'the index pins the earlier archives');
+  assert.ok(Object.keys(index.files).some((rel) => rel.startsWith('r4/red-01/')), 'the historical RED is pinned');
+  assert.deepEqual(historicalProblems(index, historicalListing(), (rel) => fs.readFileSync(path.join(ROOT, 'evidence', rel))), []);
+});
+
+test('a changed, a missing and an added historical file are each detected by name', () => {
+  const index = { files: { 'r3/a.json': sha(Buffer.from('a')), 'r3/b.json': sha(Buffer.from('b')) } };
+  const store = { 'r3/a.json': 'a', 'r3/b.json': 'b' };
+  const read = (rel) => Buffer.from(store[rel]);
+  assert.deepEqual(historicalProblems(index, Object.keys(store), read), []);
+  assert.deepEqual(historicalProblems(index, Object.keys(store), (rel) => Buffer.from(rel === 'r3/a.json' ? 'tampered' : store[rel])), ['r3/a.json: changed']);
+  assert.deepEqual(historicalProblems(index, ['r3/a.json'], read), ['r3/b.json: missing']);
+  assert.deepEqual(historicalProblems(index, [...Object.keys(store), 'r3/c.json'], read), ['r3/c.json: added']);
+  assert.deepEqual(historicalProblems({}, [], read), []);
+});
+
+const latest = (dir, prefix) => {
+  const names = fs.readdirSync(path.join(EVIDENCE, dir)).filter((f) => new RegExp(`^${prefix}-\\d+\\.json$`).test(f)).sort((a, b) => Number(/-(\d+)\.json$/.exec(a)[1]) - Number(/-(\d+)\.json$/.exec(b)[1]));
+  return JSON.parse(fs.readFileSync(path.join(EVIDENCE, dir, names[names.length - 1]), 'utf8'));
+};
+
+test('the figures the README states about the archived RED runs are recomputed from the manifests', () => {
+  const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
+  const red = latest('red-01', 'red-01-hostile-vs-published').summary;
+  assert.ok(readme.includes(`${red.fail} of ${red.tests} tests fail`), `the README must say "${red.fail} of ${red.tests} tests fail" for red-01`);
+  const final = latest('final-red', 'final-red-naive-subject').summary;
+  assert.ok(readme.includes(`${final.tests} tests, ${final.pass} pass, ${final.fail} fail`), `the README must say "${final.tests} tests, ${final.pass} pass, ${final.fail} fail" for the final RED`);
 });

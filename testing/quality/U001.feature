@@ -92,7 +92,7 @@ Feature: A validator that rejects the native-run approval packets an independent
 
   Scenario: Hostile input is bounded (V6, V7)
     Given 200 KB and 5 MB adversarial tokens and JSON nested 5000 deep
-    Then validatePacket answers INPUT_TOO_LARGE or INPUT_TOO_DEEP in well under a second, never throws, and the CLI prints one line and exits non-zero without a stack trace
+    Then validatePacket answers INPUT_TOO_LARGE or INPUT_TOO_DEEP with a typed finding, never throws, and the CLI prints one line and exits non-zero without a stack trace (no time bound is promised, see the caps scenario)
 
   Scenario: The markdown copy says what the JSON says (V8)
     Given the JSON of the packet and its markdown
@@ -102,3 +102,44 @@ Feature: A validator that rejects the native-run approval packets an independent
   Scenario: The README states what a validator cannot prove
     Given the README
     Then it lists the exact commands for the tests, the RED replay and the per-file coverage, and says that prices and Learn facts need an independent lookup
+
+  # Third review (findings N1 to N16): positive designs instead of deny lists.
+
+  Scenario: The plan code is a closed list of statement shapes (N4, N5, N6, N10)
+    Given the guards, the arming sequence, the guard functions, the deletion block, the verification, the rollback and the unattended teardown script
+    When a line is not one of the reviewed shapes, or the shapes of a section are not the reviewed sequence
+    Then UNKNOWN_STATEMENT_SHAPE or SECTION_SHAPE_SEQUENCE is reported
+    And a repeated az option (long or short form, equals or space, any case, empty value) gives DUPLICATE_OPTION, a second definition of a guard GUARD_REDEFINED, an assignment to a lease variable LEASE_VARIABLE_REASSIGNED and an indirection (Process Start, ScriptBlock Create, InvokeScript, Invoke-Expression, dot-sourcing, Set-Content of a script, a string that carries a delete) INDIRECTION
+    And a generator of hostile variants of every line of the fixture is refused for every shape, and loosening any one shape is noticed
+
+  Scenario: The disarm of the only automatic backstop is guarded and comes last (N2)
+    Given the verification check 6
+    Then exactly one line may unregister, disable or stop the teardown task: the guarded line that throws unless az group exists answers false
+    And an unguarded line, a guarded line outside the verification section, a second line or no line is reported as DISARM_UNGUARDED, DISARM_MISPLACED, DISARM_DUPLICATE or DISARM_MISSING
+
+  Scenario: The alarm file exists after a failure (N1)
+    Given the unattended script run by pwsh against a fake az
+    When a delete fails and the Desktop folder is normal, redirected (missing) or unusable with the temp folder also missing
+    Then the alarm file exists in the Desktop folder, the temp folder or the script folder, and the dialog names it or says that it could not be written
+    And a script whose alarm folder is built by hand is reported as SCRIPT_ALARM_PATH
+
+  Scenario: The work is bounded by typed caps proved structurally (N7, N8)
+    Given block nesting beyond 32, more than 2000 statements, a run of more than 32 combining marks, or more than 1,000,000 characters in all strings and the markdown
+    Then INPUT_TOO_DEEP, INPUT_TOO_LARGE or INPUT_COMBINING_RUN is reported before any normalisation or scan
+    And the CLI in a child with a 300 MB heap answers the reviewer's nested scripts with exit 1 and never runs out of memory
+    And every string is normalised once: the normalize calls and characters are counted while the fixture is validated
+
+  Scenario: The markdown is compared with the JSON in order (N9)
+    Given the status paragraph, the revision line, the at-a-glance rows, the option blocks, the quota table, the decisions, the recommendation and the code blocks
+    When a claim of approval or of a free run is inserted, a figure, a size or an hour is replaced, an expiry date is added, or code lines are reordered
+    Then a MARKDOWN_* finding is reported, and the free-form prose that is not compared is named in the README
+
+  Scenario: Residual spellings, keys and placeholders (N11, N12, N13)
+    Given GUIDs with other separators, entities, marks or look-alike letters, e-mail with a double at sign or words, enforcement and unresolved phrasings, zero synonyms in a priced row
+    Then they are reported by name; a full commit id is documented as not allowed
+    And an undocumented key in the authority, an option or a decision, an own __proto__, constructor or prototype key and a placeholder that carries a value are reported
+
+  Scenario: The README and the evidence say only what is measured (N3, N14, N15)
+    Given the README and the archived evidence
+    Then no sentence says that the scanners are linear, that the CLI catches everything or that a destructive step is rejected without a limit; the README says tripwire and not a proof
+    And every active manifest input recomputes against the working files, the historical archives are pinned by a file hash index, and a tampered file fails by name

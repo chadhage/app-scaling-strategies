@@ -22,7 +22,7 @@ const tests = fs.readdirSync(path.join(scratch, 'tests')).filter((f) => f.endsWi
 const env = { ...process.env };
 delete env.NODE_TEST_CONTEXT;
 delete env.NODE_V8_COVERAGE;
-const r = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...tests], { cwd: scratch, env, encoding: 'utf8', timeout: 900000, maxBuffer: 1 << 28 });
+const r = spawnSync(process.execPath, ['--test', '--test-concurrency=3', ...tests], { cwd: scratch, env, encoding: 'utf8', timeout: 900000, maxBuffer: 1 << 28 });
 process.stdout.write(r.stdout || '');
 process.stderr.write(r.stderr || '');
 fs.rmSync(scratch, { recursive: true, force: true });

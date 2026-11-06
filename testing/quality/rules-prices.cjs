@@ -11,7 +11,7 @@ const CODES = ['PRICES_MISSING', 'PRICE_NOT_POSITIVE', 'PRICE_NO_CURRENCY', 'PRI
   'RESOURCE_PRICED_NO_LINE', 'RESOURCE_UNAVAILABLE_IN_TOTAL', 'REQUIRED_RESOURCES_MISSING', 'ZERO_COST_UNSOURCED', 'RESOURCE_NO_METER_EVIDENCE'];
 
 const UNAVAILABLE = /price unavailable/i;
-const ZERO = /\bfree\b|\bno (?:separate |extra )?(?:charge|cost)\b|\bzero cost\b|\bcosts? nothing\b|\bn\/a\b|(?:^|[^\d.])\$ ?0(?:\.0+)?(?![\d.])|\b0(?:\.0+)? usd\b|\bincluded\b/;
+const ZERO = /\bfree\b|\bno (?:separate |extra |additional )?(?:charge|cost)\b|\bzero cost\b|\bcosts? nothing\b|\bgratis\b|\bcomplimentary\b|\bcovered by the plan\b|\bn\/a\b|(?:^|[^\d.])\$ ?0(?:\.0+)?(?![\d.])|\b0(?:\.0+)? usd\b|\busd 0(?:\.0+)?(?![\d.])|\bincluded\b/;
 const RESOURCE_STATUS = ['priced', 'no-separate-charge-documented', 'price-unavailable'];
 const REQUIRED = ['RG', 'PLAN', 'APP', 'SLOT', 'STORAGE', 'EGRESS'];
 const EXCLUSION_COST = /^(?:price unavailable|not applicable|not created|outside the authorized)/;

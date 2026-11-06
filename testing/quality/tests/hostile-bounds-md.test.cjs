@@ -75,7 +75,7 @@ const BAD = {
   'a missing section heading': (md) => md.replace('## 3. Required resources, costs and exclusions\n', ''), 'a missing Appendix D': (md) => md.replace('## Appendix D. Validation', ''),
   'a ceiling changed next to its option with the right strings appended': (md) => `${md.replace('$5.00', '$50.00')}\n$5.00 $15.00 $75.00`, 'a changed default region': (md) => md.replace('default region eastus', 'default region westus3'),
   'a changed default option': (md) => md.replace('default option A', 'default option C'), 'a missing quota status': (md) => md.replace(/\| failed-2026-11-05 \|/g, '| |'),
-  'a missing price expiry': (md) => md.replace('usable until 2026-11-11', 'usable'), 'a missing approvals sentence': (md) => md.replace('approvals.C001 has all six flags false, maximumLiveAzureRuns 0 and authorizedCloudSpend 0.', 'Approved.'),
+  'a missing price expiry': (md) => md.replace('usable until 2026-11-11', 'usable'), 'a missing approvals sentence': (md) => md.replace('approvals.C001 has all six flags false, maximumLiveAzureRuns 0 and authorizedCloudSpend 0', 'Approved'),
   'a missing hash': (md, p) => md.split(p.integrity.packetSha256).join('<hash>'), 'a missing allowance sentence': (md, p) => md.replace(p.repositoryState.relationToThisPacket.allowanceVersusBounds, 'none'),
   'a dollar amount the JSON does not contain': (md) => `${md}\nThe plan costs $0.0001 per hour.`, 'an unguarded command in a code block': (md) => md.replace('```powershell', '```powershell\naz group delete --name prod-rg --yes'),
   'an unguarded command in prose': (md) => `${md}\nRun az group delete --name prod-rg --yes now.`, 'a changed command line': (md) => md.replace(' --subscription $Subscription', ''),

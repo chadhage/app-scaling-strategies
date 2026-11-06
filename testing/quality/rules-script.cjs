@@ -3,8 +3,9 @@
 // finishes with the guarded group delete, records every failure, exits non-zero and writes a persistent alarm; the checks and the rollback
 // are parsed like every other container.
 const { isObj, isArr } = require('./util.cjs');
-const { optValue } = require('./shell.cjs');
+const { optValue, anyWithin } = require('./shell.cjs');
 const { analyze } = require('./rules-commands.cjs');
+const { checkShapes } = require('./shapes.cjs');
 const plan = require('./rules-plan.cjs');
 
 const CODES = [];
@@ -25,19 +26,19 @@ function checkScript(p, add) {
   const kind = (id) => lower(parsed.blocks[id].kind);
   const deletes = list.map((d, i) => ({ d, i })).filter(({ d }) => d.kind === 'az' && d.destructive);
   const firstDelete = deletes.length > 0 ? deletes[0].i : list.length;
-  const stop = list.findIndex((d) => d.kind === 'other' && /^\$erroractionpreference$/i.test(d.st.words[0].text) && d.st.words[2] && lower(d.st.words[2].text) === 'stop' && d.st.blocks.length === 1);
+  const stop = list.findIndex((d) => d.kind === 'other' && /^\$erroractionpreference$/i.test(d.st.words[0].text) && d.st.words[2] && lower(d.st.words[2].text) === 'stop' && d.st.block === 0);
   if (stop < 0 || stop > firstDelete) add('SCRIPT_NO_STOP', path, "the script must set $ErrorActionPreference = 'Stop' before its first delete, so a failed guard really stops that delete");
   parsed.blocks.forEach((b) => { if (b.kind === 'catch' && b.statements === 0) add('SCRIPT_CATCH_SILENT', path, 'a catch block must record the failure, never swallow it'); });
-  for (const { d } of deletes) if (kind(d.st.blocks[d.st.blocks.length - 1]) !== 'try') add('SCRIPT_DELETE_NOT_WRAPPED', `${path} (line ${d.st.line})`, 'every delete must sit in its own try block so one failure does not stop the next delete');
+  for (const { d } of deletes) if (kind(d.st.block) !== 'try') add('SCRIPT_DELETE_NOT_WRAPPED', `${path} (line ${d.st.line})`, 'every delete must sit in its own try block so one failure does not stop the next delete');
   const last = deletes.length > 0 ? deletes[deletes.length - 1] : null;
-  const root = (d) => d.st.blocks.length === 1;
-  const finalOk = last && last.d.sub === 'group delete' && last.d.st.blocks.length === 2 && kind(last.d.st.blocks[1]) === 'try'
+  const root = (d) => d.st.block === 0;
+  const finalOk = last && last.d.sub === 'group delete' && parsed.blocks[last.d.st.block].parent === 0 && kind(last.d.st.block) === 'try'
     && !list.slice(0, last.i).some((d) => root(d) && isOther(d, 'exit', 'return', 'throw'));
   if (!finalOk) add('SCRIPT_NO_FINAL_GROUP_DELETE', path, 'the script must always finish with the guarded group delete (it removes everything): last delete, in its own try block at the top level, after no early exit');
   const after = list.slice(last ? last.i + 1 : 0);
   if (!after.some((d) => isOther(d, 'exit') && d.st.words[1] && d.st.words[1].text === '1')) add('SCRIPT_NO_FAILURE_EXIT', path, 'the script must exit 1 after the group delete when anything failed');
   if (!after.some((d) => isOther(d, 'set-content', 'out-file', 'add-content'))) add('SCRIPT_NO_ALARM_FILE', path, 'the script must write a persistent alarm file the owner will see, not only a dialog');
-  const outside = list.filter((d) => d.kind === 'az' && !d.st.blocks.some((id) => kind(id).startsWith('function:')));
+  const outside = list.filter((d) => d.kind === 'az' && !anyWithin(parsed, d.st.block, (b) => lower(b.kind).startsWith('function:')));
   const first = outside.find((d) => !GUARD_AZ.has(d.sub));
   if (!first || !first.destructive) add('BACKSTOP_NOT_DELETE_FIRST', path, 'the first action of the automatic backstop after the guards must be a deletion');
   if (!(isArr(p.teardown.limits) && p.teardown.limits.length > 0 && p.teardown.limits.every((x) => typeof x === 'string' && x.length > 20))) add('TEARDOWN_LIMITS_MISSING', `${BASE}.teardown.limits`, 'state what the unattended job cannot guarantee (machine off, not logged on, session expired)');
@@ -64,6 +65,7 @@ function checkPlan(packet, add, inv) {
   const p = packet.cleanupAndRollback;
   if (!isObj(p)) { add('PLAN_MISSING', BASE, 'the cleanup and rollback plan is missing'); plan.checkProse(inv, add); return; }
   plan.checkShape(p, add);
+  checkShapes(p, add);
   plan.checkProse(inv, add);
   plan.checkGuards(p, add);
   plan.checkArming(p, add);

@@ -1,0 +1,3982 @@
+{
+ "schemaVersion": 2,
+ "itemId": "U001",
+ "title": "U001 native-run approval packet, revision 3: first App Service code-slot target (Linux)",
+ "servesItems": [
+  "U002",
+  "APPROVED"
+ ],
+ "preparedBy": "worker-U001 (w3-U001)",
+ "preparedAtUtc": "2026-11-06T07:33:42Z",
+ "status": "proposal only: nothing in this packet is an approval and every owner decision defaults to no; the owner artifacts at HEAD (demo/, infra/, the azure-demo workflows, .azure/deployment-plan.md) are not approvals either",
+ "authority": {
+  "source": ".docs/wiki/flow-state.json approvals.C001 (read-only) and capability/C001/contract-guard.js",
+  "observedFlags": {
+   "liveAzureExecutionApproved": false,
+   "iacGenerationApproved": false,
+   "scaffoldApproved": false,
+   "deploymentApproved": false,
+   "identityRegistrationApproved": false,
+   "expenditureApproved": false
+  },
+  "observedOperatingEnvelope": {
+   "maximumLiveAzureRuns": 0,
+   "nativeTargetQualified": false,
+   "mode": "local-implementation-only",
+   "authorizedCloudSpend": 0,
+   "concreteTargetApprovalRequired": true
+  },
+  "hosting": "App Service Linux",
+  "runtime": "Node.js 24 LTS",
+  "framework": "Express",
+  "authentication": "Microsoft Entra ID: single tenant with invited guests",
+  "controlStorage": [
+   "Azure Storage Tables",
+   "Azure Storage Queues",
+   "Azure Blob Storage"
+  ],
+  "firstNativeHost": "App Service: code deployment slots",
+  "firstNativeConfiguration": "Planned only; OS, SKU, subscription, resource group, and region are not approved",
+  "preferredIacFormat": "Bicep",
+  "pinnedSnapshotSha256": "d88600582af0d499bb0bd26a727e8f0840e724e133bda6284592bc2b4e346909",
+  "reading": "authorizedCloudSpend 0 means spending is forbidden, not a price. Nothing in this packet changes it; only U002 can, from the owner literal answers.",
+  "observedAtUtc": "2026-11-06T05:11:32Z",
+  "unitStatement": "C001 and C002 define no unit for authorizedCloudSpend (a bare integer today). USD minor units (cents) are a PROPOSAL of this packet, following C004.",
+  "c002Pins": {
+   "source": "capability/C002/run-envelope-contract.js (lines 41 and 55-57) and validator.js (lines 121-127)",
+   "scope": "envelope.scope.liveAzureRuns is pinned to const 0 and limits.budget.cloudSpend min and max are pinned to const 0",
+   "effect": "A non-zero envelope cannot validate until C002 is revised as well as C001; the validator also reports SCOPE_ESCALATION above the C001 authority."
+  }
+ },
+ "pricing": {
+  "pricingDateUtc": "2026-11-04",
+  "retrievalWindowUtc": "about 2026-11-04T18:23Z to 18:41Z (wall clock of the worker; the API returns no response timestamp)",
+  "source": "Azure Retail Prices REST API, public and unauthenticated, fetched with the web_fetch tool",
+  "endpoint": "https://prices.azure.com/api/retail/prices",
+  "apiVersion": "api-version=2023-01-01-preview",
+  "currencyCode": "USD",
+  "priceType": "Consumption",
+  "basis": "Retail pay-as-you-go list prices. Savings plan entries in the responses are ignored. Discounts, taxes and currency conversion are excluded.",
+  "conventions": {
+   "hoursPerMonth": 730,
+   "billingGranularityAssumedForCeilings": "whole started hours plus one teardown-latency hour at the instance cap (conservative; estimated)",
+   "monthlyMeaning": "exposure if the plan is left running for 730 hours, not a planned cost",
+   "teardownLatencyHours": 1
+  },
+  "rules": [
+   "A price is a returned unitPrice with its unit of measure and effective start date; unitPrice null means price unavailable.",
+   "returned-zero means the API explicitly returned 0.0 (a free tier or free allowance); it is never inferred and the ceilings do not rely on it.",
+   "not-queried and price-unavailable never enter a total and are never costed as 0."
+  ],
+  "queries": [
+   {
+    "id": "Q01",
+    "purpose": "App Service Basic Plan - Linux, eastus2 (no slots: reference only)",
+    "httpStatus": 200,
+    "filter": "serviceName eq 'Azure App Service' and armRegionName eq 'eastus2' and priceType eq 'Consumption' and productName eq 'Azure App Service Basic Plan - Linux'",
+    "itemsReturned": 3
+   },
+   {
+    "id": "W01",
+    "purpose": "Revision 2: Storage Blob General Block Blob v2, Hot LRS, eastus2: confirms the meter List and Create Container Operations (0.05 per 10K, effective 2016-05-09, the same price as Hot LRS Write Operations (the meter ID is the same in eastus2, eastus and centralus, different in westus2 and westus3))",
+    "httpStatus": 200,
+    "filter": "serviceName eq 'Storage' and productName eq 'General Block Blob v2' and skuName eq 'Hot LRS' and armRegionName eq 'eastus2' and priceType eq 'Consumption'",
+    "itemsReturned": 9
+   },
+   {
+    "id": "W02",
+    "purpose": "Revision 2: any meter or product named Resource Group or service named Resource Manager (looks for a resource-group price)",
+    "httpStatus": 200,
+    "filter": "contains(productName,'Resource Group') or contains(meterName,'Resource Group') or contains(serviceName,'Resource Manager')",
+    "itemsReturned": 0,
+    "outcome": "Zero items: the API lists no price for a resource group. Nothing is costed from it."
+   }
+  ],
+  "lines": [
+   {
+    "id": "plan.S1@eastus2",
+    "key": "plan.S1",
+    "region": "eastus2",
+    "meterName": "S1 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.095,
+    "status": "returned",
+    "queryId": "Q02",
+    "effectiveStartDate": "2018-05-11",
+    "meterId": "fixture-meter-1"
+   },
+   {
+    "id": "plan.S1@eastus",
+    "key": "plan.S1",
+    "region": "eastus",
+    "meterName": "S1 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.095,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2018-05-11",
+    "meterId": "fixture-meter-2"
+   },
+   {
+    "id": "plan.S1@westus2",
+    "key": "plan.S1",
+    "region": "westus2",
+    "meterName": "S1 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.08,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2020-03-01",
+    "meterId": "fixture-meter-3"
+   },
+   {
+    "id": "plan.S1@westus3",
+    "key": "plan.S1",
+    "region": "westus3",
+    "meterName": "S1 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.08,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2022-08-01",
+    "meterId": "fixture-meter-4"
+   },
+   {
+    "id": "plan.S1@centralus",
+    "key": "plan.S1",
+    "region": "centralus",
+    "meterName": "S1 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.095,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2018-05-11",
+    "meterId": "fixture-meter-5"
+   },
+   {
+    "id": "plan.P0v3@eastus2",
+    "key": "plan.P0v3",
+    "region": "eastus2",
+    "meterName": "P0v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.0775,
+    "status": "returned",
+    "queryId": "Q03",
+    "effectiveStartDate": "2024-08-01",
+    "meterId": "fixture-meter-6"
+   },
+   {
+    "id": "plan.P0v3@eastus",
+    "key": "plan.P0v3",
+    "region": "eastus",
+    "meterName": "P0v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.0775,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2024-08-01",
+    "meterId": "fixture-meter-7"
+   },
+   {
+    "id": "plan.P0v3@westus2",
+    "key": "plan.P0v3",
+    "region": "westus2",
+    "meterName": "P0v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.0775,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2024-08-01",
+    "meterId": "fixture-meter-8"
+   },
+   {
+    "id": "plan.P0v3@westus3",
+    "key": "plan.P0v3",
+    "region": "westus3",
+    "meterName": "P0v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.0775,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2024-08-01",
+    "meterId": "fixture-meter-9"
+   },
+   {
+    "id": "plan.P0v3@centralus",
+    "key": "plan.P0v3",
+    "region": "centralus",
+    "meterName": "P0v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.085,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2024-08-01",
+    "meterId": "fixture-meter-10"
+   },
+   {
+    "id": "plan.P1v3@eastus2",
+    "key": "plan.P1v3",
+    "region": "eastus2",
+    "meterName": "P1 v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.155,
+    "status": "returned",
+    "queryId": "Q03",
+    "effectiveStartDate": "2020-10-01",
+    "meterId": "fixture-meter-11"
+   },
+   {
+    "id": "plan.P1v3@eastus",
+    "key": "plan.P1v3",
+    "region": "eastus",
+    "meterName": "P1 v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.155,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2020-10-01",
+    "meterId": "fixture-meter-12"
+   },
+   {
+    "id": "plan.P1v3@westus2",
+    "key": "plan.P1v3",
+    "region": "westus2",
+    "meterName": "P1 v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.155,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2020-10-01",
+    "meterId": "fixture-meter-13"
+   },
+   {
+    "id": "plan.P1v3@westus3",
+    "key": "plan.P1v3",
+    "region": "westus3",
+    "meterName": "P1 v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.155,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2022-08-01",
+    "meterId": "fixture-meter-14"
+   },
+   {
+    "id": "plan.P1v3@centralus",
+    "key": "plan.P1v3",
+    "region": "centralus",
+    "meterName": "P1 v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.17,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2020-10-01",
+    "meterId": "fixture-meter-15"
+   },
+   {
+    "id": "plan.P2v3@eastus2",
+    "key": "plan.P2v3",
+    "region": "eastus2",
+    "meterName": "P2 v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.31,
+    "status": "returned",
+    "queryId": "Q03",
+    "effectiveStartDate": "2020-10-01",
+    "meterId": "fixture-meter-16"
+   },
+   {
+    "id": "plan.P2v3@eastus",
+    "key": "plan.P2v3",
+    "region": "eastus",
+    "meterName": "P2 v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.31,
+    "status": "returned",
+    "queryId": "Q09",
+    "effectiveStartDate": "2020-10-01",
+    "meterId": "fixture-meter-17"
+   },
+   {
+    "id": "plan.P2v3@westus2",
+    "key": "plan.P2v3",
+    "region": "westus2",
+    "meterName": "P2 v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.31,
+    "status": "returned",
+    "queryId": "Q09",
+    "effectiveStartDate": "2020-10-01",
+    "meterId": "fixture-meter-18"
+   },
+   {
+    "id": "plan.P2v3@westus3",
+    "key": "plan.P2v3",
+    "region": "westus3",
+    "meterName": "P2 v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.31,
+    "status": "returned",
+    "queryId": "Q09",
+    "effectiveStartDate": "2022-08-01",
+    "meterId": "fixture-meter-19"
+   },
+   {
+    "id": "plan.P2v3@centralus",
+    "key": "plan.P2v3",
+    "region": "centralus",
+    "meterName": "P2 v3 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.34,
+    "status": "returned",
+    "queryId": "Q09",
+    "effectiveStartDate": "2020-10-01",
+    "meterId": "fixture-meter-20"
+   },
+   {
+    "id": "plan.P0v4@eastus2",
+    "key": "plan.P0v4",
+    "region": "eastus2",
+    "meterName": "P0v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.073,
+    "status": "returned",
+    "queryId": "Q05",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-21"
+   },
+   {
+    "id": "plan.P0v4@eastus",
+    "key": "plan.P0v4",
+    "region": "eastus",
+    "meterName": "P0v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.073,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-22"
+   },
+   {
+    "id": "plan.P0v4@westus2",
+    "key": "plan.P0v4",
+    "region": "westus2",
+    "meterName": "P0v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.073,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-23"
+   },
+   {
+    "id": "plan.P0v4@westus3",
+    "key": "plan.P0v4",
+    "region": "westus3",
+    "meterName": "P0v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.073,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-24"
+   },
+   {
+    "id": "plan.P0v4@centralus",
+    "key": "plan.P0v4",
+    "region": "centralus",
+    "meterName": "P0v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.0898,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-25"
+   },
+   {
+    "id": "plan.P1v4@eastus2",
+    "key": "plan.P1v4",
+    "region": "eastus2",
+    "meterName": "P1v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.146,
+    "status": "returned",
+    "queryId": "Q05",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-26"
+   },
+   {
+    "id": "plan.P1v4@eastus",
+    "key": "plan.P1v4",
+    "region": "eastus",
+    "meterName": "P1v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.146,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-27"
+   },
+   {
+    "id": "plan.P1v4@westus2",
+    "key": "plan.P1v4",
+    "region": "westus2",
+    "meterName": "P1v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.146,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-28"
+   },
+   {
+    "id": "plan.P1v4@westus3",
+    "key": "plan.P1v4",
+    "region": "westus3",
+    "meterName": "P1v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.146,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-29"
+   },
+   {
+    "id": "plan.P1v4@centralus",
+    "key": "plan.P1v4",
+    "region": "centralus",
+    "meterName": "P1v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.18,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-30"
+   },
+   {
+    "id": "plan.P2v4@eastus2",
+    "key": "plan.P2v4",
+    "region": "eastus2",
+    "meterName": "P2v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.292,
+    "status": "returned",
+    "queryId": "Q05",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-31"
+   },
+   {
+    "id": "plan.P2v4@eastus",
+    "key": "plan.P2v4",
+    "region": "eastus",
+    "meterName": "P2v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": null,
+    "status": "not-queried",
+    "queryId": null,
+    "effectiveStartDate": null,
+    "meterId": null,
+    "note": "Not queried for this region: price unavailable, never costed as 0."
+   },
+   {
+    "id": "plan.P2v4@westus2",
+    "key": "plan.P2v4",
+    "region": "westus2",
+    "meterName": "P2v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": null,
+    "status": "not-queried",
+    "queryId": null,
+    "effectiveStartDate": null,
+    "meterId": null,
+    "note": "Not queried for this region: price unavailable, never costed as 0."
+   },
+   {
+    "id": "plan.P2v4@westus3",
+    "key": "plan.P2v4",
+    "region": "westus3",
+    "meterName": "P2v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": null,
+    "status": "not-queried",
+    "queryId": null,
+    "effectiveStartDate": null,
+    "meterId": null,
+    "note": "Not queried for this region: price unavailable, never costed as 0."
+   },
+   {
+    "id": "plan.P2v4@centralus",
+    "key": "plan.P2v4",
+    "region": "centralus",
+    "meterName": "P2v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": null,
+    "status": "not-queried",
+    "queryId": null,
+    "effectiveStartDate": null,
+    "meterId": null,
+    "note": "Not queried for this region: price unavailable, never costed as 0."
+   },
+   {
+    "id": "ref.F1@eastus2",
+    "key": "ref.F1",
+    "region": "eastus2",
+    "meterName": "F1 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0,
+    "status": "returned-zero",
+    "queryId": "Q06",
+    "effectiveStartDate": "2019-05-01",
+    "meterId": "fixture-meter-36",
+    "note": "Free has no deployment slots (documented): excluded. The API returned an explicit 0.0 for this tier."
+   },
+   {
+    "id": "blob.stored@eastus2",
+    "key": "blob.stored",
+    "region": "eastus2",
+    "meterName": "Hot LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.0184,
+    "status": "returned",
+    "queryId": "Q12",
+    "effectiveStartDate": "2017-02-03",
+    "meterId": "fixture-meter-37"
+   },
+   {
+    "id": "blob.stored@eastus",
+    "key": "blob.stored",
+    "region": "eastus",
+    "meterName": "Hot LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.0208,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2017-02-03",
+    "meterId": "fixture-meter-38"
+   },
+   {
+    "id": "blob.stored@westus2",
+    "key": "blob.stored",
+    "region": "westus2",
+    "meterName": "Hot LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.0184,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2017-02-03",
+    "meterId": "fixture-meter-39"
+   },
+   {
+    "id": "blob.stored@westus3",
+    "key": "blob.stored",
+    "region": "westus3",
+    "meterName": "Hot LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.0184,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2022-08-01",
+    "meterId": "fixture-meter-40"
+   },
+   {
+    "id": "blob.stored@centralus",
+    "key": "blob.stored",
+    "region": "centralus",
+    "meterName": "Hot LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.0184,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2017-02-03",
+    "meterId": "fixture-meter-41"
+   },
+   {
+    "id": "blob.write@eastus2",
+    "key": "blob.write",
+    "region": "eastus2",
+    "meterName": "Hot LRS Write Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.05,
+    "status": "returned",
+    "queryId": "Q12",
+    "effectiveStartDate": "2016-05-09",
+    "meterId": "fixture-meter-42"
+   },
+   {
+    "id": "blob.write@eastus",
+    "key": "blob.write",
+    "region": "eastus",
+    "meterName": "Hot LRS Write Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.05,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2016-11-01",
+    "meterId": "fixture-meter-43"
+   },
+   {
+    "id": "blob.write@westus2",
+    "key": "blob.write",
+    "region": "westus2",
+    "meterName": "Hot LRS Write Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.05,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2016-07-11",
+    "meterId": "fixture-meter-44"
+   },
+   {
+    "id": "blob.write@westus3",
+    "key": "blob.write",
+    "region": "westus3",
+    "meterName": "Hot LRS Write Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.05,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2022-08-01",
+    "meterId": "fixture-meter-45"
+   },
+   {
+    "id": "blob.write@centralus",
+    "key": "blob.write",
+    "region": "centralus",
+    "meterName": "Hot LRS Write Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.05,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2016-05-09",
+    "meterId": "fixture-meter-46"
+   },
+   {
+    "id": "blob.read@eastus2",
+    "key": "blob.read",
+    "region": "eastus2",
+    "meterName": "Hot Read Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q12",
+    "effectiveStartDate": "2016-05-09",
+    "meterId": "fixture-meter-47"
+   },
+   {
+    "id": "blob.read@eastus",
+    "key": "blob.read",
+    "region": "eastus",
+    "meterName": "Hot Read Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2016-11-01",
+    "meterId": "fixture-meter-48"
+   },
+   {
+    "id": "blob.read@westus2",
+    "key": "blob.read",
+    "region": "westus2",
+    "meterName": "Hot Read Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2016-07-11",
+    "meterId": "fixture-meter-49"
+   },
+   {
+    "id": "blob.read@westus3",
+    "key": "blob.read",
+    "region": "westus3",
+    "meterName": "Hot Read Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2022-08-01",
+    "meterId": "fixture-meter-50"
+   },
+   {
+    "id": "blob.read@centralus",
+    "key": "blob.read",
+    "region": "centralus",
+    "meterName": "Hot Read Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2016-05-09",
+    "meterId": "fixture-meter-51"
+   },
+   {
+    "id": "blob.other@eastus2",
+    "key": "blob.other",
+    "region": "eastus2",
+    "meterName": "All Other Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q12",
+    "effectiveStartDate": "2017-10-01",
+    "meterId": "fixture-meter-52"
+   },
+   {
+    "id": "blob.other@eastus",
+    "key": "blob.other",
+    "region": "eastus",
+    "meterName": "All Other Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2017-10-01",
+    "meterId": "fixture-meter-53"
+   },
+   {
+    "id": "blob.other@westus2",
+    "key": "blob.other",
+    "region": "westus2",
+    "meterName": "All Other Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2017-10-01",
+    "meterId": "fixture-meter-54"
+   },
+   {
+    "id": "blob.other@westus3",
+    "key": "blob.other",
+    "region": "westus3",
+    "meterName": "All Other Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2022-08-01",
+    "meterId": "fixture-meter-55"
+   },
+   {
+    "id": "blob.other@centralus",
+    "key": "blob.other",
+    "region": "centralus",
+    "meterName": "All Other Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q16",
+    "effectiveStartDate": "2017-10-01",
+    "meterId": "fixture-meter-56"
+   },
+   {
+    "id": "table.stored@eastus2",
+    "key": "table.stored",
+    "region": "eastus2",
+    "meterName": "LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.045,
+    "status": "returned",
+    "queryId": "Q10",
+    "effectiveStartDate": "2019-06-01",
+    "meterId": "fixture-meter-57"
+   },
+   {
+    "id": "table.stored@eastus",
+    "key": "table.stored",
+    "region": "eastus",
+    "meterName": "LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.045,
+    "status": "returned",
+    "queryId": "Q17",
+    "effectiveStartDate": "2019-06-01",
+    "meterId": "fixture-meter-58"
+   },
+   {
+    "id": "table.stored@westus2",
+    "key": "table.stored",
+    "region": "westus2",
+    "meterName": "LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.045,
+    "status": "returned",
+    "queryId": "Q17",
+    "effectiveStartDate": "2019-06-01",
+    "meterId": "fixture-meter-59"
+   },
+   {
+    "id": "table.stored@westus3",
+    "key": "table.stored",
+    "region": "westus3",
+    "meterName": "LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.045,
+    "status": "returned",
+    "queryId": "Q17",
+    "effectiveStartDate": "2021-04-20",
+    "meterId": "fixture-meter-60"
+   },
+   {
+    "id": "table.stored@centralus",
+    "key": "table.stored",
+    "region": "centralus",
+    "meterName": "LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.045,
+    "status": "returned",
+    "queryId": "Q17",
+    "effectiveStartDate": "2019-06-01",
+    "meterId": "fixture-meter-61"
+   },
+   {
+    "id": "table.ops@eastus2",
+    "key": "table.ops",
+    "region": "eastus2",
+    "meterName": "Write Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.00036,
+    "status": "returned",
+    "queryId": "Q10",
+    "effectiveStartDate": "2016-04-11",
+    "meterId": "fixture-meter-62"
+   },
+   {
+    "id": "table.ops@eastus",
+    "key": "table.ops",
+    "region": "eastus",
+    "meterName": "Write Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.00036,
+    "status": "returned",
+    "queryId": "Q17",
+    "effectiveStartDate": "2016-04-11",
+    "meterId": "fixture-meter-63"
+   },
+   {
+    "id": "table.ops@westus2",
+    "key": "table.ops",
+    "region": "westus2",
+    "meterName": "Write Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.00036,
+    "status": "returned",
+    "queryId": "Q17",
+    "effectiveStartDate": "2016-04-11",
+    "meterId": "fixture-meter-64"
+   },
+   {
+    "id": "table.ops@westus3",
+    "key": "table.ops",
+    "region": "westus3",
+    "meterName": "Write Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.00036,
+    "status": "returned",
+    "queryId": "Q17",
+    "effectiveStartDate": "2021-04-20",
+    "meterId": "fixture-meter-65"
+   },
+   {
+    "id": "table.ops@centralus",
+    "key": "table.ops",
+    "region": "centralus",
+    "meterName": "Write Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.00036,
+    "status": "returned",
+    "queryId": "Q17",
+    "effectiveStartDate": "2016-04-11",
+    "meterId": "fixture-meter-66"
+   },
+   {
+    "id": "queue.stored@eastus2",
+    "key": "queue.stored",
+    "region": "eastus2",
+    "meterName": "LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.045,
+    "status": "returned",
+    "queryId": "Q11",
+    "effectiveStartDate": "2017-11-01",
+    "meterId": "fixture-meter-67"
+   },
+   {
+    "id": "queue.stored@eastus",
+    "key": "queue.stored",
+    "region": "eastus",
+    "meterName": "LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.045,
+    "status": "returned",
+    "queryId": "Q18",
+    "effectiveStartDate": "2017-11-01",
+    "meterId": "fixture-meter-68"
+   },
+   {
+    "id": "queue.stored@westus2",
+    "key": "queue.stored",
+    "region": "westus2",
+    "meterName": "LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.045,
+    "status": "returned",
+    "queryId": "Q18",
+    "effectiveStartDate": "2017-11-01",
+    "meterId": "fixture-meter-69"
+   },
+   {
+    "id": "queue.stored@westus3",
+    "key": "queue.stored",
+    "region": "westus3",
+    "meterName": "LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.045,
+    "status": "returned",
+    "queryId": "Q18",
+    "effectiveStartDate": "2021-04-20",
+    "meterId": "fixture-meter-70"
+   },
+   {
+    "id": "queue.stored@centralus",
+    "key": "queue.stored",
+    "region": "centralus",
+    "meterName": "LRS Data Stored",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.045,
+    "status": "returned",
+    "queryId": "Q18",
+    "effectiveStartDate": "2017-11-01",
+    "meterId": "fixture-meter-71"
+   },
+   {
+    "id": "queue.c1@eastus2",
+    "key": "queue.c1",
+    "region": "eastus2",
+    "meterName": "LRS Class 1 Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q11",
+    "effectiveStartDate": "2017-11-01",
+    "meterId": "fixture-meter-72"
+   },
+   {
+    "id": "queue.c1@eastus",
+    "key": "queue.c1",
+    "region": "eastus",
+    "meterName": "LRS Class 1 Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q18",
+    "effectiveStartDate": "2017-11-01",
+    "meterId": "fixture-meter-73"
+   },
+   {
+    "id": "queue.c1@westus2",
+    "key": "queue.c1",
+    "region": "westus2",
+    "meterName": "LRS Class 1 Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q18",
+    "effectiveStartDate": "2017-11-01",
+    "meterId": "fixture-meter-74"
+   },
+   {
+    "id": "queue.c1@westus3",
+    "key": "queue.c1",
+    "region": "westus3",
+    "meterName": "LRS Class 1 Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q18",
+    "effectiveStartDate": "2021-04-20",
+    "meterId": "fixture-meter-75"
+   },
+   {
+    "id": "queue.c1@centralus",
+    "key": "queue.c1",
+    "region": "centralus",
+    "meterName": "LRS Class 1 Operations",
+    "unitOfMeasure": "10K",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.004,
+    "status": "returned",
+    "queryId": "Q18",
+    "effectiveStartDate": "2017-11-01",
+    "meterId": "fixture-meter-76"
+   },
+   {
+    "id": "la.ingest.free@eastus2",
+    "key": "la.ingest.free",
+    "region": "eastus2",
+    "meterName": "Analytics Logs Data Ingestion",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0,
+    "status": "returned-zero",
+    "queryId": "Q13",
+    "effectiveStartDate": "2018-02-01",
+    "meterId": "fixture-meter-77"
+   },
+   {
+    "id": "la.ingest.free@eastus",
+    "key": "la.ingest.free",
+    "region": "eastus",
+    "meterName": "Analytics Logs Data Ingestion",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0,
+    "status": "returned-zero",
+    "queryId": "Q15",
+    "effectiveStartDate": "2018-02-01",
+    "meterId": "fixture-meter-78"
+   },
+   {
+    "id": "la.ingest.free@westus2",
+    "key": "la.ingest.free",
+    "region": "westus2",
+    "meterName": "Analytics Logs Data Ingestion",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0,
+    "status": "returned-zero",
+    "queryId": "Q15",
+    "effectiveStartDate": "2018-02-01",
+    "meterId": "fixture-meter-79"
+   },
+   {
+    "id": "la.ingest.free@westus3",
+    "key": "la.ingest.free",
+    "region": "westus3",
+    "meterName": "Analytics Logs Data Ingestion",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0,
+    "status": "returned-zero",
+    "queryId": "Q15",
+    "effectiveStartDate": "2022-08-01",
+    "meterId": "fixture-meter-80"
+   },
+   {
+    "id": "la.ingest.free@centralus",
+    "key": "la.ingest.free",
+    "region": "centralus",
+    "meterName": "Analytics Logs Data Ingestion",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0,
+    "status": "returned-zero",
+    "queryId": "Q15",
+    "effectiveStartDate": "2018-02-01",
+    "meterId": "fixture-meter-81"
+   },
+   {
+    "id": "la.ingest.paid@eastus2",
+    "key": "la.ingest.paid",
+    "region": "eastus2",
+    "meterName": "Analytics Logs Data Ingestion",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 5,
+    "currencyCode": "USD",
+    "unitPrice": 2.76,
+    "status": "returned",
+    "queryId": "Q13",
+    "effectiveStartDate": "2018-02-01",
+    "meterId": "fixture-meter-82"
+   },
+   {
+    "id": "la.ingest.paid@eastus",
+    "key": "la.ingest.paid",
+    "region": "eastus",
+    "meterName": "Analytics Logs Data Ingestion",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 5,
+    "currencyCode": "USD",
+    "unitPrice": 2.3,
+    "status": "returned",
+    "queryId": "Q15",
+    "effectiveStartDate": "2018-02-01",
+    "meterId": "fixture-meter-83"
+   },
+   {
+    "id": "la.ingest.paid@westus2",
+    "key": "la.ingest.paid",
+    "region": "westus2",
+    "meterName": "Analytics Logs Data Ingestion",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 5,
+    "currencyCode": "USD",
+    "unitPrice": 2.3,
+    "status": "returned",
+    "queryId": "Q15",
+    "effectiveStartDate": "2018-02-01",
+    "meterId": "fixture-meter-84"
+   },
+   {
+    "id": "la.ingest.paid@westus3",
+    "key": "la.ingest.paid",
+    "region": "westus3",
+    "meterName": "Analytics Logs Data Ingestion",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 5,
+    "currencyCode": "USD",
+    "unitPrice": 2.3,
+    "status": "returned",
+    "queryId": "Q15",
+    "effectiveStartDate": "2022-08-01",
+    "meterId": "fixture-meter-85"
+   },
+   {
+    "id": "la.ingest.paid@centralus",
+    "key": "la.ingest.paid",
+    "region": "centralus",
+    "meterName": "Analytics Logs Data Ingestion",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 5,
+    "currencyCode": "USD",
+    "unitPrice": 2.76,
+    "status": "returned",
+    "queryId": "Q15",
+    "effectiveStartDate": "2018-02-01",
+    "meterId": "fixture-meter-86"
+   },
+   {
+    "id": "la.retain@eastus2",
+    "key": "la.retain",
+    "region": "eastus2",
+    "meterName": "Analytics Logs Data Retention",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.12,
+    "status": "returned",
+    "queryId": "Q13",
+    "effectiveStartDate": "2018-02-01",
+    "meterId": "fixture-meter-87"
+   },
+   {
+    "id": "la.retain@eastus",
+    "key": "la.retain",
+    "region": "eastus",
+    "meterName": "Analytics Logs Data Retention",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.1,
+    "status": "returned",
+    "queryId": "Q20",
+    "effectiveStartDate": "2018-02-01",
+    "meterId": "fixture-meter-88"
+   },
+   {
+    "id": "la.retain@westus2",
+    "key": "la.retain",
+    "region": "westus2",
+    "meterName": "Analytics Logs Data Retention",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.1,
+    "status": "returned",
+    "queryId": "Q20",
+    "effectiveStartDate": "2018-02-01",
+    "meterId": "fixture-meter-89"
+   },
+   {
+    "id": "la.retain@westus3",
+    "key": "la.retain",
+    "region": "westus3",
+    "meterName": "Analytics Logs Data Retention",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.1,
+    "status": "returned",
+    "queryId": "Q20",
+    "effectiveStartDate": "2022-08-01",
+    "meterId": "fixture-meter-90"
+   },
+   {
+    "id": "la.retain@centralus",
+    "key": "la.retain",
+    "region": "centralus",
+    "meterName": "Analytics Logs Data Retention",
+    "unitOfMeasure": "1 GB/Month",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.12,
+    "status": "returned",
+    "queryId": "Q20",
+    "effectiveStartDate": "2018-02-01",
+    "meterId": "fixture-meter-91"
+   },
+   {
+    "id": "bw.free@eastus2",
+    "key": "bw.free",
+    "region": "eastus2",
+    "meterName": "Standard Data Transfer Out",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0,
+    "status": "returned-zero",
+    "queryId": "Q14",
+    "effectiveStartDate": "2022-05-01",
+    "meterId": "fixture-meter-92"
+   },
+   {
+    "id": "bw.free@eastus",
+    "key": "bw.free",
+    "region": "eastus",
+    "meterName": "Standard Data Transfer Out",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0,
+    "status": "returned-zero",
+    "queryId": "Q19",
+    "effectiveStartDate": "2022-05-01",
+    "meterId": "fixture-meter-93"
+   },
+   {
+    "id": "bw.free@westus2",
+    "key": "bw.free",
+    "region": "westus2",
+    "meterName": "Standard Data Transfer Out",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0,
+    "status": "returned-zero",
+    "queryId": "Q19",
+    "effectiveStartDate": "2022-05-01",
+    "meterId": "fixture-meter-94"
+   },
+   {
+    "id": "bw.free@westus3",
+    "key": "bw.free",
+    "region": "westus3",
+    "meterName": "Standard Data Transfer Out",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0,
+    "status": "returned-zero",
+    "queryId": "Q19",
+    "effectiveStartDate": "2022-05-01",
+    "meterId": "fixture-meter-95"
+   },
+   {
+    "id": "bw.free@centralus",
+    "key": "bw.free",
+    "region": "centralus",
+    "meterName": "Standard Data Transfer Out",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0,
+    "status": "returned-zero",
+    "queryId": "Q19",
+    "effectiveStartDate": "2022-05-01",
+    "meterId": "fixture-meter-96"
+   },
+   {
+    "id": "bw.paid@eastus2",
+    "key": "bw.paid",
+    "region": "eastus2",
+    "meterName": "Standard Data Transfer Out",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 100,
+    "currencyCode": "USD",
+    "unitPrice": 0.087,
+    "status": "returned",
+    "queryId": "Q14",
+    "effectiveStartDate": "2022-05-01",
+    "meterId": "fixture-meter-97"
+   },
+   {
+    "id": "bw.paid@eastus",
+    "key": "bw.paid",
+    "region": "eastus",
+    "meterName": "Standard Data Transfer Out",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 100,
+    "currencyCode": "USD",
+    "unitPrice": 0.087,
+    "status": "returned",
+    "queryId": "Q19",
+    "effectiveStartDate": "2022-05-01",
+    "meterId": "fixture-meter-98"
+   },
+   {
+    "id": "bw.paid@westus2",
+    "key": "bw.paid",
+    "region": "westus2",
+    "meterName": "Standard Data Transfer Out",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 100,
+    "currencyCode": "USD",
+    "unitPrice": 0.087,
+    "status": "returned",
+    "queryId": "Q19",
+    "effectiveStartDate": "2022-05-01",
+    "meterId": "fixture-meter-99"
+   },
+   {
+    "id": "bw.paid@westus3",
+    "key": "bw.paid",
+    "region": "westus3",
+    "meterName": "Standard Data Transfer Out",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 100,
+    "currencyCode": "USD",
+    "unitPrice": 0.087,
+    "status": "returned",
+    "queryId": "Q19",
+    "effectiveStartDate": "2022-05-01",
+    "meterId": "fixture-meter-100"
+   },
+   {
+    "id": "bw.paid@centralus",
+    "key": "bw.paid",
+    "region": "centralus",
+    "meterName": "Standard Data Transfer Out",
+    "unitOfMeasure": "1 GB",
+    "tierMinimumUnits": 100,
+    "currencyCode": "USD",
+    "unitPrice": 0.087,
+    "status": "returned",
+    "queryId": "Q19",
+    "effectiveStartDate": "2022-05-01",
+    "meterId": "fixture-meter-101"
+   }
+  ],
+  "unpricedItems": [
+   {
+    "item": "Microsoft Entra tenant licensing, app registrations, service principals, B2B guest invitations",
+    "status": "price-unavailable",
+    "unitPrice": null,
+    "includedInTotals": false,
+    "note": "price unavailable (not queried: outside the Retail Prices API); excluded from every total and never costed as 0"
+   },
+   {
+    "item": "User-assigned or system-assigned managed identity and role assignments (only if identityRegistration is yes)",
+    "status": "price-unavailable",
+    "unitPrice": null,
+    "includedInTotals": false,
+    "note": "price unavailable (no meter queried); excluded, not zero"
+   },
+   {
+    "item": "Cost Management budget, action group and alert emails",
+    "status": "price-unavailable",
+    "unitPrice": null,
+    "includedInTotals": false,
+    "note": "price unavailable (no meter queried); excluded, not zero"
+   },
+   {
+    "item": "Microsoft Defender for Cloud plans or any policy-driven add-on enabled on the owner subscription",
+    "status": "price-unavailable",
+    "unitPrice": null,
+    "includedInTotals": false,
+    "note": "price unavailable (unknown and subscription-specific); the owner must confirm none applies to the new resources; excluded, not zero"
+   },
+   {
+    "item": "Azure-side teardown automation (Automation account, Logic App or Function)",
+    "status": "price-unavailable",
+    "unitPrice": null,
+    "includedInTotals": false,
+    "note": "price unavailable (not queried) and not created; the default teardown job runs on the owner machine"
+   },
+   {
+    "item": "Resource group",
+    "status": "price-unavailable",
+    "unitPrice": null,
+    "includedInTotals": false,
+    "note": "price unavailable (no meter: W02 returned 0 items); no charge is expected, an estimate: no Learn page read states it"
+   }
+  ],
+  "reverification": {
+   "by": "rev-U001 independent lookups, review of 2026-11-06T03:45Z",
+   "lookups": 19,
+   "unitPricesCompared": 116,
+   "differences": 0,
+   "note": "No price changed after 2026-11-04 (newest effective date returned 2025-09-01). The 7-day rule makes the prices usable until 2026-11-11.",
+   "workerLookups": "W01 and W02 of 2026-11-06 (about 04:00Z to 04:10Z): W01 re-fetched the eastus2 blob meters and confirmed that List and Create Container Operations are priced like writes; W02 found no resource-group meter. No unit price changed."
+  }
+ },
+ "documentedSources": [
+  {
+   "id": "DOC-SLOTS",
+   "title": "Set up staging environments in Azure App Service",
+   "url": "https://learn.microsoft.com/azure/app-service/deploy-staging-slots",
+   "retrievedUtcDate": "2026-11-04",
+   "claims": [
+    {
+     "id": "SLOTS-TIER",
+     "text": "Deployment slots are available only in the Standard, Premium or Isolated tier of an App Service plan."
+    },
+    {
+     "id": "SLOTS-FREE",
+     "text": "There is no extra charge for using deployment slots; the Standard tier supports only five slots."
+    },
+    {
+     "id": "SLOTS-NOAUTOSWAP",
+     "text": "Auto swap is not supported in web apps on Linux or in Web App for Containers."
+    },
+    {
+     "id": "SLOTS-ROLLBACK",
+     "text": "To roll back a swap, swap the same two slots again immediately."
+    },
+    {
+     "id": "SLOTS-WARMUP",
+     "text": "By default an instance that returns any HTTP response counts as warmed up; WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES make the check strict."
+    },
+    {
+     "id": "SLOTS-RECYCLE",
+     "text": "Former production instances are recycled in the last swap step and long-running operations on them are abandoned."
+    },
+    {
+     "id": "SLOTS-TARGET-ONLINE",
+     "text": "The target slot stays online while the source slot is prepared and warmed up, whether or not the swap succeeds."
+    },
+    {
+     "id": "SLOTS-PREVIEW",
+     "text": "Swap with preview applies the target slot settings to the source slot first; the swap can then be completed (CompleteSlotSwap) or cancelled (ResetSlotSwap)."
+    }
+   ]
+  },
+  {
+   "id": "DOC-LIMITS",
+   "title": "Azure subscription and service limits: App Service limits",
+   "url": "https://learn.microsoft.com/azure/azure-resource-manager/management/azure-subscription-service-limits",
+   "retrievedUtcDate": "2026-11-04",
+   "claims": [
+    {
+     "id": "LIMITS-SLOTS",
+     "text": "Staging slots per app: none in Free, Shared and Basic; 5 in Standard; 20 in Premium; 20 in Isolated."
+    },
+    {
+     "id": "LIMITS-TIP",
+     "text": "Testing in Production (slot traffic percentage) and Autoscale are available from Standard upward; Always On from Basic upward."
+    }
+   ]
+  },
+  {
+   "id": "DOC-PLANS",
+   "title": "Azure App Service plans",
+   "url": "https://learn.microsoft.com/azure/app-service/overview-hosting-plans",
+   "retrievedUtcDate": "2026-11-04",
+   "claims": [
+    {
+     "id": "PLANS-BILLING",
+     "text": "In the dedicated tiers (Basic, Standard, Premium, PremiumV2, PremiumV3, PremiumV4) each VM instance of the plan is charged."
+    },
+    {
+     "id": "PLANS-SLOTSHARE",
+     "text": "All deployment slots of an app run on the same VM instances as the plan; an active slot competes for plan resources."
+    },
+    {
+     "id": "PLANS-NOFEATURECHARGE",
+     "text": "Deployment slots, custom domains, TLS certificates and backups are not charged as features; App Service domains, App Service certificates and IP-based TLS are exceptions."
+    }
+   ]
+  },
+  {
+   "id": "DOC-NODE",
+   "title": "Configure Node.js apps in Azure App Service",
+   "url": "https://learn.microsoft.com/azure/app-service/configure-language-nodejs",
+   "retrievedUtcDate": "2026-11-04",
+   "claims": [
+    {
+     "id": "NODE-LINUX24",
+     "text": "On Linux the runtime is selected with az webapp config set --linux-fx-version \"NODE|24-lts\"; the page metadata shows updated_at 2026-10-19."
+    },
+    {
+     "id": "NODE-PORT",
+     "text": "On Linux App Service sets the PORT environment variable and forwards requests to it; the app must listen on process.env.PORT."
+    }
+   ]
+  },
+  {
+   "id": "DOC-PV4",
+   "title": "Configure Premium v4 tier",
+   "url": "https://learn.microsoft.com/azure/app-service/app-service-configure-premium-v4-tier",
+   "retrievedUtcDate": "2026-11-04",
+   "claims": [
+    {
+     "id": "PV4-LINUX",
+     "text": "Premium v4 is available for source code apps and custom containers on Linux, in select regions; the listed public regions include Central US, East US, East US 2, West US 2 and West US 3."
+    },
+    {
+     "id": "PV4-NOIP",
+     "text": "Premium v4 has no stable outbound IP addresses by design."
+    },
+    {
+     "id": "PV4-UNIT",
+     "text": "Premium v4 availability also depends on the underlying App Service deployment of the resource group and region combination."
+    }
+   ]
+  },
+  {
+   "id": "DOC-BUDGETS",
+   "title": "Tutorial: Create and manage budgets",
+   "url": "https://learn.microsoft.com/azure/cost-management-billing/costs/tutorial-acm-create-budgets",
+   "retrievedUtcDate": "2026-11-04",
+   "claims": [
+    {
+     "id": "BUDGET-ALERTONLY",
+     "text": "Budget notifications are triggered when thresholds are exceeded; resources are not affected and consumption is not stopped."
+    },
+    {
+     "id": "BUDGET-LAG",
+     "text": "Cost data is typically available within 8 to 24 hours and budgets are evaluated against it every 24 hours; a new subscription can need up to 48 hours before budgets work."
+    },
+    {
+     "id": "BUDGET-ACTIONGROUP",
+     "text": "Budgets at subscription or resource group scope can call an action group, which can trigger automation such as Functions or webhooks."
+    }
+   ]
+  },
+  {
+   "id": "DOC-RGDELETE",
+   "title": "Delete resource groups and resources",
+   "url": "https://learn.microsoft.com/azure/azure-resource-manager/management/delete-resource-group",
+   "retrievedUtcDate": "2026-11-04",
+   "claims": [
+    {
+     "id": "RGDEL-PRECOND",
+     "text": "Resource locks and backup data must be removed before a resource group can be deleted."
+    },
+    {
+     "id": "RGDEL-ORDER",
+     "text": "Resource Manager deletes nested resources first, then resources that manage others (managedBy), then the rest, waiting for dependencies; a delete is retried for 5xx, 429 and 408 for 15 minutes by default; a 404 on GET means success."
+    }
+   ]
+  },
+  {
+   "id": "DOC-TAGS",
+   "title": "Use tags to organize your Azure resources",
+   "url": "https://learn.microsoft.com/azure/azure-resource-manager/management/tag-resources",
+   "retrievedUtcDate": "2026-11-04",
+   "claims": [
+    {
+     "id": "TAGS-NOINHERIT",
+     "text": "Resources do not inherit tags applied to a resource group or subscription."
+    },
+    {
+     "id": "TAGS-LIMITS",
+     "text": "At most 50 tag name-value pairs per resource, group or subscription; tag names up to 512 characters (128 for storage accounts), values up to 256; tag values are case-sensitive."
+    }
+   ]
+  },
+  {
+   "id": "DOC-LADELETE",
+   "title": "Delete and recover a Log Analytics workspace",
+   "url": "https://learn.microsoft.com/azure/azure-monitor/logs/delete-workspace",
+   "retrievedUtcDate": "2026-11-04",
+   "claims": [
+    {
+     "id": "LADEL-SOFT",
+     "text": "Deleting a workspace soft-deletes it for 14 days and the name stays reserved; a workspace already in the soft-delete state must be recovered before it can be permanently removed; the --force parameter of the workspace delete command makes the deletion permanent (command group: az monitor log-analytics workspace)."
+    }
+   ]
+  },
+  {
+   "id": "DOC-LACAP",
+   "title": "Set daily cap on a Log Analytics workspace",
+   "url": "https://learn.microsoft.com/azure/azure-monitor/logs/daily-cap",
+   "retrievedUtcDate": "2026-11-04",
+   "claims": [
+    {
+     "id": "LACAP-SOFT",
+     "text": "The daily cap cannot stop collection at exactly the cap and some excess data is expected; data collected above the cap is still billed; the reset hour cannot be configured."
+    }
+   ]
+  },
+  {
+   "id": "DOC-CLI-SLOTSWAP",
+   "title": "az webapp deployment slot (Azure CLI reference)",
+   "url": "https://learn.microsoft.com/cli/azure/webapp/deployment/slot",
+   "retrievedUtcDate": "2026-11-06",
+   "claims": [
+    {
+     "id": "CLI-SWAP-FORM",
+     "text": "az webapp deployment slot swap --slot <slot> [--name] [--resource-group] [--subscription] [--target-slot] [--action {preview, reset, swap}]; the default action is swap and the default target slot is production."
+    },
+    {
+     "id": "CLI-SWAP-ACTIONS",
+     "text": "--action preview applies the target slot's settings on the source slot first; --action swap completes it; --action reset resets the swap."
+    },
+    {
+     "id": "CLI-SLOT-DELETE",
+     "text": "The delete form of the az webapp deployment slot group takes --slot <slot> [--name] [--resource-group] [--subscription] and removes a deployment slot."
+    }
+   ]
+  },
+  {
+   "id": "DOC-CLI-LADELETED",
+   "title": "az monitor log-analytics workspace (Azure CLI reference)",
+   "url": "https://learn.microsoft.com/cli/azure/monitor/log-analytics/workspace",
+   "retrievedUtcDate": "2026-11-06",
+   "claims": [
+    {
+     "id": "CLI-LADEL-LIST",
+     "text": "az monitor log-analytics workspace list-deleted-workspaces gets a list of deleted workspaces that can be recovered in a subscription or a resource group (Core, GA)."
+    }
+   ]
+  },
+  {
+   "id": "DOC-CLI-GRAPH",
+   "title": "az graph (Azure CLI reference)",
+   "url": "https://learn.microsoft.com/cli/azure/graph",
+   "retrievedUtcDate": "2026-11-06",
+   "claims": [
+    {
+     "id": "CLI-GRAPH-QUERY",
+     "text": "az graph query -q <query> [--subscriptions] queries the resources managed by Azure Resource Manager; it is an extension command (GA)."
+    }
+   ]
+  },
+  {
+   "id": "DOC-CLI-DEPLOYSUB",
+   "title": "az deployment sub (Azure CLI reference)",
+   "url": "https://learn.microsoft.com/cli/azure/deployment/sub",
+   "retrievedUtcDate": "2026-11-06",
+   "claims": [
+    {
+     "id": "CLI-DEPLOY-VALIDATE",
+     "text": "az deployment sub validate validates whether a template is valid at subscription scope and az deployment sub what-if executes a what-if operation at subscription scope (both Core, GA)."
+    },
+    {
+     "id": "CLI-DEPLOY-LOCATION",
+     "text": "The required --location (-l) parameter of az deployment sub validate is described as the location to store the deployment metadata (read on Learn 2026-11-06); it is not described as the region of the resources, which come from the template and its parameters."
+    }
+   ]
+  },
+  {
+   "id": "DOC-PS-SCHEDULEDTASKS",
+   "title": "ScheduledTasks module: Register-ScheduledTask, New-ScheduledTaskSettingsSet, Unregister-ScheduledTask",
+   "url": "https://learn.microsoft.com/powershell/module/scheduledtasks/register-scheduledtask",
+   "retrievedUtcDate": "2026-11-06",
+   "claims": [
+    {
+     "id": "PS-REGISTER-FORM",
+     "text": "Register-ScheduledTask -TaskName <string> -Action <CimInstance[]> [-Description] [-Settings] [-Trigger]; the page example creates the trigger with New-ScheduledTaskTrigger -At 12:00 -Once."
+    },
+    {
+     "id": "PS-SETTINGS-FORM",
+     "text": "New-ScheduledTaskSettingsSet accepts -AllowStartIfOnBatteries, -DontStopIfGoingOnBatteries, -StartWhenAvailable, -WakeToRun and -ExecutionTimeLimit <TimeSpan>; Unregister-ScheduledTask accepts -TaskName and -Confirm."
+    }
+   ]
+  }
+ ],
+ "options": [
+  {
+   "id": "A",
+   "name": "Lean",
+   "title": "Lean: lowest-cost slot-capable plan with documented slot support (P0v3), one instance, no workspace",
+   "os": "Linux",
+   "runtime": "Node.js 24 LTS (linuxFxVersion NODE|24-lts)",
+   "planProduct": "Azure App Service Premium v3 Plan - Linux",
+   "sku": "P0v3",
+   "skuKey": "P0v3",
+   "cliSku": "P0V3",
+   "tier": "Premium v3",
+   "steadyInstances": 1,
+   "instanceCap": 1,
+   "stagingSlots": 1,
+   "autoscale": "none: manual instance count only",
+   "defaultRegion": "eastus",
+   "regionCandidates": [
+    {
+     "region": "eastus2",
+     "planLineId": "plan.P0v3@eastus2",
+     "unitPricePerInstanceHourUsd": 0.0775,
+     "effectiveStartDate": "2024-08-01",
+     "perHourSteadyUsd": 0.0775,
+     "monthly730Usd": 56.575,
+     "expectedPlanCostUsd": 0.2325,
+     "worstCaseUsd": 0.83554,
+     "quotaStatus": "untested",
+     "quotaNote": "Not tested. The sibling SKU P1v3 failed in eastus2 on 2026-11-05, so treat this as likely blocked until a non-deploying validation passes."
+    },
+    {
+     "region": "eastus",
+     "planLineId": "plan.P0v3@eastus",
+     "unitPricePerInstanceHourUsd": 0.0775,
+     "effectiveStartDate": "2024-08-01",
+     "perHourSteadyUsd": 0.0775,
+     "monthly730Usd": 56.575,
+     "expectedPlanCostUsd": 0.2325,
+     "worstCaseUsd": 0.83578,
+     "quotaStatus": "untested",
+     "quotaNote": "Not tested. Unproven until a non-deploying validation and what-if pass in the owner subscription."
+    },
+    {
+     "region": "westus2",
+     "planLineId": "plan.P0v3@westus2",
+     "unitPricePerInstanceHourUsd": 0.0775,
+     "effectiveStartDate": "2024-08-01",
+     "perHourSteadyUsd": 0.0775,
+     "monthly730Usd": 56.575,
+     "expectedPlanCostUsd": 0.2325,
+     "worstCaseUsd": 0.83554,
+     "quotaStatus": "untested",
+     "quotaNote": "Not tested. The sibling SKU P1v3 failed in westus2 on 2026-11-05, so treat this as likely blocked until a non-deploying validation passes."
+    },
+    {
+     "region": "westus3",
+     "planLineId": "plan.P0v3@westus3",
+     "unitPricePerInstanceHourUsd": 0.0775,
+     "effectiveStartDate": "2024-08-01",
+     "perHourSteadyUsd": 0.0775,
+     "monthly730Usd": 56.575,
+     "expectedPlanCostUsd": 0.2325,
+     "worstCaseUsd": 0.83554,
+     "quotaStatus": "untested",
+     "quotaNote": "Not tested. Unproven until a non-deploying validation and what-if pass in the owner subscription."
+    },
+    {
+     "region": "centralus",
+     "planLineId": "plan.P0v3@centralus",
+     "unitPricePerInstanceHourUsd": 0.085,
+     "effectiveStartDate": "2024-08-01",
+     "perHourSteadyUsd": 0.085,
+     "monthly730Usd": 62.05,
+     "expectedPlanCostUsd": 0.255,
+     "worstCaseUsd": 0.88804,
+     "quotaStatus": "untested",
+     "quotaNote": "Not tested. The sibling SKU P1v3 failed in centralus on 2026-11-05, so treat this as likely blocked until a non-deploying validation passes."
+    }
+   ],
+   "expectedRunHours": 3,
+   "expectedPhases": [
+    {
+     "step": "Provision resource group, plan, web app, staging slot and storage",
+     "hours": 0.5
+    },
+    {
+     "step": "Deploy v1 to production and v2 to staging, warm up, swap with preview, complete",
+     "hours": 1
+    },
+    {
+     "step": "Observe, swap back (rollback test), record version stamps",
+     "hours": 0.75
+    },
+    {
+     "step": "Export evidence, tear down, verify",
+     "hours": 0.75
+    }
+   ],
+   "phasesLabel": "estimated",
+   "scaleStepHours": 0,
+   "teardownDeadlineHours": 6,
+   "teardown": {
+    "deadlineTag": "lease-expires-utc",
+    "deadlineRule": "the time arming step 4 computes (taken before the plan exists, so slightly earlier than plan creation: conservative) + 6 hours",
+    "mechanism": "Owner-machine one-shot scheduled job (Windows Task Scheduler, registered by arming step 5 of section 4) that runs the teardown script at lease-expires-utc with the owner az session, guarded by G2 and G3; no Azure resource and no Azure cost (estimated)."
+   },
+   "usageCaps": {
+    "blobWriteOps": 20000,
+    "blobReadOps": 100000,
+    "blobOtherOps": 20000,
+    "tableOps": 200000,
+    "queueOps": 100000,
+    "storedGbEach": 0.1,
+    "egressGb": 1
+   },
+   "logs": {
+    "workspace": false
+   },
+   "worstCase": {
+    "basis": "Highest returned price across the five candidate regions, the instance cap for the whole deadline plus one teardown-latency hour at the cap, and every usage cap fully used.",
+    "planInstanceCap": 1,
+    "planPricePerInstanceHourUsd": 0.085,
+    "planUsd": 0.595,
+    "usage": [
+     {
+      "item": "Blob write, list and create-container operations (all priced at the write rate)",
+      "quantity": 2,
+      "unit": "10K operations",
+      "lineKey": "blob.write",
+      "unitPrice": 0.05,
+      "cost": 0.1
+     },
+     {
+      "item": "Blob read operations",
+      "quantity": 10,
+      "unit": "10K operations",
+      "lineKey": "blob.read",
+      "unitPrice": 0.004,
+      "cost": 0.04
+     },
+     {
+      "item": "Blob other operations (list and create-container operations are counted under the write line)",
+      "quantity": 2,
+      "unit": "10K operations",
+      "lineKey": "blob.other",
+      "unitPrice": 0.004,
+      "cost": 0.008
+     },
+     {
+      "item": "Table operations (all returned table operation meters are 0.00036 per 10K; Write meter used)",
+      "quantity": 20,
+      "unit": "10K operations",
+      "lineKey": "table.ops",
+      "unitPrice": 0.00036,
+      "cost": 0.0072
+     },
+     {
+      "item": "Queue operations (Queues v2 class 1 rate, equal to class 2)",
+      "quantity": 10,
+      "unit": "10K operations",
+      "lineKey": "queue.c1",
+      "unitPrice": 0.004,
+      "cost": 0.04
+     },
+     {
+      "item": "Blob data stored, billed as a full month",
+      "quantity": 0.1,
+      "unit": "GB-month",
+      "lineKey": "blob.stored",
+      "unitPrice": 0.0208,
+      "cost": 0.00208
+     },
+     {
+      "item": "Table data stored, billed as a full month",
+      "quantity": 0.1,
+      "unit": "GB-month",
+      "lineKey": "table.stored",
+      "unitPrice": 0.045,
+      "cost": 0.0045
+     },
+     {
+      "item": "Queue data stored, billed as a full month",
+      "quantity": 0.1,
+      "unit": "GB-month",
+      "lineKey": "queue.stored",
+      "unitPrice": 0.045,
+      "cost": 0.0045
+     },
+     {
+      "item": "Outbound data transfer, every GB at the paid tier",
+      "quantity": 1,
+      "unit": "GB",
+      "lineKey": "bw.paid",
+      "unitPrice": 0.087,
+      "cost": 0.087
+     }
+    ],
+    "usageUsd": 0.29328,
+    "totalUsd": 0.88828,
+    "planHoursAtCap": 7
+   },
+   "covers": [
+    "C062: one Linux code-slot deployment with native resource and version observations, controlled swap and swap back, no auto swap"
+   ],
+   "doesNotCover": [
+    "Per-instance warm-up and recycling across several instances (C064), manual scale (C065), autoscale (C066), separate plans (C067), traffic weights (C108): each needs its own bounded approval",
+    "Log collection (no workspace in this option)"
+   ],
+   "when": "First native proof; smallest spend and exposure.",
+   "alternatives": [
+    {
+     "sku": "S1",
+     "why": "Classic Standard tier, documented to allow 5 slots, but dearer per hour than P0v3 in all five candidate regions.",
+     "byRegion": [
+      {
+       "region": "eastus2",
+       "unitPricePerInstanceHourUsd": 0.095,
+       "status": "returned",
+       "perHourSteadyUsd": 0.095,
+       "lineId": "plan.S1@eastus2"
+      },
+      {
+       "region": "eastus",
+       "unitPricePerInstanceHourUsd": 0.095,
+       "status": "returned",
+       "perHourSteadyUsd": 0.095,
+       "lineId": "plan.S1@eastus"
+      },
+      {
+       "region": "westus2",
+       "unitPricePerInstanceHourUsd": 0.08,
+       "status": "returned",
+       "perHourSteadyUsd": 0.08,
+       "lineId": "plan.S1@westus2"
+      },
+      {
+       "region": "westus3",
+       "unitPricePerInstanceHourUsd": 0.08,
+       "status": "returned",
+       "perHourSteadyUsd": 0.08,
+       "lineId": "plan.S1@westus3"
+      },
+      {
+       "region": "centralus",
+       "unitPricePerInstanceHourUsd": 0.095,
+       "status": "returned",
+       "perHourSteadyUsd": 0.095,
+       "lineId": "plan.S1@centralus"
+      }
+     ]
+    },
+    {
+     "sku": "P0v4",
+     "why": "Cheapest returned slot-capable price in four of five regions (not centralus), but Premium v4 has no stable outbound IPs, depends on the deployment unit and its slot count is not stated on its page (R09).",
+     "byRegion": [
+      {
+       "region": "eastus2",
+       "unitPricePerInstanceHourUsd": 0.073,
+       "status": "returned",
+       "perHourSteadyUsd": 0.073,
+       "lineId": "plan.P0v4@eastus2"
+      },
+      {
+       "region": "eastus",
+       "unitPricePerInstanceHourUsd": 0.073,
+       "status": "returned",
+       "perHourSteadyUsd": 0.073,
+       "lineId": "plan.P0v4@eastus"
+      },
+      {
+       "region": "westus2",
+       "unitPricePerInstanceHourUsd": 0.073,
+       "status": "returned",
+       "perHourSteadyUsd": 0.073,
+       "lineId": "plan.P0v4@westus2"
+      },
+      {
+       "region": "westus3",
+       "unitPricePerInstanceHourUsd": 0.073,
+       "status": "returned",
+       "perHourSteadyUsd": 0.073,
+       "lineId": "plan.P0v4@westus3"
+      },
+      {
+       "region": "centralus",
+       "unitPricePerInstanceHourUsd": 0.0898,
+       "status": "returned",
+       "perHourSteadyUsd": 0.0898,
+       "lineId": "plan.P0v4@centralus"
+      }
+     ]
+    }
+   ],
+   "teardownLatencyHours": 1,
+   "spendCeilingUsd": 5,
+   "spendCeilingLabel": "planning bound, not enforced by Azure",
+   "spendCeilingRule": "ceil(worst case x 1.25 / 5) x 5, worst case = instance cap x (deadline + teardown latency) x highest plan price + every usage cap at the highest price",
+   "proposedCloudSpendMinorUnitsUsd": 500,
+   "minorUnitsNote": "PROPOSAL: C001 and C002 define no unit for authorizedCloudSpend; USD minor units (cents) follow C004.",
+   "expectedPlanCostFormula": "price per instance-hour x (steady instances x expected run hours + (instance cap - steady instances) x scale-step hours)",
+   "expectedPlanCostBreakdown": {
+    "steadyInstanceHours": 3,
+    "scaleStepInstanceHours": 0
+   },
+   "usageCapsNote": "blobWriteOps counts write, list and create-container operations, all priced at the write rate (meter 'LRS List and Create Container Operations' 0.05 per 10K, the same price as 'Hot LRS Write Operations' (0.05 per 10K) in all five candidate regions; the meter IDs are the same in eastus2, eastus and centralus and differ in westus2 and westus3 (lookup W01)); blobOtherOps counts only the remaining operations.",
+   "ceilingHeadroom": {
+    "headroomUsd": 3.1117,
+    "perAtCapHourUsd": 0.085,
+    "atCapHours": 36.61,
+    "statement": "Before the ceiling rule steps up to the next multiple of 5, option A has USD 3.1117 of room (ceiling / 1.25 minus the worst case), which is about 36.61 more at-cap hours of the plan at the highest returned price (USD 0.085 per at-cap hour); a longer deadline or a higher cap needs a new ceiling, never a silent overrun."
+   }
+  },
+  {
+   "id": "B",
+   "name": "Balanced",
+   "title": "Balanced: two instances, one bounded scale step, workspace logging",
+   "os": "Linux",
+   "runtime": "Node.js 24 LTS (linuxFxVersion NODE|24-lts)",
+   "planProduct": "Azure App Service Premium v3 Plan - Linux",
+   "sku": "P1 v3",
+   "skuKey": "P1v3",
+   "cliSku": "P1V3",
+   "tier": "Premium v3",
+   "steadyInstances": 2,
+   "instanceCap": 3,
+   "stagingSlots": 1,
+   "autoscale": "none: manual instance count only",
+   "defaultRegion": "eastus",
+   "regionCandidates": [
+    {
+     "region": "eastus2",
+     "planLineId": "plan.P1v3@eastus2",
+     "unitPricePerInstanceHourUsd": 0.155,
+     "effectiveStartDate": "2020-10-01",
+     "perHourSteadyUsd": 0.31,
+     "monthly730Usd": 226.3,
+     "expectedPlanCostUsd": 2.015,
+     "worstCaseUsd": 10.4444,
+     "quotaStatus": "failed-2026-11-05",
+     "quotaNote": "The owner non-deploying ARM validation rejected P1v3 here with InternalSubscriptionIsOverQuotaForSku (effective limit 0). Do not select until quota is raised and a new validation passes."
+    },
+    {
+     "region": "eastus",
+     "planLineId": "plan.P1v3@eastus",
+     "unitPricePerInstanceHourUsd": 0.155,
+     "effectiveStartDate": "2020-10-01",
+     "perHourSteadyUsd": 0.31,
+     "monthly730Usd": 226.3,
+     "expectedPlanCostUsd": 2.015,
+     "worstCaseUsd": 9.9668,
+     "quotaStatus": "untested",
+     "quotaNote": "Not tested. Unproven until a non-deploying validation and what-if pass in the owner subscription."
+    },
+    {
+     "region": "westus2",
+     "planLineId": "plan.P1v3@westus2",
+     "unitPricePerInstanceHourUsd": 0.155,
+     "effectiveStartDate": "2020-10-01",
+     "perHourSteadyUsd": 0.31,
+     "monthly730Usd": 226.3,
+     "expectedPlanCostUsd": 2.015,
+     "worstCaseUsd": 9.9644,
+     "quotaStatus": "failed-2026-11-05",
+     "quotaNote": "The owner non-deploying ARM validation rejected P1v3 here with InternalSubscriptionIsOverQuotaForSku (effective limit 0). Do not select until quota is raised and a new validation passes."
+    },
+    {
+     "region": "westus3",
+     "planLineId": "plan.P1v3@westus3",
+     "unitPricePerInstanceHourUsd": 0.155,
+     "effectiveStartDate": "2022-08-01",
+     "perHourSteadyUsd": 0.31,
+     "monthly730Usd": 226.3,
+     "expectedPlanCostUsd": 2.015,
+     "worstCaseUsd": 9.9644,
+     "quotaStatus": "untested",
+     "quotaNote": "Not tested. Unproven until a non-deploying validation and what-if pass in the owner subscription."
+    },
+    {
+     "region": "centralus",
+     "planLineId": "plan.P1v3@centralus",
+     "unitPricePerInstanceHourUsd": 0.17,
+     "effectiveStartDate": "2020-10-01",
+     "perHourSteadyUsd": 0.34,
+     "monthly730Usd": 248.2,
+     "expectedPlanCostUsd": 2.21,
+     "worstCaseUsd": 11.0294,
+     "quotaStatus": "failed-2026-11-05",
+     "quotaNote": "The owner non-deploying ARM validation rejected P1v3 here with InternalSubscriptionIsOverQuotaForSku (effective limit 0). Do not select until quota is raised and a new validation passes."
+    }
+   ],
+   "expectedRunHours": 6,
+   "expectedPhases": [
+    {
+     "step": "Provision plan, app, slot, storage and workspace with diagnostic settings",
+     "hours": 0.75
+    },
+    {
+     "step": "Deploy, warm up on two instances, swap, swap back",
+     "hours": 2
+    },
+    {
+     "step": "One bounded manual scale step 2 to 3 for at most one hour, traffic-percentage observation",
+     "hours": 1.25
+    },
+    {
+     "step": "Export evidence, tear down, verify",
+     "hours": 1
+    },
+    {
+     "step": "Buffer",
+     "hours": 1
+    }
+   ],
+   "phasesLabel": "estimated",
+   "scaleStepHours": 1,
+   "teardownDeadlineHours": 12,
+   "teardown": {
+    "deadlineTag": "lease-expires-utc",
+    "deadlineRule": "the time arming step 4 computes (taken before the plan exists, so slightly earlier than plan creation: conservative) + 12 hours",
+    "mechanism": "Owner-machine one-shot scheduled job (Windows Task Scheduler, registered by arming step 5 of section 4) that runs the teardown script at lease-expires-utc with the owner az session, guarded by G2 and G3; no Azure resource and no Azure cost (estimated)."
+   },
+   "usageCaps": {
+    "blobWriteOps": 100000,
+    "blobReadOps": 500000,
+    "blobOtherOps": 100000,
+    "tableOps": 1000000,
+    "queueOps": 500000,
+    "storedGbEach": 1,
+    "egressGb": 5
+   },
+   "logs": {
+    "workspace": true,
+    "dailyCapGb": 0.5,
+    "capWindowsInDeadline": 2
+   },
+   "worstCase": {
+    "basis": "Highest returned price across the five candidate regions, the instance cap for the whole deadline plus one teardown-latency hour at the cap, and every usage cap fully used.",
+    "planInstanceCap": 3,
+    "planPricePerInstanceHourUsd": 0.17,
+    "planUsd": 6.63,
+    "usage": [
+     {
+      "item": "Blob write, list and create-container operations (all priced at the write rate)",
+      "quantity": 10,
+      "unit": "10K operations",
+      "lineKey": "blob.write",
+      "unitPrice": 0.05,
+      "cost": 0.5
+     },
+     {
+      "item": "Blob read operations",
+      "quantity": 50,
+      "unit": "10K operations",
+      "lineKey": "blob.read",
+      "unitPrice": 0.004,
+      "cost": 0.2
+     },
+     {
+      "item": "Blob other operations (list and create-container operations are counted under the write line)",
+      "quantity": 10,
+      "unit": "10K operations",
+      "lineKey": "blob.other",
+      "unitPrice": 0.004,
+      "cost": 0.04
+     },
+     {
+      "item": "Table operations (all returned table operation meters are 0.00036 per 10K; Write meter used)",
+      "quantity": 100,
+      "unit": "10K operations",
+      "lineKey": "table.ops",
+      "unitPrice": 0.00036,
+      "cost": 0.036
+     },
+     {
+      "item": "Queue operations (Queues v2 class 1 rate, equal to class 2)",
+      "quantity": 50,
+      "unit": "10K operations",
+      "lineKey": "queue.c1",
+      "unitPrice": 0.004,
+      "cost": 0.2
+     },
+     {
+      "item": "Blob data stored, billed as a full month",
+      "quantity": 1,
+      "unit": "GB-month",
+      "lineKey": "blob.stored",
+      "unitPrice": 0.0208,
+      "cost": 0.0208
+     },
+     {
+      "item": "Table data stored, billed as a full month",
+      "quantity": 1,
+      "unit": "GB-month",
+      "lineKey": "table.stored",
+      "unitPrice": 0.045,
+      "cost": 0.045
+     },
+     {
+      "item": "Queue data stored, billed as a full month",
+      "quantity": 1,
+      "unit": "GB-month",
+      "lineKey": "queue.stored",
+      "unitPrice": 0.045,
+      "cost": 0.045
+     },
+     {
+      "item": "Outbound data transfer, every GB at the paid tier",
+      "quantity": 5,
+      "unit": "GB",
+      "lineKey": "bw.paid",
+      "unitPrice": 0.087,
+      "cost": 0.435
+     },
+     {
+      "item": "Log Analytics ingestion at the paid tier (daily cap 0.5 GB x 2 cap windows)",
+      "quantity": 1,
+      "unit": "GB",
+      "lineKey": "la.ingest.paid",
+      "unitPrice": 2.76,
+      "cost": 2.76
+     },
+     {
+      "item": "Log Analytics retention, one month for that volume",
+      "quantity": 1,
+      "unit": "GB-month",
+      "lineKey": "la.retain",
+      "unitPrice": 0.12,
+      "cost": 0.12
+     }
+    ],
+    "usageUsd": 4.4018,
+    "totalUsd": 11.0318,
+    "planHoursAtCap": 13
+   },
+   "covers": [
+    "C062",
+    "C064: swap with former-worker recycling visible on two instances",
+    "C065: one bounded manual scale change with effective instance counts",
+    "C108: slot traffic percentage (Testing in Production is documented for Standard and above)"
+   ],
+   "doesNotCover": [
+    "Autoscale profile (C066) and a second plan (C067): excluded",
+    "Soak under sustained load"
+   ],
+   "when": "After Option A succeeds and the owner wants swap-with-two-instances and scale evidence.",
+   "alternatives": [
+    {
+     "sku": "P1v4",
+     "why": "Slightly cheaper per instance-hour in four of five regions (dearer in centralus); same Premium v4 caveats as in Option A (R09).",
+     "byRegion": [
+      {
+       "region": "eastus2",
+       "unitPricePerInstanceHourUsd": 0.146,
+       "status": "returned",
+       "perHourSteadyUsd": 0.292,
+       "lineId": "plan.P1v4@eastus2"
+      },
+      {
+       "region": "eastus",
+       "unitPricePerInstanceHourUsd": 0.146,
+       "status": "returned",
+       "perHourSteadyUsd": 0.292,
+       "lineId": "plan.P1v4@eastus"
+      },
+      {
+       "region": "westus2",
+       "unitPricePerInstanceHourUsd": 0.146,
+       "status": "returned",
+       "perHourSteadyUsd": 0.292,
+       "lineId": "plan.P1v4@westus2"
+      },
+      {
+       "region": "westus3",
+       "unitPricePerInstanceHourUsd": 0.146,
+       "status": "returned",
+       "perHourSteadyUsd": 0.292,
+       "lineId": "plan.P1v4@westus3"
+      },
+      {
+       "region": "centralus",
+       "unitPricePerInstanceHourUsd": 0.18,
+       "status": "returned",
+       "perHourSteadyUsd": 0.36,
+       "lineId": "plan.P1v4@centralus"
+      }
+     ]
+    },
+    {
+     "sku": "S1",
+     "why": "Classic Standard at two instances is cheaper per hour than two P1 v3 instances, with a smaller machine; slots documented (5).",
+     "byRegion": [
+      {
+       "region": "eastus2",
+       "unitPricePerInstanceHourUsd": 0.095,
+       "status": "returned",
+       "perHourSteadyUsd": 0.19,
+       "lineId": "plan.S1@eastus2"
+      },
+      {
+       "region": "eastus",
+       "unitPricePerInstanceHourUsd": 0.095,
+       "status": "returned",
+       "perHourSteadyUsd": 0.19,
+       "lineId": "plan.S1@eastus"
+      },
+      {
+       "region": "westus2",
+       "unitPricePerInstanceHourUsd": 0.08,
+       "status": "returned",
+       "perHourSteadyUsd": 0.16,
+       "lineId": "plan.S1@westus2"
+      },
+      {
+       "region": "westus3",
+       "unitPricePerInstanceHourUsd": 0.08,
+       "status": "returned",
+       "perHourSteadyUsd": 0.16,
+       "lineId": "plan.S1@westus3"
+      },
+      {
+       "region": "centralus",
+       "unitPricePerInstanceHourUsd": 0.095,
+       "status": "returned",
+       "perHourSteadyUsd": 0.19,
+       "lineId": "plan.S1@centralus"
+      }
+     ]
+    }
+   ],
+   "teardownLatencyHours": 1,
+   "spendCeilingUsd": 15,
+   "spendCeilingLabel": "planning bound, not enforced by Azure",
+   "spendCeilingRule": "ceil(worst case x 1.25 / 5) x 5, worst case = instance cap x (deadline + teardown latency) x highest plan price + every usage cap at the highest price",
+   "proposedCloudSpendMinorUnitsUsd": 1500,
+   "minorUnitsNote": "PROPOSAL: C001 and C002 define no unit for authorizedCloudSpend; USD minor units (cents) follow C004.",
+   "expectedPlanCostFormula": "price per instance-hour x (steady instances x expected run hours + (instance cap - steady instances) x scale-step hours)",
+   "expectedPlanCostBreakdown": {
+    "steadyInstanceHours": 12,
+    "scaleStepInstanceHours": 1
+   },
+   "usageCapsNote": "blobWriteOps counts write, list and create-container operations, all priced at the write rate (meter 'LRS List and Create Container Operations' 0.05 per 10K, the same price as 'Hot LRS Write Operations' (0.05 per 10K) in all five candidate regions; the meter IDs are the same in eastus2, eastus and centralus and differ in westus2 and westus3 (lookup W01)); blobOtherOps counts only the remaining operations.",
+   "ceilingHeadroom": {
+    "headroomUsd": 0.9682,
+    "perAtCapHourUsd": 0.51,
+    "atCapHours": 1.9,
+    "statement": "Before the ceiling rule steps up to the next multiple of 5, option B has USD 0.9682 of room (ceiling / 1.25 minus the worst case), which is about 1.9 more at-cap hours of the plan at the highest returned price (USD 0.51 per at-cap hour); a longer deadline or a higher cap needs a new ceiling, never a silent overrun."
+   }
+  },
+  {
+   "id": "C",
+   "name": "Production-like",
+   "title": "Production-like: larger plan, two instances plus headroom, 24 hour soak with logging",
+   "os": "Linux",
+   "runtime": "Node.js 24 LTS (linuxFxVersion NODE|24-lts)",
+   "planProduct": "Azure App Service Premium v3 Plan - Linux",
+   "sku": "P2 v3",
+   "skuKey": "P2v3",
+   "cliSku": "P2V3",
+   "tier": "Premium v3",
+   "steadyInstances": 2,
+   "instanceCap": 3,
+   "stagingSlots": 1,
+   "autoscale": "none: manual instance count only",
+   "defaultRegion": "eastus",
+   "regionCandidates": [
+    {
+     "region": "eastus2",
+     "planLineId": "plan.P2v3@eastus2",
+     "unitPricePerInstanceHourUsd": 0.31,
+     "effectiveStartDate": "2020-10-01",
+     "perHourSteadyUsd": 0.62,
+     "monthly730Usd": 452.6,
+     "expectedPlanCostUsd": 15.5,
+     "worstCaseUsd": 53.272,
+     "quotaStatus": "untested",
+     "quotaNote": "Not tested. The sibling SKU P1v3 failed in eastus2 on 2026-11-05, so treat this as likely blocked until a non-deploying validation passes."
+    },
+    {
+     "region": "eastus",
+     "planLineId": "plan.P2v3@eastus",
+     "unitPricePerInstanceHourUsd": 0.31,
+     "effectiveStartDate": "2020-10-01",
+     "perHourSteadyUsd": 0.62,
+     "monthly730Usd": 452.6,
+     "expectedPlanCostUsd": 15.5,
+     "worstCaseUsd": 50.404,
+     "quotaStatus": "untested",
+     "quotaNote": "Not tested. Unproven until a non-deploying validation and what-if pass in the owner subscription."
+    },
+    {
+     "region": "westus2",
+     "planLineId": "plan.P2v3@westus2",
+     "unitPricePerInstanceHourUsd": 0.31,
+     "effectiveStartDate": "2020-10-01",
+     "perHourSteadyUsd": 0.62,
+     "monthly730Usd": 452.6,
+     "expectedPlanCostUsd": 15.5,
+     "worstCaseUsd": 50.392,
+     "quotaStatus": "untested",
+     "quotaNote": "Not tested. The sibling SKU P1v3 failed in westus2 on 2026-11-05, so treat this as likely blocked until a non-deploying validation passes."
+    },
+    {
+     "region": "westus3",
+     "planLineId": "plan.P2v3@westus3",
+     "unitPricePerInstanceHourUsd": 0.31,
+     "effectiveStartDate": "2022-08-01",
+     "perHourSteadyUsd": 0.62,
+     "monthly730Usd": 452.6,
+     "expectedPlanCostUsd": 15.5,
+     "worstCaseUsd": 50.392,
+     "quotaStatus": "untested",
+     "quotaNote": "Not tested. Unproven until a non-deploying validation and what-if pass in the owner subscription."
+    },
+    {
+     "region": "centralus",
+     "planLineId": "plan.P2v3@centralus",
+     "unitPricePerInstanceHourUsd": 0.34,
+     "effectiveStartDate": "2020-10-01",
+     "perHourSteadyUsd": 0.68,
+     "monthly730Usd": 496.4,
+     "expectedPlanCostUsd": 17,
+     "worstCaseUsd": 56.062,
+     "quotaStatus": "untested",
+     "quotaNote": "Not tested. The sibling SKU P1v3 failed in centralus on 2026-11-05, so treat this as likely blocked until a non-deploying validation passes."
+    }
+   ],
+   "expectedRunHours": 24,
+   "expectedPhases": [
+    {
+     "step": "Provision plan, app, slot, storage, workspace and optional Application Insights",
+     "hours": 1
+    },
+    {
+     "step": "Deploy, warm up, swap, swap back, bounded scale step",
+     "hours": 4
+    },
+    {
+     "step": "Soak under a bounded synthetic load taken from an owner-supplied C002 envelope",
+     "hours": 16
+    },
+    {
+     "step": "Export evidence, tear down, verify",
+     "hours": 3
+    }
+   ],
+   "phasesLabel": "estimated",
+   "scaleStepHours": 2,
+   "teardownDeadlineHours": 30,
+   "teardown": {
+    "deadlineTag": "lease-expires-utc",
+    "deadlineRule": "the time arming step 4 computes (taken before the plan exists, so slightly earlier than plan creation: conservative) + 30 hours",
+    "mechanism": "Owner-machine one-shot scheduled job (Windows Task Scheduler, registered by arming step 5 of section 4) that runs the teardown script at lease-expires-utc with the owner az session, guarded by G2 and G3; no Azure resource and no Azure cost (estimated)."
+   },
+   "usageCaps": {
+    "blobWriteOps": 500000,
+    "blobReadOps": 2500000,
+    "blobOtherOps": 500000,
+    "tableOps": 5000000,
+    "queueOps": 2500000,
+    "storedGbEach": 5,
+    "egressGb": 20
+   },
+   "logs": {
+    "workspace": true,
+    "dailyCapGb": 2,
+    "capWindowsInDeadline": 3
+   },
+   "worstCase": {
+    "basis": "Highest returned price across the five candidate regions, the instance cap for the whole deadline plus one teardown-latency hour at the cap, and every usage cap fully used.",
+    "planInstanceCap": 3,
+    "planPricePerInstanceHourUsd": 0.34,
+    "planUsd": 31.62,
+    "usage": [
+     {
+      "item": "Blob write, list and create-container operations (all priced at the write rate)",
+      "quantity": 50,
+      "unit": "10K operations",
+      "lineKey": "blob.write",
+      "unitPrice": 0.05,
+      "cost": 2.5
+     },
+     {
+      "item": "Blob read operations",
+      "quantity": 250,
+      "unit": "10K operations",
+      "lineKey": "blob.read",
+      "unitPrice": 0.004,
+      "cost": 1
+     },
+     {
+      "item": "Blob other operations (list and create-container operations are counted under the write line)",
+      "quantity": 50,
+      "unit": "10K operations",
+      "lineKey": "blob.other",
+      "unitPrice": 0.004,
+      "cost": 0.2
+     },
+     {
+      "item": "Table operations (all returned table operation meters are 0.00036 per 10K; Write meter used)",
+      "quantity": 500,
+      "unit": "10K operations",
+      "lineKey": "table.ops",
+      "unitPrice": 0.00036,
+      "cost": 0.18
+     },
+     {
+      "item": "Queue operations (Queues v2 class 1 rate, equal to class 2)",
+      "quantity": 250,
+      "unit": "10K operations",
+      "lineKey": "queue.c1",
+      "unitPrice": 0.004,
+      "cost": 1
+     },
+     {
+      "item": "Blob data stored, billed as a full month",
+      "quantity": 5,
+      "unit": "GB-month",
+      "lineKey": "blob.stored",
+      "unitPrice": 0.0208,
+      "cost": 0.104
+     },
+     {
+      "item": "Table data stored, billed as a full month",
+      "quantity": 5,
+      "unit": "GB-month",
+      "lineKey": "table.stored",
+      "unitPrice": 0.045,
+      "cost": 0.225
+     },
+     {
+      "item": "Queue data stored, billed as a full month",
+      "quantity": 5,
+      "unit": "GB-month",
+      "lineKey": "queue.stored",
+      "unitPrice": 0.045,
+      "cost": 0.225
+     },
+     {
+      "item": "Outbound data transfer, every GB at the paid tier",
+      "quantity": 20,
+      "unit": "GB",
+      "lineKey": "bw.paid",
+      "unitPrice": 0.087,
+      "cost": 1.74
+     },
+     {
+      "item": "Log Analytics ingestion at the paid tier (daily cap 2 GB x 3 cap windows)",
+      "quantity": 6,
+      "unit": "GB",
+      "lineKey": "la.ingest.paid",
+      "unitPrice": 2.76,
+      "cost": 16.56
+     },
+     {
+      "item": "Log Analytics retention, one month for that volume",
+      "quantity": 6,
+      "unit": "GB-month",
+      "lineKey": "la.retain",
+      "unitPrice": 0.12,
+      "cost": 0.72
+     }
+    ],
+    "usageUsd": 24.454,
+    "totalUsd": 56.074,
+    "planHoursAtCap": 31
+   },
+   "covers": [
+    "Everything in Option B",
+    "A 24 hour observation window with log evidence"
+   ],
+   "doesNotCover": [
+    "Autoscale (C066), second plan (C067), zone redundancy and multi-region work: excluded",
+    "A load generator: runs on the owner machine and is not priced"
+   ],
+   "when": "Only when a long soak is required; highest spend.",
+   "alternatives": [
+    {
+     "sku": "P2v4",
+     "why": "Only the eastus2 price was queried; the other regions are price unavailable (not queried) and cannot be costed. Premium v4 caveats apply (R09).",
+     "byRegion": [
+      {
+       "region": "eastus2",
+       "unitPricePerInstanceHourUsd": 0.292,
+       "status": "returned",
+       "perHourSteadyUsd": 0.584,
+       "lineId": "plan.P2v4@eastus2"
+      },
+      {
+       "region": "eastus",
+       "unitPricePerInstanceHourUsd": null,
+       "status": "not-queried",
+       "perHourSteadyUsd": null,
+       "lineId": "plan.P2v4@eastus"
+      },
+      {
+       "region": "westus2",
+       "unitPricePerInstanceHourUsd": null,
+       "status": "not-queried",
+       "perHourSteadyUsd": null,
+       "lineId": "plan.P2v4@westus2"
+      },
+      {
+       "region": "westus3",
+       "unitPricePerInstanceHourUsd": null,
+       "status": "not-queried",
+       "perHourSteadyUsd": null,
+       "lineId": "plan.P2v4@westus3"
+      },
+      {
+       "region": "centralus",
+       "unitPricePerInstanceHourUsd": null,
+       "status": "not-queried",
+       "perHourSteadyUsd": null,
+       "lineId": "plan.P2v4@centralus"
+      }
+     ]
+    }
+   ],
+   "teardownLatencyHours": 1,
+   "spendCeilingUsd": 75,
+   "spendCeilingLabel": "planning bound, not enforced by Azure",
+   "spendCeilingRule": "ceil(worst case x 1.25 / 5) x 5, worst case = instance cap x (deadline + teardown latency) x highest plan price + every usage cap at the highest price",
+   "proposedCloudSpendMinorUnitsUsd": 7500,
+   "minorUnitsNote": "PROPOSAL: C001 and C002 define no unit for authorizedCloudSpend; USD minor units (cents) follow C004.",
+   "expectedPlanCostFormula": "price per instance-hour x (steady instances x expected run hours + (instance cap - steady instances) x scale-step hours)",
+   "expectedPlanCostBreakdown": {
+    "steadyInstanceHours": 48,
+    "scaleStepInstanceHours": 2
+   },
+   "usageCapsNote": "blobWriteOps counts write, list and create-container operations, all priced at the write rate (meter 'LRS List and Create Container Operations' 0.05 per 10K, the same price as 'Hot LRS Write Operations' (0.05 per 10K) in all five candidate regions; the meter IDs are the same in eastus2, eastus and centralus and differ in westus2 and westus3 (lookup W01)); blobOtherOps counts only the remaining operations.",
+   "ceilingHeadroom": {
+    "headroomUsd": 3.926,
+    "perAtCapHourUsd": 1.02,
+    "atCapHours": 3.85,
+    "statement": "Before the ceiling rule steps up to the next multiple of 5, option C has USD 3.926 of room (ceiling / 1.25 minus the worst case), which is about 3.85 more at-cap hours of the plan at the highest returned price (USD 1.02 per at-cap hour); a longer deadline or a higher cap needs a new ceiling, never a silent overrun."
+   }
+  }
+ ],
+ "recommendation": "Option A for the first native proof (C062), in a region whose quota gate passed. Options B and C only when later native cards need two instances, scale evidence or a soak. Every default answer remains no.",
+ "requiredResources": [
+  {
+   "id": "RG",
+   "name": "Resource group (new, empty, dedicated to one lease)",
+   "armType": "Microsoft.Resources/resourceGroups",
+   "inOptions": "A, B, C",
+   "pricing": "price unavailable (no meter: lookup W02 returned 0 items). No charge is expected: an estimate, because no Learn page read states it.",
+   "pricingStatus": "price-unavailable",
+   "includedInTotals": false,
+   "meterEvidence": {
+    "query": "W02",
+    "itemsReturned": 0,
+    "chargeLabel": "estimated"
+   }
+  },
+  {
+   "id": "PLAN",
+   "name": "App Service plan, Linux, fixed SKU and instance count",
+   "armType": "Microsoft.Web/serverfarms",
+   "inOptions": "A, B, C",
+   "pricing": "Priced per instance-hour (queried, Q02 to Q09). The only fixed-rate meter; it is billed per plan instance (documented, PLANS-BILLING).",
+   "pricingStatus": "priced",
+   "includedInTotals": true,
+   "priceKeys": [
+    "plan.P0v3",
+    "plan.P1v3",
+    "plan.P2v3"
+   ]
+  },
+  {
+   "id": "APP",
+   "name": "Web app, Linux, Node.js 24 LTS (NODE|24-lts)",
+   "armType": "Microsoft.Web/sites",
+   "inOptions": "A, B, C",
+   "pricing": "No separate charge; compute is billed on the plan (documented, PLANS-BILLING and PLANS-NOFEATURECHARGE).",
+   "pricingStatus": "no-separate-charge-documented",
+   "includedInTotals": false
+  },
+  {
+   "id": "SLOT",
+   "name": "One deployment slot named staging",
+   "armType": "Microsoft.Web/sites/slots",
+   "inOptions": "A, B, C",
+   "pricing": "No extra charge for slots (documented, SLOTS-FREE); it shares the plan instances (documented, PLANS-SLOTSHARE).",
+   "pricingStatus": "no-separate-charge-documented",
+   "includedInTotals": false
+  },
+  {
+   "id": "STORAGE",
+   "name": "Storage account, StorageV2, Standard_LRS, Hot, for Tables, Queues and Blobs",
+   "armType": "Microsoft.Storage/storageAccounts",
+   "inOptions": "A, B, C",
+   "pricing": "Usage-based (queried, Q10 to Q12 and Q16 to Q18): data stored per GB-month and operations per 10K, bounded by the option usage caps.",
+   "pricingStatus": "priced",
+   "includedInTotals": true,
+   "priceKeys": [
+    "blob.stored",
+    "blob.write",
+    "blob.read",
+    "blob.other",
+    "table.stored",
+    "table.ops",
+    "queue.stored",
+    "queue.c1"
+   ]
+  },
+  {
+   "id": "LAW",
+   "name": "Log Analytics workspace with a daily cap, plus diagnostic settings on the web app",
+   "armType": "Microsoft.OperationalInsights/workspaces",
+   "inOptions": "B, C (not in A)",
+   "pricing": "Ingestion per GB and retention per GB-month (queried, Q13, Q15, Q20). The daily cap is a safeguard, not a guarantee (documented, LACAP-SOFT).",
+   "pricingStatus": "priced",
+   "includedInTotals": true,
+   "priceKeys": [
+    "la.ingest.paid",
+    "la.retain"
+   ]
+  },
+  {
+   "id": "APPI",
+   "name": "Application Insights component, workspace-based (optional, C only)",
+   "armType": "Microsoft.Insights/components",
+   "inOptions": "C (optional)",
+   "pricing": "price unavailable beyond workspace ingestion: its telemetry lands in the workspace and is covered by the workspace ingestion lines; a separate Application Insights meter was not queried.",
+   "pricingStatus": "price-unavailable",
+   "includedInTotals": false
+  },
+  {
+   "id": "EGRESS",
+   "name": "Outbound data transfer from the web app",
+   "armType": "(metered usage)",
+   "inOptions": "A, B, C",
+   "pricing": "Per GB beyond the first-tier allowance (queried, Q14 and Q19). The ceiling prices every GB at the paid tier.",
+   "pricingStatus": "priced",
+   "includedInTotals": true,
+   "priceKeys": [
+    "bw.paid"
+   ]
+  }
+ ],
+ "exclusions": [
+  {
+   "item": "Microsoft Entra tenant licensing, app registrations, service principals, B2B guest invitations",
+   "cost": "price unavailable (not queried: outside the Retail Prices API); excluded from every total and never costed as 0"
+  },
+  {
+   "item": "User-assigned or system-assigned managed identity and role assignments (only if identityRegistration is yes)",
+   "cost": "price unavailable (no meter queried); excluded, not zero"
+  },
+  {
+   "item": "Cost Management budget, action group and alert emails",
+   "cost": "price unavailable (no meter queried); excluded, not zero"
+  },
+  {
+   "item": "Microsoft Defender for Cloud plans or any policy-driven add-on enabled on the owner subscription",
+   "cost": "price unavailable (unknown and subscription-specific); the owner must confirm none applies to the new resources; excluded, not zero"
+  },
+  {
+   "item": "Azure support plan, taxes, currency conversion, EA/CSP/MCA discounts, reservations and savings plans",
+   "cost": "not applicable to list prices; the packet uses retail pay-as-you-go USD only"
+  },
+  {
+   "item": "Front Door, Application Gateway, Traffic Manager, NAT gateway, private endpoints, VNet integration, custom domain and certificates",
+   "cost": "not created in any option"
+  },
+  {
+   "item": "Key Vault, databases, caches, additional storage redundancy or accounts",
+   "cost": "not created; control storage is the single Standard_LRS account"
+  },
+  {
+   "item": "Autoscale rules, a second App Service plan (C067), extra slots, backups, zone redundancy, container targets (C063) and the Windows configuration (C061)",
+   "cost": "not created; each needs its own bounded approval"
+  },
+  {
+   "item": "Azure-side teardown automation (Automation account, Logic App or Function)",
+   "cost": "price unavailable (not queried) and not created; the default teardown job runs on the owner machine"
+  },
+  {
+   "item": "Load generation, Azure Load Testing and the owner workstation",
+   "cost": "not created in Azure; local costs are not estimated"
+  },
+  {
+   "item": "Any usage above the option caps (operations, stored GB, egress, log ingestion)",
+   "cost": "outside the authorized ceiling; the run must stop and tear down"
+  }
+ ],
+ "cleanupAndRollback": {
+  "principle": "Everything for one lease lives in one new, empty, dedicated resource group, and every resource carries the lease tags explicitly because tags are not inherited from the group (documented, TAGS-NOINHERIT).",
+  "naming": {
+   "resourceGroup": "rg-ass-native-c062-<yyyymmdd>-<nn>",
+   "resourceGroupNote": "the owner may supply a literal name instead; always a new, empty group, enforced by gate G1 (az group exists must print false)",
+   "leaseId": "u001-<option letter>-<yyyymmdd>-<nn>",
+   "webApp": "globally unique; default host name <app>.azurewebsites.net",
+   "storageAccount": "3 to 24 lowercase letters and digits, globally unique"
+  },
+  "leaseTags": [
+   [
+    "lease-id",
+    "u001-<option letter>-<yyyymmdd>-<nn>",
+    "Unique lease key; the single query key for cleanup verification."
+   ],
+   [
+    "lease-owner",
+    "<OWNER-SUPPLIED: alias, not an email address>",
+    "Accountable owner."
+   ],
+   [
+    "lease-expires-utc",
+    "<ISO-8601 UTC = the time arming step 4 computes + teardown deadline>",
+    "The automatic teardown deadline, readable by any sweep."
+   ],
+   [
+    "purpose",
+    "native-proof-first-code-slot",
+    "Why the lease exists."
+   ],
+   [
+    "card",
+    "C062",
+    "The first native card this lease serves (Linux code slots)."
+   ],
+   [
+    "option",
+    "A | B | C",
+    "The approved option."
+   ],
+   [
+    "cost-ceiling-usd",
+    "5 | 15 | 75",
+    "The approved spend ceiling (planning bound, not enforced by Azure) for the lease."
+   ]
+  ],
+  "teardown": {
+   "rule": "The deadline is an absolute UTC time written to the tag lease-expires-utc when the resource group is created; the teardown job is registered before that moment and before any billable resource.",
+   "default": "Owner-machine one-shot scheduled job (Windows Task Scheduler, registered by arming step 5) that runs the teardown script below at lease-expires-utc with the owner az session; no Azure resource and no Azure cost (estimated).",
+   "automaticBackstopFirstAction": "After guards G2 and G3, the first action of the automatic backstop is the deletion of the slot, the web app and the plan; it exports nothing and waits for nothing.",
+   "job": {
+    "name": "ass-teardown-<lease-id>",
+    "script": [
+     "param(",
+     "  [Parameter(Mandatory)][string]$Subscription, [Parameter(Mandatory)][string]$Group, [Parameter(Mandatory)][string]$Lease,",
+     "  [Parameter(Mandatory)][string]$App, [Parameter(Mandatory)][string]$Plan, [string]$Workspace = '',",
+     "  [string]$AlarmDir = (Join-Path $env:USERPROFILE 'Desktop')",
+     ")",
+     "$ErrorActionPreference = 'Stop'; $PSNativeCommandUseErrorActionPreference = $true",
+     "$failures = [System.Collections.Generic.List[string]]::new()",
+     "function Assert-Subscription {",
+     "  if ((az account show --query id -o tsv) -ne $Subscription) { throw 'G2: the az session selects another subscription than the approved one' }",
+     "}",
+     "function Assert-Lease {",
+     "  $g = az group show --name $Group --subscription $Subscription -o json | ConvertFrom-Json",
+     "  if (-not $g -or $g.name -ine $Group -or $g.tags.'lease-id' -cne $Lease -or -not $g.tags.'lease-expires-utc') { throw 'G3: group name or lease tags differ from this lease' }",
+     "}",
+     "try { Assert-Subscription; if ((az group exists --name $Group --subscription $Subscription) -eq 'false') { exit 0 } } catch { $failures.Add(\"first check: $($_.Exception.Message)\") }",
+     "try { Assert-Subscription; Assert-Lease; az webapp deployment slot delete --resource-group $Group --name $App --slot staging --subscription $Subscription } catch { $failures.Add(\"slot: $($_.Exception.Message)\") }",
+     "try { Assert-Subscription; Assert-Lease; az webapp delete --resource-group $Group --name $App --subscription $Subscription } catch { $failures.Add(\"web app: $($_.Exception.Message)\") }",
+     "try { Assert-Subscription; Assert-Lease; az appservice plan delete --resource-group $Group --name $Plan --yes --subscription $Subscription } catch { $failures.Add(\"plan: $($_.Exception.Message)\") }",
+     "if ($Workspace) { try { Assert-Subscription; Assert-Lease; az monitor log-analytics workspace delete --resource-group $Group --workspace-name $Workspace --force --yes --subscription $Subscription } catch { $failures.Add(\"workspace: $($_.Exception.Message)\") } }",
+     "try { Assert-Subscription; Assert-Lease; az group delete --name $Group --yes --subscription $Subscription } catch { $failures.Add(\"group: $($_.Exception.Message)\") }",
+     "try { Assert-Subscription; if ((az group exists --name $Group --subscription $Subscription) -ne 'false') { $failures.Add('the group still exists after its delete') } } catch { $failures.Add(\"final check: $($_.Exception.Message)\") }",
+     "if ($failures.Count -gt 0) {",
+     "  $m = \"TEARDOWN FAILED for lease ${Lease} ($($failures.Count) problems): $($failures -join ' | '). The meter may still run: delete the lease by hand now (deletion order of the packet).\"",
+     "  try { Set-Content -Path (Join-Path $AlarmDir \"AZURE-LEASE-TEARDOWN-FAILED-${Lease}.txt\") -Value $m } catch { $m += ' (the alarm file could not be written)' }",
+     "  Add-Type -AssemblyName PresentationFramework",
+     "  [void][System.Windows.MessageBox]::Show($m, 'Azure lease teardown FAILED')",
+     "  exit 1",
+     "}",
+     "exit 0"
+    ],
+    "onGuardFailure": "Each delete is wrapped: a failing guard or delete is recorded, the script continues, always finishes with the guarded group delete (it removes everything) when the group guard still passes, verifies that the group is gone, and on any problem writes a persistent alarm file on the owner Desktop, shows a dialog and exits 1."
+   },
+   "backstops": [
+    "Cost Management budget on the lease resource group at 50, 80 and 100 percent of the spend ceiling (planning bound, not enforced by Azure) with email; alert only, evaluated every 24 hours on data that lags 8 to 24 hours (documented, BUDGET-ALERTONLY and BUDGET-LAG), so it cannot enforce a short-run ceiling.",
+    "Owner check at deadline plus 1 hour using verification checks 1 and 2.",
+    "Stop rule on scale: no autoscale rules, manual instance count only, and the instance cap of the option is the most the plan may ever be set to."
+   ],
+   "notSelected": "Azure-side automation (Automation account, Logic App, Function with an identity and a role assignment) would be more robust against an offline workstation but adds resources and an identity: price unavailable (not queried), excluded.",
+   "limits": [
+    "The job runs only while the owner machine is on (WakeToRun and StartWhenAvailable help only if the operating system allows wake timers), the owner is logged on (the task runs as the interactive user) and the az session is still valid at the deadline.",
+    "If the machine stays off or the session is invalid, nothing is deleted and no alarm is raised at all: the owner check at deadline plus 1 hour (verification checks 1 and 2) is then the only control, and the manual deletion block below is the fallback.",
+    "The alarm file and the dialog appear only when the script runs; the file stays until the owner removes it, the dialog is closed by the 2-hour execution limit."
+   ]
+  },
+  "deletionOrder": [
+   {
+    "n": 0,
+    "step": "Define the variables and the guard functions (paste first; PowerShell 7.4 or later)",
+    "commands": [
+     "$Subscription = '<subscription-id>'; $Group = '<rg>'; $Lease = '<lease-id>'; $App = '<app>'; $Plan = '<plan>'; $Workspace = '<law>'; $Storage = '<storage>'",
+     "$ErrorActionPreference = 'Stop'; $PSNativeCommandUseErrorActionPreference = $true",
+     "function Assert-Subscription {",
+     "  if ((az account show --query id -o tsv) -ne $Subscription) { throw 'G2: the az session selects another subscription than the approved one' }",
+     "}",
+     "function Assert-Lease {",
+     "  $g = az group show --name $Group --subscription $Subscription -o json | ConvertFrom-Json",
+     "  if (-not $g -or $g.name -ine $Group -or $g.tags.'lease-id' -cne $Lease -or -not $g.tags.'lease-expires-utc') { throw 'G3: group name or lease tags differ from this lease' }",
+     "}"
+    ],
+    "guards": [],
+    "label": "estimated",
+    "why": "Every delete line below calls Assert-Subscription (G2) and Assert-Lease (G3) itself, so copying only this code block keeps every delete guarded; a failed guard throws and the rest of that line does not run."
+   },
+   {
+    "n": 1,
+    "step": "Stop the meter: delete the slot, the web app, then the App Service plan (the first action of the automatic backstop)",
+    "commands": [
+     "Assert-Subscription; Assert-Lease; az webapp deployment slot delete --resource-group $Group --name $App --slot staging --subscription $Subscription",
+     "Assert-Subscription; Assert-Lease; az webapp delete --resource-group $Group --name $App --subscription $Subscription",
+     "Assert-Subscription; Assert-Lease; az appservice plan delete --resource-group $Group --name $Plan --yes --subscription $Subscription"
+    ],
+    "guards": [
+     "G2",
+     "G3"
+    ],
+    "label": "estimated",
+    "why": "The plan is the only fixed-rate meter and each plan instance is billed (documented, PLANS-BILLING); an empty plan keeps its instances, so it must be deleted explicitly. Each of the three lines runs G2 and G3 first."
+   },
+   {
+    "n": 2,
+    "step": "Delete observability (B and C): Application Insights, diagnostic settings, then the workspace permanently",
+    "commands": [
+     "Assert-Subscription; Assert-Lease; az monitor log-analytics workspace delete --resource-group $Group --workspace-name $Workspace --force --yes --subscription $Subscription"
+    ],
+    "guards": [
+     "G2",
+     "G3"
+    ],
+    "label": "documented",
+    "why": "Without --force the workspace is only soft-deleted for 14 days and its name stays reserved (documented, LADEL-SOFT). Guards run first."
+   },
+   {
+    "n": 3,
+    "step": "Delete the storage account after the evidence export",
+    "commands": [
+     "Assert-Subscription; Assert-Lease; az storage account delete --resource-group $Group --name $Storage --yes --subscription $Subscription"
+    ],
+    "guards": [
+     "G2",
+     "G3"
+    ],
+    "label": "estimated",
+    "why": "Stops capacity and operation charges; the manual path confirms the export hash first, the backstop skips this step because step 5 deletes the account with the group."
+   },
+   {
+    "n": 4,
+    "step": "Delete lease identities (only if identityRegistration was yes)",
+    "commands": [
+     "Assert-Subscription; Assert-Lease; az role assignment delete --assignee <identity-principal-id> --scope \"/subscriptions/$Subscription/resourceGroups/$Group/providers/Microsoft.Storage/storageAccounts/$Storage\" --subscription $Subscription",
+     "Assert-Subscription; Assert-Lease; az identity delete --resource-group $Group --name <identity> --subscription $Subscription"
+    ],
+    "guards": [
+     "G2",
+     "G3"
+    ],
+    "label": "estimated",
+    "why": "Only a user-assigned managed identity inside the lease group is allowed; its role assignments are scoped to the lease storage account and are removed first. Nothing may exist at subscription scope."
+   },
+   {
+    "n": 5,
+    "step": "Catch-all: delete the lease resource group",
+    "commands": [
+     "Assert-Subscription; Assert-Lease; az group delete --name $Group --yes --subscription $Subscription"
+    ],
+    "guards": [
+     "G2",
+     "G3"
+    ],
+    "label": "documented",
+    "why": "Resource Manager deletes nested, then managedBy, then remaining resources and retries transient errors for 15 minutes; locks and backup data must not exist (documented, RGDEL-PRECOND and RGDEL-ORDER); this plan creates none. --yes is used only after G2 and G3 passed on the same line; without --no-wait the command returns only when the deletion finished, so a failure is seen."
+   },
+   {
+    "n": 6,
+    "step": "Disarm the scheduled teardown job only after every verification below passes",
+    "commands": [
+     "Unregister-ScheduledTask -TaskName 'ass-teardown-<lease-id>' -Confirm:$false"
+    ],
+    "guards": [],
+    "label": "documented",
+    "why": "A disarmed job with a failed verification would leave nothing watching the lease."
+   }
+  ],
+  "verification": [
+   {
+    "n": 1,
+    "check": "The lease resource group is gone",
+    "guards": [
+     "G2",
+     "G3"
+    ],
+    "commands": [
+     "az account show --query id -o tsv",
+     "foreach ($i in 1..12) { if ((az group exists --name <rg> --subscription <subscription-id>) -eq 'false') { 'gone'; break }; Start-Sleep -Seconds 300 }"
+    ],
+    "expect": "the first command prints <subscription-id> and the loop prints gone within 60 minutes; if the group still exists, G3 runs before any further delete",
+    "label": "documented"
+   },
+   {
+    "n": 2,
+    "check": "No lease resource remains anywhere in the subscription (G2 first)",
+    "guards": [
+     "G2"
+    ],
+    "commands": [
+     "az account show --query id -o tsv",
+     "az extension add --name resource-graph",
+     "az graph query -q \"resources | where tags['lease-id'] == '<lease-id>' | project id, type\" --subscriptions <subscription-id>",
+     "az graph query -q \"resourcecontainers | where type =~ 'microsoft.resources/subscriptions/resourcegroups' and name =~ '<rg>' | project id\" --subscriptions <subscription-id>"
+    ],
+    "expect": "the first command prints <subscription-id> (G2); 0 rows for both queries; repeat after 15 minutes and next day because Resource Graph is eventually consistent. The extension is a one-time local install on the owner machine.",
+    "label": "documented"
+   },
+   {
+    "n": 3,
+    "check": "No soft-deleted workspace keeps the lease name reserved",
+    "guards": [
+     "G2"
+    ],
+    "commands": [
+     "az account show --query id -o tsv",
+     "az monitor log-analytics workspace list-deleted-workspaces --subscription <subscription-id> --query \"[?name=='<law>'].id\" -o tsv"
+    ],
+    "expect": "the first command prints <subscription-id> (G2); empty output; the workspace was deleted with --force (command form on Learn, DOC-CLI-LADELETED)",
+    "label": "documented"
+   },
+   {
+    "n": 4,
+    "check": "No identity or role assignment created for the lease remains",
+    "guards": [
+     "G2"
+    ],
+    "commands": [
+     "az account show --query id -o tsv",
+     "az graph query -q \"resources | where type =~ 'microsoft.managedidentity/userassignedidentities' and tags['lease-id'] == '<lease-id>' | project id\" --subscriptions <subscription-id>",
+     "az role assignment list --all --subscription <subscription-id> --query \"[?contains(scope, '<rg>')].id\" -o tsv"
+    ],
+    "expect": "the first command prints <subscription-id> (G2); 0 rows and empty output; record not applicable for the identity when identityRegistration was no (the queries still run). Entra app registrations and service principals are forbidden by this packet and are not searched.",
+    "label": "estimated"
+   },
+   {
+    "n": 5,
+    "check": "Spend stayed within the ceiling and stopped at the deadline",
+    "guards": [],
+    "commands": [],
+    "portal": "Portal: Cost Management > Cost analysis > scope = the subscription > filter Tag lease-id = <lease-id> > the lease day and the next day; read the budget alert mails",
+    "expect": "total at or below the approved ceiling and no cost on later days; cost data lags 8 to 24 hours (documented, BUDGET-LAG)",
+    "label": "documented"
+   },
+   {
+    "n": 6,
+    "check": "The lease record is closed and the job is disarmed",
+    "guards": [],
+    "commands": [
+     "Get-ScheduledTask -TaskName 'ass-teardown-<lease-id>' -ErrorAction SilentlyContinue"
+    ],
+    "expect": "prints nothing after step 6 of the deletion order; the record holds lease id, option, start and end UTC, every verification output and the evidence hash",
+    "label": "estimated"
+   }
+  ],
+  "rollback": [
+   {
+    "id": "RB1",
+    "when": "Code deployment or startup fails in the staging slot",
+    "commands": [],
+    "label": "documented",
+    "action": "Production was never touched: the target slot stays online while the source slot is prepared (documented, SLOTS-TARGET-ONLINE). Fix and redeploy the staging slot, or delete the slot content; no swap happened, so nothing is rolled back."
+   },
+   {
+    "id": "RB2",
+    "when": "A swap completed but post-swap checks fail",
+    "commands": [
+     "az webapp deployment slot swap --resource-group <rg> --name <app> --slot staging --target-slot production --subscription <subscription-id>"
+    ],
+    "label": "documented",
+    "action": "Run G2 and G3, then swap the same two slots again immediately to restore the pre-swap states (documented, SLOTS-ROLLBACK; command form on Learn, DOC-CLI-SLOTSWAP). Expect the former production workers to be recycled in each swap (documented, SLOTS-RECYCLE) and record both swap timings."
+   },
+   {
+    "id": "RB3",
+    "when": "First swap of a fresh app",
+    "label": "documented",
+    "commands": [
+     "az webapp deployment slot swap --resource-group <rg> --name <app> --slot staging --target-slot production --subscription <subscription-id> --action preview",
+     "az webapp deployment slot swap --resource-group <rg> --name <app> --slot staging --target-slot production --subscription <subscription-id> --action swap",
+     "az webapp deployment slot swap --resource-group <rg> --name <app> --slot staging --target-slot production --subscription <subscription-id> --action reset"
+    ],
+    "action": "Use swap with preview after G2 and G3: the first command applies the production slot settings to staging so the staging slot can be validated, the second completes the swap, the third cancels the preview (documented, SLOTS-PREVIEW and CLI-SWAP-ACTIONS)."
+   },
+   {
+    "id": "RB4",
+    "when": "Warm-up could mask a broken app",
+    "commands": [],
+    "label": "documented",
+    "action": "Set WEBSITE_SWAP_WARMUP_PING_PATH to a health path and WEBSITE_SWAP_WARMUP_PING_STATUSES to an explicit list such as 200, because the default accepts any HTTP response (documented, SLOTS-WARMUP)."
+   },
+   {
+    "id": "RB5",
+    "when": "Someone proposes auto swap for the Linux app",
+    "commands": [],
+    "label": "documented",
+    "action": "Do not configure it: auto swap is not supported on Linux (documented, SLOTS-NOAUTOSWAP); every swap is an explicit command."
+   },
+   {
+    "id": "RB6",
+    "when": "The first-ever deployment has no previous version",
+    "commands": [],
+    "label": "estimated",
+    "action": "Production holds only the platform placeholder, so there is nothing to swap back to: do not swap; delete and recreate the slot or the lease and rerun."
+   },
+   {
+    "id": "RB7",
+    "when": "The infrastructure deployment (Bicep) fails part-way",
+    "commands": [],
+    "label": "estimated",
+    "action": "Incremental deployments can leave partial resources. Do not hand-patch: run the teardown (guards G2 and G3, then the deletion order) and redeploy under a new lease id. ARM rollback-on-error is not relied on."
+   },
+   {
+    "id": "RB8",
+    "when": "The teardown job does not run, or a delete fails or hangs",
+    "commands": [],
+    "label": "documented",
+    "action": "Run G2 and G3, delete the plan explicitly first to stop the meter, then repeat the group deletion (deletion order step 5); if a lock exists remove it first (documented, RGDEL-PRECOND; this plan creates none). If a guard fails, do not delete: tell the owner. The budget email is only a late backstop (documented, BUDGET-LAG)."
+   }
+  ],
+  "guards": [
+   {
+    "id": "G1",
+    "name": "Pre-creation gate",
+    "commands": [
+     "az group exists --name <rg> --subscription <subscription-id>"
+    ],
+    "expect": "prints false",
+    "onFailure": "STOP. A group with this name already exists: do not create, tag, reuse or delete it; tell the owner and choose a new name."
+   },
+   {
+    "id": "G2",
+    "name": "Subscription pin",
+    "commands": [
+     "az account show --query id -o tsv"
+    ],
+    "expect": "prints exactly the approved <subscription-id>. It is the only az command without --subscription because it reads the session default on purpose. Every other az command of the lease, of the scheduled job and of the checks carries --subscription <subscription-id> (az graph query carries --subscriptions <subscription-id>). In scripts and in the manual deletion block this guard is the function Assert-Subscription.",
+    "onFailure": "ABORT before any other command and tell the owner."
+   },
+   {
+    "id": "G3",
+    "name": "Ownership check before EACH delete",
+    "commands": [
+     "az group show --name <rg> --subscription <subscription-id> -o json"
+    ],
+    "expect": "name equals <rg> (case-insensitive), tag lease-id equals <lease-id> exactly, and tag lease-expires-utc is present. In scripts and in the manual deletion block this guard is the function Assert-Lease, called on the same line before each delete.",
+    "onFailure": "ABORT this delete and every later one and tell the owner; nothing is deleted on a mismatch."
+   },
+   {
+    "id": "G4",
+    "name": "The same guards inside verification checks 1 to 4",
+    "commands": [],
+    "expect": "checks 1 to 4 start with the subscription pin (G2) as their first command; while check 1 still sees the group, the ownership check G3 runs before any further deletion",
+    "onFailure": "a mismatch aborts the check and is reported to the owner."
+   }
+  ],
+  "armingSequence": [
+   {
+    "n": 1,
+    "step": "Pin the subscription (G2)",
+    "commands": [
+     "az account show --query id -o tsv"
+    ],
+    "guards": [
+     "G2"
+    ],
+    "expect": "prints exactly <subscription-id>; otherwise ABORT",
+    "label": "documented"
+   },
+   {
+    "n": 2,
+    "step": "Pre-creation gate (G1)",
+    "commands": [
+     "az group exists --name <rg> --subscription <subscription-id>"
+    ],
+    "guards": [
+     "G1"
+    ],
+    "expect": "prints false; otherwise STOP",
+    "label": "documented"
+   },
+   {
+    "n": 3,
+    "step": "Quota and policy gate: a non-deploying validation and what-if with the template parameters set to the chosen region AND SKU",
+    "commands": [
+     "az deployment sub validate --location <region> --template-file <reviewed-template.bicep> --parameters <region-parameter>=<region> <sku-parameter>=<sku> <other-reviewed-parameters> --subscription <subscription-id>",
+     "az deployment sub what-if --location <region> --template-file <reviewed-template.bicep> --parameters <region-parameter>=<region> <sku-parameter>=<sku> <other-reviewed-parameters> --subscription <subscription-id>"
+    ],
+    "guards": [
+     "G2"
+    ],
+    "expect": "both succeed. --location only stores the deployment metadata (documented, CLI-DEPLOY-LOCATION); the region and SKU that are validated come from the template and its parameters, so the parameters must set <region> and the SKU of the chosen option (<sku>); the owner defaults of the reviewed template (centralus, P1v3: the combination that failed on 5 Nov) must not be used unless that is the chosen option. Read the resolved location and SKU in the what-if output before continuing. Any error, including InternalSubscriptionIsOverQuotaForSku, means STOP: pick another candidate region or have the quota raised, and repeat this step. Do not start while an earlier subscription-scope deployment is still running. Decide before arming which side creates the group: step 6 (script) or the reviewed template, never both (a template that also declares the group would meet the tagged group of step 6).",
+    "label": "documented"
+   },
+   {
+    "n": 4,
+    "step": "Compute the deadline",
+    "commands": [
+     "$expires = [DateTime]::UtcNow.AddHours(<teardown-deadline-hours>).ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)"
+    ],
+    "guards": [],
+    "expect": "the value (UTC, culture-invariant: the same text under fi-FI, da-DK, th-TH and ar-SA) is written to tag lease-expires-utc in step 6",
+    "label": "estimated"
+   },
+   {
+    "n": 5,
+    "step": "Register the one-shot teardown job BEFORE any billable resource (Windows Task Scheduler, PowerShell 7.4 or later)",
+    "commands": [
+     "$action = New-ScheduledTaskAction -Execute 'pwsh.exe' -Argument \"-NoProfile -File `\"<script-folder>\\teardown-<lease-id>.ps1`\" -Subscription <subscription-id> -Group <rg> -Lease <lease-id> -App <app> -Plan <plan>\"",
+     "$trigger = New-ScheduledTaskTrigger -Once -At ([DateTimeOffset]::Parse($expires, [Globalization.CultureInfo]::InvariantCulture).LocalDateTime)",
+     "$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -WakeToRun -ExecutionTimeLimit (New-TimeSpan -Hours 2)",
+     "Register-ScheduledTask -TaskName 'ass-teardown-<lease-id>' -Action $action -Trigger $trigger -Settings $settings -Description 'Backstop: delete lease <lease-id> at its deadline'",
+     "$task = Get-ScheduledTask -TaskName 'ass-teardown-<lease-id>'",
+     "$registered = [DateTimeOffset]::Parse($task.Triggers[0].StartBoundary, [Globalization.CultureInfo]::InvariantCulture).UtcDateTime",
+     "$task | Select-Object TaskName, State; \"registered trigger (UTC): $($registered.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)); deadline: $expires\"",
+     "if ([Math]::Abs(($registered - [DateTimeOffset]::Parse($expires, [Globalization.CultureInfo]::InvariantCulture).UtcDateTime).TotalSeconds) -gt 120) { throw 'the registered trigger time differs from the deadline: unregister the task and start again' }"
+    ],
+    "guards": [],
+    "expect": "Get-ScheduledTask prints the task with State Ready, the line \"registered trigger (UTC)\" shows the time the task will fire and equals the deadline printed next to it (the last command throws when they differ by more than 2 minutes); the script it runs is listed below and carries guards G2 and G3. The app, plan and (B and C) workspace names are the ones of the lease.",
+    "label": "documented"
+   },
+   {
+    "n": 6,
+    "step": "Create the resource group with the lease tags",
+    "commands": [
+     "az group create --name <rg> --location <region> --subscription <subscription-id> --tags lease-id=<lease-id> lease-owner=<owner-alias> \"lease-expires-utc=$expires\" purpose=native-proof-first-code-slot card=C062 option=<option-letter> cost-ceiling-usd=<5|15|75>"
+    ],
+    "guards": [
+     "G2"
+    ],
+    "expect": "provisioningState Succeeded",
+    "label": "documented"
+   },
+   {
+    "n": 7,
+    "step": "Check the tags before anything else is created (G3)",
+    "commands": [
+     "az group show --name <rg> --subscription <subscription-id> -o json"
+    ],
+    "guards": [
+     "G2",
+     "G3"
+    ],
+    "expect": "name, lease-id and lease-expires-utc are as written in step 6",
+    "label": "documented"
+   },
+   {
+    "n": 8,
+    "step": "Budget on the group (optional, alert only)",
+    "commands": [],
+    "guards": [],
+    "expect": "created by the reviewed Bicep (Microsoft.Consumption/budgets) or in the portal; never a control (documented, BUDGET-ALERTONLY)",
+    "label": "documented"
+   },
+   {
+    "n": 9,
+    "step": "Create the resources through the reviewed IaC, tagging every resource",
+    "commands": [],
+    "guards": [
+     "G2",
+     "G3"
+    ],
+    "expect": "every resource shows the seven lease tags (tags are not inherited)",
+    "label": "documented"
+   }
+  ],
+  "manualBeforeDeletion": {
+   "step": "Export evidence (manual path only, before the deadline)",
+   "action": "Stop issuing commands; export run logs, Table, Queue and Blob contents and App Service logs to the owner machine; record the SHA-256 of the export.",
+   "rule": "The automatic backstop never exports and never waits for an export: its first action is the deletion. Evidence that is not exported before the deadline is lost by design.",
+   "label": "estimated"
+  },
+  "guardFunctions": [
+   "function Assert-Subscription {",
+   "  if ((az account show --query id -o tsv) -ne $Subscription) { throw 'G2: the az session selects another subscription than the approved one' }",
+   "}",
+   "function Assert-Lease {",
+   "  $g = az group show --name $Group --subscription $Subscription -o json | ConvertFrom-Json",
+   "  if (-not $g -or $g.name -ine $Group -or $g.tags.'lease-id' -cne $Lease -or -not $g.tags.'lease-expires-utc') { throw 'G3: group name or lease tags differ from this lease' }",
+   "}"
+  ]
+ },
+ "ownerDecisions": {
+  "literalAnswerRule": "Only the exact lowercase word yes counts as yes. Anything else, including silence, is recorded as no.",
+  "decisions": [
+   {
+    "key": "target",
+    "question": "Do you approve exactly one first native target with the exact values listed below (OS, SKU, instance count and cap, region, subscription, resource group)?",
+    "default": "no",
+    "yes": "Names those exact values as the only first native target of the app-service-first-code-slots configuration (card C062, Linux code slots), valid only after the quota gate (arming step 3: a non-deploying validation and what-if) passed for that SKU and region.",
+    "stays": "Any other OS, SKU, region, subscription or resource group; the Windows configuration (C061) and container startup (C063); every approval below.",
+    "ledger": "No boolean exists in approvals.C001 today. firstNativeConfiguration is free text and operatingEnvelope.concreteTargetApprovalRequired is true; recording a yes needs a reviewed C001 revision.",
+    "guardAction": "none today",
+    "neededBy": "C062 and every later native card"
+   },
+   {
+    "key": "iacGeneration",
+    "question": "Do you approve generating Bicep, and only Bicep, for the resources in section 3 of the approved option, for review, without deploying it?",
+    "default": "no",
+    "yes": "Generating one Bicep file set for the listed resources of the approved target.",
+    "stays": "Terraform, ARM JSON, resources not listed, deployment, any registration.",
+    "ledger": "approvals.C001.iacGenerationApproved",
+    "guardAction": "iac.generate",
+    "neededBy": "C062 (Bicep is the preferred IaC format). HEAD already holds unapproved Bicep under infra/: the owner can answer yes to reviewing or reusing it instead of generating new templates; this packet approves nothing at HEAD."
+   },
+   {
+    "key": "scaffold",
+    "question": "Do you approve scaffolding one minimal native-proof app: Node.js 24 LTS, Express as the only runtime dependency, GET /healthz and GET /version, listening on process.env.PORT, no UI, no authentication, no storage access?",
+    "default": "no",
+    "yes": "Creating that one small app and its package.json (engines node 24) as the proof app. A no leaves the owner free to name the existing demo/ as the proof app in a later answer.",
+    "stays": "Any other framework, UI, authentication, additional services or generated applications.",
+    "ledger": "approvals.C001.scaffoldApproved",
+    "guardAction": "scaffold.generate",
+    "neededBy": "C062. HEAD already holds an unapproved deployable app, the owner demo/ (Express 5.1.0 for Node.js 24, listens on process.env.PORT); the question is whether demo/ or a separate minimal app is the proof app. The C020, C025 and C027 servers still bind 127.0.0.1 on a random port and read the local ledger."
+   },
+   {
+    "key": "identityRegistration",
+    "question": "Do you approve creating Azure or Entra identities for this one lease? The listed default scope is none (the owner interactive az session is used). If yes, only: one user-assigned managed identity in the lease resource group with Storage Table, Queue and Blob data-plane roles on the lease storage account.",
+    "default": "no",
+    "yes": "Creating exactly the identity and the three role assignments named above and deleting them at teardown.",
+    "stays": "Entra app registrations (the sign-in application), service principals with secrets, guest invitations, role assignments at subscription scope or on any other resource.",
+    "ledger": "approvals.C001.identityRegistrationApproved",
+    "guardAction": "identity.register",
+    "neededBy": "Not required by Option A; optional for B and C only if the app is to touch storage"
+   },
+   {
+    "key": "deployment",
+    "question": "Do you approve provisioning the listed resources and deploying code to the approved target, including the staging-slot deployment, the swap and the swap back?",
+    "default": "no",
+    "yes": "Those operations on the approved target only, within the approved lease.",
+    "stays": "Any other subscription, resource group, region or resource; anything after the deadline.",
+    "ledger": "approvals.C001.deploymentApproved",
+    "guardAction": "deployment.execute",
+    "neededBy": "C062"
+   },
+   {
+    "key": "expenditure",
+    "question": "Do you approve spending up to the spend ceiling (planning bound, not enforced by Azure) of the approved option as the cap for this one lease?",
+    "default": "no",
+    "yes": "Cloud spend up to the stated ceiling in USD for one lease. The unit is a PROPOSAL: C001 and C002 define no unit for authorizedCloudSpend, so USD minor units (cents) are proposed, following C004.",
+    "stays": "Any spend above the ceiling, any second lease, any usage above the caps.",
+    "ledger": "approvals.C001.expenditureApproved and operatingEnvelope.authorizedCloudSpend (a bare integer today; C001 and C002 define no unit; C002 also pins scope.liveAzureRuns and limits.budget.cloudSpend to const 0, so a non-zero envelope needs a C002 revision too)",
+    "guardAction": "spend.authorize",
+    "neededBy": "C062"
+   },
+   {
+    "key": "liveExecution",
+    "question": "Do you approve exactly one live Azure run (one lease) that executes the approved option and its teardown?",
+    "default": "no",
+    "yes": "maximumLiveAzureRuns = 1 for this lease.",
+    "stays": "A second run, a rerun after teardown, or any run before every prerequisite answer is yes.",
+    "ledger": "approvals.C001.liveAzureExecutionApproved and operatingEnvelope.maximumLiveAzureRuns",
+    "guardAction": "native.execute and native.provision",
+    "neededBy": "C062"
+   }
+  ],
+  "values": [
+   {
+    "key": "option",
+    "allowed": [
+     "A",
+     "B",
+     "C",
+     "none"
+    ],
+    "default": "none",
+    "note": "Packet recommendation for the first native proof: A. The default stays none."
+   },
+   {
+    "key": "os",
+    "allowed": [
+     "Linux"
+    ],
+    "default": "Linux",
+    "note": "Proposed for C062; the OS remains unapproved until target is yes. Windows (C061) and containers (C063) are separate configurations."
+   },
+   {
+    "key": "sku / instanceCount / instanceCap",
+    "allowed": [
+     "A: P0v3 x 1, cap 1",
+     "B: P1 v3 x 2, cap 3",
+     "C: P2 v3 x 2, cap 3"
+    ],
+    "default": "from the option"
+   },
+   {
+    "key": "subscriptionId",
+    "placeholder": "<OWNER-SUPPLIED: subscription ID (GUID)>",
+    "note": "Never invented here. Use a dedicated sandbox subscription in the single Entra tenant; confirm quota, allowed locations and SKU policies, Defender plans and a spending limit before answering yes to target."
+   },
+   {
+    "key": "tenantId",
+    "placeholder": "<OWNER-SUPPLIED: Entra tenant ID (GUID), must be the single tenant>"
+   },
+   {
+    "key": "resourceGroupName",
+    "placeholder": "<OWNER-SUPPLIED or accept the pattern rg-ass-native-c062-<yyyymmdd>-<nn>>",
+    "note": "A new, empty resource group dedicated to one lease; never an existing group. Lowercase letters, digits and hyphens only."
+   },
+   {
+    "key": "region",
+    "allowed": [
+     "eastus2",
+     "eastus",
+     "westus2",
+     "westus3",
+     "centralus"
+    ],
+    "default": "eastus (untested). The Premium v3 list price ties across eastus2, eastus, westus2 and westus3; eastus2, westus2 and centralus failed the owner P1v3 validation on 2026-11-05 and are not defaults.",
+    "note": "Every option and region is unproven until the quota gate passes in the owner subscription: section 0b lists the quota status of each."
+   },
+   {
+    "key": "spendCeilingUsd and authorizedCloudSpend",
+    "allowed": [
+     "A: $5.00 = 500 USD cents (proposal)",
+     "B: $15.00 = 1500 USD cents (proposal)",
+     "C: $75.00 = 7500 USD cents (proposal)"
+    ],
+    "note": "Each ceiling is a planning bound, not enforced by Azure. C001 and C002 define no unit for authorizedCloudSpend; the cents unit is a PROPOSAL matching C004 totalMinorUnits. The owner own allowance of USD 10,000 per demonstration is a different figure (section 0a)."
+   },
+   {
+    "key": "maximumLiveAzureRuns",
+    "allowed": [
+     0,
+     1
+    ],
+    "default": 0,
+    "note": "Yes to liveExecution means 1 for this one lease."
+   },
+   {
+    "key": "teardownMechanism",
+    "allowed": [
+     "owner-machine scheduled job",
+     "manual only (does not satisfy the automatic deadline)"
+    ],
+    "default": "owner-machine scheduled job"
+   },
+   {
+    "key": "budgetAlertRecipient",
+    "placeholder": "<OWNER-SUPPLIED: recipient, not recorded in the ledger>"
+   },
+   {
+    "key": "quotaGate",
+    "placeholder": "<OWNER-SUPPLIED: result of the non-deploying validation and what-if for the chosen SKU and region: passed, failed or not run>",
+    "default": "not run",
+    "note": "Anything but passed makes liveExecution no."
+   }
+  ],
+  "answerSheetTemplate": {
+   "target": "no",
+   "iacGeneration": "no",
+   "scaffold": "no",
+   "identityRegistration": "no",
+   "deployment": "no",
+   "expenditure": "no",
+   "liveExecution": "no",
+   "option": "none",
+   "os": "Linux",
+   "sku": "<from the chosen option>",
+   "instanceCount": "<from the chosen option>",
+   "instanceCap": "<from the chosen option>",
+   "subscriptionId": "<OWNER-SUPPLIED: subscription ID (GUID)>",
+   "tenantId": "<OWNER-SUPPLIED: Entra tenant ID (GUID), must be the single tenant>",
+   "resourceGroupName": "<OWNER-SUPPLIED or accept the pattern rg-ass-native-c062-<yyyymmdd>-<nn>>",
+   "region": "<OWNER-SUPPLIED: one of eastus, westus3 (untested), eastus2, westus2, centralus (failed for P1v3 on 2026-11-05)>",
+   "spendCeilingUsd": "<from the chosen option>",
+   "proposedCloudSpendUsdMinorUnits": "<ceiling x 100 (PROPOSAL: C001 and C002 define no unit)>",
+   "maximumLiveAzureRuns": 0,
+   "teardownDeadlineHours": "<from the chosen option>",
+   "teardownMechanism": "owner-machine scheduled job",
+   "budgetAlertRecipient": "<OWNER-SUPPLIED: recipient, not recorded in the ledger>",
+   "quotaGate": "not run"
+  },
+  "consistencyRules": [
+   "Only the exact lowercase word yes counts as yes. Anything else, including silence, is recorded as no.",
+   "liveExecution yes requires target, deployment and expenditure to be yes; deployment yes requires target yes; expenditure yes requires target yes and a chosen option; iacGeneration, scaffold and identityRegistration yes each require target yes. A yes that breaks a rule is recorded as no.",
+   "The ceiling and the teardown deadline are part of the answer: a ceiling below the option computed worst case (which includes the teardown-latency hour), or no teardown mechanism, makes expenditure and liveExecution no.",
+   "An all-no answer changes nothing in approvals.C001: U002 is Done with a no result and records the packet SHA-256 and the date.",
+   "Any yes needs the failing-test-first change that the U002 card requires, and a reviewed C001 snapshot and pin revision: the live probe and the C020, C025 and C027 servers deny with APPROVAL_DRIFT as soon as approvals.C001 differs from the pinned snapshot. C002 also pins scope.liveAzureRuns and limits.budget.cloudSpend to const 0, so a non-zero envelope cannot validate until C002 is revised as well.",
+   "Prices are list prices of 2026-11-04 (re-confirmed on 2026-11-06). If U002 happens after 2026-11-11 (more than 7 days after the price date), re-run the queries in section 1 before accepting any ceiling.",
+   "liveExecution yes also requires quotaGate = passed for the chosen SKU and region; a failed or not-run gate makes liveExecution no."
+  ]
+ },
+ "risksAndAssumptions": [
+  {
+   "id": "R01",
+   "label": "documented",
+   "source": "SLOTS-TIER, LIMITS-SLOTS",
+   "text": "Deployment slots need the Standard, Premium or Isolated tier. Basic (B1 from $0.017 per hour) and Free are cheaper but have no slots and are excluded; Standard allows 5 slots and Premium 20, so one staging slot fits every option."
+  },
+  {
+   "id": "R02",
+   "label": "documented",
+   "source": "SLOTS-FREE, PLANS-SLOTSHARE, PLANS-BILLING",
+   "text": "Slots cost nothing extra and run on the plan instances, so swap overlap needs spare capacity on the same instances; the plan instance-hour is the only fixed-rate meter."
+  },
+  {
+   "id": "R03",
+   "label": "documented",
+   "source": "SLOTS-NOAUTOSWAP, SLOTS-ROLLBACK",
+   "text": "Auto swap is unavailable on Linux, so every swap and rollback is an explicit command; rollback is the same swap repeated at once."
+  },
+  {
+   "id": "R04",
+   "label": "documented",
+   "source": "SLOTS-WARMUP, SLOTS-RECYCLE",
+   "text": "The default warm-up accepts any HTTP response and swaps recycle the former production workers, abandoning long operations: set strict warm-up statuses and keep the proof app fault tolerant."
+  },
+  {
+   "id": "R05",
+   "label": "documented",
+   "source": "NODE-LINUX24",
+   "text": "Node.js 24 LTS on Linux App Service is documented as NODE|24-lts. Production-runtime validation is still unperformed (approvals.C001: Node 22.23.4 is test tooling only)."
+  },
+  {
+   "id": "R06",
+   "label": "documented",
+   "source": "BUDGET-ALERTONLY, BUDGET-LAG",
+   "text": "Cost Management cannot enforce a ceiling on a run of hours: budgets only notify, on data 8 to 24 hours old. The ceiling (planning bound, not enforced by Azure) comes from price times capped instances times the teardown deadline plus one latency hour, and holds only if the scheduled teardown runs (R16)."
+  },
+  {
+   "id": "R07",
+   "label": "documented",
+   "source": "TAGS-NOINHERIT, TAGS-LIMITS",
+   "text": "Lease tags must be written on every resource explicitly; the group tag is not inherited. Seven tags are far below the 50-tag limit."
+  },
+  {
+   "id": "R08",
+   "label": "documented",
+   "source": "LADEL-SOFT, LACAP-SOFT",
+   "text": "A workspace deleted without --force stays soft-deleted for 14 days with its name reserved, and the daily cap can be exceeded and the excess is billed: the log lines of B and C are bounded estimates, not guarantees."
+  },
+  {
+   "id": "R09",
+   "label": "documented",
+   "source": "PV4-LINUX, PV4-NOIP, PV4-UNIT",
+   "text": "Premium v4 is cheaper (P0v4 $0.073 per hour in eastus2 against $0.0775 for P0v3) and offered in all five candidate regions, but it has no stable outbound IPs, availability depends on the resource group deployment unit, and its slot count is not stated on its page. It is listed as an alternative, not selected."
+  },
+  {
+   "id": "R10",
+   "label": "estimated",
+   "source": "tier names",
+   "text": "P0v3, P1 v3 and P2 v3 support slots because they are in the Premium tier (documented by tier, not by SKU name). The first what-if or create call is the real check."
+  },
+  {
+   "id": "R11",
+   "label": "estimated",
+   "source": "Retail Prices API",
+   "text": "Prices are retail pay-as-you-go list prices in USD returned on 2026-11-04. Billed prices can differ (discounts, taxes, currency) and change; the packet is stale after 7 days (planning assumption)."
+  },
+  {
+   "id": "R12",
+   "label": "estimated",
+   "source": "convention",
+   "text": "Monthly figures use 730 hours per month. Ceilings assume billing in whole started hours plus one teardown-latency hour at the instance cap (the time between the deadline and the plan actually being deleted), which is conservative if billing is finer."
+  },
+  {
+   "id": "R13",
+   "label": "estimated",
+   "source": "this item could not call Azure",
+   "text": "Regional capacity, allowed-location and SKU policies, and subscription-level Defender plans were not checked by this packet (az and Azure tools are forbidden for this item). Any of them can block the run or add cost; the quota gate of the arming sequence is the check."
+  },
+  {
+   "id": "R14",
+   "label": "estimated",
+   "source": "planning assumption",
+   "text": "Run windows (3, 6 and 24 hours) and usage caps are planning assumptions that the test harness must enforce, not Azure; exceeding a cap means stop and tear down."
+  },
+  {
+   "id": "R15",
+   "label": "estimated",
+   "source": "zero-priced tiers",
+   "text": "The API returns zero-priced first tiers (Log Analytics first 5 GB, egress first 100 GB). They are explicit returned values, not missing prices, but the ceilings do not rely on them: every GB is priced at the paid tier."
+  },
+  {
+   "id": "R16",
+   "label": "estimated",
+   "source": "teardown design",
+   "text": "The default teardown job needs the owner machine on (the task settings wake it and start it when available), the az session valid and the approved subscription selected at the deadline. If a guard fails the job deletes nothing, shows a dialog and exits 1; if the job never runs the exposure is the per-hour cost until someone tears down by hand, and the budget mail arrives a day later."
+  },
+  {
+   "id": "R17",
+   "label": "documented",
+   "source": "repository state (HEAD)",
+   "text": "HEAD holds the owner native demo (demo/, infra/, the azure-demo workflows, demo/cleanup.cjs and .azure/deployment-plan.md, commit f42f4e03). None of it is an approval or part of this packet lease, and this packet defers to the owner plan for the concrete target (section 0a). No lease, teardown or admission code of the C cards exists yet (C010, C011, C052, C053, C056 are not admitted); the owner cleanup.cjs is the model for the guards G1 to G3."
+  },
+  {
+   "id": "R18",
+   "label": "estimated",
+   "source": "unpriced services",
+   "text": "Entra identities, managed identities, budgets, action groups, Defender and teardown automation have no price in this packet: price unavailable, never zero, and never inside a total."
+  },
+  {
+   "id": "R19",
+   "label": "estimated",
+   "source": "C003, C001 README",
+   "text": "The OS is the owner decision: Linux is proposed because the order and C062 target it. A Linux code-slot result is not proof for Windows (C061) or containers (C063), and the control-service hosting (App Service Linux) does not decide the native OS."
+  },
+  {
+   "id": "R20",
+   "label": "estimated",
+   "source": "C002 README",
+   "text": "The C002 synthetic fixture limits (1 to 100 requests per second, 1 to 20 users, 1 to 300 seconds, 1 to 4 capacity units, spend 0 to 0) are local examples; they neither select a SKU nor authorize spend."
+  },
+  {
+   "id": "R21",
+   "label": "documented",
+   "source": ".azure/deployment-plan.md at HEAD",
+   "text": "The owner non-deploying ARM validation was rejected with InternalSubscriptionIsOverQuotaForSku for P1v3 in centralus, northcentralus, eastus2 and westus2; eastus, westus3, P0v3 and P2 v3 were not tested. Option B and its eastus2, westus2 and centralus rows are known failures; every other combination is unproven until the quota gate passes."
+  },
+  {
+   "id": "R22",
+   "label": "estimated",
+   "source": "owner plan, this packet",
+   "text": "The owner allowance of USD 10,000 per demonstration is not an estimate or a cap (owner wording) and is not a figure of this packet; each of the ceilings $5, $15 and $75 is a planning bound, not enforced by Azure, for one bounded lease. The owner reconciles the two when answering expenditure."
+  },
+  {
+   "id": "R23",
+   "label": "estimated",
+   "source": "C001, C002, C004",
+   "text": "The cents unit for authorizedCloudSpend is a PROPOSAL (C001 and C002 define no unit), and C002 pins scope.liveAzureRuns and limits.budget.cloudSpend to const 0: a non-zero envelope cannot validate until C002 is revised too."
+  },
+  {
+   "id": "R24",
+   "label": "estimated",
+   "source": "Retail Prices API, Learn",
+   "text": "No official Learn page that states that a resource group has no charge was found in eight lookups; the resource-group row is therefore price unavailable with the no-charge expectation labelled as an estimate (lookup W02 found no meter)."
+  }
+ ],
+ "integrity": {
+  "packetSha256": "de0298744cd520b19a3d425a34ee49680a55a096ecc5a35913ddbc196db7844e",
+  "canonicalization": "SHA-256 of JSON.stringify of this packet without the integrity and validation fields, keys in construction order"
+ },
+ "validation": {
+  "kind": "repository validator, kept from the independent review checks",
+  "command": "node testing\\quality\\validate-packet.cjs <packet.json>",
+  "note": "The validator (testing\\quality\\packet-validator.cjs) was published with revision 2 and is replaced by a hardened version with revision 3; its commit and tag are in results\\U001.json. It checks structure, recomputed arithmetic, the guards and the markdown copy; prices and Learn facts still need an independent lookup (see its README)."
+ },
+ "revision": {
+  "number": 3,
+  "supersedes": {
+   "schemaVersion": 2,
+   "packetSha256": "4d9a9ed1199f05a9440d7a7b0da11146e99d3de5b5b401b4651352fcff645563",
+   "preparedAtUtc": "2026-11-06T05:11:32Z"
+  },
+  "reason": "The independent review of 2026-11-06 found revision 2 sound (prices, arithmetic and guards re-verified) and listed seven minor packet findings, A1 to A7, about money safety and precision. Revision 3 fixes all of them. No price, ceiling, decision or approval changed.",
+  "pricesKept": "All 116 unit prices stay unchanged (re-confirmed by independent lookups on 2026-11-06, no difference since 2026-11-04) and stay usable until 2026-11-11 by the 7-day rule (R11).",
+  "changes": [
+   {
+    "finding": "A1",
+    "change": "Arming step 3 sets the template parameters for the region AND the SKU (--location only stores the deployment metadata), tells the owner to read the resolved location and SKU in the what-if output, names the owner defaults that failed on 5 Nov, decides who creates the group and warns about a running subscription-scope deployment."
+   },
+   {
+    "finding": "A2",
+    "change": "Every timestamp is built and parsed with InvariantCulture (the former text broke under fi-FI and da-DK and set the year 2569 or 1448 under th-TH and ar-SA)."
+   },
+   {
+    "finding": "A3",
+    "change": "The registration check prints the registered trigger time and compares it with the deadline; the last command throws on a difference of more than 2 minutes."
+   },
+   {
+    "finding": "A4",
+    "change": "The unattended teardown wraps every delete, never stops at the first failure, always finishes with the guarded group delete and a check that the group is gone, records every failure, exits 1 and raises a persistent alarm file on the Desktop plus the dialog; what it cannot guarantee when the machine is off is stated."
+   },
+   {
+    "finding": "A5",
+    "change": "The manual deletion block carries the guard functions and every delete line calls Assert-Subscription (G2) and Assert-Lease (G3) itself, so copying only the code block stays guarded."
+   },
+   {
+    "finding": "A6",
+    "change": "The list and create-container meter sentence names the regions where the meter IDs are equal and where only the price is equal; the deadline rule says the time arming step 4 computes."
+   },
+   {
+    "finding": "A7",
+    "change": "The ceiling headroom (B about 1.9 and C about 3.85 at-cap hours before the next step) is stated next to the ceilings and recomputed by the validator."
+   },
+   {
+    "finding": "V13/V14",
+    "change": "Appendix D no longer claims that any GUID, e-mail or secret is rejected: it names the validator README for the covered and the uncovered spellings."
+   }
+  ],
+  "earlier": {
+   "number": 2,
+   "reason": "rev-U001 rejected revision 1 on 2026-11-06 (major F1: stale against HEAD; major F2: unguarded teardown; minors F3 to F8). Revision 2 refreshes it against HEAD, guards every destructive step and keeps the review checks as a repository validator.",
+   "changes": [
+    {
+     "finding": "F1",
+     "change": "Section 0a states the repository at HEAD and defers to the owner plan; the two false statements (scaffold decision, R17) are replaced; the 5 Nov quota failure is stated; section 0b and section 2 give a quota status for every option and region; the default region is eastus (untested, not a failed combination); arming step 3 is the quota gate; the USD 10,000 allowance is related to the planning bounds."
+    },
+    {
+     "finding": "F2",
+     "change": "Guards G1 to G4 (pre-creation gate, subscription pin, ownership check before each delete, same guards in checks 1 and 2); every az command carries --subscription; the unattended job is a listed script with the guards."
+    },
+    {
+     "finding": "F3",
+     "change": "One teardown-latency hour at the instance cap in every worst case; ceilings A $5, B $15, C $75 (C raised); blob list and create-container operations are priced like writes; the phrase planning bound, not enforced by Azure replaces every earlier wording that overstated what Azure does with the bound; deletion is the first action of the automatic backstop."
+    },
+    {
+     "finding": "F4",
+     "change": "The resource-group row reads price unavailable (no meter) with the lookup that shows it."
+    },
+    {
+     "finding": "F5",
+     "change": "Exact commands for arming (Task Scheduler), rollback RB2 and RB3 (slot swap with --action), checks 3 and 4 and the identity deletion; no unconfirmed command remains."
+    },
+    {
+     "finding": "F6",
+     "change": "The cents unit is called a PROPOSAL everywhere; C002 pins scope.liveAzureRuns and limits.budget.cloudSpend to 0 so a non-zero envelope needs a C002 revision too."
+    },
+    {
+     "finding": "F7",
+     "change": "The expected-plan-cost formula is stated, including the scale step."
+    },
+    {
+     "finding": "F8",
+     "change": "The checks of the review are kept as the repository validator testing\\quality\\packet-validator.cjs with a negative test per rule."
+    }
+   ],
+   "supersedes": {
+    "schemaVersion": 1,
+    "packetSha256": "36b2d81655a64d61d8817dae55014188d46cbe453f5b67b782bcbda0c5313548",
+    "preparedAtUtc": "2026-11-04T18:57:28Z"
+   }
+  }
+ },
+ "repositoryState": {
+  "title": "State of the repository at HEAD",
+  "describesHead": "14cefdeac385",
+  "checkedAtUtc": "2026-11-06T05:11:32Z",
+  "checkedBy": "git log and read-only reads of the files named below; the checks are listed at the end of this section; no Azure call",
+  "ownerCommit": {
+   "id": "f42f4e03",
+   "date": "2026-11-05 16:29:49 -0500",
+   "subject": "Add phased Azure scaling demonstration pipelines",
+   "onlyCommitTouchingThesePaths": true
+  },
+  "artifacts": [
+   {
+    "path": "demo/",
+    "what": "Express 5.1.0 demonstration app for Node.js 24 (server.cjs listens on process.env.PORT and refuses to start on any other Node major), own package.json, tests, a pipeline and experiments for App Service Linux code slots",
+    "limits": "Phase 1 of the owner plan: local checks only, no Azure execution recorded",
+    "approval": "not an approval"
+   },
+   {
+    "path": "demo/cleanup.cjs",
+    "what": "Tag-checked teardown: refuses deletion unless the group name and the ownership tags match, scopes every az call with --subscription and compares az account show with the configured subscription",
+    "limits": "Its tag names differ from this packet lease tags; it is the model for guards G1 to G3",
+    "approval": "not an approval"
+   },
+   {
+    "path": "infra/*.bicep",
+    "what": "main.bicep (subscription scope, creates a tagged resource group), app-service.bicep, scale.bicep (P1v3, capacity 1 or 2), github-identity.bicep and github-principals.bicep (OIDC bootstrap, unexecuted)",
+    "limits": "Not deployed, not validated: the ARM validation was rejected (see quotaValidation)",
+    "approval": "not an approval"
+   },
+   {
+    "path": ".github/workflows/azure-demo*.yml",
+    "what": "azure-demo.yml (manual run with a cost confirmation input that defaults to false), azure-demo-cleanup.yml (hourly janitor for expired owned groups) and azure-demo-ci.yml",
+    "limits": "Not dispatched; the owner plan requires separate approval for identity registration and live deployment",
+    "approval": "not an approval"
+   },
+   {
+    "path": ".azure/deployment-plan.md",
+    "what": "The owner deployment plan: Status Validation Blocked (App Service provider quota); target centralus initially, North Central US or another US region with capacity authorized; at least two P1v3 Linux workers; an estimated-spend allowance of USD 10,000 per demonstration",
+    "limits": "The allowance is, in the owner words, not an estimate or a real-time billing cap",
+    "approval": "not an approval"
+   }
+  ],
+  "ownerPlan": {
+   "path": ".azure/deployment-plan.md",
+   "status": "Validation Blocked - Azure App Service provider quota",
+   "initialLocation": "centralus",
+   "workers": "at least two P1v3 Linux workers",
+   "allowanceUsdPerDemonstration": 10000,
+   "allowanceReading": "not an estimate or a real-time billing cap (owner wording)",
+   "stillRequiresSeparateApproval": "identity registration and live deployment"
+  },
+  "quotaValidation": {
+   "source": ".azure/deployment-plan.md, committed 2026-11-05 in f42f4e03",
+   "kind": "non-deploying ARM provider validation",
+   "result": "rejected with InternalSubscriptionIsOverQuotaForSku (effective P1v3 limit 0, one worker required)",
+   "sku": "P1v3",
+   "regionsFailed": [
+    "centralus",
+    "northcentralus",
+    "eastus2",
+    "westus2"
+   ],
+   "whatIf": "The Central US what-if failed on the same gate.",
+   "untested": {
+    "regions": [
+     "eastus",
+     "westus3"
+    ],
+    "skus": [
+     "P0v3",
+     "P2 v3"
+    ]
+   },
+   "inventoryIsNotProof": "The quota inventory and the Microsoft.Web usage endpoint reported P1v3 limit 360 and usage 0 in Central US, so they alone do not prove a deployment can proceed.",
+   "notCandidates": [
+    {
+     "region": "northcentralus",
+     "quotaStatus": "failed-2026-11-05",
+     "price": "price unavailable (not queried)"
+    }
+   ]
+  },
+  "relationToThisPacket": {
+   "defersToOwnerPlan": true,
+   "text": "This packet DEFERS to the owner plan for the concrete target (platform, SKU, region, resource group, identity and workflows) and gives only planning cost bounds for three Linux code-slot options; Option B (P1 v3, two instances) is the closest in size to the owner plan.",
+   "headArtifactsAreApprovals": false,
+   "approvalsC001": {
+    "liveAzureExecutionApproved": false,
+    "iacGenerationApproved": false,
+    "scaffoldApproved": false,
+    "deploymentApproved": false,
+    "identityRegistrationApproved": false,
+    "expenditureApproved": false,
+    "maximumLiveAzureRuns": 0,
+    "authorizedCloudSpend": 0
+   },
+   "allowanceVersusBounds": "The owner allowance of USD 10,000 per demonstration is the owner own figure and is not an estimate or a cap; each ceiling of this packet ($5, $15, $75) is a planning bound, not enforced by Azure: worst case x 1.25 rounded up to $5 for one bounded lease. The allowance never sizes a run; the planning bound of the chosen option is what U002 would record, and the owner reconciles the two figures when answering expenditure."
+  },
+  "verifiedFacts": [
+   "only commit f42f4e03 ever touched demo/, infra/, .azure/ and the three azure-demo workflows",
+   "demo/server.cjs listens on process.env.PORT and refuses to start unless Node.js is 24",
+   "demo/package.json depends on express 5.1.0",
+   "demo/cleanup.cjs refuses deletion on an ownership-tag mismatch, scopes every az call with --subscription and compares az account show with the configured subscription",
+   "the owner plan says Validation Blocked, records InternalSubscriptionIsOverQuotaForSku for centralus, northcentralus, eastus2 and westus2, and an allowance of USD 10,000 per demonstration",
+   "the owner plan states that the allowance is not an estimate or a real-time billing cap",
+   "infra/main.bicep is subscription scoped and creates a tagged resource group",
+   "infra holds app-service, scale, github-identity and github-principals templates",
+   "azure-demo.yml is a manual run with a cost confirmation input defaulting to false",
+   "azure-demo-cleanup.yml is an hourly schedule",
+   "C002 pins scope.liveAzureRuns const 0 and limits.budget.cloudSpend min and max const 0",
+   "approvals.C001 still has six false flags, 0 live runs and 0 authorized spend"
+  ]
+ },
+ "defaultChoice": {
+  "option": "A",
+  "region": "eastus",
+  "quotaStatus": "untested"
+ },
+ "fixtureNote": "Trimmed copy of the U001 revision 3 packet for the validator tests: placeholders only; meter IDs replaced by fixture-meter-N; unneeded price lines and queries removed; hash recomputed."
+}

@@ -5,12 +5,13 @@
 // command line of the JSON plan (and the other way round); and prose, code and numbers are scanned like the JSON.
 const { isObj, isArr } = require('./util.cjs');
 const { LIMITS } = require('./limits.cjs');
-const { parseDate, DAY_MS } = require('./dates.cjs');
+const { hasMarkRun } = require('./text.cjs');
 const { scanIdentifiers, scanWording, registerIds, HASH_PATHS } = require('./rules-hygiene.cjs');
 const { destructiveMention, linesOf } = require('./rules-plan.cjs');
+const structure = require('./markdown-structure.cjs');
 
 const CODES = ['MARKDOWN_HASH_MISSING', 'MARKDOWN_HEADING_MISSING', 'MARKDOWN_CEILING_MISSING', 'MARKDOWN_DEFAULT_MISSING', 'MARKDOWN_QUOTA_MISSING', 'MARKDOWN_EXPIRY_MISSING',
-  'MARKDOWN_ALLOWANCE_MISSING', 'MARKDOWN_APPROVALS_MISSING', 'MARKDOWN_DECISION_MISMATCH', 'MARKDOWN_AMOUNT_UNKNOWN', 'MARKDOWN_COMMAND_MISMATCH', 'MARKDOWN_COMMAND_MISSING'];
+  'MARKDOWN_ALLOWANCE_MISSING', 'MARKDOWN_APPROVALS_MISSING', 'MARKDOWN_DECISION_MISMATCH', 'MARKDOWN_AMOUNT_UNKNOWN', 'MARKDOWN_COMMAND_MISMATCH', 'MARKDOWN_COMMAND_MISSING', ...structure.CODES];
 
 const HEADINGS = ['## 0. At a glance', '## 0a. State of the repository at HEAD', '## 0b. Quota status of every option and region', '## 1. Pricing evidence', '## 2. Bounded options',
   '## 3. Required resources, costs and exclusions', '## 4. Cleanup and rollback plan', '## 5. Exact owner decisions U002 must collect', '## 6. Risks and assumptions',
@@ -57,6 +58,8 @@ function checkRequired(packet, markdown, prose, add) {
   const d = isObj(packet.defaultChoice) ? packet.defaultChoice : {};
   if (!markdown.includes(`default option ${d.option}`) || !markdown.includes(`default region ${d.region}`)) add('MARKDOWN_DEFAULT_MISSING', 'markdown', `the markdown copy must name the default option ${d.option} and the default region ${d.region}`);
   const { header, rows } = quotaCells(prose);
+  const body = rows.filter((r) => r[0] !== 'Option and SKU' && !/^:?-+:?$/.test(r[0]));
+  if (body.length !== options.length || body.some((r, i) => r[0] !== `${options[i].id} ${options[i].sku}`)) add('MARKDOWN_QUOTA_MISSING', 'markdown', 'the quota table must list the options in the order of the JSON, one row each');
   for (const o of options) {
     const row = rows.find((r) => r[0] === `${o.id} ${o.sku}`);
     for (const c of isArr(o.regionCandidates) ? o.regionCandidates.filter(isObj) : []) {
@@ -64,12 +67,12 @@ function checkRequired(packet, markdown, prose, add) {
       if (!(typeof cell === 'string' && cell.startsWith(String(c.quotaStatus)))) add('MARKDOWN_QUOTA_MISSING', 'markdown', `the quota table must show ${c.quotaStatus} for option ${o.id} in ${c.region}`);
     }
   }
-  const price = parseDate(isObj(packet.pricing) ? packet.pricing.pricingDateUtc : undefined);
-  if (!Number.isNaN(price) && !markdown.includes(`usable until ${new Date(price + 7 * DAY_MS).toISOString().slice(0, 10)}`)) add('MARKDOWN_EXPIRY_MISSING', 'markdown', 'the markdown copy must say until which day the prices stay usable');
   const rel = isObj(packet.repositoryState) && isObj(packet.repositoryState.relationToThisPacket) ? packet.repositoryState.relationToThisPacket : {};
   if (typeof rel.allowanceVersusBounds !== 'string' || !markdown.includes(rel.allowanceVersusBounds)) add('MARKDOWN_ALLOWANCE_MISSING', 'markdown', 'the markdown copy must carry the sentence that relates the owner allowance to the planning bounds');
   if (!markdown.includes(APPROVALS)) add('MARKDOWN_APPROVALS_MISSING', 'markdown', `the markdown copy must say: ${APPROVALS}`);
   const decisions = isObj(packet.ownerDecisions) && isArr(packet.ownerDecisions.decisions) ? packet.ownerDecisions.decisions.filter(isObj) : [];
+  const order = decisions.map((dec) => prose.findIndex((l) => l.startsWith(`### ${dec.key}:`)));
+  if (order.some((at, i) => at < 0 || (i > 0 && at < order[i - 1]))) add('MARKDOWN_DECISION_MISMATCH', 'markdown', 'the decisions must appear in the order of the JSON');
   for (const dec of decisions) {
     const at = prose.findIndex((l) => l.startsWith(`### ${dec.key}:`));
     if (at < 0 || !prose.slice(at, at + 4).some((l) => l.includes(`Default: **${dec.default}**`))) add('MARKDOWN_DECISION_MISMATCH', 'markdown', `the decision ${dec.key} must show its default ${dec.default} in the markdown copy`);
@@ -104,10 +107,19 @@ function checkCommands(packet, code, add) {
 function checkMarkdown(packet, markdown, add, inv) {
   if (typeof markdown !== 'string') return;
   if (markdown.length > LIMITS.maxMarkdownLength) { add('INPUT_TOO_LARGE', 'markdown', `the markdown copy is longer than ${LIMITS.maxMarkdownLength} characters`); return; }
+  if (inv.totalChars + markdown.length > LIMITS.maxTotalChars) { add('INPUT_TOO_LARGE', 'markdown', `the strings of the packet and the markdown together are longer than ${LIMITS.maxTotalChars} characters`); return; }
+  if (hasMarkRun(markdown)) { add('INPUT_COMBINING_RUN', 'markdown', `a run of more than ${LIMITS.maxMarkRun} combining marks is refused: normalising it would take super-quadratic time`); return; }
   const { prose, proseNo, code } = split(markdown);
   checkRequired(packet, markdown, prose, add);
   checkAmounts(packet, markdown, inv, add);
   checkCommands(packet, code, add);
+  structure.checkStatusAndHeader(packet, prose, add);
+  structure.checkGlance(packet, prose, add);
+  structure.checkOptions(packet, prose, add);
+  structure.checkRecommendation(packet, prose, add);
+  structure.checkExpiry(packet, markdown, add);
+  structure.checkCodeOrder(packet, code, add);
+  structure.checkClaims(prose, proseNo, add);
   const hashes = [...HASH_PATHS].map((p) => p.split('.').reduce((o, k) => (isObj(o) ? o[k] : undefined), packet)).filter((h) => typeof h === 'string' && /^[0-9a-f]{64}$/.test(h));
   const masked = [...hashes.map((h) => [h, '<sha256>']), ...[...registerIds(packet)].map((id) => [id, '<line-id>'])];
   const whole = masked.reduce((t, [from, to]) => t.split(from).join(to), [...prose, ...code].join('\n'));
