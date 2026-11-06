@@ -12,8 +12,9 @@ const { spawn } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const PRODUCTION = ['audit.cjs', 'codes.cjs', 'contract.js', 'page.js', 'server.cjs', 'store.cjs'];
-const TESTS = ['anonymous', 'audit', 'batch', 'commit', 'contract', 'hostile-fields', 'hostile-paths', 'idor', 'lists', 'operator', 'page', 'pipeline-inproc-a', 'pipeline-inproc-b',
-  'pipeline-inproc-c', 'property', 'quota', 'server-units', 'store', 'uniform'].map((name) => path.join('capability', 'C010', 'tests', `${name}.test.cjs`));
+const TESTS = ['anonymous', 'audit', 'batch', 'commit', 'contract', 'guard-boundaries', 'guard-close', 'guard-host', 'guard-requests', 'guard-server', 'hostile-fields', 'hostile-paths', 'idor', 'lists', 'operator',
+  'page', 'page-learning', 'pipeline-inproc-a', 'pipeline-inproc-b', 'pipeline-inproc-c', 'property', 'quota', 'server-units', 'store', 'store-order', 'store-revisions', 'two-instances', 'uniform']
+  .map((name) => path.join('capability', 'C010', 'tests', `${name}.test.cjs`));
 const FLOOR = Object.freeze({ lines: 85, branches: 85, functions: 85 });
 const PARALLEL = 3;
 const NUMBER = '(\\d+(?:\\.\\d+)?)';

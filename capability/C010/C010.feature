@@ -106,6 +106,20 @@ Feature: Lease ownership on every resource target; another conductor's resources
     When its lease ends, expires or moves to another owner, or its token expires, before it commits
     Then it has no effect and answers the uniform refusal or its typed 401
 
+  Scenario: A batch naming a foreign target never reaches the commit gate
+    When conductor-b sends a batch that names a target of conductor-a, alone or after one of its own targets
+    Then the answer is the uniform refusal before the queue, the commit gate is never reached and the state is unchanged
+    And a batch of own targets reaches the gate once and is applied
+
+  Scenario: A connection that ended or was refused while its mutation waited gives it no effect
+    Given an authorized mutation is waiting for the rest of its body or at the commit gate
+    When its connection is destroyed (the client left, or the lane cut it) or marked as refused
+    Then the mutation is not committed, no audit record is written and no answer is sent
+
+  Scenario: Deleting or changing one resource touches nothing else of the owner
+    When a run is deleted, or a resource is patched
+    Then only the exports of that run go with it, and the lease keeps its name, owner and expiry
+
   Scenario: One conductor filling its quota cannot starve another lease or the operator
     When conductor-a fills its own share of the state
     Then conductor-b can still create and the operator can still read, and conductor-a gets OWNER_QUOTA_FULL with no effect

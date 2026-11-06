@@ -6,8 +6,11 @@
 // literal (replaced), every numeric literal (plus and minus one). Mutants that do not parse are discarded. Each mutant is applied alone in a private
 // copy OUTSIDE the repository and must be killed by a NAMED failing test (a crash of a whole file is not a kill); a survivor fails the run unless
 // its label is on the equivalent list of tests\mutants-equivalent.cjs with a one-line proof.
-// Usage: node tests\mutate-gen.cjs --scratch <dir outside the repository> --out <report.json> [--only <file>] [--workers N] [--list] [--limit N]
+// Usage: node tests\mutate-gen.cjs --scratch <dir outside the repository> --out <report.json> [--only <file>] [--first <file>] [--workers N] [--list] [--limit N]
+//        node tests\mutate-gen.cjs --scratch <dir> --out <report.json> --retest --extra-tests a,b   (re-runs the survivors against test files ADDED since)
+//        node tests\mutate-gen.cjs --out <report.json> --finalize                                    (builds the report from the incremental files)
 const fs = require('node:fs');
+const crypto = require('node:crypto');
 const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
@@ -19,20 +22,25 @@ const argument = (name) => { const index = process.argv.indexOf(name); return in
 const scratch = argument('--scratch');
 const out = argument('--out');
 const only = argument('--only');
+const first = argument('--first');
 const listOnly = process.argv.includes('--list');
 const finalizeOnly = process.argv.includes('--finalize');
-const workers = Number(argument('--workers') ?? 3);
+const retestOnly = process.argv.includes('--retest');
+const extraTests = (argument('--extra-tests') ?? '').split(',').filter(Boolean);
+const workers = Number(argument('--workers') ?? 2);
 const limit = Number(argument('--limit') ?? Infinity);
 if (!listOnly && (!out || (!finalizeOnly && (!scratch || path.resolve(scratch).toLowerCase().startsWith(repository.toLowerCase()))))) throw new Error('--scratch must be outside the repository and --out a report file');
 
 const PRODUCTION = ['store.cjs', 'server.cjs', 'contract.js', 'audit.cjs', 'codes.cjs', 'page.js'];
 const STAGES = {
   unit: ['contract', 'store', 'audit'], core: ['idor', 'anonymous', 'server-units', 'hostile-fields', 'commit'], rest: ['uniform', 'lists', 'hostile-paths', 'batch', 'operator', 'quota'],
-  late: ['property', 'pipeline-inproc-a', 'pipeline-inproc-b', 'pipeline-inproc-c'], page: ['page']
+  late: ['property', 'pipeline-inproc-a', 'pipeline-inproc-b', 'pipeline-inproc-c'], page: ['page', 'page-learning'],
+  // Test files that were ADDED after the first pass of a run to kill its survivors (--retest --extra-tests a,b): old test files are never edited, so every earlier kill stays valid.
+  added: []
 };
 const PLAN = { 'audit.cjs': ['unit', 'core', 'rest'], 'codes.cjs': ['unit', 'core', 'rest'], 'contract.js': ['unit', 'core', 'rest', 'late'], 'page.js': ['page'], 'server.cjs': ['core', 'rest', 'late'], 'store.cjs': ['unit', 'core', 'rest', 'late'] };
-const CONCURRENCY = Number(process.env.C010_MUTATION_CONCURRENCY || 2);
-const MATRIX_QUICK = '^(TARGET_NOT_FOUND|ROLE_FORBIDDEN|QUERY_REJECTED|EXPECTATION_FAILED|REQUEST_MALFORMED|URL_TOO_LONG|METHOD_NOT_ALLOWED|BODY_TOO_LARGE|INVALID_URL|UNEXPECTED_BODY|TOKEN_EXPIRED|INTERNAL_ERROR) \\[(R M7|G G R M7|M6 G R|R \\| M7)\\] (HTTP/1\\.1|refusal then HTTP/1\\.0)$';
+STAGES.added = extraTests;
+const MATRIX_QUICK =  '^(TARGET_NOT_FOUND|ROLE_FORBIDDEN|QUERY_REJECTED|EXPECTATION_FAILED|REQUEST_MALFORMED|URL_TOO_LONG|METHOD_NOT_ALLOWED|BODY_TOO_LARGE|INVALID_URL|UNEXPECTED_BODY|TOKEN_EXPIRED|INTERNAL_ERROR) \\[(R M7|G G R M7|M6 G R|R \\| M7)\\] (HTTP/1\\.1|refusal then HTTP/1\\.0)$';
 
 // Same-length mask of comments, strings, templates and regex literals, so that operators and keywords are found in code only.
 function mask(text) {
@@ -88,7 +96,7 @@ function operands(masked, from, to) {
 function generate(file, text) {
   const masked = mask(text);
   const mutants = [];
-  const lineOf = (at) => text.slice(0, at).split('\n').length;
+  const lineOf = (at) => { const before = text.slice(0, at); return `${before.split('\n').length}:${at - before.lastIndexOf('\n')}`; };
   const add = (label, start, end, replacement) => { if (text.slice(start, end) !== replacement) mutants.push({ file, label: `${label} @${lineOf(start)}`, start, end, replacement }); };
   for (const match of masked.matchAll(/\b(?:if|while)\s*\(/g)) {
     const open = match.index + match[0].length - 1;
@@ -146,7 +154,7 @@ const all = PRODUCTION.filter((file) => !only || file === only).flatMap((file) =
 const perFile = {};
 for (const mutant of all) perFile[mutant.file] = (perFile[mutant.file] ?? 0) + 1;
 const rank = {};
-const mutants = all.map((mutant) => { rank[mutant.file] = (rank[mutant.file] ?? 0) + 1; return { mutant, key: rank[mutant.file] / perFile[mutant.file] + PRODUCTION.indexOf(mutant.file) / 1000 }; })
+const mutants = all.map((mutant) => { rank[mutant.file] = (rank[mutant.file] ?? 0) + 1; return { mutant, key: rank[mutant.file] / perFile[mutant.file] + PRODUCTION.indexOf(mutant.file) / 1000 - (mutant.file === first ? 10 : 0) }; })
   .sort((first, second) => first.key - second.key).map((item) => item.mutant).slice(0, limit);
 const equivalent = fs.existsSync(path.join(__dirname, 'mutants-equivalent.cjs')) ? require('./mutants-equivalent.cjs') : {};
 if (listOnly) {
@@ -164,20 +172,31 @@ function buildTree(target) {
   for (const name of ['authz.cjs', 'codes.cjs', 'contract.js', 'http-io.cjs', 'queue.cjs']) copy(path.join(root, '..', 'C009', name), path.join(target, 'capability', 'C009', name));
 }
 
-function runTests(tree, names, matrixQuick) {
+// One test file in its own process. A stage runs its files one after the other and stops at the first file that fails: a killed mutant costs the
+// time of the first file that sees it, not of the whole stage, and a survivor still runs every file.
+function runFile(tree, name, matrixQuick) {
   return new Promise((resolve) => {
     const env = { ...process.env };
     for (const key of ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE', 'CAPTURE_BROWSER_EVIDENCE', 'C010_SUBJECT_DIR']) delete env[key];
     env.C010_SETTLE_MS = '400';
     if (matrixQuick) env.C010_MATRIX_ONLY = MATRIX_QUICK;
-    const files = names.map((name) => path.join('capability', 'C010', 'tests', `${name}.test.cjs`));
-    const child = spawn(process.execPath, ['--test', `--test-concurrency=${CONCURRENCY}`, '--test-timeout=170000', ...files], { cwd: tree, env, windowsHide: true });
+    const file = path.join('capability', 'C010', 'tests', `${name}.test.cjs`);
+    const child = spawn(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=170000', file], { cwd: tree, env, windowsHide: true });
     const chunks = [];
     child.stdout.on('data', (chunk) => chunks.push(chunk));
     child.stderr.on('data', (chunk) => chunks.push(chunk));
-    const timer = setTimeout(() => spawnSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }), 420000);
-    child.on('close', (code) => { clearTimeout(timer); resolve({ code, text: Buffer.concat(chunks).toString('utf8') }); });
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; spawnSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }); }, 600000);
+    child.on('close', (code) => { clearTimeout(timer); resolve({ code, timedOut, text: Buffer.concat(chunks).toString('utf8') }); });
   });
+}
+async function runTests(tree, names, matrixQuick) {
+  let last = { code: 0, timedOut: false, text: '' };
+  for (const name of names) {
+    last = await runFile(tree, name, matrixQuick);
+    if (last.code !== 0 || last.timedOut) return last;
+  }
+  return last;
 }
 const failing = (text) => [...new Set([...text.matchAll(/^\s*not ok \d+ - (?!(?:[A-Za-z]:)?[\\/\w.-]*capability[\\/])(.+)$/gm)].map((match) => match[1].trim()))];
 
@@ -191,33 +210,54 @@ async function worker(name, queue, results) {
     fs.writeFileSync(target, original.slice(0, mutant.start) + mutant.replacement + original.slice(mutant.end));
     let stage = null;
     let named = [];
-    for (const step of PLAN[mutant.file]) {
+    let undecided = null;
+    for (const step of retestOnly ? ['added'] : PLAN[mutant.file]) {
       // The late stage runs the property test and a quick selection of the pipelining cells (C010_MATRIX_ONLY): a mutant that keeps connections open would make every cell wait.
       let run = await runTests(tree, STAGES[step], step === 'late');
-      for (let attempt = 0; attempt < 2 && run.code !== 0 && failing(run.text).length === 0; attempt += 1) run = await runTests(tree, STAGES[step], step === 'late');
+      for (let attempt = 0; attempt < 2 && run.code !== 0 && !run.timedOut && failing(run.text).length === 0; attempt += 1) run = await runTests(tree, STAGES[step], step === 'late');
       named = failing(run.text);
       if (run.code !== 0 && named.length > 0) { stage = step; break; }
+      // A timeout is UNDECIDED, never a kill and never a survivor: the run fails until the mutant is decided.
+      if (run.timedOut) undecided = step;
     }
     fs.writeFileSync(target, original);
     const killed = stage !== null;
     const reason = equivalent[`${mutant.file}: ${mutant.label}`] ?? null;
-    const entry = { file: mutant.file, label: mutant.label, killed, stage, failingTests: named.slice(0, 3), equivalent: reason };
+    const entry = { file: mutant.file, label: mutant.label, killed, stage, failingTests: named.slice(0, 3), equivalent: reason, undecided: killed ? null : undecided, retest: retestOnly };
     results.push(entry);
     fs.appendFileSync(`${out}.jsonl`, `${JSON.stringify(entry)}\n`);
-    console.log(`${killed ? 'KILLED  ' : 'SURVIVED'} [${stage ?? '-'}] ${mutant.file}: ${mutant.label}${killed ? ` <- ${named.slice(0, 2).map((item) => item.slice(0, 80)).join(' | ')}` : reason ? ` (equivalent: ${reason})` : ''}`);
+    console.log(`${killed ? 'KILLED  ' : entry.undecided ? 'UNDECIDED' : 'SURVIVED'} [${stage ?? '-'}] ${mutant.file}: ${mutant.label}${killed ? ` <- ${named.slice(0, 2).map((item) => item.slice(0, 80)).join(' | ')}` : reason ? ` (equivalent: ${reason})` : ''}`);
   }
 }
 
+// What a run was recorded against: the production files and every test file the stages can load, by SHA-256 (raw), taken when the run STARTED.
+// The files that only produce or check evidence are not inputs of a kill. Later test files are never edited, only added (see --retest).
+const NOT_AN_INPUT = /^(evidence|seal|figures|loop|fresh|coverage|browser|guard-mutants|mutants-equivalent|mutate-gen|imports-check)/;
+const shaOf = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+function campaignInputs() {
+  const files = {};
+  for (const name of PRODUCTION) files[name] = shaOf(path.join(root, name));
+  for (const name of fs.readdirSync(__dirname).sort()) if (/\.c?js$/.test(name) && !NOT_AN_INPUT.test(name)) files[`tests/${name}`] = shaOf(path.join(__dirname, name));
+  return { generator: shaOf(__filename), node: process.version, files };
+}
+
 function summarize(rawResults, total, baseline) {
-  // A kill in a stage whose UNMUTATED control did not pass proves nothing: it is demoted to a survivor, by name.
+  // The LAST record of a mutant decides (a retest replaces the first run's survivor). A kill in a stage whose UNMUTATED control did not pass
+  // proves nothing: it is demoted to a survivor, by name. The equivalent list is applied as it stands now.
   const green = new Set(baseline.filter((step) => step.exitCode === 0).map((step) => step.stage));
-  const results = rawResults.map((item) => (item.killed && !green.has(item.stage)
-    ? { ...item, killed: false, stage: null, demoted: `killed in stage ${item.stage}, whose unmutated control did not pass: ${item.failingTests.join(' | ').slice(0, 200)}` } : item));
+  const latest = new Map();
+  for (const item of rawResults) latest.set(`${item.file}: ${item.label}`, item);
+  const results = [...latest.entries()].map(([key, item]) => {
+    const current = { ...item, equivalent: equivalent[key] ?? null };
+    return current.killed && !green.has(current.stage)
+      ? { ...current, killed: false, stage: null, demoted: `killed in stage ${current.stage}, whose unmutated control did not pass: ${current.failingTests.join(' | ').slice(0, 200)}` } : current;
+  });
   const sorted = [...results].sort((first, second) => `${first.file}${first.label}`.localeCompare(`${second.file}${second.label}`));
-  const survivors = sorted.filter((item) => !item.killed && !item.equivalent);
+  const open = sorted.filter((item) => !item.killed && !item.equivalent);
   return {
-    schema: 'C010-mutation-gen/1', baseline, generated: total, executed: sorted.length, notExecuted: total - sorted.length, killed: sorted.filter((item) => item.killed).length,
-    survivedEquivalent: sorted.filter((item) => !item.killed && item.equivalent).length, survived: survivors.length,
+    schema: 'C010-mutation-gen/2', baseline, generated: total, executed: sorted.length, notExecuted: total - sorted.length, killed: sorted.filter((item) => item.killed).length,
+    killedByRetest: sorted.filter((item) => item.killed && item.retest).length, survivedEquivalent: sorted.filter((item) => !item.killed && item.equivalent).length,
+    survived: open.filter((item) => !item.undecided).length, undecided: open.filter((item) => item.undecided).length,
     perFile: Object.fromEntries(PRODUCTION.map((file) => [file, { generated: all.filter((item) => item.file === file).length, executed: sorted.filter((item) => item.file === file).length, killed: sorted.filter((item) => item.file === file && item.killed).length }])),
     results: sorted
   };
@@ -240,25 +280,48 @@ async function baseline(stages) {
   return steps;
 }
 
+// The latest control of every stage (a resumed or retested run appends new controls to the same file).
+const latestControls = () => [...new Map(readLines(`${out}.baseline.jsonl`).map((step) => [step.stage, step])).values()];
+const writeReport = (report) => {
+  const start = fs.existsSync(`${out}.start.json`) ? JSON.parse(fs.readFileSync(`${out}.start.json`, 'utf8')) : null;
+  fs.writeFileSync(out, `${JSON.stringify({ ...report, campaign: start, retests: readLines(`${out}.retests.jsonl`) }, null, 1)}\n`, { flag: 'w' });
+};
+
 async function main() {
   if (finalizeOnly) {
-    // Builds the report from the incremental files of a run that was stopped on purpose (the generated count is the full set, so notExecuted is exact).
-    const steps = readLines(`${out}.baseline.jsonl`);
-    const report = summarize(readLines(`${out}.jsonl`), all.length, steps);
-    fs.writeFileSync(out, `${JSON.stringify(report, null, 1)}\n`, { flag: 'w' });
-    console.log(`MUTATION (stopped run) ${report.killed} killed, ${report.survivedEquivalent} equivalent, ${report.survived} survived, ${report.notExecuted} not executed of ${report.generated}`);
+    // Builds the report from the incremental files (the generated count is the full set, so notExecuted is exact).
+    const report = summarize(readLines(`${out}.jsonl`), all.length, latestControls());
+    writeReport(report);
+    console.log(`MUTATION (finalized) ${report.killed} killed (${report.killedByRetest} by a retest), ${report.survivedEquivalent} equivalent, ${report.survived} survived, ${report.undecided} undecided, ${report.notExecuted} not executed of ${report.generated}`);
+    process.exitCode = report.survived === 0 && report.undecided === 0 && report.notExecuted === 0 && latestControls().every((step) => step.exitCode === 0) ? 0 : 1;
     return;
   }
+  // The generator runs at NORMAL priority when the caller says so (a BelowNormal process gets almost no CPU next to other agents' load and its mutants time out).
   if (process.env.C010_MUTATION_PRIORITY !== 'normal') { try { os.setPriority(0, os.constants.priority.PRIORITY_BELOW_NORMAL); } catch { /* the caller may have set it already */ } }
+  if (!fs.existsSync(`${out}.start.json`)) fs.writeFileSync(`${out}.start.json`, `${JSON.stringify({ at: new Date().toISOString(), workers, filesPerRun: 1, ...campaignInputs() }, null, 1)}\n`, { flag: 'wx' });
   const finished = readLines(`${out}.jsonl`);
-  const done = new Set(finished.map((item) => `${item.file}: ${item.label}`));
-  const queue = mutants.filter((mutant) => !done.has(`${mutant.file}: ${mutant.label}`));
+  const keyOf = (item) => `${item.file}: ${item.label}`;
+  let queue;
+  let stages;
+  if (retestOnly) {
+    if (extraTests.length === 0) throw new Error('--retest needs --extra-tests');
+    const latest = new Map(finished.map((item) => [keyOf(item), item]));
+    const open = new Set([...latest.entries()].filter(([key, item]) => !item.killed && !equivalent[key]).map(([key]) => key));
+    queue = mutants.filter((mutant) => open.has(keyOf(mutant)));
+    stages = ['added'];
+    fs.appendFileSync(`${out}.retests.jsonl`, `${JSON.stringify({ at: new Date().toISOString(), extraTests, files: Object.fromEntries(extraTests.map((name) => [`tests/${name}.test.cjs`, shaOf(path.join(__dirname, `${name}.test.cjs`))])), mutants: queue.length })}\n`);
+  } else {
+    const done = new Set(finished.map(keyOf));
+    queue = mutants.filter((mutant) => !done.has(keyOf(mutant)));
+    stages = [...new Set(mutants.flatMap((mutant) => PLAN[mutant.file]))];
+  }
   const results = [...finished];
-  const [steps] = await Promise.all([baseline([...new Set(mutants.flatMap((mutant) => PLAN[mutant.file]))]), ...Array.from({ length: workers }, (_, index) => worker(`gen-${index}`, queue, results))]);
-  const report = summarize(results, all.length, steps);
-  fs.writeFileSync(out, `${JSON.stringify(report, null, 1)}\n`, { flag: 'w' });
-  console.log(`MUTATION ${report.killed} killed, ${report.survivedEquivalent} equivalent, ${report.survived} survived, ${report.notExecuted} not executed of ${report.generated}; baseline ${steps.every((step) => step.exitCode === 0) ? 'green' : 'RED'}`);
-  process.exitCode = report.survived === 0 && report.notExecuted === 0 && steps.every((step) => step.exitCode === 0) ? 0 : 1;
+  await Promise.all([baseline(stages), ...Array.from({ length: workers }, (_, index) => worker(`gen-${index}`, queue, results))]);
+  const report = summarize(results, all.length, latestControls());
+  writeReport(report);
+  const green = latestControls().every((step) => step.exitCode === 0);
+  console.log(`MUTATION ${report.killed} killed (${report.killedByRetest} by a retest), ${report.survivedEquivalent} equivalent, ${report.survived} survived, ${report.undecided} undecided, ${report.notExecuted} not executed of ${report.generated}; baseline ${green ? 'green' : 'RED'}`);
+  process.exitCode = report.survived === 0 && report.undecided === 0 && report.notExecuted === 0 && green ? 0 : 1;
 }
 
 main();

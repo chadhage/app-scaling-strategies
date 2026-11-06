@@ -58,8 +58,8 @@ test(`a PENDING first request with 64 KB blocks of GET /x pipelined behind it on
     const before = (await call(child, a, 'GET', '/v1/leases')).json;
     const reports = await Promise.all(Array.from({ length: SOCKETS }, () => pipeline(child.port, a, Math.ceil(REQUESTS / SOCKETS))));
     assert.ok(alive, `the child is still alive: ${child.errors().slice(0, 300)}`);
-    await until(async () => (await child.stats()).connections === 0, 'no connection remains');
-    const stats = await child.stats();
+    let stats = null;
+    await until(async () => { stats = await child.stats(); return stats.connections === 0; }, 'no connection remains');
     assert.equal(reports.filter((report) => report.closed).length, SOCKETS, `every attacker socket was closed by the server (requests sent per socket: ${reports.map((report) => report.requests)})`);
     assert.ok(reports.every((report) => report.requests > 0));
     assert.equal(stats.connections, 0);
@@ -68,10 +68,10 @@ test(`a PENDING first request with 64 KB blocks of GET /x pipelined behind it on
     await child.release();
     // The commit queue is FIFO: once this mutation answers, every held request of the flood has passed the commit decision.
     assert.equal((await call(child, child.tokens['conductor-b'], 'POST', '/v1/leases', { name: 'after', ttlMs: 60000 })).status, 200);
-    // Decision (recorded, not hidden): a mutation that was already RUNNING when the lane cut its connection still commits and its answer is lost
-    // (only requests that were queued behind it or came later are dropped); at most one lease per attacker socket can exist, and only conductor-a sees them.
+    // Decision (rev-C010 m5, tested here and in commit.test.cjs): a mutation whose connection the lane cut has NO effect, whether it was still
+    // waiting for the commit gate or about to reach it; only conductor-a would see a lease of the flood, and there is none.
     const after = (await call(child, a, 'GET', '/v1/leases')).json;
-    assert.ok(after.items.length <= SOCKETS, `at most one held mutation per socket committed: ${after.items.length}`);
+    assert.deepEqual(after.items, [], 'no held mutation of a cut connection committed');
     assert.deepEqual(before.items, []);
     assert.ok(alive);
     console.log(`# pending-first flood: requests sent per socket ${reports.map((report) => report.requests)}, heapUsed ${Math.round(stats.heapUsed / MB)} MB, connections ${stats.connections}, held mutations that committed ${after.items.length}`);

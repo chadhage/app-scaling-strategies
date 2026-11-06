@@ -183,3 +183,37 @@ test('nothing the store returns is shared with its state: every reachable object
   assert.equal(JSON.stringify(reads()), baseline);
   assert.deepEqual(store.snapshot().leases.find((entry) => entry.id === ids.a.lease).scratches.map((item) => item.name), ['same']);
 });
+
+// Own-lease integrity (rev-C010 m2): a change of one resource touches that resource and what is derived from it, nothing else of the owner's.
+test('deleting a run removes the exports of THAT run only: the exports of the lease\'s other runs and of the owner\'s other leases stay, and so do the other conductor\'s', () => {
+  const { store, ids, lease, resource } = world();
+  const second = resource(A, ids.a.lease, 'run', { name: 'second', units: 1 }).id;
+  const kept = resource(A, ids.a.lease, 'export', { name: 'export-second', runId: second }).id;
+  const other = lease(A, 'other lease');
+  const otherRun = resource(A, other.id, 'run', { name: 'other-run', units: 1 }).id;
+  const otherExport = resource(A, other.id, 'export', { name: 'other-export', runId: otherRun }).id;
+  assert.deepEqual(store.apply(A, 'deleteResource', { lease: ids.a.lease, kind: 'run', id: ids.a.run }), { ok: true, value: { deleted: true } });
+  const exportsOf = (leaseId) => store.snapshot().leases.find((entry) => entry.id === leaseId).exports.map((item) => item.id);
+  assert.deepEqual(exportsOf(ids.a.lease), [kept], 'the export of the deleted run is gone, the export of the second run stays');
+  assert.deepEqual(exportsOf(other.id), [otherExport], 'the owner\'s other lease is untouched');
+  assert.deepEqual(exportsOf(ids.b.lease), [ids.b.export], 'the other conductor\'s lease is untouched');
+  assert.deepEqual(store.snapshot().leases.find((entry) => entry.id === ids.a.lease).runs.map((item) => item.id), [second]);
+});
+
+test('updating a resource changes that resource only: the lease keeps its name, owner, expiry and creation time, and the other resources of the lease and of the owner are unchanged', () => {
+  const { store, ids, resource } = world();
+  const sibling = resource(A, ids.a.lease, 'run', { name: 'sibling', units: 2 }).id;
+  const leaseOf = (id) => store.snapshot().leases.find((entry) => entry.id === id);
+  const before = leaseOf(ids.a.lease);
+  const otherBefore = leaseOf(ids.b.lease);
+  const answer = store.apply(A, 'updateResource', { lease: ids.a.lease, kind: 'run', id: ids.a.run, patch: { name: 'renamed', units: 9 } });
+  assert.deepEqual([answer.value.resource.name, answer.value.resource.units], ['renamed', 9]);
+  const after = leaseOf(ids.a.lease);
+  for (const field of ['id', 'owner', 'name', 'createdAtMs', 'expiresAtMs']) assert.equal(after[field], before[field], `the lease keeps its ${field}`);
+  assert.deepEqual(Object.keys(after).sort(), Object.keys(before).sort(), 'the patch added no field to the lease');
+  assert.equal(after.revision, before.revision + 1, 'the lease revision counts the change');
+  assert.deepEqual(after.runs.find((item) => item.id === sibling), before.runs.find((item) => item.id === sibling), 'a sibling resource is unchanged');
+  assert.deepEqual([after.scratches, after.exports], [before.scratches, before.exports]);
+  assert.deepEqual(leaseOf(ids.b.lease), otherBefore, 'the other conductor\'s lease is unchanged');
+  assert.equal(store.readLease(A, ids.a.lease).value.lease.name, 'lease-a', 'the view of the lease keeps its name');
+});

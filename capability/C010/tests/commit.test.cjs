@@ -4,7 +4,10 @@
 // linearized in one queue; a request that waits there was decided earlier, so the owner, the lease, its lifetime and the token are decided
 // AGAIN right before the effect. hooks.beforeCommit runs inside the queue and lets a test change the world (or hold the head of the queue).
 const assert = require('node:assert/strict');
+const net = require('node:net');
 const test = require('node:test');
+const { endConnection } = require('../../C009/http-io.cjs');
+const { bare, bearer, JSON_TYPE, withBody } = require('./raw-http.cjs');
 const { call, gate, planHooks, same, seed, target, until, withApp } = require('./helpers.cjs');
 
 const SHORT = { name: 'short', ttlMs: 5000 };
@@ -150,3 +153,111 @@ test('concurrent creates, reads, ends and rival attempts on one lease settle con
     }
   }
 }));
+
+// The first decision of a BATCH is made before the queue: a batch that names a foreign target never reaches the commit gate (the counter below
+// is the proof: the store would refuse it there too, with the same answer, which is why only the counter tells the two decisions apart).
+const batchOps = (own, foreign) => ({
+  own: { op: 'delete', lease: own.lease, kind: 'scratch', id: own.scratch }, foreignDelete: { op: 'delete', lease: foreign.lease, kind: 'run', id: foreign.run },
+  foreignUpdate: { op: 'update', lease: foreign.lease, kind: 'run', id: foreign.run, patch: { units: 9 } }
+});
+
+test('a batch that names a foreign target, alone or after an own one, is refused 404 before the queue (the commit gate is never reached, nothing changes); an own batch reaches the gate once', () => {
+  const arrivals = [];
+  return withApp({ app: { hooks: { beforeCommit: (info) => { arrivals.push(info.route); } } } }, async (context) => {
+    const { tokens, ids } = await seed(context);
+    const ops = batchOps(ids.b, ids.a);
+    arrivals.length = 0;
+    const before = same(context.app.snapshot());
+    for (const batch of [[ops.own, ops.foreignDelete], [ops.foreignUpdate], [ops.foreignDelete, ops.own]]) {
+      const answer = await call(context, tokens['conductor-b'], 'POST', '/v1/batch', { ops: batch });
+      assert.equal(answer.status, 404, answer.text);
+      assert.equal(answer.json.error.code, 'TARGET_NOT_FOUND');
+      assert.deepEqual(arrivals, [], 'a batch with a foreign target never reaches the commit gate');
+      noEffect(context, before);
+    }
+    const mine = await call(context, tokens['conductor-b'], 'POST', '/v1/batch', { ops: [ops.own] });
+    assert.equal(mine.status, 200, mine.text);
+    assert.deepEqual(arrivals, ['batch'], 'an own batch reaches the commit gate exactly once');
+    assert.equal(leaseOf(context, ids.b.lease).scratches.length, 0, 'and it was applied');
+  });
+});
+
+// A connection that ended or was refused while its mutation waited: no effect, no audit record, no answer. The test watches the server side of
+// the connections and responses and, where a case needs it, marks the connection the way C009's refusal does (endConnection) or lets the lane cut it.
+async function connectionEnded(how) {
+  const arrivals = [];
+  const hold = gate();
+  let armed = false;
+  const seen = { sockets: [], responses: [], onRequest: () => {} };
+  const hooks = {
+    beforeCommit: async (info) => {
+      arrivals.push(info.route);
+      if (!armed) return;
+      if (how === 'held-then-client-gone') await hold.closed;
+      if (how === 'marked-at-commit') endConnection(seen.sockets[0]);
+    }
+  };
+  return withApp({ app: { hooks } }, async (context) => {
+    const { tokens, ids } = await seed(context);
+    arrivals.length = 0;
+    armed = true;
+    context.app.server.on('connection', (socket) => seen.sockets.push(socket));
+    context.app.server.on('request', (request, response) => { seen.responses.push(response); seen.onRequest(request); });
+    const before = same(context.app.snapshot());
+    const auditBefore = context.app.auditLog().length;
+    const post = withBody(context.port, 'POST', `/v1/leases/${ids.a.lease}/scratches`, [bearer(tokens['conductor-a']), JSON_TYPE], JSON.stringify({ name: 'late' }));
+    const get = bare(context.port, 'GET', '/v1/me', [bearer(tokens['conductor-a'])]);
+    if (how === 'marked-while-body-arrives') seen.onRequest = (request) => endConnection(request.socket);
+    const client = net.connect({ host: '127.0.0.1', port: context.port });
+    const received = [];
+    client.on('data', (chunk) => received.push(chunk));
+    client.on('error', () => {});
+    try {
+      // The lane cuts a connection that has more than four requests in flight: one write of a complete mutation and four more requests.
+      client.write(how === 'cut-by-the-lane' ? Buffer.concat([post, get, get, get, get]) : post);
+      if (how === 'held-then-client-gone') {
+        await until(() => arrivals.length === 1, 'the mutation waits at the commit gate');
+        client.destroy();
+        await until(() => seen.sockets[0].destroyed, 'the server saw the client leave');
+        hold.open();
+      }
+      if (how === 'marked-at-commit') await until(() => arrivals.length === 1, 'the mutation reached the commit gate, where the hook marked its connection');
+      if (how === 'cut-by-the-lane') await until(() => seen.sockets[0]?.destroyed === true, 'the lane cut the connection');
+      if (how === 'marked-while-body-arrives') await until(() => seen.responses.length === 1, 'the request was dispatched and its connection marked');
+      await until(() => context.app.queued() === 0, 'the queue is empty');
+      await new Promise((resolve) => setImmediate(resolve));
+      assert.equal(seen.responses[0].headersSent, false, 'no answer was written');
+      assert.equal(Buffer.concat(received).length, 0, 'the client received nothing');
+      assert.equal(context.app.auditLog().length, auditBefore, 'no audit record');
+      noEffect(context, before);
+      return arrivals.slice();
+    } finally {
+      client.destroy();
+    }
+  });
+}
+
+const ENDED = [
+  ['marked-at-commit', ['resource.create'], 'a hook marks the connection (as C009\'s refusal does) while the mutation sits at the commit gate: the second guard drops it'],
+  ['held-then-client-gone', ['resource.create'], 'the client leaves (its socket is destroyed) while the mutation is held at the commit gate: the second guard drops it'],
+  ['cut-by-the-lane', [], 'the lane cuts the connection (a complete mutation followed by four more requests in one write): the first guard drops it before the queue'],
+  ['marked-while-body-arrives', [], 'the connection is marked while the body of the mutation is still being read: the first guard drops it before the queue']
+];
+
+for (const [how, expected, label] of ENDED) {
+  test(`a mutation whose connection ended or was refused while it waited has no effect, no audit record and no answer: ${label}`, async () => {
+    assert.deepEqual(await connectionEnded(how), expected, `the commit gate was reached by: ${expected.length} request(s)`);
+  });
+}
+
+test('control of the cases above: the same mutation on an untouched connection reaches the commit gate once, is applied and answered', () => {
+  const arrivals = [];
+  return withApp({ app: { hooks: { beforeCommit: (info) => { arrivals.push(info.route); } } } }, async (context) => {
+    const { tokens, ids } = await seed(context);
+    arrivals.length = 0;
+    const answer = await call(context, tokens['conductor-a'], 'POST', `/v1/leases/${ids.a.lease}/scratches`, { name: 'late' });
+    assert.equal(answer.status, 200, answer.text);
+    assert.deepEqual(arrivals, ['resource.create']);
+    assert.equal(leaseOf(context, ids.a.lease).scratches.length, 2, 'the scratch resource was added');
+  });
+});

@@ -70,7 +70,11 @@ async function flood(mode, limitMs) {
     const report = await flooding;
     await until(async () => (await child.stats()).connections === 0, `${mode} holds no connection after the attacker is gone`);
     const afterKept = kept ? await kept.once() : null;
-    return { mode, report, stats: await child.stats(), before, status: (await probe()).status, expected, during, afterKept };
+    // The neighbour's last request opened a connection of its own that the client closes right after the answer: the final observation is the
+    // very reading in which the child no longer counts it (rev-C010 M2: read at once, a child that is behind still counted it and the run failed under load).
+    let settled = null;
+    await until(async () => { settled = await child.stats(); return settled.connections === 0; }, `${mode} holds no connection after the neighbour's last request`);
+    return { mode, report, stats: settled, before, status: (await probe()).status, expected, during, afterKept };
   } finally {
     kept?.close();
     await child.close();

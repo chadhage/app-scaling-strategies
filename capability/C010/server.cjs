@@ -3,8 +3,9 @@
 // The C010 server: wiring only. Identity, the role table, the refusal path and the lanes are the accepted C009 pieces (imported read-only);
 // who owns what is decided in store.cjs and nowhere else. Every request goes through ONE function, route(); every refusal through ONE refuse().
 // The order of a request: guard (Host, Origin), URL, route (unknown, method), credential (always verified when presented), role (deny by
-// default), query (closed vocabulary), body, then the owner of every target, and for a mutation the whole decision AGAIN inside the linearized
-// commit, together with the token. A request whose connection was refused while it waited is dropped without an answer, audit record or effect.
+// default), query (closed vocabulary), body, then the owner of every target, and for a mutation the owner of every target AGAIN inside the
+// linearized commit (store.cjs), together with the token. A request whose connection was refused or ended while it waited is dropped without
+// an answer, audit record or effect.
 const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
@@ -89,6 +90,8 @@ function createApp(options = {}) {
     const out = createResponder(response);
     const claims = claimedHeaders(request.rawHeaders);
     const ctx = { subject: null, role: null, route: null, method: METHODS.has(request.method) ? request.method : 'OTHER' };
+    // A connection that was refused (marked by C009) or ended (the client left, or the lane cut it) while this request waited: nothing is committed or answered.
+    const cancelled = () => isFinished(request.socket) || request.socket.destroyed;
     const finish = (outcome, code) => audit.record({ subject: ctx.subject, role: ctx.role, route: ctx.route, method: ctx.method, outcome, code });
     // THE refusal: every error answer of this server is written here; the responder marks the socket, says Connection: close and stops reading.
     const refuse = (code, extra = {}, headers = {}) => {
@@ -150,7 +153,7 @@ function createApp(options = {}) {
       if (matched.body !== null) {
         out.proceed();
         const read = await readBody(request, limits.bodyBytes);
-        if (isFinished(request.socket)) return undefined;
+        if (cancelled()) return undefined;
         if (read.tooLarge) return refuse('BODY_TOO_LARGE');
         let parsed;
         try { parsed = JSON.parse(read.buffer.toString('utf8')); } catch { return refuse('BODY_INVALID_JSON'); }
@@ -160,16 +163,15 @@ function createApp(options = {}) {
         if (matched.name === 'batch' && context.body.ops.some((operation) => !store.has(identity.subject, operation))) return refuse('TARGET_NOT_FOUND');
       }
 
-      // The second decision, where the effect is committed: the hook may change the world while this request waits; the token, the role and
-      // every target are decided again, and a connection refused in the meantime ends the request without an answer.
+      // The second decision, where the effect is committed: the hook may change the world while this request waits; the token is verified again
+      // and every target is decided again (inside the store), and a connection that ended or was refused in the meantime ends the request with no
+      // effect, no audit record and no answer. The role is not decided twice: it belongs to the token entry, which never changes after issue.
       const effect = async () => {
         try {
           await hooks.beforeCommit?.({ route: matched.name, subject: identity.subject });
-          const current = registry.verify(token);
-          const again = decide(roleTable, matched.name, current.role);
-          if (!again.allowed) return refuse(again.code);
-          if (isFinished(request.socket)) return undefined;
-          const result = WRITES[matched.name]({ ...context, subject: current.subject });
+          if (cancelled()) return undefined;
+          registry.verify(token);
+          const result = WRITES[matched.name](context);
           return result.ok ? answer(() => result.value, 'applied') : refuse(result.code);
         } catch (error) {
           if (error instanceof AuthError) return refuseAuth(error);
