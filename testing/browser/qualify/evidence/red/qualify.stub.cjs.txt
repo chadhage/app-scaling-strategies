@@ -1,0 +1,21 @@
+'use strict';
+
+// RED STUB (U018): reproduces what the 57 browser-pin suites do today, an equality pin on the old build and
+// nothing else (no signature, no publisher, no major list, no hash, no timeout). The GREEN step replaces this file.
+async function qualifyEdge(options = {}) {
+  const adapters = options.adapters || {};
+  const found = adapters.candidates(options.env).find((candidate) => adapters.statFile(candidate).exists);
+  const version = found ? await adapters.fileVersion(found) : null;
+  return {
+    ok: version === '156.0.4314.50',
+    reasons: [],
+    path: found || null,
+    version,
+    major: null,
+    signature: { status: null, publisher: null },
+    sha256: null,
+    qualifiedMajors: [],
+  };
+}
+
+module.exports = { qualifyEdge };
