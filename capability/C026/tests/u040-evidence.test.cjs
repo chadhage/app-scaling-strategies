@@ -56,6 +56,16 @@ const OTHER_REDS = Object.freeze(['red-03-old-verifier-fixed-server', 'red-04-fi
 const EXPECTED_RUNS = Object.freeze([...S1_REDS, ...OTHER_REDS, ...S1_FINAL, ...RETAINED_FAILURES, ...S2_FINAL].sort());
 
 const state = chain.verifyChain(read);
+// Addendum 2 (fix 2) replaced three of these files after every capture of this file ran. A recorded input of such a capture is accepted when
+// it is exactly the bytes that addendum 2 names as replaced and the file is exactly the bytes that it names as the live ones (a changed live
+// file is never accepted: the chain itself reports it).
+const FIX2_AMENDED = Object.freeze(['server.cjs', 'README.md', 'tests\\coverage-gate.cjs'].map(FILE));
+const replacedByFix2 = (relative, recorded, liveBytes) => FIX2_AMENDED.includes(relative) && liveBytes !== null && state.hashes.has(relative)
+  && state.hashes.get(relative).length >= 3 && state.hashes.get(relative).at(-2) === recorded && chain.supersedes(state.hashes, relative, recorded, chain.sha(liveBytes));
+const shipped = (recorded, name) => recorded === live(name) || replacedByFix2(FILE(name), recorded, read(FILE(name)));
+// The verifier of addendum 2 and the suites that fix 2 adds ran in no capture of this file.
+const FIX2_SUITES = Object.freeze(['u040-evidence-2.test.cjs', 'u040-flood.test.cjs', 'u040-budget.test.cjs', 'u040-expect.test.cjs']);
+const liveSuiteNames = () => fs.readdirSync(__dirname).filter((name) => name.endsWith('.test.cjs') && !VERIFIERS.includes(name) && !FIX2_SUITES.includes(name)).sort();
 const addendum = JSON.parse(read(chain.addendumPath(1))?.toString('utf8') ?? '{"evidence":[]}');
 const manifestPaths = addendum.evidence.map((item) => item.path).filter((item) => /\\evidence\\u040\\(?:red|green)\\[^\\]+\.json$/.test(item));
 
@@ -135,7 +145,7 @@ test('the REDs ran against the HEAD bytes of server.cjs that the addendum supers
   }
   const old = run('red-03-old-verifier-fixed-server');
   assert.equal(old.manifest.summary.fail, 1);
-  assert.equal(inputHash(old.manifest, 'server.cjs'), live('server.cjs'));
+  assert.equal(shipped(inputHash(old.manifest, 'server.cjs'), 'server.cjs'), true);
   assert.equal(inputHash(old.manifest, 'tests\\evidence-final.test.cjs'), state.hashes.get(FILE('tests\\evidence-final.test.cjs'))[0], 'the old verifier ran');
   assert.match(old.stdout, /server\.cjs is not the shipped file/);
   assert.equal(assertionErrors(old.stdout), 1);
@@ -175,7 +185,7 @@ test('the final runs hashed the production files that ship, passed, and the repl
   for (const name of S2_FINAL) {
     const { manifest } = run(name);
     assert.deepEqual([manifest.exitCode, manifest.expectedExitCode, manifest.timedOut], [0, 0, false], name);
-    for (const file of PRODUCTION) assert.equal(inputHash(manifest, file), live(file), `${name}: ${file} is not the shipped file`);
+    for (const file of PRODUCTION) assert.equal(shipped(inputHash(manifest, file), file), true, `${name}: ${file} is not the shipped file`);
   }
   const wholes = WHOLE_S2.map(run);
   const coverageRuns = COVERAGE_FILES.map((file) => run(`coverage-s2-${file}`));
@@ -187,7 +197,7 @@ test('the final runs hashed the production files that ship, passed, and the repl
   }
   assert.equal(new Set([...wholes, ...coverageRuns, ...freshRuns].map((whole) => whole.manifest.summary.tests)).size, 1, 'eight whole-suite runs (one plain, five under coverage, two in a fresh tree) ran the same tests');
   const suitesOf = (manifest) => manifest.command.filter((argument) => argument.endsWith('.test.cjs')).map((argument) => path.basename(argument)).sort();
-  const liveSuites = fs.readdirSync(__dirname).filter((name) => name.endsWith('.test.cjs') && !VERIFIERS.includes(name)).sort();
+  const liveSuites = liveSuiteNames();
   for (const whole of [...wholes, ...coverageRuns]) assert.deepEqual(suitesOf(whole.manifest), liveSuites, `${whole.relative}: every suite except the two verifiers`);
   const behaviour = run('green-05-u040-suites');
   assert.deepEqual(suitesOf(behaviour.manifest), ['u040-amendment.test.cjs', 'u040-exchange.test.cjs', 'u040-node-own.test.cjs', 'u040-pipelining.test.cjs']);
@@ -215,7 +225,7 @@ test('the first generation of captures (S1) is history: it recomputes, passed or
   for (const name of S1_FINAL) {
     const { relative, manifest } = run(name);
     assert.deepEqual(checkRun(relative, read, { inputsLive: true, history: true }), [], name);
-    for (const file of PRODUCTION) assert.equal(inputHash(manifest, file), live(file), `${name}: ${file} is not the shipped file`);
+    for (const file of PRODUCTION) assert.equal(shipped(inputHash(manifest, file), file), true, `${name}: ${file} is not the shipped file`);
   }
   const suites = ['green-02-whole-suite-1', 'green-03-whole-suite-2', 'green-04-whole-suite-3'].map(run);
   for (const whole of suites) assert.deepEqual([whole.manifest.summary.fail, whole.manifest.summary.pass], [0, whole.manifest.summary.tests], whole.relative);
@@ -241,7 +251,7 @@ test('every production file has a per-file coverage run with its own row at 85/8
 test('the mutation report is for the shipped server.cjs: the control passed and every mutant was killed by a named failing test', () => {
   const item = addendum.evidence.find((entry) => /mutants-01\.report\.json$/.test(entry.path));
   const report = JSON.parse(read(item.path).toString('utf8'));
-  assert.equal(report.serverSha256, live('server.cjs'));
+  assert.equal(shipped(report.serverSha256, 'server.cjs'), true);
   assert.equal(report.controlPassed, true);
   assert.equal(report.total >= 20 && report.killed === report.total && report.survived.length === 0, true);
   for (const result of report.results.filter((entry) => entry.id !== 'control')) assert.equal(result.killed && result.failedTests.length > 0, true, result.id);
@@ -272,6 +282,7 @@ function checkRun(relative, readBytes, { inputsLive, history = false }) {
     for (const entry of manifest.inputs) {
       if (old.get(entry.path) === entry.rawSha256) continue;
       const now = readBytes(entry.path);
+      if (now !== null && replacedByFix2(entry.path, entry.rawSha256, now)) continue;
       if (now === null || chain.sha(now) !== entry.rawSha256) errors.push(`INPUT_CHANGED ${entry.path}`);
     }
   }
@@ -280,7 +291,8 @@ function checkRun(relative, readBytes, { inputsLive, history = false }) {
 function checkReport(readBytes) {
   const report = JSON.parse(readBytes(REPORT).toString('utf8'));
   const errors = [];
-  if (report.serverSha256 !== chain.sha(readBytes(FILE('server.cjs')))) errors.push('REPORT_FOR_OTHER_SERVER');
+  const liveServer = readBytes(FILE('server.cjs'));
+  if (!(report.serverSha256 === chain.sha(liveServer) || replacedByFix2(FILE('server.cjs'), report.serverSha256, liveServer))) errors.push('REPORT_FOR_OTHER_SERVER');
   if (report.controlPassed !== true) errors.push('CONTROL_FAILED');
   if (report.survived.length > 0 || report.killed !== report.total) errors.push('MUTANT_SURVIVED');
   for (const result of report.results.filter((entry) => entry.id !== 'control')) if (!(result.killed && result.failedTests.length > 0)) errors.push(`NOT_KILLED_BY_A_NAMED_TEST ${result.id}`);
@@ -389,7 +401,7 @@ function checkFailedLoop(text, stderr, { runs, parallel, tests }) {
 test('the fresh checkout: a scratch tree built from git archive passes every suite, in LF and again with the source text converted to CRLF', () => {
   const whole = run(WHOLE_S2[0]);
   const suites = whole.manifest.command.filter((argument) => argument.endsWith('.test.cjs')).length;
-  assert.equal(suites, fs.readdirSync(__dirname).filter((name) => name.endsWith('.test.cjs') && !VERIFIERS.includes(name)).length);
+  assert.equal(suites, liveSuiteNames().length);
   assert.equal(suites, 16);
   const runs = [run('fresh-03-archive-lf'), run('fresh-04-archive-crlf')];
   assert.deepEqual(manifestPaths.filter((item) => /\\fresh-/.test(item)).map((item) => path.basename(item, '.json')).sort(), ['fresh-01-archive-lf', 'fresh-02-archive-crlf', 'fresh-03-archive-lf', 'fresh-04-archive-crlf']);
@@ -397,7 +409,7 @@ test('the fresh checkout: a scratch tree built from git archive passes every sui
     const mode = ['lf', 'crlf'][position];
     assert.deepEqual(checkFresh(mode, entry.manifest, entry.stdout, { tests: whole.manifest.summary.tests, suites }), [], entry.relative);
     assert.deepEqual(checkRun(entry.relative, read, { inputsLive: true }), [], entry.relative);
-    for (const name of [...PRODUCTION, 'tests\\u040-fresh-tree.cjs']) assert.equal(inputHash(entry.manifest, name), live(name), `${entry.relative}: ${name} is not the shipped file`);
+    for (const name of [...PRODUCTION, 'tests\\u040-fresh-tree.cjs']) assert.equal(shipped(inputHash(entry.manifest, name), name), true, `${entry.relative}: ${name} is not the shipped file`);
   });
 });
 
@@ -408,7 +420,7 @@ test('the loop: the two behaviour suites ran 64 times, 4 at a time, and every ru
   assert.deepEqual(checkLoop(loop.stdout, { runs: 64, parallel: 4, tests: replay.manifest.summary.tests }), []);
   assert.deepEqual([loop.manifest.command[1].endsWith('u040-loop.cjs'), loop.manifest.command[2], loop.manifest.command[3]], [true, '64', '4']);
   assert.deepEqual(checkRun(loop.relative, read, { inputsLive: true }), []);
-  for (const name of [...PRODUCTION, 'tests\\u040-loop.cjs']) assert.equal(inputHash(loop.manifest, name), live(name), `${loop.relative}: ${name} is not the shipped file`);
+  for (const name of [...PRODUCTION, 'tests\\u040-loop.cjs']) assert.equal(shipped(inputHash(loop.manifest, name), name), true, `${loop.relative}: ${name} is not the shipped file`);
 });
 
 test('the three failed attempts are retained: the fresh checkout hit the driver\'s path guard twice and the first loop failed one run on the first helper; the retries differ as stated', () => {
@@ -441,7 +453,7 @@ test('the one exemption of the S1 captures: exactly five superseded files, each 
     const recorded = S1_FINAL.map((item) => inputHash(run(item).manifest, name)).filter((hash) => hash !== undefined);
     assert.equal(recorded.length >= 10, true, `${name}: pinned by the S1 captures`);
     assert.deepEqual([...new Set(recorded)], [oldHash(name)], `${name}: every S1 capture recorded exactly the bytes of the archived copy`);
-    for (const item of S2_FINAL) assert.equal(inputHash(run(item).manifest, name), live(name), `${item}: ${name} is the live byte (no exemption for S2)`);
+    for (const item of S2_FINAL) assert.equal(shipped(inputHash(run(item).manifest, name), name), true, `${item}: ${name} is the live byte, or the byte that addendum 2 names as replaced (no S1 exemption for S2)`);
   }
   const first = run('green-01-u040-suites').relative;
   assert.deepEqual(checkRun(first, read, { inputsLive: true, history: true }), []);

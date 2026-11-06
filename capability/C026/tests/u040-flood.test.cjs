@@ -1,0 +1,99 @@
+'use strict';
+
+// U040 fix 2 (addendum 2), finding F1 of the independent review of U040: requests that fix 1 DROPPED (never answered, socket never
+// stopped) were not limited by anything. Node pauses a pipelining connection only when the OUTPUT queued behind an unfinished answer
+// reaches the write high-water mark; a dropped request writes nothing, so after a refusal (or while /transcript.json is in flight)
+// Node kept parsing and holding one request and one response object per pipelined request, and a child with a 48 MB heap died at
+// 3 sockets (exit 134, FATAL ERROR: Reached heap limit).
+// The F24 probe as a test, in four variants (the three of the review and the sibling m1), against the fixture in a SEPARATE node process started with --max-old-space-size=48:
+// 3 sockets, each sends one first request (a real GET /transcript.json, a refused GET /nope, a transcript that never settles, or a GET with Expect: 100-continue) and
+// then 50 blocks of 64 KB of pipelined GET /scope.json (about 1,000 requests per block) while it reads nothing.
+// The tests named "flood ..." need nothing of the new behaviour: the server stays alive, no connection is left, a legitimate GET is
+// answered (the pre-U040 bytes pass them: that is the control). The tests named "budget ..." are the structural counters of the fix:
+// the server announced the drop budget exactly once per attacker socket, ended every one of them itself, and Node handed at most the
+// budget plus the rest of one read to the request listeners. No heap size and no time decides a result: the capped heap is what a
+// leak would break, and the counts are events.
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const { childFixture, unitFor, attacker, legitimateGet } = require('./u040-flood-support.cjs');
+
+const SOCKETS = 3;
+const BLOCKS = 50;
+const HEAP_MB = 48;
+const BUDGET = 16;
+const get = (port, target, headers = []) => [`GET ${target} HTTP/1.1`, `Host: 127.0.0.1:${port}`, ...headers, '', ''].join('\r\n');
+const VARIANTS = Object.freeze([
+  { name: 'real', mode: 'real', first: (port) => get(port, '/transcript.json'), label: 'a real GET /transcript.json (answered after an await)', calls: null },
+  { name: 'refuse', mode: 'ok', first: (port) => get(port, '/nope'), label: 'a refused GET /nope', calls: 0 },
+  { name: 'hold', mode: 'hold', first: (port) => get(port, '/transcript.json'), label: 'a transcript that never settles', calls: SOCKETS },
+  { name: 'expect', mode: 'ok', first: (port) => get(port, '/scope.json', ['Expect: 100-continue']), label: 'a GET with Expect: 100-continue (answered without 100: Node forces Connection: close, m1)', calls: 0 }
+]);
+
+async function quiescent(child) {
+  let state = await child.state();
+  for (let poll = 0; poll < 400 && state.connections > 0; poll += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    state = await child.state();
+  }
+  return state;
+}
+
+async function runProbe(variant) {
+  const child = await childFixture(variant.mode, { heapMb: HEAP_MB });
+  const report = { variant: variant.name, died: null, state: null, after: null, legit: null, ended: [], handed: [], endedByServer: [], unit: unitFor(child.port) };
+  try {
+    const first = variant.first(child.port);
+    const attackers = Array.from({ length: SOCKETS }, () => attacker(child.port, first, { blocks: BLOCKS }));
+    report.ended = await Promise.all(attackers.map((entry) => entry.written));
+    report.handed = attackers.map((entry) => entry.handed);
+    report.endedByServer = await Promise.all(attackers.map((entry) => entry.drain()));
+    try {
+      report.state = await quiescent(child);
+      report.legit = await legitimateGet(child.port);
+      report.after = await child.state();
+    } catch {
+      report.died = child.exited();
+    }
+    report.died ??= child.exited();
+  } finally {
+    report.exit = await child.close();
+    report.stderr = child.stderrTail();
+  }
+  return report;
+}
+
+const results = new Map();
+const probe = (variant) => {
+  if (!results.has(variant.name)) results.set(variant.name, runProbe(variant));
+  return results.get(variant.name);
+};
+
+for (const variant of VARIANTS) {
+  test(`flood ${variant.name}: ${SOCKETS} sockets x ${BLOCKS} blocks of 64 KB behind ${variant.label} in a ${HEAP_MB} MB-heap child: the child stays alive, no connection is left and a legitimate GET is answered`, { timeout: 170000 }, async () => {
+    const report = await probe(variant);
+    assert.equal(report.died, null, `the server child died (exit ${JSON.stringify(report.died)}): ${report.stderr}`);
+    assert.notEqual(report.state, null, 'the server child answered the state query');
+    assert.equal(report.state.connections, 0, 'no connection is left open in the server');
+    assert.equal(report.legit, 200, 'a legitimate GET on a new connection is answered');
+    assert.deepEqual(report.exit, { code: 0, signal: null }, `the server child stopped cleanly: ${report.stderr}`);
+    assert.equal(report.handed.every((count) => count > 0), true, 'every attacker socket handed requests to the server');
+    console.log(`# flood ${variant.name}: requests handed per socket ${JSON.stringify(report.handed)}, writers ended ${JSON.stringify(report.ended)}, ended by the server ${JSON.stringify(report.endedByServer)}, peak heap ${report.state.peakHeapUsedMb} MB, limit events ${report.state.limitEvents.length}`);
+  });
+}
+
+for (const variant of VARIANTS) {
+  test(`budget ${variant.name}: every attacker socket crossed the drop budget exactly once and was ended by the server, and Node handed at most the budget plus the rest of one read to the request listeners`, { timeout: 170000 }, async () => {
+    const report = await probe(variant);
+    assert.equal(report.died, null, `the server child died (exit ${JSON.stringify(report.died)}): ${report.stderr}`);
+    assert.notEqual(report.state, null, 'the server child answered the state query');
+    assert.notEqual(report.after, null, 'the server child answered the state query after the legitimate GET');
+    assert.deepEqual(report.after.limitEvents, Array.from({ length: SOCKETS }, () => ({ code: 'DROPPED_REQUEST_BACKLOG', limit: BUDGET })), 'one announcement per attacker socket and none for the legitimate GET');
+    assert.deepEqual(report.endedByServer, Array.from({ length: SOCKETS }, () => true), 'the server ended every attacker socket itself');
+    const counts = Object.values(report.after.parsed);
+    assert.equal(counts.length, SOCKETS + 1, 'the request listener saw every attacker socket and the legitimate GET');
+    // the first request, the budget, the request that crosses it and the rest of the one read in which that happened
+    const bound = 1 + BUDGET + 1 + report.unit.count;
+    assert.equal(counts.filter((seen) => seen <= bound).length, counts.length, `no socket handed more than ${bound} requests to the request listeners: ${JSON.stringify(counts)}`);
+    if (variant.calls !== null) assert.equal(report.after.transcripts, variant.calls, 'the transcript producer was entered once per first request, or never');
+  });
+}

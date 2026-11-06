@@ -1,0 +1,70 @@
+'use strict';
+
+// U040 fix 2 (addendum 2), minor m1 of the independent review: one write of "GET /scope.json" with "Expect: 100-continue" followed by a valid
+// "GET /stream" upgrade and a masked hello frame created a hub session AFTER an answer that says "Connection: close". The request is not a
+// refusal, but Node forces Connection: close when a request that expects 100 Continue is answered without it (the peer may still be
+// sending a body that nobody reads), and the pipelined upgrade, already parsed from the same read, ran behind that answer. The connection
+// is now marked as soon as an answer says it closes. The same bytes without Expect stay a legitimate pipeline ([200, 101], one session).
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const { wire, upgradeWithHello, exchange: rawExchange } = require('./u040-support.cjs');
+const { inProcessFixture, childFixture } = require('./u040-flood-support.cjs');
+
+// The bounds of the exchanges only end a wait that would otherwise hang (the machine may be saturated): a generous default.
+const exchange = (port, writes, options = {}) => rawExchange(port, writes, { boundMs: 20000, ...options });
+
+const MODES = Object.freeze(['in-process', 'separate']);
+async function withFixture(mode, transcript, body) {
+  const started = mode === 'in-process' ? await inProcessFixture(transcript) : await childFixture(transcript);
+  try {
+    return await body(started);
+  } finally {
+    await started.close();
+  }
+}
+const expecting = (host, target, header = 'Expect: 100-continue') => wire({ target, host, headers: [header] });
+
+for (const mode of MODES) {
+  test(`${mode}: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists`, { timeout: 120000 }, async () => {
+    await withFixture(mode, 'ok', async (server) => {
+      for (const [target, header] of [['/scope.json', 'Expect: 100-continue'], ['/page.js', 'Expect: 100-continue'], ['/scope.json', 'expect: 100-CONTINUE'], ['/transcript.json', 'Expect: 100-continue']]) {
+        const result = await exchange(server.port, [{ data: Buffer.concat([expecting(server.host, target, header), upgradeWithHello(server.host)]) }]);
+        const label = `${target} with "${header}"`;
+        assert.deepEqual(result.statuses, [200], `${label}: only the answer to the read`);
+        assert.equal(result.responses[0].headers.connection, 'close', `${label}: the answer says Connection: close`);
+        assert.equal(result.saw101, false, `${label}: no upgrade`);
+        assert.equal(result.closedByServer, true, `${label}: the connection is closed`);
+        assert.equal((await server.state()).sessions, 0, `${label}: no hub session`);
+      }
+    });
+  });
+
+  test(`${mode}: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session`, { timeout: 120000 }, async () => {
+    await withFixture(mode, 'ok', async (server) => {
+      const result = await exchange(server.port, [{ data: Buffer.concat([wire({ target: '/scope.json', host: server.host }), expecting(server.host, '/scope.json'), upgradeWithHello(server.host)]) }]);
+      assert.deepEqual(result.statuses, [200, 200]);
+      assert.equal(result.responses[1].headers.connection, 'close');
+      assert.equal(result.saw101, false);
+      assert.equal(result.closedByServer, true);
+      assert.equal((await server.state()).sessions, 0);
+    });
+  });
+
+  test(`${mode}: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called`, { timeout: 120000 }, async () => {
+    await withFixture(mode, 'ok', async (server) => {
+      const result = await exchange(server.port, [{ data: Buffer.concat([expecting(server.host, '/scope.json'), wire({ target: '/transcript.json', host: server.host })]) }]);
+      assert.deepEqual(result.statuses, [200]);
+      assert.equal(result.closedByServer, true);
+      assert.equal((await server.state()).transcripts, 0, 'the transcript producer was never called');
+    });
+  });
+
+  test(`${mode}: control: the same pipeline without Expect is a legitimate read and upgrade: [200, 101] and one session`, { timeout: 120000 }, async () => {
+    await withFixture(mode, 'ok', async (server) => {
+      const result = await exchange(server.port, [{ data: Buffer.concat([wire({ target: '/scope.json', host: server.host }), upgradeWithHello(server.host)]) }]);
+      assert.deepEqual(result.statuses, [200, 101]);
+      assert.equal(result.responses[0].headers.connection, 'keep-alive');
+      assert.equal((await server.state()).sessions, 1);
+    });
+  });
+}

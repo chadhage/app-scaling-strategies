@@ -1,0 +1,252 @@
+'use strict';
+
+// U040 fix 2 (addendum 2): the drop budget. A request pipelined behind a refusal, or behind a /transcript.json read that is still in
+// flight, is dropped without an answer (fix 1). Dropping writes nothing, so nothing would ever make Node stop parsing a flood
+// (finding F1): the server counts the requests it dropped on a marked connection and destroys the connection at the first one
+// beyond the budget of 16, announcing the typed limit { code: 'DROPPED_REQUEST_BACKLOG', limit: 16 } once. Until then the answers of the
+// earlier requests and the refusal are delivered (the earlier rows of U040 pipeline at most three requests).
+// Every row runs in this process and in a separate node process. The flood itself (3 sockets x 50 blocks in a 48 MB-heap child) is
+// u040-flood.test.cjs; here the budget is exact, per connection, counted in events, and a seeded fuzz of hostile pipelines around it
+// checks the invariants of a model. No clock decides anything: the bounds only end a wait.
+const assert = require('node:assert/strict');
+const net = require('node:net');
+const test = require('node:test');
+const { wire, upgradeWithHello, exchange } = require('./u040-support.cjs');
+const { inProcessFixture, childFixture, legitimateGet } = require('./u040-flood-support.cjs');
+
+const BUDGET = 16;
+const LIMIT = Object.freeze({ code: 'DROPPED_REQUEST_BACKLOG', limit: BUDGET });
+const MODES = Object.freeze(['in-process', 'separate']);
+const sameAs = (count, make) => Buffer.concat(Array.from({ length: count }, make));
+
+async function fixture(mode, transcript) {
+  return mode === 'in-process' ? inProcessFixture(transcript) : childFixture(transcript);
+}
+async function withFixture(mode, transcript, body) {
+  const started = await fixture(mode, transcript);
+  try {
+    return await body(started);
+  } finally {
+    await started.close();
+  }
+}
+const pipeline = (host, tokens) => Buffer.concat(tokens.map((token) => ({
+  G: () => wire({ target: '/scope.json', host }),
+  R: () => wire({ target: '/nope', host }),
+  T: () => wire({ target: '/transcript.json', host }),
+  U: () => upgradeWithHello(host)
+})[token]()));
+
+for (const mode of MODES) {
+  test(`${mode}: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once`, { timeout: 120000 }, async () => {
+    await withFixture(mode, 'ok', async (server) => {
+      const sixteen = await exchange(server.port, [{ data: Buffer.concat([pipeline(server.host, ['R']), sameAs(BUDGET, () => pipeline(server.host, ['G']))]) }]);
+      assert.deepEqual(sixteen.statuses, [404], '16 dropped requests: the refusal is delivered');
+      assert.equal(sixteen.closedByServer, true, 'the refusal closes the connection after the flush');
+      assert.deepEqual((await server.state()).limitEvents, [], 'the budget is not exceeded by 16');
+      const seventeen = await exchange(server.port, [{ data: Buffer.concat([pipeline(server.host, ['R']), sameAs(BUDGET + 1, () => pipeline(server.host, ['G']))]) }]);
+      assert.equal(seventeen.closedByServer, true, 'the 17th dropped request ends the connection');
+      assert.equal(seventeen.statuses.length <= 1 && seventeen.statuses.every((status) => status === 404), true, `the answers that arrive are a prefix of the refusal: ${JSON.stringify(seventeen.statuses)}`);
+      assert.deepEqual((await server.state()).limitEvents, [LIMIT], 'announced exactly once');
+      assert.equal((await server.state()).sessions, 0);
+    });
+  });
+
+  test(`${mode}: earlier answers are delivered up to the budget: [G][R] and 16 more are answered 200 and the refusal, then the connection closes`, { timeout: 120000 }, async () => {
+    await withFixture(mode, 'ok', async (server) => {
+      const result = await exchange(server.port, [{ data: Buffer.concat([pipeline(server.host, ['G', 'R']), sameAs(BUDGET, () => pipeline(server.host, ['G']))]) }]);
+      assert.deepEqual(result.statuses, [200, 404]);
+      assert.equal(result.closedByServer, true);
+      assert.deepEqual((await server.state()).limitEvents, []);
+    });
+  });
+
+  test(`${mode}: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection`, { timeout: 120000 }, async () => {
+    await withFixture(mode, 'ok', async (server) => {
+      const one = await exchange(server.port, [{ data: pipeline(server.host, ['T', 'G']) }]);
+      assert.deepEqual(one.statuses, [200], 'only the transcript answer');
+      assert.equal(one.closedByServer, true);
+      const sixteen = await exchange(server.port, [{ data: Buffer.concat([pipeline(server.host, ['T']), sameAs(BUDGET, () => pipeline(server.host, ['G']))]) }]);
+      assert.deepEqual(sixteen.statuses, [200]);
+      assert.deepEqual((await server.state()).limitEvents, []);
+      const seventeen = await exchange(server.port, [{ data: Buffer.concat([pipeline(server.host, ['T']), sameAs(BUDGET + 1, () => pipeline(server.host, ['G']))]) }]);
+      assert.equal(seventeen.closedByServer, true);
+      assert.deepEqual((await server.state()).limitEvents, [LIMIT]);
+      assert.equal((await server.state()).transcripts, 3, 'every transcript request reached the producer once');
+    });
+  });
+
+  test(`${mode}: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it`, { timeout: 120000 }, async () => {
+    await withFixture(mode, 'hold', async (server) => {
+      const held = await exchange(server.port, [{ data: Buffer.concat([pipeline(server.host, ['T']), sameAs(BUDGET, () => pipeline(server.host, ['G']))]) }], { boundMs: 1500 });
+      assert.equal(held.closedByServer, false, 'nothing ends a connection whose first answer is still pending and whose budget is not exceeded');
+      assert.deepEqual(held.statuses, []);
+      assert.deepEqual((await server.state()).limitEvents, []);
+      const destroyed = await exchange(server.port, [{ data: Buffer.concat([pipeline(server.host, ['T']), sameAs(BUDGET + 1, () => pipeline(server.host, ['G']))]) }]);
+      assert.equal(destroyed.closedByServer, true, 'the 17th dropped request destroys the connection although the first answer never comes');
+      assert.deepEqual(destroyed.statuses, []);
+      assert.deepEqual((await server.state()).limitEvents, [LIMIT]);
+    });
+  });
+
+  test(`${mode}: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget`, { timeout: 120000 }, async () => {
+    await withFixture(mode, 'ok', async (server) => {
+      const flood = (count) => exchange(server.port, [{ data: Buffer.concat([pipeline(server.host, ['R']), sameAs(count, () => pipeline(server.host, ['G']))]) }]);
+      const [over, within, again] = await Promise.all([flood(BUDGET + 1), flood(BUDGET), flood(BUDGET)]);
+      assert.equal(over.closedByServer && within.closedByServer && again.closedByServer, true);
+      assert.deepEqual([within.statuses, again.statuses], [[404], [404]], 'the two sockets within the budget got the refusal');
+      assert.deepEqual((await server.state()).limitEvents, [LIMIT], 'only the socket over the budget was announced');
+      const plain = await exchange(server.port, [{ data: sameAs(100, () => pipeline(server.host, ['G'])) }]);
+      assert.deepEqual(plain.statuses, Array.from({ length: 100 }, () => 200), 'legitimate pipelining on an unmarked connection is answered in full');
+      assert.equal(plain.closedByServer, false, 'and the connection is kept');
+      assert.deepEqual((await server.state()).limitEvents, [LIMIT], 'no further announcement');
+    });
+  });
+
+  test(`${mode}: an upgrade behind a marked connection is dropped without being counted: [R][16 reads][U] creates no session, announces nothing and ends with the refusal`, { timeout: 120000 }, async () => {
+    await withFixture(mode, 'ok', async (server) => {
+      const result = await exchange(server.port, [{ data: Buffer.concat([pipeline(server.host, ['R']), sameAs(BUDGET, () => pipeline(server.host, ['G'])), pipeline(server.host, ['U'])]) }]);
+      assert.deepEqual(result.statuses, [404]);
+      assert.equal(result.closedByServer, true);
+      const state = await server.state();
+      assert.deepEqual([state.sessions, state.limitEvents], [0, []]);
+    });
+  });
+
+  test(`${mode}: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection`, { timeout: 120000 }, async () => {
+    await withFixture(mode, 'ok', async (server) => {
+      const old = (target) => wire({ target, host: server.host, framing: '1.0k' });
+      const sixteen = await exchange(server.port, [{ data: Buffer.concat([old('/nope'), sameAs(BUDGET, () => old('/scope.json'))]) }]);
+      assert.deepEqual(sixteen.statuses, [404]);
+      assert.equal(sixteen.closedByServer, true);
+      assert.deepEqual((await server.state()).limitEvents, []);
+      const seventeen = await exchange(server.port, [{ data: Buffer.concat([old('/nope'), sameAs(BUDGET + 1, () => old('/scope.json'))]) }]);
+      assert.equal(seventeen.closedByServer, true);
+      assert.deepEqual((await server.state()).limitEvents, [LIMIT]);
+    });
+  });
+
+  // Documented limits of U040 that stay true (README, "what is not covered"): both are pre-existing and neither creates a session or changes state.
+  test(`${mode}: documented limit m2: reads before an upgrade that the upgrade listener refuses lose their later answers: [G][G][refused upgrade] answers 200 and the refusal`, { timeout: 120000 }, async () => {
+    await withFixture(mode, 'ok', async (server) => {
+      const refused = wire({
+        target: '/nope', host: server.host, headers: ['Upgrade: websocket', 'Connection: Upgrade', 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==', 'Sec-WebSocket-Version: 13']
+      });
+      const result = await exchange(server.port, [{ data: Buffer.concat([pipeline(server.host, ['G', 'G']), refused]) }]);
+      assert.deepEqual(result.statuses, [200, 404], 'the second read answer is taken by the raw refusal');
+      assert.equal(result.closedByServer, true);
+      assert.equal((await server.state()).sessions, 0);
+    });
+  });
+
+  test(`${mode}: documented limit m3: a parse error behind an earlier read gets no typed 400: [G][bad request line] answers 200 and closes`, { timeout: 120000 }, async () => {
+    await withFixture(mode, 'ok', async (server) => {
+      const result = await exchange(server.port, [{ data: Buffer.concat([pipeline(server.host, ['G']), Buffer.from('G ET / HTTP/1.1\r\nHost: x\r\n\r\n', 'latin1')]) }]);
+      assert.deepEqual(result.statuses, [200]);
+      assert.equal(result.closedByServer, true);
+      assert.equal((await server.state()).sessions, 0);
+    });
+  });
+}
+
+test('a failing assertion inside a fixture body still stops the fixture: the child process has exited and the in-process port is closed', { timeout: 120000 }, async () => {
+  let child;
+  await assert.rejects(withFixture('separate', 'ok', async (server) => { child = server; assert.equal(server.port > 0, false, 'injected failure'); }), { code: 'ERR_ASSERTION' });
+  assert.deepEqual(child.exited(), { code: 0, signal: null }, 'the child server exited on its own when the fixture was closed');
+  let local;
+  await assert.rejects(withFixture('in-process', 'ok', async (server) => { local = server; assert.equal(server.port > 0, false, 'injected failure'); }), { code: 'ERR_ASSERTION' });
+  const refused = await new Promise((resolve) => {
+    const socket = net.connect({ host: '127.0.0.1', port: local.port });
+    socket.on('connect', () => { socket.destroy(); resolve('connected'); });
+    socket.on('error', (error) => resolve(error.code));
+  });
+  assert.equal(refused, 'ECONNREFUSED', 'the in-process server no longer accepts connections');
+});
+
+// Seeded hostile pipelines around the budget. A pipeline is 0 to 3 earlier reads, one mark (a refusal of one of six kinds, a transcript
+// read or a read with Expect: 100-continue), then 12 to 22 requests of every kind, an upgrade among them at random, in one write or in two
+// writes split at a random byte. The model: the answers are the earlier reads, then the answer of the mark; the requests after the mark
+// up to the first upgrade are dropped, the upgrade and everything after it are not parsed as HTTP; more than 16 dropped requests announce the
+// limit once and destroy the connection, so the client may then have lost the tail of the answers (always a prefix).
+function mulberry(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6D2B79F5) >>> 0;
+    let value = Math.imul(state ^ (state >>> 15), 1 | state);
+    value = (value + Math.imul(value ^ (value >>> 7), 61 | value)) ^ value;
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const MARKS = Object.freeze([
+  { name: '404', status: 404, build: (host) => wire({ target: '/nope', host }) },
+  { name: '405', status: 405, build: (host) => wire({ method: 'POST', target: '/scope.json', host }) },
+  { name: '421', status: 421, build: () => wire({ target: '/scope.json', host: 'evil.example:1' }) },
+  { name: '403', status: 403, build: (host) => wire({ target: '/scope.json', host, headers: ['Origin: http://evil.example'] }) },
+  { name: '400', status: 400, build: (host) => wire({ target: '/page.js?x=1', host }) },
+  { name: '426', status: 426, build: (host) => wire({ target: '/stream', host }) },
+  { name: 'T', status: 200, build: (host) => wire({ target: '/transcript.json', host }) },
+  { name: 'X', status: 200, build: (host) => wire({ target: '/scope.json', host, headers: ['Expect: 100-continue'] }) }
+]);
+const LATER = Object.freeze([
+  { name: 'G', build: (host) => wire({ target: '/scope.json', host }), http: true },
+  { name: 'A', build: (host) => wire({ target: '/page.js', host }), http: true },
+  { name: 'R', build: (host) => wire({ target: '/nope', host }), http: true },
+  { name: 'T', build: (host) => wire({ target: '/transcript.json', host }), http: true },
+  { name: 'X', build: (host) => wire({ target: '/scope.json', host, headers: ['Expect: 100-continue'] }), http: true },
+  { name: 'P', build: (host) => wire({ method: 'POST', target: '/scope.json', host }), http: true },
+  { name: 'U', build: (host) => upgradeWithHello(host), http: false }
+]);
+
+function generate(random, host) {
+  const earlier = Math.floor(random() * 4);
+  const mark = MARKS[Math.floor(random() * MARKS.length)];
+  const later = 12 + Math.floor(random() * 11);
+  const pieces = [];
+  for (let index = 0; index < earlier; index += 1) pieces.push({ name: 'G', bytes: wire({ target: '/scope.json', host }) });
+  pieces.push({ name: `mark ${mark.name}`, bytes: mark.build(host) });
+  const upgradeAt = random() < 0.35 ? Math.floor(random() * later) : -1;
+  let dropped = 0;
+  let parsedAsHttp = true;
+  for (let index = 0; index < later; index += 1) {
+    const kind = index === upgradeAt ? LATER[LATER.length - 1] : LATER[Math.floor(random() * (LATER.length - 1))];
+    pieces.push({ name: kind.name, bytes: kind.build(host) });
+    if (parsedAsHttp && kind.http) dropped += 1;
+    if (kind.name === 'U') parsedAsHttp = false;
+  }
+  const bytes = Buffer.concat(pieces.map((piece) => piece.bytes));
+  const split = random() < 0.5 ? null : 1 + Math.floor(random() * (bytes.length - 1));
+  return { earlier, mark, dropped, bytes, split, label: pieces.map((piece) => piece.name).join(',') };
+}
+
+for (const [mode, seed, cases] of [['in-process', 40, 70], ['separate', 41, 30]]) {
+  test(`${mode}: seeded hostile pipelines around the drop budget (seed ${seed}, ${cases} cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than ${BUDGET} requests were dropped`, { timeout: 300000 }, async () => {
+    await withFixture(mode, 'ok', async (server) => {
+      const random = mulberry(seed);
+      let announced = 0;
+      const overBudget = [];
+      for (let index = 0; index < cases; index += 1) {
+        const pipelineCase = generate(random, server.host);
+        const expected = [...Array.from({ length: pipelineCase.earlier }, () => 200), pipelineCase.mark.status];
+        const writes = pipelineCase.split === null ? [{ data: pipelineCase.bytes }]
+          : [{ data: pipelineCase.bytes.subarray(0, pipelineCase.split) }, { data: pipelineCase.bytes.subarray(pipelineCase.split), after: 5 }];
+        const result = await exchange(server.port, writes, { boundMs: 8000 });
+        const label = `case ${index} [${pipelineCase.label}] split ${pipelineCase.split}`;
+        const state = await server.state();
+        const mustAnnounce = pipelineCase.dropped > BUDGET;
+        assert.equal(state.sessions, 0, `${label}: no session behind a mark`);
+        assert.equal(result.closedByServer, true, `${label}: the connection ends (${result.reason})`);
+        assert.deepEqual(result.statuses, expected.slice(0, result.statuses.length), `${label}: the answers are a prefix of the model ${JSON.stringify(expected)}`);
+        if (!mustAnnounce) assert.deepEqual(result.statuses, expected, `${label}: within the budget every earlier answer and the answer of the mark arrive`);
+        // One write is one read of the server, so the count is exact; two writes may reach a connection that the refusal already closed, so
+        // the server may have seen fewer requests than the pipeline holds: then it must never announce more than the model allows.
+        const events = state.limitEvents.length - announced;
+        if (pipelineCase.split === null) assert.equal(events, mustAnnounce ? 1 : 0, `${label}: ${pipelineCase.dropped} dropped requests`);
+        else assert.equal(events <= (mustAnnounce ? 1 : 0), true, `${label}: ${events} announcements for ${pipelineCase.dropped} dropped requests in two writes`);
+        announced = state.limitEvents.length;
+        if (mustAnnounce && pipelineCase.split === null) overBudget.push(index);
+      }
+      assert.equal(overBudget.length >= 3, true, `the seed covers the far side of the budget in one write: ${overBudget.length} of ${cases} cases`);
+      assert.equal(await legitimateGet(server.port), 200, 'the server still answers a legitimate GET');
+    });
+  });
+}

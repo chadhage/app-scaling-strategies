@@ -1,0 +1,771 @@
+{
+  "schemaVersion": 1,
+  "serverSha256": "85ebbc331a226fcd282110d935c2ff33c73c254d916c617059fac9a105606821",
+  "baseSha256": "db597b1c5d50cb151a6e901105fd3be1b4ef19dce67926d70a61f639062944d9",
+  "testInputs": {
+    "u040-mutants-2.cjs": "b81ab230bcc7b902926f9f20f53aa52de7c7d2a8c8693fa50ce6cbb48d7b5399",
+    "u040-expect.test.cjs": "09dea3e5fddcc540caf2e690d369acad1b4a85ca8ad45657d92a5e1a54b9bd5d",
+    "u040-budget.test.cjs": "30b8ddc4d8b8a5efd10ac8c281b82b6849c0d0e4643a9a712f29d73a52a5cd38",
+    "u040-flood.test.cjs": "671b639bd113ae570bc9ec6522c993a30185f6754ddad953d02eee5a0d56c06b",
+    "u040-support.cjs": "303890738e95e4c340f355a7541e930135bfd53afadfef526dec45ece886da25",
+    "u040-target.cjs": "dc771707ee983a94848ad4715dedfa877fda89c063fc16d8f3c2843fd781485c",
+    "u040-flood-child.cjs": "d6677282e6cdeb0fe04e1045fca2e570d569925e13df0549477c8130cccc56c0",
+    "u040-flood-support.cjs": "f2d663420903395598f49ef88f6fd041b0a0acf2809d43be54141770b15fb530",
+    "support.cjs": "81997997fb8907ea287a1804eed636cd81994cfdc6eca05640f9d15679ebb0f9"
+  },
+  "changedLines": [
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    203,
+    204,
+    205,
+    206,
+    207,
+    208,
+    209,
+    210,
+    211,
+    212,
+    213,
+    217,
+    218,
+    219,
+    220,
+    224,
+    225,
+    226
+  ],
+  "controlPassed": true,
+  "total": 44,
+  "killed": 44,
+  "invalid": 0,
+  "undecided": [],
+  "survived": [],
+  "equivalent": [],
+  "results": [
+    {
+      "id": "control",
+      "outcome": "survived",
+      "killed": false,
+      "failedTests": []
+    },
+    {
+      "id": "N02",
+      "line": null,
+      "kind": "named: the drop budget is raised past the probe (16 to 100000)",
+      "original": "",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "N01",
+      "line": null,
+      "kind": "named: the drop counter is removed: a request behind a mark is dropped quietly for ever (fix 1)",
+      "original": "",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "N03",
+      "line": null,
+      "kind": "named: the Expect mark is removed: an answer that Node forces to close does not mark the connection (m1)",
+      "original": "",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "in-process: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session",
+        "in-process: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called",
+        "separate: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "separate: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session",
+        "separate: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called"
+      ]
+    },
+    {
+      "id": "N05",
+      "line": null,
+      "kind": "named: the over-budget request destroys the connection but does not announce the limit",
+      "original": "",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "N04",
+      "line": null,
+      "kind": "named: the over-budget request announces the limit but does not destroy the connection",
+      "original": "",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "separate: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: seeded hostile pipelines around the drop budget (seed 40, 70 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped",
+        "separate: seeded hostile pipelines around the drop budget (seed 41, 30 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped"
+      ]
+    },
+    {
+      "id": "N06",
+      "line": null,
+      "kind": "named: one budget for the whole server instead of one per connection",
+      "original": "",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: earlier answers are delivered up to the budget: [G][R] and 16 more are answered 200 and the refusal, then the connection closes",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: an upgrade behind a marked connection is dropped without being counted: [R][16 reads][U] creates no session, announces nothing and ends with the refusal",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection"
+      ]
+    },
+    {
+      "id": "N07",
+      "line": null,
+      "kind": "named: an already destroyed connection is announced again by every later request of the same read",
+      "original": "",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: seeded hostile pipelines around the drop budget (seed 40, 70 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped",
+        "separate: seeded hostile pipelines around the drop budget (seed 41, 30 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped"
+      ]
+    },
+    {
+      "id": "N08",
+      "line": null,
+      "kind": "named: the Expect mark uses response.socket instead of request.socket",
+      "original": "",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session",
+        "separate: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session"
+      ]
+    },
+    {
+      "id": "G002",
+      "line": 53,
+      "kind": "number 16 to 15",
+      "original": "const MAX_DROPPED_REQUESTS = 16;",
+      "mutated": "const MAX_DROPPED_REQUESTS = 15;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: earlier answers are delivered up to the budget: [G][R] and 16 more are answered 200 and the refusal, then the connection closes",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: an upgrade behind a marked connection is dropped without being counted: [R][16 reads][U] creates no session, announces nothing and ends with the refusal"
+      ]
+    },
+    {
+      "id": "G001",
+      "line": 53,
+      "kind": "number 16 to 17",
+      "original": "const MAX_DROPPED_REQUESTS = 16;",
+      "mutated": "const MAX_DROPPED_REQUESTS = 17;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "G003",
+      "line": 53,
+      "kind": "number 16 to 0",
+      "original": "const MAX_DROPPED_REQUESTS = 16;",
+      "mutated": "const MAX_DROPPED_REQUESTS = 0;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: earlier answers are delivered up to the budget: [G][R] and 16 more are answered 200 and the refusal, then the connection closes",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: an upgrade behind a marked connection is dropped without being counted: [R][16 reads][U] creates no session, announces nothing and ends with the refusal"
+      ]
+    },
+    {
+      "id": "G004",
+      "line": 207,
+      "kind": "delete the statement",
+      "original": "if (socket.destroyed) return;",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: seeded hostile pipelines around the drop budget (seed 40, 70 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped",
+        "separate: seeded hostile pipelines around the drop budget (seed 41, 30 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped"
+      ]
+    },
+    {
+      "id": "G006",
+      "line": 207,
+      "kind": "condition false",
+      "original": "if (socket.destroyed) return;",
+      "mutated": "if (false) return;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: seeded hostile pipelines around the drop budget (seed 40, 70 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped",
+        "separate: seeded hostile pipelines around the drop budget (seed 41, 30 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped"
+      ]
+    },
+    {
+      "id": "G005",
+      "line": 207,
+      "kind": "condition true",
+      "original": "if (socket.destroyed) return;",
+      "mutated": "if (true) return;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "G008",
+      "line": 208,
+      "kind": "number 0 to 1",
+      "original": "const count = (dropped.get(socket) ?? 0) + 1;",
+      "mutated": "const count = (dropped.get(socket) ?? 1) + 1;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: earlier answers are delivered up to the budget: [G][R] and 16 more are answered 200 and the refusal, then the connection closes",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: an upgrade behind a marked connection is dropped without being counted: [R][16 reads][U] creates no session, announces nothing and ends with the refusal"
+      ]
+    },
+    {
+      "id": "G007",
+      "line": 207,
+      "kind": "condition negated",
+      "original": "if (socket.destroyed) return;",
+      "mutated": "if (!(socket.destroyed)) return;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "G009",
+      "line": 208,
+      "kind": "number 1 to 2",
+      "original": "const count = (dropped.get(socket) ?? 0) + 1;",
+      "mutated": "const count = (dropped.get(socket) ?? 0) + 2;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: earlier answers are delivered up to the budget: [G][R] and 16 more are answered 200 and the refusal, then the connection closes",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: an upgrade behind a marked connection is dropped without being counted: [R][16 reads][U] creates no session, announces nothing and ends with the refusal"
+      ]
+    },
+    {
+      "id": "G010",
+      "line": 208,
+      "kind": "number 1 to 0",
+      "original": "const count = (dropped.get(socket) ?? 0) + 1;",
+      "mutated": "const count = (dropped.get(socket) ?? 0) + 0;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "G011",
+      "line": 209,
+      "kind": "delete the statement",
+      "original": "dropped.set(socket, count);",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "G013",
+      "line": 210,
+      "kind": "delete the statement",
+      "original": "if (count <= MAX_DROPPED_REQUESTS) return;",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: earlier answers are delivered up to the budget: [G][R] and 16 more are answered 200 and the refusal, then the connection closes",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: an upgrade behind a marked connection is dropped without being counted: [R][16 reads][U] creates no session, announces nothing and ends with the refusal"
+      ]
+    },
+    {
+      "id": "G012",
+      "line": 209,
+      "kind": ".set( to .get(",
+      "original": "dropped.set(socket, count);",
+      "mutated": "dropped.get(socket, count);",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "G015",
+      "line": 210,
+      "kind": "condition false",
+      "original": "if (count <= MAX_DROPPED_REQUESTS) return;",
+      "mutated": "if (false) return;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: earlier answers are delivered up to the budget: [G][R] and 16 more are answered 200 and the refusal, then the connection closes",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: an upgrade behind a marked connection is dropped without being counted: [R][16 reads][U] creates no session, announces nothing and ends with the refusal"
+      ]
+    },
+    {
+      "id": "G014",
+      "line": 210,
+      "kind": "condition true",
+      "original": "if (count <= MAX_DROPPED_REQUESTS) return;",
+      "mutated": "if (true) return;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "G016",
+      "line": 210,
+      "kind": "condition negated",
+      "original": "if (count <= MAX_DROPPED_REQUESTS) return;",
+      "mutated": "if (!(count <= MAX_DROPPED_REQUESTS)) return;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: earlier answers are delivered up to the budget: [G][R] and 16 more are answered 200 and the refusal, then the connection closes",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: an upgrade behind a marked connection is dropped without being counted: [R][16 reads][U] creates no session, announces nothing and ends with the refusal"
+      ]
+    },
+    {
+      "id": "G017",
+      "line": 210,
+      "kind": "<= to <",
+      "original": "if (count <= MAX_DROPPED_REQUESTS) return;",
+      "mutated": "if (count < MAX_DROPPED_REQUESTS) return;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: earlier answers are delivered up to the budget: [G][R] and 16 more are answered 200 and the refusal, then the connection closes",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: an upgrade behind a marked connection is dropped without being counted: [R][16 reads][U] creates no session, announces nothing and ends with the refusal"
+      ]
+    },
+    {
+      "id": "G018",
+      "line": 210,
+      "kind": "<= to >",
+      "original": "if (count <= MAX_DROPPED_REQUESTS) return;",
+      "mutated": "if (count > MAX_DROPPED_REQUESTS) return;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: earlier answers are delivered up to the budget: [G][R] and 16 more are answered 200 and the refusal, then the connection closes",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: an upgrade behind a marked connection is dropped without being counted: [R][16 reads][U] creates no session, announces nothing and ends with the refusal"
+      ]
+    },
+    {
+      "id": "G019",
+      "line": 210,
+      "kind": "<= to >=",
+      "original": "if (count <= MAX_DROPPED_REQUESTS) return;",
+      "mutated": "if (count >= MAX_DROPPED_REQUESTS) return;",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: earlier answers are delivered up to the budget: [G][R] and 16 more are answered 200 and the refusal, then the connection closes",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: an upgrade behind a marked connection is dropped without being counted: [R][16 reads][U] creates no session, announces nothing and ends with the refusal"
+      ]
+    },
+    {
+      "id": "G020",
+      "line": 211,
+      "kind": "delete the statement",
+      "original": "server.emit('limit', { code: 'DROPPED_REQUEST_BACKLOG', limit: MAX_DROPPED_REQUESTS });",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "G021",
+      "line": 211,
+      "kind": ".emit( to .listenerCount(",
+      "original": "server.emit('limit', { code: 'DROPPED_REQUEST_BACKLOG', limit: MAX_DROPPED_REQUESTS });",
+      "mutated": "server.listenerCount('limit', { code: 'DROPPED_REQUEST_BACKLOG', limit: MAX_DROPPED_REQUESTS });",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "G022",
+      "line": 211,
+      "kind": "string DROPPED_REQUEST_BACKLOG changed",
+      "original": "server.emit('limit', { code: 'DROPPED_REQUEST_BACKLOG', limit: MAX_DROPPED_REQUESTS });",
+      "mutated": "server.emit('limit', { code: 'DROPPED_REQUEST_BACKLOG_X', limit: MAX_DROPPED_REQUESTS });",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "G023",
+      "line": 212,
+      "kind": "delete the statement",
+      "original": "socket.destroy();",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "separate: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: seeded hostile pipelines around the drop budget (seed 40, 70 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped",
+        "separate: seeded hostile pipelines around the drop budget (seed 41, 30 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped"
+      ]
+    },
+    {
+      "id": "G024",
+      "line": 212,
+      "kind": ".destroy() to .end()",
+      "original": "socket.destroy();",
+      "mutated": "socket.end();",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: seeded hostile pipelines around the drop budget (seed 40, 70 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped",
+        "separate: seeded hostile pipelines around the drop budget (seed 41, 30 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped"
+      ]
+    },
+    {
+      "id": "G025",
+      "line": 212,
+      "kind": ".destroy() to .pause()",
+      "original": "socket.destroy();",
+      "mutated": "socket.pause();",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "separate: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: seeded hostile pipelines around the drop budget (seed 40, 70 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped",
+        "separate: seeded hostile pipelines around the drop budget (seed 41, 30 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped"
+      ]
+    },
+    {
+      "id": "G026",
+      "line": 217,
+      "kind": "condition true",
+      "original": "if (closing.has(request.socket)) {",
+      "mutated": "if (true) {",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "in-process: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session",
+        "in-process: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called",
+        "in-process: control: the same pipeline without Expect is a legitimate read and upgrade: [200, 101] and one session",
+        "separate: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "separate: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session"
+      ]
+    },
+    {
+      "id": "G027",
+      "line": 217,
+      "kind": "condition false",
+      "original": "if (closing.has(request.socket)) {",
+      "mutated": "if (false) {",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called",
+        "separate: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called"
+      ]
+    },
+    {
+      "id": "G028",
+      "line": 217,
+      "kind": "condition negated",
+      "original": "if (closing.has(request.socket)) {",
+      "mutated": "if (!(closing.has(request.socket))) {",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "in-process: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session",
+        "in-process: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called",
+        "in-process: control: the same pipeline without Expect is a legitimate read and upgrade: [200, 101] and one session",
+        "separate: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "separate: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session"
+      ]
+    },
+    {
+      "id": "G029",
+      "line": 217,
+      "kind": ".has( to .delete(",
+      "original": "if (closing.has(request.socket)) {",
+      "mutated": "if (closing.delete(request.socket)) {",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: an upgrade behind a marked connection is dropped without being counted: [R][16 reads][U] creates no session, announces nothing and ends with the refusal",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection"
+      ]
+    },
+    {
+      "id": "G031",
+      "line": 219,
+      "kind": "delete the statement",
+      "original": "return;",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called",
+        "separate: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called"
+      ]
+    },
+    {
+      "id": "G030",
+      "line": 218,
+      "kind": "delete the statement",
+      "original": "dropRequest(request.socket);",
+      "mutated": "",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+        "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+        "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+        "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+        "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+        "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once"
+      ]
+    },
+    {
+      "id": "G032",
+      "line": 226,
+      "kind": "condition true",
+      "original": "if (!response.shouldKeepAlive) closing.add(request.socket);",
+      "mutated": "if (true) closing.add(request.socket);",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session",
+        "in-process: control: the same pipeline without Expect is a legitimate read and upgrade: [200, 101] and one session",
+        "separate: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session",
+        "separate: control: the same pipeline without Expect is a legitimate read and upgrade: [200, 101] and one session"
+      ]
+    },
+    {
+      "id": "G033",
+      "line": 226,
+      "kind": "condition false",
+      "original": "if (!response.shouldKeepAlive) closing.add(request.socket);",
+      "mutated": "if (false) closing.add(request.socket);",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "in-process: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session",
+        "in-process: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called",
+        "separate: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "separate: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session",
+        "separate: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called"
+      ]
+    },
+    {
+      "id": "G034",
+      "line": 226,
+      "kind": "condition negated",
+      "original": "if (!response.shouldKeepAlive) closing.add(request.socket);",
+      "mutated": "if (!(!response.shouldKeepAlive)) closing.add(request.socket);",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "in-process: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session",
+        "in-process: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called",
+        "in-process: control: the same pipeline without Expect is a legitimate read and upgrade: [200, 101] and one session",
+        "separate: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "separate: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session"
+      ]
+    },
+    {
+      "id": "G035",
+      "line": 226,
+      "kind": ".add( to .delete(",
+      "original": "if (!response.shouldKeepAlive) closing.add(request.socket);",
+      "mutated": "if (!response.shouldKeepAlive) closing.delete(request.socket);",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "in-process: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session",
+        "in-process: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called",
+        "separate: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "separate: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session",
+        "separate: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called"
+      ]
+    },
+    {
+      "id": "G036",
+      "line": 226,
+      "kind": "negation removed",
+      "original": "if (!response.shouldKeepAlive) closing.add(request.socket);",
+      "mutated": "if (response.shouldKeepAlive) closing.add(request.socket);",
+      "outcome": "killed",
+      "killed": true,
+      "failedTests": [
+        "in-process: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "in-process: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session",
+        "in-process: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called",
+        "in-process: control: the same pipeline without Expect is a legitimate read and upgrade: [200, 101] and one session",
+        "separate: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+        "separate: the mark is made with request.socket, also for an answer that is queued behind an earlier one: [G][GET with Expect][upgrade and hello] answers twice, closes and creates no session"
+      ]
+    }
+  ]
+}

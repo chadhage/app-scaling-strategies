@@ -44,6 +44,14 @@ const openSockets = new WeakMap();
 // (an upgrade included) before the first answer has finished, so nothing behind a refusal may run. The mark is made at decision time
 // with request.socket: response.socket is null for an answer that is queued behind another one.
 const closing = new WeakSet();
+// What a marked connection may still make the server read. Everything behind the mark is dropped without an answer, and a dropped request
+// writes nothing, so Node never sees output pile up behind an unfinished answer and never pauses the connection: it would keep parsing and
+// holding one request and one response object (about 2 KB) per pipelined request for as long as the peer sends. The first
+// MAX_DROPPED_REQUESTS are dropped quietly, so that the answers queued before the mark and the refusal itself are still flushed; the next one
+// destroys the connection. What bounds the work: Node has parsed at most the read in progress (64 KB, about 1,000 of the smallest requests)
+// when that happens, the destroy ends every further read, and the objects are released when the socket closes.
+const MAX_DROPPED_REQUESTS = 16;
+const dropped = new WeakMap();
 // Parse errors that Node reports through 'clientError' (it would write its own bare 400, 408 or 431): the typed refusal for each.
 const MALFORMED_REQUEST = Object.freeze([400, 'MALFORMED_REQUEST', 'The request could not be parsed.']);
 const CLIENT_ERRORS = new Map([
@@ -192,15 +200,30 @@ async function produceLocalTranscript() {
 }
 
 function createLocalServer({ hub = createHub(), transcript = produceLocalTranscript } = {}) {
+  // Whatever was pipelined behind a mark is dropped without effect and without an answer, and counted (see MAX_DROPPED_REQUESTS). Within the
+  // budget nothing is destroyed: the refusal said Connection: close, so Node ends the connection once that answer (queued behind earlier ones)
+  // has been flushed. The request that exceeds the budget destroys the connection and announces the limit once.
+  function dropRequest(socket) {
+    if (socket.destroyed) return;
+    const count = (dropped.get(socket) ?? 0) + 1;
+    dropped.set(socket, count);
+    if (count <= MAX_DROPPED_REQUESTS) return;
+    server.emit('limit', { code: 'DROPPED_REQUEST_BACKLOG', limit: MAX_DROPPED_REQUESTS });
+    socket.destroy();
+  }
   // The one request path. Node calls it for every request, and for the two it would otherwise answer itself: Expect: 100-continue
   // and an unknown Expect header (expectationFailed), so that every refusal of the plain routes is decided, marked and closed here.
   function handle(request, response, expectationFailed = false) {
-    // Whatever was pipelined behind a refusal is dropped without effect and without an answer. Nothing is destroyed here: the
-    // refusal said Connection: close, so Node ends the connection once that answer (queued behind earlier ones) has been flushed.
-    if (closing.has(request.socket)) return;
+    if (closing.has(request.socket)) {
+      dropRequest(request.socket);
+      return;
+    }
     function send(status, value, type = 'application/json; charset=utf-8', extra = {}) {
       const body = Buffer.isBuffer(value) ? value : Buffer.from(JSON.stringify(value));
       response.writeHead(status, { ...SECURITY_HEADERS, 'Content-Type': type, 'Content-Length': body.length, ...extra });
+      // Node forces Connection: close on the answer to a request that expects 100 Continue and gets none (the peer may still be sending a
+      // body nobody reads): a request or an upgrade pipelined behind such an answer must not run either.
+      if (!response.shouldKeepAlive) closing.add(request.socket);
       response.end(body);
     }
     // Every refusal says Connection: close, so Node closes the socket once the answer is flushed and stops parsing a body

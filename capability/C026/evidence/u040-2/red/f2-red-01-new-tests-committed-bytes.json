@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "name": "f2-red-01-new-tests-committed-bytes",
+  "purpose": "U040 fix 2 RED, archived BEFORE the fix (addendum 2): the new suites u040-flood, u040-budget and u040-expect against the COMMITTED server.cjs (sha256 db597b1c..., U040 fix 1). Finding F1 of the independent review: the F24 flood probe (3 sockets x 50 blocks of 64 KB behind a real transcript read, a refused read, or a held transcript, in a child with --max-old-space-size=48) kills the server child with exit 134 (Reached heap limit), because the requests that fix 1 drops are never answered and never stop the socket. The budget rows fail because the server never announces DROPPED_REQUEST_BACKLOG and never destroys the connection; the m1 rows fail because a read with Expect: 100-continue followed by a valid upgrade creates a hub session after an answer that says Connection: close. Controls that pass: [G][R] plus 16 dropped reads, an upgrade behind a marked connection, HTTP/1.1 pipelines without Expect, the documented limits m2 and m3.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "capability\\C026\\tests\\u040-flood.test.cjs",
+    "capability\\C026\\tests\\u040-budget.test.cjs",
+    "capability\\C026\\tests\\u040-expect.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "startedAtUtc": "2026-11-06T20:16:58.694Z",
+  "completedAtUtc": "2026-11-06T20:18:19.725Z",
+  "elapsedMs": 81031,
+  "timeoutMs": 900000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C026\\server.cjs",
+      "bytes": 18457,
+      "rawSha256": "db597b1c5d50cb151a6e901105fd3be1b4ef19dce67926d70a61f639062944d9",
+      "crlfToLfSha256": "98dbd5071fee3eb0c449e6d09c3144706c4510a85324373a6f2c5a66d2da46cb"
+    },
+    {
+      "path": "capability\\C026\\framing.cjs",
+      "bytes": 9354,
+      "rawSha256": "ce238fad9962f9cfde14782b91d4361e8eb85406d7c66d3da088a122eb1e3ce4",
+      "crlfToLfSha256": "3d87b7ad1389f9395b270c1a6ad2b5da9f721302fdeb5d9c9eef48bfcbed2c34"
+    },
+    {
+      "path": "capability\\C026\\stream.cjs",
+      "bytes": 7480,
+      "rawSha256": "7c4b6fd17dcf2a74fe8a3fa84990d036b776d401240f262161baad595b9e8a85",
+      "crlfToLfSha256": "d184474d0eafaea9d48b8885e49a98bb051f67eb55b20e96983e1e4b17569a94"
+    },
+    {
+      "path": "capability\\C026\\conversation.cjs",
+      "bytes": 8668,
+      "rawSha256": "0ead68176e1ab3d9f99c626f0b397c6cb69c46f7b9141085e7696e62b293c231",
+      "crlfToLfSha256": "7a6c814336f001f7cf05edda10c054266775d87a74bc64571db20d9da15a785f"
+    },
+    {
+      "path": "capability\\C026\\U040-fix2.feature",
+      "bytes": 3494,
+      "rawSha256": "2b6f7c773e8adad91c7121ac47cf7e6d0a01c158dc7ace17875772017e9ae22c",
+      "crlfToLfSha256": "5c5a36deec7d5069a9294505589d6fb055b1650e52c1eeab29d532de2ec8e7d7"
+    },
+    {
+      "path": "capability\\C026\\tests\\u040-support.cjs",
+      "bytes": 5815,
+      "rawSha256": "303890738e95e4c340f355a7541e930135bfd53afadfef526dec45ece886da25",
+      "crlfToLfSha256": "10417c5667d019bd8e7f26449d7a47ba1f5b4a6145295b637d29e72807220c39"
+    },
+    {
+      "path": "capability\\C026\\tests\\u040-target.cjs",
+      "bytes": 876,
+      "rawSha256": "dc771707ee983a94848ad4715dedfa877fda89c063fc16d8f3c2843fd781485c",
+      "crlfToLfSha256": "13f62a425930eaa4ce0ba22ef64e227c61a4f6354c5b492af8b8730cc3a43f66"
+    },
+    {
+      "path": "capability\\C026\\tests\\u040-flood-child.cjs",
+      "bytes": 2548,
+      "rawSha256": "d6677282e6cdeb0fe04e1045fca2e570d569925e13df0549477c8130cccc56c0",
+      "crlfToLfSha256": "583215100195d4848c0f14289b0aa63d059a3720598abeed3cb502315a1cf8a7"
+    },
+    {
+      "path": "capability\\C026\\tests\\u040-flood-support.cjs",
+      "bytes": 7814,
+      "rawSha256": "ef13c50241ab1b5545ce34dd9a58d7ade035ae52291653fb44328bc0d5eee5e8",
+      "crlfToLfSha256": "e78bd796085d3a9290395e243904f43eb71a6a3c88f4578c5871772c975df388"
+    },
+    {
+      "path": "capability\\C026\\tests\\u040-flood.test.cjs",
+      "bytes": 6619,
+      "rawSha256": "47bd946abc2460ff07659fcaecebcc08a7ba7b9cf228e69ef1ec73b6800ff5e1",
+      "crlfToLfSha256": "6c9b19f99dddb6eda79cc0f3701649ce39aa990ffcd8d0ced003fae4b3b41b23"
+    },
+    {
+      "path": "capability\\C026\\tests\\u040-budget.test.cjs",
+      "bytes": 18483,
+      "rawSha256": "9ac782130c840026a51516f40110a7b22907890019faa3c3c4a732e7fb7b7305",
+      "crlfToLfSha256": "fcf063334f39335b616bf72cde5a3aa0abcb3e839d470a8c60e193e7cc728c91"
+    },
+    {
+      "path": "capability\\C026\\tests\\u040-expect.test.cjs",
+      "bytes": 3847,
+      "rawSha256": "229c26348bb78548c06bb09488229c3b7a339d492163ff755fb1c58be517c6a5",
+      "crlfToLfSha256": "0ec1f0a8e8ceb5e08ee01c7e02234859212b27d8b43b0184a8313423e942280f"
+    }
+  ],
+  "summary": {
+    "tests": 33,
+    "suites": 0,
+    "pass": 11,
+    "fail": 22,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "in-process: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+      "in-process: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+      "in-process: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+      "in-process: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+      "in-process: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+      "separate: the budget is exact: 16 requests behind a refusal are dropped quietly and the refusal is delivered, the 17th destroys the connection and is announced once",
+      "separate: a plain read behind a successful transcript answer is dropped and counted: [T][G] is answered once, 16 more are quiet, the 17th destroys the connection",
+      "separate: behind a transcript that never settles, 16 dropped requests leave the connection open and the 17th destroys it",
+      "separate: the budget belongs to the connection: a flood on one socket does not use up the budget of another, and an unmarked connection has no budget",
+      "separate: the budget holds in HTTP/1.0 framing with keep-alive: 16 dropped reads are quiet, the 17th destroys the connection",
+      "in-process: seeded hostile pipelines around the drop budget (seed 40, 70 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped",
+      "separate: seeded hostile pipelines around the drop budget (seed 41, 30 cases): no session, answers are a prefix of the model, the connection ends, the limit is announced if and only if more than 16 requests were dropped",
+      "in-process: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+      "in-process: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called",
+      "separate: GET with Expect: 100-continue followed by a valid upgrade and hello in one write: the answer closes the connection, nothing is upgraded and no session exists",
+      "separate: a request pipelined behind a GET with Expect: 100-continue does not run: [GET with Expect][GET /transcript.json] is answered once and the transcript producer is never called",
+      "flood real: 3 sockets x 50 blocks of 64 KB behind a real GET /transcript.json (answered after an await) in a 48 MB-heap child: the child stays alive, no connection is left and a legitimate GET is answered",
+      "flood refuse: 3 sockets x 50 blocks of 64 KB behind a refused GET /nope in a 48 MB-heap child: the child stays alive, no connection is left and a legitimate GET is answered",
+      "flood hold: 3 sockets x 50 blocks of 64 KB behind a transcript that never settles in a 48 MB-heap child: the child stays alive, no connection is left and a legitimate GET is answered",
+      "budget real: every attacker socket crossed the drop budget exactly once and was ended by the server, and Node handed at most the budget plus the rest of one read to the request listeners",
+      "budget refuse: every attacker socket crossed the drop budget exactly once and was ended by the server, and Node handed at most the budget plus the rest of one read to the request listeners",
+      "budget hold: every attacker socket crossed the drop budget exactly once and was ended by the server, and Node handed at most the budget plus the rest of one read to the request listeners"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\f2-red-01-new-tests-committed-bytes.stdout.raw.gz",
+      "bytes": 36007,
+      "sha256": "df1120207861e0fb8cdcfe3a940f31bb1afd6a6095a4e0614bfdc69c41a4d84e",
+      "gzipBytes": 3307,
+      "gzipSha256": "3e356d5bfbed3aeb63da7a3ee189d3a0085cf4a302fb8d3b19c5c484e96df4eb",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\f2-red-01-new-tests-committed-bytes.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

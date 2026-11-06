@@ -13,7 +13,7 @@ const NOT_NODE_MEASURABLE = /\.(?:html|css|ps1)$/;
 // A nested `node --test` that inherits NODE_TEST_CONTEXT exits 0 even when its test fails (L-0002).
 const NESTED_REMOVED = Object.freeze(['CAPTURE_BROWSER_EVIDENCE', 'NODE_V8_COVERAGE', 'NODE_TEST_CONTEXT']);
 const TESTS = Object.freeze(['framing', 'stream', 'server', 'conversation', 'page', 'surface', 'limits', 'hardening', 'heap-limit', 'refusal-close', 'recovery', 'evidence',
-  'u040-pipelining', 'u040-node-own']
+  'u040-pipelining', 'u040-node-own', 'u040-flood', 'u040-budget', 'u040-expect']
   .map((name) => `${name}.test.cjs`));
 
 function nestedEnvironment(env) {
