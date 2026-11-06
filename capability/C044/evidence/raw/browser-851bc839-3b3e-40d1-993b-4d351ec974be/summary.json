@@ -1,0 +1,80 @@
+{
+  "cardId": "C044",
+  "startedAtUtc": "2026-11-06T00:45:08.890Z",
+  "outcome": "failed",
+  "mode": "isolated-headless",
+  "engine": "Microsoft Edge (Chromium)",
+  "testRuntime": "v22.23.4",
+  "businessData": "synthetic",
+  "nativeTargetQualified": false,
+  "productionRuntimeValidated": false,
+  "integratedForegroundLeaseUsed": false,
+  "checks": [
+    {
+      "name": "the console connects with EventSource and applies live events from the owned listener",
+      "passed": true,
+      "observed": {
+        "connection": "Connection: disconnected (connection lost; reconnecting)",
+        "applied": 21,
+        "duplicates": 0,
+        "reconnects": 0,
+        "marker": "No reconnect yet.",
+        "detached": "Produced while detached: not measured yet.",
+        "lastSeq": 21
+      }
+    },
+    {
+      "name": "keyboard Disconnect closes only the client stream while the server producer keeps going",
+      "passed": true,
+      "observed": {
+        "before": {
+          "connection": "Connection: disconnected (by you; the server keeps producing)",
+          "applied": 21,
+          "duplicates": 0,
+          "reconnects": 1,
+          "marker": "reconnected from id synthetic-run-001:3:21 [automatic]",
+          "detached": "Server counter at disconnect: 24. Waiting for the reconnect.",
+          "lastSeq": 21
+        },
+        "serverProducedWhileDetached": 11
+      }
+    },
+    {
+      "name": "keyboard Reconnect resumes at the next event: the gap events appear exactly once, no duplicate",
+      "passed": true,
+      "observed": {
+        "marker": "reconnected from id synthetic-run-001:3:21",
+        "detached": "Produced while detached: 13 (server counter 24 to 37).",
+        "shownContiguous": [
+          1,
+          43
+        ]
+      }
+    }
+  ],
+  "cleanup": {
+    "serverClosed": true,
+    "browserClosed": true,
+    "scratchRemoved": true
+  },
+  "server": {
+    "pid": 25940,
+    "address": {
+      "address": "127.0.0.1",
+      "family": "IPv4",
+      "port": 53356
+    },
+    "ownership": "this process, exact returned http.Server handle",
+    "context": {
+      "origin": "actual-C015-public-restore-read-only",
+      "runId": "synthetic-run-001",
+      "epoch": 3,
+      "stateSha256": "66f2593752364d65b37d145cf9b784e09dc86867643766bd9f14f8c7d0f1f135"
+    }
+  },
+  "browserVersion": "156.0.4314.58",
+  "playwrightVersion": "1.56.1",
+  "helperRawSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "failure": "The input did not match the regular expression /^reconnected from id synthetic-run-001:\\d+:\\d+ \\(re-requested 3 applied events\\)$/. Input:\n\n'reconnected from id synthetic-run-001:3:52 [automatic]'\n",
+  "completedAtUtc": "2026-11-06T00:45:17.854Z"
+}

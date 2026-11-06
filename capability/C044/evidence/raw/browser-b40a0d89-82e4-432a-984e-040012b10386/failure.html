@@ -1,0 +1,63 @@
+
+    <p class="eyebrow">C044 · H004 · H008 · local fixture</p>
+    <h1>Reconnect a live console. The work keeps running.</h1>
+    <p class="boundary"><strong>Training rehearsal - synthetic data - not a live Azure result.</strong> Loopback HTTP only.
+      The run and its events are synthetic and owned by the local server. No real identity, cloud service, production
+      Node 24 / Express / Entra validation or spend is involved.</p>
+    <p>Disconnect and Reconnect only close and re-open <em>this page's</em> stream. The server's producer is never stopped,
+      paused or restarted by a client, so the events produced while detached arrive exactly once on reconnect.</p>
+
+    <section aria-labelledby="state-heading">
+      <h2 id="state-heading">Connection</h2>
+      <p id="connection" role="status" aria-live="polite">Connection: failed</p>
+      <p id="cursor">Last applied id: synthetic-run-001:3:73</p>
+      <p id="marker" role="status" aria-live="polite">reconnected from id synthetic-run-001:3:13 (re-requested 60 applied events)</p>
+      <p id="server-counters">Server counters: produced 77, head 77, clients attached 1, run running.</p>
+      <p id="detached">Produced while detached: 1 (server counter 76 to 77).</p>
+    </section>
+
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Controls</h2>
+      <div class="controls">
+        <button id="disconnect" type="button" disabled="">Disconnect</button>
+        <button id="reconnect" type="button" disabled="">Reconnect</button>
+      </div>
+      <label for="rewind">Re-request this many already applied events on the next reconnect (duplicate drill)</label>
+      <input id="rewind" type="number" min="0" max="500" value="0" inputmode="numeric">
+      <p class="hint">A correct reconnect resumes at the next event. A re-request above 0 asks the server to send applied events again;
+        the page drops each one by id and counts it. A re-request larger than the replay window is a typed failure.</p>
+    </section>
+
+    <section aria-labelledby="counts-heading">
+      <h2 id="counts-heading">Counts</h2>
+      <ul class="counts">
+        <li>Applied events: <output id="count-applied">73</output></li>
+        <li>Dropped duplicates: <output id="count-duplicates">3</output></li>
+        <li>Dropped out-of-order: <output id="count-out-of-order">0</output></li>
+        <li>Rejected deliveries: <output id="count-rejected">0</output></li>
+        <li>Reconnects: <output id="count-reconnects">8</output></li>
+        <li>Disconnects: <output id="count-disconnects">8</output></li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="failure-heading">
+      <h2 id="failure-heading">Typed failure and allowed recovery actions</h2>
+      <p id="failure" role="alert">CURSOR_EXPIRED (stale): The cursor is older than the bounded replay window. The events after it are no longer retained for resumption.</p>
+      <div id="actions"><button type="button" title="Explicitly discard the cursor and open a fresh stream from the oldest retained event. The skipped range stays visible as a gap and is never invented.">Resync from snapshot</button><button type="button" title="Read the run snapshot without opening a stream. Nothing is repaired, reset or replayed.">Reinspect read-only</button><button type="button" title="Stop opening streams. Recorded events, counters and failures stay.">Stop reconnecting</button></div>
+      <p id="notice" role="status" aria-live="polite">No recovery action taken.</p>
+    </section>
+
+    <section aria-labelledby="log-heading">
+      <h2 id="log-heading">Console events</h2>
+      <p id="evicted">All applied events are shown.</p>
+      <ol id="log"><li class="applied">synthetic-run-001:3:1 · run-started · synthetic run-started 0 of 1500</li><li class="applied">synthetic-run-001:3:2 · step-completed · synthetic step-completed 1 of 1500</li><li class="applied">synthetic-run-001:3:3 · step-completed · synthetic step-completed 2 of 1500</li><li class="applied">synthetic-run-001:3:4 · step-completed · synthetic step-completed 3 of 1500</li><li class="applied">synthetic-run-001:3:5 · step-completed · synthetic step-completed 4 of 1500</li><li class="applied">synthetic-run-001:3:6 · step-completed · synthetic step-completed 5 of 1500</li><li class="applied">synthetic-run-001:3:7 · step-completed · synthetic step-completed 6 of 1500</li><li class="applied">synthetic-run-001:3:8 · step-completed · synthetic step-completed 7 of 1500</li><li class="applied">synthetic-run-001:3:9 · step-completed · synthetic step-completed 8 of 1500</li><li class="applied">synthetic-run-001:3:10 · step-completed · synthetic step-completed 9 of 1500</li><li class="applied">synthetic-run-001:3:11 · step-completed · synthetic step-completed 10 of 1500</li><li class="applied">synthetic-run-001:3:12 · step-completed · synthetic step-completed 11 of 1500</li><li class="applied">synthetic-run-001:3:13 · step-completed · synthetic step-completed 12 of 1500</li><li class="applied">synthetic-run-001:3:14 · step-completed · synthetic step-completed 13 of 1500</li><li class="applied">synthetic-run-001:3:15 · step-completed · synthetic step-completed 14 of 1500</li><li class="applied">synthetic-run-001:3:16 · step-completed · synthetic step-completed 15 of 1500</li><li class="applied">synthetic-run-001:3:17 · step-completed · synthetic step-completed 16 of 1500</li><li class="applied">synthetic-run-001:3:18 · step-completed · synthetic step-completed 17 of 1500</li><li class="applied">synthetic-run-001:3:19 · step-completed · synthetic step-completed 18 of 1500</li><li class="applied">synthetic-run-001:3:20 · step-completed · synthetic step-completed 19 of 1500</li><li class="applied">synthetic-run-001:3:21 · step-completed · synthetic step-completed 20 of 1500</li><li class="applied">synthetic-run-001:3:22 · step-completed · synthetic step-completed 21 of 1500</li><li class="applied">synthetic-run-001:3:23 · step-completed · synthetic step-completed 22 of 1500</li><li class="applied">synthetic-run-001:3:24 · step-completed · synthetic step-completed 23 of 1500</li><li class="applied">synthetic-run-001:3:25 · step-completed · synthetic step-completed 24 of 1500</li><li class="applied">synthetic-run-001:3:26 · step-completed · synthetic step-completed 25 of 1500</li><li class="applied">synthetic-run-001:3:27 · step-completed · synthetic step-completed 26 of 1500</li><li class="applied">synthetic-run-001:3:28 · step-completed · synthetic step-completed 27 of 1500</li><li class="applied">synthetic-run-001:3:29 · step-completed · synthetic step-completed 28 of 1500</li><li class="applied">synthetic-run-001:3:30 · step-completed · synthetic step-completed 29 of 1500</li><li class="applied">synthetic-run-001:3:31 · step-completed · synthetic step-completed 30 of 1500</li><li class="applied">synthetic-run-001:3:32 · step-completed · synthetic step-completed 31 of 1500</li><li class="applied">synthetic-run-001:3:33 · step-completed · synthetic step-completed 32 of 1500</li><li class="applied">synthetic-run-001:3:34 · step-completed · synthetic step-completed 33 of 1500</li><li class="applied">synthetic-run-001:3:35 · step-completed · synthetic step-completed 34 of 1500</li><li class="applied">synthetic-run-001:3:36 · step-completed · synthetic step-completed 35 of 1500</li><li class="applied">synthetic-run-001:3:37 · step-completed · synthetic step-completed 36 of 1500</li><li class="applied">synthetic-run-001:3:38 · step-completed · synthetic step-completed 37 of 1500</li><li class="applied">synthetic-run-001:3:39 · step-completed · synthetic step-completed 38 of 1500</li><li class="applied">synthetic-run-001:3:40 · step-completed · synthetic step-completed 39 of 1500</li><li class="applied">synthetic-run-001:3:41 · step-completed · synthetic step-completed 40 of 1500</li><li class="applied">synthetic-run-001:3:42 · step-completed · synthetic step-completed 41 of 1500</li><li class="applied">synthetic-run-001:3:43 · step-completed · synthetic step-completed 42 of 1500</li><li class="applied">synthetic-run-001:3:44 · step-completed · synthetic step-completed 43 of 1500</li><li class="applied">synthetic-run-001:3:45 · step-completed · synthetic step-completed 44 of 1500</li><li class="applied">synthetic-run-001:3:46 · step-completed · synthetic step-completed 45 of 1500</li><li class="applied">synthetic-run-001:3:47 · step-completed · synthetic step-completed 46 of 1500</li><li class="applied">synthetic-run-001:3:48 · step-completed · synthetic step-completed 47 of 1500</li><li class="applied">synthetic-run-001:3:49 · step-completed · synthetic step-completed 48 of 1500</li><li class="applied">synthetic-run-001:3:50 · step-completed · synthetic step-completed 49 of 1500</li><li class="applied">synthetic-run-001:3:51 · step-completed · synthetic step-completed 50 of 1500</li><li class="applied">synthetic-run-001:3:52 · step-completed · synthetic step-completed 51 of 1500</li><li class="applied">synthetic-run-001:3:53 · step-completed · synthetic step-completed 52 of 1500</li><li class="applied">synthetic-run-001:3:54 · step-completed · synthetic step-completed 53 of 1500</li><li class="applied">synthetic-run-001:3:55 · step-completed · synthetic step-completed 54 of 1500</li><li class="applied">synthetic-run-001:3:56 · step-completed · synthetic step-completed 55 of 1500</li><li class="applied">synthetic-run-001:3:57 · step-completed · synthetic step-completed 56 of 1500</li><li class="applied">synthetic-run-001:3:58 · step-completed · synthetic step-completed 57 of 1500</li><li class="applied">synthetic-run-001:3:59 · step-completed · synthetic step-completed 58 of 1500</li><li class="applied">synthetic-run-001:3:60 · step-completed · synthetic step-completed 59 of 1500</li><li class="applied">synthetic-run-001:3:61 · step-completed · synthetic step-completed 60 of 1500</li><li class="applied">synthetic-run-001:3:62 · step-completed · synthetic step-completed 61 of 1500</li><li class="applied">synthetic-run-001:3:63 · step-completed · synthetic step-completed 62 of 1500</li><li class="applied">synthetic-run-001:3:64 · step-completed · synthetic step-completed 63 of 1500</li><li class="applied">synthetic-run-001:3:65 · step-completed · synthetic step-completed 64 of 1500</li><li class="applied">synthetic-run-001:3:66 · step-completed · synthetic step-completed 65 of 1500</li><li class="applied">synthetic-run-001:3:67 · step-completed · synthetic step-completed 66 of 1500</li><li class="applied">synthetic-run-001:3:68 · step-completed · synthetic step-completed 67 of 1500</li><li class="applied">synthetic-run-001:3:69 · step-completed · synthetic step-completed 68 of 1500</li><li class="applied">synthetic-run-001:3:70 · step-completed · synthetic step-completed 69 of 1500</li><li class="applied">synthetic-run-001:3:71 · step-completed · synthetic step-completed 70 of 1500</li><li class="applied">synthetic-run-001:3:72 · step-completed · synthetic step-completed 71 of 1500</li><li class="applied">synthetic-run-001:3:73 · step-completed · synthetic step-completed 72 of 1500</li></ol>
+    </section>
+
+    <section aria-labelledby="dropped-heading">
+      <h2 id="dropped-heading">Dropped deliveries (never shown as new events)</h2>
+      <ol id="dropped"><li class="dropped">dropped duplicate: synthetic-run-001:3:44</li><li class="dropped">dropped duplicate: synthetic-run-001:3:45</li><li class="dropped">dropped duplicate: synthetic-run-001:3:46</li></ol>
+    </section>
+
+    <footer>Server-Sent Events over HTTP/1.1 on 127.0.0.1. Test runtime Node 22; approved production design Node.js 24 LTS /
+      Express / App Service Linux is not validated by this Node-builtin fixture.</footer>
+  
