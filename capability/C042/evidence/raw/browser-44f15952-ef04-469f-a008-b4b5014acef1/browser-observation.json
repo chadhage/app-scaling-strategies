@@ -1,0 +1,241 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C042",
+  "kind": "isolated-headless-edge-observation",
+  "startedAtUtc": "2026-11-06T03:39:31.947Z",
+  "outcome": "passed",
+  "testRuntime": "v22.23.4",
+  "businessData": "synthetic",
+  "journalRecordsAtEnd": 3,
+  "limits": [
+    "The isolated helper allows only GET and aborts writes: the browser could not POST; the page reported UNKNOWN and the server saw no write."
+  ],
+  "integratedForegroundBrowserUsed": false,
+  "checks": [
+    {
+      "name": "the installed Edge is Microsoft-signed and within the qualified major version",
+      "passed": true,
+      "observed": {
+        "version": "156.0.4314.58",
+        "sha256": "d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b"
+      }
+    },
+    {
+      "name": "initial state: synthetic banner, the GET-only limit stated, no result shown, a valid example loaded",
+      "passed": true,
+      "observed": "Not run — no result yet."
+    },
+    {
+      "name": "the whole page is reachable with Tab in a sensible order",
+      "passed": true,
+      "observed": [
+        "preset",
+        "request",
+        "submit",
+        "key",
+        "inspect",
+        "load"
+      ]
+    },
+    {
+      "name": "Enter on Submit: the helper blocks the POST, the page says UNKNOWN, offers Retry and Inspect, shows no success, the server saw no write",
+      "passed": true,
+      "observed": {
+        "unknown": "UNKNOWN — no valid response was received, so it is not known whether the request was applied. Nothing is shown as success. Use Inspect (a read-only GET) or Retry with the same key.",
+        "requests": [
+          "POST /v1/steps"
+        ]
+      }
+    },
+    {
+      "name": "keyboard Inspect (a GET) shows the validated inputs, the explicit result, what did not happen and the journal trail of the recorded step",
+      "passed": true,
+      "observed": [
+        "200",
+        "inspect",
+        "succeeded (COMPLETED)",
+        "true",
+        "false",
+        "true",
+        "committed",
+        "true",
+        "false",
+        "5",
+        "none",
+        "The effect is recorded exactly once; no recovery is needed.",
+        "1"
+      ]
+    },
+    {
+      "name": "an in-flight step shows UNKNOWN with Cancel, Retry and Inspect; the blocked Cancel is reported as unknown and nothing was cancelled",
+      "passed": true,
+      "observed": {
+        "lease": {
+          "capacity": 100,
+          "committed": 5,
+          "held": 3,
+          "available": 92
+        }
+      }
+    },
+    {
+      "name": "an unknown key is a typed rejection with only Correct and resubmit, which moves focus to the editor; an invalid key is refused locally",
+      "passed": true,
+      "observed": "Enter a valid idempotency key: 8 to 64 letters, digits, dots, hyphens or underscores."
+    },
+    {
+      "name": "Enter on Load: the page verified the server-produced transcript and shows every case, including hostile inputs, abort and restart",
+      "passed": true,
+      "observed": {
+        "status": "VERIFIED SERVER TRANSCRIPT — 24 exchanges, 5 effects, 4 replays, 2 aborts and restarts. The POST actions were conducted by the server, not by this browser.",
+        "summary": {
+          "verified": true,
+          "exchanges": 24,
+          "outcomes": {
+            "succeeded": 7,
+            "rejected": 7,
+            "unsupported": 2,
+            "unknown": 2,
+            "cancelled": 2,
+            "interrupted": 2
+          },
+          "replays": 4,
+          "aborts": 2,
+          "effects": 5,
+          "typedFailures": [
+            "ACTION_NOT_ALLOWED",
+            "CAPACITY_EXHAUSTED",
+            "DUPLICATE_FIELD",
+            "FIELD_OUT_OF_RANGE",
+            "FORBIDDEN_FIELD",
+            "IDEMPOTENCY_KEY_CONFLICT",
+            "JOURNAL_UNCERTAIN",
+            "STEP_CANCELLED",
+            "STEP_INTERRUPTED",
+            "STEP_IN_FLIGHT",
+            "UNSUPPORTED_ACTION",
+            "UNSUPPORTED_STEP"
+          ]
+        }
+      }
+    },
+    {
+      "name": "a tampered or missing transcript is REJECTED in the real browser and the earlier display is cleared",
+      "passed": true,
+      "observed": "REJECTED — HTTP_500: no transcript was observed."
+    },
+    {
+      "name": "CSP blocks inline script, outside connections and native form navigation",
+      "passed": true,
+      "observed": {
+        "inline": "blocked",
+        "outside": "blocked",
+        "location": "/"
+      }
+    }
+  ],
+  "cleanup": {
+    "serverClosed": true,
+    "browserClosed": true
+  },
+  "signedEdge": {
+    "path": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "status": "Valid",
+    "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "fileVersion": "156.0.4314.58",
+    "sha256": "d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b"
+  },
+  "server": {
+    "pid": 34420,
+    "address": {
+      "address": "127.0.0.1",
+      "family": "IPv4",
+      "port": 60664
+    },
+    "ownership": "this process, exact returned http.Server handle"
+  },
+  "browserVersion": "156.0.4314.58",
+  "playwrightVersion": "1.56.1",
+  "domSnapshot": {
+    "elementIds": [
+      "limit",
+      "step-form",
+      "preset",
+      "request",
+      "submit",
+      "status",
+      "inputs-heading",
+      "inputs",
+      "result-heading",
+      "result",
+      "did-not",
+      "details",
+      "trail",
+      "recovery-heading",
+      "recovery",
+      "key",
+      "inspect",
+      "transcript-heading",
+      "load",
+      "summary",
+      "events"
+    ],
+    "eventNumbers": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27
+    ],
+    "submitStatuses": [
+      "201",
+      "200",
+      "409",
+      "400",
+      "400",
+      "400",
+      "422",
+      "409",
+      "200",
+      "409",
+      "200",
+      "503",
+      "200",
+      "409",
+      "201"
+    ]
+  },
+  "consoleErrors": [
+    "Loading the image 'data:,' violates the following Content Security Policy directive: \"default-src 'none'\". Note that 'img-src' was not explicitly set, so 'default-src' is used as a fallback. The action has been blocked.",
+    "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+    "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-SlHSUXvpUrZZqHBPWfdJaR/1l5NR39l5yPTcF2NGT3I='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked.",
+    "Connecting to 'http://example.invalid/' violates the following Content Security Policy directive: \"connect-src 'self'\". The action has been blocked.",
+    "Fetch API cannot load http://example.invalid/. Refused to connect because it violates the document's Content Security Policy."
+  ],
+  "completedAtUtc": "2026-11-06T03:40:30.535Z"
+}

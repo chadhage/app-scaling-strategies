@@ -1,0 +1,53 @@
+'use strict';
+
+// Test tooling, not production code: runs the L-0004 command ONCE PER enumerated C042 production file (a single
+// command with several includes would hide a weak file behind the aggregate row) and enforces 85 lines, 85 branches
+// and 85 functions per file. An unloaded file counts as 0%. Output is JSON-friendly; the exit code is 1 below any floor.
+const path = require('node:path');
+const { spawn } = require('node:child_process');
+const gate = require('./coverage-gate.cjs');
+
+const root = path.resolve(__dirname, '..');
+const repository = path.resolve(root, '..', '..');
+const names = gate.listNamespaceFiles(root);
+const files = gate.enumerate(names);
+const tests = gate.testFiles(__dirname).map((name) => path.join('capability', 'C042', 'tests', name));
+const PARALLEL = 2;
+
+function measure(file) {
+  const args = ['--test', '--test-concurrency=1', '--experimental-test-coverage', `--test-coverage-include=capability/C042/${file}`,
+    '--test-coverage-lines=85', '--test-coverage-branches=85', '--test-coverage-functions=85', ...tests];
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, args, { cwd: repository, env: gate.nestedEnvironment(process.env), windowsHide: true });
+    const chunks = [];
+    child.stdout.on('data', (chunk) => chunks.push(chunk));
+    child.stderr.on('data', (chunk) => chunks.push(chunk));
+    const timer = setTimeout(() => child.kill(), 900000);
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      const output = Buffer.concat(chunks).toString('utf8');
+      const evaluated = gate.evaluate(file, gate.parse(output));
+      if (code !== 0) evaluated.failures.push(`NESTED_EXIT ${code}`);
+      resolve({ ...evaluated, command: `node ${args.join(' ')}`, exitCode: code, tail: output.split(/\r?\n/).filter((line) => /^# (tests|pass|fail)|^\s*not ok /.test(line)).join(' | ') });
+    });
+  });
+}
+
+async function main() {
+  const results = [];
+  const queue = [...files];
+  await Promise.all(Array.from({ length: PARALLEL }, async () => {
+    while (queue.length) results.push(await measure(queue.shift()));
+  }));
+  results.sort((a, b) => a.file.localeCompare(b.file));
+  process.stdout.write(gate.format(results, gate.unmeasured(names)));
+  process.stdout.write(`${JSON.stringify(results.map(({ file, lines, branches, functions, exitCode, tail }) => ({ file, lines, branches, functions, exitCode, tail })), null, 2)}\n`);
+  if (results.some((item) => item.failures.length)) {
+    console.error(`C042 coverage RED: ${results.filter((item) => item.failures.length).length} of ${files.length} production files below 85/85/85 (unloaded counts as 0%).`);
+    process.exitCode = 1;
+  } else {
+    console.log(`C042 coverage GREEN: ${files.length}/${files.length} enumerated production files at or above 85 lines, 85 branches and 85 functions each: ${files.join(', ')}.`);
+  }
+}
+
+main();
