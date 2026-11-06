@@ -1,0 +1,46 @@
+'use strict';
+
+// U005 mutants of startup.cjs (data for u005-mutate.cjs): { id, file, guard, find (must occur exactly once, LF text), replace, expect }.
+
+const f = 'startup.cjs';
+
+module.exports = [
+  { id: 'S01', file: f, guard: 'F9 open deadline validated', find: "deadlineMs: checkMs(options.deadlineMs, 'deadlineMs'),", replace: 'deadlineMs: options.deadlineMs,', expect: 'F9 at startup' },
+  { id: 'S02', file: f, guard: 'F9 other deadlines validated', find: "const pick = (name, fallback) => checkMs(options[name] === undefined ? fallback : options[name], name);", replace: 'const pick = (name, fallback) => (options[name] === undefined ? fallback : options[name]);', expect: 'F9 at startup' },
+  { id: 'S03', file: f, guard: 'per-process lock taken', find: 'const release = await settings.lock.acquire();', replace: 'const release = () => {};', expect: 'two concurrent startups are serialised' },
+  { id: 'S04', file: f, guard: 'lock held until the watch ends', find: '}).finally(release);', replace: '}).finally(() => {});', expect: 'call after a timeout works' },
+  { id: 'S05', file: f, guard: 'expiry ends the owned tree', find: '  const phase = phaseOf(settings);\n  const report = await sweep(tree, settings);', replace: '  const phase = phaseOf(settings);\n  const report = emptyReport(true);', expect: 'expiry during launch' },
+  { id: 'S06', file: f, guard: 'late session closed', find: 'if (state.settled && state.ok) late = await closeSession(state.value, settings);', replace: 'void 0;', expect: 'a session that resolves late' },
+  { id: 'S07', file: f, guard: 'late child found while watching', find: 'if (!state.settled) report = await sweep(tree, settings);', replace: 'void 0;', expect: 'expiry before any child exists' },
+  { id: 'S08', file: f, guard: 'grace expiry flagged', find: 'graceExpired = true;', replace: 'graceExpired = false;', expect: 'abandoned after the grace period' },
+  { id: 'S09', file: f, guard: 'leftovers of a failed open reported', find: 'if (report.clean && tree.roots.length === 0 && tree.unverifiable.length === 0) throw state.error;', replace: 'throw state.error;', expect: 'leaves a browser behind' },
+  { id: 'S10', file: f, guard: 'a clean failed open rethrows the original', find: 'if (report.clean && tree.roots.length === 0 && tree.unverifiable.length === 0) throw state.error;', replace: 'void 0;', expect: 'rethrows the original error unchanged' },
+  { id: 'S11', file: f, guard: 'a session without an owned root is refused', find: "if (tree.roots.length === 0) throw new LifecycleError('ERR_NO_OWNED_ROOT', 'the open produced no new child process of the caller');", replace: 'void 0;', expect: 'without a new child process of the caller' },
+  { id: 'S12', file: f, guard: 'an unowned session is closed', find: 'const closed = await closeSession(session, settings);', replace: "const closed = { status: 'closed', error: null };", expect: 'without a new child process of the caller' },
+  { id: 'S13', file: f, guard: 'watching reported', find: 'watching: !state.settled || state.ok, report, settled', replace: 'watching: false, report, settled', expect: 'expiry before any child exists' },
+  { id: 'S14', file: f, guard: 'clean never true while watching', find: 'this.clean = report.clean && !this.watching;', replace: 'this.clean = report.clean;', expect: 'expiry before any child exists' },
+  { id: 'S15', file: f, guard: 'unreadable baseline fails closed', find: "throw new StartupError('ERR_STARTUP_BASELINE', message, { cause: error, deadlineMs: settings.deadlineMs, report: emptyReport(true) });", replace: 'void message;', expect: 'cannot be read before the open' },
+  { id: 'S16', file: f, guard: 'session close bounded', find: "await bounded(settings.clock, settings.terminateMs, 'the session close', () => session.close());", replace: 'await session.close();', expect: 'close never settles' },
+  { id: 'S17', file: f, guard: 'failed late close is not clean', find: "late.status !== 'close-failed'", replace: 'true', expect: 'late session whose close fails' },
+  { id: 'S18', file: f, guard: 'an unsettled open is not clean', find: 'clean: report.clean && state.settled && late.status', replace: 'clean: report.clean && late.status', expect: 'abandoned after the grace period' },
+  { id: 'S19', file: f, guard: 'abandoned late session closed', find: 'if (!state.settled) inner.then((session) => closeSession(session, settings), () => {});', replace: 'void 0;', expect: 'abandoned after the grace period has its late session closed' },
+  { id: 'S20', file: f, guard: 'phase probe cannot throw past the cleanup', find: "  try {\n    return String(settings.getPhase());\n  } catch {\n    return 'unknown';\n  }", replace: '  return String(settings.getPhase());', expect: 'a phase probe that throws' },
+  { id: 'S21', file: f, guard: 'lock kept while the watch runs', find: 'if (!(error instanceof StartupError && error.settled !== null)) release();', replace: 'release();', expect: 'call after a timeout works' },
+  { id: 'S22', file: f, guard: 'lock released after success', find: '    release();\n    return session;', replace: '    return session;', expect: 'two concurrent startups are serialised' },
+  { id: 'S23', file: f, guard: 'deadline timer cleared', find: 'settings.clock.clearTimeout(timer);', replace: 'void 0;', expect: 'a startup inside the deadline' },
+  { id: 'S24', file: f, guard: 'synchronous opener throw handled', find: '  try {\n    inner = Promise.resolve(run());\n  } catch (error) {\n    inner = Promise.reject(error);\n  }', replace: '  inner = Promise.resolve(run());', expect: 'treated like a rejection and is still swept' },
+  { id: 'S25', file: f, guard: 'process-wide lock', find: 'const defaultLock = () => (globalThis[LOCK_KEY] ||= createLock());', replace: 'const defaultLock = () => createLock();', expect: 'the default lock is shared per process' },
+  { id: 'S26', file: f, guard: 'lock chain waits for the holder', find: 'tail = ready.then(() => held);', replace: 'tail = ready;', expect: 'two concurrent startups are serialised' },
+  { id: 'S27', file: f, guard: 'default lock used', find: 'lock: options.lock || defaultLock(),', replace: 'lock: options.lock,', expect: 'without a lock option' },
+  { id: 'S28', file: f, guard: 'lesson argument passed', find: 'return startBounded(() => open(relativeRepoPath), options);', replace: 'return startBounded(() => open(), options);', expect: 'the opener is injectable' },
+  { id: 'S29', file: f, guard: 'loopback server passed', find: 'return startBounded(() => open(relativeOwnedIndexPath, server), options);', replace: 'return startBounded(() => open(relativeOwnedIndexPath), options);', expect: 'the opener is injectable' },
+  { id: 'S30', file: f, guard: 'sealed default for the lesson entry', find: 'const open = options.opener || (options.loadSealed || loadSealed)().openIsolatedLesson;', replace: 'const open = options.opener || (options.loadSealed || loadSealed)().openIsolatedLoopback;', expect: 'the opener is injectable' },
+  { id: 'S31', file: f, guard: 'polling interval bounded', find: 'await settings.adapters.sleep(Math.min(settings.pollMs, left));', replace: 'await settings.adapters.sleep(left);', expect: 'expiry before any child exists' },
+  { id: 'S32', file: f, guard: 'expiry decided by the race', find: "if (first !== 'settled') return expire(settings, tree, state, release, inner, first);", replace: 'void 0;', expect: 'expiry during launch' },
+  { id: 'S33', file: f, guard: 'grace limit ends the watch', find: 'if (left <= 0) {',   replace: 'if (left <= -1e15) {', expect: 'u005-startup' },
+    { id: 'S34', file: f, guard: 'unowned close failure is not clean', find: "report: { ...report, clean: report.clean && closed.status === 'closed' }", replace: 'report', expect: 'whose close also fails' },
+    { id: 'S35', file: f, guard: 'abort signal listened to', find: "onAbort = () => resolve('aborted');", replace: 'onAbort = () => {};', expect: 'an abort signal ends the owned tree' },
+    { id: 'S36', file: f, guard: 'a signal aborted in advance launches nothing', find: 'if (settings.signal && settings.signal.aborted) {', replace: 'if (false) {', expect: 'already aborted launches nothing' },
+    { id: 'S37', file: f, guard: 'signal validated', find: "if (options.signal !== undefined && !(options.signal && typeof options.signal.addEventListener === 'function')) throw", replace: 'if (false) throw', expect: 'an invalid signal is refused' },
+    { id: 'S38', file: f, guard: 'abort has its own code', find: "const aborted = reason === 'aborted';", replace: 'const aborted = false;', expect: 'an abort signal ends the owned tree' },
+  ];

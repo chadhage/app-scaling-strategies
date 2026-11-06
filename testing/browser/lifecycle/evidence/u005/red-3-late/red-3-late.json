@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "name": "red-3-late",
+  "purpose": "U005 RED 3 (draft tests): the naive wrapper that ends the tree once at expiry but never watches (mode late): a late child and a late session are left behind, the kill adapter and the table are trusted",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "--test-timeout=20000",
+    "testing\\browser\\lifecycle\\tests\\u005-owned.test.cjs",
+    "testing\\browser\\lifecycle\\tests\\u005-startup-expiry.test.cjs",
+    "testing\\browser\\lifecycle\\tests\\u005-startup-flow.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "U005_RED_IMPL",
+    "U005_NAIVE_MODE"
+  ],
+  "startedAtUtc": "2026-11-06T07:12:58.504Z",
+  "completedAtUtc": "2026-11-06T07:13:01.407Z",
+  "elapsedMs": 2903,
+  "timeoutMs": 300000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "testing\\browser\\lifecycle\\U005.feature",
+      "bytes": 5176,
+      "rawSha256": "9bd385a8c52719404569ec5103c1f4eea87b8f12d46a012eb78e00295567ba99",
+      "crlfToLfSha256": "439321d31fb1695fc9c7ed86dc05094b19042fd39691f7c5dcf2132ba6ea96c1"
+    },
+    {
+      "path": "testing\\browser\\lifecycle\\evidence\\u005\\specimen\\naive-impl.cjs.txt",
+      "bytes": 5922,
+      "rawSha256": "44ac7fda88c96f02d1b3cd6c8e0498b6582947be55ac419f572896481dceec6d",
+      "crlfToLfSha256": "e53c5bf5c7bbb5e2c5fc9addfc5e05c0ebc979385ceca1a094db356c68703511"
+    },
+    {
+      "path": "testing\\browser\\lifecycle\\tests\\u005-support-impl.cjs",
+      "bytes": 878,
+      "rawSha256": "715ad09d700a1342b9c5d338d35cb50042403181a545e2f89a89911e01d06d29",
+      "crlfToLfSha256": "b09901b273fbba1ab2a853a6b3678a80f799ac7d867401c12334e0e5fb8e3382"
+    },
+    {
+      "path": "testing\\browser\\lifecycle\\tests\\u005-support-world.cjs",
+      "bytes": 8091,
+      "rawSha256": "e4febc75054183090175c8ebed00bdd4e8fb7dfddac81bfcfca4c0675b96a4d7",
+      "crlfToLfSha256": "5e5d03563f5f4443b25f42f65e1c2a376a1fb321ae2fc746b0bcbe775f666e51"
+    },
+    {
+      "path": "testing\\browser\\lifecycle\\tests\\u005-owned.test.cjs",
+      "bytes": 19474,
+      "rawSha256": "8cae2315d35dca2b852d4b2c4bee4e24a15561b5bffa65f560dd950e0bf1b2d9",
+      "crlfToLfSha256": "a9fbfc12cf1d5e57e107b8c41edc553add371032aae457ca5b4b76f08826a4f7"
+    },
+    {
+      "path": "testing\\browser\\lifecycle\\tests\\u005-startup-expiry.test.cjs",
+      "bytes": 11776,
+      "rawSha256": "25dd70ef685aaaba0993a3f046aeac8d4e44de6f097457affa349dc8b9de8bde",
+      "crlfToLfSha256": "fa21d56dca3c320a3db7ad88675b5cb6f094cc111113d7c5b27d06e602fe52c0"
+    },
+    {
+      "path": "testing\\browser\\lifecycle\\tests\\u005-startup-flow.test.cjs",
+      "bytes": 10799,
+      "rawSha256": "7ece1f72ff4854ea5f31be02995ee1c0b171628a25bb88cc9266f7f4a674d858",
+      "crlfToLfSha256": "e35d0ac949d92c0e670cfdb4cfe061153e857b196b6a1c42b00f1202e06465e4"
+    },
+    {
+      "path": "testing\\browser\\lifecycle\\tree.cjs",
+      "bytes": 12000,
+      "rawSha256": "b6fc291acf85f6641eb9cfa2daddc01a558c3ffae127f1cac996fb431581cc18",
+      "crlfToLfSha256": "391ed1eea1a64cadec43cd10265d183ef4fd20dc16f0c9336f72d2ddcd4390ab"
+    },
+    {
+      "path": "testing\\browser\\lifecycle\\windows.cjs",
+      "bytes": 11810,
+      "rawSha256": "8556a957e729183f1c69246ef2b7d59ab2e0b63ce4fac8c833537324055f81f0",
+      "crlfToLfSha256": "9bc1da23da8cf34b9a2c15a52690819d15308f43df72d4797d0bbfe7b2ad0b12"
+    }
+  ],
+  "summary": {
+    "tests": 52,
+    "suites": 0,
+    "pass": 11,
+    "fail": 41,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "F1: an empty process table fails closed, never success-shaped",
+      "F1: a truncated table without the caller fails closed, one with the caller is accepted",
+      "F1: terminating over an empty table reports nothing gone and nothing terminated",
+      "helper rows: the helper that printed the table is not a new child, a stranger with that pid is kept",
+      "F2: an unreadable descendant and everything below it is listed as unverifiable, not dropped",
+      "F2: the owned tree counts an unverifiable descendant against clean while it is listed, not once it is gone",
+      "F3: a list adapter that never settles is raced against its deadline and the timer is cleared",
+      "F3: a kill adapter that never settles cannot hang terminate, nothing is claimed",
+      "F3: a list adapter that never settles cannot hang terminate either",
+      "F4: terminated is claimed only after a confirming fresh table, otherwise it is unconfirmed",
+      "a real kill is confirmed by the table: terminated, clean, and history keeps terminated over alreadyGone",
+      "F5: ownerPid is required, a foreign owner, a foreign root, system pids and the caller are refused",
+      "F5: the caller and system pids are never forwarded to the kill adapter",
+      "F5: an all-protected batch reaches no adapter at all and a bogus outcome list is ignored",
+      "F9: timers are capped at 2147483647 ms and invalid deadlines are rejected",
+      "F8: process.env itself reaches the Windows adapters and a plain copy with other casing works too",
+      "the real Windows adapters record their helper pid so the helper never looks like a new child",
+      "the owned tree records exactly the new children of the caller, not the baseline, and replaces a reused pid",
+      "a new direct child with an unreadable creation time is unverifiable, a protected one is refused, nothing throws",
+      "a protected or unverifiable refusal that is still listed is not clean",
+      "expiry during launch ends only the owned tree and rejects with a typed error",
+      "expiry during new context ends only the owned tree and rejects with a typed error",
+      "expiry during new page ends only the owned tree and rejects with a typed error",
+      "expiry during navigation ends only the owned tree and rejects with a typed error",
+      "expiry before any child exists rejects at once and keeps watching; a late browser and a late session are cleaned",
+      "a session that resolves late, after its tree was ended at expiry, is closed and never left behind",
+      "a late session whose close fails is reported, not hidden, and is not clean",
+      "a late session whose close never settles is abandoned after the grace period and its tree is still ended",
+      "an open that never settles and spawns nothing is abandoned after the grace period and reported unclean",
+      "F3 at startup: a list adapter that stops answering still lets the rejection arrive, unclean",
+      "F3 at startup: a kill adapter that never settles still lets the rejection arrive, with survivors",
+      "F1 at startup: an empty table at expiry is never read as everything gone",
+      "F2 at startup: an unreadable descendant is listed as unverifiable and counted until it is gone",
+      "a startup inside the deadline returns the session with the owned tree and kills nothing",
+      "an open that fails but leaves a browser behind is swept by identity and reported",
+      "a session without a new child process of the caller is closed and refused, never returned unowned",
+      "a session whose process table cannot be read after the open is closed and refused",
+      "a process table that cannot be read before the open fails closed before anything is launched",
+      "F9 at startup: deadlines are validated before the lock or the opener are touched and capped at 2147483647 ms",
+      "two concurrent startups are serialised and each records only its own browser",
+      "the default lock is shared per process and a call after a timeout works once the first cleanup ended"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red-3-late.stdout.raw.gz",
+      "bytes": 42030,
+      "sha256": "c400a377d76d8f7ba9b54f9f5f56b406122c1d0a593a6188cc3457e9f15c04f1",
+      "gzipBytes": 4514,
+      "gzipSha256": "b0a6af1aa556ba4161d04b287cd26de6edd6e45fef27399c057293508db8843b",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red-3-late.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}
