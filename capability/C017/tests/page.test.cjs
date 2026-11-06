@@ -91,7 +91,7 @@ test('a blocked or lost cancel request is shown as not delivered and UNKNOWN, re
 test('typed failures, forged answers and unrecognized answers claim nothing', async (t) => {
   const answers = [
     [409, C.failure('STALE_EPOCH', {}).body, /^Not applied \(STALE_EPOCH\): .* Allowed next steps: reinspect\. No outcome is claimed\.$/],
-    [200, { kind: 'C017-cancel-result', outcome: 'COMPENSATED', effective: true, statement: 'Reversed.', facts: { totalSteps: 4, effectsStanding: [{ step: 1, units: 5 }], stepsNotRun: [3, 4], unknownSteps: [], undone: [], standingUnits: 5, compensation: 'NOT_REQUESTED' } }, /contradicts its own facts.*No cancellation, undo or completion is claimed\.$/],
+    [200, { kind: 'C017-cancel-result', outcome: 'COMPENSATED', effective: true, statement: 'Reversed.', facts: { totalSteps: 4, effectsStanding: [{ step: 1, units: 5 }], stepsNotRun: [3, 4], unknownSteps: [], undone: [], standingUnits: 5, compensation: 'NOT_REQUESTED' } }, /^Answer rejected: .*contradicts its own facts.*No cancellation, undo or completion is claimed\.$/],
     [200, { kind: 'something-else' }, /^The answer was not recognized\. Nothing is claimed\.$/],
   ];
   for (const [status, body, pattern] of answers) {
@@ -151,12 +151,12 @@ test('polling follows a live action to completion, an unreachable server is repo
   const down = loadPage({ fetch: () => Promise.reject(new TypeError('offline')), origin: env.origin });
   await down.settle();
   assert.match(down.el('status').textContent, /^The server is not reachable\./);
-  const forged = { schemaVersion: 1, kind: 'C017-state', journalStatus: 'READABLE', problem: null, lease: { leaseId: '<img src=x onerror=alert(1)>' }, epoch: 0, action: null, journal: [{ type: '<b>x</b>' }], journalOmitted: 5 };
+  const forged = { schemaVersion: 1, kind: 'C017-state', journalStatus: 'READABLE', problem: null, lease: { leaseId: '<img src=x onerror=alert(1)>', runId: 'synthetic-run-001', userId: 'user-synthetic-001' }, epoch: 0, action: null, journal: [{ type: '<b>x</b>' }], journalOmitted: 5 };
   const evil = loadPage({ fetch: () => reply(200, forged), origin: env.origin });
   await evil.settle();
-  assert.equal(evil.el('lease').textContent, '<img src=x onerror=alert(1)>');
-  assert.equal(evil.el('journal').texts()[0], '5 earlier entries are not shown; the server keeps all of them.');
-  assert.equal(evil.el('journal').children.every((child) => child.tag === 'li'), true);
+  assert.match(evil.el('outcome').textContent, /^Answer rejected: the server's state view contradicts its own facts/);
+  const shown = ['status', 'outcome', 'lease', 'units'].map((id) => evil.el(id).textContent).concat(['steps', 'facts', 'journal'].flatMap((id) => evil.el(id).texts())).join('\n');
+  assert.doesNotMatch(shown, /<img|<b>/, 'a hostile identity or journal type is never displayed, not even as text');
   const source = fs.readFileSync(path.join(s.root, 'page.js'), 'utf8');
   assert.doesNotMatch(source, /innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function/);
 });

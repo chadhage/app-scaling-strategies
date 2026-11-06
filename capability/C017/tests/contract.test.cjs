@@ -59,7 +59,7 @@ test('an own __proto__ key from JSON.parse is an extra field and pollutes nothin
 });
 
 test('every typed failure has a closed status, group and allowed recovery actions and claims nothing', () => {
-  const groups = new Set(['input', 'identity', 'epoch', 'state', 'integrity']);
+  const groups = new Set(['input', 'identity', 'epoch', 'state', 'integrity', 'server']);
   for (const [code, entry] of Object.entries(C.failures)) {
     const { status, body } = C.failure(code, {});
     assert.equal(status, entry.status);
@@ -67,7 +67,7 @@ test('every typed failure has a closed status, group and allowed recovery action
     assert.ok(entry.actions.length > 0 && entry.actions.every((a) => C.recovery.includes(a)), code);
     assert.deepEqual([body.kind, body.error.code, body.effectClaimed, body.journalWritten, body.outcome], ['C017-typed-failure', code, false, false, undefined]);
   }
-  assert.equal(Object.keys(C.failures).length, 22);
+  assert.equal(Object.keys(C.failures).length, 23);
 });
 
 test('a typed failure echoes only well-formed identifiers and never the caller text', () => {

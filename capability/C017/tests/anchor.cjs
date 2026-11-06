@@ -13,7 +13,8 @@ const sha = (buffer) => createHash('sha256').update(buffer).digest('hex');
 const git = (args, encoding = 'utf8') => execFileSync('git', args, { cwd: repo, encoding, maxBuffer: 1 << 26 });
 
 const problems = [];
-for (const dep of imports.dependencies) {
+const pins = [...imports.dependencies, { ...imports.browserHelper, card: 'flow-browser' }];
+for (const dep of pins) {
   const posix = dep.path.replaceAll('\\', '/');
   const resolved = git(['rev-parse', `${dep.tag}^{commit}`]).trim();
   if (resolved !== dep.commit) problems.push(`${dep.tag} resolves to ${resolved}, not ${dep.commit}`);
@@ -22,5 +23,5 @@ for (const dep of imports.dependencies) {
   const last = git(['log', '-1', '--format=%H', '--', posix]).trim();
   if (last !== dep.commit) problems.push(`${dep.path}: last changed in ${last}, pinned ${dep.commit}`);
 }
-console.log(JSON.stringify({ checked: imports.dependencies.length, problems }, null, 2));
+console.log(JSON.stringify({ checked: pins.length, problems }, null, 2));
 process.exit(problems.length ? 1 : 0);

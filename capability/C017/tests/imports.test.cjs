@@ -23,7 +23,10 @@ test('every imported accepted file matches its pins by raw or LF-normalized byte
     assert.equal(dep.tag, `kanban/${dep.card}/${dep.commit.slice(0, 12)}`);
     assert.equal(imports.accepted[dep.card].commit === dep.commit || imports.accepted[dep.card].tag === dep.tag, true);
   }
-  assert.equal(sha(fs.readFileSync(path.join(repo, 'testing', 'browser', 'isolated.cjs'))), imports.browserHelperRawSha256);
+  const helper = imports.browserHelper;
+  const bytes = fs.readFileSync(path.join(repo, 'testing', 'browser', 'isolated.cjs'));
+  assert.ok(sha(bytes) === helper.raw || sha(lf(bytes)) === helper.lf, 'the browser helper drifted from its pin');
+  assert.equal(helper.git, helper.lf, 'the accepted Git blob is the LF-canonical form');
 });
 
 test('C017 production code loads exactly the pinned accepted files from other namespaces and nothing else', () => {

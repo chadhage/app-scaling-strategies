@@ -66,8 +66,7 @@ test('a small-heap child stays bounded and responsive under floods, half-open an
   const silent = h.raw(origin, `POST /api/cancel HTTP/1.1\r\n${host}Content-Type: application/json\r\nContent-Length: ${Buffer.byteLength(body)}\r\n\r\n${body}`, { read: false });
   await pollState(origin, (st) => st.action.cancel && st.action.cancel.key === 'mem-cancel-0001', 'the never-reading cancel was not journaled');
   await sleep(400);
-  const before = readMem(memFile);
-  assert.ok(before, 'the child heap sampler wrote nothing');
+  const before = await readMem(memFile);
 
   const burst = async (count, make) => { for (let i = 0; i < count; i += 40) await Promise.all(Array.from({ length: Math.min(40, count - i) }, make)); };
   const quiet = (promise) => promise.catch(() => null);
@@ -79,7 +78,7 @@ test('a small-heap child stays bounded and responsive under floods, half-open an
   const tiny = `POST /api/cancel HTTP/1.1\r\n${host}Content-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n${'1\r\na\r\n'.repeat(3000)}0\r\n\r\n`;
   const crowd = [...Array.from({ length: 40 }, () => h.raw(origin, tiny, { read: false })), ...Array.from({ length: 90 }, () => h.raw(origin, `GET /api/state HTTP/1.1\r\n${host}X-Partial: `, { read: false }))];
   await sleep(600);
-  const after = readMem(memFile);
+  const after = await readMem(memFile);
   assert.ok(after.heapUsed < before.heapUsed + 24 * 1024 * 1024, `heap grew from ${before.heapUsed} to ${after.heapUsed}`);
   assert.ok(after.rss < before.rss + 160 * 1024 * 1024, `rss grew from ${before.rss} to ${after.rss}`);
   crowd.forEach((client) => client.socket.destroy());

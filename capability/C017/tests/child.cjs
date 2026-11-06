@@ -56,8 +56,22 @@ async function pollState(origin, predicate, message, ms = 8000) {
   }
 }
 
-function readMem(file) {
-  try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return null; }
+// The child rewrites its sample file every 100 ms: a reader waits until the file parses (a half-written or momentarily missing file is
+// retried) and gives up with a clear error only after the deadline, instead of reporting that nothing was written (L-0137).
+async function readMem(file, { ms = 5000 } = {}) {
+  const end = Date.now() + ms;
+  let last = 'no file yet';
+  for (;;) {
+    try {
+      const sample = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (Number.isFinite(sample.heapUsed) && Number.isFinite(sample.rss)) return sample;
+      last = 'not a heap sample';
+    } catch (error) {
+      last = error.code || error.message;
+    }
+    if (Date.now() > end) throw new Error(`the child never produced a parseable heap sample within ${ms} ms (${last})`);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
 }
 
 module.exports = Object.freeze({ startChild, pollState, readMem });

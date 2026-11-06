@@ -8,6 +8,10 @@ const C = require('./contract.js');
 
 const MAX_BODY = 2048;
 const MAX_JOURNAL_VIEW = 48;
+// After an answer is flushed the request body is still dumped, but only up to this many more bytes and this long: a polite client that
+// is still uploading a finite oversize body (up to about 128 KB) receives its typed answer, an endless or slow one is cut (L-0120, L-0132).
+const DRAIN_BYTES = 131072;
+const DRAIN_MS = 1000;
 const tracked = new WeakMap();
 const scope = Object.freeze({
   cardId: 'C017', businessData: 'synthetic', transport: '127.0.0.1 HTTP only', testRuntime: process.version,
@@ -44,15 +48,29 @@ function readBody(request) {
   });
 }
 
+function closeAfterAnswer(socket) {
+  if (socket.destroyed) return;
+  const limit = socket.bytesRead + DRAIN_BYTES;
+  const cut = () => socket.destroy();
+  const timer = setTimeout(cut, DRAIN_MS);
+  timer.unref();
+  const watch = () => { if (socket.bytesRead > limit) cut(); };
+  socket.on('data', watch);
+  socket.once('close', () => { clearTimeout(timer); socket.off('data', watch); });
+}
+
 // Resource bounds: one request per connection (Connection: close), a 2 KB body, 8 KB of headers, a capped journal view,
 // a connection cap and short request and idle timeouts. Every accepted socket is tracked so shutdown can never hang on one.
 function createLocalServer({ engine, requestTimeoutMs = 5000, socketTimeoutMs = 30000, maxConnections = 64 }) {
   const sockets = new Set();
   const server = http.createServer({ connectionsCheckingInterval: 250, maxHeaderSize: 8192 }, async (request, response) => {
+    const { socket } = request;
+    // The ONE send path of every answer: once it is flushed the connection is closed after a bounded drain (closeAfterAnswer). Node's own
+    // close at the end of a response waits for pending reads on Windows, which an endless chunked body never lets finish.
     const send = (status, value, type = 'application/json; charset=utf-8') => {
       const body = Buffer.isBuffer(value) ? value : Buffer.from(JSON.stringify(value));
       response.writeHead(status, { ...headers, 'Content-Type': type, 'Content-Length': body.length, Connection: 'close' });
-      response.end(body);
+      response.end(body, () => closeAfterAnswer(socket));
     };
     const fail = (code, details) => { const { status, body } = C.failure(code, { details }); send(status, body); };
     try {
@@ -91,7 +109,7 @@ function createLocalServer({ engine, requestTimeoutMs = 5000, socketTimeoutMs = 
       }
       return fail('NOT_FOUND');
     } catch {
-      if (!response.headersSent) send(500, { schemaVersion: 1, kind: 'C017-typed-failure', error: { code: 'INTERNAL', group: 'server', reason: 'The local server failed; no effect is claimed.' }, effectClaimed: false });
+      if (!response.headersSent) fail('INTERNAL');
       return undefined;
     }
   });

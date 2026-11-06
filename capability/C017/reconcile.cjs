@@ -175,6 +175,7 @@ function derive(entries) {
       if (cur && !cur.completed && !cur.closed) cur.interrupted = true;
     } else if (e.type === 'action-accepted') {
       if (cur && !(cur.closed || cur.completed)) bad(index, 'a new action began before the previous one settled');
+      if (e.leaseId !== C.identity.leaseId || e.runId !== C.identity.runId || e.userId !== C.identity.userId) bad(index, 'the action is not attributed to the lease, run and user of this server');
       if (e.epoch !== (cur ? cur.epoch + 1 : 1) || e.totalSteps < 1 || e.totalSteps > 8 || e.unitsPerStep < 1 || e.unitsPerStep > 1000) bad(index, 'epoch or sizing is not valid');
       cur = newAction(e);
       actions.push(cur);

@@ -1,0 +1,17 @@
+{
+  "schema": "C017-fix-red/1",
+  "group": "chunked-process",
+  "purpose": "F2: cross-process endless chunked bodies starve the server (3 attackers in another process, server in a small-heap child); the 413 path keeps the socket open until the request timeout. Also the INTERNAL answer is not a typed failure of the closed table.",
+  "tests": [
+    "capability/C017/tests/chunked-process.test.cjs",
+    "capability/C017/tests/chunked.test.cjs"
+  ],
+  "overlay": {
+    "capability/C017/server.cjs": "capability/C017/evidence/red/prefix-ed21ef79/server.snapshot.cjs",
+    "capability/C017/contract.js": "capability/C017/evidence/red/prefix-ed21ef79/contract.snapshot.js",
+    "capability/C017/tests/child.cjs": "capability/C017/evidence/red/red-time-tooling/child.snapshot.cjs",
+    "capability/C017/tests/fixtures/child-preload.cjs": "capability/C017/evidence/red/red-time-tooling/child-preload.snapshot.cjs"
+  },
+  "nodeOptions": "--require=./capability/C017/tests/fixtures/overlay-preload.cjs",
+  "testTimeoutMs": 170000
+}

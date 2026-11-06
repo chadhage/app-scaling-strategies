@@ -2,7 +2,10 @@
 
 // Append-only, hash-chained, versioned journal on the local filesystem (the persisted-state pattern of the accepted C015:
 // closed format version, previous-digest chain, canonical SHA-256 from C015's contract). Every append is flushed.
-// Nothing here repairs, truncates or rewrites: any irregularity makes the journal unreadable, never "empty".
+// Nothing here repairs, truncates or rewrites: a journal that fails the strict line grammar below (torn tail, bad JSON, wrong fields,
+// broken sequence or digest chain, oversize, not UTF-8) is unreadable, never "empty". Scope of that check: it is not a canonical-form check.
+// A byte-order mark, CRLF endings, padded lines, a duplicated key (the last wins), reordered keys and 2.0 for 2 parse to the same logical
+// record and are accepted when the record and its digest agree, because the digest covers the parsed value, not the bytes.
 const fs = require('node:fs');
 const path = require('node:path');
 const { digest } = require('../C015/contract.cjs');

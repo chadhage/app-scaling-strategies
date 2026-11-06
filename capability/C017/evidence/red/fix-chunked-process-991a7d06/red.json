@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "F2: cross-process endless chunked bodies starve the server (3 attackers in another process, server in a small-heap child); the 413 path keeps the socket open until the request timeout. Also the INTERNAL answer is not a typed failure of the closed table.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "--test-timeout=170000",
+    "capability\\C017\\tests\\chunked-process.test.cjs",
+    "capability\\C017\\tests\\chunked.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C017_OVERLAY",
+    "NODE_OPTIONS"
+  ],
+  "startedAtUtc": "2026-11-06T07:20:52.370Z",
+  "completedAtUtc": "2026-11-06T07:21:22.540Z",
+  "elapsedMs": 30170,
+  "timeoutMs": 900000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C017\\tests\\chunked-process.test.cjs",
+      "bytes": 5513,
+      "rawSha256": "7585d8ac4fa5181694a94730b8630fd28e4c390732af2a7a5fb0f0d1902eeeeb",
+      "crlfToLfSha256": "eb820ed858415cf9adf6f613b5beff43f0f5734f1432e84700eb9480e584cf56"
+    },
+    {
+      "path": "capability\\C017\\tests\\chunked.test.cjs",
+      "bytes": 4329,
+      "rawSha256": "5c835ef3bc7730daf034b8f115447533b6cdf77f5eaee8e82915188b700fd5ed",
+      "crlfToLfSha256": "518f79299295e5d0d0bd6862008c3c362583d9160a9b5f694ac26170f06b6ad7"
+    },
+    {
+      "path": "capability\\C017\\tests\\attacker.cjs",
+      "bytes": 1576,
+      "rawSha256": "4fdfb8dec5ce2d17891de7c6d06adfc18f0ed94eec1ebce09f56eebcf4d65bf6",
+      "crlfToLfSha256": "30a7e847c0ce91e1834270143dd3e55cb60438b58ed1e335f45954c4bacd1900"
+    },
+    {
+      "path": "capability\\C017\\tests\\refusals.cjs",
+      "bytes": 2620,
+      "rawSha256": "bf959f5ea98540957a594856421fd98bc33463e20da1beb4383918026cff55e2",
+      "crlfToLfSha256": "c70246bf05967f37f4cfa6a0f7f79a938023f348260ac01d25d23675bd7818ae"
+    },
+    {
+      "path": "capability\\C017\\tests\\fixtures\\overlay-preload.cjs",
+      "bytes": 1772,
+      "rawSha256": "3e9db2975e4a7c9e389126d676ad76e0c4afa17d93a5ed975a047f0d1abd1f4d",
+      "crlfToLfSha256": "6f63f54b3fadc6c7066ab85d45b23d226025d42575eb488989c810a347c07f8b"
+    },
+    {
+      "path": "capability\\C017\\evidence\\red\\prefix-ed21ef79\\server.snapshot.cjs",
+      "bytes": 6705,
+      "rawSha256": "901d058bf5a6080ce01f76c07567149e1578ab0ba21db269fa616f758f44870b",
+      "crlfToLfSha256": "25b55073e76896c1eb1f95114b0ed0f9c76a1c03b5a21ee7fa8e50e2f988c1a7"
+    },
+    {
+      "path": "capability\\C017\\evidence\\red\\prefix-ed21ef79\\contract.snapshot.js",
+      "bytes": 12631,
+      "rawSha256": "63cc674af09b20d17d7523bc3c0c1737803af7e4751f67fee65b91c3b8aab862",
+      "crlfToLfSha256": "c68f16e1dfc8ca4ea8d4671891a67c8042945ac2155ae32b45c0efe89f4a768d"
+    },
+    {
+      "path": "capability\\C017\\evidence\\red\\red-time-tooling\\child.snapshot.cjs",
+      "bytes": 2812,
+      "rawSha256": "419152a464e0128ed226284d6b7e35dd0d7b407d9a69a0daa5d645cf7b5d6548",
+      "crlfToLfSha256": "77a2400dd94c49032861c6dce9bce846b204990d53036057d18e060b9f37ed97"
+    },
+    {
+      "path": "capability\\C017\\evidence\\red\\red-time-tooling\\child-preload.snapshot.cjs",
+      "bytes": 1845,
+      "rawSha256": "cb42ffe41f1b144f088eae69976ad190b4b2b6eed68ed7eeb2e4b4bee1db59d9",
+      "crlfToLfSha256": "4d90e090feb582b1d7ccb912ca2b10ed22e2ab6e2c58e84bfbdb8b684bf9962c"
+    },
+    {
+      "path": "capability\\C017\\evidence\\red\\fix-chunked-process-991a7d06\\replay.json",
+      "bytes": 1024,
+      "rawSha256": "240e0089534c7c6c05ef8e5aee72ed2e7a818404a14430c6c5b0d197ece23365",
+      "crlfToLfSha256": "240e0089534c7c6c05ef8e5aee72ed2e7a818404a14430c6c5b0d197ece23365"
+    }
+  ],
+  "summary": {
+    "tests": 28,
+    "suites": 0,
+    "pass": 25,
+    "fail": 3,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "every refusal of the shared table closes an abusive connection at once and never starves the event loop of a small-heap child (attacker in another process)",
+      "an internal failure (500) closes an abusive connection like every other answer"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 9819,
+      "sha256": "78f8cbb224a1a445b752a78b2e0fc4604eeeb2e5eb8a350883aea460dce48dca",
+      "gzipBytes": 1768,
+      "gzipSha256": "e3d1632436454dfc86b042521b143efdaeb4c4db9b27bc080f33c4f8fafe6152",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

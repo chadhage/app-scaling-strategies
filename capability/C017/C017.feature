@@ -76,4 +76,16 @@ Feature: C017 Reconcile cancellation during an in-flight action and never fabric
 
   Scenario: Local scope and pinned imports
     When the CLI starts it rechecks C001 consent and binds only 127.0.0.1 on port 0
-    Then reused accepted C001, C002 and C015 files are pinned by commit, tag and SHA-256 in imports.json
+    Then reused accepted C001, C002 and C015 files and the shared browser helper are pinned by commit, tag and SHA-256 (raw, LF, git) in imports.json
+
+  Scenario: A journal of another lease, run or user is UNKNOWN
+    When a valid-digest journal names another lease, run or user in its action-accepted entry
+    Then the journal is unreadable, a cancel answers CANCEL_UNKNOWN and the foreign identity is never echoed
+
+  Scenario: The page rejects every tampered server answer
+    When the server answers a state view, a reconcile answer, a typed failure, a start answer or a cancel answer that contradicts its own facts or the closed tables
+    Then the page shows "Answer rejected" with no forged claim anywhere, lists nothing it cannot prove and never stays disabled
+
+  Scenario: An abusive request body is cut once the answer is flushed
+    When a client in another process keeps streaming an endless chunked body to a refused or served request
+    Then the connection is closed after a bounded drain, the event loop of the server is not starved and a polite small request still gets its typed answer

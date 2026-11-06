@@ -4,9 +4,10 @@
 // same-origin GET/HEAD and blocks writes, so the browser can never deliver a POST: its own Cancel click is observed to be
 // reported as "not delivered, UNKNOWN", and every real outcome is produced by a Node client POST and OBSERVED by the page through GET.
 //   node capability\C017\tests\browser.cjs                      (assertions only, evidence untouched)
-//   $env:CAPTURE_BROWSER_EVIDENCE='1'; node capability\C017\tests\browser.cjs   (also writes evidence\browser-observation.json once)
+//   $env:CAPTURE_BROWSER_EVIDENCE='browser-observation-02'; node capability\C017\tests\browser.cjs   (also writes evidence\browser-observation-02.json once; the first publication file stays immutable)
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const http = require('node:http');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { createHash } = require('node:crypto');
@@ -57,6 +58,8 @@ const waitText = (page, id, prefix) => page.waitForFunction(({ id: target, prefi
 
 async function scenario(name, options, act, record, versionBox) {
   const cleanups = [];
+  const started = Date.now();
+  console.error(`scenario start: ${name.slice(0, 60)}`);
   const env = await h.serve({ after: (fn) => cleanups.push(fn) }, options.boot || {});
   let session = null;
   try {
@@ -67,10 +70,27 @@ async function scenario(name, options, act, record, versionBox) {
     const final = await read(session.page);
     assertRenderedConsistent(final, name);
     record.push({ scenario: name, final });
+    console.error(`scenario done after ${Date.now() - started} ms`);
   } finally {
-    if (session) await session.close();
+    if (session) { console.error('closing the browser session'); await session.close(); console.error('browser session closed'); }
+    if (env.extraClose) await env.extraClose();
     for (const fn of cleanups.reverse()) await fn();
+    console.error('scenario cleaned up');
   }
+}
+
+// A loopback server that serves exactly what the real server serves, except that it LIES about /api/state (GET only: the helper blocks POST,
+// so a forged answer has to be a served GET). It is a test double of the server, never used by the page code.
+async function lyingServer(realOrigin, lie) {
+  const server = http.createServer(async (request, response) => {
+    const upstream = await fetch(`${realOrigin}${request.url}`, { cache: 'no-store' });
+    let body = Buffer.from(await upstream.arrayBuffer());
+    if (request.url === '/api/state') body = Buffer.from(JSON.stringify(lie(JSON.parse(body.toString('utf8')))));
+    response.writeHead(upstream.status, { ...Object.fromEntries(upstream.headers), 'content-length': body.length, connection: 'close' });
+    response.end(body);
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  return server;
 }
 
 async function main() {
@@ -158,16 +178,36 @@ async function main() {
   }, records, versionBox);
   garbage.remove();
 
+  await scenario('forged: a served state view that claims a compensation the facts do not show is refused and nothing is claimed', {
+    setup: async (env) => {
+      await holdThree(env);
+      const decided = await h.post(env.origin, '/api/cancel', s.cancelCmd('browser-cancel-04', env.start.action.actionId));
+      assert.equal(decided.json.outcome, 'CANCELLED_PARTIAL');
+      env.server = await lyingServer(env.origin, (view) => { view.action.cancel.outcome = 'COMPENSATED'; return view; });
+      env.extraClose = () => new Promise((resolve) => { env.server.closeAllConnections(); env.server.close(resolve); });
+    },
+  }, async (page) => {
+    await waitText(page, 'outcome', 'Answer rejected');
+    const state = await read(page);
+    assert.match(state.outcome, /^Answer rejected: the server's state view contradicts its own facts \(.+\)\. No cancellation, undo or completion is claimed\.$/);
+    assert.equal(state.status, state.outcome);
+    assert.deepEqual([state.steps, state.facts, state.journal], [[], [], []], 'nothing of the forged view is listed');
+    assert.deepEqual(state.disabled, { start: true, cancel: true, reconcile: true, compensate: true });
+    assert.doesNotMatch(`${state.status}\n${state.outcome}`, /reversed by journaled compensating steps|rolled back/);
+  }, records, versionBox);
+
   const edge = edgeIdentity(versionBox.version);
   const observation = {
     schema: 'C017-browser-observation/1', helper: 'testing/browser/isolated.cjs openIsolatedLoopback', limits: 'same-origin GET/HEAD only; every POST is blocked by the helper, so outcomes are produced by a Node client and observed by the page through GET',
     edge: { version: edge.version, fileVersion: edge.fileVersion, sha256: edge.sha256, signature: edge.signature, signer: edge.signer, thumbprint: edge.thumbprint }, scenarios: records,
   };
   records.forEach((record) => assertRenderedConsistent(record.final, record.scenario));
-  if (process.env.CAPTURE_BROWSER_EVIDENCE === '1') {
-    fs.writeFileSync(path.join(__dirname, '..', 'evidence', 'browser-observation.json'), `${JSON.stringify(observation, null, 2)}\n`, { flag: 'wx' });
+  const capture = process.env.CAPTURE_BROWSER_EVIDENCE;
+  if (capture) {
+    if (!/^browser-observation-\d{2}$/.test(capture)) throw new Error('CAPTURE_BROWSER_EVIDENCE must name a NEW file: browser-observation-NN (the first publication evidence is immutable)');
+    fs.writeFileSync(path.join(__dirname, '..', 'evidence', `${capture}.json`), `${JSON.stringify(observation, null, 2)}\n`, { flag: 'wx' });
   }
-  console.log(JSON.stringify({ ok: true, edge: observation.edge, scenarios: records.map((r) => r.scenario), captured: process.env.CAPTURE_BROWSER_EVIDENCE === '1' }, null, 2));
+  console.log(JSON.stringify({ ok: true, edge: observation.edge, scenarios: records.map((r) => r.scenario), captured: capture || null }, null, 2));
 }
 
 main().then(() => process.exit(0), (error) => { console.error(error); process.exit(1); });

@@ -45,6 +45,7 @@
     STATE_UNREADABLE: [503, 'integrity', 'The journal is unreadable or inconsistent: the state is UNKNOWN and nothing is repaired or written.', ['confirm-operator-review', 'stop']],
     JOURNAL_FULL: [503, 'integrity', 'The local journal has no room for a new action; an operator must rotate it. Nothing was changed.', ['confirm-operator-review', 'stop']],
     SERVER_CLOSING: [503, 'integrity', 'The server is closing; the command was not decided and its effect is not claimed.', ['reinspect']],
+    INTERNAL: [500, 'server', 'The local server failed; no effect is claimed.', ['reinspect']],
   };
   const failures = Object.freeze(Object.fromEntries(Object.entries(table).map(([code, [status, group, reason, actions]]) => [code, Object.freeze({ status, group, reason, actions })])));
 
@@ -99,20 +100,25 @@
         + 'No effect remains standing (0 units). The original effects stay in the journal.';
     }
     if (f.compensation === 'FAILED') {
+      const reversed = f.undone.length ? `step(s) ${list(f.undone.map((e) => e.step))} were reversed by journaled compensating steps` : 'no compensating step took effect';
       return `Stopped after step ${ran} of ${f.totalSteps}. Compensating step ${f.compensationFailure.step} failed: step(s) ${list(standing)} still STAND (${f.standingUnits} synthetic units); `
-        + `step(s) ${list(f.undone.map((e) => e.step))} were reversed by journaled compensating steps; step(s) ${list(f.stepsNotRun)} were NOT run.`;
+        + `${reversed}; step(s) ${list(f.stepsNotRun)} were NOT run.`;
     }
     return `Stopped after step ${ran} of ${f.totalSteps}. Step(s) ${list(standing)} took effect and STAND (${f.standingUnits} synthetic units); step(s) ${list(f.stepsNotRun)} were NOT run. Nothing was undone or rolled back.`;
   }
 
   function describeDetermination(determination, f) {
     const known = `Journaled effects of step(s) ${list(f.effectsStanding.map((e) => e.step))} STAND (${units(f)} synthetic units)`;
-    const tail = `step(s) ${list(f.stepsNotRun)} never ran. The action did not complete and was not cancelled; nothing was undone.`;
+    const reversal = f.undone.length ? `step(s) ${list(f.undone.map((e) => e.step))} were reversed by journaled compensating steps before the interruption` : 'nothing was undone';
+    const tail = `step(s) ${list(f.stepsNotRun)} never ran. The action did not complete and was not cancelled; ${reversal}.`;
     if (determination === 'INTERRUPTED_KNOWN') return `Interrupted by a restart. ${known}; ${tail}`;
     const unknown = `step(s) ${list(f.unknownSteps)} have an UNKNOWN effect (begun but not recorded as done)`;
     if (determination === 'INTERRUPTED_UNKNOWN') return `Interrupted by a restart. ${known}; ${unknown}; ${tail}`;
     return `A cancel request raced the restart and was never decided: its outcome is UNKNOWN. ${known}; ${unknown}; ${tail}`;
   }
+
+  // The wording a cancel answer may carry, re-derived from its OWN facts (the page prints this, never the server's prose).
+  const statementOf = (body) => describe(body.outcome, body.facts.effectsStanding === null ? null : body.facts);
 
   // Consistency of a cancel answer with its own facts. The page runs it on every answer and refuses to display a claim it fails.
   function claimCheck(body) {
@@ -120,7 +126,7 @@
     if (!isPlain(body) || !OUTCOMES.includes(body.outcome) || !isPlain(body.facts)) return { ok: false, problems: ['the answer is not one of the five outcomes with facts'] };
     const f = body.facts;
     if (body.effective !== EFFECTIVE.includes(body.outcome)) problems.push('effective contradicts the outcome');
-    if (body.statement !== describe(body.outcome, f.effectsStanding === null ? null : f)) problems.push('the statement is not the one the facts allow');
+    if (body.statement !== statementOf(body)) problems.push('the statement is not the one the facts allow');
     if (body.outcome === 'CANCEL_UNKNOWN') {
       if (body.actionStopped !== null || body.nothingUndone !== null || body.effective !== false) problems.push('unknown must not claim stopped, nothing undone or effective');
       return { ok: problems.length === 0, problems };
@@ -142,5 +148,130 @@
     return { ok: problems.length === 0, problems };
   }
 
-  return Object.freeze({ OUTCOMES, EFFECTIVE, HTTP_STATUS, DETERMINATIONS, identity, patterns, schemas, recovery, failures, validateCommand, failure, describe, describeDetermination, claimCheck, isPlain });
+  // ---- Checks of every other answer shape (F3, L-0139). The page validates EVERY answer against its own facts and the closed tables and never
+  // prints server prose: wording is re-derived from facts or taken from the closed table. A check returns { ok, problems }; a problem is a
+  // fixed sentence that never repeats the checked text.
+  const STATUSES = Object.freeze(['ACCEPTED', 'RUNNING', 'CANCEL_REQUESTED', 'COMPLETED', 'CANCELLED', 'INTERRUPTED', 'RECONCILED']);
+  const LIVE = Object.freeze(['ACCEPTED', 'RUNNING', 'CANCEL_REQUESTED']);
+  const COMPENSATION = Object.freeze(['NOT_REQUESTED', 'NOT_ATTEMPTED', 'IN_PROGRESS', 'COMPLETE', 'FAILED', 'INTERRUPTED']);
+  const JOURNAL_TYPES = Object.freeze(['boot', 'action-accepted', 'step-intent', 'step-effect', 'action-completed', 'cancel-requested', 'compensation-intent', 'compensation-effect', 'compensation-failed', 'cancel-decided', 'reconciled']);
+  const isInt = (v) => Number.isSafeInteger(v) && !Object.is(v, -0);
+  const inRange = (v, min, max) => isInt(v) && v >= min && v <= max;
+  const stepList = (v) => Array.isArray(v) && v.length <= 8 && v.every((s) => inRange(s, 1, 8));
+  const effectList = (v) => Array.isArray(v) && v.length <= 8 && v.every((e) => isPlain(e) && inRange(e.step, 1, 8) && inRange(e.units, 1, 1000));
+  const named = (o) => isPlain(o) && ['leaseId', 'runId', 'userId'].every((name) => safe(o[name], name) !== null);
+  const sum = (list) => list.reduce((total, e) => total + e.units, 0);
+  const collect = () => { const problems = []; return { problems, bad: (text, condition) => { if (condition) problems.push(text); }, verdict: () => ({ ok: problems.length === 0, problems }) }; };
+
+  function factLists(f) {
+    if (!isPlain(f) || !inRange(f.totalSteps, 1, 8) || !effectList(f.effectsStanding) || !effectList(f.undone) || !stepList(f.stepsNotRun) || !stepList(f.unknownSteps)) return null;
+    return { standing: f.effectsStanding.map((e) => e.step), undone: f.undone.map((e) => e.step), notRun: f.stepsNotRun, unknown: f.unknownSteps };
+  }
+
+  // Every listed step is distinct and inside 1..total; a settled action lists all of them, a live one may have a single step in flight.
+  function partitionBroken(lists, total, settled) {
+    const all = [].concat(lists.standing, lists.undone, lists.notRun, lists.unknown).sort((a, b) => a - b);
+    const distinct = all.every((step, index) => step <= total && (index === 0 || step !== all[index - 1]));
+    return !distinct || (settled ? all.length !== total : all.length < total - 1);
+  }
+
+  function stateOf(lists, live, step) {
+    if (lists.unknown.includes(step)) return 'UNKNOWN';
+    if (lists.undone.includes(step)) return 'REVERSED';
+    if (lists.standing.includes(step)) return 'STANDS';
+    if (lists.notRun.includes(step)) return live ? 'PENDING' : 'NOT_RUN';
+    return 'IN_FLIGHT';
+  }
+
+  const statusFits = (status, cancel, outcome) => ({
+    ACCEPTED: cancel === null, RUNNING: cancel === null, CANCEL_REQUESTED: cancel !== null && outcome === null, COMPLETED: cancel === null || outcome === 'CANCEL_TOO_LATE',
+    CANCELLED: EFFECTIVE.includes(outcome), INTERRUPTED: cancel === null || outcome === 'CANCEL_UNKNOWN', RECONCILED: cancel === null || outcome === 'CANCEL_UNKNOWN',
+  }[status] === true);
+
+  function actionProblems(a, journal) {
+    if (!isPlain(a)) return ['the action is missing or malformed'];
+    const live = LIVE.includes(a.status);
+    const lists = factLists({ totalSteps: a.totalSteps, effectsStanding: a.effectsStanding, undone: a.undone, stepsNotRun: live ? a.stepsPending : a.stepsNotRun, unknownSteps: a.unknownSteps });
+    const other = live ? a.stepsNotRun : a.stepsPending;
+    if (!lists || !Array.isArray(other) || other.length || !Array.isArray(a.steps) || a.steps.length !== a.totalSteps) return ['the steps and the facts of the action are incomplete or malformed'];
+    const { problems, bad } = collect();
+    const { cancel, reconciliation } = a;
+    const outcome = isPlain(cancel) ? cancel.outcome : null;
+    bad('the action names a lease, run, user or action the server cannot have', !named(a) || safe(a.actionId, 'actionId') === null);
+    bad('the epoch or the sizing is not valid', !inRange(a.epoch, 1, 1000000) || !inRange(a.unitsPerStep, 1, 1000));
+    bad('the status is not a closed status or contradicts live', !STATUSES.includes(a.status) || a.live !== live);
+    bad('the steps do not partition the facts', partitionBroken(lists, a.totalSteps, !live));
+    bad('a step is shown in a state its facts contradict', a.steps.some((entry, index) => !isPlain(entry) || entry.step !== index + 1 || entry.units !== a.unitsPerStep || entry.state !== stateOf(lists, live, index + 1)));
+    bad('the standing units do not add up', a.standingUnits !== sum(a.effectsStanding) || a.effectsStanding.some((e) => e.units !== a.unitsPerStep));
+    bad('the exactness of the standing units contradicts the unknown steps', a.standingUnitsExact !== (lists.unknown.length === 0));
+    bad('the compensation state is not closed', !COMPENSATION.includes(a.compensation) || (a.compensation === 'FAILED') !== isPlain(a.compensationFailure) || (a.compensationFailure !== null && !inRange(a.compensationFailure.step, 1, 8)));
+    bad('the cancel summary is malformed', cancel !== null && !(isPlain(cancel) && typeof cancel.key === 'string' && typeof cancel.compensate === 'boolean' && typeof cancel.decided === 'boolean' && (outcome === null || OUTCOMES.includes(outcome))));
+    bad('the status contradicts the cancel summary', !statusFits(a.status, cancel, outcome));
+    bad('a completed action must show every step standing', a.status === 'COMPLETED' && lists.standing.length !== a.totalSteps);
+    bad('the reconciliation contradicts the status', (a.status === 'RECONCILED') !== (reconciliation !== null) || (reconciliation !== null && !(isPlain(reconciliation) && DETERMINATIONS.includes(reconciliation.determination))));
+    bad('the journal shows a decision or a reconciliation the summary does not', journal.some((e) => e.actionId === a.actionId
+      && ((e.type === 'cancel-decided' && outcome !== e.outcome) || (e.type === 'reconciled' && !(isPlain(reconciliation) && reconciliation.determination === e.determination)))));
+    if (OUTCOMES.includes(outcome)) {
+      const unknown = outcome === 'CANCEL_UNKNOWN';
+      const claim = { outcome, effective: EFFECTIVE.includes(outcome), actionStopped: unknown ? null : outcome !== 'CANCEL_TOO_LATE', actionCompleted: a.status === 'COMPLETED', nothingUndone: unknown ? null : a.undone.length === 0,
+        facts: { totalSteps: a.totalSteps, effectsStanding: a.effectsStanding, stepsNotRun: lists.notRun, unknownSteps: a.unknownSteps, undone: a.undone, standingUnits: a.standingUnits, standingUnitsExact: a.standingUnitsExact,
+          compensation: a.compensation, compensationFailure: a.compensationFailure } };
+      claim.statement = statementOf(claim);
+      problems.push(...claimCheck(claim).problems);
+    }
+    return problems;
+  }
+
+  const journalWindow = (view) => Array.isArray(view.journal) && view.journal.length <= 256 && (view.journalOmitted === undefined || inRange(view.journalOmitted, 0, 1000000))
+    && view.journal.every((e) => isPlain(e) && JOURNAL_TYPES.includes(e.type) && (e.step === undefined || inRange(e.step, 1, 8)) && (e.outcome === undefined || OUTCOMES.includes(e.outcome))
+      && (e.determination === undefined || DETERMINATIONS.includes(e.determination)) && (e.actionId === undefined || safe(e.actionId, 'actionId') !== null));
+
+  // The /api/state view: identity, epoch, journal window, and an action whose steps, lists, status, cancel summary and reconciliation agree.
+  function viewCheck(view) {
+    if (!isPlain(view) || view.kind !== 'C017-state' || view.schemaVersion !== 1) return { ok: false, problems: ['the answer is not a state view of this server'] };
+    const { problems, bad, verdict } = collect();
+    bad('the journal status is not closed', !['READABLE', 'UNREADABLE'].includes(view.journalStatus));
+    bad('the lease is not a lease of this server', !named(view.lease));
+    bad('the epoch is not valid', !(view.epoch === null || inRange(view.epoch, 0, 1000000)));
+    bad('the journal window is malformed', !journalWindow(view));
+    bad('an unreadable journal cannot come with an action', view.journalStatus === 'UNREADABLE' && view.action !== null);
+    if (!problems.length && view.action !== null) problems.push(...actionProblems(view.action, view.journal));
+    return verdict();
+  }
+
+  function startCheck(body) {
+    if (!isPlain(body) || body.kind !== 'C017-start-result' || body.outcome !== 'ACTION_ACCEPTED' || typeof body.idempotentReplay !== 'boolean') return { ok: false, problems: ['the answer is not an accepted start with its action'] };
+    const problems = actionProblems(body.action, []);
+    return { ok: problems.length === 0, problems };
+  }
+
+  function reconcileCheck(body) {
+    const lists = isPlain(body) && body.kind === 'C017-reconcile-result' ? factLists(body.facts) : null;
+    if (!lists || !DETERMINATIONS.includes(body.determination)) return { ok: false, problems: ['the answer is not a reconcile result with a closed determination and well-formed facts'] };
+    const f = body.facts;
+    const { bad, verdict } = collect();
+    bad('the answer names a lease, run, user or action the server cannot have', !named(body) || safe(body.actionId, 'actionId') === null);
+    bad('the steps do not partition the facts', partitionBroken(lists, f.totalSteps, true));
+    bad('the standing units do not add up', f.standingUnits !== sum(f.effectsStanding));
+    bad('the exactness of the standing units contradicts the unknown steps', f.standingUnitsExact !== (lists.unknown.length === 0));
+    bad('the determination contradicts the unknown steps', (body.determination === 'INTERRUPTED_KNOWN' && lists.unknown.length > 0) || (body.determination === 'INTERRUPTED_UNKNOWN' && lists.unknown.length === 0));
+    bad('the statement is not the one the facts allow', body.statement !== describeDetermination(body.determination, f));
+    return verdict();
+  }
+
+  // A typed failure is the closed table's entry for its code: the reason and the allowed actions are never taken from the answer.
+  function failureCheck(body) {
+    if (!isPlain(body) || body.kind !== 'C017-typed-failure' || !isPlain(body.error) || typeof body.error.code !== 'string' || !Object.hasOwn(failures, body.error.code)) {
+      return { ok: false, problems: ['the answer is not a typed failure of the closed table'] };
+    }
+    const entry = failures[body.error.code];
+    const { bad, verdict } = collect();
+    bad('the reason or the group is not the one the closed table gives for this code', body.error.reason !== entry.reason || body.error.group !== entry.group);
+    bad('the allowed actions are not the ones the closed table gives for this code', JSON.stringify(body.allowedActions) !== JSON.stringify(entry.actions));
+    bad('a typed failure must claim no effect and no journal write', body.effectClaimed !== false || body.journalWritten !== false);
+    return verdict();
+  }
+
+  return Object.freeze({ OUTCOMES, EFFECTIVE, HTTP_STATUS, DETERMINATIONS, STATUSES, JOURNAL_TYPES, identity, patterns, schemas, recovery, failures, validateCommand, failure, describe, describeDetermination, statementOf, claimCheck,
+    viewCheck, startCheck, reconcileCheck, failureCheck, isPlain });
 }));

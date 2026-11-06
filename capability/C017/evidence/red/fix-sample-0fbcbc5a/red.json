@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "F1: the child heap sampler truncates then writes and the reader reads once without retry (the flaky small-heap test).",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "--test-timeout=170000",
+    "capability\\C017\\tests\\sample.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C017_OVERLAY",
+    "NODE_OPTIONS"
+  ],
+  "startedAtUtc": "2026-11-06T06:45:40.409Z",
+  "completedAtUtc": "2026-11-06T06:45:58.140Z",
+  "elapsedMs": 17731,
+  "timeoutMs": 900000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C017\\tests\\sample.test.cjs",
+      "bytes": 3824,
+      "rawSha256": "5538d3c72dcbec998b79f8caf3c3d7c57dce528c3d733867ca526ed312772f68",
+      "crlfToLfSha256": "3f34468d2c3e7806ef19617259e24ebe1f0c2deb101dcd9f89143b7049956551"
+    },
+    {
+      "path": "capability\\C017\\tests\\fixtures\\overlay-preload.cjs",
+      "bytes": 1772,
+      "rawSha256": "3e9db2975e4a7c9e389126d676ad76e0c4afa17d93a5ed975a047f0d1abd1f4d",
+      "crlfToLfSha256": "6f63f54b3fadc6c7066ab85d45b23d226025d42575eb488989c810a347c07f8b"
+    },
+    {
+      "path": "capability\\C017\\tests\\fixtures\\slow-write-preload.cjs",
+      "bytes": 1024,
+      "rawSha256": "59ec82e64e583558d9e3c43a8b52057089404c9ca7434c5b7da2a04e1a03b06e",
+      "crlfToLfSha256": "0e900501663cf5580ee4c46c54edec169de4d1ec068725e05e3d8f8bafb31a69"
+    },
+    {
+      "path": "capability\\C017\\evidence\\red\\red-time-tooling\\child.snapshot.cjs",
+      "bytes": 2812,
+      "rawSha256": "419152a464e0128ed226284d6b7e35dd0d7b407d9a69a0daa5d645cf7b5d6548",
+      "crlfToLfSha256": "77a2400dd94c49032861c6dce9bce846b204990d53036057d18e060b9f37ed97"
+    },
+    {
+      "path": "capability\\C017\\evidence\\red\\red-time-tooling\\child-preload.snapshot.cjs",
+      "bytes": 1845,
+      "rawSha256": "cb42ffe41f1b144f088eae69976ad190b4b2b6eed68ed7eeb2e4b4bee1db59d9",
+      "crlfToLfSha256": "4d90e090feb582b1d7ccb912ca2b10ed22e2ab6e2c58e84bfbdb8b684bf9962c"
+    },
+    {
+      "path": "capability\\C017\\evidence\\red\\fix-sample-0fbcbc5a\\replay.json",
+      "bytes": 618,
+      "rawSha256": "fa14a133a6f7b1244fb9fea0358eb672f5690a961545ee1d7c9ff39896de5c8b",
+      "crlfToLfSha256": "fa14a133a6f7b1244fb9fea0358eb672f5690a961545ee1d7c9ff39896de5c8b"
+    }
+  ],
+  "summary": {
+    "tests": 3,
+    "suites": 0,
+    "pass": 0,
+    "fail": 3,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "the sample reader waits for a half-written file instead of reporting that nothing was written",
+      "the sample reader gives up with a clear error when no parseable sample ever appears",
+      "the child never exposes a half-written sample, even when each write takes 150 ms (atomic publication)"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 2944,
+      "sha256": "18bd0eef21103a6d2ca27d1ce87ef3dc73ff6be5c847e29626cfa682e1e2850f",
+      "gzipBytes": 864,
+      "gzipSha256": "763a629ea628ad4e9b15d4fb8f669b0a1e0d559de014221115324add67cd0410",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

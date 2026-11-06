@@ -19,6 +19,11 @@
 
   const say = (id, text) => { el[id].textContent = text; };
   const newKey = () => `k-${typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('')}`;
+  // Nothing the server says in prose is displayed: every answer is checked against its own facts and the closed tables (contract.js),
+  // wording is re-derived from the facts, and an answer that fails is replaced by this typed refusal (L-0139).
+  const rejection = (what, problems) => `Answer rejected: the server's ${what} contradicts its own facts (${problems.join('; ')}). No cancellation, undo or completion is claimed.`;
+  const answerKinds = new Map([['C017-cancel-result', ['cancel answer', C.claimCheck]], ['C017-reconcile-result', ['reconcile answer', C.reconcileCheck]],
+    ['C017-start-result', ['start answer', C.startCheck]], ['C017-typed-failure', ['failure answer', C.failureCheck]]]);
 
   function fill(list, lines) {
     list.replaceChildren(...lines.map((line) => { const item = document.createElement('li'); item.textContent = line; return item; }));
@@ -47,6 +52,7 @@
   }
 
   function showFacts(facts) {
+    if (facts.effectsStanding === null) { fill(el.facts, []); return; }
     const steps = (list) => (list.length ? list.map((e) => (typeof e === 'number' ? e : e.step)).join(', ') : 'none');
     fill(el.facts, [`Steps whose effect STANDS: ${steps(facts.effectsStanding)}`, `Steps NOT RUN: ${steps(facts.stepsNotRun)}`, `Steps with UNKNOWN effect: ${steps(facts.unknownSteps)}`,
       `Steps reversed by journaled compensating steps: ${steps(facts.undone)}`, `Synthetic units standing: ${facts.standingUnitsExact ? '' : 'at least '}${facts.standingUnits}`]);
@@ -84,32 +90,52 @@
     return { status: response.status, body: await response.json() };
   }
 
+  function showRejectedView(problems) {
+    state = null;
+    clearTimeout(timer);
+    const text = rejection('state view', problems);
+    say('status', text);
+    say('outcome', text);
+    say('lease', '');
+    say('units', '');
+    for (const id of ['steps', 'facts', 'journal']) fill(el[id], []);
+    for (const id of ['start', 'cancel', 'compensate', 'reconcile']) el[id].disabled = true;
+  }
+
   async function refresh(keepOutcome) {
     try {
       const response = await fetch('/api/state', { cache: 'no-store', credentials: 'omit', redirect: 'error' });
-      render(await response.json(), keepOutcome);
+      const next = await response.json();
+      const check = C.viewCheck(next);
+      if (check.ok) render(next, keepOutcome);
+      else showRejectedView(check.problems);
     } catch {
       say('status', 'The server is not reachable. What is shown may be stale; nothing new is claimed.');
     }
   }
 
+  // Returns true only for an answer that passed its check; wording is always derived from the facts or the closed table.
   function showAnswer(answer) {
     const body = answer.body;
-    if (body && body.kind === 'C017-cancel-result') {
-      const check = C.claimCheck(body);
-      if (!check.ok) { say('outcome', `The server's answer contradicts its own facts (${check.problems.join('; ')}). No cancellation, undo or completion is claimed.`); fill(el.facts, []); return; }
-      say('outcome', body.statement);
+    const known = C.isPlain(body) && answerKinds.has(body.kind) ? answerKinds.get(body.kind) : null;
+    if (!known) { say('outcome', 'The answer was not recognized. Nothing is claimed.'); fill(el.facts, []); return false; }
+    const check = known[1](body);
+    if (!check.ok) { say('outcome', rejection(known[0], check.problems)); fill(el.facts, []); return false; }
+    if (body.kind === 'C017-cancel-result') {
+      say('outcome', C.statementOf(body));
       showFacts(body.facts);
-    } else if (body && body.kind === 'C017-reconcile-result') {
-      say('outcome', body.statement);
+    } else if (body.kind === 'C017-reconcile-result') {
+      say('outcome', C.describeDetermination(body.determination, body.facts));
       showFacts(body.facts);
-    } else if (body && body.kind === 'C017-start-result') {
+    } else if (body.kind === 'C017-start-result') {
       say('outcome', `Start accepted for epoch ${body.action.epoch}. Nothing has been cancelled or undone.`);
       fill(el.facts, []);
-    } else if (body && body.kind === 'C017-typed-failure') {
-      say('outcome', `Not applied (${body.error.code}): ${body.error.reason} Allowed next steps: ${body.allowedActions.join(', ')}. No outcome is claimed.`);
+    } else {
+      const entry = C.failures[body.error.code];
+      say('outcome', `Not applied (${body.error.code}): ${entry.reason} Allowed next steps: ${entry.actions.join(', ')}. No outcome is claimed.`);
       fill(el.facts, []);
-    } else say('outcome', 'The answer was not recognized. Nothing is claimed.');
+    }
+    return true;
   }
 
   async function command(kind, build) {
@@ -126,8 +152,15 @@
       fill(el.facts, []);
     }
     if (answer) {
-      showAnswer(answer);
-      if (kind === 'cancel' && !(answer.body && answer.body.outcome === 'CANCEL_UNKNOWN')) cancelAttempt = null;
+      let accepted = false;
+      try {
+        accepted = showAnswer(answer);
+      } catch {
+        say('outcome', 'The answer was not recognized. Nothing is claimed.');
+        fill(el.facts, []);
+      }
+      // A rejected or unrecognized answer proves nothing, so a retry keeps its key; only a settled answer ends the attempt.
+      if (kind === 'cancel' && accepted && answer.body.outcome !== 'CANCEL_UNKNOWN') cancelAttempt = null;
     }
     busy = false;
     el.outcome.focus();

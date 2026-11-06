@@ -62,23 +62,38 @@ function invariants(seed, op, page, env) {
   if (/^Completed:/.test(status)) assert.ok(journal.some((e) => e.type === 'action-completed'), `${where}: ${status}`);
   if (/^Stopped (partway|before)/.test(status)) assert.ok(proves('CANCELLED_PARTIAL') || proves('CANCELLED_BEFORE_EFFECT'), `${where}: ${status}`);
   if (/^Interrupted/.test(status)) assert.ok(journal.filter((e) => e.type === 'boot').length >= 2, `${where}: ${status}`);
-  const refusal = /^The server's answer contradicts its own facts \([^)]*\)\. No cancellation, undo or completion is claimed\.$/.test(outcome);
+  const refusal = /^Answer rejected: the server's [a-z ]+ contradicts its own facts \([^)]+\)\. No cancellation, undo or completion is claimed\.$/.test(outcome);
   if (!refusal && !/^Stopped after step \d+ and reversed/.test(outcome)) assert.doesNotMatch(outcome.replace(negations, ''), /undone|rolled back|reversed/i, `${where}: the outcome overstates: ${outcome}`);
+  const everything = [status, outcome, ...page.el('steps').texts(), ...page.el('facts').texts(), ...page.el('journal').texts()].join('\n');
+  assert.doesNotMatch(everything, /rolled back successfully|Everything was cancelled and rolled back|all effects were undone/, `${where}: a forged phrase is displayed`);
+  if (/^Answer rejected/.test(status)) assert.deepEqual([page.el('steps').texts().length, page.el('facts').texts().length, page.el('journal').texts().length, page.el('cancel').disabled, page.el('start').disabled], [0, 0, 0, true, true], `${where}: a refused view leaves nothing to command`);
   if (/^Cancel not confirmed/.test(outcome)) assert.doesNotMatch(outcome, /^Cancel not confirmed.*(was cancelled|has been cancelled|completed successfully)/, where);
 }
 
 async function sequence(seed, length) {
   const random = prng(seed);
   const made = s.scratch('q');
-  const faults = { next: null };
+  const faults = { next: null, nextGet: false };
   let env = await open(made.dir);
+  const forgedView = async (url, init) => {
+    const body = await (await realFetch(url, init)).json();
+    body.action = body.action ? { ...body.action, status: 'CANCELLED', live: false, cancel: { key: 'forged-key-01', compensate: true, decided: true, outcome: 'COMPENSATED', compensation: 'COMPLETE' } } : { fabricated: 'everything was undone' };
+    return { status: 200, json: async () => body };
+  };
   const fetcher = (url, init) => {
     if (init && init.method === 'POST' && faults.next) {
       const fault = faults.next;
       faults.next = null;
       if (fault === 'reject') return Promise.reject(new TypeError('Failed to fetch'));
       if (fault === 'typed') return reply(409, C.failure('STALE_EPOCH', {}).body);
+      if (fault === 'forgedTyped') return reply(409, { ...C.failure('STALE_EPOCH', {}).body, error: { code: 'STALE_EPOCH', group: 'epoch', reason: 'The action was cancelled and rolled back successfully.' } });
+      if (fault === 'forgedReconcile') return reply(200, { kind: 'C017-reconcile-result', determination: 'INTERRUPTED_KNOWN', statement: 'Everything was cancelled and rolled back; all effects were undone.', facts: { totalSteps: 4, effectsStanding: [], stepsNotRun: [], unknownSteps: [], undone: [], standingUnits: 0, standingUnitsExact: true, compensation: 'NOT_REQUESTED' } });
+      if (fault === 'forgedStart') return reply(202, { kind: 'C017-start-result', outcome: 'ACTION_ACCEPTED' });
       return reply(200, { kind: 'C017-cancel-result', outcome: 'COMPENSATED', effective: true, statement: 'Reversed.', facts: { totalSteps: 4, effectsStanding: [{ step: 1, units: 5 }], stepsNotRun: [3, 4], unknownSteps: [], undone: [], standingUnits: 5, compensation: 'NOT_REQUESTED' } });
+    }
+    if (faults.nextGet && String(url).endsWith('/api/state')) {
+      faults.nextGet = false;
+      return forgedView(url, init);
     }
     return realFetch(url, init);
   };
@@ -86,7 +101,7 @@ async function sequence(seed, length) {
   const clicks = [];
   const click = (id) => { if (!page.el(id).disabled) clicks.push(page.el(id).click()); };
   let direct = 0;
-  const ops = ['start', 'cancel', 'cancel', 'advance', 'advance', 'advance', 'refresh', 'poll', 'reconcile', 'lost', 'typed', 'forged', 'crash', 'second'];
+  const ops = ['start', 'cancel', 'cancel', 'advance', 'advance', 'advance', 'refresh', 'poll', 'reconcile', 'lost', 'typed', 'forged', 'forgedTyped', 'forgedReconcile', 'forgedStart', 'forgedState', 'crash', 'second'];
   try {
     await page.settle();
     for (let i = 0; i < length; i += 1) {
@@ -94,7 +109,7 @@ async function sequence(seed, length) {
       if (op === 'start') click('start');
       else if (op === 'cancel') { page.el('compensate').checked = random() < 0.5; click('cancel'); } else if (op === 'advance') { const release = env.queue.pop(); env.queue.length = 0; if (release) release(); } else if (op === 'refresh') click('refresh');
       else if (op === 'poll') { const timer = page.timers.shift(); if (timer) clicks.push(timer()); } else if (op === 'reconcile') click('reconcile');
-      else if (op === 'lost') { faults.next = 'reject'; click(random() < 0.5 ? 'cancel' : 'start'); } else if (op === 'typed') { faults.next = 'typed'; click('cancel'); } else if (op === 'forged') { faults.next = 'forged'; click('cancel'); } else if (op === 'crash') {
+      else if (op === 'lost') { faults.next = 'reject'; click(random() < 0.5 ? 'cancel' : 'start'); } else if (op === 'typed') { faults.next = 'typed'; click('cancel'); } else if (op === 'forged') { faults.next = 'forged'; click('cancel'); } else if (op === 'forgedTyped') { faults.next = 'forgedTyped'; click('cancel'); } else if (op === 'forgedReconcile') { faults.next = 'forgedReconcile'; click('reconcile'); } else if (op === 'forgedStart') { faults.next = 'forgedStart'; click('start'); } else if (op === 'forgedState') { faults.nextGet = true; click('refresh'); } else if (op === 'crash') {
         await env.engine.close();
         await closeOwned(env.server);
         env = await open(made.dir);

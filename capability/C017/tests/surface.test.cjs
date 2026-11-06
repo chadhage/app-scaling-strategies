@@ -54,7 +54,11 @@ test('the second retained RED (a defect found after the first GREEN) pins its in
   const name = 'red-02-completed-undecided-cancel-window';
   const dir = path.join(root, 'evidence', 'red', name);
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
-  for (const item of [...manifest.inputs, ...manifest.outputs]) assert.equal(sha(path.join(root, item.path)), item.sha256, item.path);
+  // The fix cycle after the independent review changed contract.js, reconcile.cjs and journal.cjs: their pins are checked against the retained
+  // first-publication bytes (evidence\red\prefix-ed21ef79, itself pinned by evidence.test.cjs), every other input against the live file.
+  const retained = JSON.parse(fs.readFileSync(path.join(root, 'evidence', 'red', 'prefix-ed21ef79', 'manifest.json'), 'utf8')).files;
+  const pinnedFile = (rel) => { const kept = retained.find((item) => item.live === `capability/C017/${rel}`); return kept ? path.join(root, '..', '..', kept.snapshot) : path.join(root, rel); };
+  for (const item of [...manifest.inputs, ...manifest.outputs]) assert.equal(sha(pinnedFile(item.path)), item.sha256, item.path);
   assert.equal(manifest.exitCode, 1);
   assert.deepEqual([manifest.summary.tests, manifest.summary.fail, manifest.summary.failureCodes], [1, 1, { JOURNAL_INCONSISTENT: 1 }]);
   assert.notEqual(sha(path.join(root, 'engine.cjs')), sha(path.join(dir, 'engine.prefix.snapshot.cjs')), 'the final engine differs from the retained pre-fix engine');
@@ -103,7 +107,7 @@ test('every JavaScript file parses', () => {
 
 test('the feature names every outcome and the README carries the exact commands of the independent reviewer', () => {
   const feature = fs.readFileSync(path.join(root, 'C017.feature'), 'utf8');
-  assert.equal((feature.match(/^ {2}Scenario:/gm) || []).length, 15);
+  assert.equal((feature.match(/^ {2}Scenario:/gm) || []).length, 18);
   for (const outcome of s.OUTCOMES) assert.ok(feature.includes(outcome), outcome);
   const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
   for (const command of ['red-run.cjs replay red-01-naive-cancel-always-succeeds', 'red-run.cjs verify-green red-01-naive-cancel-always-succeeds', 'node --test --test-concurrency=1 (Get-ChildItem capability\\C017\\tests\\*.test.cjs).FullName',
