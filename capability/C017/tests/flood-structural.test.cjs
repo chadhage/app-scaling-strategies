@@ -75,7 +75,7 @@ function startNaive(t, env) {
   return { origin: () => s.withTimeout(origin, 'the naive control never listened', 20000), stop: () => { child.stdin.write('stop\n'); return s.withTimeout(exited, 'the naive control did not stop', 8000); } };
 }
 
-test('every refusal of both tables, the Node-answered shapes included, closes an abusive connection at once and reads a bounded number of bytes; the naive control keeps it open (attacker in another process)', { timeout: 420000 }, async (t) => {
+test('every refusal of both tables, the Node-answered shapes included, closes an abusive connection at once and reads a bounded number of bytes; the naive control keeps it open (attacker in another process)', { timeout: 1800000 }, async (t) => {
   const made = s.scratch('fs');
   t.after(() => made.remove());
   const file = (name) => path.join(made.dir, name);
@@ -87,7 +87,7 @@ test('every refusal of both tables, the Node-answered shapes included, closes an
   const controlHost = `Host: 127.0.0.1:${new URL(controlOrigin).port}\r\n`;
 
   for (const row of rows) {
-    await t.test(row.name, { timeout: 120000 }, async (sub) => {
+    await t.test(row.name, { timeout: 1200000 }, async (sub) => {
       const polite = h.raw(origin, row.head(host) + row.small);
       await s.withTimeout(polite.closed, 'the polite request was never closed', 20000);
       const answered = own.finalStatusOf(polite.text());

@@ -15,7 +15,7 @@ const F = require('./fix-red.cjs');
 const repo = path.resolve(s.root, '..', '..');
 const redRoot = path.join(s.root, 'evidence', 'red');
 const fixes = fs.readdirSync(redRoot).filter((name) => name.startsWith('fix-')).sort();
-const EXPECTED = ['chunked-process', 'chunked-structural', 'expect', 'identity', 'interrupted-compensation', 'journal', 'lanes', 'minors', 'page-forged', 'pins', 'pipeline', 'sample', 'wording'];
+const EXPECTED = ['chunked-process', 'chunked-structural', 'expect', 'identity', 'interrupted-compensation', 'journal', 'lanes', 'lifecycle', 'limits', 'minors', 'page-forged', 'pending', 'pins', 'pipeline', 'sample', 'wording'];
 const original = path.join(redRoot, fixes.find((name) => name.startsWith('fix-identity-')));
 
 function copyOfIdentity(t) {
@@ -31,7 +31,7 @@ function copyOfIdentity(t) {
 test('every retained RED of the fix cycle is present, failed for its behavior, recomputes all its hashes and names only pinned files', () => {
   assert.deepEqual(fixes.map((name) => name.replace(/^fix-/, '').replace(/-[0-9a-f]{8}$/, '')), EXPECTED);
   for (const name of fixes) {
-    const result = E.verifyRed(path.join(redRoot, name));
+    const result = E.verifyRedAuto(path.join(redRoot, name));
     assert.deepEqual(result.problems, [], name);
     assert.equal(result.manifest.exitCode, 1, name);
     assert.ok(result.manifest.summary.fail >= 1, name);

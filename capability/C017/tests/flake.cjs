@@ -1,10 +1,12 @@
 'use strict';
 
 // Test tooling, not production code: the flake loop. Runs ONE test file many times, several at once (the load that exposed the heap sampler race),
-// each run a separate `node --test` process under a hard timeout; any failing run is reported. Exit 1 when a single run failed.
+// each run a separate `node --test` process under a hard timeout; any failing run is reported. Exit 1 when a single run failed. The printed JSON carries
+// the SHA-256 of every non-evidence file of the namespace it ran against (`inputs`), so evidence-check.cjs names a loop result that outlived an edit.
 //   node capability\C017\tests\flake.cjs child.test.cjs 20 5
 const { spawn } = require('node:child_process');
 const path = require('node:path');
+const { inputPins } = require('./evidence-check.cjs');
 
 const [fileName, runsText = '20', parallelText = '5'] = process.argv.slice(2);
 const runs = Number(runsText);
@@ -21,11 +23,11 @@ env.NODE_V8_COVERAGE = '';
 function one(index) {
   return new Promise((resolve) => {
     const started = Date.now();
-    const child = spawn(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=170000', `capability/C017/tests/${fileName}`], { cwd: repo, env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=1200000', `capability/C017/tests/${fileName}`], { cwd: repo, env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
     child.stdout.on('data', (part) => { out += part; });
     child.stderr.on('data', (part) => { out += part; });
-    const timer = setTimeout(() => child.kill(), 900000);
+    const timer = setTimeout(() => child.kill(), 2400000);
     child.on('close', (code) => {
       clearTimeout(timer);
       const failing = [...out.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((m) => m[1].trim());
@@ -39,6 +41,6 @@ function one(index) {
   let next = 1;
   await Promise.all(Array.from({ length: parallel }, async () => { while (next <= runs) results.push(await one(next++)); }));
   const failures = results.filter((r) => r.exit !== 0);
-  console.log(JSON.stringify({ file: fileName, runs, parallel, failures: failures.length, slowestSeconds: Math.max(...results.map((r) => r.seconds)), failing: failures }, null, 2));
+  console.log(JSON.stringify({ file: fileName, runs, parallel, failures: failures.length, slowestSeconds: Math.max(...results.map((r) => r.seconds)), failing: failures, inputs: inputPins() }, null, 2));
   process.exit(failures.length ? 1 : 0);
 })();

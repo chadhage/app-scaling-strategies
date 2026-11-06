@@ -98,6 +98,14 @@ Feature: C017 Reconcile cancellation during an in-flight action and never fabric
     When a valid cancel, start or reconcile is sent behind a refusal in the same TCP write, in HTTP/1.1 or HTTP/1.0 framing, however the refusal was decided
     Then the journal and the revision are unchanged, the client receives only the answer of the first request and the connection is closed
 
+  Scenario: A flood pipelined behind a pending first request cannot exhaust the server
+    When a client pipelines more than a few requests behind a first request that is still pending, such as a valid cancel waiting for its step boundary
+    Then the first request keeps running and an idempotent retry returns its outcome, but the connection is destroyed at the ninth request behind it, the server reads a bounded number of bytes from it and a server with a small heap stays alive and answers a legitimate request
+
+  Scenario: The header and connection limits are enforced by the server
+    When a request carries more than 32 header lines, or a connection arrives above the connection cap
+    Then the request is refused with the typed 431 and the surplus connection is dropped by the server itself
+
   Scenario: The journal pane is re-derived, not displayed
     When the server answers a state view whose journal lines contradict its facts, carry no action id, belong to another action or decide a cancel for a view without an action
     Then the page replays the journal window with the same state machine as the server, refuses the view and lists nothing, and a window that does not reach the action's start shows only lines it re-derived

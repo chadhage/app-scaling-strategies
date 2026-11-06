@@ -27,22 +27,23 @@ function frame(method, urlPath, version, { port, host, headers = {}, body, chunk
   return `${head.join('\r\n')}\r\n\r\n${payload}`;
 }
 
-// One exchange: every write in order (optionally with a pause), then read until the server closes or the hard bound passes.
-function exchange(port, writes, boundMs = 4000) {
+// One exchange: every write in order (optionally with a pause), then read until the server closes the connection or until a SECOND answer shows that
+// a later request was answered (already the failure, nothing more needs reading). No timer: a server that keeps the connection open is cut by the
+// node:test timeout alone, and a healthy server on a saturated machine is never cut short (F25 of the third independent review).
+function exchange(port, writes) {
   return new Promise((resolve) => {
     const socket = net.connect({ host: '127.0.0.1', port });
     const parts = [];
     let finished = false;
+    const text = () => Buffer.concat(parts).toString('latin1');
+    const statuses = () => [...text().matchAll(/HTTP\/1\.[01] (\d{3})/g)].map((m) => Number(m[1]));
     const finish = () => {
       if (finished) return;
       finished = true;
-      clearTimeout(timer);
       socket.destroy();
-      const text = Buffer.concat(parts).toString('latin1');
-      resolve({ text, statuses: [...text.matchAll(/HTTP\/1\.[01] (\d{3})/g)].map((m) => Number(m[1])) });
+      resolve({ text: text(), statuses: statuses() });
     };
-    const timer = setTimeout(finish, boundMs);
-    socket.on('data', (part) => parts.push(part));
+    socket.on('data', (part) => { parts.push(part); if (statuses().length > 1) finish(); });
     socket.on('close', finish);
     socket.on('error', finish);
     socket.on('connect', async () => {
@@ -61,16 +62,16 @@ async function snapshot(ctx) {
   return JSON.stringify({ hash: fileHash(ctx.dir), journalEntries: state.journalEntries, epoch: state.epoch, status: state.action ? state.action.status : null });
 }
 
-// Poll to quiescence (never one fixed sleep): the snapshot must stay identical for several consecutive polls.
+// Poll to quiescence (never one fixed sleep): the snapshot must stay identical for several consecutive polls. No deadline: with the signal of the
+// test (ctx.signal) the wait ends with a named error when the test is aborted, without it only the runner's timeout ends it.
 async function settled(ctx) {
   let last = await snapshot(ctx);
   let same = 0;
-  const end = Date.now() + 15000;
   while (same < 8) {
     await sleep(12);
     const now = await snapshot(ctx);
     if (now === last) same += 1; else { same = 0; last = now; }
-    if (Date.now() > end) throw new Error('the server state never became quiet');
+    if (ctx.signal && ctx.signal.aborted) throw new Error('the server state never became quiet');
   }
   return last;
 }
@@ -80,6 +81,7 @@ async function settled(ctx) {
 async function prepare(t, type) {
   const made = s.scratch(`pl${type[0]}`);
   t.after(() => made.remove());
+  const { signal } = t;
   const launch = (extra) => startChild(t, { args: [`--dir=${made.dir}`, '--step-delay-ms=0', ...extra] });
   let kid = launch(type === 'start' ? [] : ['--hold-before-step=3']);
   let origin = await kid.origin();
@@ -87,16 +89,16 @@ async function prepare(t, type) {
   if (type !== 'start') {
     const started = await h.post(origin, '/api/start', s.startCmd(key('prep')));
     assert202(started);
-    const state = await pollState(origin, (v) => v.action && v.action.effectsStanding.length === 2, 'two effects were never journaled');
+    const state = await pollState(origin, (v) => v.action && v.action.effectsStanding.length === 2, 'two effects were never journaled', { signal });
     actionId = state.action.actionId;
     if (type === 'reconcile') {
       await kid.kill();
       kid = launch([]);
       origin = await kid.origin();
-      actionId = (await pollState(origin, (v) => v.action && v.action.status === 'INTERRUPTED', 'the action was never interrupted by the restart')).action.actionId;
+      actionId = (await pollState(origin, (v) => v.action && v.action.status === 'INTERRUPTED', 'the action was never interrupted by the restart', { signal })).action.actionId;
     }
   }
-  return { type, kid, origin, port: Number(new URL(origin).port), dir: made.dir, actionId };
+  return { type, kid, origin, port: Number(new URL(origin).port), dir: made.dir, actionId, signal };
 }
 
 function assert202(answer) { if (answer.status !== 202) throw new Error(`the preparing start was not accepted: ${answer.text}`); }

@@ -5,11 +5,12 @@
 // failing test. Usage (repository root):
 //   node capability\C017\tests\mutants.cjs list
 //   node capability\C017\tests\mutants.cjs run <id> [<id>...]
-//   node capability\C017\tests\mutants.cjs run-all [--jobs 3] [--out mutants-03]      (--out writes evidence\<name>.json once; exit 1 when a mutant survives)
+//   node capability\C017\tests\mutants.cjs run-all [--jobs 3] [--out mutants-04]      (--out writes evidence\<name>.json once, with the SHA-256 of every input; exit 1 when a mutant survives or is undecided)
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { mutants } = require('./mutant-list.cjs');
+const { inputPins } = require('./evidence-check.cjs');
 
 const root = path.join(__dirname, '..');
 const repo = path.resolve(root, '..', '..');
@@ -30,18 +31,19 @@ function run(mutant) {
   const mutated = prepare(mutant, dir);
   const env = { ...process.env, C017_OVERLAY: JSON.stringify({ [`capability/C017/${mutant.file}`]: rel(mutated) }), NODE_OPTIONS: '--require=./capability/C017/tests/fixtures/overlay-preload.cjs', NODE_V8_COVERAGE: '' };
   delete env.NODE_TEST_CONTEXT;
-  const args = ['--test', '--test-reporter=tap', '--test-concurrency=1', '--test-timeout=150000', ...(mutant.pattern ? [`--test-name-pattern=${mutant.pattern}`] : []), ...mutant.tests];
+  const args = ['--test', '--test-reporter=tap', '--test-concurrency=1', '--test-timeout=900000', ...(mutant.pattern ? [`--test-name-pattern=${mutant.pattern}`] : []), ...mutant.tests];
   return new Promise((resolve) => {
     const child = spawn(process.execPath, args, { cwd: repo, env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
     child.stdout.on('data', (part) => { out += part; });
     child.stderr.on('data', () => {});
-    const limit = setTimeout(() => child.kill(), 400000);
+    const limit = setTimeout(() => child.kill(), 2400000);
     child.once('exit', (code) => {
       clearTimeout(limit);
       fs.rmSync(dir, { recursive: true, force: true });
       const failing = [...out.replace(/\r\n/g, '\n').matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((m) => m[1].trim().slice(0, 140));
-      resolve({ id: mutant.id, file: mutant.file, change: mutant.replace === '' ? 'line removed' : 'text replaced', killed: code !== 0 && failing.some((name) => mutant.kills.test(name)), exit: code, failingTests: failing.slice(0, 6) });
+      // A run that was cut (code null) decided nothing: it is UNDECIDED, listed as such and never counted as killed (controller rule 13).
+      resolve({ id: mutant.id, file: mutant.file, change: mutant.replace === '' ? 'line removed' : 'text replaced', killed: code !== null && code !== 0 && failing.some((name) => mutant.kills.test(name)), undecided: code === null, exit: code, failingTests: failing.slice(0, 6) });
     });
   });
 }
@@ -67,7 +69,7 @@ async function pool(list, jobs) {
   const chosen = mode === 'run-all' ? mutants : mutants.filter((m) => rest.includes(m.id));
   if (!chosen.length) { console.error('usage: mutants.cjs list | run <id>... | run-all [--jobs N] [--out name]'); process.exit(2); }
   const results = await pool(chosen, Number(option('--jobs', '3')));
-  const summary = { schema: 'C017-mutants/1', node: process.version, mutants: results.length, killed: results.filter((r) => r.killed).length, survived: results.filter((r) => !r.killed).map((r) => r.id), results };
+  const summary = { schema: 'C017-mutants/2', node: process.version, inputs: inputPins(), mutants: results.length, killed: results.filter((r) => r.killed).length, undecided: results.filter((r) => r.undecided).map((r) => r.id), survived: results.filter((r) => !r.killed).map((r) => r.id), results };
   if (option('--out')) fs.writeFileSync(path.join(root, 'evidence', `${option('--out')}.json`), `${JSON.stringify(summary, null, 1)}\n`, { flag: 'wx' });
   console.log(JSON.stringify({ mutants: summary.mutants, killed: summary.killed, survived: summary.survived }, null, 1));
   process.exit(summary.survived.length ? 1 : 0);

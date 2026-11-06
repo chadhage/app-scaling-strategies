@@ -9,12 +9,22 @@
 // and fs.readFileSync() to the test files and to every child process they start.
 const fs = require('node:fs');
 const path = require('node:path');
+const zlib = require('node:zlib');
 const { spawnSync } = require('node:child_process');
-const { verifyRed } = require('./evidence-check.cjs');
+const { verifyRedAuto } = require('./evidence-check.cjs');
 
 const root = path.join(__dirname, '..');
 const repo = path.resolve(root, '..', '..');
 const redRoot = path.join(root, 'evidence', 'red');
+
+// Test NAMES at every nesting depth of a TAP transcript, never counts: a RED archived from a run that its own timeout cut has fewer tests than the
+// final code (fix-chunked-structural: 26 against 28), and a replay on a loaded machine may be cut elsewhere; what must hold is that every test that
+// failed in the archive fails again on the pre-fix bytes (replay) and passes on the final code (verify-green).
+const tapNames = (text, ok) => new Set([...text.replace(/\r\n/g, '\n').matchAll(ok ? /^\s*ok \d+ - (.+?)(?: # (?:SKIP|TODO).*)?$/gm : /^\s*not ok \d+ - (.+?)(?: # (?:SKIP|TODO).*)?$/gm)].map((m) => m[1].trim()));
+// A failing name that is the path of a test FILE is a CUT (the file's own timeout, a killed run), not an assertion: the archived chunked-structural run
+// was cut that way and its transcript names the file. Such a name is never compared: only real test names are.
+const failedNames = (text) => [...tapNames(text, false)].filter((name) => !/\.test\.cjs$/.test(name));
+const archivedTranscript = (dir, manifest) => zlib.gunzipSync(fs.readFileSync(path.join(dir, manifest.transcripts.stdout.path))).toString('utf8');
 
 // A replay serves the retained PRE-FIX bytes of the files named in replay.json; every other production file must be the world as it was when
 // that RED ran, not today's: the second fix cycle moved the derivation into contract.js, so a pre-fix contract.js next to today's reconcile.cjs
@@ -56,26 +66,30 @@ function run(dir, { overlay }) {
   const legacy = retainedLegacy(dir);
   if (overlay || Object.keys(legacy).length) Object.assign(env, { C017_OVERLAY: JSON.stringify({ ...(overlay ? { ...world, ...replay.overlay } : {}), ...legacy }), NODE_OPTIONS: replay.nodeOptions });
   const args = ['--test', '--test-reporter=tap', '--test-concurrency=1', `--test-timeout=${replay.testTimeoutMs}`, ...replay.tests.map((p) => p.replaceAll('/', '\\'))];
-  const result = spawnSync(process.execPath, args, { cwd: repo, env, encoding: 'utf8', maxBuffer: 1 << 26, timeout: 900000 });
+  const result = spawnSync(process.execPath, args, { cwd: repo, env, encoding: 'utf8', maxBuffer: 1 << 26, timeout: 3600000 });
   const text = result.stdout.replace(/\r\n/g, '\n');
   const count = (label) => Number((new RegExp(`^# ${label} (\\d+)$`, 'm').exec(text) || [0, 0])[1]);
-  return { exitCode: result.status, tests: count('tests'), pass: count('pass'), fail: count('fail'), notOk: [...text.matchAll(/^not ok \d+ - (.+)$/gm)].map((m) => m[1].trim()).slice(0, 60) };
+  return { exitCode: result.status, tests: count('tests'), pass: count('pass'), fail: count('fail'), notOk: [...text.matchAll(/^not ok \d+ - (.+)$/gm)].map((m) => m[1].trim()).slice(0, 60), passed: tapNames(text, true), failed: tapNames(text, false) };
 }
 
 function replay(name) {
   const dir = resolveDir(name);
-  const archived = verifyRed(dir);
+  const archived = verifyRedAuto(dir);
   const now = run(dir, { overlay: true });
   const manifest = archived.manifest;
-  const same = now.exitCode === manifest.exitCode && now.fail === manifest.summary.fail && now.tests === manifest.summary.tests && JSON.stringify(now.notOk) === JSON.stringify(manifest.summary.notOk);
-  return { name: path.basename(dir), reproduced: archived.ok && same, archiveProblems: archived.problems, exitCode: now.exitCode, fail: now.fail, tests: now.tests, failing: now.notOk };
+  const failedThen = failedNames(archivedTranscript(dir, manifest));
+  const missing = failedThen.filter((testName) => !now.failed.has(testName));
+  const same = now.exitCode === manifest.exitCode && missing.length === 0;
+  return { name: path.basename(dir), reproduced: archived.ok && same, archiveProblems: archived.problems, exitCode: now.exitCode, fail: now.fail, tests: now.tests, failing: now.notOk, failedThen: failedThen.length, notFailingNow: missing };
 }
 
 function verifyGreen(name) {
   const dir = resolveDir(name);
-  const archived = verifyRed(dir);
+  const archived = verifyRedAuto(dir);
   const now = run(dir, { overlay: false });
-  return { name: path.basename(dir), unchangedRedPassesAgainstFinalCode: archived.ok && now.exitCode === 0 && now.fail === 0 && now.tests === archived.manifest.summary.tests, archiveProblems: archived.problems, exitCode: now.exitCode, fail: now.fail, tests: now.tests };
+  const failedThen = failedNames(archivedTranscript(dir, archived.manifest));
+  const notPassing = failedThen.filter((testName) => !now.passed.has(testName));
+  return { name: path.basename(dir), unchangedRedPassesAgainstFinalCode: archived.ok && now.exitCode === 0 && now.fail === 0 && failedThen.length > 0 && notPassing.length === 0, archiveProblems: archived.problems, exitCode: now.exitCode, fail: now.fail, tests: now.tests, failedThen: failedThen.length, notPassing };
 }
 
 const all = () => fs.readdirSync(redRoot).filter((entry) => entry.startsWith('fix-')).sort();
@@ -93,4 +107,4 @@ if (require.main === module) {
   process.exit(results.every((r) => r.reproduced || r.unchangedRedPassesAgainstFinalCode || r.superseded) ? 0 : 1);
 }
 
-module.exports = Object.freeze({ replay, verifyGreen, run, all, retainedLegacy });
+module.exports = Object.freeze({ replay, verifyGreen, run, all, retainedLegacy, tapNames, failedNames });

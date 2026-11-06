@@ -4,23 +4,24 @@
 // /api/state views by a lying loopback proxy of the real server (the helper blocks POST, so a forged answer has to be a served GET) and the REAL
 // page must refuse every one of them, list nothing, disable every command, and recover when the honest view returns. One session.
 //   node capability\C017\tests\browser-journal.cjs                       (assertions only)
-//   $env:CAPTURE_BROWSER_EVIDENCE='browser-journal-03'; node capability\C017\tests\browser-journal.cjs   (also writes evidence\browser-journal-03.json once)
+//   $env:CAPTURE_BROWSER_EVIDENCE='browser-journal-04'; node capability\C017\tests\browser-journal.cjs   (also writes evidence\browser-journal-04.json once, with the SHA-256 of every input)
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
-const { createHash } = require('node:crypto');
 const { openIsolatedLoopback } = require('../../../testing/browser/isolated.cjs');
+const { qualifyEdge } = require('../../../testing/browser/qualify/qualify.cjs');
 const s = require('./support.cjs');
 const h = require('./http.cjs');
+const { inputPins } = require('./evidence-check.cjs');
 
-function edgeIdentity(version) {
-  const signed = JSON.parse(execFileSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-File', path.join(__dirname, 'signed-edge.ps1')], { encoding: 'utf8', timeout: 150000, windowsHide: true }));
-  assert.equal(signed.authenticodeStatus, 'Valid', 'Edge must be validly signed');
-  assert.match(signed.signer, /Microsoft Corporation/);
-  assert.equal(version.split('.')[0], '156', 'the qualified Edge major version is 156');
-  return { version, sha256: createHash('sha256').update(fs.readFileSync(signed.executable)).digest('hex'), signature: signed.authenticodeStatus, signer: signed.signer, fileVersion: signed.fileVersion };
+// The installed Edge must be Microsoft-signed and within the qualified majors (U018 qualifyEdge: never an equality pin on a build number or a hash).
+async function edgeIdentity(version) {
+  const edge = await qualifyEdge();
+  assert.equal(edge.ok, true, edge.reasons.join(' | '));
+  assert.equal(edge.signature.publisher, 'Microsoft Corporation');
+  assert.equal(String(version).split('.')[0], String(edge.major), 'the session ran the qualified major');
+  return { version, major: edge.major, qualifiedVia: edge.qualifiedVia, sha256: edge.sha256, signature: edge.signature.status, signer: edge.signature.subject, thumbprint: edge.signature.thumbprint, fileVersion: edge.version || version };
 }
 
 const read = (page) => page.evaluate(() => {
@@ -53,7 +54,9 @@ const forgeries = [
   ['a step-effect for step 3, which never ran', (v) => { v.journal.push({ type: 'step-effect', at: 't', actionId: v.action.actionId, step: 3, units: 5, standingUnits: 15 }); }],
 ];
 
-async function main() {
+// `open` is injectable: browser-cleanup.test.cjs drives this function with a fake session and an injected failure and proves that the session is
+// closed and the servers are shut down (self-review line 9). Real runs use the isolated helper.
+async function main({ open = openIsolatedLoopback } = {}) {
   const cleanups = [];
   const env = await h.serve({ after: (fn) => cleanups.push(fn) }, {});
   env.ctx.g.hold('before', 3);
@@ -66,7 +69,7 @@ async function main() {
   let session = null;
   const records = [];
   try {
-    session = await openIsolatedLoopback('capability\\C017\\index.html', lying);
+    session = await open('capability\\C017\\index.html', lying);
     const { page } = session;
     const show = async (label, lie) => {
       box.lie = lie;
@@ -93,9 +96,9 @@ async function main() {
       assert.doesNotMatch(back.dom.outcome, /^Answer rejected/, `${label}: the sentence of the refusal is gone`);
       records.push({ label, verdict: 'refused', outcome: forged.dom.outcome.slice(0, 90), recovered: true });
     }
-    const identity = edgeIdentity(session.browserVersion);
+    const identity = await edgeIdentity(session.browserVersion);
     console.log(JSON.stringify({ edge: identity, forgeries: records.length }));
-    return { schema: 'C017-browser-journal/1', helper: 'testing/browser/isolated.cjs openIsolatedLoopback', limits: 'same-origin GET/HEAD only: forged views are served GETs through a lying loopback proxy of the real server', edge: identity, sessions: 1, records };
+    return { schema: 'C017-browser-journal/2', helper: 'testing/browser/isolated.cjs openIsolatedLoopback', limits: 'same-origin GET/HEAD only: forged views are served GETs through a lying loopback proxy of the real server', edge: identity, inputs: inputPins(), sessions: 1, records };
   } finally {
     if (session) await session.close();
     await new Promise((resolve) => lying.close(resolve));
@@ -103,7 +106,7 @@ async function main() {
   }
 }
 
-main().then((observation) => {
+const report = (observation) => {
   const capture = process.env.CAPTURE_BROWSER_EVIDENCE;
   if (capture) {
     if (!/^browser-journal-\d{2}$/.test(capture)) throw new Error('CAPTURE_BROWSER_EVIDENCE must name a NEW file: browser-journal-NN');
@@ -111,4 +114,8 @@ main().then((observation) => {
   }
   console.log('browser-journal: every forged journal pane was refused in real Edge and the page recovered');
   process.exit(0);
-}).catch((error) => { console.error(error); process.exit(1); });
+};
+
+if (require.main === module) main().then(report).catch((error) => { console.error(error); process.exit(1); });
+
+module.exports = Object.freeze({ main });

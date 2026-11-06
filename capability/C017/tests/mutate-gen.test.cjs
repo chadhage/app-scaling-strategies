@@ -51,5 +51,5 @@ test('the generator covers the production server: every guard of server.cjs has 
   assert.equal(sites.filter((site) => site.kind === 'cond-false').length, ifs, 'one cond-false mutant per if');
   assert.equal(sites.filter((site) => site.kind === 'cond-true').length, ifs, 'one cond-true mutant per if');
   assert.ok(sites.length >= 100, `${sites.length} mutants`);
-  assert.deepEqual(G.TESTS.map((name) => name.split('\\').pop()), ['server-guards.test.cjs', 'refusal-shapes.test.cjs', 'drain.test.cjs', 'two-servers.test.cjs', 'server.test.cjs', 'chunked.test.cjs', 'resources.test.cjs']);
+  assert.deepEqual(G.TESTS.map((name) => name.split('\\').pop()), ['server-guards.test.cjs', 'refusal-shapes.test.cjs', 'drain.test.cjs', 'pending-flood.test.cjs', 'limits.test.cjs', 'two-servers.test.cjs', 'server.test.cjs', 'chunked.test.cjs', 'resources.test.cjs']);
 });

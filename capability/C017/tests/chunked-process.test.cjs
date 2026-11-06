@@ -89,10 +89,10 @@ function startNaive(t) {
   });
   const exited = new Promise((resolve) => child.once('exit', resolve));
   child.stdin.on('error', () => {});
-  return { origin: () => s.withTimeout(origin, 'the naive control never listened', 20000), stop: () => { child.stdin.write('stop\n'); return s.withTimeout(exited, 'the naive control did not stop', 8000); } };
+  return { origin: () => origin, stop: () => { child.stdin.write('stop\n'); return exited; } };
 }
 
-test('every refusal of the shared table closes an abusive connection and reads a bounded number of bytes while the server keeps serving, and a naive control does none of that (attacker in another process, no time bound)', { timeout: 420000 }, async (t) => {
+test('every refusal of the shared table closes an abusive connection and reads a bounded number of bytes while the server keeps serving, and a naive control does none of that (attacker in another process, no time bound)', { timeout: 1800000 }, async (t) => {
   const made = s.scratch('cp');
   t.after(() => made.remove());
   const netLog = path.join(made.dir, 'net.jsonl');
@@ -108,7 +108,7 @@ test('every refusal of the shared table closes an abusive connection and reads a
   assert.equal((await h.get(origin, '/api/state')).status, 200, 'the idle child must answer a GET');
 
   for (const row of rows) {
-    await t.test(row.name, { timeout: 120000 }, async (sub) => {
+    await t.test(row.name, { timeout: 1200000 }, async (sub) => {
       const polite = h.raw(origin, row.head(host) + row.small);
       await polite.closed;
       assert.equal(statusOf(polite.text()), row.status, 'the table row must elicit its status from a well-behaved client');

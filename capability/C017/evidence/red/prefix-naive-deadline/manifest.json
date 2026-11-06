@@ -1,0 +1,29 @@
+{
+  "schema": "C017-prefix/1",
+  "commit": null,
+  "tag": null,
+  "note": "A NAIVE SUBJECT, not a published file: the child helper of the second fix (commit 8832dac5, derivedFrom) with its wall-clock guards (20 s for the listening line, 8 s for the exit after stop and after a kill, 8 s and 5 s in the polling helpers) and ONLY the injectable launch added, so that child-lifecycle.test.cjs can drive a fake child. The RED fix-lifecycle replays that file against it: every wait that races a timer against the child fails on the mocked clock.",
+  "derivedFrom": {
+    "file": "capability/C017/tests/child.cjs",
+    "commit": "8832dac542f6767f102d18f2c22e3538b024900a",
+    "sha256": "9e3e3bd5fea9a4f0c869527e3d639cf0ff56af90860190743258d785a9615679",
+    "replacements": [
+      {
+        "find": "function startChild(t, { args = [], nodeFlags = [], env = {} } = {}) {",
+        "replace": "function startChild(t, { args = [], nodeFlags = [], env = {}, launch = spawn } = {}) {"
+      },
+      {
+        "find": "const child = spawn(process.execPath,",
+        "replace": "const child = launch(process.execPath,"
+      }
+    ]
+  },
+  "files": [
+    {
+      "live": "capability/C017/tests/child.cjs",
+      "snapshot": "capability/C017/evidence/red/prefix-naive-deadline/child.snapshot.cjs",
+      "bytes": 3496,
+      "sha256": "9ba09fc72a6d0a0affea5c39961e900935d2545489fe76d9c9373f708c37e9a6"
+    }
+  ]
+}

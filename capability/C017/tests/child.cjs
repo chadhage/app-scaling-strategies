@@ -1,21 +1,23 @@
 'use strict';
 
-// Test tooling, not production code: spawns the REAL cli.cjs with the child-preload (ledger snapshot, optional heap sampler),
-// a hard external deadline for every wait, and an exact-PID kill; it never kills by name.
+// Test tooling, not production code: spawns the REAL cli.cjs with the child-preload (ledger snapshot, optional heap sampler)
+// and an exact-PID kill; it never kills by name. NO DEADLINE decides pass or fail here (F25 of the third independent review): the child's
+// listening line, its exit after "stop" and after a kill are awaited as events, so a healthy child on a saturated machine is never reported as
+// hung, and a child that really never comes up or never stops is cut by the node:test timeout of the test that started it, which is the only clock.
 const { spawn } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
-const s = require('./support.cjs');
 const h = require('./http.cjs');
 
 const preload = path.join(__dirname, 'fixtures', 'child-preload.cjs');
 const cli = path.join(__dirname, '..', 'cli.cjs');
 
-function startChild(t, { args = [], nodeFlags = [], env = {} } = {}) {
+// `launch` is injectable so that the lifecycle waits are proved with a fake child that is slower than any deadline the helper could have (child-lifecycle.test.cjs).
+function startChild(t, { args = [], nodeFlags = [], env = {}, launch = spawn } = {}) {
   const clean = { ...process.env, ...env };
   delete clean.NODE_TEST_CONTEXT;
   delete clean.NODE_V8_COVERAGE;
-  const child = spawn(process.execPath, [...nodeFlags, '--require', preload, cli, ...args], { stdio: ['pipe', 'pipe', 'pipe'], env: clean, windowsHide: true });
+  const child = launch(process.execPath, [...nodeFlags, '--require', preload, cli, ...args], { stdio: ['pipe', 'pipe', 'pipe'], env: clean, windowsHide: true });
   const errors = [];
   const lines = [];
   let buffer = '';
@@ -40,25 +42,26 @@ function startChild(t, { args = [], nodeFlags = [], env = {} } = {}) {
   t.after(() => { if (child.exitCode === null && child.signalCode === null) child.kill(); });
   return {
     child, lines, exited, errors: () => errors.join(''),
-    origin: async () => (await s.withTimeout(Promise.race([listening, exited.then(() => { throw new Error(`the child exited early: ${errors.join('')}`); })]), 'the child never listened', 20000)).origin,
-    stop: () => { child.stdin.write('stop\n'); return s.withTimeout(exited, 'the child did not stop within the bound', 8000); },
-    kill: () => { child.kill(); return s.withTimeout(exited, 'the killed child did not exit', 8000); },
+    origin: async () => (await Promise.race([listening, exited.then(() => { throw new Error(`the child exited early: ${errors.join('')}`); })])).origin,
+    stop: () => { child.stdin.write('stop\n'); return exited; },
+    kill: () => { child.kill(); return exited; },
   };
 }
 
-async function pollState(origin, predicate, message, ms = 8000) {
-  const end = Date.now() + ms;
+// Polls until the predicate holds. Without a signal only the runner's timeout ends the wait; with the test's own signal (t.signal, aborted when the
+// test times out or is cancelled) the wait ends with the named message instead of an anonymous timeout.
+async function pollState(origin, predicate, message, { signal } = {}) {
   for (;;) {
     const state = (await h.get(origin, '/api/state')).json;
     if (predicate(state)) return state;
-    if (Date.now() > end) throw new Error(message);
+    if (signal && signal.aborted) throw new Error(message);
     await new Promise((resolve) => setTimeout(resolve, 25));
   }
 }
 
 // The child rewrites its sample file every 100 ms: a reader waits until the file parses (a half-written or momentarily missing file is
-// retried) and gives up with a clear error only after the deadline, instead of reporting that nothing was written (L-0137).
-async function readMem(file, { ms = 5000 } = {}) {
+// retried). With a signal it waits until the test is aborted; without one it gives up with a clear error after `ms` (L-0137).
+async function readMem(file, { ms = 5000, signal } = {}) {
   const end = Date.now() + ms;
   let last = 'no file yet';
   for (;;) {
@@ -69,7 +72,7 @@ async function readMem(file, { ms = 5000 } = {}) {
     } catch (error) {
       last = error.code || error.message;
     }
-    if (Date.now() > end) throw new Error(`the child never produced a parseable heap sample within ${ms} ms (${last})`);
+    if (signal ? signal.aborted : Date.now() > end) throw new Error(`the child never produced a parseable heap sample${signal ? '' : ` within ${ms} ms`} (${last})`);
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
 }

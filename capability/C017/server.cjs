@@ -15,6 +15,14 @@ const MAX_JOURNAL_VIEW = 48;
 const DRAIN_BYTES = 32768;
 const DRAIN_MS = 1000;
 const MAX_DRAINING = 4;
+// A request behind the FIRST one of its connection is never run and never answered, but Node's parser still builds a request and a response object
+// for every one of them and, because nothing is ever written for them, nothing slows the socket down: a flood pipelined behind a PENDING first
+// request (a valid cancel waits for its step boundary) was retained at about 1.8 KB per request until a small-heap server hung or aborted (F24 of
+// the third independent review). A connection may leave at most MAX_DROPPED requests behind its first one; the next one destroys it while the
+// first request keeps running (a keyed command is recovered by an idempotent retry). The rest of the single socket read that carried that request
+// (at most 64 KB) is still parsed, and every object is released with the socket.
+const MAX_DROPPED = 8;
+const dropped = new WeakMap();
 const tracked = new WeakMap();
 let draining = 0;
 const scope = Object.freeze({
@@ -52,6 +60,12 @@ function readBody(request) {
   });
 }
 
+function dropBehindFirst(socket) {
+  const count = (dropped.get(socket) || 0) + 1;
+  dropped.set(socket, count);
+  if (count > MAX_DROPPED) socket.destroy();
+}
+
 function closeAfterAnswer(socket) {
   if (socket.destroyed) return;
   if (draining >= MAX_DRAINING) { socket.destroy(); return; }
@@ -85,13 +99,17 @@ function createLocalServer({ engine, requestTimeoutMs = 5000, socketTimeoutMs = 
   // Sockets whose one request was taken. The mark is made at the first line of EVERY handler, synchronously, on request.socket (a response
   // queued behind another one has no socket yet), whatever the HTTP version: Node dispatches every request of one TCP read before the first
   // answer exists, and neither maxRequestsPerSocket nor its Host check count an HTTP/1.0 request or a request without Host, so a mutation
-  // pipelined behind a refusal used to run while the client only saw the refusal (F12). A request behind the first is never run and never answered.
+  // pipelined behind a refusal used to run while the client only saw the refusal (F12). A request behind the first is never run and never answered,
+  // and a connection that leaves more than MAX_DROPPED of them behind is destroyed (dropBehindFirst, F24).
   const taken = new WeakSet();
   // mode.expectation: Node would answer an unknown Expect header with its own bodiless 417 and keep the connection (F11); mode.continued: the
   // client waits for 100 Continue, which is sent only when the request is about to be read, so a refusal never invites an upload.
   async function handle(request, response, mode = {}) {
     const { socket } = request;
-    if (taken.has(socket)) return undefined;
+    if (taken.has(socket)) {
+      dropBehindFirst(socket);
+      return undefined;
+    }
     taken.add(socket);
     // The ONE send path of every answer: once it is flushed the connection is closed after a bounded drain (closeAfterAnswer). Node's own
     // close at the end of a response waits for pending reads on Windows, which an endless chunked body never lets finish.

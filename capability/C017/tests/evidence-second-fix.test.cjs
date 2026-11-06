@@ -108,27 +108,28 @@ test('the figures the README states about the second fix equal the stored eviden
   assert.ok(lanes.fail >= 1 && lanes.fail + lanes.pass === lanes.tests, 'the lane tests fail on the naive subject');
   assert.ok(readme.includes(`${lanes.fail} of ${lanes.tests} lane tests fail`), 'the README states the lane RED');
   const { mutants } = require('./mutant-list.cjs');
-  assert.equal(mutants.length, 31);
+  assert.equal(mutants.length, 37, 'the catalogue of the third fix: the 31 named mutants of the second fix and six more');
   assert.ok(readme.includes('31 named mutants'));
   const archived = path.join(evidence, 'mutants-03.json');
   if (fs.existsSync(archived)) {
     const summary = JSON.parse(fs.readFileSync(archived, 'utf8'));
-    assert.deepEqual([summary.mutants, summary.killed, summary.survived], [31, 31, []], 'every named mutant is killed by a named failing test');
-    assert.deepEqual(summary.results.map((result) => result.id).sort(), mutants.map((mutant) => mutant.id).sort());
+    assert.deepEqual([summary.mutants, summary.killed, summary.survived], [31, 31, []], 'every named mutant of the second fix is killed by a named failing test');
+    const current = new Set(mutants.map((mutant) => mutant.id));
+    assert.ok(summary.results.every((result) => current.has(result.id)), 'the 31 archived mutants are still in the catalogue');
     assert.ok(summary.results.every((result) => result.failingTests.length >= 1));
   }
 });
 
-test('the systematic mutation run is archived for the final server.cjs, and every survivor of the base run is killed by the re-run or named in the README (L-0172, checklist line 4)', () => {
+test('the systematic mutation run of the second fix is archived for the server.cjs of that fix, and every survivor of its base run is killed by the re-run or named in the README (L-0172, checklist line 4)', () => {
   const G = require('./mutate-gen.cjs');
   const base = path.join(evidence, 'mutants-gen-03.json');
   const again = path.join(evidence, 'mutants-gen-03-rerun.json');
   if (!fs.existsSync(path.join(evidence, 'pins.json')) && !fs.existsSync(base)) return;
   const readme = fs.readFileSync(path.join(s.root, 'README.md'), 'utf8');
-  const server = fs.readFileSync(path.join(s.root, 'server.cjs'));
+  const server = fs.readFileSync(path.join(evidence, 'red', 'prefix-8832dac5', 'server.snapshot.cjs'));
   const run = JSON.parse(fs.readFileSync(base, 'utf8'));
-  assert.equal(run.generated, G.generate(server.toString('utf8').replace(/\r\n/g, '\n')).length, 'the archived run generated every mutant of the final server.cjs');
-  assert.equal(run.baseSha256, E.sha(server), 'the archived run mutated the final server.cjs');
+  assert.equal(run.generated, G.generate(server.toString('utf8').replace(/\r\n/g, '\n')).length, 'the archived run generated every mutant of the server.cjs of the second fix');
+  assert.equal(run.baseSha256, E.sha(server), 'the archived run mutated the server.cjs of the second fix (the published bytes, retained in evidence/red/prefix-8832dac5)');
   assert.equal(run.ran + run.invalid.length, run.generated);
   assert.equal(run.killed + run.survived.length, run.ran);
   assert.ok(run.results.every((result) => result.invalid || result.killed === false || result.failingTests.length >= 1 || /hang/.test(result.killedBy)), 'every kill names a failing test');

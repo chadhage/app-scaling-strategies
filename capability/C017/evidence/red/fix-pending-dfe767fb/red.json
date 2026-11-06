@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "F24 of the third independent review: the published second fix drops every request behind the FIRST one of a connection without answering it and without slowing or destroying the socket, so a flood pipelined behind a PENDING first request (a valid cancel waiting for its step boundary) is retained at about 1.8 KB per request until a small-heap server hangs or aborts (exit 134). The in-process tests count the requests behind the first one (at most 8 are tolerated, the ninth destroys the connection) and the process test attacks a 48 MB-heap child with 4 connections of 50,000 requests each; they run against the published server.cjs of the second fix (evidence/red/prefix-8832dac5) and must fail.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "--test-timeout=400000",
+    "capability\\C017\\tests\\pending-flood.test.cjs",
+    "capability\\C017\\tests\\pending-flood-process.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "NODE_OPTIONS",
+    "C017_OVERLAY"
+  ],
+  "startedAtUtc": "2026-11-06T18:37:13.637Z",
+  "completedAtUtc": "2026-11-06T18:37:20.819Z",
+  "elapsedMs": 7182,
+  "timeoutMs": 900000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C017\\evidence\\red\\fix-pending-dfe767fb\\replay.json",
+      "bytes": 1153,
+      "rawSha256": "df70c40bc275a4807e68a2896f8396f1072e8c9a3a71012c02b9ba5d8c968e3b",
+      "crlfToLfSha256": "df70c40bc275a4807e68a2896f8396f1072e8c9a3a71012c02b9ba5d8c968e3b"
+    },
+    {
+      "path": "capability\\C017\\tests\\pending-flood.test.cjs",
+      "bytes": 7829,
+      "rawSha256": "ccf20edc452e079be2ddc8ffc8bc9f3fa6009c518e5f4c866c5aa1147faecc03",
+      "crlfToLfSha256": "b915cfa5caf2477a8623846287762faf57d218f7c5468d39c1ae7f0286a23159"
+    },
+    {
+      "path": "capability\\C017\\tests\\pending-flood-process.test.cjs",
+      "bytes": 7122,
+      "rawSha256": "c84d739bb879360c6cf57ab9cfad964e5656e00d1a3c0c605f0accbf6a69cfc1",
+      "crlfToLfSha256": "74c2e31da2d4219e11fb44661c9124586764e173dfea88506defd1fd1eee1897"
+    },
+    {
+      "path": "capability\\C017\\tests\\child.cjs",
+      "bytes": 4170,
+      "rawSha256": "2d94d3dea3c91d9ab6e8bd1bbc7e9186ba1bb449fa80843e067f2460b74f23b6",
+      "crlfToLfSha256": "f0e22bc95a676ec11b44d234b6a542cfe26bba53308ca62f4cb770c9e45d7a6d"
+    },
+    {
+      "path": "capability\\C017\\tests\\support.cjs",
+      "bytes": 6890,
+      "rawSha256": "3eae28582724d9b4afa78b241b0f431d786102ee097378d5c44c2d707f4c6e4c",
+      "crlfToLfSha256": "d7413430871b232f3da94ff205a3d95cb85cd5861783b886d8844d9291d16b13"
+    },
+    {
+      "path": "capability\\C017\\tests\\http.cjs",
+      "bytes": 2915,
+      "rawSha256": "da7ab2bb2c558f675a1c17cde7137750f8ab0c2257ba5568ba55908f1c01a10a",
+      "crlfToLfSha256": "0bfff55facfb3eaae861167e13568890017fac9f62712a0013e516c19952fea8"
+    },
+    {
+      "path": "capability\\C017\\tests\\fixtures\\overlay-preload.cjs",
+      "bytes": 1772,
+      "rawSha256": "3e9db2975e4a7c9e389126d676ad76e0c4afa17d93a5ed975a047f0d1abd1f4d",
+      "crlfToLfSha256": "6f63f54b3fadc6c7066ab85d45b23d226025d42575eb488989c810a347c07f8b"
+    },
+    {
+      "path": "capability\\C017\\tests\\fixtures\\child-preload.cjs",
+      "bytes": 2133,
+      "rawSha256": "97d78a4d84a8fb24ab183d12cda9a0c9f103adda30c88be6bed45f5fcf64340f",
+      "crlfToLfSha256": "c70d3ee7c18c48ff1d448cfc48ac27b44d1477ffdd796711a7e45df4f648f2b0"
+    },
+    {
+      "path": "capability\\C017\\tests\\fixtures\\net-log-preload.cjs",
+      "bytes": 1534,
+      "rawSha256": "6aedc68ac903fc43be40160cfbe592ce29892702f4ab71ed7cb2fb2d399661f8",
+      "crlfToLfSha256": "f3f580cf8e3745a07edff447baa5b582885a5b0738b72a169d9ca6d897e0860e"
+    },
+    {
+      "path": "capability\\C017\\tests\\fixtures\\pending-attacker.cjs",
+      "bytes": 2050,
+      "rawSha256": "3bb94eeed54ea44a2070e6f32088c59e7a0d465df00664152511b1a0ad891b8f",
+      "crlfToLfSha256": "7db52c02ee4f3fa3f2fd94e2bcb4ef4adafffd828f4f73602fe047bb9487a764"
+    },
+    {
+      "path": "capability\\C017\\evidence\\red\\prefix-8832dac5\\server.snapshot.cjs",
+      "bytes": 10763,
+      "rawSha256": "7b3aa0e4f1f42338fc51e6bb3024ffd34726577ea433ae1759c23907b3da16b2",
+      "crlfToLfSha256": "5f09cd5664c3d123d54b2bc29c93a4b19c248bd0e6e24bbfa933fe4aa4840f09"
+    }
+  ],
+  "summary": {
+    "tests": 6,
+    "suites": 0,
+    "pass": 2,
+    "fail": 4,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "a pending first request with 50000 pipelined requests behind it on each of 4 connections keeps a 48 MB-heap child alive, bounded, closing every connection and answering a legitimate GET (counts only)",
+      "one request more than TOLERATED destroys the connection while the first request is still pending; the cancel is applied once and its idempotent retry returns the outcome",
+      "the bound counts across reads: one request per write, the ninth request behind the first one destroys the connection and not the eighth",
+      "requests behind a first request that is answered at once count as well: the ninth one destroys the connection, with no drain and no pending request needed"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 5422,
+      "sha256": "8558c44ada616c4099112f4d4cabd22134d65421ee80cafbba9aaa3c9df62e14",
+      "gzipBytes": 1245,
+      "gzipSha256": "49eeee74e26ea4917915624303bef89094190ed7004b5a5f687631419951b6d8",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

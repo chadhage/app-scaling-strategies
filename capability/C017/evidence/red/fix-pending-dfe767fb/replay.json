@@ -1,0 +1,15 @@
+{
+  "schema": "C017-fix-red/1",
+  "group": "pending",
+  "baseline": "final",
+  "purpose": "F24 of the third independent review: the published second fix drops every request behind the FIRST one of a connection without answering it and without slowing or destroying the socket, so a flood pipelined behind a PENDING first request (a valid cancel waiting for its step boundary) is retained at about 1.8 KB per request until a small-heap server hangs or aborts (exit 134). The in-process tests count the requests behind the first one (at most 8 are tolerated, the ninth destroys the connection) and the process test attacks a 48 MB-heap child with 4 connections of 50,000 requests each; they run against the published server.cjs of the second fix (evidence/red/prefix-8832dac5) and must fail.",
+  "tests": [
+    "capability/C017/tests/pending-flood.test.cjs",
+    "capability/C017/tests/pending-flood-process.test.cjs"
+  ],
+  "overlay": {
+    "capability/C017/server.cjs": "capability/C017/evidence/red/prefix-8832dac5/server.snapshot.cjs"
+  },
+  "nodeOptions": "--require=./capability/C017/tests/fixtures/overlay-preload.cjs",
+  "testTimeoutMs": 400000
+}

@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "F25 of the third independent review: the child helper raced a wall-clock guard (20 s for the listening line, 8 s for the exit after stop and after a kill) against a healthy child, so the separate-process tests failed on a saturated machine with no behaviour failing. child-lifecycle.test.cjs drives a FAKE child that needs ten minutes of virtual time (mocked clock) and requires every wait to resolve with the event; it runs against the old helper with only an injectable launch added (evidence/red/prefix-naive-deadline) and must fail.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "--test-timeout=400000",
+    "capability\\C017\\tests\\child-lifecycle.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "NODE_OPTIONS",
+    "C017_OVERLAY"
+  ],
+  "startedAtUtc": "2026-11-06T18:37:22.363Z",
+  "completedAtUtc": "2026-11-06T18:37:29.188Z",
+  "elapsedMs": 6825,
+  "timeoutMs": 900000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C017\\evidence\\red\\fix-lifecycle-a2cc9900\\replay.json",
+      "bytes": 945,
+      "rawSha256": "786e7e3dd2114981dc6786caf10c4e1834482e63c2de4d29d0f75a8c98d98c5b",
+      "crlfToLfSha256": "786e7e3dd2114981dc6786caf10c4e1834482e63c2de4d29d0f75a8c98d98c5b"
+    },
+    {
+      "path": "capability\\C017\\tests\\child-lifecycle.test.cjs",
+      "bytes": 7340,
+      "rawSha256": "b4600e27d4dcdbcbdc266567af00f963d8b090d8b053aaf7173dbf88e1da41f6",
+      "crlfToLfSha256": "92c25e380da68442c9aaecddddb2650874af0bb9b25f3c040d0ab8b609303a7e"
+    },
+    {
+      "path": "capability\\C017\\tests\\support.cjs",
+      "bytes": 6890,
+      "rawSha256": "3eae28582724d9b4afa78b241b0f431d786102ee097378d5c44c2d707f4c6e4c",
+      "crlfToLfSha256": "d7413430871b232f3da94ff205a3d95cb85cd5861783b886d8844d9291d16b13"
+    },
+    {
+      "path": "capability\\C017\\tests\\http.cjs",
+      "bytes": 2915,
+      "rawSha256": "da7ab2bb2c558f675a1c17cde7137750f8ab0c2257ba5568ba55908f1c01a10a",
+      "crlfToLfSha256": "0bfff55facfb3eaae861167e13568890017fac9f62712a0013e516c19952fea8"
+    },
+    {
+      "path": "capability\\C017\\tests\\fixtures\\overlay-preload.cjs",
+      "bytes": 1772,
+      "rawSha256": "3e9db2975e4a7c9e389126d676ad76e0c4afa17d93a5ed975a047f0d1abd1f4d",
+      "crlfToLfSha256": "6f63f54b3fadc6c7066ab85d45b23d226025d42575eb488989c810a347c07f8b"
+    },
+    {
+      "path": "capability\\C017\\tests\\fixtures\\child-preload.cjs",
+      "bytes": 2133,
+      "rawSha256": "97d78a4d84a8fb24ab183d12cda9a0c9f103adda30c88be6bed45f5fcf64340f",
+      "crlfToLfSha256": "c70d3ee7c18c48ff1d448cfc48ac27b44d1477ffdd796711a7e45df4f648f2b0"
+    },
+    {
+      "path": "capability\\C017\\evidence\\red\\prefix-naive-deadline\\child.snapshot.cjs",
+      "bytes": 3496,
+      "rawSha256": "9ba09fc72a6d0a0affea5c39961e900935d2545489fe76d9c9373f708c37e9a6",
+      "crlfToLfSha256": "9ba09fc72a6d0a0affea5c39961e900935d2545489fe76d9c9373f708c37e9a6"
+    }
+  ],
+  "summary": {
+    "tests": 6,
+    "suites": 0,
+    "pass": 1,
+    "fail": 5,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "origin() waits for the listening line of a child that is slower than any deadline: ten virtual minutes pass and it still resolves with the origin",
+      "stop() waits for the exit of a child that needs longer than any deadline and resolves with its exit code",
+      "kill() waits for the exit of a child that is slow to die and resolves with its exit",
+      "pollState waits until the predicate holds, and with a signal it ends with the named message only when the signal aborts",
+      "readMem with a signal waits until the file parses and ends only when the signal aborts; without a signal it keeps its own deadline"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 5617,
+      "sha256": "146f2cf352a15bd77d8e97022c59f0a7427ceff270a79c7bf0cf85667269e79e",
+      "gzipBytes": 1265,
+      "gzipSha256": "5ed507edb660acd00e56ab83f20d5e3489a2a77ec4c28733aed71012d305be7c",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

@@ -107,7 +107,7 @@ test('every JavaScript file parses', () => {
 
 test('the feature names every outcome and the README carries the exact commands of the independent reviewer', () => {
   const feature = fs.readFileSync(path.join(root, 'C017.feature'), 'utf8');
-  assert.equal((feature.match(/^ {2}Scenario:/gm) || []).length, 21);
+  assert.equal((feature.match(/^ {2}Scenario:/gm) || []).length, 23);
   for (const outcome of s.OUTCOMES) assert.ok(feature.includes(outcome), outcome);
   const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
   for (const command of ['red-run.cjs replay red-01-naive-cancel-always-succeeds', 'red-run.cjs verify-green red-01-naive-cancel-always-succeeds', 'node --test --test-concurrency=1 (Get-ChildItem capability\\C017\\tests\\*.test.cjs).FullName',

@@ -1,0 +1,14 @@
+{
+  "schema": "C017-fix-red/1",
+  "group": "limits",
+  "baseline": "final",
+  "purpose": "G102 and G103 (the two real gaps of the systematic mutation generator, F27 of the third independent review): server.maxHeadersCount = 32 and server.maxConnections = maxConnections could be deleted without any test failing. limits.test.cjs pins both (32 header lines served and 33 refused with the typed 431; a connection above the cap is dropped by the server itself); the code already had the guards, so this RED is a MUTANT: the published server.cjs without the two lines (evidence/red/prefix-naive-limits). All three tests must fail.",
+  "tests": [
+    "capability/C017/tests/limits.test.cjs"
+  ],
+  "overlay": {
+    "capability/C017/server.cjs": "capability/C017/evidence/red/prefix-naive-limits/server.snapshot.cjs"
+  },
+  "nodeOptions": "--require=./capability/C017/tests/fixtures/overlay-preload.cjs",
+  "testTimeoutMs": 400000
+}

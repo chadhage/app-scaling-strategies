@@ -4,27 +4,27 @@
 // same-origin GET/HEAD and blocks writes, so the browser can never deliver a POST: its own Cancel click is observed to be
 // reported as "not delivered, UNKNOWN", and every real outcome is produced by a Node client POST and OBSERVED by the page through GET.
 //   node capability\C017\tests\browser.cjs                      (assertions only, evidence untouched)
-//   $env:CAPTURE_BROWSER_EVIDENCE='browser-observation-02'; node capability\C017\tests\browser.cjs   (also writes evidence\browser-observation-02.json once; the first publication file stays immutable)
+//   $env:CAPTURE_BROWSER_EVIDENCE='browser-observation-04'; node capability\C017\tests\browser.cjs   (also writes evidence\browser-observation-04.json once, with the SHA-256 of every input; earlier captures stay immutable)
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
-const { createHash } = require('node:crypto');
 const { openIsolatedLoopback } = require('../../../testing/browser/isolated.cjs');
+const { qualifyEdge } = require('../../../testing/browser/qualify/qualify.cjs');
 const s = require('./support.cjs');
 const h = require('./http.cjs');
+const { inputPins } = require('./evidence-check.cjs');
 
 const entry = 'capability\\C017\\index.html';
 
-function edgeIdentity(version) {
-  const out = execFileSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-File', path.join(__dirname, 'signed-edge.ps1')], { encoding: 'utf8', timeout: 150000, windowsHide: true });
-  const signed = JSON.parse(out);
-  assert.equal(signed.authenticodeStatus, 'Valid', 'Edge must be validly signed');
-  assert.match(signed.signer, /Microsoft Corporation/);
-  assert.equal(version.split('.')[0], '156', 'the qualified Edge major version is 156');
-  const sha256 = createHash('sha256').update(fs.readFileSync(signed.executable)).digest('hex');
-  return { version, sha256, signature: signed.authenticodeStatus, signer: signed.signer, thumbprint: signed.thumbprint, fileVersion: signed.fileVersion };
+// The installed Edge must be Microsoft-signed and within the qualified majors (U018 qualifyEdge: never an equality pin on a build number or a
+// hash); a major that is not qualified answers MAJOR_NOT_QUALIFIED here and is reported, never worked around.
+async function edgeIdentity(version) {
+  const edge = await qualifyEdge();
+  assert.equal(edge.ok, true, edge.reasons.join(' | '));
+  assert.equal(edge.signature.publisher, 'Microsoft Corporation');
+  assert.equal(String(version).split('.')[0], String(edge.major), 'the session ran the qualified major');
+  return { version, major: edge.major, qualifiedVia: edge.qualifiedVia, sha256: edge.sha256, signature: edge.signature.status, signer: edge.signature.subject, thumbprint: edge.signature.thumbprint, fileVersion: edge.version || version };
 }
 
 const read = (page) => page.evaluate(() => {
@@ -56,7 +56,9 @@ async function tabTo(page, id) {
 }
 const waitText = (page, id, prefix) => page.waitForFunction(({ id: target, prefix: start }) => document.getElementById(target).textContent.startsWith(start), { id, prefix }, { timeout: 90000 });
 
-async function scenario(name, options, act, record, versionBox) {
+// `open` is injectable: browser-cleanup.test.cjs drives this very function with a fake session and an injected failing assertion and proves that the
+// session is closed and the servers are shut down whatever the scenario does (self-review line 9). Real runs use the isolated helper.
+async function scenario(name, options, act, record, versionBox, open = openIsolatedLoopback) {
   const cleanups = [];
   const started = Date.now();
   console.error(`scenario start: ${name.slice(0, 60)}`);
@@ -64,7 +66,7 @@ async function scenario(name, options, act, record, versionBox) {
   let session = null;
   try {
     await options.setup(env);
-    session = await openIsolatedLoopback(entry, env.server);
+    session = await open(entry, env.server);
     versionBox.version = session.browserVersion;
     await act(session.page, env);
     const final = await read(session.page);
@@ -196,10 +198,10 @@ async function main() {
     assert.doesNotMatch(`${state.status}\n${state.outcome}`, /reversed by journaled compensating steps|rolled back/);
   }, records, versionBox);
 
-  const edge = edgeIdentity(versionBox.version);
+  const edge = await edgeIdentity(versionBox.version);
   const observation = {
-    schema: 'C017-browser-observation/1', helper: 'testing/browser/isolated.cjs openIsolatedLoopback', limits: 'same-origin GET/HEAD only; every POST is blocked by the helper, so outcomes are produced by a Node client and observed by the page through GET',
-    edge: { version: edge.version, fileVersion: edge.fileVersion, sha256: edge.sha256, signature: edge.signature, signer: edge.signer, thumbprint: edge.thumbprint }, scenarios: records,
+    schema: 'C017-browser-observation/2', helper: 'testing/browser/isolated.cjs openIsolatedLoopback', limits: 'same-origin GET/HEAD only; every POST is blocked by the helper, so outcomes are produced by a Node client and observed by the page through GET',
+    edge: { version: edge.version, major: edge.major, qualifiedVia: edge.qualifiedVia, fileVersion: edge.fileVersion, sha256: edge.sha256, signature: edge.signature, signer: edge.signer, thumbprint: edge.thumbprint }, inputs: inputPins(), scenarios: records,
   };
   records.forEach((record) => assertRenderedConsistent(record.final, record.scenario));
   const capture = process.env.CAPTURE_BROWSER_EVIDENCE;
@@ -210,4 +212,6 @@ async function main() {
   console.log(JSON.stringify({ ok: true, edge: observation.edge, scenarios: records.map((r) => r.scenario), captured: capture || null }, null, 2));
 }
 
-main().then(() => process.exit(0), (error) => { console.error(error); process.exit(1); });
+if (require.main === module) main().then(() => process.exit(0), (error) => { console.error(error); process.exit(1); });
+
+module.exports = Object.freeze({ scenario });

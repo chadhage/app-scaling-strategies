@@ -1,0 +1,14 @@
+{
+  "schema": "C017-fix-red/1",
+  "group": "lifecycle",
+  "baseline": "final",
+  "purpose": "F25 of the third independent review: the child helper raced a wall-clock guard (20 s for the listening line, 8 s for the exit after stop and after a kill) against a healthy child, so the separate-process tests failed on a saturated machine with no behaviour failing. child-lifecycle.test.cjs drives a FAKE child that needs ten minutes of virtual time (mocked clock) and requires every wait to resolve with the event; it runs against the old helper with only an injectable launch added (evidence/red/prefix-naive-deadline) and must fail.",
+  "tests": [
+    "capability/C017/tests/child-lifecycle.test.cjs"
+  ],
+  "overlay": {
+    "capability/C017/tests/child.cjs": "capability/C017/evidence/red/prefix-naive-deadline/child.snapshot.cjs"
+  },
+  "nodeOptions": "--require=./capability/C017/tests/fixtures/overlay-preload.cjs",
+  "testTimeoutMs": 400000
+}

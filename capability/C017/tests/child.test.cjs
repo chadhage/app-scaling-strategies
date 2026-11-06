@@ -18,9 +18,9 @@ test('a real process kill mid-action leaves a journal that tells the truth after
   const started = await h.post(origin, '/api/start', startBody('kill-start-0001'));
   assert.equal(started.status, 202);
   const actionId = started.json.action.actionId;
-  await pollState(origin, (st) => st.journal.some((e) => e.type === 'step-intent' && e.step === 3), 'step 3 never began');
+  await pollState(origin, (st) => st.journal.some((e) => e.type === 'step-intent' && e.step === 3), 'step 3 never began', { signal: t.signal });
   const racing = h.post(origin, '/api/cancel', s.cancelCmd('kill-cancel-0001', actionId)).then((answer) => ({ answer }), (error) => ({ error }));
-  await pollState(origin, (st) => st.action.cancel && st.action.cancel.key === 'kill-cancel-0001', 'the cancel was never journaled');
+  await pollState(origin, (st) => st.action.cancel && st.action.cancel.key === 'kill-cancel-0001', 'the cancel was never journaled', { signal: t.signal });
   const gone = await first.kill();
   assert.notEqual(gone.code, 0, 'the process was killed, not stopped');
   const lost = await racing;
@@ -47,7 +47,7 @@ test('a real process kill mid-action leaves a journal that tells the truth after
   assert.equal((await h.get(again, '/api/state')).json.action.status, 'RECONCILED');
   const next = await h.post(again, '/api/start', { ...startBody('kill-start-0002'), expectedEpoch: 1 });
   assert.equal(next.status, 202);
-  await pollState(again, (st) => st.action.status === 'COMPLETED', 'the new epoch never completed');
+  await pollState(again, (st) => st.action.status === 'COMPLETED', 'the new epoch never completed', { signal: t.signal });
   const stopped = await second.stop();
   assert.equal(stopped.code, 0);
 });
@@ -60,13 +60,13 @@ test('a small-heap child stays bounded and responsive under floods, half-open an
   const origin = await kid.origin();
   const started = await h.post(origin, '/api/start', startBody('mem-start-0001'));
   const actionId = started.json.action.actionId;
-  await pollState(origin, (st) => st.journal.some((e) => e.type === 'step-intent' && e.step === 2), 'step 2 never began');
+  await pollState(origin, (st) => st.journal.some((e) => e.type === 'step-intent' && e.step === 2), 'step 2 never began', { signal: t.signal });
   const host = `Host: ${new URL(origin).host}\r\n`;
   const body = JSON.stringify(s.cancelCmd('mem-cancel-0001', actionId));
   const silent = h.raw(origin, `POST /api/cancel HTTP/1.1\r\n${host}Content-Type: application/json\r\nContent-Length: ${Buffer.byteLength(body)}\r\n\r\n${body}`, { read: false });
-  await pollState(origin, (st) => st.action.cancel && st.action.cancel.key === 'mem-cancel-0001', 'the never-reading cancel was not journaled');
+  await pollState(origin, (st) => st.action.cancel && st.action.cancel.key === 'mem-cancel-0001', 'the never-reading cancel was not journaled', { signal: t.signal });
   await sleep(400);
-  const before = await readMem(memFile);
+  const before = await readMem(memFile, { signal: t.signal });
 
   const burst = async (count, make) => { for (let i = 0; i < count; i += 40) await Promise.all(Array.from({ length: Math.min(40, count - i) }, make)); };
   const quiet = (promise) => promise.catch(() => null);
@@ -81,10 +81,10 @@ test('a small-heap child stays bounded and responsive under floods, half-open an
   // The sampler forces a GC every 100 ms, but a starved child still holds the requests it has not finished when the sample is taken: the limits are
   // polled until they hold (L-0144), and a real leak never converges, so the node:test timeout of this test is the only clock.
   const within = (sample) => sample.heapUsed < before.heapUsed + 24 * 1024 * 1024 && sample.rss < before.rss + 160 * 1024 * 1024;
-  let after = await readMem(memFile);
+  let after = await readMem(memFile, { signal: t.signal });
   while (!within(after) && !t.signal.aborted) {
     await sleep(100);
-    after = await readMem(memFile);
+    after = await readMem(memFile, { signal: t.signal });
   }
   assert.ok(after.heapUsed < before.heapUsed + 24 * 1024 * 1024, `heap grew from ${before.heapUsed} to ${after.heapUsed}`);
   assert.ok(after.rss < before.rss + 160 * 1024 * 1024, `rss grew from ${before.rss} to ${after.rss}`);
