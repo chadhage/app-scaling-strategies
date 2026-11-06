@@ -1,14 +1,14 @@
 'use strict';
 
 // The loopback service, real sockets: assets and their strict headers, the step API over the C042 engine, ONE central
-// refuse() proved by a TABLE of every refusal the service can emit before it reads a body (typed answer, Connection: close, the
-// socket destroyed once flushed), keep-alive after a consumed refusal, the CLI and the data-name guard.
+// refuse() proved by a TABLE of every refusal the service can emit (typed answer, Connection: close, the socket destroyed once
+// flushed, nothing pipelined behind it runs: see pipelining.test.cjs), the CLI and the data-name guard.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const { c042, repository } = require('./harness.cjs');
-const { call, raw, startService } = require('./net.cjs');
+const { call, connect, get, raw, startService, until } = require('./net.cjs');
 const server = require('../server.cjs');
 
 const OPTIONS = { timeout: 30000 };
@@ -131,18 +131,98 @@ for (const [name, make, status, code] of TABLE) {
   });
 }
 
-test('a refusal after the body was read keeps the connection alive: two pipelined requests are both answered', OPTIONS, async () => {
-  const service = await startService();
+// The answers NODE would give by itself are the service's own typed answers on the same refusal rule (proved here in process, with real sockets, so that the
+// listeners are measured by the coverage run; tests\pipelining.test.cjs proves them, and that nothing runs behind them, in a separate process).
+const NODE_OWN = [
+  ['an unknown expectation', (port) => `GET /scope.json HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nExpect: nonsense\r\n\r\n`, 417, 'EXPECTATION_NOT_SUPPORTED'],
+  ['a request without Host', () => 'GET /scope.json HTTP/1.1\r\n\r\n', 421, 'LOCAL_HOST_REQUIRED'],
+  ['a malformed HTTP version', (port) => `GET /scope.json HTTP/9.9\r\nHost: 127.0.0.1:${port}\r\n\r\n`, 400, 'MALFORMED_REQUEST'],
+  ['a header section that is too large', (port) => `GET /scope.json HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nX-Pad: ${'a'.repeat(9000)}\r\n\r\n`, 431, 'REQUEST_HEADERS_TOO_LARGE'],
+];
+
+for (const [name, make, status, code] of NODE_OWN) {
+  test(`Node's own answer on the one refusal path: ${name} is answered ${status} ${code} with Connection: close and the socket is destroyed`, OPTIONS, async () => {
+    const service = await startService();
+    try {
+      const answer = await raw(service.port, make(service.port));
+      assert.equal(answer.status, status, answer.received.slice(0, 200));
+      assert.equal(answer.headers.connection, 'close');
+      assert.equal(answer.closed, true);
+      assert.equal(answer.json.error.code, code);
+      assert.equal(answer.json.accepted, false);
+    } finally {
+      await service.stop();
+    }
+  });
+}
+
+test('a request that is too slow gets the typed 408 and the connection is closed (the timers are relaxed for this one rule)', OPTIONS, async () => {
+  const service = await startService({ bounds: { headersMs: 300, requestMs: 300, checkMs: 50 } });
   try {
-    const bad = request(service.port, 'POST /v1/steps', ['Content-Type: application/json'], '{}');
-    const answers = await raw(service.port, `${bad}${request(service.port, 'GET /v1/leases', ['Connection: close'], '')}`);
-    assert.equal(answers.received.match(/HTTP\/1\.1 \d{3} /g).length, 2);
-    assert.match(answers.received, /^HTTP\/1\.1 400 /);
-    assert.doesNotMatch(answers.received.split('\r\n\r\n')[0], /connection: close/i);
+    const answer = await raw(service.port, `GET /scope.json HTTP/1.1\r\nHost: 127.0.0.1:${service.port}\r\n`);
+    assert.equal(answer.status, 408, answer.received.slice(0, 200));
+    assert.equal(answer.json.error.code, 'REQUEST_TIMEOUT');
+    assert.equal(answer.headers.connection, 'close');
   } finally {
     await service.stop();
   }
 });
+
+test('Expect: 100-continue: the interim answer is sent when the request starts, then the request is answered', OPTIONS, async () => {
+  const service = await startService();
+  try {
+    const body = JSON.stringify(input({ idempotencyKey: 'srv-key-0100' }));
+    const answer = await raw(service.port, `POST /v1/steps HTTP/1.1\r\nHost: 127.0.0.1:${service.port}\r\nContent-Type: application/json\r\nExpect: 100-continue\r\nContent-Length: ${Buffer.byteLength(body)}\r\nConnection: close\r\n\r\n${body}`);
+    assert.match(answer.received, /^HTTP\/1\.1 100 Continue\r\n\r\nHTTP\/1\.1 201 /);
+  } finally {
+    await service.stop();
+  }
+});
+
+test('a refusal after the body was read closes the connection too: the GET pipelined behind it is neither run nor answered', OPTIONS, async () => {
+  const service = await startService();
+  try {
+    const bad = request(service.port, 'POST /v1/steps', ['Content-Type: application/json'], '{}');
+    const answers = await raw(service.port, `${bad}${request(service.port, 'GET /v1/leases', ['Connection: close'], '')}`);
+    assert.equal(answers.received.match(/HTTP\/1\.1 \d{3} /g).length, 1);
+    assert.match(answers.received, /^HTTP\/1\.1 400 /);
+    assert.match(answers.received.split('\r\n\r\n')[0], /connection: close/i);
+    assert.equal(answers.closed, true);
+  } finally {
+    await service.stop();
+  }
+});
+
+// Two live services in ONE process (the service owns sockets, a ledger and timers per instance): closed in FIFO and in LIFO order, closed twice, and the
+// neighbour keeps answering on its OWN keep-alive connection with its OWN ledger. The only bound is the hard timeout that turns a hang into a failure.
+const stuck = (ms, label) => new Promise((resolve, reject) => { setTimeout(() => reject(new Error(`hard timeout: ${label}`)), ms).unref(); });
+for (const order of ['FIFO', 'LIFO']) {
+  test(`two live services in one process, closed ${order}: the neighbour stays untouched, a repeated close is harmless and the ledgers are separate`, OPTIONS, async () => {
+    const services = [await startService(), await startService()];
+    const clients = services.map((service) => connect(service.port));
+    try {
+      assert.notEqual(services[0].port, services[1].port);
+      assert.equal((await call(services[0].port, 'POST', '/v1/steps', input({ idempotencyKey: 'srv-two-0001' }))).status, 201);
+      assert.equal((await call(services[1].port, 'GET', '/v1/leases')).json.leases['synthetic-lease-001'].committed, 0, 'the neighbour has its own ledger');
+      clients.forEach((client, index) => client.socket.write(get(services[index].port, '/scope.json')));
+      await until(() => clients.every((client) => /^HTTP\/1\.1 200 /.test(client.received())), 'both keep-alive connections are answered');
+      const [closing, neighbour] = order === 'FIFO' ? [0, 1] : [1, 0];
+      await Promise.race([services[closing].stop(), stuck(20000, 'the first close')]);
+      await Promise.race([clients[closing].closed, stuck(20000, 'the closed service kept its connection')]);
+      await Promise.race([services[closing].stop(), stuck(20000, 'the repeated close')]);
+      clients[neighbour].socket.write(get(services[neighbour].port, '/v1/leases'));
+      await until(() => (clients[neighbour].received().match(/HTTP\/1\.1 200 /g) ?? []).length === 2, 'the neighbour answered again on its own connection');
+      assert.equal(clients[neighbour].socket.destroyed, false);
+      assert.equal((await call(services[neighbour].port, 'GET', '/v1/leases')).status, 200);
+    } finally {
+      for (const client of clients) client.socket.destroy();
+      for (const service of order === 'FIFO' ? services : [...services].reverse()) {
+        await Promise.race([service.stop(), stuck(20000, 'the final close')]);
+        await Promise.race([service.stop(), stuck(20000, 'the final repeated close')]);
+      }
+    }
+  });
+}
 
 test('the CLI accepts only --data-dir and --settle-ms, prints one JSON line with the exact origin, and closes on a signal', OPTIONS, async () => {
   assert.deepEqual(server.parseArguments([]), { dataName: null, settleMs: 0 });

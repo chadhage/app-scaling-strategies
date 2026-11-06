@@ -44,17 +44,64 @@ const ACTION_ROUTE = /^\/v1\/steps\/([^/]+)\/([^/]+)$/;
 const ACTION_NAME = /^[a-z][a-z-]{0,31}$/;
 const DATA_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$/;
 const sockets = new WeakMap();
-const pipelined = new WeakMap();
 const silent = new WeakMap();
+// Connections on which a refusal was decided, and the per-connection lane of pipelined requests (see decide() and drain()).
+const closing = new WeakSet();
+const lanes = new WeakMap();
 // Per-connection and per-server bounds: nothing a client does can make memory or the number of sockets grow without limit.
 // connectionsCheckingInterval makes Node enforce the header and request timeouts every checkMs instead of every 30 s.
 const BOUNDS = Object.freeze({ pipelineDepth: 4, connections: 128, headerBytes: 8192, headerCount: 64, idleMs: 90000, checkMs: 1000, firstRequestMs: 5000, requestMs: 5000, headersMs: 5000, keepAliveMs: 1000 });
+
+const JSON_UTF8 = 'application/json; charset=utf-8';
+const EXPECTATION_REFUSED = Object.freeze({ accepted: false, error: Object.freeze({ code: 'EXPECTATION_NOT_SUPPORTED', message: 'Only the 100-continue expectation is supported.' }), scope: contract.SCOPE });
+
+// The one place where a refusal is DECIDED: synchronously, before any later request of the connection is looked at. The connection is marked
+// (request.socket, never response.socket: a response queued behind another has no socket yet) and every request already waiting behind the
+// refusal is dropped, so that nothing pipelined behind a refusal runs, whether the refusal was decided at once or after an await.
+function decide(socket) {
+  closing.add(socket);
+  const lane = lanes.get(socket);
+  if (lane) lane.queue.length = 0;
+}
+
+// THE one write path for every answer. A refusal (status 400 and above: also an engine rejection and Node's own 417) decides, answers with
+// Connection: close and destroys the socket once the answer is flushed, because Node would otherwise keep parsing what is pipelined behind it.
+function writeAnswer(request, response, status, value, type = JSON_UTF8, extra = {}) {
+  if (response.destroyed || response.writableEnded) return;
+  const refusing = status >= 400;
+  if (refusing) {
+    decide(request.socket);
+    response.once('finish', () => request.socket.destroy());
+  }
+  const body = Buffer.isBuffer(value) ? value : Buffer.from(JSON.stringify(value));
+  response.writeHead(status, { ...HEADERS, 'Content-Security-Policy': PAGE_CSP, ...extra, 'Content-Type': type, 'Content-Length': body.length, ...(refusing ? { Connection: 'close' } : {}) });
+  response.end(body);
+}
 
 function readOwned(file) {
   const actual = fs.realpathSync(file);
   const comparable = (value) => (process.platform === 'win32' ? value.toLowerCase() : value);
   if (comparable(actual) !== comparable(path.resolve(file)) || !fs.statSync(actual).isFile()) throw new Error('Asset must be an owned regular file without redirected paths.');
   return fs.readFileSync(actual);
+}
+
+// Requests that Node finds invalid BEFORE any handler can run end in 'clientError'. They are decided here, through the same rule as every other
+// refusal: the connection is marked, the typed answer says Connection: close and the socket is destroyed once the answer is flushed. A parse error
+// ends the connection at once: the answer of an earlier request that is still running on it is lost (its effect is not).
+const NODE_REFUSALS = Object.freeze({
+  HPE_HEADER_OVERFLOW: [431, 'Request Header Fields Too Large', 'REQUEST_HEADERS_TOO_LARGE', 'The request headers are too large.'],
+  ERR_HTTP_REQUEST_TIMEOUT: [408, 'Request Timeout', 'REQUEST_TIMEOUT', 'The request was not received in time.'],
+});
+const MALFORMED_REQUEST = Object.freeze([400, 'Bad Request', 'MALFORMED_REQUEST', 'The request is not valid HTTP.']);
+
+function refuseMalformed(error, socket) {
+  decide(socket);
+  if (!socket.writable || socket.destroyed) { socket.destroy(); return; }
+  const [status, reason, code, message] = Object.hasOwn(NODE_REFUSALS, error.code) ? NODE_REFUSALS[error.code] : MALFORMED_REQUEST;
+  const body = Buffer.from(JSON.stringify({ accepted: false, error: { code, message }, scope: contract.SCOPE }));
+  const head = { ...HEADERS, 'Content-Security-Policy': PAGE_CSP, 'Content-Type': JSON_UTF8, 'Content-Length': body.length, Connection: 'close' };
+  socket.write(`HTTP/1.1 ${status} ${reason}\r\n${Object.entries(head).map(([name, value]) => `${name}: ${value}\r\n`).join('')}\r\n`);
+  socket.write(body, () => socket.destroy());
 }
 
 // Every servable byte is read once, at startup: own files, pinned imports, and the C041 lesson assets after hash verification.
@@ -103,28 +150,22 @@ function createLocalServer({ engine, assets = loadAssets(), transcript = null, b
     produced ??= transcript().catch((error) => { produced = null; throw error; });
     return produced;
   };
-  const server = http.createServer({ maxHeaderSize: limits.headerBytes, connectionsCheckingInterval: limits.checkMs }, async (request, response) => {
-    const depth = (pipelined.get(request.socket) ?? 0) + 1;
-    clearTimeout(silent.get(request.socket));
-    if (depth > limits.pipelineDepth) {
-      request.socket.destroy();
-      return undefined;
-    }
-    pipelined.set(request.socket, depth);
-    response.once('close', () => pipelined.set(request.socket, pipelined.get(request.socket) - 1));
+  // Pipelined requests of one connection run one at a time, each only after the answer before it was flushed: Node dispatches every request of one
+  // TCP read before the first answer exists, so a request that would run beside a refusal decided later (after an await) must wait for it.
+  function drain(lane) {
+    const next = lane.queue.shift();
+    lane.running = next !== undefined;
+    if (next === undefined) return;
+    next.response.once('close', () => drain(lane));
+    // 100 Continue invites the client to send its body: only when the request actually starts, never for a request that was dropped.
+    if (next.expectContinue) next.response.writeContinue();
+    handle(next.request, next.response);
+  }
+
+  const handle = async (request, response) => {
     const hasBody = Boolean(request.headers['transfer-encoding']) || Number(request.headers['content-length'] || 0) > 0;
-    let consumed = !hasBody;
-    // THE one send path, for every answer: a request whose body was not read is never kept alive. Answer with
-    // Connection: close, then destroy the socket once the answer is flushed, because Node would otherwise keep
-    // parsing an endless (chunked) body behind a refusal.
-    const send = (status, value, type = 'application/json; charset=utf-8', extra = {}) => {
-      if (response.destroyed || response.writableEnded) return;
-      const body = Buffer.isBuffer(value) ? value : Buffer.from(JSON.stringify(value));
-      if (!consumed) response.once('finish', () => request.socket.destroy());
-      response.writeHead(status, { ...HEADERS, 'Content-Security-Policy': PAGE_CSP, ...extra, 'Content-Type': type, 'Content-Length': body.length, ...(consumed ? {} : { Connection: 'close' }) });
-      response.end(body);
-    };
-    const reply = ({ status, body }, extra = {}) => send(status, body, undefined, extra);
+    const reply = ({ status, body }, extra = {}) => writeAnswer(request, response, status, body, undefined, extra);
+    const send = (status, value, type, extra) => writeAnswer(request, response, status, value, type, extra);
     const refuse = (code, options, extra) => reply(result.refusal(code, options), extra);
     try {
       const host = `127.0.0.1:${server.address().port}`;
@@ -165,7 +206,6 @@ function createLocalServer({ engine, assets = loadAssets(), transcript = null, b
         const bytes = await readBody(request, contract.LIMITS.bodyBytes);
         if (bytes === undefined) return undefined;
         if (bytes === null) return refuse('BODY_TOO_LARGE', { action: 'submit', details: [{ path: '$', code: 'BODY_TOO_LARGE', message: contract.ERRORS.BODY_TOO_LARGE.message }] });
-        consumed = true;
         const parsed = input.parseBody(bytes);
         if (parsed.ok) return reply(await engine.submit(parsed.input));
         if (parsed.unsupported) return refuse(parsed.unsupported, { action: 'submit' });
@@ -189,7 +229,29 @@ function createLocalServer({ engine, assets = loadAssets(), transcript = null, b
       if (error instanceof TypeError && error.code === 'ERR_INVALID_URL') return refuse('INVALID_URL');
       return refuse('INTERNAL_ERROR');
     }
-  });
+  };
+  // THE listener of every request Node hands over, whatever its HTTP version (maxRequestsPerSocket is never relied on: it is not applied to HTTP/1.0
+  // requests and not advanced by Node's own answers).
+  const admit = (request, response, expectContinue) => {
+    const socket = request.socket;
+    clearTimeout(silent.get(socket));
+    // The check at the top of every request: once a refusal was decided on this connection, no later request runs (the refusal's own answer
+    // is still pending its flush, after which it destroys the socket: destroying here could cut that answer off).
+    if (closing.has(socket)) return;
+    const lane = lanes.get(socket) ?? { running: false, queue: [] };
+    lanes.set(socket, lane);
+    if (lane.queue.length >= limits.pipelineDepth) { decide(socket); socket.destroy(); return; }
+    lane.queue.push({ request, response, expectContinue });
+    if (!lane.running) drain(lane);
+  };
+  // requireHostHeader is off: Node would answer a request without Host with its own 400 and never call a handler; the handler refuses it (421) through the one path.
+  const server = http.createServer({ maxHeaderSize: limits.headerBytes, connectionsCheckingInterval: limits.checkMs, requireHostHeader: false }, (request, response) => admit(request, response, false));
+  // The answers Node would give ITSELF are decided here, through the same rule: Node's 417 for an expectation other than 100-continue keeps the connection
+  // open and keeps parsing the dumped body, 100-continue is sent when the request starts (never for a dropped one), and a request Node finds invalid
+  // (malformed line or header, header overflow, an invalid chunk, a timeout) gets a typed answer, Connection: close and a destroyed socket.
+  server.on('checkContinue', (request, response) => admit(request, response, true));
+  server.on('checkExpectation', (request, response) => writeAnswer(request, response, 417, EXPECTATION_REFUSED));
+  server.on('clientError', refuseMalformed);
   server.requestTimeout = limits.requestMs;
   server.headersTimeout = limits.headersMs;
   server.keepAliveTimeout = limits.keepAliveMs;

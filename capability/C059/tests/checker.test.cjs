@@ -176,7 +176,8 @@ test('style rules: what is accepted and what is not', OPTIONS, () => {
   assert.deepEqual(clean(':focus-visible { outline: 3px solid red; }\nhtml { scroll-behavior: smooth; }'), ['REDUCED_MOTION_IGNORED']);
   assert.deepEqual(clean(':focus-visible { outline: 3px solid red; }\nb { transition: none; }'), []);
   assert.deepEqual(clean(':focus-visible { outline: 3px solid red; }\n.x { overflow: clip; max-height: 4pt; }'), ['TEXT_CLIPPING_RISK']);
-  assert.deepEqual(clean(':focus-visible { outline: 3px solid red; }\n.x { overflow: hidden; height: 5rem; }'), []);
+  assert.deepEqual(clean(':focus-visible { outline: 3px solid red; }\n.x { overflow: hidden; height: 5rem; }'), ['TEXT_CLIPPING_RISK'], 'a fixed height in any length unit clips wrapped text');
+  assert.deepEqual(clean(':focus-visible { outline: 3px solid red; }\n.x { overflow: hidden; height: auto; }'), []);
   assert.deepEqual(clean(':focus-visible { outline: 3px solid red; }\nbody { font-size: 12pt; }'), ['FIXED_FONT_SIZE']);
   assert.deepEqual(clean('/* :focus { outline: none } */\n:focus-visible { outline: 2px dashed red; }'), []);
   assert.deepEqual(clean('body { margin: 0 }'), ['FOCUS_INDICATOR_MISSING']);

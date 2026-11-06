@@ -90,11 +90,11 @@ function scratch() {
 }
 
 // The service in a child process with a small heap and a hard external watchdog: a hang or an out-of-memory death is a failed test.
-async function startChild({ heapMb = 48, bounds = {}, watchdogMs = 120000 } = {}) {
+async function startChild({ heapMb = 48, bounds = {}, watchdogMs = 120000, mode = 'service' } = {}) {
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
   delete env.NODE_V8_COVERAGE;
-  const child = fork(path.join(__dirname, 'child-server.cjs'), [JSON.stringify(bounds)], { execArgv: [`--max-old-space-size=${heapMb}`], env, silent: true });
+  const child = fork(path.join(__dirname, 'child-server.cjs'), [JSON.stringify(bounds), mode], { execArgv: [`--max-old-space-size=${heapMb}`], env, silent: true });
   const errors = [];
   child.stderr.on('data', (chunk) => errors.push(chunk));
   const watchdog = setTimeout(() => child.kill(), watchdogMs);

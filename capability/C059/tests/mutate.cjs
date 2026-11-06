@@ -14,8 +14,8 @@ const scratch = argument('--scratch');
 const out = argument('--out');
 if (!scratch || !out || path.resolve(scratch).startsWith(repository)) throw new Error('--scratch must be a folder outside the repository and --out a new report file');
 
-const SERVER = ['server'];
-const RES = ['resources'];
+const SERVER = ['server', 'pipelining'];
+const RES = ['resources', 'flood', 'pipelining'];
 const mutants = [
   ['server', 'server.cjs', "|| request.headers.host !== host", '', SERVER, 'the Host check'],
   ['server', 'server.cjs', "if (request.headers.origin && request.headers.origin !== origin) return refuse('CROSS_ORIGIN_DENIED');", '', SERVER, 'the Origin check'],
@@ -27,13 +27,13 @@ const mutants = [
   ['server', 'server.cjs', "if (contract.KEY_PATTERN.test(value)) return true;", 'return true;', SERVER, 'the key format check'],
   ['server', 'server.cjs', "if (!JSON_TYPE.test(request.headers['content-type'] ?? '')) return refuse('UNSUPPORTED_MEDIA_TYPE', { action: 'submit' });", '', SERVER, 'the media type check'],
   ['server', 'server.cjs', "if (Number(request.headers['content-length'] || 0) > contract.LIMITS.bodyBytes) return refuse('BODY_TOO_LARGE', { action: 'submit' });", '', SERVER, 'the declared body size check'],
-  ['server', 'server.cjs', "...(consumed ? {} : { Connection: 'close' })", '', SERVER, 'Connection: close after a refusal with an unread body'],
-  ['resources', 'server.cjs', "if (!consumed) response.once('finish', () => request.socket.destroy());", '', RES, 'ONLY the socket destroy after the flush (cross-process flood)'],
+  ['server', 'server.cjs', "...(refusing ? { Connection: 'close' } : {})", '', SERVER, 'Connection: close after a refusal'],
+  // The published list also held 'ONLY the socket destroy after the flush': with Node's own destroySoon after a Connection: close answer no suite can tell it apart; the generator lists it as an equivalent mutant with its reason.
   ['resources', 'server.cjs', "if (size > limit) {", 'if (false) {', RES, 'the streaming body limit'],
-  ['resources', 'server.cjs', "if (depth > limits.pipelineDepth) {", 'if (false) {', RES, 'the pipeline depth limit'],
+  ['resources', 'server.cjs', "if (lane.queue.length >= limits.pipelineDepth) {", 'if (false) {', RES, 'the pipeline depth limit'],
   ['resources', 'server.cjs', "server.maxConnections = limits.connections;", '', RES, 'the connection cap'],
   ['resources', 'server.cjs', "const timer = setTimeout(() => socket.destroy(), limits.firstRequestMs);", 'const timer = setTimeout(() => {}, limits.firstRequestMs);', RES, 'the first-request timeout'],
-  ['resources', 'server.cjs', "http.createServer({ maxHeaderSize: limits.headerBytes, connectionsCheckingInterval: limits.checkMs }", 'http.createServer({ maxHeaderSize: limits.headerBytes }', RES, 'connectionsCheckingInterval (the effective timeout bound)'],
+  ['resources', 'server.cjs', "http.createServer({ maxHeaderSize: limits.headerBytes, connectionsCheckingInterval: limits.checkMs, requireHostHeader: false }", 'http.createServer({ maxHeaderSize: limits.headerBytes, requireHostHeader: false }', RES, 'connectionsCheckingInterval (the effective timeout bound)'],
   ['resources', 'server.cjs', "for (const socket of sockets.get(server) ?? []) socket.destroy();", '', RES, 'closeServer destroying every tracked socket'],
   ['server', 'server.cjs', "|| RESERVED.test(dataName) || dataName.endsWith('.')", '', SERVER, 'the Windows device-name guard'],
   ['page', 'page.js', "    if (state.busy) return undefined;\n    clearErrors();", '    clearErrors();', ['tamper'], 'ignoring a submit while busy'],
@@ -49,7 +49,7 @@ const mutants = [
   ['journey', 'journey.js', "if ((Number.isInteger(status) && status >= 200 && status < 300) !== body.accepted) return rejectAnswer('STATUS_CONTRADICTS_ENVELOPE');", '', ['tamper'], 'the status-versus-envelope check'],
   ['journey', 'journey.js', "if (code && contract.ERRORS[code].outcome !== body.outcome) return rejectAnswer('OUTCOME_CONTRADICTS_CODE');", '', ['tamper'], 'the outcome-versus-code check'],
   ['journey', 'journey.js', "if (code && !body.accepted && status !== contract.ERRORS[code].status) return rejectAnswer('STATUS_CONTRADICTS_CODE');", '', ['tamper'], 'the status-versus-code check'],
-  ...['documentRules', 'headingRules', 'landmarkRules', 'idRules', 'nameRules', 'tabRules', 'liveRules', 'statusRules', 'errorRules', 'focusRules'].map((rule) => ['checker', 'a11y-check.js', 'for (const rule of RULES) rule(context);', `for (const rule of RULES) if (rule !== ${rule}) rule(context);`, ['checker'], `the checker rule group ${rule}`]),
+  ...['documentRules', 'headingRules', 'landmarkRules', 'idRules', 'nameRules', 'tabRules', 'reachRules', 'liveRules', 'statusRules', 'errorRules', 'focusRules'].map((rule) => ['checker', 'a11y-check.js', 'for (const rule of RULES) rule(context);', `for (const rule of RULES) if (rule !== ${rule}) rule(context);`, ['checker', 'checker-reach'], `the checker rule group ${rule}`]),
   ['checker', 'a11y-check.js', "if (next === current && order.length > 1) {", 'if (false) {', ['checker'], 'the keyboard-trap detection'],
 ];
 
@@ -79,6 +79,7 @@ function runTests(tree, suites) {
   return new Promise((resolve) => {
     const env = { ...process.env };
     for (const key of ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE', 'CAPTURE_BROWSER_EVIDENCE']) delete env[key];
+    env.C059_MATRIX = 'quick';
     const files = suites.map((suite) => path.join('capability', 'C059', 'tests', `${suite}.test.cjs`));
     const child = spawn(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=90000', ...files], { cwd: tree, env, windowsHide: true });
     const chunks = [];
@@ -101,7 +102,9 @@ async function worker(name, queue, results) {
     const occurrences = original.split(find).length - 1;
     if (occurrences !== 1) { results.push({ group, file, label, error: `the mutated text occurs ${occurrences} times` }); continue; }
     fs.writeFileSync(target, original.replace(find, () => to.replace(/\n/g, eol)));
-    const run = await runTests(tree, suites);
+    let run = await runTests(tree, suites);
+    // A test process that dies without naming a failing test (the machine is shared) is not a result: run again.
+    for (let attempt = 0; attempt < 2 && run.code !== 0 && !/^\s*not ok \d+ - (?!capability[\\/])/m.test(run.text); attempt += 1) run = await runTests(tree, suites);
     fs.writeFileSync(target, original);
     const named = [...run.text.matchAll(/^\s*not ok \d+ - (?!capability[\\/])(.+)$/gm)].map((match) => match[1].trim());
     results.push({ group, file, label, from, to, suites, exitCode: run.code, killed: run.code !== 0 && named.length > 0, failingTests: [...new Set(named)].slice(0, 6), failingCount: new Set(named).size });

@@ -1,12 +1,11 @@
 'use strict';
 
 // Resource bounds, proved against the REAL service: in a child process with a small heap and a hard external watchdog (a hang
-// or an out-of-memory death becomes a failed test), with the ATTACKER in a separate process, polling to quiescence (no fixed sleeps).
+// or an out-of-memory death becomes a failed test), polling to quiescence (no fixed sleeps). The refusal flood with the attacker in a
+// separate process is judged by structure and by controls in flood.test.cjs.
 const assert = require('node:assert/strict');
-const { spawn } = require('node:child_process');
-const path = require('node:path');
 const test = require('node:test');
-const { MB, call, connect, get, settleTurn, startChild, until } = require('./net.cjs');
+const { MB, call, connect, get, startChild, startService, until } = require('./net.cjs');
 
 // Timers that would end an upload or an idle connection anyway are set to ten minutes, so only the rule under test can close it.
 const QUIET = Object.freeze({ requestMs: 600000, headersMs: 600000, keepAliveMs: 600000, idleMs: 600000, firstRequestMs: 600000 });
@@ -15,68 +14,6 @@ const bounded = (stats, baseline) => {
   assert.equal(stats.heapUsed < 32 * MB, true, `heap ${(stats.heapUsed / MB).toFixed(1)} MB`);
   assert.equal(stats.rss - baseline.rss < 96 * MB, true, `rss grew ${((stats.rss - baseline.rss) / MB).toFixed(1)} MB`);
 };
-
-function attack(port, connections, limitMs) {
-  const env = { ...process.env };
-  delete env.NODE_TEST_CONTEXT;
-  delete env.NODE_V8_COVERAGE;
-  const child = spawn(process.execPath, [path.join(__dirname, 'attacker.cjs'), String(port), String(connections), String(limitMs)], { env, windowsHide: true });
-  const chunks = [];
-  child.stdout.on('data', (chunk) => chunks.push(chunk));
-  const watchdog = setTimeout(() => child.kill(), limitMs + 15000);
-  return new Promise((resolve, reject) => child.once('close', (code) => {
-    clearTimeout(watchdog);
-    try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); } catch { reject(new Error(`the attacker printed no report (exit ${code})`)); }
-  }));
-}
-
-test('a refusal flood from ANOTHER process (60 sockets, every refusal status, endless chunked bodies) is cut off and cannot starve a concurrent GET', { timeout: 150000 }, async () => {
-  const child = await startChild({ bounds: QUIET });
-  const probe = async (count) => {
-    const latencies = [];
-    for (let index = 0; index < count; index += 1) {
-      const started = process.hrtime.bigint();
-      assert.equal((await call(child.port, 'GET', '/scope.json')).status, 200);
-      latencies.push(Number(process.hrtime.bigint() - started) / 1e6);
-    }
-    return latencies;
-  };
-  try {
-    await probe(5);
-    await child.stats(true);
-    const quiet = await probe(30);
-    const quietStats = await child.stats(true);
-    assert.ok(quietStats.lagMaxMs < 1000 && Math.max(...quiet) < 1000, 'the child is responsive before the attack');
-    const baseline = quietStats;
-    let flooding = true;
-    const latencies = [];
-    const prober = (async () => {
-      while (flooding) {
-        latencies.push(...await probe(1));
-        await settleTurn();
-      }
-    })();
-    const report = await attack(child.port, 60, 30000);
-    flooding = false;
-    await prober;
-    assert.equal(report.timedOut, false, 'the attacker sockets were not all closed by the server');
-    assert.equal(report.closed, 60);
-    assert.ok(report.answered >= 1, 'at least some attackers saw a typed answer (a reset may discard the rest; the typed answers are proved without a race in server.test.cjs)');
-    await until(async () => (await child.stats()).connections === 0, 'the server holds no attacker connection');
-    const stats = await child.stats();
-    // Every refused socket costs the child about 50 ms once (its first burst is parsed before the answer is flushed and the socket destroyed): the
-    // stall is bounded by 150 ms per attacker socket and stops growing as soon as the sockets are closed. Without the destroy the sockets are never
-    // closed (report.timedOut) and the stall grows for as long as the attacker keeps sending.
-    const lagBound = 500 + 150 * report.connections;
-    const latencyBound = lagBound + 2000;
-    assert.ok(stats.lagMaxMs < lagBound, `event-loop lag ${stats.lagMaxMs.toFixed(0)} ms against ${lagBound.toFixed(0)} ms (quiet ${quietStats.lagMaxMs.toFixed(0)} ms)`);
-    assert.ok(Math.max(...latencies) < latencyBound, `a concurrent GET took ${Math.max(...latencies).toFixed(0)} ms against ${latencyBound.toFixed(0)} ms`);
-    assert.ok(latencies.length >= 3, 'the prober ran during the flood');
-    bounded(stats, baseline);
-  } finally {
-    child.dispose();
-  }
-});
 
 test('a client that pipelines requests and never reads is cut off after a bounded queue', { timeout: 60000 }, async () => {
   const child = await startChild();
@@ -126,6 +63,23 @@ test('the connection cap holds, silent sockets are closed after the first-reques
   }
 });
 
+test('the first-request timer ends only a socket that never sends: a connection that made a request survives it', { timeout: 60000 }, async () => {
+  const child = await startChild({ bounds: { ...QUIET, firstRequestMs: 200 } });
+  const client = connect(child.port);
+  try {
+    client.socket.write(get(child.port, '/scope.json'));
+    await until(() => /^HTTP\/1\.1 200 /.test(client.received()), 'the first answer arrives');
+    // A MINIMUM wait of three times the timer; nothing is asserted about how long anything takes.
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    client.socket.write(get(child.port, '/v1/leases', 'Connection: close\r\n'));
+    await Promise.race([client.closed, hardTimeout(20000, 'the second request was not answered')]);
+    assert.equal(client.received().match(/HTTP\/1\.1 200 /g)?.length, 2, 'both requests were answered on the one connection');
+  } finally {
+    client.socket.destroy();
+    child.dispose();
+  }
+});
+
 test('shutdown never waits for a half-open peer or an unread response', { timeout: 60000 }, async () => {
   const child = await startChild({ bounds: QUIET });
   const half = connect(child.port, { allowHalfOpen: true });
@@ -145,20 +99,44 @@ test('shutdown never waits for a half-open peer or an unread response', { timeou
   }
 });
 
-test('a client that trickles one byte at a time is cut off within the configured bound (connectionsCheckingInterval is set)', { timeout: 60000 }, async () => {
+test('the parser timeouts are enforced every second: connectionsCheckingInterval is set (Node checks headersTimeout and requestTimeout only at that interval, 30 s by default)', { timeout: 60000 }, async () => {
+  const service = await startService();
+  try {
+    assert.equal(service.server.connectionsCheckingInterval, 1000);
+    assert.equal(service.server.headersTimeout, 5000);
+    assert.equal(service.server.requestTimeout, 5000);
+  } finally {
+    await service.stop();
+  }
+});
+
+test('a client that trickles one byte at a time is cut off by the configured timers', { timeout: 60000 }, async () => {
   const child = await startChild({ bounds: { ...QUIET, headersMs: 600, requestMs: 600, checkMs: 100, firstRequestMs: 600000 } });
   const trickle = connect(child.port);
-  const started = process.hrtime.bigint();
+  const line = 'GET /scope.json HTTP/1.1\r\nHost: 127.0.0.1:1\r\nX-Slow: ';
+  const ticker = setInterval(() => { if (!trickle.socket.destroyed) trickle.socket.write(line.slice(0, 1)); }, 150);
   try {
-    const line = 'GET /scope.json HTTP/1.1\r\nHost: 127.0.0.1:1\r\nX-Slow: ';
-    const ticker = setInterval(() => { if (!trickle.socket.destroyed) trickle.socket.write(line.slice(0, 1)); }, 150);
+    // The only bound here is the hard timeout that turns a stuck condition into a failed test; how fast the cut-off came is not asserted (shared machine).
     await Promise.race([trickle.closed, hardTimeout(20000, 'the trickling client was kept')]);
-    clearInterval(ticker);
-    const seconds = Number(process.hrtime.bigint() - started) / 1e9;
-    assert.ok(seconds < 5, `the trickling client was cut off after ${seconds.toFixed(1)} s`);
     assert.equal((await call(child.port, 'GET', '/v1/leases')).status, 200);
   } finally {
+    clearInterval(ticker);
     trickle.socket.destroy();
+    child.dispose();
+  }
+});
+
+test('a request that is too slow gets the typed 408 on the one refusal path, and the connection is closed', { timeout: 60000 }, async () => {
+  const child = await startChild({ bounds: { ...QUIET, headersMs: 400, requestMs: 400, checkMs: 100, firstRequestMs: 600000 } });
+  const slow = connect(child.port);
+  try {
+    slow.socket.write(`GET /scope.json HTTP/1.1\r\nHost: 127.0.0.1:${child.port}\r\n`);
+    await Promise.race([slow.closed, hardTimeout(20000, 'the slow request was kept')]);
+    assert.match(slow.received(), /^HTTP\/1\.1 408 /);
+    assert.match(slow.received(), /REQUEST_TIMEOUT/);
+    assert.match(slow.received(), /connection: close/i);
+  } finally {
+    slow.socket.destroy();
     child.dispose();
   }
 });

@@ -1,0 +1,2728 @@
+{
+  "schema": "C059-mutation-gen/1",
+  "total": 210,
+  "killed": 202,
+  "errors": 0,
+  "crashLikeKills": 6,
+  "equivalent": [
+    {
+      "label": "checker: an empty composite widget allowed",
+      "reason": "proof: stops is a filter of members, so members.length === 0 implies stops.length === 0, and the later condition stops.length !== 1 of the same disjunction is then true: an empty group is reported with or without the explicit test",
+      "survived": true
+    },
+    {
+      "label": "control: an identical text (must SURVIVE: proves the runner)",
+      "reason": "identical replacement, the program is unchanged",
+      "survived": true
+    },
+    {
+      "label": "control: an identical text (must SURVIVE: proves the runner)",
+      "reason": "identical replacement, the program is unchanged",
+      "survived": true
+    },
+    {
+      "label": "checkContinue: Node sends 100 Continue itself, also for a request that never runs",
+      "reason": "without the listener Node writes the interim 100 Continue itself when the response is assigned the socket (a queued response buffers it, a dropped one never sends it) and then calls the same listener: the lane already starts the requests one at a time, so no client can tell the two orders apart; the listener only makes the moment explicit",
+      "survived": true
+    },
+    {
+      "label": "closeServer destroying every tracked socket",
+      "reason": "server.closeAllConnections() on the next line destroys the same sockets (every accepted socket has a parser in Node's connection list); the explicit loop only keeps shutdown independent of that API",
+      "survived": true
+    },
+    {
+      "label": "decide() on a parse error: the requests waiting behind the one in flight still start",
+      "reason": "mechanism, not a proof of every state: the lane advances only when the first response closes, which after a parse error is the destroy of the socket; a handler that then starts on a destroyed socket has no remoteAddress and refuses at its first check (LOCAL_HOST_REQUIRED) without an effect and without an answer, so the queue drop only removes that dependency; no public observation tells the two apart",
+      "survived": true
+    },
+    {
+      "label": "ONLY the socket destroy after the flush",
+      "reason": "Node itself destroys the socket (destroySoon on 'finish') after a response that says Connection: close, at the same moment: the explicit destroy only makes the closing independent of that Node behaviour, and no suite (the flood test included) can tell the two apart; the pipelining guard is the mark, not the destroy",
+      "survived": false
+    }
+  ],
+  "survivors": [
+    "page.js: choose: focus not moved to the radio",
+    "server.cjs: the Windows device-name guard"
+  ],
+  "results": [
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: a checkbox, radio, switch or tab without its state allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative K9: a standalone role=checkbox without aria-checked is reported by name STATE_MISSING",
+        "negative K10: a standalone role=radio without aria-checked is reported by name STATE_MISSING",
+        "negative X18: a tab without aria-selected is reported by name STATE_MISSING"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: a dialog, tab list or tab panel needs no name",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X16: a dialog without a name is reported by name GROUP_NAME_MISSING"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: a disabled control is reported as unreachable",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "positive P3: a native disabled button (not in the Tab order by design) has no finding"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: a disabled control with a tabindex allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a natively focusable element with a tabindex is not FOCUSABLE_NO_ROLE; a disabled non-control with a tabindex is not DISABLED_FOCUSABLE",
+        "negative K11: a disabled button with tabindex=0 (reported under its own name) is reported by name DISABLED_FOCUSABLE",
+        "K11: a disabled button with a tabindex is DISABLED_FOCUSABLE and not a role problem; an enabled div tabindex=0 is still FOCUSABLE_NO_ROLE"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: a member without its state allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "composite widgets: an empty group and a member without its state are ROVING_TABINDEX"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: a native checkbox without aria-checked is a problem",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "role boundaries: an anchor without href is generic, an input is judged by its type, a native checkbox carries its own state"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: a negative tabindex is not named",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative K6: a native button with tabindex=-1 is reported by name CONTROL_NOT_REACHABLE + TABINDEX_NEGATIVE",
+        "negative K7: a link with tabindex=-1 is reported by name CONTROL_NOT_REACHABLE + TABINDEX_NEGATIVE",
+        "negative X12: a native checkbox with tabindex=-1 is reported by name CONTROL_NOT_REACHABLE + TABINDEX_NEGATIVE"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: a role that does not fit the element allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "role boundaries: an anchor without href is generic, an input is judged by its type, a native checkbox carries its own state",
+        "negative K12: a button with role=heading is reported by name ROLE_MISMATCH",
+        "negative K13: an h2 with role=button is reported by name ROLE_MISMATCH"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: a role without tabindex is not named",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative K5: a mouse-only div role=button without tabindex is reported by name CONTROL_NOT_REACHABLE + ROLE_NOT_FOCUSABLE",
+        "negative K8: a span role=link without tabindex is reported by name CONTROL_NOT_REACHABLE + ROLE_NOT_FOCUSABLE"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: a roving member is reported as unreachable",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "positive P1: a radio group with one roving tab stop has no finding",
+        "positive P2: a tab list with one roving tab stop has no finding",
+        "the valid fixture, a correct error state and the real index.html markup have no finding"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: a status region with aria-live off allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative V2: a status region with aria-live=off is reported by name LIVE_REGION_OFF + LIVE_REGION_MISSING",
+        "a live region needs an exposed, announcing mode: off, aria-hidden, assertive and a second polite region are each reported"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: a tab list is not a composite widget",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X17: a tab list whose selected tab is not the tab stop is reported by name ROVING_TABINDEX"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: an anchor without href is constrained like a link",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "role boundaries: an anchor without href is generic, an input is judged by its type, a native checkbox carries its own state"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: an aria-hidden live region allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative V3: a polite live region that is aria-hidden is reported by name LIVE_REGION_HIDDEN + LIVE_REGION_MISSING",
+        "hidden content: an aria-hidden ancestor hides every descendant from the live-region and focus rules, an inline style hides it from all rules"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: an aria-hidden region counts as the live region",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative V3: a polite live region that is aria-hidden is reported by name LIVE_REGION_HIDDEN + LIVE_REGION_MISSING"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: an assertive region counts as polite",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a live region needs an exposed, announcing mode: off, aria-hidden, assertive and a second polite region are each reported"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: an empty composite widget allowed",
+      "killed": false,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [],
+      "equivalent": "proof: stops is a filter of members, so members.length === 0 implies stops.length === 0, and the later condition stops.length !== 1 of the same disjunction is then true: an empty group is reported with or without the explicit test"
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: an inline style never hides",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X15: a status region hidden by an inline style is reported by name LIVE_REGION_MISSING",
+        "positive P9: a hidden control is not in the page has no finding",
+        "hidden content: an aria-hidden ancestor hides every descendant from the live-region and focus rules, an inline style hides it from all rules"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: any disabled element with a tabindex is DISABLED_FOCUSABLE",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a natively focusable element with a tabindex is not FOCUSABLE_NO_ROLE; a disabled non-control with a tabindex is not DISABLED_FOCUSABLE"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: aria-hidden text counted in names",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X9: a button whose only text is aria-hidden is reported by name NAME_MISSING"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: aria-labelledby mismatch not checked",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X6: aria-labelledby names a control with other words than its visible text is reported by name NAME_MISMATCH"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: aria-live off counts as announcing",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative V2: a status region with aria-live=off is reported by name LIVE_REGION_OFF + LIVE_REGION_MISSING",
+        "negative V3: a polite live region that is aria-hidden is reported by name LIVE_REGION_HIDDEN + LIVE_REGION_MISSING",
+        "negative X15: a status region hidden by an inline style is reported by name LIVE_REGION_MISSING"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: colour-only outcome allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "rule COLOUR_ONLY: reported by name with a selector and a message"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: every input is judged as a text input",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "role boundaries: an anchor without href is generic, an input is judged by its type, a native checkbox carries its own state"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: failure words in a success announcement allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "announcement rules: success words, progress, the typed code, every offered action, and the recovery count"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: first heading may be any level",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X3: the first heading is an h2 and an h1 comes later is reported by name HEADING_ORDER"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: first invalid field need not be focused",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "rule ERROR_FOCUS: reported by name with a selector and a message"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: focus on a disabled control allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "focus rules: a removed previous focus, a hidden or disabled focus, an unnamed focus, a detached focus"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: focus on an unnamed element allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "focus rules: a removed previous focus, a hidden or disabled focus, an unnamed focus, a detached focus"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: heading may skip one level",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "rule HEADING_ORDER: reported by name with a selector and a message"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: label-in-name never checked",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X6: aria-labelledby names a control with other words than its visible text is reported by name NAME_MISMATCH",
+        "rule NAME_MISMATCH: reported by name with a selector and a message",
+        "rule NAME_MISMATCH on a minimal page"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: maximum-scale=1 allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X5: viewport maximum-scale=1 blocks zoom is reported by name ZOOM_BLOCKED"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: no control is ever unreachable",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative K5: a mouse-only div role=button without tabindex is reported by name CONTROL_NOT_REACHABLE + ROLE_NOT_FOCUSABLE",
+        "negative K6: a native button with tabindex=-1 is reported by name CONTROL_NOT_REACHABLE + TABINDEX_NEGATIVE",
+        "negative K7: a link with tabindex=-1 is reported by name CONTROL_NOT_REACHABLE + TABINDEX_NEGATIVE"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: one-letter lang allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X4: a one-letter document language is reported by name DOC_LANG"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: only the element itself, not its ancestors, counts as aria-hidden",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative K3: a focusable button inside an aria-hidden container is reported by name ARIA_HIDDEN_FOCUSABLE",
+        "hidden content: an aria-hidden ancestor hides every descendant from the live-region and focus rules, an inline style hides it from all rules"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: other radios may be tab stops",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X11: a second radio with a positive tabindex is reported by name ROVING_TABINDEX + TABINDEX_POSITIVE"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: page without h1 allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X2: a page without an h1 is reported by name H1_COUNT"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: page without main allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "rule LANDMARK_MAIN: reported by name with a selector and a message"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: pending state need not be aria-busy",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X8: a pending state that is not aria-busy is reported by name BUSY_NOT_PROGRAMMATIC"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: progress text with a settled state allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "announcement rules: success words, progress, the typed code, every offered action, and the recovery count"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: recovery count mismatch allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "announcement rules: success words, progress, the typed code, every offered action, and the recovery count"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: removed previous focus not reported",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "focus rules: a removed previous focus, a hidden or disabled focus, an unnamed focus, a detached focus"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: role=alert region allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X7: the only live region is a role=alert is reported by name LIVE_REGION_COUNT"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: roving stop need not be the checked radio",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X10: the roving tab stop is not the checked radio is reported by name ROVING_TABINDEX",
+        "negative X17: a tab list whose selected tab is not the tab stop is reported by name ROVING_TABINDEX"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: stale error message allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "rule ERROR_STALE on a minimal page"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: stale error summary allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "rule ERROR_SUMMARY_STALE on a minimal page"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: success wording for a non-success allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "announcement rules: success words, progress, the typed code, every offered action, and the recovery count"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: tabindex 1 allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X1: tabindex=1 (a positive tabindex of any size) is reported by name TABINDEX_POSITIVE"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: tabindex on an iframe or other natively focusable element reported",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a natively focusable element with a tabindex is not FOCUSABLE_NO_ROLE; a disabled non-control with a tabindex is not DISABLED_FOCUSABLE"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: tabindex=0 on a plain element allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "K11: a disabled button with a tabindex is DISABLED_FOCUSABLE and not a role problem; an enabled div tabindex=0 is still FOCUSABLE_NO_ROLE",
+        "rule FOCUSABLE_NO_ROLE on a minimal page"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: two state elements allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "rule STATE_AMBIGUOUS on a minimal page"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: typed code need not be announced",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "rule ANNOUNCEMENT_INCOMPLETE: reported by name with a selector and a message",
+        "announcement rules: success words, progress, the typed code, every offered action, and the recovery count"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: unknown role allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "rule ROLE_INVALID on a minimal page"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: unnamed nav allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "rule NAV_NAME: reported by name with a selector and a message"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: unreached tab stops not reported",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "walkTab: a trap that moves but never reaches a stop, the backward cycle, a bound, and a page without tab stops"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: visibility:hidden by an inline style is not hidden",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "hidden content: an aria-hidden ancestor hides every descendant from the live-region and focus rules, an inline style hides it from all rules"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: visual-only busy allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "negative X8: a pending state that is not aria-busy is reported by name BUSY_NOT_PROGRAMMATIC",
+        "rule BUSY_NOT_PROGRAMMATIC: reported by name with a selector and a message"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: visual-only disabled allowed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "rule DISABLED_NOT_PROGRAMMATIC: reported by name with a selector and a message"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: walkTab never reports an unreachable control",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "walkTab K5: real Tab presses never reach \\#b, found independently of the focusable set",
+        "walkTab K6: real Tab presses never reach \\#b, found independently of the focusable set",
+        "walkTab K7: real Tab presses never reach \\#b, found independently of the focusable set"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: walkTab never stops on a cycle",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "walkTab: a trap that moves but never reaches a stop, the backward cycle, a bound, and a page without tab stops"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "checker: walkTab presses Tab even when the order is empty",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "walkTab on a page with an empty Tab order presses nothing and visits nothing",
+        "walkTab: a trap that moves but never reaches a stop, the backward cycle, a bound, and a page without tab stops"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "control: an identical text (must SURVIVE: proves the runner)",
+      "killed": false,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [],
+      "equivalent": "identical replacement, the program is unchanged"
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "styles: a focus ring is never recognised",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "style positive FP1 motion only inside prefers-reduced-motion: no-preference: no finding",
+        "style positive FP2 a focus ring made with box-shadow: no finding",
+        "style positive FP3 outline removed only where :focus-visible does not apply: no finding"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "styles: a removed outline is never reported",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "style negative CSS4 outline: 0px on :focus beside a ring on :focus-visible: reported by name FOCUS_INDICATOR_MISSING",
+        "style negative CSS7 outline-color: transparent on :focus: reported by name FOCUS_INDICATOR_MISSING",
+        "style rules: what is accepted and what is not"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "styles: a universal reduced-motion rule does not cover an animated selector",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "style positive FP8 a universal reduce rule covers every animated selector: no finding",
+        "style rules: what is accepted and what is not"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "styles: an outline removed only outside :focus-visible is reported",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "style positive FP3 outline removed only where :focus-visible does not apply: no finding"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "styles: any reduced-motion rule covers any animated selector",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "style negative CSS12 a reduce block that covers only an unrelated selector: reported by name REDUCED_MOTION_IGNORED"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "styles: max-height with hidden overflow is not clipping",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "style negative CSS15 max-height in em with hidden overflow: reported by name TEXT_CLIPPING_RISK",
+        "style rules: what is accepted and what is not"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "styles: motion inside no-preference is judged like any other",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "style positive FP1 motion only inside prefers-reduced-motion: no-preference: no finding"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "styles: only px and pt heights are clipping",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "style negative CSS15 max-height in em with hidden overflow: reported by name TEXT_CLIPPING_RISK",
+        "style rules: what is accepted and what is not"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "checker",
+      "file": "a11y-check.js",
+      "label": "styles: print rules are judged like screen rules",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "style positive FP7 a pt font size inside @media print: no finding"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "journey.js",
+      "label": "control: an identical text (must SURVIVE: proves the runner)",
+      "killed": false,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [],
+      "equivalent": "identical replacement, the program is unchanged"
+    },
+    {
+      "group": "page",
+      "file": "journey.js",
+      "label": "journey: an answer without a key (a refusal) is refused",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a step that cannot be confirmed (a typed persistence failure) and an unsupported step are shown with their own outcome words",
+        "a refusal without recovery actions says so in a visible note"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "journey.js",
+      "label": "journey: an applied effect may carry other units",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F6: a shape-valid an applied effect with other units than the input (in range) is refused as EFFECT_MISMATCH"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "journey.js",
+      "label": "journey: an applied effect may differ from the input",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F6: a shape-valid an applied effect with other units than the input (in range) is refused as EFFECT_MISMATCH",
+        "F6: a shape-valid an applied effect on another lease than the input (in range) is refused as EFFECT_MISMATCH"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "journey.js",
+      "label": "journey: an Inspect, Cancel or Resume answer is compared with an input the page does not hold",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "retry returns the recorded result with exactly one effect and says so; inspect reads the state",
+        "a step in flight: the lost answer, an inspect that reports it in flight, then an explicit cancel (nothing is undone)",
+        "an interrupted step (a restart) is reported as interrupted; resume runs it to one effect, never automatically"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "journey.js",
+      "label": "journey: resumes are not counted in the attempts",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "an interrupted step (a restart) is reported as interrupted; resume runs it to one effect, never automatically"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "journey.js",
+      "label": "journey: the answer key is not bound to the request",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F6: a valid envelope of ANOTHER step (other key, lease-002, 9 units) answering an Inspect is refused and its key is never adopted",
+        "F6: a valid envelope of another step answering a submit or a retry is refused as KEY_MISMATCH"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "journey.js",
+      "label": "journey: the attempt count is not checked",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F6: a shape-valid attempts MAX_SAFE_INTEGER is refused as ATTEMPTS_MISMATCH",
+        "F6: a shape-valid attempts 0 on a committed step is refused as ATTEMPTS_MISMATCH",
+        "F6: a shape-valid attempts 2 without a resume in the trail is refused as ATTEMPTS_MISMATCH"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "journey.js",
+      "label": "journey: the binding problem is ignored",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F6: a valid envelope of ANOTHER step (other key, lease-002, 9 units) answering an Inspect is refused and its key is never adopted",
+        "F6: a valid envelope of another step answering a submit or a retry is refused as KEY_MISMATCH",
+        "F6: an answer that echoes another input than the one sent is refused as INPUT_MISMATCH"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "journey.js",
+      "label": "journey: the deadline is hours long",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F8: a request that never gets an answer is aborted after a deadline: typed NO_ANSWER_IN_TIME, announced once, Retry and Inspect offered, no longer busy"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "journey.js",
+      "label": "journey: the echoed input is not bound to the request",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F6: an answer that echoes another input than the one sent is refused as INPUT_MISMATCH"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "journey.js",
+      "label": "journey: the envelope shape is not validated",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "tampered answer (an outcome that contradicts the rest) is rejected as ENVELOPE_INVALID: unknown, never success, no server prose",
+        "tampered answer (an effect that is not applied on a success) is rejected as ENVELOPE_INVALID: unknown, never success, no server prose",
+        "tampered answer (a different error message prose) is rejected as ENVELOPE_INVALID: unknown, never success, no server prose"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "act: a retry answer is not bound",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F6: a valid envelope of another step answering a submit or a retry is refused as KEY_MISMATCH"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "act: an inspect, cancel or resume answer is not bound",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F6: a valid envelope of ANOTHER step (other key, lease-002, 9 units) answering an Inspect is refused and its key is never adopted"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "act: correct-and-resubmit not handled",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a typed failure names its code and every offered action, never says success, and correct-and-resubmit moves the focus to the form",
+        "a key reused with other inputs is a conflict; correct-and-resubmit then enters a fresh key",
+        "a step in flight: the lost answer, an inspect that reports it in flight, then an explicit cancel (nothing is undone)"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "act: recovery runs while busy",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a recovery button that is no longer on the page does nothing while a request is in flight"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "announce: data-about not set",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "every announcement carries its kind in data-about: ready, navigation, validation, progress and result"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "busy: flag never set",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a recovery button that is no longer on the page does nothing while a request is in flight",
+        "while a request is in flight the page is busy programmatically, ignores a second submit and a start over, and keeps the focus on the result heading"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "busy: start-over not aria-disabled",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "while a request is in flight the page is busy programmatically, ignores a second submit and a start over, and keeps the focus on the result heading"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "busy: submit not aria-disabled",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "while a request is in flight the page is busy programmatically, ignores a second submit and a start over, and keeps the focus on the result heading"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "call: a deadline is not typed NO_ANSWER_IN_TIME",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F8: a request that never gets an answer is aborted after a deadline: typed NO_ANSWER_IN_TIME, announced once, Retry and Inspect offered, no longer busy",
+        "F8: an abort while the answer body is being read is also NO_ANSWER_IN_TIME, not a malformed answer"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "call: busy never set",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F8: a request that never gets an answer is aborted after a deadline: typed NO_ANSWER_IN_TIME, announced once, Retry and Inspect offered, no longer busy",
+        "a recovery button that is no longer on the page does nothing while a request is in flight",
+        "while a request is in flight the page is busy programmatically, ignores a second submit and a start over, and keeps the focus on the result heading"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "call: no deadline is armed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F8: a request that never gets an answer is aborted after a deadline: typed NO_ANSWER_IN_TIME, announced once, Retry and Inspect offered, no longer busy",
+        "F8: an abort while the answer body is being read is also NO_ANSWER_IN_TIME, not a malformed answer"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "call: progress never announced",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a valid step: progress then the explicit result, each announced once, the focus on the result heading, the offered controls drawn",
+        "retry returns the recorded result with exactly one effect and says so; inspect reads the state",
+        "a typed failure names its code and every offered action, never says success, and correct-and-resubmit moves the focus to the form"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "call: the abort signal is not passed to fetch",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F8: a request that never gets an answer is aborted after a deadline: typed NO_ANSWER_IN_TIME, announced once, Retry and Inspect offered, no longer busy",
+        "F8: an abort while the answer body is being read is also NO_ANSWER_IN_TIME, not a malformed answer"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "call: the answer is not bound to its request",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F6: a valid envelope of ANOTHER step (other key, lease-002, 9 units) answering an Inspect is refused and its key is never adopted",
+        "F6: a valid envelope of another step answering a submit or a retry is refused as KEY_MISMATCH",
+        "F6: an answer that echoes another input than the one sent is refused as INPUT_MISMATCH"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "call: the deadline is never cleared",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F8: an answer in time clears its deadline, so no timer is left behind"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "call: view never stored",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": true,
+      "failingTests": [
+        "a typed failure names its code and every offered action, never says success, and correct-and-resubmit moves the focus to the form",
+        "a key reused with other inputs is a conflict; correct-and-resubmit then enters a fresh key",
+        "a step in flight: the lost answer, an inspect that reports it in flight, then an explicit cancel (nothing is undone)"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "choose: aria-checked never updated",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen",
+        "the chooser is an ARIA radio group: one tab stop, arrows move and choose with wrapping, Space chooses, each choice is announced once",
+        "choosing another lesson while one is open closes it and says so; the host note is not a live region"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "choose: choice not announced",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen",
+        "every announcement carries its kind in data-about: ready, navigation, validation, progress and result",
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "choose: focus not moved to the radio",
+      "killed": false,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "choose: host note not refreshed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "choose: lesson id never stored",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen",
+        "the chooser is an ARIA radio group: one tab stop, arrows move and choose with wrapping, Space chooses, each choice is announced once",
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "choose: open lesson not closed on a new choice",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "choosing another lesson while one is open closes it and says so; the host note is not a live region"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "choose: Open stays aria-disabled",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "chooser: arrow default (scroll) not prevented",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the chooser cancels the default of Arrow keys and Space (no page scroll), leaves Tab and other keys alone, and ignores modified keys"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "chooser: arrows do not wrap",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the chooser is an ARIA radio group: one tab stop, arrows move and choose with wrapping, Space chooses, each choice is announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "chooser: modifier keys not ignored",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the chooser cancels the default of Arrow keys and Space (no page scroll), leaves Tab and other keys alone, and ignores modified keys",
+        "keys that are not part of the radio pattern, with a modifier or on another target do nothing"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "chooser: space default (scroll) not prevented",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the chooser cancels the default of Arrow keys and Space (no page scroll), leaves Tab and other keys alone, and ignores modified keys"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "chooser: Space does not choose",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the chooser cancels the default of Arrow keys and Space (no page scroll), leaves Tab and other keys alone, and ignores modified keys",
+        "the chooser is an ARIA radio group: one tab stop, arrows move and choose with wrapping, Space chooses, each choice is announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "clearErrors: aria-invalid kept",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)",
+        "the form submit default is cancelled and every error message is hidden again after a valid submit",
+        "each invalid field has a typed, fixed message; one invalid field says \"field needs\"; a valid resubmit clears every error"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "clearErrors: describedby kept",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the form submit default is cancelled and every error message is hidden again after a valid submit",
+        "each invalid field has a typed, fixed message; one invalid field says \"field needs\"; a valid resubmit clears every error"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "clearErrors: error stays visible",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the form submit default is cancelled and every error message is hidden again after a valid submit"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "clearErrors: error text kept",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the form submit default is cancelled and every error message is hidden again after a valid submit"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "clearErrors: summary list kept",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the form submit default is cancelled and every error message is hidden again after a valid submit"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "clearErrors: summary stays visible",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)",
+        "the form submit default is cancelled and every error message is hidden again after a valid submit",
+        "each invalid field has a typed, fixed message; one invalid field says \"field needs\"; a valid resubmit clears every error"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "closeLesson: Close stays enabled",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "choosing another lesson while one is open closes it and says so; the host note is not a live region"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "closeLesson: closing not announced",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen",
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "closeLesson: focus not returned to Open",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen",
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "closeLesson: frame not unmounted",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing",
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once",
+        "choosing another lesson while one is open closes it and says so; the host note is not a live region"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "closeLesson: host note not refreshed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "closeLesson: lesson heading stays",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing",
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "closeLesson: opened flag kept",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "correct: focus not moved to the key field",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a typed failure names its code and every offered action, never says success, and correct-and-resubmit moves the focus to the form"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "correct: stale key not replaced",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a key reused with other inputs is a conflict; correct-and-resubmit then enters a fresh key"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "hostNote: always says nothing is selected",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "init: chooser keys not wired",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the chooser cancels the default of Arrow keys and Space (no page scroll), leaves Tab and other keys alone, and ignores modified keys",
+        "the chooser is an ARIA radio group: one tab stop, arrows move and choose with wrapping, Space chooses, each choice is announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "init: every radio is a tab stop",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a valid step: progress then the explicit result, each announced once, the focus on the result heading, the offered controls drawn",
+        "retry returns the recorded result with exactly one effect and says so; inspect reads the state",
+        "a typed failure names its code and every offered action, never says success, and correct-and-resubmit moves the focus to the form"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "init: focus not on the h1",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a valid step: progress then the explicit result, each announced once, the focus on the result heading, the offered controls drawn",
+        "retry returns the recorded result with exactly one effect and says so; inspect reads the state",
+        "a typed failure names its code and every offered action, never says success, and correct-and-resubmit moves the focus to the form"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "init: radios ignore the mouse",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen",
+        "every announcement carries its kind in data-about: ready, navigation, validation, progress and result",
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "init: ready never announced",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the first render has one h1, a language, a title, a main landmark, the focus on the h1 and one ready announcement"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "init: Start over not wired",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen",
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)",
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "interpret: an abort while reading the body is a malformed answer",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F8: an abort while the answer body is being read is also NO_ANSWER_IN_TIME, not a malformed answer"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "interpret: an invalid answer is shown",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": true,
+      "failingTests": [
+        "F6: a valid envelope of ANOTHER step (other key, lease-002, 9 units) answering an Inspect is refused and its key is never adopted",
+        "F6: a valid envelope of another step answering a submit or a retry is refused as KEY_MISMATCH",
+        "F6: an answer that echoes another input than the one sent is refused as INPUT_MISMATCH"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "interpret: no recovery after malformed JSON",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "after malformed JSON the recovery controls are Retry and Inspect"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "onSubmit: default submit not prevented",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the form submit default is cancelled and every error message is hidden again after a valid submit"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "onSubmit: input never stored",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": true,
+      "failingTests": [
+        "retry returns the recorded result with exactly one effect and says so; inspect reads the state",
+        "no answer at all is the unknown outcome with its own wording: never success, retry and inspect offered, and a retry then works",
+        "a step that cannot be confirmed (a typed persistence failure) and an unsupported step are shown with their own outcome words"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "onSubmit: key never stored",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": true,
+      "failingTests": [
+        "a valid step: progress then the explicit result, each announced once, the focus on the result heading, the offered controls drawn",
+        "retry returns the recorded result with exactly one effect and says so; inspect reads the state",
+        "a typed failure names its code and every offered action, never says success, and correct-and-resubmit moves the focus to the form"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "onSubmit: the answer is not bound",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F6: a valid envelope of another step answering a submit or a retry is refused as KEY_MISMATCH",
+        "F6: an answer that echoes another input than the one sent is refused as INPUT_MISMATCH"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "openLesson: Close stays aria-disabled",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "openLesson: focus not moved to the lesson heading",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "openLesson: lesson heading stays hidden",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "openLesson: no lesson chosen is silent",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing",
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "openLesson: opened flag never set",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen",
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing",
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "openLesson: opening not announced",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen",
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing",
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "openLesson: refusal ignored",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a refused selection (a host that refuses) is announced and nothing is mounted"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "openLesson: reopen remounts",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "opening and closing a lesson: named frame, focus on the lesson heading, then back on the invoker, each announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "recovery buttons do nothing",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "retry returns the recorded result with exactly one effect and says so; inspect reads the state",
+        "a typed failure names its code and every offered action, never says success, and correct-and-resubmit moves the focus to the form",
+        "a key reused with other inputs is a conflict; correct-and-resubmit then enters a fresh key"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showProblems: aria-invalid missing",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "every announcement carries its kind in data-about: ready, navigation, validation, progress and result",
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)",
+        "the form submit default is cancelled and every error message is hidden again after a valid submit"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showProblems: message stays hidden",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "every announcement carries its kind in data-about: ready, navigation, validation, progress and result",
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)",
+        "the form submit default is cancelled and every error message is hidden again after a valid submit"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showProblems: message text missing",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "every announcement carries its kind in data-about: ready, navigation, validation, progress and result",
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)",
+        "the form submit default is cancelled and every error message is hidden again after a valid submit"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showProblems: result not marked validation",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)",
+        "invalid fields are not sent: aria-invalid, described by their messages, summarised, the first invalid field focused, announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showProblems: summary links without href",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "every announcement carries its kind in data-about: ready, navigation, validation, progress and result",
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)",
+        "the form submit default is cancelled and every error message is hidden again after a valid submit"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showProblems: summary stays hidden",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "every announcement carries its kind in data-about: ready, navigation, validation, progress and result",
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)",
+        "the form submit default is cancelled and every error message is hidden again after a valid submit"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showProblems: validation never announced",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "every announcement carries its kind in data-about: ready, navigation, validation, progress and result",
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)",
+        "the form submit default is cancelled and every error message is hidden again after a valid submit"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showResult: data-outcome never set",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a valid step: progress then the explicit result, each announced once, the focus on the result heading, the offered controls drawn",
+        "retry returns the recorded result with exactly one effect and says so; inspect reads the state",
+        "a typed failure names its code and every offered action, never says success, and correct-and-resubmit moves the focus to the form"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showResult: data-recovery never set",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a valid step: progress then the explicit result, each announced once, the focus on the result heading, the offered controls drawn",
+        "retry returns the recorded result with exactly one effect and says so; inspect reads the state",
+        "a typed failure names its code and every offered action, never says success, and correct-and-resubmit moves the focus to the form"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showResult: empty note never toggled",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showResult: facts never shown",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showResult: heading text never updated",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a valid step: progress then the explicit result, each announced once, the focus on the result heading, the offered controls drawn",
+        "every announcement carries its kind in data-about: ready, navigation, validation, progress and result",
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showResult: no-recovery note never shown",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a refusal without recovery actions says so in a visible note",
+        "a result without any offered action says so (the note is shown, the recovery block is not)"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showResult: recovery block never shown",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a valid step: progress then the explicit result, each announced once, the focus on the result heading, the offered controls drawn",
+        "retry returns the recorded result with exactly one effect and says so; inspect reads the state",
+        "a typed failure names its code and every offered action, never says success, and correct-and-resubmit moves the focus to the form"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showResult: stale data-code kept",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a stale data-code never survives into the next result"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "showResult: what-did-not-happen never shown",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "startOver: allowed while busy",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "while a request is in flight the page is busy programmatically, ignores a second submit and a start over, and keeps the focus on the result heading"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "startOver: errors kept",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "start over resets the journey: lesson closed, nothing chosen, a new key, no result; the focus goes to the first lesson, announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "startOver: focus not on the first lesson",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "startOver: form not reset",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "start over resets the journey: lesson closed, nothing chosen, a new key, no result; the focus goes to the first lesson, announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "startOver: host note not refreshed",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "startOver: not announced",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen",
+        "the \"no step yet\" sentence, the facts and the what-did-not-happen block are shown or hidden with the result (visibility, not text)",
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "startOver: open lesson stays open",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing",
+        "start over resets the journey: lesson closed, nothing chosen, a new key, no result; the focus goes to the first lesson, announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "startOver: Open stays enabled",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing",
+        "start over resets the journey: lesson closed, nothing chosen, a new key, no result; the focus goes to the first lesson, announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "startOver: radios stay checked",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen",
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing",
+        "start over resets the journey: lesson closed, nothing chosen, a new key, no result; the focus goes to the first lesson, announced once"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "page",
+      "file": "page.js",
+      "label": "startOver: state kept",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "F7: \\#host-note is true after every choice and close: it never says that no lesson is selected while one is chosen",
+        "Start over forgets the chosen lesson: Open then asks for a choice and mounts nothing"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "an engine rejection (409) is not a refusal",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a foreign Host] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a cross origin] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a URL that is too long] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "checkContinue: Node sends 100 Continue itself, also for a request that never runs",
+      "killed": false,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [],
+      "equivalent": "without the listener Node writes the interim 100 Continue itself when the response is assigned the socket (a queued response buffers it, a dropped one never sends it) and then calls the same listener: the lane already starts the requests one at a time, so no client can tell the two orders apart; the listener only makes the moment explicit"
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "clientError: Node's default bare 400 for a request it cannot parse",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": true,
+      "failingTests": [
+        "pipelined [a malformed HTTP version (clientError)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [an invalid header line (clientError)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a header section that is too large (clientError 431)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "closeServer destroying every tracked socket",
+      "killed": false,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [],
+      "equivalent": "server.closeAllConnections() on the next line destroys the same sockets (every accepted socket has a parser in Node's connection list); the explicit loop only keeps shutdown independent of that API"
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "Connection: close after a refusal",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a foreign Host] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a cross origin] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a URL that is too long] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "connectionsCheckingInterval (the effective timeout bound)",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the parser timeouts are enforced every second: connectionsCheckingInterval is set (Node checks headersTimeout and requestTimeout only at that interval, 30 s by default)",
+        "a request that is too slow gets the typed 408 on the one refusal path, and the connection is closed"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "decide() on a parse error: the requests waiting behind the one in flight still start",
+      "killed": false,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [],
+      "equivalent": "mechanism, not a proof of every state: the lane advances only when the first response closes, which after a parse error is the destroy of the socket; a handler that then starts on a destroyed socket has no remoteAddress and refuses at its first check (LOCAL_HOST_REQUIRED) without an effect and without an answer, so the queue drop only removes that dependency; no public observation tells the two apart"
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "deciding at all when a refusal is written",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a foreign Host] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a cross origin] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a URL that is too long] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "dropping the waiting requests inside decide()",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [an invalid JSON body (refused after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a missing field (after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [an unknown field (after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "Node's own 417 for another expectation keeps the connection",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [an unknown expectation (Node would answer 417 and keep the socket)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "Node's own answer on the one refusal path: an unknown expectation is answered 417 EXPECTATION_NOT_SUPPORTED with Connection: close and the socket is destroyed"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "ONLY the socket destroy after the flush",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a refusal flood from ANOTHER process (60 sockets, endless chunked bodies) against the service: closed, bounded, answering, compared with a bare reference of the same run"
+      ],
+      "equivalent": "Node itself destroys the socket (destroySoon on 'finish') after a response that says Connection: close, at the same moment: the explicit destroy only makes the closing independent of that Node behaviour, and no suite (the flood test included) can tell the two apart; the pipelining guard is the mark, not the destroy"
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "requireHostHeader: Node answers a request without Host with its own 400 and never calls the handler",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a request without Host (Node would answer 400)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "Node's own answer on the one refusal path: a request without Host is answered 421 LOCAL_HOST_REQUIRED with Connection: close and the socket is destroyed"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "response.socket instead of request.socket in the destroy after the flush",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": true,
+      "failingTests": [
+        "pipelined [a foreign Host] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a cross origin] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a URL that is too long] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the 100 Continue of a request when it starts",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a refused request that carries Expect: 100-continue (checkContinue)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "Expect: 100-continue: a legitimate request gets its 100 Continue when it starts, sends its body and gets its answer"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the bound on waiting pipelined requests",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined: honest requests are still answered in order, one at a time; more pipelined requests than the bound close the connection",
+        "a client that pipelines requests and never reads is cut off after a bounded queue"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the check at the top of the request handler",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a foreign Host] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a cross origin] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a URL that is too long] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the connection cap",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the connection cap holds, silent sockets are closed after the first-request limit, and the service recovers"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the declared body size check",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "refusal table: a declared body that is too large is answered 413 BODY_TOO_LARGE with Connection: close and the socket is destroyed"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the first-request timeout",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the connection cap holds, silent sockets are closed after the first-request limit, and the service recovers"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the first-request timer is not cleared by a request",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "the first-request timer ends only a socket that never sends: a connection that made a request survives it"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the fragment refusal",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "refusal table: a fragment is answered 400 INVALID_URL with Connection: close and the socket is destroyed"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the Host check",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a foreign Host] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a request without Host (Node would answer 400)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined in TWO writes [a foreign Host] R=HTTP/1.1 M=HTTP/1.1: the submit written after the refusal never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the key format check",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a key that is not a key] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "refusal table: a key that is not a key (inspect; bodiless) is answered 400 INVALID_FORMAT with Connection: close and the socket is destroyed",
+        "refusal table: a key that is not a key (action) is answered 400 INVALID_FORMAT with Connection: close and the socket is destroyed"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the lane: every pipelined request runs at once",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [an invalid JSON body (refused after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a missing field (after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [an unknown field (after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the mark of the connection inside decide()",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a foreign Host] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a cross origin] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a URL that is too long] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the media type check",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a wrong media type] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a refused request that carries Expect: 100-continue (checkContinue)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "refusal table: a wrong media type is answered 415 UNSUPPORTED_MEDIA_TYPE with Connection: close and the socket is destroyed"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the method check",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [PUT on the step route] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [POST on an asset] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined [a GET on an action route] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the next pipelined request never starts",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined: [valid submit HTTP/1.1][refusal]: the first submit applies, the refusal never overtakes it",
+        "pipelined: a submit with chunked framing or Expect: 100-continue behind a refusal never runs (and is never invited to send a body); before a refusal it applies",
+        "pipelined: honest requests are still answered in order, one at a time; more pipelined requests than the bound close the connection"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the Origin check",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a cross origin] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined in TWO writes [a cross origin] R=HTTP/1.1 M=HTTP/1.1: the submit written after the refusal never runs",
+        "pipelined in TWO writes [a cross origin] R=HTTP/1.0 M=HTTP/1.0: the submit written after the refusal never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the query refusal",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a query] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined in TWO writes [a query] R=HTTP/1.1 M=HTTP/1.1: the submit written after the refusal never runs",
+        "pipelined in TWO writes [a query] R=HTTP/1.0 M=HTTP/1.0: the submit written after the refusal never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the streaming body limit",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "a refusal flood from ANOTHER process (60 sockets, endless chunked bodies) against the service: closed, bounded, answering, compared with a bare reference of the same run",
+        "a chunked body of tiny chunks is refused at the limit, answered, closed and costs no memory"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the typed 431 and 408 of the parse errors (every one is a plain 400)",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a header section that is too large (clientError 431)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "a request that is too slow gets the typed 408 on the one refusal path, and the connection is closed"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the unexpected body on GET",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a GET with a body] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined in TWO writes [a GET with a body] R=HTTP/1.1 M=HTTP/1.1: the submit written after the refusal never runs",
+        "pipelined in TWO writes [a GET with a body] R=HTTP/1.0 M=HTTP/1.0: the submit written after the refusal never runs"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the URL length limit",
+      "killed": true,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [
+        "pipelined [a URL that is too long] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+        "pipelined in TWO writes [a URL that is too long] R=HTTP/1.0 M=HTTP/1.0: the submit written after the refusal never runs",
+        "refusal table: a URL that is too long is answered 414 URL_TOO_LONG with Connection: close and the socket is destroyed"
+      ],
+      "equivalent": null
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "the Windows device-name guard",
+      "killed": false,
+      "stage": "fast",
+      "crashLike": false,
+      "failingTests": [],
+      "equivalent": null
+    }
+  ]
+}

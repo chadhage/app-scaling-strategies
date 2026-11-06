@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "C059 fix RED, group server, extension of run-4 for the two controller additions (orders\\_PIPELINING.md, 'TWO MORE HOLES FOUND BY rev-C017'): a request PIPELINED BEHIND A REFUSAL must never run, also behind the answers NODE gives by itself (unknown Expect 417, a request without Host, clientError: malformed version, invalid header line, header overflow 431, invalid chunk size, Content-Length together with Transfer-Encoding, 100-continue) and in the HTTP/1.0 framing (maxRequestsPerSocket is not applied to it). Raw sockets against the service AS PUBLISHED in 14cefdea (stubs-4/server.cjs is that file byte for byte, loaded by helpers-4/old-server-loader.cjs) in a SEPARATE child process, ONE write per case: [refusal][valid submit] in the four framing pairs (R and M each HTTP/1.1 or HTTP/1.0) for 28 rows, [GET][refusal][submit], the two-writes variants, chunked and Expect: 100-continue submits, a quota-full engine rejection, and a parse error with a request in flight (the service in process with the held executor). The run is a reduced selection of tests\\pipelining.test.cjs (the published service keeps every connection open for its one second keep-alive bound, so the full matrix would take minutes): on the published service the valid submit behind the refusal RUNS, the connection is kept open and Node's own answers are untyped. Replay: C059_RED_SUBJECT=capability\\C059\\evidence\\red\\stubs-4.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "--test-timeout=280000",
+    "capability\\C059\\evidence\\red\\fix-f.snapshot.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C059_RED_SUBJECT"
+  ],
+  "startedAtUtc": "2026-11-06T11:05:33.116Z",
+  "completedAtUtc": "2026-11-06T11:06:55.048Z",
+  "elapsedMs": 81932,
+  "timeoutMs": 600000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C059\\C059-review-fix.feature",
+      "bytes": 5121,
+      "rawSha256": "faa4772f9db256f366e1217eed2797ddc6d1596a5586e0320205ecda674b872b",
+      "crlfToLfSha256": "d27204f2e0cf2a0d3afeee672f3d07cd8b512f2da146404cd504791bc7cded5c"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\fix-f.snapshot.cjs",
+      "bytes": 12409,
+      "rawSha256": "0b2c93130bfb0df8cead5bc0d27af044f8cf6ffb813fad2fd1a8853e5618dbe3",
+      "crlfToLfSha256": "32ea10ff9b038a0230ea8597696ac502156c92cd34b0d775b7a34ab304300597"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-6\\net.cjs",
+      "bytes": 6720,
+      "rawSha256": "3d6948b825808225eacfc01cc0b9b5292e16f46690f1003595a922d1d617f482",
+      "crlfToLfSha256": "0da9572a5552161590114c59c12694abf64f1516770cb35bfecfddcaa493555d"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-6\\pipelining-support.cjs",
+      "bytes": 9645,
+      "rawSha256": "c7c18f38cc1a6c087530562657128c6528974fc1a081a5bc39aeb7ac0270ad8d",
+      "crlfToLfSha256": "e97bc3cc4abd733965dace6d411b9ad4d148106327980dd168acdd284c84bcef"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-4\\child-server.cjs",
+      "bytes": 1451,
+      "rawSha256": "a82cbdddaa6a18e3d0b0d2919463469251b73857d10113a91aeacb8ea22eba4b",
+      "crlfToLfSha256": "b8fa1cf8384afe9515188b9e255db9ae0c9abe4a8c8aa68095fc532acd8912d1"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-4\\old-server-loader.cjs",
+      "bytes": 798,
+      "rawSha256": "97568490eac1e0f5544bcab652c05ad5e2dabf98f4df4412a66703abbfcfdd92",
+      "crlfToLfSha256": "d6f574bf64f55f3771b0adcf7a3265ddfec94455aa83da31d3803342f2f67fa3"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\stubs-4\\server.cjs",
+      "bytes": 15786,
+      "rawSha256": "160a69a6b0475b535c71d451a5fd012becbc3884f33e565a9dea2641e1f1d727",
+      "crlfToLfSha256": "8ef32f20312b3b91f289eb605e9b6ca6334cbfaa9e415bf832a06705520ebfe8"
+    }
+  ],
+  "summary": {
+    "tests": 152,
+    "suites": 0,
+    "pass": 50,
+    "fail": 102,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "pipelined [a foreign Host] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a foreign Host] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [a foreign Host] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a cross origin] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a cross origin] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [a cross origin] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a URL that is too long] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a URL that is too long] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [a URL that is too long] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [another authority in the target] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [another authority in the target] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [another authority in the target] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a query] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a query] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [a query] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a GET with a body] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a GET with a body] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [a GET with a body] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [PUT on the step route] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [PUT on the step route] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [PUT on the step route] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [POST on an asset] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [POST on an asset] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [POST on an asset] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an unknown route with a body] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an unknown route with a body] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [an unknown route with a body] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a wrong media type] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a wrong media type] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [a wrong media type] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a key that is not a key] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a key that is not a key] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [a key that is not a key] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an action with a body] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an action with a body] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [an action with a body] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a GET on an action route] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a GET on an action route] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [a GET on an action route] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an invalid JSON body (refused after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an invalid JSON body (refused after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [an invalid JSON body (refused after the body was read)] R=HTTP/1.0 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an invalid JSON body (refused after the body was read)] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an invalid JSON body (refused after the body was read)] R=HTTP/1.0 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a missing field (after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a missing field (after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [a missing field (after the body was read)] R=HTTP/1.0 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a missing field (after the body was read)] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a missing field (after the body was read)] R=HTTP/1.0 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an unknown field (after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an unknown field (after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [an unknown field (after the body was read)] R=HTTP/1.0 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an unknown field (after the body was read)] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an unknown field (after the body was read)] R=HTTP/1.0 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an unsupported schema version (after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an unsupported schema version (after the body was read)] R=HTTP/1.1 M=HTTP/1.1: [valid GET][refusal][valid submit] in ONE write, the GET and the refusal are answered, the submit never runs",
+      "pipelined [an unsupported schema version (after the body was read)] R=HTTP/1.0 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an unsupported schema version (after the body was read)] R=HTTP/1.1 M=HTTP/1.0: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [an unsupported schema version (after the body was read)] R=HTTP/1.0 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs",
+      "pipelined [a refused chunked body (complete)] R=HTTP/1.1 M=HTTP/1.1: [refusal][valid submit] in ONE write, the submit never runs"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 161101,
+      "sha256": "5f4375aa794384f15a9804ef7a882a2878030768055408eb578548158fc03111",
+      "gzipBytes": 6943,
+      "gzipSha256": "c442468cd7933c9d7633a7d351c633a4ef0876eefef4fe463d61fac56ecb5caf",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

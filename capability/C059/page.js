@@ -99,12 +99,19 @@
   const STEPS = Object.freeze({ ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 });
   const fallback = () => [...(state.input ? ['retry'] : []), ...(state.key ? ['inspect'] : [])];
 
+  // #host-note is the C041 host's own status line, which knows only "mounted" and "nothing mounted": the page keeps it true while a lesson is chosen but closed.
+  function hostNote() {
+    const lesson = lessons.find((item) => item.id === state.lessonId);
+    $('host-note').textContent = lesson ? journey.say.hostChosen(lesson) : journey.say.hostNone();
+  }
+
   function closeLesson({ silent = false } = {}) {
     host.unmount();
     state.opened = false;
     $('lesson-heading').hidden = true;
     $('lesson-heading').textContent = '';
     setDisabled('close-lesson', true);
+    hostNote();
     if (silent) return;
     $('open-lesson').focus();
     announce(journey.say.closed(), 'navigation');
@@ -134,6 +141,7 @@
       radio.setAttribute('tabindex', position === index ? '0' : '-1');
     });
     state.lessonId = lesson.id;
+    hostNote();
     setDisabled('open-lesson', false);
     announce(journey.say.chosen(lesson, closed), 'navigation');
   }
@@ -151,32 +159,36 @@
     }
   }
 
-  async function interpret(response) {
+  async function interpret(response, expected, signal) {
     let body;
     try {
       body = await response.json();
-    } catch {
+    } catch (error) {
+      if (signal.aborted) throw error;
       return journey.localFailure('ANSWER_REJECTED', fallback(), 'MALFORMED_JSON');
     }
-    const view = journey.present({ status: response.status, body });
+    const view = journey.present({ status: response.status, body }, expected);
     return view.ok ? view : journey.localFailure('ANSWER_REJECTED', fallback(), view.code);
   }
 
-  async function call(action, method, route, body) {
+  // One request at a time. `expected` binds the answer to the request ({ key, input }); a request that is not answered within the deadline is aborted.
+  async function call(action, method, route, body, expected) {
     setBusy(true);
     showResult(blank('pending', 'Result: working'));
     $('result-heading').focus();
     announce(journey.say.progress(action), 'progress');
+    const controller = new AbortController();
+    const deadline = setTimeout(() => controller.abort(), journey.REQUEST_DEADLINE_MS);
     let view;
     try {
-      const options = body === null ? { method, cache: 'no-store' } : { method, cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body };
-      view = await interpret(await fetch(route, options));
+      const options = { method, cache: 'no-store', signal: controller.signal, ...(body === null ? {} : { headers: { 'Content-Type': 'application/json' }, body }) };
+      view = await interpret(await fetch(route, options), expected, controller.signal);
     } catch {
-      view = journey.localFailure('NO_VALID_RESPONSE', fallback());
+      view = journey.localFailure(controller.signal.aborted ? 'NO_ANSWER_IN_TIME' : 'NO_VALID_RESPONSE', fallback());
+    } finally {
+      clearTimeout(deadline);
     }
     state.view = view;
-    state.key = view.key ?? state.key;
-    state.input = state.input ?? view.input;
     showResult(view);
     setBusy(false);
     announce(view.announcement, 'result');
@@ -193,9 +205,10 @@
   function act(name) {
     if (state.busy) return undefined;
     if (name === 'correct-and-resubmit') return correct();
-    if (name === 'retry') return call('submit', 'POST', '/v1/steps', JSON.stringify(state.input));
+    if (name === 'retry') return call('submit', 'POST', '/v1/steps', JSON.stringify(state.input), { key: state.input.idempotencyKey, input: state.input });
     const route = `/v1/steps/${encodeURIComponent(state.key)}`;
-    return name === 'inspect' ? call('inspect', 'GET', route, null) : call(name, 'POST', `${route}/${name}`, null);
+    const expected = { key: state.key, input: null };
+    return name === 'inspect' ? call('inspect', 'GET', route, null, expected) : call(name, 'POST', `${route}/${name}`, null, expected);
   }
 
   function onSubmit(event) {
@@ -206,7 +219,7 @@
     if (!verdict.ok) return showProblems(verdict.problems);
     state.input = verdict.input;
     state.key = verdict.input.idempotencyKey;
-    return call('submit', 'POST', '/v1/steps', JSON.stringify(verdict.input));
+    return call('submit', 'POST', '/v1/steps', JSON.stringify(verdict.input), { key: state.key, input: verdict.input });
   }
 
   function resetForm() {
@@ -223,6 +236,7 @@
       radio.setAttribute('tabindex', position === 0 ? '0' : '-1');
     });
     Object.assign(state, { lessonId: null, input: null, key: null, view: null });
+    hostNote();
     setDisabled('open-lesson', true);
     clearErrors();
     resetForm();

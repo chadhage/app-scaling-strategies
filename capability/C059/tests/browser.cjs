@@ -7,6 +7,7 @@ const path = require('node:path');
 const { call } = require('./net.cjs');
 const { INITIAL_ORDER, K, checked, checks, openIsolatedLoopback, prepare, qualifyEdge, body } = require('./browser-support.cjs');
 const { closeServer } = require('../server.cjs');
+const { NEGATIVES, POSITIVES, documentHtml } = require('./negatives.cjs');
 
 async function main() {
   const edge = await qualifyEdge();
@@ -89,6 +90,8 @@ async function main() {
     await act('click', () => page.click('#lesson-A-S001'), { announced: 1 });
     assert.match(await text('#status'), /^A-S001 chosen: /);
     checked('the lesson chooser follows the radio group pattern in Edge: arrows move and choose, Space chooses, one tab stop, each choice announced once', await text('#status'));
+    assert.match(await text('#host-note'), /^A-S001 is chosen and not open\./, 'the host note is true after a choice');
+    checked('the host note under Open is true after a choice in Edge (it never says that no lesson is selected while one is chosen)', await text('#host-note'));
 
     await page.focus('#open-lesson');
     const opened = await act('open the lesson', () => press('Enter'), { announced: 1 });
@@ -214,6 +217,44 @@ async function main() {
     assert.ok(verdicts.every((item) => item.success === (item.outcome === 'succeeded')), 'success wording only for succeeded outcomes');
     assert.deepEqual([...new Set(verdicts.map((item) => item.outcome))].sort(), ['cancelled', 'interrupted', 'rejected', 'succeeded', 'unknown', 'unsupported']);
     checked('the server-produced transcript (the POST journey the browser cannot make) is re-derived by the page rules in Edge: every envelope valid, success wording only for succeeded', { envelopes: verdicts.length });
+
+    // Review F1 on the REAL DOM: every named negative fixture is reported by name, the positives are clean, and real Tab presses never reach the
+    // controls that are not in the Tab order (found independently of the focusable set by unreachable()). The page document is replaced for this
+    // part, so it runs after every page observation above.
+    // The page CSP (style-src 'self') blocks inline style ATTRIBUTES in markup, so the fixtures' style attributes are applied through the CSSOM, which it allows.
+    const load = (fixture) => page.evaluate(({ html, focus }) => {
+      document.open();
+      document.write(html.replace(/ style="([^"]*)"/g, ' data-fixture-style="$1"'));
+      document.close();
+      for (const element of document.querySelectorAll('[data-fixture-style]')) { element.style.cssText = element.getAttribute('data-fixture-style'); element.removeAttribute('data-fixture-style'); }
+      document.getElementById(focus)?.focus();
+      const isHidden = (element) => { const style = getComputedStyle(element); return style.display === 'none' || style.visibility === 'hidden'; };
+      return globalThis.C059A11y.check(document, { isHidden }).findings.map((item) => item.code);
+    }, { html: documentHtml(fixture), focus: fixture.focus ?? 'top' });
+    const reported = {};
+    for (const fixture of NEGATIVES) {
+      const found = await load(fixture);
+      reported[fixture.id] = [...new Set(found)];
+      for (const code of fixture.codes) assert.ok(found.includes(code), `${fixture.id} (${fixture.name}): ${code} missing on the real DOM in [${reported[fixture.id]}]`);
+      for (const code of fixture.absent ?? []) assert.ok(!found.includes(code), `${fixture.id}: ${code} must not be reported on the real DOM`);
+    }
+    checked('the named negative fixtures (K3, K5-K15, V2, V3 and the boundary fixtures X1-X19) are each reported BY NAME on the real DOM in Edge', { fixtures: NEGATIVES.length, K5: reported.K5, K6: reported.K6, V2: reported.V2 });
+    const walked = {};
+    for (const fixture of NEGATIVES.filter((item) => item.unreachable)) {
+      await load(fixture);
+      const visited = [];
+      for (let step = 0; step < 4; step += 1) { await press('Tab'); visited.push(await active()); }
+      assert.ok(!visited.includes(fixture.unreachable), `${fixture.id}: Tab reached #${fixture.unreachable} in Edge: ${visited}`);
+      const missed = await page.evaluate((ids) => globalThis.C059A11y.unreachable(document, ids.map((id) => document.getElementById(id)).filter(Boolean)).map((element) => element.id), visited);
+      assert.ok(missed.includes(fixture.unreachable), `${fixture.id}: unreachable() did not name #${fixture.unreachable}`);
+      walked[fixture.id] = visited;
+    }
+    for (const fixture of POSITIVES) assert.deepEqual(await load(fixture), [], `${fixture.id} (${fixture.name}) has no finding on the real DOM`);
+    await load(POSITIVES.find((item) => item.id === 'P1'));
+    const roving = [];
+    for (let step = 0; step < 3; step += 1) { await press('Tab'); roving.push(await active()); }
+    assert.ok(roving.includes('r1') && !roving.includes('r2'), `a roving radio group is ONE Tab stop in Edge: ${roving}`);
+    checked('real Tab presses in Edge never reach the controls that are not in the Tab order (K5-K8, X12, X13), unreachable() names them, the positives are clean and a roving radio group is one Tab stop', { walked, roving });
 
     // Every console error is classified: the blocked POSTs (the helper aborts them: one error per POST the page attempted), the one typed 404
     // (STEP_NOT_FOUND) and the service-worker message of the sandboxed lesson frame (its own content). Anything else fails.

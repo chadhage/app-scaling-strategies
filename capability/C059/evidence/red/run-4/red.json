@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "C059 fix RED, group server (the controller addition: a request PIPELINED BEHIND A REFUSAL must never run, orders\\_PIPELINING.md): raw sockets, ONE write per case, against the service AS PUBLISHED in 14cefdea (stubs-4/server.cjs is that file byte for byte, loaded by helpers-4/old-server-loader.cjs as if it lived in the namespace root) in a SEPARATE child process. [refusal][valid submit] and [GET][refusal][valid submit] for 19 refusal kinds, the two-writes variants, chunked and Expect: 100-continue framing, a quota-full engine rejection: the valid submit behind the refusal RUNS on the published service (its ledger, journal and step state change) and the keep-alive connection is not closed. Replay: C059_RED_SUBJECT=capability\\C059\\evidence\\red\\stubs-4.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "--test-timeout=280000",
+    "capability\\C059\\evidence\\red\\fix-d.snapshot.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C059_RED_SUBJECT"
+  ],
+  "startedAtUtc": "2026-11-06T09:51:21.237Z",
+  "completedAtUtc": "2026-11-06T09:52:30.695Z",
+  "elapsedMs": 69458,
+  "timeoutMs": 290000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C059\\C059-review-fix.feature",
+      "bytes": 5121,
+      "rawSha256": "faa4772f9db256f366e1217eed2797ddc6d1596a5586e0320205ecda674b872b",
+      "crlfToLfSha256": "d27204f2e0cf2a0d3afeee672f3d07cd8b512f2da146404cd504791bc7cded5c"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\fix-d.snapshot.cjs",
+      "bytes": 11334,
+      "rawSha256": "a0e8b92081fe60af3c9629c2b1e12b580533cc57d26831c3f865b23171ffa9a0",
+      "crlfToLfSha256": "22ae1bef0f804ae6da0e6e27756ad023b90bb691a97bc96bc8d9aa2fec01a1d2"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-4\\net.cjs",
+      "bytes": 6457,
+      "rawSha256": "98ea07971ae3ead50f20b92599d88f1ecc6d32ca9caee070540bff6f0aad0823",
+      "crlfToLfSha256": "5f64aa190b04f6d0a49e0539b4da9bc316e0a86f4923c449edac74a300a19a89"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-4\\child-server.cjs",
+      "bytes": 1451,
+      "rawSha256": "a82cbdddaa6a18e3d0b0d2919463469251b73857d10113a91aeacb8ea22eba4b",
+      "crlfToLfSha256": "b8fa1cf8384afe9515188b9e255db9ae0c9abe4a8c8aa68095fc532acd8912d1"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-4\\old-server-loader.cjs",
+      "bytes": 798,
+      "rawSha256": "97568490eac1e0f5544bcab652c05ad5e2dabf98f4df4412a66703abbfcfdd92",
+      "crlfToLfSha256": "d6f574bf64f55f3771b0adcf7a3265ddfec94455aa83da31d3803342f2f67fa3"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\stubs-4\\server.cjs",
+      "bytes": 15786,
+      "rawSha256": "160a69a6b0475b535c71d451a5fd012becbc3884f33e565a9dea2641e1f1d727",
+      "crlfToLfSha256": "8ef32f20312b3b91f289eb605e9b6ca6334cbfaa9e415bf832a06705520ebfe8"
+    }
+  ],
+  "summary": {
+    "tests": 49,
+    "suites": 0,
+    "pass": 3,
+    "fail": 46,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "pipelined: [a foreign Host][valid submit] in ONE write: only the refusal 421 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][a foreign Host][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [a cross origin][valid submit] in ONE write: only the refusal 403 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][a cross origin][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [a URL that is too long][valid submit] in ONE write: only the refusal 414 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][a URL that is too long][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [another authority in the target][valid submit] in ONE write: only the refusal 400 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][another authority in the target][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [a query][valid submit] in ONE write: only the refusal 400 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][a query][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [a GET with a body][valid submit] in ONE write: only the refusal 400 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][a GET with a body][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [PUT on the step route][valid submit] in ONE write: only the refusal 405 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][PUT on the step route][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [POST on an asset][valid submit] in ONE write: only the refusal 405 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][POST on an asset][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [an unknown route with a body][valid submit] in ONE write: only the refusal 404 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][an unknown route with a body][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [a wrong media type][valid submit] in ONE write: only the refusal 415 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][a wrong media type][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [a key that is not a key][valid submit] in ONE write: only the refusal 400 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][a key that is not a key][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [an action with a body][valid submit] in ONE write: only the refusal 400 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][an action with a body][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [a GET on an action route][valid submit] in ONE write: only the refusal 405 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][a GET on an action route][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [an unknown expectation][valid submit] in ONE write: only the refusal 417 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][an unknown expectation][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [an invalid JSON body (refused after the body was read)][valid submit] in ONE write: only the refusal 400 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][an invalid JSON body (refused after the body was read)][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [a missing field (after the body was read)][valid submit] in ONE write: only the refusal 400 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][a missing field (after the body was read)][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [an unknown field (after the body was read)][valid submit] in ONE write: only the refusal 400 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][an unknown field (after the body was read)][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [an unsupported schema version (after the body was read)][valid submit] in ONE write: only the refusal 422 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][an unsupported schema version (after the body was read)][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined: [a refused chunked body (complete)][valid submit] in ONE write: only the refusal 400 is answered, the connection closes and the submit never runs",
+      "pipelined: [valid GET][a refused chunked body (complete)][valid submit] in ONE write: the GET and the refusal are answered, the submit never runs",
+      "pipelined in TWO writes: [another authority in the target] then [valid submit] written after it: the submit never runs",
+      "pipelined in TWO writes: [POST on an asset] then [valid submit] written after it: the submit never runs",
+      "pipelined in TWO writes: [a key that is not a key] then [valid submit] written after it: the submit never runs",
+      "pipelined in TWO writes: [a GET on an action route] then [valid submit] written after it: the submit never runs",
+      "pipelined in TWO writes: [an invalid JSON body (refused after the body was read)] then [valid submit] written after it: the submit never runs",
+      "pipelined in TWO writes: [an unknown field (after the body was read)] then [valid submit] written after it: the submit never runs",
+      "pipelined: a submit with chunked framing or Expect: 100-continue behind a refusal never runs; the same submit before a refusal applies",
+      "pipelined: an engine rejection (quota full) is a refusal too: the submit behind it never runs"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 64469,
+      "sha256": "15086fb71fa328d66f1707bfa6cb62a11c7aa18287d693ace18298cdd98a26c5",
+      "gzipBytes": 3293,
+      "gzipSha256": "e3ccda472654e105055a2ad67c92054f53bafdb5fe43541e4fecb0672703e1dc",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

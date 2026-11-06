@@ -12,10 +12,10 @@ const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const names = gate.listNamespaceFiles(root);
 const SUITES = Object.freeze({
-  'a11y-check.js': ['checker', 'page', 'flow', 'tamper', 'keyboard', 'property'],
-  'journey.js': ['journey', 'page', 'flow', 'tamper', 'transcript'],
-  'page.js': ['page', 'flow', 'tamper', 'keyboard', 'property'],
-  'server.cjs': ['server', 'resources', 'transcript'],
+  'a11y-check.js': ['checker', 'checker-reach', 'checker-kill', 'page', 'flow', 'tamper', 'page-bind', 'page-kill', 'keyboard', 'property'],
+  'journey.js': ['journey', 'page', 'flow', 'tamper', 'page-bind', 'page-kill', 'transcript'],
+  'page.js': ['page', 'flow', 'tamper', 'page-bind', 'page-kill', 'keyboard', 'property'],
+  'server.cjs': ['server', 'resources', 'pipelining', 'flood', 'transcript'],
   'transcript.cjs': ['transcript', 'server'],
 });
 const requested = process.argv.slice(2);

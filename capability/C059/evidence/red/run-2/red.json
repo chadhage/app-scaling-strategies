@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "C059 fix RED, group checker (F1, F3 checker killers, F5): the new named negative fixtures (K3, K5-K15, V2, V3, X1-X19), the positives, the independent walkTab and the style rows run against the checker AS PUBLISHED in 14cefdea (stubs-2/a11y-check.js is that file byte for byte). 42 of 80 fail with assertions about the specified behavior (a defective page is reported by name); the 38 that pass are the positives and the mutant killers that the old checker already satisfies. Replay: C059_RED_SUBJECT=capability\\C059\\evidence\\red\\stubs-2.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "--test-timeout=60000",
+    "capability\\C059\\evidence\\red\\fix-a.snapshot.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C059_RED_SUBJECT"
+  ],
+  "startedAtUtc": "2026-11-06T09:28:06.743Z",
+  "completedAtUtc": "2026-11-06T09:28:07.127Z",
+  "elapsedMs": 384,
+  "timeoutMs": 180000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C059\\C059-review-fix.feature",
+      "bytes": 5121,
+      "rawSha256": "faa4772f9db256f366e1217eed2797ddc6d1596a5586e0320205ecda674b872b",
+      "crlfToLfSha256": "d27204f2e0cf2a0d3afeee672f3d07cd8b512f2da146404cd504791bc7cded5c"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\fix-a.snapshot.cjs",
+      "bytes": 10889,
+      "rawSha256": "492b321918ab1531666ed51e8d7678dfb7480fba50342de977eb9af61fa176a8",
+      "crlfToLfSha256": "6ff7a00191824afc9cbe883823c2e59527281e5d6f41fcbe7bc92129f9852d2e"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-2\\negatives.cjs",
+      "bytes": 8784,
+      "rawSha256": "820b34521892528b136880d185a81c0c95a0bda95c03303b218426b201e60795",
+      "crlfToLfSha256": "1e20c0cbdd5108758f3dfae0ffc92b8e055cce309b446435ad0185753a4924a1"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-2\\dom.cjs",
+      "bytes": 7871,
+      "rawSha256": "2bc5490f0356c170b561e04a2488be2dd52aa650ae1dd86daa7d01c6c58813ab",
+      "crlfToLfSha256": "1535c39517bc9ff0b0e30677be347ffd146467220cd7b89b4edc8d16d0097568"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-2\\dom-nodes.cjs",
+      "bytes": 7731,
+      "rawSha256": "f25fac50b81542ca62412ec2ffe6061c1e7ea8a61c44b5a5880e16b62a0b7e43",
+      "crlfToLfSha256": "233a4146f7e5844cb7a50eb3671f2f1406ae8e4460d0b8dc0a34953540fb2b13"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\stubs-2\\a11y-check.js",
+      "bytes": 25158,
+      "rawSha256": "116073bdf35099f2f94aa1b08eb96c371d3f9e5f0e241e21ce75cb693fe698ee",
+      "crlfToLfSha256": "920305e953d135db9b2b83b3711516a6f897997fb13dbb90422b86732b9886e4"
+    }
+  ],
+  "summary": {
+    "tests": 80,
+    "suites": 0,
+    "pass": 38,
+    "fail": 42,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "negative K3: a focusable button inside an aria-hidden container is reported by name ARIA_HIDDEN_FOCUSABLE",
+      "negative K5: a mouse-only div role=button without tabindex is reported by name CONTROL_NOT_REACHABLE + ROLE_NOT_FOCUSABLE",
+      "negative K6: a native button with tabindex=-1 is reported by name CONTROL_NOT_REACHABLE + TABINDEX_NEGATIVE",
+      "negative K7: a link with tabindex=-1 is reported by name CONTROL_NOT_REACHABLE + TABINDEX_NEGATIVE",
+      "negative K8: a span role=link without tabindex is reported by name CONTROL_NOT_REACHABLE + ROLE_NOT_FOCUSABLE",
+      "negative K9: a standalone role=checkbox without aria-checked is reported by name STATE_MISSING",
+      "negative K10: a standalone role=radio without aria-checked is reported by name STATE_MISSING",
+      "negative K11: a disabled button with tabindex=0 (reported under its own name) is reported by name DISABLED_FOCUSABLE",
+      "negative K12: a button with role=heading is reported by name ROLE_MISMATCH",
+      "negative K13: an h2 with role=button is reported by name ROLE_MISMATCH",
+      "negative K14: an input with role=button is reported by name ROLE_MISMATCH",
+      "negative K15: a link with role=heading is reported by name ROLE_MISMATCH",
+      "negative V2: a status region with aria-live=off is reported by name LIVE_REGION_OFF + LIVE_REGION_MISSING",
+      "negative V3: a polite live region that is aria-hidden is reported by name LIVE_REGION_HIDDEN + LIVE_REGION_MISSING",
+      "negative X12: a native checkbox with tabindex=-1 is reported by name CONTROL_NOT_REACHABLE + TABINDEX_NEGATIVE",
+      "negative X13: a standalone radio with tabindex=-1 outside any group is reported by name CONTROL_NOT_REACHABLE",
+      "negative X15: a status region hidden by an inline style is reported by name LIVE_REGION_MISSING",
+      "negative X16: a dialog without a name is reported by name GROUP_NAME_MISSING",
+      "negative X17: a tab list whose selected tab is not the tab stop is reported by name ROVING_TABINDEX",
+      "negative X18: a tab without aria-selected is reported by name STATE_MISSING",
+      "negative X19: a switch with an invalid aria-checked value is reported by name STATE_MISSING",
+      "walkTab K5: real Tab presses never reach \\#b, found independently of the focusable set",
+      "walkTab K6: real Tab presses never reach \\#b, found independently of the focusable set",
+      "walkTab K7: real Tab presses never reach \\#b, found independently of the focusable set",
+      "walkTab K8: real Tab presses never reach \\#b, found independently of the focusable set",
+      "walkTab X12: real Tab presses never reach \\#c, found independently of the focusable set",
+      "walkTab X13: real Tab presses never reach \\#b, found independently of the focusable set",
+      "walkTab: the controls are enumerated by tag and role, not from the focusable set the order is derived from",
+      "unreachable(): the controls that a recorded Tab walk did not visit, composite members excepted (the API the real-Edge run uses)",
+      "K11: a disabled button with a tabindex is DISABLED_FOCUSABLE and not a role problem; an enabled div tabindex=0 is still FOCUSABLE_NO_ROLE",
+      "hidden content: an aria-hidden ancestor hides every descendant from the live-region and focus rules, an inline style hides it from all rules",
+      "a live region needs an exposed, announcing mode: off, aria-hidden, assertive and a second polite region are each reported",
+      "style negative CSS4 outline: 0px on :focus beside a ring on :focus-visible: reported by name FOCUS_INDICATOR_MISSING",
+      "style negative CSS5 outline-width: 0px: reported by name FOCUS_INDICATOR_MISSING",
+      "style negative CSS6 a transparent outline and nothing else: reported by name FOCUS_INDICATOR_MISSING",
+      "style negative CSS7 outline-color: transparent on :focus: reported by name FOCUS_INDICATOR_MISSING",
+      "style negative CSS12 a reduce block that covers only an unrelated selector: reported by name REDUCED_MOTION_IGNORED",
+      "style negative CSS15 max-height in em with hidden overflow: reported by name TEXT_CLIPPING_RISK",
+      "style positive FP1 motion only inside prefers-reduced-motion: no-preference: no finding",
+      "style positive FP3 outline removed only where :focus-visible does not apply: no finding",
+      "style positive FP5 min-height with hidden overflow: no finding",
+      "style positive FP7 a pt font size inside @media print: no finding"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 56814,
+      "sha256": "e5a5b958df994d6d663e6c3540bddf24f151cc1839f425d45f2e69eeabe7d1c2",
+      "gzipBytes": 4892,
+      "gzipSha256": "f42b6d7d76010904da8d2c22f9b71f8ac63823018e267662ef0d785d7061764c",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

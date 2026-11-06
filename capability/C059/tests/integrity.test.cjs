@@ -105,6 +105,7 @@ test('tampering with the RED archive is caught by name on a scratch copy: a chan
     assert.ok(verifyManifest(manifestPath, { root: scratch }).problems.includes('TRANSCRIPT_MISSING stdout'));
   } finally {
     fs.rmSync(scratch, { recursive: true, force: true });
+    try { fs.rmdirSync(path.join(__dirname, 'scratch')); } catch { /* another file still uses it, or it is gone */ }
   }
 });
 
@@ -117,11 +118,16 @@ test('the retained RED replays against the naive subject: exit 1, 42 assertion f
   assert.doesNotMatch(`${run.stdout}${run.stderr}`, /MODULE_NOT_FOUND|SyntaxError|ReferenceError/);
 });
 
-test('the SAME retained RED file passes unchanged against the final code (44 of 44, no edited copy)', OPTIONS, () => {
+test('the SAME retained RED file against the final code: 42 of 44 pass and the other two fail ONLY because the frozen DOM helper of the first RED predates AbortController (review F8), no edited copy', OPTIONS, () => {
   const run = runRed({});
-  assert.equal(run.status, 0, run.stdout.slice(-2000));
-  assert.match(run.stdout, /^# pass 44$/m);
-  assert.match(run.stdout, /^# fail 0$/m);
+  assert.equal(run.status, 1, run.stdout.slice(-2000));
+  assert.match(run.stdout, /^# pass 42$/m);
+  assert.match(run.stdout, /^# fail 2$/m);
+  assert.deepEqual([...run.stdout.matchAll(/^not ok \d+ - (.+)$/gm)].map((match) => match[1]).sort(), [
+    'a rejected outcome is never announced as success; it names its typed code and the offered recovery',
+    'after a submitted step the focus is on a named, connected element, never on the body',
+  ]);
+  assert.equal([...run.stdout.matchAll(/error: 'AbortController is not defined'/g)].length, 2, 'the page now arms an abort deadline; the host of the first RED has no AbortController');
   const manifest = JSON.parse(fs.readFileSync(path.join(red, 'run-1', 'red.json'), 'utf8'));
   for (const name of ['initial-a.snapshot.cjs', 'initial-b.snapshot.cjs']) {
     const recorded = manifest.inputs.find((input) => input.path.endsWith(name));
@@ -146,10 +152,10 @@ const latest = (stage) => {
   return path.join(root, 'evidence', 'raw', names.sort((a, b) => Number(/-(\d+)\.json$/.exec(a)[1]) - Number(/-(\d+)\.json$/.exec(b)[1])).at(-1));
 };
 
-test('the latest archived coverage, syntax, browser and mutation runs passed, verify, and match the published bytes', OPTIONS, () => {
+test('the latest archived coverage, syntax and browser runs passed, verify, and match the published bytes (the systematic mutation run and the load loop are verified by integrity-fix.test.cjs; the first publication\'s `mutation` runs stay as history)', OPTIONS, () => {
   const gate = require('./coverage-gate.cjs');
   // The GREEN run cannot verify itself (it runs this test): its manifest is checked by the reviewer and by the result file.
-  for (const stage of ['coverage', 'syntax', 'browser', 'mutation']) {
+  for (const stage of ['coverage', 'syntax', 'browser']) {
     const { manifest, problems, stdout } = verifyManifest(latest(stage), { root: repository });
     assert.deepEqual(problems, [], `${stage}: ${latest(stage)}`);
     assert.equal(manifest.exitCode, 0, stage);
@@ -163,11 +169,6 @@ test('the latest archived coverage, syntax, browser and mutation runs passed, ve
       assert.ok([...stdout.matchAll(/^PASS /gm)].length >= 18, 'the browser checks are recorded');
       assert.match(stdout, /"result":"ok"/);
       assert.match(stdout, /^PASS the installed Edge is Microsoft-signed and within the qualified major/m);
-    }
-    if (stage === 'mutation') {
-      const report = JSON.parse(fs.readFileSync(path.join(root, 'evidence', 'raw', `mutation-report-${/-(\d+)\.json$/.exec(latest(stage))[1]}.json`), 'utf8'));
-      assert.deepEqual([report.killed, report.survivors], [report.total, []]);
-      assert.ok(report.results.every((item) => item.killed && item.failingTests.length > 0 && !item.error), 'every mutant is killed by a NAMED failing test');
     }
   }
 });

@@ -133,7 +133,7 @@ function networkFetch(port) {
 const compiled = new Map();
 
 function loadPage({ html, resolve, fetch, document = parseHtml(html), globals = {}, skip = [] }) {
-  const context = vm.createContext({ document, fetch, console, ...globals });
+  const context = vm.createContext({ document, fetch, console, setTimeout, clearTimeout, AbortController, ...globals });
   const loaded = [];
   for (const element of document.elements().filter((item) => item.localName === 'script' && item.src && !skip.includes(item.src))) {
     const file = resolve(element.src);

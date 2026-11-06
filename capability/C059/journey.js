@@ -16,8 +16,12 @@
   const STATES = { none: 'No step exists', 'in-flight': 'In flight', committed: 'Committed', cancelled: 'Cancelled', interrupted: 'Interrupted', uncertain: 'Not confirmed' };
   const LOCAL = {
     NO_VALID_RESPONSE: 'No answer arrived, so it is not known whether the request was applied.',
+    NO_ANSWER_IN_TIME: 'No answer arrived in time and the request was abandoned, so it is not known whether it was applied.',
     ANSWER_REJECTED: 'The answer was not a valid result and was discarded.',
   };
+  // A request that has not been answered after this long is aborted by the page (the typed failure NO_ANSWER_IN_TIME).
+  const REQUEST_DEADLINE_MS = 15000;
+  const ECHOED = ['schemaVersion', 'step', 'idempotencyKey', 'leaseId', 'units'];
   const FIELD_NAMES = { key: 'Idempotency key', lease: 'Lease', units: 'Units' };
   const MESSAGES = {
     KEY_REQUIRED: 'Enter an idempotency key.',
@@ -52,14 +56,30 @@
     return { ok: false, code, detail };
   }
 
-  // Validates one server answer ({ status, body }) and derives everything shown from the validated facts.
-  function present({ status, body }) {
+  // An answer is bound to ITS request (the key, and for a request with a body the input sent) and its numbers to the facts it carries: a valid
+  // envelope of another step, an echo of another input, an effect that is not the input's or an attempt count its own trail contradicts is refused.
+  function bindingProblem(body, expected) {
+    const key = body.idempotencyKey;
+    const echoed = body.validatedInput;
+    // The pinned contract already requires the envelope key to equal validatedInput.idempotencyKey (KEY_MATCH), so binding the envelope key binds the echoed key too.
+    if (expected && key !== null && key !== expected.key) return 'KEY_MISMATCH';
+    if (expected && expected.input && echoed !== null && ECHOED.some((field) => echoed[field] !== expected.input[field])) return 'INPUT_MISMATCH';
+    if (body.accepted && body.effect.applied === true && echoed && (body.effect.leaseId !== echoed.leaseId || body.effect.units !== echoed.units)) return 'EFFECT_MISMATCH';
+    const begun = body.trail.some((item) => item.type === 'begin');
+    const resumes = body.trail.filter((item) => item.type === 'resume').length;
+    return body.attempts === (begun ? 1 + resumes : 0) ? null : 'ATTEMPTS_MISMATCH';
+  }
+
+  // Validates one server answer ({ status, body }) for the request it answers (expected: { key, input }) and derives everything shown from the validated facts.
+  function present({ status, body }, expected = null) {
     const verdict = contract.validateResultEnvelope(body);
     if (!verdict.ok) return rejectAnswer('ENVELOPE_INVALID', verdict.problems);
     const code = body.error ? body.error.code : null;
     if ((Number.isInteger(status) && status >= 200 && status < 300) !== body.accepted) return rejectAnswer('STATUS_CONTRADICTS_ENVELOPE');
     if (code && !body.accepted && status !== contract.ERRORS[code].status) return rejectAnswer('STATUS_CONTRADICTS_CODE');
     if (code && contract.ERRORS[code].outcome !== body.outcome) return rejectAnswer('OUTCOME_CONTRADICTS_CODE');
+    const problem = bindingProblem(body, expected);
+    if (problem) return rejectAnswer(problem);
     const state = body.step.state;
     const actions = (code && contract.ERRORS[code].actions) || contract.allowedActions(state);
     if (JSON.stringify(body.recovery.allowed) !== JSON.stringify(actions)) return rejectAnswer('RECOVERY_TAMPERED');
@@ -115,9 +135,11 @@
     chooseFirst: () => 'Choose a lesson first: no lesson is chosen.',
     noneOpen: () => 'No lesson is open.',
     startOver: () => 'Started over. Choose a lesson.',
+    hostNone: () => 'No lesson selected. No result or management action has been run.',
+    hostChosen: (lesson) => `${lesson.id} is chosen and not open. No result or management action has been run.`,
     progress: (name) => `Working on "${REQUESTS[name]}". Waiting for the server; nothing is confirmed yet.`,
     correct: (newKey) => `Edit the form, then conduct the step again.${newKey ? ` A fresh key, ${newKey}, was entered.` : ''} ${contract.ACTIONS['correct-and-resubmit'].description}`,
   };
 
-  return Object.freeze({ FIELD_NAMES, LEASES, MESSAGES, WORDS, labelOf, localFailure, present, say, validateForm, validationView });
+  return Object.freeze({ FIELD_NAMES, LEASES, MESSAGES, REQUEST_DEADLINE_MS, WORDS, labelOf, localFailure, present, say, validateForm, validationView });
 }));

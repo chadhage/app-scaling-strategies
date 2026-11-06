@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "C059 fix RED, group flood (F2, F4): the structural flood test (every attacker socket closed by the server, no connection remains, a GET answered after the flood, bytes read and CPU time per socket within ratios of a bare 400-and-close reference measured in the same run, heap bounded) replayed with the NAIVE keep-alive server in place of the service (C059_FLOOD_SUBJECT=naive): the first test fails BY NAME (SOCKETS_NOT_CLOSED_BY_THE_SERVER, the attacker timed out and kept sending) while the control test, which asserts that the naive server is detected and the bare reference passes, passes. The old test (an absolute event-loop lag bound of 500 + 150 x sockets ms) is replaced; it failed 4 of 6 standalone runs on a loaded machine (rev-C059 F2).",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "--test-timeout=280000",
+    "capability\\C059\\evidence\\red\\fix-e.snapshot.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C059_FLOOD_SUBJECT"
+  ],
+  "startedAtUtc": "2026-11-06T09:55:34.711Z",
+  "completedAtUtc": "2026-11-06T09:55:49.098Z",
+  "elapsedMs": 14387,
+  "timeoutMs": 290000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C059\\C059-review-fix.feature",
+      "bytes": 5121,
+      "rawSha256": "faa4772f9db256f366e1217eed2797ddc6d1596a5586e0320205ecda674b872b",
+      "crlfToLfSha256": "d27204f2e0cf2a0d3afeee672f3d07cd8b512f2da146404cd504791bc7cded5c"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\fix-e.snapshot.cjs",
+      "bytes": 6127,
+      "rawSha256": "9207d68cde98253ce0e9bcefeaaa4843b1ed3133ce1e128fa58cd8d71a223b38",
+      "crlfToLfSha256": "b145eda4b4a012b9fb2e2ef3d8c00e71c726ced11ed6ce67ba056379c8da919e"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-5\\net.cjs",
+      "bytes": 6477,
+      "rawSha256": "07ef48816970e99ba5ecf1f682e55a063f53e64063aabdc6efaefe033714aeac",
+      "crlfToLfSha256": "502a8529fe063a622a7535cbc58f82175088c7dcab5c91aedfe77e8f518d837d"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-5\\child-server.cjs",
+      "bytes": 2804,
+      "rawSha256": "a6609640f64cac7f52bb54e9a5eca8e8a49fa0c5312723612dd9660947768bb5",
+      "crlfToLfSha256": "af24dc4364371037e3f7b1767dde6007dff391b31295310cc2f695a13d37a530"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\helpers-5\\attacker.cjs",
+      "bytes": 2434,
+      "rawSha256": "1ddd00db11c1b8e73d0b97290fb343ed43b7ee8b488b4e49866515161bee7c9f",
+      "crlfToLfSha256": "fa9d9111c09cf00a84e33d4f52568ea8c15d86af43372260ae51ecec3ab8a3f6"
+    }
+  ],
+  "summary": {
+    "tests": 2,
+    "suites": 0,
+    "pass": 1,
+    "fail": 1,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "a refusal flood from ANOTHER process (60 sockets, endless chunked bodies) against the NAIVE server (RED replay): closed, bounded, answering, compared with a bare reference of the same run"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 2261,
+      "sha256": "4a79cd63d096f4ec726b0370ce304cef0fea28bc4b743e1ffe34f901ce840dc7",
+      "gzipBytes": 1005,
+      "gzipSha256": "e0adb8adaec089c243bbb899834a266bb62b27be6e49b47011d7d09873155b94",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

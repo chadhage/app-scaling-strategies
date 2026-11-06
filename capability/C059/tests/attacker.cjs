@@ -22,10 +22,11 @@ const REFUSALS = [
 const burst = '1\r\nx\r\n'.repeat(400);
 let closed = 0;
 let answered = 0;
+let burstsAfterAnswer = 0;
 const sockets = [];
 
 function finish(timedOut) {
-  console.log(JSON.stringify({ connections: count, closed, answered, timedOut }));
+  console.log(JSON.stringify({ connections: count, closed, answered, timedOut, burstsAfterAnswer }));
   for (const socket of sockets) socket.destroy();
   process.exit(0);
 }
@@ -33,11 +34,12 @@ function finish(timedOut) {
 for (let index = 0; index < count; index += 1) {
   const [method, target, type, host] = REFUSALS[index % REFUSALS.length];
   const socket = net.connect({ host: '127.0.0.1', port });
+  let seen = false;
   sockets.push(socket);
   socket.on('error', () => {});
-  socket.on('data', (chunk) => { if (/^HTTP\/1\.1 \d{3} /.test(chunk.toString('latin1'))) answered += 1; });
+  socket.on('data', (chunk) => { if (!seen && /^HTTP\/1\.1 \d{3} /.test(chunk.toString('latin1'))) { seen = true; answered += 1; } });
   socket.once('close', () => { closed += 1; if (closed === count) finish(false); });
-  const ticker = setInterval(() => { if (!socket.destroyed) socket.write(burst); }, 20);
+  const ticker = setInterval(() => { if (!socket.destroyed) { if (seen) burstsAfterAnswer += 1; socket.write(burst); } }, 20);
   socket.once('close', () => clearInterval(ticker));
   socket.write(`${method} ${target} HTTP/1.1\r\nHost: ${host ?? `127.0.0.1:${port}`}\r\nContent-Type: ${type}\r\nTransfer-Encoding: chunked\r\n\r\n${burst}`);
 }

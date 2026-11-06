@@ -1,0 +1,170 @@
+'use strict';
+
+// Integrity of the FIX evidence (second worker): the subjects of the new REDs are the bytes published in 14cefdea (recomputed against git), every new RED
+// is a recorded behavioral failure with unchanged inputs, a tamper of any of them is caught, and each RED REPLAYS both ways: it fails against its old
+// subject and passes UNCHANGED against the final code. The latest mutation-generator run and the load loop are verified like the other captures.
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawn, execFileSync } = require('node:child_process');
+const { randomUUID } = require('node:crypto');
+const { sha, verifyManifest } = require('./evidence-verify.cjs');
+
+const root = path.resolve(__dirname, '..');
+const repository = path.resolve(root, '..', '..');
+const red = path.join(root, 'evidence', 'red');
+const raw = path.join(root, 'evidence', 'raw');
+const FIRST = '14cefdeac385312eb3cb2defbbf8d2193443cf6a';
+const OPTIONS = { timeout: 280000 };
+const blob = (relative) => execFileSync('git', ['--no-pager', 'cat-file', 'blob', `${FIRST}:${relative}`], { cwd: repository, maxBuffer: 4 * 1024 * 1024, windowsHide: true });
+
+// [run directory, snapshot files, subject env, tests, pass and fail against the old subject]
+const RUNS = [
+  ['run-2', ['fix-a.snapshot.cjs'], { C059_RED_SUBJECT: path.join('capability', 'C059', 'evidence', 'red', 'stubs-2') }, 80, 38, 42],
+  ['run-3', ['fix-b.snapshot.cjs', 'fix-c.snapshot.cjs'], { C059_RED_SUBJECT: path.join('capability', 'C059', 'evidence', 'red', 'stubs-3') }, 22, 11, 11],
+  ['run-4', ['fix-d.snapshot.cjs'], { C059_RED_SUBJECT: path.join('capability', 'C059', 'evidence', 'red', 'stubs-4') }, 49, 3, 46, false, 8],
+  ['run-5', ['fix-e.snapshot.cjs'], { C059_FLOOD_SUBJECT: 'naive' }, 2, 1, 1],
+  ['run-6', ['fix-f.snapshot.cjs'], { C059_RED_SUBJECT: path.join('capability', 'C059', 'evidence', 'red', 'stubs-4') }, 152, 50, 102, true, 12],
+];
+// run-4 is the first pipelining RED (HTTP/1.1 only, before the fix). Its two-writes cases asserted an answer that a TCP reset may discard, so it is
+// verified and replayed against its old subject only; run-6 supersedes it on the final code (all four framing pairs and the answers Node gives itself).
+// The old-subject replays of run-4 and run-6 hold the exact counts of the archive (verified from the manifest above) within a small tolerance: a few of their
+// cases (two writes to a connection the published service may or may not have closed yet) race a TCP reset and can flip on a busy machine.
+
+function replay(files, env) {
+  const clean = { ...process.env, ...env };
+  for (const key of ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE', 'CAPTURE_BROWSER_EVIDENCE']) delete clean[key];
+  if (!env.C059_RED_SUBJECT) delete clean.C059_RED_SUBJECT;
+  if (!env.C059_FLOOD_SUBJECT) delete clean.C059_FLOOD_SUBJECT;
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=250000', ...files.map((file) => path.join(red, file))], { cwd: repository, env: clean, windowsHide: true });
+    const out = [];
+    const err = [];
+    child.stdout.on('data', (chunk) => out.push(chunk));
+    child.stderr.on('data', (chunk) => err.push(chunk));
+    const timer = setTimeout(() => child.kill(), 270000);
+    child.on('close', (status) => { clearTimeout(timer); resolve({ status, stdout: Buffer.concat(out).toString('utf8'), stderr: Buffer.concat(err).toString('utf8') }); });
+  });
+}
+
+// Every replay is a real test run (the published service keeps each connection for its one-second keep-alive bound), and one test file may not exceed the
+// 280 seconds of the GREEN command: they all start together when the file is loaded and every test awaits its own.
+const replays = new Map(RUNS.map(([directory, files, env, , , , finalReplay = true]) => [directory, { old: replay(files, env), final: finalReplay ? replay(files, {}) : null }]));
+
+test('the subjects of the new REDs are the bytes published in 14cefdea (recomputed against git)', OPTIONS, () => {
+  for (const [stub, published] of [
+    ['stubs-2/a11y-check.js', 'capability/C059/a11y-check.js'], ['stubs-3/page.js', 'capability/C059/page.js'], ['stubs-3/journey.js', 'capability/C059/journey.js'],
+    ['stubs-3/index.html', 'capability/C059/index.html'], ['stubs-4/server.cjs', 'capability/C059/server.cjs'],
+  ]) assert.equal(sha(fs.readFileSync(path.join(red, ...stub.split('/')))), sha(blob(published)), `${stub} is ${published} of ${FIRST.slice(0, 12)}`);
+});
+
+for (const [directory, files, , tests, passes, fails] of RUNS) {
+  test(`${directory}: a recorded behavioral failure (${fails} of ${tests} assertions), inputs and transcripts unchanged`, OPTIONS, () => {
+    const { manifest, problems, stdout } = verifyManifest(path.join(red, directory, 'red.json'), { root: repository });
+    assert.deepEqual(problems, []);
+    assert.deepEqual([manifest.exitCode, manifest.expectedExitCode, manifest.timedOut], [1, 1, false]);
+    assert.deepEqual([manifest.summary.tests, manifest.summary.pass, manifest.summary.fail], [tests, passes, fails]);
+    assert.equal([...stdout.matchAll(/code: 'ERR_ASSERTION'/g)].length, fails, 'every failure is an assertion about behavior');
+    assert.doesNotMatch(stdout, /MODULE_NOT_FOUND|Cannot find module|SyntaxError|ReferenceError|TypeError/);
+    assert.equal(manifest.transcripts.stderr.bytes, 0);
+    for (const file of files) assert.ok(manifest.inputs.some((input) => input.path.endsWith(file)), `${file} is a recorded input`);
+    assert.ok(manifest.inputs.some((input) => input.path.endsWith('C059-review-fix.feature')), 'the specification is a recorded input');
+  });
+
+  test(`${directory}: a tampered input hash, transcript or summary of the archive is caught by name`, OPTIONS, () => {
+    const scratch = path.join(__dirname, 'scratch', `t-${randomUUID()}`);
+    try {
+      const dir = path.join(scratch, directory);
+      fs.cpSync(path.join(red, directory), dir, { recursive: true });
+      const manifestPath = path.join(dir, 'red.json');
+      const original = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      assert.deepEqual(verifyManifest(manifestPath, { root: repository }).problems, []);
+      const flipped = JSON.parse(JSON.stringify(original));
+      flipped.inputs[1].rawSha256 = `${flipped.inputs[1].rawSha256.slice(0, 63)}${flipped.inputs[1].rawSha256.endsWith('0') ? '1' : '0'}`;
+      fs.writeFileSync(manifestPath, JSON.stringify(flipped));
+      assert.deepEqual(verifyManifest(manifestPath, { root: repository }).problems, [`INPUT_CHANGED ${original.inputs[1].path}`]);
+      fs.writeFileSync(manifestPath, JSON.stringify({ ...original, summary: { ...original.summary, fail: original.summary.fail + 1 } }));
+      assert.deepEqual(verifyManifest(manifestPath, { root: repository }).problems, ['SUMMARY_MISMATCH fail']);
+      fs.writeFileSync(manifestPath, JSON.stringify(original));
+      const gz = path.join(dir, 'raw', 'red.stdout.raw.gz');
+      const bytes = fs.readFileSync(gz);
+      bytes[bytes.length - 12] ^= 0xff;
+      fs.writeFileSync(gz, bytes);
+      assert.ok(verifyManifest(manifestPath, { root: repository }).problems.some((problem) => /^(GZIP_CHANGED|GZIP_CORRUPT|RAW_CHANGED) stdout$/.test(problem)));
+    } finally {
+      fs.rmSync(scratch, { recursive: true, force: true });
+      try { fs.rmdirSync(path.join(__dirname, 'scratch')); } catch { /* another file still uses it, or it is gone */ }
+    }
+  });
+}
+
+for (const [directory, files, env, tests, passes, fails, finalReplay = true, tolerance = 0] of RUNS) {
+  test(`${directory}: the retained RED fails against its old subject (${fails} of ${tests})${finalReplay ? ` and passes UNCHANGED against the final code (${tests} of ${tests})` : ' (not replayed on the final code: superseded by run-6)'}`, OPTIONS, async () => {
+    const old = await replays.get(directory).old;
+    assert.equal(old.status, 1, old.stdout.slice(-1500));
+    const passed = Number(/^# pass (\d+)$/m.exec(old.stdout)?.[1]);
+    const failed = Number(/^# fail (\d+)$/m.exec(old.stdout)?.[1]);
+    assert.ok(Math.abs(passed - passes) <= tolerance && Math.abs(failed - fails) <= tolerance && passed + failed === tests, `${passed} passed and ${failed} failed against the old subject, archived ${passes} and ${fails} (tolerance ${tolerance})`);
+    assert.equal([...old.stdout.matchAll(/code: 'ERR_ASSERTION'/g)].length, failed);
+    assert.doesNotMatch(`${old.stdout}${old.stderr}`, /MODULE_NOT_FOUND|SyntaxError|ReferenceError/);
+    if (finalReplay) {
+      const final = await replays.get(directory).final;
+      assert.equal(final.status, 0, final.stdout.slice(-2500));
+      assert.match(final.stdout, new RegExp(`^# pass ${tests}$`, 'm'));
+      assert.match(final.stdout, /^# fail 0$/m);
+    }
+    const manifest = JSON.parse(fs.readFileSync(path.join(red, directory, 'red.json'), 'utf8'));
+    for (const file of files) assert.equal(sha(fs.readFileSync(path.join(red, file))), manifest.inputs.find((input) => input.path.endsWith(file)).rawSha256, `${file} is byte-identical to the RED run`);
+  });
+}
+
+const latest = (stage) => {
+  const names = fs.readdirSync(raw).filter((name) => new RegExp(`^${stage}-\\d+\\.json$`).test(name)).sort((a, b) => Number(/-(\d+)\.json$/.exec(a)[1]) - Number(/-(\d+)\.json$/.exec(b)[1]));
+  assert.ok(names.length > 0, `no archived ${stage} run`);
+  return names.at(-1);
+};
+
+// The systematic mutation evidence is the latest FULL run (at least 150 mutants) plus any later TARGETED runs: a full run may end with survivors (the generator then
+// exits 1, and its manifest says so); each of them must be killed by a NAMED failing test in a later targeted run of exactly that mutant, after the test that closes
+// the gap was written. Older runs are history (their inputs changed on purpose).
+test('the latest full systematic mutation run killed every non-equivalent mutant by a NAMED failing test (a survivor only if a later targeted run kills it) and lists its equivalent mutants with a reason', OPTIONS, () => {
+  const numbers = fs.readdirSync(raw).map((name) => /^mutgen-report-(\d+)\.json$/.exec(name)?.[1]).filter(Boolean).map(Number).sort((a, b) => a - b);
+  const reports = new Map(numbers.map((number) => [number, JSON.parse(fs.readFileSync(path.join(raw, `mutgen-report-${number}.json`), 'utf8'))]));
+  const fullNumber = [...numbers].reverse().find((number) => reports.get(number).total >= 150);
+  assert.ok(fullNumber, 'a full run of at least 150 mutants is archived');
+  const full = reports.get(fullNumber);
+  const killedLater = new Set();
+  for (const number of numbers.filter((value) => value >= fullNumber)) {
+    const { manifest, problems } = verifyManifest(path.join(raw, `mutgen-${number}.json`), { root: repository });
+    const report = reports.get(number);
+    // The shared verifier calls a run whose exit code differs from the expected one RUN_NOT_AS_EXPECTED: a full run with survivors (the generator exits 1) is that, and nothing else.
+    assert.deepEqual(problems, number === fullNumber && report.survivors.length > 0 ? ['RUN_NOT_AS_EXPECTED'] : [], `mutgen-${number}`);
+    assert.equal(report.errors, 0);
+    assert.ok(report.results.filter((item) => item.killed).every((item) => item.failingTests.length > 0), `every kill of mutgen-${number} names a failing test`);
+    if (number === fullNumber) {
+      assert.equal(manifest.exitCode, report.survivors.length === 0 ? 0 : 1, 'the generator verdict of the full run');
+      assert.equal(report.killed + report.equivalent.filter((item) => item.survived).length + report.survivors.length, report.total);
+      assert.ok(report.equivalent.every((item) => item.reason.length > 10), 'every equivalent mutant states its reason');
+    } else {
+      assert.ok(report.total < 150 && manifest.exitCode === 0 && report.killed === report.total && report.survivors.length === 0, `mutgen-${number} is a targeted run that killed everything it applied`);
+      for (const item of report.results) killedLater.add(`${item.file}: ${item.label}`);
+    }
+  }
+  assert.deepEqual(full.survivors.filter((survivor) => !killedLater.has(survivor)), [], 'every survivor of the full run is killed by a later targeted run');
+});
+
+test('the latest load loop of the flood test passed every run, five at a time under CPU burners', OPTIONS, () => {
+  const name = latest('loop');
+  const { manifest, problems, stdout } = verifyManifest(path.join(raw, name), { root: repository });
+  assert.deepEqual(problems, []);
+  assert.equal(manifest.exitCode, 0);
+  const summary = JSON.parse(stdout.slice(stdout.indexOf('{')));
+  assert.deepEqual([summary.runs, summary.passed], [20, 20]);
+  assert.ok(summary.parallel >= 3 && summary.burners >= 2, `parallel ${summary.parallel}, burners ${summary.burners}`);
+  assert.ok(summary.results.every((item) => item.exit === 0 && item.fail === 0 && item.tests === 2));
+});
+
+test('the test runs leave no scratch folder behind', OPTIONS, () => {
+  assert.equal(fs.existsSync(path.join(__dirname, 'scratch')), false);
+});
