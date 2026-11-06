@@ -41,7 +41,7 @@ negative('HARD_WITHOUT_PHRASE', 'the word hard without the planning-bound phrase
 negative('HARD_WITHOUT_PHRASE', 'the word hard in the markdown copy', (p) => { p.x = 1; }, { markdown: (p) => `${goodMarkdown(p)}\nA hard cap.` });
 negative('MARKDOWN_HASH_MISSING', 'a markdown copy without the packet hash', (p) => { p.x = 1; }, { markdown: () => '## 0a. State of the repository at HEAD $5.00 $15.00 $75.00' });
 negative('MARKDOWN_CEILING_MISSING', 'a markdown copy that lacks a ceiling', (p) => { p.x = 1; }, { markdown: (p) => goodMarkdown(p).replace('$75.00', '$70.00') });
-negative('MARKDOWN_REPO_STATE_MISSING', 'a markdown copy without the HEAD section', (p) => { p.x = 1; }, { markdown: (p) => goodMarkdown(p).replace('State of the repository at HEAD', 'Notes') });
+negative('MARKDOWN_HEADING_MISSING', 'a markdown copy without the HEAD section', (p) => { p.x = 1; }, { markdown: (p) => goodMarkdown(p).replace('State of the repository at HEAD', 'Notes') });
 
 test('the accepted fixture and a good markdown copy pass; the date injection is optional', () => {
   const p = load();

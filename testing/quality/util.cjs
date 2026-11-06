@@ -24,46 +24,4 @@ function makeSink() {
   return { findings, add };
 }
 
-// Visits every string in a JSON-like tree with its path, e.g. options[0].teardown.mechanism.
-function walkStrings(value, visit, path = '') {
-  if (typeof value === 'string') visit(value, path);
-  else if (isArr(value)) value.forEach((v, i) => walkStrings(v, visit, `${path}[${i}]`));
-  else if (isObj(value)) for (const [k, v] of Object.entries(value)) walkStrings(v, visit, path ? `${path}.${k}` : k);
-}
-
-// Collects the az and PowerShell statements of the plan (commands, scripts) with their paths. Revision 1 packets kept one string per
-// step in `command` (deletion order) or `how` (verification); those are collected too, so the old shape is checked rather than skipped.
-function planStatements(plan) {
-  const out = [];
-  const take = (value, path) => {
-    const list = isArr(value) ? value : typeof value === 'string' ? [value] : [];
-    list.forEach((c, i) => { if (typeof c === 'string') out.push({ path: isArr(value) ? `${path}[${i}]` : path, text: c }); });
-  };
-  (isArr(plan.guards) ? plan.guards : []).forEach((g, i) => take(g && g.commands, `cleanupAndRollback.guards[${i}].commands`));
-  for (const section of ['armingSequence', 'deletionOrder', 'verification', 'rollback']) {
-    (isArr(plan[section]) ? plan[section] : []).forEach((s, i) => {
-      for (const field of ['commands', 'command', 'how']) take(s && s[field], `cleanupAndRollback.${section}[${i}].${field}`);
-    });
-  }
-  take(plan.teardown && plan.teardown.job && plan.teardown.job.script, 'cleanupAndRollback.teardown.job.script');
-  return out;
-}
-
-// An az invocation inside a statement: "az <word>" not preceded by a word character or a dash.
-const AZ = /(?<![\w-])az\s+([a-z][\w-]*(?:\s+[a-z][\w-]*)?)/g;
-
-function azInvocations(text) {
-  const found = [];
-  const bare = text.replace(/"(?:`.|[^"`])*"|'[^']*'/g, '""');
-  for (const statement of bare.split(/;|\r?\n|\|\s*ConvertFrom-Json|\{|\}/)) {
-    AZ.lastIndex = 0;
-    const m = AZ.exec(statement);
-    if (m) found.push({ command: m[1], statement: statement.trim() });
-  }
-  return found;
-}
-
-// Whole UTC days from a YYYY-MM-DD date to an ISO instant: the 7-day price rule is counted in calendar days.
-const dayAge = (dateStr, iso) => Math.floor((Date.parse(`${String(iso).slice(0, 10)}T00:00:00Z`) - Date.parse(`${dateStr}T00:00:00Z`)) / 86400000);
-
-module.exports = { isObj, isNum, isStr, isArr, approx, round, ceilingFor, integrityHash, makeSink, walkStrings, planStatements, azInvocations, dayAge };
+module.exports = { isObj, isNum, isStr, isArr, approx, round, ceilingFor, integrityHash, makeSink };

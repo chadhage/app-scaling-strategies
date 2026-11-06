@@ -6,7 +6,9 @@ const plan = (p) => p.cleanupAndRollback;
 const guard = (p, id) => plan(p).guards.find((g) => g.id === id);
 const arming = (p, re) => plan(p).armingSequence.find((s) => s.commands.some((c) => re.test(c)));
 const script = (p) => plan(p).teardown.job.script;
-const del = (p, i = 0) => plan(p).deletionOrder[i];
+// The first deletion step is the variables and guard functions (n 0); the old index 0 is step 1.
+const del = (p, i = 0) => plan(p).deletionOrder[i + 1];
+const GROUP_DELETE = 'az group delete --name $Group --yes --subscription $Subscription';
 
 negative('PLAN_MISSING', 'no cleanup and rollback plan', (p) => { delete p.cleanupAndRollback; });
 negative('GUARD_G1_MISSING', 'no pre-creation gate', (p) => { plan(p).guards = plan(p).guards.filter((g) => g.id !== 'G1'); });
@@ -43,7 +45,7 @@ negative('ARMING_TAGS', 'a group created without the lease tags', (p) => {
   s.commands = s.commands.map((c) => c.replace(/lease-id=\S+/, ''));
 });
 negative('AZ_NO_SUBSCRIPTION', 'a verification command without --subscription', (p) => { plan(p).verification[2].commands = ['az monitor log-analytics workspace list-deleted-workspaces -o tsv']; });
-negative('AZ_NO_SUBSCRIPTION', 'a deletion command without --subscription', (p) => { del(p).commands[1] = del(p).commands[1].replace(/ --subscription <subscription-id>/, ''); });
+negative('AZ_NO_SUBSCRIPTION', 'a deletion command without --subscription', (p) => { del(p).commands[1] = del(p).commands[1].replace(/ --subscription \$Subscription/, ''); });
 negative('AZ_NO_SUBSCRIPTION', 'a script line without --subscription', (p) => {
   const i = script(p).findIndex((l) => /az group delete/.test(l));
   script(p)[i] = script(p)[i].replace(' --subscription $Subscription', '');
@@ -55,29 +57,29 @@ negative('AZ_NO_SUBSCRIPTION', 'a --subscription flag without a value', (p) => {
 negative('AZ_NO_SUBSCRIPTION', 'a --subscription flag followed by another flag', (p) => { del(p).commands[1] = 'az webapp delete --subscription --resource-group <rg> --name <app>'; });
 negative('SCRIPT_NO_OWNERSHIP_CHECK', 'a script whose ownership check is empty', (p) => { plan(p).teardown.job.script = script(p).filter((l) => !/az group show|lease-id|lease-expires-utc/.test(l)); });
 negative('DELETION_MISSING', 'no deletion order', (p) => { plan(p).deletionOrder = []; });
-negative('DELETE_UNGUARDED', 'a delete step without the subscription pin', (p) => { del(p, 4).guards = ['G3']; });
-negative('DELETE_UNGUARDED', 'a delete step without the ownership check', (p) => { del(p, 0).guards = ['G2']; });
-negative('DELETE_UNGUARDED', 'a delete step with no guards at all (revision 1)', (p) => { del(p, 4).guards = []; });
-negative('DELETE_UNGUARDED', 'a revision 1 style step: one command string, no guards', (p) => {
-  plan(p).deletionOrder[0] = { n: 2, step: 'Stop the meter', command: 'az webapp delete --resource-group <rg> --name <app>; az appservice plan delete --resource-group <rg> --name <plan> --yes', label: 'estimated' };
+negative('DELETE_UNGUARDED', 'a delete step without the subscription pin', (p) => { del(p, 4).commands = [`Assert-Lease; ${GROUP_DELETE}`]; });
+negative('DELETE_UNGUARDED', 'a delete step without the ownership check', (p) => { del(p, 0).commands = del(p, 0).commands.map((c) => c.replace('Assert-Lease; ', '')); });
+negative('DELETE_UNGUARDED', 'a delete step with no guards at all (revision 1)', (p) => { del(p, 4).commands = [GROUP_DELETE]; });
+negative('PLAN_SHAPE', 'a revision 1 style step: one command string, no guards', (p) => {
+  plan(p).deletionOrder[1] = { n: 2, step: 'Stop the meter', command: 'az webapp delete --resource-group <rg> --name <app>; az appservice plan delete --resource-group <rg> --name <plan> --yes', label: 'estimated' };
 });
-negative('AZ_NO_SUBSCRIPTION', 'a revision 1 style command string without --subscription', (p) => {
-  plan(p).deletionOrder[0] = { n: 2, step: 'Stop the meter', command: 'az webapp delete --resource-group <rg> --name <app>', label: 'estimated' };
+negative('DELETE_OUTSIDE_COMMANDS', 'a revision 1 style command string without --subscription', (p) => {
+  plan(p).deletionOrder[1] = { n: 2, step: 'Stop the meter', command: 'az webapp delete --resource-group <rg> --name <app>', label: 'estimated', commands: [] };
 });
-negative('AZ_NO_SUBSCRIPTION', 'a revision 1 style verification how-string without --subscription', (p) => {
-  plan(p).verification[0] = { n: 1, check: 'gone', how: 'az group exists --name <rg> every 5 minutes for up to 60 minutes', expect: 'false' };
+negative('PLAN_SHAPE', 'a revision 1 style verification how-string without --subscription', (p) => {
+  plan(p).verification[0] = { n: 1, check: 'gone', how: 'az group exists --name <rg> every 5 minutes for up to 60 minutes', expect: 'false', commands: [] };
 });
 negative('DELETE_UNGUARDED', 'a delete hidden in a rollback step without guards', (p) => {
   plan(p).rollback[7].commands = ['az group delete --name <rg> --subscription <subscription-id>'];
   plan(p).rollback[7].guards = [];
 });
 negative('DELETE_UNGUARDED', 'a delete hidden in a verification step with only the pin', (p) => {
-  plan(p).verification[2].commands = ['az monitor log-analytics workspace delete --workspace-name <law> --subscription <subscription-id>'];
+  plan(p).verification[2].commands = ['az account show --query id -o tsv', 'az monitor log-analytics workspace delete --resource-group <rg> --workspace-name <law> --subscription <subscription-id>'];
   plan(p).verification[2].guards = ['G2'];
 });
-negative('FLAG_UNGUARDED', 'a --force in a verification command', (p) => { plan(p).verification[2].commands = ['az monitor log-analytics workspace delete --force --subscription <subscription-id>']; });
+negative('DELETE_UNGUARDED', 'a --force delete in a verification command', (p) => { plan(p).verification[2].commands = ['az monitor log-analytics workspace delete --force --subscription <subscription-id>']; });
 negative('SCRIPT_MISSING', 'no unattended teardown script', (p) => { delete plan(p).teardown.job; });
-negative('SCRIPT_NO_PIN', 'a script that never checks the subscription', (p) => { plan(p).teardown.job.script = script(p).filter((l) => !/az account show/.test(l) && !/Assert-Subscription$/.test(l.trim())); });
+negative('SCRIPT_NO_PIN', 'a script that never checks the subscription', (p) => { plan(p).teardown.job.script = script(p).filter((l) => !/az account show/.test(l)); });
 negative('SCRIPT_DELETE_UNGUARDED', 'a script delete without the ownership check', (p) => {
   const i = script(p).findIndex((l) => /az group delete/.test(l));
   script(p)[i] = script(p)[i].replace('Assert-Lease; ', '');
@@ -91,8 +93,8 @@ negative('BACKSTOP_NOT_DELETE_FIRST', 'a script that exports before it deletes',
   script(p).splice(i, 0, '  az storage blob download-batch --destination out --source evidence --subscription $Subscription');
 });
 negative('VERIFY_MISSING', 'no verification checks', (p) => { plan(p).verification = []; });
-negative('VERIFY_UNGUARDED', 'check 1 without the subscription pin', (p) => { plan(p).verification[0].guards = []; });
-negative('VERIFY_UNGUARDED', 'check 2 without the subscription pin', (p) => { plan(p).verification[1].guards = []; });
+negative('VERIFY_UNGUARDED', 'check 1 without the subscription pin', (p) => { plan(p).verification[0].commands = plan(p).verification[0].commands.slice(1); });
+negative('VERIFY_UNGUARDED', 'check 2 without the subscription pin', (p) => { plan(p).verification[1].commands = plan(p).verification[1].commands.slice(1); });
 negative('ROLLBACK_NO_SWAP', 'no slot-swap rollback', (p) => { plan(p).rollback.forEach((r) => { r.commands = []; }); });
 negative('ROLLBACK_NO_PREVIEW', 'no swap with preview and reset', (p) => { plan(p).rollback.forEach((r) => { r.commands = r.commands.filter((c) => !/--action (preview|reset)/.test(c)); }); });
 negative('LEASE_TAGS', 'lease tags without lease-expires-utc', (p) => { plan(p).leaseTags = plan(p).leaseTags.filter((t) => t[0] !== 'lease-expires-utc'); });
@@ -100,16 +102,18 @@ negative('UNRESOLVED_WORDING', 'a command still to be confirmed', (p) => { plan(
 
 test('a guarded delete outside the deletion order is accepted', () => {
   const p = load();
-  p.cleanupAndRollback.rollback[7].commands = ['az group delete --name <rg> --subscription <subscription-id>'];
-  p.cleanupAndRollback.rollback[7].guards = ['G2', 'G3'];
+  p.cleanupAndRollback.rollback[7].commands = ['az account show --query id -o tsv', 'az group show --name <rg> --subscription <subscription-id> -o json', 'az group delete --name <rg> --subscription <subscription-id>'];
   reseal(p);
   assert.equal(run(p).findings.filter((f) => f.code === 'DELETE_UNGUARDED').length, 0);
 });
 
 test('the accepted plan lists a delete with both guards in every deletion step', () => {
   const p = load();
-  for (const s of p.cleanupAndRollback.deletionOrder.filter((x) => x.commands.some((c) => /\bdelete\b/.test(c) && /^az /.test(c)))) {
+  const steps = p.cleanupAndRollback.deletionOrder.filter((x) => x.commands.some((c) => /\baz\b.*\bdelete\b/.test(c)));
+  assert.ok(steps.length >= 5);
+  for (const s of steps) {
     assert.ok(s.guards.includes('G2') && s.guards.includes('G3'));
+    assert.ok(s.commands.filter((c) => /\baz\b.*\bdelete\b/.test(c)).every((c) => c.startsWith('Assert-Subscription; Assert-Lease; ')));
   }
   assert.equal(run(p).ok, true);
 });

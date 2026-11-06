@@ -1,6 +1,6 @@
 'use strict';
 // Edge cases: malformed shapes never throw, and optional fields fall back the way the rules document.
-const { assert, test, load, reseal, run } = require('./support.cjs');
+const { assert, test, load, reseal, run, goodMarkdown } = require('./support.cjs');
 const { validatePacket } = require('../packet-validator.cjs');
 
 const codes = (p, extra) => new Set(run(reseal(p), extra).findings.map((f) => f.code));
@@ -37,7 +37,7 @@ test('a null region candidate and a null usage line are reported', () => {
   p.options[0].worstCase.usage.push(null);
   const found = codes(p);
   assert.ok(found.has('OPTION_REGIONS'));
-  assert.ok(found.has('OPTION_USAGE_COST') && found.has('OPTION_PRICE_LINE_UNAVAILABLE'));
+  assert.ok(found.has('OPTION_USAGE_COST') && found.has('OPTION_USAGE_LINES'));
 });
 
 test('an option without a worst case is reported once per rule and never throws', () => {
@@ -53,10 +53,10 @@ test('phases that are missing or not objects do not add up', () => {
   assert.ok(codes(p).has('OPTION_PHASES_SUM'));
 });
 
-test('a usage line unknown to the register is reported as unavailable, not priced', () => {
+test('a usage line unknown to the register is reported as a wrong usage line set, not priced', () => {
   const p = load();
   p.options[0].worstCase.usage[2].lineKey = 'blob.nothing';
-  assert.ok(codes(p).has('OPTION_PRICE_LINE_UNAVAILABLE'));
+  assert.ok(codes(p).has('OPTION_USAGE_LINES'));
 });
 
 test('without scaleStepHours an option with cap = steady still recomputes; the SKU key falls back to the SKU name', () => {
@@ -119,9 +119,9 @@ test('a zero claim on a priced resource and a returned-zero line that is sourced
   assert.ok(codes(p).has('ZERO_COST_UNSOURCED'));
 });
 
-test('markdown scanning ignores the packet hashes and the junk-free fixture markdown passes', () => {
+test('markdown scanning ignores the packet hashes and the faithful fixture markdown passes', () => {
   const p = reseal(load());
-  const md = `# t\n${p.integrity.packetSha256}\n${p.revision.supersedes.packetSha256}\n$5.00 $15.00 $75.00\n## 0a. State of the repository at HEAD\n`;
+  const md = `${goodMarkdown(p)}\n${p.revision.supersedes.packetSha256}\n${p.revision.earlier.supersedes.packetSha256}\n`;
   assert.equal(run(p, { markdown: md }).ok, true);
   assert.equal(run(p, { markdown: 5 }).ok, true);
 });

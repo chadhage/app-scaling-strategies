@@ -2,7 +2,7 @@
 // CLI: exit 0 ok, 1 findings, 2 usage or unreadable input. In-process through main(argv, io) plus real child processes.
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
-const { assert, test, load, reseal, NOW } = require('./support.cjs');
+const { assert, test, load, reseal, NOW, goodMarkdown } = require('./support.cjs');
 const { main } = require('../validate-packet.cjs');
 
 const CLI = path.join(__dirname, '..', 'validate-packet.cjs');
@@ -49,8 +49,7 @@ test('--help prints the usage and exits 0', () => {
 
 test('a result file with packet and packetMarkdown is unwrapped and its markdown is checked', () => {
   const p = load();
-  const md = ['# packet', p.integrity.packetSha256, '$5.00 $15.00 $75.00', '## 0a. State of the repository at HEAD'].join('\n');
-  assert.equal(main(['r.json'], io({ 'r.json': { packet: p, packetMarkdown: md } })), 0);
+  assert.equal(main(['r.json'], io({ 'r.json': { packet: p, packetMarkdown: goodMarkdown(p) } })), 0);
   const bad = io({ 'r.json': { packet: p, packetMarkdown: 'no hash here' } });
   assert.equal(main(['r.json'], bad), 1);
   assert.match(bad.out.join('\n'), /MARKDOWN_HASH_MISSING/);
@@ -58,8 +57,7 @@ test('a result file with packet and packetMarkdown is unwrapped and its markdown
 
 test('--markdown reads a separate file and --now overrides the clock; stale prices fail', () => {
   const p = load();
-  const md = ['# packet', p.integrity.packetSha256, '$5.00 $15.00 $75.00', '## 0a. State of the repository at HEAD'].join('\n');
-  assert.equal(main(['p.json', '--markdown', 'p.md'], io({ 'p.json': p, 'p.md': md })), 0);
+  assert.equal(main(['p.json', '--markdown', 'p.md'], io({ 'p.json': p, 'p.md': goodMarkdown(p) })), 0);
   const x = io({ 'p.json': p });
   assert.equal(main(['p.json', '--now', '2026-11-20T00:00:00Z'], x), 1);
   assert.match(x.out.join('\n'), /PRICE_STALE_NOW/);

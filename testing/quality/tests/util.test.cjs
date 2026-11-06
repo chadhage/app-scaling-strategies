@@ -41,39 +41,3 @@ test('makeSink collects findings in order', () => {
   add('B', 'q', 'second');
   assert.deepEqual(findings.map((f) => f.code), ['A', 'B']);
 });
-
-test('walkStrings visits every string with its path', () => {
-  const seen = [];
-  u.walkStrings({ a: 'x', b: [{ c: 'y' }, 3, null], d: { e: 'z' } }, (s, p) => seen.push(`${p}=${s}`));
-  assert.deepEqual(seen, ['a=x', 'b[0].c=y', 'd.e=z']);
-});
-
-test('planStatements gathers commands from every section and the script, and ignores junk', () => {
-  const plan = {
-    guards: [{ commands: ['az account show'] }, null],
-    armingSequence: [{ commands: ['az group exists --name x'] }],
-    deletionOrder: [{ commands: ['az group delete --name x', 7] }],
-    verification: [{}], rollback: 'nope',
-    teardown: { job: { script: ['Assert-Lease'] } }
-  };
-  const paths = u.planStatements(plan).map((s) => s.path);
-  assert.deepEqual(paths, ['cleanupAndRollback.guards[0].commands[0]', 'cleanupAndRollback.armingSequence[0].commands[0]', 'cleanupAndRollback.deletionOrder[0].commands[0]', 'cleanupAndRollback.teardown.job.script[0]']);
-  assert.deepEqual(u.planStatements({}), []);
-  const legacy = u.planStatements({ deletionOrder: [{ command: 'az group delete --name x' }], verification: [{ how: 'az group exists --name x' }] }).map((s) => s.path);
-  assert.deepEqual(legacy, ['cleanupAndRollback.deletionOrder[0].command', 'cleanupAndRollback.verification[0].how']);
-});
-
-test('azInvocations finds az commands but not the word az inside quoted text', () => {
-  assert.deepEqual(u.azInvocations('az group delete --name x --yes').map((i) => i.command), ['group delete']);
-  assert.deepEqual(u.azInvocations("if ((az account show --query id -o tsv) -ne $s) { throw 'the az session differs' }").map((i) => i.command), ['account show']);
-  assert.deepEqual(u.azInvocations('Assert-Lease; az webapp delete --name a; az group exists --name b').map((i) => i.command), ['webapp delete', 'group exists']);
-  assert.deepEqual(u.azInvocations('$g = az group show --name $G -o json | ConvertFrom-Json').map((i) => i.command), ['group show']);
-  assert.deepEqual(u.azInvocations('az graph query -q "resources | where x == \'y\'" --subscriptions s').map((i) => i.statement.includes('--subscriptions')), [true]);
-  assert.deepEqual(u.azInvocations('Write-Host maze'), []);
-});
-
-test('dayAge counts whole UTC days', () => {
-  assert.equal(u.dayAge('2026-11-04', '2026-11-11T23:59:59Z'), 7);
-  assert.equal(u.dayAge('2026-11-04', '2026-11-12T00:00:00Z'), 8);
-  assert.equal(u.dayAge('2026-11-04', '2026-11-04T10:00:00Z'), 0);
-});

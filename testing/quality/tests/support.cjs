@@ -20,7 +20,8 @@ function reseal(p) {
 
 const run = (p, extra = {}) => validatePacket(p, { nowUtc: NOW, ...extra });
 const line = (p, key, region) => p.pricing.lines.find((l) => l.key === key && l.region === region);
-const goodMarkdown = (p) => ['# packet', p.integrity.packetSha256, p.options.map((o) => `$${o.spendCeilingUsd}.00`).join(' '), '## 0a. State of the repository at HEAD'].join('\n');
+const { faithfulMarkdown } = require('./md.cjs');
+const goodMarkdown = (p) => faithfulMarkdown(p);
 
 // One negative test: mutate a copy of the fixture, re-seal it (unless the test is about the seal), and expect the code.
 function negative(code, name, mutation, { markdown, nowUtc, seal = true } = {}) {

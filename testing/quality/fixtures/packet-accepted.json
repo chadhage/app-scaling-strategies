@@ -1,13 +1,13 @@
 {
  "schemaVersion": 2,
  "itemId": "U001",
- "title": "U001 native-run approval packet, revision 2: first App Service code-slot target (Linux)",
+ "title": "U001 native-run approval packet, revision 3: first App Service code-slot target (Linux)",
  "servesItems": [
   "U002",
   "APPROVED"
  ],
- "preparedBy": "worker-U001 (w2-U001)",
- "preparedAtUtc": "2026-11-06T05:11:32Z",
+ "preparedBy": "worker-U001 (w3-U001)",
+ "preparedAtUtc": "2026-11-06T07:33:42Z",
  "status": "proposal only: nothing in this packet is an approval and every owner decision defaults to no; the owner artifacts at HEAD (demo/, infra/, the azure-demo workflows, .azure/deployment-plan.md) are not approvals either",
  "authority": {
   "source": ".docs/wiki/flow-state.json approvals.C001 (read-only) and capability/C001/contract-guard.js",
@@ -78,7 +78,7 @@
    },
    {
     "id": "W01",
-    "purpose": "Revision 2: Storage Blob General Block Blob v2, Hot LRS, eastus2: confirms the meter List and Create Container Operations (0.05 per 10K, effective 2016-05-09, the same meter ID as Hot LRS Write Operations)",
+    "purpose": "Revision 2: Storage Blob General Block Blob v2, Hot LRS, eastus2: confirms the meter List and Create Container Operations (0.05 per 10K, effective 2016-05-09, the same price as Hot LRS Write Operations (the meter ID is the same in eastus2, eastus and centralus, different in westus2 and westus3))",
     "httpStatus": 200,
     "filter": "serviceName eq 'Storage' and productName eq 'General Block Blob v2' and skuName eq 'Hot LRS' and armRegionName eq 'eastus2' and priceType eq 'Consumption'",
     "itemsReturned": 9
@@ -94,6 +94,76 @@
   ],
   "lines": [
    {
+    "id": "plan.S1@eastus2",
+    "key": "plan.S1",
+    "region": "eastus2",
+    "meterName": "S1 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.095,
+    "status": "returned",
+    "queryId": "Q02",
+    "effectiveStartDate": "2018-05-11",
+    "meterId": "fixture-meter-1"
+   },
+   {
+    "id": "plan.S1@eastus",
+    "key": "plan.S1",
+    "region": "eastus",
+    "meterName": "S1 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.095,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2018-05-11",
+    "meterId": "fixture-meter-2"
+   },
+   {
+    "id": "plan.S1@westus2",
+    "key": "plan.S1",
+    "region": "westus2",
+    "meterName": "S1 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.08,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2020-03-01",
+    "meterId": "fixture-meter-3"
+   },
+   {
+    "id": "plan.S1@westus3",
+    "key": "plan.S1",
+    "region": "westus3",
+    "meterName": "S1 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.08,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2022-08-01",
+    "meterId": "fixture-meter-4"
+   },
+   {
+    "id": "plan.S1@centralus",
+    "key": "plan.S1",
+    "region": "centralus",
+    "meterName": "S1 App",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.095,
+    "status": "returned",
+    "queryId": "Q07",
+    "effectiveStartDate": "2018-05-11",
+    "meterId": "fixture-meter-5"
+   },
+   {
     "id": "plan.P0v3@eastus2",
     "key": "plan.P0v3",
     "region": "eastus2",
@@ -105,7 +175,7 @@
     "status": "returned",
     "queryId": "Q03",
     "effectiveStartDate": "2024-08-01",
-    "meterId": "fixture-meter-1"
+    "meterId": "fixture-meter-6"
    },
    {
     "id": "plan.P0v3@eastus",
@@ -119,7 +189,7 @@
     "status": "returned",
     "queryId": "Q07",
     "effectiveStartDate": "2024-08-01",
-    "meterId": "fixture-meter-2"
+    "meterId": "fixture-meter-7"
    },
    {
     "id": "plan.P0v3@westus2",
@@ -133,7 +203,7 @@
     "status": "returned",
     "queryId": "Q07",
     "effectiveStartDate": "2024-08-01",
-    "meterId": "fixture-meter-3"
+    "meterId": "fixture-meter-8"
    },
    {
     "id": "plan.P0v3@westus3",
@@ -147,7 +217,7 @@
     "status": "returned",
     "queryId": "Q07",
     "effectiveStartDate": "2024-08-01",
-    "meterId": "fixture-meter-4"
+    "meterId": "fixture-meter-9"
    },
    {
     "id": "plan.P0v3@centralus",
@@ -161,7 +231,7 @@
     "status": "returned",
     "queryId": "Q07",
     "effectiveStartDate": "2024-08-01",
-    "meterId": "fixture-meter-5"
+    "meterId": "fixture-meter-10"
    },
    {
     "id": "plan.P1v3@eastus2",
@@ -175,7 +245,7 @@
     "status": "returned",
     "queryId": "Q03",
     "effectiveStartDate": "2020-10-01",
-    "meterId": "fixture-meter-6"
+    "meterId": "fixture-meter-11"
    },
    {
     "id": "plan.P1v3@eastus",
@@ -189,7 +259,7 @@
     "status": "returned",
     "queryId": "Q07",
     "effectiveStartDate": "2020-10-01",
-    "meterId": "fixture-meter-7"
+    "meterId": "fixture-meter-12"
    },
    {
     "id": "plan.P1v3@westus2",
@@ -203,7 +273,7 @@
     "status": "returned",
     "queryId": "Q07",
     "effectiveStartDate": "2020-10-01",
-    "meterId": "fixture-meter-8"
+    "meterId": "fixture-meter-13"
    },
    {
     "id": "plan.P1v3@westus3",
@@ -217,7 +287,7 @@
     "status": "returned",
     "queryId": "Q07",
     "effectiveStartDate": "2022-08-01",
-    "meterId": "fixture-meter-9"
+    "meterId": "fixture-meter-14"
    },
    {
     "id": "plan.P1v3@centralus",
@@ -231,7 +301,7 @@
     "status": "returned",
     "queryId": "Q07",
     "effectiveStartDate": "2020-10-01",
-    "meterId": "fixture-meter-10"
+    "meterId": "fixture-meter-15"
    },
    {
     "id": "plan.P2v3@eastus2",
@@ -245,7 +315,7 @@
     "status": "returned",
     "queryId": "Q03",
     "effectiveStartDate": "2020-10-01",
-    "meterId": "fixture-meter-11"
+    "meterId": "fixture-meter-16"
    },
    {
     "id": "plan.P2v3@eastus",
@@ -259,7 +329,7 @@
     "status": "returned",
     "queryId": "Q09",
     "effectiveStartDate": "2020-10-01",
-    "meterId": "fixture-meter-12"
+    "meterId": "fixture-meter-17"
    },
    {
     "id": "plan.P2v3@westus2",
@@ -273,7 +343,7 @@
     "status": "returned",
     "queryId": "Q09",
     "effectiveStartDate": "2020-10-01",
-    "meterId": "fixture-meter-13"
+    "meterId": "fixture-meter-18"
    },
    {
     "id": "plan.P2v3@westus3",
@@ -287,7 +357,7 @@
     "status": "returned",
     "queryId": "Q09",
     "effectiveStartDate": "2022-08-01",
-    "meterId": "fixture-meter-14"
+    "meterId": "fixture-meter-19"
    },
    {
     "id": "plan.P2v3@centralus",
@@ -301,7 +371,147 @@
     "status": "returned",
     "queryId": "Q09",
     "effectiveStartDate": "2020-10-01",
-    "meterId": "fixture-meter-15"
+    "meterId": "fixture-meter-20"
+   },
+   {
+    "id": "plan.P0v4@eastus2",
+    "key": "plan.P0v4",
+    "region": "eastus2",
+    "meterName": "P0v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.073,
+    "status": "returned",
+    "queryId": "Q05",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-21"
+   },
+   {
+    "id": "plan.P0v4@eastus",
+    "key": "plan.P0v4",
+    "region": "eastus",
+    "meterName": "P0v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.073,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-22"
+   },
+   {
+    "id": "plan.P0v4@westus2",
+    "key": "plan.P0v4",
+    "region": "westus2",
+    "meterName": "P0v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.073,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-23"
+   },
+   {
+    "id": "plan.P0v4@westus3",
+    "key": "plan.P0v4",
+    "region": "westus3",
+    "meterName": "P0v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.073,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-24"
+   },
+   {
+    "id": "plan.P0v4@centralus",
+    "key": "plan.P0v4",
+    "region": "centralus",
+    "meterName": "P0v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.0898,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-25"
+   },
+   {
+    "id": "plan.P1v4@eastus2",
+    "key": "plan.P1v4",
+    "region": "eastus2",
+    "meterName": "P1v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.146,
+    "status": "returned",
+    "queryId": "Q05",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-26"
+   },
+   {
+    "id": "plan.P1v4@eastus",
+    "key": "plan.P1v4",
+    "region": "eastus",
+    "meterName": "P1v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.146,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-27"
+   },
+   {
+    "id": "plan.P1v4@westus2",
+    "key": "plan.P1v4",
+    "region": "westus2",
+    "meterName": "P1v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.146,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-28"
+   },
+   {
+    "id": "plan.P1v4@westus3",
+    "key": "plan.P1v4",
+    "region": "westus3",
+    "meterName": "P1v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.146,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-29"
+   },
+   {
+    "id": "plan.P1v4@centralus",
+    "key": "plan.P1v4",
+    "region": "centralus",
+    "meterName": "P1v4",
+    "unitOfMeasure": "1 Hour",
+    "tierMinimumUnits": 0,
+    "currencyCode": "USD",
+    "unitPrice": 0.18,
+    "status": "returned",
+    "queryId": "Q08",
+    "effectiveStartDate": "2025-09-01",
+    "meterId": "fixture-meter-30"
    },
    {
     "id": "plan.P2v4@eastus2",
@@ -315,7 +525,7 @@
     "status": "returned",
     "queryId": "Q05",
     "effectiveStartDate": "2025-09-01",
-    "meterId": "fixture-meter-16"
+    "meterId": "fixture-meter-31"
    },
    {
     "id": "plan.P2v4@eastus",
@@ -389,7 +599,7 @@
     "status": "returned-zero",
     "queryId": "Q06",
     "effectiveStartDate": "2019-05-01",
-    "meterId": "fixture-meter-21",
+    "meterId": "fixture-meter-36",
     "note": "Free has no deployment slots (documented): excluded. The API returned an explicit 0.0 for this tier."
    },
    {
@@ -404,7 +614,7 @@
     "status": "returned",
     "queryId": "Q12",
     "effectiveStartDate": "2017-02-03",
-    "meterId": "fixture-meter-22"
+    "meterId": "fixture-meter-37"
    },
    {
     "id": "blob.stored@eastus",
@@ -418,7 +628,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2017-02-03",
-    "meterId": "fixture-meter-23"
+    "meterId": "fixture-meter-38"
    },
    {
     "id": "blob.stored@westus2",
@@ -432,7 +642,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2017-02-03",
-    "meterId": "fixture-meter-24"
+    "meterId": "fixture-meter-39"
    },
    {
     "id": "blob.stored@westus3",
@@ -446,7 +656,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2022-08-01",
-    "meterId": "fixture-meter-25"
+    "meterId": "fixture-meter-40"
    },
    {
     "id": "blob.stored@centralus",
@@ -460,7 +670,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2017-02-03",
-    "meterId": "fixture-meter-26"
+    "meterId": "fixture-meter-41"
    },
    {
     "id": "blob.write@eastus2",
@@ -474,7 +684,7 @@
     "status": "returned",
     "queryId": "Q12",
     "effectiveStartDate": "2016-05-09",
-    "meterId": "fixture-meter-27"
+    "meterId": "fixture-meter-42"
    },
    {
     "id": "blob.write@eastus",
@@ -488,7 +698,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2016-11-01",
-    "meterId": "fixture-meter-28"
+    "meterId": "fixture-meter-43"
    },
    {
     "id": "blob.write@westus2",
@@ -502,7 +712,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2016-07-11",
-    "meterId": "fixture-meter-29"
+    "meterId": "fixture-meter-44"
    },
    {
     "id": "blob.write@westus3",
@@ -516,7 +726,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2022-08-01",
-    "meterId": "fixture-meter-30"
+    "meterId": "fixture-meter-45"
    },
    {
     "id": "blob.write@centralus",
@@ -530,7 +740,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2016-05-09",
-    "meterId": "fixture-meter-31"
+    "meterId": "fixture-meter-46"
    },
    {
     "id": "blob.read@eastus2",
@@ -544,7 +754,7 @@
     "status": "returned",
     "queryId": "Q12",
     "effectiveStartDate": "2016-05-09",
-    "meterId": "fixture-meter-32"
+    "meterId": "fixture-meter-47"
    },
    {
     "id": "blob.read@eastus",
@@ -558,7 +768,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2016-11-01",
-    "meterId": "fixture-meter-33"
+    "meterId": "fixture-meter-48"
    },
    {
     "id": "blob.read@westus2",
@@ -572,7 +782,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2016-07-11",
-    "meterId": "fixture-meter-34"
+    "meterId": "fixture-meter-49"
    },
    {
     "id": "blob.read@westus3",
@@ -586,7 +796,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2022-08-01",
-    "meterId": "fixture-meter-35"
+    "meterId": "fixture-meter-50"
    },
    {
     "id": "blob.read@centralus",
@@ -600,7 +810,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2016-05-09",
-    "meterId": "fixture-meter-36"
+    "meterId": "fixture-meter-51"
    },
    {
     "id": "blob.other@eastus2",
@@ -614,7 +824,7 @@
     "status": "returned",
     "queryId": "Q12",
     "effectiveStartDate": "2017-10-01",
-    "meterId": "fixture-meter-37"
+    "meterId": "fixture-meter-52"
    },
    {
     "id": "blob.other@eastus",
@@ -628,7 +838,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2017-10-01",
-    "meterId": "fixture-meter-38"
+    "meterId": "fixture-meter-53"
    },
    {
     "id": "blob.other@westus2",
@@ -642,7 +852,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2017-10-01",
-    "meterId": "fixture-meter-39"
+    "meterId": "fixture-meter-54"
    },
    {
     "id": "blob.other@westus3",
@@ -656,7 +866,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2022-08-01",
-    "meterId": "fixture-meter-40"
+    "meterId": "fixture-meter-55"
    },
    {
     "id": "blob.other@centralus",
@@ -670,7 +880,7 @@
     "status": "returned",
     "queryId": "Q16",
     "effectiveStartDate": "2017-10-01",
-    "meterId": "fixture-meter-41"
+    "meterId": "fixture-meter-56"
    },
    {
     "id": "table.stored@eastus2",
@@ -684,7 +894,7 @@
     "status": "returned",
     "queryId": "Q10",
     "effectiveStartDate": "2019-06-01",
-    "meterId": "fixture-meter-42"
+    "meterId": "fixture-meter-57"
    },
    {
     "id": "table.stored@eastus",
@@ -698,7 +908,7 @@
     "status": "returned",
     "queryId": "Q17",
     "effectiveStartDate": "2019-06-01",
-    "meterId": "fixture-meter-43"
+    "meterId": "fixture-meter-58"
    },
    {
     "id": "table.stored@westus2",
@@ -712,7 +922,7 @@
     "status": "returned",
     "queryId": "Q17",
     "effectiveStartDate": "2019-06-01",
-    "meterId": "fixture-meter-44"
+    "meterId": "fixture-meter-59"
    },
    {
     "id": "table.stored@westus3",
@@ -726,7 +936,7 @@
     "status": "returned",
     "queryId": "Q17",
     "effectiveStartDate": "2021-04-20",
-    "meterId": "fixture-meter-45"
+    "meterId": "fixture-meter-60"
    },
    {
     "id": "table.stored@centralus",
@@ -740,7 +950,7 @@
     "status": "returned",
     "queryId": "Q17",
     "effectiveStartDate": "2019-06-01",
-    "meterId": "fixture-meter-46"
+    "meterId": "fixture-meter-61"
    },
    {
     "id": "table.ops@eastus2",
@@ -754,7 +964,7 @@
     "status": "returned",
     "queryId": "Q10",
     "effectiveStartDate": "2016-04-11",
-    "meterId": "fixture-meter-47"
+    "meterId": "fixture-meter-62"
    },
    {
     "id": "table.ops@eastus",
@@ -768,7 +978,7 @@
     "status": "returned",
     "queryId": "Q17",
     "effectiveStartDate": "2016-04-11",
-    "meterId": "fixture-meter-48"
+    "meterId": "fixture-meter-63"
    },
    {
     "id": "table.ops@westus2",
@@ -782,7 +992,7 @@
     "status": "returned",
     "queryId": "Q17",
     "effectiveStartDate": "2016-04-11",
-    "meterId": "fixture-meter-49"
+    "meterId": "fixture-meter-64"
    },
    {
     "id": "table.ops@westus3",
@@ -796,7 +1006,7 @@
     "status": "returned",
     "queryId": "Q17",
     "effectiveStartDate": "2021-04-20",
-    "meterId": "fixture-meter-50"
+    "meterId": "fixture-meter-65"
    },
    {
     "id": "table.ops@centralus",
@@ -810,7 +1020,7 @@
     "status": "returned",
     "queryId": "Q17",
     "effectiveStartDate": "2016-04-11",
-    "meterId": "fixture-meter-51"
+    "meterId": "fixture-meter-66"
    },
    {
     "id": "queue.stored@eastus2",
@@ -824,7 +1034,7 @@
     "status": "returned",
     "queryId": "Q11",
     "effectiveStartDate": "2017-11-01",
-    "meterId": "fixture-meter-52"
+    "meterId": "fixture-meter-67"
    },
    {
     "id": "queue.stored@eastus",
@@ -838,7 +1048,7 @@
     "status": "returned",
     "queryId": "Q18",
     "effectiveStartDate": "2017-11-01",
-    "meterId": "fixture-meter-53"
+    "meterId": "fixture-meter-68"
    },
    {
     "id": "queue.stored@westus2",
@@ -852,7 +1062,7 @@
     "status": "returned",
     "queryId": "Q18",
     "effectiveStartDate": "2017-11-01",
-    "meterId": "fixture-meter-54"
+    "meterId": "fixture-meter-69"
    },
    {
     "id": "queue.stored@westus3",
@@ -866,7 +1076,7 @@
     "status": "returned",
     "queryId": "Q18",
     "effectiveStartDate": "2021-04-20",
-    "meterId": "fixture-meter-55"
+    "meterId": "fixture-meter-70"
    },
    {
     "id": "queue.stored@centralus",
@@ -880,7 +1090,7 @@
     "status": "returned",
     "queryId": "Q18",
     "effectiveStartDate": "2017-11-01",
-    "meterId": "fixture-meter-56"
+    "meterId": "fixture-meter-71"
    },
    {
     "id": "queue.c1@eastus2",
@@ -894,7 +1104,7 @@
     "status": "returned",
     "queryId": "Q11",
     "effectiveStartDate": "2017-11-01",
-    "meterId": "fixture-meter-57"
+    "meterId": "fixture-meter-72"
    },
    {
     "id": "queue.c1@eastus",
@@ -908,7 +1118,7 @@
     "status": "returned",
     "queryId": "Q18",
     "effectiveStartDate": "2017-11-01",
-    "meterId": "fixture-meter-58"
+    "meterId": "fixture-meter-73"
    },
    {
     "id": "queue.c1@westus2",
@@ -922,7 +1132,7 @@
     "status": "returned",
     "queryId": "Q18",
     "effectiveStartDate": "2017-11-01",
-    "meterId": "fixture-meter-59"
+    "meterId": "fixture-meter-74"
    },
    {
     "id": "queue.c1@westus3",
@@ -936,7 +1146,7 @@
     "status": "returned",
     "queryId": "Q18",
     "effectiveStartDate": "2021-04-20",
-    "meterId": "fixture-meter-60"
+    "meterId": "fixture-meter-75"
    },
    {
     "id": "queue.c1@centralus",
@@ -950,7 +1160,7 @@
     "status": "returned",
     "queryId": "Q18",
     "effectiveStartDate": "2017-11-01",
-    "meterId": "fixture-meter-61"
+    "meterId": "fixture-meter-76"
    },
    {
     "id": "la.ingest.free@eastus2",
@@ -964,7 +1174,7 @@
     "status": "returned-zero",
     "queryId": "Q13",
     "effectiveStartDate": "2018-02-01",
-    "meterId": "fixture-meter-62"
+    "meterId": "fixture-meter-77"
    },
    {
     "id": "la.ingest.free@eastus",
@@ -978,7 +1188,7 @@
     "status": "returned-zero",
     "queryId": "Q15",
     "effectiveStartDate": "2018-02-01",
-    "meterId": "fixture-meter-63"
+    "meterId": "fixture-meter-78"
    },
    {
     "id": "la.ingest.free@westus2",
@@ -992,7 +1202,7 @@
     "status": "returned-zero",
     "queryId": "Q15",
     "effectiveStartDate": "2018-02-01",
-    "meterId": "fixture-meter-64"
+    "meterId": "fixture-meter-79"
    },
    {
     "id": "la.ingest.free@westus3",
@@ -1006,7 +1216,7 @@
     "status": "returned-zero",
     "queryId": "Q15",
     "effectiveStartDate": "2022-08-01",
-    "meterId": "fixture-meter-65"
+    "meterId": "fixture-meter-80"
    },
    {
     "id": "la.ingest.free@centralus",
@@ -1020,7 +1230,7 @@
     "status": "returned-zero",
     "queryId": "Q15",
     "effectiveStartDate": "2018-02-01",
-    "meterId": "fixture-meter-66"
+    "meterId": "fixture-meter-81"
    },
    {
     "id": "la.ingest.paid@eastus2",
@@ -1034,7 +1244,7 @@
     "status": "returned",
     "queryId": "Q13",
     "effectiveStartDate": "2018-02-01",
-    "meterId": "fixture-meter-67"
+    "meterId": "fixture-meter-82"
    },
    {
     "id": "la.ingest.paid@eastus",
@@ -1048,7 +1258,7 @@
     "status": "returned",
     "queryId": "Q15",
     "effectiveStartDate": "2018-02-01",
-    "meterId": "fixture-meter-68"
+    "meterId": "fixture-meter-83"
    },
    {
     "id": "la.ingest.paid@westus2",
@@ -1062,7 +1272,7 @@
     "status": "returned",
     "queryId": "Q15",
     "effectiveStartDate": "2018-02-01",
-    "meterId": "fixture-meter-69"
+    "meterId": "fixture-meter-84"
    },
    {
     "id": "la.ingest.paid@westus3",
@@ -1076,7 +1286,7 @@
     "status": "returned",
     "queryId": "Q15",
     "effectiveStartDate": "2022-08-01",
-    "meterId": "fixture-meter-70"
+    "meterId": "fixture-meter-85"
    },
    {
     "id": "la.ingest.paid@centralus",
@@ -1090,7 +1300,7 @@
     "status": "returned",
     "queryId": "Q15",
     "effectiveStartDate": "2018-02-01",
-    "meterId": "fixture-meter-71"
+    "meterId": "fixture-meter-86"
    },
    {
     "id": "la.retain@eastus2",
@@ -1104,7 +1314,7 @@
     "status": "returned",
     "queryId": "Q13",
     "effectiveStartDate": "2018-02-01",
-    "meterId": "fixture-meter-72"
+    "meterId": "fixture-meter-87"
    },
    {
     "id": "la.retain@eastus",
@@ -1118,7 +1328,7 @@
     "status": "returned",
     "queryId": "Q20",
     "effectiveStartDate": "2018-02-01",
-    "meterId": "fixture-meter-73"
+    "meterId": "fixture-meter-88"
    },
    {
     "id": "la.retain@westus2",
@@ -1132,7 +1342,7 @@
     "status": "returned",
     "queryId": "Q20",
     "effectiveStartDate": "2018-02-01",
-    "meterId": "fixture-meter-74"
+    "meterId": "fixture-meter-89"
    },
    {
     "id": "la.retain@westus3",
@@ -1146,7 +1356,7 @@
     "status": "returned",
     "queryId": "Q20",
     "effectiveStartDate": "2022-08-01",
-    "meterId": "fixture-meter-75"
+    "meterId": "fixture-meter-90"
    },
    {
     "id": "la.retain@centralus",
@@ -1160,7 +1370,7 @@
     "status": "returned",
     "queryId": "Q20",
     "effectiveStartDate": "2018-02-01",
-    "meterId": "fixture-meter-76"
+    "meterId": "fixture-meter-91"
    },
    {
     "id": "bw.free@eastus2",
@@ -1174,7 +1384,7 @@
     "status": "returned-zero",
     "queryId": "Q14",
     "effectiveStartDate": "2022-05-01",
-    "meterId": "fixture-meter-77"
+    "meterId": "fixture-meter-92"
    },
    {
     "id": "bw.free@eastus",
@@ -1188,7 +1398,7 @@
     "status": "returned-zero",
     "queryId": "Q19",
     "effectiveStartDate": "2022-05-01",
-    "meterId": "fixture-meter-78"
+    "meterId": "fixture-meter-93"
    },
    {
     "id": "bw.free@westus2",
@@ -1202,7 +1412,7 @@
     "status": "returned-zero",
     "queryId": "Q19",
     "effectiveStartDate": "2022-05-01",
-    "meterId": "fixture-meter-79"
+    "meterId": "fixture-meter-94"
    },
    {
     "id": "bw.free@westus3",
@@ -1216,7 +1426,7 @@
     "status": "returned-zero",
     "queryId": "Q19",
     "effectiveStartDate": "2022-05-01",
-    "meterId": "fixture-meter-80"
+    "meterId": "fixture-meter-95"
    },
    {
     "id": "bw.free@centralus",
@@ -1230,7 +1440,7 @@
     "status": "returned-zero",
     "queryId": "Q19",
     "effectiveStartDate": "2022-05-01",
-    "meterId": "fixture-meter-81"
+    "meterId": "fixture-meter-96"
    },
    {
     "id": "bw.paid@eastus2",
@@ -1244,7 +1454,7 @@
     "status": "returned",
     "queryId": "Q14",
     "effectiveStartDate": "2022-05-01",
-    "meterId": "fixture-meter-82"
+    "meterId": "fixture-meter-97"
    },
    {
     "id": "bw.paid@eastus",
@@ -1258,7 +1468,7 @@
     "status": "returned",
     "queryId": "Q19",
     "effectiveStartDate": "2022-05-01",
-    "meterId": "fixture-meter-83"
+    "meterId": "fixture-meter-98"
    },
    {
     "id": "bw.paid@westus2",
@@ -1272,7 +1482,7 @@
     "status": "returned",
     "queryId": "Q19",
     "effectiveStartDate": "2022-05-01",
-    "meterId": "fixture-meter-84"
+    "meterId": "fixture-meter-99"
    },
    {
     "id": "bw.paid@westus3",
@@ -1286,7 +1496,7 @@
     "status": "returned",
     "queryId": "Q19",
     "effectiveStartDate": "2022-05-01",
-    "meterId": "fixture-meter-85"
+    "meterId": "fixture-meter-100"
    },
    {
     "id": "bw.paid@centralus",
@@ -1300,7 +1510,7 @@
     "status": "returned",
     "queryId": "Q19",
     "effectiveStartDate": "2022-05-01",
-    "meterId": "fixture-meter-86"
+    "meterId": "fixture-meter-101"
    }
   ],
   "unpricedItems": [
@@ -1529,7 +1739,7 @@
    "claims": [
     {
      "id": "LADEL-SOFT",
-     "text": "Deleting a workspace soft-deletes it for 14 days and the name stays reserved; the --force parameter of az monitor log-analytics workspace delete deletes it permanently; a workspace already in the soft-delete state must be recovered before it can be permanently deleted."
+     "text": "Deleting a workspace soft-deletes it for 14 days and the name stays reserved; a workspace already in the soft-delete state must be recovered before it can be permanently removed; the --force parameter of the workspace delete command makes the deletion permanent (command group: az monitor log-analytics workspace)."
     }
    ]
   },
@@ -1561,7 +1771,7 @@
     },
     {
      "id": "CLI-SLOT-DELETE",
-     "text": "az webapp deployment slot delete --slot <slot> [--name] [--resource-group] [--subscription] deletes a deployment slot."
+     "text": "The delete form of the az webapp deployment slot group takes --slot <slot> [--name] [--resource-group] [--subscription] and removes a deployment slot."
     }
    ]
   },
@@ -1598,6 +1808,10 @@
     {
      "id": "CLI-DEPLOY-VALIDATE",
      "text": "az deployment sub validate validates whether a template is valid at subscription scope and az deployment sub what-if executes a what-if operation at subscription scope (both Core, GA)."
+    },
+    {
+     "id": "CLI-DEPLOY-LOCATION",
+     "text": "The required --location (-l) parameter of az deployment sub validate is described as the location to store the deployment metadata (read on Learn 2026-11-06); it is not described as the region of the resources, which come from the template and its parameters."
     }
    ]
   },
@@ -1721,7 +1935,7 @@
    "teardownDeadlineHours": 6,
    "teardown": {
     "deadlineTag": "lease-expires-utc",
-    "deadlineRule": "plan creation time + 6 hours",
+    "deadlineRule": "the time arming step 4 computes (taken before the plan exists, so slightly earlier than plan creation: conservative) + 6 hours",
     "mechanism": "Owner-machine one-shot scheduled job (Windows Task Scheduler, registered by arming step 5 of section 4) that runs the teardown script at lease-expires-utc with the owner az session, guarded by G2 and G3; no Azure resource and no Azure cost (estimated)."
    },
    "usageCaps": {
@@ -1922,7 +2136,13 @@
     "steadyInstanceHours": 3,
     "scaleStepInstanceHours": 0
    },
-   "usageCapsNote": "blobWriteOps counts write, list and create-container operations, all priced at the write rate (meter 'LRS List and Create Container Operations' 0.05 per 10K, the same meter ID as 'Hot LRS Write Operations', lookup W01); blobOtherOps counts only the remaining operations."
+   "usageCapsNote": "blobWriteOps counts write, list and create-container operations, all priced at the write rate (meter 'LRS List and Create Container Operations' 0.05 per 10K, the same price as 'Hot LRS Write Operations' (0.05 per 10K) in all five candidate regions; the meter IDs are the same in eastus2, eastus and centralus and differ in westus2 and westus3 (lookup W01)); blobOtherOps counts only the remaining operations.",
+   "ceilingHeadroom": {
+    "headroomUsd": 3.1117,
+    "perAtCapHourUsd": 0.085,
+    "atCapHours": 36.61,
+    "statement": "Before the ceiling rule steps up to the next multiple of 5, option A has USD 3.1117 of room (ceiling / 1.25 minus the worst case), which is about 36.61 more at-cap hours of the plan at the highest returned price (USD 0.085 per at-cap hour); a longer deadline or a higher cap needs a new ceiling, never a silent overrun."
+   }
   },
   {
    "id": "B",
@@ -2030,7 +2250,7 @@
    "teardownDeadlineHours": 12,
    "teardown": {
     "deadlineTag": "lease-expires-utc",
-    "deadlineRule": "plan creation time + 12 hours",
+    "deadlineRule": "the time arming step 4 computes (taken before the plan exists, so slightly earlier than plan creation: conservative) + 12 hours",
     "mechanism": "Owner-machine one-shot scheduled job (Windows Task Scheduler, registered by arming step 5 of section 4) that runs the teardown script at lease-expires-utc with the owner az session, guarded by G2 and G3; no Azure resource and no Azure cost (estimated)."
    },
    "usageCaps": {
@@ -2252,7 +2472,13 @@
     "steadyInstanceHours": 12,
     "scaleStepInstanceHours": 1
    },
-   "usageCapsNote": "blobWriteOps counts write, list and create-container operations, all priced at the write rate (meter 'LRS List and Create Container Operations' 0.05 per 10K, the same meter ID as 'Hot LRS Write Operations', lookup W01); blobOtherOps counts only the remaining operations."
+   "usageCapsNote": "blobWriteOps counts write, list and create-container operations, all priced at the write rate (meter 'LRS List and Create Container Operations' 0.05 per 10K, the same price as 'Hot LRS Write Operations' (0.05 per 10K) in all five candidate regions; the meter IDs are the same in eastus2, eastus and centralus and differ in westus2 and westus3 (lookup W01)); blobOtherOps counts only the remaining operations.",
+   "ceilingHeadroom": {
+    "headroomUsd": 0.9682,
+    "perAtCapHourUsd": 0.51,
+    "atCapHours": 1.9,
+    "statement": "Before the ceiling rule steps up to the next multiple of 5, option B has USD 0.9682 of room (ceiling / 1.25 minus the worst case), which is about 1.9 more at-cap hours of the plan at the highest returned price (USD 0.51 per at-cap hour); a longer deadline or a higher cap needs a new ceiling, never a silent overrun."
+   }
   },
   {
    "id": "C",
@@ -2356,7 +2582,7 @@
    "teardownDeadlineHours": 30,
    "teardown": {
     "deadlineTag": "lease-expires-utc",
-    "deadlineRule": "plan creation time + 30 hours",
+    "deadlineRule": "the time arming step 4 computes (taken before the plan exists, so slightly earlier than plan creation: conservative) + 30 hours",
     "mechanism": "Owner-machine one-shot scheduled job (Windows Task Scheduler, registered by arming step 5 of section 4) that runs the teardown script at lease-expires-utc with the owner az session, guarded by G2 and G3; no Azure resource and no Azure cost (estimated)."
    },
    "usageCaps": {
@@ -2535,7 +2761,13 @@
     "steadyInstanceHours": 48,
     "scaleStepInstanceHours": 2
    },
-   "usageCapsNote": "blobWriteOps counts write, list and create-container operations, all priced at the write rate (meter 'LRS List and Create Container Operations' 0.05 per 10K, the same meter ID as 'Hot LRS Write Operations', lookup W01); blobOtherOps counts only the remaining operations."
+   "usageCapsNote": "blobWriteOps counts write, list and create-container operations, all priced at the write rate (meter 'LRS List and Create Container Operations' 0.05 per 10K, the same price as 'Hot LRS Write Operations' (0.05 per 10K) in all five candidate regions; the meter IDs are the same in eastus2, eastus and centralus and differ in westus2 and westus3 (lookup W01)); blobOtherOps counts only the remaining operations.",
+   "ceilingHeadroom": {
+    "headroomUsd": 3.926,
+    "perAtCapHourUsd": 1.02,
+    "atCapHours": 3.85,
+    "statement": "Before the ceiling rule steps up to the next multiple of 5, option C has USD 3.926 of room (ceiling / 1.25 minus the worst case), which is about 3.85 more at-cap hours of the plan at the highest returned price (USD 1.02 per at-cap hour); a longer deadline or a higher cap needs a new ceiling, never a silent overrun."
+   }
   }
  ],
  "recommendation": "Option A for the first native proof (C062), in a region whose quota gate passed. Options B and C only when later native cards need two instances, scale evidence or a soak. Every default answer remains no.",
@@ -2561,7 +2793,12 @@
    "inOptions": "A, B, C",
    "pricing": "Priced per instance-hour (queried, Q02 to Q09). The only fixed-rate meter; it is billed per plan instance (documented, PLANS-BILLING).",
    "pricingStatus": "priced",
-   "includedInTotals": true
+   "includedInTotals": true,
+   "priceKeys": [
+    "plan.P0v3",
+    "plan.P1v3",
+    "plan.P2v3"
+   ]
   },
   {
    "id": "APP",
@@ -2588,7 +2825,17 @@
    "inOptions": "A, B, C",
    "pricing": "Usage-based (queried, Q10 to Q12 and Q16 to Q18): data stored per GB-month and operations per 10K, bounded by the option usage caps.",
    "pricingStatus": "priced",
-   "includedInTotals": true
+   "includedInTotals": true,
+   "priceKeys": [
+    "blob.stored",
+    "blob.write",
+    "blob.read",
+    "blob.other",
+    "table.stored",
+    "table.ops",
+    "queue.stored",
+    "queue.c1"
+   ]
   },
   {
    "id": "LAW",
@@ -2597,7 +2844,11 @@
    "inOptions": "B, C (not in A)",
    "pricing": "Ingestion per GB and retention per GB-month (queried, Q13, Q15, Q20). The daily cap is a safeguard, not a guarantee (documented, LACAP-SOFT).",
    "pricingStatus": "priced",
-   "includedInTotals": true
+   "includedInTotals": true,
+   "priceKeys": [
+    "la.ingest.paid",
+    "la.retain"
+   ]
   },
   {
    "id": "APPI",
@@ -2615,7 +2866,10 @@
    "inOptions": "A, B, C",
    "pricing": "Per GB beyond the first-tier allowance (queried, Q14 and Q19). The ceiling prices every GB at the paid tier.",
    "pricingStatus": "priced",
-   "includedInTotals": true
+   "includedInTotals": true,
+   "priceKeys": [
+    "bw.paid"
+   ]
   }
  ],
  "exclusions": [
@@ -2686,7 +2940,7 @@
    ],
    [
     "lease-expires-utc",
-    "<ISO-8601 UTC = plan creation time + teardown deadline>",
+    "<ISO-8601 UTC = the time arming step 4 computes + teardown deadline>",
     "The automatic teardown deadline, readable by any sweep."
    ],
    [
@@ -2719,9 +2973,11 @@
     "script": [
      "param(",
      "  [Parameter(Mandatory)][string]$Subscription, [Parameter(Mandatory)][string]$Group, [Parameter(Mandatory)][string]$Lease,",
-     "  [Parameter(Mandatory)][string]$App, [Parameter(Mandatory)][string]$Plan, [string]$Workspace = ''",
+     "  [Parameter(Mandatory)][string]$App, [Parameter(Mandatory)][string]$Plan, [string]$Workspace = '',",
+     "  [string]$AlarmDir = (Join-Path $env:USERPROFILE 'Desktop')",
      ")",
      "$ErrorActionPreference = 'Stop'; $PSNativeCommandUseErrorActionPreference = $true",
+     "$failures = [System.Collections.Generic.List[string]]::new()",
      "function Assert-Subscription {",
      "  if ((az account show --query id -o tsv) -ne $Subscription) { throw 'G2: the az session selects another subscription than the approved one' }",
      "}",
@@ -2729,51 +2985,75 @@
      "  $g = az group show --name $Group --subscription $Subscription -o json | ConvertFrom-Json",
      "  if (-not $g -or $g.name -ine $Group -or $g.tags.'lease-id' -cne $Lease -or -not $g.tags.'lease-expires-utc') { throw 'G3: group name or lease tags differ from this lease' }",
      "}",
-     "try {",
-     "  Assert-Subscription",
-     "  if ((az group exists --name $Group --subscription $Subscription) -eq 'false') { exit 0 }",
-     "  Assert-Lease; az webapp deployment slot delete --resource-group $Group --name $App --slot staging --subscription $Subscription",
-     "  Assert-Lease; az webapp delete --resource-group $Group --name $App --subscription $Subscription",
-     "  Assert-Lease; az appservice plan delete --resource-group $Group --name $Plan --yes --subscription $Subscription",
-     "  if ($Workspace) { Assert-Lease; az monitor log-analytics workspace delete --resource-group $Group --workspace-name $Workspace --force --yes --subscription $Subscription }",
-     "  Assert-Lease; az group delete --name $Group --yes --no-wait --subscription $Subscription",
-     "} catch {",
-     "  $m = \"TEARDOWN ABORTED for lease ${Lease}: $($_.Exception.Message). Nothing further was deleted and the meter may still run. Tell the owner now.\"",
+     "try { Assert-Subscription; if ((az group exists --name $Group --subscription $Subscription) -eq 'false') { exit 0 } } catch { $failures.Add(\"first check: $($_.Exception.Message)\") }",
+     "try { Assert-Subscription; Assert-Lease; az webapp deployment slot delete --resource-group $Group --name $App --slot staging --subscription $Subscription } catch { $failures.Add(\"slot: $($_.Exception.Message)\") }",
+     "try { Assert-Subscription; Assert-Lease; az webapp delete --resource-group $Group --name $App --subscription $Subscription } catch { $failures.Add(\"web app: $($_.Exception.Message)\") }",
+     "try { Assert-Subscription; Assert-Lease; az appservice plan delete --resource-group $Group --name $Plan --yes --subscription $Subscription } catch { $failures.Add(\"plan: $($_.Exception.Message)\") }",
+     "if ($Workspace) { try { Assert-Subscription; Assert-Lease; az monitor log-analytics workspace delete --resource-group $Group --workspace-name $Workspace --force --yes --subscription $Subscription } catch { $failures.Add(\"workspace: $($_.Exception.Message)\") } }",
+     "try { Assert-Subscription; Assert-Lease; az group delete --name $Group --yes --subscription $Subscription } catch { $failures.Add(\"group: $($_.Exception.Message)\") }",
+     "try { Assert-Subscription; if ((az group exists --name $Group --subscription $Subscription) -ne 'false') { $failures.Add('the group still exists after its delete') } } catch { $failures.Add(\"final check: $($_.Exception.Message)\") }",
+     "if ($failures.Count -gt 0) {",
+     "  $m = \"TEARDOWN FAILED for lease ${Lease} ($($failures.Count) problems): $($failures -join ' | '). The meter may still run: delete the lease by hand now (deletion order of the packet).\"",
+     "  try { Set-Content -Path (Join-Path $AlarmDir \"AZURE-LEASE-TEARDOWN-FAILED-${Lease}.txt\") -Value $m } catch { $m += ' (the alarm file could not be written)' }",
      "  Add-Type -AssemblyName PresentationFramework",
-     "  [void][System.Windows.MessageBox]::Show($m, 'Azure lease teardown')",
+     "  [void][System.Windows.MessageBox]::Show($m, 'Azure lease teardown FAILED')",
      "  exit 1",
-     "}"
+     "}",
+     "exit 0"
     ],
-    "onGuardFailure": "The script throws, shows a dialog that tells the owner, deletes nothing further and exits 1."
+    "onGuardFailure": "Each delete is wrapped: a failing guard or delete is recorded, the script continues, always finishes with the guarded group delete (it removes everything) when the group guard still passes, verifies that the group is gone, and on any problem writes a persistent alarm file on the owner Desktop, shows a dialog and exits 1."
    },
    "backstops": [
     "Cost Management budget on the lease resource group at 50, 80 and 100 percent of the spend ceiling (planning bound, not enforced by Azure) with email; alert only, evaluated every 24 hours on data that lags 8 to 24 hours (documented, BUDGET-ALERTONLY and BUDGET-LAG), so it cannot enforce a short-run ceiling.",
     "Owner check at deadline plus 1 hour using verification checks 1 and 2.",
     "Stop rule on scale: no autoscale rules, manual instance count only, and the instance cap of the option is the most the plan may ever be set to."
    ],
-   "notSelected": "Azure-side automation (Automation account, Logic App, Function with an identity and a role assignment) would be more robust against an offline workstation but adds resources and an identity: price unavailable (not queried), excluded."
+   "notSelected": "Azure-side automation (Automation account, Logic App, Function with an identity and a role assignment) would be more robust against an offline workstation but adds resources and an identity: price unavailable (not queried), excluded.",
+   "limits": [
+    "The job runs only while the owner machine is on (WakeToRun and StartWhenAvailable help only if the operating system allows wake timers), the owner is logged on (the task runs as the interactive user) and the az session is still valid at the deadline.",
+    "If the machine stays off or the session is invalid, nothing is deleted and no alarm is raised at all: the owner check at deadline plus 1 hour (verification checks 1 and 2) is then the only control, and the manual deletion block below is the fallback.",
+    "The alarm file and the dialog appear only when the script runs; the file stays until the owner removes it, the dialog is closed by the 2-hour execution limit."
+   ]
   },
   "deletionOrder": [
+   {
+    "n": 0,
+    "step": "Define the variables and the guard functions (paste first; PowerShell 7.4 or later)",
+    "commands": [
+     "$Subscription = '<subscription-id>'; $Group = '<rg>'; $Lease = '<lease-id>'; $App = '<app>'; $Plan = '<plan>'; $Workspace = '<law>'; $Storage = '<storage>'",
+     "$ErrorActionPreference = 'Stop'; $PSNativeCommandUseErrorActionPreference = $true",
+     "function Assert-Subscription {",
+     "  if ((az account show --query id -o tsv) -ne $Subscription) { throw 'G2: the az session selects another subscription than the approved one' }",
+     "}",
+     "function Assert-Lease {",
+     "  $g = az group show --name $Group --subscription $Subscription -o json | ConvertFrom-Json",
+     "  if (-not $g -or $g.name -ine $Group -or $g.tags.'lease-id' -cne $Lease -or -not $g.tags.'lease-expires-utc') { throw 'G3: group name or lease tags differ from this lease' }",
+     "}"
+    ],
+    "guards": [],
+    "label": "estimated",
+    "why": "Every delete line below calls Assert-Subscription (G2) and Assert-Lease (G3) itself, so copying only this code block keeps every delete guarded; a failed guard throws and the rest of that line does not run."
+   },
    {
     "n": 1,
     "step": "Stop the meter: delete the slot, the web app, then the App Service plan (the first action of the automatic backstop)",
     "commands": [
-     "az webapp deployment slot delete --resource-group <rg> --name <app> --slot staging --subscription <subscription-id>",
-     "az webapp delete --resource-group <rg> --name <app> --subscription <subscription-id>",
-     "az appservice plan delete --resource-group <rg> --name <plan> --yes --subscription <subscription-id>"
+     "Assert-Subscription; Assert-Lease; az webapp deployment slot delete --resource-group $Group --name $App --slot staging --subscription $Subscription",
+     "Assert-Subscription; Assert-Lease; az webapp delete --resource-group $Group --name $App --subscription $Subscription",
+     "Assert-Subscription; Assert-Lease; az appservice plan delete --resource-group $Group --name $Plan --yes --subscription $Subscription"
     ],
     "guards": [
      "G2",
      "G3"
     ],
     "label": "estimated",
-    "why": "The plan is the only fixed-rate meter and each plan instance is billed (documented, PLANS-BILLING); an empty plan keeps its instances, so it must be deleted explicitly. G2 runs once and G3 before each of the three commands."
+    "why": "The plan is the only fixed-rate meter and each plan instance is billed (documented, PLANS-BILLING); an empty plan keeps its instances, so it must be deleted explicitly. Each of the three lines runs G2 and G3 first."
    },
    {
     "n": 2,
     "step": "Delete observability (B and C): Application Insights, diagnostic settings, then the workspace permanently",
     "commands": [
-     "az monitor log-analytics workspace delete --resource-group <rg> --workspace-name <law> --force --yes --subscription <subscription-id>"
+     "Assert-Subscription; Assert-Lease; az monitor log-analytics workspace delete --resource-group $Group --workspace-name $Workspace --force --yes --subscription $Subscription"
     ],
     "guards": [
      "G2",
@@ -2786,7 +3066,7 @@
     "n": 3,
     "step": "Delete the storage account after the evidence export",
     "commands": [
-     "az storage account delete --resource-group <rg> --name <storage> --yes --subscription <subscription-id>"
+     "Assert-Subscription; Assert-Lease; az storage account delete --resource-group $Group --name $Storage --yes --subscription $Subscription"
     ],
     "guards": [
      "G2",
@@ -2799,8 +3079,8 @@
     "n": 4,
     "step": "Delete lease identities (only if identityRegistration was yes)",
     "commands": [
-     "az role assignment delete --assignee <identity-principal-id> --scope <storage-account-resource-id> --subscription <subscription-id>",
-     "az identity delete --resource-group <rg> --name <identity> --subscription <subscription-id>"
+     "Assert-Subscription; Assert-Lease; az role assignment delete --assignee <identity-principal-id> --scope \"/subscriptions/$Subscription/resourceGroups/$Group/providers/Microsoft.Storage/storageAccounts/$Storage\" --subscription $Subscription",
+     "Assert-Subscription; Assert-Lease; az identity delete --resource-group $Group --name <identity> --subscription $Subscription"
     ],
     "guards": [
      "G2",
@@ -2813,14 +3093,14 @@
     "n": 5,
     "step": "Catch-all: delete the lease resource group",
     "commands": [
-     "az group delete --name <rg> --yes --no-wait --subscription <subscription-id>"
+     "Assert-Subscription; Assert-Lease; az group delete --name $Group --yes --subscription $Subscription"
     ],
     "guards": [
      "G2",
      "G3"
     ],
     "label": "documented",
-    "why": "Resource Manager deletes nested, then managedBy, then remaining resources and retries transient errors for 15 minutes; locks and backup data must not exist (documented, RGDEL-PRECOND and RGDEL-ORDER); this plan creates none. --yes and --no-wait are used only after G2 and G3 passed in the same run."
+    "why": "Resource Manager deletes nested, then managedBy, then remaining resources and retries transient errors for 15 minutes; locks and backup data must not exist (documented, RGDEL-PRECOND and RGDEL-ORDER); this plan creates none. --yes is used only after G2 and G3 passed on the same line; without --no-wait the command returns only when the deletion finished, so a failure is seen."
    },
    {
     "n": 6,
@@ -2855,11 +3135,12 @@
      "G2"
     ],
     "commands": [
+     "az account show --query id -o tsv",
      "az extension add --name resource-graph",
      "az graph query -q \"resources | where tags['lease-id'] == '<lease-id>' | project id, type\" --subscriptions <subscription-id>",
      "az graph query -q \"resourcecontainers | where type =~ 'microsoft.resources/subscriptions/resourcegroups' and name =~ '<rg>' | project id\" --subscriptions <subscription-id>"
     ],
-    "expect": "0 rows for both queries; repeat after 15 minutes and next day because Resource Graph is eventually consistent. The extension is a one-time local install on the owner machine.",
+    "expect": "the first command prints <subscription-id> (G2); 0 rows for both queries; repeat after 15 minutes and next day because Resource Graph is eventually consistent. The extension is a one-time local install on the owner machine.",
     "label": "documented"
    },
    {
@@ -2869,9 +3150,10 @@
      "G2"
     ],
     "commands": [
+     "az account show --query id -o tsv",
      "az monitor log-analytics workspace list-deleted-workspaces --subscription <subscription-id> --query \"[?name=='<law>'].id\" -o tsv"
     ],
-    "expect": "empty output; the workspace was deleted with --force (command form on Learn, DOC-CLI-LADELETED)",
+    "expect": "the first command prints <subscription-id> (G2); empty output; the workspace was deleted with --force (command form on Learn, DOC-CLI-LADELETED)",
     "label": "documented"
    },
    {
@@ -2881,10 +3163,11 @@
      "G2"
     ],
     "commands": [
+     "az account show --query id -o tsv",
      "az graph query -q \"resources | where type =~ 'microsoft.managedidentity/userassignedidentities' and tags['lease-id'] == '<lease-id>' | project id\" --subscriptions <subscription-id>",
      "az role assignment list --all --subscription <subscription-id> --query \"[?contains(scope, '<rg>')].id\" -o tsv"
     ],
-    "expect": "0 rows and empty output; record not applicable for the identity when identityRegistration was no (the queries still run). Entra app registrations and service principals are forbidden by this packet and are not searched.",
+    "expect": "the first command prints <subscription-id> (G2); 0 rows and empty output; record not applicable for the identity when identityRegistration was no (the queries still run). Entra app registrations and service principals are forbidden by this packet and are not searched.",
     "label": "estimated"
    },
    {
@@ -2968,7 +3251,7 @@
     "when": "The teardown job does not run, or a delete fails or hangs",
     "commands": [],
     "label": "documented",
-    "action": "Run G2 and G3, delete the plan explicitly first to stop the meter, then re-run az group delete; if a lock exists remove it first (documented, RGDEL-PRECOND; this plan creates none). If a guard fails, do not delete: tell the owner. The budget email is only a late backstop (documented, BUDGET-LAG)."
+    "action": "Run G2 and G3, delete the plan explicitly first to stop the meter, then repeat the group deletion (deletion order step 5); if a lock exists remove it first (documented, RGDEL-PRECOND; this plan creates none). If a guard fails, do not delete: tell the owner. The budget email is only a late backstop (documented, BUDGET-LAG)."
    }
   ],
   "guards": [
@@ -2987,7 +3270,7 @@
     "commands": [
      "az account show --query id -o tsv"
     ],
-    "expect": "prints exactly the approved <subscription-id>. It is the only az command without --subscription because it reads the session default on purpose. Every other az command of the lease, of the scheduled job and of the checks carries --subscription <subscription-id> (az graph query carries --subscriptions <subscription-id>).",
+    "expect": "prints exactly the approved <subscription-id>. It is the only az command without --subscription because it reads the session default on purpose. Every other az command of the lease, of the scheduled job and of the checks carries --subscription <subscription-id> (az graph query carries --subscriptions <subscription-id>). In scripts and in the manual deletion block this guard is the function Assert-Subscription.",
     "onFailure": "ABORT before any other command and tell the owner."
    },
    {
@@ -2996,14 +3279,14 @@
     "commands": [
      "az group show --name <rg> --subscription <subscription-id> -o json"
     ],
-    "expect": "name equals <rg> (case-insensitive), tag lease-id equals <lease-id> exactly, and tag lease-expires-utc is present",
+    "expect": "name equals <rg> (case-insensitive), tag lease-id equals <lease-id> exactly, and tag lease-expires-utc is present. In scripts and in the manual deletion block this guard is the function Assert-Lease, called on the same line before each delete.",
     "onFailure": "ABORT this delete and every later one and tell the owner; nothing is deleted on a mismatch."
    },
    {
     "id": "G4",
-    "name": "The same guards inside verification checks 1 and 2",
+    "name": "The same guards inside verification checks 1 to 4",
     "commands": [],
-    "expect": "checks 1 and 2 start with G2; while check 1 still sees the group, G3 runs before any further delete",
+    "expect": "checks 1 to 4 start with the subscription pin (G2) as their first command; while check 1 still sees the group, the ownership check G3 runs before any further deletion",
     "onFailure": "a mismatch aborts the check and is reported to the owner."
    }
   ],
@@ -3034,25 +3317,25 @@
    },
    {
     "n": 3,
-    "step": "Quota and policy gate: a non-deploying validation and what-if in the chosen region",
+    "step": "Quota and policy gate: a non-deploying validation and what-if with the template parameters set to the chosen region AND SKU",
     "commands": [
-     "az deployment sub validate --location <region> --template-file <reviewed-template.bicep> --parameters <reviewed-parameters> --subscription <subscription-id>",
-     "az deployment sub what-if --location <region> --template-file <reviewed-template.bicep> --parameters <reviewed-parameters> --subscription <subscription-id>"
+     "az deployment sub validate --location <region> --template-file <reviewed-template.bicep> --parameters <region-parameter>=<region> <sku-parameter>=<sku> <other-reviewed-parameters> --subscription <subscription-id>",
+     "az deployment sub what-if --location <region> --template-file <reviewed-template.bicep> --parameters <region-parameter>=<region> <sku-parameter>=<sku> <other-reviewed-parameters> --subscription <subscription-id>"
     ],
     "guards": [
      "G2"
     ],
-    "expect": "both succeed for the chosen SKU and region; any error, including InternalSubscriptionIsOverQuotaForSku, means STOP: pick another candidate region or have the quota raised, then repeat. The template must be subscription scoped (targetScope = subscription, as infra/main.bicep is) so the validation can run before the group exists. A quota inventory alone is not proof: the owner plan recorded a limit of 360 and usage 0 beside a rejected validation.",
+    "expect": "both succeed. --location only stores the deployment metadata (documented, CLI-DEPLOY-LOCATION); the region and SKU that are validated come from the template and its parameters, so the parameters must set <region> and the SKU of the chosen option (<sku>); the owner defaults of the reviewed template (centralus, P1v3: the combination that failed on 5 Nov) must not be used unless that is the chosen option. Read the resolved location and SKU in the what-if output before continuing. Any error, including InternalSubscriptionIsOverQuotaForSku, means STOP: pick another candidate region or have the quota raised, and repeat this step. Do not start while an earlier subscription-scope deployment is still running. Decide before arming which side creates the group: step 6 (script) or the reviewed template, never both (a template that also declares the group would meet the tagged group of step 6).",
     "label": "documented"
    },
    {
     "n": 4,
     "step": "Compute the deadline",
     "commands": [
-     "$expires = [DateTime]::UtcNow.AddHours(<teardown-deadline-hours>).ToString('yyyy-MM-ddTHH:mm:ssZ')"
+     "$expires = [DateTime]::UtcNow.AddHours(<teardown-deadline-hours>).ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)"
     ],
     "guards": [],
-    "expect": "the value is written to tag lease-expires-utc in step 6",
+    "expect": "the value (UTC, culture-invariant: the same text under fi-FI, da-DK, th-TH and ar-SA) is written to tag lease-expires-utc in step 6",
     "label": "estimated"
    },
    {
@@ -3060,13 +3343,16 @@
     "step": "Register the one-shot teardown job BEFORE any billable resource (Windows Task Scheduler, PowerShell 7.4 or later)",
     "commands": [
      "$action = New-ScheduledTaskAction -Execute 'pwsh.exe' -Argument \"-NoProfile -File `\"<script-folder>\\teardown-<lease-id>.ps1`\" -Subscription <subscription-id> -Group <rg> -Lease <lease-id> -App <app> -Plan <plan>\"",
-     "$trigger = New-ScheduledTaskTrigger -Once -At ([DateTimeOffset]::Parse($expires).LocalDateTime)",
+     "$trigger = New-ScheduledTaskTrigger -Once -At ([DateTimeOffset]::Parse($expires, [Globalization.CultureInfo]::InvariantCulture).LocalDateTime)",
      "$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -WakeToRun -ExecutionTimeLimit (New-TimeSpan -Hours 2)",
      "Register-ScheduledTask -TaskName 'ass-teardown-<lease-id>' -Action $action -Trigger $trigger -Settings $settings -Description 'Backstop: delete lease <lease-id> at its deadline'",
-     "Get-ScheduledTask -TaskName 'ass-teardown-<lease-id>' | Select-Object TaskName, State"
+     "$task = Get-ScheduledTask -TaskName 'ass-teardown-<lease-id>'",
+     "$registered = [DateTimeOffset]::Parse($task.Triggers[0].StartBoundary, [Globalization.CultureInfo]::InvariantCulture).UtcDateTime",
+     "$task | Select-Object TaskName, State; \"registered trigger (UTC): $($registered.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)); deadline: $expires\"",
+     "if ([Math]::Abs(($registered - [DateTimeOffset]::Parse($expires, [Globalization.CultureInfo]::InvariantCulture).UtcDateTime).TotalSeconds) -gt 120) { throw 'the registered trigger time differs from the deadline: unregister the task and start again' }"
     ],
     "guards": [],
-    "expect": "Get-ScheduledTask prints the task with State Ready; the script it runs is listed below and carries guards G2 and G3. The app, plan and (B and C) workspace names are fixed by the reviewed IaC parameters before this step; for B and C add -Workspace <law> to the -Argument string.",
+    "expect": "Get-ScheduledTask prints the task with State Ready, the line \"registered trigger (UTC)\" shows the time the task will fire and equals the deadline printed next to it (the last command throws when they differ by more than 2 minutes); the script it runs is listed below and carries guards G2 and G3. The app, plan and (B and C) workspace names are the ones of the lease.",
     "label": "documented"
    },
    {
@@ -3119,7 +3405,16 @@
    "action": "Stop issuing commands; export run logs, Table, Queue and Blob contents and App Service logs to the owner machine; record the SHA-256 of the export.",
    "rule": "The automatic backstop never exports and never waits for an export: its first action is the deletion. Evidence that is not exported before the deadline is lost by design.",
    "label": "estimated"
-  }
+  },
+  "guardFunctions": [
+   "function Assert-Subscription {",
+   "  if ((az account show --query id -o tsv) -ne $Subscription) { throw 'G2: the az session selects another subscription than the approved one' }",
+   "}",
+   "function Assert-Lease {",
+   "  $g = az group show --name $Group --subscription $Subscription -o json | ConvertFrom-Json",
+   "  if (-not $g -or $g.name -ine $Group -or $g.tags.'lease-id' -cne $Lease -or -not $g.tags.'lease-expires-utc') { throw 'G3: group name or lease tags differ from this lease' }",
+   "}"
+  ]
  },
  "ownerDecisions": {
   "literalAnswerRule": "Only the exact lowercase word yes counts as yes. Anything else, including silence, is recorded as no.",
@@ -3142,7 +3437,7 @@
     "stays": "Terraform, ARM JSON, resources not listed, deployment, any registration.",
     "ledger": "approvals.C001.iacGenerationApproved",
     "guardAction": "iac.generate",
-    "neededBy": "C062 (Bicep is the preferred IaC format). HEAD already holds unapproved Bicep under infra/: the owner can answer yes to reviewing or reusing it instead of generating new templates; nothing at HEAD is approved by this packet."
+    "neededBy": "C062 (Bicep is the preferred IaC format). HEAD already holds unapproved Bicep under infra/: the owner can answer yes to reviewing or reusing it instead of generating new templates; this packet approves nothing at HEAD."
    },
    {
     "key": "scaffold",
@@ -3469,61 +3764,104 @@
   }
  ],
  "integrity": {
-  "packetSha256": "dcec67b22807b1140f3de0cb0a12fcce8ab589aefa55fa3f57132dddd586f1be",
+  "packetSha256": "de0298744cd520b19a3d425a34ee49680a55a096ecc5a35913ddbc196db7844e",
   "canonicalization": "SHA-256 of JSON.stringify of this packet without the integrity and validation fields, keys in construction order"
  },
  "validation": {
   "kind": "repository validator, kept from the independent review checks",
   "command": "node testing\\quality\\validate-packet.cjs <packet.json>",
-  "note": "The validator (testing\\quality\\packet-validator.cjs) is published with revision 2; its commit and tag are in results\\U001.json. It checks structure, recomputed arithmetic and the guards; prices and Learn facts still need an independent lookup (see its README)."
+  "note": "The validator (testing\\quality\\packet-validator.cjs) was published with revision 2 and is replaced by a hardened version with revision 3; its commit and tag are in results\\U001.json. It checks structure, recomputed arithmetic, the guards and the markdown copy; prices and Learn facts still need an independent lookup (see its README)."
  },
  "revision": {
-  "number": 2,
+  "number": 3,
   "supersedes": {
-   "schemaVersion": 1,
-   "packetSha256": "36b2d81655a64d61d8817dae55014188d46cbe453f5b67b782bcbda0c5313548",
-   "preparedAtUtc": "2026-11-04T18:57:28Z"
+   "schemaVersion": 2,
+   "packetSha256": "4d9a9ed1199f05a9440d7a7b0da11146e99d3de5b5b401b4651352fcff645563",
+   "preparedAtUtc": "2026-11-06T05:11:32Z"
   },
-  "reason": "rev-U001 rejected revision 1 on 2026-11-06 (major F1: stale against HEAD; major F2: unguarded teardown; minors F3 to F8). Revision 2 refreshes it against HEAD, guards every destructive step and keeps the review checks as a repository validator.",
-  "pricesKept": "All 116 unit prices of revision 1 were re-confirmed by the independent review on 2026-11-06 with no difference since 2026-11-04; they are kept unchanged and stay usable until 2026-11-11 by the 7-day rule (R11).",
+  "reason": "The independent review of 2026-11-06 found revision 2 sound (prices, arithmetic and guards re-verified) and listed seven minor packet findings, A1 to A7, about money safety and precision. Revision 3 fixes all of them. No price, ceiling, decision or approval changed.",
+  "pricesKept": "All 116 unit prices stay unchanged (re-confirmed by independent lookups on 2026-11-06, no difference since 2026-11-04) and stay usable until 2026-11-11 by the 7-day rule (R11).",
   "changes": [
    {
-    "finding": "F1",
-    "change": "Section 0a states the repository at HEAD and defers to the owner plan; the two false statements (scaffold decision, R17) are replaced; the 5 Nov quota failure is stated; section 0b and section 2 give a quota status for every option and region; the default region is eastus (untested, not a failed combination); arming step 3 is the quota gate; the USD 10,000 allowance is related to the planning bounds."
+    "finding": "A1",
+    "change": "Arming step 3 sets the template parameters for the region AND the SKU (--location only stores the deployment metadata), tells the owner to read the resolved location and SKU in the what-if output, names the owner defaults that failed on 5 Nov, decides who creates the group and warns about a running subscription-scope deployment."
    },
    {
-    "finding": "F2",
-    "change": "Guards G1 to G4 (pre-creation gate, subscription pin, ownership check before each delete, same guards in checks 1 and 2); every az command carries --subscription; the unattended job is a listed script with the guards."
+    "finding": "A2",
+    "change": "Every timestamp is built and parsed with InvariantCulture (the former text broke under fi-FI and da-DK and set the year 2569 or 1448 under th-TH and ar-SA)."
    },
    {
-    "finding": "F3",
-    "change": "One teardown-latency hour at the instance cap in every worst case; ceilings A $5, B $15, C $75 (C raised); blob list and create-container operations are priced like writes; the phrase planning bound, not enforced by Azure replaces every use of the word hard; deletion is the first action of the automatic backstop."
+    "finding": "A3",
+    "change": "The registration check prints the registered trigger time and compares it with the deadline; the last command throws on a difference of more than 2 minutes."
    },
    {
-    "finding": "F4",
-    "change": "The resource-group row reads price unavailable (no meter) with the lookup that shows it."
+    "finding": "A4",
+    "change": "The unattended teardown wraps every delete, never stops at the first failure, always finishes with the guarded group delete and a check that the group is gone, records every failure, exits 1 and raises a persistent alarm file on the Desktop plus the dialog; what it cannot guarantee when the machine is off is stated."
    },
    {
-    "finding": "F5",
-    "change": "Exact commands for arming (Task Scheduler), rollback RB2 and RB3 (slot swap with --action), checks 3 and 4 and the identity deletion; no unconfirmed command remains."
+    "finding": "A5",
+    "change": "The manual deletion block carries the guard functions and every delete line calls Assert-Subscription (G2) and Assert-Lease (G3) itself, so copying only the code block stays guarded."
    },
    {
-    "finding": "F6",
-    "change": "The cents unit is called a PROPOSAL everywhere; C002 pins scope.liveAzureRuns and limits.budget.cloudSpend to 0 so a non-zero envelope needs a C002 revision too."
+    "finding": "A6",
+    "change": "The list and create-container meter sentence names the regions where the meter IDs are equal and where only the price is equal; the deadline rule says the time arming step 4 computes."
    },
    {
-    "finding": "F7",
-    "change": "The expected-plan-cost formula is stated, including the scale step."
+    "finding": "A7",
+    "change": "The ceiling headroom (B about 1.9 and C about 3.85 at-cap hours before the next step) is stated next to the ceilings and recomputed by the validator."
    },
    {
-    "finding": "F8",
-    "change": "The checks of the review are kept as the repository validator testing\\quality\\packet-validator.cjs with a negative test per rule."
+    "finding": "V13/V14",
+    "change": "Appendix D no longer claims that any GUID, e-mail or secret is rejected: it names the validator README for the covered and the uncovered spellings."
    }
-  ]
+  ],
+  "earlier": {
+   "number": 2,
+   "reason": "rev-U001 rejected revision 1 on 2026-11-06 (major F1: stale against HEAD; major F2: unguarded teardown; minors F3 to F8). Revision 2 refreshes it against HEAD, guards every destructive step and keeps the review checks as a repository validator.",
+   "changes": [
+    {
+     "finding": "F1",
+     "change": "Section 0a states the repository at HEAD and defers to the owner plan; the two false statements (scaffold decision, R17) are replaced; the 5 Nov quota failure is stated; section 0b and section 2 give a quota status for every option and region; the default region is eastus (untested, not a failed combination); arming step 3 is the quota gate; the USD 10,000 allowance is related to the planning bounds."
+    },
+    {
+     "finding": "F2",
+     "change": "Guards G1 to G4 (pre-creation gate, subscription pin, ownership check before each delete, same guards in checks 1 and 2); every az command carries --subscription; the unattended job is a listed script with the guards."
+    },
+    {
+     "finding": "F3",
+     "change": "One teardown-latency hour at the instance cap in every worst case; ceilings A $5, B $15, C $75 (C raised); blob list and create-container operations are priced like writes; the phrase planning bound, not enforced by Azure replaces every earlier wording that overstated what Azure does with the bound; deletion is the first action of the automatic backstop."
+    },
+    {
+     "finding": "F4",
+     "change": "The resource-group row reads price unavailable (no meter) with the lookup that shows it."
+    },
+    {
+     "finding": "F5",
+     "change": "Exact commands for arming (Task Scheduler), rollback RB2 and RB3 (slot swap with --action), checks 3 and 4 and the identity deletion; no unconfirmed command remains."
+    },
+    {
+     "finding": "F6",
+     "change": "The cents unit is called a PROPOSAL everywhere; C002 pins scope.liveAzureRuns and limits.budget.cloudSpend to 0 so a non-zero envelope needs a C002 revision too."
+    },
+    {
+     "finding": "F7",
+     "change": "The expected-plan-cost formula is stated, including the scale step."
+    },
+    {
+     "finding": "F8",
+     "change": "The checks of the review are kept as the repository validator testing\\quality\\packet-validator.cjs with a negative test per rule."
+    }
+   ],
+   "supersedes": {
+    "schemaVersion": 1,
+    "packetSha256": "36b2d81655a64d61d8817dae55014188d46cbe453f5b67b782bcbda0c5313548",
+    "preparedAtUtc": "2026-11-04T18:57:28Z"
+   }
+  }
  },
  "repositoryState": {
   "title": "State of the repository at HEAD",
-  "describesHead": "f1a84bd04570",
+  "describesHead": "14cefdeac385",
   "checkedAtUtc": "2026-11-06T05:11:32Z",
   "checkedBy": "git log and read-only reads of the files named below; the checks are listed at the end of this section; no Azure call",
   "ownerCommit": {
@@ -3635,5 +3973,10 @@
    "approvals.C001 still has six false flags, 0 live runs and 0 authorized spend"
   ]
  },
- "fixtureNote": "Trimmed copy of the U001 revision 2 packet for the validator tests: placeholders only; meter IDs replaced by fixture-meter-N; unneeded price lines and queries removed; hash recomputed."
+ "defaultChoice": {
+  "option": "A",
+  "region": "eastus",
+  "quotaStatus": "untested"
+ },
+ "fixtureNote": "Trimmed copy of the U001 revision 3 packet for the validator tests: placeholders only; meter IDs replaced by fixture-meter-N; unneeded price lines and queries removed; hash recomputed."
 }
