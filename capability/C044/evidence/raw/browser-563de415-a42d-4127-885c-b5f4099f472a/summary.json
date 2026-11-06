@@ -1,0 +1,197 @@
+{
+  "cardId": "C044",
+  "startedAtUtc": "2026-11-06T03:49:22.563Z",
+  "outcome": "passed",
+  "mode": "isolated-headless",
+  "engine": "Microsoft Edge (Chromium)",
+  "testRuntime": "v22.23.4",
+  "businessData": "synthetic",
+  "nativeTargetQualified": false,
+  "productionRuntimeValidated": false,
+  "integratedForegroundLeaseUsed": false,
+  "checks": [
+    {
+      "name": "the console connects with EventSource and applies live events from the owned listener",
+      "passed": true,
+      "observed": {
+        "connection": "Connection: disconnected (connection lost; reconnecting)",
+        "applied": 30,
+        "duplicates": 0,
+        "reconnects": 0,
+        "marker": "No reconnect yet.",
+        "detached": "Produced while detached: not measured yet.",
+        "cursor": "Last applied id: synthetic-run-001:3:30",
+        "lastSeq": 30,
+        "failure": "No failure.",
+        "notice": "No recovery action taken.",
+        "rewind": "0",
+        "dropped": [],
+        "actions": []
+      }
+    },
+    {
+      "name": "keyboard Disconnect closes only the client stream while the server producer keeps going",
+      "passed": true,
+      "observed": {
+        "applied": 30,
+        "lastSeq": 30,
+        "serverProducedWhileDetached": 16
+      }
+    },
+    {
+      "name": "keyboard Reconnect resumes at the next event: the gap events appear exactly once, no duplicate",
+      "passed": true,
+      "observed": {
+        "marker": "reconnected from id synthetic-run-001:3:30",
+        "detached": "Produced while detached: 23 (server counter 37 to 60).",
+        "shownContiguous": [
+          1,
+          64
+        ]
+      }
+    },
+    {
+      "name": "a re-requested cursor re-sends applied events; the reducer drops them by id and shows the dropped-duplicate counter",
+      "passed": true,
+      "observed": {
+        "duplicates": 3,
+        "marker": "reconnected from id synthetic-run-001:3:61 (re-requested 3 applied events)",
+        "dropped": [
+          "dropped duplicate: synthetic-run-001:3:62",
+          "dropped duplicate: synthetic-run-001:3:63",
+          "dropped duplicate: synthetic-run-001:3:64"
+        ]
+      }
+    },
+    {
+      "name": "a cursor older than the replay window shows a typed CURSOR_EXPIRED failure with only its allowed actions and no silent restart",
+      "passed": true,
+      "observed": {
+        "failure": "CURSOR_EXPIRED (stale): The cursor is older than the bounded replay window. The events after it are no longer retained for resumption.",
+        "actions": [
+          "Resync from snapshot",
+          "Reinspect read-only",
+          "Stop reconnecting"
+        ]
+      }
+    },
+    {
+      "name": "the explicit Resync is the only way back to a stream: replayed events are dropped duplicates, no id is shown twice, a skipped range is named",
+      "passed": true,
+      "observed": {
+        "marker": "resynced after id synthetic-run-001:3:87: nothing was skipped; events already applied are dropped as duplicates",
+        "lastBefore": 87,
+        "replayedDuplicates": 26,
+        "firstNew": 88,
+        "duplicates": 29
+      }
+    },
+    {
+      "name": "only GET requests to the owned origin; no page errors; the server producer never stopped",
+      "passed": true,
+      "observed": {
+        "paths": [
+          "/cursor",
+          "/run.json",
+          "/stream"
+        ],
+        "resources": [
+          "/cursor",
+          "/cursor.js",
+          "/page.js",
+          "/reducer.js",
+          "/run.json",
+          "/stream",
+          "/style.css"
+        ],
+        "pageErrors": [],
+        "serverCounters": {
+          "produced": 115,
+          "persisted": 115,
+          "clientsAttached": 0,
+          "clientsTotal": 8,
+          "disconnects": 8,
+          "resumes": 6,
+          "replayedEvents": 128,
+          "rejectedCursors": 2,
+          "slowReaderDrops": 0,
+          "heartbeats": 16
+        },
+        "final": {
+          "connection": "Connection: connecting",
+          "applied": 105,
+          "duplicates": 29,
+          "reconnects": 7,
+          "marker": "reconnected from id synthetic-run-001:3:105 [automatic]",
+          "detached": "Produced while detached: 4 (server counter 91 to 95).",
+          "cursor": "Last applied id: synthetic-run-001:3:105",
+          "lastSeq": 105,
+          "failure": "No failure.",
+          "notice": "Resynced from the oldest retained event. Events you already applied are dropped as duplicates; only a range the server no longer retains is named as a gap.",
+          "rewind": "0",
+          "dropped": [
+            "dropped duplicate: synthetic-run-001:3:62",
+            "dropped duplicate: synthetic-run-001:3:63",
+            "dropped duplicate: synthetic-run-001:3:64",
+            "dropped duplicate: synthetic-run-001:3:62",
+            "dropped duplicate: synthetic-run-001:3:63",
+            "dropped duplicate: synthetic-run-001:3:64",
+            "dropped duplicate: synthetic-run-001:3:65",
+            "dropped duplicate: synthetic-run-001:3:66",
+            "dropped duplicate: synthetic-run-001:3:67",
+            "dropped duplicate: synthetic-run-001:3:68",
+            "dropped duplicate: synthetic-run-001:3:69",
+            "dropped duplicate: synthetic-run-001:3:70",
+            "dropped duplicate: synthetic-run-001:3:71",
+            "dropped duplicate: synthetic-run-001:3:72",
+            "dropped duplicate: synthetic-run-001:3:73",
+            "dropped duplicate: synthetic-run-001:3:74",
+            "dropped duplicate: synthetic-run-001:3:75",
+            "dropped duplicate: synthetic-run-001:3:76",
+            "dropped duplicate: synthetic-run-001:3:77",
+            "dropped duplicate: synthetic-run-001:3:78",
+            "dropped duplicate: synthetic-run-001:3:79",
+            "dropped duplicate: synthetic-run-001:3:80",
+            "dropped duplicate: synthetic-run-001:3:81",
+            "dropped duplicate: synthetic-run-001:3:82",
+            "dropped duplicate: synthetic-run-001:3:83",
+            "dropped duplicate: synthetic-run-001:3:84",
+            "dropped duplicate: synthetic-run-001:3:85",
+            "dropped duplicate: synthetic-run-001:3:86",
+            "dropped duplicate: synthetic-run-001:3:87"
+          ],
+          "actions": []
+        }
+      }
+    }
+  ],
+  "cleanup": {
+    "serverClosed": true,
+    "browserClosed": true,
+    "scratchRemoved": true
+  },
+  "server": {
+    "pid": 21764,
+    "address": {
+      "address": "127.0.0.1",
+      "family": "IPv4",
+      "port": 59762
+    },
+    "ownership": "this process, exact returned http.Server handle",
+    "context": {
+      "origin": "actual-C015-public-restore-read-only",
+      "runId": "synthetic-run-001",
+      "epoch": 3,
+      "stateSha256": "66f2593752364d65b37d145cf9b784e09dc86867643766bd9f14f8c7d0f1f135"
+    }
+  },
+  "browserVersion": "156.0.4314.58",
+  "playwrightVersion": "1.56.1",
+  "helperRawSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "cursorExample": "synthetic-run-001:3:115",
+  "limits": [
+    "The isolated helper buffers each response with route.fetch, so the page is served bounded stream responses (streamLifetimeMs) and reconnects with ?lastEventId=; header-based Last-Event-ID resume and abrupt/slow-reader loss are proven with real Node sockets, not in the browser.",
+    "This is not native Chromium TCP, proxy, Node 24, Express, Entra or Azure qualification."
+  ],
+  "completedAtUtc": "2026-11-06T03:49:44.912Z"
+}

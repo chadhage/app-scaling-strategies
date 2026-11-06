@@ -24,9 +24,21 @@
     return node;
   }
 
+  function resyncedText(marker) {
+    const from = marker.fromId === null ? 'none' : marker.fromId;
+    switch (marker.outcome) {
+      case 'overlap': return `resynced after id ${from}: nothing was skipped; events already applied are dropped as duplicates`;
+      case 'continued': return `resynced after id ${from}: nothing was skipped; the stream continued at the next event`;
+      case 'fresh': return 'resynced before any event was applied: nothing was skipped';
+      case 'gap': return `resynced after id ${from}: skipped sequences ${marker.skippedFrom} to ${marker.skippedTo} (${marker.skippedTo - marker.skippedFrom + 1} events are no longer retained)`;
+      case 'new-epoch': return `resynced after id ${from}: epoch ${marker.epoch} started, its events count from its own beginning`;
+      default: return `resynced after id ${from}: waiting for the first retained event`;
+    }
+  }
+
   function markerText(marker) {
     if (!marker) return 'No reconnect yet.';
-    if (marker.kind === 'resynced') return `resynced after id ${marker.fromId === null ? 'none' : marker.fromId} (the skipped range is a gap)`;
+    if (marker.kind === 'resynced') return resyncedText(marker);
     const from = marker.fromId === null ? 'none (fresh stream)' : marker.fromId;
     return `reconnected from id ${from}${marker.rewound ? ` (re-requested ${marker.rewound} applied events)` : ''}${marker.automatic ? ' [automatic]' : ''}`;
   }
@@ -162,8 +174,10 @@
   function reconnect(automatic) {
     cancelTimer();
     const requested = automatic ? 0 : Math.max(0, Math.floor(Number(el.rewind.value)) || 0);
-    const rewound = state.lastSeq === null ? 0 : Math.min(requested, state.lastSeq - 1);
-    const cursorId = state.lastSeq === null ? null : cursors.format(state.runId, state.epoch, state.lastSeq - rewound);
+    // A resync stays cursorless until its first event: the reducer keeps the watermark, so a replayed window is counted as duplicates.
+    const cursorless = state.lastSeq === null || state.resync !== null;
+    const rewound = cursorless ? 0 : Math.min(requested, state.lastSeq - 1);
+    const cursorId = cursorless ? null : cursors.format(state.runId, state.epoch, state.lastSeq - rewound);
     if (!automatic) el.rewind.value = '0';
     readSnapshot('reconnect');
     dispatch({ type: 'reconnect', cursor: cursorId, rewound, automatic });

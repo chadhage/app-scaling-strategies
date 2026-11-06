@@ -11,7 +11,7 @@
   const notices = Object.freeze({
     REVIEW_NEEDED_CONFIRMED: 'Operator review is needed. It has not been performed and no recovery is claimed.',
     REINSPECTED: 'Read-only snapshot inspected. Nothing was repaired, reset or replayed.',
-    RESYNCED: 'Resynced from the oldest retained event. The skipped range stays visible as a gap.',
+    RESYNCED: 'Resynced from the oldest retained event. Events you already applied are dropped as duplicates; only a range the server no longer retains is named as a gap.',
     STOPPED: 'Stopped. Recorded events, counters and failures remain.',
   });
   const viewLimit = 200;
@@ -21,14 +21,14 @@
   function frozen(state) {
     return Object.freeze({
       ...state, events: Object.freeze(state.events), dropped: Object.freeze(state.dropped),
-      gaps: Object.freeze(state.gaps), counts: Object.freeze(state.counts),
+      gaps: Object.freeze(state.gaps), epochChanges: Object.freeze(state.epochChanges), counts: Object.freeze(state.counts),
     });
   }
 
   function initial() {
     return frozen({
       schemaVersion: 1, revision: 0, connection: 'idle', detachedBy: null, runId: null, epoch: null, lastSeq: null, lastId: null,
-      events: [], eventsEvicted: 0, dropped: [], droppedTotal: 0, droppedEvicted: 0, gaps: [],
+      events: [], eventsEvicted: 0, dropped: [], droppedTotal: 0, droppedEvicted: 0, gaps: [], epochChanges: [], resync: null,
       counts: { applied: 0, duplicates: 0, outOfOrder: 0, rejected: 0, reconnects: 0, disconnects: 0, resyncs: 0 },
       marker: null, failure: null, detached: null, notice: null, completed: false,
     });
@@ -38,12 +38,12 @@
     return frozen({ ...state, ...changes, revision: state.revision + 1 });
   }
 
-  function drop(state, entry, counter) {
+  function drop(state, entry, counter, extra = {}) {
     const dropped = [...state.dropped, entry];
     const overflow = Math.max(0, dropped.length - dropLimit);
     return next(state, {
       dropped: dropped.slice(overflow), droppedTotal: state.droppedTotal + 1, droppedEvicted: state.droppedEvicted + overflow,
-      counts: { ...state.counts, [counter]: state.counts[counter] + 1 },
+      counts: { ...state.counts, [counter]: state.counts[counter] + 1 }, ...extra,
     });
   }
 
@@ -56,6 +56,24 @@
     }
   }
 
+  // The watermark (epoch, last applied sequence) only moves forward. A pending resync is settled by the first valid delivery
+  // after it, which says what the replay of the retained window actually did.
+  function settle(state, outcome, details = {}) {
+    if (!state.resync) return {};
+    return { resync: null, marker: state.marker && state.marker.kind === 'resynced' ? { ...state.marker, outcome, ...details } : state.marker };
+  }
+
+  function accept(state, action, cursor, data, extra, newEpoch = false) {
+    const events = [...state.events, { id: action.id, seq: cursor.seq, event: action.event, data }];
+    const overflow = Math.max(0, events.length - viewLimit);
+    const completed = (newEpoch ? false : state.completed) || action.event === 'run-completed';
+    return next(state, {
+      runId: cursor.runId, epoch: cursor.epoch, lastSeq: cursor.seq, lastId: action.id, events: events.slice(overflow),
+      eventsEvicted: state.eventsEvicted + overflow, counts: { ...state.counts, applied: state.counts.applied + 1 }, completed, failure: null,
+      connection: completed ? 'complete' : state.connection, ...extra,
+    });
+  }
+
   function event(state, action) {
     const label = typeof action.id === 'string' ? action.id.slice(0, 80) : null;
     const rejected = (reason) => drop(state, { id: label, reason, display: `rejected (${reason})` }, 'rejected');
@@ -66,33 +84,41 @@
     const data = copyData(action.data);
     if (!data || typeof data !== 'object' || data.runId !== runId || data.epoch !== epoch || data.seq !== seq) return rejected('attribution-mismatch');
     if (state.runId !== null && runId !== state.runId) return rejected('foreign-run');
-    if (state.epoch !== null && epoch !== state.epoch) return rejected('foreign-epoch');
+    const pending = Boolean(state.resync);
+    if (state.epoch !== null && epoch !== state.epoch) {
+      if (!pending || epoch < state.epoch) return rejected('foreign-epoch');
+      // The server restarted under a later epoch: only now does the watermark reset, and the new epoch starts at its own beginning.
+      const change = { fromEpoch: state.epoch, toEpoch: epoch, afterId: state.lastId, firstId: action.id };
+      return accept(state, action, parsed.cursor, data, { epochChanges: [...state.epochChanges, change], ...settle(state, 'new-epoch', { epoch }) }, true);
+    }
     if (state.lastSeq !== null && seq <= state.lastSeq) {
-      return drop(state, { id: action.id, seq, reason: 'duplicate', display: 'dropped duplicate' }, 'duplicates');
+      return drop(state, { id: action.id, seq, reason: 'duplicate', display: 'dropped duplicate' }, 'duplicates', settle(state, 'overlap'));
     }
     if (state.lastSeq !== null && seq > state.lastSeq + 1) {
-      return drop(state, {
-        id: action.id, seq, reason: 'out-of-order', display: `dropped out-of-order (expected sequence ${state.lastSeq + 1})`,
-      }, 'outOfOrder');
+      if (!pending) {
+        return drop(state, {
+          id: action.id, seq, reason: 'out-of-order', display: `dropped out-of-order (expected sequence ${state.lastSeq + 1})`,
+        }, 'outOfOrder');
+      }
+      const gap = { epoch, afterId: state.lastId, afterSeq: state.lastSeq, firstId: action.id, skippedFrom: state.lastSeq + 1, skippedTo: seq - 1 };
+      return accept(state, action, parsed.cursor, data, {
+        gaps: [...state.gaps, gap], ...settle(state, 'gap', { skippedFrom: gap.skippedFrom, skippedTo: gap.skippedTo }),
+      });
     }
-    const events = [...state.events, { id: action.id, seq, event: action.event, data }];
-    const overflow = Math.max(0, events.length - viewLimit);
-    const completed = state.completed || action.event === 'run-completed';
-    return next(state, {
-      runId, epoch, lastSeq: seq, lastId: action.id, events: events.slice(overflow), eventsEvicted: state.eventsEvicted + overflow,
-      counts: { ...state.counts, applied: state.counts.applied + 1 }, completed, failure: null,
-      connection: completed ? 'complete' : state.connection,
-    });
+    return accept(state, action, parsed.cursor, data, settle(state, state.lastSeq === null ? 'fresh' : 'continued'));
   }
 
   function reconnect(state, action) {
     const parsed = action.cursor === null ? { ok: true, cursor: null } : cursors.parse(action.cursor);
     const fromId = parsed.ok ? action.cursor : null;
     const rewound = Number.isSafeInteger(action.rewound) && action.rewound > 0 ? action.rewound : 0;
+    const keepResync = fromId === null && Boolean(state.resync);
     return next(state, {
-      connection: 'connecting', failure: null,
+      connection: 'connecting', failure: null, resync: fromId === null ? state.resync : null,
       counts: { ...state.counts, reconnects: state.counts.reconnects + 1 },
-      marker: { kind: 'reconnected', fromId, fromSeq: parsed.ok && parsed.cursor ? parsed.cursor.seq : null, rewound, automatic: action.automatic === true },
+      marker: keepResync ? state.marker : {
+        kind: 'reconnected', fromId, fromSeq: parsed.ok && parsed.cursor ? parsed.cursor.seq : null, rewound, automatic: action.automatic === true,
+      },
     });
   }
 
@@ -100,10 +126,11 @@
     const allowed = state.failure && state.failure.allowedActions.some((item) => item.action === 'resync-from-snapshot');
     if (!allowed) return state;
     return next(state, {
-      connection: 'connecting', failure: null, epoch: null, lastSeq: null, lastId: null, notice: 'RESYNCED',
-      gaps: [...state.gaps, { afterId: state.lastId, afterSeq: state.lastSeq }],
+      connection: 'connecting', failure: null, notice: 'RESYNCED', resync: { fromId: state.lastId, fromSeq: state.lastSeq, fromEpoch: state.epoch },
       counts: { ...state.counts, resyncs: state.counts.resyncs + 1 },
-      marker: { kind: 'resynced', fromId: state.lastId, fromSeq: state.lastSeq, rewound: 0, automatic: false },
+      marker: {
+        kind: 'resynced', fromId: state.lastId, fromSeq: state.lastSeq, rewound: 0, automatic: false, outcome: 'pending', skippedFrom: null, skippedTo: null, epoch: null,
+      },
     });
   }
 

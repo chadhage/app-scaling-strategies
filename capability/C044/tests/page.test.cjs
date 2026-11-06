@@ -179,7 +179,7 @@ test('a refused stream is diagnosed and the typed failure and only its allowed a
   assert.equal(page.sources.length, 3);
   assert.equal(page.sources[2].url, '/stream', 'a resync is the only way to a fresh stream');
   assert.equal(page.texts('failure'), 'No failure.');
-  assert.equal(page.texts('marker'), `resynced after id ${id(2)} (the skipped range is a gap)`);
+  assert.equal(page.texts('marker'), `resynced after id ${id(2)}: waiting for the first retained event`);
   assert.match(page.texts('notice'), /Resynced from the oldest retained event/);
   assert.equal(page.texts('count-applied'), '2', 'history is retained');
 });
@@ -278,4 +278,22 @@ test('the evicted-event note appears only when the bounded view dropped somethin
   assert.equal(page.elements.log.children.length, 200);
   assert.equal(page.texts('count-applied'), '205');
   await page.flush();
+});
+
+test('the resync marker reads "continued" when the stream resumes at the next event and "fresh" when nothing was applied before', async () => {
+  const continued = loadPage({ fetchHandler: (url) => (url.startsWith('/cursor') ? typedFailure('CURSOR_EXPIRED') : snapshot(5)) });
+  continued.sources[0].open();
+  for (let seq = 1; seq <= 5; seq++) deliver(continued.sources[0], seq, seq === 1 ? 'run-started' : 'step-completed');
+  continued.sources[0].fail(2);
+  await continued.flush();
+  continued.elements.actions.children[0].click();
+  deliver(continued.sources[1], 6);
+  assert.equal(continued.texts('marker'), `resynced after id ${id(5)}: nothing was skipped; the stream continued at the next event`);
+  const fresh = loadPage({ fetchHandler: (url) => (url.startsWith('/cursor') ? typedFailure('CURSOR_MALFORMED') : snapshot(0)) });
+  fresh.sources[0].fail(2);
+  await fresh.flush();
+  fresh.elements.actions.children[0].click();
+  deliver(fresh.sources[1], 9);
+  assert.equal(fresh.texts('marker'), 'resynced before any event was applied: nothing was skipped');
+  assert.equal(fresh.texts('count-applied'), '1');
 });

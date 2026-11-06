@@ -25,7 +25,7 @@
     },
     'resync-from-snapshot': {
       label: 'Resync from snapshot',
-      description: 'Explicitly discard the cursor and open a fresh stream from the oldest retained event. The skipped range stays visible as a gap and is never invented.',
+      description: 'Explicitly discard the cursor and open a fresh stream from the oldest retained event. Events you already applied are dropped as duplicates; a range the server no longer retains is named as a gap, never invented.',
     },
     'confirm-operator-review': {
       label: 'Confirm operator review is needed',

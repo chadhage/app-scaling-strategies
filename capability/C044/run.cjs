@@ -49,11 +49,17 @@ function createRun(options = {}) {
   let fault = null;
   let cancelProducer = null;
 
+  // Frames always carry the producer's field order, so a frame rebuilt from the canonical (key-sorted) persisted log is
+  // byte-identical to the frame that was sent before a restart; the persisted record and its hash chain are unchanged.
+  const fieldOrder = ['runId', 'epoch', 'seq', 'step', 'of', 'note'];
+  const inFieldOrder = (data) => ({ ...Object.fromEntries(fieldOrder.filter((key) => Object.hasOwn(data, key)).map((key) => [key, data[key]])), ...data });
+
   function decorate(spec) {
     const id = cursors.format(runId, epoch, spec.seq);
+    const data = inFieldOrder(spec.data);
     return Object.freeze({
-      seq: spec.seq, id, event: spec.event, data: spec.data,
-      frame: `id: ${id}\nevent: ${spec.event}\ndata: ${JSON.stringify(spec.data)}\n\n`,
+      seq: spec.seq, id, event: spec.event, data,
+      frame: `id: ${id}\nevent: ${spec.event}\ndata: ${JSON.stringify(data)}\n\n`,
     });
   }
 

@@ -74,6 +74,7 @@ async function main() {
           reconnects: Number(text('count-reconnects')), marker: text('marker'), detached: text('detached'), cursor,
           lastSeq: Number((/:(\d+)$/.exec(cursor) || [])[1] || 0), failure: text('failure'), notice: text('notice'), rewind: document.getElementById('rewind').value,
           seqs: [...document.querySelectorAll('#log li')].map((item) => Number(item.textContent.split(' · ')[0].split(':')[2])),
+          ids: [...document.querySelectorAll('#log li.applied')].map((item) => item.textContent.split(' · ')[0]),
           dropped: [...document.querySelectorAll('#dropped li')].map((item) => item.textContent),
           actions: [...document.querySelectorAll('#actions button')].map((button) => button.textContent),
         };
@@ -106,7 +107,7 @@ async function main() {
     }));
     assert.equal(inline.ran, false, 'the strict CSP blocks an injected inline script');
     assert.match(inline.violated, /^script-src/);
-    checked('the console connects with EventSource and applies live events from the owned listener', { ...live, seqs: undefined });
+    checked('the console connects with EventSource and applies live events from the owned listener', { ...live, seqs: undefined, ids: undefined });
 
     // Keyboard Disconnect: only this client connection closes; the server keeps producing.
     const detachedAt = await disconnectByKeyboard();
@@ -168,14 +169,43 @@ async function main() {
     await observe(() => { const value = window.c044Snapshot(); return value.notice.startsWith('Read-only snapshot inspected') ? value : false; });
     checked('a cursor older than the replay window shows a typed CURSOR_EXPIRED failure with only its allowed actions and no silent restart', { failure: failed.failure, actions: failed.actions });
 
+    const lastBefore = failed.lastSeq;
+    const lastIdBefore = failed.cursor.replace('Last applied id: ', '');
+    const windowBefore = run.view().firstRetainedSeq;
     await page.getByRole('button', { name: 'Resync from snapshot' }).focus();
     await page.keyboard.press('Enter');
-    const resynced = await observe(() => { const value = window.c044Snapshot(); return value.marker.startsWith('resynced after id') ? value : false; });
+    // F1: the retained window replayed by the cursorless stream is judged by id: events already applied are counted dropped
+    // duplicates and never shown again; only a range that the server no longer retains may be named as a gap.
+    const resynced = await observe(({ from }) => {
+      const value = window.c044Snapshot();
+      return value.applied > from && value.marker.startsWith('resynced after id') && !value.marker.endsWith('first retained event') ? value : false;
+    }, { from: failed.applied });
     assert.equal(resynced.failure, 'No failure.');
-    await observe(({ from }) => { const value = window.c044Snapshot(); return value.applied > from ? value : false; }, { from: failed.applied });
-    checked('the explicit Resync action is the only way back to a stream and records the gap', { marker: resynced.marker });
+    assert.equal(new Set(resynced.ids).size, resynced.ids.length, 'after Resync no id appears twice among the applied entries');
+    assert.equal(resynced.ids.length, resynced.seqs.length);
+    const replayed = resynced.dropped.slice(failed.duplicates).map((line) => Number(line.split(':').at(-1)));
+    const fresh = resynced.seqs.slice(resynced.seqs.indexOf(lastBefore) + 1);
+    assert.ok(fresh.length >= 1, 'events after the last pre-resync event were applied');
+    if (replayed.length > 0) {
+      contiguous(replayed, 'the replayed window part is one contiguous range');
+      assert.equal(replayed.at(-1), lastBefore, 'the overlap ends at the last event that was already applied');
+      assert.ok(replayed[0] >= windowBefore, 'the replay starts inside the retained window');
+      assert.equal(resynced.duplicates, failed.duplicates + replayed.length, '#count-duplicates equals the overlap');
+      assert.equal(fresh[0], lastBefore + 1, 'the first new event follows the last applied one');
+      assert.match(resynced.marker, new RegExp(`^resynced after id ${lastIdBefore}: nothing was skipped`));
+      assert.doesNotMatch(resynced.marker, /is a gap/);
+    } else {
+      assert.equal(resynced.duplicates, failed.duplicates, 'no overlap, so no duplicate');
+      assert.ok(fresh[0] > lastBefore + 1);
+      assert.equal(resynced.marker, `resynced after id ${lastIdBefore}: skipped sequences ${lastBefore + 1} to ${fresh[0] - 1} (${fresh[0] - 1 - lastBefore} events are no longer retained)`);
+    }
+    contiguous(fresh, 'the new events are contiguous');
+    save('resynced.html', await page.locator('main').innerHTML());
+    checked('the explicit Resync is the only way back to a stream: replayed events are dropped duplicates, no id is shown twice, a skipped range is named',
+      { marker: resynced.marker, lastBefore, replayedDuplicates: replayed.length, firstNew: fresh[0], duplicates: resynced.duplicates });
 
     const finalState = await snap();
+    assert.equal(new Set(finalState.ids).size, finalState.ids.length, 'at the end no id appears twice among the applied entries');
     const snapshot = run.snapshot();
     assert.equal(snapshot.run.producerActive, true);
     assert.ok(snapshot.counters.disconnects >= 3, 'the server observed the client losses');
@@ -194,7 +224,7 @@ async function main() {
     save('final.html', await page.locator('main').innerHTML());
     if (capture) await page.screenshot({ path: path.join(capture, 'final.png'), fullPage: true });
     checked('only GET requests to the owned origin; no page errors; the server producer never stopped', {
-      paths: [...paths].sort(), resources: [...new Set(resources)].sort(), pageErrors, serverCounters: snapshot.counters, final: { ...finalState, seqs: undefined },
+      paths: [...paths].sort(), resources: [...new Set(resources)].sort(), pageErrors, serverCounters: snapshot.counters, final: { ...finalState, seqs: undefined, ids: undefined },
     });
     record.outcome = 'passed';
     record.cursorExample = cursors.format('synthetic-run-001', snapshot.context.epoch, snapshot.run.headSeq);

@@ -52,6 +52,13 @@ function createLocalServer(options) {
       const failure = cursors.failure(code, run.view());
       send(failure.status, failure);
     }
+    // A request that carries a body is answered once and its connection is closed and destroyed after the response, so an
+    // endless body (for example one-byte chunks) is never parsed.
+    function refuseBody() {
+      const failure = cursors.failure('UNEXPECTED_BODY', run.view());
+      response.once('finish', () => request.socket.destroy());
+      send(failure.status, failure, 'application/json; charset=utf-8', { Connection: 'close' });
+    }
 
     function stream(url) {
       const resolved = run.resolveCursor({ header: request.headers['last-event-id'], query: url.searchParams.getAll('lastEventId') });
@@ -125,7 +132,7 @@ function createLocalServer(options) {
       if (request.socket.remoteAddress !== '127.0.0.1' || request.headers.host !== host) return fail('LOCAL_HOST_REQUIRED');
       if (request.headers.origin && request.headers.origin !== origin) return fail('CROSS_ORIGIN_DENIED');
       if (request.method !== 'GET') return fail('METHOD_NOT_ALLOWED');
-      if (request.headers['transfer-encoding'] || Number(request.headers['content-length'] || 0) > 0) return fail('UNEXPECTED_BODY');
+      if (request.headers['transfer-encoding'] || Number(request.headers['content-length'] || 0) > 0) return refuseBody();
       if (!request.url || request.url.length > 2048) return fail('URL_TOO_LONG');
       const url = new URL(request.url, origin);
       if (url.origin !== origin || url.hash) return fail('INVALID_URL');

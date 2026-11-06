@@ -152,12 +152,12 @@ test('typed failures are revalidated and offer only their allowed recovery actio
   assert.equal(resynced.connection, 'connecting');
   assert.equal(resynced.failure, null);
   assert.equal(resynced.notice, 'RESYNCED');
-  assert.deepEqual([resynced.lastSeq, resynced.epoch, resynced.runId], [null, null, run]);
-  assert.deepEqual(resynced.gaps, [{ afterId: id(2), afterSeq: 2 }]);
+  assert.deepEqual([resynced.lastSeq, resynced.epoch, resynced.runId], [2, 3, run], 'the watermark survives a resync, so replayed events are counted as duplicates');
+  assert.deepEqual(resynced.gaps, [], 'a gap is recorded only when a delivery shows that something was skipped');
   assert.equal(resynced.events.length, 2, 'history is retained across a resync');
   assert.equal(resynced.marker.kind, 'resynced');
   const afterResync = apply(resynced, { ...delivery(40), id: id(40, run, 4), data: { runId: run, epoch: 4, seq: 40 } });
-  assert.equal(afterResync.epoch, 4, 'a resync may adopt the new epoch');
+  assert.equal(afterResync.epoch, 4, 'a resync may adopt a later epoch, and only a later one');
   const future = JSON.parse(JSON.stringify(cursors.failure('CURSOR_FROM_FUTURE', { runId: run, epoch: 3, headSeq: 5, firstRetainedSeq: 1, replayWindow: 8 }, id(99))));
   const review = apply(reducer.initial(), { type: 'failure', failure: future });
   assert.equal(reducer.reduce(review, { type: 'resync' }), review, 'resync is not offered for a future cursor');
@@ -182,4 +182,13 @@ test('the view and the dropped list are bounded without silently losing the coun
   assert.equal(state.droppedTotal, reducer.dropLimit + 7);
   assert.equal(state.droppedEvicted, 7);
   assert.equal(state.counts.duplicates, reducer.dropLimit + 7);
+});
+
+test('a new epoch also starts its completion state at its own beginning', () => {
+  const failure = JSON.parse(JSON.stringify(cursors.failure('CURSOR_EPOCH_MISMATCH', { runId: run, epoch: 4, headSeq: 3, firstRetainedSeq: 1, replayWindow: 8 }, id(2))));
+  let state = apply(reducer.initial(), delivery(1), { ...delivery(2), event: 'run-completed' });
+  assert.equal(state.connection, 'complete');
+  state = apply(state, { type: 'failure', failure }, { type: 'resync' }, { ...delivery(1), id: id(1, run, 4), data: { runId: run, epoch: 4, seq: 1 } });
+  assert.deepEqual([state.epoch, state.completed, state.connection], [4, false, 'connecting'], 'the earlier epoch finished, the new one has not');
+  assert.equal(state.epochChanges.length, 1);
 });

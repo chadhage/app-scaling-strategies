@@ -15,6 +15,15 @@ const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const owned = (...parts) => path.join('capability', 'C044', ...parts);
 const focusedTests = FOCUSED.map((name) => owned('tests', name));
+// One L-0004 command per production file: a combined command would check only the aggregate row and could hide a weak file.
+const perFileStages = Object.fromEntries(['context.cjs', 'cursor.js', 'page.js', 'reducer.js', 'run.cjs', 'server.cjs', 'store.cjs'].map((file) => [
+  `cov-${file.replace(/\.c?js$/, '')}`,
+  {
+    args: ['--test', '--test-concurrency=1', '--experimental-test-coverage', `--test-coverage-include=**/C044/${file}`,
+      '--test-coverage-lines=85', '--test-coverage-branches=85', '--test-coverage-functions=85', ...focusedTests],
+    timeoutMs: 900000,
+  },
+]));
 const commands = Object.freeze({
   red: { args: ['--test', owned('evidence', 'red', 'stream.initial.cjs')], timeoutMs: 120000 },
   focused: { args: ['--test', '--test-concurrency=1', ...focusedTests], timeoutMs: 600000 },
@@ -22,11 +31,12 @@ const commands = Object.freeze({
   coverage: { args: [owned('tests', 'coverage.cjs')], timeoutMs: 900000 },
   browser: { args: [owned('tests', 'browser.cjs')], timeoutMs: 600000 },
   limits: { args: [owned('tests', 'helper-limits.cjs')], timeoutMs: 300000 },
+  ...perFileStages,
 });
 
 const stage = process.argv[2];
 if (process.argv.length !== 3 || !Object.hasOwn(commands, stage) || process.env.CAPTURE_BROWSER_EVIDENCE !== '1') {
-  throw new Error('Exact CAPTURE_BROWSER_EVIDENCE=1 and one closed C044 stage (red, focused, syntax, coverage, browser, limits) are required.');
+  throw new Error(`Exact CAPTURE_BROWSER_EVIDENCE=1 and one closed C044 stage (${Object.keys(commands).join(', ')}) are required.`);
 }
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');

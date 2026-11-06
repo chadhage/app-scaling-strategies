@@ -38,7 +38,9 @@
       <label for="rewind">Re-request this many already applied events on the next reconnect (duplicate drill)</label>
       <input id="rewind" type="number" min="0" max="500" value="0" inputmode="numeric">
       <p class="hint">A correct reconnect resumes at the next event. A re-request above 0 asks the server to send applied events again;
-        the page drops each one by id and counts it. A re-request larger than the replay window is a typed failure.</p>
+        the page drops each one by id and counts it. A re-request larger than the replay window is a typed failure. Its allowed
+        action Resync from snapshot opens a fresh stream from the oldest retained event: events you already applied are dropped
+        as duplicates (never shown again), and only a range the server no longer retains is named as a gap.</p>
     </section>
 
     <section aria-labelledby="counts-heading">
