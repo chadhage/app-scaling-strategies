@@ -1,0 +1,233 @@
+'use strict';
+
+// Windows adapters for tree.cjs: one bounded Windows PowerShell 5.1 helper per call. Requests travel on standard input,
+// so a pid or creation time never appears on a command line and nothing is interpolated into a shell string.
+// The helper compiles a small P/Invoke class and works from a Toolhelp snapshot:
+//   list  one row per running process: pid, parent pid and the creation FILETIME read from an opened handle of that process
+//   kill  per identity: OpenProcess, read the creation time of THAT handle, compare, TerminateProcess on the SAME handle,
+//         so a pid that was reused in the meantime can never be ended; every outcome is reported per identity.
+
+const childProcess = require('node:child_process');
+const path = require('node:path');
+const timers = require('node:timers/promises');
+const { LifecycleError } = require('./tree.cjs');
+
+const NATIVE_SOURCE = String.raw`
+using System;
+using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Text;
+
+public static class U004Native
+{
+    const uint PROCESS_TERMINATE = 0x0001;
+    const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+    const uint SYNCHRONIZE = 0x00100000;
+    const uint TH32CS_SNAPPROCESS = 0x2;
+    const uint WAIT_OBJECT_0 = 0;
+    const int ERROR_INVALID_PARAMETER = 87;
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    struct PROCESSENTRY32
+    {
+        public uint dwSize; public uint cntUsage; public uint th32ProcessID; public IntPtr th32DefaultHeapID;
+        public uint th32ModuleID; public uint cntThreads; public uint th32ParentProcessID; public int pcPriClassBase;
+        public uint dwFlags;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string szExeFile;
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true)] static extern IntPtr CreateToolhelp32Snapshot(uint flags, uint pid);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern bool Process32FirstW(IntPtr snapshot, ref PROCESSENTRY32 entry);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern bool Process32NextW(IntPtr snapshot, ref PROCESSENTRY32 entry);
+    [DllImport("kernel32.dll", SetLastError = true)] static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);
+    [DllImport("kernel32.dll", SetLastError = true)] static extern bool GetProcessTimes(IntPtr process, out long created, out long exited, out long kernel, out long user);
+    [DllImport("kernel32.dll", SetLastError = true)] static extern bool TerminateProcess(IntPtr process, uint exitCode);
+    [DllImport("kernel32.dll", SetLastError = true)] static extern uint WaitForSingleObject(IntPtr handle, uint milliseconds);
+    [DllImport("kernel32.dll", SetLastError = true)] static extern bool CloseHandle(IntPtr handle);
+
+    public static string List()
+    {
+        IntPtr snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if (snapshot == new IntPtr(-1)) throw new InvalidOperationException("snapshot failed: " + Marshal.GetLastWin32Error());
+        StringBuilder text = new StringBuilder();
+        try
+        {
+            PROCESSENTRY32 entry = new PROCESSENTRY32();
+            entry.dwSize = (uint)Marshal.SizeOf(typeof(PROCESSENTRY32));
+            for (bool more = Process32FirstW(snapshot, ref entry); more; more = Process32NextW(snapshot, ref entry))
+            {
+                if (entry.th32ProcessID == 0) continue;
+                string created = "-";
+                IntPtr handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, false, entry.th32ProcessID);
+                if (handle == IntPtr.Zero)
+                {
+                    if (Marshal.GetLastWin32Error() == ERROR_INVALID_PARAMETER) continue;
+                }
+                else
+                {
+                    try
+                    {
+                        long c, x, k, u;
+                        if (WaitForSingleObject(handle, 0) == WAIT_OBJECT_0) continue;
+                        if (GetProcessTimes(handle, out c, out x, out k, out u)) created = c.ToString(CultureInfo.InvariantCulture);
+                    }
+                    finally { CloseHandle(handle); }
+                }
+                text.Append(entry.th32ProcessID).Append(',').Append(entry.th32ParentProcessID).Append(',').Append(created).Append('\n');
+            }
+        }
+        finally { CloseHandle(snapshot); }
+        return text.ToString();
+    }
+
+    public static string Kill(string request)
+    {
+        string[] lines = request.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        uint waitMs = uint.Parse(lines[0].Trim(), CultureInfo.InvariantCulture);
+        StringBuilder text = new StringBuilder();
+        for (int i = 1; i < lines.Length; i++)
+        {
+            string[] parts = lines[i].Trim().Split(',');
+            uint pid = uint.Parse(parts[0], CultureInfo.InvariantCulture);
+            long expected = long.Parse(parts[1], CultureInfo.InvariantCulture);
+            text.Append(pid).Append(',').Append(KillOne(pid, expected, waitMs)).Append('\n');
+        }
+        return text.ToString();
+    }
+
+    static string KillOne(uint pid, long expected, uint waitMs)
+    {
+        IntPtr handle = OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, false, pid);
+        if (handle == IntPtr.Zero)
+        {
+            int error = Marshal.GetLastWin32Error();
+            return error == ERROR_INVALID_PARAMETER ? "gone" : "error:open:" + error;
+        }
+        try
+        {
+            long created, x, k, u;
+            if (!GetProcessTimes(handle, out created, out x, out k, out u)) return "error:times:" + Marshal.GetLastWin32Error();
+            if (created != expected) return "mismatch";
+            if (WaitForSingleObject(handle, 0) == WAIT_OBJECT_0) return "gone";
+            if (!TerminateProcess(handle, 1))
+            {
+                int error = Marshal.GetLastWin32Error();
+                return WaitForSingleObject(handle, waitMs) == WAIT_OBJECT_0 ? "gone" : "error:terminate:" + error;
+            }
+            return WaitForSingleObject(handle, waitMs) == WAIT_OBJECT_0 ? "killed" : "survived";
+        }
+        finally { CloseHandle(handle); }
+    }
+}
+`;
+
+const SCRIPT = `$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+Add-Type -TypeDefinition @'${NATIVE_SOURCE}'@
+$mode = [Console]::In.ReadLine()
+$request = [Console]::In.ReadToEnd()
+if ($mode -eq 'list') { [Console]::Out.Write([U004Native]::List()) }
+elseif ($mode -eq 'kill') { [Console]::Out.Write([U004Native]::Kill($request)) }
+else { throw 'unknown mode' }
+`;
+const ENCODED = Buffer.from(SCRIPT, 'utf16le').toString('base64');
+const ARGS = ['-NoLogo', '-NoProfile', '-NonInteractive', '-EncodedCommand', ENCODED];
+
+function runHelper(settings, mode, payload, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const out = [];
+    const err = [];
+    let size = 0;
+    let done = false;
+    let timer;
+    const finish = (settle, value) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      settle(value);
+    };
+    let child;
+    try {
+      child = settings.spawn(settings.executable, ARGS, { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], env: settings.env });
+    } catch (error) {
+      reject(new LifecycleError('ERR_HELPER', `cannot start the PowerShell helper: ${error.message}`, { cause: error }));
+      return;
+    }
+    timer = setTimeout(() => {
+      child.kill();
+      finish(reject, new LifecycleError('ERR_TIMEOUT', `the PowerShell helper did not finish within ${timeoutMs} ms`));
+    }, timeoutMs);
+    child.on('error', (error) => finish(reject, new LifecycleError('ERR_HELPER', `the PowerShell helper failed: ${error.message}`, { cause: error })));
+    child.stdout.on('data', (chunk) => {
+      if (done) return;
+      size += chunk.length;
+      if (size > settings.maxOutputBytes) {
+        child.kill();
+        finish(reject, new LifecycleError('ERR_OUTPUT', 'the PowerShell helper printed more than the allowed output'));
+        return;
+      }
+      out.push(chunk);
+    });
+    child.stderr.on('data', (chunk) => { if (err.length < 16) err.push(chunk); });
+    child.on('close', (code) => {
+      if (code === 0) finish(resolve, Buffer.concat(out).toString('utf8'));
+      else finish(reject, new LifecycleError('ERR_HELPER', `the PowerShell helper exited with ${code}: ${Buffer.concat(err).toString('utf8').slice(0, 400)}`));
+    });
+    child.stdin.on('error', () => {});
+    child.stdin.end(`${mode}\n${payload}`);
+  });
+}
+
+function parseList(text) {
+  return text.split('\n').filter((line) => line !== '').map((line) => {
+    const match = /^(\d+),(\d+),(\d+|-)\r?$/.exec(line);
+    if (!match) throw new LifecycleError('ERR_HELPER', `malformed process table line: ${line.slice(0, 80)}`);
+    return { pid: Number(match[1]), ppid: Number(match[2]), createdAt: match[3] === '-' ? null : match[3] };
+  });
+}
+
+function parseKill(text, identities) {
+  const requested = new Map(identities.map((identity) => [identity.pid, identity.createdAt]));
+  return text.split('\n').filter((line) => line !== '').map((line) => {
+    const match = /^(\d+),(killed|gone|mismatch|survived|error:[^\r\n]*)\r?$/.exec(line);
+    if (!match || !requested.has(Number(match[1]))) throw new LifecycleError('ERR_HELPER', `malformed kill outcome line: ${line.slice(0, 80)}`);
+    const pid = Number(match[1]);
+    const failed = match[2].startsWith('error:');
+    return failed
+      ? { pid, createdAt: requested.get(pid), outcome: 'error', detail: match[2] }
+      : { pid, createdAt: requested.get(pid), outcome: match[2] };
+  });
+}
+
+function validIdentity(identity) {
+  return Boolean(identity) && Number.isSafeInteger(identity.pid) && identity.pid > 0
+    && typeof identity.createdAt === 'string' && /^\d+$/.test(identity.createdAt);
+}
+
+function createWindowsAdapters(options = {}) {
+  const { platform = process.platform, env = process.env, spawn = childProcess.spawn, maxOutputBytes = 4 * 1024 * 1024, defaultTimeoutMs = 60000, waitMs = 3000 } = options;
+  if (platform !== 'win32') throw new LifecycleError('ERR_PLATFORM', 'the Windows adapters only run on Windows');
+  const systemRoot = env.SystemRoot || env.windir;
+  if (!systemRoot) throw new LifecycleError('ERR_PLATFORM', 'SystemRoot is not set');
+  const settings = { executable: path.win32.join(systemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'), env, spawn, maxOutputBytes };
+  const timeoutOf = (call) => (call && Number.isFinite(call.timeoutMs) && call.timeoutMs > 0 ? call.timeoutMs : defaultTimeoutMs);
+
+  return {
+    selfPid: process.pid,
+    now: () => Number(process.hrtime.bigint() / 1000000n),
+    sleep: (ms) => timers.setTimeout(ms),
+    async list(call) {
+      return parseList(await runHelper(settings, 'list', '', timeoutOf(call)));
+    },
+    async kill(identities, call) {
+      if (!Array.isArray(identities) || !identities.every(validIdentity)) throw new LifecycleError('ERR_INVALID_ARG', 'identities must be an array of {pid, createdAt} pairs');
+      if (identities.length === 0) return [];
+      const timeoutMs = timeoutOf(call);
+      const wait = Math.max(200, Math.min(waitMs, Math.floor(timeoutMs / (identities.length + 2))));
+      const payload = `${wait}\n${identities.map((identity) => `${identity.pid},${identity.createdAt}`).join('\n')}\n`;
+      return parseKill(await runHelper(settings, 'kill', payload, timeoutMs), identities);
+    },
+  };
+}
+
+module.exports = { createWindowsAdapters };

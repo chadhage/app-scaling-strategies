@@ -1,0 +1,243 @@
+'use strict';
+
+// Identity based process tree snapshot and termination (pure core: every operating system access is an injected adapter).
+// adapters = { list({timeoutMs}) -> rows {pid, ppid, createdAt}, kill(identities, {timeoutMs}) -> outcomes, now(), sleep(ms), selfPid }.
+// An owned process is a (pid, creation time) pair recorded while it was alive. A bare pid, an image name or a marker in a
+// command line never proves ownership, and nothing is killed before its recorded identity matches the live process again.
+
+const DIGITS = /^\d+$/;
+const DEFAULT_TIMEOUT_MS = 10000;
+const DEFAULT_POLL_MS = 100;
+const DEFAULT_MAX_ENTRIES = 512;
+
+class LifecycleError extends Error {
+  constructor(code, message, options) {
+    super(message, options);
+    this.name = 'LifecycleError';
+    this.code = code;
+  }
+}
+
+const isPid = (value) => Number.isSafeInteger(value) && value > 0;
+const isCreated = (value) => typeof value === 'string' && DIGITS.test(value);
+const isParent = (value) => Number.isSafeInteger(value) && value >= 0;
+const invalid = (message) => new LifecycleError('ERR_INVALID_ARG', message);
+const notEarlier = (child, parent) => BigInt(child) >= BigInt(parent);
+const compareCreated = (a, b) => (BigInt(a) < BigInt(b) ? -1 : BigInt(a) > BigInt(b) ? 1 : 0);
+const byOrder = (a, b) => a.depth - b.depth || compareCreated(a.createdAt, b.createdAt) || a.pid - b.pid;
+
+function requireAdapters(adapters) {
+  for (const name of ['list', 'kill', 'now', 'sleep']) {
+    if (!adapters || typeof adapters[name] !== 'function') throw invalid(`adapters.${name} must be a function`);
+  }
+  return isPid(adapters.selfPid) ? adapters.selfPid : process.pid;
+}
+
+function validateSnapshot(snapshot) {
+  if (!snapshot || snapshot.version !== 1 || !Array.isArray(snapshot.entries)) throw invalid('snapshot must be a version 1 snapshot');
+  const seen = new Set();
+  for (const entry of snapshot.entries) {
+    const ok = entry && isPid(entry.pid) && isParent(entry.ppid) && isCreated(entry.createdAt) && Number.isSafeInteger(entry.depth) && entry.depth >= 0;
+    if (!ok || seen.has(entry.pid)) throw invalid('snapshot holds a malformed or duplicate entry');
+    seen.add(entry.pid);
+  }
+}
+
+function tableOf(rows) {
+  if (!Array.isArray(rows)) throw new LifecycleError('ERR_ADAPTER', 'list adapter must return an array');
+  const table = new Map();
+  for (const row of rows) {
+    const ok = row && isPid(row.pid) && isParent(row.ppid) && (row.createdAt === null || isCreated(row.createdAt));
+    if (!ok || table.has(row.pid)) throw new LifecycleError('ERR_ADAPTER', 'list adapter returned a malformed or duplicate row');
+    table.set(row.pid, { pid: row.pid, ppid: row.ppid, createdAt: row.createdAt });
+  }
+  return table;
+}
+
+// The caller and its ancestors; a parent id only counts as an ancestor when that process is not younger than its child.
+function protectedPids(table, selfPid) {
+  const found = new Set([selfPid]);
+  let current = table.get(selfPid);
+  while (current && current.createdAt !== null) {
+    const parent = table.get(current.ppid);
+    if (!parent || parent.createdAt === null || found.has(parent.pid) || compareCreated(parent.createdAt, current.createdAt) > 0) break;
+    found.add(parent.pid);
+    current = parent;
+  }
+  return found;
+}
+
+// Breadth first from the seeds: a child needs the parent's pid as its parent id AND a creation time not earlier than the parent's.
+function discover(table, seeds, known, limit) {
+  const children = new Map();
+  for (const row of table.values()) {
+    if (row.createdAt === null) continue;
+    if (!children.has(row.ppid)) children.set(row.ppid, []);
+    children.get(row.ppid).push(row);
+  }
+  const added = [];
+  const queue = [...seeds];
+  while (queue.length) {
+    const parent = queue.shift();
+    const next = (children.get(parent.pid) || [])
+      .filter((row) => row.pid !== parent.pid && !known.has(row.pid) && notEarlier(row.createdAt, parent.createdAt))
+      .sort((a, b) => compareCreated(a.createdAt, b.createdAt) || a.pid - b.pid);
+    for (const row of next) {
+      if (known.size >= limit) throw new LifecycleError('ERR_TREE_TOO_LARGE', `the tree has more than ${limit} processes`);
+      const entry = { pid: row.pid, ppid: row.ppid, createdAt: row.createdAt, depth: parent.depth + 1 };
+      known.set(row.pid, entry);
+      added.push(entry);
+      queue.push(entry);
+    }
+  }
+  return added;
+}
+
+async function listOrThrow(adapters, timeoutMs) {
+  try {
+    return tableOf(await adapters.list({ timeoutMs }));
+  } catch (error) {
+    if (error instanceof LifecycleError) throw error;
+    throw new LifecycleError('ERR_ADAPTER', `list adapter failed: ${error && error.message}`, { cause: error });
+  }
+}
+
+function limitOf(options) {
+  const value = options.maxEntries === undefined ? DEFAULT_MAX_ENTRIES : options.maxEntries;
+  if (!Number.isSafeInteger(value) || value < 1) throw invalid('maxEntries must be a positive integer');
+  return value;
+}
+
+async function snapshotTree(rootPid, adapters, options) {
+  if (!isPid(rootPid)) throw invalid('rootPid must be a positive integer');
+  const selfPid = requireAdapters(adapters);
+  const settings = options || {};
+  const limit = limitOf(settings);
+  const table = await listOrThrow(adapters, settings.timeoutMs);
+  if (protectedPids(table, selfPid).has(rootPid)) throw new LifecycleError('ERR_PROTECTED_ROOT', 'the caller and its ancestors can never be an owned tree');
+  const root = table.get(rootPid);
+  const entries = [];
+  if (root) {
+    if (root.createdAt === null) throw new LifecycleError('ERR_UNVERIFIABLE_ROOT', 'the creation time of the root cannot be read');
+    if (settings.ownerPid !== undefined) {
+      const owner = table.get(settings.ownerPid);
+      const proven = isPid(settings.ownerPid) && root.ppid === settings.ownerPid && owner && owner.createdAt !== null && notEarlier(root.createdAt, owner.createdAt);
+      if (!proven) throw new LifecycleError('ERR_NOT_CHILD', 'the root is not a verified child of ownerPid');
+    }
+    const first = { pid: root.pid, ppid: root.ppid, createdAt: root.createdAt, depth: 0 };
+    entries.push(first, ...discover(table, [first], new Map([[first.pid, first]]), limit));
+  }
+  return { version: 1, rootPid, capturedAtMs: adapters.now(), entries };
+}
+
+// Records new descendants of entries that are alive with their recorded identity; dead entries (orphans) stay recorded.
+async function refreshTree(snapshot, adapters, options) {
+  validateSnapshot(snapshot);
+  requireAdapters(adapters);
+  const settings = options || {};
+  const table = await listOrThrow(adapters, settings.timeoutMs);
+  const known = new Map();
+  const seeds = [];
+  for (const entry of snapshot.entries) {
+    const row = table.get(entry.pid);
+    if (row && row.createdAt === entry.createdAt) seeds.push(entry);
+    if (!row || row.createdAt === entry.createdAt) known.set(entry.pid, entry);
+  }
+  const added = discover(table, seeds, known, limitOf(settings));
+  const replaced = new Set(added.map((entry) => entry.pid));
+  const kept = snapshot.entries.filter((entry) => !replaced.has(entry.pid)).map((entry) => ({ ...entry }));
+  return { ...snapshot, capturedAtMs: adapters.now(), entries: [...kept, ...added] };
+}
+
+const failure = (code, pid, createdAt, message) => ({ pid, createdAt, code, message });
+const describe = (error) => String((error && error.message) || error);
+
+function verify(states, table, protectedSet) {
+  const refuse = (state, reason) => { state.status = 'refused'; state.reason = reason; };
+  for (const state of states) {
+    if (state.status === 'refused' || (state.status === 'dead' && state.confirmed)) continue;
+    const row = table.get(state.entry.pid);
+    const same = Boolean(row) && row.createdAt === state.entry.createdAt;
+    if (state.status === 'dead') {
+      if (same) state.status = 'alive';
+      else state.confirmed = true;
+    } else if (!row) {
+      state.status = 'dead';
+      state.confirmed = true;
+    } else if (protectedSet.has(row.pid)) refuse(state, 'protected');
+    else if (row.createdAt === null) refuse(state, 'unverifiable');
+    else if (!same) refuse(state, 'identity-mismatch');
+    else state.status = 'alive';
+  }
+}
+
+function applyOutcomes(targets, outcomes, errors) {
+  const byPid = new Map();
+  for (const outcome of Array.isArray(outcomes) ? outcomes : []) if (outcome && isPid(outcome.pid)) byPid.set(outcome.pid, outcome);
+  for (const state of targets) {
+    const { pid, createdAt } = state.entry;
+    const outcome = byPid.get(pid);
+    const kind = outcome && outcome.outcome;
+    if (kind === 'killed' || kind === 'gone') {
+      state.status = 'dead';
+      state.killed = state.killed || kind === 'killed';
+    } else if (kind === 'mismatch') {
+      state.status = 'dead';
+      state.killed = true;
+    } else if (kind === 'survived') state.killed = true;
+    else {
+      state.failed = true;
+      errors.push(failure('ERR_KILL', pid, createdAt, kind === 'error' ? String(outcome.detail || 'kill failed') : 'the kill adapter returned no outcome for this identity'));
+    }
+  }
+}
+
+async function terminateOwned(snapshot, options) {
+  const { timeoutMs = DEFAULT_TIMEOUT_MS, pollMs = DEFAULT_POLL_MS, adapters } = options || {};
+  validateSnapshot(snapshot);
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) throw invalid('timeoutMs must be a positive finite number');
+  const selfPid = requireAdapters(adapters);
+  const deadline = adapters.now() + timeoutMs;
+  const remaining = () => deadline - adapters.now();
+  const errors = [];
+  const states = snapshot.entries.map((entry) => ({ entry: { ...entry }, status: 'unknown', confirmed: false, killed: false, failed: false, reason: null }));
+  const expired = () => { errors.push(failure('ERR_DEADLINE', null, null, 'the deadline passed before every owned process was confirmed gone')); };
+
+  for (;;) {
+    if (remaining() <= 0) { expired(); break; }
+    let table;
+    try {
+      table = tableOf(await adapters.list({ timeoutMs: remaining() }));
+    } catch (error) {
+      errors.push(failure('ERR_LIST', null, null, describe(error)));
+      break;
+    }
+    verify(states, table, protectedPids(table, selfPid));
+    const known = new Map(states.filter((state) => state.status !== 'dead').map((state) => [state.entry.pid, state.entry]));
+    const seeds = states.filter((state) => state.status === 'alive').map((state) => state.entry);
+    for (const entry of discover(table, seeds, known, Number.MAX_SAFE_INTEGER)) {
+      states.push({ entry, status: 'alive', confirmed: false, killed: false, failed: false, reason: null });
+    }
+    const targets = states.filter((state) => state.status === 'alive' && !state.failed).sort((a, b) => byOrder(a.entry, b.entry));
+    if (targets.length === 0) break;
+    if (remaining() <= 0) { expired(); break; }
+    try {
+      applyOutcomes(targets, await adapters.kill(targets.map((state) => ({ pid: state.entry.pid, createdAt: state.entry.createdAt })), { timeoutMs: remaining() }), errors);
+    } catch (error) {
+      errors.push(failure('ERR_KILL', null, null, describe(error)));
+      break;
+    }
+    if (targets.some((state) => state.status === 'alive' && !state.failed)) await adapters.sleep(Math.max(0, Math.min(pollMs, remaining())));
+  }
+
+  const result = { terminated: [], alreadyGone: [], survivors: [], refused: [], errors };
+  for (const { entry, status, killed, reason } of states) {
+    const identity = { pid: entry.pid, createdAt: entry.createdAt };
+    if (status === 'refused') result.refused.push({ ...identity, reason });
+    else if (status === 'dead') (killed ? result.terminated : result.alreadyGone).push(identity);
+    else result.survivors.push(identity);
+  }
+  return result;
+}
+
+module.exports = { snapshotTree, refreshTree, terminateOwned, LifecycleError };

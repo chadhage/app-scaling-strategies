@@ -1,0 +1,84 @@
+'use strict';
+
+// RED specimen, kept as evidence and never loaded by production code (the .txt name keeps it out of the module set).
+// It implements the naive strategies the work order names, behind the same interface as the real modules:
+//   U004_NAIVE_MODE=marker (default)  find and kill every process whose command line carries the root's marker (plus the recorded pids)
+//   U004_NAIVE_MODE=name              kill every process that has the root's image name
+//   U004_NAIVE_MODE=tree              kill the root and whatever is linked to it by parent id right now (taskkill /T semantics)
+// Its only destructive path is adapters.kill(), which the tests wrap in a guard that refuses every pid the test did not start.
+
+const { execFileSync } = require('node:child_process');
+const path = require('node:path');
+
+const MODE = process.env.U004_NAIVE_MODE || 'marker';
+const POWERSHELL = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+const QUERY = 'Get-CimInstance Win32_Process | ForEach-Object { if ($_.CreationDate) { "$($_.ProcessId)|$($_.ParentProcessId)|$($_.CreationDate.ToFileTimeUtc())|$($_.Name)|$($_.CommandLine)" } }';
+
+function createWindowsAdapters() {
+  return {
+    selfPid: process.pid,
+    now: () => Date.now(),
+    sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    async list() {
+      const text = execFileSync(POWERSHELL, ['-NoProfile', '-NonInteractive', '-Command', QUERY], { encoding: 'utf8', windowsHide: true, timeout: 120000 });
+      return text.split(/\r?\n/).filter(Boolean).map((line) => {
+        const [pid, ppid, createdAt, name, ...rest] = line.split('|');
+        return { pid: Number(pid), ppid: Number(ppid), createdAt, name, commandLine: rest.join('|') };
+      });
+    },
+    async kill(identities, options) {
+      if (!options || options.guard !== true) throw new Error('naive kill refused: it only runs behind the real-process guard of the tests');
+      return identities.map(({ pid, createdAt }) => {
+        try {
+          process.kill(pid, 'SIGKILL');
+          return { pid, createdAt, outcome: 'killed' };
+        } catch {
+          return { pid, createdAt, outcome: 'gone' };
+        }
+      });
+    },
+  };
+}
+
+const markerOf = (row) => ((row && row.commandLine) || '').split(' ').find((part) => part.startsWith('--marker=')) || null;
+
+async function snapshotTree(rootPid, adapters) {
+  const rows = await adapters.list();
+  const root = rows.find((row) => row.pid === rootPid);
+  const entries = [];
+  const queue = root ? [{ ...root, depth: 0 }] : [];
+  while (queue.length) {
+    const next = queue.shift();
+    if (entries.some((entry) => entry.pid === next.pid)) continue;
+    entries.push({ pid: next.pid, ppid: next.ppid, createdAt: next.createdAt, depth: next.depth });
+    for (const row of rows) if (row.ppid === next.pid) queue.push({ ...row, depth: next.depth + 1 });
+  }
+  return { version: 1, rootPid, capturedAtMs: 0, entries, marker: markerOf(root), rootName: root && root.name };
+}
+
+async function refreshTree(snapshot) {
+  return { ...snapshot, entries: snapshot.entries.map((entry) => ({ ...entry })) };
+}
+
+async function terminateOwned(snapshot, { adapters }) {
+  const rows = await adapters.list();
+  let victims = snapshot.entries.map((entry) => ({ pid: entry.pid, createdAt: entry.createdAt }));
+  if (MODE === 'marker' && snapshot.marker) {
+    victims = rows.filter((row) => (row.commandLine || '').includes(snapshot.marker)).map((row) => ({ pid: row.pid, createdAt: row.createdAt }));
+  }
+  if (MODE === 'name') {
+    victims = rows.filter((row) => row.name === snapshot.rootName).map((row) => ({ pid: row.pid, createdAt: row.createdAt }));
+  }
+  if (MODE === 'tree') {
+    const live = new Set([snapshot.rootPid]);
+    for (let grew = true; grew;) {
+      grew = false;
+      for (const row of rows) if (live.has(row.ppid) && !live.has(row.pid)) { live.add(row.pid); grew = true; }
+    }
+    victims = rows.filter((row) => live.has(row.pid)).map((row) => ({ pid: row.pid, createdAt: row.createdAt }));
+  }
+  await adapters.kill(victims);
+  return { terminated: victims, alreadyGone: [], survivors: [], refused: [], errors: [] };
+}
+
+module.exports = { createWindowsAdapters, snapshotTree, refreshTree, terminateOwned };

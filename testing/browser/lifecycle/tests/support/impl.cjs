@@ -1,0 +1,23 @@
+'use strict';
+
+const path = require('node:path');
+
+const repoRoot = path.resolve(__dirname, '..', '..', '..', '..', '..');
+const lifecycleRoot = path.resolve(__dirname, '..', '..');
+
+// The RED archive runs these same tests against an archived naive implementation (U004_RED_IMPL, a repository-relative
+// path); normal runs load the production modules. The naive file exports snapshotTree, terminateOwned and createWindowsAdapters.
+function loadImplementation() {
+  const redPath = process.env.U004_RED_IMPL;
+  if (redPath) {
+    const naive = require(path.resolve(repoRoot, redPath));
+    return { red: true, tree: naive, windows: naive };
+  }
+  return {
+    red: false,
+    tree: require(path.join(lifecycleRoot, 'tree.cjs')),
+    windows: require(path.join(lifecycleRoot, 'windows.cjs')),
+  };
+}
+
+module.exports = { loadImplementation, repoRoot, lifecycleRoot };
