@@ -6,7 +6,7 @@
 // for that cleanup; after the session exists it is the session's own close. The U005 files are consumed read-only.
 
 const { startBounded, openLessonBounded, openLoopbackBounded, StartupError } = require('./startup.cjs');
-const { wrapSession, CloseError, durationsOf, REPORT_KEYS } = require('./close.cjs');
+const { wrapSession, CloseError, durationsOf, frozenCopy, readOption, invalidArg, REPORT_KEYS } = require('./close.cjs');
 
 const NOTHING = { confirmed: true, terminated: [], alreadyGone: [], refused: [], survivors: [], failed: [], unverifiable: [], unconfirmed: [], errors: [] };
 
@@ -24,16 +24,24 @@ async function closeStartup(controller, ready) {
   controller.abort();
   const settled = await ready.then((session) => ({ session }), (error) => ({ error }));
   if (settled.session) return settled.session.close();
-  const final = settled.error instanceof StartupError && settled.error.settled ? await settled.error.settled : null;
+  const final = settled.error instanceof StartupError ? await settled.error.settled : null;
   const outcome = startupOutcome(settled.error, final);
   if (!outcome.clean) throw new CloseError(`close() during the startup did not leave a clean state (${outcome.startup})`, outcome);
-  return outcome;
+  return frozenCopy(outcome);
+}
+
+// The caller's own signal (if any) is combined with the one that close() fires; anything else than an AbortSignal is a typed refusal.
+function signalOf(options, controller) {
+  const given = readOption(options, 'signal');
+  if (given === undefined) return controller.signal;
+  if (!(given instanceof AbortSignal)) throw invalidArg('signal must be an AbortSignal');
+  return AbortSignal.any([given, controller.signal]);
 }
 
 function startSession(run, options = {}) {
   durationsOf(options);
   const controller = new AbortController();
-  const signal = options.signal ? AbortSignal.any([options.signal, controller.signal]) : controller.signal;
+  const signal = signalOf(options, controller);
   const ready = startBounded(run, { ...options, signal }).then((session) => wrapSession(session, options));
   ready.catch(() => {});
   let closing = null;

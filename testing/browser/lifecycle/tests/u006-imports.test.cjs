@@ -6,7 +6,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { lifecycleRoot, repoRoot, readImports, verifyImports } = require('./u006-support-imports.cjs');
+const { lifecycleRoot, repoRoot, git, readImports, verifyImports } = require('./u006-support-imports.cjs');
 
 const T = { timeout: 60000 };
 const imports = readImports();
@@ -14,7 +14,7 @@ const pinned = new Set(imports.files.map((file) => file.path.replace(/\\/g, '/')
 
 test('every imported file matches its pinned raw and LF bytes and the published git blob; every tag resolves to its commit', T, () => {
   assert.deepEqual(verifyImports(imports), []);
-  assert.deepEqual(Object.keys(imports.accepted).sort(), ['U004', 'U005']);
+  assert.deepEqual(Object.keys(imports.accepted).sort(), ['U004', 'U005', 'U018']);
   for (const accepted of Object.values(imports.accepted)) assert.match(accepted.commit, /^[0-9a-f]{40}$/);
 });
 
@@ -58,8 +58,11 @@ test('tampering is detected: an edited import, a missing import, a forged pin, a
     assert.ok(verifyImports(imports, { root, checkGit: false }).some((item) => /missing/.test(item)));
   });
   const forged = JSON.parse(JSON.stringify(imports));
-  forged.files[0].rawSha256 = '0'.repeat(64);
+  forged.files[0].crlfToLfSha256 = '0'.repeat(64);
   assert.ok(verifyImports(forged, { checkGit: false }).some((item) => /raw bytes changed/.test(item)));
+  assert.ok(verifyImports({ ...imports, schema: 'x' }, { checkGit: false }).some((item) => /unknown schema/.test(item)));
+  // the git object checks need the object database: a git archive tree has none (the checks are then skipped, as verifyImports itself does)
+  if (git(['rev-parse', '--git-dir']).status !== 0) return;
   const reSigned = JSON.parse(JSON.stringify(imports));
   reSigned.files[0].acceptedGitSha256 = '1'.repeat(64);
   reSigned.files[0].crlfToLfSha256 = '1'.repeat(64);
@@ -71,5 +74,4 @@ test('tampering is detected: an edited import, a missing import, a forged pin, a
   const wrongTag = JSON.parse(JSON.stringify(imports));
   wrongTag.accepted.U005.tag = imports.accepted.U004.tag;
   assert.ok(verifyImports(wrongTag).some((item) => /does not resolve/.test(item)));
-  assert.ok(verifyImports({ ...imports, schema: 'x' }, { checkGit: false }).some((item) => /unknown schema/.test(item)));
 });

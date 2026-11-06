@@ -24,9 +24,11 @@ function readImports(file = path.join(lifecycleRoot, 'imports.json')) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
-// Problems found: files that changed, bytes that differ from the published commit, tags that do not resolve to their commit.
+// Problems found: files that changed, bytes that differ from the published commit, tags that do not resolve to their commit. The LF-normalized form decides
+// (a git archive checkout has LF bytes, the Windows working tree CRLF). The git object checks run only where the object database exists (a git archive tree has none).
 function verifyImports(imports, { root = repoRoot, checkGit = true } = {}) {
   const problems = [];
+  const haveGit = checkGit && git(['rev-parse', '--git-dir']).status === 0;
   if (imports.schema !== 'U006-source-pins/1') problems.push('unknown schema');
   for (const file of imports.files) {
     let bytes = null;
@@ -36,18 +38,17 @@ function verifyImports(imports, { root = repoRoot, checkGit = true } = {}) {
       problems.push(`${file.path}: missing`);
     }
     if (bytes) {
-      if (sha256(bytes) !== file.rawSha256) problems.push(`${file.path}: raw bytes changed`);
-      if (sha256(crlfToLf(bytes)) !== file.crlfToLfSha256) problems.push(`${file.path}: LF bytes changed`);
+      if (sha256(crlfToLf(bytes)) !== file.crlfToLfSha256) problems.push(`${file.path}: raw bytes changed`);
     }
     if (file.crlfToLfSha256 !== file.acceptedGitSha256) problems.push(`${file.path}: LF pin differs from the git pin`);
-    if (checkGit) {
+    if (haveGit) {
       const accepted = imports.accepted[file.card];
       const blob = git(['cat-file', 'blob', `${accepted.commit}:${file.path.replace(/\\/g, '/')}`]);
       if (blob.status !== 0) problems.push(`${file.path}: not in commit ${accepted.commit}`);
       else if (sha256(blob.stdout) !== file.acceptedGitSha256) problems.push(`${file.path}: the published blob differs from the pin`);
     }
   }
-  if (checkGit) {
+  if (haveGit) {
     for (const [card, accepted] of Object.entries(imports.accepted)) {
       const tag = git(['rev-parse', `${accepted.tag}^{commit}`]);
       if (tag.status !== 0 || tag.stdout.toString().trim() !== accepted.commit) problems.push(`${card}: tag ${accepted.tag} does not resolve to ${accepted.commit}`);

@@ -61,3 +61,45 @@ Feature: Make close() unable to hang, and always end the owned browser tree
     Given a real isolated headless Edge from the bounded startup and an independent read-only process table
     Then a normal close leaves zero owned survivors
     And a never-settling graceful close is ended by owned-tree termination while a same-image look-alike survives
+
+  # Fix after the independent review (rev-U005 on U006): a session closes only what it owns.
+
+  Scenario: Two live sessions are closed in either order
+    Given two sessions opened one after the other through openLessonSession
+    When the first is closed (clean graceful close, or a graceful close that leaves its tree behind), or the second first
+    Then only the closed session's tree is ended and requested, the other browser keeps running, and a repeated close ends nothing more
+
+  Scenario: Closing during the baseline read or while queued ends the startup at once
+    Given a startup that is still reading its baseline table, or is queued behind another startup
+    When close() is called
+    Then the startup is aborted at once (nothing launched, no time had to pass), the lock chain survives and the outcome says it was aborted
+
+  Scenario: A process that is still exiting is not a survivor
+    Given a recorded process that is still listed when the confirming table is read but leaves during a bounded settle
+    Then the table is read once more after that settle, the identity is reported as exiting and counted terminated, no further kill is sent, and the close is clean
+    And a process that never leaves stays a survivor and a re-read that fails keeps the survivors and records the failure
+
+  Scenario: The close budgets are one formula
+    Given the defaults
+    Then a close takes at most gracefulMs + 2 * listMs + terminateMs + exitSettleMs + listMs + settleMs, and a table that never answers rejects at exactly the stated bound
+
+  Scenario: Every real test ends its sessions in a finally block
+    Given a real test that opens a browser and then fails an assertion
+    Then the session is closed and its tree ended by the guard, and only the roots and a lower bound are asserted alive
+    And two live real sessions are closed in FIFO order with the second browser alive and answering
+
+  Scenario: The real tests tolerate only the scratch-removal lock error of the sealed close
+    Given the sealed close answers EBUSY while it removes its scratch directory under load, with every owned process gone and confirmed
+    Then the real test records it (closeBusy), removes the leftover directory that the error itself names, and still fails on every other close error
+
+  Scenario: The outcome of a close is one frozen value
+    Given every caller of the shared close() receives the same outcome, and a close during a failed startup returns a "nothing to close" outcome
+    Then the outcome and the CloseError are deep-frozen copies: nothing a caller does is visible to the next caller or to a later outcome, and no list is shared between outcomes
+
+  Scenario: Hostile options are typed refusals
+    Given options that are not an object, an option whose getter throws, or a signal that is not an AbortSignal
+    Then startSession, wrapSession and the budgets refuse with ERR_INVALID_ARG before anything is launched, and every close option is read exactly once
+
+  Scenario: Qualified Edge majors come from the owning API
+    Given the sealed qualified-majors file has an append-only addendum
+    Then no lifecycle source or test names the sealed file outside a comment: the real tests and the evidence tests call readQualified() of testing\browser\qualify

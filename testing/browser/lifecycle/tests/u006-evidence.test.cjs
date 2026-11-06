@@ -1,28 +1,38 @@
 'use strict';
 
-// U006 evidence integrity: recomputes every archived run, pins the final runs to the bytes they ran on, checks that the RED is behavioral,
-// the GREEN and coverage numbers, every mutant killed and the real Edge observations. The tamper tests prove the verifier fails on edits.
-// The verifier is the U005 one (read-only import, pinned in imports.json).
+// U006 evidence integrity of the FIRST publication (history): recomputes every archived run, checks that the RED is behavioral, the GREEN and coverage numbers, every mutant
+// killed and the real Edge observations. The final runs of the first publication recorded the FIRST-PUBLICATION bytes of the files that the fix changed, so they are no longer pinned
+// to the working tree: what the fix changed is tied to the archived snapshots (evidence\u006-fix\first-publication, evidence\u005-fix\first-publication) and to the git blobs of the
+// first commit, and every other input stays pinned. The tamper tests prove the verifier fails on edits. The verifier is the U005 one (read-only import, pinned in imports.json).
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { repoRoot, readManifest, verifyRun, stdoutOf } = require('./u005-support-evidence.cjs');
+const { spawnSync } = require('node:child_process');
+const { readQualified } = require('../../qualify/adapters.cjs');
+const { repoRoot, readManifest, verifyRun, stdoutOf, sha256, crlfToLf } = require('./u005-support-evidence.cjs');
 
 const T = { timeout: 60000 };
 const evidenceRoot = path.resolve(__dirname, '..', 'evidence', 'u006');
+const FIRST_COMMIT = 'a52f05e23febf1ab3b53702f5bff836a845180b7';
 const DRAFT_REDS = ['red-1-await', 'red-2-name', 'red-3-ignore'];
 // History: archived on the bytes before the retry passes of the U005 owned.cjs (and before the real test existed). They are verified (transcripts, hashes, exit codes), not pinned to the
 // current files: red-4..6 and green-1..3 are the first "final" runs, mutation-1 the first full mutation run (30 of 30 killed).
 const HISTORY_REDS = ['red-4-final-await', 'red-5-final-name', 'red-6-final-ignore'];
 const HISTORY = [...HISTORY_REDS, 'green-1-suite', 'green-2-coverage-close', 'green-3-coverage-session', 'mutation-1'];
-// The final runs, pinned to the bytes they ran on.
+// The final runs of the first publication.
 const FINAL_REDS = ['red-7-final-await', 'red-8-final-name', 'red-9-final-ignore'];
 const GREENS = ['green-4-suite', 'green-5-coverage-close', 'green-6-coverage-session', 'green-7-imports'];
 const FINAL = [...FINAL_REDS, ...GREENS, 'mutation-2', 'real-1'];
 const ALL = [...DRAFT_REDS, ...HISTORY, ...FINAL];
+// The inputs that the fix changed after those captures (U006's own files, and owned.cjs, startup.cjs and the U005 support files that the U005 fix changed).
+const CHANGED_BY_FIX = ['U006.feature', 'close.cjs', 'imports.json', 'owned.cjs', 'session.cjs', 'startup.cjs', 'u005-support-evidence.cjs', 'u005-support-impl.cjs', 'u006-imports.test.cjs', 'u006-real.test.cjs', 'u006-support-impl.cjs', 'u006-support-imports.cjs', 'u006-support-real.cjs'];
+const SNAPSHOTS = [
+  [path.resolve(__dirname, '..', 'evidence', 'u006-fix', 'first-publication'), ['close.cjs', 'session.cjs', 'u006-real.test.cjs']],
+  [path.resolve(__dirname, '..', 'evidence', 'u005-fix', 'first-publication'), ['owned.cjs', 'startup.cjs']],
+];
 const dirOf = (name) => path.join(evidenceRoot, name);
 
 test('the evidence folder holds exactly the archived runs, the specimen and nothing else', T, () => {
@@ -36,9 +46,39 @@ test('the evidence folder holds exactly the archived runs, the specimen and noth
   assert.deepEqual(fs.readdirSync(path.join(evidenceRoot, 'specimen')), ['naive-close.cjs.txt']);
 });
 
-test('every archived run verifies, and the final runs pin the exact bytes of every file they ran on', T, () => {
+test('every archived run verifies, and the first-publication final runs pin the bytes they ran on except what the fix changed', T, () => {
   for (const name of ALL) assert.deepEqual(verifyRun(dirOf(name), name), [], name);
-  for (const name of FINAL) assert.deepEqual(verifyRun(dirOf(name), name, { pinInputs: true }), [], name);
+  for (const name of FINAL) assert.deepEqual(verifyRun(dirOf(name), name, { pinInputs: true, ignoreInputs: CHANGED_BY_FIX }), [], name);
+});
+
+test('what the fix changed is tied to the archived first-publication snapshots: the final runs ran on those bytes', T, () => {
+  let tied = 0;
+  for (const [root, names] of SNAPSHOTS) {
+    const snapshot = JSON.parse(fs.readFileSync(path.join(root, 'first-publication.json'), 'utf8'));
+    for (const file of snapshot.files.filter((item) => names.includes(path.basename(item.path)))) {
+      const bytes = fs.readFileSync(path.join(root, file.snapshot));
+      assert.equal(sha256(bytes), file.sha256, `${file.snapshot} is the archived snapshot`);
+      for (const name of FINAL) {
+        const input = readManifest(dirOf(name), name).inputs.find((item) => path.basename(item.path) === path.basename(file.path));
+        if (!input) continue;
+        assert.equal(input.crlfToLfSha256, file.sha256, `${name} ran on the first-publication ${path.basename(file.path)}`);
+        tied += 1;
+      }
+    }
+  }
+  assert.ok(tied >= 12, `tied ${tied} inputs`);
+});
+
+test('every input of the first-publication final runs is the blob that git published as the first U006 commit (when the object database is available)', T, () => {
+  const git = (args) => spawnSync('git', ['-C', repoRoot, ...args], { maxBuffer: 16 * 1024 * 1024, windowsHide: true, timeout: 60000 });
+  if (git(['cat-file', '-e', `${FIRST_COMMIT}^{commit}`]).status !== 0) return;
+  for (const name of FINAL) {
+    for (const input of readManifest(dirOf(name), name).inputs) {
+      const blob = git(['cat-file', 'blob', `${FIRST_COMMIT}:${input.path.replace(/\\/g, '/')}`]);
+      assert.equal(blob.status, 0, `${name}: ${input.path} exists in the first commit`);
+      assert.equal(sha256(crlfToLf(blob.stdout)), input.crlfToLfSha256, `${name}: ${input.path} is the published blob`);
+    }
+  }
 });
 
 test('the draft REDs pin the naive specimen and the accepted U004 tree.cjs, which never changed', T, () => {
@@ -91,7 +131,7 @@ test('mutation evidence: the control passes and every guard mutant of the final 
 test('real Edge evidence: a normal close and a forced stuck close, signed and qualified, look-alike and foreign Edge untouched', T, () => {
   const lines = [...stdoutOf(dirOf('real-1'), 'real-1').matchAll(/^# U006-REAL-OBSERVATION (.+)$/gm)].map((match) => JSON.parse(match[1]));
   assert.equal(lines.length, 2);
-  const majors = JSON.parse(fs.readFileSync(path.join(repoRoot, 'testing', 'browser', 'qualify', 'qualified.json'), 'utf8')).qualifiedMajors;
+  const majors = readQualified().qualifiedMajors;
   for (const line of lines) {
     assert.equal(line.edge.status, 'Valid');
     assert.match(line.edge.subject, /O=Microsoft Corporation/);
@@ -133,9 +173,10 @@ test('tampering is detected: a flipped transcript byte, an edited manifest, a mi
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.copyFileSync(path.join(repoRoot, input.path), target);
     }
-    const options = { pinInputs: true, root: path.join(dir, 'root') };
+    const options = { pinInputs: true, root: path.join(dir, 'root'), ignoreInputs: CHANGED_BY_FIX };
     assert.deepEqual(verifyRun(copy, name, options), []);
-    fs.appendFileSync(path.join(dir, 'root', manifest.inputs[0].path), '\n// tampered\n');
-    assert.ok(verifyRun(copy, name, options).some((item) => /changed after the run/.test(item)));
+    const pinned = manifest.inputs.find((input) => !CHANGED_BY_FIX.some((suffix) => input.path.endsWith(suffix)));
+    fs.appendFileSync(path.join(dir, 'root', pinned.path), '\n// tampered\n');
+    assert.ok(verifyRun(copy, name, options).some((item) => item.includes(`${pinned.path} changed after the run`)));
   });
 });

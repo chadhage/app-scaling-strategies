@@ -1,0 +1,265 @@
+'use strict';
+
+// U006 fix evidence integrity (rev-U005 F6 on U006): iterates EVERY manifest of EVERY capture of evidence\u006-fix, recomputes transcripts and hashes, pins the final runs
+// (README-U006.md and U006.feature included) to the bytes they ran on, checks the RED, recomputes every figure that README-U006.md states from the stored evidence and proves
+// by tampering in a scratch copy that each kind of edit fails BY NAME. It also fails when any lifecycle source or test names the sealed qualified-majors file outside a comment
+// (controller note, U018 addendum: readQualified() is the reader). The verifier is the U005 one (read-only import, pinned in imports.json).
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { readQualified } = require('../../qualify/adapters.cjs');
+const { lex } = require('./mutate-lex.cjs');
+const { repoRoot, readManifest, verifyRun, stdoutOf, sha256, crlfToLf } = require('./u005-support-evidence.cjs');
+
+const T = { timeout: 120000 };
+const lifecycle = path.join(repoRoot, 'testing', 'browser', 'lifecycle');
+const root = path.join(lifecycle, 'evidence', 'u006-fix');
+const dirOf = (name) => path.join(root, name);
+// History (verified, never pinned to the working tree): the RED on the first draft of the fix tests, the first real run, which passed 3 of 3 on test bytes that read the
+// sealed qualified-majors file themselves and had no tolerance for the sealed close's scratch EBUSY (the controller note after the U018 review forced a new capture), and the
+// second real run (kept FAILED, exit 1): its tests 2 and 3 passed on the final bytes, its test 1 failed the strict `graceful closed` assertion because the sealed close of a
+// healthy browser took longer than the 60 s bound on a machine at 100 percent CPU (the tree was ended by termination: `graceful timeout`); real-3 has the generous bound.
+const HISTORY_REDS = ['red-1-first-publication'];
+const KEPT_FAILED = ['real-2'];
+const HISTORY = [...HISTORY_REDS, 'real-1', ...KEPT_FAILED];
+const FINAL_REDS = ['red-2-final'];
+const GREENS = ['green-1-suite', 'green-2-coverage-close', 'green-3-coverage-session', 'green-4-imports'];
+const FINAL_RUNS = [...FINAL_REDS, ...GREENS, 'mutation-1', 'real-3'];
+const INTEGRITY = 'green-5-integrity';
+const ALL = [...HISTORY, ...FINAL_RUNS];
+const DOC_RUNS = [...FINAL_REDS, 'green-1-suite', 'green-2-coverage-close', 'green-3-coverage-session'];
+const PINNED_DOCS = ['U006.feature', 'README-U006.md'];
+const readme = () => fs.readFileSync(path.join(lifecycle, 'README-U006.md'), 'utf8').replace(/\r\n/g, '\n');
+const observations = () => [...stdoutOf(dirOf('real-3'), 'real-3').matchAll(/^# U006-REAL-OBSERVATION (.+)$/gm)].map((match) => JSON.parse(match[1]));
+const mutationReport = () => JSON.parse(stdoutOf(dirOf('mutation-1'), 'mutation-1'));
+const rowOf = (name, file) => readManifest(dirOf(name), name).summary.coverageRows.find((row) => row.file === file);
+
+// Every figure README-U006.md states, derived from the stored evidence only.
+function figures() {
+  const summaryOf = (name) => readManifest(dirOf(name), name).summary;
+  const suite = summaryOf('green-1-suite');
+  const imports = summaryOf('green-4-imports');
+  const draft = summaryOf('red-1-first-publication');
+  const red = summaryOf('red-2-final');
+  const firstReal = summaryOf('real-1');
+  const failedReal = summaryOf('real-2');
+  const finalReal = summaryOf('real-3');
+  const mutants = mutationReport().summary;
+  const cover = (name, file) => { const row = rowOf(name, file); return `${row.lines} / ${row.branches} / ${row.functions}`; };
+  return [
+    ['hermetic tests of the whole U006 suite', `${suite.pass} of ${suite.tests}`],
+    ['coverage close.cjs lines / branches / functions', cover('green-2-coverage-close', 'close.cjs')],
+    ['coverage session.cjs lines / branches / functions', cover('green-3-coverage-session', 'session.cjs')],
+    ['imports and pins test (green-4-imports)', `${imports.pass} of ${imports.tests}`],
+    ['fix RED on the draft of the fix tests (red-1-first-publication)', `${draft.fail} of ${draft.tests} fail`],
+    ['fix RED on the final tests against the first-publication bytes (red-2-final)', `${red.fail} of ${red.tests} fail`],
+    ['systematic mutants of close.cjs and session.cjs', `${mutants.total} generated, ${mutants.killed} killed, ${mutants.equivalent} equivalent with a proof, ${mutants.survived} survived`],
+    ['first real run of the fix, kept as history (real-1)', `${firstReal.pass} of ${firstReal.tests} pass`],
+    ['second real run of the fix, kept as a failed attempt (real-2)', `${failedReal.pass} of ${failedReal.tests} pass`],
+    ['final real run of the fix (real-3)', `${finalReal.pass} of ${finalReal.tests} pass`],
+  ];
+}
+
+test('the fix evidence folder holds exactly the archived runs and the first-publication snapshot', T, () => {
+  const present = fs.readdirSync(root).filter((name) => name !== '.gitattributes' && name !== INTEGRITY).sort();
+  assert.deepEqual(present, [...ALL, 'first-publication'].sort());
+  assert.equal(fs.readFileSync(path.join(root, '.gitattributes'), 'utf8').trim(), '* -text -diff');
+  for (const name of ALL) {
+    assert.deepEqual(fs.readdirSync(dirOf(name)).sort(), ['raw', `${name}.json`].sort(), name);
+    assert.deepEqual(fs.readdirSync(path.join(dirOf(name), 'raw')).sort(), [`${name}.stderr.raw.gz`, `${name}.stdout.raw.gz`], name);
+  }
+});
+
+test('every archived run of the fix verifies: transcripts, hashes, exit codes and summaries', T, () => {
+  for (const name of ALL.filter((item) => !KEPT_FAILED.includes(item))) assert.deepEqual(verifyRun(dirOf(name), name), [], name);
+  for (const name of KEPT_FAILED) assert.deepEqual(verifyRun(dirOf(name), name, { expectedExitCode: 1 }), [], name);
+  for (const name of [...HISTORY_REDS, ...FINAL_REDS, ...KEPT_FAILED]) assert.equal(readManifest(dirOf(name), name).exitCode, 1, name);
+  for (const name of [...GREENS, 'mutation-1', 'real-1', 'real-3']) assert.equal(readManifest(dirOf(name), name).exitCode, 0, name);
+  const failed = readManifest(dirOf('real-2'), 'real-2').summary;
+  assert.deepEqual([failed.tests, failed.pass, failed.fail], [3, 2, 1], 'the kept failed real run: two of three tests passed');
+  assert.deepEqual(failed.notOk, ['real Edge: a normal open and close leaves zero owned survivors and no scratch directory']);
+  assert.match(stdoutOf(dirOf('real-2'), 'real-2'), /expected: 'closed'\n\s+actual: 'timeout'/, 'real-2 failed on the strict graceful assertion of the normal close, not on a process fact');
+});
+
+test('every final run pins the exact bytes of every file it ran on, and the specification and README are among them', T, () => {
+  for (const name of FINAL_RUNS) assert.deepEqual(verifyRun(dirOf(name), name, { pinInputs: true }), [], name);
+  for (const name of DOC_RUNS) {
+    const inputs = readManifest(dirOf(name), name).inputs.map((input) => path.basename(input.path));
+    for (const doc of PINNED_DOCS) assert.ok(inputs.includes(doc), `${name} pins ${doc}`);
+  }
+  assert.ok(readManifest(dirOf('mutation-1'), 'mutation-1').inputs.some((input) => /mutate-lex\.cjs$/.test(input.path)));
+});
+
+test('the REDs fail on assertions about the specified behavior and name a failing test for every finding the first publication still had: F3, F5, F7 (and SR5, SR7 on the final tests)', T, () => {
+  for (const [name, findings] of [...HISTORY_REDS.map((item) => [item, ['F3', 'F5', 'F7']]), ...FINAL_REDS.map((item) => [item, ['F3', 'F5', 'F7', 'SR5', 'SR7']])]) {
+    const manifest = readManifest(dirOf(name), name);
+    const text = stdoutOf(dirOf(name), name);
+    assert.ok(manifest.summary.fail >= 5 && manifest.summary.tests >= 12, `${name}: ${manifest.summary.fail} of ${manifest.summary.tests}`);
+    assert.ok((text.match(/code: 'ERR_ASSERTION'/g) || []).length >= 5, `${name}: assertion failures`);
+    assert.doesNotMatch(text, /Cannot find module|MODULE_NOT_FOUND|SyntaxError/, name);
+    for (const finding of findings) assert.ok(manifest.summary.notOk.some((item) => item.startsWith(`${finding}:`)), `${name}: a failing test for ${finding}`);
+  }
+});
+
+test('the GREEN suite passes every test, the per-file rows are at least 85/85/85 and the RED tests ran unchanged inside it', T, () => {
+  const suite = readManifest(dirOf('green-1-suite'), 'green-1-suite');
+  assert.deepEqual([suite.summary.pass, suite.summary.fail, suite.summary.skipped, suite.summary.cancelled], [suite.summary.tests, 0, 0, 0]);
+  assert.ok(suite.summary.tests >= 40);
+  for (const [name, file] of [['green-2-coverage-close', 'close.cjs'], ['green-3-coverage-session', 'session.cjs']]) {
+    const rows = readManifest(dirOf(name), name).summary.coverageRows.filter((row) => row.file === file);
+    assert.equal(rows.length, 1, name);
+    assert.ok(rows[0].lines >= 85 && rows[0].branches >= 85 && rows[0].functions >= 85, JSON.stringify(rows[0]));
+  }
+  const red = readManifest(dirOf('red-2-final'), 'red-2-final').inputs;
+  for (const input of red.filter((item) => /u006-fix-(session|close)\.test\.cjs$/.test(item.path))) {
+    assert.equal(suite.inputs.find((item) => item.path === input.path).crlfToLfSha256, input.crlfToLfSha256, `${input.path} is the same test in the RED and in the GREEN`);
+  }
+});
+
+test('systematic mutation: every statement and condition was mutated, nothing survives unexplained, every equivalent carries a proof', T, () => {
+  const report = mutationReport();
+  assert.equal(report.control.ok, true);
+  assert.ok(report.summary.total >= 200);
+  assert.deepEqual(report.summary.unexplained, []);
+  assert.deepEqual(report.mutants.filter((mutant) => mutant.timedOut), [], 'a mutant that timed out is undecided: none may exist');
+  assert.equal(new Set(report.mutants.map((mutant) => mutant.id)).size, report.mutants.length);
+  assert.deepEqual([...new Set(report.mutants.map((mutant) => mutant.file))].sort(), ['close.cjs', 'session.cjs']);
+  for (const mutant of report.mutants) {
+    assert.ok(['killed', 'killed-by-crash', 'equivalent'].includes(mutant.status), mutant.id);
+    if (mutant.status === 'equivalent') assert.ok(typeof mutant.proof === 'string' && mutant.proof.length >= 25, `${mutant.id} has a proof`);
+    if (mutant.status === 'killed') assert.ok(mutant.failing.length >= 1, mutant.id);
+  }
+});
+
+test('real Edge evidence: signed and qualified, normal close, forced stuck close and two live sessions, no foreign process touched; a scratch-removal EBUSY is recorded, nothing else tolerated', T, () => {
+  const lines = observations();
+  assert.equal(lines.length, 3);
+  const majors = readQualified().qualifiedMajors;
+  for (const line of lines) {
+    assert.equal(line.edge.status, 'Valid');
+    assert.match(line.edge.subject, /O=Microsoft Corporation/);
+    assert.ok(majors.includes(Number(line.edge.version.split('.')[0])));
+  }
+  const [normal, stuck, two] = lines;
+  const busy = [normal.closeBusy, stuck.closeBusy, two.closeBusyFirst, two.closeBusySecond];
+  for (const code of busy) assert.ok(code === null || ['EBUSY', 'EPERM', 'ENOTEMPTY'].includes(code), `a tolerated close error is a lock error: ${code}`);
+  for (const line of lines) assert.ok([0, 1].includes(line.openRetries), `at most one retried open per test (a typed launch timeout of the sealed helper): ${line.openRetries}`);
+  assert.equal(normal.case, 'normal');
+  assert.equal(normal.rootsAliveBeforeClose, true);
+  assert.equal(normal.graceful, 'closed');
+  assert.equal(normal.scratch, normal.closeBusy === null ? 'removed' : 'failed');
+  assert.equal(stuck.case, 'forced-stuck-close');
+  assert.equal(stuck.graceful, 'timeout');
+  assert.equal(stuck.scratch, stuck.closeBusy === null ? 'removed' : 'failed');
+  assert.equal(stuck.lookAlikeAlive, true);
+  // Other agents run real browsers at the same time and close them on their own: a foreign Edge process present before may be gone afterwards (real-3 recorded two). That is not a
+  // kill: the real test asserted, and passed, that no kill request ever named a foreign process and that every request named an owned identity.
+  assert.ok(Array.isArray(stuck.foreignVanished) && stuck.foreignVanished.every(Number.isInteger));
+  assert.ok(stuck.foreignEdgeBefore >= 0 && stuck.foreignEdgeAfter >= 0);
+  assert.ok(stuck.terminated >= 1);
+  assert.equal(two.case, 'two-live-sessions-fifo');
+  assert.equal(two.bRootAliveAfterFirstClose && two.bTitleAfterFirstClose, true);
+  assert.equal(two.firstClean || two.closeBusyFirst !== null, true);
+  assert.equal(two.secondClean || two.closeBusySecond !== null, true);
+  assert.equal(two.killRequestsSecond, 0);
+});
+
+test('README-U006.md states exactly the figures the stored evidence shows', T, () => {
+  const text = readme();
+  for (const [label, value] of figures()) assert.ok(text.includes(`| ${label} | ${value} |`), `README row: ${label} = ${value}`);
+});
+
+test('the README figures table holds exactly the rows the evidence recomputes: a new row fails until it is compared', T, () => {
+  const lines = readme().split('\n');
+  const start = lines.findIndex((line) => line === '| Figure | Value |');
+  assert.ok(start >= 0, 'the figures table exists');
+  const body = [];
+  for (const line of lines.slice(start + 2)) {
+    if (!line.startsWith('|')) break;
+    body.push(line);
+  }
+  assert.deepEqual(body.map((line) => line.split('|')[1].trim()).sort(), figures().map(([label]) => label).sort());
+});
+
+// Controller note (U018 addendum): the sealed list of qualified Edge majors is never read directly, readQualified() of testing\browser\qualify merges it with its append-only
+// addendum. The scan covers EVERY lifecycle source and test (U004, U005 and U006 files alike; evidence is data), so a new file that names the sealed file fails until it is fixed.
+test('no lifecycle source or test names the sealed qualified-majors file outside a comment', T, () => {
+  const needle = ['qualified', 'json'].join('.');
+  const inCode = (text) => lex(text).filter((token) => token.type !== 'ws' && token.type !== 'comment').filter((token) => token.text.includes(needle));
+  const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (entry.isDirectory()) return entry.name === 'evidence' ? [] : walk(path.join(dir, entry.name));
+    return /\.(cjs|js|mjs)$/.test(entry.name) ? [path.join(dir, entry.name)] : [];
+  });
+  const files = walk(lifecycle);
+  assert.ok(files.length >= 40, `scanned ${files.length} files`);
+  for (const name of ['close.cjs', 'session.cjs', 'owned.cjs', 'startup.cjs', 'tests/u006-support-real.cjs', 'tests/u006-evidence.test.cjs', 'tests/u006-fix-evidence.test.cjs', 'tests/u005-real.test.cjs']) {
+    assert.ok(files.some((file) => file.endsWith(name.replace(/\//g, path.sep))), `${name} is scanned`);
+  }
+  for (const file of files) assert.deepEqual(inCode(fs.readFileSync(file, 'utf8')).map((token) => token.text.slice(0, 80)), [], `${path.relative(lifecycle, file)} names ${needle} in code`);
+  assert.equal(inCode(`const f = '../qualify/${needle}';`).length, 1, 'a name in a string is found');
+  assert.equal(inCode('const t = `x/' + needle + '`;').length, 1, 'a name in a template is found');
+  assert.equal(inCode(`// ${needle}\n/* ${needle} */ const x = 1;`).length, 0, 'a name in a comment is not an access');
+});
+
+function withScratch(run) {
+  const dir = fs.mkdtempSync(path.join(__dirname, 'u006-fix-tamper-'));
+  try {
+    return run(dir);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test('tampering is detected BY NAME: a README byte, a feature byte, a production byte, a test byte, a transcript byte, an edited manifest, an edited pin', T, () => {
+  const name = 'green-1-suite';
+  withScratch((dir) => {
+    const copy = path.join(dir, name);
+    fs.cpSync(dirOf(name), copy, { recursive: true });
+    const manifest = readManifest(copy, name);
+    const rootDir = path.join(dir, 'root');
+    for (const input of manifest.inputs) {
+      fs.mkdirSync(path.dirname(path.join(rootDir, input.path)), { recursive: true });
+      fs.copyFileSync(path.join(repoRoot, input.path), path.join(rootDir, input.path));
+    }
+    const options = { pinInputs: true, root: rootDir };
+    assert.deepEqual(verifyRun(copy, name, options), []);
+    for (const needle of ['README-U006.md', 'U006.feature', 'close.cjs', 'session.cjs', 'u006-fix-close.test.cjs']) {
+      const input = manifest.inputs.find((item) => item.path.endsWith(needle));
+      const file = path.join(rootDir, input.path);
+      const original = fs.readFileSync(file);
+      const flipped = Buffer.from(original);
+      flipped[Math.floor(flipped.length / 2)] ^= 0x01;
+      fs.writeFileSync(file, flipped);
+      assert.ok(verifyRun(copy, name, options).some((item) => item.includes(`${needle} changed after the run`)), `a byte of ${needle}`);
+      fs.writeFileSync(file, original);
+    }
+    const gz = path.join(copy, 'raw', `${name}.stdout.raw.gz`);
+    const bytes = fs.readFileSync(gz);
+    bytes[bytes.length - 12] ^= 0xff;
+    fs.writeFileSync(gz, bytes);
+    assert.ok(verifyRun(copy, name).some((item) => /stdout/.test(item)), 'a transcript byte');
+    fs.cpSync(path.join(dirOf(name), 'raw', `${name}.stdout.raw.gz`), gz);
+    const file = path.join(copy, `${name}.json`);
+    const forged = { ...manifest, inputs: manifest.inputs.map((input, index) => (index === 0 ? { ...input, crlfToLfSha256: '0'.repeat(64) } : input)) };
+    fs.writeFileSync(file, JSON.stringify(forged));
+    assert.ok(verifyRun(copy, name, options).some((item) => item.includes(`${manifest.inputs[0].path} changed after the run`)), 'a forged pin');
+    fs.writeFileSync(file, JSON.stringify({ ...manifest, exitCode: 1 }));
+    assert.ok(verifyRun(copy, name).some((item) => /exit 1/.test(item)), 'an edited manifest');
+  });
+});
+
+test('the first-publication snapshot is what the manifests say and what git published when the object database is available', T, () => {
+  const snapshot = JSON.parse(fs.readFileSync(path.join(dirOf('first-publication'), 'first-publication.json'), 'utf8'));
+  const red = readManifest(dirOf('red-1-first-publication'), 'red-1-first-publication').inputs;
+  for (const file of snapshot.files) {
+    const bytes = fs.readFileSync(path.join(dirOf('first-publication'), file.snapshot));
+    assert.equal(sha256(bytes), file.sha256);
+    assert.equal(bytes.length, file.bytes);
+    assert.ok(!bytes.includes(13), 'the snapshot holds LF bytes');
+    assert.equal(red.find((item) => item.path.endsWith(file.snapshot)).crlfToLfSha256, file.sha256, 'the RED ran on this snapshot');
+    const probe = require('node:child_process').spawnSync('git', ['-C', repoRoot, 'cat-file', 'blob', `${snapshot.commit}:${file.path}`], { windowsHide: true, maxBuffer: 16 * 1024 * 1024 });
+    if (probe.status === 0) assert.equal(sha256(crlfToLf(probe.stdout)), file.sha256, `${file.path} is the blob of ${snapshot.commit}`);
+  }
+});
