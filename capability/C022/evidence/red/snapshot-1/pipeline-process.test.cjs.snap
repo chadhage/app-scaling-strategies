@@ -1,0 +1,154 @@
+'use strict';
+
+// Nothing runs behind a refusal against a server in a SEPARATE PROCESS (one shared child for the whole file), HTTP/1.1 and HTTP/1.0, plus
+// the structural resource test for the third hole: 128 sockets that each send [G][G][X] must pin nothing. Facts are COUNTED (answers,
+// closed sockets, the world digest of the child before and after), never timed.
+const assert = require('node:assert/strict');
+const net = require('node:net');
+const { after, before, test } = require('node:test');
+const { call, raw } = require('./helpers.cjs');
+const rows = require('./rows.cjs');
+const { startChild } = require('./proc.cjs');
+
+let server;
+let port;
+let t;
+let table;
+let digest0;
+before(async () => {
+  server = startChild({ mode: 'real' });
+  ({ port, tokens: t } = await server.receive('ready'));
+  table = rows.ROWS(t);
+  digest0 = (await server.ask('report', 'report')).digest;
+});
+after(async () => { await server.stop(); });
+
+const label = (row) => row.name || row.code;
+const danaRole = async () => (await call(port, 'GET', '/v1/session', { token: t.dana })).json.session.role;
+const reset = async () => {
+  if ((await danaRole()) !== 'member') await call(port, 'POST', '/v1/admin/role', { token: t.ada, body: { user: 'dana', role: 'member' } });
+};
+const legit = (v = '1.1') => rows.LEGIT(t)(port, v);
+const down = (v = '1.1') => rows.MUTATION(t).down(port, v);
+const up = (v = '1.1') => rows.MUTATION(t).up(port, v);
+
+function check(row, answers, before) {
+  const expected = [...before, row.status];
+  const statuses = answers.map((answer) => answer.status);
+  if (row.lossy) assert.deepEqual(statuses, expected.slice(0, statuses.length));
+  else assert.deepEqual(statuses, expected);
+}
+
+test('the child serves a prepared world and a positive control keeps its connection open', async () => {
+  const result = await raw.exchange(port, legit(), { waitMs: 3000, settleMs: 300 });
+  assert.deepEqual(result.answers.map((answer) => answer.status), [200]);
+  assert.equal(result.closedByServer, false);
+});
+
+for (const row of rows.ROWS(new Proxy({}, { get: () => 'placeholder' }))) {
+  test(`${label(row)} in a separate server process: [G][R][M], [G][G][R][M], [M1][R][M2] in HTTP/1.1 and HTTP/1.0`, async () => {
+    const entry = table.find((candidate) => label(candidate) === label(row));
+    try {
+      for (const earlier of [1, 2]) {
+        const result = await raw.exchange(port, Buffer.concat([...Array(earlier).fill(0).map(() => legit()), entry.build(port), down()]), { waitMs: 6000, settleMs: 250 });
+        check(entry, result.answers, Array(earlier).fill(200));
+        assert.equal(result.closedByServer, true);
+        assert.equal(await danaRole(), 'member', `${earlier} legitimate before`);
+      }
+      const first = await raw.exchange(port, Buffer.concat([down(), entry.build(port), up()]), { waitMs: 6000, settleMs: 250 });
+      check(entry, first.answers, [200]);
+      assert.equal(await danaRole(), 'viewer', 'M1 applied, M2 behind the refusal did not');
+      await reset();
+      if (!entry.only11) {
+        const old = await raw.exchange(port, Buffer.concat([legit('1.0'), entry.build(port, '1.0'), down('1.0')]), { waitMs: 6000, settleMs: 250 });
+        check(entry, old.answers, [200]);
+        assert.equal(await danaRole(), 'member', 'HTTP/1.0 keep-alive');
+        const mixed = await raw.exchange(port, Buffer.concat([legit(), entry.build(port), down('1.0')]), { waitMs: 6000, settleMs: 250 });
+        check(entry, mixed.answers, [200]);
+        assert.equal(await danaRole(), 'member', 'HTTP/1.0 mutation behind an HTTP/1.1 refusal');
+      }
+    } finally {
+      await reset();
+    }
+  });
+}
+
+const NODE_OWN = [
+  { name: 'unknown Expect', status: 417, only11: true, build: (v) => rows.get(port, '/v1/projects', t.alf, v, ['Expect: nonsense']) },
+  { name: 'unknown Expect on a POST with a body', status: 417, only11: true, build: (v) => rows.post(port, '/v1/projects', t.alf, { name: 'x', units: 1 }, v, ['Expect: nonsense']) },
+  { name: 'parse error', status: 400, build: () => Buffer.from(`GET /v1/projects HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nBad Header Line\r\n\r\n`) },
+  { name: 'no Host', status: 421, build: (v) => raw.request(port, 'GET', '/v1/projects', { version: v, host: false, headers: [rows.bearer(t.alf)] }) },
+  { name: 'CONNECT', status: 405, only11: true, build: () => Buffer.from(`CONNECT 127.0.0.1:1 HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\n\r\n`) }
+];
+
+for (const x of NODE_OWN) {
+  test(`third hole in a separate process, ${x.name}: [G][G][X], [G][G][G][X], [G][G][X][G], [POST][G][X] in both framings`, async () => {
+    try {
+      for (const v of x.only11 ? ['1.1'] : ['1.1', '1.0']) {
+        const shapes = [
+          [[legit(v), legit(v), x.build(v)], [200, 200]], [[legit(v), legit(v), legit(v), x.build(v)], [200, 200, 200]],
+          [[legit(v), legit(v), x.build(v), legit(v)], [200, 200]], [[down(v), legit(v), x.build(v)], [200, 200]]
+        ];
+        for (const [parts, before] of shapes) {
+          const result = await raw.exchange(port, Buffer.concat(parts), { waitMs: 6000, settleMs: 250 });
+          assert.deepEqual(result.answers.map((answer) => answer.status), [...before, x.status], `HTTP/${v}`);
+          assert.equal(result.closedByServer, true, `HTTP/${v}`);
+          await reset();
+        }
+      }
+    } finally {
+      await reset();
+    }
+  });
+}
+
+// Many sockets, each with two legitimate requests before the Node-own refusal. Afterwards every socket is closed BY THE SERVER, each saw
+// exactly its owed answers, and a legitimate request is still served. Counted, not timed: the wait is for the close EVENTS.
+function burst(count, build, statuses) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    let pending = count;
+    const deadline = setTimeout(() => reject(new Error(`${pending} of ${count} sockets were not closed by the server`)), 120000);
+    for (let index = 0; index < count; index += 1) {
+      const socket = net.connect({ host: '127.0.0.1', port, allowHalfOpen: true });
+      const chunks = [];
+      let done = false;
+      const settle = () => {
+        if (done) return;
+        done = true;
+        socket.destroy();
+        results.push(raw.parseAnswers(Buffer.concat(chunks)).map((answer) => answer.status));
+        pending -= 1;
+        if (pending === 0) { clearTimeout(deadline); resolve(results); }
+      };
+      socket.on('data', (chunk) => chunks.push(chunk));
+      socket.on('end', settle);
+      socket.on('close', settle);
+      socket.on('error', settle);
+      socket.write(build());
+    }
+  }).then((results) => {
+    assert.equal(results.length, count);
+    for (const answers of results) assert.deepEqual(answers, statuses);
+  });
+}
+
+test('128 sockets that each send [G][G][X] (unknown Expect) are all closed by the server and pin nothing; the 128 x [G][G][404] control behaves the same', async () => {
+  await burst(128, () => Buffer.concat([legit(), legit(), rows.get(port, '/v1/projects', t.alf, '1.1', ['Expect: nonsense'])]), [200, 200, 417]);
+  await burst(128, () => Buffer.concat([legit(), legit(), rows.get(port, '/v1/nowhere', t.alf, '1.1')]), [200, 200, 404]);
+  await burst(64, () => Buffer.concat([legit(), legit(), Buffer.from(`GET /v1/projects HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nBad Header Line\r\n\r\n`)]), [200, 200, 400]);
+  assert.equal((await call(port, 'GET', '/v1/session', { token: t.alf })).status, 200, 'a legitimate GET is answered after the bursts');
+  // Polled to quiescence (the client side of a socket may be destroyed a moment before the server's own close event fires): no fixed sleep decides.
+  let report = await server.ask('report', 'report');
+  for (let attempt = 0; attempt < 200 && report.sockets.some((socket) => !socket.closed); attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    report = await server.ask('report', 'report');
+  }
+  assert.ok(report.sockets.length >= 320, 'the server counted every attacking socket');
+  assert.equal(report.sockets.filter((socket) => !socket.closed).length, 0, 'no socket is left open on the server side');
+});
+
+test('after every cell of this file the world of the server process is exactly what it was before (no refusal and no pipelined request left a trace)', async () => {
+  await reset();
+  assert.equal((await server.ask('report', 'report')).digest, digest0);
+});

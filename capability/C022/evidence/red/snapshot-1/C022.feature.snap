@@ -1,0 +1,108 @@
+Feature: Isolated synthetic tenant, authentication and session state
+  C022 is a local, synthetic H005 fixture, not the approved Node 24 Express control API and not an identity service. Three fictional
+  tenants (tenant-alder, tenant-birch, tenant-cedar) share ONE loopback server. Each has its own users, roles, sessions, projects,
+  profiles and audit trail. Users: ada (admin), alf (member), ana (viewer) in alder; bea, ben, bo in birch; cai, cy in cedar; dana belongs
+  to alder (member) and birch (viewer); nomad belongs to no tenant. An in-process stand-in for the identity provider (issueTicket) hands
+  out one-time login tickets: nothing here is a real credential, there is no Entra, no cloud and no spend.
+  The tenant of a request is derived ONLY from the verified session. A tenant named by a client in any header, query, path or body is
+  refused (400 TENANT_CLAIM_REJECTED, whatever its value). Every read, list, search, mutation, cursor and ETag is scoped by tenant and the
+  answer to "someone else's id" is byte for byte the answer to "no such id". The decision is repeated where the effect is committed.
+  The shared browser helper permits only GET and HEAD: the real-browser observation shows reads and probes; every POST, PUT and DELETE
+  is proven with real loopback sockets in Node.
+
+  Scenario Outline: The tenant comes only from the verified session, never from a client claim
+    Given "<user>" of tenant "<tenant>" holds an active session
+    When the request carries the claim "<claim>" naming the OTHER tenant or the own one
+    Then the answer is HTTP 400 with code "TENANT_CLAIM_REJECTED", the connection is closed and nothing changed
+    Examples:
+      | user | tenant       | claim                                             |
+      | ada  | tenant-alder | header X-Tenant                                   |
+      | ada  | tenant-alder | header X-Forwarded-Tenant                         |
+      | ben  | tenant-birch | header Tenant-Id                                  |
+      | ada  | tenant-alder | query ?tenant=                                    |
+      | ben  | tenant-birch | query ?orgId=                                     |
+      | ada  | tenant-alder | body field tenant on POST /v1/projects            |
+      | alf  | tenant-alder | body field tenantId on PUT /v1/projects/proj-0001 |
+
+  Scenario Outline: A cross-tenant probe on every kind and verb is answered exactly like a missing id, with no effect
+    Given tenant-alder owns "proj-0001" and tenant-birch owns "proj-0001" (the same id, other content)
+    When a member of one tenant sends "<verb> <path>" for an id that exists only in the OTHER tenant
+    Then the answer is HTTP 404 "RESOURCE_NOT_FOUND" and its bytes (status, headers except Date, body) equal the answer for an id that exists nowhere
+    And the world snapshot of both tenants is unchanged and the foreign tenant's audit trail gained nothing
+    Examples:
+      | verb   | path                   |
+      | GET    | /v1/projects/<id>      |
+      | PUT    | /v1/projects/<id>      |
+      | DELETE | /v1/projects/<id>      |
+      | GET    | /v1/profiles/<profile> |
+      | POST   | /v1/admin/revoke (sid) |
+      | POST   | /v1/admin/role (user)  |
+
+  Scenario: The same resource id in two tenants never collides or leaks
+    When both tenants hold "proj-0001" and each edits and deletes its own
+    Then each tenant reads only its own content and ETag and the other is unaffected
+
+  Scenario: Lists, counts, pagination and search show only the caller's tenant
+    When members of tenants with 3, 2 and 0 projects list, page and search
+    Then every item, count and cursor belongs to the caller's tenant and a cursor of another tenant is refused as CURSOR_INVALID
+
+  Scenario: Conditional requests and caches cannot cross tenants
+    Then every answer of the server's own handler says "Cache-Control: no-store" and "Vary: Authorization" (the answers Node gives itself say no-store only)
+    And an ETag taken from tenant A never validates anything in tenant B (200, not 304) and an If-Match from A fails in B as 412
+    And the server never sets or reads a cookie
+
+  Scenario: The audit trail is per tenant and per user, admin only
+    Then a denial or probe is recorded in the caller's tenant only, anonymous refusals in a separate ring, and one user's flood cannot evict another's records
+
+  Scenario: Resource quota exhaustion in one tenant cannot starve another
+    When tenant-cedar fills its project quota and its session quota
+    Then further creates and logins in cedar are refused 409 and tenant-alder and tenant-birch still create and log in
+
+  Scenario: Anonymous to authenticated changes the session id (no fixation)
+    Given an anonymous session with token A
+    When the user logs in with a valid ticket while presenting A
+    Then the answer carries a NEW token B and a new session id, A is dead (SESSION_SUPERSEDED), and a client-chosen id is refused
+
+  Scenario Outline: Illegal identity and session transitions fail with a typed refusal and no effect
+    When <attempt>
+    Then the answer is HTTP <status> with code "<code>" and the world snapshot is unchanged
+    Examples:
+      | attempt                                                | status | code                         |
+      | a login ticket is replayed after its first use         | 401    | TICKET_INVALID               |
+      | an expired or never issued ticket is presented         | 401    | TICKET_INVALID               |
+      | nomad (no tenant) redeems a ticket                     | 403    | NOT_A_MEMBER                 |
+      | an active session token is presented to login          | 409    | ALREADY_AUTHENTICATED        |
+      | logout is repeated with the dead token                 | 401    | SESSION_LOGGED_OUT           |
+      | a revoked token is used                                | 401    | SESSION_REVOKED              |
+      | an expired token is used                               | 401    | SESSION_EXPIRED              |
+      | a token is altered in any one character                | 401    | TOKEN_UNKNOWN                |
+      | an anonymous token reaches a tenant route              | 401    | LOGIN_REQUIRED               |
+      | an active session asks to switch tenant                | 403    | TENANT_SWITCH_REQUIRES_LOGIN |
+      | an admin revokes a session that already ended          | 409    | SESSION_NOT_ACTIVE           |
+      | an admin demotes the last admin of the tenant          | 409    | LAST_ADMIN                   |
+      | a viewer sends a mutation                              | 403    | ROLE_FORBIDDEN               |
+      | a body names role, owner, id or version                | 400    | INPUT_UNKNOWN_FIELD          |
+
+  Scenario: A role change takes effect at once and an old token never keeps the old privilege
+    When an admin demotes a member to viewer
+    Then the member's EXISTING token is refused every mutation at once; after a re-upgrade the same token acts by the CURRENT role only
+
+  Scenario: Tenant switch needs a fresh authentication
+    Given dana holds an alder session
+    When dana asks to switch, or sends a tenant claim, or presents the alder token for birch resources
+    Then every attempt is refused with no effect; only a new login with a ticket for birch gives a separate birch session, and the alder session is untouched
+
+  Scenario: Races are decided where the effect is committed
+    Then of two logins with one ticket exactly one wins, a session that expires or is revoked while its request is queued has no effect, and a logout racing a mutation leaves a consistent state
+
+  Scenario: Every refusal ends the connection and nothing runs behind it
+    Then EVERY refusal status, first or later on a kept-alive connection, after an await, and every answer Node gives itself (417, no Host, parse error, CONNECT) is answered once, then the connection is closed
+    And a valid mutation pipelined behind a refusal, behind one, two or three requests, in HTTP/1.1 and HTTP/1.0, in this process and in a separate one, never applies
+    And 128 sockets each sending a GET, a GET and an unknown Expect leave no open socket and a legitimate GET is answered
+
+  Scenario: A seeded random sequence keeps the global invariant after every operation
+    Then no identity observes or changes the state of a tenant it is not authenticated into and every refused transition had no effect
+
+  Scenario: The inspection page shows allowed and refused outcomes re-derived from facts
+    Given two users of two tenants paste their tokens
+    Then the page issues real fetches and shows, per probe, the observed status and typed code and an isolation verdict computed by comparing facts, never server prose

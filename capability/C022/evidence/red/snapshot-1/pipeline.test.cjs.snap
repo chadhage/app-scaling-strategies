@@ -1,0 +1,146 @@
+'use strict';
+
+// Nothing runs behind a refusal, in THIS process: every row of the refusal table (rows.cjs) in the shapes of orders\_PIPELINING.md, with
+// raw sockets, and a valid authorized mutation (the admin turns dana into a viewer) pipelined behind the refusal. The answers, the state
+// and dana's role decide. Third hole (rev-C059): TWO or THREE legitimate requests BEFORE every Node-own refusal.
+const assert = require('node:assert/strict');
+const net = require('node:net');
+const { after, before, test } = require('node:test');
+const { raw, startApp } = require('./helpers.cjs');
+const rows = require('./rows.cjs');
+
+let ctx;
+let t;
+let table;
+before(async () => {
+  ctx = await startApp({ app: { hooks: rows.HOOKS } });
+  t = await rows.prepare(ctx);
+  table = rows.ROWS(t);
+});
+after(async () => { await ctx.close(); });
+
+const label = (row) => row.name || row.code;
+const danaRole = async () => (await ctx.call('GET', '/v1/session', { token: t.dana })).json.session.role;
+const reset = async () => {
+  if ((await danaRole()) !== 'member') await ctx.call('POST', '/v1/admin/role', { token: t.ada, body: { user: 'dana', role: 'member' } });
+};
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+// Every cell starts from, and ends in, the same state, even when an assertion of the cell fails.
+const cell = (body) => async () => {
+  try { await body(); } finally { await reset(); }
+};
+
+// Sends the parts as separate TCP writes (a pause between them only SHAPES the input, no assertion waits on a clock).
+function exchangeParts(parts) {
+  return new Promise((resolve) => {
+    const socket = net.connect({ host: '127.0.0.1', port: ctx.port, allowHalfOpen: true });
+    const chunks = [];
+    let closed = false;
+    let timer = null;
+    const finish = () => { clearTimeout(timer); socket.destroy(); resolve({ answers: raw.parseAnswers(Buffer.concat(chunks)), closedByServer: closed }); };
+    socket.on('data', (chunk) => { chunks.push(chunk); clearTimeout(timer); timer = setTimeout(finish, 300); });
+    const ended = () => { closed = true; finish(); };
+    socket.on('error', ended);
+    socket.on('end', ended);
+    socket.on('close', ended);
+    timer = setTimeout(finish, 6000);
+    (async () => {
+      for (const part of parts) {
+        if (!socket.destroyed) socket.write(part);
+        await sleep(15);
+      }
+    })();
+  });
+}
+
+function check(row, answers, expectedBefore) {
+  const expected = [...expectedBefore, row.status];
+  const statuses = answers.map((answer) => answer.status);
+  if (row.lossy) assert.deepEqual(statuses, expected.slice(0, statuses.length), 'only the answers it was owed, in order');
+  else assert.deepEqual(statuses, expected, `${label(row)}: answers`);
+}
+
+for (const row of rows.ROWS(new Proxy({}, { get: () => 'placeholder' }))) {
+  const entry = () => table.find((candidate) => label(candidate) === label(row));
+  const build = (...args) => entry().build(...args);
+  const mutation = () => rows.MUTATION(t);
+  const legit = () => rows.LEGIT(t);
+
+  test(`${label(row)}: [R][M] in one write: the mutation behind the refusal never runs`, cell(async () => {
+    const result = await raw.exchange(ctx.port, Buffer.concat([build(ctx.port), mutation().down(ctx.port)]), { waitMs: 6000, settleMs: 250 });
+    check(entry(), result.answers, []);
+    assert.equal(result.closedByServer, true);
+    assert.equal(await danaRole(), 'member');
+  }));
+
+  test(`${label(row)}: [G][R][M] and [G][G][R][M]: the earlier requests are answered IN ORDER, the mutation never runs`, cell(async () => {
+    for (const earlier of [1, 2]) {
+      const bytes = Buffer.concat([...Array(earlier).fill(0).map(() => legit()(ctx.port)), build(ctx.port), mutation().down(ctx.port)]);
+      const result = await raw.exchange(ctx.port, bytes, { waitMs: 6000, settleMs: 250 });
+      check(entry(), result.answers, Array(earlier).fill(200));
+      assert.equal(result.closedByServer, true, `${earlier} legitimate request(s) before`);
+      assert.equal(await danaRole(), 'member', `${earlier} legitimate request(s) before`);
+    }
+  }));
+
+  test(`${label(row)}: [M1][R][M2]: the first mutation applies and is answered, the second never runs`, cell(async () => {
+    const bytes = Buffer.concat([mutation().down(ctx.port), build(ctx.port), mutation().up(ctx.port)]);
+    const result = await raw.exchange(ctx.port, bytes, { waitMs: 6000, settleMs: 250 });
+    check(entry(), result.answers, [200]);
+    assert.equal(result.closedByServer, true);
+    assert.equal(await danaRole(), 'viewer', 'M1 applied once and M2 behind the refusal did not');
+  }));
+
+  test(`${label(row)}: the same pair in TWO writes: nothing runs behind the refusal either`, cell(async () => {
+    const result = await exchangeParts([build(ctx.port), mutation().down(ctx.port)]);
+    // A reset can discard an answer the client has not read yet (Windows resets a connection that still has unread data in flight): the
+    // answers only have to be the ones owed, in order (none is allowed); the state decides.
+    check({ ...entry(), lossy: true }, result.answers, []);
+    assert.equal(result.closedByServer, true);
+    assert.equal(await danaRole(), 'member');
+  }));
+
+  if (!row.only11) {
+    test(`${label(row)}: HTTP/1.0 framing: [G][R][M] with keep-alive, and an HTTP/1.1 refusal behind which an HTTP/1.0 mutation is pipelined`, cell(async () => {
+      const framed = Buffer.concat([legit()(ctx.port, '1.0'), build(ctx.port, '1.0'), mutation().down(ctx.port, '1.0')]);
+      const result = await raw.exchange(ctx.port, framed, { waitMs: 6000, settleMs: 250 });
+      check(entry(), result.answers, [200]);
+      assert.equal(await danaRole(), 'member', 'HTTP/1.0 keep-alive');
+      const mixed = Buffer.concat([legit()(ctx.port), build(ctx.port), mutation().down(ctx.port, '1.0')]);
+      const second = await raw.exchange(ctx.port, mixed, { waitMs: 6000, settleMs: 250 });
+      check(entry(), second.answers, [200]);
+      assert.equal(await danaRole(), 'member', 'an HTTP/1.0 mutation behind an HTTP/1.1 refusal');
+    }));
+  }
+}
+
+// The third hole: a Node-own answer decided at PARSE time, with two or more legitimate requests before it.
+const NODE_OWN = (tok) => [
+  { name: 'unknown Expect', status: 417, only11: true, build: (p, v) => rows.get(p, '/v1/projects', tok.alf, v, ['Expect: nonsense']) },
+  { name: 'unknown Expect on a POST with a body', status: 417, only11: true, build: (p, v) => rows.post(p, '/v1/projects', tok.alf, { name: 'x', units: 1 }, v, ['Expect: nonsense']) },
+  { name: 'parse error', status: 400, build: (p) => Buffer.from(`GET /v1/projects HTTP/1.1\r\nHost: 127.0.0.1:${p}\r\nBad Header Line\r\n\r\n`) },
+  { name: 'no Host', status: 421, build: (p, v) => raw.request(p, 'GET', '/v1/projects', { version: v, host: false, headers: [rows.bearer(tok.alf)] }) },
+  { name: 'CONNECT', status: 405, only11: true, build: (p) => Buffer.from(`CONNECT 127.0.0.1:1 HTTP/1.1\r\nHost: 127.0.0.1:${p}\r\n\r\n`) }
+];
+
+for (const x of NODE_OWN({ alf: 'placeholder' })) {
+  test(`third hole, ${x.name}: [G][G][X], [G][G][G][X], [G][G][X][G], [POST][G][X] answer the earlier requests in order, then the refusal, then close`, cell(async () => {
+    const X = () => NODE_OWN(t).find((candidate) => candidate.name === x.name);
+    const g = (v) => rows.LEGIT(t)(ctx.port, v);
+    const post = (v) => rows.MUTATION(t).down(ctx.port, v);
+    for (const v of x.only11 ? ['1.1'] : ['1.1', '1.0']) {
+      const shapes = [
+        ['[G][G][X]', [g(v), g(v), X().build(ctx.port, v)], [200, 200]],
+        ['[G][G][G][X]', [g(v), g(v), g(v), X().build(ctx.port, v)], [200, 200, 200]],
+        ['[G][G][X][G]', [g(v), g(v), X().build(ctx.port, v), g(v)], [200, 200]],
+        ['[POST][G][X]', [post(v), g(v), X().build(ctx.port, v)], [200, 200]]
+      ];
+      for (const [shape, parts, before] of shapes) {
+        const result = await raw.exchange(ctx.port, Buffer.concat(parts), { waitMs: 6000, settleMs: 250 });
+        assert.deepEqual(result.answers.map((answer) => answer.status), [...before, x.status], `${shape} HTTP/${v}`);
+        assert.equal(result.closedByServer, true, `${shape} HTTP/${v}: the connection is closed`);
+        await reset();
+      }
+    }
+  }));
+}
