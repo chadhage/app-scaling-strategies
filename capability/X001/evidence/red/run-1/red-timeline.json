@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "name": "red-timeline",
+  "purpose": "X001 RED: behavioral specification of the timeline model run against the naive first attempt (evidence/red/timeline.stub.cjs, which re-runs the producer, folds with its own formula, clamps positions, interpolates gaps and refuses nothing). Must exit 1 on assertion failures.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "--test-reporter=tap",
+    "capability\\X001\\evidence\\red\\timeline.red.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "startedAtUtc": "2026-11-06T05:53:29.444Z",
+  "completedAtUtc": "2026-11-06T05:53:31.105Z",
+  "elapsedMs": 1661,
+  "timeoutMs": 120000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\X001\\evidence\\red\\timeline.red.test.cjs",
+      "bytes": 13162,
+      "rawSha256": "c5c3fb4809de15e55877fc19b4929632d09866bf8bc73523f050cd80824752d6",
+      "crlfToLfSha256": "ed28a713a17c2fb84fd62a17f280914562a618d9bc55709ac1d3e9b459c4d1cf"
+    },
+    {
+      "path": "capability\\X001\\evidence\\red\\timeline.stub.cjs",
+      "bytes": 2083,
+      "rawSha256": "8d0eb2a3c6eba455f94a30fb0056bb3f70ad5c72a8b99686760c39fd8dda8ef1",
+      "crlfToLfSha256": "8ed9bf369d01d4ee590b789f4d5ba3e0da9723998d88415d18f74eaadfb242ef"
+    },
+    {
+      "path": "capability\\X001\\X001.feature",
+      "bytes": 3835,
+      "rawSha256": "2885530178c20e91a31548ff59221b827f859bcaebf6b8ce79a81e66e936a233",
+      "crlfToLfSha256": "dbaf96138a75ab24483880103f5a1f2be51ef06d9f1677c9b13b74d5618a6199"
+    },
+    {
+      "path": "capability\\X001\\saved.js",
+      "bytes": 121433,
+      "rawSha256": "8911f38da6e99049580e694748faa3c286b12398d68ce628f78241afe81172ff",
+      "crlfToLfSha256": "8911f38da6e99049580e694748faa3c286b12398d68ce628f78241afe81172ff"
+    },
+    {
+      "path": "capability\\X001\\imports.json",
+      "bytes": 7723,
+      "rawSha256": "b88eb627e8719e29e54b112aba31667a36d8cd1be3e902dd4b6b4457d1332c12",
+      "crlfToLfSha256": "b88eb627e8719e29e54b112aba31667a36d8cd1be3e902dd4b6b4457d1332c12"
+    },
+    {
+      "path": "capability\\C044\\reducer.js",
+      "bytes": 9963,
+      "rawSha256": "0d9965bff8bdf0e3e4a4861271f3c761efa69220313741d0b481be6ff84b92f2",
+      "crlfToLfSha256": "0c8f8e15ff795bd8a438d8b399d0febab6f53620673a976a720f3f4526713664"
+    }
+  ],
+  "summary": {
+    "tests": 14,
+    "suites": 0,
+    "pass": 1,
+    "fail": 13,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "stateAt(i) is the C044 reducer folded over entries 0..i for every position of every console run",
+      "a position outside the recording is typed NOT_RECORDED and carries no state, never the nearest one",
+      "replayed duplicates are counted and marked DUPLICATE, never applied as new events",
+      "a true gap names its exact skipped range and nothing inside it is interpolated",
+      "a restart is an epoch change with its position and each epoch keeps its own recorded window",
+      "a recording that stops before the producer total is INCOMPLETE and shows recorded of total",
+      "failed entries are FAILED and unknown events or entry types are UNKNOWN, never success-shaped",
+      "the accepted C034 traces fold with their own outcomes and hostile ones are refused with the decoder code",
+      "a malformed saved run is refused with a typed code",
+      "jumps land exactly on the next or previous gap, failure, unknown or epoch change",
+      "building and scrubbing re-executes nothing: no producer, timer or network is started",
+      "verify recomputes every position from the raw entries and detects a forged state",
+      "a fragment is parsed strictly and a hostile one is a typed refusal that echoes nothing"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red-timeline.stdout.raw.gz",
+      "bytes": 16799,
+      "sha256": "2dfbadee4c69b5716c9bc38346a7879fd0fe9408fb1c5f4e1dcfd1783596e80f",
+      "gzipBytes": 2376,
+      "gzipSha256": "2e42fcbda4144a84b55e6d5e1bcf59fa8b6e15327b85301a3607ca0855087169",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red-timeline.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

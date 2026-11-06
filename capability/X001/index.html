@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+  <title>X001 scrub a saved run timeline</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="../C020/contract.js"></script>
+  <script defer src="../C020/inspector.js"></script>
+  <script defer src="../C033/journey.js"></script>
+  <script defer src="../C034/trace.js"></script>
+  <script defer src="../C044/cursor.js"></script>
+  <script defer src="../C044/reducer.js"></script>
+  <script defer src="timeline.js"></script>
+  <script defer src="describe.js"></script>
+  <script defer src="saved.js"></script>
+  <script defer src="page.js"></script>
+</head>
+<body>
+  <main>
+    <p id="banner" class="banner">Training rehearsal - synthetic data - not a live Azure result</p>
+    <h1>Scrub a saved run timeline backward and forward</h1>
+    <p id="mode">OFFLINE: saved recordings of the accepted C044 console stream and the accepted C034 client trace, plus fictional hostile sets. Scrubbing only reads what was recorded. Nothing is run again: no producer, server, timer or network is started, and a position that was not recorded is never replaced by the nearest one.</p>
+    <section aria-labelledby="choose-heading">
+      <h2 id="choose-heading">Choose a saved run</h2>
+      <label for="saved-run">Saved run</label>
+      <select id="saved-run">
+        <option value="">Choose a saved run; no default success</option>
+      </select>
+      <div class="controls">
+        <button id="load" type="button">Load saved run</button>
+      </div>
+      <p id="status" role="status" aria-live="polite" data-state="UNLOADED">No saved run is loaded. Nothing is assumed to have succeeded.</p>
+      <p id="error" role="alert"></p>
+      <p id="provenance"></p>
+    </section>
+    <section aria-labelledby="scrub-heading">
+      <h2 id="scrub-heading">Timeline</h2>
+      <p id="scrub-label">Position on the saved timeline. Left and Right move by 1, Page Up and Page Down by 10, Home and End go to the first and the last position.</p>
+      <div id="scrub" role="slider" tabindex="-1" aria-labelledby="scrub-label" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="No saved run is loaded" aria-disabled="true">
+        <div id="scrub-fill"></div>
+      </div>
+      <p id="position" data-position="0" data-of="0">Position: none</p>
+      <div class="controls">
+        <button id="prev" type="button" disabled>Previous event</button>
+        <button id="next" type="button" disabled>Next event</button>
+      </div>
+      <div class="controls" role="group" aria-label="Jump to the previous or next gap, failure, unknown entry or epoch change">
+        <button id="prev-gap" type="button" disabled>Previous gap</button>
+        <button id="next-gap" type="button" disabled>Next gap</button>
+        <button id="prev-failure" type="button" disabled>Previous failure</button>
+        <button id="next-failure" type="button" disabled>Next failure</button>
+        <button id="prev-unknown" type="button" disabled>Previous unknown</button>
+        <button id="next-unknown" type="button" disabled>Next unknown</button>
+        <button id="prev-epoch" type="button" disabled>Previous epoch change</button>
+        <button id="next-epoch" type="button" disabled>Next epoch change</button>
+      </div>
+      <div class="controls" role="group" aria-label="Find a run sequence number in this recording">
+        <label for="seq-epoch">Epoch</label>
+        <input id="seq-epoch" type="text" inputmode="numeric" maxlength="3" size="3" autocomplete="off" disabled>
+        <label for="seq-number">Sequence</label>
+        <input id="seq-number" type="text" inputmode="numeric" maxlength="6" size="6" autocomplete="off" disabled>
+        <button id="seq-find" type="button" disabled>Find sequence</button>
+      </div>
+      <p id="seq-result" role="status" aria-live="polite"></p>
+    </section>
+    <section aria-labelledby="state-heading">
+      <h2 id="state-heading">State at this position</h2>
+      <p id="producing" data-mark="none">No position is shown.</p>
+      <dl id="state"></dl>
+    </section>
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Limits of this recording</h2>
+      <p id="verified">Nothing is verified yet.</p>
+      <ul id="limits"></ul>
+    </section>
+    <section aria-labelledby="entries-heading">
+      <h2 id="entries-heading">Every recorded entry</h2>
+      <p>Failed and unknown entries are listed with a text label and can never disappear.</p>
+      <ol id="entries"></ol>
+    </section>
+    <footer>One original X001 / L Delighter; gates C034 and C044. Fictional data and saved fictional-service recordings only: production Node 24, Express, Entra and any real service are neither validated nor registered. IaC N/A. No packages, cloud, identity, real users, credentials, deployment or spend.</footer>
+  </main>
+</body>
+</html>

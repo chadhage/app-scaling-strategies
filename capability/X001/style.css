@@ -1,0 +1,27 @@
+:root { color-scheme: light dark; --ink: #1b1b1b; --paper: #fbfbf8; --line: #6b6b6b; --accent: #0b5cad; --bad: #a4262c; --unknown: #6e4a00; }
+@media (prefers-color-scheme: dark) { :root { --ink: #f2f2ee; --paper: #1d1d1b; --line: #a0a09a; --accent: #6cb2f2; --bad: #ff8b8b; --unknown: #f2c66d; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
+main { max-width: 62rem; margin: 0 auto; padding: 1rem; }
+.banner { font-weight: 700; border: 2px solid var(--line); padding: 0.4rem 0.6rem; }
+.controls { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0; }
+button, select { font: inherit; padding: 0.35rem 0.7rem; color: inherit; background: var(--paper); border: 2px solid var(--line); border-radius: 4px; }
+button:disabled { opacity: 0.55; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+#error { color: var(--bad); font-weight: 700; min-height: 1.5em; }
+#scrub { position: relative; height: 1.6rem; border: 2px solid var(--line); border-radius: 4px; }
+#scrub[aria-disabled="true"] { opacity: 0.55; }
+#scrub-fill { height: 100%; width: 0; background: var(--accent); transition: width 0.2s ease; }
+#state { display: grid; grid-template-columns: max-content 1fr; gap: 0.15rem 1rem; }
+#state dt { font-weight: 600; }
+#state dd { margin: 0; }
+#entries { padding-left: 2.5rem; }
+#entries li { padding: 0.1rem 0.4rem; border-left: 6px solid transparent; }
+#entries li.current { border-left-color: var(--accent); background: rgba(11, 92, 173, 0.14); font-weight: 600; }
+#entries li .mark { font-weight: 700; margin-right: 0.5rem; }
+#entries li[data-class="failed"] .mark { color: var(--bad); text-decoration: underline; }
+#entries li[data-class="unknown"] .mark { color: var(--unknown); text-decoration: underline dotted; }
+#entries li .here { margin-left: 0.5rem; font-style: italic; }
+#entries li .note { margin-left: 0.5rem; font-weight: 700; }
+#producing { border: 2px solid var(--line); padding: 0.4rem 0.6rem; }
+@media (prefers-reduced-motion: reduce) { #scrub-fill { transition: none; } * { animation: none; scroll-behavior: auto; } }
+footer { margin-top: 2rem; font-size: 0.85rem; color: var(--line); }
