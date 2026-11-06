@@ -5,9 +5,12 @@
 // socket once the answer is flushed (the platform cost of a refusal, none of C059's logic). mode 'naive': the same answer but the connection is
 // kept alive and keeps being read (the defect the refusal rule exists to prevent: the CONTROL a flood test must fail on).
 // It answers IPC probes: memory, open connections, CPU time, the bytes read from every closed socket, and the event-loop delay measured INSIDE it.
+// mode 'hold' (third review, Q2): the real service whose every step stays pending until the test sends { type: 'release' } (a request that stays in flight: the shape of the F24
+// finding). The stats also report the cap read back from the server, the sockets accepted and dropped at accept, and, for the real service, the number of request events Node
+// emitted per socket (the parser consumes a whole read before any JavaScript can cut the socket).
 const http = require('node:http');
 const { monitorEventLoopDelay } = require('node:perf_hooks');
-const { startLocal, closeServer } = require('../server.cjs');
+const { startLocal, closeServer } = require('./subject.cjs').load('server.cjs');
 
 const mode = process.argv[3] ?? 'service';
 
@@ -25,21 +28,47 @@ async function startReference() {
 
 async function main() {
   const bounds = JSON.parse(process.argv[2] ?? '{}');
-  const server = mode === 'service' ? await startLocal({ bounds }) : await startReference();
+  let release;
+  const held = new Promise((resolve) => { release = resolve; });
+  let entered = 0;
+  const server = mode === 'service' ? await startLocal({ bounds })
+    : mode === 'hold' ? await startLocal({ bounds, executor: async () => { entered += 1; await held; } }) : await startReference();
+  const requests = new WeakMap();
+  const open = new Set();
+  const finished = [];
+  let accepted = 0;
+  let dropped = 0;
+  server.on('drop', () => { dropped += 1; });
+  if (mode === 'service' || mode === 'hold') server.prependListener('request', (request) => requests.set(request.socket, (requests.get(request.socket) ?? 0) + 1));
   const delay = monitorEventLoopDelay({ resolution: 5 });
   delay.enable();
   let bytesRead = 0;
-  server.on('connection', (socket) => socket.once('close', () => { bytesRead += socket.bytesRead; }));
+  server.on('connection', (socket) => {
+    accepted += 1;
+    open.add(socket);
+    socket.once('close', () => {
+      bytesRead += socket.bytesRead;
+      open.delete(socket);
+      finished.push(requests.get(socket) ?? 0);
+    });
+  });
   const connections = () => new Promise((resolve) => server.getConnections((error, count) => resolve(error ? -1 : count)));
   process.on('message', async (message) => {
     if (message.type === 'stats') {
       const memory = process.memoryUsage();
       const cpu = process.cpuUsage();
-      const reply = { type: 'stats', heapUsed: memory.heapUsed, rss: memory.rss, connections: await connections(), lagMaxMs: delay.max / 1e6, cpuMicros: cpu.user + cpu.system, bytesRead };
+      const reply = {
+        type: 'stats', heapUsed: memory.heapUsed, rss: memory.rss, connections: await connections(), lagMaxMs: delay.max / 1e6, cpuMicros: cpu.user + cpu.system, bytesRead,
+        maxConnections: server.maxConnections, accepted, dropped, entered, perSocket: [...finished, ...[...open].map((socket) => requests.get(socket) ?? 0)],
+      };
       if (message.reset) delay.reset();
       process.send(reply);
+    } else if (message.type === 'release') {
+      release();
+      process.send({ type: 'released' });
     } else if (message.type === 'stop') {
-      if (mode === 'service') await closeServer(server);
+      release();
+      if (mode === 'service' || mode === 'hold') await closeServer(server);
       else { server.close(); server.closeAllConnections(); }
       process.send({ type: 'closed' });
       process.disconnect();

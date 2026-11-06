@@ -114,13 +114,14 @@ function verifyTranscript(transcript) {
     if (event.kind !== 'exchange') continue;
     const answer = event.response;
     if (!answer || !Number.isInteger(answer.status) || !answer.body) return fail('EVENT_SHAPE', `Event ${event.n} has no response.`);
+    if (!event.request || typeof event.request.path !== 'string') return fail('EVENT_SHAPE', `Event ${event.n} has no recorded request.`);
     if (answer.body.kind === 'C042-lease-snapshot') {
       for (const [id, lease] of Object.entries(answer.body.leases)) {
         if (lease.committed !== (ledger.get(`${event.scenario}/${id}`) ?? 0) || lease.committed + lease.held > lease.capacity) return fail('LEDGER_MISMATCH', `Event ${event.n}: the ledger disagrees with the recorded effects.`);
       }
       continue;
     }
-    const view = journey.present(answer);
+    const view = journey.present(answer, journey.expectedFor(event.request));
     if (!view.ok) return fail(view.code, `Event ${event.n}: the answer is not a valid result.`);
     const body = answer.body;
     outcomes.add(body.outcome);

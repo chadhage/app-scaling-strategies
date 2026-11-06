@@ -49,6 +49,9 @@ for (const [name, tail] of [
     try {
       await burst(child.port, tail(child.port), SOCKETS);
       await until(async () => (await child.stats()).connections === 0, 'the server holds no connection after the burst');
+      const stats = await child.stats();
+      assert.equal(stats.maxConnections, 32, 'the connection cap, read back from the server (review Q2: 32 x about 6 MB bounds the pending first requests; the burst of 128 attackers is larger than the cap on purpose)');
+      assert.equal(stats.accepted + stats.dropped, SOCKETS, 'every attacker socket was accepted and closed by the server, or dropped by Node at accept: none is unaccounted for');
       assert.equal((await call(child.port, 'GET', '/scope.json')).status, 200, 'the connection cap is not pinned: a legitimate GET is answered');
     } finally {
       child.dispose();

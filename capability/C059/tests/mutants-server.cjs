@@ -4,7 +4,7 @@
 // `suites` names the test files that must fail BY NAME; mutants-page.cjs and mutants-checker.cjs use the suites of their own group.
 const S = 'server.cjs';
 const SERVER = ['server', 'pipelining', 'lane'];
-const RESOURCES = ['resources', 'flood', 'pipelining', 'lane-flood'];
+const RESOURCES = ['resources', 'flood', 'pipelining', 'lane-flood', 'pending'];
 const m = (from, to, label, suites = SERVER, equivalent) => ({ file: S, from, to, label, suites, equivalent });
 
 module.exports = [
@@ -19,7 +19,7 @@ module.exports = [
   m("if (!JSON_TYPE.test(request.headers['content-type'] ?? '')) return refuse('UNSUPPORTED_MEDIA_TYPE', { action: 'submit' });", '', 'the media type check'),
   m("if (Number(request.headers['content-length'] || 0) > contract.LIMITS.bodyBytes) return refuse('BODY_TOO_LARGE', { action: 'submit' });", '', 'the declared body size check'),
   m("...(refusing ? { Connection: 'close' } : {})", '', 'Connection: close after a refusal'),
-  m("    response.once('finish', () => request.socket.destroy());", '', 'ONLY the socket destroy after the flush', RESOURCES, "Node itself destroys the socket (destroySoon on 'finish') after a response that says Connection: close, at the same moment: the explicit destroy only makes the closing independent of that Node behaviour, and no suite (the flood test included) can tell the two apart; the pipelining guard is the mark, not the destroy"),
+  m("    response.once('finish', () => request.socket.destroy());", '', 'ONLY the socket destroy after the flush (mutant S5 of the third review)', RESOURCES, "PROOF of equivalence, not an argument from reachability: (1) every refusal answer carries `Connection: close` (writeAnswer adds it whenever the status is 400 or above; the strict rows of tests\\lane.test.cjs and the server and pipelining suites assert the header on every refusal), (2) Node itself then ends the connection after the flush (`res._last`, then `socket.destroySoon()` when the response finishes), which tests\\node-close.test.cjs SHOWS on the running platform in the shapes that matter (one refused request, three pipelined, a stream of further requests, a refused request whose chunked body never ends, HTTP/1.0) with a bare server that has no destroy anywhere, against a control without the header that answers both pipelined requests and keeps the connection; the survival of this mutant in the lane, pipelining, flood and resource suites is the same fact observed on the service itself"),
   m("() => request.socket.destroy()", '() => response.socket.destroy()', 'response.socket instead of request.socket in the destroy after the flush'),
   m("  closing.add(socket);\n  const lane = lanes.get(socket);", "  const lane = lanes.get(socket);", 'the mark of the connection inside decide()'),
   m("  if (lane) lane.queue.length = 0;", '', 'dropping the waiting requests inside decide()'),
@@ -49,4 +49,10 @@ module.exports = [
   m("    clearTimeout(silent.get(socket));\n", '', 'the first-request timer is not cleared by a request', RESOURCES),
   m("for (const socket of sockets.get(server) ?? []) socket.destroy();", '', 'closeServer destroying every tracked socket', RESOURCES, 'server.closeAllConnections() on the next line destroys the same sockets (every accepted socket has a parser in Node\'s connection list); the explicit loop only keeps shutdown independent of that API'),
   m("|| RESERVED.test(dataName) || dataName.endsWith('.')", '', 'the Windows device-name guard'),
+  // The third review (Q1, Q2): the refused request ITSELF must not run, and the cap bounds the pending first requests.
+  m("connections: 32, headerBytes: 8192", "connections: 128, headerBytes: 8192", 'the connection cap is 128 again: 128 x about 6 MB of pending first requests is about 0.77 GB (review Q2)', RESOURCES),
+  m("writeAnswer(next.request, next.response, 417, EXPECTATION_REFUSED); return; }", "writeAnswer(next.request, next.response, 417, EXPECTATION_REFUSED); }", 'S1: drain() goes on to run the handler for the request it has just refused with the 417 (the return is deleted; mutant S1 of the third review, killed by the valid step bodies of the refused requests)'),
+  // The binding of every recorded exchange to the request it answers (review Q7): transcript.cjs.
+  { file: 'transcript.cjs', from: "    if (!event.request || typeof event.request.path !== 'string') return fail('EVENT_SHAPE', `Event ${event.n} has no recorded request.`);\n", to: '', label: 'transcript: an exchange without its recorded request is not refused (review Q7)', suites: ['transcript'] },
+  { file: 'transcript.cjs', from: 'journey.present(answer, journey.expectedFor(event.request))', to: 'journey.present(answer, { key: answer.body.idempotencyKey, input: null })', label: 'transcript: an answer is not bound to the request it was recorded for (review Q7)', suites: ['transcript'] },
 ];

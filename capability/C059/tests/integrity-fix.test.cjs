@@ -128,12 +128,22 @@ const latest = (stage) => {
 // The systematic mutation evidence is the latest FULL run (at least 150 mutants) plus any later TARGETED runs: a full run may end with survivors (the generator then
 // exits 1, and its manifest says so); each of them must be killed by a NAMED failing test in a later targeted run of exactly that mutant, after the test that closes
 // the gap was written. Older runs are history (their inputs changed on purpose).
-test('the latest full systematic mutation run killed every non-equivalent mutant by a NAMED failing test (a survivor only if a later targeted run kills it) and lists its equivalent mutants with a reason', OPTIONS, () => {
+test('the latest full systematic mutation run killed every non-equivalent mutant by a NAMED failing test (a survivor only if a later targeted run kills it) and lists its equivalent mutants with a reason; or the README says UNCAPTURED explicitly (rule 16)', OPTIONS, (t) => {
   const numbers = fs.readdirSync(raw).map((name) => /^mutgen-report-(\d+)\.json$/.exec(name)?.[1]).filter(Boolean).map(Number).sort((a, b) => a - b);
   const reports = new Map(numbers.map((number) => [number, JSON.parse(fs.readFileSync(path.join(raw, `mutgen-report-${number}.json`), 'utf8'))]));
   const fullNumber = [...numbers].reverse().find((number) => reports.get(number).total >= 150);
   assert.ok(fullNumber, 'a full run of at least 150 mutants is archived');
   const full = reports.get(fullNumber);
+  // Rule 16 of the controller: a capture that was not finished is never pinned red. When the latest full run describes OLDER bytes (an input changed since), this rule reports an explicit
+  // UNCAPTURED status that the README names (and then it makes no claim about the mutation run); when the run is current the README must not say so and every check below applies.
+  const check = verifyManifest(path.join(raw, `mutgen-${fullNumber}.json`), { root: repository });
+  const readmeText = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
+  if (check.problems.some((problem) => problem.startsWith('INPUT_CHANGED'))) {
+    t.diagnostic(`UNCAPTURED: the latest full systematic mutation run (mutgen-${fullNumber}) describes older bytes: ${check.problems.join(', ')}`);
+    assert.match(readmeText, /mutation: UNCAPTURED on the final bytes/, 'the README names the uncaptured status explicitly');
+    return;
+  }
+  assert.doesNotMatch(readmeText, /mutation: UNCAPTURED/, 'the full run is current: the README must not claim that it is uncaptured');
   const killedLater = new Set();
   for (const number of numbers.filter((value) => value >= fullNumber)) {
     const { manifest, problems } = verifyManifest(path.join(raw, `mutgen-${number}.json`), { root: repository });
@@ -154,7 +164,7 @@ test('the latest full systematic mutation run killed every non-equivalent mutant
   assert.deepEqual(full.survivors.filter((survivor) => !killedLater.has(survivor)), [], 'every survivor of the full run is killed by a later targeted run');
 });
 
-test('the latest load loop of the flood test passed every run, five at a time under CPU burners', OPTIONS, () => {
+test('the latest load loop of the flood test passed every run, several at a time (the archived run: 20 runs, 4 at a time) under CPU burners', OPTIONS, () => {
   const name = latest('loop');
   const { manifest, problems, stdout } = verifyManifest(path.join(raw, name), { root: repository });
   assert.deepEqual(problems, []);

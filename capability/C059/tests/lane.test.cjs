@@ -8,6 +8,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { call, startChild, startService } = require('./net.cjs');
+const { c042 } = require('./harness.cjs');
 const { FRAMINGS, ROWS, SHAPES, exchange, request, runRow, submitBody } = require('./lane-support.cjs');
 
 const OPTIONS = { timeout: 180000 };
@@ -20,13 +21,20 @@ const host = async (name) => {
   if (!hosts.has(name)) hosts.set(name, name === 'in this process' ? startService().then((service) => ({ port: service.port, dispose: () => service.stop() })) : startChild({ watchdogMs: 900000 }).then((child) => ({ port: child.port, dispose: () => child.dispose() })));
   return hosts.get(name);
 };
+// Every ROW gets its own service: the rows commit steps against the finite capacity of the synthetic leases (every shape with a valid submit before the refusal consumes units), so one shared
+// service would run out of capacity as rows are added (a legitimate submit then answers 409 CAPACITY_EXHAUSTED and the row fails for a reason that has nothing to do with the lane).
+const fresh = (name) => (name === 'in this process' ? startService().then((service) => ({ port: service.port, dispose: () => service.stop() })) : startChild({ watchdogMs: 900000 }).then((child) => ({ port: child.port, dispose: () => child.dispose() })));
 test.after(async () => { for (const pending of hosts.values()) await (await pending).dispose(); });
 
 for (const name of ['in a SEPARATE process', 'in this process']) {
   for (const item of rows) {
     test(`lane [${name}] ${item.name}: ${SHAPES.length} shapes in ${QUICK ? 1 : FRAMINGS.length} framings, one to three legitimate requests before it, nothing behind it runs, the server closes`, OPTIONS, async () => {
-      const { port } = await host(name);
-      assert.deepEqual(await runRow(port, item, 12, QUICK ? [['1.1', '1.1']] : FRAMINGS), []);
+      const { port, dispose } = await fresh(name);
+      try {
+        assert.deepEqual(await runRow(port, item, 12, QUICK ? [['1.1', '1.1']] : FRAMINGS), []);
+      } finally {
+        await dispose();
+      }
     });
   }
 }
@@ -39,6 +47,33 @@ test('the reviewer shapes in the open: [G][G][X] gets 200, 200, then the typed 4
     const answers = await exchange(port, bytes);
     assert.deepEqual(answers.map((answer) => answer.status), statuses, label);
     assert.deepEqual([answers.at(-1).code, answers.at(-1).close], ['EXPECTATION_NOT_SUPPORTED', true], label);
+  }
+});
+
+test('Q1: the refused request ITSELF applies nothing: for every refusal that carries a valid step body the lease ledger and the journal record count are exactly as before, and the same step sent plainly is applied (the control)', OPTIONS, async () => {
+  const io = c042('journal.cjs').createMemoryIo();
+  const service = await startService({ io });
+  try {
+    const { port } = service;
+    const records = () => io.read().split('\n').filter((line) => line !== '').length;
+    const state = async () => ({ leases: (await call(port, 'GET', '/v1/leases')).json, records: records() });
+    const before = await state();
+    const items = ROWS.filter((item) => item.valid);
+    assert.ok(items.length >= 3, 'the unknown expectation, the chunked one and the refused 100-continue carry a valid step');
+    for (const item of items) {
+      const refused = [];
+      const answers = await exchange(port, item.make(port, '1.1', refused));
+      assert.deepEqual(answers.map((answer) => [answer.status, answer.code, answer.close]), [[item.status, item.code, true]], item.name);
+      for (const key of refused) assert.equal((await call(port, 'GET', `/v1/steps/${key}`)).status, 404, `${item.name}: ${key} was never recorded`);
+      assert.deepEqual(await state(), before, `${item.name}: the ledger and the journal are as before the refused request`);
+    }
+    const control = await call(port, 'POST', '/v1/steps', submitBody('lane-ctrl-0001'));
+    assert.equal(control.status, 201, 'the same valid step sent plainly is applied');
+    const after = await state();
+    assert.equal(after.leases.leases['synthetic-lease-001'].committed, before.leases.leases['synthetic-lease-001'].committed + 1, 'the control changed the ledger by its one unit');
+    assert.ok(after.records > before.records, 'and the journal');
+  } finally {
+    await service.stop();
   }
 });
 

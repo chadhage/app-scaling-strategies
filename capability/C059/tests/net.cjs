@@ -10,7 +10,7 @@ const net = require('node:net');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const { gate } = require('./harness.cjs');
-const { startLocal, closeServer } = require('../server.cjs');
+const { startLocal, closeServer } = require('./subject.cjs').load('server.cjs');
 
 const scratchRoot = path.join(__dirname, 'scratch');
 const MB = 1024 * 1024;
@@ -107,6 +107,8 @@ async function startChild({ heapMb = 48, bounds = {}, watchdogMs = 120000, mode 
   return {
     port, exited, errors: () => Buffer.concat(errors).toString('utf8'),
     stats: (reset = false) => { const reply = next('stats'); child.send({ type: 'stats', reset }); return reply; },
+    release: () => { const reply = next('released'); child.send({ type: 'release' }); return reply; },
+    alive: () => child.exitCode === null && child.signalCode === null,
     stop: () => { const reply = next('closed'); child.send({ type: 'stop' }); return reply; },
     dispose: () => { clearTimeout(watchdog); child.kill(); },
   };

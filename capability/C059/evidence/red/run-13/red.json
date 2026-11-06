@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "C059 third fix RED (M2, review of c2390608): the import pins demanded the raw hash AND the LF hash of another namespace working bytes, so every import failed on an LF checkout. tests\\pins.test.cjs against tests\\evidence-verify.cjs AS PUBLISHED in c2390608 (evidence\\red\\run-13 old subject: stubs-8): the raw branch with a wrong LF pin, the LF branch with a wrong raw pin, the one-file-at-a-time refusal and the blob, tag and accepted-bytes checks in both forms fail; the CRLF premise and the refusal of an edited file pass as controls. Taken AFTER the fix was written, against the published bytes. Replay: C059_RED_SUBJECT=evidence\\red\\stubs-8 (old), unset (the final code). Run from a neutral path (a subst drive) so that no local folder name enters the transcript.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "--test-timeout=300000",
+    "R:\\capability\\C059\\tests\\pins.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C059_RED_SUBJECT"
+  ],
+  "startedAtUtc": "2026-11-06T22:03:44.608Z",
+  "completedAtUtc": "2026-11-06T22:03:49.329Z",
+  "elapsedMs": 4721,
+  "timeoutMs": 600000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C059\\C059-review-fix3.feature",
+      "bytes": 3444,
+      "rawSha256": "ffe504b92a64c85d82e603c93cb7988b264b122462b8b9631484a81a372f8655",
+      "crlfToLfSha256": "67dfc6a49ca0ff512774cd64ac7632cab8027d21391d62f415862488937fb7c2"
+    },
+    {
+      "path": "capability\\C059\\tests\\pins.test.cjs",
+      "bytes": 5927,
+      "rawSha256": "8240ce814567f594240414a82ea262a39a2fc9e59706c89edc19e85f95fa3e82",
+      "crlfToLfSha256": "1532dc8d3c7e0395fa17b18cfde2c95f725426e872d73e40c3afd90af4a4f82a"
+    },
+    {
+      "path": "capability\\C059\\tests\\subject.cjs",
+      "bytes": 1272,
+      "rawSha256": "a4867c08fd88dd813729d4aee518be3ffbc919ca6bbe0d9e52dc730ea530bc55",
+      "crlfToLfSha256": "ec6e024f880dc1703f32d176066fe46a1578f2392e7dc5a04d26b817a4a65c2a"
+    },
+    {
+      "path": "capability\\C059\\tests\\evidence-verify.cjs",
+      "bytes": 3691,
+      "rawSha256": "4445081ead7143927b5f019ba859611752b71cb59c562f7743ac0a1b7b713d8e",
+      "crlfToLfSha256": "d563b34d57e62c16227f512e811eceee3a6e49de34866592f9d7c25e88f95101"
+    },
+    {
+      "path": "capability\\C059\\imports.json",
+      "bytes": 4873,
+      "rawSha256": "8412153aebec6e50c498e0d4b9a3b75d3215d26bcc4762d7e45f3049b012331c",
+      "crlfToLfSha256": "8412153aebec6e50c498e0d4b9a3b75d3215d26bcc4762d7e45f3049b012331c"
+    },
+    {
+      "path": "capability\\C059\\evidence\\red\\stubs-8\\evidence-verify.cjs",
+      "bytes": 3519,
+      "rawSha256": "4fe21f2a630f1c1f7c03fef26d568da4322b80453a61bb36f839f06770e7eb20",
+      "crlfToLfSha256": "b69423d95fee13c330d989c07221e1b143b85ad9f8ba53659a25841d3e819bec"
+    }
+  ],
+  "summary": {
+    "tests": 6,
+    "suites": 0,
+    "pass": 2,
+    "fail": 4,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "the RAW branch: the bytes of the machine that recorded the pins (CRLF) are accepted, whatever the LF hash says (a CRLF checkout)",
+      "the LF branch: the LF-normalized bytes (an LF checkout, as Linux gives for blobs stored as LF) are accepted, whatever the raw hash says",
+      "with BOTH pins wrong the file is refused by name, and one file at a time (the rest stay accepted)",
+      "the blob, the tag and the accepted bytes are still checked (BLOB_MISMATCH, TAG_MISMATCH, PIN_NOT_ACCEPTED_BYTES), in both forms"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 8239,
+      "sha256": "54f0ee9a55d03b478de04d18d59dce0c04e0be310f96452eb587443475005630",
+      "gzipBytes": 1449,
+      "gzipSha256": "8d7e0752aa83a85828bae78e6e9a8ab8eec399ece6eba4e05b5b4ba4f5187204",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

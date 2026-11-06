@@ -1,7 +1,7 @@
 'use strict';
 
 // Integrity of the evidence of the THIRD worker's fix (second review, N1 to N4): the subjects of the new REDs are the bytes published in dfdace94 (recomputed against
-// git), every new RED is a recorded behavioral failure with unchanged inputs, a tamper of any of them is caught BY NAME, the retained snapshots ARE the final tests
+// git), every new RED is a recorded behavioral failure with unchanged inputs, a tamper of any of them is caught BY NAME, the retained snapshots ARE the tests of the second fix commit
 // (only their header and require lines differ), and the final REDs REPLAY both ways: they fail against their old subject and pass UNCHANGED against the final code.
 // run-7, run-8 and run-11 are retained attempts (their flaws are named in the README); they are verified and tamper-tested, and run-7 is replayed on the final code.
 const test = require('node:test');
@@ -16,7 +16,7 @@ const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const red = path.join(root, 'evidence', 'red');
 const FIRST_FIX = 'dfdace94e5791dce67a543a36659071956661a51';
-const OPTIONS = { timeout: 280000 };
+const OPTIONS = { timeout: 600000 };
 const blob = (relative) => execFileSync('git', ['--no-pager', 'cat-file', 'blob', `${FIRST_FIX}:${relative}`], { cwd: repository, maxBuffer: 4 * 1024 * 1024, windowsHide: true });
 const subject = (name) => path.join('capability', 'C059', 'evidence', 'red', name);
 
@@ -49,10 +49,14 @@ function replay(files, env, selection) {
   });
 }
 
-// Every replay is a real test run; they all start together when the file is loaded and every test awaits its own (one file may not exceed the 280 seconds of the GREEN command).
+// Every replay is a real test run. They run one after the other, the first started when the file is loaded, and every test awaits its own: several node test processes at once
+// starve each other on a busy machine and a watchdog of the suite under replay fires.
+let turn = Promise.resolve();
+const queued = (task) => { const run = turn.then(task); turn = run.then(() => undefined); return run; };
+const failures = (text) => `${(text.match(/^\s*not ok .*$/gm) ?? []).join('\n')}\n${text.slice(-1500)}`;
 const replays = new Map(RUNS.filter((item) => item[7] || item[8]).map(([directory, files, stub, , , , , finalReplay, oldReplay]) => [directory, {
-  old: oldReplay ? replay(files, { C059_RED_SUBJECT: subject(stub) }, OLD_SELECTION[directory]) : null,
-  final: finalReplay ? replay(files, {}) : null,
+  old: oldReplay ? queued(() => replay(files, { C059_RED_SUBJECT: subject(stub) }, OLD_SELECTION[directory])) : null,
+  final: finalReplay ? queued(() => replay(files, {})) : null,
 }]));
 
 test('the subjects of the new REDs are the bytes published in dfdace94 (recomputed against git)', OPTIONS, () => {
@@ -104,14 +108,18 @@ for (const [directory, files, , tests, passes, fails, others] of RUNS) {
   });
 }
 
-// The snapshots are the final tests: the same lines, except the leading comment block and the lines that load the subject.
+// The snapshots are the tests as they were PUBLISHED in the second fix (c2390608, recomputed against git): the same lines, except the leading comment block and the lines that load
+// the subject. The third fix strengthened three of those tests (lane-support.cjs, lane.test.cjs, lane-flood.test.cjs: valid bodies in the refused requests, the cap read back from the
+// server), so the snapshots can no longer equal the live files; they are the tests of the commit that carried the RED, and they still replay both ways below.
+const SECOND_FIX = 'c2390608feccd87712d0848692b5ad238c5f63d5';
+const published = (name) => execFileSync('git', ['--no-pager', 'cat-file', 'blob', `${SECOND_FIX}:capability/C059/tests/${name}`], { cwd: repository, maxBuffer: 4 * 1024 * 1024, windowsHide: true });
 const body = (text) => text.replace(/\r\n/g, '\n').split('\n').filter((line) => !/^\/\//.test(line) && !/^const .*require\(/.test(line) && !/^const subject = /.test(line)).join('\n');
-test('the final RED snapshots ARE the final tests: only their comments and the lines that load the subject differ', OPTIONS, () => {
+test('the final RED snapshots ARE the tests as published in c2390608: only their comments and the lines that load the subject differ', OPTIONS, () => {
   for (const [live, snapshot] of [
     ['lane.test.cjs', 'fix-k.snapshot.cjs'], ['lane-flood.test.cjs', 'fix-l.snapshot.cjs'], ['lane-support.cjs', path.join('helpers-10', 'lane-support.cjs')],
     ['bind-null.test.cjs', 'fix-n.snapshot.cjs'], ['checker-fp.test.cjs', 'fix-j.snapshot.cjs'],
-  ]) assert.equal(body(fs.readFileSync(path.join(__dirname, live), 'utf8')), body(fs.readFileSync(path.join(red, snapshot), 'utf8')), `${snapshot} is ${live}`);
-  assert.equal(sha(fs.readFileSync(path.join(red, 'helpers-9', 'negatives.cjs'))), sha(fs.readFileSync(path.join(__dirname, 'negatives.cjs'))), 'the helper copy of the fixtures is the final fixtures');
+  ]) assert.equal(body(published(live).toString('utf8')), body(fs.readFileSync(path.join(red, snapshot), 'utf8')), `${snapshot} is ${live} of ${SECOND_FIX.slice(0, 12)}`);
+  assert.equal(sha(fs.readFileSync(path.join(red, 'helpers-9', 'negatives.cjs'))), sha(published('negatives.cjs')), 'the helper copy of the fixtures is the fixtures of c2390608');
 });
 
 for (const [directory, files, , tests, passes, fails, , finalReplay, oldReplay] of RUNS.filter((item) => item[7] || item[8])) {
@@ -119,7 +127,7 @@ for (const [directory, files, , tests, passes, fails, , finalReplay, oldReplay] 
     const pending = replays.get(directory);
     if (oldReplay) {
       const old = await pending.old;
-      assert.equal(old.status, 1, old.stdout.slice(-1500));
+      assert.equal(old.status, 1, failures(old.stdout));
       const failed = Number(/^# fail (\d+)$/m.exec(old.stdout)?.[1]);
       const passed = Number(/^# pass (\d+)$/m.exec(old.stdout)?.[1]);
       if (OLD_SELECTION[directory]) assert.ok(failed >= 3 && passed === 0, `${passed} passed and ${failed} failed against the old subject`);
@@ -129,7 +137,7 @@ for (const [directory, files, , tests, passes, fails, , finalReplay, oldReplay] 
     }
     if (finalReplay) {
       const final = await pending.final;
-      assert.equal(final.status, 0, final.stdout.slice(-2500));
+      assert.equal(final.status, 0, failures(final.stdout));
       assert.match(final.stdout, new RegExp(`^# pass ${tests}$`, 'm'));
       assert.match(final.stdout, /^# fail 0$/m);
     }

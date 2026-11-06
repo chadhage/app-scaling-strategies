@@ -55,7 +55,8 @@ function verifyPins(pins, { readBlob, readFile }) {
     const blob = readBlob(pins.accepted[entry.card].commit, entry.path);
     if (sha(blob) !== entry.acceptedGitSha256) problems.push(`BLOB_MISMATCH ${entry.path}`);
     const bytes = readFile(entry.path);
-    if (sha(bytes) !== entry.rawSha256 || sha(normalize(bytes)) !== entry.crlfToLfSha256) problems.push(`WORKING_COPY_DIFFERS ${entry.path}`);
+    // Either form of the accepted file is the accepted file: the raw bytes of the machine that recorded the pin, or their LF-normalized form (an LF checkout; review M2).
+    if (sha(bytes) !== entry.rawSha256 && sha(normalize(bytes)) !== entry.crlfToLfSha256) problems.push(`WORKING_COPY_DIFFERS ${entry.path}`);
     if (![entry.rawSha256, entry.crlfToLfSha256].includes(entry.acceptedGitSha256)) problems.push(`PIN_NOT_ACCEPTED_BYTES ${entry.path}`);
   }
   return problems;

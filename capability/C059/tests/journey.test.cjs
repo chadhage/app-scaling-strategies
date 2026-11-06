@@ -48,18 +48,20 @@ test('validationView counts fields, not problems, and names each field once', OP
 
 test('present derives every shown line from the validated facts; the explanation is the catalog text, never the answer text', OPTIONS, async () => {
   const engine = await c042('engine.cjs').openEngine({ io: c042('journal.cjs').createMemoryIo() });
-  const done = await engine.submit({ schemaVersion: 1, step: 'reserve-capacity', idempotencyKey: 'jr-key-0001', leaseId: 'synthetic-lease-002', units: 3 });
-  const view = journey.present(done);
+  const sent = { schemaVersion: 1, step: 'reserve-capacity', idempotencyKey: 'jr-key-0001', leaseId: 'synthetic-lease-002', units: 3 };
+  const expected = { key: 'jr-key-0001', input: sent };
+  const done = await engine.submit(sent);
+  const view = journey.present(done, expected);
   assert.equal(view.ok, true);
   assert.deepEqual(view.actions, ['retry', 'inspect']);
   assert.equal(view.heading, 'Result: Succeeded');
   assert.deepEqual(view.facts.find(([name]) => name === 'Reserved after'), ['Reserved after', '3 of 10']);
   assert.deepEqual(view.didNot, done.body.didNot.map((item) => c042('contract.js').DIDNOT[item.code]));
-  assert.equal(journey.present(await engine.submit({ schemaVersion: 1, step: 'reserve-capacity', idempotencyKey: 'jr-key-0001', leaseId: 'synthetic-lease-002', units: 3 })).announcement.includes('recorded result of an earlier request'), true);
-  const failed = journey.present(c042('result.cjs').refusal('CAPACITY_EXHAUSTED', { action: 'submit' }));
+  assert.equal(journey.present(await engine.submit(sent), expected).announcement.includes('recorded result of an earlier request'), true);
+  const failed = journey.present(c042('result.cjs').refusal('CAPACITY_EXHAUSTED', { action: 'submit' }), expected);
   assert.equal(failed.outcome, 'rejected');
   assert.equal(failed.announcement, 'Rejected. Code CAPACITY_EXHAUSTED. The lease does not have that many free synthetic units. No reservation is recorded for this step. Offered: Correct and resubmit.');
-  const bare = journey.present(c042('result.cjs').refusal('STEP_LIMIT_REACHED', { action: 'submit' }));
+  const bare = journey.present(c042('result.cjs').refusal('STEP_LIMIT_REACHED', { action: 'submit' }), expected);
   assert.deepEqual(bare.actions, []);
   assert.match(bare.announcement, /No recovery action is offered\.$/);
 });

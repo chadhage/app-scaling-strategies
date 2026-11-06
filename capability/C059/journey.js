@@ -7,30 +7,38 @@
 
   // The journey's pure rules: client-side validation of the closed input, and the wording of every state, RE-DERIVED from
   // validated facts and fixed catalogs. Server prose is never printed (C017 F3); a tampered answer is rejected, not shown.
-  const LEASES = Object.keys(contract.LEASES);
-  const WORDS = {
+  // Every table the journey reads or exports is deeply frozen: a caller that wrote into an export would rewrite every later wording (review Q3).
+  const freeze = (value) => {
+    if (value !== null && typeof value === 'object' && !Object.isFrozen(value)) {
+      Object.freeze(value);
+      for (const item of Object.values(value)) freeze(item);
+    }
+    return value;
+  };
+  const LEASES = freeze(Object.keys(contract.LEASES));
+  const WORDS = freeze({
     succeeded: ['Succeeded', '\u2714'], rejected: ['Rejected', '\u2716'], unsupported: ['Unsupported', '\u2298'],
     unknown: ['Unknown', '?'], cancelled: ['Cancelled', '\u25A0'], interrupted: ['Interrupted', '\u23F8'],
-  };
-  const REQUESTS = { submit: 'Conduct the step', inspect: 'Inspect the step', cancel: 'Cancel the step', resume: 'Resume the step', none: 'No step' };
-  const STATES = { none: 'No step exists', 'in-flight': 'In flight', committed: 'Committed', cancelled: 'Cancelled', interrupted: 'Interrupted', uncertain: 'Not confirmed' };
-  const LOCAL = {
+  });
+  const REQUESTS = freeze({ submit: 'Conduct the step', inspect: 'Inspect the step', cancel: 'Cancel the step', resume: 'Resume the step', none: 'No step' });
+  const STATES = freeze({ none: 'No step exists', 'in-flight': 'In flight', committed: 'Committed', cancelled: 'Cancelled', interrupted: 'Interrupted', uncertain: 'Not confirmed' });
+  const LOCAL = freeze({
     NO_VALID_RESPONSE: 'No answer arrived, so it is not known whether the request was applied.',
     NO_ANSWER_IN_TIME: 'No answer arrived in time and the request was abandoned, so it is not known whether it was applied.',
     ANSWER_REJECTED: 'The answer was not a valid result and was discarded.',
-  };
+  });
   // A request that has not been answered after this long is aborted by the page (the typed failure NO_ANSWER_IN_TIME).
   const REQUEST_DEADLINE_MS = 15000;
-  const ECHOED = ['schemaVersion', 'step', 'idempotencyKey', 'leaseId', 'units'];
-  const FIELD_NAMES = { key: 'Idempotency key', lease: 'Lease', units: 'Units' };
-  const MESSAGES = {
+  const ECHOED = freeze(['schemaVersion', 'step', 'idempotencyKey', 'leaseId', 'units']);
+  const FIELD_NAMES = freeze({ key: 'Idempotency key', lease: 'Lease', units: 'Units' });
+  const MESSAGES = freeze({
     KEY_REQUIRED: 'Enter an idempotency key.',
     KEY_FORMAT: 'The key needs 8 to 64 letters, digits, dots, hyphens or underscores, starting with a letter or digit.',
     LEASE_UNKNOWN: 'Choose one of the synthetic leases.',
     UNITS_REQUIRED: 'Enter the number of units.',
     UNITS_NOT_INTEGER: 'Units must be a whole number written with digits only.',
     UNITS_RANGE: `Units must be a whole number from ${contract.UNITS.min} to ${contract.UNITS.max}.`,
-  };
+  });
 
   const labelOf = (name) => contract.ACTIONS[name].label;
   const own = (object, key) => typeof key === 'string' && Object.hasOwn(object, key);
@@ -73,8 +81,10 @@
     return body.attempts === (begun ? 1 + resumes : 0) ? null : 'ATTEMPTS_MISMATCH';
   }
 
-  // Validates one server answer ({ status, body }) for the request it answers (expected: { key, input }) and derives everything shown from the validated facts.
-  function present({ status, body }, expected = null) {
+  // Validates one server answer ({ status, body }) for the request it answers (expected, REQUIRED: { key, input }) and derives everything shown from the validated facts.
+  // An answer is never judged without the request it answers: a caller that forgot to say which one gets a refusal, not a misrouted envelope shown as a success (review Q7).
+  function present({ status, body }, expected) {
+    if (expected === null || typeof expected !== 'object') return rejectAnswer('EXPECTED_REQUIRED');
     const verdict = contract.validateResultEnvelope(body);
     if (!verdict.ok) return rejectAnswer('ENVELOPE_INVALID', verdict.problems);
     const code = body.error ? body.error.code : null;
@@ -129,7 +139,7 @@
     };
   }
 
-  const say = {
+  const say = Object.freeze({
     ready: () => 'Ready. Choose a lesson, then conduct the step.',
     chosen: (lesson, closedPrevious) => `${lesson.id} chosen: ${lesson.title}.${closedPrevious ? ' The open lesson was closed.' : ''} Open it, or go on to conduct the step.`,
     opened: (lesson) => `${lesson.id} opened in an isolated frame. Press Tab to enter it; Shift+Tab or Close the lesson leaves it. Nothing was run or certified.`,
@@ -142,7 +152,18 @@
     hostChosen: (lesson) => `${lesson.id} is chosen and not open. No result or management action has been run.`,
     progress: (name) => `Working on "${REQUESTS[name]}". Waiting for the server; nothing is confirmed yet.`,
     correct: (newKey) => `Edit the form, then conduct the step again.${newKey ? ` A fresh key, ${newKey}, was entered.` : ''} ${contract.ACTIONS['correct-and-resubmit'].description}`,
-  };
+  });
 
-  return Object.freeze({ FIELD_NAMES, LEASES, MESSAGES, REQUEST_DEADLINE_MS, WORDS, labelOf, localFailure, present, say, validateForm, validationView });
+  // The expectation of a RECORDED exchange ({ method, path, body }, as the server transcript keeps it): a submit is bound to the key and the input it sent, every other step request to the key of its path.
+  const STEP_PATH = /^\/v1\/steps\/([^/]+)(?:\/[^/]+)?$/;
+  function expectedFor(request) {
+    if (request.method === 'POST' && request.path === '/v1/steps') {
+      const sent = typeof request.body === 'object' ? request.body : null;
+      return { key: sent !== null && typeof sent.idempotencyKey === 'string' ? sent.idempotencyKey : null, input: sent };
+    }
+    const step = STEP_PATH.exec(request.path);
+    return { key: step === null ? null : step[1], input: null };
+  }
+
+  return Object.freeze({ FIELD_NAMES, LEASES, MESSAGES, REQUEST_DEADLINE_MS, WORDS, expectedFor, labelOf, localFailure, present, say, validateForm, validationView });
 }));

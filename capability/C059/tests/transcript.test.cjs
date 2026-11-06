@@ -54,6 +54,9 @@ const TAMPERS = [
   ['a gap in the sequence', (made) => { made.events[3].n = 99; }, 'SEQUENCE_GAP'],
   ['an unknown event kind', (made) => { made.events[1].kind = 'magic'; }, 'EVENT_SHAPE'],
   ['an exchange without a response', (made) => { find(made, (event) => event.kind === 'exchange').response = null; }, 'EVENT_SHAPE'],
+  ['an exchange without its recorded request (Q7: an answer is judged only against the request it answers)', (made) => { delete find(made, (event) => event.kind === 'exchange').request; }, 'EVENT_SHAPE'],
+  ['an answer that belongs to ANOTHER recorded request (the inspect of a different key)', (made) => { find(made, (event) => event.kind === 'exchange' && event.request.path === '/v1/steps/tr-key-0001').request.path = '/v1/steps/tr-key-0002'; }, 'KEY_MISMATCH'],
+  ['an answer whose echoed input is not the input of its recorded submit', (made) => { find(made, (event) => event.kind === 'exchange' && event.request.method === 'POST' && event.response.status === 201).request.body.units += 1; }, 'INPUT_MISMATCH'],
   ['an envelope with prose added', (made) => { find(made, (event) => event.kind === 'exchange' && event.response.body.kind === 'C042-step-result').response.body.prose = 'trust me'; }, 'ENVELOPE_INVALID'],
   ['a success claimed with a 500 status', (made) => { find(made, (event) => event.kind === 'exchange' && event.response.status === 201).response.status = 500; }, 'STATUS_CONTRADICTS_ENVELOPE'],
   ['a second commit for one key', (made) => {

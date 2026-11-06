@@ -17,8 +17,10 @@ const chunked = (port, version, rest) => `POST /v1/steps HTTP/${version}\r\nHost
 const row = (name, make, status, code, extra = {}) => ({ name, make, status, code, kind: 'lane', ...extra });
 const ROWS = [
   row('an unknown expectation: Node would answer 417 itself and keep the socket (checkExpectation, decided at parse time)', (p) => request(p, 'GET', '/scope.json', '1.1', ['Expect: nonsense']), 417, 'EXPECTATION_NOT_SUPPORTED', { only11: true }),
-  row('an unknown expectation on a POST that carries a body', (p) => request(p, 'POST', '/v1/steps', '1.1', [JSON_TYPE, 'Expect: nonsense'], '{}'), 417, 'EXPECTATION_NOT_SUPPORTED', { only11: true }),
+  row('an unknown expectation on a POST that carries a VALID step body (review Q1: a handler that wrongly ran for the refused request would APPLY it)', (p, v, refused) => { const key = freshKey(); refused.push(key); return request(p, 'POST', '/v1/steps', '1.1', [JSON_TYPE, 'Expect: nonsense'], submitBody(key)); }, 417, 'EXPECTATION_NOT_SUPPORTED', { only11: true, valid: true }),
+  row('an unknown expectation on a CHUNKED POST that carries a VALID step body (review Q1)', (p, v, refused) => { const key = freshKey(); refused.push(key); const body = submitBody(key); return chunked(p, '1.1', `Expect: nonsense\r\nTransfer-Encoding: chunked\r\n\r\n${Buffer.byteLength(body).toString(16)}\r\n${body}\r\n0\r\n\r\n`); }, 417, 'EXPECTATION_NOT_SUPPORTED', { only11: true, valid: true }),
   row('a refused request that asks for 100-continue (checkContinue)', (p) => request(p, 'POST', '/v1/steps', '1.1', ['Content-Type: text/plain', 'Expect: 100-continue'], 'abcd'), 415, 'UNSUPPORTED_MEDIA_TYPE', { only11: true, interim: 1 }),
+  row('a refused request that asks for 100-continue and carries a VALID step body (cross-origin: refused before its body is read; review Q1)', (p, v, refused) => { const key = freshKey(); refused.push(key); return request(p, 'POST', '/v1/steps', '1.1', [JSON_TYPE, 'Origin: http://evil.example', 'Expect: 100-continue'], submitBody(key)); }, 403, 'CROSS_ORIGIN_DENIED', { only11: true, interim: 1, valid: true }),
   row('a request without Host: Node would answer 400, the service answers 421', (p, v) => `GET /scope.json HTTP/${v}\r\n\r\n`, 421, 'LOCAL_HOST_REQUIRED'),
   row('a refusal of the service itself (404 on an unknown route with a body)', (p, v) => request(p, 'POST', '/admin', v, [], 'abcd'), 404, 'NOT_FOUND'),
   row('a malformed HTTP version (clientError)', (p) => `GET /scope.json HTTP/9.9\r\nHost: 127.0.0.1:${p}\r\n\r\n`, 400, 'MALFORMED_REQUEST', { kind: 'parse', only11: true }),
@@ -73,11 +75,11 @@ const freshKey = () => `lane-${String(counter += 1).padStart(6, '0')}`;
 const ranTimes = async (port, key) => { const answer = await call(port, 'GET', `/v1/steps/${key}`); return answer.status === 404 ? 0 : answer.json.attempts; };
 
 function describeCase(shape, item, [earlier, behind]) {
-  const keys = { before: [], after: [] };
+  const keys = { before: [], after: [], refused: [] };
   const build = (port) => {
     let seen = false;
     return [...shape].map((token) => {
-      if (token === 'R') { seen = true; return item.make(port, behind); }
+      if (token === 'R') { seen = true; return item.make(port, behind, keys.refused); }
       if (token === 'G') return request(port, 'GET', '/scope.json', seen ? behind : earlier);
       const key = freshKey();
       (seen ? keys.after : keys.before).push(key);
@@ -112,6 +114,7 @@ async function runCase(port, shape, item, framing) {
   for (const key of kase.keys.before) assert.ok((await ranTimes(port, key)) <= 1, `${where}: ${key} ran at most once`);
   if (kase.strict) for (const key of kase.keys.before) assert.equal(await ranTimes(port, key), 1, `${where}: ${key} (before the refusal) ran exactly once`);
   for (const key of kase.keys.after) assert.equal(await ranTimes(port, key), 0, `${where}: ${key} (behind the refusal) never ran`);
+  for (const key of kase.keys.refused) assert.equal(await ranTimes(port, key), 0, `${where}: ${key} (the refused request ITSELF carried a valid step) never ran`);
 }
 
 // Runs the cases of one row with a bounded pool; every failed case is reported with its label.

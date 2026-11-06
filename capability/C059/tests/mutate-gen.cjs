@@ -18,9 +18,11 @@ const only = argument('--only');
 const match = argument('--match');
 const check = process.argv.includes('--check');
 const workers = Number(argument('--workers') ?? 2);
+// Progress of a long run: every result line is also appended to the file that C059_MUT_PROGRESS names (the recorder keeps stdout until the end).
+const log = (line) => { console.log(line); if (process.env.C059_MUT_PROGRESS) fs.appendFileSync(process.env.C059_MUT_PROGRESS, `${line}\n`); };
 if (!scratch || (!out && !check) || path.resolve(scratch).toLowerCase().startsWith(repository.toLowerCase())) throw new Error('--scratch must be outside the repository and --out a new report file');
 
-const FAST_PAGE = ['page', 'flow', 'tamper', 'page-bind', 'bind-null', 'page-kill', 'journey'];
+const FAST_PAGE = ['page', 'flow', 'tamper', 'page-bind', 'bind-null', 'page-kill', 'journey', 'journey-freeze'];
 const SLOW_PAGE = ['keyboard', 'property'];
 const FAST_CHECKER = ['checker', 'checker-reach', 'checker-kill', 'checker-fp'];
 const groups = [
@@ -81,7 +83,7 @@ async function worker(name, queue, results) {
     const eol = original.includes('\r\n') ? '\r\n' : '\n';
     const find = mutant.from.replace(/\n/g, eol);
     const occurrences = original.split(find).length - 1;
-    if (occurrences !== 1) { results.push({ ...mutant, error: `the mutated text occurs ${occurrences} times` }); console.log(`ERROR    ${mutant.file}: ${mutant.label}: occurs ${occurrences} times`); continue; }
+    if (occurrences !== 1) { results.push({ ...mutant, error: `the mutated text occurs ${occurrences} times` }); log(`ERROR    ${mutant.file}: ${mutant.label}: occurs ${occurrences} times`); continue; }
     fs.writeFileSync(target, original.replace(find, () => mutant.to.replace(/\n/g, eol)));
     let run = await runTests(tree, mutant.suites);
     // A test process that dies without naming a failing test (the machine is shared and kills processes under memory pressure) is not a result: run again.
@@ -96,8 +98,8 @@ async function worker(name, queue, results) {
     const named = failing(run.text);
     const killed = run.code !== 0 && named.length > 0;
     results.push({ group: mutant.group, file: mutant.file, label: mutant.label, killed, stage, crashLike: /SyntaxError|ReferenceError|Cannot read properties of (?:null|undefined)/.test(run.text), failingTests: named.slice(0, 3), equivalent: mutant.equivalent ?? null });
-    console.log(`${killed ? 'KILLED  ' : 'SURVIVED'} [${stage}] ${mutant.file}: ${mutant.label}${killed ? ` <- ${named.slice(0, 3).map((name) => name.slice(0, 90)).join(' | ')}` : ''}`);
-    if (!killed) console.log(`  exit ${run.code}; tail: ${run.text.slice(-500).replace(/\s+/g, ' ')}`);
+    log(`${killed ? 'KILLED  ' : 'SURVIVED'} [${stage}] ${mutant.file}: ${mutant.label}${killed ? ` <- ${named.slice(0, 3).map((name) => name.slice(0, 90)).join(' | ')}` : ''}`);
+    if (!killed) log(`  exit ${run.code}; tail: ${run.text.slice(-500).replace(/\s+/g, ' ')}`);
   }
 }
 

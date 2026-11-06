@@ -36,6 +36,11 @@ async function main() {
       new MutationObserver((records) => { for (const record of records) window.__live.push(record.target.textContent); }).observe(document.getElementById('status'), { childList: true, subtree: true, characterData: true });
     });
     const active = () => page.evaluate(() => document.activeElement.id || document.activeElement.tagName.toLowerCase());
+    // Focus crosses the boundary of the sandboxed frame asynchronously: poll (up to 5 s) for the settled focus instead of asserting the first read.
+    const settled = async (expected) => {
+      for (let turn = 0; turn < 100 && (await active()) !== expected; turn += 1) await new Promise((resolve) => setTimeout(resolve, 50));
+      return active();
+    };
     const idle = () => page.waitForFunction(() => !document.querySelector('[aria-busy="true"]'), null, { timeout: 15000 });
     const audit = async (label, options = {}) => {
       const findings = await page.evaluate((opts) => globalThis.C059A11y.check(document, opts).findings.map((item) => `${item.code} ${item.selector}`), options);
@@ -104,13 +109,14 @@ async function main() {
       if (!frame) await new Promise((resolve) => setTimeout(resolve, 50));
     }
     assert.ok(frame, 'the delivered lesson loaded in the sandboxed frame');
-    await frame.waitForLoadState('domcontentloaded');
+    await frame.waitForLoadState('load');
     assert.ok((await frame.title()).length > 0);
     assert.match(await page.locator('iframe').getAttribute('title'), /^A-S001: .* isolated synthetic training$/);
+    const frameStop = await page.evaluate(() => document.querySelector('iframe').id || 'iframe');
     await press('Tab');
-    assert.equal(await active(), await page.evaluate(() => document.querySelector('iframe').id || 'iframe'));
+    assert.equal(await settled(frameStop), frameStop, 'Tab from the lesson heading enters the frame');
     await press('Shift+Tab');
-    assert.equal(await active(), 'close-lesson', 'Shift+Tab leaves the frame');
+    assert.equal(await settled('close-lesson'), 'close-lesson', 'Shift+Tab leaves the frame');
     await act('close the lesson', () => press('Enter'), { announced: 1 });
     assert.equal(await active(), 'open-lesson');
     assert.equal(await page.locator('iframe').count(), 0);
@@ -211,7 +217,7 @@ async function main() {
     const verdicts = await page.evaluate(async () => {
       const transcript = await (await fetch('/transcript.json')).json();
       return transcript.events.filter((event) => event.kind === 'exchange' && event.response.body.kind === 'C042-step-result').map((event) => {
-        const view = globalThis.C059Journey.present(event.response);
+        const view = globalThis.C059Journey.present(event.response, globalThis.C059Journey.expectedFor(event.request));
         return { ok: view.ok, outcome: view.outcome, success: /succe/i.test(view.announcement) };
       });
     });

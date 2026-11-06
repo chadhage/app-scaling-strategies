@@ -50,9 +50,12 @@ const silent = new WeakMap();
 const closing = new WeakSet();
 const lanes = new WeakMap();
 const KIND = Object.freeze({ ordinary: 'ordinary', continue: 'continue', expectation: 'unsupported-expectation' });
-// Per-connection and per-server bounds: nothing a client does can make memory or the number of sockets grow without limit.
+// Per-connection and per-server bounds. The sockets (connections), the requests that wait on one socket (pipelineDepth), every header and every body are capped, and nothing a client
+// sends AFTER the first 64 KB read of a socket is ever parsed (the depth bound destroys the socket). The memory is NOT bounded independently of the cap: Node parses a whole 64 KB
+// read (3,449 requests of 19 bytes, 3,640 of 18 bytes) before any JavaScript can cut the socket, so each socket whose first request is still pending keeps about 6 MB of parsed requests until that
+// request ends. The worst case is connections x 6 MB: 32 sockets, about 190 MB (the cap was 128, about 0.77 GB). Sockets beyond the cap are dropped by Node at accept.
 // connectionsCheckingInterval makes Node enforce the header and request timeouts every checkMs instead of every 30 s.
-const BOUNDS = Object.freeze({ pipelineDepth: 4, connections: 128, headerBytes: 8192, headerCount: 64, idleMs: 90000, checkMs: 1000, firstRequestMs: 5000, requestMs: 5000, headersMs: 5000, keepAliveMs: 1000 });
+const BOUNDS = Object.freeze({ pipelineDepth: 4, connections: 32, headerBytes: 8192, headerCount: 64, idleMs: 90000, checkMs: 1000, firstRequestMs: 5000, requestMs: 5000, headersMs: 5000, keepAliveMs: 1000 });
 
 const JSON_UTF8 = 'application/json; charset=utf-8';
 const EXPECTATION_REFUSED = Object.freeze({ accepted: false, error: Object.freeze({ code: 'EXPECTATION_NOT_SUPPORTED', message: 'Only the 100-continue expectation is supported.' }), scope: contract.SCOPE });

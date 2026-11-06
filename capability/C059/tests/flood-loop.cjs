@@ -39,7 +39,7 @@ async function main() {
   const lane = async () => { while (next <= runs) { const index = next; next += 1; results.push(await once(index)); } };
   await Promise.all(Array.from({ length: parallel }, lane));
   results.sort((a, b) => a.run - b.run);
-  const summary = { runs, parallel, burners: burnerCount, passed: results.filter((item) => item.exit === 0 && item.fail === 0 && item.pass === item.tests && item.tests === 2).length, results };
+  const summary = { runs, parallel, burners: burnerCount, burnerPids: burners.map((burner) => burner.pid), passed: results.filter((item) => item.exit === 0 && item.fail === 0 && item.pass === item.tests && item.tests === 2).length, results };
   console.log(JSON.stringify(summary, null, 1));
   if (summary.passed !== runs) process.exitCode = 1;
 }
