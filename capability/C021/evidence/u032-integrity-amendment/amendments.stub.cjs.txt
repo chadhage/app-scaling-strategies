@@ -1,0 +1,22 @@
+'use strict';
+
+// U032 loadable stub for the RED: the final API with no behavior (nothing is checked, nothing is reported).
+const { createHash } = require('node:crypto');
+
+const SCHEMA = 'C021-evidence-addendum/1';
+const MANIFEST_PATH = 'capability\\C021\\evidence.json';
+const AMENDABLE = Object.freeze([]);
+const EVIDENCE_ROOT = 'capability\\C021\\evidence\\u032-integrity-amendment\\';
+const DRIFT_FILTER = '';
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const addendumName = (sequence) => `evidence-addendum-${sequence}.json`;
+const buildAddendum = (value) => Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
+const listAddenda = () => [];
+const resolveChain = () => ({ count: 0, tip: null, head: new Map(), evidence: new Map() });
+const checkSealed = ({ entries }) => entries.length;
+const checkEvidence = () => 0;
+const driftArgs = (commit) => ['--no-pager', 'diff', '--name-only', commit, '--', 'capability/C020'];
+const c020Drift = () => [];
+
+module.exports = Object.freeze({ SCHEMA, MANIFEST_PATH, AMENDABLE, EVIDENCE_ROOT, DRIFT_FILTER, hash, addendumName, buildAddendum,
+  listAddenda, resolveChain, checkSealed, checkEvidence, driftArgs, c020Drift });

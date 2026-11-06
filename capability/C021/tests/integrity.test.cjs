@@ -1,12 +1,12 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { execFileSync } = require('node:child_process');
 const { createHash } = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const { gunzipSync } = require('node:zlib');
+const amendments = require('./amendments.cjs');
 
 const root = path.resolve(__dirname, '..');
 const repo = path.resolve(root, '..', '..');
@@ -21,15 +21,21 @@ function rawStream(relative) {
   return relative.endsWith('.gz') ? gunzipSync(bytes) : bytes;
 }
 
+// U032: evidence.json stays sealed. This test's own bytes are superseded through the chained, append-only evidence-addendum-N.json files,
+// and the helper that reads them is pinned here by its raw SHA-256 (the helper holds no hash of this test, so the chain is acyclic).
+const AMENDMENTS_RAW_SHA256 = '495a3e7c11610dd82c90f38b2a57b3f5f34665f9277bbce6c7e487584dbd696c';
+const repoFile = (relative) => fs.readFileSync(path.join(repo, relative));
+const chainOf = (manifest) => amendments.resolveChain({ sealed: manifest.sourceHashes, addenda: amendments.listAddenda(root),
+  base: { path: amendments.MANIFEST_PATH, rawSha256: hash(fs.readFileSync(path.join(root, 'evidence.json'))) } });
+
 test('accepted C020 is byte-unchanged from RED and git-unchanged from its accepted dependency commit', () => {
   const red = stage('behavioral-red');
   for (const name of ['contract.js', 'profiles.cjs', 'inspector.js']) {
     const relative = path.join('capability', 'C020', name);
     assert.equal(hash(fs.readFileSync(path.join(repo, relative))), source(red, relative).sha256);
   }
-  assert.equal(execFileSync('git', [
-    '--no-pager', 'diff', '--exit-code', acceptedC020, '--', path.join('capability', 'C020')
-  ], { cwd: repo, encoding: 'utf8' }), '');
+  assert.deepEqual(amendments.c020Drift({ cwd: repo, commit: acceptedC020 }), [],
+    'a modified, deleted or renamed file of the accepted C020 tree (added files are accepted since U032)');
 });
 
 test('actual recorded BDD/stub/behavioral RED/IaC-N-A/initial GREEN stages are chronological', () => {
@@ -144,9 +150,9 @@ test('manifest source hashes and every linked historical verification record mat
   assert.equal(manifest.kanoUnits, 1);
   assert.equal(manifest.acceptedDependency.commit, acceptedC020);
   assert.deepEqual(manifest.parents, ['H005']);
-  for (const entry of manifest.sourceHashes) {
-    assert.equal(hash(fs.readFileSync(path.join(repo, entry.path))), entry.sha256, entry.path);
-  }
+  const chain = chainOf(manifest);
+  assert.equal(amendments.checkSealed({ entries: manifest.sourceHashes, chain, read: repoFile }), manifest.sourceHashes.length);
+  assert.equal(amendments.checkEvidence({ chain, read: repoFile }), chain.evidence.size);
   for (const entry of manifest.evidenceFiles) {
     assert.equal(hash(fs.readFileSync(path.join(repo, entry.path))), entry.sha256, entry.path);
   }
@@ -154,4 +160,15 @@ test('manifest source hashes and every linked historical verification record mat
     const record = read(path.join(repo, entry.record));
     assert.equal(record.exitCode, entry.expectedExitCode, entry.stage);
   }
+});
+
+test('the amendment helper is the pinned one and the addendum chain supersedes exactly this test', () => {
+  assert.equal(hash(fs.readFileSync(path.join(__dirname, 'amendments.cjs'))), AMENDMENTS_RAW_SHA256);
+  const manifest = read(path.join(root, 'evidence.json'));
+  const chain = chainOf(manifest);
+  const relative = path.join('capability', 'C021', 'tests', 'integrity.test.cjs');
+  assert.ok(chain.count >= 1);
+  assert.deepEqual([...chain.head.keys()], [relative]);
+  assert.notEqual(chain.head.get(relative), manifest.sourceHashes.find((entry) => entry.path === relative).sha256);
+  assert.equal(hash(fs.readFileSync(__filename)), chain.head.get(relative));
 });
