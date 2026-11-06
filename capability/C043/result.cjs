@@ -15,23 +15,32 @@ const notRun = (spec, index) => ({
 });
 
 // The view of one run: per-step facts (acknowledged, in flight, interrupted or not run), its state and its trail.
-// Only the steps of `applied` (acknowledged during THIS request) claim to have been applied by it.
-function viewOf(run, { live = false, elapsedMs = 0, applied = [] } = {}) {
+// Only the steps of `applied` (acknowledged during THIS request) claim to have been applied by it. `contradiction` is
+// the first acknowledged step that the step service does not confirm ({ index, code }): that step is shown as unknown
+// (with the step service's own code), the steps after it as not run, the run as stopped and never as completed.
+function viewOf(run, { live = false, elapsedMs = 0, applied = [], contradiction = null } = {}) {
   const steps = run.preset.steps.map((spec, index) => {
+    if (contradiction !== null && index + 1 >= contradiction.index) {
+      return index + 1 === contradiction.index ? { ...notRun(spec, index), status: 'unknown', code: contradiction.code, applied: null } : notRun(spec, index);
+    }
     if (run.pending === index + 1) return { ...notRun(spec, index), status: live ? 'running' : 'interrupted', applied: null };
     return run.acks[index] ? { ...run.acks[index], appliedByThisRequest: applied.includes(index + 1) && run.acks[index].status === 'succeeded' } : notRun(spec, index);
   });
-  const state = run.terminal ? run.terminal.state : live ? 'running' : 'interrupted';
-  return { state, steps, trail: run.trail.map((item) => ({ ...item })), attempts: run.attempts, elapsedMs: run.terminal ? run.terminal.elapsedMs : elapsedMs, bound: run.terminal ? run.terminal.bound : null };
+  const state = contradiction !== null ? 'stopped' : run.terminal ? run.terminal.state : live ? 'running' : 'interrupted';
+  return {
+    state, steps, trail: run.trail.map((item) => ({ ...item })), attempts: run.attempts, elapsedMs: run.terminal ? run.terminal.elapsedMs : elapsedMs,
+    bound: contradiction === null && run.terminal ? run.terminal.bound : null, contradicted: contradiction !== null,
+  };
 }
 
 const codeOf = (view) => {
+  if (view.contradicted === true) return 'PRESET_STEP_SERVICE_DISAGREES';
   if (view.state === 'completed') return null;
   if (view.state === 'interrupted') return view.steps.some((step) => step.status === 'unknown') ? 'PRESET_UNCONFIRMED' : 'PRESET_INTERRUPTED';
   return RUN_CODE[view.state];
 };
 
-function describeNot({ state, action, errorCode, notRunList, outcome }) {
+function describeNot({ state, action, errorCode, notRunList, outcome, contradicted }) {
   if (PERSISTENCE.includes(errorCode)) return ['NOT_CONFIRMED', 'NO_AUTOMATIC_RETRY', 'NO_CLOUD_CALL'];
   const codes = [];
   if (state === 'none') codes.push('NO_EFFECT', 'NO_JOURNAL_ENTRY', 'NO_STEP_CALLED');
@@ -41,7 +50,8 @@ function describeNot({ state, action, errorCode, notRunList, outcome }) {
     if (refused || ['inspect', 'cancel', 'none'].includes(action)) codes.push('NO_EFFECT_BY_THIS_REQUEST');
     codes.push('NO_UNDO');
     if (state === 'completed') codes.push('NO_SECOND_EFFECT');
-    if (notRunList.length > 0) codes.push('LATER_STEPS_NOT_RUN');
+    if (contradicted) codes.push('STEPS_NOT_CONFIRMED');
+    else if (notRunList.length > 0) codes.push('LATER_STEPS_NOT_RUN');
     if (state !== 'completed') codes.push('NO_AUTOMATIC_RETRY');
     if (outcome === 'unknown') codes.push('NOT_CONFIRMED');
   }
@@ -50,7 +60,7 @@ function describeNot({ state, action, errorCode, notRunList, outcome }) {
   return codes;
 }
 
-function build({ action, accepted = false, replayed = false, errorCode = null, details = null, bound = null, preset = null, sha256 = null, key = null, view = null }) {
+function build({ action, accepted = false, replayed = false, errorCode = null, details = null, bound = null, preset = null, sha256 = null, key = null, view = null, stepTail = 0 }) {
   const code = errorCode ?? (view ? codeOf(view) : null);
   if (code === null && (view === null || view.state !== 'completed')) throw new Error('Only a completed run of every step can be reported as success.');
   const known = code === null ? null : ERRORS[code];
@@ -61,16 +71,18 @@ function build({ action, accepted = false, replayed = false, errorCode = null, d
   const effects = steps.filter((step) => step.applied === true).map((step) => ({ index: step.index, key: step.key, leaseId: step.leaseId, units: step.units, reservedAfter: step.reservedAfter }));
   const outcome = known ? known.outcome : 'succeeded';
   const stopped = steps.find((step) => step.status === 'failed');
-  const detail = details ?? (code === 'PRESET_STEP_FAILED' ? [{ path: `steps[${stopped.index - 1}]`, code: stopped.code, message: contract.catalogEntry(stopped.code).message }] : []);
+  const unconfirmed = steps.find((step) => step.status === 'unknown');
+  const named = (step) => [{ path: `steps[${step.index - 1}]`, code: step.code, message: contract.catalogEntry(step.code).message }];
+  const detail = details ?? (code === 'PRESET_STEP_FAILED' ? named(stopped) : code === 'PRESET_STEP_SERVICE_DISAGREES' ? named(unconfirmed) : []);
   const body = {
     schemaVersion: 1, kind: 'C043-preset-result', action, accepted, replayed, outcome, classification: contract.CLASSIFICATIONS[outcome],
     terminal: !contract.OPEN_STATES.includes(state), idempotencyKey: preset ? preset.idempotencyKey : key, presetSha256: sha256, preset: preset ? JSON.parse(JSON.stringify(preset)) : null,
     run: { state }, bound: bound ?? (view ? view.bound : null), steps, ran, notRun: notRunList, effects,
     usage: { steps: ran.length, units: effects.reduce((total, item) => total + item.units, 0), elapsedMs: view ? view.elapsedMs : 0 },
-    didNot: describeNot({ state, action, errorCode: code, notRunList, outcome }).map((item) => ({ code: item, text: DIDNOT[item] })),
+    didNot: describeNot({ state, action, errorCode: code, notRunList, outcome, contradicted: view !== null && view.contradicted === true }).map((item) => ({ code: item, text: DIDNOT[item] })),
     error: known ? { code, group: known.group, message: known.message, details: detail } : null,
     recovery: { allowed: contract.expectedActions(code, state, steps.some((step) => !contract.SUCCESS_STATUSES.includes(step.status))), reason: known ? known.message : STATE_REASONS[state] },
-    trail: view ? view.trail : [], attempts: view ? view.attempts : 0, scope: SCOPE,
+    trail: view ? view.trail : [], attempts: view ? view.attempts : 0, stepJournalDiscardedTailBytes: view ? stepTail : null, scope: SCOPE,
   };
   const fresh = steps.some((step) => step.appliedByThisRequest);
   const status = accepted ? (action === 'run' && fresh ? 201 : state === 'running' ? 202 : 200) : known.status;

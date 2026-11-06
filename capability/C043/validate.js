@@ -89,11 +89,12 @@
   }
 
   function stepFactsOk(step, index, spec, action, replayed) {
+    if (!record(step, STEP_KEYS) || !Object.hasOwn(STEP_RULES, step.status)) return false;
     const rule = STEP_RULES[step.status];
     const capacity = c42.LEASES[spec.leaseId];
     const reserved = SUCCESS.includes(step.status);
-    return record(step, STEP_KEYS) && step.index === index + 1 && step.key === spec.idempotencyKey && step.leaseId === spec.leaseId &&
-      step.units === spec.units && rule !== undefined && rule.applied.includes(step.applied) &&
+    return step.index === index + 1 && step.key === spec.idempotencyKey && step.leaseId === spec.leaseId &&
+      step.units === spec.units && rule.applied.includes(step.applied) &&
       (step.code === null ? rule.code !== true : rule.code !== false && contract.STEP_CODES.includes(step.code)) &&
       typeof step.appliedByThisRequest === 'boolean' && (!step.appliedByThisRequest || (step.status === 'succeeded' && !replayed && ['run', 'resume'].includes(action))) &&
       (reserved ? integer(step.reservedAfter, step.units, capacity) : step.reservedAfter === null);
@@ -107,5 +108,7 @@
     running: { applied: [null], code: false }, 'not-run': { applied: [false], code: false },
   };
 
-  return Object.freeze({ validatePresetShape, stepShapeProblems, stepFactsOk, record, object, text, sum, same, STEP_KEYS, FORBIDDEN });
+  return Object.freeze({
+    validatePresetShape, stepShapeProblems, stepFactsOk, record, object, text, sum, same, STEP_KEYS: Object.freeze([...STEP_KEYS]), FORBIDDEN: Object.freeze([...FORBIDDEN]),
+  });
 }));

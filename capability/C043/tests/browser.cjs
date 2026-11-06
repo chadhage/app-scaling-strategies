@@ -11,6 +11,7 @@ const { randomUUID } = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { produceTranscript } = require('../transcript.cjs');
+const contract = require('../contract.js');
 const {
   call, doc, gate, inFlight, startService, step,
 } = require('./support.cjs');
@@ -165,10 +166,53 @@ async function main() {
     assert.equal(await page.locator('#events tr').count(), 0);
     checked('a forged transcript is REJECTED in the real browser and the earlier display is cleared', await text('#status'));
 
+    // C043 F4: every tamper pattern of an answer is REJECTED (never UNKNOWN, never a throw) in the real browser, and no
+    // tampered word reaches the page. The GET answer of an inspect is rewritten on its way to the page (the helper still
+    // allows only GET: the route handler passes every other method on to the helper's own guard).
+    const PROSE = 'Success: every step ran fine.';
+    const UNKNOWN = 'tamper-unknown-0001';
+    let unknownInspections = 0;
+    let tamper = null;
+    const rewrite = async (route) => {
+      if (tamper === null || route.request().method() !== 'GET') return route.fallback();
+      const response = await route.fetch({ maxRedirects: 0 });
+      const forged = JSON.parse(await response.text());
+      tamper(forged);
+      const forgedText = JSON.stringify(forged);
+      return route.fulfill({ response, body: forgedText, headers: { ...response.headers(), 'content-length': String(Buffer.byteLength(forgedText)) } });
+    };
+    await page.route('**/v1/presets/*', rewrite);
+    const TAMPERS = [
+      ['a null step', DONE, (answer) => { answer.steps[1] = null; }],
+      ['a step status of __proto__', DONE, (answer) => { answer.steps[0].status = '__proto__'; }],
+      ['a step status of constructor', DONE, (answer) => { answer.steps[0].status = 'constructor'; }],
+      ['a null usage', DONE, (answer) => { answer.usage = null; }],
+      ['a deceptive sentence as a detail path', UNKNOWN, (answer) => { answer.error.details = [{ path: PROSE, code: 'INVALID_FORMAT', message: contract.ERRORS.INVALID_FORMAT.message }]; }],
+      ['a single deceptive word as a detail path', UNKNOWN, (answer) => { answer.error.details = [{ path: 'Success', code: 'INVALID_FORMAT', message: contract.ERRORS.INVALID_FORMAT.message }]; }],
+    ];
+    const rejected = [];
+    for (const [name, key, change] of TAMPERS) {
+      tamper = change;
+      unknownInspections += key === UNKNOWN ? 1 : 0;
+      await page.fill('#key', key);
+      await page.focus('#inspect');
+      await page.keyboard.press('Enter');
+      await page.waitForFunction(() => !document.getElementById('status').textContent.startsWith('Waiting'));
+      const status = await text('#status');
+      assert.match(status, /^REJECTED — the response is not a valid C043 result/, `${name}: ${status}`);
+      assert.equal(await page.evaluate((sentence) => document.body.textContent.includes(sentence), PROSE), false, `${name}: no tampered sentence reaches the page`);
+      assert.equal(await page.locator('#result dt').count(), 0, `${name}: nothing is shown`);
+      await coherent(`after the tamper: ${name}`);
+      rejected.push(name);
+    }
+    tamper = null;
+    await page.unroute('**/v1/presets/*', rewrite);
+    checked('every tamper pattern (null step, inherited status names, null usage, a deceptive detail path) is REJECTED, never UNKNOWN, and prints none of the tampered text', rejected);
+
     // The console must hold no CSP violation and no missing resource before the deliberate CSP probe below (C042 F7);
     // the one 404 is the typed RUN_NOT_FOUND answer of the unknown-key inspection above.
     assert.deepEqual(consoleErrors.filter((entry) => /Content Security Policy|favicon/.test(entry)), [], 'the console holds no CSP violation (C042 F7)');
-    assert.equal(consoleErrors.filter((entry) => /404/.test(entry)).length, 1, 'the only missing resource is the deliberate unknown-key inspection');
+    assert.equal(consoleErrors.filter((entry) => /404/.test(entry)).length, 1 + unknownInspections, 'the only missing resources are the deliberate unknown-key inspections');
     assert.equal(requests.filter((entry) => /favicon/.test(entry)).length, 0, 'no favicon request');
     const csp = await page.evaluate(async () => {
       const script = document.createElement('script');

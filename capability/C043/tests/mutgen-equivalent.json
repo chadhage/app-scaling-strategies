@@ -1,0 +1,6 @@
+{
+  "6686:if-true": "`if (true) await earlier;` instead of `if (earlier !== null) await earlier;`: `earlier` is either null or a promise, and awaiting null resolves in the same microtask turn, so no request is ordered differently (the requests of one connection already queue behind a promise).",
+  "7383:if-false": "`if (false)` for the guard `response.destroyed || response.writableEnded` of send(): Node 22 ignores a write to a destroyed response and a second end(), so the guard only skips work; no answer, state or socket differs (defense in depth, never the only protection: every path that calls send() returns after it).",
+  "7402:swap ||": "`response.destroyed && response.writableEnded` instead of `||`: the same guard weakened; with writableEnded true or the response destroyed, Node ignores the second write exactly as above, so no observable difference.",
+  "7570:swap >=": "`status > 300` instead of `status >= 300`: the server never answers with status 300 (the statuses of result.cjs are 200, 201, 202 and 4xx and 5xx), so the boundary value is not reachable; tests\\boundaries.test.cjs enumerates the statuses the service emits."
+}

@@ -17,11 +17,13 @@ const red = (name) => path.join('capability', 'C043', 'evidence', 'red', `${name
 // The suites that load each file. Fewer suites can only LOWER a file's coverage, so this list never inflates a figure.
 const INITIAL = [red('initial-a'), red('initial-b')];
 const TESTS = {
-  'contract.js': [t('units'), t('page'), t('server'), ...INITIAL], 'validate.js': [t('units'), t('page'), t('server'), ...INITIAL],
-  'envelope.js': [t('units'), t('page'), t('server'), ...INITIAL], 'verify.js': [t('units'), t('page'), t('server'), ...INITIAL],
+  'contract.js': [t('units'), t('page'), t('server'), t('f4-tamper'), ...INITIAL], 'validate.js': [t('units'), t('page'), t('server'), t('f4-tamper'), ...INITIAL],
+  'envelope.js': [t('units'), t('page'), t('server'), t('f4-tamper'), t('f-more'), ...INITIAL], 'verify.js': [t('units'), t('page'), t('server'), t('f4-tamper'), ...INITIAL],
   'preset.cjs': [t('journal'), t('units'), t('server'), ...INITIAL], 'runlog.cjs': [t('journal'), t('runner'), t('server'), ...INITIAL],
-  'result.cjs': [t('runner'), t('journal'), t('units'), t('server'), ...INITIAL], 'runner.cjs': [t('runner'), t('same-steps'), t('property'), t('journal'), ...INITIAL],
-  'server.cjs': [t('server'), t('resources'), t('page'), t('units'), ...INITIAL], 'transcript.cjs': [t('units'), t('page'), t('server')], 'page.js': [t('page')],
+  'result.cjs': [t('runner'), t('journal'), t('units'), t('server'), t('f3-cross-check'), t('f-more'), ...INITIAL],
+  'runner.cjs': [t('runner'), t('same-steps'), t('property'), t('journal'), t('f3-cross-check'), t('f-more'), ...INITIAL],
+  'server.cjs': [t('server'), t('resources'), t('page'), t('units'), t('pipelining'), t('guards'), t('node-own'), t('connect-upgrade'), t('two-instances'), t('boundaries'), ...INITIAL], 'transcript.cjs': [t('units'), t('page'), t('server')],
+  'page.js': [t('page'), t('f4-tamper'), t('f-more')],
 };
 const PARALLEL = Number(process.env.C043_COVERAGE_PARALLEL ?? 3);
 const only = process.env.C043_COVERAGE_ONLY ? process.env.C043_COVERAGE_ONLY.split(',') : null;

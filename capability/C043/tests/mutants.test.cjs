@@ -43,19 +43,66 @@ const MUTANTS = [
   ['L4 Windows device names are accepted', 'runlog.cjs', '!WINDOWS_DEVICES.test(name) &&', '', 'tests/server.test.cjs', 'the data name is closed'],
   ['L5 trailing dots and spaces are accepted', 'runlog.cjs', "&& !/[. ]$/.test(name) ?", '&& true ?', 'tests/server.test.cjs', 'the data name is closed'],
   ['S1 maxConnections is removed', 'server.cjs', 'server.maxConnections = limits.connections;', '', 'tests/resources.test.cjs', 'connection cap'],
-  ['S2 the socket is not destroyed after the refusal is flushed', 'server.cjs', "if (close) response.once('finish', () => request.socket.destroy());", '', 'tests/resources.test.cjs', 'get-body', { C043_KINDS: 'get-body' }, 'REFUSAL FLOOD'],
+  ['S2 the socket is not destroyed after the refusal is flushed', 'server.cjs', "response.once('finish', () => socket.destroy());", '', 'tests/resources.test.cjs', 'get-body', { C043_KINDS: 'get-body', C043_LIVENESS_MS: '20000' }, 'REFUSAL FLOOD'],
   ['S3 the pipeline depth is not limited', 'server.cjs', 'if (depth > limits.pipelineDepth) {', 'if (false) {', 'tests/resources.test.cjs', 'pipelines requests and never reads'],
-  ['S4 a silent socket is never closed', 'server.cjs', 'const timer = setTimeout(() => socket.destroy(), limits.firstRequestMs);', 'const timer = setTimeout(() => {}, limits.firstRequestMs);', 'tests/resources.test.cjs', 'never sends a request'],
-  ['S5 connectionsCheckingInterval is not set', 'server.cjs', ', connectionsCheckingInterval: limits.checkMs', '', 'tests/resources.test.cjs', 'trickles its headers'],
-  ['S6 requestTimeout is not set', 'server.cjs', 'server.requestTimeout = limits.requestMs;', '', 'tests/resources.test.cjs', 'body that trickles'],
-  ['S7 headersTimeout is not set', 'server.cjs', 'server.headersTimeout = limits.headersMs;', '', 'tests/resources.test.cjs', 'trickles its headers'],
-  ['S8 keepAliveTimeout is not set', 'server.cjs', 'server.keepAliveTimeout = limits.keepAliveMs;', '', 'tests/resources.test.cjs', 'idle keep-alive'],
+  ['S4 a silent socket is never closed', 'server.cjs', 'const timer = setTimeout(() => socket.destroy(), limits.firstRequestMs);', 'const timer = setTimeout(() => {}, limits.firstRequestMs);', 'tests/resources.test.cjs', 'never sends a request', { C043_LIVENESS_MS: '20000' }],
+  ['S5 connectionsCheckingInterval is not set', 'server.cjs', ', connectionsCheckingInterval: limits.checkMs', '', 'tests/guards.test.cjs', 'T1 the timers and bounds'],
+  ['S6 requestTimeout is not set', 'server.cjs', 'server.requestTimeout = limits.requestMs;', '', 'tests/guards.test.cjs', 'T1 the timers and bounds'],
+  ['S7 headersTimeout is not set', 'server.cjs', 'server.headersTimeout = limits.headersMs;', '', 'tests/guards.test.cjs', 'T1 the timers and bounds'],
+  ['S8 keepAliveTimeout is not set', 'server.cjs', 'server.keepAliveTimeout = limits.keepAliveMs;', '', 'tests/guards.test.cjs', 'T1 the timers and bounds'],
   ['S9 the header size is not limited', 'server.cjs', 'maxHeaderSize: limits.headerBytes', 'maxHeaderSize: 65536', 'tests/resources.test.cjs', 'headers beyond the size bound'],
-  ['S10 the streamed body is not limited', 'server.cjs', 'if (size > limit) {', 'if (false) {', 'tests/resources.test.cjs', 'invalid-preset-400', { C043_KINDS: 'invalid-preset-400' }, 'REFUSAL FLOOD'],
+  ['S10 the streamed body is not limited', 'server.cjs', 'if (size > limit) {', 'if (false) {', 'tests/resources.test.cjs', 'invalid-preset-400', { C043_KINDS: 'invalid-preset-400', C043_LIVENESS_MS: '20000' }, 'REFUSAL FLOOD'],
   ['S11 a declared large body is read before it is refused', 'server.cjs', "if (Number(request.headers['content-length'] || 0) > contract.LIMITS.bodyBytes) return refuse('BODY_TOO_LARGE', { action: 'run' });", '', 'tests/server.test.cjs', 'every typed refusal'],
   ['S12 a refusal keeps the connection alive', 'server.cjs', 'const close = status < 200 || status >= 300 || !consumed;', 'const close = !consumed;', 'tests/server.test.cjs', 'every typed refusal'],
   ['S13 closeServer does not halt the runner', 'server.cjs', 'server.runner?.halt();', '', 'tests/units.test.cjs', 'server-produced transcript verifies'],
   ['S14 closeServer does not halt the step service', 'server.cjs', 'server.engine?.halt();', '', 'tests/server.test.cjs', 'closing the server stops the step service'],
+  // F1 (pipelining behind a refusal): the mark, the check and the per-connection queue, in process and in a separate process.
+  ['S15 a refusal does not mark its connection', 'server.cjs', 'closing.add(socket); response.once(', 'response.once(', 'tests/pipelining.test.cjs', 'pipelined behind an unknown route'],
+  ['S16 a request on a marked connection still runs', 'server.cjs', 'if (closing.has(socket)) {', 'if (false) {', 'tests/pipelining.test.cjs', 'pipelined behind an unknown route'],
+  ['S17 the requests of one connection are not queued', 'server.cjs', 'if (earlier !== null) await earlier;', '', 'tests/pipelining.test.cjs', 'decided after'],
+  ['S18 a refusal does not mark its connection (separate process)', 'server.cjs', 'closing.add(socket); response.once(', 'response.once(', 'tests/pipelining-process.test.cjs', 'SEPARATE PROCESS'],
+  ['S19 a request on a marked connection still runs (separate process)', 'server.cjs', 'if (closing.has(socket)) {', 'if (false) {', 'tests/pipelining-process.test.cjs', 'SEPARATE PROCESS'],
+  ['S20 the requests of one connection are not queued (separate process)', 'server.cjs', 'if (earlier !== null) await earlier;', '', 'tests/pipelining-process.test.cjs', 'SEPARATE PROCESS'],
+  ['S21 a refusal keeps the connection alive (the pipelining matrix)', 'server.cjs', 'const close = status < 200 || status >= 300 || !consumed;', 'const close = !consumed;', 'tests/pipelining.test.cjs', 'pipelined behind an unknown route'],
+  // Addendum (rev-C017 F11, F12): the requests Node answers itself, and the guard that must not depend on the HTTP version.
+  ['N1 an unknown Expect header is answered by Node itself', 'server.cjs', "server.on('checkExpectation', (request, response) => handle(request, response, 'EXPECTATION_FAILED'));", '', 'tests/node-own.test.cjs', 'NODE-OWN an unknown Expect header'],
+  ['N2 Expect: 100-continue is answered by Node itself (100 Continue before the checks)', 'server.cjs', "server.on('checkContinue', (request, response) => handle(request, response));", '', 'tests/node-own.test.cjs', 'NODE-OWN Expect: 100-continue'],
+  ['N3 parse errors are answered by Node itself', 'server.cjs', "server.on('clientError', refuseUnparsed);", '', 'tests/node-own.test.cjs', 'NODE-OWN a malformed request line'],
+  ['N4 a request without Host is answered by Node itself', 'server.cjs', 'server.requireHostHeader = false;', '', 'tests/node-own.test.cjs', 'NODE-OWN an HTTP/1.1 request without a Host header'],
+  ['N5 a parse error cuts the request in flight short', 'server.cjs', 'else queued.get(socket).then(answer);', 'else answer();', 'tests/node-own.test.cjs', 'NODE-OWN a parse error behind a request that is still being answered'],
+  ['N6 bytes after an answer that closes the connection get an answer', 'server.cjs', "|| error.code === 'HPE_CLOSED_CONNECTION') {", ') {', 'tests/guards.test.cjs', 'N6 bytes after an answer that closes the connection'],
+  ['N7 the per-connection guard is not applied to HTTP/1.0 requests', 'server.cjs', 'if (closing.has(socket)) {', "if (closing.has(socket) && request.httpVersion === '1.1') {", 'tests/pipelining-framing.test.cjs', 'SEPARATE PROCESS, BOTH FRAMINGS'],
+  ['N8 a request timeout is answered with the generic parse error', 'server.cjs', 'ERR_HTTP_REQUEST_TIMEOUT: \'REQUEST_TIMEOUT\',', '', 'tests/node-own.test.cjs', 'NODE-OWN a request timeout'],
+  ['N9 a header overflow is answered with the generic parse error', 'server.cjs', "HPE_HEADER_OVERFLOW: 'HEADERS_TOO_LARGE', ", '', 'tests/node-own.test.cjs', 'NODE-OWN a header block beyond the size bound'],
+  // R3 (line 14): CONNECT is answered through the one refusal path, after the requests that came before it.
+  ['N10 a CONNECT request is destroyed by Node at once (no connect listener)', 'server.cjs', "server.on('connect', (request, socket) => refuseUnparsed(Object.assign(new Error('CONNECT is not supported'), { code: 'C043_CONNECT' }), socket));", '', 'tests/connect-upgrade.test.cjs', '[valid mutation][CONNECT] HTTP/1.1', {}, 'in this process'],
+  ['N11 the 405 of a CONNECT has no Allow header', 'server.cjs', "...(status === 405 ? { Allow: 'GET, POST' } : {})", '...{}', 'tests/connect-upgrade.test.cjs', 'a CONNECT request is answered 405'],
+  ['N12 a CONNECT request is answered with the generic parse error', 'server.cjs', ", C043_CONNECT: 'METHOD_NOT_ALLOWED',", ',', 'tests/connect-upgrade.test.cjs', '[CONNECT] HTTP/1.1', {}, 'in this process'],
+  // F5: the guards that survived the first review.
+  ['G11 the action name is not a closed pattern', 'server.cjs', 'if (actionMatch && ACTION_NAME.test(actionMatch[2])) {', 'if (actionMatch) {', 'tests/guards.test.cjs', 'G11'],
+  ['G12 the header count is not bounded', 'server.cjs', 'server.maxHeadersCount = limits.headerCount;', '', 'tests/guards.test.cjs', 'G12'],
+  ['G13 the idle timeout is not set', 'server.cjs', 'server.timeout = limits.idleMs;', '', 'tests/guards.test.cjs', 'G13'],
+  ['G15 the transcript is rebuilt for every request', 'server.cjs', 'produced ??= transcript()', 'produced = transcript()', 'tests/guards.test.cjs', 'G15'],
+  ['G16 the journal health hides the step journal tail', 'server.cjs', 'stepJournalDiscardedTailBytes: engine.tornTailBytes', 'stepJournalDiscardedTailBytes: 0', 'tests/guards.test.cjs', 'G16'],
+  // F3: the cross-check against the step service.
+  ['C1 the ledger layer of the cross-check never finds a contradiction', 'runner.cjs', 'let confirmed = ledger === null || (ledger[spec.leaseId]?.committed ?? 0) >= reserved;', 'let confirmed = true;', 'tests/f3-cross-check.test.cjs', 'every answer about the run says so'],
+  ['C2 the per-step layer compares only the step state, not the effect', 'runner.cjs', "confirmed = seen.body.step.state === 'committed' && effect.leaseId === spec.leaseId && effect.units === spec.units && effect.reservedAfter === reserved;", "confirmed = seen.body.step.state === 'committed';", 'tests/f-more.test.cjs', 'holds differently'],
+  ['C11 the per-step layer of the production composition is skipped', 'runner.cjs', 'if (confirmed && this.#verify !== null) {', 'if (false) {', 'tests/f-more.test.cjs', 'holds differently'],
+  ['C3 resume drives an open run that is contradicted', 'runner.cjs', "this.#live.has(key) || this.#contradiction(run) !== null) return this.#answer('resume'", "this.#live.has(key)) return this.#answer('resume'", 'tests/f-more.test.cjs', 'OPEN run'],
+  ['C4 cancel acts on an open run that is contradicted', 'runner.cjs', " || this.#contradiction(run) !== null) return this.#answer('cancel'", ") return this.#answer('cancel'", 'tests/f-more.test.cjs', 'OPEN run'],
+  ['C5 the answer of a fresh run asks the step service again', 'runner.cjs', '{ applied: live.applied, check: false }', '{ applied: live.applied }', 'tests/f-more.test.cjs', 'a run driven in this process is answered from its own step answers'],
+  ['C6 the step journal tail is not reported', 'runner.cjs', 'const bytes = this.#engine.tornTailBytes;', 'const bytes = 0;', 'tests/f3-cross-check.test.cjs', 'discarded step-journal tail is exposed'],
+  ['C7 the contradiction does not replace the state-based refusal', 'runner.cjs', 'const code = contradiction !== null && !OWN_REFUSALS.includes(errorCode) ? null : errorCode;', 'const code = errorCode;', 'tests/f3-cross-check.test.cjs', 'every answer about the run says so'],
+  ['C8 the journal health does not count unconfirmed runs', 'runner.cjs', 'unconfirmedRuns: unconfirmed,', 'unconfirmedRuns: 0,', 'tests/f3-cross-check.test.cjs', 'every answer about the run says so'],
+  ['C9 the page headline hides the contradiction', 'page.js', "if (value.error && value.error.code === 'PRESET_STEP_SERVICE_DISAGREES') return", 'if (false) return', 'tests/f-more.test.cjs', 'the page shows a contradicted run'],
+  ['C10 the page hides the discarded tail', 'page.js', 'String(value.stepJournalDiscardedTailBytes)', "'0'", 'tests/f-more.test.cjs', 'the page shows a contradicted run'],
+  // F4: the vocabulary and the totality of the answer validation.
+  ['V1 a step field path is not checked against the vocabulary', 'contract.js', 'return parts.length === 2 && fields !== null && fields.includes(parts[1]);', 'return true;', 'tests/f4-tamper.test.cjs', 'closed vocabulary'],
+  ['V2 any word is a path of a typed code', 'contract.js', 'if (NAMED.includes(code) && NAME_ALPHABET.test(path)) return true;', 'if (NAME_ALPHABET.test(path)) return true;', 'tests/f4-tamper.test.cjs', 'closed vocabulary'],
+  ['V3 the validator is not total', 'envelope.js', "return { ok: false, problems: ['MALFORMED'] };", "throw new Error('not total');", 'tests/f4-tamper.test.cjs', 'the validator is total'],
+  ['V4 an inherited step status name reaches the rule table', 'validate.js', '|| !Object.hasOwn(STEP_RULES, step.status)) return false;', ') return false;', 'tests/f-more.test.cjs', 'typed problem names the rule'],
+  ['V5 a null usage reaches the bound check', 'envelope.js', "if (!problems.includes('USAGE')) need(", 'need(', 'tests/f-more.test.cjs', 'typed problem names the rule'],
+  ['V6 the step journal tail of an answer is not validated', 'envelope.js', "need(state === 'none' ? value.stepJournalDiscardedTailBytes === null : integer(value.stepJournalDiscardedTailBytes, 0), 'STEP_JOURNAL_TAIL');", '', 'tests/f-more.test.cjs', 'typed problem names the rule'],
 ];
 // Documented equivalent mutant: removing the loop that destroys tracked sockets in closeServer changes nothing on Node 22,
 // because server.closeAllConnections() already ends every connection; the loop is defense in depth and is not counted as a guard.
@@ -63,7 +110,7 @@ const MUTANTS = [
 function runNode(args, env, timeoutMs) {
   return new Promise((resolve) => {
     const clean = { ...process.env };
-    for (const key of ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE', 'NODE_OPTIONS', 'C043_MUTANT', 'C043_RED_SUBJECT', 'C043_KINDS', 'C043_FLOOD']) delete clean[key];
+    for (const key of ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE', 'NODE_OPTIONS', 'C043_MUTANT', 'C043_RED_SUBJECT', 'C043_KINDS', 'C043_FLOOD', 'C043_LIVENESS_MS', 'C043_STALL_MS', 'C043_MUTANTS_ONLY']) delete clean[key];
     const child = spawn(process.execPath, args, { cwd: root, env: { ...clean, ...env }, windowsHide: true });
     const chunks = [];
     child.stdout.on('data', (chunk) => chunks.push(chunk));
@@ -76,7 +123,9 @@ function runNode(args, env, timeoutMs) {
 const failing = (output) => [...output.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((match) => match[1].trim());
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const focused = (file, pattern) => ['--test-reporter=tap', `--test-name-pattern=${escapeRegExp(pattern)}`, file];
-const unique = [...new Map(MUTANTS.map(([, , , , file, expected, env, pattern]) => [`${file}|${pattern ?? expected}|${JSON.stringify(env ?? {})}`, [file, pattern ?? expected, env ?? {}]])).values()];
+// C043_MUTANTS_ONLY=N10,N11 runs only those rows (a development aid: the capture runs them all).
+const SELECTED = process.env.C043_MUTANTS_ONLY ? MUTANTS.filter(([name]) => process.env.C043_MUTANTS_ONLY.split(',').some((id) => name.startsWith(`${id} `))) : MUTANTS;
+const unique = [...new Map(SELECTED.map(([, , , , file, expected, env, pattern]) => [`${file}|${pattern ?? expected}|${JSON.stringify(env ?? {})}`, [file, pattern ?? expected, env ?? {}]])).values()];
 
 async function pool(items, size, work) {
   const results = new Array(items.length);
@@ -94,7 +143,7 @@ test('MUTANTS: the focused tests pass on the unmutated code (controls)', { timeo
 
 test('MUTANTS: every mutation matches exactly once and is killed by a test named for the guard it removes', { timeout: 1200000 }, async () => {
   const survivors = [];
-  const report = await pool(MUTANTS, 3, async ([name, file, from, to, testFile, expected, env = {}, pattern = expected]) => {
+  const report = await pool(SELECTED, 3, async ([name, file, from, to, testFile, expected, env = {}, pattern = expected]) => {
     const source = fs.readFileSync(path.join(root, file), 'utf8');
     const occurrences = source.split(from).length - 1;
     if (occurrences !== 1) return { name, problem: `the mutation target occurs ${occurrences} times` };
@@ -106,5 +155,21 @@ test('MUTANTS: every mutation matches exactly once and is killed by a test named
     return { name, killed, code: outcome.code, names: names.slice(0, 3) };
   });
   for (const item of report) if (item.problem || !item.killed) survivors.push(`${item.name}: ${item.problem ?? `exit ${item.code}, failing: ${item.names.join(' | ') || 'none'}`}`);
-  assert.deepEqual(survivors, [], `${MUTANTS.length - survivors.length} of ${MUTANTS.length} mutants were killed by a named test`);
+  assert.deepEqual(survivors, [], `${SELECTED.length - survivors.length} of ${SELECTED.length} mutants were killed by a named test`);
+});
+
+// Equivalent mutants are listed and SHOWN to survive (never hidden): the focused tests still pass on them.
+const EQUIVALENT = [
+  ['Q1 the mark uses response.socket instead of request.socket: under the per-connection queue a response always has its socket when its handler runs, so the two are the same object', 'server.cjs', 'closing.add(socket); response.once(', 'closing.add(response.socket); response.once(', 'tests/pipelining.test.cjs', 'pipelined behind'],
+  ['Q2 the redundant sequence check of the preset journal (the hash chain and the self-check already reject every gap)', 'runlog.cjs', "if (record.seq !== expectedSeq) return 'sequence gap';", '', 'tests/journal.test.cjs', 'EXHAUSTIVE single-byte flips'],
+];
+
+test('EQUIVALENT mutants are listed and survive the focused tests (no behavior differs)', { timeout: 600000 }, async () => {
+  const report = await pool(EQUIVALENT, 2, async ([name, file, from, to, testFile, pattern]) => {
+    const source = fs.readFileSync(path.join(root, file), 'utf8');
+    assert.equal(source.split(from).length - 1, 1, `${name}: the target occurs once`);
+    const outcome = await runNode(focused(testFile, pattern), { C043_MUTANT: JSON.stringify({ file, from, to }), C043_MUTANT_OPTIONAL: '1', NODE_OPTIONS: `--require=${preload}` }, 300000);
+    return { name, code: outcome.code, failing: failing(outcome.output) };
+  });
+  for (const item of report) assert.deepEqual([item.code, item.failing], [0, []], `${item.name} was killed after all: ${item.failing.join('; ')}`);
 });

@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "cardId": "C043",
+  "kind": "isolated-headless-edge-observation",
+  "startedAtUtc": "2026-11-06T15:04:02.236Z",
+  "outcome": "passed",
+  "testRuntime": "v22.23.4",
+  "businessData": "synthetic",
+  "integratedForegroundBrowserUsed": false,
+  "checks": [
+    {
+      "name": "the installed Edge is Microsoft-signed and within the qualified major version",
+      "passed": true,
+      "observed": {
+        "version": "156.0.4314.58",
+        "sha256": "d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b"
+      }
+    },
+    {
+      "name": "initial state: synthetic banner, the GET-only limit stated, the declared presets loaded and validated",
+      "passed": true,
+      "observed": "4 declared presets loaded and validated."
+    },
+    {
+      "name": "the whole page is reachable with Tab in a sensible order",
+      "passed": true,
+      "observed": [
+        "preset",
+        "request",
+        "submit",
+        "key",
+        "inspect",
+        "load"
+      ]
+    },
+    {
+      "name": "Enter on Run: the helper blocks the POST, the page says UNKNOWN, offers Retry and Inspect, shows no success",
+      "passed": true,
+      "observed": {
+        "requests": [
+          "POST /v1/presets"
+        ]
+      }
+    },
+    {
+      "name": "Inspect (a GET) of the preset that Node completed: validated progress, effects and the controls that work",
+      "passed": true,
+      "observed": {
+        "status": "COMPLETED — all 3 steps succeeded within the bounds; 3 effect(s) stand (15 units); nothing was undone.",
+        "controls": [
+          "Retry with the same key",
+          "Inspect the preset"
+        ]
+      }
+    },
+    {
+      "name": "Inspect of the preset still running: step 1 succeeded, step 2 in flight, step 3 not run; cancel, retry and inspect offered",
+      "passed": true,
+      "observed": "RUNNING — step 2 of 3 is in flight; 1 step(s) were not run; 1 effect(s) stand (5 units); nothing was undone."
+    },
+    {
+      "name": "an unknown key is a typed rejection with only the control that works",
+      "passed": true,
+      "observed": "REJECTED — RUN_NOT_FOUND; nothing was run and nothing was written."
+    },
+    {
+      "name": "the server-produced transcript is verified again by the page in a real browser",
+      "passed": true,
+      "observed": {
+        "rows": 28
+      }
+    },
+    {
+      "name": "a forged transcript is REJECTED in the real browser and the earlier display is cleared",
+      "passed": true,
+      "observed": "REJECTED — the transcript did not verify; nothing is shown as observed."
+    },
+    {
+      "name": "every tamper pattern (null step, inherited status names, null usage, a deceptive detail path) is REJECTED, never UNKNOWN, and prints none of the tampered text",
+      "passed": true,
+      "observed": [
+        "a null step",
+        "a step status of __proto__",
+        "a step status of constructor",
+        "a null usage",
+        "a deceptive sentence as a detail path",
+        "a single deceptive word as a detail path"
+      ]
+    },
+    {
+      "name": "CSP blocks inline script and outside connections",
+      "passed": true,
+      "observed": {
+        "inline": "blocked",
+        "outside": "blocked",
+        "location": "/"
+      }
+    }
+  ],
+  "cleanup": {
+    "serverClosed": true,
+    "browserClosed": true
+  },
+  "limits": [
+    "The isolated helper allows only GET and aborts writes: the browser could not POST; the page reported UNKNOWN and the server saw no write."
+  ],
+  "signedEdge": {
+    "path": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "status": "Valid",
+    "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "fileVersion": "156.0.4314.58",
+    "sha256": "d35d48b11f0439eeeddbbff0bf54856e922f5e1506a2f3098b5a808fcec4068b"
+  },
+  "server": {
+    "pid": 24812,
+    "address": {
+      "address": "127.0.0.1",
+      "family": "IPv4",
+      "port": 63046
+    },
+    "ownership": "this process, exact returned http.Server handle"
+  },
+  "browserVersion": "156.0.4314.58",
+  "playwrightVersion": "1.56.1",
+  "transcriptSummary": "VERIFIED SERVER TRANSCRIPT\n{\n  \"verified\": true,\n  \"exchanges\": 27,\n  \"outcomes\": {\n    \"succeeded\": 4,\n    \"rejected\": 8,\n    \"unsupported\": 2,\n    \"bound-exceeded\": 2,\n    \"failed\": 1,\n    \"unknown\": 1,\n    \"cancelled\": 2,\n    \"interrupted\": 1\n  },\n  \"replays\": 1,\n  \"effects\": 10,\n  \"typedFailures\": [\n    \"ACTION_NOT_ALLOWED\",\n    \"DUPLICATE_FIELD\",\n    \"DUPLICATE_STEP_KEY\",\n    \"FIELD_OUT_OF_RANGE\",\n    \"FORBIDDEN_FIELD\",\n    \"IDEMPOTENCY_KEY_CONFLICT\",\n    \"PRESET_BOUND_EXCEEDED\",\n    \"PRESET_CANCELLED\",\n    \"PRESET_INTERRUPTED\",\n    \"PRESET_IN_FLIGHT\",\n    \"PRESET_STEP_FAILED\",\n    \"TOO_MANY_STEPS\",\n    \"UNSUPPORTED_ACTION\",\n    \"UNSUPPORTED_PRESET_VERSION\"\n  ]\n}",
+  "consoleErrors": [
+    "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-SlHSUXvpUrZZqHBPWfdJaR/1l5NR39l5yPTcF2NGT3I='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked.",
+    "Connecting to 'http://example.invalid/' violates the following Content Security Policy directive: \"connect-src 'self'\". The action has been blocked.",
+    "Fetch API cannot load http://example.invalid/. Refused to connect because it violates the document's Content Security Policy."
+  ],
+  "domSnapshot": {
+    "title": "C043 · run a bounded preset through the same validated steps",
+    "status": "REJECTED — the response is not a valid C043 result (PARTS); nothing is shown as success.",
+    "ids": [
+      "limit",
+      "run-form",
+      "preset",
+      "catalog-status",
+      "request",
+      "submit",
+      "status",
+      "progress-heading",
+      "progress",
+      "result-heading",
+      "result",
+      "listing-ran",
+      "listing-notrun",
+      "listing-effects",
+      "did-not",
+      "details",
+      "trail",
+      "recovery-heading",
+      "recovery",
+      "key",
+      "inspect",
+      "transcript-heading",
+      "load",
+      "summary",
+      "events"
+    ],
+    "events": 0
+  },
+  "completedAtUtc": "2026-11-06T15:06:24.429Z"
+}

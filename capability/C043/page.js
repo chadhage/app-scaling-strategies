@@ -86,6 +86,7 @@
     if (value.run.state === 'completed') return `COMPLETED — all ${total} steps succeeded within the bounds; ${standing}.`;
     if (value.run.state === 'none' && value.bound) return `BOUND EXCEEDED — ${BOUND_WORDS[value.bound.name]} is ${value.bound.limit} but the preset declares ${value.bound.observed}; nothing was run or written.`;
     if (value.bound) return `BOUND EXCEEDED — ${BOUND_WORDS[value.bound.name]} is ${value.bound.limit} but ${value.bound.observed} was used; ${value.notRun.length} step(s) were not run; ${standing}.`;
+    if (value.error && value.error.code === 'PRESET_STEP_SERVICE_DISAGREES') return `NOT CONFIRMED — the step service does not confirm step ${stopped.index} of ${total} (${stopped.code}); ${standing}.`;
     const where = stopped ? `step ${stopped.index} of ${total} ${STATUS_VERBS[stopped.status]}${stopped.code ? ` (${stopped.code})` : ''}` : `${value.notRun.length} of ${total} steps were not run`;
     return `${STATE_WORDS[value.run.state]} — ${where}; ${value.notRun.length} step(s) were not run; ${standing}.`;
   }
@@ -99,6 +100,7 @@
       ['Elapsed (injected clock)', `${value.usage.elapsedMs} ms`], ['Bound exceeded', bound],
       ['Typed code', value.error ? `${value.error.code} (${value.error.group})` : 'none'], ['Why', value.error ? contract.ERRORS[value.error.code].message : contract.STATE_REASONS[value.run.state]],
       ['Attempts', String(value.attempts)],
+      ['Step journal bytes discarded at start', value.stepJournalDiscardedTailBytes === null ? 'not reported' : String(value.stepJournalDiscardedTailBytes)],
     ];
     $('result').replaceChildren(...rows.flatMap(([name, content]) => [node('dt', name), node('dd', content)]));
     showProgress(value.steps);

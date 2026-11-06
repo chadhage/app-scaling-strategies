@@ -102,6 +102,14 @@ const REFUSALS = [
   ['an absolute URL for another origin', (p) => rawHost(p, ['GET http://other.example/v1/leases HTTP/1.1', 'Host: HOST']), 'INVALID_URL', 400],
   ['a fragment-bearing target', (p) => rawHost(p, ['GET /v1/leases#frag HTTP/1.1', 'Host: HOST']), 'INVALID_URL', 400],
   ['a malformed percent escape', (p) => rawHost(p, ['GET /%zz HTTP/1.1', 'Host: HOST']), 'NOT_FOUND', 404],
+  // The answers Node would give itself and never call the handler for: each is a typed refusal that closes the connection.
+  ['an unknown Expect header', (p) => rawHost(p, ['GET /v1/leases HTTP/1.1', 'Host: HOST', 'Expect: foo']), 'EXPECTATION_FAILED', 417],
+  ['an HTTP/1.1 request without a Host header', (p) => raw(p, ['GET /v1/leases HTTP/1.1']), 'LOCAL_HOST_REQUIRED', 421],
+  ['a malformed request line', (p) => raw(p, ['GET']), 'MALFORMED_REQUEST', 400],
+  ['an invalid header line', (p) => rawHost(p, ['GET /v1/leases HTTP/1.1', 'Host: HOST', 'Bad Header: x']), 'MALFORMED_REQUEST', 400],
+  ['Content-Length together with Transfer-Encoding', (p) => rawHost(p, ['POST /v1/presets HTTP/1.1', 'Host: HOST', 'Content-Length: 5', 'Transfer-Encoding: chunked'], '0\r\n\r\n'), 'MALFORMED_REQUEST', 400],
+  ['a header block beyond the size bound', (p) => rawHost(p, ['GET /v1/leases HTTP/1.1', 'Host: HOST', `X-Big: ${'a'.repeat(9000)}`]), 'HEADERS_TOO_LARGE', 431],
+  ['more headers than the count bound', (p) => rawHost(p, ['GET /v1/leases HTTP/1.1', 'Host: HOST', ...Array.from({ length: 70 }, (_, index) => `X-J-${index}: 1`)]), 'HEADERS_TOO_LARGE', 431],
 ];
 
 test('every typed refusal is a valid envelope, carries its status and closes the connection', { timeout: 60000 }, async (context) => {

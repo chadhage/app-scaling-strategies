@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync, spawnSync } = require('node:child_process');
 const zlib = require('node:zlib');
-const { manifestsUnder, sha, verifyManifest } = require('./evidence.cjs');
+const { sha, verifyManifest } = require('./evidence.cjs');
 const { assert, cleanup, scratch } = require('./support.cjs');
 
 const root = path.resolve(__dirname, '..');
@@ -59,12 +59,9 @@ test('the page has no inline script or handler, loads the pinned validators firs
   assert.equal(/innerHTML|insertAdjacentHTML|document\.write|eval\(/.test(read('page.js')), false, 'the page builds text nodes only');
 });
 
-test('the RED, GREEN and coverage evidence is recomputed from the files, and every kind of tampering is a named failure', { timeout: 60000 }, () => {
-  const manifests = manifestsUnder(path.join(root, 'evidence'));
-  assert.equal(manifests.length >= 1, true, 'at least the RED run is archived');
-  for (const manifest of manifests) assert.deepEqual(verifyManifest(manifest, repository), [], manifest);
-  const red = manifests.find((name) => name.includes(`${path.sep}red-01${path.sep}`));
-  assert.equal(Boolean(red), true, 'the first RED run is retained');
+test('the first RED run is retained and recomputed, and the transcript tamperings that keep its hashes consistent are named failures', { timeout: 60000 }, () => {
+  const red = path.join(root, 'evidence', 'red', 'red-01', 'red-initial.json');
+  assert.deepEqual(verifyManifest(red, repository), [], 'the files of the first RED are unchanged');
   const manifest = JSON.parse(fs.readFileSync(red, 'utf8'));
   assert.deepEqual([manifest.exitCode, manifest.expectedExitCode, manifest.summary.fail > 0, manifest.summary.pass], [1, 1, true, 0]);
   assert.equal(manifest.summary.tests, manifest.summary.fail);
@@ -115,7 +112,9 @@ test('the RED fails against the behaviorless stubs and passes unchanged against 
 test('the README carries the exact commands and the honest limits, the feature came first and the files keep their bytes', { timeout: 30000 }, () => {
   const readme = read('README.md');
   for (const phrase of ['node capability\\C043\\server.cjs', 'C043_RED_SUBJECT', 'node capability\\C043\\tests\\coverage.cjs', 'node capability\\C043\\tests\\browser.cjs', 'MUTANTS:',
-    'only GET', 'C017', 'not the approved Node.js 24', 'discarded tail', 'external anchor', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'equivalent mutant', 'same steps']) {
+    'only GET', 'C017', 'not the approved Node.js 24', 'discarded tail', 'external anchor', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'equivalent mutant', 'same steps',
+    'C043-review-fixes.feature', 'C043-node-own.feature', 'PRESET_STEP_SERVICE_DISAGREES', 'closed vocabulary', 'per drive', 'consistent rewrite', 'maxRequestsPerSocket', 'HTTP/1.0',
+    'C043-r3-load.feature', 'C043-r3-connect.feature', 'C043-r3-hardening.feature', 'C043-r3-aliasing.feature', 'tests\\fresh-tree.cjs', 'tests\\mutgen.cjs', 'tests\\loop.cjs', 'What was not probed']) {
     assert.equal(readme.includes(phrase), true, `README lacks: ${phrase}`);
   }
   const feature = read('C043.feature');

@@ -16,6 +16,8 @@ const deferred = () => {
   return { promise, resolve };
 };
 const ENGINE_METHODS = ['submit', 'inspect', 'cancel', 'resume'];
+// Refusals of the request itself: a contradicted run does not replace them.
+const OWN_REFUSALS = ['IDEMPOTENCY_KEY_CONFLICT', 'UNSUPPORTED_ACTION'];
 
 // What the preset journal records about one step, from the step service's answer (never from prose).
 function factsOf({ body }, cancelRequested) {
@@ -34,15 +36,17 @@ class Runner {
   #engine;
   #io;
   #clock;
+  #verify;
   #log = null;
   #live = new Map();
   #halted = false;
   #degraded = false;
 
-  constructor(engine, io, clock) {
+  constructor(engine, io, clock, verify) {
     this.#engine = engine;
     this.#io = io;
     this.#clock = clock;
+    this.#verify = verify;
   }
 
   load() {
@@ -53,7 +57,8 @@ class Runner {
   halt() { this.#halted = true; }
 
   health() {
-    return { schemaVersion: 1, kind: 'C043-journal-health', runs: this.#log.runs.size, live: this.#live.size, discardedTailBytes: this.#log.discardedTailBytes, scope: contract.SCOPE };
+    const unconfirmed = [...this.#log.runs.values()].filter((run) => !this.#live.has(run.key) && this.#contradiction(run) !== null).length;
+    return { schemaVersion: 1, kind: 'C043-journal-health', runs: this.#log.runs.size, live: this.#live.size, discardedTailBytes: this.#log.discardedTailBytes, unconfirmedRuns: unconfirmed, scope: contract.SCOPE };
   }
 
   #tick() {
@@ -62,6 +67,39 @@ class Runner {
   }
 
   #elapsed(live) { return Math.max(0, this.#tick() - live.startedAt); }
+
+  // The bytes the step service discarded from the tail of its own journal when it started (a torn or flipped final record).
+  #stepTail() {
+    const bytes = this.#engine.tornTailBytes;
+    return Number.isSafeInteger(bytes) && bytes >= 0 ? bytes : 0;
+  }
+
+  // The step service is the system of record of every effect. Every acknowledged step of a run that is not being driven
+  // here is checked against it, whenever the runner answers about the run (F3: a rolled-back or damaged step journal must
+  // never leave a COMPLETED answer standing). The check has two layers. (1) The ledger the step service reports
+  // (`leases()`, not a step function) must hold at least the units that the acknowledgement says were reserved after the
+  // step: a step journal that lost its tail makes the total fall below. (2) When the composition provides `verify` (the
+  // service does: the step service's own `inspect`), the step must also be held as committed with the same effect. The
+  // first step that fails a layer is returned with the step service's own typed code for it.
+  #contradiction(run) {
+    const ledger = typeof this.#engine.leases === 'function' ? this.#engine.leases() : null;
+    for (let index = 1; index <= run.done; index += 1) {
+      const spec = run.preset.steps[index - 1];
+      const reserved = run.acks[index - 1].reservedAfter;
+      let seen = null;
+      let confirmed = ledger === null || (ledger[spec.leaseId]?.committed ?? 0) >= reserved;
+      if (confirmed && this.#verify !== null) {
+        seen = this.#verify(spec.idempotencyKey);
+        const { effect } = seen.body;
+        confirmed = seen.body.step.state === 'committed' && effect.leaseId === spec.leaseId && effect.units === spec.units && effect.reservedAfter === reserved;
+      }
+      if (!confirmed) {
+        seen ??= (this.#verify ?? ((key) => this.#engine.inspect(key)))(spec.idempotencyKey);
+        return { index, code: seen.body.error ? seen.body.error.code : 'IDEMPOTENCY_KEY_CONFLICT' };
+      }
+    }
+    return null;
+  }
 
   // After a write that could not be confirmed nothing in memory is trusted: the next request re-reads the journal.
   #blocked() {
@@ -75,11 +113,16 @@ class Runner {
     }
   }
 
-  #answer(action, run, { replayed = false, errorCode = null, applied = [] } = {}) {
+  // `check: false` is for a run driven in this process: its acknowledgements came from the step service's own answers.
+  // A run that is not driven here is asked about again; a contradicted one is never accepted and its own typed refusal wins
+  // over the state-based ones (a conflicting key or an unsupported action keeps its code: that request is refused anyway).
+  #answer(action, run, { replayed = false, errorCode = null, applied = [], check = true } = {}) {
     const live = this.#live.get(run.key);
-    const view = result.viewOf(run, { live: Boolean(live), elapsedMs: live ? this.#elapsed(live) : 0, applied });
-    const accepted = errorCode === null && (action === 'inspect' || (action === 'cancel' ? view.state === 'cancelled' : view.state === 'completed'));
-    return result.build({ action, accepted, replayed, errorCode, view, preset: run.preset, sha256: run.sha256 });
+    const contradiction = check && !live ? this.#contradiction(run) : null;
+    const code = contradiction !== null && !OWN_REFUSALS.includes(errorCode) ? null : errorCode;
+    const view = result.viewOf(run, { live: Boolean(live), elapsedMs: live ? this.#elapsed(live) : 0, applied, contradiction });
+    const accepted = code === null && (action === 'inspect' || (action === 'cancel' ? view.state === 'cancelled' : view.state === 'completed'));
+    return result.build({ action, accepted, replayed, errorCode: code, view, preset: run.preset, sha256: run.sha256, stepTail: this.#stepTail() });
   }
 
   // A step is submitted exactly as by hand. After a restart the step service is first asked what it already knows,
@@ -154,7 +197,7 @@ class Runner {
     }
     if (this.#halted) return result.refusal('RUN_JOURNAL_UNAVAILABLE', { action, key });
     if (uncertain) return this.#uncertain(action, key);
-    return this.#answer(action, this.#log.runs.get(key), { applied: live.applied });
+    return this.#answer(action, this.#log.runs.get(key), { applied: live.applied, check: false });
   }
 
   #uncertain(action, key) {
@@ -186,8 +229,9 @@ class Runner {
     const known = this.#log.runs.get(key);
     if (known) {
       if (known.sha256 !== sha256) return this.#answer('run', known, { errorCode: 'IDEMPOTENCY_KEY_CONFLICT' });
-      await this.#live.get(key)?.done.promise;
-      return this.#answer('run', this.#log.runs.get(key) ?? known, { replayed: true });
+      const driven = this.#live.get(key);
+      await driven?.done.promise;
+      return this.#answer('run', this.#log.runs.get(key) ?? known, { replayed: true, check: driven === undefined });
     }
     // Runs that ended without an effect-bearing success (stopped, bounded, cancelled) do not use admission for ever (C042 F3),
     // and the journal stays below the size its replay accepts, so the service can always restart.
@@ -215,9 +259,9 @@ class Runner {
       live.cancelRequested = true;
       if (live.current !== null) this.#engine.cancel(live.current);
       await live.done.promise;
-      return this.#answer('cancel', this.#log.runs.get(key), { errorCode: this.#log.runs.get(key)?.terminal?.state === 'cancelled' ? null : 'ACTION_NOT_ALLOWED' });
+      return this.#answer('cancel', this.#log.runs.get(key), { errorCode: this.#log.runs.get(key)?.terminal?.state === 'cancelled' ? null : 'ACTION_NOT_ALLOWED', check: false });
     }
-    if (run.terminal || (run.done === run.preset.steps.length && run.pending === null)) return this.#answer('cancel', run, { errorCode: 'ACTION_NOT_ALLOWED' });
+    if (run.terminal || (run.done === run.preset.steps.length && run.pending === null) || this.#contradiction(run) !== null) return this.#answer('cancel', run, { errorCode: 'ACTION_NOT_ALLOWED' });
     return this.#cancelOpen(key, run);
   }
 
@@ -242,7 +286,7 @@ class Runner {
       live.done.resolve();
     }
     const final = this.#log.runs.get(key);
-    return this.#answer('cancel', final, { errorCode: final.terminal && final.terminal.state !== 'cancelled' ? 'ACTION_NOT_ALLOWED' : null });
+    return this.#answer('cancel', final, { errorCode: final.terminal && final.terminal.state !== 'cancelled' ? 'ACTION_NOT_ALLOWED' : null, check: false });
   }
 
   async resume(key) {
@@ -250,7 +294,7 @@ class Runner {
     if (blocked) return result.refusal(blocked, { action: 'resume', key });
     const run = this.#log.runs.get(key);
     if (!run) return result.refusal('RUN_NOT_FOUND', { action: 'resume', key });
-    if (run.terminal || this.#live.has(key)) return this.#answer('resume', run, { errorCode: 'ACTION_NOT_ALLOWED' });
+    if (run.terminal || this.#live.has(key) || this.#contradiction(run) !== null) return this.#answer('resume', run, { errorCode: 'ACTION_NOT_ALLOWED' });
     const failed = this.#append('resume', key, { type: 'resume' });
     return failed ?? this.#drive(key, 'resume', 'resume');
   }
@@ -264,11 +308,12 @@ class Runner {
   }
 }
 
-async function openRunner({ engine, io, clock = () => 0 } = {}) {
+async function openRunner({ engine, io, clock = () => 0, verify = null } = {}) {
   if (!engine || !ENGINE_METHODS.every((name) => typeof engine[name] === 'function')) throw new TypeError('A step service with submit, inspect, cancel and resume is required.');
   if (!io || typeof io.read !== 'function' || typeof io.append !== 'function' || typeof io.truncate !== 'function') throw new TypeError('An io object with read, append and truncate is required.');
   if (typeof clock !== 'function') throw new TypeError('An injected clock function is required.');
-  const runner = new Runner(engine, io, clock);
+  if (verify !== null && typeof verify !== 'function') throw new TypeError('verify must be a function that asks the step service about one step.');
+  const runner = new Runner(engine, io, clock, verify);
   runner.load();
   return runner;
 }

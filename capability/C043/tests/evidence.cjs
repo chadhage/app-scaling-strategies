@@ -5,17 +5,21 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
+const { execFileSync } = require('node:child_process');
 const { createHash } = require('node:crypto');
 
 const sha = (buffer) => createHash('sha256').update(buffer).digest('hex');
+const crlfToLf = (buffer) => Buffer.from(buffer.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
 
+// EVERY manifest of EVERY capture (red, green, coverage, mutants, browser and the fix captures): a capture manifest is
+// recognised by its shape, so no folder (the raw folder holds the green, coverage, mutants and browser manifests) is skipped.
 function manifestsUnder(directory) {
   const found = [];
   const walk = (dir) => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) walk(full);
-      else if (entry.name.endsWith('.json') && !full.includes(`${path.sep}raw${path.sep}`)) {
+      else if (entry.name.endsWith('.json')) {
         const body = JSON.parse(fs.readFileSync(full, 'utf8'));
         if (body.schemaVersion === 1 && body.transcripts && Array.isArray(body.inputs)) found.push(full);
       }
@@ -25,15 +29,21 @@ function manifestsUnder(directory) {
   return found.sort();
 }
 
-// Every input must still have the recorded bytes and every transcript must hash and unzip to what was recorded.
-function verifyManifest(manifestPath, repository) {
+// The bytes of a pinned input as they are today (default) or as they were in a given commit (a sealed capture).
+const workingReader = (repository) => (relative) => fs.readFileSync(path.join(repository, relative));
+const gitReader = (commit, repository) => (relative) => execFileSync('git', ['--no-pager', 'cat-file', 'blob', `${commit}:${relative.replace(/\\/g, '/')}`],
+  { cwd: repository, maxBuffer: 16 * 1024 * 1024, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+
+// Every input must have the recorded bytes (size, SHA-256 and LF-normalized SHA-256) and every transcript must hash and
+// unzip to what was recorded.
+function verifyManifest(manifestPath, repository, read = workingReader(repository)) {
   const problems = [];
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   const here = path.dirname(manifestPath);
   for (const input of manifest.inputs) {
-    const file = path.join(repository, input.path);
-    if (!fs.existsSync(file)) problems.push(`${manifest.name}: input ${input.path} is missing`);
-    else if (sha(fs.readFileSync(file)) !== input.rawSha256) problems.push(`${manifest.name}: input ${input.path} differs from the recorded bytes`);
+    let bytes;
+    try { bytes = read(input.path); } catch { problems.push(`${manifest.name}: input ${input.path} is missing`); continue; }
+    if (sha(bytes) !== input.rawSha256 || bytes.length !== input.bytes || sha(crlfToLf(bytes)) !== input.crlfToLfSha256) problems.push(`${manifest.name}: input ${input.path} differs from the recorded bytes`);
   }
   for (const [stream, info] of Object.entries(manifest.transcripts)) {
     const file = path.join(here, info.path);
@@ -47,4 +57,4 @@ function verifyManifest(manifestPath, repository) {
   return problems;
 }
 
-module.exports = Object.freeze({ manifestsUnder, verifyManifest, sha });
+module.exports = Object.freeze({ gitReader, manifestsUnder, verifyManifest, workingReader, sha });

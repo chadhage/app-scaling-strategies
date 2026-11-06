@@ -1,0 +1,143 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./contract.js'), require('./validate.js'));
+  else Object.defineProperty(root, 'C043Envelope', { value: factory(root.C043Contract, root.C043Validate) });
+}(globalThis, function (contract, v) {
+  'use strict';
+
+  const { own, integer } = contract;
+  const ENVELOPE_KEYS = ['schemaVersion', 'kind', 'action', 'accepted', 'replayed', 'outcome', 'classification', 'terminal', 'idempotencyKey',
+    'presetSha256', 'preset', 'run', 'bound', 'steps', 'ran', 'notRun', 'effects', 'usage', 'didNot', 'error', 'recovery', 'trail', 'attempts', 'stepJournalDiscardedTailBytes', 'scope'];
+  const EFFECT_KEYS = ['index', 'key', 'leaseId', 'units', 'reservedAfter'];
+  const CATALOG_KEYS = ['schemaVersion', 'kind', 'scope', 'presets'];
+  const known = (code) => contract.catalogEntry(code);
+
+  function errorOk(error) {
+    if (error === null) return true;
+    if (!v.record(error, ['code', 'group', 'message', 'details']) || !own(contract.ERRORS, error.code)) return false;
+    const entry = contract.ERRORS[error.code];
+    return error.group === entry.group && error.message === entry.message && Array.isArray(error.details) && error.details.length <= 16 &&
+      error.details.every((item) => v.record(item, ['path', 'code', 'message']) && contract.pathOk(item.path, item.code) && known(item.code) !== null && item.message === known(item.code).message);
+  }
+
+  function listsOk(value) {
+    const { recovery } = value;
+    return Array.isArray(value.didNot) && value.didNot.length >= 1 && value.didNot.length <= 11 &&
+      value.didNot.every((item, index) => v.record(item, ['code', 'text']) && own(contract.DIDNOT, item.code) && item.text === contract.DIDNOT[item.code] &&
+        value.didNot.findIndex((other) => other.code === item.code) === index) &&
+      v.record(recovery, ['allowed', 'reason']) && Array.isArray(recovery.allowed) &&
+      recovery.allowed.every((name, index) => contract.ACTION_NAMES.includes(name) && recovery.allowed.indexOf(name) === index) &&
+      Array.isArray(value.trail) && value.trail.length <= 64 &&
+      value.trail.every((item, index) => v.record(item, ['seq', 'type']) && contract.RECORD_TYPES.includes(item.type) && integer(item.seq, 1) &&
+        (index === 0 || item.seq > value.trail[index - 1].seq));
+  }
+
+  function boundOk(value, preset, state) {
+    const { bound } = value;
+    if (!v.record(bound, ['name', 'limit', 'observed']) || !contract.BOUND_KEYS.includes(bound.name) || !integer(bound.limit, 1) || !integer(bound.observed, 0) ||
+        bound.observed <= bound.limit || preset === null || bound.limit !== preset.bounds[bound.name]) return false;
+    if (bound.name === 'maxDurationMs') return state === 'bounded' && bound.observed === value.usage.elapsedMs;
+    const declared = bound.name === 'maxSteps' ? preset.steps.length : v.sum(preset.steps, (step) => step.units);
+    return state === 'none' && bound.observed === declared && value.ran.length === 0;
+  }
+
+  // What each run-state code claims about the listing (the step that stopped the run, if any).
+  function runShapeOk(value, code, stopper) {
+    const between = stopper === null && value.notRun.length > 0;
+    const stopped = value.steps.find((step) => step.status === 'failed');
+    if (code === 'PRESET_STEP_FAILED') {
+      return stopper === 'failed' && value.error.details.length === 1 && value.error.details[0].code === stopped.code && value.error.details[0].path === `steps[${stopped.index - 1}]`;
+    }
+    if (code === 'PRESET_BOUND_EXCEEDED') return stopper === null;
+    if (code === 'PRESET_CANCELLED') return stopper === 'cancelled' || between;
+    if (code === 'PRESET_INTERRUPTED') return stopper === 'interrupted' || between;
+    if (code === 'PRESET_UNCONFIRMED') return stopper === 'unknown';
+    if (code === 'PRESET_STEP_SERVICE_DISAGREES') {
+      const unconfirmed = value.steps.find((step) => step.status === 'unknown');
+      return stopper === 'unknown' && value.error.details.length === 1 && value.error.details[0].code === unconfirmed.code && value.error.details[0].path === `steps[${unconfirmed.index - 1}]`;
+    }
+    return stopper === 'running' || between;
+  }
+
+  // Closed shape plus the honesty rules: success only for a completed run of every step, a listing derived from the
+  // steps, wording only from closed catalogs, and the offered controls exactly those the run state allows.
+  function inspectEnvelope(value) {
+    if (!v.record(value, ENVELOPE_KEYS)) return { ok: false, problems: ['ENVELOPE_KEYS'] };
+    const problems = [];
+    const need = (condition, name) => { if (!condition) problems.push(name); };
+    need(value.schemaVersion === 1 && value.kind === 'C043-preset-result' && value.scope === contract.SCOPE, 'IDENTITY');
+    need(contract.REQUEST_ACTIONS.includes(value.action), 'ACTION');
+    need(['accepted', 'replayed', 'terminal'].every((name) => typeof value[name] === 'boolean'), 'FLAGS');
+    need(own(contract.CLASSIFICATIONS, value.outcome) && value.classification === contract.CLASSIFICATIONS[value.outcome], 'OUTCOME');
+    need(v.record(value.run, ['state']) && contract.STATES.includes(value.run.state), 'RUN');
+    need(errorOk(value.error) && listsOk(value), 'PARTS');
+    need(value.preset === null || v.validatePresetShape(value.preset).ok, 'PRESET');
+    need((value.preset === null) === (value.presetSha256 === null) && (value.presetSha256 === null || /^[0-9a-f]{64}$/.test(value.presetSha256)), 'PRESET_DIGEST');
+    need(value.idempotencyKey === null || (typeof value.idempotencyKey === 'string' && contract.c42.KEY_PATTERN.test(value.idempotencyKey)), 'KEY');
+    need(value.preset === null || value.idempotencyKey === value.preset.idempotencyKey, 'KEY_MATCH');
+    need(integer(value.attempts, 0) && Array.isArray(value.steps) && Array.isArray(value.ran) && Array.isArray(value.notRun) && Array.isArray(value.effects), 'ATTEMPTS');
+    if (problems.length) return { ok: false, problems };
+    const { preset, steps } = value;
+    const specs = preset === null ? [] : preset.steps;
+    need(steps.length === specs.length && steps.every((step, index) => v.stepFactsOk(step, index, specs[index], value.action, value.replayed)), 'STEPS');
+    if (problems.length) return { ok: false, problems };
+    const statuses = steps.map((step) => step.status);
+    const first = statuses.findIndex((status) => !contract.SUCCESS_STATUSES.includes(status));
+    const stopper = first !== -1 && statuses[first] !== 'not-run' ? statuses[first] : null;
+    need(first === -1 || statuses.slice(first + (stopper ? 1 : 0)).every((status) => status === 'not-run'), 'STEP_ORDER');
+    const ran = steps.filter((step) => step.status !== 'not-run').map((step) => step.index);
+    const effects = steps.filter((step) => step.applied === true).map((step) => ({ index: step.index, key: step.key, leaseId: step.leaseId, units: step.units, reservedAfter: step.reservedAfter }));
+    need(v.same(value.ran, ran) && v.same(value.notRun, steps.filter((step) => step.status === 'not-run').map((step) => step.index)) && v.same(value.effects, effects) &&
+      value.effects.every((item) => v.record(item, EFFECT_KEYS)), 'DERIVED_LISTS');
+    need(v.record(value.usage, ['steps', 'units', 'elapsedMs']) && value.usage.steps === ran.length && value.usage.units === v.sum(effects, (item) => item.units) && integer(value.usage.elapsedMs, 0), 'USAGE');
+    if (!problems.includes('USAGE')) need(preset === null || value.usage.units <= preset.bounds.maxUnits, 'UNITS_WITHIN_BOUND');
+    if (problems.length) return { ok: false, problems };
+    const state = value.run.state;
+    const code = value.error === null ? null : value.error.code;
+    const entry = code === null ? null : contract.ERRORS[code];
+    const runCode = code !== null && own(contract.RUN_CODE_STATE, code);
+    need(value.terminal === !contract.OPEN_STATES.includes(state), 'TERMINAL_STATE');
+    need(state !== 'none' || (value.trail.length === 0 && value.attempts === 0), 'NO_RUN_NO_TRAIL');
+    need(state === 'none' ? value.stepJournalDiscardedTailBytes === null : integer(value.stepJournalDiscardedTailBytes, 0), 'STEP_JOURNAL_TAIL');
+    need(state === 'none' || (value.trail.length > 0 && value.trail[0].type === 'begin' && value.attempts >= 1), 'RUN_HAS_TRAIL');
+    need(value.bound === null || boundOk(value, preset, state), 'BOUND');
+    need((code !== 'PRESET_BOUND_EXCEEDED' && state !== 'bounded') || value.bound !== null, 'BOUND_NAMED');
+    if (code === null) {
+      need(value.outcome === 'succeeded' && state === 'completed' && value.accepted && steps.length > 0 && stopper === null && value.notRun.length === 0, 'SUCCESS_NEEDS_COMPLETED_RUN');
+    } else {
+      need(value.outcome === entry.outcome, 'OUTCOME_MATCHES_CODE');
+      need(!runCode || (contract.RUN_CODE_STATE[code].includes(state) && runShapeOk(value, code, stopper)), 'RUN_CODE_MATCHES_STATE');
+      need(runCode || !value.accepted, 'REFUSAL_NOT_ACCEPTED');
+    }
+    need(!value.replayed || value.action === 'run', 'REPLAY_ACTION');
+    need(!value.accepted || (value.action === 'cancel' ? code === 'PRESET_CANCELLED' : value.action === 'inspect' ? state !== 'none' :
+      ['run', 'resume'].includes(value.action) && value.outcome === 'succeeded'), 'ACCEPTED_MEANING');
+    need(v.same(value.recovery.allowed, contract.expectedActions(code, state, steps.some((step) => !contract.SUCCESS_STATUSES.includes(step.status)))) &&
+      value.recovery.reason === (entry ? entry.message : contract.STATE_REASONS[state]), 'RECOVERY');
+    return { ok: problems.length === 0, problems };
+  }
+
+  // Total (F4): whatever a tampered or hostile response is (a null step, an inherited status name, an object whose getters
+  // throw), the verdict is a typed rejection and never an exception, so the page says REJECTED and not UNKNOWN.
+  function validateResultEnvelope(value) {
+    try {
+      return inspectEnvelope(value);
+    } catch {
+      return { ok: false, problems: ['MALFORMED'] };
+    }
+  }
+
+  function validateCatalog(value) {
+    if (!v.record(value, CATALOG_KEYS) || value.schemaVersion !== 1 || value.kind !== 'C043-preset-catalog' || value.scope !== contract.SCOPE) return { ok: false, problems: ['CATALOG_KEYS'] };
+    const list = value.presets;
+    const problems = [];
+    if (!Array.isArray(list) || list.length === 0 || list.length > 8) problems.push('CATALOG_SIZE');
+    else {
+      if (!list.every((item) => v.validatePresetShape(item).ok)) problems.push('CATALOG_PRESET');
+      else if (new Set(list.map((item) => item.preset)).size !== list.length || new Set(list.map((item) => item.idempotencyKey)).size !== list.length) problems.push('CATALOG_DUPLICATE');
+    }
+    return { ok: problems.length === 0, problems };
+  }
+
+  return Object.freeze({ validateResultEnvelope, validateCatalog, ENVELOPE_KEYS });
+}));

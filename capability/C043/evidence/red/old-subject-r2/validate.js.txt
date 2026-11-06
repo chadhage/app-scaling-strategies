@@ -1,0 +1,112 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./contract.js'));
+  else Object.defineProperty(root, 'C043Validate', { value: factory(root.C043Contract) });
+}(globalThis, function (contract) {
+  'use strict';
+
+  const { c42, own, integer } = contract;
+  const FORBIDDEN = new Set(['__proto__', 'constructor', 'prototype']);
+  const RANGES = { maxSteps: [1, contract.LIMITS.steps], maxDurationMs: [1, contract.LIMITS.durationMs], maxUnits: [1, contract.LIMITS.units] };
+  const record = (value, keys) => value !== null && typeof value === 'object' && !Array.isArray(value) &&
+    Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key));
+  const object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+  const text = (value, max) => typeof value === 'string' && value.length > 0 && value.length <= max;
+  const sum = (items, pick) => items.reduce((total, item) => total + pick(item), 0);
+  const same = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+
+  // The display-side check of one step of a catalog preset: closed keys and the C042 domains (never used to execute).
+  function stepShapeProblems(step) {
+    if (!object(step)) return [{ path: '', code: 'INVALID_SHAPE' }];
+    const problems = [];
+    for (const key of c42.INPUT_KEYS) if (!own(step, key)) problems.push({ path: key, code: 'REQUIRED_FIELD' });
+    for (const key of Object.keys(step)) if (!c42.INPUT_KEYS.includes(key)) problems.push({ path: key, code: FORBIDDEN.has(key) ? 'FORBIDDEN_FIELD' : 'UNKNOWN_FIELD' });
+    if (problems.length) return problems;
+    if (step.schemaVersion !== c42.SCHEMA_VERSION || step.step !== c42.STEP) problems.push({ path: 'step', code: 'UNSUPPORTED_STEP' });
+    if (typeof step.idempotencyKey !== 'string' || !c42.KEY_PATTERN.test(step.idempotencyKey)) problems.push({ path: 'idempotencyKey', code: 'INVALID_FORMAT' });
+    if (!own(c42.LEASES, step.leaseId)) problems.push({ path: 'leaseId', code: 'FIELD_OUT_OF_RANGE' });
+    if (!integer(step.units, c42.UNITS.min, c42.UNITS.max)) problems.push({ path: 'units', code: 'FIELD_OUT_OF_RANGE' });
+    return problems;
+  }
+
+  function boundsProblems(bounds, add) {
+    if (!object(bounds)) { add('bounds', 'WRONG_TYPE'); return; }
+    for (const key of contract.BOUND_KEYS) {
+      if (!own(bounds, key)) { add(`bounds.${key}`, 'REQUIRED_FIELD'); continue; }
+      const value = bounds[key];
+      if (typeof value !== 'number') add(`bounds.${key}`, 'WRONG_TYPE');
+      else if (!Number.isSafeInteger(value) || Object.is(value, -0)) add(`bounds.${key}`, 'UNSAFE_NUMBER');
+      else if (value < RANGES[key][0] || value > RANGES[key][1]) add(`bounds.${key}`, 'FIELD_OUT_OF_RANGE');
+    }
+    for (const key of Object.keys(bounds)) if (!contract.BOUND_KEYS.includes(key)) add(`bounds.${key}`, FORBIDDEN.has(key) ? 'FORBIDDEN_FIELD' : 'UNKNOWN_FIELD');
+  }
+
+  function stepsProblems(steps, add, stepProblems, markUnsupported) {
+    if (!Array.isArray(steps)) { add('steps', 'WRONG_TYPE'); return; }
+    if (steps.length === 0) { add('steps', 'FIELD_OUT_OF_RANGE'); return; }
+    if (steps.length > contract.LIMITS.steps) { add('steps', 'TOO_MANY_STEPS'); return; }
+    const keys = new Map();
+    steps.forEach((step, index) => {
+      for (const problem of stepProblems(step)) {
+        const path = `steps[${index}]${problem.path ? `.${problem.path}` : ''}`;
+        if (problem.code.startsWith('UNSUPPORTED_')) markUnsupported(problem.code, path);
+        else add(path, problem.code);
+      }
+      const key = object(step) && own(step, 'idempotencyKey') ? step.idempotencyKey : null;
+      if (typeof key === 'string' && keys.has(key)) add(`steps[${index}].idempotencyKey`, 'DUPLICATE_STEP_KEY');
+      if (typeof key === 'string') keys.set(key, index);
+    });
+  }
+
+  // One closed preset shape for the server and the page. Typed problems first, then the first unsupported version or step.
+  function validatePresetShape(value, stepProblems = stepShapeProblems) {
+    if (!object(value)) return { ok: false, problems: [{ path: '$', code: 'INVALID_SHAPE' }] };
+    const problems = [];
+    let unsupported = null;
+    const add = (path, code) => { if (problems.length < 16) problems.push({ path, code }); };
+    const markUnsupported = (code, path) => { unsupported ??= { code, path }; };
+    for (const key of contract.PRESET_KEYS) if (!own(value, key)) add(key, 'REQUIRED_FIELD');
+    for (const key of Object.keys(value)) if (!contract.PRESET_KEYS.includes(key)) add(key, FORBIDDEN.has(key) ? 'FORBIDDEN_FIELD' : 'UNKNOWN_FIELD');
+    if (own(value, 'schemaVersion')) {
+      const version = value.schemaVersion;
+      if (typeof version !== 'number') add('schemaVersion', 'WRONG_TYPE');
+      else if (!Number.isSafeInteger(version) || Object.is(version, -0)) add('schemaVersion', 'UNSAFE_NUMBER');
+      else if (version !== contract.SCHEMA_VERSION) markUnsupported('UNSUPPORTED_PRESET_VERSION', 'schemaVersion');
+    }
+    if (own(value, 'preset')) {
+      if (typeof value.preset !== 'string') add('preset', 'WRONG_TYPE');
+      else if (!contract.PRESET_NAME.test(value.preset)) add('preset', 'INVALID_FORMAT');
+    }
+    if (own(value, 'idempotencyKey')) {
+      if (typeof value.idempotencyKey !== 'string') add('idempotencyKey', 'WRONG_TYPE');
+      else if (!c42.KEY_PATTERN.test(value.idempotencyKey)) add('idempotencyKey', 'INVALID_FORMAT');
+    }
+    if (own(value, 'bounds')) boundsProblems(value.bounds, add);
+    if (own(value, 'steps')) stepsProblems(value.steps, add, stepProblems, markUnsupported);
+    if (problems.length) return { ok: false, problems };
+    if (unsupported) return { ok: false, problems: [], unsupported };
+    return { ok: true };
+  }
+
+  function stepFactsOk(step, index, spec, action, replayed) {
+    if (!record(step, STEP_KEYS) || !Object.hasOwn(STEP_RULES, step.status)) return false;
+    const rule = STEP_RULES[step.status];
+    const capacity = c42.LEASES[spec.leaseId];
+    const reserved = SUCCESS.includes(step.status);
+    return step.index === index + 1 && step.key === spec.idempotencyKey && step.leaseId === spec.leaseId &&
+      step.units === spec.units && rule.applied.includes(step.applied) &&
+      (step.code === null ? rule.code !== true : rule.code !== false && contract.STEP_CODES.includes(step.code)) &&
+      typeof step.appliedByThisRequest === 'boolean' && (!step.appliedByThisRequest || (step.status === 'succeeded' && !replayed && ['run', 'resume'].includes(action))) &&
+      (reserved ? integer(step.reservedAfter, step.units, capacity) : step.reservedAfter === null);
+  }
+
+  const SUCCESS = contract.SUCCESS_STATUSES;
+  const STEP_KEYS = ['index', 'key', 'leaseId', 'units', 'status', 'code', 'applied', 'appliedByThisRequest', 'reservedAfter'];
+  const STEP_RULES = {
+    succeeded: { applied: [true], code: false }, replayed: { applied: [true], code: false }, failed: { applied: [false], code: true },
+    unknown: { applied: [null], code: true }, interrupted: { applied: [false, null], code: 'any' }, cancelled: { applied: [false], code: 'any' },
+    running: { applied: [null], code: false }, 'not-run': { applied: [false], code: false },
+  };
+
+  return Object.freeze({ validatePresetShape, stepShapeProblems, stepFactsOk, record, object, text, sum, same, STEP_KEYS, FORBIDDEN });
+}));

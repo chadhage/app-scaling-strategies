@@ -95,5 +95,5 @@
     }
   }
 
-  return Object.freeze({ REQUIRED_CODES, canon, expectedStatus, checkAnswer, verifyTranscript });
+  return Object.freeze({ REQUIRED_CODES: Object.freeze([...REQUIRED_CODES]), canon, expectedStatus, checkAnswer, verifyTranscript });
 }));

@@ -41,6 +41,19 @@ const ACTION_NAME = /^[a-z][a-z-]{0,31}$/;
 const sockets = new WeakMap();
 const pipelined = new WeakMap();
 const silent = new WeakMap();
+// A connection on which a refusal was decided (or whose body was left unread): nothing later on it may run (F1, HTTP pipelining).
+const closing = new WeakSet();
+// Per connection: settles when the latest request has been answered, so the requests of one connection run one after the other.
+const queued = new WeakMap();
+const deferred = () => {
+  let resolve;
+  const promise = new Promise((done) => { resolve = done; });
+  return { promise, resolve };
+};
+// The typed refusal for a parse error that Node reports through 'clientError' (the default is its own 400), and for a CONNECT request.
+const CLIENT_ERRORS = Object.freeze({
+  HPE_HEADER_OVERFLOW: 'HEADERS_TOO_LARGE', HPE_CHUNK_EXTENSIONS_OVERFLOW: 'HEADERS_TOO_LARGE', ERR_HTTP_REQUEST_TIMEOUT: 'REQUEST_TIMEOUT', C043_CONNECT: 'METHOD_NOT_ALLOWED',
+});
 // Per-connection and per-server bounds: nothing a client does can make memory or the number of sockets grow without limit.
 const BOUNDS = Object.freeze({ pipelineDepth: 4, connections: 128, headerBytes: 8192, headerCount: 64, idleMs: 90000, checkMs: 1000, firstRequestMs: 5000, requestMs: 5000, headersMs: 5000, keepAliveMs: 1000 });
 
@@ -73,15 +86,34 @@ function createLocalServer({ runner, engine, transcript = null, bounds = {} } = 
     produced ??= transcript().catch((error) => { produced = null; throw error; });
     return produced;
   };
-  const server = http.createServer({ maxHeaderSize: limits.headerBytes, connectionsCheckingInterval: limits.checkMs }, async (request, response) => {
-    const depth = (pipelined.get(request.socket) ?? 0) + 1;
-    clearTimeout(silent.get(request.socket));
+  // Every request reaches this ONE function: through the 'request' event, or, for the requests Node would answer itself,
+  // through 'checkExpectation' (an unknown Expect header: `forced` is the typed refusal) and 'checkContinue'.
+  async function handle(request, response, forced = null) {
+    // The connection of the REQUEST, never response.socket: Node has already parsed every pipelined request of one read, and
+    // the response of a request that waits behind an unfinished one has no socket yet. Nothing below depends on the HTTP
+    // version (Node's maxRequestsPerSocket is not applied to HTTP/1.0 and is never relied on).
+    const { socket } = request;
+    const depth = (pipelined.get(socket) ?? 0) + 1;
+    clearTimeout(silent.get(socket));
     if (depth > limits.pipelineDepth) {
-      request.socket.destroy();
+      socket.destroy();
       return undefined;
     }
-    pipelined.set(request.socket, depth);
-    response.once('close', () => pipelined.set(request.socket, pipelined.get(request.socket) - 1));
+    pipelined.set(socket, depth);
+    const earlier = queued.get(socket) ?? null;
+    const turn = deferred();
+    queued.set(socket, turn.promise);
+    const release = () => { socket.off('close', release); turn.resolve(); };
+    response.once('close', () => { pipelined.set(socket, pipelined.get(socket) - 1); release(); });
+    socket.once('close', release);
+    // Requests of one connection run one after the other, in order: this one starts when the answer of the previous one is
+    // complete, so a refusal decided after an await still stops everything pipelined behind it.
+    if (earlier !== null) await earlier;
+    if (closing.has(socket)) {
+      socket.destroy();
+      release();
+      return undefined;
+    }
     const hasBody = Boolean(request.headers['transfer-encoding']) || Number(request.headers['content-length'] || 0) > 0;
     let consumed = !hasBody;
     // The ONE path every answer takes. A refusal (any non-2xx answer) and any request whose body was not read is never
@@ -91,16 +123,17 @@ function createLocalServer({ runner, engine, transcript = null, bounds = {} } = 
       if (response.destroyed || response.writableEnded) return;
       const body = Buffer.isBuffer(value) ? value : Buffer.from(JSON.stringify(value));
       const close = status < 200 || status >= 300 || !consumed;
-      if (close) response.once('finish', () => request.socket.destroy());
+      if (close) { closing.add(socket); response.once('finish', () => socket.destroy()); }
       response.writeHead(status, { ...HEADERS, 'Content-Type': type, 'Content-Length': body.length, ...(close ? { Connection: 'close' } : {}), ...extra });
       response.end(body);
     };
     const reply = ({ status, body }, extra = {}) => send(status, body, undefined, extra);
     const refuse = (code, options, extra) => reply(result.refusal(code, options), extra);
     try {
+      if (forced !== null) return refuse(forced);
       const host = `127.0.0.1:${server.address().port}`;
       const origin = `http://${host}`;
-      if (request.socket.remoteAddress !== '127.0.0.1' || request.headers.host !== host) return refuse('LOCAL_HOST_REQUIRED');
+      if (socket.remoteAddress !== '127.0.0.1' || request.headers.host !== host) return refuse('LOCAL_HOST_REQUIRED');
       if (request.headers.origin && request.headers.origin !== origin) return refuse('CROSS_ORIGIN_DENIED');
       if (!request.url || request.url.length > 2048) return refuse('URL_TOO_LONG');
       const url = new URL(request.url, origin);
@@ -134,6 +167,8 @@ function createLocalServer({ runner, engine, transcript = null, bounds = {} } = 
         if (!only('POST')) return undefined;
         if (!JSON_TYPE.test(request.headers['content-type'] ?? '')) return refuse('UNSUPPORTED_MEDIA_TYPE', { action: 'run' });
         if (Number(request.headers['content-length'] || 0) > contract.LIMITS.bodyBytes) return refuse('BODY_TOO_LARGE', { action: 'run' });
+        // Only a request that passed every check before its body is invited to send it (Expect: 100-continue).
+        if (/^100-continue$/i.test(request.headers.expect ?? '')) response.writeContinue();
         const bytes = await readBody(request, contract.LIMITS.bodyBytes);
         if (bytes === undefined) return undefined;
         if (bytes === null) return refuse('BODY_TOO_LARGE', { action: 'run', details: [{ path: '$', code: 'BODY_TOO_LARGE', message: contract.ERRORS.BODY_TOO_LARGE.message }] });
@@ -158,7 +193,44 @@ function createLocalServer({ runner, engine, transcript = null, bounds = {} } = 
       if (error instanceof TypeError && error.code === 'ERR_INVALID_URL') return refuse('INVALID_URL');
       return refuse('INTERNAL_ERROR');
     }
-  });
+  }
+
+  // Node answers parse errors itself and never calls the handler (and its own 400 does not close what is queued behind
+  // it). They take the same path as every refusal: the requests that were parsed before the error are answered first
+  // (a request timeout cuts them off: its body never completes), then ONE typed answer, the connection is marked and
+  // destroyed, and nothing more is read. Bytes after an answer that closes the connection get no answer at all.
+  function refuseUnparsed(error, socket) {
+    socket.pause();
+    const answer = () => {
+      closing.add(socket);
+      if (!socket.writable || error.code === 'HPE_CLOSED_CONNECTION') {
+        socket.destroy();
+        return;
+      }
+      const { status, body } = result.refusal(CLIENT_ERRORS[error.code] ?? 'MALFORMED_REQUEST');
+      const payload = Buffer.from(JSON.stringify(body));
+      const head = Object.entries({
+        ...HEADERS, 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': payload.length, Connection: 'close', ...(status === 405 ? { Allow: 'GET, POST' } : {}),
+      }).map(([name, value]) => `${name}: ${value}\r\n`).join('');
+      socket.end(Buffer.concat([Buffer.from(`HTTP/1.1 ${status} ${http.STATUS_CODES[status]}\r\n${head}\r\n`), payload]), () => socket.destroy());
+    };
+    const inFlight = (pipelined.get(socket) ?? 0) > 0;
+    if (!inFlight) answer();
+    else if (error.code === 'ERR_HTTP_REQUEST_TIMEOUT') socket.destroy();
+    else queued.get(socket).then(answer);
+  }
+
+  const server = http.createServer({ maxHeaderSize: limits.headerBytes, connectionsCheckingInterval: limits.checkMs }, (request, response) => handle(request, response));
+  // A request without Host reaches the handler (LOCAL_HOST_REQUIRED) instead of getting Node's own 400.
+  server.requireHostHeader = false;
+  server.on('checkExpectation', (request, response) => handle(request, response, 'EXPECTATION_FAILED'));
+  server.on('checkContinue', (request, response) => handle(request, response));
+  server.on('clientError', refuseUnparsed);
+  // Without a listener Node destroys the socket of a CONNECT request at once, and the answer of a request still in flight on
+  // that connection dies with it (a mutation written before the CONNECT would apply and never be answered). The CONNECT
+  // is answered after the requests that came before it, then the connection is closed. An Upgrade header needs no listener:
+  // it is ignored, the request is an ordinary one and goes through handle().
+  server.on('connect', (request, socket) => refuseUnparsed(Object.assign(new Error('CONNECT is not supported'), { code: 'C043_CONNECT' }), socket));
   server.requestTimeout = limits.requestMs;
   server.headersTimeout = limits.headersMs;
   server.keepAliveTimeout = limits.keepAliveMs;
@@ -194,7 +266,8 @@ function closeServer(server) {
 // The composition root: the real step service, the runner over its own journal, and the monotonic clock.
 async function composeService({ stepIo, runIo, settleMs = 0, clock = () => performance.now() }) {
   const engine = await openEngine({ io: stepIo, executor: settleMs > 0 ? delayExecutor(settleMs) : undefined });
-  const runner = await openRunner({ engine, io: runIo, clock });
+  // The production composition also asks the step service about every acknowledged step (its own inspect).
+  const runner = await openRunner({ engine, io: runIo, clock, verify: (key) => engine.inspect(key) });
   return { engine, runner };
 }
 

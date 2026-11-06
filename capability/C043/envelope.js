@@ -7,7 +7,7 @@
 
   const { own, integer } = contract;
   const ENVELOPE_KEYS = ['schemaVersion', 'kind', 'action', 'accepted', 'replayed', 'outcome', 'classification', 'terminal', 'idempotencyKey',
-    'presetSha256', 'preset', 'run', 'bound', 'steps', 'ran', 'notRun', 'effects', 'usage', 'didNot', 'error', 'recovery', 'trail', 'attempts', 'scope'];
+    'presetSha256', 'preset', 'run', 'bound', 'steps', 'ran', 'notRun', 'effects', 'usage', 'didNot', 'error', 'recovery', 'trail', 'attempts', 'stepJournalDiscardedTailBytes', 'scope'];
   const EFFECT_KEYS = ['index', 'key', 'leaseId', 'units', 'reservedAfter'];
   const CATALOG_KEYS = ['schemaVersion', 'kind', 'scope', 'presets'];
   const known = (code) => contract.catalogEntry(code);
@@ -17,7 +17,7 @@
     if (!v.record(error, ['code', 'group', 'message', 'details']) || !own(contract.ERRORS, error.code)) return false;
     const entry = contract.ERRORS[error.code];
     return error.group === entry.group && error.message === entry.message && Array.isArray(error.details) && error.details.length <= 16 &&
-      error.details.every((item) => v.record(item, ['path', 'code', 'message']) && v.text(item.path, 64) && known(item.code) !== null && item.message === known(item.code).message);
+      error.details.every((item) => v.record(item, ['path', 'code', 'message']) && contract.pathOk(item.path, item.code) && known(item.code) !== null && item.message === known(item.code).message);
   }
 
   function listsOk(value) {
@@ -52,12 +52,16 @@
     if (code === 'PRESET_CANCELLED') return stopper === 'cancelled' || between;
     if (code === 'PRESET_INTERRUPTED') return stopper === 'interrupted' || between;
     if (code === 'PRESET_UNCONFIRMED') return stopper === 'unknown';
+    if (code === 'PRESET_STEP_SERVICE_DISAGREES') {
+      const unconfirmed = value.steps.find((step) => step.status === 'unknown');
+      return stopper === 'unknown' && value.error.details.length === 1 && value.error.details[0].code === unconfirmed.code && value.error.details[0].path === `steps[${unconfirmed.index - 1}]`;
+    }
     return stopper === 'running' || between;
   }
 
   // Closed shape plus the honesty rules: success only for a completed run of every step, a listing derived from the
   // steps, wording only from closed catalogs, and the offered controls exactly those the run state allows.
-  function validateResultEnvelope(value) {
+  function inspectEnvelope(value) {
     if (!v.record(value, ENVELOPE_KEYS)) return { ok: false, problems: ['ENVELOPE_KEYS'] };
     const problems = [];
     const need = (condition, name) => { if (!condition) problems.push(name); };
@@ -86,7 +90,7 @@
     need(v.same(value.ran, ran) && v.same(value.notRun, steps.filter((step) => step.status === 'not-run').map((step) => step.index)) && v.same(value.effects, effects) &&
       value.effects.every((item) => v.record(item, EFFECT_KEYS)), 'DERIVED_LISTS');
     need(v.record(value.usage, ['steps', 'units', 'elapsedMs']) && value.usage.steps === ran.length && value.usage.units === v.sum(effects, (item) => item.units) && integer(value.usage.elapsedMs, 0), 'USAGE');
-    need(preset === null || value.usage.units <= preset.bounds.maxUnits, 'UNITS_WITHIN_BOUND');
+    if (!problems.includes('USAGE')) need(preset === null || value.usage.units <= preset.bounds.maxUnits, 'UNITS_WITHIN_BOUND');
     if (problems.length) return { ok: false, problems };
     const state = value.run.state;
     const code = value.error === null ? null : value.error.code;
@@ -94,6 +98,7 @@
     const runCode = code !== null && own(contract.RUN_CODE_STATE, code);
     need(value.terminal === !contract.OPEN_STATES.includes(state), 'TERMINAL_STATE');
     need(state !== 'none' || (value.trail.length === 0 && value.attempts === 0), 'NO_RUN_NO_TRAIL');
+    need(state === 'none' ? value.stepJournalDiscardedTailBytes === null : integer(value.stepJournalDiscardedTailBytes, 0), 'STEP_JOURNAL_TAIL');
     need(state === 'none' || (value.trail.length > 0 && value.trail[0].type === 'begin' && value.attempts >= 1), 'RUN_HAS_TRAIL');
     need(value.bound === null || boundOk(value, preset, state), 'BOUND');
     need((code !== 'PRESET_BOUND_EXCEEDED' && state !== 'bounded') || value.bound !== null, 'BOUND_NAMED');
@@ -112,6 +117,16 @@
     return { ok: problems.length === 0, problems };
   }
 
+  // Total (F4): whatever a tampered or hostile response is (a null step, an inherited status name, an object whose getters
+  // throw), the verdict is a typed rejection and never an exception, so the page says REJECTED and not UNKNOWN.
+  function validateResultEnvelope(value) {
+    try {
+      return inspectEnvelope(value);
+    } catch {
+      return { ok: false, problems: ['MALFORMED'] };
+    }
+  }
+
   function validateCatalog(value) {
     if (!v.record(value, CATALOG_KEYS) || value.schemaVersion !== 1 || value.kind !== 'C043-preset-catalog' || value.scope !== contract.SCOPE) return { ok: false, problems: ['CATALOG_KEYS'] };
     const list = value.presets;
@@ -124,5 +139,5 @@
     return { ok: problems.length === 0, problems };
   }
 
-  return Object.freeze({ validateResultEnvelope, validateCatalog, ENVELOPE_KEYS });
+  return Object.freeze({ validateResultEnvelope, validateCatalog, ENVELOPE_KEYS: Object.freeze([...ENVELOPE_KEYS]) });
 }));
