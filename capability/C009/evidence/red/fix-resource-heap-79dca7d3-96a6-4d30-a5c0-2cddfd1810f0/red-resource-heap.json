@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "name": "red-resource-heap",
+  "purpose": "RED for F2 (order R8): the FIRST-PUBLICATION resources.test.cjs fails nondeterministically under load (retained heap read after a fixed 1500 ms sleep). 40 runs of the unchanged first-publication test, 8 in parallel x 5 rounds, in an extracted copy of commit 7a2a920c; the failing runs are in the transcript.",
+  "command": [
+    "node.exe",
+    "RUN\\scratch\\w5-C009\\exp\\loop.cjs",
+    "RUN\\scratch\\w5-C009\\pristine",
+    "resources.test.cjs",
+    "8",
+    "5"
+  ],
+  "tool": {
+    "path": "RUN\\scratch\\w5-C009\\exp\\loop.cjs",
+    "sha256": "378dd89cb3ccfcb979bb400026b4efc3737a81a88e38bbf5b5edfcdd4cd63fe2",
+    "note": "same code as capability\\C009\\tests\\flake-loop.cjs apart from the usage text and the argument check"
+  },
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE",
+    "C009_SUBJECT_DIR"
+  ],
+  "heavySlot": "taken for the run (owner C009)",
+  "startedAtUtc": "slot 3 at 2026-11-06T01:00:24",
+  "completedAtUtc": "done at 2026-11-06T01:02:36 exit 0",
+  "replayable": "not deterministic: about 5 percent of the loaded runs fail; replay with the command above against a git archive extract of 7a2a920c",
+  "inputs": [
+    {
+      "path": "capability\\C009\\tests\\resources.test.cjs",
+      "source": "git archive 7a2a920cff9ccb76d288779b55d240883881025c (LF blob)",
+      "bytes": 4830,
+      "sha256": "7aa6bee825babe0c0ba5519e519907feea241bc5905470a4b6b3e60114f7aee1"
+    },
+    {
+      "path": "capability\\C009\\tests\\resource-harness.cjs",
+      "source": "git archive 7a2a920cff9ccb76d288779b55d240883881025c (LF blob)",
+      "bytes": 3562,
+      "sha256": "f48ebda119780e5651a9fadc218c819df04bf0e4b161913671f844f4369d99bb"
+    },
+    {
+      "path": "capability\\C009\\tests\\resource-child.cjs",
+      "source": "git archive 7a2a920cff9ccb76d288779b55d240883881025c (LF blob)",
+      "bytes": 1072,
+      "sha256": "b62e5bb76d981969b8a6a146094993a196ed48a24b4291b0578dbb96517f0ab6"
+    },
+    {
+      "path": "capability\\C009\\tests\\helpers.cjs",
+      "source": "git archive 7a2a920cff9ccb76d288779b55d240883881025c (LF blob)",
+      "bytes": 3879,
+      "sha256": "2d48bd4fad4b49f0ce9fa1e27b42b626a28df6e1bea2df4072dfe968717ec2d3"
+    },
+    {
+      "path": "capability\\C009\\cli.cjs",
+      "source": "git archive 7a2a920cff9ccb76d288779b55d240883881025c (LF blob)",
+      "bytes": 3256,
+      "sha256": "a10043367477e9534176f671927a9c7b5f99b91e92d7bc5108798dec2bd90260"
+    },
+    {
+      "path": "capability\\C009\\server.cjs",
+      "source": "git archive 7a2a920cff9ccb76d288779b55d240883881025c (LF blob)",
+      "bytes": 6333,
+      "sha256": "8a9aed3338305c0e98a537042ddf16720088806739dcd566b76578971423c38a"
+    },
+    {
+      "path": "capability\\C009\\http-io.cjs",
+      "source": "git archive 7a2a920cff9ccb76d288779b55d240883881025c (LF blob)",
+      "bytes": 2616,
+      "sha256": "c2a58bd22c65c45a7d5a66efd7bea6c4408a796012cb1bc726011c4fd401f9b6"
+    }
+  ],
+  "summary": {
+    "runs": 40,
+    "bad": 2,
+    "failures": [
+      {
+        "run": "2.3",
+        "retainedHeapBytes": 28573176,
+        "limitBytes": 25165824
+      },
+      {
+        "run": "4.5",
+        "retainedHeapBytes": 28551872,
+        "limitBytes": 25165824
+      }
+    ],
+    "flakeHuntLine": "FLAKE HUNT resources.test.cjs: 2 bad of 40"
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red-resource-heap.stdout.raw.gz",
+      "bytes": 4790,
+      "sha256": "6dd52eded82db3757db50bdfa1cecd3dd95a59d75840985e527f17dc7582a0e8",
+      "gzipBytes": 1011,
+      "gzipSha256": "0d9753ecf58f8ead555ebe58cf488324f5fe32b07bec4703b9819029a70dbad9"
+    },
+    "stderr": {
+      "path": "raw\\red-resource-heap.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    }
+  }
+}

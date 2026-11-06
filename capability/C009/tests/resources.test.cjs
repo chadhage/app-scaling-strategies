@@ -9,11 +9,26 @@ const { startChild, clients, within } = require('./resource-harness.cjs');
 const HEAP_LIMIT = 24 * 1024 * 1024;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Retention, not scheduling (L-0144): a child starved by a loaded machine still holds the request and response objects of the
+// attack it has not finished with, so ONE reading after a fixed sleep measured the load and failed about 1 run in 20 (28.5 MB).
+// Poll forced-GC readings until the whole attack has been accepted and one is below the limit; memory that is really retained stays
+// above it for the whole window, and the lowest reading is reported.
+async function settledHeap(server, { accepted = 0, limit = HEAP_LIMIT, windowMs = 20000 } = {}) {
+  const deadline = Date.now() + windowMs;
+  let lowest = Infinity;
+  for (;;) {
+    const sample = await server.ask('stats', 'stats', 30000);
+    lowest = Math.min(lowest, sample.heapUsed);
+    if ((sample.accepted >= accepted && sample.heapUsed < limit) || Date.now() > deadline) return { heapUsed: lowest, accepted: sample.accepted };
+    await sleep(250);
+  }
+}
+
 async function withChild(probe) {
-  const server = startChild({ heapMb: 48, hardMs: 60000 });
+  const server = startChild({ heapMb: 48, hardMs: 90000 });
   let net;
   try {
-    const { port, tokens } = await server.receive('listening', 15000);
+    const { port, tokens } = await server.receive('listening', 30000);
     net = clients(port);
     return await probe({ server, net, port, tokens, origin: `http://127.0.0.1:${port}` });
   } finally {
@@ -22,21 +37,22 @@ async function withChild(probe) {
   }
 }
 
-// After the attack a normal client and a normal authorized command must still be served, and the retained heap must be small.
-async function assertServiceable({ server, origin, tokens }) {
-  const { heapUsed } = await server.ask('stats', 'stats');
-  assert.ok(heapUsed < HEAP_LIMIT, `retained heap ${heapUsed} must stay below ${HEAP_LIMIT}`);
-  assert.equal((await fetch(`${origin}/v1/state`, { signal: AbortSignal.timeout(5000) })).status, 200, 'a normal client is still served');
+// After the attack a normal client and a normal authorized command must still be served, and the settled retained heap must be small.
+async function assertServiceable({ server, origin, tokens }, accepted) {
+  const sample = await settledHeap(server, { accepted });
+  assert.ok(sample.accepted >= accepted, `the attack reached the server: ${sample.accepted} of ${accepted} connections accepted`);
+  assert.ok(sample.heapUsed < HEAP_LIMIT, `retained heap ${sample.heapUsed} must stay below ${HEAP_LIMIT}`);
+  assert.equal((await fetch(`${origin}/v1/state`, { signal: AbortSignal.timeout(20000) })).status, 200, 'a normal client is still served');
   const resize = await fetch(`${origin}/v1/commands/pool.resize`, {
-    method: 'POST', headers: { Authorization: `Bearer ${tokens.operator}`, 'Content-Type': 'application/json' }, body: '{"size":5}', signal: AbortSignal.timeout(5000)
+    method: 'POST', headers: { Authorization: `Bearer ${tokens.operator}`, 'Content-Type': 'application/json' }, body: '{"size":5}', signal: AbortSignal.timeout(20000)
   });
   assert.equal(resize.status, 200, 'a normal authorized command still works');
 }
 
 // The attackers are still connected: the CLI shutdown must end every socket and the process must exit by itself, code 0.
 async function assertShutdown({ server }) {
-  await server.ask('close', 'closed', 8000);
-  const end = await within(server.exited, 'the server process ends by itself', 8000);
+  await server.ask('close', 'closed', 25000);
+  const end = await within(server.exited, 'the server process ends by itself', 25000);
   assert.deepEqual([end.code, end.signal], [0, null], `the child exits cleanly: ${end.stderr}`);
 }
 
@@ -45,7 +61,7 @@ test('pipelined floods that are never read cannot exhaust a small server process
   const flood = Buffer.from(line.repeat(20000));
   for (let index = 0; index < 16; index += 1) context.net.open(flood);
   await sleep(1500);
-  await assertServiceable(context);
+  await assertServiceable(context, 16);
   await assertShutdown(context);
 }));
 
@@ -60,7 +76,7 @@ test('silent, partial and half-open clients cannot keep the server alive or bloc
   }
   for (let index = 0; index < 20; index += 1) net.open(`GET /v1/state HTTP/1.1\r\n${host}\r\n\r\n`).end();
   await sleep(500);
-  await assertServiceable(context);
+  await assertServiceable(context, 220);
   await assertShutdown(context);
 }));
 
@@ -72,14 +88,20 @@ test('a header flood and an endless chunked upload are cut off without effect an
     let text = '';
     flood.on('data', (chunk) => { text += chunk; });
     flood.once('close', () => resolve(text));
-  }), 'the header flood is answered and closed', 8000);
+  }), 'the header flood is answered and closed', 20000);
   assert.match(answer, /^HTTP\/1\.1 431 /);
   const upload = net.open(`POST /v1/commands/pool.resize HTTP/1.1\r\n${host}\r\nAuthorization: Bearer ${tokens.operator}\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n`, { read: true });
   const cut = new Promise((resolve) => upload.once('close', resolve));
   for (let index = 0; index < 400; index += 1) upload.write('1\r\nx\r\n'.repeat(500));
-  await within(cut, 'the endless chunked upload is cut off', 8000);
-  const state = await (await fetch(`${origin}/v1/state`, { signal: AbortSignal.timeout(5000) })).json();
+  await within(cut, 'the endless chunked upload is cut off', 20000);
+  const state = await (await fetch(`${origin}/v1/state`, { signal: AbortSignal.timeout(20000) })).json();
   assert.deepEqual([state.revision, state.state.pool.size], [0, 2], 'neither attack changed the state');
-  await assertServiceable(context);
+  await assertServiceable(context, 2);
   await assertShutdown(context);
+}));
+
+test('the settled reading still fails for memory the server really retains', () => withChild(async ({ server }) => {
+  await server.ask('retain', 'retained');
+  const sample = await settledHeap(server, { windowMs: 1500 });
+  assert.ok(sample.heapUsed >= HEAP_LIMIT, `retained memory must stay visible: ${sample.heapUsed} against the limit ${HEAP_LIMIT}`);
 }));

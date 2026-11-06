@@ -10,6 +10,7 @@ const repositoryRoot = path.resolve(__dirname, '..', '..', '..');
 const { openIsolatedLoopback } = require(path.join(repositoryRoot, 'testing', 'browser', 'isolated.cjs'));
 const approved = require('../../C001/approved-contract.js').approval;
 const { startLocal } = require('../cli.cjs');
+const { qualifyEdge } = require(path.join(repositoryRoot, 'testing', 'browser', 'qualify', 'qualify.cjs'));
 
 const COMMANDS = ['run.create', 'scratch.create', 'pool.resize', 'experiment.approve', 'native.execute'];
 const DASH = '\u2014';
@@ -32,12 +33,20 @@ async function ask(page, token, claim = '') {
 }
 
 async function main() {
+  // Microsoft-signed and a qualified major, with no equality pin on a build or a hash: qualifyEdge checks the Authenticode signature
+  // and publisher and that the major is listed in testing\browser\qualify\qualified.json, and it fails closed (about 6 to 15 s).
+  const edge = await qualifyEdge();
+  assert.equal(edge.ok, true, edge.reasons.join(' | '));
+  checked('the installed Edge is Microsoft-signed and its major is qualified', {
+    version: edge.version, major: edge.major, signature: edge.signature.status, publisher: edge.signature.publisher, sha256: edge.sha256, path: edge.path
+  });
   const local = await startLocal({ readApproval: () => approved, lifetimeMs: 300000 });
   let session;
   try {
     session = await openIsolatedLoopback(path.join('capability', 'C009', 'index.html'), local.server);
     const { page } = session;
     console.log(`Edge ${session.browserVersion}, page ${local.origin}/ (synthetic, loopback, isolated headless)`);
+    assert.equal(Number(String(session.browserVersion).split('.')[0]), edge.major, 'the launched browser has the qualified major');
     const pageErrors = [];
     const requests = [];
     page.on('pageerror', (error) => pageErrors.push(error.message));

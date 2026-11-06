@@ -9,7 +9,7 @@ const { createCommandPipeline } = require('./commands.cjs');
 const { defaultHandlers } = require('./handlers.cjs');
 const { createLedger } = require('./ledger.cjs');
 const { createQueue } = require('./queue.cjs');
-const { createResponder, hasBody, localGuard } = require('./http-io.cjs');
+const { createResponder, hasBody, isFinished, localGuard } = require('./http-io.cjs');
 
 const scope = Object.freeze({
   cardId: 'C009', businessData: 'synthetic', transport: '127.0.0.1 HTTP only', testRuntime: process.version,
@@ -26,10 +26,10 @@ const COMMAND_ROUTE = /^\/v1\/commands\/([^/]+)$/;
 const READ_ROUTES = new Set(['/v1/state', '/v1/authorization/preview', '/scope.json', ...Object.keys(ASSETS)]);
 
 function createApp(options = {}) {
-  const { idleMs, connections, pipelined, entries } = { ...contract.limits, ...options.limits };
+  const { idleMs, connections, pipelined, entries, ownerEntries, auditEntries, anonymousEntries, headerMs, checkMs } = { ...contract.limits, ...options.limits };
   const table = options.commands || contract.commands;
   const registry = createTokenRegistry({ now: options.now, randomBytes: options.randomBytes });
-  const ledger = createLedger(contract.limits.auditEntries, entries);
+  const ledger = createLedger(auditEntries, entries, { ownerLimit: ownerEntries, anonymousLimit: anonymousEntries });
   const queue = createQueue();
   const handleCommand = createCommandPipeline({
     registry, ledger, queue, table, handlers: options.handlers || defaultHandlers, hooks: options.hooks || {},
@@ -88,9 +88,11 @@ function createApp(options = {}) {
   // A client may keep a few requests in flight per socket. One that pipelines further is cut off: Node parses a whole chunk at once
   // and keeps one response object per request, so a flood of tiny pipelined requests would otherwise queue answers without bound.
   const inFlight = new WeakMap();
-  const server = http.createServer((request, response) => {
+  // Node checks the header and request timeouts only every connectionsCheckingInterval (30 s by default): set it, or a client that
+  // trickles one byte every 2 s is cut after 30 s and 256 of them hold the whole listener.
+  const server = http.createServer({ connectionsCheckingInterval: checkMs }, (request, response) => {
     const { socket } = request;
-    if (socket.destroyed) return;
+    if (socket.destroyed || isFinished(socket)) return;
     const depth = (inFlight.get(socket) || 0) + 1;
     if (depth > pipelined) {
       socket.destroy();
@@ -100,8 +102,10 @@ function createApp(options = {}) {
     response.once('close', () => inFlight.set(socket, inFlight.get(socket) - 1));
     route(request, response).catch(() => response.destroy());
   });
-  server.requestTimeout = 5000;
-  server.headersTimeout = 5000;
+  // An Expect other than 100-continue is refused through the same final-answer path (Node would answer 417 and keep the connection).
+  server.on('checkExpectation', (request, response) => createResponder(response).fail('EXPECTATION_FAILED'));
+  server.requestTimeout = headerMs;
+  server.headersTimeout = headerMs;
   server.keepAliveTimeout = 1000;
   server.timeout = idleMs;
   server.maxConnections = connections;

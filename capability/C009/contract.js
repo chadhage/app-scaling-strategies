@@ -19,7 +19,12 @@ const LIMITS = {
   bodyBytes: 4096, auditEntries: 200, defaultTtlMs: 600000, maxTtlMs: 900000,
   // Per-connection and per-server resource bounds: idle time of a silent socket, open sockets, requests in flight per socket,
   // and the number of runs, scratches and approvals the in-memory state may hold.
-  idleMs: 5000, connections: 256, pipelined: 4, entries: 1000
+  idleMs: 5000, connections: 256, pipelined: 4, entries: 1000,
+  // One identity may hold at most ownerEntries runs, scratches and approvals, so two conductors and the operator's approvals always
+  // fit under entries. The audit log keeps identified records (auditEntries) apart from anonymous refusals (anonymousEntries).
+  ownerEntries: 400, anonymousEntries: 50,
+  // Header and request timeout, and how often Node checks them: it checks only every checkMs (30 s unless set), so that is the slack.
+  headerMs: 5000, checkMs: 1000
 };
 // Identity always comes from the verified token, so a body that names one is refused instead of ignored.
 const CLAIM_FIELDS = ['role', 'roles', 'subject', 'owner', 'identity', 'actingAs'];

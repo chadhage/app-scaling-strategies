@@ -10,11 +10,11 @@ const { spawn } = require('node:child_process');
 
 const childPath = path.join(__dirname, 'resource-child.cjs');
 
-function startChild({ heapMb = 48, hardMs = 90000 } = {}) {
+function startChild({ heapMb = 48, hardMs = 90000, script = childPath, args = ['--expose-gc'] } = {}) {
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
   delete env.NODE_V8_COVERAGE;
-  const child = spawn(process.execPath, [`--max-old-space-size=${heapMb}`, '--expose-gc', childPath], { env, stdio: ['ignore', 'ignore', 'pipe', 'ipc'], windowsHide: true });
+  const child = spawn(process.execPath, [`--max-old-space-size=${heapMb}`, ...args, script], { env, stdio: ['ignore', 'ignore', 'pipe', 'ipc'], windowsHide: true });
   let stderr = '';
   child.stderr.on('data', (chunk) => { stderr = `${stderr}${chunk}`.slice(0, 2000); });
   const inbox = [];

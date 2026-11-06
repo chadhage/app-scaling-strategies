@@ -21,6 +21,7 @@ const CODES = Object.freeze({
   INPUT_INVALID: [400, 'A field is outside its type or bounds.'],
   ALREADY_APPROVED: [409, 'That experiment is already approved.'],
   STATE_FULL: [409, 'The fixture state is full; nothing was changed.'],
+  OWNER_QUOTA_FULL: [409, 'This identity already holds its share of the state; nothing was changed.'],
   COMMAND_NOT_IMPLEMENTED: [501, 'The command is permitted but has no handler.'],
   COMMAND_FAILED: [500, 'The command failed and had no effect.'],
   METHOD_NOT_ALLOWED: [405, 'That method is not supported on this route.'],
@@ -30,6 +31,7 @@ const CODES = Object.freeze({
   NOT_FOUND: [404, 'No fixture route has that path.'],
   LOCAL_HOST_REQUIRED: [421, 'Only the actual 127.0.0.1 listener is supported.'],
   CROSS_ORIGIN_DENIED: [403, 'This synthetic fixture supports only its own loopback origin.'],
+  EXPECTATION_FAILED: [417, 'Only the 100-continue expectation is supported.'],
   INTERNAL_ERROR: [500, 'The fixture failed closed; nothing was changed.']
 });
 
