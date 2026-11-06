@@ -1,0 +1,194 @@
+{
+  "schema": "C031-browser-proof/1",
+  "cardId": "C031",
+  "startedAtUtc": "2026-11-06T01:40:10.465Z",
+  "outcome": "passed",
+  "meaning": "Actual static DOM and keyboard verification of local fictional saved traces, not a live migration, user journey or Azure result.",
+  "testRuntime": "v22.23.4",
+  "productionNode24Validated": false,
+  "liveAzureResult": false,
+  "helperPatched": false,
+  "unsafeFlagsUsed": false,
+  "packagesDownloaded": 0,
+  "cloudRuns": 0,
+  "spend": 0,
+  "checks": [
+    {
+      "name": "actual Microsoft-signed Edge 156 / Node 22 / offline Playwright 1.56.1 and unchanged isolated helper",
+      "passed": true,
+      "observed": {
+        "actualBrowserPid": 19412,
+        "browserVersion": "156.0.4314.58",
+        "authenticodeStatus": "Valid",
+        "actualNodePid": 9072
+      }
+    },
+    {
+      "name": "actual initial static DOM has the exact training banner, no rows and no default success",
+      "passed": true,
+      "observed": "Training rehearsal - synthetic data - not a live Azure result"
+    },
+    {
+      "name": "actual Enter with no saved set rejects and shows no success rate",
+      "passed": true,
+      "observed": "UNKNOWN_SAVED_ID"
+    },
+    {
+      "name": "actual ArrowDown/Tab/Enter chooses and evaluates the baseline: 3 of 8, spelled out, with visible focus and the classification table",
+      "passed": true,
+      "observed": {
+        "rate": "Migration success rate: 3 of 8 = 37.50%",
+        "focus": {
+          "focusVisible": true,
+          "outline": "3px"
+        }
+      }
+    },
+    {
+      "name": "actual Space compares the flood of 40 unchanged v2 clients: still 3 of 8, 42 unchanged, not raised",
+      "passed": true,
+      "observed": "Baseline fleet-baseline: 3 of 8 = 37.50%. This set negative-unchanged-flood: 3 of 8 = 37.50%. Rate raised: no. Numerator increased: no. Decision: NOT_RAISED.added flood-001: UNCHANGED / UNCHANGED_NEW_VERSION_ONLY (not el"
+    },
+    {
+      "name": "actual keyboard comparison of replay, duplicates, stale acknowledgment and out-of-order: never raised, exact reason codes shown",
+      "passed": true,
+      "observed": {
+        "negative-replayed-v2-request": {
+          "rate": "Migration success rate: 3 of 10 = 30.00%",
+          "code": "UNACKNOWLEDGED_NEW_VERSION_REQUEST"
+        },
+        "negative-duplicated-trace": {
+          "rate": "Migration success rate: 3 of 9 = 33.33%",
+          "code": "CONFLICTING_DUPLICATE_TRACES"
+        },
+        "negative-stale-cached-ack": {
+          "rate": "Migration success rate: 3 of 9 = 33.33%",
+          "code": "STALE_ACKNOWLEDGMENT"
+        },
+        "negative-out-of-order": {
+          "rate": "Migration success rate: 3 of 11 = 27.27%",
+          "code": "ACK_BEFORE_REQUEST"
+        }
+      }
+    },
+    {
+      "name": "actual keyboard evaluation of the exact saved C034 traces: 3 of 7 with failed, interrupted and summary-only kept, then 1 of 2 with the held original",
+      "passed": true,
+      "observed": [
+        [
+          "synthetic-C033-attempt-1",
+          "ACTUAL_TRANSITION",
+          "TRANSITION_EVIDENCE_COMPLETE"
+        ],
+        [
+          "synthetic-C033-attempt-2",
+          "ACTUAL_TRANSITION",
+          "TRANSITION_EVIDENCE_COMPLETE"
+        ],
+        [
+          "synthetic-C033-attempt-3",
+          "ACTUAL_TRANSITION",
+          "TRANSITION_EVIDENCE_COMPLETE"
+        ],
+        [
+          "synthetic-C033-attempt-4",
+          "FAILED_OR_UNKNOWN",
+          "FAILED_REPLY"
+        ],
+        [
+          "synthetic-C033-attempt-5",
+          "FAILED_OR_UNKNOWN",
+          "NO_VERSION_OBSERVED"
+        ],
+        [
+          "synthetic-C033-attempt-6",
+          "FAILED_OR_UNKNOWN",
+          "INTERRUPTED_BEFORE_TERMINAL_OUTCOME"
+        ],
+        [
+          "synthetic-C033-attempt-7",
+          "FAILED_OR_UNKNOWN",
+          "SUMMARY_ONLY_NO_TRACE"
+        ]
+      ]
+    },
+    {
+      "name": "actual Enter on the saved-actions summary opens the exact saved events of a client",
+      "passed": true,
+      "observed": true
+    },
+    {
+      "name": "actual Space reset clears only the display, returns focus to the picker and retains the operation history",
+      "passed": true,
+      "observed": 9
+    },
+    {
+      "name": "actual sixteen-operation bound disables evaluation and evicts nothing",
+      "passed": true,
+      "observed": 16
+    },
+    {
+      "name": "actual enforced CSP blocks inline code, connections and forms",
+      "passed": true,
+      "observed": {
+        "inline": {
+          "effectiveDirective": "script-src-elem",
+          "blockedURI": "inline"
+        },
+        "connection": {
+          "effectiveDirective": "connect-src",
+          "blockedURI": "file"
+        },
+        "submission": {
+          "effectiveDirective": "form-action",
+          "blockedURI": "file"
+        },
+        "connected": false,
+        "inlineRan": false
+      }
+    }
+  ],
+  "sourceSha256": {
+    "index.html": "f72e4aa3b66e3d6efec78fc1d1e4a3890095b61fe02ca19caaf0897870facda0",
+    "page.js": "a211e020f9f33c04aedb2d7f6d216fc5cb0dbeb3c82e40a77467ccb2ab376b3d",
+    "evaluator.js": "94b589bb2da51dd13b2195425202536b4df9ab77492e7b5ca6e1ea7d6fae2fdc",
+    "saved.js": "bca6cb5099db89245efeb0a828bc5ef442647090a0263a9603b70d2df3b79163",
+    "style.css": "462983145b4922fa7c6645d5b7f5ca2990aea6fefe9f9b55ea249507e77a347e"
+  },
+  "cleanup": {
+    "browserClosed": true,
+    "exactHelperSessionRemoved": true,
+    "exactOwnedProfileRemoved": true,
+    "exactOwnedEdgeGone": true
+  },
+  "playwrightVersion": "1.56.1",
+  "helperRawSha256": "86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055",
+  "installedSignature": {
+    "executable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "authenticodeStatus": "Valid",
+    "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "thumbprint": "4028CAD637509D4744B17EC5B42AED8D7A31E6AF",
+    "fileVersion": "156.0.4314.58",
+    "actualCallerNodePid": null,
+    "actualOwnedBrowserPid": null,
+    "unsafeFlagsObserved": false,
+    "inspectedAtUtc": "2026-11-06T01:40:11.8737889Z"
+  },
+  "actualHelperSession": "C:\\Users\\chhage\\repos\\app-scaling-strategies\\.git\\kanban-orchestrator\\browser-runtime\\session-f6cc94fa-29fb-44cc-b970-1c364d907735",
+  "browserVersion": "156.0.4314.58",
+  "actualSignedEdge": {
+    "executable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "authenticodeStatus": "Valid",
+    "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "thumbprint": "4028CAD637509D4744B17EC5B42AED8D7A31E6AF",
+    "fileVersion": "156.0.4314.58",
+    "actualCallerNodePid": 9072,
+    "actualOwnedBrowserPid": 19412,
+    "unsafeFlagsObserved": false,
+    "inspectedAtUtc": "2026-11-06T01:40:15.3856420Z"
+  },
+  "pageErrors": [],
+  "requestCount": 6,
+  "completedAtUtc": "2026-11-06T01:40:18.151Z",
+  "captureMode": "Exact deliberate CAPTURE_BROWSER_EVIDENCE=1, unique owned append."
+}
