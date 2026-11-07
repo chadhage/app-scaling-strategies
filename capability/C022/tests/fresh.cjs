@@ -9,6 +9,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync, spawnSync } = require('node:child_process');
+const { runInputs } = require('./evidence-verify.cjs');
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((pairs, value, index, all) => (value.startsWith('--') ? [...pairs, [value.slice(2), all[index + 1]]] : pairs), []));
 const repo = path.resolve(__dirname, '..', '..', '..');
@@ -32,6 +33,8 @@ function copy(from, to) {
 }
 
 fs.rmSync(tree, { recursive: true, force: true });
+// The bytes this run copies (hashes taken just before the copy): evidence.test.cjs compares them with the live files.
+const inputs = runInputs(path.join(repo, 'capability', 'C022'));
 copy(path.join(repo, 'capability', 'C022'), path.join(tree, 'capability', 'C022'));
 for (const dep of imports.dependencies) {
   const blob = execFileSync('git', ['show', `${dep.commit}:${dep.path}`], { cwd: repo, maxBuffer: 1 << 26 });
@@ -42,7 +45,7 @@ for (const dep of imports.dependencies) {
 fs.mkdirSync(path.join(tree, 'testing', 'browser'), { recursive: true });
 const env = { ...process.env };
 delete env.NODE_TEST_CONTEXT;
-delete env.NODE_V8_COVERAGE;
+env.NODE_V8_COVERAGE = '';
 const tests = fs.readdirSync(path.join(tree, 'capability', 'C022', 'tests')).filter((name) => name.endsWith('.test.cjs') && name !== 'evidence.test.cjs').sort().map((name) => path.join('capability', 'C022', 'tests', name));
 const started = Date.now();
 const run = spawnSync(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=600000', ...tests], { cwd: tree, env, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, timeout: 1500000 });
@@ -50,7 +53,7 @@ const out = `${run.stdout}${run.stderr}`;
 const count = (key) => Number((new RegExp(`^# ${key} (\\d+)$`, 'm').exec(out) || [])[1] || 0);
 const document = {
   tool: 'tests/fresh.cjs', mode: args.mode, node: process.version, ms: Date.now() - started, exit: run.status, tests: count('tests'), pass: count('pass'), fail: count('fail'), cancelled: count('cancelled'), skipped: count('skipped'),
-  files: tests.length, failed: [...out.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((match) => match[1].trim()).slice(0, 20)
+  files: tests.length, failed: [...out.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((match) => match[1].trim()).slice(0, 20), inputs
 };
 fs.writeFileSync(path.resolve(args.out), `${JSON.stringify(document, null, 1)}\n`, { flag: 'wx' });
 console.log(JSON.stringify(document));

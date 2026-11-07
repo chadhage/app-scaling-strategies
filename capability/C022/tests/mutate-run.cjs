@@ -21,7 +21,10 @@ const repo = path.resolve(__dirname, '..', '..', '..');
 const namespace = path.join(repo, 'capability', 'C022');
 const scratch = path.resolve(args.scratch);
 const workers = Number(args.workers || 2);
-const FILES = (args.files || 'server.cjs,service.cjs,identity.cjs,store.cjs,contract.js,page.js').split(',');
+// --hand <list.cjs>: instead of the generated mutants, run the HAND LIST of isolation-guard mutants (tests\hand-mutants.cjs: iteration sources, call
+// arguments and scoped accessors that the generator cannot make). Every entry is applied alone and must be killed by a NAMED failing test.
+const hand = args.hand ? require(path.resolve(args.hand)).MUTANTS : null;
+const FILES = hand ? [...new Set(hand.map((entry) => entry.file))] : (args.files || 'server.cjs,service.cjs,identity.cjs,store.cjs,contract.js,page.js').split(',');
 // The test files, from the directory (a new test file needs no edit here): cheap in-process files first, then the heavy in-process ones, then
 // the files that start processes. imports.test.cjs and evidence.test.cjs need git and the archive, so they are not part of a scratch tree;
 // page.js has its own suite. A mutant SURVIVES only when every file that can load the mutated file passes.
@@ -32,16 +35,16 @@ const onDisk = fs.readdirSync(__dirname).filter((name) => /\.test\.cjs$/.test(na
 const ALL = [...onDisk.filter((name) => !HEAVY.has(name) && !SPAWNING.has(name)), ...onDisk.filter((name) => HEAVY.has(name)), ...onDisk.filter((name) => SPAWNING.has(name))];
 // What most likely kills a mutant of each production file goes first (the order only saves time, never decides: the whole list runs for a survivor).
 const FIRST = {
-  'identity.cjs': ['identity', 'identity-room', 'property', 'service', 'lifecycle'],
-  'store.cjs': ['store', 'store-gaps', 'service', 'isolation', 'property'],
-  'service.cjs': ['service', 'lifecycle', 'races', 'property', 'isolation'],
+  'identity.cjs': ['dual-tenant', 'guard-gaps', 'identity', 'identity-room', 'property', 'service', 'lifecycle'],
+  'store.cjs': ['dual-tenant', 'store', 'store-gaps', 'service', 'isolation', 'property'],
+  'service.cjs': ['dual-tenant', 'service', 'lifecycle', 'races', 'property', 'isolation'],
   'contract.js': ['contract-pins', 'contract-bounds', 'contract', 'rows-complete', 'guards', 'server'],
-  'server.cjs': ['close-resolves', 'static-tables', 'auth-header', 'credentials', 'credential-first', 'continue', 'wiring', 'finished-socket', 'guards', 'server', 'lifecycle', 'races', 'isolation', 'property', 'refusal-close']
+  'server.cjs': ['close-resolves', 'static-tables', 'auth-header', 'credentials', 'credential-first', 'continue', 'wiring', 'finished-socket', 'dual-tenant', 'guards', 'server', 'lifecycle', 'races', 'isolation', 'property', 'refusal-close']
 };
 // Pure unit files never load server.cjs, so a mutant of server.cjs cannot change their result (they stay in the baseline).
 const UNIT = new Set(['identity', 'identity-room', 'store', 'store-gaps', 'contract', 'rows-complete']);
 const SUITES = { 'page.js': ['page', 'page-gaps'] };
-const orderFor = (file) => SUITES[file] || [...(FIRST[file] || []), ...ALL.filter((name) => !(FIRST[file] || []).includes(name))].filter((name) => !(file === 'server.cjs' && UNIT.has(name)));
+const orderFor = (file) => (SUITES[file] || [...(FIRST[file] || []), ...ALL.filter((name) => !(FIRST[file] || []).includes(name))].filter((name) => !(file === 'server.cjs' && UNIT.has(name)))).slice(0, args['order-limit'] ? Number(args['order-limit']) : undefined);
 const ORDER = ALL;
 const deadline = args.until ? new Date(`${new Date().toISOString().slice(0, 10)}T${args.until}:00`).getTime() : Infinity;
 const IMPORTS = ['capability/C009/http-io.cjs', 'capability/C009/codes.cjs', 'capability/C009/queue.cjs', 'capability/C020/profiles.cjs', 'capability/C020/contract.js'];
@@ -62,7 +65,7 @@ function runFile(tree, name, timeoutMs, bail = false) {
   return new Promise((resolve) => {
     const env = { ...process.env };
     delete env.NODE_TEST_CONTEXT;
-    delete env.NODE_V8_COVERAGE;
+    env.NODE_V8_COVERAGE = '';
     const file = path.join(tree, 'capability', 'C022', 'tests', `${name}.test.cjs`);
     const child = spawn(process.execPath, ['--test-reporter=tap', file], { cwd: tree, env, windowsHide: true });
     if (args.low === '1') { try { os.setPriority(child.pid, os.constants.priority.PRIORITY_BELOW_NORMAL); } catch { /* best effort */ } }
@@ -84,13 +87,24 @@ function runFile(tree, name, timeoutMs, bail = false) {
   });
 }
 
+// A hand-list entry as a mutant: every find text occurs exactly once in its file; the replacement is applied in order.
+function handMutant(entry, source) {
+  for (const [find] of entry.edits) {
+    const count = source.split(find).length - 1;
+    if (count !== 1) throw new Error(`${entry.id}: the find text occurs ${count} times in ${entry.file}`);
+  }
+  const first = source.indexOf(entry.edits[0][0]);
+  return { id: entry.id, line: source.slice(0, first).split('\n').length, kind: 'hand', note: entry.why, from: entry.edits[0][0], to: entry.edits[0][1], apply: (text) => entry.edits.reduce((current, [find, to]) => current.replace(find, () => to), text) };
+}
+
 async function main() {
   const queue = [];
   const sourceHashes = {};
   for (const file of FILES) {
     const source = fs.readFileSync(path.join(namespace, file), 'utf8');
     sourceHashes[file] = { raw: sha256(source), lf: sha256(source.replaceAll('\r\n', '\n')) };
-    for (const mutant of generate(source, { numbers: file === 'contract.js' })) queue.push({ file, source, mutant });
+    const own = hand ? hand.filter((entry) => entry.file === file).map((entry) => handMutant(entry, source)) : generate(source, { numbers: file === 'contract.js' });
+    for (const mutant of own) queue.push({ file, source, mutant });
   }
   const testHashes = {};
   for (const name of new Set([...ALL, ...Object.values(SUITES).flat()])) {
@@ -128,7 +142,9 @@ async function main() {
     trees.push(tree);
   }
   const baseline = [];
-  for (const name of new Set(Object.values(SUITES).flat().concat(ORDER))) {
+  // --skip-baseline 1 and --order-limit N are for DEVELOPMENT runs only (a quick look at a list of mutants): the archived pass runs the baseline of every
+  // file and the whole order for a survivor, and the evidence test rejects a manifest without them.
+  for (const name of args['skip-baseline'] === '1' ? [] : new Set(Object.values(SUITES).flat().concat(ORDER))) {
     const result = await runFile(trees[0], name, 900000);
     baseline.push({ file: `${name}.test.cjs`, status: result.status, failed: result.failed.slice(0, 3) });
     console.log(`baseline ${name}: ${result.status === 0 ? 'passes' : `FAILS ${result.failed.slice(0, 1)}`}`);
@@ -165,7 +181,7 @@ async function main() {
     summary[file] = { generated, total: mine.length, killed: mine.filter((r) => r.killedBy).length, survived: mine.filter((r) => !r.killedBy && !r.undecided).length, undecided: mine.filter((r) => r.undecided).length, notRun: generated - mine.length };
   }
   const document = {
-    tool: 'tests/mutate-gen.cjs + tests/mutate-run.cjs', node: process.version, generatedAtUtc: new Date().toISOString(), workers, order: { all: ALL, first: FIRST, skippedForServer: [...UNIT], neverBailing: [...SPAWNING] }, timeBox: args.until || null, baseline,
+    tool: 'tests/mutate-gen.cjs + tests/mutate-run.cjs', handList: hand ? { file: 'tests/hand-mutants.cjs', count: hand.length, raw: sha256(fs.readFileSync(path.resolve(args.hand), 'utf8')), lf: sha256(fs.readFileSync(path.resolve(args.hand), 'utf8').replaceAll('\r\n', '\n')) } : null, node: process.version, generatedAtUtc: new Date().toISOString(), workers, order: { all: ALL, first: FIRST, skippedForServer: [...UNIT], neverBailing: [...SPAWNING] }, timeBox: args.until || null, baseline,
     sourceHashes, testHashes, passes: [...(base && sameSource(FILES[0]) ? base.passes || [] : []), { generatedAtUtc: new Date().toISOString(), ran: results.length - kept.length, keptFromBase: kept.length, workers, timeBox: args.until || null }],
     complete: Object.values(summary).every((figures) => figures.notRun === 0 && figures.undecided === 0), summary, results: results.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line)
   };

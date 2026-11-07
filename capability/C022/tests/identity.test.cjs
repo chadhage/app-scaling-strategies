@@ -184,5 +184,14 @@ test('the defaults are the real ones: the system clock and crypto randomness (to
   assert.notEqual(a.token, b.token);
   assert.notEqual(a.session.sid, b.session.sid);
   assert.match(a.token, /^c022_[A-Za-z0-9_-]{43}$/);
-  assert.ok(Math.abs(a.session.expiresAtMs - Date.now() - TTL) < 5000);
+  // The default clock IS the system clock: with Date.now replaced for one synchronous step the default instance reads exactly that value (no window).
+  const realNow = Date.now;
+  Date.now = () => 1700000000000;
+  try {
+    const three = createIdentity();
+    const c = three.login(three.issueTicket({ user: 'ada', tenant: 'tenant-alder' }), null);
+    assert.equal(c.session.expiresAtMs, 1700000000000 + TTL);
+  } finally {
+    Date.now = realNow;
+  }
 });

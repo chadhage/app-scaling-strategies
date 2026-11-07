@@ -13,8 +13,13 @@ test('the limits of the contract are exactly the declared bounds', () => {
     bodyBytes: 4096, ttlMs: 600000, anonymousTtlMs: 300000, ticketTtlMs: 120000, ticketMaxTtlMs: 600000, tickets: 256,
     sessionsPerTenant: 8, recordsPerTenant: 32, anonymousSessions: 16, anonymousRecords: 32,
     projectsPerTenant: 12, pageDefault: 5, pageMax: 10, auditPerUser: 200, anonymousAudit: 50,
-    idleMs: 5000, connections: 256, pipelined: 4, headerMs: 5000, checkMs: 1000
+    idleMs: 8000, connections: 256, pipelined: 4, headerMs: 5000, checkMs: 1000
   });
+});
+
+test('the idle timeout stays above the request timeout plus its check interval: a stalled request is answered with the typed 408, never cut without a word', () => {
+  const { idleMs, headerMs, checkMs } = contract.limits;
+  assert.ok(idleMs > headerMs + checkMs, `${idleMs} must exceed ${headerMs} + ${checkMs}`);
 });
 
 test('the declared seeds, members and profiles of the three tenants', () => {

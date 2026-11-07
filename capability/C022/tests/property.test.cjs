@@ -16,6 +16,7 @@ const { createModel } = require('./model.cjs');
 const { call, manualClock, seededBytes, startApp } = require('./helpers.cjs');
 
 const SHORT = { 'tenant-alder': 'alder', 'tenant-birch': 'birch', 'tenant-cedar': 'cedar' };
+const SEEDS = [500, 511, 522, 533, 544, 555, 566, 577];
 const RAISED = { sessionsPerTenant: 100000, recordsPerTenant: 200000, projectsPerTenant: 100000, anonymousSessions: 100000, anonymousRecords: 200000, tickets: 100000 };
 
 function mulberry32(seed) {
@@ -105,16 +106,50 @@ async function sequence(makeExecutor, seed, steps, stats = null) {
     return pick(known);
   };
   try {
+    // dana is a member of two tenants. Every seed starts with her live in BOTH, so that a revoke by user, a role change or a logout can reach a
+    // user whose name exists in two tenants (the rule of model.cjs: an admin names the members of the admin's OWN tenant).
+    const danaLogsInEverywhere = async () => {
+      for (const tenant of ['tenant-alder', 'tenant-birch']) {
+        const ticket = exec.issue('dana', tenant);
+        model.registerTicket(ticket, 'dana', tenant);
+        const first = { kind: 'login', ticket, token: null };
+        const predictedFirst = model.step(first);
+        const actualFirst = await exec.run(first);
+        assert.equal(actualFirst.code, predictedFirst.code, `seed ${seed}: dana logs in to ${tenant}`);
+        model.register(actualFirst.body.token, { ...predictedFirst.create, sid: actualFirst.body.session.sid });
+        tickets.push(ticket);
+      }
+    };
+    await danaLogsInEverywhere();
     for (let step = 0; step < steps; step += 1) {
       const r = rng();
+      // About one step in fifty is the dual-tenant case ON PURPOSE: dana logs in to both tenants again and a live admin of alder or birch revokes
+      // "dana" by user (the model says: only the admin's own tenant's sessions of dana end).
+      let forced = null;
+      if (rng() < 0.02) {
+        await danaLogsInEverywhere();
+        const admin = model.liveTokens().find((candidate) => {
+          const answer = model.step({ kind: 'session.whoami', token: candidate });
+          return answer.ok && answer.data.role === 'admin' && answer.data.tenant !== 'tenant-cedar';
+        });
+        if (admin) forced = { kind: 'admin.revoke', token: admin, user: 'dana' };
+      }
       const tok = token();
       const tenantOfToken = (tok && model.tenantOf(tok)) || pick(contract.tenants);
       const ids = ['proj-0001', 'proj-0002', 'proj-0003', 'proj-0004', 'proj-0005', 'proj-0006', 'proj-0099'];
-      // Most role changes and revokes name a member of the acting tenant (the interesting transitions); some name anybody.
-      const userFor = () => (rng() < 0.7 ? pick(Object.keys(model.roles[tenantOfToken])) : pick(contract.users));
+      // Most role changes and revokes name a member of the acting tenant (the interesting transitions); some name anybody, some the acting user herself
+      // (the last admin), some dana, who is a member of two tenants (she is live in both from the start of the seed), so that a revoke by user can
+      // reach another tenant's session.
+      const userFor = () => {
+        const choice = rng();
+        if (choice < 0.12) return 'dana';
+        if (choice < 0.35) return model.userOf(tok) || pick(contract.users);
+        return choice < 0.8 ? pick(Object.keys(model.roles[tenantOfToken])) : pick(contract.users);
+      };
       let op;
-      if (r < 0.06) { clock.advance(rng() < 0.92 ? pick([0, 1, 1000, 5000]) : pick([130000, 400000, 600000])); continue; }
-      if (r < 0.12) op = { kind: 'anonymous' };
+      if (!forced && r < 0.06) { clock.advance(rng() < 0.92 ? pick([0, 1, 1000, 5000]) : pick([130000, 400000, 600000])); continue; }
+      if (forced) op = forced;
+      else if (r < 0.12) op = { kind: 'anonymous' };
       else if (r < 0.28) {
         const t = rng();
         let ticket;
@@ -145,12 +180,17 @@ async function sequence(makeExecutor, seed, steps, stats = null) {
 
       const before = JSON.stringify(exec.world());
       const worldBefore = exec.world();
+      // A revoke by user whose user has a live session in ANOTHER tenant (dana): the case that only a dual-tenant seed can reach.
+      const actingTenant = op.token ? model.tenantOf(op.token) : null;
+      const dualRevoke = op.kind === 'admin.revoke' && op.user !== undefined && actingTenant !== null
+        && [...model.sessions.values()].some((entry) => entry.kind === 'tenant' && entry.user === op.user && entry.tenant !== actingTenant && entry.state === 'active');
       const predicted = model.step(op);
       const actual = await exec.run(op);
       const where = `seed ${seed} step ${step} ${JSON.stringify({ ...op, token: op.token ? op.token.slice(0, 9) : op.token })}`;
       assert.equal(actual.code, predicted.code, where);
       assert.equal(actual.ok, predicted.ok, where);
       if (stats) stats.add(`${op.kind}:${actual.code}`);
+      if (stats && dualRevoke && actual.ok) stats.add('admin.revoke:dual-tenant-user');
       const worldAfter = exec.world();
       if (!actual.ok) assert.equal(JSON.stringify(worldAfter), before, `${where}: a refused operation changed the world`);
       if (op.kind === 'login' && op.ticket) tickets.push(op.ticket);
@@ -178,7 +218,10 @@ async function sequence(makeExecutor, seed, steps, stats = null) {
           assert.deepEqual({ tenant: b.session.tenant, user: b.session.user, role: b.session.role }, data, where);
         } else if (op.kind === 'admin.role') assert.equal(b.changed, data.changed, where);
         else if (op.kind === 'admin.revoke') assert.equal(b.revoked, data.revoked, where);
-        else if (op.kind === 'profile.list') assert.equal(b.count, data.count, where);
+        else if (op.kind === 'admin.sessions') {
+          assert.deepEqual(b.sessions.map(({ sid, user, state }) => ({ sid, user, state })), data.sessions, `${where}: the session list of the tenant`);
+          assert.equal(b.count, data.sessions.length, where);
+        } else if (op.kind === 'profile.list') assert.equal(b.count, data.count, where);
       }
     }
   } finally {
@@ -186,23 +229,23 @@ async function sequence(makeExecutor, seed, steps, stats = null) {
   }
 }
 
-test('seeded random sequences against the service: every answer is the model\'s, every refusal had no effect, no effect crossed a tenant (5 seeds x 500 operations)', async () => {
-  for (const seed of [11, 22, 33, 44, 55]) await sequence(async (clock) => directExecutor(clock), seed, 500);
+test('seeded random sequences against the service: every answer is the model\'s, every refusal had no effect, no effect crossed a tenant (8 seeds x 500 operations, each starting with dana live in two tenants)', async () => {
+  for (const seed of SEEDS) await sequence(async (clock) => directExecutor(clock), seed, 500);
 });
 
 test('the same kind of sequence over REAL sockets against the HTTP server (2 seeds x 120 operations)', { timeout: 120000 }, async () => {
   for (const seed of [101, 202]) await sequence(httpExecutor, seed, 120);
 });
 
-test('the sequences are not vacuous: the real seeds reach every operation, every refusal class and both outcomes', async () => {
+test('the sequences are not vacuous: the real seeds reach every operation, every refusal class and both outcomes, and a revoke by user whose user is live in another tenant', async () => {
   const stats = new Set();
-  for (const seed of [11, 22, 33, 44, 55]) await sequence(async (clock) => directExecutor(clock), seed, 500, stats);
+  for (const seed of SEEDS) await sequence(async (clock) => directExecutor(clock), seed, 500, stats);
   for (const needed of [
     'login:ok', 'login:TICKET_INVALID', 'login:NOT_A_MEMBER', 'login:ALREADY_AUTHENTICATED', 'login:SESSION_SUPERSEDED', 'login:TOKEN_UNKNOWN', 'anonymous:ok',
     'session.logout:ok', 'session.logout:SESSION_LOGGED_OUT', 'session.whoami:ok', 'session.switch:TENANT_SWITCH_REQUIRES_LOGIN', 'session.switch:LOGIN_REQUIRED',
     'project.list:ok', 'project.read:ok', 'project.read:RESOURCE_NOT_FOUND', 'project.read:SESSION_EXPIRED', 'project.read:SESSION_REVOKED', 'project.read:TOKEN_MALFORMED',
     'project.read:AUTHENTICATION_REQUIRED', 'project.create:ok', 'project.create:ROLE_FORBIDDEN', 'project.update:ok', 'project.update:RESOURCE_NOT_FOUND', 'project.delete:ok',
     'profile.read:ok', 'profile.read:RESOURCE_NOT_FOUND', 'admin.role:ok', 'admin.role:LAST_ADMIN', 'admin.role:ROLE_FORBIDDEN', 'admin.role:RESOURCE_NOT_FOUND',
-    'admin.revoke:ok', 'admin.revoke:SESSION_NOT_ACTIVE', 'admin.revoke:RESOURCE_NOT_FOUND', 'admin.sessions:ok', 'admin.audit:ok'
-  ]) assert.ok(stats.has(needed), `${needed} was never reached by the five seeds: ${[...stats].sort().join(' ')}`);
+    'admin.revoke:ok', 'admin.revoke:SESSION_NOT_ACTIVE', 'admin.revoke:RESOURCE_NOT_FOUND', 'admin.revoke:dual-tenant-user', 'admin.sessions:ok', 'admin.audit:ok'
+  ]) assert.ok(stats.has(needed), `${needed} was never reached by the seeds: ${[...stats].sort().join(' ')}`);
 });

@@ -98,7 +98,8 @@ function createModel(clock) {
         case 'project.delete': return own.delete(op.id) ? { ok: true, code: 'ok' } : no('RESOURCE_NOT_FOUND');
         case 'profile.read': return profiles[tenant].includes(op.id) ? { ok: true, code: 'ok' } : no('RESOURCE_NOT_FOUND');
         case 'profile.list': return { ok: true, code: 'ok', data: { count: profiles[tenant].length } };
-        case 'admin.sessions': case 'admin.audit': return { ok: true, code: 'ok' };
+        case 'admin.sessions': return { ok: true, code: 'ok', data: { sessions: [...sessions.values()].filter((entry) => entry.kind === 'tenant' && entry.tenant === tenant).map((entry) => ({ sid: entry.sid, user: entry.user, state: eff(entry) })) } };
+        case 'admin.audit': return { ok: true, code: 'ok' };
         case 'admin.role': {
           if (!Object.hasOwn(roles[tenant], op.user)) return no('RESOURCE_NOT_FOUND');
           if (roles[tenant][op.user] === op.role) return { ok: true, code: 'ok', data: { changed: false } };

@@ -37,14 +37,14 @@ function verify(root, { repoRoot = path.resolve(root, '..', '..') } = {}) {
   for (const file of walk(path.join(root, 'evidence')).filter((candidate) => candidate.endsWith('.json') && !candidate.includes(`${path.sep}raw${path.sep}`))) {
     try { JSON.parse(fs.readFileSync(file, 'utf8')); } catch { problems.push(`${rel(file)}: is not valid JSON`); }
   }
-  // The first RED cycle ran on test files that were split for cost afterwards: its manifests stay exactly as archived (immutable) and are
-  // listed in evidence/red/superseded.json; an input of a listed manifest may match the live file OR the retained bytes in the snapshot
-  // directory (a .snap copy, so that no runner picks it up). Every other manifest must match the live files.
-  const supersededFile = path.join(root, 'evidence', 'red', 'superseded.json');
-  const superseded = fs.existsSync(supersededFile) ? JSON.parse(fs.readFileSync(supersededFile, 'utf8')) : { manifests: [], snapshotDir: '' };
+  // Earlier captures stay in the tree exactly as archived (immutable) and are listed in a superseded list: evidence/red/superseded.json (the
+  // first RED cycle, made before the cost split of the pipelining files) and evidence/superseded.json (what was captured for the first
+  // publication, before the fix of its review). An input of a listed manifest may match the live file OR the retained bytes in a snapshot
+  // directory of a list (a .snap copy, so that no runner picks it up). Every other manifest must match the live files.
+  const { manifests: retainedNames, snapshotDirs } = retainedOf(root);
   for (const { file, json } of manifests) {
     const where = rel(file);
-    const retained = superseded.manifests.includes(where.split(path.sep).join('/'));
+    const retained = retainedNames.has(where.split(path.sep).join('/'));
     for (const stream of ['stdout', 'stderr']) {
       const transcript = json.transcripts[stream];
       const target = path.join(path.dirname(file), transcript.path);
@@ -61,8 +61,8 @@ function verify(root, { repoRoot = path.resolve(root, '..', '..') } = {}) {
       const pinned = (bytes) => sha(bytes) === input.rawSha256 || sha(lf(bytes)) === input.crlfToLfSha256;
       const live = fs.existsSync(target);
       if (live && pinned(fs.readFileSync(target))) continue;
-      const snapshot = retained ? path.join(root, superseded.snapshotDir, `${path.win32.basename(input.path)}.snap`) : '';
-      if (snapshot && fs.existsSync(snapshot) && pinned(fs.readFileSync(snapshot))) continue;
+      const snapshots = retained ? snapshotDirs.map((directory) => path.join(root, directory, `${path.win32.basename(input.path)}.snap`)) : [];
+      if (snapshots.some((snapshot) => fs.existsSync(snapshot) && pinned(fs.readFileSync(snapshot)))) continue;
       problems.push(live || retained ? `${where}: input ${input.path} differs from its pin` : `${where}: input ${input.path} is missing`);
     }
     if (json.exitCode !== json.expectedExitCode || json.timedOut) problems.push(`${where}: exit ${json.exitCode} (expected ${json.expectedExitCode})`);
@@ -87,12 +87,44 @@ function readManifest(root, relative) {
   return JSON.parse(fs.readFileSync(path.join(root, 'evidence', relative), 'utf8'));
 }
 
-// Every file of the evidence folder that seal.cjs pins byte for byte: the recorder manifests, the mutation, loop and fresh figures, the
-// retained snapshots, the stub and the superseded list. The raw transcripts are pinned by their manifests (verify() recomputes them), seal.json
-// is the seal itself and verify-N (this archive's own test run, written AFTER the seal) is checked as a manifest like any other.
-function sealedEvidence(root) {
-  return walk(path.join(root, 'evidence')).map((file) => path.relative(root, file).split(path.sep).join('/'))
-    .filter((name) => name !== 'evidence/seal.json' && !name.includes('/raw/') && !/^evidence\/green\/verify-\d+\.json$/.test(name)).sort();
+// The two lists of retained manifests (see verify): their manifests and their snapshot directories. A damaged list is reported by verify() as
+// invalid JSON and retains nothing.
+const SUPERSEDED_LISTS = ['evidence/red/superseded.json', 'evidence/superseded.json'];
+function retainedOf(root) {
+  const manifests = new Set();
+  const snapshotDirs = [];
+  for (const name of SUPERSEDED_LISTS) {
+    const file = path.join(root, name);
+    if (!fs.existsSync(file)) continue;
+    let list;
+    try { list = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { continue; }
+    for (const manifest of Array.isArray(list.manifests) ? list.manifests : []) manifests.add(manifest);
+    if (typeof list.snapshotDir === 'string') snapshotDirs.push(list.snapshotDir);
+  }
+  return { manifests, snapshotDirs };
 }
 
-module.exports = Object.freeze({ PRODUCTION, lf, manifestsOf, readManifest, sealedEvidence, sha, verify, walk });
+// Every file of the evidence folder that seal.cjs pins byte for byte: the recorder manifests, the mutation, loop and fresh figures, the
+// retained snapshots, the stub and the superseded lists. The raw transcripts are pinned by their manifests (verify() recomputes them), seal.json
+// is the seal itself and the verify-N that is not retained (this archive's own test run, written AFTER the seal) is checked as a manifest
+// like any other; the verify-N of an earlier publication is retained and sealed like the rest.
+function sealedEvidence(root) {
+  const { manifests: retained } = retainedOf(root);
+  return walk(path.join(root, 'evidence')).map((file) => path.relative(root, file).split(path.sep).join('/'))
+    .filter((name) => name !== 'evidence/seal.json' && !name.includes('/raw/') && !(/^evidence\/green\/verify-\d+\.json$/.test(name) && !retained.has(name))).sort();
+}
+
+// The files a loop or a fresh-checkout run executes or reads: every production file, the feature, imports.json and every tool and test under
+// tests\ except the three files that belong to the archive itself (the test that verifies the captures, its verifier and the seal writer: they are
+// edited after the captures and are pinned by the seal). The run records the hashes before it starts; evidence.test.cjs compares them with the live
+// bytes, so a capture cannot silently describe other bytes than the ones that ship.
+const ARCHIVE_TOOLS = ['evidence.test.cjs', 'evidence-verify.cjs', 'seal.cjs'];
+function runInputs(root) {
+  const names = [...PRODUCTION, 'C022.feature', 'imports.json', ...fs.readdirSync(path.join(root, 'tests')).filter((name) => /\.c?js$/.test(name) && !ARCHIVE_TOOLS.includes(name)).map((name) => `tests/${name}`)].sort();
+  return Object.fromEntries(names.map((name) => {
+    const bytes = fs.readFileSync(path.join(root, name));
+    return [name, { raw: sha(bytes), lf: sha(lf(bytes)) }];
+  }));
+}
+
+module.exports = Object.freeze({ PRODUCTION, lf, manifestsOf, readManifest, retainedOf, runInputs, sealedEvidence, sha, verify, walk });

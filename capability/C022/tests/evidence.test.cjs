@@ -8,16 +8,26 @@ const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
 const { test } = require('node:test');
-const { lf, manifestsOf, readManifest, sha, verify, walk } = require('./evidence-verify.cjs');
+const { lf, manifestsOf, readManifest, runInputs, sha, verify, walk } = require('./evidence-verify.cjs');
 
 const root = path.resolve(__dirname, '..');
 const read = (name) => fs.readFileSync(path.join(root, name), 'utf8');
 const only = (dir, prefix) => manifestsOf(root).filter(({ file }) => file.startsWith(path.join(root, 'evidence', dir)) && path.basename(file).startsWith(prefix));
-const serial = (entry) => Number(/-(\d+)\.json$/.exec(entry.file)[1]);
-// The CURRENT capture of a kind is the highest serial: the first RED cycle (red-1, replay-1) is retained next to the final one (red-2, replay-2).
+const serialOf = (file) => {
+  const match = /-(\d+)\.json$/.exec(file);
+  return match ? Number(match[1]) : 1;
+};
+const serial = (entry) => serialOf(entry.file);
+// The CURRENT capture of a kind is the highest serial (a name without one is serial 1). Earlier captures stay in the tree, listed as retained:
+// evidence/red/superseded.json (RED cycle 1) and evidence/superseded.json (RED cycle 2 and everything else captured for the first publication,
+// before the fix of its review).
 const latest = (dir, prefix) => only(dir, prefix).sort((left, right) => serial(left) - serial(right)).at(-1);
+// The same for the figures that are not recorder manifests (loop, fresh): the file of a name with the highest serial.
+const currentFile = (dir, name) => fs.readdirSync(path.join(root, 'evidence', dir)).filter((entry) => entry.startsWith(name) && /^(-\d+)?\.json$/.test(entry.slice(name.length)))
+  .sort((left, right) => serialOf(left) - serialOf(right)).map((entry) => path.join(root, 'evidence', dir, entry)).at(-1);
 const rows = (manifest) => manifest.summary.coverageRows;
 const DOT_TEST = /\.test\.cjs$/;
+const stdoutOf = (entry) => zlib.gunzipSync(fs.readFileSync(path.join(path.dirname(entry.file), entry.json.transcripts.stdout.path))).toString('utf8');
 
 test('every archived manifest recomputes: transcripts, pinned inputs, exit codes, and the seal over the final bytes', () => {
   assert.deepEqual(verify(root), []);
@@ -58,17 +68,22 @@ test('the RED replays UNCHANGED against the final code and passes: the same file
   assert.deepEqual([...redNames].filter((name) => !replayPassed.has(name)), [], 'every test that ran in the RED exists and passes in the replay');
 });
 
-test('the first RED cycle is retained exactly as archived: its manifests are listed, the bytes of every input that changed since are kept, nothing else is', () => {
-  const listed = readManifest(root, 'red/superseded.json');
-  assert.deepEqual(listed.manifests.slice().sort(), ['evidence/red/replay-1/replay-1.json', 'evidence/red/run-1/red-1.json']);
-  const retained = [only('red', 'red-'), only('red', 'replay-')].flat().filter((entry) => serial(entry) === 1);
-  assert.equal(retained.length, 2);
-  const [first] = retained.filter((entry) => path.basename(entry.file).startsWith('red-'));
-  assert.equal(first.json.exitCode, 1);
-  assert.equal(first.json.summary.tests, 303);
-  assert.equal(first.json.summary.fail, 292);
-  const [firstReplay] = retained.filter((entry) => path.basename(entry.file).startsWith('replay-'));
-  assert.equal(firstReplay.json.summary.pass, 396);
+test('the earlier captures are retained exactly as archived: every retained manifest is listed, the bytes of every pinned input that changed since are kept, nothing else is', () => {
+  const lists = ['red/superseded.json', 'superseded.json'].map((name) => readManifest(root, name));
+  const listed = lists.flatMap((list) => list.manifests).sort();
+  assert.deepEqual(listed, [
+    'evidence/browser/browser-1.json', 'evidence/coverage/cov-contract-js.json', 'evidence/coverage/cov-identity-cjs.json', 'evidence/coverage/cov-page-js.json', 'evidence/coverage/cov-server-cjs.json',
+    'evidence/coverage/cov-service-cjs.json', 'evidence/coverage/cov-store-cjs.json', 'evidence/green/green-1.json', 'evidence/green/verify-1.json', 'evidence/red/replay-1/replay-1.json',
+    'evidence/red/replay-2/replay-2.json', 'evidence/red/run-1/red-1.json', 'evidence/red/run-2/red-2.json'
+  ], 'the first RED cycle, the second one and everything captured for the first publication');
+  const retained = manifestsOf(root).filter(({ file }) => listed.includes(path.relative(root, file).split(path.sep).join('/')));
+  assert.equal(retained.length, listed.length, 'every listed manifest exists');
+  const byName = (name) => retained.find(({ file }) => path.basename(file) === name).json;
+  assert.deepEqual([byName('red-1.json').exitCode, byName('red-1.json').summary.tests, byName('red-1.json').summary.fail], [1, 303, 292]);
+  assert.equal(byName('replay-1.json').summary.pass, 396);
+  assert.deepEqual([byName('red-2.json').exitCode, byName('red-2.json').summary.tests, byName('red-2.json').summary.fail], [1, 400, 381]);
+  assert.equal(byName('replay-2.json').summary.pass, 400);
+  assert.ok(byName('green-1.json').summary.tests >= 621, 'the first publication ran 621 tests');
   const changed = new Set();
   for (const { json } of retained) {
     for (const input of json.inputs) {
@@ -76,14 +91,15 @@ test('the first RED cycle is retained exactly as archived: its manifests are lis
       if (!fs.existsSync(live) || (sha(fs.readFileSync(live)) !== input.rawSha256 && sha(lf(fs.readFileSync(live))) !== input.crlfToLfSha256)) changed.add(path.win32.basename(input.path));
     }
   }
-  const kept = fs.readdirSync(path.join(root, listed.snapshotDir)).filter((name) => name.endsWith('.snap')).map((name) => name.slice(0, -'.snap'.length));
-  assert.deepEqual(kept.sort(), [...changed].sort(), 'a snapshot is kept for exactly the inputs that changed since the first RED cycle');
-  assert.ok(kept.includes('pipeline.test.cjs') && kept.includes('pipeline-process.test.cjs') && kept.includes('C022.feature'));
+  const kept = new Set(lists.flatMap((list) => fs.readdirSync(path.join(root, list.snapshotDir)).filter((name) => name.endsWith('.snap')).map((name) => name.slice(0, -'.snap'.length))));
+  assert.deepEqual([...kept].sort(), [...changed].sort(), 'a snapshot is kept for exactly the inputs that changed since an earlier capture');
+  for (const name of ['pipeline.test.cjs', 'pipeline-process.test.cjs', 'C022.feature', 'proc.cjs', 'contract.js', 'evidence.test.cjs', 'seal.json']) assert.ok(kept.has(name), `${name} is retained`);
 });
 
 test('GREEN: every test of the suite passed with nothing skipped, cancelled or left todo', () => {
-  const [green] = only('green', 'green-');
+  const green = latest('green', 'green-');
   assert.ok(green);
+  assert.ok(serial(green) >= 2, 'the GREEN run of the fix round (green-1 is the first publication, retained)');
   const { summary } = green.json;
   assert.ok(summary.tests > 400);
   assert.equal(summary.pass, summary.tests);
@@ -91,31 +107,37 @@ test('GREEN: every test of the suite passed with nothing skipped, cancelled or l
   const files = new Set(green.json.command.filter((arg) => arg.endsWith('.test.cjs')));
   const onDisk = fs.readdirSync(__dirname).filter((name) => name.endsWith('.test.cjs') && name !== 'evidence.test.cjs').map((name) => `capability\\C022\\tests\\${name}`);
   assert.deepEqual([...files].sort(), onDisk.sort(), 'the GREEN run enumerated every test file but this one (it verifies the archive, which the GREEN run produces)');
-  // This file's own run (verify-1) is recorded AFTER the seal by the recorder and is verified as a manifest like any other; while that run is
-  // being recorded it cannot exist yet, so it is checked only when it is there.
-  const [verifyRun] = only('green', 'verify-');
-  if (verifyRun) {
-    assert.deepEqual(verifyRun.json.command.filter((arg) => arg.endsWith('.test.cjs')), ['capability\\C022\\tests\\evidence.test.cjs']);
-    assert.equal(verifyRun.json.summary.fail, 0);
-  }
+  // This file's own run (verify-N) is recorded AFTER the seal by the recorder and is verified as a manifest like any other; while that run is
+  // being recorded it cannot exist yet, so the highest serial is then the retained verify-1 of the first publication.
+  const verifyRun = latest('green', 'verify-');
+  assert.ok(verifyRun);
+  assert.deepEqual(verifyRun.json.command.filter((arg) => arg.endsWith('.test.cjs')), ['capability\\C022\\tests\\evidence.test.cjs']);
+  assert.equal(verifyRun.json.summary.fail, 0);
 });
 
 // The cost rule: every raw-socket or process-spawning file runs 20 times, 4 at a time, under 4 CPU burners that the loop started (PIDs recorded,
 // normal priority). A failing run is a defect. A run over the runner's 60 s per-file cap under that load is a FINDING, never hidden: the figures are
 // recorded in the manifest and the README states them.
-const LOOPED = ['imports', 'pending-flood', 'pipeline-earlier', 'pipeline-http10', 'pipeline-one-write', 'pipeline-process-rows', 'pipeline-process-third-hole', 'pipeline-third-hole', 'pipeline-two-writes', 'races', 'refusal-close', 'refusal-flood'];
+const LOOPED = ['child-env', 'default-timeouts', 'imports', 'pending-flood', 'pipeline-earlier', 'pipeline-http10', 'pipeline-one-write', 'pipeline-process-rows', 'pipeline-process-third-hole', 'pipeline-third-hole', 'pipeline-two-writes', 'races', 'refusal-close', 'refusal-flood'];
 const loopFigures = () => {
-  const [file] = walk(path.join(root, 'evidence', 'loops')).filter((candidate) => candidate.endsWith('.json'));
+  const file = currentFile('loops', 'loop');
   const loop = JSON.parse(fs.readFileSync(file, 'utf8'));
   const entries = Object.entries(loop.perFile);
   const slowest = entries.reduce((best, entry) => (entry[1].maxMs > best[1].maxMs ? entry : best));
-  return { loop, runs: entries.reduce((sum, entry) => sum + entry[1].runs, 0), passed: entries.reduce((sum, entry) => sum + entry[1].passed, 0), overCap: entries.reduce((sum, entry) => sum + entry[1].overCap, 0), files: entries.length, slowest };
+  return { loop, file, runs: entries.reduce((sum, entry) => sum + entry[1].runs, 0), passed: entries.reduce((sum, entry) => sum + entry[1].passed, 0), overCap: entries.reduce((sum, entry) => sum + entry[1].overCap, 0), files: entries.length, slowest };
+};
+// A loop or a fresh-checkout run records the hashes of the files it runs (tests/loop.cjs, tests/fresh.cjs, runInputs): they must be the live bytes.
+const assertRunOnTheseBytes = (inputs, name) => {
+  assert.deepEqual(Object.keys(inputs), Object.keys(runInputs(root)), `${name}: the run recorded exactly the files that ship`);
+  for (const [file, hashes] of Object.entries(inputs)) {
+    const bytes = fs.readFileSync(path.join(root, file));
+    assert.ok(sha(bytes) === hashes.raw || sha(lf(bytes)) === hashes.lf, `${name}: ${file} is the file that the run executed`);
+  }
 };
 
-test('the load loop: every run of every raw-socket and process-spawning file passed under CPU burners that this card started (20 runs, 4 at a time)', () => {
-  const loops = walk(path.join(root, 'evidence', 'loops')).filter((file) => file.endsWith('.json'));
-  assert.equal(loops.length, 1, 'one loop archive');
-  const { loop } = loopFigures();
+test('the load loop: every run of every raw-socket and process-spawning file passed under CPU burners that this card started (20 runs, 4 at a time), on the bytes that ship', () => {
+  const { loop, file } = loopFigures();
+  assert.ok(serialOf(file) >= 2, 'the loop of the fix round (loop-1 is the first publication, kept next to it)');
   assert.ok(loop.burners >= 4 && loop.burnerPids.length === loop.burners, 'burners started by the loop, PIDs recorded');
   assert.ok(loop.parallel >= 4 && loop.rounds >= 20, `${loop.rounds} rounds, ${loop.parallel} at a time`);
   const spawning = fs.readdirSync(__dirname).filter((name) => DOT_TEST.test(name) && /child_process|proc\.cjs|matrix-kit\.cjs|raw\.cjs/.test(fs.readFileSync(path.join(__dirname, name), 'utf8'))).map((name) => name.replace(DOT_TEST, ''));
@@ -126,11 +148,26 @@ test('the load loop: every run of every raw-socket and process-spawning file pas
     assert.equal(figures.passed, figures.runs, `${name}: every run passed`);
     assert.equal(figures.runs, loop.rounds, name);
   }
+  assertRunOnTheseBytes(loop.inputs, 'the loop');
 });
 
-test('the fresh-checkout proofs: every test file but this one is green in a tree of LF bytes and in the same tree converted to CRLF', () => {
+test('the per-file timing: every test file but this one ran alone, one after the other, and finished under the runner\'s 60 s per-file cap, on the bytes that ship', () => {
+  const timing = JSON.parse(fs.readFileSync(path.join(root, 'evidence', 'loops', 'files-1.json'), 'utf8'));
+  const onDisk = fs.readdirSync(__dirname).filter((name) => DOT_TEST.test(name) && name !== 'evidence.test.cjs').sort();
+  assert.deepEqual(Object.keys(timing.perFile).sort(), onDisk, 'every test file but this one was timed');
+  assert.deepEqual([timing.rounds, timing.parallel, timing.burners], [1, 1, 0], 'one run of each file, one at a time, no burner');
+  for (const [name, figures] of Object.entries(timing.perFile)) {
+    assert.equal(figures.passed, 1, `${name} passed`);
+    assert.equal(figures.overCap, 0, `${name} finished in ${figures.maxMs} ms, over the 60 s cap`);
+  }
+  assertRunOnTheseBytes(timing.inputs, 'the timing run');
+});
+
+test('the fresh-checkout proofs: every test file but this one is green in a tree of LF bytes and in the same tree converted to CRLF, on the bytes that ship', () => {
   for (const mode of ['lf', 'crlf']) {
-    const run = JSON.parse(fs.readFileSync(path.join(root, 'evidence', 'fresh', `fresh-${mode}.json`), 'utf8'));
+    const file = currentFile('fresh', `fresh-${mode}`);
+    assert.ok(serialOf(file) >= 2, 'the fresh run of the fix round');
+    const run = JSON.parse(fs.readFileSync(file, 'utf8'));
     assert.equal(run.mode, mode);
     assert.equal(run.exit, 0);
     assert.equal(run.fail, 0);
@@ -138,6 +175,7 @@ test('the fresh-checkout proofs: every test file but this one is green in a tree
     assert.equal(run.pass, run.tests);
     assert.ok(run.tests > 400);
     assert.equal(run.files, fs.readdirSync(__dirname).filter((name) => DOT_TEST.test(name) && name !== 'evidence.test.cjs').length, 'every test file but this one ran in the tree (this one asserts these manifests)');
+    assertRunOnTheseBytes(run.inputs, `the ${mode} run`);
   }
 });
 
@@ -145,12 +183,14 @@ test('per-file coverage: ONE L-0004 command per production file, a row for each,
   const production = ['contract.js', 'identity.cjs', 'store.cjs', 'service.cjs', 'server.cjs', 'page.js'];
   assert.deepEqual(fs.readdirSync(root).filter((name) => /\.c?js$/.test(name)).sort(), production.slice().sort(), 'no unenumerated production file');
   for (const file of production) {
-    const manifests = only('coverage', `cov-${file.replace('.', '-')}`);
-    assert.equal(manifests.length, 1, file);
-    const { json } = manifests[0];
+    const capture = latest('coverage', `cov-${file.replace('.', '-')}`);
+    assert.ok(capture, file);
+    assert.ok(serial(capture) >= 2, `${file}: the coverage of the fix round (the first publication's capture is retained next to it)`);
+    const { json } = capture;
     assert.ok(json.command.includes(`--test-coverage-include=**/C022/${file}`), file);
     assert.equal(json.command.filter((arg) => arg.startsWith('--test-coverage-include=')).length, 1, 'one file per command');
     for (const flag of ['--test-coverage-lines=85', '--test-coverage-branches=85', '--test-coverage-functions=85']) assert.ok(json.command.includes(flag));
+    assert.equal(json.command.filter((arg) => DOT_TEST.test(arg)).length, fs.readdirSync(__dirname).filter((name) => DOT_TEST.test(name) && name !== 'evidence.test.cjs').length, `${file}: the coverage command runs every test file but this one`);
     const row = rows(json).find((entry) => entry.file === file);
     assert.ok(row, `${file} has a coverage row (an unloaded file prints none)`);
     assert.ok(row.lines >= 85 && row.branches >= 85 && row.functions >= 85, `${file}: ${row.lines}/${row.branches}/${row.functions}`);
@@ -160,6 +200,9 @@ test('per-file coverage: ONE L-0004 command per production file, a row for each,
 
 // A mutant is identified by its file, its id and its replacement: the two mutants of one condition (to true, to false) share their id.
 const mutantKey = (entry) => `${entry.file}:${entry.id}:${entry.to}`;
+// mutate-run.cjs hashes the LF form of a TEST file as a string (latin1 decoding, then hashed as UTF-8): the same as the hash of the LF bytes for an ASCII
+// file, another one for a file with a non-ASCII byte, so a tree converted to LF is judged by that form as well.
+const sameTestBytes = (bytes, hashes) => sha(bytes) === hashes.raw || sha(lf(bytes)) === hashes.lf || sha(bytes.toString('latin1').replaceAll('\r\n', '\n')) === hashes.lf;
 const mutationPasses = () => fs.readdirSync(path.join(root, 'evidence', 'mutants')).filter((name) => /^mutation-\d+\.json$/.test(name)).sort((left, right) => Number(/\d+/.exec(left)[0]) - Number(/\d+/.exec(right)[0]));
 
 test('mutation: every generated mutant was run, every survivor and undecided mutant is listed (equivalent with a one-line proof, answered by a later test, or open), the rest were killed by a named test', () => {
@@ -174,7 +217,7 @@ test('mutation: every generated mutant was run, every survivor and undecided mut
   const added = disk.filter((name) => !Object.hasOwn(run.testHashes, name));
   for (const [name, hashes] of Object.entries(run.testHashes)) {
     const bytes = fs.readFileSync(path.join(__dirname, `${name}.test.cjs`));
-    assert.ok(sha(bytes) === hashes.raw || sha(lf(bytes)) === hashes.lf, `${name}: the final mutation pass ran against these test bytes`);
+    assert.ok(sameTestBytes(bytes, hashes), `${name}: the final mutation pass ran against these test bytes`);
   }
   for (const [file, hashes] of Object.entries(run.sourceHashes)) {
     const bytes = fs.readFileSync(path.join(root, file));
@@ -203,11 +246,87 @@ test('mutation: every generated mutant was run, every survivor and undecided mut
   assert.ok(run.results.filter((entry) => entry.killedBy).every((entry) => entry.killedBy.test && entry.killedBy.file.endsWith('.test.cjs')), 'every kill names a test');
   for (const earlier of names.slice(0, -1)) {
     const before = readManifest(root, `mutants/${earlier}`);
-    for (const entry of before.results.filter((result) => !result.killedBy)) {
+    // A production file that changed since an earlier pass was run again as a whole (its mutants have new offsets, so an earlier survivor
+    // cannot be found by its id): the final pass decides every mutant of the shipped bytes, which the checks above recompute.
+    const changedSince = (file) => before.sourceHashes[file].lf !== run.sourceHashes[file].lf;
+    for (const entry of before.results.filter((result) => !result.killedBy && !changedSince(result.file))) {
       const now = run.results.find((result) => mutantKey(result) === mutantKey(entry));
       assert.ok(now, `${mutantKey(entry)} was run again by the final pass`);
-      if (now.killedBy) assert.ok(!Object.hasOwn(before.testHashes, now.killedBy.file.replace(DOT_TEST, '')), `${mutantKey(entry)}: killed later by a test file that did not exist in ${earlier}`);
+      if (now.killedBy) {
+        const name = now.killedBy.file.replace(DOT_TEST, '');
+        const bytes = fs.readFileSync(path.join(__dirname, now.killedBy.file));
+        const unchanged = Object.hasOwn(before.testHashes, name) && sameTestBytes(bytes, before.testHashes[name]);
+        assert.ok(!unchanged, `${mutantKey(entry)}: killed later by a test file that did not exist, or was changed, since ${earlier}`);
+      }
     }
+  }
+});
+
+// The hand list: what the generator cannot make (an iteration source, a call argument, a scoped accessor replaced by its unscoped sibling, a regular
+// expression anchor). Found by the review of the first publication, where a surviving mutant of that class (revokeUser iterating every tenant's
+// sessions) was the one real hole. Every entry runs alone against the whole suite; a proven equivalent is listed with its proof and is not run.
+test('the hand list of argument and iteration mutants: every entry was run alone against the whole suite and killed by a named test; each proven equivalent carries its proof', () => {
+  const { MUTANTS, EQUIVALENT } = require('./hand-mutants.cjs');
+  const run = readManifest(root, 'mutants/hand-1.json');
+  assert.ok(MUTANTS.length >= 66, `at least the 66 guard mutants of the review (${MUTANTS.length})`);
+  const ids = [...MUTANTS, ...EQUIVALENT].map((entry) => entry.id);
+  assert.equal(new Set(ids).size, ids.length, 'every id is used once');
+  const list = fs.readFileSync(path.join(__dirname, 'hand-mutants.cjs'));
+  assert.equal(run.handList.count, MUTANTS.length);
+  assert.ok(sha(list) === run.handList.raw || sha(lf(list)) === run.handList.lf, 'the run used this very list');
+  assert.ok(run.baseline.length >= 20 && run.baseline.every((entry) => entry.status === 0), 'every test file passed on the unmutated tree before the first mutant');
+  assert.deepEqual(run.results.map((entry) => entry.id).sort(), MUTANTS.map((entry) => entry.id).sort(), 'every entry of the list ran, and nothing else');
+  const disk = fs.readdirSync(__dirname).filter((name) => DOT_TEST.test(name) && !['evidence.test.cjs', 'imports.test.cjs'].includes(name)).map((name) => name.replace(DOT_TEST, '')).sort();
+  assert.deepEqual(Object.keys(run.testHashes).sort(), disk, 'the run had every test file of the suite');
+  for (const [name, hashes] of Object.entries(run.testHashes)) {
+    const bytes = fs.readFileSync(path.join(__dirname, `${name}.test.cjs`));
+    assert.ok(sameTestBytes(bytes, hashes), `${name}: the hand run used these test bytes`);
+  }
+  for (const [file, hashes] of Object.entries(run.sourceHashes)) {
+    const bytes = fs.readFileSync(path.join(root, file));
+    assert.ok(sha(bytes) === hashes.raw || sha(lf(bytes)) === hashes.lf, `${file}: the hand mutants were made from these production bytes`);
+  }
+  for (const entry of run.results) {
+    assert.ok(entry.killedBy && entry.killedBy.test && entry.killedBy.file.endsWith('.test.cjs'), `${entry.id} is killed by a named test`);
+    assert.equal(entry.undecided, null, `${entry.id} is decided`);
+    assert.ok(fs.existsSync(path.join(__dirname, entry.killedBy.file)), `${entry.id}: the killing file exists`);
+  }
+  for (const entry of [...MUTANTS, ...EQUIVALENT]) {
+    const text = fs.readFileSync(path.join(root, entry.file), 'utf8').replaceAll('\r\n', '\n');
+    assert.ok(entry.why.length > 10 && entry.edits.length >= 1, `${entry.id} says what it breaks`);
+    for (const [find, to] of entry.edits) {
+      assert.equal(text.split(find).length - 1, 1, `${entry.id}: the replaced text occurs once in the shipped ${entry.file}`);
+      assert.notEqual(find, to, `${entry.id} changes something`);
+    }
+  }
+  for (const entry of EQUIVALENT) assert.ok(entry.proof.length > 60 && !entry.proof.includes('\n'), `${entry.id}: an equivalent needs a one-line proof`);
+  assert.deepEqual([...new Set(MUTANTS.map((entry) => entry.file))].sort(), ['contract.js', 'identity.cjs', 'server.cjs', 'service.cjs', 'store.cjs'], 'every production file but page.js has hand mutants');
+  assert.ok(run.results.some((entry) => entry.id === 'I03' && entry.killedBy.file === 'dual-tenant.test.cjs'), 'the reviewer\'s mutant (revokeUser iterating every tenant) is killed by the dual-tenant tests');
+});
+
+test('the review fix is RED-proven: the dual-tenant tests fail on the reviewer\'s mutant of revokeUser and the default-limits test fails on the old idleMs, with assertion errors, and the same tests pass on the final code', () => {
+  const recipes = JSON.parse(read('evidence/fix-red/recipes.json'));
+  const green = latest('green', 'green-');
+  const passed = new Set([...stdoutOf(green).replaceAll('\r\n', '\n').matchAll(/^\s*ok \d+ - (.+)$/gm)].map((match) => match[1].trim()));
+  assert.deepEqual(recipes.mutants.map((entry) => entry.id), ['M1', 'm1']);
+  for (const recipe of recipes.mutants) {
+    const text = read(recipe.file).replaceAll('\r\n', '\n');
+    assert.equal(text.split(recipe.shipped).length - 1, 1, `${recipe.id}: the shipped ${recipe.file} holds the fixed text once`);
+    const mutant = text.replace(recipe.shipped, () => recipe.mutated);
+    assert.equal(sha(Buffer.from(mutant)), recipe.mutantLfSha256, `${recipe.id}: the mutant is exactly the shipped file with that one text replaced`);
+    const capture = manifestsOf(root).find(({ file }) => file.startsWith(path.join(root, 'evidence', 'fix-red')) && path.basename(file) === `${recipe.capture}.json`);
+    assert.ok(capture, `${recipe.id}: a RED capture exists`);
+    assert.equal(capture.json.exitCode, 1);
+    assert.ok(capture.json.environmentAdded.includes('C022_SUBJECT_DIR'), 'the tests ran against the mutant tree');
+    assert.ok(capture.json.summary.fail >= recipe.minFailures, `${recipe.id}: ${capture.json.summary.fail} tests fail on the mutant`);
+    assert.equal(capture.json.summary.pass + capture.json.summary.fail, capture.json.summary.tests);
+    const stdout = stdoutOf(capture).replaceAll('\r\n', '\n');
+    assert.ok((stdout.match(/ERR_ASSERTION/g) || []).length >= recipe.minFailures, `${recipe.id}: the failures are assertions`);
+    assert.doesNotMatch(stdout, /Cannot find module|ERR_MODULE_NOT_FOUND|SyntaxError|ReferenceError/);
+    for (const file of capture.json.command.filter((arg) => DOT_TEST.test(arg))) assert.ok(green.json.command.includes(file), `${file} is part of the GREEN run`);
+    const failing = [...new Set([...stdout.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((match) => match[1].trim()).filter((name) => !name.endsWith('.cjs')))];
+    assert.ok(failing.length >= recipe.minFailures && failing.length <= capture.json.summary.fail, `${recipe.id}: ${failing.length} named failing tests`);
+    for (const name of failing) assert.ok(passed.has(name), `${recipe.id}: "${name}" fails on the mutant and passes on the shipped code`);
   }
 });
 
@@ -215,21 +334,23 @@ test('the importer pins were recomputed against git (tests\\anchor.cjs) and the 
   const [anchor] = only('anchor', 'anchor-');
   const stdout = zlib.gunzipSync(fs.readFileSync(path.join(path.dirname(anchor.file), anchor.json.transcripts.stdout.path))).toString('utf8');
   assert.deepEqual(JSON.parse(stdout), { checked: 7, problems: [] });
-  const [browser] = only('browser', 'browser-');
-  const text = zlib.gunzipSync(fs.readFileSync(path.join(path.dirname(browser.file), browser.json.transcripts.stdout.path))).toString('utf8');
+  const browser = latest('browser', 'browser-');
+  assert.ok(serial(browser) >= 2, 'the browser run of the fix round');
+  const text = stdoutOf(browser);
   assert.match(text, /C022 BROWSER OK/);
   assert.match(text, /PASS the installed Edge is Microsoft-signed and its major is qualified/);
+  assert.match(text, /PASS no cookie and no storage entry after the whole run: \{"cookie":"","local":0,"session":0,"contextCookies":0\}/);
   assert.equal(browser.json.environmentAdded, undefined, 'CAPTURE_BROWSER_EVIDENCE stays unset');
 });
 
 test('the README states only figures that the evidence shows', () => {
   const readme = read('README.md');
-  const [green] = only('green', 'green-');
+  const green = latest('green', 'green-');
   assert.ok(readme.includes(`${green.json.summary.tests} tests`), 'the GREEN test count');
   const red = latest('red', 'red-');
   assert.ok(readme.includes(`${red.json.summary.fail} of ${red.json.summary.tests}`), 'the RED failure count');
   for (const file of ['contract.js', 'identity.cjs', 'store.cjs', 'service.cjs', 'server.cjs', 'page.js']) {
-    const row = rows(only('coverage', `cov-${file.replace('.', '-')}`)[0].json).find((entry) => entry.file === file);
+    const row = rows(latest('coverage', `cov-${file.replace('.', '-')}`).json).find((entry) => entry.file === file);
     assert.ok(readme.includes(`${file} ${row.lines}/${row.branches}/${row.functions}`), `${file} coverage figure`);
   }
   const run = readManifest(root, `mutants/${mutationPasses().at(-1)}`);
@@ -238,16 +359,24 @@ test('the README states only figures that the evidence shows', () => {
   assert.ok(readme.includes(`${killed} of ${total} mutants`), 'the mutation figure');
   const gaps = readManifest(root, 'mutants/equivalents.json');
   for (const kind of ['equivalent', 'answered', 'open']) assert.ok(readme.includes(`${gaps.filter((entry) => entry.kind === kind).length} ${kind}`), `the README states how many gaps are ${kind}`);
-  assert.ok(readme.includes(`${mutationPasses().length} mutation pass`), 'the README states how many mutation passes are archived');
+  assert.ok(readme.includes(`${mutationPasses().length} mutation passes`), 'the README states how many mutation passes are archived');
+  const hand = readManifest(root, 'mutants/hand-1.json');
+  assert.ok(readme.includes(`${hand.results.filter((entry) => entry.killedBy).length} of ${hand.handList.count} hand mutants`), 'the hand list figure');
+  for (const recipe of JSON.parse(read('evidence/fix-red/recipes.json')).mutants) {
+    const capture = manifestsOf(root).find(({ file }) => path.basename(file) === `${recipe.capture}.json`);
+    assert.ok(readme.includes(`${capture.json.summary.fail} of ${capture.json.summary.tests} tests of \`${recipe.id === 'M1' ? 'dual-tenant' : 'default-timeouts'}.test.cjs\``), `the fix RED figure of ${recipe.id}`);
+  }
   const { runs, passed, overCap, files, slowest } = loopFigures();
   assert.ok(readme.includes(`${runs} runs of ${files} files`), 'the loop run count');
   assert.ok(readme.includes(`${passed} passed`) && readme.includes(`${overCap} over the 60 s cap`), 'the loop pass and over-cap figures (a run over the cap under load is stated, never hidden)');
   assert.ok(readme.includes(`slowest ${slowest[1].maxMs} ms (${slowest[0]})`), 'the slowest loop run');
   for (const mode of ['lf', 'crlf']) {
-    const fresh = JSON.parse(fs.readFileSync(path.join(root, 'evidence', 'fresh', `fresh-${mode}.json`), 'utf8'));
+    const fresh = JSON.parse(fs.readFileSync(currentFile('fresh', `fresh-${mode}`), 'utf8'));
     assert.ok(readme.includes(`${mode.toUpperCase()} ${fresh.pass} of ${fresh.tests}`), `the fresh ${mode} figure`);
   }
   for (const [name, command] of [['RED replay', 'C022_SUBJECT_DIR'], ['per-file coverage', 'coverage.cjs'], ['browser', 'tests\\browser.cjs']]) assert.ok(readme.includes(command), `the README has the command for ${name}`);
+  // The README states what it does not have: no line may call a capture uncaptured now that every one is archived.
+  assert.doesNotMatch(readme, /UNCAPTURED|uncaptured/);
 });
 
 // A scratch COPY of the namespace in the layout of the repository (so that the pinned input paths resolve), then one alteration, then verify.
@@ -286,9 +415,9 @@ test('TAMPER: a flipped byte of a raw transcript, a truncated transcript, a dele
   json.transcripts.stdout.sha256 = '0'.repeat(64);
   fs.writeFileSync(manifest, JSON.stringify(json));
   const problems = verify(copy);
-  assert.ok(problems.some((problem) => /green-1\.json: stdout gzip hash differs/.test(problem)), 'a flipped byte');
-  assert.ok(problems.some((problem) => /cov-[a-z-]+\.json: stdout (gzip hash differs|is not valid gzip)/.test(problem)), 'a truncated transcript');
-  assert.ok(problems.some((problem) => /browser-1\.json: transcript .* is missing/.test(problem)), 'a deleted transcript');
+  assert.ok(problems.some((problem) => /green-\d+\.json: stdout gzip hash differs/.test(problem)), 'a flipped byte');
+  assert.ok(problems.some((problem) => /cov-[a-z0-9-]+\.json: stdout (gzip hash differs|is not valid gzip)/.test(problem)), 'a truncated transcript');
+  assert.ok(problems.some((problem) => /browser-\d+\.json: transcript .* is missing/.test(problem)), 'a deleted transcript');
   assert.ok(problems.some((problem) => /anchor-1\.json: stdout stream hash differs/.test(problem)), 'a forged manifest hash');
 });
 
@@ -305,22 +434,25 @@ test('TAMPER: one byte of the README, the feature, a production file, a test fil
   assert.ok(verify(bare).includes('evidence/seal.json is missing'));
 });
 
-test('TAMPER: one byte of any evidence file that no manifest pins by itself (mutation, loop, fresh, anchor, snapshot, stub, superseded list) is detected by name, and so is an unsealed new evidence file', (t) => {
+test('TAMPER: one byte of any evidence file that no manifest pins by itself (mutation, hand list, loop, fresh, anchor, snapshots, stub, superseded lists, fix RED recipes) is detected by name, and so is an unsealed new evidence file', (t) => {
   const copy = scratchCopy(t);
-  const names = ['evidence/mutants/mutation-1.json', 'evidence/mutants/equivalents.json', 'evidence/fresh/fresh-lf.json', 'evidence/fresh/fresh-crlf.json', 'evidence/anchor/anchor-1.json',
-    'evidence/red/superseded.json', 'evidence/red/stub/server.cjs', 'evidence/red/snapshot-1/pipeline.test.cjs.snap'];
+  const names = ['evidence/mutants/mutation-1.json', 'evidence/mutants/mutation-2.json', 'evidence/mutants/hand-1.json', 'evidence/mutants/equivalents.json', 'evidence/fresh/fresh-lf.json', 'evidence/fresh/fresh-crlf.json',
+    'evidence/fresh/fresh-lf-2.json', 'evidence/fresh/fresh-crlf-2.json', 'evidence/anchor/anchor-1.json', 'evidence/red/superseded.json', 'evidence/superseded.json', 'evidence/fix-red/recipes.json',
+    'evidence/red/stub/server.cjs', 'evidence/red/snapshot-1/pipeline.test.cjs.snap', 'evidence/superseded/snapshot-2/proc.cjs.snap'];
   for (const name of names) flip(path.join(copy, name), 7);
   fs.writeFileSync(path.join(copy, 'evidence', 'loops', 'loop-1.json'), '{');
+  fs.writeFileSync(path.join(copy, 'evidence', 'loops', 'loop-2.json'), '{');
   fs.writeFileSync(path.join(copy, 'evidence', 'mutants', 'extra.json'), '{}');
   const problems = verify(copy);
-  for (const name of [...names, 'evidence/loops/loop-1.json']) assert.ok(problems.some((problem) => problem.includes(`seal: ${name} differs from its pin`)), name);
+  for (const name of [...names, 'evidence/loops/loop-1.json', 'evidence/loops/loop-2.json']) assert.ok(problems.some((problem) => problem.includes(`seal: ${name} differs from its pin`)), name);
   assert.ok(problems.some((problem) => problem.includes('seal: evidence/mutants/extra.json is not sealed')));
   assert.ok(problems.some((problem) => /loop-1\.json: is not valid JSON/.test(problem)));
+  assert.ok(problems.some((problem) => /loop-2\.json: is not valid JSON/.test(problem)));
 });
 
 test('TAMPER: a pinned input that changed after a capture (a test file, a production file) is detected through the manifests too', (t) => {
   const copy = scratchCopy(t);
-  const manifest = manifestsOf(copy).find(({ file }) => path.basename(file).startsWith('green-'));
+  const manifest = manifestsOf(copy).filter(({ file }) => path.basename(file).startsWith('green-')).sort((left, right) => serial(left) - serial(right)).at(-1);
   assert.ok(manifest && manifest.json.inputs.some((input) => input.path.endsWith('server.cjs')), 'the GREEN capture pins server.cjs');
   flip(path.join(copy, 'server.cjs'), 11);
   const pinned = manifest.json.inputs.find((input) => /tests\\server\.test\.cjs$/.test(input.path));
@@ -340,6 +472,13 @@ test('TAMPER: a flipped byte of a retained snapshot, and a retained manifest tha
   const problems = verify(unlisted);
   assert.ok(problems.some((problem) => /red-1\.json: input .*pipeline\.test\.cjs is missing/.test(problem)), 'an unlisted manifest cannot lean on the snapshots');
   assert.ok(problems.some((problem) => /red-1\.json: input .*C022\.feature differs from its pin/.test(problem)));
+  // The captures of the first publication lean on the second list in the same way.
+  const second = scratchCopy(t);
+  flip(path.join(second, 'evidence', 'superseded', 'snapshot-2', 'proc.cjs.snap'), 9);
+  assert.ok(verify(second).some((problem) => /green-1\.json: input .*proc\.cjs differs from its pin/.test(problem)), 'the first GREEN no longer verifies against an altered snapshot');
+  const forgotten = scratchCopy(t);
+  fs.writeFileSync(path.join(forgotten, 'evidence', 'superseded.json'), JSON.stringify({ schemaVersion: 1, manifests: [], snapshotDir: 'evidence/superseded/snapshot-2' }));
+  assert.ok(verify(forgotten).some((problem) => /green-1\.json: input .*contract\.js differs from its pin/.test(problem)), 'a manifest of the first publication that is not listed cannot lean on the snapshots');
 });
 
 test('a green run and a replay carry the same sha for nothing that is mutable: no manifest pins a file outside this namespace except the declared imports', () => {

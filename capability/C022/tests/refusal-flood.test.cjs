@@ -13,7 +13,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { after, before, test } = require('node:test');
 const { call } = require('./helpers.cjs');
-const { startChild } = require('./proc.cjs');
+const { startChild, childEnv } = require('./proc.cjs');
 
 const ATTACKER = path.join(__dirname, 'flood-attacker.cjs');
 const SOCKETS = 2;
@@ -44,8 +44,7 @@ after(async () => { await Promise.all([real.stop(), naive.stop()]); });
 
 // The attacker tells us when it has offered everything, stays connected, and reports what its sockets saw on request.
 function runAttacker(port, spec) {
-  const env = { ...process.env };
-  delete env.NODE_TEST_CONTEXT;
+  const env = childEnv();
   const child = spawn(process.execPath, [ATTACKER, String(port), JSON.stringify(spec), String(SOCKETS), String(OFFER_BYTES)], { env, stdio: ['ignore', 'inherit', 'inherit', 'ipc'], windowsHide: true });
   const hard = setTimeout(() => child.kill('SIGKILL'), DEADLINE_MS + 20000);
   const message = (type) => new Promise((resolve, reject) => {

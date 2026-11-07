@@ -10,6 +10,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
+const { runInputs } = require('./evidence-verify.cjs');
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((pairs, value, index, all) => (value.startsWith('--') ? [...pairs, [value.slice(2), all[index + 1]]] : pairs), []));
 const root = path.resolve(__dirname, '..');
@@ -25,7 +26,7 @@ function run(file) {
   return new Promise((resolve) => {
     const env = { ...process.env };
     delete env.NODE_TEST_CONTEXT;
-    delete env.NODE_V8_COVERAGE;
+    env.NODE_V8_COVERAGE = '';
     const started = Date.now();
     const child = spawn(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=600000', path.join(root, 'tests', file)], { cwd: path.resolve(root, '..', '..'), env, windowsHide: true });
     low(child);
@@ -42,6 +43,9 @@ function run(file) {
 }
 
 async function main() {
+  // The bytes this loop runs (hashes taken before the first run): evidence.test.cjs compares them with the live files.
+  const inputs = runInputs(root);
+  const startedAt = new Date().toISOString();
   const burners = [];
   for (let index = 0; index < burnerCount; index += 1) {
     const burner = spawn(process.execPath, ['-e', 'for(;;){}'], { stdio: 'ignore', windowsHide: true });
@@ -65,7 +69,7 @@ async function main() {
     const mine = results.filter((result) => result.file === file);
     perFile[file] = { runs: mine.length, passed: mine.filter((result) => result.status === 0 && result.fail === 0 && result.cancelled === 0 && result.tests > 0).length, maxMs: Math.max(...mine.map((result) => result.ms)), overCap: mine.filter((result) => result.ms > CAP_MS).length };
   }
-  const document = { tool: 'tests/loop.cjs', node: process.version, cpus: os.cpus().length, burnerPids, burners: burnerCount, parallel, rounds, capMs: CAP_MS, perFile, runs: results };
+  const document = { tool: 'tests/loop.cjs', node: process.version, cpus: os.cpus().length, burnerPids, burners: burnerCount, parallel, rounds, capMs: CAP_MS, startedAt, finishedAt: new Date().toISOString(), inputs, perFile, runs: results };
   fs.writeFileSync(path.resolve(args.out), `${JSON.stringify(document, null, 1)}\n`, { flag: 'wx' });
   console.log(JSON.stringify(perFile));
 }

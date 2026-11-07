@@ -9,6 +9,7 @@ const { createHash } = require('node:crypto');
 const { spawnSync } = require('node:child_process');
 const { test } = require('node:test');
 const imports = require('../imports.json');
+const { childEnv } = require('./proc.cjs');
 
 const root = path.resolve(__dirname, '..');
 const repo = path.resolve(root, '..', '..');
@@ -36,10 +37,8 @@ test('C022 production code loads exactly the pinned accepted files from other na
     for (const file of ${JSON.stringify(PRODUCTION.filter((name) => name !== 'page.js'))}) require(${JSON.stringify(root + path.sep)} + file);
     const mine = ${JSON.stringify(root + path.sep)};
     const cap = ${JSON.stringify(path.join(repo, 'capability') + path.sep)};
-    console.log(JSON.stringify(Object.keys(require.cache).filter((f) => f.startsWith(cap) && !f.startsWith(mine)).map((f) => f.slice(${repo.length + 1}).replaceAll('\\\\', '/')).sort()));`;
-  const env = { ...process.env };
-  delete env.NODE_TEST_CONTEXT;
-  delete env.NODE_V8_COVERAGE;
+    console.log(JSON.stringify(Object.keys(require.cache).filter((f) => f.startsWith(cap) && !f.startsWith(mine)).map((f) => require('node:path').relative(${JSON.stringify(repo)}, f).replaceAll('\\\\', '/')).sort()));`;
+  const env = childEnv();
   const run = spawnSync(process.execPath, ['-e', script], { cwd: repo, env, encoding: 'utf8', timeout: 60000 });
   assert.equal(run.status, 0, run.stderr);
   const used = imports.dependencies.filter((dep) => dep.path.startsWith('capability/')).map((dep) => dep.path).sort();

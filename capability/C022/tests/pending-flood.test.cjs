@@ -16,6 +16,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { after, before, test } = require('node:test');
 const { call } = require('./helpers.cjs');
+const { childEnv } = require('./proc.cjs');
 
 const CHILD = path.join(__dirname, 'pending-child.cjs');
 const SOCKETS = 3;
@@ -25,8 +26,7 @@ const PENDING_COST_MB = 10;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function startPending({ mode, heapMb }) {
-  const env = { ...process.env, C022_MODE: mode };
-  delete env.NODE_TEST_CONTEXT;
+  const env = childEnv({ C022_MODE: mode });
   const child = spawn(process.execPath, [`--max-old-space-size=${heapMb}`, '--expose-gc', CHILD], { env, stdio: ['ignore', 'inherit', 'inherit', 'ipc'], windowsHide: true });
   const hard = setTimeout(() => child.kill('SIGKILL'), 240000);
   hard.unref();

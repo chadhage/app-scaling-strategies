@@ -29,8 +29,9 @@
     sessionsPerTenant: 8, recordsPerTenant: 32, anonymousSessions: 16, anonymousRecords: 32,
     projectsPerTenant: 12, pageDefault: 5, pageMax: 10, auditPerUser: 200, anonymousAudit: 50,
     // Wire bounds of the imported C009 path: idle socket, open sockets, requests running or queued per socket, header and request
-    // timeouts and how often Node checks them.
-    idleMs: 5000, connections: 256, pipelined: 4, headerMs: 5000, checkMs: 1000
+    // timeouts and how often Node checks them. idleMs stays ABOVE headerMs + checkMs: a stalled request is answered by the request timeout with
+    // the typed 408 before the idle timeout can cut its socket without a word (tests default-timeouts and contract-pins).
+    idleMs: 8000, connections: 256, pipelined: 4, headerMs: 5000, checkMs: 1000
   };
   const ALL = ROLES.slice();
   const OPS = {

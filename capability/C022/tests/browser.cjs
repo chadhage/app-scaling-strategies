@@ -111,6 +111,11 @@ async function main() {
     assert.ok(consoleErrors.length > 0, 'the refused probes were logged by the browser');
     assert.ok(requests.every((line) => line.startsWith('GET ') && line.includes(ctx.origin)), 'only same-origin GET requests');
     assert.ok(requests.filter((line) => line.includes('/v1/')).length >= 20);
+    // The page keeps nothing in the browser: no cookie (the context also sees the HttpOnly ones) and no local or session storage entry.
+    const kept = await page.evaluate(() => ({ cookie: document.cookie, local: localStorage.length, session: sessionStorage.length }));
+    assert.deepEqual(kept, { cookie: '', local: 0, session: 0 }, 'nothing is stored by the page');
+    assert.deepEqual(await page.context().cookies(), [], 'the browser context holds no cookie');
+    checked('no cookie and no storage entry after the whole run', { ...kept, contextCookies: 0 });
     checked('no page error, no CSP violation, same-origin GET requests only', { requests: requests.length, refusedProbesLoggedByTheBrowser: consoleErrors.length });
   } finally {
     try { if (session) await session.close(); } finally { await ctx.close(); }

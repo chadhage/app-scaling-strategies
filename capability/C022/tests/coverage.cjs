@@ -22,6 +22,17 @@ const tests = fs.readdirSync(__dirname).filter((name) => name.endsWith('.test.cj
 const environment = { ...process.env };
 for (const key of ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE', 'CAPTURE_BROWSER_EVIDENCE', 'C022_SUBJECT_DIR']) delete environment[key];
 
+// A killed test child used to leave a truncated V8 coverage file and the report then failed as a whole ("Could not report code coverage ...
+// Unexpected end of JSON input"), with no row. Children no longer inherit NODE_V8_COVERAGE (proc.cjs childEnv), and a run whose report could not
+// be written is run ONCE more; a real failure (a floor missed, an unloaded file, a failing test) is never retried and never hidden.
+const COVERAGE_WARNING = /Could not report code coverage/;
+const retryable = (result) => !result.loaded && result.warning;
+async function withRetry(run, file) {
+  const first = await run(file);
+  if (!retryable(first)) return first;
+  return { ...(await run(file)), retried: { reason: 'the coverage report could not be written', failures: first.failures } };
+}
+
 function measure(file) {
   const args = ['--test', '--test-concurrency=1', '--test-timeout=600000', '--experimental-test-coverage', `--test-coverage-include=**/C022/${file}`,
     '--test-coverage-lines=85', '--test-coverage-branches=85', '--test-coverage-functions=85', ...tests];
@@ -38,16 +49,16 @@ function measure(file) {
       const failures = row ? [] : ['UNLOADED_COUNTS_AS_ZERO'];
       for (const metric of Object.keys(FLOOR)) if (values[metric] < FLOOR[metric]) failures.push(`${metric} ${values[metric]} < ${FLOOR[metric]}`);
       if (status !== 0) failures.push(`nested runner exit ${status}`);
-      resolve({ file, loaded: Boolean(row), ...values, nestedExit: status, failedTests: [...out.matchAll(/^not ok \d+ - (.+)$/gm)].map((match) => match[1].trim()), failures });
+      resolve({ file, loaded: Boolean(row), ...values, nestedExit: status, warning: COVERAGE_WARNING.test(out), failedTests: [...out.matchAll(/^not ok \d+ - (.+)$/gm)].map((match) => match[1].trim()), failures });
     });
   });
 }
 
-(async () => {
+async function main() {
   const results = [];
   const queue = [...PRODUCTION];
   await Promise.all(Array.from({ length: PARALLEL }, async () => {
-    while (queue.length) results.push(await measure(queue.shift()));
+    while (queue.length) results.push(await withRetry(measure, queue.shift()));
   }));
   results.sort((left, right) => left.file.localeCompare(right.file));
   const passed = unenumerated.length === 0 && missing.length === 0 && results.every((item) => item.failures.length === 0);
@@ -58,4 +69,7 @@ function measure(file) {
   } else {
     console.log(`C022 coverage GREEN: ${PRODUCTION.length}/${PRODUCTION.length} production files at or above 85/85/85 each: ${PRODUCTION.join(', ')}.`);
   }
-})();
+}
+
+if (require.main === module) main();
+module.exports = Object.freeze({ retryable, withRetry });

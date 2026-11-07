@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "name": "fix-red-m1",
+  "purpose": "M1 RED: the dual-tenant tests against the reviewer's mutant of identity.cjs revokeUser (for (const record of sessions.values())), a scratch tree built from evidence/fix-red/recipes.json outside the repository; they fail with assertion errors about revoked counts and the other tenant's live session.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "--test-timeout=60000",
+    "capability\\C022\\tests\\dual-tenant.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C022_SUBJECT_DIR"
+  ],
+  "startedAtUtc": "2026-11-07T00:46:40.370Z",
+  "completedAtUtc": "2026-11-07T00:46:48.646Z",
+  "elapsedMs": 8276,
+  "timeoutMs": 600000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C022\\tests\\dual-tenant.test.cjs",
+      "bytes": 23384,
+      "rawSha256": "bf9cecd27a98ffe38c3bc8455cea9b334f6b2d0c85ba1a735240ab7c7b62168a",
+      "crlfToLfSha256": "1ef918c91ee5b9b07f3df844a76efa23dc253796d70e4a8016189255e2300896"
+    },
+    {
+      "path": "capability\\C022\\tests\\helpers.cjs",
+      "bytes": 5874,
+      "rawSha256": "8b5dc378935b71fed94a3e79f880a34a8e2c1f9033f5386af037a91fdf0f9665",
+      "crlfToLfSha256": "f7894f0813265dac1591ae3b4a52da43a194b4e1b06bc6d2c7e7a5e682c4bbcf"
+    },
+    {
+      "path": "capability\\C022\\tests\\raw.cjs",
+      "bytes": 5097,
+      "rawSha256": "b45a5f36406dbdf03f9c91d99014e51e84fb15111b3cafd645cd038b5b5fb4c5",
+      "crlfToLfSha256": "e9cb70ae36c71aa60589fbe6bdd92a25f97c950f05d5a216e3fb2d40e5ee16e5"
+    },
+    {
+      "path": "capability\\C022\\evidence\\fix-red\\recipes.json",
+      "bytes": 1338,
+      "rawSha256": "d1e6afa52c883c9df17498b528bbc399541030b2037ff5d44948cad8a8bedd33",
+      "crlfToLfSha256": "28b4dcc7e57937264804b2d905a961fc3847dcb1444a41c4c21b627e7d91c9ba"
+    },
+    {
+      "path": "capability\\C022\\server.cjs",
+      "bytes": 13816,
+      "rawSha256": "024f0bd191dd4902ef580e830fae5cd0eab4bba453017adf23680287dff2db9c",
+      "crlfToLfSha256": "ce1c37d9aa95d2790d0c665a723d5a69a33a1e36066cadfed532da05e62609e5"
+    },
+    {
+      "path": "capability\\C022\\service.cjs",
+      "bytes": 7168,
+      "rawSha256": "a1ab3caa427b3b9e1eb7d7a4b8e486cf3650c36bd7e537559cb9aea8ce138791",
+      "crlfToLfSha256": "b7cf79b47e51093ec2b77ceb95de42de02c9026d4dfe2b46a2119b610c2e57c0"
+    },
+    {
+      "path": "capability\\C022\\identity.cjs",
+      "bytes": 9430,
+      "rawSha256": "7f1421fa31531cc3097a49b8d76a910e01a085c1166f340af095ad1888588d49",
+      "crlfToLfSha256": "3d97645d03ca5703f7d202deec0931a6eb83f31b227d37253f6d778e97c644a9"
+    },
+    {
+      "path": "capability\\C022\\store.cjs",
+      "bytes": 5522,
+      "rawSha256": "65826687d197d8f0417bf9e354a30289d1b7ecd560be7b8d8e05879c27ecc6a8",
+      "crlfToLfSha256": "9d068dce3114740c491825cbdd39743d61acc030847d021bc5a754dcbab0c31c"
+    },
+    {
+      "path": "capability\\C022\\contract.js",
+      "bytes": 10244,
+      "rawSha256": "ce775547d0689d220c641f740f58fcf6842ac6b8cb7508af2b6e1c3f404a9b62",
+      "crlfToLfSha256": "25236aee150f76150ce89fc8dd2e303390c34993689c33cf8e4070da6c190412"
+    }
+  ],
+  "summary": {
+    "tests": 21,
+    "suites": 0,
+    "pass": 16,
+    "fail": 5,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "identity: revoking dana in one tenant ends her sessions of that tenant only, in both directions, and an empty revoke ends nothing anywhere",
+      "service: a revoke by user names the verified admin's own tenant, whatever user name the body carries (both directions, effect and answer)",
+      "HTTP: the alder admin revokes \"dana\": her alder session ends, her birch session answers, and birch's own session list still says active",
+      "HTTP (mirror): the birch admin revokes \"dana\": her birch session ends, her alder session answers and alder's own list still says active",
+      "HTTP: dana with two sessions in alder and one in birch: the alder revoke ends exactly two, a repeated revoke ends none, the birch session never changes"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\fix-red-m1.stdout.raw.gz",
+      "bytes": 10551,
+      "sha256": "4e556582297b7d16877d66746d5ac290850e2fe912516c1709d3387a99747198",
+      "gzipBytes": 2047,
+      "gzipSha256": "e58b28c8d21b5bc314f2b2951f8aff9b5d31890725127cf89f2849ef9b69bc64",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\fix-red-m1.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+ "schemaVersion": 1,
+ "note": "The two mutants of the fix RED (evidence/fix-red). Each is the shipped file with ONE text replaced (shipped -> mutated), built in a private tree outside the repository with the pinned imports; evidence.test.cjs recomputes that the shipped text occurs once and that the replacement gives the recorded LF SHA-256. M1 is the surviving mutant of the independent review of the first publication; m1 puts back the old idle limit of the same review.",
+ "mutants": [
+  {
+   "id": "M1",
+   "file": "identity.cjs",
+   "shipped": "for (const record of live(tenant)) {",
+   "mutated": "for (const record of sessions.values()) {",
+   "mutantLfSha256": "1bd843db806f26a561e9c007daca2632205c14ca979917f0d0b33c35493d8340",
+   "capture": "fix-red-m1",
+   "minFailures": 5,
+   "effect": "revokeUser(tenant, user) ends the sessions of that user name in EVERY tenant (an alder admin ended dana's birch session)"
+  },
+  {
+   "id": "m1",
+   "file": "contract.js",
+   "shipped": "idleMs: 8000",
+   "mutated": "idleMs: 5000",
+   "mutantLfSha256": "8f1433796f342830078fa2957b38bb491f2e8b38c3fb57be90b6707b386d9d42",
+   "capture": "fix-red-m1-minor",
+   "minFailures": 7,
+   "effect": "the socket idle timeout equals headerMs again: a stalled request is cut at about 5.1 s without the typed 408"
+  }
+ ]
+}
