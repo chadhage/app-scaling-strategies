@@ -108,7 +108,7 @@ test('the figures the README states about the second fix equal the stored eviden
   assert.ok(lanes.fail >= 1 && lanes.fail + lanes.pass === lanes.tests, 'the lane tests fail on the naive subject');
   assert.ok(readme.includes(`${lanes.fail} of ${lanes.tests} lane tests fail`), 'the README states the lane RED');
   const { mutants } = require('./mutant-list.cjs');
-  assert.equal(mutants.length, 37, 'the catalogue of the third fix: the 31 named mutants of the second fix and six more');
+  assert.equal(mutants.length, 41, 'the catalogue of the fourth fix: the 31 named mutants of the second fix, six of the third and four more (S25 to S28)');
   assert.ok(readme.includes('31 named mutants'));
   const archived = path.join(evidence, 'mutants-03.json');
   if (fs.existsSync(archived)) {
@@ -124,7 +124,6 @@ test('the systematic mutation run of the second fix is archived for the server.c
   const G = require('./mutate-gen.cjs');
   const base = path.join(evidence, 'mutants-gen-03.json');
   const again = path.join(evidence, 'mutants-gen-03-rerun.json');
-  if (!fs.existsSync(path.join(evidence, 'pins.json')) && !fs.existsSync(base)) return;
   const readme = fs.readFileSync(path.join(s.root, 'README.md'), 'utf8');
   const server = fs.readFileSync(path.join(evidence, 'red', 'prefix-8832dac5', 'server.snapshot.cjs'));
   const run = JSON.parse(fs.readFileSync(base, 'utf8'));
@@ -134,8 +133,7 @@ test('the systematic mutation run of the second fix is archived for the server.c
   assert.equal(run.killed + run.survived.length, run.ran);
   assert.ok(run.results.every((result) => result.invalid || result.killed === false || result.failingTests.length >= 1 || /hang/.test(result.killedBy)), 'every kill names a failing test');
   assert.ok(readme.includes(`the base run killed ${run.killed} of ${run.ran} generated mutants`), 'the README states the base run');
-  // The re-run of the survivors is part of the END state (evidence\pins.json written); while the captures are being recorded it may still be running.
-  if (!fs.existsSync(again) && !fs.existsSync(path.join(evidence, 'pins.json'))) return;
+  // The re-run of the survivors is a retained capture of the second fix: it always exists now (a missing file fails this test, it never skips it silently).
   const second = JSON.parse(fs.readFileSync(again, 'utf8'));
   assert.deepEqual(second.results.map((result) => result.id).sort(), run.survived.map((entry) => entry.id).sort(), 'the re-run covers exactly the survivors of the base run');
   assert.equal(second.ran, run.survived.length);
@@ -198,7 +196,6 @@ test('only the archive that pinned the old bytes is served them by the replay to
 test('the flake loops are archived with zero failures and the README states their real sizes (F22, checklist line 12)', () => {
   const dir = path.join(evidence, 'loops-03');
   const plan = { chunked: [64, 4], 'chunked-process': [64, 4], resources: [64, 4], drain: [64, 4], pipelining: [16, 4], 'two-servers': [16, 4], 'refusal-shapes': [16, 4], child: [16, 4] };
-  if (!fs.existsSync(path.join(evidence, 'pins.json')) && !fs.existsSync(dir)) return;
   const readme = fs.readFileSync(path.join(s.root, 'README.md'), 'utf8');
   for (const [name, [runs, parallel]] of Object.entries(plan)) {
     const loop = JSON.parse(fs.readFileSync(path.join(dir, `${name}.json`), 'utf8'));

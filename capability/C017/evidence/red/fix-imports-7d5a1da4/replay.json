@@ -1,0 +1,14 @@
+{
+  "schema": "C017-fix-red/1",
+  "group": "imports",
+  "baseline": "final",
+  "purpose": "F34 of the fifth independent review: tests/browser.cjs and tests/browser-journal.cjs import U018 testing/browser/qualify/qualify.cjs, which imports.json did not pin (it pinned only isolated.cjs). imports.test.cjs now scans tests/*.cjs and tests/fixtures/*.cjs for every import that leaves the namespace and requires each to be pinned, checks the pins of the qualify helper, and compares the files qualify.cjs really loads with the pinned ones. It runs against the PUBLISHED imports.json of the third fix (evidence/red/prefix-35b21507): the three new tests must fail by assertion.",
+  "tests": [
+    "capability/C017/tests/imports.test.cjs"
+  ],
+  "overlay": {
+    "capability/C017/imports.json": "capability/C017/evidence/red/prefix-35b21507/imports.snapshot.json"
+  },
+  "nodeOptions": "--require=./capability/C017/tests/fixtures/overlay-preload.cjs",
+  "testTimeoutMs": 400000
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "C017-fix-red/1",
+  "group": "gencontinue",
+  "baseline": "final",
+  "purpose": "F28 of the fifth independent review: the systematic generator stopped at the FIRST test file that was cut, so a mutant that leaves a listener open (G083: closeOwned never closes the server, the process of server-guards.test.cjs never ends) stayed UNDECIDED although two-servers.test.cjs kills it by name, and the END state of the third fix could never be complete. mutate-gen-continue.test.cjs drives decide() with a FAKE runner: a cut file decides nothing and the next file is tried, UNDECIDED only when nothing killed the mutant, and the runs use --test-force-exit. It runs against the published generator plus only the seam with the OLD stop-at-the-first-cut logic (evidence/red/prefix-naive-generator): the continue rows and the force-exit row must fail.",
+  "tests": [
+    "capability/C017/tests/mutate-gen-continue.test.cjs"
+  ],
+  "overlay": {
+    "capability/C017/tests/mutate-gen.cjs": "capability/C017/evidence/red/prefix-naive-generator/mutate-gen.snapshot.cjs"
+  },
+  "nodeOptions": "--require=./capability/C017/tests/fixtures/overlay-preload.cjs",
+  "testTimeoutMs": 400000
+}

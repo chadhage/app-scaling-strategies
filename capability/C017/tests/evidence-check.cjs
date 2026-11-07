@@ -16,17 +16,23 @@ const repo = path.resolve(root, '..', '..');
 const sha = (buffer) => createHash('sha256').update(buffer).digest('hex');
 const here = (rel) => path.join(repo, rel.replaceAll('\\', '/'));
 
-// The captures of the FIRST fix pin the live files of the day they were made; the second and third fixes changed some of them, so those pins are
-// recomputed against the manifest of the commit they were made at (tests\tree-manifest.cjs, anchored to git) instead of against today's files:
-// tree-8e7046e9.json for the first fix, tree-8832dac5.json for everything committed by the second fix (its REDs, green-03, coverage-03).
+// The captures of the earlier fixes pin the live files of the day they were made; the later fixes changed some of them, so those pins are recomputed
+// against the manifest of the commit they were made at (tests\tree-manifest.cjs, anchored to git) instead of against today's files:
+// tree-8e7046e9.json for the first fix, tree-8832dac5.json for everything committed by the second fix (its REDs, green-03, coverage-03) and
+// tree-35b21507.json for everything committed by the third fix (its REDs, green-04, verify-green-04, coverage-04, the loops, the mutation runs and the
+// browser observations of the -04 generation).
 const treeFile = path.join(root, 'evidence', 'tree-8e7046e9.json');
 const tree2File = path.join(root, 'evidence', 'tree-8832dac5.json');
+const tree3File = path.join(root, 'evidence', 'tree-35b21507.json');
 const treePin = (file = treeFile) => {
   const tree = JSON.parse(fs.readFileSync(file, 'utf8'));
   return (rel) => { const hit = tree.files[rel.replaceAll('\\', '/')]; return hit ? hit.sha256 : null; };
 };
-// A directory committed at the second fix is verified against its tree; one created in the third fix cycle against the live files.
-const committedAtSecondFix = (rel) => fs.existsSync(tree2File) && Object.hasOwn(JSON.parse(fs.readFileSync(tree2File, 'utf8')).files, rel.replaceAll('\\', '/'));
+// A directory committed at the second fix is verified against its tree, one committed at the third fix against the tree of that commit; one created in
+// the fourth fix cycle against the live files.
+const inTree = (file, rel) => fs.existsSync(file) && Object.hasOwn(JSON.parse(fs.readFileSync(file, 'utf8')).files, rel.replaceAll('\\', '/'));
+const committedAtSecondFix = (rel) => inTree(tree2File, rel);
+const committedAtThirdFix = (rel) => inTree(tree3File, rel) && !inTree(tree2File, rel);
 
 // The two legacy tests of the first fix (absolute time bounds) were rewritten structurally in the second fix (F22). A RED archive that pinned their
 // OLD bytes is satisfied by the retained copy in evidence\red\prefix-legacy-8e7046e9 (itself pinned by verifyPrefix) exactly as a pin on the live file.
@@ -160,16 +166,20 @@ function verifyPins(evidence = path.join(root, 'evidence')) {
   return { ok: problems.length === 0, problems };
 }
 
-// The captures of each earlier fix pin the files of the day they were made (tree pins against the commit's tree), those of the third fix the live files;
+// The captures of each earlier fix pin the files of the day they were made (tree pins against the commit's tree), those of the fourth fix the live files;
 // each coverage directory holds one manifest per production file.
-const CAPTURES = [['green-02', ['green'], 'tree'], ['verify-green-02', ['verify-green'], 'tree'], ['green-03', ['green'], 'tree2'], ['green-04', ['green'], 'live'], ['verify-green-04', ['verify-green'], 'live']];
-const COVERAGE = [['coverage-02', 'tree'], ['coverage-03', 'tree2'], ['coverage-04', 'live']];
-const pinFor = (mode) => (mode === 'tree' ? treePin() : (mode === 'tree2' ? treePin(tree2File) : undefined));
-const verifyRedAuto = (dir) => verifyRed(dir, committedAtSecondFix(`capability/C017/evidence/red/${path.basename(dir)}/red.json`) ? { pin: treePin(tree2File) } : {});
+const CAPTURES = [['green-02', ['green'], 'tree'], ['verify-green-02', ['verify-green'], 'tree'], ['green-03', ['green'], 'tree2'], ['green-04', ['green'], 'tree3'], ['verify-green-04', ['verify-green'], 'tree3'], ['green-05', ['green'], 'live'], ['verify-green-05', ['verify-green'], 'live']];
+const COVERAGE = [['coverage-02', 'tree'], ['coverage-03', 'tree2'], ['coverage-04', 'tree3'], ['coverage-05', 'live']];
+const pinFor = (mode) => (mode === 'tree' ? treePin() : (mode === 'tree2' ? treePin(tree2File) : (mode === 'tree3' ? treePin(tree3File) : undefined)));
+const verifyRedAuto = (dir) => {
+  const rel = `capability/C017/evidence/red/${path.basename(dir)}/red.json`;
+  if (committedAtSecondFix(rel)) return verifyRed(dir, { pin: treePin(tree2File) });
+  return verifyRed(dir, committedAtThirdFix(rel) ? { pin: treePin(tree3File) } : {});
+};
 
-// Result files of the third fix cycle (loops-04, mutants-04, mutants-gen-04, browser-observation-04, browser-journal-04) carry the SHA-256 of every
-// non-evidence file of the namespace they were produced from (inputPins), so that a one-byte edit of a production file, a test or a tool after the run
-// is named, exactly as for the recorder's manifests (F27 of the third independent review).
+// Result files of the third and fourth fix cycles (loops-04/05, mutants-04/05, mutants-gen-04/05, browser-observation-04/05, browser-journal-04/05) carry the
+// SHA-256 of every non-evidence file of the namespace they were produced from (inputPins), so that a one-byte edit of a production file, a test or a tool after
+// the run is named, exactly as for the recorder's manifests (F27 of the third independent review).
 const INPUT_EXCLUDED = new Set(['evidence', 'test-scratch', 'state']);
 function inputPins() {
   const list = [];
@@ -215,7 +225,7 @@ function resultFiles(evidence = path.join(root, 'evidence')) {
   return out.sort();
 }
 
-// complete: the END state (every capture of the third fix present). While a capture is still being recorded its directory exists without its
+// complete: the END state (every capture of the fourth fix present). While a capture is still being recorded its directory exists without its
 // manifest, and the suite that is being recorded verifies the evidence too, so an unfinished capture is skipped unless `complete` is asked for.
 function verifyAll({ complete = false } = {}) {
   const red = path.join(root, 'evidence', 'red');
@@ -237,12 +247,14 @@ function verifyAll({ complete = false } = {}) {
     const dir = path.join(root, 'evidence', dirName);
     if (fs.existsSync(dir)) out[dirName] = Object.fromEntries(fs.readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => [f, verifyCoverage(dir, f, { pin: pinFor(mode) })]));
   }
-  out.results = Object.fromEntries(resultFiles().map((name) => [name, verifyResultInputs(path.join(root, 'evidence', name))]));
+  // Results of the third fix generation (-04) pin the files of commit 35b21507 and are recomputed against its tree; those of the fourth fix (-05) the live files.
+  out.results = Object.fromEntries(resultFiles().map((name) => [name, verifyResultInputs(path.join(root, 'evidence', name), { pin: /-04[./]/.test(name) ? treePin(tree3File) : undefined })]));
   if (complete) {
-    const missing = [...['contract.js', 'reconcile.cjs', 'journal.cjs', 'engine.cjs', 'server.cjs', 'cli.cjs', 'page.js'].map((file) => `coverage-04/coverage-${file}.json`),
-      'green-04/green.json', 'verify-green-04/verify-green.json', 'mutants-04.json', 'mutants-gen-04.json', 'browser-observation-04.json', 'browser-journal-04.json', 'pins.json',
-      ...['chunked', 'chunked-process', 'resources', 'drain', 'pipelining', 'two-servers', 'refusal-shapes', 'child', 'pending-flood-process'].map((name) => `loops-04/${name}.json`)].filter((name) => !fs.existsSync(path.join(root, 'evidence', name)));
-    out.complete = { complete: { problems: missing.map((name) => `${name}: a capture of the third fix is missing`) } };
+    const LOOPS = ['chunked', 'chunked-process', 'resources', 'drain', 'pipelining', 'two-servers', 'refusal-shapes', 'child', 'pending-flood-process', 'pending-flood', 'limits', 'child-lifecycle'];
+    const missing = [...['contract.js', 'reconcile.cjs', 'journal.cjs', 'engine.cjs', 'server.cjs', 'cli.cjs', 'page.js'].map((file) => `coverage-05/coverage-${file}.json`),
+      'green-05/green.json', 'verify-green-05/verify-green.json', 'mutants-05.json', 'mutants-gen-05.json', 'browser-observation-05.json', 'browser-journal-05.json', 'pins.json',
+      ...LOOPS.map((name) => `loops-05/${name}.json`)].filter((name) => !fs.existsSync(path.join(root, 'evidence', name)));
+    out.complete = { complete: { problems: missing.map((name) => `${name}: a capture of the fourth fix is missing`) } };
   }
   if (fs.existsSync(path.join(root, 'evidence', 'pins.json'))) out.pins = { pins: verifyPins() };
   return out;
@@ -254,11 +266,11 @@ if (require.main === module) {
     process.exit(0);
   }
   const everything = verifyAll({ complete: process.argv[2] === 'complete' });
-  const keys = ['green-02', 'verify-green-02', 'green-03', 'green-04', 'verify-green-04', 'coverage-02', 'coverage-03', 'coverage-04', 'results', 'prefixes', 'pins', 'complete'];
+  const keys = ['green-02', 'verify-green-02', 'green-03', 'green-04', 'verify-green-04', 'green-05', 'verify-green-05', 'coverage-02', 'coverage-03', 'coverage-04', 'coverage-05', 'results', 'prefixes', 'pins', 'complete'];
   const flat = [everything.prefix, ...Object.values(everything.red), ...keys.flatMap((key) => Object.values(everything[key] || {}))];
   const problems = flat.flatMap((entry) => entry.problems);
   console.log(JSON.stringify({ checked: flat.length, red: Object.keys(everything.red), problems }, null, 2));
   process.exit(problems.length ? 1 : 0);
 }
 
-module.exports = Object.freeze({ verifyManifest, verifyRed, verifyRedAuto, verifyPrefix, verifyCoverage, verifyPins, writePins, verifyAll, verifyResultInputs, inputPins, resultFiles, treePin, tree2File, pinnedFiles, retainedMatches, sha });
+module.exports = Object.freeze({ verifyManifest, verifyRed, verifyRedAuto, verifyPrefix, verifyCoverage, verifyPins, writePins, verifyAll, verifyResultInputs, inputPins, resultFiles, treePin, tree2File, tree3File, pinnedFiles, retainedMatches, sha });

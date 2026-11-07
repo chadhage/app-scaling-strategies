@@ -17,9 +17,13 @@ const T = require('./tree-manifest.cjs');
 const evidence = path.join(s.root, 'evidence');
 const redRoot = path.join(evidence, 'red');
 const repo = path.resolve(s.root, '..', '..');
-const ended = () => fs.existsSync(path.join(evidence, 'pins.json'));
+// C017_END_STATE=run forces the END-state assertions before pins.json exists: the capture of green-05 must run before pins.json pins it (see
+// evidence-fourth-fix.test.cjs), and it runs the whole suite with this switch so that no test is skipped in the archived GREEN.
+const forced = process.env.C017_END_STATE === 'run';
+const ended = () => forced || fs.existsSync(path.join(evidence, 'pins.json'));
 const readme = () => fs.readFileSync(path.join(s.root, 'README.md'), 'utf8');
 const tree2 = JSON.parse(fs.readFileSync(path.join(evidence, 'tree-8832dac5.json'), 'utf8'));
+const tree3 = JSON.parse(fs.readFileSync(path.join(evidence, 'tree-35b21507.json'), 'utf8'));
 // verifyAll hashes every capture of the namespace and unzips every transcript: once per test file is enough (nothing is edited while it runs).
 let memo = null;
 const everything = () => { memo = memo || E.verifyAll(); return memo; };
@@ -120,12 +124,10 @@ test('a loop, mutation or browser result of the third fix without its input pins
   }
 });
 
-test('every result of the third fix that exists pins the bytes it was produced from, and evidence-check names each missing capture of the END state', () => {
+test('every result of the third fix that exists pins the bytes it was produced from (the retained -04 results against the tree of the commit they were made at)', () => {
   const all = everything();
   assert.deepEqual(Object.values(all.results).flatMap((entry) => entry.problems), []);
-  const missing = E.verifyAll({ complete: true }).complete.complete.problems;
-  if (ended()) assert.deepEqual(missing, [], 'the END state is complete');
-  else assert.ok(missing.some((problem) => /pins\.json: a capture of the third fix is missing/.test(problem)), 'an incomplete state is named');
+  assert.ok(Object.keys(all.results).some((name) => /-04(\.json)?$/.test(name)), 'the retained results of the third fix are verified');
 });
 
 test('the figures the README states about the three new REDs equal the stored evidence and the unproven stall claim is gone (claims are tests, F26)', () => {
@@ -144,8 +146,12 @@ test('the figures the README states about the three new REDs equal the stored ev
   assert.match(server, /const MAX_DROPPED = 8;/, 'the README states the constant of the code');
 });
 
-test('the loops, the mutation runs and the coverage of the third fix are archived and the README states their real figures (END state)', () => {
-  if (!ended()) return;
+// F28 of the fourth review: this test used to `return` while evidence\pins.json was missing, which the runner printed as a plain ok (1 ms, `# skipped 0`)
+// and which counted a test that asserted nothing (L-0220). It is now an EXPLICIT skip with its reason (TAP `# SKIP <reason>`, `# skipped 1`), and
+// end-state-skip.test.cjs proves that it can never pass silently. It asserts the RETAINED captures of the third fix as they really are: the generator
+// run of that fix has exactly one UNDECIDED mutant (G083), which that fix killed by hand (evidence\by-hand-04); the fourth fix re-ran the generator.
+const SKIP_UNENDED = 'evidence\\pins.json is not written: the END state (loops, mutation runs, coverage figures) is NOT asserted by this test in this state';
+test('the retained loops, mutation runs and coverage of the third fix are archived, the README states their real figures and the one undecided mutant is the disclosed one (END state of the third fix)', { skip: ended() ? false : SKIP_UNENDED }, () => {
   const text = readme();
   const dir = path.join(evidence, 'loops-04');
   const plan = { chunked: [64, 4], 'chunked-process': [64, 4], resources: [64, 4], drain: [64, 4], 'pending-flood-process': [64, 4], pipelining: [16, 4], 'two-servers': [16, 4], 'refusal-shapes': [16, 4], child: [16, 4], 'pending-flood': [16, 4], limits: [16, 4], 'child-lifecycle': [16, 4] };
@@ -154,17 +160,17 @@ test('the loops, the mutation runs and the coverage of the third fix are archive
     assert.deepEqual([loop.file, loop.runs, loop.parallel, loop.failures, loop.failing], [`${name}.test.cjs`, runs, parallel, 0, []], name);
     assert.ok(text.includes(`${name}.test.cjs ${runs} x ${parallel} (third fix)`), `the README states the loop of ${name}`);
   }
-  const { mutants } = require('./mutant-list.cjs');
   const named = JSON.parse(fs.readFileSync(path.join(evidence, 'mutants-04.json'), 'utf8'));
-  assert.deepEqual([named.mutants, named.killed, named.undecided, named.survived], [mutants.length, mutants.length, [], []]);
+  assert.deepEqual([named.mutants, named.killed, named.undecided, named.survived], [37, 37, [], []], 'the retained named run has the 37 named mutants of the third fix, all killed');
   assert.ok(named.results.every((result) => result.failingTests.length >= 1));
-  assert.ok(text.includes(`${mutants.length} named mutants`));
-  const G = require('./mutate-gen.cjs');
+  assert.ok(text.includes('37 named mutants'));
   const run = JSON.parse(fs.readFileSync(path.join(evidence, 'mutants-gen-04.json'), 'utf8'));
-  const server = fs.readFileSync(path.join(s.root, 'server.cjs'));
-  assert.equal(run.generated, G.generate(server.toString('utf8').replace(/\r\n/g, '\n')).length, 'the third-fix run generated every mutant of the final server.cjs');
-  assert.equal(run.baseSha256, E.sha(server));
-  assert.deepEqual(run.undecided, [], 'no mutant was left undecided by a cut run');
+  assert.equal(run.baseSha256, tree3.files['capability/C017/server.cjs'].sha256, 'the third-fix run mutated the server.cjs that fix published (tree of commit 35b21507)');
+  assert.equal(run.generated, 115);
+  assert.deepEqual(run.undecided, ['G083-cond-false-L194'], 'the retained run has exactly the one undecided mutant it disclosed');
+  const byHand = JSON.parse(fs.readFileSync(path.join(evidence, 'by-hand-04', 'results.json'), 'utf8'));
+  assert.ok(byHand.g083.results.length >= 2);
+  for (const result of byHand.g083.results) assert.ok(result.failing.length >= 1 && result.summary.fail >= 1, `${result.file} killed G083 by name when it was run by hand`);
   assert.ok(text.includes(`the third-fix base run killed ${run.killed} of ${run.ran} generated mutants`));
   for (const entry of run.survived) assert.ok(text.includes(entry.id), `${entry.id} survived the third-fix run and must be classified in the README`);
   const coverage = everything()['coverage-04'];

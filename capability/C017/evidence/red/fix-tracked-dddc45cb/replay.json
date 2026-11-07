@@ -1,0 +1,14 @@
+{
+  "schema": "C017-fix-red/1",
+  "group": "tracked",
+  "baseline": "final",
+  "purpose": "F30 of the fifth independent review (G110, G109, G111, G114 of the systematic generator): the line that removes a closed socket from the set closeOwned() tracks was observable by no test; a mutant without it leaked one socket object per connection (about 2.1 KB, linear). tracked.test.cjs counts the set through the read-only accessor openSockets(server): idle connections while open, 160 short connections at concurrency 8, closeAllConnections called once and the tracked set alone destroying every socket. It runs against the published server.cjs plus the accessor and WITHOUT that line (evidence/red/prefix-naive-churn), exactly the reviewer mutant, so this RED is a mutant: the tests that count the set after the connections closed must fail.",
+  "tests": [
+    "capability/C017/tests/tracked.test.cjs"
+  ],
+  "overlay": {
+    "capability/C017/server.cjs": "capability/C017/evidence/red/prefix-naive-churn/server.snapshot.cjs"
+  },
+  "nodeOptions": "--require=./capability/C017/tests/fixtures/overlay-preload.cjs",
+  "testTimeoutMs": 400000
+}

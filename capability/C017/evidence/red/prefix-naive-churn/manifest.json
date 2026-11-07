@@ -1,0 +1,33 @@
+{
+  "schema": "C017-prefix/1",
+  "commit": null,
+  "tag": null,
+  "note": "A NAIVE SUBJECT, not a published file: the published server.cjs of the third fix (commit 35b21507, derivedFrom) with the read-only openSockets accessor of the fourth fix added and WITHOUT the line that removes a closed socket from the tracked set (G110 of the systematic generator, a mutant that leaked one socket object per connection: F30 of the fifth review). The code has the line, so this RED is a mutant: tracked.test.cjs must fail on the tests that count the tracked set after the connections closed.",
+  "derivedFrom": {
+    "file": "capability/C017/server.cjs",
+    "commit": "35b21507c1039337cd93d7bda26428230cecc5ef",
+    "sha256": "3ec292c6a2f34a6f384879eb3dd2f8a5faa2f6f9cff354e9a708a3f9b59653d3",
+    "replacements": [
+      {
+        "find": "module.exports = Object.freeze({ MAX_BODY, MAX_JOURNAL_VIEW, scope, createLocalServer, listen, closeOwned, drain });",
+        "replace": "module.exports = Object.freeze({ MAX_BODY, MAX_JOURNAL_VIEW, scope, createLocalServer, listen, closeOwned, openSockets, drain });"
+      },
+      {
+        "find": "async function closeOwned(server) {",
+        "replace": "// Read-only: how many accepted sockets the server still tracks for shutdown. A socket leaves the set when it closes, so the count is 0 once every\r\n// connection has ended; a set that kept closed sockets leaked one socket object per connection (G110 of the generator, F30 of the fourth review).\r\nfunction openSockets(server) {\r\n  const sockets = tracked.get(server);\r\n  return sockets ? sockets.size : 0;\r\n}\r\n\r\nasync function closeOwned(server) {"
+      },
+      {
+        "find": "    socket.once('close', () => sockets.delete(socket));\r\n",
+        "replace": ""
+      }
+    ]
+  },
+  "files": [
+    {
+      "live": "capability/C017/server.cjs",
+      "snapshot": "capability/C017/evidence/red/prefix-naive-churn/server.snapshot.cjs",
+      "bytes": 12327,
+      "sha256": "09fcf1a6ee4b6b1a86e584563bc784820a67f10414889ecda372affd3286a73a"
+    }
+  ]
+}

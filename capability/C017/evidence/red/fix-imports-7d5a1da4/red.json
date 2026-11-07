@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "F34 of the fifth independent review: tests/browser.cjs and tests/browser-journal.cjs import U018 testing/browser/qualify/qualify.cjs, which imports.json did not pin (it pinned only isolated.cjs). imports.test.cjs now scans tests/*.cjs and tests/fixtures/*.cjs for every import that leaves the namespace and requires each to be pinned, checks the pins of the qualify helper, and compares the files qualify.cjs really loads with the pinned ones. It runs against the PUBLISHED imports.json of the third fix (evidence/red/prefix-35b21507): the three new tests must fail by assertion.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-reporter=./capability/C017/tests/fixtures/sanitized-tap.cjs",
+    "--test-concurrency=1",
+    "--test-timeout=400000",
+    "capability\\C017\\tests\\imports.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C017_OVERLAY",
+    "NODE_OPTIONS"
+  ],
+  "startedAtUtc": "2026-11-06T23:44:25.626Z",
+  "completedAtUtc": "2026-11-06T23:44:29.601Z",
+  "elapsedMs": 3975,
+  "timeoutMs": 1800000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C017\\tests\\imports.test.cjs",
+      "bytes": 7343,
+      "rawSha256": "68d02fecfeef3fc038502711435ce775033c3dce91a209a544192ff36092d9e3",
+      "crlfToLfSha256": "aa52850ada0deb3d1a579c05471fa4b45f8fabb57f02e36cf1d39cbd4e885875"
+    },
+    {
+      "path": "capability\\C017\\tests\\support.cjs",
+      "bytes": 6890,
+      "rawSha256": "3eae28582724d9b4afa78b241b0f431d786102ee097378d5c44c2d707f4c6e4c",
+      "crlfToLfSha256": "d7413430871b232f3da94ff205a3d95cb85cd5861783b886d8844d9291d16b13"
+    },
+    {
+      "path": "capability\\C017\\tests\\browser.cjs",
+      "bytes": 14841,
+      "rawSha256": "c844ef6974dcbdd26390b245b01fe5de2f7fae58b2c856a667a51dd728c140a8",
+      "crlfToLfSha256": "7f1bee22b21f7ea8451616fab78a207bbf130f6949c0214cc0af9fb33acf66da"
+    },
+    {
+      "path": "capability\\C017\\tests\\browser-journal.cjs",
+      "bytes": 8816,
+      "rawSha256": "bc5e16e1841ef2bc2e4e04c8a7dfebd7ae9c3753d695ef3357531e155d0aaa5a",
+      "crlfToLfSha256": "b78f60b2691b7f7eebee00f3d183d475b5951c0c263828951cd24ffe1f8fb322"
+    },
+    {
+      "path": "capability\\C017\\evidence\\red\\prefix-35b21507\\imports.snapshot.json",
+      "bytes": 5445,
+      "rawSha256": "703d4e939beff350ad3ba893e86a630a810e04899ef7ebf0fd3a2e7a75eb7da2",
+      "crlfToLfSha256": "88596d1457d4e21c3b2f86a9b3eae4017b10a53c80fa7ad87778e86f247f46d2"
+    },
+    {
+      "path": "capability\\C017\\tests\\fixtures\\overlay-preload.cjs",
+      "bytes": 1772,
+      "rawSha256": "3e9db2975e4a7c9e389126d676ad76e0c4afa17d93a5ed975a047f0d1abd1f4d",
+      "crlfToLfSha256": "6f63f54b3fadc6c7066ab85d45b23d226025d42575eb488989c810a347c07f8b"
+    },
+    {
+      "path": "capability\\C017\\tests\\fixtures\\sanitized-tap.cjs",
+      "bytes": 1972,
+      "rawSha256": "032d6c9ab5d35fbdd299419e808af83244182607be7dd40ee7bd2975989615bd",
+      "crlfToLfSha256": "906b0791c616ded59435f03ec20b6eacd5d1cc9ae887295b9d10e0d965f54b69"
+    }
+  ],
+  "summary": {
+    "tests": 6,
+    "suites": 0,
+    "pass": 3,
+    "fail": 3,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "every imported accepted file matches its pins by raw or LF-normalized bytes, and the pin metadata is coherent",
+      "every import of the test tooling (tests\\\\*.cjs and tests\\\\fixtures\\\\*.cjs) that leaves the namespace is a pinned file: an accepted dependency, the isolated browser helper or a file of the qualify helper (F34)",
+      "the files that U018 qualify.cjs loads are exactly the pinned ones, and the sealed qualified list it reads is pinned too"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 4728,
+      "sha256": "c5214629c52f05043a5df906c0913b4bfe62a376450673235daae5da081c7cfa",
+      "gzipBytes": 1212,
+      "gzipSha256": "b22a77767ded3720ecc13115f7dc97967ff9978f5e3bbc26cd26516065e0ea37",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

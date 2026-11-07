@@ -15,7 +15,7 @@ const F = require('./fix-red.cjs');
 const repo = path.resolve(s.root, '..', '..');
 const redRoot = path.join(s.root, 'evidence', 'red');
 const fixes = fs.readdirSync(redRoot).filter((name) => name.startsWith('fix-')).sort();
-const EXPECTED = ['chunked-process', 'chunked-structural', 'expect', 'identity', 'interrupted-compensation', 'journal', 'lanes', 'lifecycle', 'limits', 'minors', 'page-forged', 'pending', 'pins', 'pipeline', 'sample', 'wording'];
+const EXPECTED = ['chunked-process', 'chunked-structural', 'endskip', 'expect', 'gencontinue', 'identity', 'imports', 'interrupted-compensation', 'journal', 'lanes', 'lifecycle', 'limits', 'minors', 'page-forged', 'pending', 'pins', 'pipeline', 'sample', 'tracked', 'wording'];
 const original = path.join(redRoot, fixes.find((name) => name.startsWith('fix-identity-')));
 
 function copyOfIdentity(t) {

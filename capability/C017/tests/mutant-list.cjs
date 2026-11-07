@@ -1,7 +1,7 @@
 'use strict';
 
-// Test tooling, not production code: the catalogue of named mutants of the guard lines of server.cjs, contract.js and page.js (second and third fix
-// cycles: 37 mutants).
+// Test tooling, not production code: the catalogue of named mutants of the guard lines of server.cjs, contract.js and page.js (second, third and fourth
+// fix cycles: 41 mutants).
 // Each mutant is ONE exact text replacement (`find` must occur exactly once in the file, LF-normalised); `tests` are the test files to run against
 // the mutated copy, `pattern` optionally narrows them with --test-name-pattern, and `kills` must match the name of at least one FAILING test:
 // a mutant is killed only by a NAMED failing test. tests\mutants.cjs runs them (README: exact commands) and archives the result.
@@ -12,6 +12,7 @@ const PANE = [T('journal-pane.test.cjs'), T('page-journal.test.cjs')];
 const CHECKS = [T('checks-total.test.cjs')];
 const PENDING = [T('pending-flood.test.cjs')];
 const LIMITS = [T('limits.test.cjs')];
+const TRACKED = [T('tracked.test.cjs')];
 
 const mutants = [
   { id: 'S01-no-checkExpectation', file: 'server.cjs', find: "  server.on('checkExpectation', (request, response) => handle(request, response, { expectation: true }));\n", replace: '', tests: SHAPES, kills: /every row of both refusal tables/ },
@@ -38,6 +39,10 @@ const mutants = [
   { id: 'S22-bound-1000', file: 'server.cjs', find: 'const MAX_DROPPED = 8;', replace: 'const MAX_DROPPED = 1000;', tests: PENDING, kills: /one request more than TOLERATED|the bound counts across reads|answered at once count/ },
   { id: 'S23-no-maxHeadersCount', file: 'server.cjs', find: '  server.maxHeadersCount = 32;\n', replace: '', tests: LIMITS, kills: /maxHeadersCount/ },
   { id: 'S24-no-maxConnections', file: 'server.cjs', find: '  server.maxConnections = maxConnections;\n', replace: '', tests: LIMITS, kills: /maxConnections/ },
+  { id: 'S25-closed-sockets-stay-tracked', file: 'server.cjs', find: "    socket.once('close', () => sockets.delete(socket));\n", replace: '', tests: TRACKED, kills: /the tracked set holds exactly|short connections at concurrency 8/ },
+  { id: 'S26-sockets-not-tracked', file: 'server.cjs', find: '    sockets.add(socket);\n', replace: '', tests: TRACKED, kills: /the tracked set holds exactly|closeOwned calls closeAllConnections once/ },
+  { id: 'S27-no-closeAllConnections', file: 'server.cjs', find: '  server.closeAllConnections();\n', replace: '', tests: TRACKED, kills: /closeOwned calls closeAllConnections once/ },
+  { id: 'S28-no-tracked-destroy', file: 'server.cjs', find: '  for (const socket of tracked.get(server) || []) socket.destroy();\n', replace: '', tests: TRACKED, kills: /the tracked set alone destroys every socket/ },
   { id: 'C01-journal-not-replayed', file: 'contract.js', find: "    if (!problems.length && view.journalStatus === 'READABLE') problems.push(...paneOf(view).problems);\n", replace: '', tests: PANE, kills: /every forged journal pane is refused|forged journal pane is refused by the real page/ },
   { id: 'C02-action-not-compared', file: 'contract.js', find: '!derived.action || !sameJson(ledger.actionView(derived.action), view.action)', replace: '!derived.action', tests: PANE, kills: /every forged journal pane is refused|single-point forgeries/ },
   { id: 'C03-epoch-not-compared', file: 'contract.js', find: "if (view.epoch !== derived.epoch) problems.push('the epoch is not the one the journal derives');", replace: '', tests: PANE, kills: /every forged journal pane is refused/ },

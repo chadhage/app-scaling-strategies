@@ -13,7 +13,7 @@ const sha = (buffer) => createHash('sha256').update(buffer).digest('hex');
 const git = (args, encoding = 'utf8') => execFileSync('git', args, { cwd: repo, encoding, maxBuffer: 1 << 26 });
 
 const problems = [];
-const pins = [...imports.dependencies, { ...imports.browserHelper, card: 'flow-browser' }];
+const pins = [...imports.dependencies, { ...imports.browserHelper, card: 'flow-browser' }, ...imports.qualifyHelper.files.map((file) => ({ ...file, card: 'U018' }))];
 for (const dep of pins) {
   const posix = dep.path.replaceAll('\\', '/');
   const resolved = git(['rev-parse', `${dep.tag}^{commit}`]).trim();

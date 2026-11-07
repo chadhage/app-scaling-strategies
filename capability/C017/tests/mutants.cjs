@@ -5,7 +5,7 @@
 // failing test. Usage (repository root):
 //   node capability\C017\tests\mutants.cjs list
 //   node capability\C017\tests\mutants.cjs run <id> [<id>...]
-//   node capability\C017\tests\mutants.cjs run-all [--jobs 3] [--out mutants-04]      (--out writes evidence\<name>.json once, with the SHA-256 of every input; exit 1 when a mutant survives or is undecided)
+//   node capability\C017\tests\mutants.cjs run-all [--jobs 3] [--out mutants-05]      (--out writes evidence\<name>.json once, with the SHA-256 of every input; exit 1 when a mutant survives or is undecided)
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');

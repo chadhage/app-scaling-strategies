@@ -188,6 +188,13 @@ function listen(server) {
   });
 }
 
+// Read-only: how many accepted sockets the server still tracks for shutdown. A socket leaves the set when it closes, so the count is 0 once every
+// connection has ended; a set that kept closed sockets leaked one socket object per connection (G110 of the generator, F30 of the fourth review).
+function openSockets(server) {
+  const sockets = tracked.get(server);
+  return sockets ? sockets.size : 0;
+}
+
 async function closeOwned(server) {
   server.closeAllConnections();
   for (const socket of tracked.get(server) || []) socket.destroy();
@@ -197,4 +204,4 @@ async function closeOwned(server) {
 // drain: the bounded drain after an answer, exposed so that its bounds are proved with fake sockets and fake timers, not with wall-clock measurements.
 const drain = Object.freeze({ closeAfterAnswer, DRAIN_BYTES, DRAIN_MS, MAX_DRAINING, active: () => draining });
 
-module.exports = Object.freeze({ MAX_BODY, MAX_JOURNAL_VIEW, scope, createLocalServer, listen, closeOwned, drain });
+module.exports = Object.freeze({ MAX_BODY, MAX_JOURNAL_VIEW, scope, createLocalServer, listen, closeOwned, openSockets, drain });

@@ -3,10 +3,11 @@
 // Test tooling, not production code: the SYSTEMATIC mutation generator for server.cjs (L-0172, checklist line 4): no mutant is chosen by hand.
 // Every `if` condition is replaced by `false` and by `true`, so is every operand of a top-level || or && inside it, and every single-line effect
 // statement (a call or an assignment, not a declaration, a return or a throw) is deleted. The mutated copy is served to the tests through the overlay
-// preload (the live file is never touched). A mutant is KILLED when a test file fails (the first failing file is named), otherwise it SURVIVED and is
-// listed with its line. The fast in-process test files run one after the other and a mutant stops at the first file that fails.
+// preload (the live file is never touched). A mutant is KILLED when a test file fails BY NAME (the first such file is named), otherwise it SURVIVED and is
+// listed with its line. The fast in-process test files run one after the other and a mutant stops at the first file that kills it; a file that is cut
+// decides nothing and the next file is tried (decide(): UNDECIDED only when no file killed the mutant and at least one was cut).
 //   node capability\C017\tests\mutate-gen.cjs list
-//   node capability\C017\tests\mutate-gen.cjs run [--jobs 3] [--only <regex on the id>] [--out mutants-gen-04]   (--out writes evidence\<name>.json once, with the SHA-256 of every input)
+//   node capability\C017\tests\mutate-gen.cjs run [--jobs 3] [--only <regex on the id>] [--out mutants-gen-05]   (--out writes evidence\<name>.json once, with the SHA-256 of every input)
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
@@ -17,7 +18,7 @@ const { inputPins } = require('./evidence-check.cjs');
 const root = path.join(__dirname, '..');
 const repo = path.resolve(root, '..', '..');
 const FILE = 'server.cjs';
-const TESTS = ['server-guards.test.cjs', 'refusal-shapes.test.cjs', 'drain.test.cjs', 'pending-flood.test.cjs', 'limits.test.cjs', 'two-servers.test.cjs', 'server.test.cjs', 'chunked.test.cjs', 'resources.test.cjs'].map((name) => `capability\\C017\\tests\\${name}`);
+const TESTS = ['server-guards.test.cjs', 'refusal-shapes.test.cjs', 'drain.test.cjs', 'pending-flood.test.cjs', 'limits.test.cjs', 'tracked.test.cjs', 'two-servers.test.cjs', 'server.test.cjs', 'chunked.test.cjs', 'resources.test.cjs'].map((name) => `capability\\C017\\tests\\${name}`);
 const rel = (file) => path.relative(repo, file).replaceAll('\\', '/');
 const QUOTES = ["'", '"', '`'];
 
@@ -89,10 +90,13 @@ function generate(source) {
 
 const base = () => fs.readFileSync(path.join(root, FILE), 'utf8').replace(/\r\n/g, '\n');
 
+// The arguments of one test run. --test-force-exit ends a file whose tests all finished while a listener that the mutant never closed keeps the process
+// alive, so that such a file reports its verdict instead of hanging until a timeout (G083 of the third-fix run, F28 of the fourth review).
+const testArgs = (files) => ['--test', '--test-reporter=tap', '--test-concurrency=1', '--test-timeout=900000', '--test-force-exit', ...files];
+
 function runTests(env, files) {
   return new Promise((resolve) => {
-    const args = ['--test', '--test-reporter=tap', '--test-concurrency=1', '--test-timeout=900000', ...files];
-    const child = spawn(process.execPath, args, { cwd: repo, env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, testArgs(files), { cwd: repo, env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
     child.stdout.on('data', (part) => { out += part; });
     child.stderr.on('data', () => {});
@@ -102,6 +106,27 @@ function runTests(env, files) {
       resolve({ code, failing: [...out.replace(/\r\n/g, '\n').matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((m) => m[1].trim().slice(0, 140)) });
     });
   });
+}
+
+// The verdict of one mutant over the test files, which run one after the other through runFile(file) -> { code, failing }. A file that fails BY NAME kills
+// it and the rest is not run. A file that is cut (a hard kill, or only the file itself reported as failing: nothing it contains failed by name) decides
+// nothing: the next file is tried (F28 of the fourth review: the generator used to stop at the first cut file, so G083 stayed UNDECIDED although
+// two-servers.test.cjs kills it by name). UNDECIDED only when no file killed it and at least one was cut (controller rule 13: never counted as killed);
+// SURVIVED when every file passed.
+async function decide(files, runFile) {
+  const cut = [];
+  for (const file of files) {
+    const result = await runFile(file);
+    if (result.code === 0) continue;
+    const named = result.failing.filter((name) => !/\.test\.cjs$/.test(name));
+    if (result.code === null || named.length === 0) {
+      cut.push({ file: path.basename(file), failing: result.failing.slice(0, 3), exit: result.code });
+      continue;
+    }
+    return { killed: true, killedBy: path.basename(file), failingTests: named.slice(0, 3), exit: result.code, ...(cut.length ? { cutBefore: cut.map((entry) => entry.file) } : {}) };
+  }
+  if (cut.length) return { killed: null, undecided: true, killedBy: `${cut.map((entry) => entry.file).join(', ')} (cut, no named failing test, and no other file killed it)`, failingTests: cut[0].failing, exit: cut[0].exit, cut: cut.map((entry) => entry.file) };
+  return { killed: false, killedBy: null, failingTests: [], exit: 0 };
 }
 
 async function runMutant(source, site) {
@@ -119,16 +144,7 @@ async function runMutant(source, site) {
   const env = { ...process.env, C017_OVERLAY: JSON.stringify({ [`capability/C017/${FILE}`]: rel(mutated) }), NODE_OPTIONS: '--require=./capability/C017/tests/fixtures/overlay-preload.cjs', NODE_V8_COVERAGE: '' };
   delete env.NODE_TEST_CONTEXT;
   try {
-    for (const file of TESTS) {
-      const result = await runTests(env, [file]);
-      // UNDECIDED, never killed: a run that was cut (hard kill, or only the file itself reported as failing) decided nothing (controller rule 13).
-      if (result.code !== 0) {
-        const named = result.failing.filter((name) => !/\.test\.cjs$/.test(name));
-        if (result.code === null || named.length === 0) return { ...about, killed: null, undecided: true, killedBy: `${path.basename(file)} (cut, no named failing test)`, failingTests: result.failing.slice(0, 3), exit: result.code };
-        return { ...about, killed: true, killedBy: path.basename(file), failingTests: named.slice(0, 3), exit: result.code };
-      }
-    }
-    return { ...about, killed: false, killedBy: null, failingTests: [], exit: 0 };
+    return { ...about, ...(await decide(TESTS, (file) => runTests(env, [file]))) };
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -167,4 +183,4 @@ async function main() {
 }
 
 if (require.main === module) main().catch((error) => { console.error(error.message); process.exit(2); });
-module.exports = Object.freeze({ generate, closeOf, operands, TESTS });
+module.exports = Object.freeze({ generate, closeOf, operands, TESTS, decide, testArgs });

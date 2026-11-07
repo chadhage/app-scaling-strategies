@@ -1,0 +1,14 @@
+{
+  "schema": "C017-fix-red/1",
+  "group": "endskip",
+  "baseline": "final",
+  "purpose": "F28 of the fifth independent review (L-0220): the END-state test of the third fix returned silently while evidence/pins.json was missing, so the runner printed a plain ok (1 ms, # skipped 0) for a test that asserted nothing. end-state-skip.test.cjs runs each END-state test file in a scratch copy of the namespace without pins.json and requires the TAP to say `# SKIP <reason>` and `# skipped 1`, never a plain ok. It runs here against the PUBLISHED bytes of the third-fix test (evidence/red/prefix-35b21507), which prints the plain ok: that test must fail, the fourth-fix file and the controls pass.",
+  "tests": [
+    "capability/C017/tests/end-state-skip.test.cjs"
+  ],
+  "overlay": {
+    "capability/C017/tests/evidence-third-fix.test.cjs": "capability/C017/evidence/red/prefix-35b21507/evidence-third-fix.test.snapshot.cjs"
+  },
+  "nodeOptions": "--require=./capability/C017/tests/fixtures/overlay-preload.cjs",
+  "testTimeoutMs": 400000
+}

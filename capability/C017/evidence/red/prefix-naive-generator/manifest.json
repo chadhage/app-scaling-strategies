@@ -1,0 +1,29 @@
+{
+  "schema": "C017-prefix/1",
+  "commit": null,
+  "tag": null,
+  "note": "A NAIVE SUBJECT, not a published file: the published tests/mutate-gen.cjs of the third fix (commit 35b21507, derivedFrom) with ONLY the seam of the fourth fix added (testArgs and decide, exported), implemented with the published logic: the files run one after the other and the run stops at the FIRST file that is cut, so a mutant whose first file never ends (G083) is UNDECIDED although a later file kills it by name (F28). The RED fix-gencontinue replays mutate-gen-continue.test.cjs against it.",
+  "derivedFrom": {
+    "file": "capability/C017/tests/mutate-gen.cjs",
+    "commit": "35b21507c1039337cd93d7bda26428230cecc5ef",
+    "sha256": "279b1390128bef3094a3c3f5abf46107034884a5ac1cf4f76fde101008eb83e0",
+    "replacements": [
+      {
+        "find": "async function runMutant(source, site) {",
+        "replace": "// The seam of the fourth fix with the OLD logic: the files run one after the other and the run STOPS at the first file that is cut.\r\nconst testArgs = (files) => ['--test', '--test-reporter=tap', '--test-concurrency=1', '--test-timeout=900000', ...files];\r\n\r\nasync function decide(files, runFile) {\r\n  for (const file of files) {\r\n    const result = await runFile(file);\r\n    if (result.code !== 0) {\r\n      const named = result.failing.filter((name) => !/\\.test\\.cjs$/.test(name));\r\n      if (result.code === null || named.length === 0) return { killed: null, undecided: true, killedBy: `${path.basename(file)} (cut, no named failing test)`, failingTests: result.failing.slice(0, 3), exit: result.code };\r\n      return { killed: true, killedBy: path.basename(file), failingTests: named.slice(0, 3), exit: result.code };\r\n    }\r\n  }\r\n  return { killed: false, killedBy: null, failingTests: [], exit: 0 };\r\n}\r\n\r\nasync function runMutant(source, site) {"
+      },
+      {
+        "find": "module.exports = Object.freeze({ generate, closeOf, operands, TESTS });",
+        "replace": "module.exports = Object.freeze({ generate, closeOf, operands, TESTS, decide, testArgs });"
+      }
+    ]
+  },
+  "files": [
+    {
+      "live": "capability/C017/tests/mutate-gen.cjs",
+      "snapshot": "capability/C017/evidence/red/prefix-naive-generator/mutate-gen.snapshot.cjs",
+      "bytes": 10397,
+      "sha256": "6859792eae3850294e3405b174b103aeb243b968982afd46ae86dd0e0e0a7fa7"
+    }
+  ]
+}

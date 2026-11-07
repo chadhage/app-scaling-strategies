@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "name": "red",
+  "purpose": "F28 of the fifth independent review: the systematic generator stopped at the FIRST test file that was cut, so a mutant that leaves a listener open (G083: closeOwned never closes the server, the process of server-guards.test.cjs never ends) stayed UNDECIDED although two-servers.test.cjs kills it by name, and the END state of the third fix could never be complete. mutate-gen-continue.test.cjs drives decide() with a FAKE runner: a cut file decides nothing and the next file is tried, UNDECIDED only when nothing killed the mutant, and the runs use --test-force-exit. It runs against the published generator plus only the seam with the OLD stop-at-the-first-cut logic (evidence/red/prefix-naive-generator): the continue rows and the force-exit row must fail.",
+  "command": [
+    "node.exe",
+    "--test",
+    "--test-reporter=./capability/C017/tests/fixtures/sanitized-tap.cjs",
+    "--test-concurrency=1",
+    "--test-timeout=400000",
+    "capability\\C017\\tests\\mutate-gen-continue.test.cjs"
+  ],
+  "commandResolvedExecutable": "C:\\Program Files\\nodejs\\node.exe",
+  "nodeRuntime": "v22.23.4",
+  "cwd": "repository root",
+  "environmentRemoved": [
+    "NODE_TEST_CONTEXT",
+    "NODE_V8_COVERAGE"
+  ],
+  "environmentAdded": [
+    "C017_OVERLAY",
+    "NODE_OPTIONS"
+  ],
+  "startedAtUtc": "2026-11-06T23:44:22.243Z",
+  "completedAtUtc": "2026-11-06T23:44:23.910Z",
+  "elapsedMs": 1667,
+  "timeoutMs": 1800000,
+  "timedOut": false,
+  "expectedExitCode": 1,
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "inputs": [
+    {
+      "path": "capability\\C017\\tests\\mutate-gen-continue.test.cjs",
+      "bytes": 4405,
+      "rawSha256": "e31b7c2ff9d290022be08e48f86c6f9293f3a02dfcc8da11c078d7469b53b662",
+      "crlfToLfSha256": "48eb4e09bb0d8dba3a63975d7601e05c5ad2015bd80714589172c15d900b4318"
+    },
+    {
+      "path": "capability\\C017\\tests\\evidence-check.cjs",
+      "bytes": 19911,
+      "rawSha256": "bd9cc034acca62be6df6cdc3c2f6ab94499d85646115ec066afcf0721830c3c0",
+      "crlfToLfSha256": "d370b4cc76ae2e38fd369dae94b1cf3b8e713d6cb8b559d7f083abd01b68337e"
+    },
+    {
+      "path": "capability\\C017\\evidence\\red\\prefix-naive-generator\\mutate-gen.snapshot.cjs",
+      "bytes": 10397,
+      "rawSha256": "6859792eae3850294e3405b174b103aeb243b968982afd46ae86dd0e0e0a7fa7",
+      "crlfToLfSha256": "1f1845659d308f0bee31204760af73635003a7c130b48b39592b8e005d6c0859"
+    },
+    {
+      "path": "capability\\C017\\tests\\fixtures\\overlay-preload.cjs",
+      "bytes": 1772,
+      "rawSha256": "3e9db2975e4a7c9e389126d676ad76e0c4afa17d93a5ed975a047f0d1abd1f4d",
+      "crlfToLfSha256": "6f63f54b3fadc6c7066ab85d45b23d226025d42575eb488989c810a347c07f8b"
+    },
+    {
+      "path": "capability\\C017\\tests\\fixtures\\sanitized-tap.cjs",
+      "bytes": 1972,
+      "rawSha256": "032d6c9ab5d35fbdd299419e808af83244182607be7dd40ee7bd2975989615bd",
+      "crlfToLfSha256": "906b0791c616ded59435f03ec20b6eacd5d1cc9ae887295b9d10e0d965f54b69"
+    }
+  ],
+  "summary": {
+    "tests": 5,
+    "suites": 0,
+    "pass": 1,
+    "fail": 4,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "thresholdErrors": [],
+    "coverageRows": [],
+    "notOk": [
+      "a file that is cut (hard kill) decides nothing: the next file that fails by name kills the mutant, and the files after it are not run",
+      "a file that only reports itself as failing (no test name) is a cut as well, and a later file may still kill the mutant",
+      "UNDECIDED only when nothing killed the mutant and at least one file was cut: it is never counted as killed and names every cut file",
+      "the real runs end a file whose tests all finished although a listener stays open (--test-force-exit), so that a mutant cannot hang its first file"
+    ]
+  },
+  "transcripts": {
+    "stdout": {
+      "path": "raw\\red.stdout.raw.gz",
+      "bytes": 4268,
+      "sha256": "5487406343c50e3b3730c7c48aaa657eef6fb268d28510a38ecfab8af5152e82",
+      "gzipBytes": 1092,
+      "gzipSha256": "4a6db9f7951e2dec9b4a01e4beaccebe5700f01906f13757a7f112c5f8af644a",
+      "rawCRLFPairs": 0
+    },
+    "stderr": {
+      "path": "raw\\red.stderr.raw.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "rawCRLFPairs": 0
+    }
+  }
+}

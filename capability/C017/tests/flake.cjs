@@ -3,16 +3,19 @@
 // Test tooling, not production code: the flake loop. Runs ONE test file many times, several at once (the load that exposed the heap sampler race),
 // each run a separate `node --test` process under a hard timeout; any failing run is reported. Exit 1 when a single run failed. The printed JSON carries
 // the SHA-256 of every non-evidence file of the namespace it ran against (`inputs`), so evidence-check.cjs names a loop result that outlived an edit.
-//   node capability\C017\tests\flake.cjs child.test.cjs 20 5
+// `--burners N` starts N CPU burners of its own (node processes that spin), records their PIDs in the result and stops exactly those in a finally block:
+// the loops of the fourth fix run 20 x 4 under 4 burners (controller rule 13 and the order of the fourth fix), at normal priority, inside the loop slot.
+//   node capability\C017\tests\flake.cjs child.test.cjs 20 5 [--burners 4]
 const { spawn } = require('node:child_process');
 const path = require('node:path');
 const { inputPins } = require('./evidence-check.cjs');
 
-const [fileName, runsText = '20', parallelText = '5'] = process.argv.slice(2);
+const [fileName, runsText = '20', parallelText = '5', ...flags] = process.argv.slice(2);
 const runs = Number(runsText);
 const parallel = Number(parallelText);
-if (!/^[a-z0-9-]+\.test\.cjs$/.test(fileName || '') || !(runs >= 1 && runs <= 200) || !(parallel >= 1 && parallel <= 16)) {
-  console.error('usage: flake.cjs <name.test.cjs> <runs 1-200> <parallel 1-16>');
+const burnerCount = flags[0] === '--burners' ? Number(flags[1]) : 0;
+if (!/^[a-z0-9-]+\.test\.cjs$/.test(fileName || '') || !(runs >= 1 && runs <= 200) || !(parallel >= 1 && parallel <= 16) || !(burnerCount >= 0 && burnerCount <= 8) || (flags.length && flags[0] !== '--burners')) {
+  console.error('usage: flake.cjs <name.test.cjs> <runs 1-200> <parallel 1-16> [--burners 0-8]');
   process.exit(2);
 }
 const repo = path.resolve(__dirname, '..', '..', '..');
@@ -37,10 +40,16 @@ function one(index) {
 }
 
 (async () => {
+  const burners = Array.from({ length: burnerCount }, () => spawn(process.execPath, ['-e', 'while (true) {}'], { windowsHide: true, stdio: 'ignore' }));
+  const pids = burners.map((burner) => burner.pid);
   const results = [];
-  let next = 1;
-  await Promise.all(Array.from({ length: parallel }, async () => { while (next <= runs) results.push(await one(next++)); }));
+  try {
+    let next = 1;
+    await Promise.all(Array.from({ length: parallel }, async () => { while (next <= runs) results.push(await one(next++)); }));
+  } finally {
+    for (const burner of burners) if (burner.exitCode === null && burner.signalCode === null) burner.kill();
+  }
   const failures = results.filter((r) => r.exit !== 0);
-  console.log(JSON.stringify({ file: fileName, runs, parallel, failures: failures.length, slowestSeconds: Math.max(...results.map((r) => r.seconds)), failing: failures, inputs: inputPins() }, null, 2));
+  console.log(JSON.stringify({ file: fileName, runs, parallel, burners: { count: burnerCount, pids }, failures: failures.length, slowestSeconds: Math.max(...results.map((r) => r.seconds)), failing: failures, inputs: inputPins() }, null, 2));
   process.exit(failures.length ? 1 : 0);
 })();
